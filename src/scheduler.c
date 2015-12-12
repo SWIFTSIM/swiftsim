@@ -957,13 +957,23 @@ void scheduler_start(struct scheduler *s, unsigned int mask) {
   const int num_rewait_tasks = s->nr_queues > s->size - s->nr_tasks
                                    ? s->size - s->nr_tasks
                                    : s->nr_queues;
-  const int waiting_old =
-      s->waiting;  // Remember that engine_launch may fiddle with this value.
+
+  /* Remember that engine_launch may fiddle with this value. */
+  const int waiting_old = s->waiting;
+
+  /* We are going to use the task structure in a modified way to pass
+     information
+     to the task. Don't do this at home !
+     - ci and cj will give the range of tasks to which the waits will be applied
+     - the flags will be used to transfer the mask
+     - the rest is unused.
+  */
   for (int k = 0; k < num_rewait_tasks; k++) {
     rewait_tasks[k].type = task_type_rewait;
     rewait_tasks[k].ci = (struct cell *)&s->tasks[k * nr_tasks / s->nr_queues];
     rewait_tasks[k].cj =
         (struct cell *)&s->tasks[(k + 1) * nr_tasks / s->nr_queues];
+    rewait_tasks[k].flags = s->mask;
     rewait_tasks[k].skip = 0;
     rewait_tasks[k].wait = 0;
     rewait_tasks[k].rid = -1;
@@ -982,6 +992,9 @@ void scheduler_start(struct scheduler *s, unsigned int mask) {
   pthread_mutex_unlock(&s->sleep_mutex);
   /* message("waiting tasks took %.3f ms.",
           (double)(getticks() - tic) / CPU_TPS * 1000); */
+
+  /* We now have the waits set for all tasks. We can start the actual
+   * calculation */
 
   /* Loop over the tasks and enqueue whoever is ready. */
   // tic = getticks();
@@ -1309,4 +1322,34 @@ void scheduler_init(struct scheduler *s, struct space *space, int nr_queues,
   s->size = 0;
   s->nr_tasks = 0;
   s->tasks_next = 0;
+}
+
+/**
+ * @brief Sets the waits of the dependants of a range of task
+ *
+ * @param t_begin Beginning of the #task range
+ * @param t_end End of the #task range
+ * @param mask The scheduler mask
+ */
+void scheduler_do_rewait(struct task *t_begin, struct task *t_end,
+                         unsigned int mask) {
+
+  for (struct task *t2 = t_begin; t2 != t_end; t2++) {
+
+    if (t2->skip) continue;
+
+    /* Skip tasks not in the mask */
+    if (!((1 << t2->type) & mask)) continue;
+
+    /* Skip sort tasks that have already been performed */
+    if (t2->type == task_type_sort && t2->flags == 0) continue;
+
+    /* Sets the waits of the dependances */
+    for (int k = 0; k < t2->nr_unlock_tasks; k++) {
+
+      struct task *t3 = t2->unlock_tasks[k];
+
+      atomic_inc(&t3->wait);
+    }
+  }
 }

@@ -109,5 +109,7 @@ struct task *scheduler_done(struct scheduler *s, struct task *t);
 struct task *scheduler_unlock(struct scheduler *s, struct task *t);
 void scheduler_addunlock(struct scheduler *s, struct task *ta, struct task *tb);
 void scheduler_set_unlocks(struct scheduler *s);
+void scheduler_do_rewait(struct task *t_begin, struct task *t_end,
+                         unsigned int mask);
 
 #endif /* SWIFT_SCHEDULER_H */
