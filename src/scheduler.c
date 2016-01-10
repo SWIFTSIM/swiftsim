@@ -962,8 +962,7 @@ void scheduler_start(struct scheduler *s, unsigned int mask) {
   const int waiting_old = s->waiting;
 
   /* We are going to use the task structure in a modified way to pass
-     information
-     to the task. Don't do this at home !
+     information to the task. Don't do this at home !
      - ci and cj will give the range of tasks to which the waits will be applied
      - the flags will be used to transfer the mask
      - the rest is unused.
@@ -1333,7 +1332,6 @@ void scheduler_init(struct scheduler *s, struct space *space, int nr_queues,
  */
 void scheduler_do_rewait(struct task *t_begin, struct task *t_end,
                          unsigned int mask) {
-
   for (struct task *t2 = t_begin; t2 != t_end; t2++) {
 
     if (t2->skip) continue;
@@ -1346,9 +1344,7 @@ void scheduler_do_rewait(struct task *t_begin, struct task *t_end,
 
     /* Sets the waits of the dependances */
     for (int k = 0; k < t2->nr_unlock_tasks; k++) {
-
       struct task *t3 = t2->unlock_tasks[k];
-
       atomic_inc(&t3->wait);
     }
   }
