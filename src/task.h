@@ -56,8 +56,10 @@ extern const char *taskID_names[];
 /* The different task sub-types. */
 enum task_subtypes {
   task_subtype_none = 0,
-  task_subtype_density,
-  task_subtype_force,
+  task_subtype_hydro_loop1,
+  task_subtype_hydro_loop2,
+  task_subtype_hydro_loop3,
+  task_subtype_hydro_loop4,
   task_subtype_grav,
   task_subtype_count
 };

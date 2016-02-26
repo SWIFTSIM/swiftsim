@@ -47,8 +47,8 @@ const char *taskID_names[task_type_count] = {
     "ghost",   "drift",   "kick",      "send",  "recv",       "grav_pp",
     "grav_mm", "grav_up", "grav_down", "psort", "split_cell", "rewait"};
 
-const char *subtaskID_names[task_type_count] = {"none",  "density",
-                                                "force", "grav"};
+const char *subtaskID_names[task_type_count] = {
+    "none", "hydro_loop1", "hydro_loop2", "hydro_loop3", "hydro_loop4", "grav"};
 
 /**
  * @brief Computes the overlap between the parts array of two given cells.

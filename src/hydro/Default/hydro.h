@@ -216,7 +216,7 @@ __attribute__((always_inline))
  * @param half_dt The half time-step for this kick
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
-    struct part* p, struct xpart* xp, float dt, float half_dt) { }
+    struct part* p, struct xpart* xp, float dt, float half_dt) {}
 
 /**
  * @brief Converts hydro quantity of a particle
