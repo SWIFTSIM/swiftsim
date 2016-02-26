@@ -108,8 +108,8 @@ void engine_mkghosts(struct engine *e, struct cell *c, struct cell *super) {
     if (c->nodeID == e->nodeID) {
 
       /* Generate the ghost task. */
-      c->ghost = scheduler_addtask(s, task_type_ghost, task_subtype_none, 0, 0,
-                                   c, NULL, 0);
+      c->ghost1 = scheduler_addtask(s, task_type_ghost1, task_subtype_none, 0, 0,
+				    c, NULL, 0);
       /* Add the drift task. */
       c->drift = scheduler_addtask(s, task_type_drift, task_subtype_none, 0, 0,
                                    c, NULL, 0);
@@ -369,7 +369,7 @@ void engine_repartition(struct engine *e) {
 
     /* Skip un-interesting tasks. */
     if (t->type != task_type_self && t->type != task_type_pair &&
-        t->type != task_type_sub && t->type != task_type_ghost &&
+        t->type != task_type_sub && t->type != task_type_ghost1 &&
         t->type != task_type_drift && t->type != task_type_kick &&
         t->type != task_type_init)
       continue;
@@ -401,7 +401,7 @@ void engine_repartition(struct engine *e) {
     cid = ci - cells;
 
     /* Different weights for different tasks. */
-    if (t->type == task_type_ghost || t->type == task_type_drift ||
+    if (t->type == task_type_ghost1 || t->type == task_type_drift ||
         t->type == task_type_kick) {
 
       /* Particle updates add only to vertex weight. */
@@ -709,13 +709,13 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj) {
                           2 * ci->tag + 1, 0, ci, cj, 0);
 
     /* The send_rho task depends on the cell's ghost task. */
-    scheduler_addunlock(s, ci->super->ghost, t_rho);
+    scheduler_addunlock(s, ci->super->ghost1, t_rho);
 
     /* The send_rho task should unlock the super-cell's kick task. */
     scheduler_addunlock(s, t_rho, ci->super->kick);
 
     /* The send_xv task should unlock the super-cell's ghost task. */
-    scheduler_addunlock(s, t_xv, ci->super->ghost);
+    scheduler_addunlock(s, t_xv, ci->super->ghost1);
 
   }
 
@@ -1217,10 +1217,10 @@ void engine_maketasks(struct engine *e) {
     /* Self-interaction? */
     if (t->type == task_type_self && t->subtype == task_subtype_hydro_loop1) {
       scheduler_addunlock(sched, t->ci->super->init, t);
-      scheduler_addunlock(sched, t, t->ci->super->ghost);
+      scheduler_addunlock(sched, t, t->ci->super->ghost1);
       t2 = scheduler_addtask(sched, task_type_self, task_subtype_hydro_loop2, 0,
                              0, t->ci, NULL, 0);
-      scheduler_addunlock(sched, t->ci->super->ghost, t2);
+      scheduler_addunlock(sched, t->ci->super->ghost1, t2);
       scheduler_addunlock(sched, t2, t->ci->super->kick);
       t->ci->force = engine_addlink(e, t->ci->force, t2);
       atomic_inc(&t->ci->nr_force);
@@ -1233,14 +1233,14 @@ void engine_maketasks(struct engine *e) {
                              0, t->ci, t->cj, 0);
       if (t->ci->nodeID == nodeID) {
         scheduler_addunlock(sched, t->ci->super->init, t);
-        scheduler_addunlock(sched, t, t->ci->super->ghost);
-        scheduler_addunlock(sched, t->ci->super->ghost, t2);
+        scheduler_addunlock(sched, t, t->ci->super->ghost1);
+        scheduler_addunlock(sched, t->ci->super->ghost1, t2);
         scheduler_addunlock(sched, t2, t->ci->super->kick);
       }
       if (t->cj->nodeID == nodeID && t->ci->super != t->cj->super) {
         scheduler_addunlock(sched, t->cj->super->init, t);
-        scheduler_addunlock(sched, t, t->cj->super->ghost);
-        scheduler_addunlock(sched, t->cj->super->ghost, t2);
+        scheduler_addunlock(sched, t, t->cj->super->ghost1);
+        scheduler_addunlock(sched, t->cj->super->ghost1, t2);
         scheduler_addunlock(sched, t2, t->cj->super->kick);
       }
       t->ci->force = engine_addlink(e, t->ci->force, t2);
@@ -1255,14 +1255,14 @@ void engine_maketasks(struct engine *e) {
       t2 = scheduler_addtask(sched, task_type_sub, task_subtype_hydro_loop2,
                              t->flags, 0, t->ci, t->cj, 0);
       if (t->ci->nodeID == nodeID) {
-        scheduler_addunlock(sched, t, t->ci->super->ghost);
-        scheduler_addunlock(sched, t->ci->super->ghost, t2);
+        scheduler_addunlock(sched, t, t->ci->super->ghost1);
+        scheduler_addunlock(sched, t->ci->super->ghost1, t2);
         scheduler_addunlock(sched, t2, t->ci->super->kick);
       }
       if (t->cj != NULL && t->cj->nodeID == nodeID &&
           t->ci->super != t->cj->super) {
-        scheduler_addunlock(sched, t, t->cj->super->ghost);
-        scheduler_addunlock(sched, t->cj->super->ghost, t2);
+        scheduler_addunlock(sched, t, t->cj->super->ghost1);
+        scheduler_addunlock(sched, t->cj->super->ghost1, t2);
         scheduler_addunlock(sched, t2, t->cj->super->kick);
       }
       t->ci->force = engine_addlink(e, t->ci->force, t2);
@@ -1382,7 +1382,7 @@ int engine_marktasks(struct engine *e) {
       }
 
       /* Single-cell task? */
-      else if (t->type == task_type_self || t->type == task_type_ghost ||
+      else if (t->type == task_type_self || t->type == task_type_ghost1 ||
                (t->type == task_type_sub && t->cj == NULL)) {
 
         /* Set this task's skip. */
@@ -1748,7 +1748,7 @@ void engine_init_particles(struct engine *e) {
     mask |= 1 << task_type_self;
     mask |= 1 << task_type_pair;
     mask |= 1 << task_type_sub;
-    mask |= 1 << task_type_ghost;
+    mask |= 1 << task_type_ghost1;
 
     submask |= 1 << task_subtype_hydro_loop1;
   }
@@ -1896,7 +1896,7 @@ void engine_step(struct engine *e) {
     mask |= 1 << task_type_self;
     mask |= 1 << task_type_pair;
     mask |= 1 << task_type_sub;
-    mask |= 1 << task_type_ghost;
+    mask |= 1 << task_type_ghost1;
 
     submask |= 1 << task_subtype_hydro_loop1;
     submask |= 1 << task_subtype_hydro_loop2;
