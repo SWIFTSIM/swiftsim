@@ -51,8 +51,12 @@ struct part {
   float v[3];
 
   /* Particle acceleration. */
-  float a[3];
+  float a_hydro[3];
 
+  float mass; // MATTHIEU
+  float h_dt;
+  float rho;
+  
   /* Particle cutoff radius. */
   float h;
 
