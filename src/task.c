@@ -43,9 +43,10 @@
 
 /* Task type names. */
 const char *taskID_names[task_type_count] = {
-    "none",    "sort",    "self",      "pair",  "sub",        "init",
-    "ghost",   "drift",   "kick",      "send",  "recv",       "grav_pp",
-    "grav_mm", "grav_up", "grav_down", "psort", "split_cell", "rewait"};
+    "none",    "sort",      "self",   "pair",       "sub",
+    "init",    "ghost1",    "ghost2", "ghost3",     "drift",
+    "kick",    "send",      "recv",   "grav_pp",    "grav_mm",
+    "grav_up", "grav_down", "psort",  "split_cell", "rewait"};
 
 const char *subtaskID_names[task_type_count] = {
     "none", "hydro_loop1", "hydro_loop2", "hydro_loop3", "hydro_loop4", "grav"};

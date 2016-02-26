@@ -77,20 +77,6 @@ const char runner_flip[27] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
 #define FUNCTION hydro_loop2
 #include "runner_doiact.h"
 
-/* /\* Import the density loop functions. *\/ */
-/* #define FUNCTION volume */
-/* #include "runner_doiact.h" */
-
-/* /\* Import the gradient loop functions. *\/ */
-/* #undef FUNCTION */
-/* #define FUNCTION gradient */
-/* #include "runner_doiact.h" */
-
-/* /\* Import the force loop functions. *\/ */
-/* #undef FUNCTION */
-/* #define FUNCTION fluxes */
-/* #include "runner_doiact.h" */
-
 /* Import the gravity loop functions. */
 #include "runner_doiact_grav.h"
 
@@ -554,7 +540,7 @@ void runner_doinit(struct runner *r, struct cell *c, int timer) {
  * @param c The cell.
  */
 
-void runner_doghost(struct runner *r, struct cell *c) {
+void runner_doghost1(struct runner *r, struct cell *c) {
 
   struct part *p, *parts = c->parts;
   struct xpart *xp, *xparts = c->xparts;
@@ -570,7 +556,7 @@ void runner_doghost(struct runner *r, struct cell *c) {
   /* Recurse? */
   if (c->split) {
     for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL) runner_doghost(r, c->progeny[k]);
+      if (c->progeny[k] != NULL) runner_doghost1(r, c->progeny[k]);
     return;
   }
 
@@ -695,12 +681,16 @@ void runner_doghost(struct runner *r, struct cell *c) {
 
 #ifdef TIMER_VERBOSE
   message("runner %02i: %i parts at depth %i took %.3f ms.", r->id, c->count,
-          c->depth, ((double)TIMER_TOC(timer_doghost)) / CPU_TPS * 1000);
+          c->depth, ((double)TIMER_TOC(timer_doghost1)) / CPU_TPS * 1000);
   fflush(stdout);
 #else
-  TIMER_TOC(timer_doghost);
+  TIMER_TOC(timer_doghost1);
 #endif
 }
+
+void runner_doghost2(struct runner *r, struct cell *c) {}
+
+void runner_doghost3(struct runner *r, struct cell *c) {}
 
 /**
  * @brief Drift particles forward in time
@@ -1095,10 +1085,16 @@ void *runner_main(void *data) {
         case task_type_init:
           runner_doinit(r, ci, 1);
           break;
-        case task_type_ghost:
-          runner_doghost(r, ci);
+        case task_type_ghost1:
+          runner_doghost1(r, ci);
           break;
-        case task_type_drift:
+        case task_type_ghost2:
+          runner_doghost2(r, ci);
+          break;
+        case task_type_ghost3:
+          runner_doghost3(r, ci);
+          break;
+      case task_type_drift:
           runner_dodrift(r, ci, 1);
           break;
         case task_type_kick:
