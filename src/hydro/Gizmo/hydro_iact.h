@@ -25,8 +25,8 @@
 #define PER_FACE_LIMITER
 /* #define PRINT_ID 0 */
 
-/* this corresponds to task_subtype_volume */
-__attribute__((always_inline)) INLINE static void runner_iact_volume(
+/* this corresponds to task_subtype_hydro_loop1 */
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop1(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float r = sqrtf(r2);
@@ -193,8 +193,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_volume(
 #endif
 }
 
-/* this corresponds to task_subtype_volume */
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_volume(
+/* this corresponds to task_subtype_hydro_loop1 */
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_hydro_loop1(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float r;
@@ -283,7 +283,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_volume(
 #endif
 }
 
-__attribute__((always_inline)) INLINE static void runner_iact_gradient(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop2(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
 #ifndef SPH_GRADIENTS
@@ -484,7 +484,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
 #endif
 }
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_hydro_loop2(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
 #ifndef SPH_GRADIENTS
@@ -1012,14 +1012,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
 }
 
 /* this corresponds to task_subtype_fluxes */
-__attribute__((always_inline)) INLINE static void runner_iact_fluxes(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop3(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 1);
 }
 
 /* this corresponds to task_subtype_fluxes */
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_fluxes(
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_hydro_loop3(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 0);
