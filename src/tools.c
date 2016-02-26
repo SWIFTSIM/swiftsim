@@ -84,8 +84,8 @@ void pairs_n2(double *dim, struct part *__restrict__ parts, int N,
       }
       r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
       if (r2 < parts[j].h * parts[j].h || r2 < parts[k].h * parts[k].h) {
-        runner_iact_density(r2, NULL, parts[j].h, parts[k].h, &parts[j],
-                            &parts[k]);
+        runner_iact_hydro_loop1(r2, NULL, parts[j].h, parts[k].h, &parts[j],
+                                &parts[k]);
         /* if ( parts[j].h / parts[k].h > maxratio )
             {
             maxratio = parts[j].h / parts[k].h;
@@ -160,7 +160,7 @@ void pairs_single_density(double *dim, long long int pid,
     }
     r2 = fdx[0] * fdx[0] + fdx[1] * fdx[1] + fdx[2] * fdx[2];
     if (r2 < p.h * p.h) {
-      runner_iact_nonsym_density(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
+      runner_iact_nonsym_hydro_loop1(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
       /* printf( "pairs_simple: interacting particles %lli [%i,%i,%i] and %lli
          [%i,%i,%i], r=%e.\n" ,
           pid , (int)(p.x[0]*ih) , (int)(p.x[1]*ih) , (int)(p.x[2]*ih) ,
@@ -203,7 +203,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hig2) {
 
         /* Interact */
-        runner_iact_nonsym_density(r2, dx, hi, pj->h, pi, pj);
+        runner_iact_nonsym_hydro_loop1(r2, dx, hi, pj->h, pi, pj);
       }
     }
   }
@@ -230,7 +230,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hjg2) {
 
         /* Interact */
-        runner_iact_nonsym_density(r2, dx, hj, pi->h, pj, pi);
+        runner_iact_nonsym_hydro_loop1(r2, dx, hj, pi->h, pj, pi);
       }
     }
   }
@@ -323,7 +323,7 @@ void density_dump(int N) {
     r2[0] = ((float)k) / N;
     Pi[0].density.wcount = 0;
     Pj[0].density.wcount = 0;
-    runner_iact_density(r2[0], NULL, hi[0], hj[0], &Pi[0], &Pj[0]);
+    runner_iact_hydro_loop1(r2[0], NULL, hi[0], hj[0], &Pi[0], &Pj[0]);
     printf(" %e %e %e", r2[0], Pi[0].density.wcount, Pj[0].density.wcount);
   }
 }
@@ -366,7 +366,7 @@ void engine_single_density(double *dim, long long int pid,
     }
     r2 = fdx[0] * fdx[0] + fdx[1] * fdx[1] + fdx[2] * fdx[2];
     if (r2 < p.h * p.h * kernel_gamma2) {
-      runner_iact_nonsym_density(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
+      runner_iact_nonsym_hydro_loop1(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
     }
   }
 
@@ -415,7 +415,7 @@ void engine_single_force(double *dim, long long int pid,
     if (r2 < p.h * p.h * kernel_gamma2 ||
         r2 < parts[k].h * parts[k].h * kernel_gamma2) {
       hydro_reset_acceleration(&p);
-      runner_iact_nonsym_force(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
+      runner_iact_nonsym_hydro_loop2(r2, fdx, p.h, parts[k].h, &p, &parts[k]);
     }
   }
 

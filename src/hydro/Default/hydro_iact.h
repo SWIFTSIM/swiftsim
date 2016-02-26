@@ -45,7 +45,7 @@
  * @brief Density loop
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_density(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop1(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float r = sqrtf(r2), ri = 1.0f / r;
@@ -104,7 +104,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 /**
  * @brief Density loop (Vectorized version)
  */
-__attribute__((always_inline)) INLINE static void runner_iact_vec_density(
+__attribute__((always_inline)) INLINE static void runner_iact_vec_hydro_loop1(
     float *R2, float *Dx, float *Hi, float *Hj, struct part **pi,
     struct part **pj) {
 
@@ -210,7 +210,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_vec_density(
 #else
 
   for (int k = 0; k < VEC_SIZE; k++)
-    runner_iact_density(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
+    runner_iact_hydro_loop1(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
 
 #endif
 }
@@ -219,8 +219,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_vec_density(
  * @brief Density loop (non-symmetric version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
-    float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
+__attribute__((always_inline))
+    INLINE static void runner_iact_nonsym_hydro_loop1(float r2, float *dx,
+                                                      float hi, float hj,
+                                                      struct part *pi,
+                                                      struct part *pj) {
 
   float r, ri;
   float xi;
@@ -269,10 +272,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
  */
 
 __attribute__((always_inline))
-    INLINE static void runner_iact_nonsym_vec_density(float *R2, float *Dx,
-                                                      float *Hi, float *Hj,
-                                                      struct part **pi,
-                                                      struct part **pj) {
+    INLINE static void runner_iact_nonsym_vec_hydro_loop1(float *R2, float *Dx,
+                                                          float *Hi, float *Hj,
+                                                          struct part **pi,
+                                                          struct part **pj) {
 
 #ifdef VECTORIZE
 
@@ -354,7 +357,8 @@ __attribute__((always_inline))
 #else
 
   for (int k = 0; k < VEC_SIZE; k++)
-    runner_iact_nonsym_density(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
+    runner_iact_nonsym_hydro_loop1(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k],
+                                   pj[k]);
 
 #endif
 }
@@ -363,7 +367,7 @@ __attribute__((always_inline))
  * @brief Force loop
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_force(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop2(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float r = sqrtf(r2), ri = 1.0f / r;
@@ -459,7 +463,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
  * @brief Force loop (Vectorized version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_vec_force(
+__attribute__((always_inline)) INLINE static void runner_iact_vec_hydro_loop2(
     float *R2, float *Dx, float *Hi, float *Hj, struct part **pi,
     struct part **pj) {
 
@@ -669,7 +673,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_vec_force(
 #else
 
   for (int k = 0; k < VEC_SIZE; k++)
-    runner_iact_force(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
+    runner_iact_hydro_loop2(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
 
 #endif
 }
@@ -678,8 +682,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_vec_force(
  * @brief Force loop (non-symmetric version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
-    float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
+__attribute__((always_inline))
+    INLINE static void runner_iact_nonsym_hydro_loop2(float r2, float *dx,
+                                                      float hi, float hj,
+                                                      struct part *pi,
+                                                      struct part *pj) {
 
   float r = sqrtf(r2), ri = 1.0f / r;
   float xi, xj;
@@ -769,9 +776,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
  * @brief Force loop (Vectorized non-symmetric version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_vec_force(
-    float *R2, float *Dx, float *Hi, float *Hj, struct part **pi,
-    struct part **pj) {
+__attribute__((always_inline))
+    INLINE static void runner_iact_nonsym_vec_hydro_loop2(float *R2, float *Dx,
+                                                          float *Hi, float *Hj,
+                                                          struct part **pi,
+                                                          struct part **pj) {
 
 #ifdef VECTORIZE
 
@@ -966,7 +975,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_vec_force(
 #else
 
   for (int k = 0; k < VEC_SIZE; k++)
-    runner_iact_nonsym_force(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k], pj[k]);
+    runner_iact_nonsym_hydro_loop2(R2[k], &Dx[3 * k], Hi[k], Hj[k], pi[k],
+                                   pj[k]);
 
 #endif
 }

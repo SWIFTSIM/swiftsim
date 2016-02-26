@@ -43,7 +43,7 @@
  * @brief Density loop
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_density(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop1(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float wi, wi_dx;
@@ -114,8 +114,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
  * @brief Density loop (non-symmetric version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
-    float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
+__attribute__((always_inline))
+    INLINE static void runner_iact_nonsym_hydro_loop1(float r2, float *dx,
+                                                      float hi, float hj,
+                                                      struct part *pi,
+                                                      struct part *pj) {
 
   float wi, wi_dx;
   float dv[3], curlvr[3];
@@ -163,7 +166,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
  * @brief Force loop
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_force(
+__attribute__((always_inline)) INLINE static void runner_iact_hydro_loop2(
     float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
 
   float wi, wj, wi_dx, wj_dx;
@@ -261,8 +264,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
  * @brief Force loop (non-symmetric version)
  */
 
-__attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
-    float r2, float *dx, float hi, float hj, struct part *pi, struct part *pj) {
+__attribute__((always_inline))
+    INLINE static void runner_iact_nonsym_hydro_loop2(float r2, float *dx,
+                                                      float hi, float hj,
+                                                      struct part *pi,
+                                                      struct part *pj) {
 
   float wi, wj, wi_dx, wj_dx;
 

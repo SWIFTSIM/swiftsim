@@ -69,13 +69,27 @@ const char runner_flip[27] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /* Import the density loop functions. */
-#define FUNCTION density
+#define FUNCTION hydro_loop1
 #include "runner_doiact.h"
 
 /* Import the force loop functions. */
 #undef FUNCTION
-#define FUNCTION force
+#define FUNCTION hydro_loop2
 #include "runner_doiact.h"
+
+/* /\* Import the density loop functions. *\/ */
+/* #define FUNCTION volume */
+/* #include "runner_doiact.h" */
+
+/* /\* Import the gradient loop functions. *\/ */
+/* #undef FUNCTION */
+/* #define FUNCTION gradient */
+/* #include "runner_doiact.h" */
+
+/* /\* Import the force loop functions. *\/ */
+/* #undef FUNCTION */
+/* #define FUNCTION fluxes */
+/* #include "runner_doiact.h" */
 
 /* Import the gravity loop functions. */
 #include "runner_doiact_grav.h"
@@ -645,18 +659,18 @@ void runner_doghost(struct runner *r, struct cell *c) {
 
           /* Self-interaction? */
           if (l->t->type == task_type_self)
-            runner_doself_subset_density(r, finger, parts, pid, count);
+            runner_doself_subset_hydro_loop1(r, finger, parts, pid, count);
 
           /* Otherwise, pair interaction? */
           else if (l->t->type == task_type_pair) {
 
             /* Left or right? */
             if (l->t->ci == finger)
-              runner_dopair_subset_density(r, finger, parts, pid, count,
-                                           l->t->cj);
+              runner_dopair_subset_hydro_loop1(r, finger, parts, pid, count,
+                                               l->t->cj);
             else
-              runner_dopair_subset_density(r, finger, parts, pid, count,
-                                           l->t->ci);
+              runner_dopair_subset_hydro_loop1(r, finger, parts, pid, count,
+                                               l->t->ci);
 
           }
 
@@ -665,11 +679,11 @@ void runner_doghost(struct runner *r, struct cell *c) {
 
             /* Left or right? */
             if (l->t->ci == finger)
-              runner_dosub_subset_density(r, finger, parts, pid, count,
-                                          l->t->cj, -1, 1);
+              runner_dosub_subset_hydro_loop1(r, finger, parts, pid, count,
+                                              l->t->cj, -1, 1);
             else
-              runner_dosub_subset_density(r, finger, parts, pid, count,
-                                          l->t->ci, -1, 1);
+              runner_dosub_subset_hydro_loop1(r, finger, parts, pid, count,
+                                              l->t->ci, -1, 1);
           }
         }
       }
@@ -1050,18 +1064,18 @@ void *runner_main(void *data) {
       /* Different types of tasks... */
       switch (t->type) {
         case task_type_self:
-          if (t->subtype == task_subtype_density)
-            runner_doself1_density(r, ci);
-          else if (t->subtype == task_subtype_force)
-            runner_doself2_force(r, ci);
+          if (t->subtype == task_subtype_hydro_loop1)
+            runner_doself1_hydro_loop1(r, ci);
+          else if (t->subtype == task_subtype_hydro_loop2)
+            runner_doself2_hydro_loop2(r, ci);
           else
             error("Unknown task subtype.");
           break;
         case task_type_pair:
-          if (t->subtype == task_subtype_density)
-            runner_dopair1_density(r, ci, cj);
-          else if (t->subtype == task_subtype_force)
-            runner_dopair2_force(r, ci, cj);
+          if (t->subtype == task_subtype_hydro_loop1)
+            runner_dopair1_hydro_loop1(r, ci, cj);
+          else if (t->subtype == task_subtype_hydro_loop2)
+            runner_dopair2_hydro_loop2(r, ci, cj);
           else
             error("Unknown task subtype.");
           break;
@@ -1069,10 +1083,10 @@ void *runner_main(void *data) {
           runner_dosort(r, ci, t->flags, 1);
           break;
         case task_type_sub:
-          if (t->subtype == task_subtype_density)
-            runner_dosub1_density(r, ci, cj, t->flags, 1);
-          else if (t->subtype == task_subtype_force)
-            runner_dosub2_force(r, ci, cj, t->flags, 1);
+          if (t->subtype == task_subtype_hydro_loop1)
+            runner_dosub1_hydro_loop1(r, ci, cj, t->flags, 1);
+          else if (t->subtype == task_subtype_hydro_loop2)
+            runner_dosub2_hydro_loop2(r, ci, cj, t->flags, 1);
           else if (t->subtype == task_subtype_grav)
             runner_dosub_grav(r, ci, cj, 1);
           else
