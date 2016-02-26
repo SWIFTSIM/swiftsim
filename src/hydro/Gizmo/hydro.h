@@ -31,6 +31,20 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
 }
 
 /**
+ * @brief Initialises the particles for the first time
+ *
+ * This function is called only once just after the ICs have been
+ * read in to do some conversions.
+ *
+ * @param p The particle to act upon
+ * @param xp The extended particle data to act upon
+ */
+__attribute__((always_inline))
+    INLINE static void hydro_first_init_part(struct part* p, struct xpart* xp) {
+}
+
+
+/**
  * @brief Prepares a particle for the volume calculation.
  *
  * @param p The particle to act upon

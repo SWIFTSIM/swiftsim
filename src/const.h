@@ -67,9 +67,9 @@
 
 /* SPH variant to use */
 //#define MINIMAL_SPH
-#define GADGET2_SPH
+//#define GADGET2_SPH
 //#define DEFAULT_SPH
-//#define GIZMO_HYDRO
+#define GIZMO_HYDRO
 
 /* System of units */
 #define const_unit_length_in_cgs 1   /* 3.08567810e16  /\* 1Mpc *\/ */

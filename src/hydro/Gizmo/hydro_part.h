@@ -56,6 +56,7 @@ struct part {
   float mass;  // MATTHIEU
   float h_dt;
   float rho;
+  float rho_dh;
 
   /* Particle cutoff radius. */
   float h;
