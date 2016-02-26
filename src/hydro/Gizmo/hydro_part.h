@@ -22,6 +22,8 @@
 /* Some standard headers. */
 #include <stdlib.h>
 
+#define GFLOAT float
+
 /* Extra particle data not needed during the computation. */
 struct xpart {
 
