@@ -34,8 +34,11 @@
 #include "./hydro/Default/hydro_iact.h"
 #include "./hydro/Default/hydro.h"
 #define SPH_IMPLEMENTATION "Default version of SPH"
+#elif defined(GIZMO_HYDRO)
+#include "./hydro/Gizmo/hydro_iact.h"
+#include "./hydro/Gizmo/hydro.h"
 #else
-#error "Invalid choice of SPH variant"
+#error "Invalid choice of hydro solver variant"
 #endif
 
 #endif /* SWIFT_HYDRO_H */
