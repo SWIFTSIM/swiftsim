@@ -37,6 +37,7 @@
 #elif defined(GIZMO_HYDRO)
 #include "./hydro/Gizmo/hydro_iact.h"
 #include "./hydro/Gizmo/hydro.h"
+#define SPH_IMPLEMENTATION "'Gizmo' hydrodynamics scheme"
 #else
 #error "Invalid choice of hydro solver variant"
 #endif
