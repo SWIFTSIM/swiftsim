@@ -16,21 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef RIEMANN_H
-#define RIEMANN_H
+#ifndef SWIFT_RIEMANN_H
+#define SWIFT_RIEMANN_H
+
+/* gives us const_hydro_gamma and tells us which floating point type to use */
+#include "const.h"
+#include "math.h"
+#include "stdio.h"
+#include "float.h"
+#include "stdlib.h"
+#include "error.h"
 
 #define HLLC_SOLVER
 
 #ifdef EXACT_SOLVER
-#include "riemann_exact.h"
+#include "riemann/riemann_exact.h"
 #endif
 
 #ifdef TRRS_SOLVER
-#include "riemann_trrs.h"
+#include "riemann/riemann_trrs.h"
 #endif
 
 #ifdef HLLC_SOLVER
-#include "riemann_hllc.h"
+#include "riemann/riemann_hllc.h"
 #endif
 
-#endif  // RIEMANN_H
+#endif /* SWIFT_RIEMANN_H */
