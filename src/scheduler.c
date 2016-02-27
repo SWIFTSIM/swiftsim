@@ -919,11 +919,7 @@ void scheduler_reweight(struct scheduler *s) {
             t->weight += 1 * wscale * t->ci->count * t->ci->count;
           break;
         case task_type_ghost1:
-          if (t->ci == t->ci->super) t->weight += wscale * t->ci->count;
-          break;
         case task_type_ghost2:
-          if (t->ci == t->ci->super) t->weight += wscale * t->ci->count;
-          break;
         case task_type_ghost3:
           if (t->ci == t->ci->super) t->weight += wscale * t->ci->count;
           break;
