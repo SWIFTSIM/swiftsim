@@ -62,10 +62,10 @@ struct part {
   float h;
 
   /* Particle time of beginning of time-step. */
-  float t_begin;
+  int ti_begin;
 
   /* Particle time of end of time-step. */
-  float t_end;
+  int ti_end;
 
   /* The primitive hydrodynamical variables */
   struct {

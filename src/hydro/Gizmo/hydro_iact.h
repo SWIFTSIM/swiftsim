@@ -648,8 +648,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   Wj[2] = pj->primitives.v[1];
   Wj[3] = pj->primitives.v[2];
   Wj[4] = pj->primitives.P;
-  dti = pi->t_end - pi->t_begin;
-  dtj = pj->t_end - pj->t_begin;
+  dti = pi->ti_end - pi->ti_begin; // MATTHIEU
+  dtj = pj->ti_end - pj->ti_begin;
 
   //    if(dti > 1.e-7 || dtj > 1.e-7){
   //        message("Timestep too large: %g %g!", dti, dtj);

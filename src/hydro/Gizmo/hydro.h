@@ -609,13 +609,13 @@ __attribute__((always_inline))
 __attribute__((always_inline))
     INLINE static void hydro_end_density(struct part* p, float time) {}
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
-    struct part* p, struct xpart* xp, float time) {}
+								      struct part* p, struct xpart* xp, int ti_current, double timeBase) {}
 __attribute__((always_inline)) INLINE static void hydro_predict_extra(
-    struct part* p, struct xpart* xp, float t0, float t1) {}
+								      struct part* p, struct xpart* xp, int t0, int t1, double timeBase) {}
 __attribute__((always_inline))
     INLINE static void hydro_end_force(struct part* p) {}
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
-    struct part* p, struct xpart* xp, float dt, float half_dt) {}
+								   struct part* p, struct xpart* xp, float dt, float half_dt) { }
 __attribute__((always_inline))
     INLINE static float hydro_get_internal_energy(struct part* p) {
   return 0.f;
