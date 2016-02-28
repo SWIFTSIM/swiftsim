@@ -110,8 +110,8 @@ void engine_mkghosts(struct engine *e, struct cell *c, struct cell *super) {
     if (c->nodeID == e->nodeID) {
 
       /* Generate the ghost task. */
-      c->ghost1 = scheduler_addtask(s, task_type_ghost1, task_subtype_none, 0, 0,
-				    c, NULL, 0);
+      c->ghost1 = scheduler_addtask(s, task_type_ghost1, task_subtype_none, 0,
+                                    0, c, NULL, 0);
       /* Add the drift task. */
       c->drift = scheduler_addtask(s, task_type_drift, task_subtype_none, 0, 0,
                                    c, NULL, 0);
@@ -1722,7 +1722,7 @@ void engine_init_particles(struct engine *e) {
 
   struct space *s = e->s;
 
-  if(e->nodeID == 0) message("Initialising particles");
+  if (e->nodeID == 0) message("Initialising particles");
 
   /* Make sure all particles are ready to go */
   /* i.e. clean-up any stupid state in the ICs */
@@ -2177,8 +2177,8 @@ void engine_init(struct engine *e, struct space *s, float dt, int nr_threads,
 
       int home = numa_node_of_cpu(sched_getcpu()), half = nr_cores / 2;
       bool done = false, swap_hyperthreads = hyperthreads_present();
-      if (swap_hyperthreads && nodeID == 0) 
-	message("prefer physical cores to hyperthreads");
+      if (swap_hyperthreads && nodeID == 0)
+        message("prefer physical cores to hyperthreads");
 
       while (!done) {
         done = true;
@@ -2275,8 +2275,7 @@ void engine_init(struct engine *e, struct space *s, float dt, int nr_threads,
   engine_print_policy(e);
 
   /* Print information about the hydro scheme */
-  if (e->nodeID == 0)
-    message("Hydrodynamic scheme: %s", SPH_IMPLEMENTATION);
+  if (e->nodeID == 0) message("Hydrodynamic scheme: %s", SPH_IMPLEMENTATION);
 
   /* Deal with timestep */
   e->timeBase = (timeEnd - timeBegin) / max_nr_timesteps;

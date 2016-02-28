@@ -39,6 +39,7 @@ enum task_types {
   task_type_ghost1,
   task_type_ghost2,
   task_type_ghost3,
+  task_type_ghost4,
   task_type_drift,
   task_type_kick,
   task_type_send,
@@ -58,10 +59,12 @@ extern const char *taskID_names[];
 /* The different task sub-types. */
 enum task_subtypes {
   task_subtype_none = 0,
-  task_subtype_hydro_loop1,
-  task_subtype_hydro_loop2,
-  task_subtype_hydro_loop3,
-  task_subtype_hydro_loop4,
+  task_subtype_hydro_gather_loop1,
+  task_subtype_hydro_gather_loop2,
+  task_subtype_hydro_gather_loop3,
+  task_subtype_hydro_symmetric_loop1,
+  task_subtype_hydro_symmetric_loop2,
+  task_subtype_hydro_symmetric_loop3,
   task_subtype_grav,
   task_subtype_count
 };

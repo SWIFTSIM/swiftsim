@@ -68,14 +68,28 @@ const float runner_shift[13 * 3] = {
 const char runner_flip[27] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-/* Import the density loop functions. */
+/* Import the first loop functions. */
 #define FUNCTION hydro_loop1
 #include "runner_doiact.h"
 
-/* Import the force loop functions. */
+/* Import the second loop functions. */
 #undef FUNCTION
 #define FUNCTION hydro_loop2
 #include "runner_doiact.h"
+
+/* Import the third loop functions. */
+#if N_NEIGHBOUR_LOOPS > 2
+#undef FUNCTION
+#define FUNCTION hydro_loop3
+#include "runner_doiact.h"
+#endif
+
+/* Import the third loop functions. */
+#if N_NEIGHBOUR_LOOPS > 3
+#undef FUNCTION
+#define FUNCTION hydro_loop4
+#include "runner_doiact.h"
+#endif
 
 /* Import the gravity loop functions. */
 #include "runner_doiact_grav.h"
@@ -1053,34 +1067,84 @@ void *runner_main(void *data) {
 
       /* Different types of tasks... */
       switch (t->type) {
-        case task_type_self:
-          if (t->subtype == task_subtype_hydro_loop1)
-            runner_doself1_hydro_loop1(r, ci);
-          else if (t->subtype == task_subtype_hydro_loop2)
-            runner_doself2_hydro_loop2(r, ci);
-          else
-            error("Unknown task subtype.");
-          break;
-        case task_type_pair:
-          if (t->subtype == task_subtype_hydro_loop1)
-            runner_dopair1_hydro_loop1(r, ci, cj);
-          else if (t->subtype == task_subtype_hydro_loop2)
-            runner_dopair2_hydro_loop2(r, ci, cj);
-          else
-            error("Unknown task subtype.");
-          break;
         case task_type_sort:
           runner_dosort(r, ci, t->flags, 1);
           break;
+
+        case task_type_self:
+          switch (t->subtype) {
+            case task_subtype_hydro_gather_loop1:
+              runner_doself1_hydro_loop1(r, ci);
+              break;
+            case task_subtype_hydro_gather_loop2:
+              runner_doself1_hydro_loop2(r, ci);
+              break;
+            case task_subtype_hydro_gather_loop3:
+              runner_doself1_hydro_loop3(r, ci);
+              break;
+            case task_subtype_hydro_symmetric_loop1:
+              runner_doself2_hydro_loop1(r, ci);
+              break;
+            case task_subtype_hydro_symmetric_loop2:
+              runner_doself2_hydro_loop2(r, ci);
+              break;
+            case task_subtype_hydro_symmetric_loop3:
+              runner_doself2_hydro_loop3(r, ci);
+              break;
+            default:
+              error("Unknown task subtype.");
+          }
+          break;
+        case task_type_pair:
+          switch (t->subtype) {
+            case task_subtype_hydro_gather_loop1:
+              runner_dopair1_hydro_loop1(r, ci, cj);
+              break;
+            case task_subtype_hydro_gather_loop2:
+              runner_dopair1_hydro_loop2(r, ci, cj);
+              break;
+            case task_subtype_hydro_gather_loop3:
+              runner_dopair1_hydro_loop3(r, ci, cj);
+              break;
+            case task_subtype_hydro_symmetric_loop1:
+              runner_dopair2_hydro_loop1(r, ci, cj);
+              break;
+            case task_subtype_hydro_symmetric_loop2:
+              runner_dopair2_hydro_loop2(r, ci, cj);
+              break;
+            case task_subtype_hydro_symmetric_loop3:
+              runner_dopair2_hydro_loop3(r, ci, cj);
+              break;
+            default:
+              error("Unknown task subtype.");
+          }
+          break;
         case task_type_sub:
-          if (t->subtype == task_subtype_hydro_loop1)
-            runner_dosub1_hydro_loop1(r, ci, cj, t->flags, 1);
-          else if (t->subtype == task_subtype_hydro_loop2)
-            runner_dosub2_hydro_loop2(r, ci, cj, t->flags, 1);
-          else if (t->subtype == task_subtype_grav)
-            runner_dosub_grav(r, ci, cj, 1);
-          else
-            error("Unknown task subtype.");
+          switch (t->subtype) {
+            case task_subtype_hydro_gather_loop1:
+              runner_dosub1_hydro_loop1(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_hydro_gather_loop2:
+              runner_dosub1_hydro_loop2(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_hydro_gather_loop3:
+              runner_dosub1_hydro_loop3(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_hydro_symmetric_loop1:
+              runner_dosub2_hydro_loop1(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_hydro_symmetric_loop2:
+              runner_dosub2_hydro_loop2(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_hydro_symmetric_loop3:
+              runner_dosub2_hydro_loop3(r, ci, cj, t->flags, 1);
+              break;
+            case task_subtype_grav:
+              runner_dosub_grav(r, ci, cj, 1);
+              break;
+            default:
+              error("Unknown task subtype.");
+          }
           break;
         case task_type_init:
           runner_doinit(r, ci, 1);
@@ -1094,7 +1158,7 @@ void *runner_main(void *data) {
         case task_type_ghost3:
           runner_doghost3(r, ci);
           break;
-      case task_type_drift:
+        case task_type_drift:
           runner_dodrift(r, ci, 1);
           break;
         case task_type_kick:

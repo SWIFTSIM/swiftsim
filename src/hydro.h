@@ -23,23 +23,43 @@
 
 /* Import the right functions */
 #if defined(MINIMAL_SPH)
+
 #include "./hydro/Minimal/hydro_iact.h"
 #include "./hydro/Minimal/hydro.h"
 #define SPH_IMPLEMENTATION "Minimal version of SPH (e.g. Price 2010)"
+#define N_GATHER_LOOPS 1
+#define N_SYMMETRIC_LOOPS 1
+
 #elif defined(GADGET2_SPH)
+
 #include "./hydro/Gadget2/hydro_iact.h"
 #include "./hydro/Gadget2/hydro.h"
 #define SPH_IMPLEMENTATION "Gadget-2 version of SPH (Springel 2005)"
+#define N_GATHER_LOOPS 1
+#define N_SYMMETRIC_LOOPS 1
+
 #elif defined(DEFAULT_SPH)
+
 #include "./hydro/Default/hydro_iact.h"
 #include "./hydro/Default/hydro.h"
 #define SPH_IMPLEMENTATION "Default version of SPH"
+#define N_GATHER_LOOPS 1
+#define N_SYMMETRIC_LOOPS 1
+
 #elif defined(GIZMO_HYDRO)
+
 #include "./hydro/Gizmo/hydro_iact.h"
 #include "./hydro/Gizmo/hydro.h"
-#define SPH_IMPLEMENTATION "'Gizmo' hydrodynamics scheme (Lanson & Vila 2008, Hopkins 2015)"
+#define SPH_IMPLEMENTATION \
+  "'Gizmo' hydrodynamics scheme (Lanson & Vila 2008, Hopkins 2015)"
+#define N_GATHER_LOOPS 2
+#define N_SYMMETRIC_LOOPS 1
+
 #else
 #error "Invalid choice of hydro solver variant"
 #endif
+
+#define N_NEIGHBOUR_LOOPS (N_GATHER_LOOPS + N_SYMMETRIC_LOOPS)
+#define N_GHOST_LOOPS (N_NEIGHBOUR_LOOPS - 1)
 
 #endif /* SWIFT_HYDRO_H */

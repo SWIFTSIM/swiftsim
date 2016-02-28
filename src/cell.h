@@ -20,9 +20,12 @@
 #define SWIFT_CELL_H
 
 /* Includes. */
+#include "const.h"
+#include "inline.h"
 #include "lock.h"
 #include "multipole.h"
 #include "part.h"
+#include "hydro.h"
 
 /* Forward declaration of space, needed for cell_unpack. */
 struct space;
@@ -114,7 +117,7 @@ struct cell {
   int nr_density, nr_force, nr_grav;
 
   /* The ghosts task to link the different loops. */
-  struct task *ghost1, *ghost2, *ghost3;
+  struct task *ghost[N_GHOST_LOOPS];
 
   /* The initialisation, kick and drift tasks. */
   struct task *init, *drift, *kick;
