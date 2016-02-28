@@ -1155,9 +1155,6 @@ void *runner_main(void *data) {
         case task_type_ghost2:
           runner_doghost2(r, ci);
           break;
-        case task_type_ghost3:
-          runner_doghost3(r, ci);
-          break;
         case task_type_drift:
           runner_dodrift(r, ci, 1);
           break;

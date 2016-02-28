@@ -920,7 +920,6 @@ void scheduler_reweight(struct scheduler *s) {
           break;
         case task_type_ghost1:
         case task_type_ghost2:
-        case task_type_ghost3:
           if (t->ci == t->ci->super) t->weight += wscale * t->ci->count;
           break;
         case task_type_kick:
@@ -1081,7 +1080,6 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
       case task_type_sort:
       case task_type_ghost1:
       case task_type_ghost2:
-      case task_type_ghost3:
       case task_type_kick:
       case task_type_drift:
       case task_type_init:
