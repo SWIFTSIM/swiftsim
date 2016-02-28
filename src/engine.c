@@ -109,9 +109,10 @@ void engine_mkghosts(struct engine *e, struct cell *c, struct cell *super) {
     /* Local tasks only... */
     if (c->nodeID == e->nodeID) {
 
-      /* Generate the ghost task. */
-      c->ghost1 = scheduler_addtask(s, task_type_ghost1, task_subtype_none, 0,
-                                    0, c, NULL, 0);
+      /* Generate the ghost tasks. */
+      for (int nghost = 0; nghost < N_GHOST_LOOPS; ++nghost)
+        c->ghost[nghost] = scheduler_addtask(
+            s, task_type_ghost1, task_subtype_none, 0, 0, c, NULL, 0);
       /* Add the drift task. */
       c->drift = scheduler_addtask(s, task_type_drift, task_subtype_none, 0, 0,
                                    c, NULL, 0);
@@ -1075,8 +1076,8 @@ void engine_maketasks(struct engine *e) {
         ci = &cells[cid];
         if (ci->count == 0) continue;
         if (ci->nodeID == nodeID)
-          scheduler_addtask(sched, task_type_self, task_subtype_hydro_loop1, 0,
-                            0, ci, NULL, 0);
+          scheduler_addtask(sched, task_type_self,
+                            task_subtype_hydro_gather_loop1, 0, 0, ci, NULL, 0);
         for (ii = -1; ii < 2; ii++) {
           iii = i + ii;
           if (!s->periodic && (iii < 0 || iii >= cdim[0])) continue;
@@ -1095,8 +1096,9 @@ void engine_maketasks(struct engine *e) {
                   (ci->nodeID != nodeID && cj->nodeID != nodeID))
                 continue;
               sid = sortlistID[(kk + 1) + 3 * ((jj + 1) + 3 * (ii + 1))];
-              scheduler_addtask(sched, task_type_pair, task_subtype_hydro_loop1,
-                                sid, 0, ci, cj, 1);
+              scheduler_addtask(sched, task_type_pair,
+                                task_subtype_hydro_gather_loop1, sid, 0, ci, cj,
+                                1);
             }
           }
         }
@@ -1161,14 +1163,14 @@ void engine_maketasks(struct engine *e) {
     /* Link density tasks to cells. */
     if (t->type == task_type_self) {
       atomic_inc(&t->ci->nr_tasks);
-      if (t->subtype == task_subtype_hydro_loop1) {
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
         t->ci->density = engine_addlink(e, t->ci->density, t);
         atomic_inc(&t->ci->nr_density);
       }
     } else if (t->type == task_type_pair) {
       atomic_inc(&t->ci->nr_tasks);
       atomic_inc(&t->cj->nr_tasks);
-      if (t->subtype == task_subtype_hydro_loop1) {
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
         t->ci->density = engine_addlink(e, t->ci->density, t);
         atomic_inc(&t->ci->nr_density);
         t->cj->density = engine_addlink(e, t->cj->density, t);
@@ -1177,7 +1179,7 @@ void engine_maketasks(struct engine *e) {
     } else if (t->type == task_type_sub) {
       atomic_inc(&t->ci->nr_tasks);
       if (t->cj != NULL) atomic_inc(&t->cj->nr_tasks);
-      if (t->subtype == task_subtype_hydro_loop1) {
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
         t->ci->density = engine_addlink(e, t->ci->density, t);
         atomic_inc(&t->ci->nr_density);
         if (t->cj != NULL) {
@@ -1217,10 +1219,10 @@ void engine_maketasks(struct engine *e) {
     if (t->skip) continue;
 
     /* Self-interaction? */
-    if (t->type == task_type_self && t->subtype == task_subtype_hydro_loop1) {
+    if (t->type == task_type_self && t->subtype == task_subtype_hydro_gather_loop1) {
       scheduler_addunlock(sched, t->ci->super->init, t);
       scheduler_addunlock(sched, t, t->ci->super->ghost1);
-      t2 = scheduler_addtask(sched, task_type_self, task_subtype_hydro_loop2, 0,
+      t2 = scheduler_addtask(sched, task_type_self, task_subtype_hydro_symmetric_loop2, 0,
                              0, t->ci, NULL, 0);
       scheduler_addunlock(sched, t->ci->super->ghost1, t2);
       scheduler_addunlock(sched, t2, t->ci->super->kick);
@@ -1231,7 +1233,7 @@ void engine_maketasks(struct engine *e) {
     /* Otherwise, pair interaction? */
     else if (t->type == task_type_pair &&
              t->subtype == task_subtype_hydro_loop1) {
-      t2 = scheduler_addtask(sched, task_type_pair, task_subtype_hydro_loop2, 0,
+      t2 = scheduler_addtask(sched, task_type_pair, task_subtype_hydro_symmetric_loop2, 0,
                              0, t->ci, t->cj, 0);
       if (t->ci->nodeID == nodeID) {
         scheduler_addunlock(sched, t->ci->super->init, t);
@@ -1753,7 +1755,12 @@ void engine_init_particles(struct engine *e) {
     mask |= 1 << task_type_sub;
     mask |= 1 << task_type_ghost1;
 
-    submask |= 1 << task_subtype_hydro_loop1;
+    submask |= 1 << task_subtype_hydro_gather_loop1;
+
+    /* Additional pre-loops for the more advanced hydro schemes */
+#if N_GATHER_LOOP > 1
+    submask |= 1 << task_subtype_hydro_gather_loop2;
+#endif
   }
 
   /* Add the tasks corresponding to self-gravity to the masks */
@@ -1918,8 +1925,16 @@ void engine_step(struct engine *e) {
     mask |= 1 << task_type_sub;
     mask |= 1 << task_type_ghost1;
 
-    submask |= 1 << task_subtype_hydro_loop1;
-    submask |= 1 << task_subtype_hydro_loop2;
+    /* Additional pre-loops for the more advanced hydro schemes */
+#if N_GATHER_LOOP == 1
+    submask |= 1 << task_subtype_hydro_gather_loop1;
+    submask |= 1 << task_subtype_hydro_symmetric_loop2;
+#elif N_GATHER_LOOP == 2
+    submask |= 1 << task_subtype_hydro_gather_loop1;
+    submask |= 1 << task_subtype_hydro_gather_loop2;
+    submask |= 1 << task_subtype_hydro_symmetric_loop3;
+#endif
+
   }
 
   /* Add the tasks corresponding to self-gravity to the masks */
