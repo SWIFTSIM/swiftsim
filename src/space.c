@@ -275,10 +275,12 @@ void space_regrid(struct space *s, double cell_max, int verbose) {
       space_rebuild_recycle(s, &s->cells[k]);
       s->cells[k].sorts = NULL;
       s->cells[k].nr_tasks = 0;
-      s->cells[k].nr_density = 0;
-      s->cells[k].nr_force = 0;
-      s->cells[k].density = NULL;
-      s->cells[k].force = NULL;
+      for (int nloops = 0; nloops < N_NEIGHBOUR_LOOPS; ++nloops) {
+	s->cells[k].nr_hydro_links[nloops] = 0;
+	s->cells[k].hydro_links[nloops] = NULL;
+      }
+      s->cells[k].nr_grav = 0;
+      s->cells[k].grav = NULL;
       s->cells[k].dx_max = 0.0f;
       s->cells[k].sorted = 0;
       s->cells[k].count = 0;

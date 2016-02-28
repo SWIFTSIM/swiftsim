@@ -112,9 +112,13 @@ struct cell {
   struct task *sorts, *gsorts;
   int sortsize, gsortsize;
 
-  /* The tasks computing this cell's density. */
-  struct link *density, *force, *grav;
-  int nr_density, nr_force, nr_grav;
+  /* The links used to compute this cell's hydro loops. */
+  struct link *hydro_links[N_NEIGHBOUR_LOOPS];
+  int nr_hydro_links[N_NEIGHBOUR_LOOPS];
+
+  /* The links used to compute this cell's gravity tasks. */
+  struct link *grav;
+  int nr_grav;
 
   /* The ghosts task to link the different loops. */
   struct task *ghost[N_GHOST_LOOPS];

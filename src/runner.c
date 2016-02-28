@@ -84,13 +84,6 @@ const char runner_flip[27] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
 #include "runner_doiact.h"
 #endif
 
-/* Import the third loop functions. */
-#if N_NEIGHBOUR_LOOPS > 3
-#undef FUNCTION
-#define FUNCTION hydro_loop4
-#include "runner_doiact.h"
-#endif
-
 /* Import the gravity loop functions. */
 #include "runner_doiact_grav.h"
 
@@ -655,7 +648,7 @@ void runner_doghost1(struct runner *r, struct cell *c) {
       for (finger = c; finger != NULL; finger = finger->parent) {
 
         /* Run through this cell's density interactions. */
-        for (struct link *l = finger->density; l != NULL; l = l->next) {
+        for (struct link *l = finger->hydro_links[0]; l != NULL; l = l->next) {
 
           /* Self-interaction? */
           if (l->t->type == task_type_self)

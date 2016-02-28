@@ -596,9 +596,11 @@ void cell_convert_hydro(struct cell *c, void *data) {
  * @param data Unused parameter
  */
 void cell_clean_links(struct cell *c, void *data) {
-  c->density = NULL;
-  c->nr_density = 0;
 
-  c->force = NULL;
-  c->nr_force = 0;
+  for (int nloops = 0; nloops < N_NEIGHBOUR_LOOPS; ++nloops) {
+    c->nr_hydro_links[nloops] = 0;
+    c->hydro_links[nloops] = NULL;
+  }
+  c->nr_grav = 0;
+  c->grav = NULL;
 }

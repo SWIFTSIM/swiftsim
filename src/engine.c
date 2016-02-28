@@ -1120,9 +1120,9 @@ void engine_maketasks(struct engine *e) {
 
   /* Allocate the list of cell-task links. The maximum number of links
      is the number of cells (s->tot_cells) times the number of neighbours (27)
-     times the number of interaction types (2, density and force). */
+     times the number of interaction types (N_NEIGHBOUR_LOOPS). */
   if (e->links != NULL) free(e->links);
-  e->size_links = s->tot_cells * 27 * 2;
+  e->size_links = s->tot_cells * 27 * N_NEIGHBOUR_LOOPS;
   if ((e->links = malloc(sizeof(struct link) * e->size_links)) == NULL)
     error("Failed to allocate cell-task links.");
   e->nr_links = 0;
@@ -1160,7 +1160,7 @@ void engine_maketasks(struct engine *e) {
           scheduler_addunlock(sched, t->ci->progeny[j]->sorts, t);
         }
 
-    /* Link density tasks to cells. */
+    /* Link first pre-loop tasks to cells. */
     if (t->type == task_type_self) {
       atomic_inc(&t->ci->nr_tasks);
       if (t->subtype == task_subtype_hydro_gather_loop1) {
