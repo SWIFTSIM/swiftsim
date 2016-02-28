@@ -1079,18 +1079,22 @@ void *runner_main(void *data) {
             case task_subtype_hydro_gather_loop2:
               runner_doself1_hydro_loop2(r, ci);
               break;
+#if N_NEIGHBOUR_LOOPS > 2
             case task_subtype_hydro_gather_loop3:
               runner_doself1_hydro_loop3(r, ci);
               break;
+#endif
             case task_subtype_hydro_symmetric_loop1:
               runner_doself2_hydro_loop1(r, ci);
               break;
             case task_subtype_hydro_symmetric_loop2:
               runner_doself2_hydro_loop2(r, ci);
               break;
+#if N_NEIGHBOUR_LOOPS > 2
             case task_subtype_hydro_symmetric_loop3:
               runner_doself2_hydro_loop3(r, ci);
               break;
+#endif
             default:
               error("Unknown task subtype.");
           }
@@ -1103,18 +1107,22 @@ void *runner_main(void *data) {
             case task_subtype_hydro_gather_loop2:
               runner_dopair1_hydro_loop2(r, ci, cj);
               break;
-            case task_subtype_hydro_gather_loop3:
+#if N_NEIGHBOUR_LOOPS > 2
+   	     case task_subtype_hydro_gather_loop3:
               runner_dopair1_hydro_loop3(r, ci, cj);
               break;
+#endif
             case task_subtype_hydro_symmetric_loop1:
               runner_dopair2_hydro_loop1(r, ci, cj);
               break;
             case task_subtype_hydro_symmetric_loop2:
               runner_dopair2_hydro_loop2(r, ci, cj);
               break;
+#if N_NEIGHBOUR_LOOPS > 2
             case task_subtype_hydro_symmetric_loop3:
               runner_dopair2_hydro_loop3(r, ci, cj);
               break;
+#endif
             default:
               error("Unknown task subtype.");
           }
@@ -1127,18 +1135,22 @@ void *runner_main(void *data) {
             case task_subtype_hydro_gather_loop2:
               runner_dosub1_hydro_loop2(r, ci, cj, t->flags, 1);
               break;
-            case task_subtype_hydro_gather_loop3:
+#if N_NEIGHBOUR_LOOPS > 2
+  	    case task_subtype_hydro_gather_loop3:
               runner_dosub1_hydro_loop3(r, ci, cj, t->flags, 1);
               break;
+#endif
             case task_subtype_hydro_symmetric_loop1:
               runner_dosub2_hydro_loop1(r, ci, cj, t->flags, 1);
               break;
             case task_subtype_hydro_symmetric_loop2:
               runner_dosub2_hydro_loop2(r, ci, cj, t->flags, 1);
               break;
+#if N_NEIGHBOUR_LOOPS > 2
             case task_subtype_hydro_symmetric_loop3:
               runner_dosub2_hydro_loop3(r, ci, cj, t->flags, 1);
               break;
+#endif
             case task_subtype_grav:
               runner_dosub_grav(r, ci, cj, 1);
               break;
