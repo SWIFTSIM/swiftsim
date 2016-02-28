@@ -276,8 +276,8 @@ void space_regrid(struct space *s, double cell_max, int verbose) {
       s->cells[k].sorts = NULL;
       s->cells[k].nr_tasks = 0;
       for (int nloops = 0; nloops < N_NEIGHBOUR_LOOPS; ++nloops) {
-	s->cells[k].nr_hydro_links[nloops] = 0;
-	s->cells[k].hydro_links[nloops] = NULL;
+        s->cells[k].nr_hydro_links[nloops] = 0;
+        s->cells[k].hydro_links[nloops] = NULL;
       }
       s->cells[k].nr_grav = 0;
       s->cells[k].grav = NULL;

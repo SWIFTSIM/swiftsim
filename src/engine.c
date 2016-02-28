@@ -1219,11 +1219,13 @@ void engine_maketasks(struct engine *e) {
     if (t->skip) continue;
 
     /* Self-interaction? */
-    if (t->type == task_type_self && t->subtype == task_subtype_hydro_gather_loop1) {
+    if (t->type == task_type_self &&
+        t->subtype == task_subtype_hydro_gather_loop1) {
       scheduler_addunlock(sched, t->ci->super->init, t);
       scheduler_addunlock(sched, t, t->ci->super->ghost1);
-      t2 = scheduler_addtask(sched, task_type_self, task_subtype_hydro_symmetric_loop2, 0,
-                             0, t->ci, NULL, 0);
+      t2 = scheduler_addtask(sched, task_type_self,
+                             task_subtype_hydro_symmetric_loop2, 0, 0, t->ci,
+                             NULL, 0);
       scheduler_addunlock(sched, t->ci->super->ghost1, t2);
       scheduler_addunlock(sched, t2, t->ci->super->kick);
       t->ci->force = engine_addlink(e, t->ci->force, t2);
@@ -1233,8 +1235,9 @@ void engine_maketasks(struct engine *e) {
     /* Otherwise, pair interaction? */
     else if (t->type == task_type_pair &&
              t->subtype == task_subtype_hydro_loop1) {
-      t2 = scheduler_addtask(sched, task_type_pair, task_subtype_hydro_symmetric_loop2, 0,
-                             0, t->ci, t->cj, 0);
+      t2 = scheduler_addtask(sched, task_type_pair,
+                             task_subtype_hydro_symmetric_loop2, 0, 0, t->ci,
+                             t->cj, 0);
       if (t->ci->nodeID == nodeID) {
         scheduler_addunlock(sched, t->ci->super->init, t);
         scheduler_addunlock(sched, t, t->ci->super->ghost1);
@@ -1757,7 +1760,7 @@ void engine_init_particles(struct engine *e) {
 
     submask |= 1 << task_subtype_hydro_gather_loop1;
 
-    /* Additional pre-loops for the more advanced hydro schemes */
+/* Additional pre-loops for the more advanced hydro schemes */
 #if N_GATHER_LOOP > 1
     submask |= 1 << task_subtype_hydro_gather_loop2;
 #endif
@@ -1925,7 +1928,7 @@ void engine_step(struct engine *e) {
     mask |= 1 << task_type_sub;
     mask |= 1 << task_type_ghost1;
 
-    /* Additional pre-loops for the more advanced hydro schemes */
+/* Additional pre-loops for the more advanced hydro schemes */
 #if N_GATHER_LOOP == 1
     submask |= 1 << task_subtype_hydro_gather_loop1;
     submask |= 1 << task_subtype_hydro_symmetric_loop2;
@@ -1934,7 +1937,6 @@ void engine_step(struct engine *e) {
     submask |= 1 << task_subtype_hydro_gather_loop2;
     submask |= 1 << task_subtype_hydro_symmetric_loop3;
 #endif
-
   }
 
   /* Add the tasks corresponding to self-gravity to the masks */

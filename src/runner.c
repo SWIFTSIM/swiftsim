@@ -1101,7 +1101,7 @@ void *runner_main(void *data) {
               runner_dopair1_hydro_loop2(r, ci, cj);
               break;
 #if N_NEIGHBOUR_LOOPS > 2
-   	     case task_subtype_hydro_gather_loop3:
+            case task_subtype_hydro_gather_loop3:
               runner_dopair1_hydro_loop3(r, ci, cj);
               break;
 #endif
@@ -1129,7 +1129,7 @@ void *runner_main(void *data) {
               runner_dosub1_hydro_loop2(r, ci, cj, t->flags, 1);
               break;
 #if N_NEIGHBOUR_LOOPS > 2
-  	    case task_subtype_hydro_gather_loop3:
+            case task_subtype_hydro_gather_loop3:
               runner_dosub1_hydro_loop3(r, ci, cj, t->flags, 1);
               break;
 #endif
