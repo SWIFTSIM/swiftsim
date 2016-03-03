@@ -1090,160 +1090,12 @@ void engine_make_hydroloop_tasks(struct engine *e) {
   }
 }
 
-void engine_make_gravityinteraction_tasks(struct engine *e) {
+void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
-  struct space *s = e->s;
-  struct scheduler *sched = &e->sched;
-  const int nr_cells = s->nr_cells;
-  struct cell *cells = s->cells;
-
-  for (int i = 0; i < nr_cells; i++)
-    if (cells[i].gcount > 0) {
-      scheduler_addtask(sched, task_type_grav_mm, task_subtype_none, -1, 0,
-                        &cells[i], NULL, 0);
-      for (int j = i + 1; j < nr_cells; j++)
-        if (cells[j].gcount > 0)
-          scheduler_addtask(sched, task_type_grav_mm, task_subtype_none, -1, 0,
-                            &cells[i], &cells[j], 0);
-    }
-}
-
-void engine_make_gravityrecursive_tasks(struct engine *e) {
-
-  struct space *s = e->s;
   struct scheduler *sched = &e->sched;
   const int nodeID = e->nodeID;
-  const int nr_cells = s->nr_cells;
-  struct cell *cells = s->cells;
-
-  for (int i = 0; i < nr_cells; i++)
-    if (cells[i].nodeID == nodeID && cells[i].gcount > 0) {
-
-      /* Create tasks at top level. */
-      struct task *up =
-          scheduler_addtask(sched, task_type_grav_up, task_subtype_none, 0, 0,
-                            &cells[i], NULL, 0);
-      struct task *down =
-          scheduler_addtask(sched, task_type_grav_down, task_subtype_none, 0, 0,
-                            &cells[i], NULL, 0);
-
-      /* Push tasks down the cell hierarchy. */
-      engine_addtasks_grav(e, &cells[i], up, down);
-    }
-}
-
-/**
- * @brief Fill the #space's task list.
- *
- * @param e The #engine we are working with.
- */
-
-void engine_maketasks(struct engine *e) {
-
-  struct space *s = e->s;
-  struct scheduler *sched = &e->sched;
-  const int nodeID = e->nodeID;
-  const int nr_cells = s->nr_cells;
-  struct cell *cells = s->cells;
-
-  /* Re-set the scheduler. */
-  scheduler_reset(sched, s->tot_cells * engine_maxtaskspercell);
-
-  /* Add the space sorting tasks. */
-  for (int i = 0; i < e->nr_threads; i++)
-    scheduler_addtask(sched, task_type_psort, task_subtype_none, i, 0, NULL,
-                      NULL, 0);
-
-  /* Construct the first hydro loop over neighbours */
-  engine_make_hydroloop_tasks(e);
-
-  /* Add the gravity mm tasks. */
-  engine_make_gravityinteraction_tasks(e);
-
-  /* Split the tasks. */
-  scheduler_splittasks(sched);
-
-  /* Allocate the list of cell-task links. The maximum number of links
-     is the number of cells (s->tot_cells) times the number of neighbours (27)
-     times the number of interaction types (N_NEIGHBOUR_LOOPS). */
-  if (e->links != NULL) free(e->links);
-  e->size_links = s->tot_cells * 27 * N_NEIGHBOUR_LOOPS;
-  if ((e->links = malloc(sizeof(struct link) * e->size_links)) == NULL)
-    error("Failed to allocate cell-task links.");
-  e->nr_links = 0;
-
-  /* Add the gravity up/down tasks at the top-level cells and push them down. */
-  engine_make_gravityrecursive_tasks(e);
-
-  /* Count the number of tasks associated with each cell and
-     store the density tasks in each cell, and make each sort
-     depend on the sorts of its progeny. */
-  for (int k = 0; k < sched->nr_tasks; k++) {
-
-    /* Get the current task. */
-    struct task *t = &sched->tasks[k];
-    if (t->skip) continue;
-
-    /* Link sort tasks together. */
-    if (t->type == task_type_sort && t->ci->split) {
-      for (int j = 0; j < 8; j++)
-        if (t->ci->progeny[j] != NULL && t->ci->progeny[j]->sorts != NULL) {
-          t->ci->progeny[j]->sorts->skip = 0;
-          scheduler_addunlock(sched, t->ci->progeny[j]->sorts, t);
-        }
-    }
-
-    /* Link first pre-loop tasks to cells. */
-    if (t->type == task_type_self) {
-      atomic_inc(&t->ci->nr_tasks);
-      if (t->subtype == task_subtype_hydro_gather_loop1) {
-        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
-        atomic_inc(&t->ci->nr_hydro_links[0]);
-      }
-    } else if (t->type == task_type_pair) {
-      atomic_inc(&t->ci->nr_tasks);
-      atomic_inc(&t->cj->nr_tasks);
-      if (t->subtype == task_subtype_hydro_gather_loop1) {
-        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
-        atomic_inc(&t->ci->nr_hydro_links[0]);
-        t->cj->hydro_links[0] = engine_addlink(e, t->cj->hydro_links[0], t);
-        atomic_inc(&t->cj->nr_hydro_links[0]);
-      }
-    } else if (t->type == task_type_sub) {
-      atomic_inc(&t->ci->nr_tasks);
-      if (t->cj != NULL) atomic_inc(&t->cj->nr_tasks);
-      if (t->subtype == task_subtype_hydro_gather_loop1) {
-        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
-        atomic_inc(&t->ci->nr_hydro_links[0]);
-        if (t->cj != NULL) {
-          t->cj->hydro_links[0] = engine_addlink(e, t->cj->hydro_links[0], t);
-          atomic_inc(&t->cj->nr_hydro_links[0]);
-        }
-      }
-    }
-
-    /* Link gravity multipole tasks to the up/down tasks. */
-    if (t->type == task_type_grav_mm ||
-        (t->type == task_type_sub && t->subtype == task_subtype_grav)) {
-      atomic_inc(&t->ci->nr_tasks);
-      scheduler_addunlock(sched, t->ci->grav_up, t);
-      scheduler_addunlock(sched, t, t->ci->grav_down);
-      if (t->cj != NULL && t->ci->grav_up != t->cj->grav_up) {
-        scheduler_addunlock(sched, t->cj->grav_up, t);
-        scheduler_addunlock(sched, t, t->cj->grav_down);
-      }
-    }
-  }
-
-  /* Append a ghost task to each cell, and add kick tasks to the
-     super cells. */
-  for (int k = 0; k < nr_cells; k++) engine_mkghosts(e, &cells[k], NULL);
-
-  /* Run through the tasks and make construct the additional neighobur loop
-     tasks.
-     Each loop task depends on the cell ghosts and unlocks the next one or the
-     final kick */
   const int nr_tasks = sched->nr_tasks;
+
   for (int k = 0; k < nr_tasks; k++) {
 
     /* Get a pointer to the task. */
@@ -1256,11 +1108,11 @@ void engine_maketasks(struct engine *e) {
     if (t->type == task_type_self &&
         t->subtype == task_subtype_hydro_gather_loop1) {
 
-      /* Create the new neighbour loop tasks */
+/* Create the new neighbour loop tasks */
 #if N_NEIGHBOUR_LOOPS > 2
       struct task *t2 = scheduler_addtask(sched, task_type_self,
-                                          task_subtype_hydro_gather_loop2, 0,
-                                          0, t->ci, NULL, 0);
+                                          task_subtype_hydro_gather_loop2, 0, 0,
+                                          t->ci, NULL, 0);
       struct task *t3 = scheduler_addtask(sched, task_type_self,
                                           task_subtype_hydro_symmetric_loop3, 0,
                                           0, t->ci, NULL, 0);
@@ -1295,11 +1147,11 @@ void engine_maketasks(struct engine *e) {
     else if (t->type == task_type_pair &&
              t->subtype == task_subtype_hydro_gather_loop1) {
 
-      /* Create the new neighbour loop tasks */
+/* Create the new neighbour loop tasks */
 #if N_NEIGHBOUR_LOOPS > 2
       struct task *t2 = scheduler_addtask(sched, task_type_pair,
-                                          task_subtype_hydro_gather_loop2, 0,
-                                          0, t->ci, t->cj, 0);
+                                          task_subtype_hydro_gather_loop2, 0, 0,
+                                          t->ci, t->cj, 0);
       struct task *t3 = scheduler_addtask(sched, task_type_pair,
                                           task_subtype_hydro_symmetric_loop3, 0,
                                           0, t->ci, t->cj, 0);
@@ -1315,9 +1167,9 @@ void engine_maketasks(struct engine *e) {
         scheduler_addunlock(sched, t, t->ci->super->ghost[0]);
         scheduler_addunlock(sched, t->ci->super->ghost[0], t2);
 #if N_NEIGHBOUR_LOOPS > 2
-	scheduler_addunlock(sched, t2, t->ci->super->ghost[1]);
-	scheduler_addunlock(sched, t->ci->super->ghost[1], t3);
-	scheduler_addunlock(sched, t3, t->ci->super->kick);
+        scheduler_addunlock(sched, t2, t->ci->super->ghost[1]);
+        scheduler_addunlock(sched, t->ci->super->ghost[1], t3);
+        scheduler_addunlock(sched, t3, t->ci->super->kick);
 #else
         scheduler_addunlock(sched, t2, t->ci->super->kick);
 #endif
@@ -1327,9 +1179,9 @@ void engine_maketasks(struct engine *e) {
         scheduler_addunlock(sched, t, t->cj->super->ghost[0]);
         scheduler_addunlock(sched, t->cj->super->ghost[0], t2);
 #if N_NEIGHBOUR_LOOPS > 2
-	scheduler_addunlock(sched, t2, t->cj->super->ghost[1]);
-	scheduler_addunlock(sched, t->cj->super->ghost[1], t3);
-	scheduler_addunlock(sched, t3, t->cj->super->kick);
+        scheduler_addunlock(sched, t2, t->cj->super->ghost[1]);
+        scheduler_addunlock(sched, t->cj->super->ghost[1], t3);
+        scheduler_addunlock(sched, t3, t->cj->super->kick);
 #else
         scheduler_addunlock(sched, t2, t->cj->super->kick);
 #endif
@@ -1345,18 +1197,18 @@ void engine_maketasks(struct engine *e) {
       atomic_inc(&t->ci->nr_hydro_links[2]);
       t->cj->hydro_links[2] = engine_addlink(e, t->cj->hydro_links[2], t3);
       atomic_inc(&t->cj->nr_hydro_links[2]);
-#endif      
+#endif
     }
 
     /* Otherwise, sub interaction? */
     else if (t->type == task_type_sub &&
              t->subtype == task_subtype_hydro_gather_loop1) {
 
-      /* Create the new neighbour loop tasks */
+/* Create the new neighbour loop tasks */
 #if N_NEIGHBOUR_LOOPS > 2
       struct task *t2 = scheduler_addtask(sched, task_type_sub,
-                                          task_subtype_hydro_gather_loop2, 0,
-                                          0, t->ci, t->cj, 0);
+                                          task_subtype_hydro_gather_loop2, 0, 0,
+                                          t->ci, t->cj, 0);
       struct task *t3 = scheduler_addtask(sched, task_type_sub,
                                           task_subtype_hydro_symmetric_loop3, 0,
                                           0, t->ci, t->cj, 0);
@@ -1412,6 +1264,168 @@ void engine_maketasks(struct engine *e) {
     /* else if (t->type == task_type_kick && t->ci->grav_down != NULL) */
     /*   scheduler_addunlock(sched, t->ci->grav_down, t); */
   }
+}
+
+void engine_count_and_link_tasks(struct engine *e) {
+
+  struct scheduler *sched = &e->sched;
+  const int nr_tasks = sched->nr_tasks;
+
+  for (int k = 0; k < nr_tasks; k++) {
+
+    /* Get the current task. */
+    struct task *t = &sched->tasks[k];
+    if (t->skip) continue;
+
+    /* Link sort tasks together. */
+    if (t->type == task_type_sort && t->ci->split) {
+      for (int j = 0; j < 8; j++)
+        if (t->ci->progeny[j] != NULL && t->ci->progeny[j]->sorts != NULL) {
+          t->ci->progeny[j]->sorts->skip = 0;
+          scheduler_addunlock(sched, t->ci->progeny[j]->sorts, t);
+        }
+    }
+
+    /* Link first pre-loop tasks to cells. */
+    if (t->type == task_type_self) {
+      atomic_inc(&t->ci->nr_tasks);
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
+        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
+        atomic_inc(&t->ci->nr_hydro_links[0]);
+      }
+    } else if (t->type == task_type_pair) {
+      atomic_inc(&t->ci->nr_tasks);
+      atomic_inc(&t->cj->nr_tasks);
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
+        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
+        atomic_inc(&t->ci->nr_hydro_links[0]);
+        t->cj->hydro_links[0] = engine_addlink(e, t->cj->hydro_links[0], t);
+        atomic_inc(&t->cj->nr_hydro_links[0]);
+      }
+    } else if (t->type == task_type_sub) {
+      atomic_inc(&t->ci->nr_tasks);
+      if (t->cj != NULL) atomic_inc(&t->cj->nr_tasks);
+      if (t->subtype == task_subtype_hydro_gather_loop1) {
+        t->ci->hydro_links[0] = engine_addlink(e, t->ci->hydro_links[0], t);
+        atomic_inc(&t->ci->nr_hydro_links[0]);
+        if (t->cj != NULL) {
+          t->cj->hydro_links[0] = engine_addlink(e, t->cj->hydro_links[0], t);
+          atomic_inc(&t->cj->nr_hydro_links[0]);
+        }
+      }
+    }
+
+    /* Link gravity multipole tasks to the up/down tasks. */
+    if (t->type == task_type_grav_mm ||
+        (t->type == task_type_sub && t->subtype == task_subtype_grav)) {
+      atomic_inc(&t->ci->nr_tasks);
+      scheduler_addunlock(sched, t->ci->grav_up, t);
+      scheduler_addunlock(sched, t, t->ci->grav_down);
+      if (t->cj != NULL && t->ci->grav_up != t->cj->grav_up) {
+        scheduler_addunlock(sched, t->cj->grav_up, t);
+        scheduler_addunlock(sched, t, t->cj->grav_down);
+      }
+    }
+  }
+}
+
+void engine_make_gravityinteraction_tasks(struct engine *e) {
+
+  struct space *s = e->s;
+  struct scheduler *sched = &e->sched;
+  const int nr_cells = s->nr_cells;
+  struct cell *cells = s->cells;
+
+  for (int i = 0; i < nr_cells; i++)
+    if (cells[i].gcount > 0) {
+      scheduler_addtask(sched, task_type_grav_mm, task_subtype_none, -1, 0,
+                        &cells[i], NULL, 0);
+      for (int j = i + 1; j < nr_cells; j++)
+        if (cells[j].gcount > 0)
+          scheduler_addtask(sched, task_type_grav_mm, task_subtype_none, -1, 0,
+                            &cells[i], &cells[j], 0);
+    }
+}
+
+void engine_make_gravityrecursive_tasks(struct engine *e) {
+
+  struct space *s = e->s;
+  struct scheduler *sched = &e->sched;
+  const int nodeID = e->nodeID;
+  const int nr_cells = s->nr_cells;
+  struct cell *cells = s->cells;
+
+  for (int i = 0; i < nr_cells; i++)
+    if (cells[i].nodeID == nodeID && cells[i].gcount > 0) {
+
+      /* Create tasks at top level. */
+      struct task *up =
+          scheduler_addtask(sched, task_type_grav_up, task_subtype_none, 0, 0,
+                            &cells[i], NULL, 0);
+      struct task *down =
+          scheduler_addtask(sched, task_type_grav_down, task_subtype_none, 0, 0,
+                            &cells[i], NULL, 0);
+
+      /* Push tasks down the cell hierarchy. */
+      engine_addtasks_grav(e, &cells[i], up, down);
+    }
+}
+
+/**
+ * @brief Fill the #space's task list.
+ *
+ * @param e The #engine we are working with.
+ */
+
+void engine_maketasks(struct engine *e) {
+
+  struct space *s = e->s;
+  struct scheduler *sched = &e->sched;
+  const int nr_cells = s->nr_cells;
+  struct cell *cells = s->cells;
+
+  /* Re-set the scheduler. */
+  scheduler_reset(sched, s->tot_cells * engine_maxtaskspercell);
+
+  /* Add the space sorting tasks. */
+  for (int i = 0; i < e->nr_threads; i++)
+    scheduler_addtask(sched, task_type_psort, task_subtype_none, i, 0, NULL,
+                      NULL, 0);
+
+  /* Construct the first hydro loop over neighbours */
+  engine_make_hydroloop_tasks(e);
+
+  /* Add the gravity mm tasks. */
+  engine_make_gravityinteraction_tasks(e);
+
+  /* Split the tasks. */
+  scheduler_splittasks(sched);
+
+  /* Allocate the list of cell-task links. The maximum number of links
+     is the number of cells (s->tot_cells) times the number of neighbours (27)
+     times the number of interaction types (N_NEIGHBOUR_LOOPS). */
+  if (e->links != NULL) free(e->links);
+  e->size_links = s->tot_cells * 27 * N_NEIGHBOUR_LOOPS;
+  if ((e->links = malloc(sizeof(struct link) * e->size_links)) == NULL)
+    error("Failed to allocate cell-task links.");
+  e->nr_links = 0;
+
+  /* Add the gravity up/down tasks at the top-level cells and push them down. */
+  engine_make_gravityrecursive_tasks(e);
+
+  /* Count the number of tasks associated with each cell and
+     store the density tasks in each cell, and make each sort
+     depend on the sorts of its progeny. */
+  engine_count_and_link_tasks(e);
+
+  /* Append a ghost task to each cell, and add kick tasks to the
+     super cells. */
+  for (int k = 0; k < nr_cells; k++) engine_mkghosts(e, &cells[k], NULL);
+
+  /* Run through the tasks and make construct the additional neighobur loop
+     tasks.Each loop task depends on the cell ghosts and unlocks the next
+     one or the final kick */
+  engine_make_extra_hydroloop_tasks(e);
 
 /* Add the communication tasks if MPI is being used. */
 #ifdef WITH_MPI
