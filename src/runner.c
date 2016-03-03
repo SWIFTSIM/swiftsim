@@ -695,9 +695,9 @@ void runner_doghost1(struct runner *r, struct cell *c) {
 #endif
 }
 
+#if N_NEIGHBOUR_LOOPS > 2
 void runner_doghost2(struct runner *r, struct cell *c) {}
-
-void runner_doghost3(struct runner *r, struct cell *c) {}
+#endif
 
 /**
  * @brief Drift particles forward in time
@@ -1157,9 +1157,11 @@ void *runner_main(void *data) {
         case task_type_ghost1:
           runner_doghost1(r, ci);
           break;
+#if N_NEIGHBOUR_LOOPS > 2
         case task_type_ghost2:
           runner_doghost2(r, ci);
           break;
+#endif
         case task_type_drift:
           runner_dodrift(r, ci, 1);
           break;
