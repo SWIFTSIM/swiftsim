@@ -1909,7 +1909,6 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
 #ifdef WITH_MPI
   struct space *s = e->s;
 
-
   /* Do the initial partition of the cells. */
   partition_initial_partition(initial_partition, e->nodeID, e->nr_nodes, s);
 
@@ -2103,8 +2102,7 @@ void engine_init(struct engine *e, struct space *s, float dt, int nr_threads,
   engine_print_policy(e);
 
   /* Print information about the hydro scheme */
-  if (e->nodeID == 0)
-    message("Hydrodynamic scheme: %s", SPH_IMPLEMENTATION);
+  if (e->nodeID == 0) message("Hydrodynamic scheme: %s", SPH_IMPLEMENTATION);
 
   /* Deal with timestep */
   e->timeBase = (timeEnd - timeBegin) / max_nr_timesteps;
