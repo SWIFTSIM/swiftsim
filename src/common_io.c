@@ -491,4 +491,38 @@ void prepare_dm_gparts(struct gpart* gparts, int Ndm) {
   }
 }
 
+/**
+ * @brief Copy every #part into the corresponding #gpart and link them.
+ *
+ * This function assumes that the DM particles are all at the start of the
+ * gparts array and adds the hydro particles afterwards
+ *
+ * @param parts The array of #part freshly read in.
+ * @param gparts The array of #gpart freshly read in with all the DM particles
+ *at the start
+ * @param Ngas The number of gas particles read in.
+ * @param Ndm The number of DM particles read in.
+ */
+void duplicate_hydro_gparts(struct part* parts, struct gpart* gparts, int Ngas,
+                            int Ndm) {
+
+  for (int i = 0; i < Ngas; ++i) {
+
+    /* Duplicate the crucial information */
+    gparts[i + Ndm].x[0] = parts[i].x[0];
+    gparts[i + Ndm].x[1] = parts[i].x[1];
+    gparts[i + Ndm].x[2] = parts[i].x[2];
+
+    gparts[i + Ndm].v[0] = parts[i].v[0];
+    gparts[i + Ndm].v[1] = parts[i].v[1];
+    gparts[i + Ndm].v[2] = parts[i].v[2];
+
+    gparts[i + Ndm].mass = parts[i].mass;
+
+    /* Link the particles */
+    gparts[i + Ndm].part = &parts[i];
+    parts[i].gpart = &gparts[i + Ndm];
+  }
+}
+
 #endif
