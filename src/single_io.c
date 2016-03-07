@@ -396,25 +396,28 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
   /* Loop over all particle types */
   for (int ptype = 0; ptype < 6; ptype++) {
 
+    /* Don't do anything if no particle of this kind */
+    if(numParticles[ptype] == 0) continue;
+
+    /* Open the particle group in the file */
     char partTypeGroupName[15];
     sprintf(partTypeGroupName, "/PartType%d", ptype);
-
     h_grp = H5Gopen(h_file, partTypeGroupName, H5P_DEFAULT);
     if (h_grp < 0) {
       error("Error while opening particle group %s.", partTypeGroupName);
     }
 
-    message("Group %s found - reading...", partTypeGroupName);
+    /* message("Group %s found - reading...", partTypeGroupName); */
 
     /* Read particle fields into the particle structure */
     switch (ptype) {
 
       case GAS:
-        if (*Ngas > 0) hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
+        hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
         break;
 
       case DM:
-        if (Ndm > 0) darkmatter_read_particles(h_grp, Ndm, Ndm, 0, *gparts);
+        darkmatter_read_particles(h_grp, Ndm, Ndm, 0, *gparts);
         break;
 
       default:
