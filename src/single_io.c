@@ -428,6 +428,9 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
   /* Prepare the DM particles */
   prepare_dm_gparts(*gparts, Ndm);
 
+  /* Now duplicate the hydro particle into gparts */
+  duplicate_hydro_gparts(*parts, *gparts, Ngas, Ndm);
+  
   /* message("Done Reading particles..."); */
 
   /* Close file */
