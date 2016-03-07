@@ -327,9 +327,9 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
+  /* GADGET has 6 particle types. We only keep the type 0 & 1 for now...*/
   int numParticles[6] = {0};
   int Ndm;
-  /* GADGET has 6 particle types. We only keep the type 0 & 1 for now...*/
 
   /* Open file */
   /* message("Opening file '%s' as IC.", fileName); */
