@@ -473,4 +473,22 @@ void writeXMFline(FILE* xmfFile, char* fileName, char* name, long long N,
   fprintf(xmfFile, "</Attribute>\n");
 }
 
+/**
+ * @brief Prepare the DM particles (in gparts) read in for the addition of the
+ * other particle types
+ *
+ * This function assumes that the DM particles are all at the start of the
+ * gparts array
+ *
+ * @param gparts The array of #gpart freshly read in.
+ * @param Ndm The number of DM particles read in.
+ */
+void prepare_dm_gparts(struct gpart* gparts, int Ndm) {
+
+  /* Let's give all these gparts a negative id */
+  for (int i = 0; i < Ndm; ++i) {
+    gparts[i].id = -abs(gparts[i].id);
+  }
+}
+
 #endif

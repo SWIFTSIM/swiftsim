@@ -24,6 +24,7 @@
 #include "../config.h"
 
 /* Includes. */
+#include "part.h"
 #include "units.h"
 
 #if defined(HAVE_HDF5)
@@ -68,6 +69,8 @@ enum PARTICLE_TYPE {
 
 hid_t hdf5Type(enum DATA_TYPE type);
 size_t sizeOfType(enum DATA_TYPE type);
+
+void prepare_dm_gparts(struct gpart* gparts, int Ndm);
 
 void readAttribute(hid_t grp, char* name, enum DATA_TYPE type, void* data);
 

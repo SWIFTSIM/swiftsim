@@ -420,9 +420,13 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
       default:
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
-    if (GAS == ptype) /* Close particle group */
-      H5Gclose(h_grp);
+
+    /* Close particle group */
+    H5Gclose(h_grp);
   }
+
+  /* Prepare the DM particles */
+  prepare_dm_gparts(*gparts, Ndm);
 
   /* message("Done Reading particles..."); */
 
