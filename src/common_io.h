@@ -55,14 +55,17 @@ enum DATA_IMPORTANCE {
   OPTIONAL = 0
 };
 
-#define NUMBER_PARTICLE_TYPES 6
-#define PARTICLE_TYPE_STRINGLEN 12
-
-/* Particle Types can contain up to NUMBER_PARTICLE_TYPES types. */
+/**
+ * @brief The different particle types present in a GADGET IC file
+ *
+ */
 enum PARTICLE_TYPE {
   GAS = 0,
-  DARKMATTER
+  DM = 1,
+  STAR = 4,
+  BH = 5
 };
+
 hid_t hdf5Type(enum DATA_TYPE type);
 size_t sizeOfType(enum DATA_TYPE type);
 

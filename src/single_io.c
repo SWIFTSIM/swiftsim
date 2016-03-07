@@ -321,19 +321,14 @@ void writeArrayBackEnd(hid_t grp, char* fileName, FILE* xmfFile, char* name,
  * Calls #error() if an error occurs.
  *
  */
-void read_ic_single(char* fileName, double dim[3], struct part** parts, struct gpart **gparts, 
-		    int *Ngas, int *Ndm, int* periodic) {
+void read_ic_single(char* fileName, double dim[3], struct part** parts,
+                    struct gpart** gparts, int* Ngas, int* Ngparts,
+                    int* periodic) {
   hid_t h_file = 0, h_grp = 0;
-  double boxSize[3] = {0.0, -1.0, -1.0};
   /* GADGET has only cubic boxes (in cosmological mode) */
-  int numParticles[NUMBER_PARTICLE_TYPES] = {0};
-  int ptype = 0;
-  char partType[PARTICLE_TYPE_STRINGLEN];
-  /* HDF5 parameters */
-  herr_t group_exists = -1;
-  hid_t lapl_id = H5Pcreate(H5P_LINK_ACCESS);
- 
-
+  double boxSize[3] = {0.0, -1.0, -1.0};
+  int numParticles[6] = {0};
+  int Ndm;
   /* GADGET has 6 particle types. We only keep the type 0 & 1 for now...*/
 
   /* Open file */
@@ -364,25 +359,31 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts, struct g
   readAttribute(h_grp, "NumPart_Total", UINT, numParticles);
 
   *Ngas = numParticles[0];
-  *Ndm = numParticles[1];
+  Ndm = numParticles[1];
   dim[0] = boxSize[0];
   dim[1] = (boxSize[1] < 0) ? boxSize[0] : boxSize[1];
   dim[2] = (boxSize[2] < 0) ? boxSize[0] : boxSize[2];
 
   /* message("Found %d particles in a %speriodic box of size [%f %f %f].",  */
-  /* 	 *N, (periodic ? "": "non-"), dim[0], dim[1], dim[2]); */
+  /* 	  *N, (periodic ? "": "non-"), dim[0], dim[1], dim[2]);  */
 
   /* Close header */
   H5Gclose(h_grp);
 
-  /* Allocate memory to store particles */
-  if (posix_memalign((void*)parts, part_align, *Ngas * sizeof(struct part)) != 0)
+  /* Total number of particles */
+  *Ngparts = *Ngas + Ndm;
+
+  /* Allocate memory to store SPH particles */
+  if (posix_memalign((void*)parts, part_align, *Ngas * sizeof(struct part)) !=
+      0)
     error("Error while allocating memory for SPH particles");
   bzero(*parts, *Ngas * sizeof(struct part));
-  /* Allocate memory to store gravity particles */
-  if (posix_memalign((void*)gparts, part_align, *Ndm * sizeof(struct gpart)) != 0)
+
+  /* Allocate memory to store all particles */
+  if (posix_memalign((void*)gparts, gpart_align,
+                     *Ngparts * sizeof(struct gpart)) != 0)
     error("Error while allocating memory for gravity particles");
-  bzero(*gparts, *Ndm * sizeof(struct gpart));
+  bzero(*gparts, *Ngparts * sizeof(struct gpart));
 
   /* message("Allocated %8.2f MB for particles.", *N * sizeof(struct part) /
    * (1024.*1024.)); */
@@ -390,57 +391,37 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts, struct g
   /* Open SPH particles group */
   /* message("Reading particle arrays..."); */
   message("BoxSize = %lf\n", dim[0]);
-  message("NumPart_Total = %d\n", *Ndm + *Ngas);
-  fflush(stdout);
-  /* Loop over all particle types */
-  for(ptype = 0; ptype < NUMBER_PARTICLE_TYPES; ptype++) {
-    snprintf(partType, PARTICLE_TYPE_STRINGLEN, "/PartType%d", ptype);
-    group_exists = H5Lexists(h_file, partType,lapl_id);
-   
-    if(group_exists) {
-      h_grp = H5Gopen2(h_file, partType, H5P_DEFAULT);
-      if (h_grp < 0) { 
-	error("Error while opening particle group.\n");
-      }
-      else {
-	message("Group %s found - reading.", partType);
-	/* Read particle fields into the particle structure */
-	if(GAS == ptype)
-	  hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
-	else if(DARKMATTER == ptype)
-	  {
-		 darkmatter_read_particles(h_grp, *Ndm, *Ndm, 0, *gparts);
-		 for(int i=0; i<*Ndm; i++)
-			(*gparts)[i].id = -abs( (*gparts)[i].id );
-		 /* /\* for testing: copy gparts into parts as if we were doing SPH *\/ */
-		 /* *Ngas = *Ndm; */
-		 /* if (posix_memalign((void*)parts, part_align, *Ngas * sizeof(struct part)) != 0) */
-		 /* 	error("Error while allocating memory for SPH particles"); */
-		 /* bzero(*parts, *Ngas * sizeof(struct part)); */
-		 /* for(i=0; i<*Ndm; i++) */
-		 /* 	{ */
-		 /* 	  for(ic=0;ic<3;ic++) */
-		 /* 		 { */
-		 /* 			(*parts)[i].x[ic] = (*gparts)[i].x[ic]; */
-		 /* 			(*parts)[i].v[ic] = (*gparts)[i].v[ic]; */
-		 /* 		 } */
-		 /* 	  (*parts)[i].u   = 1.0; */
-		 /* 	  (*parts)[i].rho = 1.0; */
-		 /* 	} */
+  message("NumPart = [%d, %d] Total = %d\n", *Ngas, Ndm, *Ngparts);
 
-	  }
-	else
-	  error("Particle Type %d not yet supported. Aborting", ptype);
-	  
-      
-	/* Close particle group */
-	H5Gclose(h_grp);
-      }
+  /* Loop over all particle types */
+  for (int ptype = 0; ptype < 6; ptype++) {
+
+    char partTypeGroupName[15];
+    sprintf(partTypeGroupName, "/PartType%d", ptype);
+
+    h_grp = H5Gopen(h_file, partTypeGroupName, H5P_DEFAULT);
+    if (h_grp < 0) {
+      error("Error while opening particle group %s.", partTypeGroupName);
     }
-    else {
-      //message("Particle Type %d does not exist - skipping", part);
-	continue;
+
+    message("Group %s found - reading...", partTypeGroupName);
+
+    /* Read particle fields into the particle structure */
+    switch (ptype) {
+
+      case GAS:
+        hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
+        break;
+
+      case DM:
+        darkmatter_read_particles(h_grp, Ndm, Ndm, 0, *gparts);
+        break;
+
+      default:
+        error("Particle Type %d not yet supported. Aborting", ptype);
     }
+    if (GAS == ptype) /* Close particle group */
+      H5Gclose(h_grp);
   }
 
   /* message("Done Reading particles..."); */

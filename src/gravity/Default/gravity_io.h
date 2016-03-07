@@ -31,9 +31,11 @@
 __attribute__((always_inline)) INLINE static void darkmatter_read_particles(
     hid_t h_grp, int N, long long N_total, long long offset,
     struct gpart* gparts) {
-  message("Reading Dark Matter particles\n");
+
   /* Read arrays */
   readArray(h_grp, "Coordinates", DOUBLE, N, 3, gparts, N_total, offset, x,
+            COMPULSORY);
+  readArray(h_grp, "Masses", FLOAT, N, 1, gparts, N_total, offset, mass,
             COMPULSORY);
   readArray(h_grp, "Velocities", FLOAT, N, 3, gparts, N_total, offset, v,
             COMPULSORY);
@@ -63,6 +65,8 @@ __attribute__((always_inline)) INLINE static void darkmatter_write_particles(
   /* Write arrays */
   writeArray(h_grp, fileName, xmfFile, "Coordinates", DOUBLE, N, 3, gparts,
              N_total, mpi_rank, offset, x, us, UNIT_CONV_LENGTH);
+  writeArray(h_grp, fileName, xmfFile, "Masses", FLOAT, N, 1, gparts, N_total,
+             mpi_rank, offset, mass, us, UNIT_CONV_MASS);
   writeArray(h_grp, fileName, xmfFile, "Velocities", FLOAT, N, 3, gparts,
              N_total, mpi_rank, offset, v, us, UNIT_CONV_SPEED);
   writeArray(h_grp, fileName, xmfFile, "ParticleIDs", ULONGLONG, N, 1, gparts,
