@@ -410,11 +410,11 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
     switch (ptype) {
 
       case GAS:
-        hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
+        if (*Ngas > 0) hydro_read_particles(h_grp, *Ngas, *Ngas, 0, *parts);
         break;
 
       case DM:
-        darkmatter_read_particles(h_grp, Ndm, Ndm, 0, *gparts);
+        if (Ndm > 0) darkmatter_read_particles(h_grp, Ndm, Ndm, 0, *gparts);
         break;
 
       default:
