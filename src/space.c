@@ -432,8 +432,7 @@ void space_rebuild(struct space *s, double cell_max, int verbose) {
   message( "getting particle indices took %.3f ms." , (double)(getticks() - tic) / CPU_TPS * 1000 );
 #ifdef WITH_MPI
   /* TODO: Here we should exchange the gparts as well! */
-  message(" need to exchenge gravity particles ");
-  stop;
+  error(" need to exchenge gravity particles ");
 #endif
 
   /* Sort the parts according to their cells. */
