@@ -457,8 +457,9 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
 void write_output_single(struct engine* e, struct UnitSystem* us) {
 
   hid_t h_file = 0, h_grp = 0, h_grpsph = 0;
-  int N = e->s->nr_parts;
-  int periodic = e->s->periodic;
+  const int Ngas= e->s->nr_parts;
+  const int Ntot= e->s->nr_gparts;
+  const int periodic = e->s->periodic;
   int numParticles[6] = {N, 0};
   int numParticlesHighWord[6] = {0};
   int numFiles = 1;
@@ -477,7 +478,7 @@ void write_output_single(struct engine* e, struct UnitSystem* us) {
   xmfFile = prepareXMFfile();
 
   /* Write the part corresponding to this specific output */
-  writeXMFheader(xmfFile, N, fileName, e->time);
+  writeXMFheader(xmfFile, Ngas, fileName, e->time);
 
   /* Open file */
   /* message("Opening file '%s'.", fileName); */
@@ -540,7 +541,7 @@ void write_output_single(struct engine* e, struct UnitSystem* us) {
   if (h_grp < 0) error("Error while creating particle group.\n");
 
   /* Write particle fields from the particle structure */
-  hydro_write_particles(h_grp, fileName, xmfFile, N, N, 0, 0, parts, us);
+  hydro_write_particles(h_grp, fileName, xmfFile, Ngas, Ngas, 0, 0, parts, us);
 
   /* Close particle group */
   H5Gclose(h_grp);
