@@ -71,7 +71,7 @@
 
 int main(int argc, char *argv[]) {
 
-  int c, icount, j, k, Ngas = 0, Ndm = 0, periodic = 1;
+  int c, icount, j, k, Ngas = 0, Ngpart = 0, periodic = 1;
   long long N_total = -1;
   int nr_threads = 1, nr_queues = -1;
   int dump_tasks = 0;
@@ -351,7 +351,7 @@ int main(int argc, char *argv[]) {
                  MPI_COMM_WORLD, MPI_INFO_NULL);
 #endif
 #else
-  read_ic_single(ICfileName, dim, &parts, &gparts, &Ngas, &Ndm, &periodic);
+  read_ic_single(ICfileName, dim, &parts, &gparts, &Ngas, &Ngpart, &periodic);
 #endif
 
   if (myrank == 0)
@@ -360,14 +360,10 @@ int main(int argc, char *argv[]) {
   fflush(stdout);
 
 #if defined(WITH_MPI)
-  long long tmp;
-  long long N_long = Ngas + Ndm;
-  MPI_Reduce(&N_long, &tmp, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-  long long N_long = Ndm;
+  long long N_long = Ngpart;
   MPI_Reduce(&N_long, &N_total, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-  N_total += tmp;
 #else
-  N_total = Ngas + Ndm;
+  N_total = Ngpart;
 #endif
   if (myrank == 0) message("Read %lld particles from the ICs", N_total);
 
@@ -385,7 +381,7 @@ int main(int argc, char *argv[]) {
       parts[k].x[1] += shift[1];
       parts[k].x[2] += shift[2];
     }
-    for (k = 0; k < Ndm; k++) {
+    for (k = 0; k < Ngpart; k++) {
       gparts[k].x[0] += shift[0];
       gparts[k].x[1] += shift[1];
       gparts[k].x[2] += shift[2];
@@ -397,7 +393,7 @@ int main(int argc, char *argv[]) {
 
   /* Initialize the space with this data. */
   tic = getticks();
-  space_init(&s, dim, parts, gparts, Ngas, Ndm, periodic, h_max, myrank == 0);
+  space_init(&s, dim, parts, gparts, Ngas, Ngpart, periodic, h_max, myrank == 0);
   if (myrank == 0)
     message("space_init took %.3f ms.",
             ((double)(getticks() - tic)) / CPU_TPS * 1000);
