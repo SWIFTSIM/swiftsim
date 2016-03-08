@@ -70,6 +70,7 @@ enum PARTICLE_TYPE {
 hid_t hdf5Type(enum DATA_TYPE type);
 size_t sizeOfType(enum DATA_TYPE type);
 
+void collect_dm_gparts(struct gpart* gparts, int Ntot, struct gpart* dmparts, int Ndm);
 void prepare_dm_gparts(struct gpart* gparts, int Ndm);
 void duplicate_hydro_gparts(struct part* parts, struct gpart* gparts, int Ngas,
 			    int Ndm);
