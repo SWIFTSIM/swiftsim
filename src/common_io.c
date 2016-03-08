@@ -525,7 +525,6 @@ void duplicate_hydro_gparts(struct part* parts, struct gpart* gparts, int Ngas,
   }
 }
 
-
 /**
  * @brief Copy every DM #gpart into the dmparts array.
  *
@@ -534,23 +533,25 @@ void duplicate_hydro_gparts(struct part* parts, struct gpart* gparts, int Ngas,
  * @param dmparts The array of #gpart containg DM particles to be filled.
  * @param Ndm The number of DM particles.
  */
-void collect_dm_gparts(struct gpart* gparts, int Ntot, struct gpart* dmparts, int Ndm) {
+void collect_dm_gparts(struct gpart* gparts, int Ntot, struct gpart* dmparts,
+                       int Ndm) {
 
   int count = 0;
-  
+
   /* Loop over all gparts */
-  for(int i = 0; i<Ntot; ++i) {
+  for (int i = 0; i < Ntot; ++i) {
 
     /* And collect the DM ones */
-    if( gparts[i].id < 0 ) {
+    if (gparts[i].id < 0) {
       memcpy(&dmparts[count], &gparts[i], sizeof(struct gpart));
       count++;
     }
   }
 
   /* Check that everything is fine */
-  if(count != Ndm)
-    error("Collected the wrong number of dm particles (%d vs. %d expected)", count, Ndm);
+  if (count != Ndm)
+    error("Collected the wrong number of dm particles (%d vs. %d expected)",
+          count, Ndm);
 }
 
 #endif

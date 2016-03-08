@@ -252,7 +252,6 @@ void writeArrayBackEnd(hid_t grp, char* fileName, FILE* xmfFile, char* name,
   H5Sclose(h_space);
 }
 
-
 /**
  * @brief A helper macro to call the readArrayBackEnd function more easily.
  *
@@ -297,7 +296,6 @@ void writeArrayBackEnd(hid_t grp, char* fileName, FILE* xmfFile, char* name,
                    mpi_rank, offset, field, us, convFactor)                   \
   writeArrayBackEnd(grp, fileName, xmfFile, name, type, N, dim,               \
                     (char*)(&(part[0]).field), us, convFactor)
-
 
 /* Import the right hydro definition */
 #include "hydro_io.h"
@@ -399,7 +397,7 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
   for (int ptype = 0; ptype < 6; ptype++) {
 
     /* Don't do anything if no particle of this kind */
-    if(numParticles[ptype] == 0) continue;
+    if (numParticles[ptype] == 0) continue;
 
     /* Open the particle group in the file */
     char partTypeGroupName[15];
@@ -545,48 +543,51 @@ void write_output_single(struct engine* e, struct UnitSystem* us) {
   for (int ptype = 0; ptype < 6; ptype++) {
 
     /* Don't do anything if no particle of this kind */
-    if(numParticles[ptype] == 0) continue;
+    if (numParticles[ptype] == 0) continue;
 
     /* Open the particle group in the file */
     char partTypeGroupName[15];
     sprintf(partTypeGroupName, "/PartType%d", ptype);
-    h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT,
+                      H5P_DEFAULT);
     if (h_grp < 0) {
       error("Error while creating particle group.\n");
     }
-  
+
     /* message("Writing particle arrays..."); */
 
     /* Write particle fields from the particle structure */
     switch (ptype) {
 
       case GAS:
-	hydro_write_particles(h_grp, fileName, xmfFile, Ngas, Ngas, 0, 0, parts, us);
-	break;
+        hydro_write_particles(h_grp, fileName, xmfFile, Ngas, Ngas, 0, 0, parts,
+                              us);
+        break;
 
       case DM:
-	/* Allocate temporary array */
-	if (posix_memalign((void*)dmparts, gpart_align, Ndm * sizeof(struct gpart)) != 0)
-	  error("Error while allocating temporart memory for DM particles");
-	bzero(&dmparts, Ndm * sizeof(struct gpart));
+        /* Allocate temporary array */
+        if (posix_memalign((void*)dmparts, gpart_align,
+                           Ndm * sizeof(struct gpart)) != 0)
+          error("Error while allocating temporart memory for DM particles");
+        bzero(&dmparts, Ndm * sizeof(struct gpart));
 
-	/* Collect the DM particles from gpart */
-	collect_dm_gparts(gparts, Ntot, dmparts, Ndm);
+        /* Collect the DM particles from gpart */
+        collect_dm_gparts(gparts, Ntot, dmparts, Ndm);
 
-	/* Write DM particles */
-	darkmatter_write_particles(h_grp, fileName, xmfFile, Ndm, Ndm, 0, 0, dmparts, us);
+        /* Write DM particles */
+        darkmatter_write_particles(h_grp, fileName, xmfFile, Ndm, Ndm, 0, 0,
+                                   dmparts, us);
 
-	/* Free temporary array */
-	free(dmparts);
-	break;
+        /* Free temporary array */
+        free(dmparts);
+        break;
 
       default:
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
-    
+
     /* Close particle group */
     H5Gclose(h_grp);
-
   }
 
   /* Write LXMF file descriptor */
