@@ -252,6 +252,7 @@ void writeArrayBackEnd(hid_t grp, char* fileName, FILE* xmfFile, char* name,
   H5Sclose(h_space);
 }
 
+
 /**
  * @brief A helper macro to call the readArrayBackEnd function more easily.
  *
@@ -296,6 +297,7 @@ void writeArrayBackEnd(hid_t grp, char* fileName, FILE* xmfFile, char* name,
                    mpi_rank, offset, field, us, convFactor)                   \
   writeArrayBackEnd(grp, fileName, xmfFile, name, type, N, dim,               \
                     (char*)(&(part[0]).field), us, convFactor)
+
 
 /* Import the right hydro definition */
 #include "hydro_io.h"
@@ -457,15 +459,20 @@ void read_ic_single(char* fileName, double dim[3], struct part** parts,
 void write_output_single(struct engine* e, struct UnitSystem* us) {
 
   hid_t h_file = 0, h_grp = 0, h_grpsph = 0;
-  const int Ngas= e->s->nr_parts;
-  const int Ntot= e->s->nr_gparts;
-  const int periodic = e->s->periodic;
-  int numParticles[6] = {N, 0};
-  int numParticlesHighWord[6] = {0};
+  const int Ngas = e->s->nr_parts;
+  const int Ntot = e->s->nr_gparts;
+  int periodic = e->s->periodic;
   int numFiles = 1;
   struct part* parts = e->s->parts;
+  struct gpart* gparts = e->s->gparts;
+  struct gpart* dmparts = NULL;
   FILE* xmfFile = 0;
   static int outputCount = 0;
+
+  /* Number of particles of each type */
+  const int Ndm = Ntot - Ngas;
+  int numParticles[6] = {Ngas, Ndm, 0};
+  int numParticlesHighWord[6] = {0};
 
   /* File name */
   char fileName[200];
@@ -534,17 +541,51 @@ void write_output_single(struct engine* e, struct UnitSystem* us) {
   /* Print the system of Units */
   writeUnitSystem(h_file, us);
 
-  /* Create SPH particles group */
-  /* message("Writing particle arrays..."); */
-  h_grp =
-      H5Gcreate(h_file, "/PartType0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  if (h_grp < 0) error("Error while creating particle group.\n");
+  /* Loop over all particle types */
+  for (int ptype = 0; ptype < 6; ptype++) {
 
-  /* Write particle fields from the particle structure */
-  hydro_write_particles(h_grp, fileName, xmfFile, Ngas, Ngas, 0, 0, parts, us);
+    /* Don't do anything if no particle of this kind */
+    if(numParticles[ptype] == 0) continue;
 
-  /* Close particle group */
-  H5Gclose(h_grp);
+    /* Open the particle group in the file */
+    char partTypeGroupName[15];
+    sprintf(partTypeGroupName, "/PartType%d", ptype);
+    h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (h_grp < 0) {
+      error("Error while creating particle group.\n");
+    }
+  
+    /* message("Writing particle arrays..."); */
+
+    /* Write particle fields from the particle structure */
+    switch (ptype) {
+
+      case GAS:
+	hydro_write_particles(h_grp, fileName, xmfFile, Ngas, Ngas, 0, 0, parts, us);
+	break;
+
+      case DM:
+
+	/* Allocate temporary array */
+	if (posix_memalign((void*)dmparts, gpart_align, Ndm * sizeof(struct gpart)) != 0)
+	  error("Error while allocating temporart memory for DM particles");
+	bzero(&dmparts, Ndm * sizeof(struct gpart));
+
+	/* Collect the DM particles from gpart */
+	
+
+	/* Write DM particles */
+	darkmatter_write_particles(h_grp, fileName, xmfFile, Ndm, Ndm, 0, 0, dmparts, us);
+	break;
+
+      default:
+        error("Particle Type %d not yet supported. Aborting", ptype);
+    }
+    
+    /* Close particle group */
+    H5Gclose(h_grp);
+
+  }
 
   /* Write LXMF file descriptor */
   writeXMFfooter(xmfFile);

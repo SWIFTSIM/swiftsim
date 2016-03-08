@@ -513,9 +513,9 @@ void duplicate_hydro_gparts(struct part* parts, struct gpart* gparts, int Ngas,
     gparts[i + Ndm].x[1] = parts[i].x[1];
     gparts[i + Ndm].x[2] = parts[i].x[2];
 
-    gparts[i + Ndm].v[0] = parts[i].v[0];
-    gparts[i + Ndm].v[1] = parts[i].v[1];
-    gparts[i + Ndm].v[2] = parts[i].v[2];
+    gparts[i + Ndm].v_full[0] = parts[i].v[0];
+    gparts[i + Ndm].v_full[1] = parts[i].v[1];
+    gparts[i + Ndm].v_full[2] = parts[i].v[2];
 
     gparts[i + Ndm].mass = parts[i].mass;
 

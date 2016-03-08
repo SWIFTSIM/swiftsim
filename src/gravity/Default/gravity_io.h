@@ -37,7 +37,7 @@ __attribute__((always_inline)) INLINE static void darkmatter_read_particles(
             COMPULSORY);
   readArray(h_grp, "Masses", FLOAT, N, 1, gparts, N_total, offset, mass,
             COMPULSORY);
-  readArray(h_grp, "Velocities", FLOAT, N, 3, gparts, N_total, offset, v,
+  readArray(h_grp, "Velocities", FLOAT, N, 3, gparts, N_total, offset, v_full,
             COMPULSORY);
   readArray(h_grp, "ParticleIDs", ULONGLONG, N, 1, gparts, N_total, offset, id,
             COMPULSORY);
@@ -49,27 +49,27 @@ __attribute__((always_inline)) INLINE static void darkmatter_read_particles(
  * @param h_grp The HDF5 group in which to write the arrays.
  * @param fileName The name of the file (unsued in MPI mode).
  * @param xmfFile The XMF file to write to (unused in MPI mode).
- * @param N The number of particles on that MPI rank.
- * @param N_total The total number of particles (only used in MPI mode)
+ * @param Ndm The number of DM particles on that MPI rank.
+ * @param Ndm_total The total number of g-particles (only used in MPI mode)
  * @param mpi_rank The MPI rank of this node (only used in MPI mode)
  * @param offset The offset of the particles for this MPI rank (only used in MPI
  *mode)
- * @param parts The particle array
+ * @param gparts The #gpart array
  * @param us The unit system to use
  *
  */
 __attribute__((always_inline)) INLINE static void darkmatter_write_particles(
-    hid_t h_grp, char* fileName, FILE* xmfFile, int N, long long N_total,
+									     hid_t h_grp, char* fileName, FILE* xmfFile, int Ndm, long long Ndm_total,
     int mpi_rank, long long offset, struct gpart* gparts, struct UnitSystem* us) {
 
   /* Write arrays */
-  writeArray(h_grp, fileName, xmfFile, "Coordinates", DOUBLE, N, 3, gparts,
-             N_total, mpi_rank, offset, x, us, UNIT_CONV_LENGTH);
-  writeArray(h_grp, fileName, xmfFile, "Masses", FLOAT, N, 1, gparts, N_total,
-             mpi_rank, offset, mass, us, UNIT_CONV_MASS);
-  writeArray(h_grp, fileName, xmfFile, "Velocities", FLOAT, N, 3, gparts,
-             N_total, mpi_rank, offset, v, us, UNIT_CONV_SPEED);
-  writeArray(h_grp, fileName, xmfFile, "ParticleIDs", ULONGLONG, N, 1, gparts,
-             N_total, mpi_rank, offset, id, us, UNIT_CONV_NO_UNITS);
+  writeArray(h_grp, fileName, xmfFile, "Coordinates", DOUBLE, Ndm,  3, gparts,
+	       Ndm_total,  mpi_rank, offset, x, us, UNIT_CONV_LENGTH);
+  writeArray(h_grp, fileName, xmfFile, "Masses", FLOAT, Ndm,  1, gparts, Ndm_total, 
+	       mpi_rank, offset, mass, us, UNIT_CONV_MASS);
+  writeArray(h_grp, fileName, xmfFile, "Velocities", FLOAT, Ndm,  3, gparts,
+	       Ndm_total,  mpi_rank, offset, v_full, us, UNIT_CONV_SPEED);
+  writeArray(h_grp, fileName, xmfFile, "ParticleIDs", ULONGLONG, Ndm,  1, gparts,
+	       Ndm_total,  mpi_rank, offset, id, us, UNIT_CONV_NO_UNITS);
 }
 
