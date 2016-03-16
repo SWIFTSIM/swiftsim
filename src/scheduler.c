@@ -1049,6 +1049,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
   int qid = -1;
 #ifdef WITH_MPI
   int err;
+  int flag;
+  MPI_Status status;
 #endif
 
   /* Fail if this task has already been enqueued before. */
@@ -1093,6 +1095,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         break;
       case task_type_recv:
 #ifdef WITH_MPI
+	/* Emit the asynchronous receive */
         if ((err = MPI_Irecv(t->ci->parts, t->ci->count, s->part_mpi_type,
                              t->ci->nodeID, t->flags, MPI_COMM_WORLD,
                              &t->req)) != MPI_SUCCESS) {
@@ -1111,6 +1114,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         break;
       case task_type_send:
 #ifdef WITH_MPI
+	/* Emit the asynchronous send */
         if ((err = MPI_Isend(t->ci->parts, t->ci->count, s->part_mpi_type,
                              t->cj->nodeID, t->flags, MPI_COMM_WORLD,
                              &t->req)) != MPI_SUCCESS) {
@@ -1122,6 +1126,10 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         // message( "sending %i parts with tag=%i from %i to %i." ,
         //     t->ci->count , t->flags , s->nodeID , t->cj->nodeID );
         // fflush(stdout);
+
+	/* Actually trigger the communication */
+	MPI_Request_get_status(t->req, &flag, &status);
+
         qid = 0;
 #else
         error("SWIFT was not compiled with MPI support.");
