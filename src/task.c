@@ -156,7 +156,8 @@ int task_lock(struct task *t) {
     }
     return res;
 
-    /* Version that silences in MPI profilling tools all the unsuccesfull calls to MPI_Test */
+/* Version that silences in MPI profilling tools all the unsuccesfull calls to
+ * MPI_Test */
 #elif defined(WITH_MPI) && defined(WITH_ITAC_ANALYSIS_CLEANING)
 
     int res, err;
@@ -172,15 +173,15 @@ int task_lock(struct task *t) {
     MPI_Pcontrol(1);
 
     /* If the communication completed, switch to normal mode */
-    if(res) {
+    if (res) {
 
       /* Check the status of the MPI request (and destroy it if completed). */
       if ((err = MPI_Test(&t->req, &res, &stat)) != MPI_SUCCESS) {
-	char buff[MPI_MAX_ERROR_STRING];
-	int len;
-	MPI_Error_string(err, buff, &len);
-	error("Failed to test request on send/recv task (tag=%i, %s).", t->flags,
-	      buff);
+        char buff[MPI_MAX_ERROR_STRING];
+        int len;
+        MPI_Error_string(err, buff, &len);
+        error("Failed to test request on send/recv task (tag=%i, %s).",
+              t->flags, buff);
       }
     }
 
