@@ -190,6 +190,22 @@ if test "$enable_opt" = "yes" ; then
    fi
 fi
 
+# Add option to activate the silencing of the unused MPI_Test() to reduce
+# the size of the ITAC analyser.
+AC_ARG_ENABLE([itac-cleaning],
+   [AS_HELP_STRING([--enable-itac-cleaning],
+     [Silences the unsuccesfull calls to MPI_Test() to reduce the size of the ITAC
+      analyser trace file (Reduces performance)  @<:@no/yes@:>@]
+   )],
+   [enable_itac_cleaning="$enableval"],
+   [enable_itac_cleaning="no"]
+)
+
+if test "$enable_itac_cleaning" = "yes"; then
+   CFLAGS="$CFLAGS -DWITH_ITAC_ANALYSIS_CLEANING"
+   AC_MSG_RESULT([added ITAC Analyser output cleaning])
+fi
+
 # Add address sanitizer options to flags, if requested. Only useful for GCC
 # version 4.8 and later and clang.
 AC_ARG_ENABLE([sanitizer],

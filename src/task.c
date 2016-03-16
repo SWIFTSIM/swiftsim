@@ -143,7 +143,7 @@ int task_lock(struct task *t) {
   /* Communication task? */
   if (type == task_type_recv || type == task_type_send) {
 
-#ifdef WITH_MPI
+#if defined(WITH_MPI) && !defined(WITH_ITAC_ANALYSIS_CLEANING)
     /* Check the status of the MPI request. */
     int res, err;
     MPI_Status stat;
@@ -155,6 +155,37 @@ int task_lock(struct task *t) {
             buff);
     }
     return res;
+
+    /* Version that silences in MPI profilling tools all the unsuccesfull calls to MPI_Test */
+#elif defined(WITH_MPI) && defined(WITH_ITAC_ANALYSIS_CLEANING)
+
+    int res, err;
+    MPI_Status stat;
+
+    /* First, switch off the tracing from MPI-profilers */
+    MPI_Pcontrol(0);
+
+    /* Make a non-destructive test */
+    MPI_Request_get_status(t->req, &res, &stat);
+
+    /* Re-activate tracing */
+    MPI_Pcontrol(1);
+
+    /* If the communication completed, switch to normal mode */
+    if(res) {
+
+      /* Check the status of the MPI request (and destroy it if completed). */
+      if ((err = MPI_Test(&t->req, &res, &stat)) != MPI_SUCCESS) {
+	char buff[MPI_MAX_ERROR_STRING];
+	int len;
+	MPI_Error_string(err, buff, &len);
+	error("Failed to test request on send/recv task (tag=%i, %s).", t->flags,
+	      buff);
+      }
+    }
+
+    return res;
+
 #else
     error("SWIFT was not compiled with MPI support.");
 #endif
