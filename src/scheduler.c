@@ -1107,7 +1107,11 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         // message( "receiving %i parts with tag=%i from %i to %i." ,
         //     t->ci->count , t->flags , t->ci->nodeID , s->nodeID );
         // fflush(stdout);
-        qid = 1 % s->nr_queues;
+
+        /* Actually trigger the communication */
+        MPI_Request_get_status(t->req, &flag, &status);
+
+	qid = 1 % s->nr_queues;
 #else
         error("SWIFT was not compiled with MPI support.");
 #endif
