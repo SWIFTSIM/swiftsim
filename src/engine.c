@@ -598,6 +598,9 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj) {
     /* The send_xv task should unlock the super-cell's ghost task. */
     scheduler_addunlock(s, t_xv, ci->super->ghost);
 
+    /* The send_xv task depends on the cell's init task. */
+    scheduler_addunlock(s, ci->super->init, t_xv);
+
   }
 
   /* Recurse? */
@@ -638,10 +641,13 @@ void engine_addtasks_recv(struct engine *e, struct cell *c, struct task *t_xv,
   /* Add dependencies. */
   for (struct link *l = c->density; l != NULL; l = l->next) {
     scheduler_addunlock(s, t_xv, l->t);
-    scheduler_addunlock(s, l->t, t_rho);
+    // scheduler_addunlock(s, l->t, t_rho);
   }
+  scheduler_addunlock(s, c->ghost, t_rho);
+
   for (struct link *l = c->force; l != NULL; l = l->next)
     scheduler_addunlock(s, t_rho, l->t);
+
   if (c->sorts != NULL) scheduler_addunlock(s, t_xv, c->sorts);
 
   /* Recurse? */
