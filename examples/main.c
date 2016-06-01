@@ -125,8 +125,7 @@ int main(int argc, char *argv[]) {
 
 /* Let's pin the main thread */
 #if defined(HAVE_SETAFFINITY) && defined(HAVE_LIBNUMA) && defined(_GNU_SOURCE)
-  if (((ENGINE_POLICY) & engine_policy_setaffinity) ==
-      engine_policy_setaffinity)
+  if (((ENGINE_POLICY)&engine_policy_setaffinity) == engine_policy_setaffinity)
     engine_pin();
 #endif
 
@@ -521,19 +520,20 @@ int main(int argc, char *argv[]) {
           int count = 0;
           for (int l = 0; l < e.sched.nr_tasks; l++)
             if (!e.sched.tasks[l].skip && !e.sched.tasks[l].implicit) {
-              fprintf(file_thread, " %03i %i %i %i %i %lli %lli %i %i %i %i %i\n",
-                      myrank, e.sched.tasks[l].last_rid, e.sched.tasks[l].type,
-                      e.sched.tasks[l].subtype, (e.sched.tasks[l].cj == NULL),
-                      e.sched.tasks[l].tic, e.sched.tasks[l].toc,
-                      (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->count
-                                                    : 0,
-                      (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->count
-                                                    : 0,
-                      (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->gcount
-                                                    : 0,
-                      (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->gcount
-                                                    : 0,
-                      e.sched.tasks[l].flags);
+              fprintf(
+                  file_thread, " %03i %i %i %i %i %lli %lli %i %i %i %i %i\n",
+                  myrank, e.sched.tasks[l].last_rid, e.sched.tasks[l].type,
+                  e.sched.tasks[l].subtype, (e.sched.tasks[l].cj == NULL),
+                  e.sched.tasks[l].tic, e.sched.tasks[l].toc,
+                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->count
+                                                : 0,
+                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->count
+                                                : 0,
+                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->gcount
+                                                : 0,
+                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->gcount
+                                                : 0,
+                  e.sched.tasks[l].flags);
               fflush(stdout);
               count++;
             }
@@ -552,8 +552,8 @@ int main(int argc, char *argv[]) {
       FILE *file_thread;
       file_thread = fopen(dumpfile, "w");
       /* Add some information to help with the plots */
-      fprintf(file_thread, " %i %i %i %i %lli %lli %i %i %i %lli\n", -2, -1, -1, 1,
-              e.tic_step, e.toc_step, 0, 0, 0, cpufreq);
+      fprintf(file_thread, " %i %i %i %i %lli %lli %i %i %i %lli\n", -2, -1, -1,
+              1, e.tic_step, e.toc_step, 0, 0, 0, cpufreq);
       for (int l = 0; l < e.sched.nr_tasks; l++)
         if (!e.sched.tasks[l].skip && !e.sched.tasks[l].implicit)
           fprintf(

@@ -255,7 +255,7 @@ static void parse_value(char *line, struct swift_params *params) {
   /* Check that it is a parameter inside a section.*/
   if (*line == ' ' || *line == '\t') {
     parse_section_param(line, &isFirstParam, section, params);
-  } else {/*Else it is the start of a new section or standalone parameter. */
+  } else { /*Else it is the start of a new section or standalone parameter. */
     /* Take first token as the parameter name. */
     token = strtok(line, " :\t");
     strcpy(tmpStr, token);
@@ -376,7 +376,8 @@ int parser_get_param_int(const struct swift_params *params, const char *name) {
     }
   }
 
-  error("Cannot find '%s' in the structure, in file '%s'.", name,params->fileName);
+  error("Cannot find '%s' in the structure, in file '%s'.", name,
+        params->fileName);
   return 0;
 }
 
@@ -408,7 +409,8 @@ char parser_get_param_char(const struct swift_params *params,
     }
   }
 
-  error("Cannot find '%s' in the structure, in file '%s'.", name,params->fileName);
+  error("Cannot find '%s' in the structure, in file '%s'.", name,
+        params->fileName);
   return 0;
 }
 
@@ -440,7 +442,8 @@ float parser_get_param_float(const struct swift_params *params,
     }
   }
 
-  error("Cannot find '%s' in the structure, in file '%s'.", name,params->fileName);
+  error("Cannot find '%s' in the structure, in file '%s'.", name,
+        params->fileName);
   return 0.f;
 }
 
@@ -471,7 +474,8 @@ double parser_get_param_double(const struct swift_params *params,
     }
   }
 
-  error("Cannot find '%s' in the structure, in file '%s'.", name,params->fileName);
+  error("Cannot find '%s' in the structure, in file '%s'.", name,
+        params->fileName);
   return 0.;
 }
 
