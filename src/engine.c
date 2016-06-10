@@ -616,8 +616,11 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj) {
     struct task *t_rho = scheduler_addtask(s, task_type_send, task_subtype_none,
                                            2 * ci->tag + 1, 0, ci, cj, 0);
 
-    /* The first send should depend on the engine's send_root. */
+    /* The first sends should depend on the engine's send_root. */
     scheduler_addunlock(s, e->send_root, t_xv);
+
+    /* Also for rho sends as the ghost tasks may be skipped. */
+    scheduler_addunlock(s, e->send_root, t_rho);
 
     /* The send_rho task depends on the cell's ghost task. */
     scheduler_addunlock(s, ci->super->ghost, t_rho);
@@ -2004,7 +2007,7 @@ void engine_step(struct engine *e) {
   clocks_gettime(&time1);
 
   e->tic_step = getticks();
-    
+
   /* Collect the cell data. */
   for (int k = 0; k < s->nr_cells; k++)
     if (s->cells[k].nodeID == e->nodeID) {
