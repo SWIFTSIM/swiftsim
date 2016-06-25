@@ -19,6 +19,11 @@
 #ifndef SWIFT_QUEUE_H
 #define SWIFT_QUEUE_H
 
+/* MPI headers. */
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
 /* Includes. */
 #include "cell.h"
 #include "lock.h"
@@ -56,6 +61,14 @@ struct queue {
   /* DEQ for incoming tasks. */
   int *tid_incoming;
   volatile unsigned int first_incoming, last_incoming, count_incoming;
+  
+#ifdef WITH_MPI
+  /* Communication task queues. */
+  int size_comm, count_comm;
+  int *tid_comm;
+  MPI_Request *reqs_comm;
+  int *done_inds_comm;
+#endif
 
 } __attribute__((aligned(64)));
 
