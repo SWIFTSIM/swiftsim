@@ -39,45 +39,6 @@
 #include "error.h"
 
 /**
- * @brief Add a communication task to the queue.
- *
- * @param q The #queue, assumed to be locked.
- * @param offset The offset of the communication task.
- */
-void queue_add_comm(struct queue *q, int offset) {
-#ifdef WITH_MPI
-  /* Check if the communicatoin queue is long enough. */
-  if (q->count_comm == q->size_comm) {
-    q->size_comm *= 2;
-    int *tid_comm_new;
-    MPI_Request *reqs_comm_new;
-    int *done_inds_comm_new;
-    if ((tid_comm_new = (int *)malloc(sizeof(int) *q->size_comm)) == NULL ||
-        (reqs_comm_new = (MPI_Request *)malloc(
-             sizeof(MPI_Request) *q->size_comm)) == NULL ||
-        (done_inds_comm_new = (int *)malloc(sizeof(int) * q->size_comm)) ==
-            NULL)
-      error("Failed to re-allocate the communication task queues.");
-    memcpy(tid_comm_new, q->tid_comm, sizeof(int) * q->count_comm);
-    memcpy(reqs_comm_new, q->reqs_comm, sizeof(MPI_Request) * q->count_comm);
-    free(q->tid_comm);
-    free(q->reqs_comm);
-    free(q->done_inds_comm);
-    q->tid_comm = tid_comm_new;
-    q->reqs_comm = reqs_comm_new;
-    q->done_inds_comm = done_inds_comm_new;
-  }
-
-  /* Add this offset to the queue. */
-  q->tid_comm[q->count_comm] = offset;
-  q->reqs_comm[q->count_comm] = q->tasks[offset].req;
-  q->count_comm += 1;
-#else
-  error("This function can only be called when compiled with MPI.");
-#endif
-}
-
-/**
  * @brief Add a task to the queue directly.
  *
  * @param q The #queue, assumed to be locked.
@@ -116,6 +77,45 @@ void queue_add(struct queue *q, int offset) {
   /* for (int k = 1; k < q->count; k++)
       if ( tasks[ tid[(k-1)/2] ].weight < tasks[ tid[k] ].weight )
           error( "Queue heap is disordered." ); */
+}
+
+/**
+ * @brief Add a communication task to the queue.
+ *
+ * @param q The #queue, assumed to be locked.
+ * @param offset The offset of the communication task.
+ */
+void queue_add_comm(struct queue *q, int offset) {
+#ifdef WITH_MPI
+  /* Check if the communicatoin queue is long enough. */
+  if (q->count_comm == q->size_comm) {
+    q->size_comm *= 2;
+    int *tid_comm_new;
+    MPI_Request *reqs_comm_new;
+    int *done_inds_comm_new;
+    if ((tid_comm_new = (int *)malloc(sizeof(int) * q->size_comm)) == NULL ||
+        (reqs_comm_new = (MPI_Request *)malloc(sizeof(MPI_Request) *
+                                               q->size_comm)) == NULL ||
+        (done_inds_comm_new = (int *)malloc(sizeof(int) * q->size_comm)) ==
+            NULL)
+      error("Failed to re-allocate the communication task queues.");
+    memcpy(tid_comm_new, q->tid_comm, sizeof(int) * q->count_comm);
+    memcpy(reqs_comm_new, q->reqs_comm, sizeof(MPI_Request) * q->count_comm);
+    free(q->tid_comm);
+    free(q->reqs_comm);
+    free(q->done_inds_comm);
+    q->tid_comm = tid_comm_new;
+    q->reqs_comm = reqs_comm_new;
+    q->done_inds_comm = done_inds_comm_new;
+  }
+
+  /* Add this offset to the queue. */
+  q->tid_comm[q->count_comm] = offset;
+  q->reqs_comm[q->count_comm] = q->tasks[offset].req;
+  q->count_comm += 1;
+#else
+  error("This function can only be called when compiled with MPI.");
+#endif
 }
 
 /**
@@ -194,8 +194,8 @@ void queue_check_comms(struct queue *q) {
   if (q->count_comm == 0) return;
 
   /* Check the status of the MPI requests. */
-  int num_done, err;
-  if ((err = MPI_Testsome(q->count_comm, q->reqs_comm, &num_done,
+  int num_reqs_done, err;
+  if ((err = MPI_Testsome(q->count_comm, q->reqs_comm, &num_reqs_done,
                           q->done_inds_comm, MPI_STATUSES_IGNORE)) !=
       MPI_SUCCESS) {
     char buff[MPI_MAX_ERROR_STRING];
@@ -205,7 +205,10 @@ void queue_check_comms(struct queue *q) {
   }
 
   /* If any communication tasks succeeded, pass them on to the queue. */
-  for (int k = 0; k < num_done; k++) {
+  /* TODO(pedro): The following assumes that the done_inds are sorted in
+     increasing order. If they are not, swapping-out used ones as below may
+     fail! */
+  for (int k = num_reqs_done - 1; k >= 0; k--) {
     int ind = q->done_inds_comm[k];
     queue_add(q, q->tid_comm[ind]);
     q->count_comm -= 1;
@@ -251,13 +254,13 @@ void queue_init(struct queue *q, struct task *tasks) {
   q->last_incoming = 0;
   q->count_incoming = 0;
 
-#ifdef WITH_MPI
   /* Init the communication task queue. */
-  q->size_comm = queue_sizeinit;
   q->count_comm = 0;
-  if ((q->tid_comm = (int *)malloc(sizeof(int) *q->size_comm)) == NULL ||
+#ifdef WITH_MPI
+  q->size_comm = queue_sizeinit;
+  if ((q->tid_comm = (int *)malloc(sizeof(int) * q->size_comm)) == NULL ||
       (q->reqs_comm =
-           (MPI_Request *)malloc(sizeof(MPI_Request) *q->size_comm)) == NULL ||
+           (MPI_Request *)malloc(sizeof(MPI_Request) * q->size_comm)) == NULL ||
       (q->done_inds_comm = (int *)malloc(sizeof(int) * q->size_comm)) == NULL)
     error("Failed to allocate the communication task queues.");
 #endif

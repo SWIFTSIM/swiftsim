@@ -61,10 +61,10 @@ struct queue {
   /* DEQ for incoming tasks. */
   int *tid_incoming;
   volatile unsigned int first_incoming, last_incoming, count_incoming;
-  
-#ifdef WITH_MPI
+
   /* Communication task queues. */
   int size_comm, count_comm;
+#ifdef WITH_MPI
   int *tid_comm;
   MPI_Request *reqs_comm;
   int *done_inds_comm;
