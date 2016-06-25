@@ -32,11 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* MPI headers. */
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
 /* This object's header. */
 #include "task.h"
 
@@ -148,30 +143,8 @@ int task_lock(struct task *t) {
   const int type = t->type;
   const int subtype = t->subtype;
   struct cell *ci = t->ci, *cj = t->cj;
-#ifdef WITH_MPI
-  int res = 0, err = 0;
-  MPI_Status stat;
-#endif
 
   switch (type) {
-
-    /* Communication task? */
-    case task_type_recv:
-    case task_type_send:
-#ifdef WITH_MPI
-      /* Check the status of the MPI request. */
-      if ((err = MPI_Test(&t->req, &res, &stat)) != MPI_SUCCESS) {
-        char buff[MPI_MAX_ERROR_STRING];
-        int len;
-        MPI_Error_string(err, buff, &len);
-        error("Failed to test request on send/recv task (tag=%i, %s).",
-              t->flags, buff);
-      }
-      return res;
-#else
-      error("SWIFT was not compiled with MPI support.");
-#endif
-      break;
 
     case task_type_sort:
       if (cell_locktree(ci) != 0) return 0;
