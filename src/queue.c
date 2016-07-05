@@ -90,8 +90,8 @@ void queue_add_comm(struct queue *q, int offset) {
   /* Check if the communicatoin queue is long enough. */
   if (q->count_comm == q->size_comm) {
     q->size_comm *= 2;
-    int *tid_comm_new;
-    MPI_Request *reqs_comm_new;
+    int *tid_comm_new = NULL;
+    MPI_Request *reqs_comm_new = NULL;
     int *done_inds_comm_new;
     if ((tid_comm_new = (int *)malloc(sizeof(int) * q->size_comm)) == NULL ||
         (reqs_comm_new = (MPI_Request *)malloc(sizeof(MPI_Request) *
