@@ -741,6 +741,8 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
   const struct entry *restrict sort_j = &cj->sort[sid * (cj->count + 1)];
 
   /* Get some other useful values. */
+  const float max_wcount =
+      2.f * r->e->hydro_properties->target_neighbours / kernel_root;
   const double hi_max = ci->h_max * kernel_gamma - rshift;
   const double hj_max = cj->h_max * kernel_gamma;
   const int count_i = ci->count;
@@ -758,6 +760,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
     /* Get a hold of the ith part in ci. */
     struct part *restrict pi = &parts_i[sort_i[pid].i];
     if (pi->ti_end > ti_current) continue;
+    if (pi->density.wcount > max_wcount) continue;
     const float hi = pi->h;
     const double di = sort_i[pid].d + hi * kernel_gamma + dx_max - rshift;
     if (di < dj_min) continue;
@@ -820,6 +823,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
     /* Get a hold of the jth part in cj. */
     struct part *restrict pj = &parts_j[sort_j[pjd].i];
     if (pj->ti_end > ti_current) continue;
+    if (pj->density.wcount > max_wcount) continue;
     const float hj = pj->h;
     const double dj = sort_j[pjd].d - hj * kernel_gamma - dx_max - rshift;
     if (dj > di_max) continue;
@@ -1305,6 +1309,8 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
 
   struct part *restrict parts = c->parts;
   const int count = c->count;
+  const float max_wcount =
+      2.f * r->e->hydro_properties->target_neighbours / kernel_root;
 
   /* Set up indt. */
   int *indt = NULL;
@@ -1312,7 +1318,8 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
   if ((indt = (int *)alloca(sizeof(int) * count)) == NULL)
     error("Failed to allocate indt.");
   for (int k = 0; k < count; k++)
-    if (parts[k].ti_end <= ti_current) {
+    if (parts[k].ti_end <= ti_current &&
+        parts[k].density.wcount <= max_wcount) {
       indt[countdt] = k;
       countdt += 1;
     }
@@ -1400,8 +1407,9 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           dx[k] = pix[k] - pj->x[k];
           r2 += dx[k] * dx[k];
         }
-        const int doj =
-            (pj->ti_end <= ti_current) && (r2 < hj * hj * kernel_gamma2);
+        const int doj = (pj->ti_end <= ti_current) &&
+                        (pj->density.wcount < max_wcount) &&
+                        (r2 < hj * hj * kernel_gamma2);
 
         /* Hit or miss? */
         if (r2 < hig2 || doj) {

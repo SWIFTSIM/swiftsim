@@ -475,8 +475,13 @@ void runner_do_ghost(struct runner *r, struct cell *c) {
         hydro_end_density(p, ti_current);
 
         /* If no derivative, double the smoothing length. */
-        if (p->density.wcount_dh == 0.0f) h_corr = p->h;
-
+        if (p->density.wcount_dh == 0.0f) {
+          h_corr = p->h;
+        }
+        /* If we are really too big, divide by 2 */
+        else if (p->density.wcount > 2.f * target_wcount) {
+          h_corr = -0.5f * p->h;
+        }
         /* Otherwise, compute the smoothing length update (Newton step). */
         else {
           h_corr = (target_wcount - p->density.wcount) / p->density.wcount_dh;
