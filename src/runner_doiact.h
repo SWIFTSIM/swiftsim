@@ -742,7 +742,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
 
   /* Get some other useful values. */
   const float max_wcount =
-      2.f * r->e->hydro_properties->target_neighbours / kernel_root;
+      (2.f / kernel_norm) * r->e->hydro_properties->target_neighbours;
   const double hi_max = ci->h_max * kernel_gamma - rshift;
   const double hj_max = cj->h_max * kernel_gamma;
   const int count_i = ci->count;
@@ -1308,7 +1308,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
   struct part *restrict parts = c->parts;
   const int count = c->count;
   const float max_wcount =
-      2.f * r->e->hydro_properties->target_neighbours / kernel_root;
+      (2.f / kernel_norm) * r->e->hydro_properties->target_neighbours;
 
   /* Set up indt. */
   int *indt = NULL;
