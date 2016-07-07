@@ -759,8 +759,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
 
     /* Get a hold of the ith part in ci. */
     struct part *restrict pi = &parts_i[sort_i[pid].i];
-    if (pi->ti_end > ti_current) continue;
-    if (pi->density.wcount > max_wcount) continue;
+    if (pi->ti_end > ti_current || pi->density.wcount > max_wcount) continue;
     const float hi = pi->h;
     const double di = sort_i[pid].d + hi * kernel_gamma + dx_max - rshift;
     if (di < dj_min) continue;
@@ -822,8 +821,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj) {
 
     /* Get a hold of the jth part in cj. */
     struct part *restrict pj = &parts_j[sort_j[pjd].i];
-    if (pj->ti_end > ti_current) continue;
-    if (pj->density.wcount > max_wcount) continue;
+    if (pj->ti_end > ti_current || pj->density.wcount > max_wcount) continue;
     const float hj = pj->h;
     const double dj = sort_j[pjd].d - hj * kernel_gamma - dx_max - rshift;
     if (dj > di_max) continue;
