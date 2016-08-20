@@ -1279,6 +1279,7 @@ void space_split_mapper(void *map_data, int num_elements, void *extra_data) {
         temp->dx_max = 0.f;
         temp->nodeID = c->nodeID;
         temp->parent = c;
+        temp->super = NULL;
         c->progeny[k] = temp;
       }
 
