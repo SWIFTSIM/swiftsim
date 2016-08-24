@@ -17,6 +17,8 @@
  *
  ******************************************************************************/
 
+#include "../config.h"
+
 /* Some standard headers. */
 #include <stdlib.h>
 #include <string.h>
