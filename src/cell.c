@@ -63,7 +63,7 @@ int cell_next_tag = 0;
  *
  * @param c The #cell.
  */
-int cell_getsize(struct cell *c) {
+__attribute__((pure)) int cell_getsize(struct cell *c) {
 
   /* Number of cells in this subtree. */
   int count = 1;
@@ -720,8 +720,8 @@ void cell_clean_links(struct cell *c, void *data) {
  *
  * @todo Deal with periodicity.
  */
-int cell_are_neighbours(const struct cell *restrict ci,
-                        const struct cell *restrict cj) {
+__attribute__((pure)) int cell_are_neighbours(const struct cell *restrict ci,
+                                              const struct cell *restrict cj) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (ci->width[0] != cj->width[0]) error("Cells of different size !");
@@ -818,7 +818,7 @@ void cell_clean(struct cell *c) {
  *
  * @return 1 If the cell needs drifting, 0 otherwise.
  */
-int cell_is_drift_needed(struct cell *c, int ti_current) {
+__attribute__((pure)) int cell_is_drift_needed(struct cell *c, int ti_current) {
 
   /* Do we have at least one active particle in the cell ?*/
   if (c->ti_end_min == ti_current) return 1;

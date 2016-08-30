@@ -2791,7 +2791,7 @@ void engine_step(struct engine *e) {
 /**
  * @brief Returns 1 if the simulation has reached its end point, 0 otherwise
  */
-int engine_is_done(struct engine *e) {
+__attribute__((pure)) int engine_is_done(struct engine *e) {
   return !(e->ti_current < max_nr_timesteps);
 }
 

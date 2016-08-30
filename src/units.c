@@ -404,8 +404,8 @@ double units_general_cgs_conversion_factor(const struct UnitSystem* us,
  * @param baseUnitsExponants The exponent of each base units required to form
  * the desired quantity. See conversionFactor() for a working example
  */
-float units_general_h_factor(const struct UnitSystem* us,
-                             const float baseUnitsExponants[5]) {
+__attribute__((pure)) float units_general_h_factor(
+    const struct UnitSystem* us, const float baseUnitsExponants[5]) {
   float factor_exp = 0.f;
 
   factor_exp += -baseUnitsExponants[UNIT_MASS];
@@ -422,8 +422,8 @@ float units_general_h_factor(const struct UnitSystem* us,
  * @param baseUnitsExponants The exponent of each base units required to form
  * the desired quantity. See conversionFactor() for a working example
  */
-float units_general_a_factor(const struct UnitSystem* us,
-                             const float baseUnitsExponants[5]) {
+__attribute__((pure)) float units_general_a_factor(
+    const struct UnitSystem* us, const float baseUnitsExponants[5]) {
   float factor_exp = 0.f;
 
   factor_exp += baseUnitsExponants[UNIT_LENGTH];
@@ -528,7 +528,8 @@ void units_general_cgs_conversion_string(char* buffer,
  * @param b The second #UnitSystem
  * @return 1 if the systems are the same, 0 otherwise
  */
-int units_are_equal(const struct UnitSystem* a, const struct UnitSystem* b) {
+__attribute__((pure)) int units_are_equal(const struct UnitSystem* a,
+                                          const struct UnitSystem* b) {
 
   if (a->UnitMass_in_cgs != b->UnitMass_in_cgs) return 0;
   if (a->UnitLength_in_cgs != b->UnitLength_in_cgs) return 0;

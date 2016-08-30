@@ -34,7 +34,7 @@
  * @param ti_end The (integer) end of the previous time-step.
  * @param timeBase_inv The inverse of the system's minimal time-step.
  */
-__attribute__((always_inline)) INLINE static int get_integer_timestep(
+__attribute__((always_inline, const)) INLINE static int get_integer_timestep(
     float new_dt, int ti_begin, int ti_end, double timeBase_inv) {
 
   /* Convert to integer time */
@@ -65,7 +65,7 @@ __attribute__((always_inline)) INLINE static int get_integer_timestep(
  * @param gp The #gpart.
  * @param e The #engine (used to get some constants).
  */
-__attribute__((always_inline)) INLINE static int get_gpart_timestep(
+__attribute__((always_inline, pure)) INLINE static int get_gpart_timestep(
     const struct gpart *restrict gp, const struct engine *restrict e) {
 
   const float new_dt_external = gravity_compute_timestep_external(
@@ -95,7 +95,7 @@ __attribute__((always_inline)) INLINE static int get_gpart_timestep(
  * @param xp The #xpart partner of p.
  * @param e The #engine (used to get some constants).
  */
-__attribute__((always_inline)) INLINE static int get_part_timestep(
+__attribute__((always_inline, pure)) INLINE static int get_part_timestep(
     const struct part *restrict p, const struct xpart *restrict xp,
     const struct engine *restrict e) {
 
