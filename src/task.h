@@ -129,7 +129,7 @@ struct task {
   short int rid;
 
   /*! Number of tasks unlocked by this one */
-  short int nr_unlock_tasks;
+  int nr_unlock_tasks;
 
   /*! Number of unsatisfied dependencies */
   int wait;
