@@ -439,9 +439,9 @@ int main(int argc, char *argv[]) {
   if (with_external_gravity && myrank == 0) potential_print(&potential);
 
   /* Initialise the cooling function properties */
-  struct cooling_function_data cooling_func;
+  cooling_function_data_handle cooling_func;
   if (with_cooling) cooling_init(params, &us, &prog_const, &cooling_func);
-  if (with_cooling && myrank == 0) cooling_print(&cooling_func);
+  if (with_cooling && myrank == 0) cooling_print(cooling_func);
 
   /* Construct the engine policy */
   int engine_policies = ENGINE_POLICY | engine_policy_steal;

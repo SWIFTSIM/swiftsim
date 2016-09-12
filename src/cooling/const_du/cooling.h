@@ -33,6 +33,8 @@
 /* Some standard headers. */
 #include <math.h>
 
+#include "../cooling_models_struct.h"
+
 /* Local includes. */
 #include "const.h"
 #include "cooling_struct.h"
@@ -56,10 +58,10 @@
  * @param xp Pointer to the extended particle data.
  * @param dt The time-step of this particle.
  */
-__attribute__((always_inline)) INLINE static void cooling_cool_part(
+__attribute__((always_inline)) INLINE static void cooling_const_du_cool_part(
     const struct phys_const* restrict phys_const,
     const struct UnitSystem* restrict us,
-    const struct cooling_function_data* restrict cooling,
+    const struct cooling_const_du_function_data* restrict cooling,
     struct part* restrict p, struct xpart* restrict xp, float dt) {
 
   /* Get current internal energy (dt=0) */
@@ -81,7 +83,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   hydro_set_internal_energy(p, u_new);
 
   /* Store the radiated energy */
-  xp->cooling_data.radiated_energy += hydro_get_mass(p) * (u_old - u_new);
+  struct cooling_const_du_xpart_data * data = (struct cooling_const_du_xpart_data*) xp->cooling_data;
+  data->radiated_energy += hydro_get_mass(p) * (u_old - u_new);
 }
 
 /**
@@ -96,8 +99,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
  * @param us The internal system of units.
  * @param p Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float cooling_timestep(
-    const struct cooling_function_data* restrict cooling,
+__attribute__((always_inline)) INLINE static float cooling_const_du_timestep(
+    const struct cooling_const_du_function_data* restrict cooling,
     const struct phys_const* restrict phys_const,
     const struct UnitSystem* restrict us, const struct part* restrict p) {
 
@@ -117,10 +120,12 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  */
-__attribute__((always_inline)) INLINE static void cooling_init_part(
+__attribute__((always_inline)) INLINE static void cooling_const_du_init_part(
     const struct part* restrict p, struct xpart* restrict xp) {
-
-  xp->cooling_data.radiated_energy = 0.f;
+  
+    xp->cooling_data = malloc(sizeof(struct cooling_const_du_xpart_data));
+    struct cooling_const_du_xpart_data * data = xp->cooling_data;
+    data->radiated_energy = 0.f;
 }
 
 /**
@@ -131,10 +136,11 @@ __attribute__((always_inline)) INLINE static void cooling_init_part(
  *
  * @param xp The extended particle data
  */
-__attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
+__attribute__((always_inline)) INLINE static float cooling_const_du_get_radiated_energy(
     const struct xpart* restrict xp) {
 
-  return xp->cooling_data.radiated_energy;
+  struct cooling_const_du_xpart_data * data = xp->cooling_data;  
+  return data->radiated_energy;
 }
 
 /**
@@ -148,11 +154,13 @@ __attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
  * @param phys_const The physical constants in internal units.
  * @param cooling The cooling properties to initialize
  */
-static INLINE void cooling_init_backend(
+static INLINE void cooling_const_du_init_backend(
     const struct swift_params* parameter_file, const struct UnitSystem* us,
     const struct phys_const* phys_const,
-    struct cooling_function_data* cooling) {
+    struct cooling_const_du_function_data* cooling) {
 
+  cooling = malloc(sizeof(struct cooling_const_du_function_data));
+    
   cooling->cooling_rate =
       parser_get_param_double(parameter_file, "ConstCooling:cooling_rate");
   cooling->min_energy =
@@ -166,8 +174,8 @@ static INLINE void cooling_init_backend(
  *
  * @param cooling The properties of the cooling function.
  */
-static INLINE void cooling_print_backend(
-    const struct cooling_function_data* cooling) {
+static INLINE void cooling_const_du_print_backend(
+    const struct cooling_const_du_function_data* cooling) {
 
   message("Cooling function is 'Constant cooling' with rate %f and floor %f.",
           cooling->cooling_rate, cooling->min_energy);

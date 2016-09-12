@@ -30,25 +30,25 @@
 /* Local headers. */
 #include "const.h"
 
+#include "cooling/cooling_models.h"
+
 /* Import the right cooling definition */
-#if defined(COOLING_NONE)
-#include "./cooling/none/cooling.h"
-#elif defined(COOLING_CONST_DU)
+//#include "./cooling/none/cooling.h"
+
 #include "./cooling/const_du/cooling.h"
-#elif defined(COOLING_CONST_LAMBDA)
 #include "./cooling/const_lambda/cooling.h"
-#elif defined(COOLING_GRACKLE)
-#include "./cooling/grackle/cooling.h"
-#else
-#error "Invalid choice of cooling function."
-#endif
+//#elif defined(COOLING_GRACKLE)
+//#include "./cooling/grackle/cooling.h"
+//#else
+//#error "Invalid choice of cooling function."
+//#endif
 
 /* Common functions */
 void cooling_init(const struct swift_params* parameter_file,
                   const struct UnitSystem* us,
                   const struct phys_const* phys_const,
-                  struct cooling_function_data* cooling);
+                  cooling_function_data_handle* cooling_handle_ptr);
 
-void cooling_print(const struct cooling_function_data* cooling);
+void cooling_print(const cooling_function_data_handle cooling_handle);
 
 #endif /* SWIFT_COOLING_H */

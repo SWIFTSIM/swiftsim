@@ -3159,7 +3159,7 @@ void engine_init(struct engine *e, struct space *s,
                  const struct phys_const *physical_constants,
                  const struct hydro_props *hydro,
                  const struct external_potential *potential,
-                 const struct cooling_function_data *cooling_func) {
+                 cooling_function_data_handle cooling_func) {
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));

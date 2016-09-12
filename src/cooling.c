@@ -22,6 +22,7 @@
 
 /* This object's header. */
 #include "cooling.h"
+#include "cooling/cooling_models.h"
 
 /**
  * @brief Initialises the cooling properties.
@@ -36,9 +37,10 @@
 void cooling_init(const struct swift_params* parameter_file,
                   const struct UnitSystem* us,
                   const struct phys_const* phys_const,
-                  struct cooling_function_data* cooling) {
+                  cooling_function_data_handle* cooling_handle_ptr) {
 
-  cooling_init_backend(parameter_file, us, phys_const, cooling);
+  // FIXME : this layer may not be necessary              
+  cooling_init_backend(parameter_file, us, phys_const, cooling_handle_ptr);
 }
 
 /**
@@ -48,7 +50,8 @@ void cooling_init(const struct swift_params* parameter_file,
  *
  * @param cooling The properties of the cooling function.
  */
-void cooling_print(const struct cooling_function_data* cooling) {
+void cooling_print(const cooling_function_data_handle cooling) {
 
+  // FIXME : this layer may not be necessary              
   cooling_print_backend(cooling);
 }

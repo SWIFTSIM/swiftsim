@@ -27,11 +27,11 @@
 /**
  * @brief Properties of the cooling function.
  */
-struct cooling_function_data {};
+struct cooling_none_function_data {};
 
 /**
  * @brief Properties of the cooling stored in the particle data
  */
-struct cooling_xpart_data {};
+struct cooling_none_xpart_data {};
 
 #endif /* SWIFT_COOLING_STRUCT_NONE_H */

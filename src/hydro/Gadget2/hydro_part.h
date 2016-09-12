@@ -43,7 +43,7 @@ struct xpart {
   float v_full[3];
 
   /* Additional data used to record cooling information */
-  struct cooling_xpart_data cooling_data;
+  cooling_xpart_data_handle cooling_data;
 
 } SWIFT_STRUCT_ALIGN;
 

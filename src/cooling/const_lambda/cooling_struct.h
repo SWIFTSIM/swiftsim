@@ -26,7 +26,7 @@
 /**
  * @brief Properties of the cooling function.
  */
-struct cooling_function_data {
+struct cooling_const_lambda_function_data {
 
   /*! Cooling rate in cgs units. Defined by 'rho * du/dt = -lambda * n_H^2'*/
   float lambda;
@@ -51,7 +51,7 @@ struct cooling_function_data {
 /**
  * @brief Properties of the cooling stored in the particle data.
  */
-struct cooling_xpart_data {
+struct cooling_const_lambda_xpart_data {
 
   /*! Energy radiated away by this particle since the start of the run */
   float radiated_energy;

@@ -33,7 +33,7 @@
 /**
  * @brief Properties of the cooling function.
  */
-struct cooling_function_data {
+struct cooling_const_du_function_data {
 
   /*! Cooling rate in internal units. du_dt = -cooling_rate */
   float cooling_rate;
@@ -51,7 +51,7 @@ struct cooling_function_data {
  * This is used to carry properties such as the total amount of
  * energy radiated away.
  */
-struct cooling_xpart_data {
+struct cooling_const_du_xpart_data {
 
   /*! Energy radiated away by this particle since the start of the run */
   float radiated_energy;

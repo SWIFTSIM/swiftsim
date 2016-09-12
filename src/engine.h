@@ -47,6 +47,7 @@
 #include "space.h"
 #include "task.h"
 #include "units.h"
+#include "cooling/cooling_models_struct.h"
 
 /* Some constants. */
 enum engine_policy {
@@ -205,7 +206,7 @@ struct engine {
   const struct external_potential *external_potential;
 
   /* Properties of the cooling scheme */
-  const struct cooling_function_data *cooling_func;
+  cooling_function_data_handle cooling_func;
 
   /* The (parsed) parameter file */
   const struct swift_params *parameter_file;
@@ -223,7 +224,7 @@ void engine_init(struct engine *e, struct space *s,
                  const struct phys_const *physical_constants,
                  const struct hydro_props *hydro,
                  const struct external_potential *potential,
-                 const struct cooling_function_data *cooling);
+                 cooling_function_data_handle cooling);
 void engine_launch(struct engine *e, int nr_runners, unsigned int mask,
                    unsigned int submask);
 void engine_prepare(struct engine *e, int nodrift);

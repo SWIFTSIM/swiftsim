@@ -24,9 +24,7 @@
  * @brief Empty infrastructure for the cases without cooling function
  */
 
-/* Some standard headers. */
-#include <float.h>
-#include <math.h>
+#include "cooling_struct.h"
 
 /* Local includes. */
 #include "error.h"
@@ -35,6 +33,10 @@
 #include "part.h"
 #include "physical_constants.h"
 #include "units.h"
+
+/* Some standard headers. */
+#include <float.h>
+#include <math.h>
 
 /**
  * @brief Apply the cooling function to a particle.
@@ -47,10 +49,10 @@
  * @param p Pointer to the particle data.
  * @param dt The time-step of this particle.
  */
-__attribute__((always_inline)) INLINE static void cooling_cool_part(
+__attribute__((always_inline)) INLINE static void cooling_none_cool_part(
     const struct phys_const* restrict phys_const,
     const struct UnitSystem* restrict us,
-    const struct cooling_function_data* restrict cooling,
+    const struct cooling_none_function_data* restrict cooling,
     struct part* restrict p, struct xpart* restrict xp, float dt) {}
 
 /**
@@ -63,8 +65,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
  * @param us The internal system of units.
  * @param p Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float cooling_timestep(
-    const struct cooling_function_data* restrict cooling,
+__attribute__((always_inline)) INLINE static float cooling_none_timestep(
+    const struct cooling_none_function_data* restrict cooling,
     const struct phys_const* restrict phys_const,
     const struct UnitSystem* restrict us, const struct part* restrict p) {
 
@@ -80,7 +82,7 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  */
-__attribute__((always_inline)) INLINE static void cooling_init_part(
+__attribute__((always_inline)) INLINE static void cooling_none_init_part(
     const struct part* restrict p, struct xpart* restrict xp) {}
 
 /**
@@ -90,7 +92,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_part(
  *
  * @param xp The extended particle data
  */
-__attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
+__attribute__((always_inline)) INLINE static float cooling_none_get_radiated_energy(
     const struct xpart* restrict xp) {
 
   return 0.f;
@@ -106,18 +108,18 @@ __attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
  * @param phys_const The physical constants in internal units.
  * @param cooling The cooling properties to initialize
  */
-static INLINE void cooling_init_backend(
+static INLINE void cooling_none_init_backend(
     const struct swift_params* parameter_file, const struct UnitSystem* us,
     const struct phys_const* phys_const,
-    struct cooling_function_data* cooling) {}
+    struct cooling_none_function_data* cooling) {}
 
 /**
  * @brief Prints the properties of the cooling model to stdout.
  *
  * @param cooling The properties of the cooling function.
  */
-static INLINE void cooling_print_backend(
-    const struct cooling_function_data* cooling) {
+static INLINE void cooling_none_print_backend(
+    const struct cooling_none_function_data* cooling) {
 
   message("Cooling function is 'No cooling'.");
 }

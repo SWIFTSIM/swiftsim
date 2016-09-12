@@ -30,17 +30,18 @@
 /* Local headers. */
 #include "const.h"
 
+#include "cooling/cooling_models_struct.h"
 /* Import the right cooling definition */
-#if defined(COOLING_NONE)
-#include "./cooling/none/cooling_struct.h"
-#elif defined(COOLING_CONST_DU)
-#include "./cooling/const_du/cooling_struct.h"
-#elif defined(COOLING_CONST_LAMBDA)
-#include "./cooling/const_lambda/cooling_struct.h"
-#elif defined(COOLING_GRACKLE)
-#include "./cooling/grackle/cooling_struct.h"
-#else
-#error "Invalid choice of cooling function."
-#endif
+//#if defined(COOLING_NONE)
+//#include "./cooling/none/cooling_struct.h"
+//#elif defined(COOLING_CONST_DU)
+//#include "./cooling/const_du/cooling_struct.h"
+//#elif defined(COOLING_CONST_LAMBDA)
+//#include "./cooling/const_lambda/cooling_struct.h"
+//#elif defined(COOLING_GRACKLE)
+//#include "./cooling/grackle/cooling_struct.h"
+//#else
+//#error "Invalid choice of cooling function."
+//#endif
 
 #endif /* SWIFT_COOLING_STRUCT_H */
