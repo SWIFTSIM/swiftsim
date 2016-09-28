@@ -44,6 +44,8 @@
 #include "./hydro/Minimal/hydro_debug.h"
 #elif defined(GADGET2_SPH)
 #include "./hydro/Gadget2/hydro_debug.h"
+#elif defined(HOPKINS_PE_SPH)
+#include "./hydro/PressureEntropy/hydro_debug.h"
 #elif defined(DEFAULT_SPH)
 #include "./hydro/Default/hydro_debug.h"
 #elif defined(GIZMO_SPH)
@@ -65,7 +67,7 @@
  *
  * (Should be used for debugging only as it runs in O(N).)
  */
-void printParticle(const struct part *parts, struct xpart *xparts,
+void printParticle(const struct part *parts, const struct xpart *xparts,
                    long long int id, size_t N) {
 
   int found = 0;
@@ -125,7 +127,7 @@ void printgParticle(const struct gpart *gparts, const struct part *parts,
  */
 void printParticle_single(const struct part *p, const struct xpart *xp) {
 
-  printf("## Particle: id=%lld", p->id);
+  printf("## Particle: id=%lld ", p->id);
   hydro_debug_particle(p, xp);
   printf("\n");
 }
@@ -154,8 +156,9 @@ int checkSpacehmax(struct space *s) {
   /* Loop over local cells. */
   float cell_h_max = 0.0f;
   for (int k = 0; k < s->nr_cells; k++) {
-    if (s->cells[k].nodeID == s->e->nodeID && s->cells[k].h_max > cell_h_max) {
-      cell_h_max = s->cells[k].h_max;
+    if (s->cells_top[k].nodeID == s->e->nodeID &&
+        s->cells_top[k].h_max > cell_h_max) {
+      cell_h_max = s->cells_top[k].h_max;
     }
   }
 
@@ -172,9 +175,9 @@ int checkSpacehmax(struct space *s) {
 
   /* There is a problem. Hunt it down. */
   for (int k = 0; k < s->nr_cells; k++) {
-    if (s->cells[k].nodeID == s->e->nodeID) {
-      if (s->cells[k].h_max > part_h_max) {
-        message("cell %d is inconsistent (%f > %f)", k, s->cells[k].h_max,
+    if (s->cells_top[k].nodeID == s->e->nodeID) {
+      if (s->cells_top[k].h_max > part_h_max) {
+        message("cell %d is inconsistent (%f > %f)", k, s->cells_top[k].h_max,
                 part_h_max);
       }
     }

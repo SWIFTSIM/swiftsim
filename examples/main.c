@@ -58,6 +58,7 @@ void print_help_message() {
   printf("Valid options are:\n");
   printf("  %2s %8s %s\n", "-a", "", "Pin runners using processor affinity");
   printf("  %2s %8s %s\n", "-c", "", "Run with cosmological time integration");
+  printf("  %2s %8s %s\n", "-C", "", "Run with cooling");
   printf(
       "  %2s %8s %s\n", "-d", "",
       "Dry run. Read the parameter file, allocate memory but does not read ");
@@ -67,21 +68,25 @@ void print_help_message() {
   printf("  %2s %8s %s\n", "", "",
          "Allows user to check validy of parameter and IC files as well as "
          "memory limits.");
+  printf("  %2s %8s %s\n", "-D", "",
+         "Always drift all particles even the ones far from active particles.");
   printf("  %2s %8s %s\n", "-e", "",
          "Enable floating-point exceptions (debugging mode)");
   printf("  %2s %8s %s\n", "-f", "{int}",
          "Overwrite the CPU frequency (Hz) to be used for time measurements");
   printf("  %2s %8s %s\n", "-g", "",
          "Run with an external gravitational potential");
+  printf("  %2s %8s %s\n", "-F", "", "Run with feedback ");
   printf("  %2s %8s %s\n", "-G", "", "Run with self-gravity");
   printf("  %2s %8s %s\n", "-n", "{int}",
-         "Execute a fixed number of time steps");
+         "Execute a fixed number of time steps. When unset use the time_end "
+         "parameter to stop.");
   printf("  %2s %8s %s\n", "-s", "", "Run with SPH");
   printf("  %2s %8s %s\n", "-t", "{int}",
          "The number of threads to use on each MPI rank. Defaults to 1 if not "
          "specified.");
-  printf("  %2s %8s %s\n", "-v", "[12]",
-         "Increase the level of verbosity 1: MPI-rank 0 writes ");
+  printf("  %2s %8s %s\n", "-v", "[12]", "Increase the level of verbosity");
+  printf("  %2s %8s %s\n", "", "", "1: MPI-rank 0 writes ");
   printf("  %2s %8s %s\n", "", "", "2: All MPI-ranks write");
   printf("  %2s %8s %s\n", "-y", "{int}",
          "Time-step frequency at which task graphs are dumped");
@@ -143,9 +148,12 @@ int main(int argc, char *argv[]) {
   int nsteps = -2;
   int with_cosmology = 0;
   int with_external_gravity = 0;
+  int with_sourceterms = 0;
+  int with_cooling = 0;
   int with_self_gravity = 0;
   int with_hydro = 0;
   int with_fp_exceptions = 0;
+  int with_drift_all = 0;
   int verbose = 0;
   int nr_threads = 1;
   char paramFileName[200] = "";
@@ -153,15 +161,21 @@ int main(int argc, char *argv[]) {
 
   /* Parse the parameters */
   int c;
-  while ((c = getopt(argc, argv, "acdef:gGhn:st:v:y:")) != -1) switch (c) {
+  while ((c = getopt(argc, argv, "acCdDef:FgGhn:st:v:y:")) != -1) switch (c) {
       case 'a':
         with_aff = 1;
         break;
       case 'c':
         with_cosmology = 1;
         break;
+      case 'C':
+        with_cooling = 1;
+        break;
       case 'd':
         dry_run = 1;
+        break;
+      case 'D':
+        with_drift_all = 1;
         break;
       case 'e':
         with_fp_exceptions = 1;
@@ -172,6 +186,9 @@ int main(int argc, char *argv[]) {
           if (myrank == 0) print_help_message();
           return 1;
         }
+        break;
+      case 'F':
+        with_sourceterms = 1;
         break;
       case 'g':
         with_external_gravity = 1;
@@ -318,16 +335,12 @@ int main(int argc, char *argv[]) {
   struct hydro_props hydro_properties;
   hydro_props_init(&hydro_properties, params);
 
-  /* Initialise the external potential properties */
-  struct external_potential potential;
-  if (with_external_gravity)
-    potential_init(params, &prog_const, &us, &potential);
-  if (with_external_gravity && myrank == 0) potential_print(&potential);
-
   /* Read particles and space information from (GADGET) ICs */
   char ICfileName[200] = "";
   parser_get_param_string(params, "InitialConditions:file_name", ICfileName);
   if (myrank == 0) message("Reading ICs from file '%s'", ICfileName);
+  fflush(stdout);
+
   struct part *parts = NULL;
   struct gpart *gparts = NULL;
   size_t Ngas = 0, Ngpart = 0;
@@ -424,19 +437,38 @@ int main(int argc, char *argv[]) {
     message("nr of cells at depth %i is %i.", data[0], data[1]);
   }
 
+  /* Initialise the external potential properties */
+  struct external_potential potential;
+  if (with_external_gravity)
+    potential_init(params, &prog_const, &us, &potential);
+  if (with_external_gravity && myrank == 0) potential_print(&potential);
+
+  /* Initialise the cooling function properties */
+  struct cooling_function_data cooling_func;
+  if (with_cooling) cooling_init(params, &us, &prog_const, &cooling_func);
+  if (with_cooling && myrank == 0) cooling_print(&cooling_func);
+
+  /* Initialise the feedback properties */
+  struct sourceterms sourceterms;
+  if (with_sourceterms) sourceterms_init(params, &us, &sourceterms);
+  if (with_sourceterms && myrank == 0) sourceterms_print(&sourceterms);
+
   /* Construct the engine policy */
   int engine_policies = ENGINE_POLICY | engine_policy_steal;
+  if (with_drift_all) engine_policies |= engine_policy_drift_all;
   if (with_hydro) engine_policies |= engine_policy_hydro;
   if (with_self_gravity) engine_policies |= engine_policy_self_gravity;
   if (with_external_gravity) engine_policies |= engine_policy_external_gravity;
   if (with_cosmology) engine_policies |= engine_policy_cosmology;
+  if (with_cooling) engine_policies |= engine_policy_cooling;
+  if (with_sourceterms) engine_policies |= engine_policy_sourceterms;
 
   /* Initialize the engine with the space and policies. */
   if (myrank == 0) clocks_gettime(&tic);
   struct engine e;
   engine_init(&e, &s, params, nr_nodes, myrank, nr_threads, with_aff,
               engine_policies, talking, &us, &prog_const, &hydro_properties,
-              &potential);
+              &potential, &cooling_func, &sourceterms);
   if (myrank == 0) {
     clocks_gettime(&toc);
     message("engine_init took %.3f %s.", clocks_diff(&tic, &toc),
@@ -509,7 +541,7 @@ int main(int argc, char *argv[]) {
 
       /* Make sure output file is empty, only on one rank. */
       char dumpfile[30];
-      snprintf(dumpfile, 30, "thread_info_MPI-step%d.dat", j);
+      snprintf(dumpfile, 30, "thread_info_MPI-step%d.dat", j + 1);
       FILE *file_thread;
       if (myrank == 0) {
         file_thread = fopen(dumpfile, "w");
@@ -561,7 +593,7 @@ int main(int argc, char *argv[]) {
 
 #else
       char dumpfile[30];
-      snprintf(dumpfile, 30, "thread_info-step%d.dat", j);
+      snprintf(dumpfile, 30, "thread_info-step%d.dat", j + 1);
       FILE *file_thread;
       file_thread = fopen(dumpfile, "w");
       /* Add some information to help with the plots */

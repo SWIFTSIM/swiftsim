@@ -26,8 +26,11 @@
 #include "../config.h"
 
 /* Includes. */
+#include "align.h"
 #include "cell.h"
 #include "cycle.h"
+
+#define task_align 128
 
 /**
  * @brief The different task types.
@@ -50,9 +53,10 @@ enum task_types {
   task_type_grav_fft,
   task_type_grav_mm,
   task_type_grav_up,
-  task_type_grav_external,
+  task_type_cooling,
+  task_type_sourceterms,
   task_type_count
-};
+} __attribute__((packed));
 
 /**
  * @brief The different task sub-types (for pairs, selfs and sub-tasks).
@@ -63,9 +67,10 @@ enum task_subtypes {
   task_subtype_gradient,
   task_subtype_force,
   task_subtype_grav,
+  task_subtype_external_grav,
   task_subtype_tend,
   task_subtype_count
-};
+} __attribute__((packed));
 
 /**
  * @brief The type of particles/objects this task acts upon in a given cell.
@@ -94,35 +99,14 @@ extern const char *subtaskID_names[];
  */
 struct task {
 
-  /*! Type of the task */
-  enum task_types type;
-
-  /*! Sub-type of the task (for the tasks that have one */
-  enum task_subtypes subtype;
-
-  /*! Flags used to carry additional information (e.g. sort directions) */
-  int flags;
-
-  /*! Number of unsatisfied dependencies */
-  int wait;
-
-  /*! Rank of a task in the order */
-  int rank;
-
-  /*! Weight of the task */
-  int weight;
-
   /*! Pointers to the cells this task acts upon */
   struct cell *ci, *cj;
 
-  /*! ID of the queue or runner owning this task */
-  int rid;
-
-  /*! Number of tasks unlocked by this one */
-  int nr_unlock_tasks;
-
   /*! List of tasks unlocked by this one */
   struct task **unlock_tasks;
+
+  /*! Start and end time of this task */
+  ticks tic, toc;
 
 #ifdef WITH_MPI
 
@@ -134,8 +118,29 @@ struct task {
 
 #endif
 
-  /*! Start and end time of this task */
-  ticks tic, toc;
+  /*! Flags used to carry additional information (e.g. sort directions) */
+  int flags;
+
+  /*! Rank of a task in the order */
+  int rank;
+
+  /*! Weight of the task */
+  int weight;
+
+  /*! ID of the queue or runner owning this task */
+  short int rid;
+
+  /*! Number of tasks unlocked by this one */
+  short int nr_unlock_tasks;
+
+  /*! Number of unsatisfied dependencies */
+  short int wait;
+
+  /*! Type of the task */
+  enum task_types type;
+
+  /*! Sub-type of the task (for the tasks that have one */
+  enum task_subtypes subtype;
 
   /*! Should the scheduler skip this task ? */
   char skip;
@@ -145,7 +150,8 @@ struct task {
 
   /*! Is this task implicit (i.e. does not do anything) ? */
   char implicit;
-};
+
+} SWIFT_STRUCT_ALIGN;
 
 /* Function prototypes. */
 void task_unlock(struct task *t);
@@ -154,5 +160,6 @@ int task_lock(struct task *t);
 void task_print_mask(unsigned int mask);
 void task_print_submask(unsigned int submask);
 void task_do_rewait(struct task *t);
+void task_print(const struct task *t);
 
 #endif /* SWIFT_TASK_H */

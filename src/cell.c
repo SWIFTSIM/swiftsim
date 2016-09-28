@@ -63,7 +63,6 @@ int cell_next_tag = 0;
  *
  * @param c The #cell.
  */
-
 int cell_getsize(struct cell *c) {
 
   /* Number of cells in this subtree. */
@@ -87,8 +86,9 @@ int cell_getsize(struct cell *c) {
  *
  * @return The number of cells created.
  */
-
 int cell_unpack(struct pcell *pc, struct cell *c, struct space *s) {
+
+#ifdef WITH_MPI
 
   /* Unpack the current pcell. */
   c->h_max = pc->h_max;
@@ -130,6 +130,11 @@ int cell_unpack(struct pcell *pc, struct cell *c, struct space *s) {
   /* Return the total number of unpacked cells. */
   c->pcell_size = count;
   return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
 }
 
 /**
@@ -140,7 +145,6 @@ int cell_unpack(struct pcell *pc, struct cell *c, struct space *s) {
  *
  * @return The number of particles linked.
  */
-
 int cell_link_parts(struct cell *c, struct part *parts) {
 
   c->parts = parts;
@@ -166,7 +170,6 @@ int cell_link_parts(struct cell *c, struct part *parts) {
  *
  * @return The number of particles linked.
  */
-
 int cell_link_gparts(struct cell *c, struct gpart *gparts) {
 
   c->gparts = gparts;
@@ -193,8 +196,9 @@ int cell_link_gparts(struct cell *c, struct gpart *gparts) {
  *
  * @return The number of packed cells.
  */
-
 int cell_pack(struct cell *c, struct pcell *pc) {
+
+#ifdef WITH_MPI
 
   /* Start by packing the data of the current cell. */
   pc->h_max = c->h_max;
@@ -216,9 +220,24 @@ int cell_pack(struct cell *c, struct pcell *pc) {
   /* Return the number of packed cells used. */
   c->pcell_size = count;
   return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
 }
 
+/**
+ * @brief Pack the time information of the given cell and all it's sub-cells.
+ *
+ * @param c The #cell.
+ * @param ti_ends (output) The time information we pack into
+ *
+ * @return The number of packed cells.
+ */
 int cell_pack_ti_ends(struct cell *c, int *ti_ends) {
+
+#ifdef WITH_MPI
 
   /* Pack this cell's data. */
   ti_ends[0] = c->ti_end_min;
@@ -232,9 +251,24 @@ int cell_pack_ti_ends(struct cell *c, int *ti_ends) {
 
   /* Return the number of packed values. */
   return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
 }
 
+/**
+ * @brief Unpack the time information of a given cell and its sub-cells.
+ *
+ * @param c The #cell
+ * @param ti_ends The time information to unpack
+ *
+ * @return The number of cells created.
+ */
 int cell_unpack_ti_ends(struct cell *c, int *ti_ends) {
+
+#ifdef WITH_MPI
 
   /* Unpack this cell's data. */
   c->ti_end_min = ti_ends[0];
@@ -248,14 +282,19 @@ int cell_unpack_ti_ends(struct cell *c, int *ti_ends) {
 
   /* Return the number of packed values. */
   return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
 }
 
 /**
- * @brief Lock a cell and hold its parents.
+ * @brief Lock a cell for access to its array of #part and hold its parents.
  *
  * @param c The #cell.
+ * @return 0 on success, 1 on failure
  */
-
 int cell_locktree(struct cell *c) {
 
   TIMER_TIC
@@ -314,6 +353,12 @@ int cell_locktree(struct cell *c) {
   }
 }
 
+/**
+ * @brief Lock a cell for access to its array of #gpart and hold its parents.
+ *
+ * @param c The #cell.
+ * @return 0 on success, 1 on failure
+ */
 int cell_glocktree(struct cell *c) {
 
   TIMER_TIC
@@ -373,11 +418,10 @@ int cell_glocktree(struct cell *c) {
 }
 
 /**
- * @brief Unlock a cell's parents.
+ * @brief Unlock a cell's parents for access to #part array.
  *
  * @param c The #cell.
  */
-
 void cell_unlocktree(struct cell *c) {
 
   TIMER_TIC
@@ -392,6 +436,11 @@ void cell_unlocktree(struct cell *c) {
   TIMER_TOC(timer_locktree);
 }
 
+/**
+ * @brief Unlock a cell's parents for access to #gpart array.
+ *
+ * @param c The #cell.
+ */
 void cell_gunlocktree(struct cell *c) {
 
   TIMER_TIC
@@ -413,7 +462,6 @@ void cell_gunlocktree(struct cell *c) {
  * @param parts_offset Offset of the cell parts array relative to the
  *        space's parts array, i.e. c->parts - s->parts.
  */
-
 void cell_split(struct cell *c, ptrdiff_t parts_offset) {
 
   int i, j;
@@ -532,7 +580,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset) {
   }
 
   /* Re-link the gparts. */
-  part_relink_gparts(parts, count, parts_offset);
+  if (count > 0 && gcount > 0) part_relink_gparts(parts, count, parts_offset);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that _all_ the parts have been assigned to a cell. */
@@ -627,60 +675,66 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset) {
   }
 
   /* Re-link the parts. */
-  part_relink_parts(gparts, gcount, parts - parts_offset);
+  if (count > 0 && gcount > 0)
+    part_relink_parts(gparts, gcount, parts - parts_offset);
 }
 
 /**
- * @brief Initialises all particles to a valid state even if the ICs were stupid
+ * @brief Sanitizes the smoothing length values of cells by setting large
+ * outliers to more sensible values.
  *
- * @param c Cell to act upon
- * @param data Unused parameter
- */
-void cell_init_parts(struct cell *c, void *data) {
-
-  struct part *restrict p = c->parts;
-  struct xpart *restrict xp = c->xparts;
-  const size_t count = c->count;
-
-  for (size_t i = 0; i < count; ++i) {
-    p[i].ti_begin = 0;
-    p[i].ti_end = 0;
-    xp[i].v_full[0] = p[i].v[0];
-    xp[i].v_full[1] = p[i].v[1];
-    xp[i].v_full[2] = p[i].v[2];
-    hydro_first_init_part(&p[i], &xp[i]);
-    hydro_init_part(&p[i]);
-    hydro_reset_acceleration(&p[i]);
-  }
-  c->ti_end_min = 0;
-  c->ti_end_max = 0;
-}
-
-/**
- * @brief Initialises all g-particles to a valid state even if the ICs were
- *stupid
+ * We compute the mean and standard deviation of the smoothing lengths in
+ * logarithmic space and limit values to mean + 4 sigma.
  *
- * @param c Cell to act upon
- * @param data Unused parameter
+ * @param c The cell.
  */
-void cell_init_gparts(struct cell *c, void *data) {
+void cell_sanitize(struct cell *c) {
 
-  struct gpart *restrict gp = c->gparts;
-  const size_t gcount = c->gcount;
+  const int count = c->count;
+  struct part *parts = c->parts;
 
-  for (size_t i = 0; i < gcount; ++i) {
-    gp[i].ti_begin = 0;
-    gp[i].ti_end = 0;
-    gravity_first_init_gpart(&gp[i]);
-    gravity_init_gpart(&gp[i]);
+  /* First collect some statistics */
+  float h_mean = 0.f, h_mean2 = 0.f;
+  float h_min = FLT_MAX, h_max = 0.f;
+  for (int i = 0; i < count; ++i) {
+
+    const float h = logf(parts[i].h);
+    h_mean += h;
+    h_mean2 += h * h;
+    h_max = max(h_max, h);
+    h_min = min(h_min, h);
   }
-  c->ti_end_min = 0;
-  c->ti_end_max = 0;
+  h_mean /= count;
+  h_mean2 /= count;
+  const float h_var = h_mean2 - h_mean * h_mean;
+  const float h_std = (h_var > 0.f) ? sqrtf(h_var) : 0.1f * h_mean;
+
+  /* Choose a cut */
+  const float h_limit = expf(h_mean + 4.f * h_std);
+
+  /* Be verbose this is not innocuous */
+  message("Cell properties: h_min= %f h_max= %f geometric mean= %f.",
+          expf(h_min), expf(h_max), expf(h_mean));
+
+  if (c->h_max > h_limit) {
+
+    message("Smoothing lengths will be limited to (mean + 4sigma)= %f.",
+            h_limit);
+
+    /* Apply the cut */
+    for (int i = 0; i < count; ++i) parts->h = min(parts[i].h, h_limit);
+
+    c->h_max = h_limit;
+
+  } else {
+
+    message("Smoothing lengths will not be limited.");
+  }
 }
 
 /**
  * @brief Converts hydro quantities to a valid state after the initial density
- *calculation
+ * calculation
  *
  * @param c Cell to act upon
  * @param data Unused parameter
@@ -712,7 +766,6 @@ void cell_clean_links(struct cell *c, void *data) {
 }
 
 /**
-<<<<<<< HEAD
  * @brief Checks whether the cells are direct neighbours ot not. Both cells have
  * to be of the same size
  *
@@ -797,8 +850,10 @@ void cell_check_multipole(struct cell *c, void *data) {
   }
 }
 
-/*
- * @brief Frees up the memory allocated for this #cell
+/**
+ * @brief Frees up the memory allocated for this #cell.
+ *
+ * @param c The #cell.
  */
 void cell_clean(struct cell *c) {
 
@@ -807,4 +862,53 @@ void cell_clean(struct cell *c) {
   /* Recurse */
   for (int k = 0; k < 8; k++)
     if (c->progeny[k]) cell_clean(c->progeny[k]);
+}
+
+/**
+ * @brief Checks whether a given cell needs drifting or not.
+ *
+ * @param c the #cell.
+ * @param ti_current The current time on the integer time-line.
+ *
+ * @return 1 If the cell needs drifting, 0 otherwise.
+ */
+int cell_is_drift_needed(struct cell *c, int ti_current) {
+
+  /* Do we have at least one active particle in the cell ?*/
+  if (c->ti_end_min == ti_current) return 1;
+
+  /* Loop over the pair tasks that involve this cell */
+  for (struct link *l = c->density; l != NULL; l = l->next) {
+
+    if (l->t->type != task_type_pair && l->t->type != task_type_sub_pair)
+      continue;
+
+    /* Does the other cell in the pair have an active particle ? */
+    if ((l->t->ci == c && l->t->cj->ti_end_min == ti_current) ||
+        (l->t->cj == c && l->t->ci->ti_end_min == ti_current))
+      return 1;
+  }
+
+  /* No neighbouring cell has active particles. Drift not necessary */
+  return 0;
+}
+
+/**
+ * @brief Set the super-cell pointers for all cells in a hierarchy.
+ *
+ * @param c The top-level #cell to play with.
+ * @param super Pointer to the deepest cell with tasks in this part of the tree.
+ */
+void cell_set_super(struct cell *c, struct cell *super) {
+
+  /* Are we in a cell with some kind of self/pair task ? */
+  if (super == NULL && c->nr_tasks > 0) super = c;
+
+  /* Set the super-cell */
+  c->super = super;
+
+  /* Recurse */
+  if (c->split)
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL) cell_set_super(c->progeny[k], super);
 }

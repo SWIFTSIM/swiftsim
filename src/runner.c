@@ -42,6 +42,7 @@
 #include "atomic.h"
 #include "cell.h"
 #include "const.h"
+#include "cooling.h"
 #include "debug.h"
 #include "drift.h"
 #include "engine.h"
@@ -52,10 +53,23 @@
 #include "kick.h"
 #include "minmax.h"
 #include "scheduler.h"
+#include "sourceterms.h"
 #include "space.h"
 #include "task.h"
 #include "timers.h"
 #include "timestep.h"
+
+/**
+ * @brief  Entry in a list of sorted indices.
+ */
+struct entry {
+
+  /*! Distance on the axis */
+  float d;
+
+  /*! Particle index */
+  int i;
+};
 
 /* Orientation of the cell pairs */
 const double runner_shift[13][3] = {
@@ -99,6 +113,42 @@ const char runner_flip[27] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
 #include "runner_doiact_grav.h"
 
 /**
+ * @brief Perform source terms
+ *
+ * @param r runner task
+ * @param c cell
+ * @param timer 1 if the time is to be recorded.
+ */
+void runner_do_sourceterms(struct runner *r, struct cell *c, int timer) {
+  const int count = c->count;
+  const double cell_min[3] = {c->loc[0], c->loc[1], c->loc[2]};
+  const double cell_width[3] = {c->width[0], c->width[1], c->width[2]};
+  struct sourceterms *sourceterms = r->e->sourceterms;
+  const int dimen = 3;
+
+  TIMER_TIC;
+
+  /* Recurse? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL) runner_do_sourceterms(r, c->progeny[k], 0);
+    return;
+  }
+
+  if (count > 0) {
+
+    /* do sourceterms in this cell? */
+    const int incell =
+        sourceterms_test_cell(cell_min, cell_width, sourceterms, dimen);
+    if (incell == 1) {
+      sourceterms_apply(r, sourceterms, c);
+    }
+  }
+
+  if (timer) TIMER_TOC(timer_dosource);
+}
+
+/**
  * @brief Calculate gravity acceleration from external potential
  *
  * @param r runner task
@@ -113,7 +163,11 @@ void runner_do_grav_external(struct runner *r, struct cell *c, int timer) {
   const struct external_potential *potential = r->e->external_potential;
   const struct phys_const *constants = r->e->physical_constants;
   const double time = r->e->time;
+
   TIMER_TIC;
+
+  /* Anything to do here? */
+  if (c->ti_end_min > ti_current) return;
 
   /* Recurse? */
   if (c->split) {
@@ -130,16 +184,67 @@ void runner_do_grav_external(struct runner *r, struct cell *c, int timer) {
   for (int i = 0; i < gcount; i++) {
 
     /* Get a direct pointer on the part. */
-    struct gpart *restrict g = &gparts[i];
+    struct gpart *restrict gp = &gparts[i];
 
     /* Is this part within the time step? */
-    if (g->ti_end <= ti_current) {
+    if (gp->ti_end <= ti_current) {
 
-      external_gravity(time, potential, constants, g);
+      external_gravity_acceleration(time, potential, constants, gp);
     }
   }
 
   if (timer) TIMER_TOC(timer_dograv_external);
+}
+
+/**
+ * @brief Calculate change in thermal state of particles induced
+ * by radiative cooling and heating.
+ *
+ * @param r runner task
+ * @param c cell
+ * @param timer 1 if the time is to be recorded.
+ */
+void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
+
+  struct part *restrict parts = c->parts;
+  struct xpart *restrict xparts = c->xparts;
+  const int count = c->count;
+  const int ti_current = r->e->ti_current;
+  const struct cooling_function_data *cooling_func = r->e->cooling_func;
+  const struct phys_const *constants = r->e->physical_constants;
+  const struct UnitSystem *us = r->e->internalUnits;
+  const double timeBase = r->e->timeBase;
+
+  TIMER_TIC;
+
+  /* Recurse? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL) runner_do_cooling(r, c->progeny[k], 0);
+    return;
+  }
+
+#ifdef TASK_VERBOSE
+  OUT;
+#endif
+
+  /* Loop over the parts in this cell. */
+  for (int i = 0; i < count; i++) {
+
+    /* Get a direct pointer on the part. */
+    struct part *restrict p = &parts[i];
+    struct xpart *restrict xp = &xparts[i];
+
+    /* Kick has already updated ti_end, so need to check ti_begin */
+    if (p->ti_begin == ti_current) {
+
+      const double dt = (p->ti_end - p->ti_begin) * timeBase;
+
+      cooling_cool_part(constants, us, cooling_func, p, xp, dt);
+    }
+  }
+
+  if (timer) TIMER_TOC(timer_do_cooling);
 }
 
 /**
@@ -391,6 +496,9 @@ void runner_do_init(struct runner *r, struct cell *c, int timer) {
 
   TIMER_TIC;
 
+  /* Anything to do here? */
+  if (c->ti_end_min > ti_current) return;
+
   /* Recurse? */
   if (c->split) {
     for (int k = 0; k < 8; k++)
@@ -443,6 +551,9 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c) {
   const int count = c->count;
   const int ti_current = r->e->ti_current;
 
+  /* Anything to do here? */
+  if (c->ti_end_min > ti_current) return;
+
   /* Recurse? */
   if (c->split) {
     for (int k = 0; k < 8; k++)
@@ -492,6 +603,9 @@ void runner_do_ghost(struct runner *r, struct cell *c) {
       r->e->hydro_properties->max_smoothing_iterations;
 
   TIMER_TIC;
+
+  /* Anything to do here? */
+  if (c->ti_end_min > ti_current) return;
 
   /* Recurse? */
   if (c->split) {
@@ -641,16 +755,24 @@ void runner_do_ghost(struct runner *r, struct cell *c) {
 static void runner_do_drift(struct cell *c, struct engine *e) {
 
   const double timeBase = e->timeBase;
-  const double dt = (e->ti_current - e->ti_old) * timeBase;
-  const int ti_old = e->ti_old;
+  const int ti_old = c->ti_old;
   const int ti_current = e->ti_current;
-
   struct part *const parts = c->parts;
   struct xpart *const xparts = c->xparts;
   struct gpart *const gparts = c->gparts;
-  float dx_max = 0.f, dx2_max = 0.f, h_max = 0.f;
 
-  double e_kin = 0.0, e_int = 0.0, e_pot = 0.0, entropy = 0.0, mass = 0.0;
+  /* Do we need to drift ? */
+  if (!e->drift_all && !cell_is_drift_needed(c, ti_current)) return;
+
+  /* Check that we are actually going to move forward. */
+  if (ti_current == ti_old) return;
+
+  /* Drift from the last time the cell was drifted to the current time */
+  const double dt = (ti_current - ti_old) * timeBase;
+
+  float dx_max = 0.f, dx2_max = 0.f, h_max = 0.f;
+  double e_kin = 0.0, e_int = 0.0, e_pot = 0.0, e_rad = 0.0;
+  double entropy = 0.0, mass = 0.0;
   double mom[3] = {0.0, 0.0, 0.0};
   double ang_mom[3] = {0.0, 0.0, 0.0};
 
@@ -722,6 +844,7 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
       e_kin += 0.5 * m * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
       e_pot += 0.;
       e_int += m * hydro_get_internal_energy(p, half_dt);
+      e_rad += cooling_get_radiated_energy(xp);
 
       /* Collect entropy */
       entropy += m * hydro_get_entropy(p, half_dt);
@@ -742,12 +865,13 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
         /* Recurse. */
         runner_do_drift(cp, e);
 
-        dx_max = fmaxf(dx_max, cp->dx_max);
-        h_max = fmaxf(h_max, cp->h_max);
+        dx_max = max(dx_max, cp->dx_max);
+        h_max = max(h_max, cp->h_max);
         mass += cp->mass;
         e_kin += cp->e_kin;
         e_int += cp->e_int;
         e_pot += cp->e_pot;
+        e_rad += cp->e_rad;
         entropy += cp->entropy;
         mom[0] += cp->mom[0];
         mom[1] += cp->mom[1];
@@ -765,6 +889,7 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
   c->e_kin = e_kin;
   c->e_int = e_int;
   c->e_pot = e_pot;
+  c->e_rad = e_rad;
   c->entropy = entropy;
   c->mom[0] = mom[0];
   c->mom[1] = mom[1];
@@ -772,6 +897,9 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
   c->ang_mom[0] = ang_mom[0];
   c->ang_mom[1] = ang_mom[1];
   c->ang_mom[2] = ang_mom[2];
+
+  /* Update the time of the last drift */
+  c->ti_old = ti_current;
 }
 
 /**
@@ -928,14 +1056,21 @@ void runner_do_kick(struct runner *r, struct cell *c, int timer) {
   struct gpart *restrict gparts = c->gparts;
   const double const_G = r->e->physical_constants->const_newton_G;
 
-  int updated = 0, g_updated = 0;
-  int ti_end_min = max_nr_timesteps, ti_end_max = 0;
+  TIMER_TIC;
 
-  TIMER_TIC
+  /* Anything to do here? */
+  if (c->ti_end_min > ti_current) {
+    c->updated = 0;
+    c->g_updated = 0;
+    return;
+  }
 
 #ifdef TASK_VERBOSE
   OUT;
 #endif
+
+  int updated = 0, g_updated = 0;
+  int ti_end_min = max_nr_timesteps, ti_end_max = 0;
 
   /* No children? */
   if (!c->split) {
@@ -1061,7 +1196,7 @@ void runner_do_recv_cell(struct runner *r, struct cell *c, int timer) {
       // if(ti_end < ti_current) error("Received invalid particle !");
       ti_end_min = min(ti_end_min, ti_end);
       ti_end_max = max(ti_end_max, ti_end);
-      h_max = fmaxf(h_max, parts[k].h);
+      h_max = max(h_max, parts[k].h);
     }
     for (size_t k = 0; k < nr_gparts; k++) {
       const int ti_end = gparts[k].ti_end;
@@ -1079,7 +1214,7 @@ void runner_do_recv_cell(struct runner *r, struct cell *c, int timer) {
         runner_do_recv_cell(r, c->progeny[k], 0);
         ti_end_min = min(ti_end_min, c->progeny[k]->ti_end_min);
         ti_end_max = max(ti_end_max, c->progeny[k]->ti_end_max);
-        h_max = fmaxf(h_max, c->progeny[k]->h_max);
+        h_max = max(h_max, c->progeny[k]->h_max);
       }
     }
   }
@@ -1145,9 +1280,12 @@ void *runner_main(void *data) {
             runner_doself2_force(r, ci);
           else if (t->subtype == task_subtype_grav)
             runner_doself_grav(r, ci, 1);
+          else if (t->subtype == task_subtype_external_grav)
+            runner_do_grav_external(r, ci, 1);
           else
             error("Unknown task subtype.");
           break;
+
         case task_type_pair:
           if (t->subtype == task_subtype_density)
             runner_dopair1_density(r, ci, cj);
@@ -1162,9 +1300,7 @@ void *runner_main(void *data) {
           else
             error("Unknown task subtype.");
           break;
-        case task_type_sort:
-          runner_do_sort(r, ci, t->flags, 1);
-          break;
+
         case task_type_sub_self:
           if (t->subtype == task_subtype_density)
             runner_dosub_self1_density(r, ci, 1);
@@ -1176,9 +1312,12 @@ void *runner_main(void *data) {
             runner_dosub_self2_force(r, ci, 1);
           else if (t->subtype == task_subtype_grav)
             runner_dosub_grav(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_external_grav)
+            runner_do_grav_external(r, ci, 1);
           else
             error("Unknown task subtype.");
           break;
+
         case task_type_sub_pair:
           if (t->subtype == task_subtype_density)
             runner_dosub_pair1_density(r, ci, cj, t->flags, 1);
@@ -1192,6 +1331,10 @@ void *runner_main(void *data) {
             runner_dosub_grav(r, ci, cj, 1);
           else
             error("Unknown task subtype.");
+          break;
+
+        case task_type_sort:
+          runner_do_sort(r, ci, t->flags, 1);
           break;
         case task_type_init:
           runner_do_init(r, ci, 1);
@@ -1236,8 +1379,11 @@ void *runner_main(void *data) {
         case task_type_grav_fft:
           runner_do_grav_fft(r);
           break;
-        case task_type_grav_external:
-          runner_do_grav_external(r, t->ci, 1);
+        case task_type_cooling:
+          runner_do_cooling(r, t->ci, 1);
+          break;
+        case task_type_sourceterms:
+          runner_do_sourceterms(r, t->ci, 1);
           break;
         default:
           error("Unknown task type.");

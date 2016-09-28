@@ -68,7 +68,7 @@
 #include "units.h"
 #include "version.h"
 
-const char *engine_policy_names[13] = {"none",
+const char *engine_policy_names[16] = {"none",
                                        "rand",
                                        "steal",
                                        "keep",
@@ -80,7 +80,10 @@ const char *engine_policy_names[13] = {"none",
                                        "hydro",
                                        "self_gravity",
                                        "external_gravity",
-                                       "cosmology_integration"};
+                                       "cosmology_integration",
+                                       "drift_all",
+                                       "cooling",
+                                       "sourceterms"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -94,7 +97,6 @@ int engine_rank;
  *
  * @return The new #link pointer.
  */
-
 void engine_addlink(struct engine *e, struct link **l, struct task *t) {
 
   /* Get the next free link. */
@@ -110,126 +112,77 @@ void engine_addlink(struct engine *e, struct link **l, struct task *t) {
 }
 
 /**
- * @brief Generate the gravity hierarchical tasks for a hierarchy of cells -
- * i.e. all the O(Npart) tasks.
- *
- * Tasks are only created here. The dependencies will be added later on.
- *
- * @param e The #engine.
- * @param c The #cell.
- * @param super The super #cell.
- */
-void engine_make_gravity_hierarchical_tasks(struct engine *e, struct cell *c,
-                                            struct cell *super) {
-
-  struct scheduler *s = &e->sched;
-  const int is_with_external_gravity =
-      (e->policy & engine_policy_external_gravity) ==
-      engine_policy_external_gravity;
-  const int is_fixdt = (e->policy & engine_policy_fixdt) == engine_policy_fixdt;
-
-  /* Is this the super-cell? */
-  if (super == NULL && (c->grav != NULL || (!c->split && c->gcount > 0))) {
-
-    /* This is the super cell, i.e. the first with gravity tasks attached. */
-    super = c;
-
-    /* Local tasks only... */
-    if (c->nodeID == e->nodeID) {
-
-      /* Add the init task. */
-      if (c->init == NULL)
-        c->init = scheduler_addtask(s, task_type_init, task_subtype_none, 0, 0,
-                                    c, NULL, 0);
-
-      /* Add the kick task that matches the policy. */
-      if (is_fixdt) {
-        if (c->kick == NULL)
-          c->kick = scheduler_addtask(s, task_type_kick_fixdt,
-                                      task_subtype_none, 0, 0, c, NULL, 0);
-      } else {
-        if (c->kick == NULL)
-          c->kick = scheduler_addtask(s, task_type_kick, task_subtype_none, 0,
-                                      0, c, NULL, 0);
-      }
-
-      if (is_with_external_gravity)
-        c->grav_external = scheduler_addtask(
-            s, task_type_grav_external, task_subtype_none, 0, 0, c, NULL, 0);
-    }
-  }
-
-  /* Set the super-cell. */
-  c->super = super;
-
-  /* Recurse. */
-  if (c->split)
-    for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL)
-        engine_make_gravity_hierarchical_tasks(e, c->progeny[k], super);
-}
-
-/**
  * @brief Generate the hydro hierarchical tasks for a hierarchy of cells -
  * i.e. all the O(Npart) tasks.
  *
  * Tasks are only created here. The dependencies will be added later on.
  *
+ * Note that there is no need to recurse below the super-cell.
+ *
  * @param e The #engine.
  * @param c The #cell.
- * @param super The super #cell.
  */
-void engine_make_hydro_hierarchical_tasks(struct engine *e, struct cell *c,
-                                          struct cell *super) {
+void engine_make_hierarchical_tasks(struct engine *e, struct cell *c) {
 
   struct scheduler *s = &e->sched;
-  const int is_fixdt = (e->policy & engine_policy_fixdt) == engine_policy_fixdt;
+  const int is_fixdt = (e->policy & engine_policy_fixdt);
+  const int is_hydro = (e->policy & engine_policy_hydro);
+  const int is_with_cooling = (e->policy & engine_policy_cooling);
+  const int is_with_sourceterms = (e->policy & engine_policy_sourceterms);
 
-  /* Is this the super-cell? */
-  if (super == NULL && (c->density != NULL || (c->count > 0 && !c->split))) {
-
-    /* This is the super cell, i.e. the first with density tasks attached. */
-    super = c;
+  /* Are we in a super-cell ? */
+  if (c->super == c) {
 
     /* Local tasks only... */
     if (c->nodeID == e->nodeID) {
 
       /* Add the init task. */
-      if (c->init == NULL)
-        c->init = scheduler_addtask(s, task_type_init, task_subtype_none, 0, 0,
-                                    c, NULL, 0);
+      c->init = scheduler_addtask(s, task_type_init, task_subtype_none, 0, 0, c,
+                                  NULL, 0);
 
       /* Add the kick task that matches the policy. */
       if (is_fixdt) {
-        if (c->kick == NULL)
-          c->kick = scheduler_addtask(s, task_type_kick_fixdt,
-                                      task_subtype_none, 0, 0, c, NULL, 0);
+        c->kick = scheduler_addtask(s, task_type_kick_fixdt, task_subtype_none,
+                                    0, 0, c, NULL, 0);
       } else {
-        if (c->kick == NULL)
-          c->kick = scheduler_addtask(s, task_type_kick, task_subtype_none, 0,
-                                      0, c, NULL, 0);
+        c->kick = scheduler_addtask(s, task_type_kick, task_subtype_none, 0, 0,
+                                    c, NULL, 0);
       }
 
       /* Generate the ghost task. */
-      c->ghost = scheduler_addtask(s, task_type_ghost, task_subtype_none, 0, 0,
-                                   c, NULL, 0);
+      if (is_hydro)
+        c->ghost = scheduler_addtask(s, task_type_ghost, task_subtype_none, 0,
+                                     0, c, NULL, 0);
 
 #ifdef EXTRA_HYDRO_LOOP
       /* Generate the extra ghost task. */
-      c->extra_ghost = scheduler_addtask(s, task_type_extra_ghost,
-                                         task_subtype_none, 0, 0, c, NULL, 0);
+      if (is_hydro)
+        c->extra_ghost = scheduler_addtask(s, task_type_extra_ghost,
+                                           task_subtype_none, 0, 0, c, NULL, 0);
 #endif
+
+      /* Cooling task */
+      if (is_with_cooling)
+        c->cooling = scheduler_addtask(s, task_type_cooling, task_subtype_none,
+                                       0, 0, c, NULL, 0);
+      /* add source terms */
+      if (is_with_sourceterms)
+        c->sourceterms = scheduler_addtask(s, task_type_sourceterms,
+                                           task_subtype_none, 0, 0, c, NULL, 0);
     }
+
+  } else { /* We are above the super-cell so need to go deeper */
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (c->super != NULL) error("Incorrectly set super pointer");
+#endif
+
+    /* Recurse. */
+    if (c->split)
+      for (int k = 0; k < 8; k++)
+        if (c->progeny[k] != NULL)
+          engine_make_hierarchical_tasks(e, c->progeny[k]);
   }
-
-  /* Set the super-cell. */
-  c->super = super;
-
-  /* Recurse. */
-  if (c->split)
-    for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL)
-        engine_make_hydro_hierarchical_tasks(e, c->progeny[k], super);
 }
 
 /**
@@ -255,7 +208,7 @@ void engine_redistribute(struct engine *e) {
   const int nr_nodes = e->nr_nodes;
   const int nodeID = e->nodeID;
   struct space *s = e->s;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
   const int nr_cells = s->nr_cells;
   const int *cdim = s->cdim;
   const double iwidth[3] = {s->iwidth[0], s->iwidth[1], s->iwidth[2]};
@@ -534,12 +487,12 @@ void engine_redistribute(struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that all parts are in the right place. */
-  for (int k = 0; k < nr_parts; k++) {
-    int cid = cell_getid(cdim, parts_new[k].x[0] * iwidth[0],
-                         parts_new[k].x[1] * iwidth[1],
-                         parts_new[k].x[2] * iwidth[2]);
+  for (size_t k = 0; k < nr_parts; k++) {
+    const int cid = cell_getid(cdim, parts_new[k].x[0] * iwidth[0],
+                               parts_new[k].x[1] * iwidth[1],
+                               parts_new[k].x[2] * iwidth[2]);
     if (cells[cid].nodeID != nodeID)
-      error("Received particle (%i) that does not belong here (nodeID=%i).", k,
+      error("Received particle (%zu) that does not belong here (nodeID=%i).", k,
             cells[cid].nodeID);
   }
 
@@ -560,7 +513,7 @@ void engine_redistribute(struct engine *e) {
   for (size_t k = 0; k < nr_parts; ++k) {
 
     if (parts_new[k].gpart != NULL &&
-        parts_new[k].gpart->id_or_neg_offset != -k) {
+        parts_new[k].gpart->id_or_neg_offset != -(ptrdiff_t)k) {
       error("Linking problem !");
     }
   }
@@ -772,7 +725,6 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj,
  * @param t_gradient The recv_gradient #task, if it has already been created.
  * @param t_ti The recv_ti #task, if required and has already been created.
  */
-
 void engine_addtasks_recv(struct engine *e, struct cell *c, struct task *t_xv,
                           struct task *t_rho, struct task *t_gradient,
                           struct task *t_ti) {
@@ -851,7 +803,7 @@ void engine_exchange_cells(struct engine *e) {
 #ifdef WITH_MPI
 
   struct space *s = e->s;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
   const int nr_cells = s->nr_cells;
   const int nr_proxies = e->nr_proxies;
   int offset[nr_cells];
@@ -1011,7 +963,7 @@ void engine_exchange_strays(struct engine *e, size_t offset_parts,
   /* Put the parts and gparts into the corresponding proxies. */
   for (size_t k = 0; k < *Npart; k++) {
     /* Get the target node and proxy ID. */
-    const int node_id = e->s->cells[ind_part[k]].nodeID;
+    const int node_id = e->s->cells_top[ind_part[k]].nodeID;
     if (node_id < 0 || node_id >= e->nr_nodes)
       error("Bad node ID %i.", node_id);
     const int pid = e->proxy_ind[node_id];
@@ -1035,7 +987,7 @@ void engine_exchange_strays(struct engine *e, size_t offset_parts,
                      &s->xparts[offset_parts + k], 1);
   }
   for (size_t k = 0; k < *Ngpart; k++) {
-    const int node_id = e->s->cells[ind_gpart[k]].nodeID;
+    const int node_id = e->s->cells_top[ind_gpart[k]].nodeID;
     if (node_id < 0 || node_id >= e->nr_nodes)
       error("Bad node ID %i.", node_id);
     const int pid = e->proxy_ind[node_id];
@@ -1240,7 +1192,7 @@ void engine_make_gravity_tasks(struct engine *e) {
   struct space *s = e->s;
   struct scheduler *sched = &e->sched;
   const int nodeID = e->nodeID;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
   const int nr_cells = s->nr_cells;
 
   for (int cid = 0; cid < nr_cells; ++cid) {
@@ -1278,6 +1230,30 @@ void engine_make_gravity_tasks(struct engine *e) {
   }
 }
 
+void engine_make_external_gravity_tasks(struct engine *e) {
+
+  struct space *s = e->s;
+  struct scheduler *sched = &e->sched;
+  const int nodeID = e->nodeID;
+  struct cell *cells = s->cells_top;
+  const int nr_cells = s->nr_cells;
+
+  for (int cid = 0; cid < nr_cells; ++cid) {
+
+    struct cell *ci = &cells[cid];
+
+    /* Skip cells without gravity particles */
+    if (ci->gcount == 0) continue;
+
+    /* Is that neighbour local ? */
+    if (ci->nodeID != nodeID) continue;
+
+    /* If the cells is local build a self-interaction */
+    scheduler_addtask(sched, task_type_self, task_subtype_external_grav, 0, 0,
+                      ci, NULL, 0);
+  }
+}
+
 /**
  * @brief Constructs the top-level pair tasks for the first hydro loop over
  * neighbours
@@ -1295,7 +1271,7 @@ void engine_make_hydroloop_tasks(struct engine *e) {
   struct scheduler *sched = &e->sched;
   const int nodeID = e->nodeID;
   const int *cdim = s->cdim;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
 
   /* Run through the highest level of cells and add pairs. */
   for (int i = 0; i < cdim[0]; i++) {
@@ -1431,6 +1407,22 @@ static inline void engine_make_gravity_dependencies(struct scheduler *sched,
 }
 
 /**
+ * @brief Creates the dependency network for the external gravity tasks of a
+ * given cell.
+ *
+ * @param sched The #scheduler.
+ * @param gravity The gravity task to link.
+ * @param c The cell.
+ */
+static inline void engine_make_external_gravity_dependencies(
+    struct scheduler *sched, struct task *gravity, struct cell *c) {
+
+  /* init --> external gravity --> kick */
+  scheduler_addunlock(sched, c->super->init, gravity);
+  scheduler_addunlock(sched, gravity, c->super->kick);
+}
+
+/**
  * @brief Creates all the task dependencies for the gravity
  *
  * @param e The #engine
@@ -1475,10 +1467,18 @@ void engine_link_gravity_tasks(struct engine *e) {
       scheduler_addunlock(sched, t->ci->super->init, t);
     }
 
-    /* Self-interaction? */
+    /* Self-interaction for self-gravity? */
     if (t->type == task_type_self && t->subtype == task_subtype_grav) {
 
       engine_make_gravity_dependencies(sched, t, t->ci);
+
+    }
+
+    /* Self-interaction for external gravity ? */
+    else if (t->type == task_type_self &&
+             t->subtype == task_subtype_external_grav) {
+
+      engine_make_external_gravity_dependencies(sched, t, t->ci);
 
     }
 
@@ -1502,6 +1502,15 @@ void engine_link_gravity_tasks(struct engine *e) {
 
       if (t->ci->nodeID == nodeID) {
         engine_make_gravity_dependencies(sched, t, t->ci);
+      }
+    }
+
+    /* Sub-self-interaction for external gravity ? */
+    else if (t->type == task_type_sub_self &&
+             t->subtype == task_subtype_external_grav) {
+
+      if (t->ci->nodeID == nodeID) {
+        engine_make_external_gravity_dependencies(sched, t, t->ci);
       }
     }
 
@@ -1583,7 +1592,7 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
 void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
   struct scheduler *sched = &e->sched;
-  int nr_tasks = sched->nr_tasks;
+  const int nr_tasks = sched->nr_tasks;
   const int nodeID = e->nodeID;
 
   for (int ind = 0; ind < nr_tasks; ind++) {
@@ -1779,10 +1788,17 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
       }
 #endif
     }
-    /* External gravity tasks should depend on init and unlock the kick */
-    else if (t->type == task_type_grav_external) {
-      scheduler_addunlock(sched, t->ci->init, t);
-      scheduler_addunlock(sched, t, t->ci->kick);
+    /* Cooling tasks should depend on kick and unlock sourceterms */
+    else if (t->type == task_type_cooling) {
+      scheduler_addunlock(sched, t->ci->kick, t);
+    }
+    /* source terms depend on cooling if performed, else on kick. It is the last
+       task */
+    else if (t->type == task_type_sourceterms) {
+      if (e->policy == engine_policy_cooling)
+        scheduler_addunlock(sched, t->ci->cooling, t);
+      else
+        scheduler_addunlock(sched, t->ci->kick, t);
     }
   }
 }
@@ -1801,7 +1817,7 @@ void engine_make_gravityrecursive_tasks(struct engine *e) {
   struct scheduler *sched = &e->sched;
   const int nodeID = e->nodeID;
   const int nr_cells = s->nr_cells;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
 
   for (int k = 0; k < nr_cells; k++) {
 
@@ -1834,7 +1850,7 @@ void engine_maketasks(struct engine *e) {
 
   struct space *s = e->s;
   struct scheduler *sched = &e->sched;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
   const int nr_cells = s->nr_cells;
   const ticks tic = getticks();
 
@@ -1846,6 +1862,12 @@ void engine_maketasks(struct engine *e) {
 
   /* Add the gravity mm tasks. */
   if (e->policy & engine_policy_self_gravity) engine_make_gravity_tasks(e);
+
+  /* Add the external gravity tasks. */
+  if (e->policy & engine_policy_external_gravity)
+    engine_make_external_gravity_tasks(e);
+
+  if (e->sched.nr_tasks == 0) error("No hydro or gravity tasks created.");
 
   /* Split the tasks. */
   scheduler_splittasks(sched);
@@ -1872,23 +1894,22 @@ void engine_maketasks(struct engine *e) {
      depend on the sorts of its progeny. */
   engine_count_and_link_tasks(e);
 
-  /* Append hierarchical tasks to each cells */
-  if (e->policy & engine_policy_hydro)
-    for (int k = 0; k < nr_cells; k++)
-      engine_make_hydro_hierarchical_tasks(e, &cells[k], NULL);
+  /* Now that the self/pair tasks are at the right level, set the super
+   * pointers. */
+  for (int k = 0; k < nr_cells; k++) cell_set_super(&cells[k], NULL);
 
-  if ((e->policy & engine_policy_self_gravity) ||
-      (e->policy & engine_policy_external_gravity))
-    for (int k = 0; k < nr_cells; k++)
-      engine_make_gravity_hierarchical_tasks(e, &cells[k], NULL);
+  /* Append hierarchical tasks to each cells */
+  for (int k = 0; k < nr_cells; k++)
+    engine_make_hierarchical_tasks(e, &cells[k]);
 
   /* Run through the tasks and make force tasks for each density task.
      Each force task depends on the cell ghosts and unlocks the kick task
      of its super-cell. */
-  engine_make_extra_hydroloop_tasks(e);
+  if (e->policy & engine_policy_hydro) engine_make_extra_hydroloop_tasks(e);
 
-  /* Add the dependencies for the self-gravity stuff */
-  if (e->policy & engine_policy_self_gravity) engine_link_gravity_tasks(e);
+  /* Add the dependencies for the gravity stuff */
+  if (e->policy & (engine_policy_self_gravity | engine_policy_external_gravity))
+    engine_link_gravity_tasks(e);
 
 #ifdef WITH_MPI
 
@@ -1922,14 +1943,14 @@ void engine_maketasks(struct engine *e) {
   scheduler_ranktasks(sched);
 
   /* Weight the tasks. */
-  scheduler_reweight(sched);
+  scheduler_reweight(sched, e->verbose);
 
   /* Set the tasks age. */
   e->tasks_age = 0;
 
   if (e->verbose)
-    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-            clocks_getunit());
+    message("took %.3f %s (including reweight).",
+            clocks_from_ticks(getticks() - tic), clocks_getunit());
 }
 
 /**
@@ -1958,7 +1979,7 @@ void engine_marktasks_fixdt_mapper(void *map_data, int num_elements,
 
       /* Too much particle movement? */
       if (t->tight &&
-          (fmaxf(ci->h_max, cj->h_max) + ci->dx_max + cj->dx_max > cj->dmin ||
+          (max(ci->h_max, cj->h_max) + ci->dx_max + cj->dx_max > cj->dmin ||
            ci->dx_max > space_maxreldx * ci->h_max ||
            cj->dx_max > space_maxreldx * cj->h_max))
         *rebuild_space = 1;
@@ -2030,7 +2051,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       /* Too much particle movement? */
       if (t->tight &&
-          (fmaxf(ci->h_max, cj->h_max) + ci->dx_max + cj->dx_max > cj->dmin ||
+          (max(ci->h_max, cj->h_max) + ci->dx_max + cj->dx_max > cj->dmin ||
            ci->dx_max > space_maxreldx * ci->h_max ||
            cj->dx_max > space_maxreldx * cj->h_max))
         *rebuild_space = 1;
@@ -2050,6 +2071,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           cj->sorts->skip = 0;
         }
       }
+
+#ifdef WITH_MPI
 
       /* Activate the send/recv flags. */
       if (ci->nodeID != engine_rank) {
@@ -2105,6 +2128,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (l == NULL) error("Missing link to send_ti task.");
         l->t->skip = 0;
       }
+
+#endif
     }
 
     /* Kick? */
@@ -2216,7 +2241,6 @@ void engine_print_task_counts(struct engine *e) {
  *
  * @param e The #engine.
  */
-
 void engine_rebuild(struct engine *e) {
 
   const ticks tic = getticks();
@@ -2226,6 +2250,8 @@ void engine_rebuild(struct engine *e) {
 
   /* Re-build the space. */
   space_rebuild(e->s, 0.0, e->verbose);
+
+  if (e->ti_current == 0) space_sanitize(e->s);
 
 /* If in parallel, exchange the cell structure. */
 #ifdef WITH_MPI
@@ -2251,8 +2277,11 @@ void engine_rebuild(struct engine *e) {
  * @brief Prepare the #engine by re-building the cells and tasks.
  *
  * @param e The #engine to prepare.
+ * @param nodrift Whether to drift particles before rebuilding or not. Will
+ *                not be necessary if all particles have already been
+ *                drifted (before repartitioning for instance).
  */
-void engine_prepare(struct engine *e) {
+void engine_prepare(struct engine *e, int nodrift) {
 
   TIMER_TIC;
 
@@ -2268,22 +2297,32 @@ void engine_prepare(struct engine *e) {
   rebuild = buff;
 #endif
 
-  /* Did this not go through? */
+  /* And rebuild if necessary. */
   if (rebuild) {
+
+    /* Drift all particles to the current time if needed. */
+    if (!nodrift) {
+      e->drift_all = 1;
+      engine_drift(e);
+
+      /* Restore the default drifting policy */
+      e->drift_all = (e->policy & engine_policy_drift_all);
+    }
+
     engine_rebuild(e);
   }
 
   /* Re-rank the tasks every now and then. */
   if (e->tasks_age % engine_tasksreweight == 1) {
-    scheduler_reweight(&e->sched);
+    scheduler_reweight(&e->sched, e->verbose);
   }
   e->tasks_age += 1;
 
   TIMER_TOC(timer_prepare);
 
   if (e->verbose)
-    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-            clocks_getunit());
+    message("took %.3f %s (including marktask, rebuild and reweight).",
+            clocks_from_ticks(getticks() - tic), clocks_getunit());
 }
 
 /**
@@ -2375,14 +2414,15 @@ void engine_collect_kick(struct cell *c) {
  */
 void engine_collect_timestep(struct engine *e) {
 
+  const ticks tic = getticks();
   int updates = 0, g_updates = 0;
   int ti_end_min = max_nr_timesteps;
   const struct space *s = e->s;
 
   /* Collect the cell data. */
   for (int k = 0; k < s->nr_cells; k++)
-    if (s->cells[k].nodeID == e->nodeID) {
-      struct cell *c = &s->cells[k];
+    if (s->cells_top[k].nodeID == e->nodeID) {
+      struct cell *c = &s->cells_top[k];
 
       /* Make the top-cells recurse */
       engine_collect_kick(c);
@@ -2419,6 +2459,10 @@ void engine_collect_timestep(struct engine *e) {
   e->ti_end_min = ti_end_min;
   e->updates = updates;
   e->g_updates = g_updates;
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }
 
 /**
@@ -2428,19 +2472,22 @@ void engine_collect_timestep(struct engine *e) {
  */
 void engine_print_stats(struct engine *e) {
 
+  const ticks tic = getticks();
   const struct space *s = e->s;
 
-  double e_kin = 0.0, e_int = 0.0, e_pot = 0.0, entropy = 0.0, mass = 0.0;
+  double e_kin = 0.0, e_int = 0.0, e_pot = 0.0, e_rad = 0.0;
+  double entropy = 0.0, mass = 0.0;
   double mom[3] = {0.0, 0.0, 0.0}, ang_mom[3] = {0.0, 0.0, 0.0};
 
   /* Collect the cell data. */
   for (int k = 0; k < s->nr_cells; k++)
-    if (s->cells[k].nodeID == e->nodeID) {
-      struct cell *c = &s->cells[k];
+    if (s->cells_top[k].nodeID == e->nodeID) {
+      struct cell *c = &s->cells_top[k];
       mass += c->mass;
       e_kin += c->e_kin;
       e_int += c->e_int;
       e_pot += c->e_pot;
+      e_rad += c->e_rad;
       entropy += c->entropy;
       mom[0] += c->mom[0];
       mom[1] += c->mom[1];
@@ -2453,33 +2500,35 @@ void engine_print_stats(struct engine *e) {
 /* Aggregate the data from the different nodes. */
 #ifdef WITH_MPI
   {
-    double in[11] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
-    double out[11];
+    double in[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+    double out[12];
     out[0] = e_kin;
     out[1] = e_int;
     out[2] = e_pot;
-    out[3] = mom[0];
-    out[4] = mom[1];
-    out[5] = mom[2];
-    out[6] = ang_mom[0];
-    out[7] = ang_mom[1];
-    out[8] = ang_mom[2];
-    out[9] = mass;
-    out[10] = entropy;
+    out[3] = e_rad;
+    out[4] = mom[0];
+    out[5] = mom[1];
+    out[6] = mom[2];
+    out[7] = ang_mom[0];
+    out[8] = ang_mom[1];
+    out[9] = ang_mom[2];
+    out[10] = mass;
+    out[11] = entropy;
     if (MPI_Reduce(out, in, 11, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD) !=
         MPI_SUCCESS)
       error("Failed to aggregate stats.");
     e_kin = out[0];
     e_int = out[1];
     e_pot = out[2];
-    mom[0] = out[3];
-    mom[1] = out[4];
-    mom[2] = out[5];
-    ang_mom[0] = out[6];
-    ang_mom[1] = out[7];
-    ang_mom[2] = out[8];
-    mass = out[9];
-    entropy = out[10];
+    e_rad = out[3];
+    mom[0] = out[4];
+    mom[1] = out[5];
+    mom[2] = out[6];
+    ang_mom[0] = out[7];
+    ang_mom[1] = out[8];
+    ang_mom[2] = out[9];
+    mass = out[10];
+    entropy = out[11];
   }
 #endif
 
@@ -2487,13 +2536,17 @@ void engine_print_stats(struct engine *e) {
 
   /* Print info */
   if (e->nodeID == 0) {
-    fprintf(
-        e->file_stats,
-        " %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e\n",
-        e->time, mass, e_tot, e_kin, e_int, e_pot, entropy, mom[0], mom[1],
-        mom[2], ang_mom[0], ang_mom[1], ang_mom[2]);
+    fprintf(e->file_stats,
+            " %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e "
+            "%14e\n",
+            e->time, mass, e_tot, e_kin, e_int, e_pot, e_rad, entropy, mom[0],
+            mom[1], mom[2], ang_mom[0], ang_mom[1], ang_mom[2]);
     fflush(e->file_stats);
   }
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }
 
 /**
@@ -2506,6 +2559,8 @@ void engine_print_stats(struct engine *e) {
  */
 void engine_launch(struct engine *e, int nr_runners, unsigned int mask,
                    unsigned int submask) {
+
+  const ticks tic = getticks();
 
   /* Prepare the scheduler. */
   atomic_inc(&e->sched.waiting);
@@ -2531,6 +2586,10 @@ void engine_launch(struct engine *e, int nr_runners, unsigned int mask,
   while (e->barrier_launch || e->barrier_running)
     if (pthread_cond_wait(&e->barrier_cond, &e->barrier_mutex) != 0)
       error("Error while waiting for barrier.");
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }
 
 /**
@@ -2550,7 +2609,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
 
   if (e->nodeID == 0) message("Running initialisation fake time-step.");
 
-  engine_prepare(e);
+  engine_prepare(e, 1);
 
   engine_marktasks(e);
 
@@ -2592,7 +2651,10 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
   /* Add the tasks corresponding to external gravity to the masks */
   if (e->policy & engine_policy_external_gravity) {
 
-    mask |= 1 << task_type_grav_external;
+    mask |= 1 << task_type_self;
+    mask |= 1 << task_type_sub_self;
+
+    submask |= 1 << task_subtype_external_grav;
   }
 
   /* Add MPI tasks if need be */
@@ -2609,7 +2671,15 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
   TIMER_TOC(timer_runners);
 
   /* Apply some conversions (e.g. internal energy -> entropy) */
-  if (!flag_entropy_ICs) space_map_cells_pre(s, 0, cell_convert_hydro, NULL);
+  if (!flag_entropy_ICs) {
+
+    /* Apply the conversion */
+    space_map_cells_pre(s, 0, cell_convert_hydro, NULL);
+
+    /* Correct what we did (e.g. in PE-SPH, need to recompute rho_bar) */
+    if (hydro_need_extra_init_loop)
+      engine_launch(e, e->nr_threads, mask, submask);
+  }
 
   clocks_gettime(&time2);
 
@@ -2650,8 +2720,11 @@ void engine_step(struct engine *e) {
     snapshot_drift_time = e->timeStep;
 
     /* Drift everybody to the snapshot position */
-    threadpool_map(&e->threadpool, runner_do_drift_mapper, e->s->cells,
-                   e->s->nr_cells, sizeof(struct cell), 1, e);
+    e->drift_all = 1;
+    engine_drift(e);
+
+    /* Restore the default drifting policy */
+    e->drift_all = (e->policy & engine_policy_drift_all);
 
     /* Dump... */
     engine_dump_snapshot(e);
@@ -2667,10 +2740,6 @@ void engine_step(struct engine *e) {
   e->time = e->ti_current * e->timeBase + e->timeBegin;
   e->timeOld = e->ti_old * e->timeBase + e->timeBegin;
   e->timeStep = (e->ti_current - e->ti_old) * e->timeBase + snapshot_drift_time;
-
-  /* Drift everybody */
-  threadpool_map(&e->threadpool, runner_do_drift_mapper, e->s->cells,
-                 e->s->nr_cells, sizeof(struct cell), 1, e);
 
   if (e->nodeID == 0) {
 
@@ -2690,11 +2759,20 @@ void engine_step(struct engine *e) {
     e->timeLastStatistics += e->deltaTimeStatistics;
   }
 
+  /* Drift only the necessary particles, that all means all particles
+   * if we are about to repartition. */
+  int repart = (e->forcerepart != REPART_NONE);
+  e->drift_all = repart || e->drift_all;
+  engine_drift(e);
+
   /* Re-distribute the particles amongst the nodes? */
-  if (e->forcerepart != REPART_NONE) engine_repartition(e);
+  if (repart) engine_repartition(e);
 
   /* Prepare the space. */
-  engine_prepare(e);
+  engine_prepare(e, e->drift_all);
+
+  /* Restore the default drifting policy */
+  e->drift_all = (e->policy & engine_policy_drift_all);
 
   /* Build the masks corresponding to the policy */
   unsigned int mask = 0, submask = 0;
@@ -2745,7 +2823,21 @@ void engine_step(struct engine *e) {
 
   /* Add the tasks corresponding to external gravity to the masks */
   if (e->policy & engine_policy_external_gravity) {
-    mask |= 1 << task_type_grav_external;
+
+    mask |= 1 << task_type_self;
+    mask |= 1 << task_type_sub_self;
+
+    submask |= 1 << task_subtype_external_grav;
+  }
+
+  /* Add the tasks corresponding to cooling to the masks */
+  if (e->policy & engine_policy_cooling) {
+    mask |= 1 << task_type_cooling;
+  }
+
+  /* Add the tasks corresponding to sourceterms to the masks */
+  if (e->policy & engine_policy_sourceterms) {
+    mask |= 1 << task_type_sourceterms;
   }
 
   /* Add MPI tasks if need be */
@@ -2755,6 +2847,8 @@ void engine_step(struct engine *e) {
     mask |= 1 << task_type_recv;
     submask |= 1 << task_subtype_tend;
   }
+
+  if (e->verbose) engine_print_task_counts(e);
 
   /* Send off the runners. */
   TIMER_TIC;
@@ -2777,6 +2871,21 @@ int engine_is_done(struct engine *e) {
 }
 
 /**
+ * @brief Drift particles using the current engine drift policy.
+ *
+ * @param e The #engine.
+ */
+void engine_drift(struct engine *e) {
+
+  const ticks tic = getticks();
+  threadpool_map(&e->threadpool, runner_do_drift_mapper, e->s->cells_top,
+                 e->s->nr_cells, sizeof(struct cell), 1, e);
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+}
+
+/**
  * @brief Create and fill the proxies.
  *
  * @param e The #engine.
@@ -2786,7 +2895,7 @@ void engine_makeproxies(struct engine *e) {
 #ifdef WITH_MPI
   const int *cdim = e->s->cdim;
   const struct space *s = e->s;
-  struct cell *cells = s->cells;
+  struct cell *cells = s->cells_top;
   struct proxy *proxies = e->proxies;
   ticks tic = getticks();
 
@@ -2917,7 +3026,8 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   s->xparts = xparts_new;
 
   /* Re-link the gparts. */
-  part_relink_gparts(s->parts, s->nr_parts, 0);
+  if (s->nr_parts > 0 && s->nr_gparts > 0)
+    part_relink_gparts(s->parts, s->nr_parts, 0);
 
   /* Re-allocate the local gparts. */
   if (e->verbose)
@@ -2933,7 +3043,8 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   s->gparts = gparts_new;
 
   /* Re-link the parts. */
-  part_relink_parts(s->gparts, s->nr_gparts, s->parts);
+  if (s->nr_parts > 0 && s->nr_gparts > 0)
+    part_relink_parts(s->gparts, s->nr_gparts, s->parts);
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -2953,7 +3064,8 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   }
   for (size_t k = 0; k < s->nr_parts; ++k) {
 
-    if (s->parts[k].gpart != NULL && s->parts[k].gpart->id_or_neg_offset != -k)
+    if (s->parts[k].gpart != NULL &&
+        s->parts[k].gpart->id_or_neg_offset != -(ptrdiff_t)k)
       error("Linking problem !");
   }
 
@@ -3070,6 +3182,8 @@ void engine_unpin() {
  * @param physical_constants The #phys_const used for this run.
  * @param hydro The #hydro_props used for this run.
  * @param potential The properties of the external potential.
+ * @param cooling_func The properties of the cooling function.
+ * @param sourceterms The properties of the source terms function.
  */
 void engine_init(struct engine *e, struct space *s,
                  const struct swift_params *params, int nr_nodes, int nodeID,
@@ -3077,7 +3191,9 @@ void engine_init(struct engine *e, struct space *s,
                  const struct UnitSystem *internal_units,
                  const struct phys_const *physical_constants,
                  const struct hydro_props *hydro,
-                 const struct external_potential *potential) {
+                 const struct external_potential *potential,
+                 const struct cooling_function_data *cooling_func,
+                 struct sourceterms *sourceterms) {
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
@@ -3104,6 +3220,7 @@ void engine_init(struct engine *e, struct space *s,
   e->timeStep = 0.;
   e->timeBase = 0.;
   e->timeBase_inv = 0.;
+  e->drift_all = (policy & engine_policy_drift_all);
   e->internalUnits = internal_units;
   e->timeFirstSnapshot =
       parser_get_param_double(params, "Snapshots:time_first");
@@ -3128,6 +3245,8 @@ void engine_init(struct engine *e, struct space *s,
   e->physical_constants = physical_constants;
   e->hydro_properties = hydro;
   e->external_potential = potential;
+  e->cooling_func = cooling_func;
+  e->sourceterms = sourceterms;
   e->parameter_file = params;
   engine_rank = nodeID;
 
@@ -3278,11 +3397,11 @@ void engine_init(struct engine *e, struct space *s,
                                 engine_default_energy_file_name);
     sprintf(energyfileName + strlen(energyfileName), ".txt");
     e->file_stats = fopen(energyfileName, "w");
-    fprintf(
-        e->file_stats,
-        "#%14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s\n",
-        "Time", "Mass", "E_tot", "E_kin", "E_int", "E_pot", "Entropy", "p_x",
-        "p_y", "p_z", "ang_x", "ang_y", "ang_z");
+    fprintf(e->file_stats,
+            "#%14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s "
+            "%14s\n",
+            "Time", "Mass", "E_tot", "E_kin", "E_int", "E_pot", "E_radcool",
+            "Entropy", "p_x", "p_y", "p_z", "ang_x", "ang_y", "ang_z");
     fflush(e->file_stats);
 
     char timestepsfileName[200] = "";

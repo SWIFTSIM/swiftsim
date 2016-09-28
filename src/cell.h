@@ -23,10 +23,14 @@
 #ifndef SWIFT_CELL_H
 #define SWIFT_CELL_H
 
+/* Config parameters. */
+#include "../config.h"
+
 /* Includes. */
 #include <stddef.h>
 
 /* Local includes. */
+#include "align.h"
 #include "lock.h"
 #include "multipole.h"
 #include "part.h"
@@ -41,8 +45,20 @@ struct space;
  * The maximum was lowered by a further factor of 2 to be on the safe side.*/
 #define cell_max_tag (1 << 29)
 
+#define cell_align 128
+
 /* Global variables. */
 extern int cell_next_tag;
+
+/* Mini struct to link cells to tasks. Used as a linked list. */
+struct link {
+
+  /* The task pointer. */
+  struct task *t;
+
+  /* The next pointer. */
+  struct link *next;
+};
 
 /* Packed cell. */
 struct pcell {
@@ -59,7 +75,8 @@ struct pcell {
 
   /* Relative indices of the cell's progeny. */
   int progeny[8];
-};
+
+} SWIFT_STRUCT_ALIGN;
 
 /* Structure to store the data of a single cell. */
 struct cell {
@@ -70,11 +87,14 @@ struct cell {
   /* The cell dimensions. */
   double width[3];
 
-  /* Max radii in this cell. */
+  /* Max smoothing length in this cell. */
   double h_max;
 
   /* Minimum and maximum end of time step in this cell. */
   int ti_end_min, ti_end_max;
+
+  /* Last time the cell's content was drifted forward in time. */
+  int ti_old;
 
   /* Minimum dimension, i.e. smallest edge of this cell. */
   float dmin;
@@ -82,7 +102,7 @@ struct cell {
   /* Maximum slack allowed for particle movement. */
   float slack;
 
-  /* Maximum particle movement in this cell. */
+  /* Maximum particle movement in this cell since last construction. */
   float dx_max;
 
   /* The depth of this cell in the tree. */
@@ -110,7 +130,7 @@ struct cell {
   /* Parent cell. */
   struct cell *parent;
 
-  /* Super cell, i.e. the highest-level supercell that has interactions. */
+  /* Super cell, i.e. the highest-level supercell that has pair/self tasks */
   struct cell *super;
 
   /* The task computing this cell's sorts. */
@@ -124,17 +144,27 @@ struct cell {
   /* The hierarchical tasks. */
   struct task *extra_ghost, *ghost, *init, *kick;
 
+#ifdef WITH_MPI
+
   /* Task receiving data. */
   struct task *recv_xv, *recv_rho, *recv_gradient, *recv_ti;
 
   /* Task send data. */
   struct link *send_xv, *send_rho, *send_gradient, *send_ti;
 
+#endif
+
   /* Tasks for gravity tree. */
   struct task *grav_up, *grav_down;
 
   /* Task for external gravity */
   struct task *grav_external;
+
+  /* Task for cooling */
+  struct task *cooling;
+
+  /* Task for source terms */
+  struct task *sourceterms;
 
   /* Number of tasks that are associated with this cell. */
   int nr_tasks;
@@ -152,7 +182,7 @@ struct cell {
   double mom[3], ang_mom[3];
 
   /* Mass, potential, internal  and kinetic energy of particles in this cell. */
-  double mass, e_pot, e_int, e_kin, entropy;
+  double mass, e_pot, e_int, e_kin, e_rad, entropy;
 
   /* Number of particles updated in this cell. */
   int updated, g_updated;
@@ -160,8 +190,13 @@ struct cell {
   /* Linking pointer for "memory management". */
   struct cell *next;
 
+  /* This cell's multipole. */
+  struct multipole multipole;
+
   /* ID of the node this cell lives on. */
   int nodeID;
+
+#ifdef WITH_MPI
 
   /* Bit mask of the proxies this cell is registered with. */
   unsigned long long int sendto;
@@ -171,10 +206,9 @@ struct cell {
   int pcell_size;
   int tag;
 
-  /* This cell's multipole. */
-  struct multipole multipole;
+#endif
 
-} __attribute__((aligned(64)));
+} SWIFT_STRUCT_ALIGN;
 
 /* Convert cell location to ID. */
 #define cell_getid(cdim, i, j, k) \
@@ -182,6 +216,7 @@ struct cell {
 
 /* Function prototypes. */
 void cell_split(struct cell *c, ptrdiff_t parts_offset);
+void cell_sanitize(struct cell *c);
 int cell_locktree(struct cell *c);
 void cell_unlocktree(struct cell *c);
 int cell_glocktree(struct cell *c);
@@ -193,13 +228,13 @@ int cell_unpack_ti_ends(struct cell *c, int *ti_ends);
 int cell_getsize(struct cell *c);
 int cell_link_parts(struct cell *c, struct part *parts);
 int cell_link_gparts(struct cell *c, struct gpart *gparts);
-void cell_init_parts(struct cell *c, void *data);
-void cell_init_gparts(struct cell *c, void *data);
 void cell_convert_hydro(struct cell *c, void *data);
 void cell_clean_links(struct cell *c, void *data);
 int cell_are_neighbours(const struct cell *restrict ci,
                         const struct cell *restrict cj);
 void cell_check_multipole(struct cell *c, void *data);
 void cell_clean(struct cell *c);
+int cell_is_drift_needed(struct cell *c, int ti_current);
+void cell_set_super(struct cell *c, struct cell *super);
 
 #endif /* SWIFT_CELL_H */

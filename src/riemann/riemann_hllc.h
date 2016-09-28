@@ -21,6 +21,7 @@
 #define SWIFT_RIEMANN_HLLC_H
 
 #include "adiabatic_index.h"
+#include "minmax.h"
 #include "riemann_vacuum.h"
 
 __attribute__((always_inline)) INLINE static void riemann_solve_for_flux(
@@ -57,7 +58,7 @@ __attribute__((always_inline)) INLINE static void riemann_solve_for_flux(
   rhobar = 0.5 * (WL[0] + WR[0]);
   abar = 0.5 * (aL + aR);
   pPVRS = 0.5 * (WL[4] + WR[4]) - 0.5 * (uR - uL) * rhobar * abar;
-  pstar = fmaxf(0., pPVRS);
+  pstar = max(0., pPVRS);
 
   /* STEP 2: wave speed estimates
      all these speeds are along the interface normal, since uL and uR are */
@@ -144,11 +145,13 @@ __attribute__((always_inline)) INLINE static void riemann_solve_for_flux(
      we add the extra velocity flux due to the absolute motion of the fluid
      similarly, we need to add the energy fluxes due to the absolute motion */
   v2 = vij[0] * vij[0] + vij[1] * vij[1] + vij[2] * vij[2];
+  // order is important: we first use the momentum fluxes to update the energy
+  // flux and then de-boost the momentum fluxes!
+  totflux[4] += vij[0] * totflux[1] + vij[1] * totflux[2] +
+                vij[2] * totflux[3] + 0.5 * v2 * totflux[0];
   totflux[1] += vij[0] * totflux[0];
   totflux[2] += vij[1] * totflux[0];
   totflux[3] += vij[2] * totflux[0];
-  totflux[4] += vij[0] * totflux[1] + vij[1] * totflux[2] +
-                vij[2] * totflux[3] + 0.5 * v2 * totflux[0];
 }
 
 #endif /* SWIFT_RIEMANN_HLLC_H */
