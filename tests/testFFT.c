@@ -43,6 +43,40 @@ const size_t PMGRID = 8;
 // const double asmth2 = asmth * asmth;
 // const double fact = G / (M_PI * boxSize) * (1. / (2. * boxSize / PMGRID));
 
+void printGrid(double* grid, const char* fname, size_t dimx, size_t dimy,
+               size_t dimz) {
+
+  FILE* file = fopen(fname, "w");
+  for (size_t i = 0; i < dimx; ++i) {
+    fprintf(file, "--- %zu ---\n", i);
+    for (size_t j = 0; j < dimy; ++j) {
+      for (size_t k = 0; k < dimz; ++k) {
+        fprintf(file, "%f ", grid[i * dimx * dimy + j * dimx + k]);
+      }
+      fprintf(file, "\n");
+    }
+    fprintf(file, "\n\n");
+  }
+  fclose(file);
+}
+
+void printGrid_r(fftw_complex* grid, const char* fname, size_t dimx,
+                 size_t dimy, size_t dimz) {
+
+  FILE* file = fopen(fname, "w");
+  for (size_t i = 0; i < dimx; ++i) {
+    fprintf(file, "--- %zu ---\n", i);
+    for (size_t j = 0; j < dimy; ++j) {
+      for (size_t k = 0; k < dimz; ++k) {
+        fprintf(file, "%e ", grid[i * dimx * dimy + j * dimx + k][0]);
+      }
+      fprintf(file, "\n");
+    }
+    fprintf(file, "\n\n");
+  }
+  fclose(file);
+}
+
 int main() {
 
   /* Initialize CPU frequency, this also starts time. */
@@ -66,7 +100,7 @@ int main() {
         gp->x[1] = j * boxSize / N + boxSize / (2 * N);
         gp->x[2] = k * boxSize / N + boxSize / (2 * N);
 
-        gp->mass = 1. / count;
+        gp->mass = k * 1. / count;
 
         gp->id_or_neg_offset = i * N * N + j * N + k;
       }
@@ -82,14 +116,14 @@ int main() {
   const size_t dimz = meshmax[2] - meshmin[2] + 2;
 
   const double fac = PMGRID / boxSize;
-  const size_t PMGRID2 = 2 * (PMGRID / 2 + 1);
+  // const size_t PMGRID2 = 2 * (PMGRID / 2 + 1);
 
-  /* message("dimx=%zd dimy=%zd dimz=%zd", dimx, dimy, dimz); */
+  message("dimx=%zd dimy=%zd dimz=%zd", dimx, dimy, dimz);
 
-  /* Allocate and empty the workspace mesh */
-  const size_t workspace_size = (dimx + 4) * (dimy + 4) * (dimz + 4);
-  double* workspace = fftw_malloc(workspace_size * sizeof(double));
-  bzero(workspace, workspace_size * sizeof(double));
+  /* Allocate and empty the rhogrid mesh */
+  const size_t rhogrid_size = dimx * dimy * dimz;
+  double* rhogrid = fftw_malloc(rhogrid_size * sizeof(double));
+  bzero(rhogrid, rhogrid_size * sizeof(double));
 
   /* Do CIC with the particles */
   for (size_t pid = 0; pid < count; ++pid) {
@@ -111,87 +145,53 @@ int main() {
     const size_t slab_yy = slab_y + 1;
     const size_t slab_zz = slab_z + 1;
 
-    workspace[(slab_x * dimy + slab_y) * dimz + slab_z] +=
+    rhogrid[(slab_x * dimy + slab_y) * dimz + slab_z] +=
         gp->mass * (1.0 - dx) * (1.0 - dy) * (1.0 - dz);
-    workspace[(slab_x * dimy + slab_yy) * dimz + slab_z] +=
+    rhogrid[(slab_x * dimy + slab_yy) * dimz + slab_z] +=
         gp->mass * (1.0 - dx) * dy * (1.0 - dz);
-    workspace[(slab_x * dimy + slab_y) * dimz + slab_zz] +=
+    rhogrid[(slab_x * dimy + slab_y) * dimz + slab_zz] +=
         gp->mass * (1.0 - dx) * (1.0 - dy) * dz;
-    workspace[(slab_x * dimy + slab_yy) * dimz + slab_zz] +=
+    rhogrid[(slab_x * dimy + slab_yy) * dimz + slab_zz] +=
         gp->mass * (1.0 - dx) * dy * dz;
-    workspace[(slab_xx * dimy + slab_y) * dimz + slab_z] +=
+    rhogrid[(slab_xx * dimy + slab_y) * dimz + slab_z] +=
         gp->mass * (dx) * (1.0 - dy) * (1.0 - dz);
-    workspace[(slab_xx * dimy + slab_yy) * dimz + slab_z] +=
+    rhogrid[(slab_xx * dimy + slab_yy) * dimz + slab_z] +=
         gp->mass * (dx)*dy * (1.0 - dz);
-    workspace[(slab_xx * dimy + slab_y) * dimz + slab_zz] +=
+    rhogrid[(slab_xx * dimy + slab_y) * dimz + slab_zz] +=
         gp->mass * (dx) * (1.0 - dy) * dz;
-    workspace[(slab_xx * dimy + slab_yy) * dimz + slab_zz] +=
+    rhogrid[(slab_xx * dimy + slab_yy) * dimz + slab_zz] +=
         gp->mass * (dx)*dy * dz;
   }
 
-  /* for(size_t i = 0 ; i < dimx*dimy*dimz; ++i) */
-  /*   message("workspace[%zd] = %f", i, workspace[i]); */
+  for (size_t i = 0; i < dimx * dimy; ++i) rhogrid[i] = 100.f;
+
+  /* Show the grid */
+  printGrid(rhogrid, "rho.dat", dimx, dimy, dimz);
 
   /* Prepare the force grid */
-  const size_t fft_size = workspace_size;
-  double* forcegrid = fftw_malloc(fft_size * sizeof(double));
-  bzero(forcegrid, fft_size * sizeof(double));
+  const size_t rhotilde_size = rhogrid_size;
+  fftw_complex* rhotilde = fftw_malloc(rhotilde_size * sizeof(fftw_complex));
+  bzero(rhotilde, rhotilde_size * sizeof(fftw_complex));
+  for (size_t i = 0; i < dimx * dimy * dimz; ++i) rhotilde[i][0] = 1.f;
 
-  const size_t sendmin = 0, recvmin = 0;
-  const size_t sendmax = PMGRID, recvmax = PMGRID;
+  /* Prepare the FFT */
+  fftw_plan p =
+      fftw_plan_dft_r2c_3d(dimx, dimy, dimz, rhogrid, rhotilde, FFTW_MEASURE);
 
-  memcpy(forcegrid, workspace + (sendmin - meshmin[0]) * dimy * dimz,
-         (sendmax - sendmin + 1) * dimy * dimz * sizeof(double));
+  fftw_print_plan(p);
+  printf("\n");
 
-  /* for (size_t i = 0; i < fft_size; ++i) */
-  /*   if (forcegrid[i] != workspace[i]) error("wrong"); */
+  /* Execute the FFT */
+  fftw_execute(p);
 
-  /* Prepare the density grid */
-  double* rhogrid = fftw_malloc(fft_size * sizeof(double));
-  bzero(rhogrid, fft_size * sizeof(double));
-
-  /* Now get the density */
-  for (size_t slab_x = recvmin; slab_x <= recvmax; slab_x++) {
-
-    const size_t slab_xx = slab_x % PMGRID;
-
-    for (size_t slab_y = recvmin; slab_y <= recvmax; slab_y++) {
-
-      const size_t slab_yy = slab_y % PMGRID;
-
-      for (size_t slab_z = recvmin; slab_z <= recvmax; slab_z++) {
-
-        const size_t slab_zz = slab_z % PMGRID;
-
-        rhogrid[PMGRID * PMGRID2 * slab_xx + PMGRID2 * slab_yy + slab_zz] +=
-            forcegrid[((slab_x - recvmin) * dimy + (slab_y - recvmin)) * dimz +
-                      (slab_z - recvmin)];
-      }
-    }
-  }
-
-  /* for (size_t i = 0; i < 640; i++) { */
-  /*   if (rhogrid[i] != workspace[i]) { */
-  /*     message("rhogrid[%zd]= %f workspace[%zd]= %f forcegrid[%zd]= %f", i, */
-  /*             rhogrid[i], i, workspace[i], i, forcegrid[i]); */
-  /*   } */
-  /* } */
-
-  /* FFT of the density field */
-  fftw_complex* fftgrid = fftw_malloc(fft_size * sizeof(fftw_complex));
-  fftw_plan plan_forward = fftw_plan_dft_r2c_3d(PMGRID, PMGRID, PMGRID, rhogrid,
-                                                fftgrid, FFTW_ESTIMATE);
-  fftw_execute(plan_forward);
-
-  for (size_t i = 0; i < 640; i++) {
-    message("workspace[%zd]= %f", i, fftgrid[i][0]);
-  }
+  /* Show the FFT */
+  printGrid_r(rhotilde, "rhotilde_r.dat", dimx, dimy, dimz);
+  // printGrid(rhogrid, "rhotilde_r.dat", dimx, dimy, dimz);
 
   /* Clean-up */
-  fftw_destroy_plan(plan_forward);
-  fftw_free(forcegrid);
+  fftw_destroy_plan(p);
+  fftw_free(rhotilde);
   fftw_free(rhogrid);
-  fftw_free(workspace);
   free(gparts);
   return 0;
 }
