@@ -1381,7 +1381,6 @@ void engine_count_and_link_tasks(struct engine *e) {
     if (t->type == task_type_sort && t->ci->split)
       for (int j = 0; j < 8; j++)
         if (t->ci->progeny[j] != NULL && t->ci->progeny[j]->sorts != NULL) {
-          t->ci->progeny[j]->sorts->skip = 0;
           scheduler_addunlock(sched, t->ci->progeny[j]->sorts, t);
         }
 
@@ -2005,9 +2004,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                              void *extra_data) {
   /* Unpack the arguments. */
   struct task *tasks = (struct task *)map_data;
-  const int ti_end = ((size_t *)extra_data)[0];
-  size_t *rebuild_space = &((size_t *)extra_data)[1];
-  struct scheduler *s = (struct scheduler *)(((size_t *)extra_data)[2]);
+  const int ti_end = ((int *)extra_data)[0];
+  int *rebuild_space = &((int *)extra_data)[1];
 
   for (int ind = 0; ind < num_elements; ind++) {
     struct task *t = &tasks[ind];
@@ -2019,10 +2017,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         t->type == task_type_sourceterms || t->type == task_type_sub_self) {
 
       /* Set this task's skip. */
-      if ((t->skip = (t->ci->ti_end_min > ti_end)))
-        continue;
-      else
-        scheduler_add_active(s, t);
+      t->skip = (t->ci->ti_end_min > ti_end);
     }
 
     /* Pair? */
@@ -2042,22 +2037,16 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       /* Set this task's skip. */
       if ((t->skip = (ci->ti_end_min > ti_end && cj->ti_end_min > ti_end)) == 1)
         continue;
-      else scheduler_add_active(s, t);
-      
-      /* If this is not a density task, we don't have to do any of the below. */
-      if (t->subtype != task_subtype_density) continue;
 
       /* Set the sort flags. */
-      if (t->type == task_type_pair) {
+      if (t->type == task_type_pair && t->subtype != task_subtype_grav) {
         if (!(ci->sorted & (1 << t->flags))) {
           atomic_or(&ci->sorts->flags, (1 << t->flags));
-          if (atomic_cas(&ci->sorts->skip, 1, 0))
-            scheduler_add_active(s, ci->sorts);
+          ci->sorts->skip = 0;
         }
         if (!(cj->sorted & (1 << t->flags))) {
           atomic_or(&cj->sorts->flags, (1 << t->flags));
-          if (atomic_cas(&cj->sorts->skip, 1, 0))
-            scheduler_add_active(s, cj->sorts);
+          cj->sorts->skip = 0;
         }
       }
 
@@ -2077,19 +2066,19 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_xv task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
 
         for (l = cj->send_rho; l != NULL && l->t->cj->nodeID != ci->nodeID;
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_rho task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
 
         for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_ti task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
 
       } else if (cj->nodeID != engine_rank) {
 
@@ -2103,19 +2092,19 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_xv task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
 
         for (l = ci->send_rho; l != NULL && l->t->cj->nodeID != cj->nodeID;
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_rho task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
 
         for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
              l = l->next)
           ;
         if (l == NULL) error("Missing link to send_ti task.");
-        if (atomic_cas(&l->t->skip, 1, 0)) scheduler_add_active(s, l->t);
+        l->t->skip = 0;
       }
 
 #endif
@@ -2123,22 +2112,20 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
     /* Kick? */
     else if (t->type == task_type_kick) {
+      t->skip = (t->ci->ti_end_min > ti_end);
       t->ci->updated = 0;
       t->ci->g_updated = 0;
-      if ((t->skip = (t->ci->ti_end_min > ti_end)))
-        continue;
-      else
-        scheduler_add_active(s, t);
     }
 
     /* Init? */
     else if (t->type == task_type_init) {
       /* Set this task's skip. */
-      if ((t->skip = (t->ci->ti_end_min > ti_end)))
-        continue;
-      else
-        scheduler_add_active(s, t);
+      t->skip = (t->ci->ti_end_min > ti_end);
     }
+
+    /* None? */
+    else if (t->type == task_type_none)
+      t->skip = 1;
   }
 }
 
@@ -2165,8 +2152,7 @@ int engine_marktasks(struct engine *e) {
   } else {
 
     /* Run through the tasks and mark as skip or not. */
-    size_t extra_data[3] = {e->ti_current, rebuild_space, (size_t)&e->sched};
-    scheduler_clear_active(&e->sched);
+    int extra_data[2] = {e->ti_current, rebuild_space};
     threadpool_map(&e->threadpool, engine_marktasks_mapper, s->tasks,
                    s->nr_tasks, sizeof(struct task), 10000, extra_data);
     rebuild_space = extra_data[1];
@@ -2648,7 +2634,6 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
   }
 
   /* Now, launch the calculation */
-  engine_print_task_counts(e);
   TIMER_TIC;
   engine_launch(e, e->nr_threads, mask, submask);
   TIMER_TOC(timer_runners);
