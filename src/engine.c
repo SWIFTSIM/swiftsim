@@ -2544,7 +2544,7 @@ void engine_print_stats(struct engine *e) {
   }
 #endif
 
-  const double e_tot = e_kin + e_int + e_pot;
+  const double e_tot = e_kin + e_int + e_pot + e_rad;
 
   /* Print info */
   if (e->nodeID == 0) {
