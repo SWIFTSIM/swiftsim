@@ -25,6 +25,7 @@
 
 /* Some standard headers. */
 #include <math.h>
+#include <float.h>
 
 /* Local includes. */
 #include "const.h"
@@ -111,13 +112,19 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
     const struct phys_const* restrict phys_const,
     const struct UnitSystem* restrict us, const struct part* restrict p) {
 
-  /* Get du_dt */
-  const float du_dt = cooling_rate(phys_const, us, cooling, p);
-
   /* Get current internal energy (dt=0) */
   const float u = hydro_get_internal_energy(p, 0.f);
 
-  return u / abs(du_dt);
+  /* If we are close to the energy floor, ignore cooling timestep condition*/
+
+  if (abs((u - cooling->min_energy)/cooling->min_energy) < 1.e-4){
+    return FLT_MAX;
+  }
+  else{
+    /* Get du_dt */
+    const float du_dt = cooling_rate(phys_const, us, cooling, p);
+    return u / abs(du_dt);
+  }
 }
 
 /**
