@@ -117,14 +117,17 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
 
   /* If we are close to the energy floor, ignore cooling timestep condition*/
 
-  if (abs((u - cooling->min_energy)/cooling->min_energy) < 1.e-4){
-    return FLT_MAX;
-  }
-  else{
-    /* Get du_dt */
-    const float du_dt = cooling_rate(phys_const, us, cooling, p);
-    return u / abs(du_dt);
-  }
+  /* if (abs((u - cooling->min_energy)/cooling->min_energy) < 1.e-4){ */
+  /*   return FLT_MAX; */
+  /* } */
+  /* else{ */
+  /*   /\* Get du_dt *\/ */
+  /*   const float du_dt = cooling_rate(phys_const, us, cooling, p); */
+  /*   return u / abs(du_dt); */
+  /* } */
+  const float du_dt = cooling_rate(phys_const, us, cooling, p);
+
+  return u/abs(du_dt);
 }
 
 /**
