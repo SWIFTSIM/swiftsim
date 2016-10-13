@@ -2480,7 +2480,8 @@ void engine_print_stats(struct engine *e) {
   const ticks tic = getticks();
   const struct space *s = e->s;
 
-  double e_kin = 0.0, e_int = 0.0, e_pot_self = 0.0, e_pot_ext = 0.0 ,e_rad = 0.0;
+  double e_kin = 0.0, e_int = 0.0, e_pot_self = 0.0, e_pot_ext = 0.0,
+         e_rad = 0.0;
   double entropy = 0.0, mass = 0.0;
   double mom[3] = {0.0, 0.0, 0.0}, ang_mom[3] = {0.0, 0.0, 0.0};
 
@@ -2548,8 +2549,9 @@ void engine_print_stats(struct engine *e) {
     fprintf(e->file_stats,
             " %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e "
             "%14e %14e %14e\n",
-            e->time, mass, e_tot, e_kin, e_int, e_pot, e_pot_self, e_pot_ext, e_rad, entropy, mom[0],
-            mom[1], mom[2], ang_mom[0], ang_mom[1], ang_mom[2]);
+            e->time, mass, e_tot, e_kin, e_int, e_pot, e_pot_self, e_pot_ext,
+            e_rad, entropy, mom[0], mom[1], mom[2], ang_mom[0], ang_mom[1],
+            ang_mom[2]);
     fflush(e->file_stats);
   }
 
@@ -3409,8 +3411,9 @@ void engine_init(struct engine *e, struct space *s,
     fprintf(e->file_stats,
             "#%14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s %14s "
             "%14s %14s %14s\n",
-            "Time", "Mass", "E_tot", "E_kin", "E_int", "E_pot", "E_pot_self", "E_pot_ext", 
-	    "E_radcool", "Entropy", "p_x", "p_y", "p_z", "ang_x", "ang_y", "ang_z");
+            "Time", "Mass", "E_tot", "E_kin", "E_int", "E_pot", "E_pot_self",
+            "E_pot_ext", "E_radcool", "Entropy", "p_x", "p_y", "p_z", "ang_x",
+            "ang_y", "ang_z");
     fflush(e->file_stats);
 
     char timestepsfileName[200] = "";

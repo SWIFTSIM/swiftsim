@@ -587,8 +587,7 @@ void space_rebuild(struct space *s, double cell_max, int verbose) {
   for (size_t k = 1; k < nr_parts; k++) {
     if (ind[k - 1] > ind[k]) {
       error("Sort failed!");
-    } else if (ind[k] != cell_getid(s->cdim, 
-                                    s->parts[k].x[0] * s->iwidth[0],
+    } else if (ind[k] != cell_getid(s->cdim, s->parts[k].x[0] * s->iwidth[0],
                                     s->parts[k].x[1] * s->iwidth[1],
                                     s->parts[k].x[2] * s->iwidth[2])) {
       error("Incorrect indices!");
@@ -1800,10 +1799,11 @@ void space_init(struct space *s, const struct swift_params *params,
     } else {
       for (size_t k = 0; k < Npart; k++)
         for (int j = 0; j < 3; j++)
-          if (parts[k].x[j] < 0 || parts[k].x[j] >= dim[j]){
-	    printf("parts[%zu].x[%d] = %f , dim[%d] = %f\n" , k , j , parts[k].x[j] , j , dim[j]);
+          if (parts[k].x[j] < 0 || parts[k].x[j] >= dim[j]) {
+            printf("parts[%zu].x[%d] = %f , dim[%d] = %f\n", k, j,
+                   parts[k].x[j], j, dim[j]);
             error("Not all particles are within the specified domain.");
-	  }
+          }
     }
 
     /* Same for the gparts */

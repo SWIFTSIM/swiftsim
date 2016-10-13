@@ -774,7 +774,8 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
   const double dt = (ti_current - ti_old) * timeBase;
 
   float dx_max = 0.f, dx2_max = 0.f, h_max = 0.f;
-  double e_kin = 0.0, e_int = 0.0, e_pot_self = 0.0, e_pot_ext = 0.0, e_rad = 0.0;
+  double e_kin = 0.0, e_int = 0.0, e_pot_self = 0.0, e_pot_ext = 0.0,
+         e_rad = 0.0;
   double entropy = 0.0, mass = 0.0;
   double mom[3] = {0.0, 0.0, 0.0};
   double ang_mom[3] = {0.0, 0.0, 0.0};
@@ -846,7 +847,8 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
       /* Collect energies. */
       e_kin += 0.5 * m * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
       e_pot_self += 0.;
-      e_pot_ext += m * external_gravity_get_potential_energy(potential,constants,p);
+      e_pot_ext +=
+          m * external_gravity_get_potential_energy(potential, constants, p);
       e_int += m * hydro_get_internal_energy(p, half_dt);
       e_rad += cooling_get_radiated_energy(xp);
 
@@ -875,7 +877,7 @@ static void runner_do_drift(struct cell *c, struct engine *e) {
         e_kin += cp->e_kin;
         e_int += cp->e_int;
         e_pot_self += cp->e_pot_self;
-	e_pot_ext += cp->e_pot_ext;
+        e_pot_ext += cp->e_pot_ext;
         e_rad += cp->e_rad;
         entropy += cp->entropy;
         mom[0] += cp->mom[0];
