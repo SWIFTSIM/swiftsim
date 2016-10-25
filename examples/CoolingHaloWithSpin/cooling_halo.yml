@@ -10,7 +10,7 @@ InternalUnitSystem:
 TimeIntegration:
   time_begin: 0.    # The starting time of the simulation (in internal units).
   time_end:   10.    # The end time of the simulation (in internal units).
-  dt_min:     1e-5  # The minimal time-step size of the simulation (in internal units).
+  dt_min:     1e-7  # The minimal time-step size of the simulation (in internal units).
   dt_max:     1e-1  # The maximal time-step size of the simulation (in internal units).
 
 # Parameters governing the conserved quantities statistics
@@ -44,7 +44,7 @@ SoftenedIsothermalPotential:
   position_z:      0.	
   vrot:            200.     # rotation speed of isothermal potential in internal units
   timestep_mult:   0.03     # controls time step
-  epsilon:         0.1    #softening for the isothermal potential
+  epsilon:         1.0    #softening for the isothermal potential
 
 # Cooling parameters
 LambdaCooling:

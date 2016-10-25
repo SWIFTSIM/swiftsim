@@ -92,9 +92,19 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   } else {
     u_new = u_floor;
   }
+
+  if (u_new < 0.5*u_old)
+    u_new = 0.5*u_old;
   /* Update the internal energy */
   hydro_set_internal_energy(p, u_new);
 
+  if (u_old == 0){
+    printf("u_old = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = [%g,%g,%g]\n" , u_old, u_floor ,p->rho, p->x[0] , p->x[1]  , p->x[2], p->a_hydro[0] , p->a_hydro[1] , p->a_hydro[2]);
+  }
+
+  if (u_new <= 0){
+     printf("u_new = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = [%g,%g,%g]\n" , u_new, u_floor ,p->rho, p->x[0] , p->x[1]  , p->x[2], p->a_hydro[0] , p->a_hydro[1] , p->a_hydro[2]);
+  }
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy += hydro_get_mass(p) * (u_old - u_new);
 }
@@ -191,6 +201,7 @@ static INLINE void cooling_init_backend(
                     units_cgs_conversion_factor(us, UNIT_CONV_TIME) /
                     (units_cgs_conversion_factor(us, UNIT_CONV_ENERGY) *
                      units_cgs_conversion_factor(us, UNIT_CONV_VOLUME));
+  printf("lambda_cgs = %g , time_conv = %g , energy_conv = %g , volume_conv = %g , mass_conv = %g , length_conversion = %g , density_conversion = %g \n",lambda_cgs,units_cgs_conversion_factor(us, UNIT_CONV_TIME),units_cgs_conversion_factor(us, UNIT_CONV_ENERGY),units_cgs_conversion_factor(us, UNIT_CONV_VOLUME),units_cgs_conversion_factor(us, UNIT_CONV_MASS),units_cgs_conversion_factor(us, UNIT_CONV_LENGTH),units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
 }
 
 /**

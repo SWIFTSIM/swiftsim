@@ -36,6 +36,7 @@ h = 0.67777 # hubble parameter
 gamma = 5./3.
 eta = 1.2349
 spin_lambda = 0.05 #spin parameter
+f_b = 0.25 #gas to DM ratio
 
 # First set unit velocity and then the circular velocity parameter for the isothermal potential
 const_unit_velocity_in_cgs = 1.e5 #kms^-1
@@ -113,14 +114,11 @@ coords[:,2] = radius * ctheta
 
 #shift to centre of box
 coords += np.full((N,3),boxSize/2.)
-print "x range = (%f,%f)" %(np.min(coords[:,0]),np.max(coords[:,0]))
-print "y range = (%f,%f)" %(np.min(coords[:,1]),np.max(coords[:,1]))
-print "z range = (%f,%f)" %(np.min(coords[:,2]),np.max(coords[:,2]))
 
-print np.mean(coords[:,0])
-print np.mean(coords[:,1])
-print np.mean(coords[:,2])
+#work out masses of the particles
 
+enclosed_mass = f_b * boxSize * np.sqrt(3.)/2. #enclosed mass is proportional to radius. 1 unit mass within 1 unit length
+particle_mass = enclosed_mass / N #divide by number of particles
 #now find the particles which are within the box
 
 x_coords = coords[:,0]
@@ -164,12 +162,12 @@ N = x_coords.size
 print "Number of particles in the box = " , N
 
 #make the coords and radius arrays again
-coords_2 = np.zeros((N,3))
-coords_2[:,0] = x_coords
-coords_2[:,1] = y_coords
-coords_2[:,2] = z_coords
+coords= np.zeros((N,3))
+coords[:,0] = x_coords
+coords[:,1] = y_coords
+coords[:,2] = z_coords
 
-radius = np.sqrt((coords_2[:,0]-boxSize/2.)**2 + (coords_2[:,1]-boxSize/2.)**2 + (coords_2[:,2]-boxSize/2.)**2)
+radius = np.sqrt((coords[:,0]-boxSize/2.)**2 + (coords[:,1]-boxSize/2.)**2 + (coords[:,2]-boxSize/2.)**2)
 
 #now give particle's velocities
 v = np.zeros((N,3))
@@ -184,7 +182,7 @@ print "J =", J
 omega = np.zeros((N,3))
 for i in range(N):
     omega[i,2] = 3.*J / radius[i]
-    v[i,:] = np.cross(omega[i,:],(coords_2[i,:]-boxSize/2.))
+    v[i,:] = np.cross(omega[i,:],(coords[i,:]-boxSize/2.))
         
 # Header
 grp = file.create_group("/Header")
@@ -202,16 +200,15 @@ grp.attrs["Dimension"] = 3
 grp = file.create_group("/PartType0")
 
 ds = grp.create_dataset('Coordinates', (N, 3), 'd')
-ds[()] = coords_2
-coords_2 = np.zeros(1)
+ds[()] = coords
+coords = np.zeros(1)
 
 ds = grp.create_dataset('Velocities', (N, 3), 'f')
 ds[()] = v
 v = np.zeros(1)
 
 # All particles of equal mass
-mass = 1. / N
-m = np.full((N,),mass)
+m = np.full((N,),particle_mass)
 ds = grp.create_dataset('Masses', (N, ), 'f')
 ds[()] = m
 m = np.zeros(1)
