@@ -49,7 +49,7 @@ __attribute__((always_inline)) INLINE static float cooling_rate(
     const struct cooling_function_data* cooling, const struct part* p) {
 
   /* Get particle density */
-  const float rho = p->rho;
+  const float rho = hydro_get_density(p);
 
   /* Get cooling function properties */
   const float X_H = cooling->hydrogen_mass_abundance;
@@ -95,6 +95,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
 
   if (u_new < 0.5*u_old)
     u_new = 0.5*u_old;
+
   /* Update the internal energy */
   hydro_set_internal_energy(p, u_new);
 
@@ -125,19 +126,9 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
   /* Get current internal energy (dt=0) */
   const float u = hydro_get_internal_energy(p, 0.f);
 
-  /* If we are close to the energy floor, ignore cooling timestep condition*/
-
-  /* if (abs((u - cooling->min_energy)/cooling->min_energy) < 1.e-4){ */
-  /*   return FLT_MAX; */
-  /* } */
-  /* else{ */
-  /*   /\* Get du_dt *\/ */
-  /*   const float du_dt = cooling_rate(phys_const, us, cooling, p); */
-  /*   return u / abs(du_dt); */
-  /* } */
   const float du_dt = cooling_rate(phys_const, us, cooling, p);
 
-  return u / abs(du_dt);
+  return u / fabsf(du_dt);
 }
 
 /**
@@ -201,7 +192,6 @@ static INLINE void cooling_init_backend(
                     units_cgs_conversion_factor(us, UNIT_CONV_TIME) /
                     (units_cgs_conversion_factor(us, UNIT_CONV_ENERGY) *
                      units_cgs_conversion_factor(us, UNIT_CONV_VOLUME));
-  printf("lambda_cgs = %g , time_conv = %g , energy_conv = %g , volume_conv = %g , mass_conv = %g , length_conversion = %g , density_conversion = %g \n",lambda_cgs,units_cgs_conversion_factor(us, UNIT_CONV_TIME),units_cgs_conversion_factor(us, UNIT_CONV_ENERGY),units_cgs_conversion_factor(us, UNIT_CONV_VOLUME),units_cgs_conversion_factor(us, UNIT_CONV_MASS),units_cgs_conversion_factor(us, UNIT_CONV_LENGTH),units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
 }
 
 /**

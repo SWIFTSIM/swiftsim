@@ -135,12 +135,9 @@ plt.plot(t,re,label = "Radiated Energy")
 plt.plot(t,te,label = "Total Energy")
 plt.legend(loc = "center left")
 plt.xlabel(r"$t / t_{dyn}$")
-#plt.ylabel(r"$E / v_c^2$")
-plt.title(r"$%d \, \, \mathrm{particles} \,,\, v_c = %.1f \, \mathrm{km / s} , \, \, \mathrm{Dynamical\,time} = %e \, \mathrm{years}$" %(N,v_c,dyn_time_years))
-#plt.ylabel("Energy per unit mass, relaltive to initial energy")
-#plt.ylabel("Fractional change in total energy")
-plt.ylabel(r"$\mathrm{Energy\,per\,unit\,mass} / v_c^2$") 
-#plt.ylim((-4,2))
-#plot_filename = "density_profile_%03d.png" %i
-plt.show()
+plt.ylabel(r"$E / v_c^2$")
+plt.title(r"$%d \, \, \mathrm{particles} \,,\, v_c = %.1f \, \mathrm{km / s}$" %(N,v_c))
+plt.ylim((-2,2))
+plt.savefig("energy_conservation.png",format = 'png')
+
 

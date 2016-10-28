@@ -48,8 +48,6 @@ unit_velocity_cgs = float(params.attrs["InternalUnitSystem:UnitVelocity_in_cgs"]
 unit_time_cgs = unit_length_cgs / unit_velocity_cgs
 v_c = float(params.attrs["SoftenedIsothermalPotential:vrot"])
 v_c_cgs = v_c * unit_velocity_cgs
-lambda_cgs = float(params.attrs["LambdaCooling:lambda_cgs"])
-X_H = float(params.attrs["LambdaCooling:hydrogen_mass_abundance"])
 header = f["Header"]
 N = header.attrs["NumPart_Total"][0]
 box_centre = np.array(header.attrs["BoxSize"])
@@ -98,7 +96,7 @@ for i in range(n_snaps):
 
     #calculate cooling radius
 
-    r_cool_over_r_vir = np.sqrt((2.*(gamma - 1.)*lambda_cgs*M_vir_cgs*X_H**2)/(4.*np.pi*CONST_m_H_CGS**2*v_c_cgs**2*r_vir_cgs**3))*np.sqrt(snap_time_cgs)
+    #r_cool_over_r_vir = np.sqrt((2.*(gamma - 1.)*lambda_cgs*M_vir_cgs*X_H**2)/(4.*np.pi*CONST_m_H_CGS**2*v_c_cgs**2*r_vir_cgs**3))*np.sqrt(snap_time_cgs)
 
     plt.plot(radial_bin_mids,binned_v_r,'ko',label = "Average radial velocity in shell")
     #plt.plot((0,1),(1,1),label = "Analytic Solution")
@@ -108,6 +106,6 @@ for i in range(n_snaps):
     plt.ylabel(r"$v_r / v_c$")
     plt.title(r"$\mathrm{Time}= %.3g \, s \, , \, %d \, \, \mathrm{particles} \,,\, v_c = %.1f \, \mathrm{km / s}$" %(snap_time_cgs,N,v_c))
     plt.ylim((0,2))
-    plot_filename = "velocity_profile_%03d.png" %i
+    plot_filename = "./plots/radial_velocity_profile/velocity_profile_%03d.png" %i
     plt.savefig(plot_filename,format = "png")
     plt.close()

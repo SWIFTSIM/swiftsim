@@ -392,12 +392,10 @@ void space_regrid(struct space *s, double cell_max, int verbose) {
       space_rebuild_recycle(s, &s->cells_top[k]);
       s->cells_top[k].sorts = NULL;
       s->cells_top[k].nr_tasks = 0;
-      s->cells_top[k].nr_density = 0;
-      s->cells_top[k].nr_gradient = 0;
-      s->cells_top[k].nr_force = 0;
       s->cells_top[k].density = NULL;
       s->cells_top[k].gradient = NULL;
       s->cells_top[k].force = NULL;
+      s->cells_top[k].grav = NULL;
       s->cells_top[k].dx_max = 0.0f;
       s->cells_top[k].sorted = 0;
       s->cells_top[k].count = 0;
@@ -406,7 +404,20 @@ void space_regrid(struct space *s, double cell_max, int verbose) {
       s->cells_top[k].extra_ghost = NULL;
       s->cells_top[k].ghost = NULL;
       s->cells_top[k].kick = NULL;
+      s->cells_top[k].cooling = NULL;
+      s->cells_top[k].sourceterms = NULL;
       s->cells_top[k].super = &s->cells_top[k];
+#if WITH_MPI
+      s->cells_top[k].recv_xv = NULL;
+      s->cells_top[k].recv_rho = NULL;
+      s->cells_top[k].recv_gradient = NULL;
+      s->cells_top[k].recv_ti = NULL;
+
+      s->cells_top[k].send_xv = NULL;
+      s->cells_top[k].send_rho = NULL;
+      s->cells_top[k].send_gradient = NULL;
+      s->cells_top[k].send_ti = NULL;
+#endif
     }
     s->maxdepth = 0;
   }
@@ -1429,6 +1440,7 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
 
     const int count = c->count;
     const int gcount = c->gcount;
+    const int depth = c->depth;
     int maxdepth = 0;
     float h_max = 0.0f;
     int ti_end_min = max_nr_timesteps, ti_end_max = 0;
@@ -1438,8 +1450,8 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
     struct xpart *xparts = c->xparts;
 
     /* Check the depth. */
-    while (c->depth > (maxdepth = s->maxdepth)) {
-      atomic_cas(&s->maxdepth, maxdepth, c->depth);
+    while (depth > (maxdepth = s->maxdepth)) {
+      atomic_cas(&s->maxdepth, maxdepth, depth);
     }
 
     /* If the depth is too large, we have a problem and should stop. */
@@ -1799,11 +1811,8 @@ void space_init(struct space *s, const struct swift_params *params,
     } else {
       for (size_t k = 0; k < Npart; k++)
         for (int j = 0; j < 3; j++)
-          if (parts[k].x[j] < 0 || parts[k].x[j] >= dim[j]) {
-            printf("parts[%zu].x[%d] = %f , dim[%d] = %f\n", k, j,
-                   parts[k].x[j], j, dim[j]);
+          if (parts[k].x[j] < 0 || parts[k].x[j] >= dim[j])
             error("Not all particles are within the specified domain.");
-          }
     }
 
     /* Same for the gparts */

@@ -1,8 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Tom Theuns (tom.theuns@durham.ac.uk)
- *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
- *                    Stefan Arridge (stefan.arridge@durham.ac.uk)
+ * Copyright (c) 2016  Stefan Arridge (stefan.arridge@durham.ac.uk)
+ *                     Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -119,9 +118,10 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
 
   const double term = -potential->vrot2_over_G * r2_plus_epsilon2_inv;
 
-  g->a_grav[0] = term * dx;
-  g->a_grav[1] = term * dy;
-  g->a_grav[2] = term * dz;
+  g->a_grav[0] += term * dx;
+  g->a_grav[1] += term * dy;
+  g->a_grav[2] += term * dz;
+
 }
 
 /**
@@ -130,20 +130,19 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
  *
  * @param potential The #external_potential used in the run.
  * @param phys_const Physical constants in internal units.
- * @param p Pointer to the particle data.
+ * @param g Pointer to the particle data.
  */
-
 __attribute__((always_inline)) INLINE static float
 external_gravity_get_potential_energy(
     const struct external_potential* potential,
-    const struct phys_const* const phys_const, struct part* p) {
+    const struct phys_const* const phys_const, const struct gpart* g) {
 
-  const float dx = p->x[0] - potential->x;
-  const float dy = p->x[1] - potential->y;
-  const float dz = p->x[2] - potential->z;
+  const float dx = g->x[0] - potential->x;
+  const float dy = g->x[1] - potential->y;
+  const float dz = g->x[2] - potential->z;
 
-  return potential->vrot * potential->vrot * 0.5 *
-         log(dx * dx + dy * dy * dz * dz + potential->epsilon2);
+  return 0.5f * potential->vrot * potential->vrot *
+         logf(dx * dx + dy * dy * dz * dz + potential->epsilon2);
 }
 /**
  * @brief Initialises the external potential properties in the internal system
