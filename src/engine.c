@@ -1407,7 +1407,7 @@ void engine_count_and_link_tasks(struct engine *e) {
         engine_addlink(e, &cj->grav, t);
       }
       if (t->subtype == task_subtype_external_grav) {
-        error("Found a sub-pair/external-gravity task...");
+        // error("Found a sub-pair/external-gravity task..."); // MATTHIEU
         engine_addlink(e, &ci->grav, t);
         engine_addlink(e, &cj->grav, t);
       }
