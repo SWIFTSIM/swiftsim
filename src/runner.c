@@ -792,7 +792,6 @@ static void runner_do_drift(struct cell *c, struct engine *e, int drift) {
   const double dt = (ti_current - ti_old) * timeBase;
   float dx_max = 0.f, dx2_max = 0.f, h_max = 0.f;
 
-
   /* No children? */
   if (!c->split) {
 
@@ -815,7 +814,6 @@ static void runner_do_drift(struct cell *c, struct engine *e, int drift) {
                           gp->x_diff[2] * gp->x_diff[2];
         dx2_max = (dx2_max > dx2) ? dx2_max : dx2;
       }
-
 
       /* Loop over all the particles in the cell */
       const size_t nr_parts = c->count;
@@ -840,7 +838,6 @@ static void runner_do_drift(struct cell *c, struct engine *e, int drift) {
 
       /* Now, get the maximal particle motion from its square */
       dx_max = sqrtf(dx2_max);
-
 
     } /* Check that we are actually going to move forward. */
   }

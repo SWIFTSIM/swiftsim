@@ -93,18 +93,25 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     u_new = u_floor;
   }
 
-  if (u_new < 0.5*u_old)
-    u_new = 0.5*u_old;
+  if (u_new < 0.5 * u_old) u_new = 0.5 * u_old;
 
   /* Update the internal energy */
   hydro_set_internal_energy(p, u_new);
 
-  if (u_old == 0){
-    printf("u_old = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = [%g,%g,%g]\n" , u_old, u_floor ,p->rho, p->x[0] , p->x[1]  , p->x[2], p->a_hydro[0] , p->a_hydro[1] , p->a_hydro[2]);
+  if (u_old == 0) {
+    printf(
+        "u_old = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = "
+        "[%g,%g,%g]\n",
+        u_old, u_floor, p->rho, p->x[0], p->x[1], p->x[2], p->a_hydro[0],
+        p->a_hydro[1], p->a_hydro[2]);
   }
 
-  if (u_new <= 0){
-     printf("u_new = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = [%g,%g,%g]\n" , u_new, u_floor ,p->rho, p->x[0] , p->x[1]  , p->x[2], p->a_hydro[0] , p->a_hydro[1] , p->a_hydro[2]);
+  if (u_new <= 0) {
+    printf(
+        "u_new = %g , u_floor = %g ,rho = %g , [x,y,z] = [%g,%g,%g], a_hydro = "
+        "[%g,%g,%g]\n",
+        u_new, u_floor, p->rho, p->x[0], p->x[1], p->x[2], p->a_hydro[0],
+        p->a_hydro[1], p->a_hydro[2]);
   }
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy += hydro_get_mass(p) * (u_old - u_new);

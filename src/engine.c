@@ -2479,7 +2479,6 @@ void engine_print_stats(struct engine *e) {
   struct statistics stats;
   stats_init(&stats);
 
-
   /* Collect the stats on this node */
   stats_collect(e->s, &stats);
 
