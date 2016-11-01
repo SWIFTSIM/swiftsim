@@ -2244,9 +2244,10 @@ void engine_rebuild(struct engine *e) {
   e->forcerebuild = 0;
 
   /* Re-build the space. */
-  space_rebuild(e->s, 0.0, e->verbose);
+  space_rebuild(e->s, e->verbose);
 
-  if (e->ti_current == 0) space_sanitize(e->s);
+  /* Initial cleaning up session ? */
+  if (e->s->sanitized == 0) space_sanitize(e->s);
 
 /* If in parallel, exchange the cell structure. */
 #ifdef WITH_MPI
@@ -2505,15 +2506,33 @@ void engine_print_stats(struct engine *e) {
 }
 
 /**
+ * @brief Sets all the force and kick tasks to be skipped.
+ *
+ * @param e The #engine to act on.
+ */
+void engine_skip_force_and_kick(struct engine *e) {
+
+  struct task *tasks = e->sched.tasks;
+  const int nr_tasks = e->sched.nr_tasks;
+
+  for (int i = 0; i < nr_tasks; ++i) {
+
+    struct task *t = &tasks[i];
+
+    /* Skip everything that updates the particles */
+    if (t->subtype == task_subtype_force || t->type == task_type_kick ||
+        t->type == task_type_cooling || t->type == task_type_sourceterms)
+      t->skip = 1;
+  }
+}
+
+/**
  * @brief Launch the runners.
  *
  * @param e The #engine.
  * @param nr_runners The number of #runner to let loose.
- * @param mask The task mask to launch.
- * @param submask The sub-task mask to launch.
  */
-void engine_launch(struct engine *e, int nr_runners, unsigned int mask,
-                   unsigned int submask) {
+void engine_launch(struct engine *e, int nr_runners) {
 
   const ticks tic = getticks();
 
@@ -2528,7 +2547,7 @@ void engine_launch(struct engine *e, int nr_runners, unsigned int mask,
 
   /* Load the tasks. */
   pthread_mutex_unlock(&e->barrier_mutex);
-  scheduler_start(&e->sched, mask, submask);
+  scheduler_start(&e->sched);
   pthread_mutex_lock(&e->barrier_mutex);
 
   /* Remove the safeguard. */
@@ -2568,61 +2587,12 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
 
   engine_marktasks(e);
 
-  /* Build the masks corresponding to the policy */
-  unsigned int mask = 0;
-  unsigned int submask = 0;
-
-  /* We always have sort tasks */
-  mask |= 1 << task_type_sort;
-  mask |= 1 << task_type_init;
-
-  /* Add the tasks corresponding to hydro operations to the masks */
-  if (e->policy & engine_policy_hydro) {
-
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_pair;
-    mask |= 1 << task_type_sub_self;
-    mask |= 1 << task_type_sub_pair;
-    mask |= 1 << task_type_ghost;
-
-    submask |= 1 << task_subtype_density;
-  }
-
-  /* Add the tasks corresponding to self-gravity to the masks */
-  if (e->policy & engine_policy_self_gravity) {
-
-    mask |= 1 << task_type_grav_up;
-    mask |= 1 << task_type_grav_mm;
-    mask |= 1 << task_type_grav_gather_m;
-    mask |= 1 << task_type_grav_fft;
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_pair;
-    mask |= 1 << task_type_sub_self;
-    mask |= 1 << task_type_sub_pair;
-
-    submask |= 1 << task_subtype_grav;
-  }
-
-  /* Add the tasks corresponding to external gravity to the masks */
-  if (e->policy & engine_policy_external_gravity) {
-
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_sub_self;
-
-    submask |= 1 << task_subtype_external_grav;
-  }
-
-  /* Add MPI tasks if need be */
-  if (e->policy & engine_policy_mpi) {
-
-    mask |= 1 << task_type_send;
-    mask |= 1 << task_type_recv;
-    submask |= 1 << task_subtype_tend;
-  }
+  /* No time integration. We just want the density and ghosts */
+  engine_skip_force_and_kick(e);
 
   /* Now, launch the calculation */
   TIMER_TIC;
-  engine_launch(e, e->nr_threads, mask, submask);
+  engine_launch(e, e->nr_threads);
   TIMER_TOC(timer_runners);
 
   /* Apply some conversions (e.g. internal energy -> entropy) */
@@ -2632,14 +2602,18 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs) {
     space_map_cells_pre(s, 0, cell_convert_hydro, NULL);
 
     /* Correct what we did (e.g. in PE-SPH, need to recompute rho_bar) */
-    if (hydro_need_extra_init_loop)
-      engine_launch(e, e->nr_threads, mask, submask);
+    if (hydro_need_extra_init_loop) {
+      engine_marktasks(e);
+      engine_skip_force_and_kick(e);
+      engine_launch(e, e->nr_threads);
+    }
   }
 
   clocks_gettime(&time2);
 
   /* Ready to go */
   e->step = -1;
+  e->forcerebuild = 1;
   e->wallclock_time = (float)clocks_diff(&time1, &time2);
 
   if (e->verbose) message("took %.3f %s.", e->wallclock_time, clocks_getunit());
@@ -2710,7 +2684,7 @@ void engine_step(struct engine *e) {
 
   /* Drift only the necessary particles, that means all particles
    * if we are about to repartition. */
-  int repart = (e->forcerepart != REPART_NONE);
+  const int repart = (e->forcerepart != REPART_NONE);
   e->drift_all = repart || e->drift_all;
   engine_drift(e);
 
@@ -2723,85 +2697,11 @@ void engine_step(struct engine *e) {
   /* Restore the default drifting policy */
   e->drift_all = (e->policy & engine_policy_drift_all);
 
-  /* Build the masks corresponding to the policy */
-  unsigned int mask = 0, submask = 0;
-
-  /* We always have sort tasks and init tasks */
-  mask |= 1 << task_type_sort;
-  mask |= 1 << task_type_init;
-
-  /* Add the correct kick task */
-  if (e->policy & engine_policy_fixdt) {
-    mask |= 1 << task_type_kick_fixdt;
-  } else {
-    mask |= 1 << task_type_kick;
-  }
-
-  /* Add the tasks corresponding to hydro operations to the masks */
-  if (e->policy & engine_policy_hydro) {
-
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_pair;
-    mask |= 1 << task_type_sub_self;
-    mask |= 1 << task_type_sub_pair;
-    mask |= 1 << task_type_ghost;
-
-    submask |= 1 << task_subtype_density;
-    submask |= 1 << task_subtype_force;
-
-#ifdef EXTRA_HYDRO_LOOP
-    mask |= 1 << task_type_extra_ghost;
-    submask |= 1 << task_subtype_gradient;
-#endif
-  }
-
-  /* Add the tasks corresponding to self-gravity to the masks */
-  if (e->policy & engine_policy_self_gravity) {
-
-    mask |= 1 << task_type_grav_up;
-    mask |= 1 << task_type_grav_mm;
-    mask |= 1 << task_type_grav_gather_m;
-    mask |= 1 << task_type_grav_fft;
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_pair;
-    mask |= 1 << task_type_sub_self;
-    mask |= 1 << task_type_sub_pair;
-
-    submask |= 1 << task_subtype_grav;
-  }
-
-  /* Add the tasks corresponding to external gravity to the masks */
-  if (e->policy & engine_policy_external_gravity) {
-
-    mask |= 1 << task_type_self;
-    mask |= 1 << task_type_sub_self;
-
-    submask |= 1 << task_subtype_external_grav;
-  }
-
-  /* Add the tasks corresponding to cooling to the masks */
-  if (e->policy & engine_policy_cooling) {
-    mask |= 1 << task_type_cooling;
-  }
-
-  /* Add the tasks corresponding to sourceterms to the masks */
-  if (e->policy & engine_policy_sourceterms) {
-    mask |= 1 << task_type_sourceterms;
-  }
-
-  /* Add MPI tasks if need be */
-  if (e->policy & engine_policy_mpi) {
-
-    mask |= 1 << task_type_send;
-    mask |= 1 << task_type_recv;
-    submask |= 1 << task_subtype_tend;
-  }
-
   if (e->verbose) engine_print_task_counts(e);
 
   /* Send off the runners. */
   TIMER_TIC;
-  engine_launch(e, e->nr_threads, mask, submask);
+  engine_launch(e, e->nr_threads);
   TIMER_TOC(timer_runners);
 
   /* Save some statistics */
