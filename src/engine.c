@@ -1451,31 +1451,31 @@ void engine_link_gravity_tasks(struct engine *e) {
   const int nodeID = e->nodeID;
   const int nr_tasks = sched->nr_tasks;
 
-  /* Add one task gathering all the multipoles */
-  struct task *gather = scheduler_addtask(
-      sched, task_type_grav_gather_m, task_subtype_none, 0, 0, NULL, NULL, 0);
+  /* /\* Add one task gathering all the multipoles *\/ */
+  /* struct task *gather = scheduler_addtask( */
+  /*     sched, task_type_grav_gather_m, task_subtype_none, 0, 0, NULL, NULL, 0); */
 
-  /* And one task performing the FFT */
-  struct task *fft = scheduler_addtask(sched, task_type_grav_fft,
-                                       task_subtype_none, 0, 0, NULL, NULL, 0);
+  /* /\* And one task performing the FFT *\/ */
+  /* struct task *fft = scheduler_addtask(sched, task_type_grav_fft, */
+  /*                                      task_subtype_none, 0, 0, NULL, NULL, 0); */
 
-  scheduler_addunlock(sched, gather, fft);
+  //scheduler_addunlock(sched, gather, fft);
 
   for (int k = 0; k < nr_tasks; k++) {
 
     /* Get a pointer to the task. */
     struct task *t = &sched->tasks[k];
 
-    /* Multipole construction */
-    if (t->type == task_type_grav_up) {
-      scheduler_addunlock(sched, t, gather);
-    }
+    /* /\* Multipole construction *\/ */
+    /* if (t->type == task_type_grav_up) { */
+    /*   scheduler_addunlock(sched, t, gather); */
+    /* } */
 
     /* Long-range interaction */
     if (t->type == task_type_grav_mm) {
 
       /* Gather the multipoles --> mm interaction --> kick */
-      scheduler_addunlock(sched, gather, t);
+      /* scheduler_addunlock(sched, gather, t); */
       scheduler_addunlock(sched, t, t->ci->super->kick);
 
       /* init --> mm interaction */
