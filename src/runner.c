@@ -1293,8 +1293,6 @@ void *runner_main(void *data) {
             runner_dopair2_force(r, ci, cj);
           else if (t->subtype == task_subtype_grav)
             runner_dopair_grav(r, ci, cj, 1);
-          else if (t->subtype == task_subtype_external_grav)  // MATTHIEU
-            break;
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
@@ -1327,8 +1325,6 @@ void *runner_main(void *data) {
             runner_dosub_pair2_force(r, ci, cj, t->flags, 1);
           else if (t->subtype == task_subtype_grav)
             runner_dosub_grav(r, ci, cj, 1);
-          else if (t->subtype == task_subtype_external_grav)  // MATTHIEU
-            break;
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
