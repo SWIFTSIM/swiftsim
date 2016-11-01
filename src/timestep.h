@@ -104,10 +104,9 @@ __attribute__((always_inline)) INLINE static int get_part_timestep(
 
   /* Compute the next timestep (cooling condition) */
   float new_dt_cooling = FLT_MAX;
-  /* if (e->policy & engine_policy_cooling) */
-  /*   new_dt_cooling = cooling_timestep(e->cooling_func, e->physical_constants,
-   */
-  /*                                     e->internalUnits, p); */
+  if (e->policy & engine_policy_cooling)
+    new_dt_cooling = cooling_timestep(e->cooling_func, e->physical_constants,
+                                      e->internalUnits, p);
 
   /* Compute the next timestep (gravity condition) */
   float new_dt_grav = FLT_MAX;
@@ -126,11 +125,6 @@ __attribute__((always_inline)) INLINE static int get_part_timestep(
   /* Final time-step is minimum of hydro and gravity */
   float new_dt = min(min(new_dt_hydro, new_dt_cooling), new_dt_grav);
 
-  /* if (new_dt < e->dt_min){ */
-  /* printf("(hydro_dt , cooling_dt, grav_dt) = (%g,%g,%g)\n",new_dt_hydro,
-   * new_dt_cooling, new_dt_grav); */
-  /* exit(-1); */
-  /* } */
   /* Limit change in h */
   const float dt_h_change =
       (p->force.h_dt != 0.0f)

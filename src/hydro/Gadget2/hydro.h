@@ -387,14 +387,15 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   const float dt_entr = (t1 - (p->ti_begin + p->ti_end) / 2) * timeBase;
   const float pressure = hydro_get_pressure(p, dt_entr);
 
-  if (pressure <= 0.0) {
-    printf(
+  if (dt_entr < 0.0) {
+    message(
         "ti_old = %d , ti_current = %d , p->ti_begin = %d , p->ti_end = %d , "
         "(p->ti_begin - p->ti_end)/2 = %d , dt = %g  , dt_entr = %g \n",
         t0, t1, p->ti_begin, p->ti_end, (p->ti_begin + p->ti_end) / 2, dt,
         dt_entr);
-    printf("Old pressure = %g, new pressure = %g\n", hydro_get_pressure(p, 0.),
+    message("Old pressure = %g, new pressure = %g\n", hydro_get_pressure(p, 0.),
            pressure);
+    error("dt_entr < 0 . We better stop");
   }
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
