@@ -85,7 +85,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   /* Calculate du_dt */
   const float du_dt = cooling_rate(phys_const, us, cooling, p);
 
-  /* Intergrate cooling equation, but enforce energy floor */
+  /* Integrate cooling equation, but enforce energy floor */
   float u_new;
   if (u_old + du_dt * dt > u_floor) {
     u_new = u_old + du_dt * dt;
@@ -93,10 +93,9 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     u_new = u_floor;
   }
 
-  if (u_new < 0.5 * u_old){
-    message("Warning: Extreme cooling. u_old = %g , u_new = %g , u_new/u_old = %g . Setting u_new = %g*u_old (%g) \n",u_old,u_new,u_new/u_old,cooling->cooling_tstep_mult,(1.0f-cooling->cooling_tstep_mult)*u_old);
-    u_new = (1.0f - cooling->cooling_tstep_mult) * u_old;
-  }
+  /* Don't allow particle to cool too much in one timestep */
+  if (u_new < 0.5 * u_old)
+    u_new = 0.5f * u_old;
 
   /* Update the internal energy */
   hydro_set_internal_energy(p, u_new);
