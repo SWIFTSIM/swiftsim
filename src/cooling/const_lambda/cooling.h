@@ -94,8 +94,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   }
 
   /* Don't allow particle to cool too much in one timestep */
-  if (u_new < 0.5 * u_old)
-    u_new = 0.5f * u_old;
+  if (u_new < 0.5f * u_old) u_new = 0.5f * u_old;
 
   /* Update the internal energy */
   hydro_set_internal_energy(p, u_new);
@@ -121,7 +120,8 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
   const float u = hydro_get_internal_energy(p, 0.f);
   const float du_dt = cooling_rate(phys_const, us, cooling, p);
 
-  /* If we are close to (or below) the energy floor, we ignore cooling timestep */
+  /* If we are close to (or below) the energy floor, we ignore cooling timestep
+   */
   if (u < 1.01f * cooling->min_energy)
     return FLT_MAX;
   else

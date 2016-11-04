@@ -1453,13 +1453,15 @@ void engine_link_gravity_tasks(struct engine *e) {
 
   /* /\* Add one task gathering all the multipoles *\/ */
   /* struct task *gather = scheduler_addtask( */
-  /*     sched, task_type_grav_gather_m, task_subtype_none, 0, 0, NULL, NULL, 0); */
+  /*     sched, task_type_grav_gather_m, task_subtype_none, 0, 0, NULL, NULL,
+   * 0); */
 
   /* /\* And one task performing the FFT *\/ */
   /* struct task *fft = scheduler_addtask(sched, task_type_grav_fft, */
-  /*                                      task_subtype_none, 0, 0, NULL, NULL, 0); */
+  /*                                      task_subtype_none, 0, 0, NULL, NULL,
+   * 0); */
 
-  //scheduler_addunlock(sched, gather, fft);
+  // scheduler_addunlock(sched, gather, fft);
 
   for (int k = 0; k < nr_tasks; k++) {
 
