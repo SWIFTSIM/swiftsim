@@ -1126,8 +1126,7 @@ void *runner_main(void *data) {
 /* Check that we haven't scheduled an inactive task */
 #ifdef SWIFT_DEBUG_CHECKS
       if (cj == NULL) { /* self */
-        if (ci->ti_end_min > e->ti_current && t->type != task_type_sort &&
-            t->type != task_type_cooling)
+        if (ci->ti_end_min > e->ti_current && t->type != task_type_sort)
           error(
               "Task (type='%s/%s') should have been skipped ti_current=%d "
               "c->ti_end_min=%d",
