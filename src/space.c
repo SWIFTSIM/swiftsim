@@ -1501,6 +1501,15 @@ void space_split_recursive(struct space *s, struct cell *c,
     }
   }
 
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check that the buffs are OK. */
+  for (int k = 0; k < count; k++) {
+    if (buff[k].x[0] != parts[k].x[0] || buff[k].x[1] != parts[k].x[1] ||
+        buff[k].x[2] != parts[k].x[2])
+      error("Inconsistent buff contents.");
+  }
+#endif /* SWIFT_DEBUG_CHECKS */
+
   /* Check the depth. */
   while (depth > (maxdepth = s->maxdepth)) {
     atomic_cas(&s->maxdepth, maxdepth, depth);
@@ -1545,7 +1554,7 @@ void space_split_recursive(struct space *s, struct cell *c,
     }
 
     /* Split the cell data. */
-    cell_split(c, c->parts - s->parts, buff, gbuff);
+    cell_split(c, buff, gbuff);
 
     /* Remove any progeny with zero parts. */
     struct cell_buff *progeny_buff = buff, *progeny_gbuff = gbuff;
@@ -1584,8 +1593,27 @@ void space_split_recursive(struct space *s, struct cell *c,
   else
     c->owner = 0; /* Ok, there is really nothing on this rank... */
 
-  /* Clean up. */
+  /* Are we at the top-level ? */
   if (allocate_buffer) {
+
+    /* Move particles to their correct location */
+    cell_reorder_parts(parts, count, buff);
+
+    /* Re-link the gparts. */
+    if (count > 0 && gcount > 0)
+      part_relink_gparts(parts, count, parts - s->parts);
+
+    /* Move g-particles to their correct location */
+    cell_reorder_gparts(gparts, gcount, gbuff);
+
+    /* Re-link the parts. */
+    if (count > 0 && gcount > 0) part_relink_parts(gparts, gcount, parts);
+
+#ifdef SWIFT_DEBUG_CHECKS
+
+#endif
+
+    /* Clean up. */
     if (buff != NULL) free(buff);
     if (gbuff != NULL) free(gbuff);
   }
