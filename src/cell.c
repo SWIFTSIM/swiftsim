@@ -661,6 +661,62 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, struct cell_buff *buff,
     part_relink_parts(gparts, gcount, parts - parts_offset);
 }
 
+void cell_init_counters(struct cell *c) {
+
+  const int count = c->count;
+  const int gcount = c->gcount;
+  float h_max = 0.0f;
+  int ti_end_min = max_nr_timesteps, ti_end_max = 0;
+  struct part *parts = c->parts;
+  struct xpart *xparts = c->xparts;
+  struct gpart *gparts = c->gparts;
+
+  if (c->split) {
+    for (int k = 0; k < 8; k++) {
+      if (c->progeny[k] != NULL) {
+
+        /* Recurse */
+        cell_init_counters(c->progeny[k]);
+
+        /* Update */
+        h_max = max(h_max, c->progeny[k]->h_max);
+        ti_end_min = min(ti_end_min, c->progeny[k]->ti_end_min);
+        ti_end_max = max(ti_end_max, c->progeny[k]->ti_end_max);
+      }
+    }
+
+  } else {
+
+    /* Get dt_min/dt_max. */
+    for (int k = 0; k < count; k++) {
+      const struct part *p = &parts[k];
+      struct xpart *xp = &xparts[k];
+      const float h = p->h;
+      const int ti_end = p->ti_end;
+      xp->x_diff[0] = 0.f;
+      xp->x_diff[1] = 0.f;
+      xp->x_diff[2] = 0.f;
+      if (h > h_max) h_max = h;
+      if (ti_end < ti_end_min) ti_end_min = ti_end;
+      if (ti_end > ti_end_max) ti_end_max = ti_end;
+    }
+    for (int k = 0; k < gcount; k++) {
+      struct gpart *gp = &gparts[k];
+      const int ti_end = gp->ti_end;
+      gp->x_diff[0] = 0.f;
+      gp->x_diff[1] = 0.f;
+      gp->x_diff[2] = 0.f;
+      if (ti_end < ti_end_min) ti_end_min = ti_end;
+      if (ti_end > ti_end_max) ti_end_max = ti_end;
+    }
+  }
+
+  /* Set the values for this cell. */
+  c->h_max = h_max;
+  c->ti_end_min = ti_end_min;
+  c->ti_end_max = ti_end_max;
+}
+
 /**
  * @brief Sanitizes the smoothing length values of cells by setting large
  * outliers to more sensible values.

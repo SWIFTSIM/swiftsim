@@ -55,6 +55,7 @@ extern int cell_next_tag;
 /* Struct to temporarily buffer the particle locations and bin id. */
 struct cell_buff {
   double x[3];
+  int offset;
   int ind;
 } SWIFT_STRUCT_ALIGN;
 
@@ -302,5 +303,6 @@ void cell_check_drift_point(struct cell *c, void *data);
 int cell_is_drift_needed(struct cell *c, const struct engine *e);
 int cell_unskip_tasks(struct cell *c, struct scheduler *s);
 void cell_set_super(struct cell *c, struct cell *super);
+void cell_init_counters(struct cell *c);
 
 #endif /* SWIFT_CELL_H */

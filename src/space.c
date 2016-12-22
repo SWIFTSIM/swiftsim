@@ -1469,13 +1469,10 @@ void space_split_recursive(struct space *s, struct cell *c,
   const int gcount = c->gcount;
   const int depth = c->depth;
   int maxdepth = 0;
-  float h_max = 0.0f;
-  int ti_end_min = max_nr_timesteps, ti_end_max = 0;
   struct cell *temp;
   struct part *parts = c->parts;
   struct gpart *gparts = c->gparts;
-  struct xpart *xparts = c->xparts;
-  struct engine *e = s->e;
+  const struct engine *e = s->e;
 
   /* If the buff is NULL, allocate it, and remember to free it. */
   const int allocate_buffer = (buff == NULL && gbuff == NULL);
@@ -1488,6 +1485,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         buff[k].x[0] = parts[k].x[0];
         buff[k].x[1] = parts[k].x[1];
         buff[k].x[2] = parts[k].x[2];
+        buff[k].offset = k;
       }
     }
     if (gcount > 0) {
@@ -1498,6 +1496,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         gbuff[k].x[0] = gparts[k].x[0];
         gbuff[k].x[1] = gparts[k].x[1];
         gbuff[k].x[2] = gparts[k].x[2];
+        gbuff[k].offset = k;
       }
     }
   }
@@ -1558,9 +1557,6 @@ void space_split_recursive(struct space *s, struct cell *c,
         space_split_recursive(s, c->progeny[k], progeny_buff, progeny_gbuff);
         progeny_buff += c->progeny[k]->count;
         progeny_gbuff += c->progeny[k]->gcount;
-        h_max = max(h_max, c->progeny[k]->h_max);
-        ti_end_min = min(ti_end_min, c->progeny[k]->ti_end_min);
-        ti_end_max = max(ti_end_max, c->progeny[k]->ti_end_max);
         if (c->progeny[k]->maxdepth > maxdepth)
           maxdepth = c->progeny[k]->maxdepth;
       }
@@ -1571,38 +1567,11 @@ void space_split_recursive(struct space *s, struct cell *c,
   else {
 
     /* Clear the progeny. */
-    bzero(c->progeny, sizeof(struct cell *) * 8);
     c->split = 0;
     maxdepth = c->depth;
-
-    /* Get dt_min/dt_max. */
-    for (int k = 0; k < count; k++) {
-      struct part *p = &parts[k];
-      struct xpart *xp = &xparts[k];
-      const float h = p->h;
-      const int ti_end = p->ti_end;
-      xp->x_diff[0] = 0.f;
-      xp->x_diff[1] = 0.f;
-      xp->x_diff[2] = 0.f;
-      if (h > h_max) h_max = h;
-      if (ti_end < ti_end_min) ti_end_min = ti_end;
-      if (ti_end > ti_end_max) ti_end_max = ti_end;
-    }
-    for (int k = 0; k < gcount; k++) {
-      struct gpart *gp = &gparts[k];
-      const int ti_end = gp->ti_end;
-      gp->x_diff[0] = 0.f;
-      gp->x_diff[1] = 0.f;
-      gp->x_diff[2] = 0.f;
-      if (ti_end < ti_end_min) ti_end_min = ti_end;
-      if (ti_end > ti_end_max) ti_end_max = ti_end;
-    }
   }
 
-  /* Set the values for this cell. */
-  c->h_max = h_max;
-  c->ti_end_min = ti_end_min;
-  c->ti_end_max = ti_end_max;
+  /* Update depth */
   c->maxdepth = maxdepth;
 
   /* Set ownership according to the start of the parts array. */
@@ -1638,7 +1607,12 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
 
   for (int ind = 0; ind < num_cells; ind++) {
     struct cell *c = &cells_top[ind];
+
+    /* Split cells and sort particles recursively */
     space_split_recursive(s, c, NULL, NULL);
+
+    /* Update all counters */
+    cell_init_counters(c);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
