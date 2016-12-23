@@ -584,7 +584,8 @@ void cell_reorder_parts(struct part *parts, int count, struct cell_buff *buff) {
 
   for (int i = 0; i < count; ++i) {
 
-    const struct part temp = parts[i];
+    struct part temp;
+    memcpy(&temp, &parts[i], sizeof(struct part));
     int j = i;
     while (1) {
       const int k = buff[j].offset;
@@ -593,7 +594,7 @@ void cell_reorder_parts(struct part *parts, int count, struct cell_buff *buff) {
       memcpy(&parts[j], &parts[k], sizeof(struct part));
       j = k;
     }
-    parts[j] = temp;
+    memcpy(&parts[j], &temp, sizeof(struct part));
   }
 }
 
@@ -610,7 +611,8 @@ void cell_reorder_gparts(struct gpart *gparts, int gcount,
 
   for (int i = 0; i < gcount; ++i) {
 
-    const struct gpart temp = gparts[i];
+    struct gpart temp;
+    memcpy(&temp, &gparts[i], sizeof(struct gpart));
     int j = i;
     while (1) {
       const int k = buff[j].offset;
@@ -619,7 +621,7 @@ void cell_reorder_gparts(struct gpart *gparts, int gcount,
       memcpy(&gparts[j], &gparts[k], sizeof(struct gpart));
       j = k;
     }
-    gparts[j] = temp;
+    memcpy(&gparts[j], &temp, sizeof(struct gpart));
   }
 }
 
