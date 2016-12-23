@@ -306,8 +306,6 @@ int main(int argc, char *argv[]) {
     message("sizeof(struct gpart) is %4zi bytes.", sizeof(struct gpart));
     message("sizeof(struct task)  is %4zi bytes.", sizeof(struct task));
     message("sizeof(struct cell)  is %4zi bytes.", sizeof(struct cell));
-    message("sizeof(struct cell_buff)  is %4zi bytes.",
-            sizeof(struct cell_buff));
   }
 
   /* How vocal are we ? */
