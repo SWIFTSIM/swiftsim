@@ -568,34 +568,63 @@ void cell_split(struct cell *c, struct cell_buff *buff,
     c->progeny[k]->gparts = &c->gparts[bucket_offset[k]];
   }
 }
-
+/**
+ * @brief Re-arrange the #parts array accourding to the indices stored in the
+ * buff array.
+ *
+ * @param parts The array of #part to re-arrange.
+ * @param count The size of the parts array.
+ * @param buff An array of #cell_buff containing the indices of parts.
+ */
 void cell_reorder_parts(struct part *parts, int count, struct cell_buff *buff) {
 
-  for (int i = 0; i < count - 1; ++i) {
+  for (int i = 0; i < count; ++i) {
 
-    while (i != buff[i].offset) {
-
-      const int index = buff[i].offset;
-      memswap(&parts[i], &parts[index], sizeof(struct part));
-      memswap(&buff[i], &buff[index], sizeof(struct cell_buff));
+    const struct part temp = parts[i];
+    int j = i;
+    while (1) {
+      const int k = buff[j].offset;
+      buff[j].offset = j;
+      if (k == i) break;
+      memcpy(&parts[j], &parts[k], sizeof(struct part));
+      j = k;
     }
+    parts[j] = temp;
   }
 }
 
-void cell_reorder_gparts(struct gpart *gparts, int count,
+/**
+ * @brief Re-arrange the #gparts array accourding to the indices stored in the
+ * buff array.
+ *
+ * @param gparts The array of #gpart to re-arrange.
+ * @param gcount The size of the gparts array.
+ * @param buff An array of #cell_buff containing the indices of gparts.
+ */
+void cell_reorder_gparts(struct gpart *gparts, int gcount,
                          struct cell_buff *buff) {
 
-  for (int i = 0; i < count - 1; ++i) {
+  for (int i = 0; i < gcount; ++i) {
 
-    while (i != buff[i].offset) {
-
-      const int index = buff[i].offset;
-      memswap(&gparts[i], &gparts[index], sizeof(struct gpart));
-      memswap(&buff[i], &buff[index], sizeof(struct cell_buff));
+    const struct gpart temp = gparts[i];
+    int j = i;
+    while (1) {
+      const int k = buff[j].offset;
+      buff[j].offset = j;
+      if (k == i) break;
+      memcpy(&gparts[j], &gparts[k], sizeof(struct gpart));
+      j = k;
     }
+    gparts[j] = temp;
   }
 }
 
+/**
+ * @brief Recursively update the h_max and time-step information of a cell and
+ * all its progenitors.
+ *
+ * @param c The #cell to act on.
+ */
 void cell_init_counters(struct cell *c) {
 
   const int count = c->count;

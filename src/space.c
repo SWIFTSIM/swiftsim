@@ -1499,16 +1499,21 @@ void space_split_recursive(struct space *s, struct cell *c,
         gbuff[k].offset = k;
       }
     }
-  }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Check that the buffs are OK. */
-  for (int k = 0; k < count; k++) {
-    if (buff[k].x[0] != parts[k].x[0] || buff[k].x[1] != parts[k].x[1] ||
-        buff[k].x[2] != parts[k].x[2])
-      error("Inconsistent buff contents.");
-  }
+    /* Check that the buffs are OK. */
+    for (int k = 0; k < count; k++) {
+      if (buff[k].x[0] != parts[k].x[0] || buff[k].x[1] != parts[k].x[1] ||
+          buff[k].x[2] != parts[k].x[2])
+        error("Inconsistent buff contents.");
+    }
+    for (int k = 0; k < gcount; k++) {
+      if (gbuff[k].x[0] != gparts[k].x[0] || gbuff[k].x[1] != gparts[k].x[1] ||
+          gbuff[k].x[2] != gparts[k].x[2])
+        error("Inconsistent gbuff contents.");
+    }
 #endif /* SWIFT_DEBUG_CHECKS */
+  }
 
   /* Check the depth. */
   while (depth > (maxdepth = s->maxdepth)) {
@@ -1610,8 +1615,18 @@ void space_split_recursive(struct space *s, struct cell *c,
     if (count > 0 && gcount > 0) part_relink_parts(gparts, gcount, parts);
 
 #ifdef SWIFT_DEBUG_CHECKS
-
-#endif
+    /* Check that the sorting matches the buffs. */
+    for (int k = 0; k < count; k++) {
+      if (buff[k].x[0] != parts[k].x[0] || buff[k].x[1] != parts[k].x[1] ||
+          buff[k].x[2] != parts[k].x[2])
+        error("Inconsistent buff contents.");
+    }
+    for (int k = 0; k < gcount; k++) {
+      if (gbuff[k].x[0] != gparts[k].x[0] || gbuff[k].x[1] != gparts[k].x[1] ||
+          gbuff[k].x[2] != gparts[k].x[2])
+        error("Inconsistent gbuff contents.");
+    }
+#endif /* SWIFT_DEBUG_CHECKS */
 
     /* Clean up. */
     if (buff != NULL) free(buff);
