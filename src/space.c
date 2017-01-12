@@ -1484,7 +1484,6 @@ void space_split_recursive(struct space *s, struct cell *c,
   const int gcount = c->gcount;
   const int depth = c->depth;
   int maxdepth = 0;
-  struct cell *temp;
   struct part *parts = c->parts;
   struct gpart *gparts = c->gparts;
   struct xpart *xparts = c->xparts;
