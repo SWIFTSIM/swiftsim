@@ -572,34 +572,39 @@ void cell_split(struct cell *c, struct cell_buff *buff,
     c->progeny[k]->gparts = &c->gparts[bucket_offset[k]];
   }
 }
+
 /**
- * @brief Re-arrange the #parts array accourding to the indices stored in the
+ * @brief Re-arrange the #part array accourding to the indices stored in the
  * buff array.
  *
  * @param parts The array of #part to re-arrange.
  * @param count The size of the parts array.
  * @param buff An array of #cell_buff containing the indices of parts.
  */
-void cell_reorder_parts(struct part *parts, int count, struct cell_buff *buff) {
+void cell_reorder_parts(struct part *parts, struct xpart *xparts, int count, struct cell_buff *buff) {
 
   for (int i = 0; i < count; ++i) {
 
     struct part temp;
+    struct xpart xtemp;
     memcpy(&temp, &parts[i], sizeof(struct part));
+    memcpy(&xtemp, &xparts[i], sizeof(struct xpart));
     int j = i;
     while (1) {
       const int k = buff[j].offset;
       buff[j].offset = j;
       if (k == i) break;
       memcpy(&parts[j], &parts[k], sizeof(struct part));
+      memcpy(&xparts[j], &xparts[k], sizeof(struct xpart));
       j = k;
     }
     memcpy(&parts[j], &temp, sizeof(struct part));
+    memcpy(&xparts[j], &xtemp, sizeof(struct xpart));
   }
 }
 
 /**
- * @brief Re-arrange the #gparts array accourding to the indices stored in the
+ * @brief Re-arrange the #gpart array accourding to the indices stored in the
  * buff array.
  *
  * @param gparts The array of #gpart to re-arrange.
@@ -1151,4 +1156,89 @@ void cell_drift(struct cell *c, const struct engine *e) {
 
   /* Update the time of the last drift */
   c->ti_old = ti_current;
+}
+
+/**
+ * @brief Recursively check that the cell properties match the particle content.
+ *
+ * This is a debugging function. Don't call in actual code.
+ *
+ * @param c The #cell to check.
+ */
+void cell_check_content(struct cell *c) {
+
+  const int count = c->count;
+  const int gcount = c->gcount;
+  
+  const double pos_min[3] = {c->loc[0],
+			     c->loc[1],
+			     c->loc[2]};
+  const double pos_max[3] = {c->loc[0] + c->width[0],
+			     c->loc[1] + c->width[1],
+			     c->loc[2] + c->width[2]};
+
+  const double h_max = c->h_max;
+  const int ti_end_min = c->ti_end_min;
+  const int ti_end_max = c->ti_end_max;
+
+  /* Check all the parts at this level */
+  for(int i=0; i<count; ++i) {
+
+    /* Handle on the particle */
+    const struct part *p = &c->parts[i];
+
+    /* Check that particle is in the cell */
+    for(int k=0; k<3; ++k) {
+      if(p->x[k] < pos_min[k] || p->x[k] > pos_max[k])
+	error("Particle not in the cell ! c->loc=[%e %e %e] c->width=[%e %e %e] p->x=[%e %e %e]",
+	      pos_min[0], pos_min[1], pos_min[2], c->width[0], c->width[1], c->width[2], 
+	      p->x[0], p->x[1], p->x[2]);
+    }
+
+    /* Check time-zone */
+    if(p->ti_end < ti_end_min)
+      error("Particle in wrong time-zone ! p->ti_end=%d c->ti_end_min=%d",
+	    p->ti_end, ti_end_min);
+    
+    if(p->ti_end > ti_end_max)
+      error("Particle in wrong time-zone ! p->ti_end=%d c->ti_end_max=%d",
+	    p->ti_end, ti_end_max);
+    
+    /* Check smoothing length */
+    if(p->h > h_max)
+      error("Particle with wrong h ! p->h=%e c->h_max=%e",
+	    p->h, h_max);
+  }
+
+  /* Check all the parts at this level */
+  for(int i=0; i<gcount; ++i) {
+
+    /* Handle on the particle */
+    const struct gpart *gp = &c->gparts[i];
+
+    /* Check that particle is in the cell */
+    for(int k=0; k<3; ++k) {
+      if(gp->x[k] < pos_min[k] || gp->x[k] > pos_max[k])
+	error("Particle not in the cell ! c->loc=[%e %e %e] c->width=[%e %e %e] gp->x=[%e %e %e]",
+	      pos_min[0], pos_min[1], pos_min[2], c->width[0], c->width[1], c->width[2], 
+	      gp->x[0], gp->x[1], gp->x[2]);
+    }
+
+    /* Check time-zone */
+    if(gp->ti_end < ti_end_min)
+      error("Particle in wrong time-zone ! gp->ti_end=%d c->ti_end_min=%d",
+	    gp->ti_end, ti_end_min);
+    
+    if(gp->ti_end > ti_end_max)
+      error("Particle in wrong time-zone ! gp->ti_end=%d c->ti_end_max=%d",
+	    gp->ti_end, ti_end_max);
+  }
+
+  
+  /* Recurse */
+  if(c->split)  {
+    for(int k=0; k<8; ++k) {
+      if(c->progeny[k] != NULL) cell_check_content(c->progeny[k]);
+    }
+  }
 }

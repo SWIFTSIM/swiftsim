@@ -745,6 +745,11 @@ void space_rebuild(struct space *s, int verbose) {
      sure that the parts in each cell are ok. */
   space_split(s, cells_top, s->nr_cells, verbose);
 
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Let's do a final check that all particles are at the right place */
+  for(int i=0; i<s->nr_cells; ++i) cell_check_content(&s->cells_top[i]);
+#endif
+
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
@@ -1611,7 +1616,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   if (allocate_buffer) {
 
     /* Move particles to their correct location */
-    cell_reorder_parts(parts, count, buff);
+    cell_reorder_parts(parts, c->xparts, count, buff);
 
     /* Re-link the gparts. */
     if (count > 0 && gcount > 0)
@@ -1665,16 +1670,16 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
 
     /* Update all counters */
     cell_init_counters(c);
-  }
+  
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* All cells and particles should have consistent h_max values. */
-  for (int ind = 0; ind < num_cells; ind++) {
+    /* All cells and particles should have consistent h_max values. */
     int depth = 0;
     if (!checkCellhdxmax(&cells_top[ind], &depth))
       error("    at cell depth %d", depth);
-  }
 #endif
+    
+  }
 }
 
 /**
@@ -2047,3 +2052,4 @@ void space_clean(struct space *s) {
   free(s->xparts);
   free(s->gparts);
 }
+

@@ -284,7 +284,7 @@ struct cell {
 /* Function prototypes. */
 void cell_split(struct cell *c, struct cell_buff *buff,
                 struct cell_buff *gbuff);
-void cell_reorder_parts(struct part *parts, int count, struct cell_buff *buff);
+void cell_reorder_parts(struct part *parts, struct xpart *xparts, int count, struct cell_buff *buff);
 void cell_reorder_gparts(struct gpart *gparts, int gcount,
                          struct cell_buff *gbuff);
 void cell_sanitize(struct cell *c);
@@ -311,5 +311,6 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s);
 void cell_set_super(struct cell *c, struct cell *super);
 void cell_drift(struct cell *c, const struct engine *e);
 void cell_init_counters(struct cell *c);
+void cell_check_content(struct cell *c);
 
 #endif /* SWIFT_CELL_H */
