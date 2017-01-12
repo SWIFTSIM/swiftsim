@@ -578,6 +578,7 @@ void cell_split(struct cell *c, struct cell_buff *buff,
  * buff array.
  *
  * @param parts The array of #part to re-arrange.
+ * @param xparts The corresponding array of #xpart.
  * @param count The size of the parts array.
  * @param buff An array of #cell_buff containing the indices of parts.
  */
@@ -1168,6 +1169,8 @@ void cell_drift(struct cell *c, const struct engine *e) {
  */
 void cell_check_content(struct cell *c) {
 
+#ifdef SWIFT_DEBUG_CHECKS
+
   const int count = c->count;
   const int gcount = c->gcount;
 
@@ -1241,4 +1244,10 @@ void cell_check_content(struct cell *c) {
       if (c->progeny[k] != NULL) cell_check_content(c->progeny[k]);
     }
   }
+
+#else
+
+  error("Debugging function called in actual code.");
+
+#endif
 }
