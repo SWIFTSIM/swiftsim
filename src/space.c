@@ -747,7 +747,7 @@ void space_rebuild(struct space *s, int verbose) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Let's do a final check that all particles are at the right place */
-  for(int i=0; i<s->nr_cells; ++i) cell_check_content(&s->cells_top[i]);
+  for (int i = 0; i < s->nr_cells; ++i) cell_check_content(&s->cells_top[i]);
 #endif
 
   if (verbose)
@@ -1670,7 +1670,6 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
 
     /* Update all counters */
     cell_init_counters(c);
-  
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* All cells and particles should have consistent h_max values. */
@@ -1678,7 +1677,6 @@ void space_split_mapper(void *map_data, int num_cells, void *extra_data) {
     if (!checkCellhdxmax(&cells_top[ind], &depth))
       error("    at cell depth %d", depth);
 #endif
-    
   }
 }
 
@@ -2052,4 +2050,3 @@ void space_clean(struct space *s) {
   free(s->xparts);
   free(s->gparts);
 }
-
