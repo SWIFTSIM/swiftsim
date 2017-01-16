@@ -590,19 +590,19 @@ void cell_reorder_parts(struct part *parts, struct xpart *xparts, int count,
 
     struct part temp;
     struct xpart xtemp;
-    memcpy(&temp, &parts[i], sizeof(struct part));
-    memcpy(&xtemp, &xparts[i], sizeof(struct xpart));
+    vector_memcpy(&temp, &parts[i], sizeof(struct part));
+    vector_memcpy(&xtemp, &xparts[i], sizeof(struct xpart));
     int j = i;
     while (1) {
       const int k = buff[j].offset;
       buff[j].offset = j;
       if (k == i) break;
-      memcpy(&parts[j], &parts[k], sizeof(struct part));
-      memcpy(&xparts[j], &xparts[k], sizeof(struct xpart));
+      vector_memcpy(&parts[j], &parts[k], sizeof(struct part));
+      vector_memcpy(&xparts[j], &xparts[k], sizeof(struct xpart));
       j = k;
     }
-    memcpy(&parts[j], &temp, sizeof(struct part));
-    memcpy(&xparts[j], &xtemp, sizeof(struct xpart));
+    vector_memcpy(&parts[j], &temp, sizeof(struct part));
+    vector_memcpy(&xparts[j], &xtemp, sizeof(struct xpart));
   }
 }
 
@@ -620,16 +620,16 @@ void cell_reorder_gparts(struct gpart *gparts, int gcount,
   for (int i = 0; i < gcount; ++i) {
 
     struct gpart temp;
-    memcpy(&temp, &gparts[i], sizeof(struct gpart));
+    vector_memcpy(&temp, &gparts[i], sizeof(struct gpart));
     int j = i;
     while (1) {
       const int k = buff[j].offset;
       buff[j].offset = j;
       if (k == i) break;
-      memcpy(&gparts[j], &gparts[k], sizeof(struct gpart));
+      vector_memcpy(&gparts[j], &gparts[k], sizeof(struct gpart));
       j = k;
     }
-    memcpy(&gparts[j], &temp, sizeof(struct gpart));
+    vector_memcpy(&gparts[j], &temp, sizeof(struct gpart));
   }
 }
 

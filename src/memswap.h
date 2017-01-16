@@ -49,8 +49,7 @@
  *
  * Keep in mind that this function only works when the underlying data
  * is aligned to the vector length, e.g. with the @c
- * __attribute__((aligned(32)))
- * syntax!
+ * __attribute__((aligned(32)))  syntax!
  * Furthermore, register re-labeling only seems to work when the code is
  * compiled with @c -funroll-loops.
  *
@@ -136,6 +135,53 @@ __attribute__((always_inline)) inline void memswap_unaligned(void *void_a,
   swap_loop(int, a, b, bytes);
   swap_loop(short, a, b, bytes);
   swap_loop(char, a, b, bytes);
+}
+
+/* Macro for in-place memcopy of values b into a of type t. a and b are
+   assumed to be of type char* so that the pointer arithmetic works. */
+#define memcpy_loop(type, a, b, count) \
+  while (count >= sizeof(type)) {      \
+    *(type *)a = *(const type *)b;     \
+    a += sizeof(type);                 \
+    b += sizeof(type);                 \
+    count -= sizeof(type);             \
+  }
+
+/**
+ * @brief Copies the content of one element into another one.
+ *
+ * Keep in mind that this function only works when the underlying data
+ * is aligned to the vector length, e.g. with the @c
+ * __attribute__((aligned(32)))  syntax!
+ * Furthermore, register re-labeling only seems to work when the code is
+ * compiled with @c -funroll-loops.
+ *
+ * @param void_a Pointer to the element where to write.
+ * @param void_b Pointer to the element to copy.
+ * @param bytes Size, in bytes, of the data pointed to by @c a and @c b.
+ */
+__attribute__((always_inline)) inline void vector_memcpy(void *void_a,
+                                                         const void *void_b,
+                                                         size_t bytes) {
+  char *a = (char *)void_a;
+  const char *b = (const char *)void_b;
+
+#ifdef __AVX512F__
+  memcpy_loop(__m512i, a, b, bytes);
+#endif
+#ifdef __AVX__
+  memcpy_loop(__m256i, a, b, bytes);
+#endif
+#ifdef __SSE2__
+  memcpy_loop(__m128i, a, b, bytes);
+#endif
+#ifdef __ALTIVEC__
+  memcpy_loop(vector int, a, b, bytes);
+#endif
+  memcpy_loop(size_t, a, b, bytes);
+  memcpy_loop(int, a, b, bytes);
+  memcpy_loop(short, a, b, bytes);
+  memcpy_loop(char, a, b, bytes);
 }
 
 #endif /* SWIFT_MEMSWAP_H */
