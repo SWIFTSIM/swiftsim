@@ -1467,6 +1467,44 @@ void space_map_cells_pre(struct space *s, int full,
     rec_map_cells_pre(&s->cells_top[cid], full, fun, data);
 }
 
+void space_split_populate_buffer(struct space *s, struct cell *c,
+                                 struct cell_buff **buff,
+                                 struct cell_buff **gbuff) {
+  const int count = c->count;
+  const int gcount = c->gcount;
+  struct part *parts = c->parts;
+  struct gpart *gparts = c->gparts;
+
+  if (count > 0) {
+    if (posix_memalign((void *)buff, SWIFT_STRUCT_ALIGNMENT,
+                       sizeof(struct cell_buff) * count) != 0)
+      error("Failed to allocate temporary indices.");
+
+    struct cell_buff *buff_ = *buff;
+
+    for (int k = 0; k < count; k++) {
+      buff_[k].x[0] = parts[k].x[0];
+      buff_[k].x[1] = parts[k].x[1];
+      buff_[k].x[2] = parts[k].x[2];
+      buff_[k].offset = k;
+    }
+  }
+  if (gcount > 0) {
+    if (posix_memalign((void *)gbuff, SWIFT_STRUCT_ALIGNMENT,
+                       sizeof(struct cell_buff) * gcount) != 0)
+      error("Failed to allocate temporary indices.");
+
+    struct cell_buff *gbuff_ = *gbuff;
+
+    for (int k = 0; k < gcount; k++) {
+      gbuff_[k].x[0] = gparts[k].x[0];
+      gbuff_[k].x[1] = gparts[k].x[1];
+      gbuff_[k].x[2] = gparts[k].x[2];
+      gbuff_[k].offset = k;
+    }
+  }
+}
+
 /**
  * @brief Recursively split a cell.
  *
@@ -1490,44 +1528,7 @@ void space_split_recursive(struct space *s, struct cell *c,
 
   /* If the buff is NULL, allocate it, and remember to free it. */
   const int allocate_buffer = (buff == NULL && gbuff == NULL);
-  if (allocate_buffer) {
-    if (count > 0) {
-      if (posix_memalign((void *)&buff, SWIFT_STRUCT_ALIGNMENT,
-                         sizeof(struct cell_buff) * count) != 0)
-        error("Failed to allocate temporary indices.");
-      for (int k = 0; k < count; k++) {
-        buff[k].x[0] = parts[k].x[0];
-        buff[k].x[1] = parts[k].x[1];
-        buff[k].x[2] = parts[k].x[2];
-        buff[k].offset = k;
-      }
-    }
-    if (gcount > 0) {
-      if (posix_memalign((void *)&gbuff, SWIFT_STRUCT_ALIGNMENT,
-                         sizeof(struct cell_buff) * gcount) != 0)
-        error("Failed to allocate temporary indices.");
-      for (int k = 0; k < gcount; k++) {
-        gbuff[k].x[0] = gparts[k].x[0];
-        gbuff[k].x[1] = gparts[k].x[1];
-        gbuff[k].x[2] = gparts[k].x[2];
-        gbuff[k].offset = k;
-      }
-    }
-
-#ifdef SWIFT_DEBUG_CHECKS
-    /* Check that the buffs are OK. */
-    for (int k = 0; k < count; k++) {
-      if (buff[k].x[0] != parts[k].x[0] || buff[k].x[1] != parts[k].x[1] ||
-          buff[k].x[2] != parts[k].x[2])
-        error("Inconsistent buff contents.");
-    }
-    for (int k = 0; k < gcount; k++) {
-      if (gbuff[k].x[0] != gparts[k].x[0] || gbuff[k].x[1] != gparts[k].x[1] ||
-          gbuff[k].x[2] != gparts[k].x[2])
-        error("Inconsistent gbuff contents.");
-    }
-#endif /* SWIFT_DEBUG_CHECKS */
-  }
+  if (allocate_buffer) space_split_populate_buffer(s, c, &buff, &gbuff);
 
   /* Check the depth. */
   while (depth > (maxdepth = s->maxdepth)) {

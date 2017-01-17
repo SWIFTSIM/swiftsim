@@ -590,7 +590,7 @@ void cell_reorder_parts(struct part *parts, struct xpart *xparts, int count,
 
     // If this particle is in the right place already, do nothing.
     if (buff[i].offset == i) continue;
-    
+
     // Swap this particle to its correct location.
     struct part temp;
     struct xpart xtemp;
@@ -625,7 +625,7 @@ void cell_reorder_gparts(struct gpart *gparts, int gcount,
 
     // If this particle is in the right place already, do nothing.
     if (buff[i].offset == i) continue;
-    
+
     // Swap this particle to its correct location.
     struct gpart temp;
     vector_memcpy(&temp, &gparts[i], sizeof(struct gpart));
