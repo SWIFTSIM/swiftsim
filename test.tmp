@@ -3,3 +3,4 @@ Now with two lines and more commits....
 And a final third?
 Nope needs more testing.
 Make request WIP, does that suppress checks?
+Seems to be the default to not push when WIP.
