@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Init the project.
-AC_INIT([SWIFT],[0.5.0],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
+AC_INIT([SWIFT],[0.6.0],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
 swift_config_flags="$*"
 
 #  Need to define this, instead of using fifth argument of AC_INIT, until 2.64.
@@ -48,6 +48,15 @@ AC_USE_SYSTEM_EXTENSIONS
 AX_COMPILER_VENDOR
 AX_COMPILER_VERSION
 
+# Look for C11 atomics support. This is optional in C11, but we require it.
+# Note we make no attempt to force C11 mode, so any special CFLAGS will
+# need to be set in the environment. Other C11 features could also be
+# tested if this isn't also a strong test of C11 support.
+AC_CHECK_HEADERS([stdatomic.h],[have_stdatomic=yes],[have_stdatomic=no])
+if test "x$have_stdatomic" = "xno"; then
+   AC_MSG_ERROR([C11 atomics support is required (stdatomic.h), cannot proceed])
+fi
+
 # Interprocedural optimization support. Needs special handling for linking and
 # archiving as well as compilation with Intels, needs to be done before
 # libtool is configured (to use correct LD).
@@ -78,8 +87,7 @@ if test "$enable_ipo" = "yes"; then
    fi
 fi
 
-# Check for MPI. Need to do this before characterising the compiler (C99 mode),
-# as this changes the compiler.
+# Check for MPI. 
 # We should consider using AX_PROG_CC_MPI to replace AC_PROG_CC when compiling
 # whole applications. There are issues with mixing compilers when using this
 # macro. See
@@ -158,8 +166,7 @@ AC_ARG_VAR(MPIRUN, Path to the mpirun command if non-standard)
 # Add libtool support (now that CC is defined).
 LT_INIT
 
-# Need C99 and inline support.
-AC_PROG_CC_C99
+# Need to inline functions.
 AC_C_INLINE
 
 # If debugging try to show inlined functions.
