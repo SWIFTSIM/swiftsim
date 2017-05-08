@@ -47,7 +47,12 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
        the time step to a very large value */
     return FLT_MAX;
   } else {
-    return CFL_condition * p->h / fabsf(p->timestepvars.vmax);
+    // this is now the same criterion that Phil Hopkins uses in GIZMO
+    const float psize =
+        powf(hydro_dimension_unit_sphere / p->density.wcount * p->density.wcorr,
+             hydro_dimension_inv) *
+        p->h;
+    return 2. * CFL_condition * psize / fabsf(p->timestepvars.vmax);
   }
 }
 
@@ -251,7 +256,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 
   if (condition_number > 100.0f) {
     //    error("Condition number larger than 100!");
-    //    message("Condition number too large: %g (p->id: %llu)!",
+    // message("Condition number too large: %g (p->id: %llu)!",
     //    condition_number, p->id);
     /* add a correction to the number of neighbours for this particle */
     p->density.wcorr *= 0.75;

@@ -381,14 +381,36 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   /* Compute area */
   /* eqn. (7) */
   Anorm = 0.0f;
+  float dA_dot_dx = 0.;
+  /* in principle, we use Vi and Vj as weights for the left and right
+     contributions to the generalized surface vector.
+     However, if Vi and Vj are very different (because they have very different
+     smoothing lengths), then the expressions below are more stable. */
+  float Xi = Vi;
+  float Xj = Vj;
+  if (fabsf(Vi - Vj) / fminf(Vi, Vj) > 1.5 * hydro_dimension) {
+    Xi = (Vi * hj + Vj * hi) / (hi + hj);
+    Xj = Xi;
+  }
   for (k = 0; k < 3; k++) {
     /* we add a minus sign since dx is pi->x - pj->x */
-    A[k] = -Vi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) * wi *
+    A[k] = -Xi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) * wi *
                hi_inv_dim -
-           Vj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) * wj *
+           Xj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) * wj *
                hj_inv_dim;
     Anorm += A[k] * A[k];
+    /* For stability reasons, we do require A and dx to have opposite
+       directions (basically meaning that the surface normal for the surface
+       always points from particle i to particle j, as it would in a real
+       moving-mesh code). If not, our scheme is no longer upwind and hence can
+       become unstable. */
+    dA_dot_dx += A[k] * dx[k];
   }
+  /* In GIZMO, Phil Hopkins reverts to an SPH integration scheme if this
+     happens. We curently just ignore this case. */
+  /*  if(dA_dot_dx > 0.){
+      message("Ill conditioned gradient matrix!");
+    } */
 
   if (!Anorm) {
     /* if the interface has no area, nothing happens and we return */
