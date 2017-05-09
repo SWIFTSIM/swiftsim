@@ -47,11 +47,8 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
        the time step to a very large value */
     return FLT_MAX;
   } else {
-    // this is now the same criterion that Phil Hopkins uses in GIZMO
-    const float psize =
-        powf(hydro_dimension_unit_sphere / p->density.wcount * p->density.wcorr,
-             hydro_dimension_inv) *
-        p->h;
+    const float psize = powf(p->geometry.volume / hydro_dimension_unit_sphere,
+                             hydro_dimension_inv);
     return 2. * CFL_condition * psize / fabsf(p->timestepvars.vmax);
   }
 }
@@ -540,7 +537,10 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   }
 
   if (p->conserved.energy < 0.) {
-    error("Negative energy after conserved variables update!");
+    error(
+        "Negative energy after conserved variables update (energy: %g, "
+        "denergy: %g)!",
+        p->conserved.energy, p->conserved.flux.energy);
   }
 #endif
 

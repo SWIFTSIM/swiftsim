@@ -381,7 +381,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   /* Compute area */
   /* eqn. (7) */
   Anorm = 0.0f;
-  float dA_dot_dx = 0.;
   /* in principle, we use Vi and Vj as weights for the left and right
      contributions to the generalized surface vector.
      However, if Vi and Vj are very different (because they have very different
@@ -399,18 +398,21 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
            Xj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) * wj *
                hj_inv_dim;
     Anorm += A[k] * A[k];
-    /* For stability reasons, we do require A and dx to have opposite
-       directions (basically meaning that the surface normal for the surface
-       always points from particle i to particle j, as it would in a real
-       moving-mesh code). If not, our scheme is no longer upwind and hence can
-       become unstable. */
-    dA_dot_dx += A[k] * dx[k];
   }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* For stability reasons, we do require A and dx to have opposite
+     directions (basically meaning that the surface normal for the surface
+     always points from particle i to particle j, as it would in a real
+     moving-mesh code). If not, our scheme is no longer upwind and hence can
+     become unstable. */
+  float dA_dot_dx = A[0] * dx[0] + A[1] * dx[1] + A[2] * dx[2];
   /* In GIZMO, Phil Hopkins reverts to an SPH integration scheme if this
-     happens. We curently just ignore this case. */
-  /*  if(dA_dot_dx > 0.){
-      message("Ill conditioned gradient matrix!");
-    } */
+     happens. We curently just ignore this case and display a message. */
+  if (dA_dot_dx > 1.e-10) {
+    message("Ill conditioned gradient matrix (%g)!", dA_dot_dx);
+  }
+#endif
 
   if (!Anorm) {
     /* if the interface has no area, nothing happens and we return */
