@@ -23,6 +23,8 @@
 #include "hydro_gradients.h"
 #include "riemann.h"
 
+//#define GIZMO_VOLUME_CORRECTION
+
 /**
  * @brief Calculate the volume interaction between particle i and particle j
  *
@@ -387,10 +389,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
      smoothing lengths), then the expressions below are more stable. */
   float Xi = Vi;
   float Xj = Vj;
+#ifdef GIZMO_VOLUME_CORRECTION
   if (fabsf(Vi - Vj) / fminf(Vi, Vj) > 1.5 * hydro_dimension) {
     Xi = (Vi * hj + Vj * hi) / (hi + hj);
     Xj = Xi;
   }
+#endif
   for (k = 0; k < 3; k++) {
     /* we add a minus sign since dx is pi->x - pj->x */
     A[k] = -Xi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) * wi *
@@ -410,11 +414,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   /* In GIZMO, Phil Hopkins reverts to an SPH integration scheme if this
      happens. We curently just ignore this case and display a message. */
   if (dA_dot_dx > 1.e-10) {
-    message("Ill conditioned gradient matrix (%g)!", dA_dot_dx);
+    message("Ill conditioned gradient matrix (%g %g %g %g)!", dA_dot_dx, Anorm,
+            Vi, Vj);
   }
 #endif
 
-  if (!Anorm) {
+  if (Anorm < 1.e-13 * (Vi + Vj)) {
     /* if the interface has no area, nothing happens and we return */
     /* continuing results in dividing by zero and NaN's... */
     return;
