@@ -65,6 +65,11 @@ float convert_P(struct engine* e, struct part* p) {
   return hydro_get_pressure(p);
 }
 
+float convert_dt(struct engine* e, struct part* p) {
+
+  return get_timestep(p->time_bin, e->timeBase);
+}
+
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -75,7 +80,7 @@ float convert_P(struct engine* e, struct part* p) {
 void hydro_write_particles(struct part* parts, struct io_props* list,
                            int* num_fields) {
 
-  *num_fields = 10;
+  *num_fields = 14;
 
   /* List what we want to write */
   list[0] = io_make_output_field("Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH,
@@ -99,6 +104,14 @@ void hydro_write_particles(struct part* parts, struct io_props* list,
                                               parts, rho, convert_u);
   list[9] = io_make_output_field_convert_part(
       "Pressure", FLOAT, 1, UNIT_CONV_PRESSURE, parts, rho, convert_P);
+  list[10] = io_make_output_field("Timebin", CHAR, 1, UNIT_CONV_NO_UNITS, parts,
+                                  time_bin);
+  list[11] = io_make_output_field("Soundpseed", FLOAT, 1, UNIT_CONV_SPEED,
+                                  parts, force.soundspeed);
+  list[12] = io_make_output_field_convert_part(
+      "Timestep", FLOAT, 1, UNIT_CONV_TIME, parts, rho, convert_dt);
+  list[13] = io_make_output_field("Wakeup", CHAR, 1, UNIT_CONV_NO_UNITS, parts,
+                                  wakeup);
 }
 
 /**
