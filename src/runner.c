@@ -63,6 +63,7 @@
 #include "task.h"
 #include "timers.h"
 #include "timestep.h"
+#include "timestep_limiter.h"
 
 /* Import the density loop functions. */
 #define FUNCTION density
@@ -1229,7 +1230,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         if (p->gpart != NULL) p->gpart->time_bin = get_time_bin(ti_new_step);
 
         /* Tell the particle what the new physical time step is */
-        float dt = get_timestep(p->time_bin, timeBase);
+        const float dt = get_timestep(p->time_bin, timeBase);
         hydro_timestep_extra(p, dt);
 
         /* Number of updated particles */
@@ -1396,6 +1397,82 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   c->ti_beg_max = ti_beg_max;
 
   if (timer) TIMER_TOC(timer_timestep);
+}
+
+/**
+ * @brief Apply the time-step limiter to all awaken particles in a cell
+ * hierarchy.
+ *
+ * @param r The task #runner.
+ * @param c The #cell.
+ * @param timer Are we timing this ?
+ */
+void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
+
+  const struct engine *e = r->e;
+  const integertime_t ti_current = e->ti_current;
+  const int count = c->count;
+  struct part *restrict parts = c->parts;
+  struct xpart *restrict xparts = c->xparts;
+
+  TIMER_TIC;
+
+  integertime_t ti_end_min = max_nr_timesteps, ti_end_max = 0, ti_beg_max = 0;
+
+  /* Loop over the progeny ? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL) {
+        struct cell *restrict cp = c->progeny[k];
+
+        /* Recurse */
+        runner_do_limiter(r, cp, 0);
+
+        /* And aggregate */
+        ti_end_min = min(cp->ti_end_min, ti_end_min);
+        ti_end_max = max(cp->ti_end_max, ti_end_max);
+        ti_beg_max = max(cp->ti_beg_max, ti_beg_max);
+      }
+  } else {
+
+    ti_end_min = c->ti_end_min;
+    ti_end_max = c->ti_end_max;
+    ti_beg_max = c->ti_beg_max;
+
+    /* Loop over the gas particles in this cell. */
+    for (int k = 0; k < count; k++) {
+
+      /* Get a handle on the part. */
+      struct part *restrict p = &parts[k];
+      struct xpart *restrict xp = &xparts[k];
+
+      if (p->wakeup != time_bin_not_awake) {
+
+        // if(p->time_bin > p->wakeup+1) {
+
+        /* Apply the limiter and get the new time-step size */
+        const integertime_t ti_new_step = timestep_limit_part(p, xp, e);
+
+        /* What is the next sync-point ? */
+        ti_end_min = min(ti_current + ti_new_step, ti_end_min);
+        ti_end_max = max(ti_current + ti_new_step, ti_end_max);
+
+        /* What is the next starting point for this cell ? */
+        ti_beg_max = max(ti_current, ti_beg_max);
+        //}
+        // else {
+        //  p->wakeup = time_bin_not_awake;
+        //}
+      }
+    }
+  }
+
+  /* Store the updated values */
+  c->ti_end_min = ti_end_min;
+  c->ti_end_max = ti_end_max;
+  c->ti_beg_max = ti_beg_max;
+
+  if (timer) TIMER_TOC(timer_do_limiter);
 }
 
 /**

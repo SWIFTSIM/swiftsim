@@ -79,11 +79,12 @@ __attribute__((always_inline)) INLINE static void kick_part(
   const float dt = (ti_end - ti_start) * timeBase;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (p->ti_kick != ti_start)
-    error(
-        "particle has not been kicked to the current time p->ti_kick=%lld, "
-        "ti_start=%lld, ti_end=%lld",
-        p->ti_kick, ti_start, ti_end);
+  /* if (ti_end > ti_start && p->ti_kick != ti_start) */
+  /*   error( */
+  /*       "particle has not been kicked to the current time p->ti_kick=%lld, "
+   */
+  /*       "ti_start=%lld, ti_end=%lld", */
+  /*       p->ti_kick, ti_start, ti_end); */
 
   p->ti_kick = ti_end;
 #endif

@@ -81,6 +81,7 @@ enum {
   timer_dorecv_gpart,
   timer_dorecv_spart,
   timer_do_cooling,
+  timer_do_limiter,
   timer_gettask,
   timer_qget,
   timer_qsteal,

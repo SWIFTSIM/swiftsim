@@ -32,13 +32,16 @@ typedef long long integertime_t;
 typedef char timebin_t;
 
 /*! The number of time bins */
-#define num_time_bins 56
+#define num_time_bins 26
 
 /*! The maximal number of timesteps in a simulation */
 #define max_nr_timesteps (1LL << (num_time_bins + 1))
 
-/*! Fictious time-bin to hold inhibited particles */
+/*! Fictitious time-bin to hold inhibited particles */
 #define time_bin_inhibited (num_time_bins + 2)
+
+/*! Fictitious time-bin for particles not awaken */
+#define time_bin_not_awake (num_time_bins + 2)
 
 /**
  * @brief Returns the integer time interval corresponding to a time bin
