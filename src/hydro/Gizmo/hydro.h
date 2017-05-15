@@ -266,8 +266,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   const float m = p->conserved.mass;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (m == 0.) {
-    error("Mass is 0!");
+  if (m < 0.) {
+    error("Mass is negative!");
   }
 
   if (volume == 0.) {
@@ -280,9 +280,15 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   momentum[1] = p->conserved.momentum[1];
   momentum[2] = p->conserved.momentum[2];
   p->primitives.rho = m / volume;
-  p->primitives.v[0] = momentum[0] / m;
-  p->primitives.v[1] = momentum[1] / m;
-  p->primitives.v[2] = momentum[2] / m;
+  if (m == 0.) {
+    p->primitives.v[0] = 0.;
+    p->primitives.v[1] = 0.;
+    p->primitives.v[2] = 0.;
+  } else {
+    p->primitives.v[0] = momentum[0] / m;
+    p->primitives.v[1] = momentum[1] / m;
+    p->primitives.v[2] = momentum[2] / m;
+  }
 
 #ifdef EOS_ISOTHERMAL_GAS
   /* although the pressure is not formally used anywhere if an isothermal eos
@@ -306,7 +312,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 #endif
 
   /* sanity checks */
-  /* it would probably be safer to throw a warning if netive densities or
+  /* it would probably be safer to throw a warning if negative densities or
      pressures occur */
   if (p->primitives.rho < 0.0f || p->primitives.P < 0.0f) {
     p->primitives.rho = 0.0f;
@@ -488,7 +494,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
   /* Add normalization to h_dt. */
   p->force.h_dt *= p->h * hydro_dimension_inv;
 
-  if (p->force.dt) {
+  if (p->force.dt > 0.) {
     p->du_dt = p->conserved.flux.energy / p->force.dt;
   } else {
     p->du_dt = 0.0f;
@@ -528,6 +534,14 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
 #else
   p->conserved.energy += p->conserved.flux.energy;
 #endif
+
+  /* Hard reset for negative masses and energies. */
+  if (p->conserved.mass < 0.) {
+    p->conserved.mass = 0.;
+  }
+  if (p->conserved.energy < 0.) {
+    p->conserved.energy = 0.;
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (p->conserved.mass < 0.) {
