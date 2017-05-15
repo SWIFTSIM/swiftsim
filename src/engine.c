@@ -3361,7 +3361,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   }
 
   for (size_t i = 0; i < s->nr_parts; ++i) {
-    if (s->parts[i].wakeup != time_bin_not_awake) message("Particle woken up!");
+    if (s->parts[i].wakeup == time_bin_awake) message("Particle woken up!");
   }
 
   /* Recover the (integer) end of the next time-step */
@@ -3402,9 +3402,10 @@ void engine_step(struct engine *e) {
   if (e->nodeID == 0) {
 
     /* Print some information to the screen */
-    printf("  %6d %lld %14e %14e %10zu %10zu %10zu %21.3f\n", e->step,
-           e->ti_current, e->time, e->timeStep, e->updates, e->g_updates,
-           e->s_updates, e->wallclock_time);
+    printf("  %6d %14lld %d %d %14e %14e %10zu %10zu %10zu %21.3f\n", e->step,
+           e->ti_current, e->min_active_bin, e->max_active_bin, e->time,
+           e->timeStep, e->updates, e->g_updates, e->s_updates,
+           e->wallclock_time);
     fflush(stdout);
 
     fprintf(e->file_timesteps, "  %6d %14e %14e %10zu %10zu %10zu %21.3f\n",
@@ -3417,6 +3418,8 @@ void engine_step(struct engine *e) {
   e->ti_old = e->ti_current;
   e->ti_current = e->ti_end_min;
   e->max_active_bin = get_max_active_bin(e->ti_end_min);
+  e->min_active_bin =
+      min(get_max_active_bin(e->ti_end_min - e->ti_old), e->max_active_bin);
   e->step += 1;
   e->time = e->ti_current * e->timeBase + e->timeBegin;
   e->timeOld = e->ti_old * e->timeBase + e->timeBegin;
@@ -3481,8 +3484,7 @@ void engine_step(struct engine *e) {
   }
 
   for (size_t i = 0; i < e->s->nr_parts; ++i) {
-    if (e->s->parts[i].wakeup != time_bin_not_awake)
-      message("Particle woken up!");
+    if (e->s->parts[i].wakeup == time_bin_awake) message("Particle woken up!");
   }
 
   /* Let's trigger a rebuild every-so-often for good measure */
