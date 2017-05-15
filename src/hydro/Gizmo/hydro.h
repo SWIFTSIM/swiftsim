@@ -235,6 +235,10 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->geometry.centroid[1] *= ihdim;
   p->geometry.centroid[2] *= ihdim;
 
+  p->geometry.centroid[0] /= p->density.wcount;
+  p->geometry.centroid[1] /= p->density.wcount;
+  p->geometry.centroid[2] /= p->density.wcount;
+
   /* Check the condition number to see if we have a stable geometry. */
   float condition_number_E = 0.0f;
   int i, j;
