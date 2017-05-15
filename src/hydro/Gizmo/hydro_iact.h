@@ -64,6 +64,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   for (k = 0; k < 3; k++)
     for (l = 0; l < 3; l++) pi->geometry.matrix_E[k][l] += dx[k] * dx[l] * wi;
 
+  pi->geometry.centroid[0] -= dx[0] * wi;
+  pi->geometry.centroid[1] -= dx[1] * wi;
+  pi->geometry.centroid[2] -= dx[2] * wi;
+
   /* Compute density of pj. */
   h_inv = 1.0 / hj;
   xj = r * h_inv;
@@ -76,6 +80,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->geometry.volume += wj;
   for (k = 0; k < 3; k++)
     for (l = 0; l < 3; l++) pj->geometry.matrix_E[k][l] += dx[k] * dx[l] * wj;
+
+  pj->geometry.centroid[0] += dx[0] * wj;
+  pj->geometry.centroid[1] += dx[1] * wj;
+  pj->geometry.centroid[2] += dx[2] * wj;
 }
 
 /**
@@ -119,6 +127,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->geometry.volume += wi;
   for (k = 0; k < 3; k++)
     for (l = 0; l < 3; l++) pi->geometry.matrix_E[k][l] += dx[k] * dx[l] * wi;
+
+  pi->geometry.centroid[0] -= dx[0] * wi;
+  pi->geometry.centroid[1] -= dx[1] * wi;
+  pi->geometry.centroid[2] -= dx[2] * wi;
 }
 
 /**

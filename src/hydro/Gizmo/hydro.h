@@ -171,6 +171,9 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->geometry.matrix_E[2][0] = 0.0f;
   p->geometry.matrix_E[2][1] = 0.0f;
   p->geometry.matrix_E[2][2] = 0.0f;
+  p->geometry.centroid[0] = 0.0f;
+  p->geometry.centroid[1] = 0.0f;
+  p->geometry.centroid[2] = 0.0f;
   p->geometry.Atot = 0.0f;
 
   /* Set the active flag to active. */
@@ -227,6 +230,10 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->geometry.matrix_E[2][0] = ihdim * p->geometry.matrix_E[2][0];
   p->geometry.matrix_E[2][1] = ihdim * p->geometry.matrix_E[2][1];
   p->geometry.matrix_E[2][2] = ihdim * p->geometry.matrix_E[2][2];
+
+  p->geometry.centroid[0] *= ihdim;
+  p->geometry.centroid[1] *= ihdim;
+  p->geometry.centroid[2] *= ihdim;
 
   /* Check the condition number to see if we have a stable geometry. */
   float condition_number_E = 0.0f;

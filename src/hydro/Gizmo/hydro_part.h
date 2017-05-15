@@ -148,6 +148,9 @@ struct part {
     /* Total surface area of the particle. */
     float Atot;
 
+    /* Centroid of the "cell". */
+    float centroid[3];
+
   } geometry;
 
   /* Variables used for timestep calculation (currently not used). */

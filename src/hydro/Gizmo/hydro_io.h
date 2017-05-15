@@ -127,7 +127,7 @@ float convert_Etot(struct engine* e, struct part* p) {
 void hydro_write_particles(struct part* parts, struct io_props* list,
                            int* num_fields) {
 
-  *num_fields = 14;
+  *num_fields = 15;
 
   /* List what we want to write */
   list[0] = io_make_output_field("Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH,
@@ -160,6 +160,8 @@ void hydro_write_particles(struct part* parts, struct io_props* list,
                                         parts, conserved.energy, convert_Etot);
   list[13] = io_make_output_field("GravAcceleration", FLOAT, 3,
                                   UNIT_CONV_ACCELERATION, parts, gravity.old_a);
+  list[14] = io_make_output_field("Centroid", FLOAT, 3, UNIT_CONV_LENGTH, parts,
+                                  geometry.centroid);
 }
 
 /**
