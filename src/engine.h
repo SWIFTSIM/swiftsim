@@ -128,6 +128,9 @@ struct engine {
   /* The highest active bin at this time */
   timebin_t max_active_bin;
 
+  /* The lowest active bin at this time */
+  timebin_t min_active_bin;
+
   /* Time step */
   double timeStep;
 

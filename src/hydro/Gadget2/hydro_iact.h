@@ -1028,7 +1028,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Wake up the neighbour? */
   if (v_sig > 4.1f * pj->force.v_sig)
-    pj->wakeup = min(pj->wakeup, pi->time_bin);
+    pj->wakeup = time_bin_awake;  // min(pj->wakeup, pi->time_bin);
 
   /* Change in entropy */
   pi->entropy_dt += mj * visc_term * dvdr;
