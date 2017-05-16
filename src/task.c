@@ -48,14 +48,17 @@
 
 /* Task type names. */
 const char *taskID_names[task_type_count] = {
-    "none",       "sort",           "self",
-    "pair",       "sub_self",       "sub_pair",
-    "init_grav",  "ghost",          "extra_ghost",
-    "drift_part", "drift_gpart",    "kick1",
-    "kick2",      "timestep",       "send",
-    "recv",       "grav_top_level", "grav_long_range",
-    "grav_ghost", "grav_mm",        "grav_down",
-    "cooling",    "sourceterms"};
+    "none",           "sort",
+    "self",           "pair",
+    "sub_self",       "sub_pair",
+    "init_grav",      "ghost",
+    "extra_ghost",    "drift_part", "drift_gpart",
+    "kick1",          "kick2",
+    "timestep",       "timestep_limiter",
+    "send",           "recv",
+    "grav_top_level", "grav_long_range",
+    "grav_ghost",     "grav_mm",        "grav_down",
+    "cooling",        "sourceterms"};
 
 /* Sub-task type names. */
 const char *subtaskID_names[task_subtype_count] = {
@@ -126,6 +129,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
     case task_type_extra_ghost:
     case task_type_cooling:
     case task_type_sourceterms:
+    case task_type_timestep_limiter:
       return task_action_part;
       break;
 
@@ -282,6 +286,7 @@ void task_unlock(struct task *t) {
 
     case task_type_drift_part:
     case task_type_sort:
+    case task_type_timestep_limiter:
       cell_unlocktree(ci);
       break;
 
@@ -375,6 +380,7 @@ int task_lock(struct task *t) {
 
     case task_type_drift_part:
     case task_type_sort:
+    case task_type_timestep_limiter:
       if (ci->hold) return 0;
       if (cell_locktree(ci) != 0) return 0;
       break;

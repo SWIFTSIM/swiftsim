@@ -3393,7 +3393,6 @@ static INLINE timebin_t get_min_active_bin(const struct engine *e) {
   return min(get_max_active_bin(e->ti_end_min - e->ti_old), e->max_active_bin);
 }
 
-
 /**
  * @brief Let the #engine loose to compute the forces.
  *
