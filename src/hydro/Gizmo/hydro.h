@@ -708,9 +708,11 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   p->conserved.energy = 1.;
 
   /* set the particle velocities to the Lloyd velocities */
-  xp->v_full[0] = p->geometry.centroid[0]/p->force.dt;
-  xp->v_full[1] = p->geometry.centroid[1]/p->force.dt;
-  xp->v_full[2] = p->geometry.centroid[2]/p->force.dt;
+  /* note that centroid is the relative position of the centroid w.r.t. the
+     particle position (position - centroid) */
+  xp->v_full[0] = -p->geometry.centroid[0] / p->force.dt;
+  xp->v_full[1] = -p->geometry.centroid[1] / p->force.dt;
+  xp->v_full[2] = -p->geometry.centroid[2] / p->force.dt;
   p->v[0] = xp->v_full[0];
   p->v[1] = xp->v_full[1];
   p->v[2] = xp->v_full[2];
