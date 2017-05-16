@@ -964,11 +964,11 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
               ti_end, ti_begin, ti_step, p->time_bin, ti_current);
 #endif
 
-        if (p->id == ICHECK)
-          message(
-              "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d "
-              "wakeup=%d",
-              e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup);
+        /* if (p->id == ICHECK) */
+        /*   message( */
+        /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
+        /*       "wakeup=%d", */
+        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
 
         /* do the kick */
         kick_part(p, xp, ti_begin, ti_begin + ti_step / 2, timeBase);
@@ -1104,11 +1104,11 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
               ti_begin, ti_step, p->time_bin, ti_current, p->wakeup);
 #endif
 
-        if (p->id == ICHECK)
-          message(
-              "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d "
-              "wakeup=%d",
-              e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup);
+        /* if (p->id == ICHECK) */
+        /*   message( */
+        /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
+        /*       "wakeup=%d", */
+        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
 
         /* Finish the time-step with a second half-kick */
         kick_part(p, xp, ti_begin + ti_step / 2, ti_end, timeBase);
@@ -1473,7 +1473,7 @@ void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &parts[k];
       struct xpart *restrict xp = &xparts[k];
 
-      if (part_is_active(p, e) && p->wakeup == time_bin_awake)
+      if (part_is_active(p, e) && p->wakeup != time_bin_not_awake)
         p->wakeup = time_bin_not_awake;
 
       /* Bip, bip, bip... wake-up time */
@@ -1491,17 +1491,7 @@ void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
 
           /* What is the next starting point for this cell ? */
           ti_beg_max = max(ti_current, ti_beg_max);
-
-        } /* else if (p->time_bin > { */
-
-        /*   /\* Would have been awake anyway, no need to do anything *\/ */
-        /*   p->wakeup = time_bin_not_awake; */
-        /*   if(p->id == ICHECK) */
-        /*     message("ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d
-         * wakeup=%d", */
-        /*     e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup);
-         */
-        /* } */
+        }
       }
     }
   }
