@@ -395,7 +395,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   /* Compute area */
   /* eqn. (7) */
   Anorm = 0.0f;
-  if (pi->density.wcorr > 0.5) {
+  if (pi->density.wcorr > 0.5 && pj->density.wcorr > 0.5) {
     /* in principle, we use Vi and Vj as weights for the left and right
        contributions to the generalized surface vector.
        However, if Vi and Vj are very different (because they have very
