@@ -27,7 +27,7 @@
 #include "minmax.h"
 #include "riemann.h"
 
-#define GIZMO_LLOYD_ITERATION
+//#define GIZMO_LLOYD_ITERATION
 
 /**
  * @brief Computes the hydro time-step of a given particle
@@ -678,12 +678,34 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     xp->v_full[0] = p->conserved.momentum[0] / p->conserved.mass;
     xp->v_full[1] = p->conserved.momentum[1] / p->conserved.mass;
     xp->v_full[2] = p->conserved.momentum[2] / p->conserved.mass;
+
+    /* add velocity correction */
+    float ds[3];
+    ds[0] = p->geometry.centroid[0];
+    ds[1] = p->geometry.centroid[1];
+    ds[2] = p->geometry.centroid[2];
+    const float d = sqrtf(ds[0] * ds[0] + ds[1] * ds[1] + ds[2] * ds[2]);
+    const float R = get_radius_dimension_sphere(p->geometry.volume);
+    const float eta = 0.25;
+    const float etaR = eta * R;
+    const float xi = 1.;
+    if (d > 0.9 * etaR) {
+      float fac =
+          xi * sqrtf(hydro_gamma * p->primitives.P / p->primitives.rho) / d;
+      if (d < 1.1 * etaR) {
+        fac *= 5. * (d - 0.9 * etaR) / etaR;
+      }
+      xp->v_full[0] -= ds[0] * fac;
+      xp->v_full[1] -= ds[1] * fac;
+      xp->v_full[2] -= ds[2] * fac;
+    }
   } else {
     /* vacuum particles don't move */
     xp->v_full[0] = 0.;
     xp->v_full[1] = 0.;
     xp->v_full[2] = 0.;
   }
+
   p->v[0] = xp->v_full[0];
   p->v[1] = xp->v_full[1];
   p->v[2] = xp->v_full[2];
