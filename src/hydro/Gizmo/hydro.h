@@ -494,8 +494,9 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   else
     h_corr = expf(w1);
 
-  /* Limit the smoothing length correction. */
-  if (h_corr < 2.0f) {
+  /* Limit the smoothing length correction (and make sure it is always
+     positive). */
+  if (h_corr < 2.0f && h_corr > 0.) {
     p->h *= h_corr;
   }
 
