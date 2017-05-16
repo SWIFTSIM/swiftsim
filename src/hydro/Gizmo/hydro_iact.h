@@ -412,9 +412,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     for (k = 0; k < 3; k++) {
       /* we add a minus sign since dx is pi->x - pj->x */
       A[k] = -Xi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) *
-                 wi * hi_inv_dim -
+                 wj * hj_inv_dim -
              Xj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) *
-                 wj * hj_inv_dim;
+                 wi * hi_inv_dim;
       Anorm += A[k] * A[k];
     }
   } else {
@@ -426,6 +426,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     Anorm *= Anorm * r2;
   }
 
+  if (Anorm == 0.) {
+    /* if the interface has no area, nothing happens and we return */
+    /* continuing results in dividing by zero and NaN's... */
+    return;
+  }
+
+  Anorm = sqrtf(Anorm);
+
 #ifdef SWIFT_DEBUG_CHECKS
   /* For stability reasons, we do require A and dx to have opposite
      directions (basically meaning that the surface normal for the surface
@@ -435,20 +443,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   float dA_dot_dx = A[0] * dx[0] + A[1] * dx[1] + A[2] * dx[2];
   /* In GIZMO, Phil Hopkins reverts to an SPH integration scheme if this
      happens. We curently just ignore this case and display a message. */
-  if (dA_dot_dx > 1.e-9) {
-    message("Ill conditioned gradient matrix (%g %g %g %g)!", dA_dot_dx, Anorm,
-            Vi, Vj);
+  if (dA_dot_dx > 1.e-6 * r * r2) {
+    message("Ill conditioned gradient matrix (%g %g %g %g %g)!", dA_dot_dx,
+            Anorm, Vi, Vj, r);
   }
 #endif
 
-  if (Anorm < 1.e-13 * (Vi + Vj)) {
-    /* if the interface has no area, nothing happens and we return */
-    /* continuing results in dividing by zero and NaN's... */
-    return;
-  }
-
   /* compute the normal vector of the interface */
-  Anorm = sqrtf(Anorm);
   for (k = 0; k < 3; k++) n_unit[k] = A[k] / Anorm;
 
   /* Compute interface position (relative to pi, since we don't need the actual
