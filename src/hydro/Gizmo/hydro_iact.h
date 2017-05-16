@@ -23,7 +23,7 @@
 #include "hydro_gradients.h"
 #include "riemann.h"
 
-//#define GIZMO_VOLUME_CORRECTION
+#define GIZMO_VOLUME_CORRECTION
 
 /**
  * @brief Calculate the volume interaction between particle i and particle j
@@ -419,7 +419,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     }
   } else {
     /* ill condition gradient matrix: revert to SPH face area */
-    Anorm = -(Vi * Vi * wi_dx + Vj * Vj * wj_dx) * ri;
+    Anorm = -(hidp1 * Vi * Vi * wi_dx + hjdp1 * Vj * Vj * wj_dx) * ri;
     A[0] = -Anorm * dx[0];
     A[1] = -Anorm * dx[1];
     A[2] = -Anorm * dx[2];
