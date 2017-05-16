@@ -287,12 +287,12 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   float condition_number =
       hydro_dimension_inv * sqrtf(condition_number_E * condition_number_Einv);
 
-  if (condition_number > 100.0f) {
+  if (condition_number > 100.0f && p->density.wcorr > 0.5) {
     //    error("Condition number larger than 100!");
     // message("Condition number too large: %g (p->id: %llu)!",
     //    condition_number, p->id);
     /* add a correction to the number of neighbours for this particle */
-    p->density.wcorr *= 0.75;
+    p->density.wcorr *= 0.9;
   }
 
   hydro_gradients_init(p);
@@ -690,9 +690,14 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     const float eta = 0.25;
     const float etaR = eta * R;
     const float xi = 1.;
+#ifdef EOS_ISOTHERMAL_GAS
+    const float soundspeed = const_isothermal_soundspeed;
+#else
+    const float soundspeed =
+        sqrtf(hydro_gamma * p->primitives.P / p->primitives.rho);
+#endif
     if (d > 0.9 * etaR) {
-      float fac =
-          xi * sqrtf(hydro_gamma * p->primitives.P / p->primitives.rho) / d;
+      float fac = xi * soundspeed / d;
       if (d < 1.1 * etaR) {
         fac *= 5. * (d - 0.9 * etaR) / etaR;
       }

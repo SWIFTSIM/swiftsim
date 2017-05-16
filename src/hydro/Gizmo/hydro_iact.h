@@ -395,25 +395,35 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   /* Compute area */
   /* eqn. (7) */
   Anorm = 0.0f;
-  /* in principle, we use Vi and Vj as weights for the left and right
-     contributions to the generalized surface vector.
-     However, if Vi and Vj are very different (because they have very different
-     smoothing lengths), then the expressions below are more stable. */
-  float Xi = Vi;
-  float Xj = Vj;
+  if (pi->density.wcorr > 0.5) {
+    /* in principle, we use Vi and Vj as weights for the left and right
+       contributions to the generalized surface vector.
+       However, if Vi and Vj are very different (because they have very
+       different
+       smoothing lengths), then the expressions below are more stable. */
+    float Xi = Vi;
+    float Xj = Vj;
 #ifdef GIZMO_VOLUME_CORRECTION
-  if (fabsf(Vi - Vj) / fminf(Vi, Vj) > 1.5 * hydro_dimension) {
-    Xi = (Vi * hj + Vj * hi) / (hi + hj);
-    Xj = Xi;
-  }
+    if (fabsf(Vi - Vj) / fminf(Vi, Vj) > 1.5 * hydro_dimension) {
+      Xi = (Vi * hj + Vj * hi) / (hi + hj);
+      Xj = Xi;
+    }
 #endif
-  for (k = 0; k < 3; k++) {
-    /* we add a minus sign since dx is pi->x - pj->x */
-    A[k] = -Xi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) * wi *
-               hi_inv_dim -
-           Xj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) * wj *
-               hj_inv_dim;
-    Anorm += A[k] * A[k];
+    for (k = 0; k < 3; k++) {
+      /* we add a minus sign since dx is pi->x - pj->x */
+      A[k] = -Xi * (Bi[k][0] * dx[0] + Bi[k][1] * dx[1] + Bi[k][2] * dx[2]) *
+                 wi * hi_inv_dim -
+             Xj * (Bj[k][0] * dx[0] + Bj[k][1] * dx[1] + Bj[k][2] * dx[2]) *
+                 wj * hj_inv_dim;
+      Anorm += A[k] * A[k];
+    }
+  } else {
+    /* ill condition gradient matrix: revert to SPH face area */
+    Anorm = -(Vi * Vi * wi_dx + Vj * Vj * wj_dx) * ri;
+    A[0] = -Anorm * dx[0];
+    A[1] = -Anorm * dx[1];
+    A[2] = -Anorm * dx[2];
+    Anorm *= Anorm * r2;
   }
 
 #ifdef SWIFT_DEBUG_CHECKS

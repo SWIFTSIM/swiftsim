@@ -17,7 +17,7 @@
  *
  ******************************************************************************/
 
-#define const_gizmo_gradient_cutoff 0.
+#define const_gizmo_gradient_cutoff 0.5
 
 /**
  * @brief Initialize gradient variables
