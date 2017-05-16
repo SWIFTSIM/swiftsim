@@ -968,7 +968,8 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
         /*   message( */
         /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
         /*       "wakeup=%d", */
-        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
+        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin,
+         * p->wakeup); */
 
         /* do the kick */
         kick_part(p, xp, ti_begin, ti_begin + ti_step / 2, timeBase);
@@ -1108,7 +1109,8 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
         /*   message( */
         /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
         /*       "wakeup=%d", */
-        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
+        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin,
+         * p->wakeup); */
 
         /* Finish the time-step with a second half-kick */
         kick_part(p, xp, ti_begin + ti_step / 2, ti_end, timeBase);
@@ -2062,6 +2064,9 @@ void *runner_main(void *data) {
           break;
         case task_type_timestep:
           runner_do_timestep(r, ci, 1);
+          break;
+        case task_type_timestep_limiter:
+          runner_do_limiter(r, ci, 1);
           break;
 #ifdef WITH_MPI
         case task_type_send:

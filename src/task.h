@@ -52,6 +52,7 @@ enum task_types {
   task_type_kick1,
   task_type_kick2,
   task_type_timestep,
+  task_type_timestep_limiter,
   task_type_send,
   task_type_recv,
   task_type_grav_top_level,

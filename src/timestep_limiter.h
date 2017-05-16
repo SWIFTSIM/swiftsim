@@ -60,7 +60,8 @@ __attribute__((always_inline)) INLINE static integertime_t timestep_limit_part(
 
   /* if (p->id == ICHECK) */
   /*   message( */
-  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d " */
+  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d "
+   */
   /*       "new_ti_end=%lld", */
   /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup, */
   /*       new_ti_end); */
@@ -70,7 +71,8 @@ __attribute__((always_inline)) INLINE static integertime_t timestep_limit_part(
 
   /* if (p->id == ICHECK) */
   /*   message( */
-  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d " */
+  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d "
+   */
   /*       "new_ti_end=%lld", */
   /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup, */
   /*       new_ti_end); */
@@ -80,7 +82,8 @@ __attribute__((always_inline)) INLINE static integertime_t timestep_limit_part(
 
   /* if (p->id == ICHECK) */
   /*   message( */
-  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d", */
+  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d",
+   */
   /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
 
   /* Remember the old time-bin */
@@ -91,7 +94,8 @@ __attribute__((always_inline)) INLINE static integertime_t timestep_limit_part(
 
   /* if (p->id == ICHECK) */
   /*   message( */
-  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d", */
+  /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d wakeup=%d",
+   */
   /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin, p->wakeup); */
 
   return new_fake_ti_step;
