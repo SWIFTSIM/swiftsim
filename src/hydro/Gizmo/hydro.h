@@ -674,7 +674,7 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   }
 #else
   /* Set particle movement */
-  if (p->conserved.mass > 0.) {
+  if (p->conserved.mass > 0. && p->primitives.rho > 0.) {
     xp->v_full[0] = p->conserved.momentum[0] / p->conserved.mass;
     xp->v_full[1] = p->conserved.momentum[1] / p->conserved.mass;
     xp->v_full[2] = p->conserved.momentum[2] / p->conserved.mass;
@@ -699,6 +699,21 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
       xp->v_full[1] -= ds[1] * fac;
       xp->v_full[2] -= ds[2] * fac;
     }
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (p->primitives.rho == 0.) {
+      error("Zero density for non zero mass!");
+    }
+    if (xp->v_full[0] == INFINITY || xp->v_full[0] == -INFINITY) {
+      error("Infinite velocity correction!");
+    }
+    if (xp->v_full[1] == INFINITY || xp->v_full[1] == -INFINITY) {
+      error("Infinite velocity correction!");
+    }
+    if (xp->v_full[2] == INFINITY || xp->v_full[2] == -INFINITY) {
+      error("Infinite velocity correction!");
+    }
+#endif
   } else {
     /* vacuum particles don't move */
     xp->v_full[0] = 0.;
