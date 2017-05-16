@@ -27,6 +27,8 @@
 #include "minmax.h"
 #include "riemann.h"
 
+#define GIZMO_LLOYD_ITERATION
+
 /**
  * @brief Computes the hydro time-step of a given particle
  *
@@ -39,6 +41,10 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
     const struct hydro_props* restrict hydro_properties) {
 
   const float CFL_condition = hydro_properties->CFL_condition;
+
+#ifdef GIZMO_LLOYD_ITERATION
+  return CFL_condition;
+#endif
 
   if (p->timestepvars.vmax == 0.) {
     /* vmax can be zero in vacuum cells that only have vacuum neighbours */
@@ -132,6 +138,25 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
 
 #if defined(GIZMO_FIX_PARTICLES)
   /* make sure the particles are initially at rest */
+  p->v[0] = 0.;
+  p->v[1] = 0.;
+  p->v[2] = 0.;
+#endif
+
+#ifdef GIZMO_LLOYD_ITERATION
+  /* overwrite all variables to make sure they have safe values */
+  p->primitives.rho = 1.;
+  p->primitives.v[0] = 0.;
+  p->primitives.v[1] = 0.;
+  p->primitives.v[2] = 0.;
+  p->primitives.P = 1.;
+
+  p->conserved.mass = 1.;
+  p->conserved.momentum[0] = 0.;
+  p->conserved.momentum[1] = 0.;
+  p->conserved.momentum[2] = 0.;
+  p->conserved.energy = 1.;
+
   p->v[0] = 0.;
   p->v[1] = 0.;
   p->v[2] = 0.;
@@ -231,9 +256,9 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->geometry.matrix_E[2][1] = ihdim * p->geometry.matrix_E[2][1];
   p->geometry.matrix_E[2][2] = ihdim * p->geometry.matrix_E[2][2];
 
-  p->geometry.centroid[0] *= ihdim;
-  p->geometry.centroid[1] *= ihdim;
-  p->geometry.centroid[2] *= ihdim;
+  p->geometry.centroid[0] *= kernel_norm;
+  p->geometry.centroid[1] *= kernel_norm;
+  p->geometry.centroid[2] *= kernel_norm;
 
   p->geometry.centroid[0] /= p->density.wcount;
   p->geometry.centroid[1] /= p->density.wcount;
@@ -330,6 +355,15 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
     p->primitives.P = 0.0f;
   }
 
+#ifdef GIZMO_LLOYD_ITERATION
+  /* overwrite primitive variables to make sure they still have safe values */
+  p->primitives.rho = 1.;
+  p->primitives.v[0] = 0.;
+  p->primitives.v[1] = 0.;
+  p->primitives.v[2] = 0.;
+  p->primitives.P = 1.;
+#endif
+
   /* Add a correction factor to wcount (to force a neighbour number increase if
      the geometry matrix is close to singular) */
   p->density.wcount *= p->density.wcorr;
@@ -383,6 +417,11 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
   p->gravity.mflux[0] = 0.0f;
   p->gravity.mflux[1] = 0.0f;
   p->gravity.mflux[2] = 0.0f;
+
+#ifdef GIZMO_LLOYD_ITERATION
+  /* reset the gradients to zero, as we don't want them */
+  hydro_gradients_init(p);
+#endif
 }
 
 /**
@@ -440,6 +479,10 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
  */
 __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     struct part* p, struct xpart* xp, float dt) {
+
+#ifdef GIZMO_LLOYD_ITERATION
+  return;
+#endif
 
   const float h_inv = 1.0f / p->h;
 
@@ -654,6 +697,23 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     p->gpart->v_full[1] = xp->v_full[1];
     p->gpart->v_full[2] = xp->v_full[2];
   }
+#endif
+
+#ifdef GIZMO_LLOYD_ITERATION
+  /* reset conserved variables to safe values */
+  p->conserved.mass = 1.;
+  p->conserved.momentum[0] = 0.;
+  p->conserved.momentum[1] = 0.;
+  p->conserved.momentum[2] = 0.;
+  p->conserved.energy = 1.;
+
+  /* set the particle velocities to the Lloyd velocities */
+  xp->v_full[0] = p->geometry.centroid[0]/p->force.dt;
+  xp->v_full[1] = p->geometry.centroid[1]/p->force.dt;
+  xp->v_full[2] = p->geometry.centroid[2]/p->force.dt;
+  p->v[0] = xp->v_full[0];
+  p->v[1] = xp->v_full[1];
+  p->v[2] = xp->v_full[2];
 #endif
 
   /* reset wcorr */
