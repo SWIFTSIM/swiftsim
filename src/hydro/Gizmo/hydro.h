@@ -329,8 +329,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 #ifdef EOS_ISOTHERMAL_GAS
   /* although the pressure is not formally used anywhere if an isothermal eos
      has been selected, we still make sure it is set to the correct value */
-  p->primitives.P = const_isothermal_soundspeed * const_isothermal_soundspeed *
-                    p->primitives.rho;
+  p->primitives.P = gas_pressure_from_internal_energy(p->primitives.rho, 0.);
 #else
 
   float energy = p->conserved.energy;
@@ -690,12 +689,8 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     const float eta = 0.25;
     const float etaR = eta * R;
     const float xi = 1.;
-#ifdef EOS_ISOTHERMAL_GAS
-    const float soundspeed = const_isothermal_soundspeed;
-#else
     const float soundspeed =
         sqrtf(hydro_gamma * p->primitives.P / p->primitives.rho);
-#endif
     if (d > 0.9 * etaR) {
       float fac = xi * soundspeed / d;
       if (d < 1.1 * etaR) {
