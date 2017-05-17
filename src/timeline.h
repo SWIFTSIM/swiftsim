@@ -126,4 +126,17 @@ static INLINE timebin_t get_max_active_bin(integertime_t time) {
   return bin;
 }
 
+/**
+ * @brief Returns the lowest active time bin at a given point on the time line.
+ *
+ * @param ti_current The current point on the time line.
+ * @param ti_old The last synchronisation point on the time line.
+ */
+static INLINE timebin_t get_min_active_bin(integertime_t ti_current,
+                                           integertime_t ti_old) {
+
+  const timebin_t min_bin = get_max_active_bin(ti_current - ti_old);
+  return (ti_old > 0) ? min_bin : (min_bin - 1);
+}
+
 #endif /* SWIFT_TIMELINE_H */
