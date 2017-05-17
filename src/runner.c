@@ -964,13 +964,6 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
               ti_end, ti_begin, ti_step, p->time_bin, ti_current);
 #endif
 
-        /* if (p->id == ICHECK) */
-        /*   message( */
-        /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
-        /*       "wakeup=%d", */
-        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin,
-         * p->wakeup); */
-
         /* do the kick */
         kick_part(p, xp, ti_begin, ti_begin + ti_step / 2, timeBase);
       }
@@ -1089,6 +1082,9 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
           ti_begin = get_integer_time_begin(ti_current, p->time_bin);
           ti_end = ti_step + ti_begin;
 
+          /* Set the wake-up flag back to normal behaviour */
+          p->wakeup = time_bin_not_awake;
+
         } else {
 
           /* Time-step from a kick that follows a wake-up call */
@@ -1105,13 +1101,6 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
               ti_begin, ti_step, p->time_bin, ti_current, p->wakeup);
 #endif
 
-        /* if (p->id == ICHECK) */
-        /*   message( */
-        /*       "ti_current=%lld, ti_drift=%lld ti_kick=%lld, time_bin=%d " */
-        /*       "wakeup=%d", */
-        /*       e->ti_current, p->ti_drift, p->ti_kick, p->time_bin,
-         * p->wakeup); */
-
         /* Finish the time-step with a second half-kick */
         kick_part(p, xp, ti_begin + ti_step / 2, ti_end, timeBase);
 
@@ -1119,9 +1108,6 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
         /* Check that kick and the drift are synchronized */
         if (p->ti_drift != p->ti_kick) error("Error integrating part in time.");
 #endif
-
-        /* Set the wake-up flag back to normal behaviour */
-        p->wakeup = time_bin_not_awake;
 
         /* Prepare the values to be drifted */
         hydro_reset_predicted_values(p, xp);
@@ -1475,25 +1461,22 @@ void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &parts[k];
       struct xpart *restrict xp = &xparts[k];
 
+      /* If the particle will be active no need to wake it up */
       if (part_is_active(p, e) && p->wakeup != time_bin_not_awake)
         p->wakeup = time_bin_not_awake;
 
       /* Bip, bip, bip... wake-up time */
       if (p->wakeup == time_bin_awake) {
 
-        /* Limit particles that would not be active next time-step */
-        if (p->time_bin > e->min_active_bin) {
+        /* Apply the limiter and get the new time-step size */
+        const integertime_t ti_new_step = timestep_limit_part(p, xp, e);
 
-          /* Apply the limiter and get the new time-step size */
-          const integertime_t ti_new_step = timestep_limit_part(p, xp, e);
+        /* What is the next sync-point ? */
+        ti_end_min = min(ti_current + ti_new_step, ti_end_min);
+        ti_end_max = max(ti_current + ti_new_step, ti_end_max);
 
-          /* What is the next sync-point ? */
-          ti_end_min = min(ti_current + ti_new_step, ti_end_min);
-          ti_end_max = max(ti_current + ti_new_step, ti_end_max);
-
-          /* What is the next starting point for this cell ? */
-          ti_beg_max = max(ti_current, ti_beg_max);
-        }
+        /* What is the next starting point for this cell ? */
+        ti_beg_max = max(ti_current, ti_beg_max);
       }
     }
   }

@@ -20,8 +20,6 @@
 #ifndef SWIFT_CONST_H
 #define SWIFT_CONST_H
 
-#define ICHECK -1
-
 /* SPH Viscosity constants. */
 #define const_viscosity_alpha 0.8f
 #define const_viscosity_alpha_min \
