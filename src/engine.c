@@ -3384,16 +3384,6 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 }
 
 /**
- * @brief Returns the lowest active time bin at a given point on the time line.
- *
- * @param time The current point on the time line.
- */
-static INLINE timebin_t get_min_active_bin(const struct engine *e) {
-
-  return min(get_max_active_bin(e->ti_end_min - e->ti_old), e->max_active_bin);
-}
-
-/**
  * @brief Let the #engine loose to compute the forces.
  *
  * @param e The #engine.
@@ -3428,7 +3418,7 @@ void engine_step(struct engine *e) {
   e->ti_old = e->ti_current;
   e->ti_current = e->ti_end_min;
   e->max_active_bin = get_max_active_bin(e->ti_end_min);
-  e->min_active_bin = get_min_active_bin(e);
+  e->min_active_bin = get_min_active_bin(e->ti_current, e->ti_old);
   e->step += 1;
   e->time = e->ti_current * e->timeBase + e->timeBegin;
   e->timeOld = e->ti_old * e->timeBase + e->timeBegin;
