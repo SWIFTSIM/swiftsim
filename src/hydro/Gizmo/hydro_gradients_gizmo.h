@@ -47,6 +47,18 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_init(
   p->primitives.gradients.P[1] = 0.0f;
   p->primitives.gradients.P[2] = 0.0f;
 
+  p->gravity.grad_a[0][0] = 0.0f;
+  p->gravity.grad_a[0][1] = 0.0f;
+  p->gravity.grad_a[0][2] = 0.0f;
+
+  p->gravity.grad_a[1][0] = 0.0f;
+  p->gravity.grad_a[1][1] = 0.0f;
+  p->gravity.grad_a[1][2] = 0.0f;
+
+  p->gravity.grad_a[2][0] = 0.0f;
+  p->gravity.grad_a[2][1] = 0.0f;
+  p->gravity.grad_a[2][2] = 0.0f;
+
   hydro_slope_limit_cell_init(p);
 }
 
@@ -146,6 +158,36 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
     pi->primitives.gradients.P[2] +=
         (Wi[4] - Wj[4]) * wi *
         (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[0][0] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[0][1] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[0][2] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[1][0] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[1][1] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[1][2] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[2][0] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[2][1] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[2][2] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
   } else {
     /* The gradient matrix was not well-behaved, switch to SPH gradients */
 
@@ -183,6 +225,27 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
         wi_dx * dx[1] * (pi->primitives.P - pj->primitives.P) / r;
     pi->primitives.gradients.P[2] -=
         wi_dx * dx[2] * (pi->primitives.P - pj->primitives.P) / r;
+
+    pi->gravity.grad_a[0][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pi->gravity.grad_a[0][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pi->gravity.grad_a[0][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+
+    pi->gravity.grad_a[1][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pi->gravity.grad_a[1][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pi->gravity.grad_a[1][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+
+    pi->gravity.grad_a[2][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pi->gravity.grad_a[2][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pi->gravity.grad_a[2][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
   }
 
   hydro_slope_limit_cell_collect(pi, pj, r);
@@ -244,6 +307,36 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
     pj->primitives.gradients.P[2] +=
         (Wi[4] - Wj[4]) * wj *
         (Bj[2][0] * dx[0] + Bj[2][1] * dx[1] + Bj[2][2] * dx[2]);
+
+    pj->gravity.grad_a[0][0] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wj *
+        (Bj[0][0] * dx[0] + Bj[0][1] * dx[1] + Bj[0][2] * dx[2]);
+    pj->gravity.grad_a[0][1] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wj *
+        (Bj[1][0] * dx[0] + Bj[1][1] * dx[1] + Bj[1][2] * dx[2]);
+    pj->gravity.grad_a[0][2] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wj *
+        (Bj[2][0] * dx[0] + Bj[2][1] * dx[1] + Bj[2][2] * dx[2]);
+
+    pj->gravity.grad_a[1][0] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wj *
+        (Bj[0][0] * dx[0] + Bj[0][1] * dx[1] + Bj[0][2] * dx[2]);
+    pj->gravity.grad_a[1][1] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wj *
+        (Bj[1][0] * dx[0] + Bj[1][1] * dx[1] + Bj[1][2] * dx[2]);
+    pj->gravity.grad_a[1][2] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wj *
+        (Bj[2][0] * dx[0] + Bj[2][1] * dx[1] + Bj[2][2] * dx[2]);
+
+    pj->gravity.grad_a[2][0] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wj *
+        (Bj[0][0] * dx[0] + Bj[0][1] * dx[1] + Bj[0][2] * dx[2]);
+    pj->gravity.grad_a[2][1] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wj *
+        (Bj[1][0] * dx[0] + Bj[1][1] * dx[1] + Bj[1][2] * dx[2]);
+    pj->gravity.grad_a[2][2] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wj *
+        (Bj[2][0] * dx[0] + Bj[2][1] * dx[1] + Bj[2][2] * dx[2]);
   } else {
     /* SPH gradients */
 
@@ -280,6 +373,27 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
         wj_dx * dx[1] * (pi->primitives.P - pj->primitives.P) / r;
     pj->primitives.gradients.P[2] -=
         wj_dx * dx[2] * (pi->primitives.P - pj->primitives.P) / r;
+
+    pj->gravity.grad_a[0][0] -=
+        wj_dx * dx[0] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pj->gravity.grad_a[0][1] -=
+        wj_dx * dx[1] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pj->gravity.grad_a[0][2] -=
+        wj_dx * dx[2] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+
+    pj->gravity.grad_a[1][0] -=
+        wj_dx * dx[0] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pj->gravity.grad_a[1][1] -=
+        wj_dx * dx[1] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pj->gravity.grad_a[1][2] -=
+        wj_dx * dx[2] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+
+    pj->gravity.grad_a[2][0] -=
+        wj_dx * dx[0] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pj->gravity.grad_a[2][1] -=
+        wj_dx * dx[1] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pj->gravity.grad_a[2][2] -=
+        wj_dx * dx[2] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
   }
 
   hydro_slope_limit_cell_collect(pj, pi, r);
@@ -380,6 +494,36 @@ hydro_gradients_nonsym_collect(float r2, float *dx, float hi, float hj,
     pi->primitives.gradients.P[2] +=
         (Wi[4] - Wj[4]) * wi *
         (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[0][0] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[0][1] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[0][2] +=
+        (pi->gravity.old_a[0] - pj->gravity.old_a[0]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[1][0] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[1][1] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[1][2] +=
+        (pi->gravity.old_a[1] - pj->gravity.old_a[1]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
+
+    pi->gravity.grad_a[2][0] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[0][0] * dx[0] + Bi[0][1] * dx[1] + Bi[0][2] * dx[2]);
+    pi->gravity.grad_a[2][1] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[1][0] * dx[0] + Bi[1][1] * dx[1] + Bi[1][2] * dx[2]);
+    pi->gravity.grad_a[2][2] +=
+        (pi->gravity.old_a[2] - pj->gravity.old_a[2]) * wi *
+        (Bi[2][0] * dx[0] + Bi[2][1] * dx[1] + Bi[2][2] * dx[2]);
   } else {
     /* Gradient matrix is not well-behaved, switch to SPH gradients */
 
@@ -416,6 +560,27 @@ hydro_gradients_nonsym_collect(float r2, float *dx, float hi, float hj,
         wi_dx * dx[1] * (pi->primitives.P - pj->primitives.P) / r;
     pi->primitives.gradients.P[2] -=
         wi_dx * dx[2] * (pi->primitives.P - pj->primitives.P) / r;
+
+    pi->gravity.grad_a[0][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pi->gravity.grad_a[0][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+    pi->gravity.grad_a[0][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[0] - pj->gravity.old_a[0]) / r;
+
+    pi->gravity.grad_a[1][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pi->gravity.grad_a[1][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+    pi->gravity.grad_a[1][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[1] - pj->gravity.old_a[1]) / r;
+
+    pi->gravity.grad_a[2][0] -=
+        wi_dx * dx[0] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pi->gravity.grad_a[2][1] -=
+        wi_dx * dx[1] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
+    pi->gravity.grad_a[2][2] -=
+        wi_dx * dx[2] * (pi->gravity.old_a[2] - pj->gravity.old_a[2]) / r;
   }
 
   hydro_slope_limit_cell_collect(pi, pj, r);
@@ -454,6 +619,18 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_finalize(
     p->primitives.gradients.P[0] *= ihdim;
     p->primitives.gradients.P[1] *= ihdim;
     p->primitives.gradients.P[2] *= ihdim;
+
+    p->gravity.grad_a[0][0] *= ihdim;
+    p->gravity.grad_a[0][1] *= ihdim;
+    p->gravity.grad_a[0][2] *= ihdim;
+
+    p->gravity.grad_a[1][0] *= ihdim;
+    p->gravity.grad_a[1][1] *= ihdim;
+    p->gravity.grad_a[1][2] *= ihdim;
+
+    p->gravity.grad_a[2][0] *= ihdim;
+    p->gravity.grad_a[2][1] *= ihdim;
+    p->gravity.grad_a[2][2] *= ihdim;
   } else {
     const float ihdimp1 = pow_dimension_plus_one(ih);
 
@@ -478,6 +655,18 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_finalize(
     p->primitives.gradients.P[0] *= ihdimp1 * volume;
     p->primitives.gradients.P[1] *= ihdimp1 * volume;
     p->primitives.gradients.P[2] *= ihdimp1 * volume;
+
+    p->gravity.grad_a[0][0] *= ihdimp1 * volume;
+    p->gravity.grad_a[0][1] *= ihdimp1 * volume;
+    p->gravity.grad_a[0][2] *= ihdimp1 * volume;
+
+    p->gravity.grad_a[1][0] *= ihdimp1 * volume;
+    p->gravity.grad_a[1][1] *= ihdimp1 * volume;
+    p->gravity.grad_a[1][2] *= ihdimp1 * volume;
+
+    p->gravity.grad_a[2][0] *= ihdimp1 * volume;
+    p->gravity.grad_a[2][1] *= ihdimp1 * volume;
+    p->gravity.grad_a[2][2] *= ihdimp1 * volume;
   }
 
   hydro_slope_limit_cell(p);

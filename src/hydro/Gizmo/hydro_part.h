@@ -204,6 +204,8 @@ struct part {
     /* Previous value of the gravitational acceleration. */
     float old_a[3];
 
+    float grad_a[3][3];
+
     /* Previous value of the mass flux vector. */
     float old_mflux[3];
 
