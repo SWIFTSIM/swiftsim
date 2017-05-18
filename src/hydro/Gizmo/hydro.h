@@ -622,7 +622,7 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     a_grav[2] = p->gpart->a_grav[2];
 
     /* Store the gravitational acceleration for later use. */
-    /* This is currently only used for output purposes. */
+    /* This is used for the prediction step. */
     p->gravity.old_a[0] = a_grav[0];
     p->gravity.old_a[1] = a_grav[1];
     p->gravity.old_a[2] = a_grav[2];
@@ -637,7 +637,7 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     p->conserved.momentum[1] += dt * p->conserved.mass * a_grav[1];
     p->conserved.momentum[2] += dt * p->conserved.mass * a_grav[2];
 
-#if !defined(EOS_ISOTHERMAL_GAS) && defined(GIZMO_TOTAL_ENERGY)
+#if !defined(EOS_ISOTHERMAL_GAS)
     /* This part still needs to be tested! */
     p->conserved.energy += dt * (p->conserved.momentum[0] * a_grav[0] +
                                  p->conserved.momentum[1] * a_grav[1] +
