@@ -1415,8 +1415,8 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 
 #ifdef EXTRA_HYDRO_LOOP
-          for (l = cj->send_gradient; l != NULL && l->t->cj->nodeID != ci->nodeID;
-               l = l->next)
+          for (l = cj->send_gradient;
+               l != NULL && l->t->cj->nodeID != ci->nodeID; l = l->next)
             ;
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);
@@ -1465,8 +1465,8 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 
 #ifdef EXTRA_HYDRO_LOOP
-          for (l = ci->send_gradient; l != NULL && l->t->cj->nodeID != cj->nodeID;
-               l = l->next)
+          for (l = ci->send_gradient;
+               l != NULL && l->t->cj->nodeID != cj->nodeID; l = l->next)
             ;
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);

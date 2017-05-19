@@ -1380,7 +1380,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
                           &t->req);
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
-		   t->subtype == task_subtype_gradient) {
+                   t->subtype == task_subtype_gradient) {
           err = MPI_Irecv(t->ci->parts, t->ci->count, part_mpi_type,
                           t->ci->nodeID, t->flags, MPI_COMM_WORLD, &t->req);
           // message( "receiving %i parts with tag=%i from %i to %i." ,
