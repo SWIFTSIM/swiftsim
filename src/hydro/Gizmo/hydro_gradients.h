@@ -22,6 +22,7 @@
 #define SWIFT_HYDRO_GRADIENTS_H
 
 #include "hydro_slope_limiters.h"
+#include "hydro_unphysical.h"
 #include "riemann.h"
 
 #if defined(GRADIENTS_SPH)
@@ -235,33 +236,22 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_predict(
     dWj[3] += 0.5 * mindt * a_grav_j[2];
   }
 
-  if (-dWi[0] > Wi[0]) {
-    Wi[0] = 0.0f;
-  } else {
-    Wi[0] += dWi[0];
-  }
+  Wi[0] += dWi[0];
   Wi[1] += dWi[1];
   Wi[2] += dWi[2];
   Wi[3] += dWi[3];
-  if (-dWi[4] > Wi[4]) {
-    Wi[4] = 0.0f;
-  } else {
-    Wi[4] += dWi[4];
-  }
+  Wi[4] += dWi[4];
 
-  if (-dWj[0] > Wj[0]) {
-    Wj[0] = 0.0f;
-  } else {
-    Wj[0] += dWj[0];
-  }
+  Wj[0] += dWj[0];
   Wj[1] += dWj[1];
   Wj[2] += dWj[2];
   Wj[3] += dWj[3];
-  if (-dWj[4] > Wj[4]) {
-    Wj[4] = 0.0f;
-  } else {
-    Wj[4] += dWj[4];
-  }
+  Wj[4] += dWj[4];
+
+  gizmo_check_physical_quantity("density", Wi[0]);
+  gizmo_check_physical_quantity("pressure", Wi[4]);
+  gizmo_check_physical_quantity("density", Wj[0]);
+  gizmo_check_physical_quantity("pressure", Wj[4]);
 }
 
 #endif  // SWIFT_HYDRO_GRADIENTS_H

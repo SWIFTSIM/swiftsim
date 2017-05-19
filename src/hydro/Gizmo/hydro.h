@@ -24,6 +24,7 @@
 #include "equation_of_state.h"
 #include "hydro_gradients.h"
 #include "hydro_space.h"
+#include "hydro_unphysical.h"
 #include "minmax.h"
 #include "riemann.h"
 
@@ -347,12 +348,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 #endif
 
   /* sanity checks */
-  /* it would probably be safer to throw a warning if negative densities or
-     pressures occur */
-  if (p->primitives.rho < 0.0f || p->primitives.P < 0.0f) {
-    p->primitives.rho = 0.0f;
-    p->primitives.P = 0.0f;
-  }
+  gizmo_check_physical_quantity("density", p->primitives.rho);
+  gizmo_check_physical_quantity("pressure", p->primitives.P);
 
 #ifdef GIZMO_LLOYD_ITERATION
   /* overwrite primitive variables to make sure they still have safe values */
@@ -589,15 +586,12 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   p->conserved.energy += p->conserved.flux.energy;
 #endif
 
-  /* Hard reset for negative masses and energies. */
-  if (p->conserved.mass < 0.) {
-    p->conserved.mass = 0.;
-  }
-  if (p->conserved.energy < 0.) {
-    p->conserved.energy = 0.;
-  }
+  gizmo_check_physical_quantity("mass", p->conserved.mass);
+  gizmo_check_physical_quantity("energy", p->conserved.energy);
 
 #ifdef SWIFT_DEBUG_CHECKS
+  /* Note that this check will only have effect if no GIZMO_UNPHYSICAL option
+     was selected. */
   if (p->conserved.mass < 0.) {
     error(
         "Negative mass after conserved variables update (mass: %g, dmass: %g)!",
