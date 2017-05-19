@@ -2,6 +2,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Coypright (c) 2015 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ *               2016, 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -25,6 +26,7 @@
 #include "hydro_gradients.h"
 #include "hydro_space.h"
 #include "hydro_unphysical.h"
+#include "hydro_velocities.h"
 #include "minmax.h"
 #include "riemann.h"
 
@@ -137,13 +139,6 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
                                  p->conserved.momentum[2] * p->primitives.v[2]);
 #endif
 
-#if defined(GIZMO_FIX_PARTICLES)
-  /* make sure the particles are initially at rest */
-  p->v[0] = 0.;
-  p->v[1] = 0.;
-  p->v[2] = 0.;
-#endif
-
 #ifdef GIZMO_LLOYD_ITERATION
   /* overwrite all variables to make sure they have safe values */
   p->primitives.rho = 1.;
@@ -163,9 +158,8 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   p->v[2] = 0.;
 #endif
 
-  xp->v_full[0] = p->v[0];
-  xp->v_full[1] = p->v[1];
-  xp->v_full[2] = p->v[2];
+  /* initialize the particle velocity based on the primitive fluid velocity */
+  hydro_velocities_init(p, xp);
 
   /* we cannot initialize wcorr in init_part, as init_part gets called every
      time the density loop is repeated, and the whole point of storing wcorr
@@ -379,8 +373,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
  *
  * @param p The particle to act upon.
  * @param xp The extended particle data to act upon.
- * @param ti_current Current integer time.
- * @param timeBase Conversion factor between integer time and physical time.
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part* restrict p, struct xpart* restrict xp) {
@@ -389,10 +381,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   p->timestepvars.vmax = 0.0f;
 
   /* Set the actual velocity of the particle */
-  /* if GIZMO_FIX_PARTICLES has been selected, v_full will always be zero */
-  p->force.v_full[0] = xp->v_full[0];
-  p->force.v_full[1] = xp->v_full[1];
-  p->force.v_full[2] = xp->v_full[2];
+  hydro_velocities_prepare_force(p, xp);
 }
 
 /**
@@ -542,22 +531,13 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
 
   /* set the variables that are used to drift the primitive variables */
 
-  /* Add normalization to h_dt. */
-  p->force.h_dt *= p->h * hydro_dimension_inv;
-
   if (p->force.dt > 0.) {
     p->du_dt = p->conserved.flux.energy / p->force.dt;
   } else {
     p->du_dt = 0.0f;
   }
 
-#if defined(GIZMO_FIX_PARTICLES)
-  p->du_dt = 0.0f;
-
-  /* disable the smoothing length update, since the smoothing lengths should
-     stay the same for all steps (particles don't move) */
-  p->force.h_dt = 0.0f;
-#endif
+  hydro_velocities_end_force(p);
 }
 
 /**
@@ -652,84 +632,7 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   p->conserved.flux.momentum[2] = 0.0f;
   p->conserved.flux.energy = 0.0f;
 
-#if defined(GIZMO_FIX_PARTICLES)
-  xp->v_full[0] = 0.;
-  xp->v_full[1] = 0.;
-  xp->v_full[2] = 0.;
-
-  p->v[0] = 0.;
-  p->v[1] = 0.;
-  p->v[2] = 0.;
-
-  if (p->gpart) {
-    p->gpart->v_full[0] = 0.;
-    p->gpart->v_full[1] = 0.;
-    p->gpart->v_full[2] = 0.;
-  }
-#else
-  /* Set particle movement */
-  if (p->conserved.mass > 0. && p->primitives.rho > 0.) {
-    xp->v_full[0] = p->conserved.momentum[0] / p->conserved.mass;
-    xp->v_full[1] = p->conserved.momentum[1] / p->conserved.mass;
-    xp->v_full[2] = p->conserved.momentum[2] / p->conserved.mass;
-
-    /* add velocity correction */
-    float ds[3];
-    ds[0] = p->geometry.centroid[0];
-    ds[1] = p->geometry.centroid[1];
-    ds[2] = p->geometry.centroid[2];
-    const float d = sqrtf(ds[0] * ds[0] + ds[1] * ds[1] + ds[2] * ds[2]);
-    const float R = get_radius_dimension_sphere(p->geometry.volume);
-    const float eta = 0.25;
-    const float etaR = eta * R;
-    const float xi = 1.;
-    const float soundspeed =
-        sqrtf(hydro_gamma * p->primitives.P / p->primitives.rho);
-    if (d > 0.9 * etaR) {
-      float fac = xi * soundspeed / d;
-      if (d < 1.1 * etaR) {
-        fac *= 5. * (d - 0.9 * etaR) / etaR;
-      }
-      xp->v_full[0] -= ds[0] * fac;
-      xp->v_full[1] -= ds[1] * fac;
-      xp->v_full[2] -= ds[2] * fac;
-    }
-
-#ifdef SWIFT_DEBUG_CHECKS
-    if (p->primitives.rho == 0.) {
-      error("Zero density for non zero mass!");
-    }
-    if (xp->v_full[0] == INFINITY || xp->v_full[0] == -INFINITY) {
-      error("Infinite velocity correction!");
-    }
-    if (xp->v_full[1] == INFINITY || xp->v_full[1] == -INFINITY) {
-      error("Infinite velocity correction!");
-    }
-    if (xp->v_full[2] == INFINITY || xp->v_full[2] == -INFINITY) {
-      error("Infinite velocity correction!");
-    }
-#endif
-  } else {
-    /* vacuum particles don't move */
-    xp->v_full[0] = 0.;
-    xp->v_full[1] = 0.;
-    xp->v_full[2] = 0.;
-  }
-
-  p->v[0] = xp->v_full[0];
-  p->v[1] = xp->v_full[1];
-  p->v[2] = xp->v_full[2];
-
-  /* Update gpart! */
-  /* This is essential, as the gpart drift is done independently from the part
-     drift, and we don't want the gpart and the part to have different
-     positions! */
-  if (p->gpart) {
-    p->gpart->v_full[0] = xp->v_full[0];
-    p->gpart->v_full[1] = xp->v_full[1];
-    p->gpart->v_full[2] = xp->v_full[2];
-  }
-#endif
+  hydro_velocities_set(p, xp);
 
 #ifdef GIZMO_LLOYD_ITERATION
   /* reset conserved variables to safe values */

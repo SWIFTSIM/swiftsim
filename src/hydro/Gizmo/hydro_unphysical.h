@@ -41,15 +41,15 @@
 #endif
 
 #define gizmo_check_physical_quantity(name, quantity) \
-  if(quantity < 0.){ \
-    gizmo_unphysical_message(name, quantity); \
-    quantity = 0.; \
+  if (quantity < 0.) {                                \
+    gizmo_unphysical_message(name, quantity);         \
+    quantity = 0.;                                    \
   }
 
-#else // defined(GIZMO_UNPHYSICAL_ERROR) || defined(GIZMO_UNPHYSICAL_RESCUE)
+#else  // defined(GIZMO_UNPHYSICAL_ERROR) || defined(GIZMO_UNPHYSICAL_RESCUE)
 
 #define gizmo_check_physical_quantity(name, quantity)
 
-#endif // defined(GIZMO_UNPHYSICAL_ERROR) || defined(GIZMO_UNPHYSICAL_RESCUE)
+#endif  // defined(GIZMO_UNPHYSICAL_ERROR) || defined(GIZMO_UNPHYSICAL_RESCUE)
 
-#endif // SWIFT_HYDRO_UNPHYSICAL_H
+#endif  // SWIFT_HYDRO_UNPHYSICAL_H
