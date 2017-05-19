@@ -438,7 +438,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   float dA_dot_dx = A[0] * dx[0] + A[1] * dx[1] + A[2] * dx[2];
   /* In GIZMO, Phil Hopkins reverts to an SPH integration scheme if this
      happens. We curently just ignore this case and display a message. */
-  if (dA_dot_dx > 1.e-6 * r * r2) {
+  const float rdim = pow_dimension(r);
+  if (dA_dot_dx > 1.e-6 * rdim) {
     message("Ill conditioned gradient matrix (%g %g %g %g %g)!", dA_dot_dx,
             Anorm, Vi, Vj, r);
   }
