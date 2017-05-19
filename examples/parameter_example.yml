@@ -104,6 +104,7 @@ DiscPatchPotential:
   surface_density: 10.      # Surface density of the disc (internal units)
   scale_height:    100.     # Scale height of the disc (internal units)
   z_disc:          200.     # Position of the disc along the z-axis (internal units)
+  z_max:           100.     # Distance from z_disc above which the potential starts to be truncated. Potential is zero at (z-z_disc) > 2 z_max.
   timestep_mult:   0.03     # Dimensionless pre-factor for the time-step condition
   growth_time:     5.       # (Optional) Time for the disc to grow to its final size (multiple of the dynamical time)
 
