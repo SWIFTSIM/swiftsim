@@ -17,8 +17,6 @@
  *
  ******************************************************************************/
 
-#define const_gizmo_gradient_cutoff 0.5
-
 /**
  * @brief Initialize gradient variables
  *
@@ -107,7 +105,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
   xi = r * hi_inv;
   kernel_deval(xi, &wi, &wi_dx);
 
-  if (pi->density.wcorr > const_gizmo_gradient_cutoff) {
+  if (pi->density.wcorr > const_gizmo_min_wcorr) {
     /* Compute gradients for pi */
     /* there is a sign difference w.r.t. eqn. (6) because of the inverse
      * definition of dx */
@@ -255,7 +253,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
   xj = r * hj_inv;
   kernel_deval(xj, &wj, &wj_dx);
 
-  if (pj->density.wcorr > const_gizmo_gradient_cutoff) {
+  if (pj->density.wcorr > const_gizmo_min_wcorr) {
     /* Compute gradients for pj */
     /* there is no sign difference w.r.t. eqn. (6) because dx is now what we
      * want
@@ -443,7 +441,7 @@ hydro_gradients_nonsym_collect(float r2, float *dx, float hi, float hj,
   xi = r * hi_inv;
   kernel_deval(xi, &wi, &wi_dx);
 
-  if (pi->density.wcorr > const_gizmo_gradient_cutoff) {
+  if (pi->density.wcorr > const_gizmo_min_wcorr) {
     /* Compute gradients for pi */
     /* there is a sign difference w.r.t. eqn. (6) because of the inverse
      * definition of dx */
@@ -601,7 +599,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_finalize(
   ih = 1.0f / h;
   const float ihdim = pow_dimension(ih);
 
-  if (p->density.wcorr > const_gizmo_gradient_cutoff) {
+  if (p->density.wcorr > const_gizmo_min_wcorr) {
     p->primitives.gradients.rho[0] *= ihdim;
     p->primitives.gradients.rho[1] *= ihdim;
     p->primitives.gradients.rho[2] *= ihdim;

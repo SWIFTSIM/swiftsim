@@ -282,12 +282,18 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   float condition_number =
       hydro_dimension_inv * sqrtf(condition_number_E * condition_number_Einv);
 
-  if (condition_number > 100.0f && p->density.wcorr > 0.5) {
-    //    error("Condition number larger than 100!");
-    // message("Condition number too large: %g (p->id: %llu)!",
-    //    condition_number, p->id);
+  if (condition_number > const_gizmo_max_condition_number &&
+      p->density.wcorr > const_gizmo_min_wcorr) {
+#ifdef GIZMO_PATHOLOGICAL_ERROR
+    error("Condition number larger than %g (%g)!",
+          const_gizmo_max_condition_number, condition_number);
+#endif
+#ifdef GIZMO_PATHOLOGICAL_WARNING
+    message("Condition number too large: %g (> %g, p->id: %llu)!",
+            condition_number, const_gizmo_max_condition_number, p->id);
+#endif
     /* add a correction to the number of neighbours for this particle */
-    p->density.wcorr *= 0.9;
+    p->density.wcorr *= const_gizmo_w_correction_factor;
   }
 
   hydro_gradients_init(p);
