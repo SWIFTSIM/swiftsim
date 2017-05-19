@@ -36,7 +36,6 @@ import matplotlib.pyplot as plt
 # Dynamical time  = sqrt(b / (G sigma))
 # to obtain the 1/ch^2(z/b) profile from a uniform profile (a glass, say, or a uniform random variable), note that, when integrating in z
 # \int 0^z dz/ch^2(z) = tanh(z)-tanh(0) = \int_0^x dx = x (where the last integral refers to a uniform density distribution), so that z = atanh(x)
-# usage: python makeIC.py 1000 
 
 # physical constants in cgs
 NEWTON_GRAVITY_CGS  = 6.672e-8
@@ -76,6 +75,7 @@ print 'dynamical time = ',t_dyn,' sound crossing time = ',t_cross,' sound speed=
 # Parameters
 periodic= 1            # 1 For periodic box
 boxSize = 400.         #  [kpc]
+boxSize_z = 800.
 Radius  = 100.         # maximum radius of particles [kpc]
 G       = const_G 
 
@@ -89,34 +89,16 @@ mass           = 1
 
 
 # using glass ICs
-# read glass file and generate gas positions and tile it ntile times in each dimension
-ntile   = 1
+# read glass file and generate gas positions and tile it twice along z
 inglass = 'glassCube_32.hdf5'
 infile  = h5py.File(inglass, "r")
-one_glass_p = infile["/PartType0/Coordinates"][:,:]
-one_glass_h = infile["/PartType0/SmoothingLength"][:]
+glass_p = infile["/PartType0/Coordinates"][:,:]
+glass_h = infile["/PartType0/SmoothingLength"][:]
 
-# scale in [-0.5,0.5]*BoxSize / ntile
-one_glass_p[:,:] -= 0.5
-one_glass_p      *= boxSize / ntile
-one_glass_h      *= boxSize / ntile
-ndens_glass       = (one_glass_h.shape[0]) / (boxSize/ntile)**3
-h_glass           = numpy.amin(one_glass_h) * (boxSize/ntile)
-
-glass_p = []
-glass_h = []
-for ix in range(0,ntile):
-    for iy in range(0,ntile):
-        for iz in range(0,ntile):
-            shift = one_glass_p.copy()
-            shift[:,0] += (ix-(ntile-1)/2.) * boxSize / ntile
-            shift[:,1] += (iy-(ntile-1)/2.) * boxSize / ntile
-            shift[:,2] += (iz-(ntile-1)/2.) * boxSize / ntile
-            glass_p.append(shift)
-            glass_h.append(one_glass_h.copy())
-
-glass_p = numpy.concatenate(glass_p, axis=0)
-glass_h = numpy.concatenate(glass_h, axis=0)
+glass_p[:,:]      *= boxSize
+glass_p[:,2]      -= boxSize_z/2
+ndens_glass       = (glass_h.shape[0]) / (boxSize * boxSize * boxSize_z)
+h_glass           = numpy.amin(glass_h) * (boxSize)
 
 # random shuffle of glas ICs
 numpy.random.seed(12345)
@@ -128,14 +110,18 @@ glass_h = glass_h[indx]
 # select numGas of them
 numGas = 8192
 pos    = glass_p[0:numGas,:]
+pos2   = numpy.copy(pos)
+pos2[:,2] += boxSize_z/2
+pos = numpy.concatenate((pos, pos2), axis=0)
 h      = glass_h[0:numGas]
+h = numpy.append(h, h)
 numGas = numpy.shape(pos)[0]
 
-# compute furthe properties of ICs
-column_density = fgas * surface_density * numpy.tanh(boxSize/2./scale_height)
+# compute further properties of ICs
+column_density = fgas * surface_density * numpy.tanh(boxSize_z/2./scale_height)
 enclosed_mass  = column_density * boxSize * boxSize
 pmass          = enclosed_mass / numGas
-meanrho        = enclosed_mass / boxSize**3
+meanrho        = enclosed_mass / boxSize*boxSize * boxSize_z
 print 'pmass= ',pmass,' mean(rho) = ', meanrho,' entropy= ', (gamma-1) * utherm / meanrho**(gamma-1)
 
 # desired density
@@ -145,13 +131,6 @@ entropy        = (gamma-1) * u / rho**(gamma-1)
 mass           = 0.*h + pmass
 entropy_flag   = 0
 vel            = 0 + 0 * pos
-
-# move centre of disc to middle of box
-pos[:,:]     += boxSize/2
-
-
-# create numPart dm particles
-numPart = 0
 
 # Create and write output file
 
@@ -168,10 +147,10 @@ grp.attrs["Unit temperature in cgs (U_T)"] = 1.
 
 # Header
 grp = file.create_group("/Header")
-grp.attrs["BoxSize"] = boxSize
-grp.attrs["NumPart_Total"] =  [numGas, numPart, 0, 0, 0, 0]
+grp.attrs["BoxSize"] = [boxSize, boxSize, boxSize_z]
+grp.attrs["NumPart_Total"] =  [numGas, 0, 0, 0, 0, 0]
 grp.attrs["NumPart_Total_HighWord"] = [0, 0, 0, 0, 0, 0]
-grp.attrs["NumPart_ThisFile"] = [numGas, numPart, 0, 0, 0, 0]
+grp.attrs["NumPart_ThisFile"] = [numGas, 0, 0, 0, 0, 0]
 grp.attrs["Time"] = 0.0
 grp.attrs["NumFilesPerSnapshot"] = 1
 grp.attrs["MassTable"] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -210,47 +189,4 @@ ds = grp0.create_dataset('ParticleIDs', (numGas, ), 'L')
 ds[()] = ids
 
 print "Internal energy:", u[0]
-
-# generate dark matter particles if needed
-if(numPart > 0):
-    
-    # set seed for random number
-    numpy.random.seed(1234)
-    
-    grp1 = file.create_group("/PartType1")
-    
-    radius = Radius * (numpy.random.rand(N))**(1./3.) 
-    ctheta = -1. + 2 * numpy.random.rand(N)
-    stheta = numpy.sqrt(1.-ctheta**2)
-    phi    =  2 * math.pi * numpy.random.rand(N)
-    r      = numpy.zeros((numPart, 3))
-
-    speed  = vrot
-    v      = numpy.zeros((numPart, 3))
-    omega  = speed / radius
-    period = 2.*math.pi/omega
-    print 'period = minimum = ',min(period), ' maximum = ',max(period)
-    
-    v[:,0] = -omega * r[:,1]
-    v[:,1] =  omega * r[:,0]
-    
-    ds = grp1.create_dataset('Coordinates', (numPart, 3), 'd')
-    ds[()] = r
-    
-    ds = grp1.create_dataset('Velocities', (numPart, 3), 'f')
-    ds[()] = v
-    v = numpy.zeros(1)
-    
-    m = numpy.full((numPart, ),10)
-    ds = grp1.create_dataset('Masses', (numPart,), 'f')
-    ds[()] = m
-    m = numpy.zeros(1)
-        
-    ids = 1 + numpy.linspace(0, numPart, numPart, endpoint=False, dtype='L')
-    ds = grp1.create_dataset('ParticleIDs', (numPart, ), 'L')
-    ds[()] = ids
-
-
 file.close()
-
-sys.exit()
