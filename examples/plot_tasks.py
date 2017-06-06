@@ -150,9 +150,6 @@ print "Number of threads:", nthread
 full_step = data[0,:]
 tic_step = int(full_step[4])
 toc_step = int(full_step[5])
-updates = int(full_step[6])
-g_updates = int(full_step[7])
-s_updates = int(full_step[8])
 CPU_CLOCK = float(full_step[-1]) / 1000.0
 data = data[1:,:]
 if args.verbose:

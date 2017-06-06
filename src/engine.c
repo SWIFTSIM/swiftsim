@@ -3464,8 +3464,6 @@ void engine_step(struct engine *e) {
   engine_launch(e, e->nr_threads);
   TIMER_TOC(timer_runners);
 
-// if(e->step % 10 == 0) e->forcerebuild = 1;
-
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
   if (e->policy & engine_policy_self_gravity)
