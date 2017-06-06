@@ -150,6 +150,9 @@ print "Number of threads:", nthread
 full_step = data[0,:]
 tic_step = int(full_step[4])
 toc_step = int(full_step[5])
+updates = int(full_step[6])
+g_updates = int(full_step[7])
+s_updates = int(full_step[8])
 CPU_CLOCK = float(full_step[-1]) / 1000.0
 data = data[1:,:]
 if args.verbose:
@@ -165,6 +168,7 @@ if delta_t == 0:
     dt = toc_step - tic_step
     if dt > delta_t:
         delta_t = dt
+if args.verbose:
     print "Data range: ", delta_t / CPU_CLOCK, "ms"
 
 #  Once more doing the real gather and plots this time.
@@ -183,7 +187,7 @@ ecounter = []
 for i in range(nthread):
     ecounter.append(0)
 
-num_lines = pl.size(data) / 10
+num_lines = pl.size(data) / pl.size(full_step)
 for line in range(num_lines):
     thread = int(data[line,0])
 
