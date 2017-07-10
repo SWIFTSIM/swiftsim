@@ -2761,7 +2761,7 @@ int engine_marktasks(struct engine *e) {
   /* Run through the tasks and mark as skip or not. */
   size_t extra_data[3] = {(size_t)e, rebuild_space, (size_t)&e->sched};
   threadpool_map(&e->threadpool, engine_marktasks_mapper, s->tasks, s->nr_tasks,
-                 sizeof(struct task), 10000, extra_data);
+                 sizeof(struct task), 100, extra_data);
   rebuild_space = extra_data[1];
 
   if (e->verbose)
