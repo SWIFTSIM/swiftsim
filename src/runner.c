@@ -2065,7 +2065,7 @@ void *runner_main(void *data) {
           runner_do_timestep(r, ci, 1);
           break;
         case task_type_timestep_limiter:
-          runner_do_limiter(r, ci, 1, 1);
+          runner_do_limiter(r, ci, 0, 1);
           break;
 #ifdef WITH_MPI
         case task_type_send:
