@@ -3369,9 +3369,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that all limited particles have been treated */
-  for (size_t i = 0; i < s->nr_parts; ++i) {
-    if (s->parts[i].wakeup == time_bin_awake) error("Particle woken up!");
-  }
+  space_check_limiter(e->s);
 #endif
 
   /* Recover the (integer) end of the next time-step */
@@ -3490,9 +3488,7 @@ void engine_step(struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that all limited particles have been treated */
-  for (size_t i = 0; i < e->s->nr_parts; ++i) {
-    if (e->s->parts[i].wakeup == time_bin_awake) error("Particle woken up!");
-  }
+  space_check_limiter(e->s);
 #endif
 
   /* Let's trigger a rebuild every-so-often for good measure */

@@ -2988,6 +2988,41 @@ void space_check_timesteps(struct space *s) {
 }
 
 /**
+ * @brief #threadpool mapper function for the limiter debugging check
+ */
+void space_check_limiter_mapper(void *map_data, int nr_parts,
+                                void *extra_data) {
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Unpack the data */
+  struct part *restrict parts = (struct part *)map_data;
+
+  /* Verify that all limited particles have been treated */
+  for (int k = 0; k < nr_parts; ++k) {
+    if (parts[k].wakeup == time_bin_awake) error("Particle still woken up!");
+  }
+#else
+  error("Calling debugging code without debugging flag activated.");
+#endif
+}
+
+/**
+ * @brief Checks that all particles have their wakeup flag in a correct state.
+ *
+ * Should only be used for debugging purposes.
+ *
+ * @param s The #space to check.
+ */
+void space_check_limiter(struct space *s) {
+#ifdef SWIFT_DEBUG_CHECKS
+
+  threadpool_map(&s->e->threadpool, space_check_limiter_mapper, s->parts,
+                 s->nr_parts, sizeof(struct part), 1000, NULL);
+#else
+  error("Calling debugging code without debugging flag activated.");
+#endif
+}
+
+/**
  * @brief Resets all the individual cell task counters to 0.
  *
  * Should only be used for debugging purposes.
