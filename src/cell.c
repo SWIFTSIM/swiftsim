@@ -1715,7 +1715,7 @@ void cell_activate_subcell_tasks(struct cell *ci, struct cell *cj,
 int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
 
 #ifdef WITH_MPI
-  struct engine *e = s->space->e;
+  const struct engine *const e = s->space->e;
 #endif
 
   int rebuild = 0;
@@ -1785,6 +1785,9 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
            i.e. drift the cell specified in the send task (l->t) itself. */
         cell_activate_drift_part(l->t->ci, s);
 
+        /* Same for the time-step limiter */
+        cell_activate_limiter(l->t->ci, s);
+
         if (cell_is_active(cj, e)) {
 
           for (l = cj->send_rho; l != NULL && l->t->cj->nodeID != ci->nodeID;
@@ -1831,6 +1834,9 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
         /* Drift the cell which will be sent at the level at which it is sent,
            i.e. drift the cell specified in the send task (l->t) itself. */
         cell_activate_drift_part(l->t->ci, s);
+
+        /* Same for the time-step limiter */
+        cell_activate_limiter(l->t->ci, s);
 
         if (cell_is_active(ci, e)) {
 

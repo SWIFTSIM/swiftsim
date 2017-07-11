@@ -1088,8 +1088,9 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj,
       /* Drift before you send */
       scheduler_addunlock(s, ci->super->drift_part, t_xv);
 
-      /* The super-cell's timestep task should unlock the send_ti task. */
+      /* The super-cell's timestep tasks should unlock the send_ti task. */
       scheduler_addunlock(s, ci->super->timestep, t_ti);
+      scheduler_addunlock(s, ci->super->limiter, t_ti);
     }
 
     /* Add them to the local cell. */
@@ -1177,6 +1178,7 @@ void engine_addtasks_recv(struct engine *e, struct cell *c, struct task *t_xv,
     scheduler_addunlock(s, l->t, t_ti);
   }
   if (c->sorts != NULL) scheduler_addunlock(s, t_xv, c->sorts);
+  if (c->limiter != NULL) scheduler_addunlock(s, c->limiter, t_ti);
 #endif
 
   /* Recurse? */
@@ -2646,6 +2648,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
            i.e. drift the cell specified in the send task (l->t) itself. */
         cell_activate_drift_part(l->t->ci, s);
 
+        /* Same for the time-step limiter */
+        cell_activate_limiter(l->t->ci, s);
+
         if (cell_is_active(cj, e)) {
           for (l = cj->send_rho; l != NULL && l->t->cj->nodeID != ci->nodeID;
                l = l->next)
@@ -2691,6 +2696,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         /* Drift the cell which will be sent at the level at which it is sent,
            i.e. drift the cell specified in the send task (l->t) itself. */
         cell_activate_drift_part(l->t->ci, s);
+
+        /* Same for the time-step limiter */
+        cell_activate_limiter(l->t->ci, s);
 
         if (cell_is_active(ci, e)) {
           for (l = ci->send_rho; l != NULL && l->t->cj->nodeID != cj->nodeID;
