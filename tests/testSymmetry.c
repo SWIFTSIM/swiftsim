@@ -196,6 +196,12 @@ int main(int argc, char *argv[]) {
     j_ok |= c_is_d;
   }
 #else
+  /* Need to ignore the wakeup flag */
+  pi.wakeup = time_bin_not_awake;
+  pi2.wakeup = time_bin_not_awake;
+  pj.wakeup = time_bin_not_awake;
+  pj2.wakeup = time_bin_not_awake;
+
   i_ok = memcmp(&pi, &pi2, sizeof(struct part));
   j_ok = memcmp(&pj, &pj2, sizeof(struct part));
 #endif
