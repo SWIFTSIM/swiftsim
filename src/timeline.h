@@ -41,8 +41,10 @@ typedef char timebin_t;
 #define time_bin_inhibited (num_time_bins + 2)
 
 /*! Fictitious time-bin for particles not awaken */
-#define time_bin_awake (-1)
 #define time_bin_not_awake (0)
+
+/*! Fictitious time-bin for particles woken up */
+#define time_bin_awake (-1)
 
 /**
  * @brief Returns the integer time interval corresponding to a time bin

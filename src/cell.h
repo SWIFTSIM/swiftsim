@@ -175,6 +175,9 @@ struct cell {
   /*! The task to compute time-steps */
   struct task *timestep;
 
+  /*! The task to limit the time-step of inactive particles */
+  struct task *limiter;
+
   /*! Task linking the FFT mesh to the rest of gravity tasks */
   struct task *grav_ghost[2];
 
@@ -334,17 +337,23 @@ struct cell {
   /* Bit mask of sort directions that will be needed in the next timestep. */
   unsigned int requires_sorts;
 
+  /*! Bit mask of sorts that need to be computed for this cell. */
+  unsigned int do_sort;
+
+  /*! Do any of this cell's sub-cells need to be sorted? */
+  char do_sub_sort;
+
   /*! Does this cell need to be drifted? */
   char do_drift;
 
   /*! Do any of this cell's sub-cells need to be drifted? */
   char do_sub_drift;
 
-  /*! Bit mask of sorts that need to be computed for this cell. */
-  unsigned int do_sort;
+  /*! Does this cell need to be limited? */
+  char do_limiter;
 
-  /*! Do any of this cell's sub-cells need to be sorted? */
-  char do_sub_sort;
+  /*! Do any of this cell's sub-cells need to be limited? */
+  char do_sub_limiter;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /*! The list of tasks that have been executed on this cell */
@@ -403,7 +412,9 @@ void cell_activate_subcell_tasks(struct cell *ci, struct cell *cj,
                                  struct scheduler *s);
 void cell_activate_drift_part(struct cell *c, struct scheduler *s);
 void cell_activate_sorts(struct cell *c, int sid, struct scheduler *s);
+void cell_activate_limiter(struct cell *c, struct scheduler *s);
 void cell_clear_drift_flags(struct cell *c, void *data);
+void cell_clear_limiter_flags(struct cell *c, void *data);
 
 /* Inlined functions (for speed). */
 

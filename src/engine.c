@@ -179,12 +179,16 @@ void engine_make_hierarchical_tasks(struct engine *e, struct cell *c) {
       c->kick2 = scheduler_addtask(s, task_type_kick2, task_subtype_none, 0, 0,
                                    c, NULL);
 
-      /* Add the time-step calculation task and its dependency */
+      /* Add the time-step calculation tasks and their dependencies */
       c->timestep = scheduler_addtask(s, task_type_timestep, task_subtype_none,
                                       0, 0, c, NULL);
 
+      c->limiter = scheduler_addtask(s, task_type_timestep_limiter,
+                                     task_subtype_none, 0, 0, c, NULL);
+
       scheduler_addunlock(s, c->kick2, c->timestep);
       scheduler_addunlock(s, c->timestep, c->kick1);
+      scheduler_addunlock(s, c->kick1, c->limiter);
 
       if (is_self_gravity) {
 
@@ -2088,6 +2092,11 @@ static inline void engine_make_hydro_loops_dependencies(
     struct scheduler *sched, struct task *density, struct task *gradient,
     struct task *force, struct cell *c, int with_cooling) {
 
+  /* sort  --> density loop */
+  /* drift --> density loop */
+  scheduler_addunlock(sched, c->super->drift_part, density);
+  scheduler_addunlock(sched, c->super->sorts, density);
+
   /* density loop --> ghost --> gradient loop --> extra_ghost */
   /* extra_ghost --> force loop  */
   scheduler_addunlock(sched, density, c->super->ghost);
@@ -2102,6 +2111,9 @@ static inline void engine_make_hydro_loops_dependencies(
     /* force loop --> kick2 */
     scheduler_addunlock(sched, force, c->super->kick2);
   }
+
+  /* force --> limiter */
+  scheduler_addunlock(sched, force, c->super->limiter);
 }
 
 #else
@@ -2120,6 +2132,12 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
                                                         struct task *force,
                                                         struct cell *c,
                                                         int with_cooling) {
+
+  /* sort  --> density loop */
+  /* drift --> density loop */
+  scheduler_addunlock(sched, c->super->drift_part, density);
+  scheduler_addunlock(sched, c->super->sorts, density);
+
   /* density loop --> ghost --> force loop */
   scheduler_addunlock(sched, density, c->super->ghost_in);
   scheduler_addunlock(sched, c->super->ghost_out, force);
@@ -2131,6 +2149,9 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
     /* force loop --> kick2 */
     scheduler_addunlock(sched, force, c->super->kick2);
   }
+
+  /* force --> limiter */
+  scheduler_addunlock(sched, force, c->super->limiter);
 }
 
 #endif
@@ -2164,9 +2185,7 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
     /* Self-interaction? */
     else if (t->type == task_type_self && t->subtype == task_subtype_density) {
 
-      /* Make all density tasks depend on the drift and the sorts. */
-      scheduler_addunlock(sched, t->ci->super->drift_part, t);
-      scheduler_addunlock(sched, t->ci->super->sorts, t);
+/* Make all density tasks depend on the drift and the sorts. */
 
 #ifdef EXTRA_HYDRO_LOOP
       /* Start by constructing the task for the second  and third hydro loop */
@@ -2199,16 +2218,6 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
     /* Otherwise, pair interaction? */
     else if (t->type == task_type_pair && t->subtype == task_subtype_density) {
-
-      /* Make all density tasks depend on the drift and the sorts. */
-      if (t->ci->nodeID == engine_rank)
-        scheduler_addunlock(sched, t->ci->super->drift_part, t);
-      scheduler_addunlock(sched, t->ci->super->sorts, t);
-      if (t->ci->super != t->cj->super) {
-        if (t->cj->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->cj->super->drift_part, t);
-        scheduler_addunlock(sched, t->cj->super->sorts, t);
-      }
 
 #ifdef EXTRA_HYDRO_LOOP
       /* Start by constructing the task for the second and third hydro loop */
@@ -2261,10 +2270,6 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
     else if (t->type == task_type_sub_self &&
              t->subtype == task_subtype_density) {
 
-      /* Make all density tasks depend on the drift and sorts. */
-      scheduler_addunlock(sched, t->ci->super->drift_part, t);
-      scheduler_addunlock(sched, t->ci->super->sorts, t);
-
 #ifdef EXTRA_HYDRO_LOOP
 
       /* Start by constructing the task for the second and third hydro loop */
@@ -2306,16 +2311,6 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
     /* Otherwise, sub-pair interaction? */
     else if (t->type == task_type_sub_pair &&
              t->subtype == task_subtype_density) {
-
-      /* Make all density tasks depend on the drift. */
-      if (t->ci->nodeID == engine_rank)
-        scheduler_addunlock(sched, t->ci->super->drift_part, t);
-      scheduler_addunlock(sched, t->ci->super->sorts, t);
-      if (t->ci->super != t->cj->super) {
-        if (t->cj->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->cj->super->drift_part, t);
-        scheduler_addunlock(sched, t->cj->super->sorts, t);
-      }
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -2612,6 +2607,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
 
+        /* Activate the limiter tasks. */
+        if (ci->nodeID == engine_rank) cell_activate_limiter(ci, s);
+        if (cj->nodeID == engine_rank) cell_activate_limiter(cj, s);
+
         /* Activate the sorts where needed. */
         cell_activate_sorts(ci, t->flags, s);
         cell_activate_sorts(cj, t->flags, s);
@@ -2721,7 +2720,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     /* Kick/Drift/init ? */
     if (t->type == task_type_kick1 || t->type == task_type_kick2 ||
         t->type == task_type_drift_part || t->type == task_type_drift_gpart ||
-        t->type == task_type_init_grav) {
+        t->type == task_type_init_grav ||
+        t->type == task_type_timestep_limiter) {
       if (cell_is_active(t->ci, e)) scheduler_activate(s, t);
     }
 
@@ -3167,8 +3167,9 @@ void engine_skip_force_and_kick(struct engine *e) {
     /* Skip everything that updates the particles */
     if (t->type == task_type_drift_part || t->type == task_type_drift_gpart ||
         t->type == task_type_kick1 || t->type == task_type_kick2 ||
-        t->type == task_type_timestep || t->subtype == task_subtype_force ||
-        t->subtype == task_subtype_grav ||
+        t->type == task_type_timestep ||
+        t->type == task_type_timestep_limiter ||
+        t->subtype == task_subtype_force || t->subtype == task_subtype_grav ||
         t->type == task_type_grav_long_range ||
         t->type == task_type_grav_ghost ||
         t->type == task_type_grav_top_level || t->type == task_type_grav_down ||
@@ -3178,6 +3179,7 @@ void engine_skip_force_and_kick(struct engine *e) {
 
   /* Run through the cells and clear some flags. */
   space_map_cells_pre(e->s, 1, cell_clear_drift_flags, NULL);
+  space_map_cells_pre(e->s, 1, cell_clear_limiter_flags, NULL);
 }
 
 /**
@@ -3194,8 +3196,9 @@ void engine_skip_drift(struct engine *e) {
 
     struct task *t = &tasks[i];
 
-    /* Skip everything that updates the particles */
+    /* Skip everything that moves the particles */
     if (t->type == task_type_drift_part) t->skip = 1;
+    if (t->type == task_type_drift_gpart) t->skip = 1;
   }
 
   /* Run through the cells and clear some flags. */
@@ -3356,13 +3359,12 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     gravity_exact_force_check(e->s, e, 1e-1);
 #endif
 
-  for (int i = 0; i < e->s->nr_cells; ++i) {
-    runner_do_limiter(&e->runners[0], &e->s->cells_top[i], 1);
-  }
-
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Verify that all limited particles have been treated */
   for (size_t i = 0; i < s->nr_parts; ++i) {
-    if (s->parts[i].wakeup == time_bin_awake) message("Particle woken up!");
+    if (s->parts[i].wakeup == time_bin_awake) error("Particle woken up!");
   }
+#endif
 
   /* Recover the (integer) end of the next time-step */
   engine_collect_timestep_and_rebuild(e, 1);
@@ -3478,13 +3480,12 @@ void engine_step(struct engine *e) {
     gravity_exact_force_check(e->s, e, 1e-1);
 #endif
 
-  for (int i = 0; i < e->s->nr_cells; ++i) {
-    runner_do_limiter(&e->runners[0], &e->s->cells_top[i], 1);
-  }
-
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Verify that all limited particles have been treated */
   for (size_t i = 0; i < e->s->nr_parts; ++i) {
-    if (e->s->parts[i].wakeup == time_bin_awake) message("Particle woken up!");
+    if (e->s->parts[i].wakeup == time_bin_awake) error("Particle woken up!");
   }
+#endif
 
   /* Let's trigger a rebuild every-so-often for good measure */
   if (!(e->policy & engine_policy_hydro) &&  // MATTHIEU improve this

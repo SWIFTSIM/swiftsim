@@ -1086,6 +1086,9 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
       case task_type_timestep:
         cost = wscale * t->ci->count;
         break;
+      case task_type_timestep_limiter:
+        cost = wscale * t->ci->count;
+        break;
       default:
         cost = 0;
         break;
@@ -1212,7 +1215,8 @@ void scheduler_start(struct scheduler *s) {
 
         if (ci->ti_end_min == ti_current && t->skip &&
             t->type != task_type_sort && t->type != task_type_drift_part &&
-            t->type != task_type_drift_gpart)
+            t->type != task_type_drift_gpart &&
+            t->type != task_type_timestep_limiter)
           error(
               "Task (type='%s/%s') should not have been skipped "
               "ti_current=%lld "
@@ -1310,6 +1314,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
       case task_type_drift_part:
       case task_type_drift_gpart:
       case task_type_timestep:
+      case task_type_timestep_limiter:
         qid = t->ci->super->owner;
         break;
       case task_type_pair:

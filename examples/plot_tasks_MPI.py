@@ -96,8 +96,8 @@ pl.rcParams.update(PLOT_PARAMS)
 #  Tasks and subtypes. Indexed as in tasks.h.
 TASKTYPES = ["none", "sort", "self", "pair", "sub_self", "sub_pair",
              "init_grav", "ghost", "extra_ghost", "drift_part", "drift_gpart",
-             "kick1", "kick2", "timestep", "send", "recv", "grav_top_level",
-             "grav_long_range", "grav_mm", "grav_down", "cooling",
+             "kick1", "kick2", "timestep", "limiter", "send", "recv", "grav_top_level",
+             "grav_long_range", "grav_ghost", "grav_mm", "grav_down", "cooling",
              "sourceterms", "count"]
 
 SUBTYPES = ["none", "density", "gradient", "force", "grav", "external_grav",

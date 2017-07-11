@@ -1324,6 +1324,14 @@ void cell_clear_drift_flags(struct cell *c, void *data) {
 }
 
 /**
+ * @brief Clear the limiter flags on the given cell.
+ */
+void cell_clear_limiter_flags(struct cell *c, void *data) {
+  c->do_limiter = 0;
+  c->do_sub_limiter = 0;
+}
+
+/**
  * @brief Activate the drifts on the given cell.
  */
 void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
@@ -1351,9 +1359,35 @@ void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
 }
 
 /**
+ * @brief Activate the drifts on the given cell.
+ */
+void cell_activate_limiter(struct cell *c, struct scheduler *s) {
+
+  /* If this cell is already marked for drift, quit early. */
+  if (c->do_limiter) return;
+
+  /* Mark this cell for drifting. */
+  c->do_limiter = 1;
+
+  /* Set the do_sub_limiter all the way up and activate the super limiter
+     if this has not yet been done. */
+  if (c == c->super) {
+    scheduler_activate(s, c->limiter);
+  } else {
+    for (struct cell *parent = c->parent;
+         parent != NULL && !parent->do_sub_limiter; parent = parent->parent) {
+      parent->do_sub_limiter = 1;
+      if (parent == c->super) {
+        scheduler_activate(s, parent->limiter);
+        break;
+      }
+    }
+  }
+}
+
+/**
  * @brief Activate the sorts up a cell hierarchy.
  */
-
 void cell_activate_sorts_up(struct cell *c, struct scheduler *s) {
   if (c == c->super) {
     scheduler_activate(s, c->sorts);
@@ -1432,6 +1466,7 @@ void cell_activate_subcell_tasks(struct cell *ci, struct cell *cj,
 
       /* We have reached the bottom of the tree: activate drift */
       cell_activate_drift_part(ci, s);
+      cell_activate_limiter(ci, s);
     }
   }
 
@@ -1658,6 +1693,10 @@ void cell_activate_subcell_tasks(struct cell *ci, struct cell *cj,
     if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
     if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
 
+    /* Activate the drifts if the cells are local. */
+    if (ci->nodeID == engine_rank) cell_activate_limiter(ci, s);
+    if (cj->nodeID == engine_rank) cell_activate_limiter(cj, s);
+
     /* Do we need to sort the cells? */
     cell_activate_sorts(ci, sid, s);
     cell_activate_sorts(cj, sid, s);
@@ -1699,6 +1738,10 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
       /* Activate the drift tasks. */
       if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
       if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+
+      /* Activate the drift tasks. */
+      if (ci->nodeID == engine_rank) cell_activate_limiter(ci, s);
+      if (cj->nodeID == engine_rank) cell_activate_limiter(cj, s);
 
       /* Check the sorts and activate them if needed. */
       cell_activate_sorts(ci, t->flags, s);

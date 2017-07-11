@@ -1420,9 +1420,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
  *
  * @param r The task #runner.
  * @param c The #cell.
+ * @param force Limit the particles irrespective of the #cell flags.
  * @param timer Are we timing this ?
  */
-void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
+void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
 
   const struct engine *e = r->e;
   const integertime_t ti_current = e->ti_current;
@@ -1434,21 +1435,31 @@ void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
 
   integertime_t ti_end_min = max_nr_timesteps, ti_end_max = 0, ti_beg_max = 0;
 
+  /* Limit irrespective of cell flags? */
+  force |= c->do_limiter;
+
   /* Loop over the progeny ? */
-  if (c->split) {
-    for (int k = 0; k < 8; k++)
+  if (c->split && (force || c->do_sub_limiter)) {
+    for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *restrict cp = c->progeny[k];
 
         /* Recurse */
-        runner_do_limiter(r, cp, 0);
+        runner_do_limiter(r, cp, force, 0);
 
         /* And aggregate */
         ti_end_min = min(cp->ti_end_min, ti_end_min);
         ti_end_max = max(cp->ti_end_max, ti_end_max);
         ti_beg_max = max(cp->ti_beg_max, ti_beg_max);
       }
-  } else {
+    }
+
+    /* Store the updated values */
+    c->ti_end_min = ti_end_min;
+    c->ti_end_max = ti_end_max;
+    c->ti_beg_max = ti_beg_max;
+
+  } else if (!c->split && force) {
 
     ti_end_min = c->ti_end_min;
     ti_end_max = c->ti_end_max;
@@ -1479,12 +1490,16 @@ void runner_do_limiter(struct runner *r, struct cell *c, int timer) {
         ti_beg_max = max(ti_current, ti_beg_max);
       }
     }
+
+    /* Store the updated values */
+    c->ti_end_min = ti_end_min;
+    c->ti_end_max = ti_end_max;
+    c->ti_beg_max = ti_beg_max;
   }
 
-  /* Store the updated values */
-  c->ti_end_min = ti_end_min;
-  c->ti_end_max = ti_end_max;
-  c->ti_beg_max = ti_beg_max;
+  /* Clear the limiter flags. */
+  c->do_limiter = 0;
+  c->do_sub_limiter = 0;
 
   if (timer) TIMER_TOC(timer_do_limiter);
 }
@@ -1904,7 +1919,8 @@ void *runner_main(void *data) {
         if (!cell_is_active(ci, e) && t->type != task_type_sort &&
             t->type != task_type_send && t->type != task_type_recv &&
             t->type != task_type_kick1 && t->type != task_type_drift_part &&
-            t->type != task_type_drift_gpart)
+            t->type != task_type_drift_gpart &&
+            t->type != task_type_timestep_limiter)
           error(
               "Task (type='%s/%s') should have been skipped ti_current=%lld "
               "c->ti_end_min=%lld",
@@ -2049,7 +2065,7 @@ void *runner_main(void *data) {
           runner_do_timestep(r, ci, 1);
           break;
         case task_type_timestep_limiter:
-          runner_do_limiter(r, ci, 1);
+          runner_do_limiter(r, ci, 1, 1);
           break;
 #ifdef WITH_MPI
         case task_type_send:
