@@ -1693,7 +1693,7 @@ void cell_activate_subcell_tasks(struct cell *ci, struct cell *cj,
     if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
     if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
 
-    /* Activate the drifts if the cells are local. */
+    /* Activate the limiters if the cells are local. */
     if (ci->nodeID == engine_rank) cell_activate_limiter(ci, s);
     if (cj->nodeID == engine_rank) cell_activate_limiter(cj, s);
 
@@ -1770,8 +1770,8 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
 #ifdef EXTRA_HYDRO_LOOP
           scheduler_activate(s, ci->recv_gradient);
 #endif
-          scheduler_activate(s, ci->recv_ti);
         }
+	scheduler_activate(s, ci->recv_ti);
 
         /* Look for the local cell cj's send tasks. */
         struct link *l = NULL;
@@ -1803,13 +1803,12 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);
 #endif
-
-          for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
-               l = l->next)
-            ;
-          if (l == NULL) error("Missing link to send_ti task.");
-          scheduler_activate(s, l->t);
         }
+	for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
+	     l = l->next)
+	  ;
+	if (l == NULL) error("Missing link to send_ti task.");
+	scheduler_activate(s, l->t);
 
       } else if (cj->nodeID != engine_rank) {
 
@@ -1820,8 +1819,8 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
 #ifdef EXTRA_HYDRO_LOOP
           scheduler_activate(s, cj->recv_gradient);
 #endif
-          scheduler_activate(s, cj->recv_ti);
         }
+	scheduler_activate(s, cj->recv_ti);
 
         /* Look for the local cell ci's send tasks. */
         struct link *l = NULL;
@@ -1853,13 +1852,12 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);
 #endif
-
-          for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
-               l = l->next)
-            ;
-          if (l == NULL) error("Missing link to send_ti task.");
-          scheduler_activate(s, l->t);
         }
+	for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
+	     l = l->next)
+	  ;
+	if (l == NULL) error("Missing link to send_ti task.");
+	scheduler_activate(s, l->t);
       }
 #endif
     }

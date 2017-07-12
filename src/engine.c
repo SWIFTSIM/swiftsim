@@ -1077,6 +1077,9 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj,
       /* The send_rho task should unlock the super-cell's kick task. */
       scheduler_addunlock(s, t_rho, ci->super->kick2);
 
+      /* The send_rho task should unlock the super-cell's limiter task. */
+      scheduler_addunlock(s, t_rho, ci->super->limiter);
+
       /* The send_rho task depends on the cell's ghost task. */
       scheduler_addunlock(s, ci->super->ghost_out, t_rho);
 
@@ -1089,7 +1092,7 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj,
       scheduler_addunlock(s, ci->super->drift_part, t_xv);
 
       /* The super-cell's timestep tasks should unlock the send_ti task. */
-      scheduler_addunlock(s, ci->super->timestep, t_ti);
+      //scheduler_addunlock(s, ci->super->timestep, t_ti);
       scheduler_addunlock(s, ci->super->limiter, t_ti);
     }
 
@@ -2094,11 +2097,6 @@ static inline void engine_make_hydro_loops_dependencies(
     struct scheduler *sched, struct task *density, struct task *gradient,
     struct task *force, struct cell *c, int with_cooling) {
 
-  /* sort  --> density loop */
-  /* drift --> density loop */
-  scheduler_addunlock(sched, c->super->drift_part, density);
-  scheduler_addunlock(sched, c->super->sorts, density);
-
   /* density loop --> ghost --> gradient loop --> extra_ghost */
   /* extra_ghost --> force loop  */
   scheduler_addunlock(sched, density, c->super->ghost);
@@ -2113,9 +2111,6 @@ static inline void engine_make_hydro_loops_dependencies(
     /* force loop --> kick2 */
     scheduler_addunlock(sched, force, c->super->kick2);
   }
-
-  /* force --> limiter */
-  scheduler_addunlock(sched, force, c->super->limiter);
 }
 
 #else
@@ -2135,11 +2130,6 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
                                                         struct cell *c,
                                                         int with_cooling) {
 
-  /* sort  --> density loop */
-  /* drift --> density loop */
-  scheduler_addunlock(sched, c->super->drift_part, density);
-  scheduler_addunlock(sched, c->super->sorts, density);
-
   /* density loop --> ghost --> force loop */
   scheduler_addunlock(sched, density, c->super->ghost_in);
   scheduler_addunlock(sched, c->super->ghost_out, force);
@@ -2151,9 +2141,6 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
     /* force loop --> kick2 */
     scheduler_addunlock(sched, force, c->super->kick2);
   }
-
-  /* force --> limiter */
-  scheduler_addunlock(sched, force, c->super->limiter);
 }
 
 #endif
@@ -2187,7 +2174,9 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
     /* Self-interaction? */
     else if (t->type == task_type_self && t->subtype == task_subtype_density) {
 
-/* Make all density tasks depend on the drift and the sorts. */
+      /* Make all density tasks depend on the drift and the sorts. */
+      scheduler_addunlock(sched, t->ci->super->drift_part, t);
+      scheduler_addunlock(sched, t->ci->super->sorts, t);
 
 #ifdef EXTRA_HYDRO_LOOP
       /* Start by constructing the task for the second  and third hydro loop */
@@ -2215,11 +2204,24 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
       /* Now, build all the dependencies for the hydro */
       engine_make_hydro_loops_dependencies(sched, t, t2, t->ci, with_cooling);
+
+      /* Make the limiter task depend on the force */
+      scheduler_addunlock(sched, t2, t->ci->super->limiter);
 #endif
     }
 
     /* Otherwise, pair interaction? */
     else if (t->type == task_type_pair && t->subtype == task_subtype_density) {
+
+      /* Make all density tasks depend on the drift and the sorts. */
+      if (t->ci->nodeID == engine_rank)
+	scheduler_addunlock(sched, t->ci->super->drift_part, t);
+      scheduler_addunlock(sched, t->ci->super->sorts, t);
+      if (t->ci->super != t->cj->super) {
+	if (t->cj->nodeID == engine_rank)
+	  scheduler_addunlock(sched, t->cj->super->drift_part, t);
+	scheduler_addunlock(sched, t->cj->super->sorts, t);
+      }
 
 #ifdef EXTRA_HYDRO_LOOP
       /* Start by constructing the task for the second and third hydro loop */
@@ -2264,6 +2266,13 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
         engine_make_hydro_loops_dependencies(sched, t, t2, t->cj, with_cooling);
       }
 
+      /* Make the limiter task depend on the force */
+      if (t->ci->nodeID == engine_rank)
+	scheduler_addunlock(sched, t2, t->ci->super->limiter);
+      if (t->ci->super != t->cj->super) {
+	if (t->cj->nodeID == engine_rank)
+	  scheduler_addunlock(sched, t2, t->cj->super->limiter);
+      }
 #endif
 
     }
@@ -2271,6 +2280,10 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
     /* Otherwise, sub-self interaction? */
     else if (t->type == task_type_sub_self &&
              t->subtype == task_subtype_density) {
+
+      /* Make all density tasks depend on the drift and sorts. */
+      scheduler_addunlock(sched, t->ci->super->drift_part, t);
+      scheduler_addunlock(sched, t->ci->super->sorts, t);
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -2307,12 +2320,25 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
       if (t->ci->nodeID == nodeID) {
         engine_make_hydro_loops_dependencies(sched, t, t2, t->ci, with_cooling);
       }
+
+      /* Make the limiter task depend on the force */
+      scheduler_addunlock(sched, t2, t->ci->super->limiter);
 #endif
     }
 
     /* Otherwise, sub-pair interaction? */
     else if (t->type == task_type_sub_pair &&
              t->subtype == task_subtype_density) {
+
+      /* Make all density tasks depend on the drift. */
+      if (t->ci->nodeID == engine_rank)
+	scheduler_addunlock(sched, t->ci->super->drift_part, t);
+      scheduler_addunlock(sched, t->ci->super->sorts, t);
+      if (t->ci->super != t->cj->super) {
+	if (t->cj->nodeID == engine_rank)
+	  scheduler_addunlock(sched, t->cj->super->drift_part, t);
+	scheduler_addunlock(sched, t->cj->super->sorts, t);
+      }
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -2358,6 +2384,14 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
       }
       if (t->cj->nodeID == nodeID && t->ci->super != t->cj->super) {
         engine_make_hydro_loops_dependencies(sched, t, t2, t->cj, with_cooling);
+      }
+
+      /* Make the limiter task depend on the force */
+      if (t->ci->nodeID == engine_rank)
+	scheduler_addunlock(sched, t2, t->ci->super->limiter);
+      if (t->ci->super != t->cj->super) {
+	if (t->cj->nodeID == engine_rank)
+	  scheduler_addunlock(sched, t2, t->cj->super->limiter);
       }
 #endif
     }
@@ -2633,8 +2667,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_HYDRO_LOOP
           scheduler_activate(s, ci->recv_gradient);
 #endif
-          scheduler_activate(s, ci->recv_ti);
         }
+	scheduler_activate(s, ci->recv_ti);
 
         /* Look for the local cell cj's send tasks. */
         struct link *l = NULL;
@@ -2665,14 +2699,13 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);
 #endif
-
-          for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
-               l = l->next)
-            ;
-          if (l == NULL) error("Missing link to send_ti task.");
-          scheduler_activate(s, l->t);
         }
-
+	for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
+	     l = l->next)
+	  ;
+	if (l == NULL) error("Missing link to send_ti task.");
+	scheduler_activate(s, l->t);
+	
       } else if (cj->nodeID != engine_rank) {
 
         /* Activate the tasks to recv foreign cell cj's data. */
@@ -2682,8 +2715,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_HYDRO_LOOP
           scheduler_activate(s, cj->recv_gradient);
 #endif
-          scheduler_activate(s, cj->recv_ti);
         }
+	scheduler_activate(s, cj->recv_ti);
 
         /* Look for the local cell ci's send tasks. */
         struct link *l = NULL;
@@ -2714,13 +2747,13 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (l == NULL) error("Missing link to send_gradient task.");
           scheduler_activate(s, l->t);
 #endif
-
-          for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
-               l = l->next)
-            ;
-          if (l == NULL) error("Missing link to send_ti task.");
-          scheduler_activate(s, l->t);
         }
+	for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
+	     l = l->next)
+	  ;
+	if (l == NULL) error("Missing link to send_ti task.");
+	scheduler_activate(s, l->t);
+
       }
 #endif
     }

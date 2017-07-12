@@ -1433,6 +1433,11 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
 
   TIMER_TIC;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check that we only limit local cells. */
+  if (c->nodeID != engine_rank) error("Limiting dt of a foreign cell is nope.");
+#endif
+
   integertime_t ti_end_min = max_nr_timesteps, ti_end_max = 0, ti_beg_max = 0;
 
   /* Limit irrespective of cell flags? */
