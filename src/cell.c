@@ -1761,7 +1761,7 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
-      /* Activate the send/recv tasks. */
+      /* Activate the send/recv tasks for particle data. */
       if (ci->nodeID != engine_rank) {
 
         /* Activate the tasks to recv foreign cell ci's data. */
@@ -1772,7 +1772,6 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, ci->recv_gradient);
 #endif
         }
-        scheduler_activate(s, ci->recv_ti);
 
         /* Look for the local cell cj's send task for the part positions. */
         for (l_mpi = cj->send_xv;
@@ -1808,15 +1807,7 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 #endif
         }
-
-        /* Look for the local cell ci's send task for the time-step. */
-        for (l_mpi = cj->send_ti;
-             l_mpi != NULL && l_mpi->t->cj->nodeID != ci->nodeID;
-             l_mpi = l_mpi->next)
-          ;
-        if (l_mpi == NULL) error("Missing link to send_ti task.");
-        scheduler_activate(s, l_mpi->t);
-
+        /* Same the other way round */
       } else if (cj->nodeID != engine_rank) {
 
         /* Activate the tasks to recv foreign cell cj's data. */
@@ -1827,7 +1818,6 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, cj->recv_gradient);
 #endif
         }
-        scheduler_activate(s, cj->recv_ti);
 
         /* Look for the local cell ci's send task for the part positions. */
         for (l_mpi = ci->send_xv;
@@ -1863,6 +1853,22 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 #endif
         }
+      }
+
+      /* Activate the send/recv tasks for time-steps. */
+      if (ci->nodeID != engine_rank || cj->nodeID != engine_rank) {
+
+        /* Look for the cells receive tasks */
+        scheduler_activate(s, cj->recv_ti);
+        scheduler_activate(s, ci->recv_ti);
+
+        /* Look for the local cell ci's send task for the time-step. */
+        for (l_mpi = cj->send_ti;
+             l_mpi != NULL && l_mpi->t->cj->nodeID != ci->nodeID;
+             l_mpi = l_mpi->next)
+          ;
+        if (l_mpi == NULL) error("Missing link to send_ti task.");
+        scheduler_activate(s, l_mpi->t);
 
         /* Look for the local cell ci's send task for the time-step. */
         for (l_mpi = ci->send_ti;
