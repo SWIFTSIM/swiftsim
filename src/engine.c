@@ -1092,7 +1092,7 @@ void engine_addtasks_send(struct engine *e, struct cell *ci, struct cell *cj,
       scheduler_addunlock(s, ci->super->drift_part, t_xv);
 
       /* The super-cell's timestep tasks should unlock the send_ti task. */
-      //scheduler_addunlock(s, ci->super->timestep, t_ti);
+      // scheduler_addunlock(s, ci->super->timestep, t_ti);
       scheduler_addunlock(s, ci->super->limiter, t_ti);
     }
 
@@ -2215,12 +2215,12 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
       /* Make all density tasks depend on the drift and the sorts. */
       if (t->ci->nodeID == engine_rank)
-	scheduler_addunlock(sched, t->ci->super->drift_part, t);
+        scheduler_addunlock(sched, t->ci->super->drift_part, t);
       scheduler_addunlock(sched, t->ci->super->sorts, t);
       if (t->ci->super != t->cj->super) {
-	if (t->cj->nodeID == engine_rank)
-	  scheduler_addunlock(sched, t->cj->super->drift_part, t);
-	scheduler_addunlock(sched, t->cj->super->sorts, t);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t->cj->super->drift_part, t);
+        scheduler_addunlock(sched, t->cj->super->sorts, t);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2268,10 +2268,10 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
       /* Make the limiter task depend on the force */
       if (t->ci->nodeID == engine_rank)
-	scheduler_addunlock(sched, t2, t->ci->super->limiter);
+        scheduler_addunlock(sched, t2, t->ci->super->limiter);
       if (t->ci->super != t->cj->super) {
-	if (t->cj->nodeID == engine_rank)
-	  scheduler_addunlock(sched, t2, t->cj->super->limiter);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t2, t->cj->super->limiter);
       }
 #endif
 
@@ -2332,12 +2332,12 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
       /* Make all density tasks depend on the drift. */
       if (t->ci->nodeID == engine_rank)
-	scheduler_addunlock(sched, t->ci->super->drift_part, t);
+        scheduler_addunlock(sched, t->ci->super->drift_part, t);
       scheduler_addunlock(sched, t->ci->super->sorts, t);
       if (t->ci->super != t->cj->super) {
-	if (t->cj->nodeID == engine_rank)
-	  scheduler_addunlock(sched, t->cj->super->drift_part, t);
-	scheduler_addunlock(sched, t->cj->super->sorts, t);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t->cj->super->drift_part, t);
+        scheduler_addunlock(sched, t->cj->super->sorts, t);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2388,10 +2388,10 @@ void engine_make_extra_hydroloop_tasks(struct engine *e) {
 
       /* Make the limiter task depend on the force */
       if (t->ci->nodeID == engine_rank)
-	scheduler_addunlock(sched, t2, t->ci->super->limiter);
+        scheduler_addunlock(sched, t2, t->ci->super->limiter);
       if (t->ci->super != t->cj->super) {
-	if (t->cj->nodeID == engine_rank)
-	  scheduler_addunlock(sched, t2, t->cj->super->limiter);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t2, t->cj->super->limiter);
       }
 #endif
     }
@@ -2668,7 +2668,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           scheduler_activate(s, ci->recv_gradient);
 #endif
         }
-	scheduler_activate(s, ci->recv_ti);
+        scheduler_activate(s, ci->recv_ti);
 
         /* Look for the local cell cj's send tasks. */
         struct link *l = NULL;
@@ -2700,12 +2700,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           scheduler_activate(s, l->t);
 #endif
         }
-	for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
-	     l = l->next)
-	  ;
-	if (l == NULL) error("Missing link to send_ti task.");
-	scheduler_activate(s, l->t);
-	
+        for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
+             l = l->next)
+          ;
+        if (l == NULL) error("Missing link to send_ti task.");
+        scheduler_activate(s, l->t);
+
       } else if (cj->nodeID != engine_rank) {
 
         /* Activate the tasks to recv foreign cell cj's data. */
@@ -2716,7 +2716,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           scheduler_activate(s, cj->recv_gradient);
 #endif
         }
-	scheduler_activate(s, cj->recv_ti);
+        scheduler_activate(s, cj->recv_ti);
 
         /* Look for the local cell ci's send tasks. */
         struct link *l = NULL;
@@ -2748,12 +2748,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           scheduler_activate(s, l->t);
 #endif
         }
-	for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
-	     l = l->next)
-	  ;
-	if (l == NULL) error("Missing link to send_ti task.");
-	scheduler_activate(s, l->t);
-
+        for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
+             l = l->next)
+          ;
+        if (l == NULL) error("Missing link to send_ti task.");
+        scheduler_activate(s, l->t);
       }
 #endif
     }

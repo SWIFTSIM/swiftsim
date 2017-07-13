@@ -1716,6 +1716,7 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
 
 #ifdef WITH_MPI
   const struct engine *const e = s->space->e;
+  struct link *l_mpi = NULL;
 #endif
 
   int rebuild = 0;
@@ -1771,30 +1772,33 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, ci->recv_gradient);
 #endif
         }
-	scheduler_activate(s, ci->recv_ti);
+        scheduler_activate(s, ci->recv_ti);
 
-        /* Look for the local cell cj's send tasks. */
-        struct link *l = NULL;
-        for (l = cj->send_xv; l != NULL && l->t->cj->nodeID != ci->nodeID;
-             l = l->next)
+        /* Look for the local cell cj's send task for the part positions. */
+        for (l_mpi = cj->send_xv;
+             l_mpi != NULL && l_mpi->t->cj->nodeID != ci->nodeID;
+             l_mpi = l_mpi->next)
           ;
-        if (l == NULL) error("Missing link to send_xv task.");
-        scheduler_activate(s, l->t);
+        if (l_mpi == NULL) error("Missing link to send_xv task.");
+        scheduler_activate(s, l_mpi->t);
 
         /* Drift the cell which will be sent at the level at which it is sent,
-           i.e. drift the cell specified in the send task (l->t) itself. */
-        cell_activate_drift_part(l->t->ci, s);
+           i.e. drift the cell specified in the send task (l_mpi->t) itself.
+           Recall that for an MPI task, ci is the local cell, cj the foreign. */
+        cell_activate_drift_part(l_mpi->t->ci, s);
 
         /* Same for the time-step limiter */
-        cell_activate_limiter(l->t->ci, s);
+        cell_activate_limiter(l_mpi->t->ci, s);
 
         if (cell_is_active(cj, e)) {
 
-          for (l = cj->send_rho; l != NULL && l->t->cj->nodeID != ci->nodeID;
-               l = l->next)
+          /* Look for the local cell cj's send task for the other fields. */
+          for (l_mpi = cj->send_rho;
+               l_mpi != NULL && l_mpi->t->cj->nodeID != ci->nodeID;
+               l_mpi = l_mpi->next)
             ;
-          if (l == NULL) error("Missing link to send_rho task.");
-          scheduler_activate(s, l->t);
+          if (l_mpi == NULL) error("Missing link to send_rho task.");
+          scheduler_activate(s, l_mpi->t);
 
 #ifdef EXTRA_HYDRO_LOOP
           for (l = cj->send_gradient;
@@ -1804,11 +1808,14 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 #endif
         }
-	for (l = cj->send_ti; l != NULL && l->t->cj->nodeID != ci->nodeID;
-	     l = l->next)
-	  ;
-	if (l == NULL) error("Missing link to send_ti task.");
-	scheduler_activate(s, l->t);
+
+        /* Look for the local cell ci's send task for the time-step. */
+        for (l_mpi = cj->send_ti;
+             l_mpi != NULL && l_mpi->t->cj->nodeID != ci->nodeID;
+             l_mpi = l_mpi->next)
+          ;
+        if (l_mpi == NULL) error("Missing link to send_ti task.");
+        scheduler_activate(s, l_mpi->t);
 
       } else if (cj->nodeID != engine_rank) {
 
@@ -1820,30 +1827,33 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, cj->recv_gradient);
 #endif
         }
-	scheduler_activate(s, cj->recv_ti);
+        scheduler_activate(s, cj->recv_ti);
 
-        /* Look for the local cell ci's send tasks. */
-        struct link *l = NULL;
-        for (l = ci->send_xv; l != NULL && l->t->cj->nodeID != cj->nodeID;
-             l = l->next)
+        /* Look for the local cell ci's send task for the part positions. */
+        for (l_mpi = ci->send_xv;
+             l_mpi != NULL && l_mpi->t->cj->nodeID != cj->nodeID;
+             l_mpi = l_mpi->next)
           ;
-        if (l == NULL) error("Missing link to send_xv task.");
-        scheduler_activate(s, l->t);
+        if (l_mpi == NULL) error("Missing link to send_xv task.");
+        scheduler_activate(s, l_mpi->t);
 
         /* Drift the cell which will be sent at the level at which it is sent,
-           i.e. drift the cell specified in the send task (l->t) itself. */
-        cell_activate_drift_part(l->t->ci, s);
+           i.e. drift the cell specified in the send task (l_mpi->t) itself.
+           Recall that for an MPI task, ci is the local cell, cj the foreign. */
+        cell_activate_drift_part(l_mpi->t->ci, s);
 
         /* Same for the time-step limiter */
-        cell_activate_limiter(l->t->ci, s);
+        cell_activate_limiter(l_mpi->t->ci, s);
 
         if (cell_is_active(ci, e)) {
 
-          for (l = ci->send_rho; l != NULL && l->t->cj->nodeID != cj->nodeID;
-               l = l->next)
+          /* Look for the local cell ci's send task for the other fields. */
+          for (l_mpi = ci->send_rho;
+               l_mpi != NULL && l_mpi->t->cj->nodeID != cj->nodeID;
+               l_mpi = l_mpi->next)
             ;
-          if (l == NULL) error("Missing link to send_rho task.");
-          scheduler_activate(s, l->t);
+          if (l_mpi == NULL) error("Missing link to send_rho task.");
+          scheduler_activate(s, l_mpi->t);
 
 #ifdef EXTRA_HYDRO_LOOP
           for (l = ci->send_gradient;
@@ -1853,11 +1863,14 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate(s, l->t);
 #endif
         }
-	for (l = ci->send_ti; l != NULL && l->t->cj->nodeID != cj->nodeID;
-	     l = l->next)
-	  ;
-	if (l == NULL) error("Missing link to send_ti task.");
-	scheduler_activate(s, l->t);
+
+        /* Look for the local cell ci's send task for the time-step. */
+        for (l_mpi = ci->send_ti;
+             l_mpi != NULL && l_mpi->t->cj->nodeID != cj->nodeID;
+             l_mpi = l_mpi->next)
+          ;
+        if (l_mpi == NULL) error("Missing link to send_ti task.");
+        scheduler_activate(s, l_mpi->t);
       }
 #endif
     }
