@@ -85,6 +85,8 @@ void print_help_message() {
   printf("  %2s %14s %s\n", "-g", "",
          "Run with an external gravitational potential.");
   printf("  %2s %14s %s\n", "-G", "", "Run with self-gravity.");
+  printf("  %2s %14s %s\n", "-l", "", "Use logger for the output "
+	 "(Optimized binary snapshot).");
   printf("  %2s %14s %s\n", "-M", "",
          "Reconstruct the multipoles every time-step.");
   printf("  %2s %14s %s\n", "-n", "{int}",
@@ -182,6 +184,7 @@ int main(int argc, char *argv[]) {
   int nsteps = -2;
   int restart = 0;
   int with_cosmology = 0;
+  int with_logger = 0;
   int with_external_gravity = 0;
   int with_sourceterms = 0;
   int with_cooling = 0;
@@ -456,7 +459,7 @@ int main(int argc, char *argv[]) {
   /* Broadcast the parameter file */
   MPI_Bcast(params, sizeof(struct swift_params), MPI_BYTE, 0, MPI_COMM_WORLD);
 #endif
-
+    
   /* Check that we can write the snapshots by testing if the output
    * directory exists and is searchable and writable. */
   char basename[PARSER_MAX_LINE_SIZE];

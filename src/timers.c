@@ -87,6 +87,7 @@ const char* timers_names[timer_count] = {
     "locktree",
     "runners",
     "step",
+    "logger"
 };
 
 /* File to store the timers */

@@ -252,6 +252,9 @@ struct cell {
   /*! The task to end the force calculation */
   struct task *end_force;
 
+  /*! The logger task */
+  struct task *logger;
+
   /*! The task to compute time-steps */
   struct task *timestep;
 

@@ -88,6 +88,7 @@ enum {
   timer_locktree,
   timer_runners,
   timer_step,
+  timer_logger,
   timer_count,
 };
 
