@@ -75,6 +75,7 @@ Snapshots:
   UnitVelocity_in_cgs: 1  # (Optional) Unit system for the outputs (Centimeters per second)
   UnitCurrent_in_cgs:  1  # (Optional) Unit system for the outputs (Amperes)
   UnitTemp_in_cgs:     1  # (Optional) Unit system for the outputs (Kelvin)
+  logger_max_steps:    10 # (Optional) Number of particle steps between two chunk writing if using logger
 
 # Parameters governing the conserved quantities statistics
 Statistics:

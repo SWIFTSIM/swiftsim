@@ -1451,6 +1451,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         break;
       case task_type_kick1:
       case task_type_kick2:
+      case task_type_logger:
       case task_type_timestep:
         qid = t->ci->super->owner;
         break;
