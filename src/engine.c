@@ -96,7 +96,8 @@ const char *engine_policy_names[] = {"none",
                                      "reconstruct_mpoles",
                                      "cooling",
                                      "sourceterms",
-                                     "stars"};
+                                     "stars",
+				     "logger"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -174,6 +175,7 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
 
   struct scheduler *s = &e->sched;
   const int is_with_cooling = (e->policy & engine_policy_cooling);
+  const int is_logger = (e->policy & engine_policy_logger);
 
   /* Are we in a super-cell ? */
   if (c->super == c) {
@@ -184,6 +186,11 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       /* Add the two half kicks */
       c->kick1 = scheduler_addtask(s, task_type_kick1, task_subtype_none, 0, 0,
                                    c, NULL);
+
+      if (is_logger)
+	c->logger = scheduler_addtask(s, task_type_logger, task_subtype_none, 0, 0,
+				      c, NULL);
+	
 
       c->kick2 = scheduler_addtask(s, task_type_kick2, task_subtype_none, 0, 0,
                                    c, NULL);
@@ -4474,7 +4481,10 @@ void engine_step(struct engine *e) {
   if (e->dump_snapshot) {
 
     /* Dump... */
-    engine_dump_snapshot(e);
+    if (e->policy & engine_policy_logger)
+      engine_dump_index(e);
+    else
+      engine_dump_snapshot(e);
 
     /* ... and find the next output time */
     engine_compute_next_snapshot_time(e);
@@ -5088,6 +5098,30 @@ void engine_dump_snapshot(struct engine *e) {
             (float)clocks_diff(&time1, &time2), clocks_getunit());
 }
 
+/**
+ * @brief Writes an index file with the current state of the engine
+ *
+ * @param e The #engine.
+ */
+void engine_dump_index(struct engine *e) {
+
+  struct clocks_time time1, time2;
+  clocks_gettime(&time1);
+
+  if (e->verbose) message("writing index at t=%e.", e->time);
+
+  /* Dump... */
+  /* Should use snapshotBaseName for the index name */
+  message("I am dumping an index file...");
+
+  e->dump_snapshot = 0;
+
+  clocks_gettime(&time2);
+  if (e->verbose)
+    message("writing particle properties took %.3f %s.",
+            (float)clocks_diff(&time1, &time2), clocks_getunit());
+}
+
 #ifdef HAVE_SETAFFINITY
 /**
  * @brief Returns the initial affinity the main thread is using.
@@ -5157,6 +5191,7 @@ void engine_unpin() {
  * @param Ndm total number of gravity particles in the simulation.
  * @param policy The queuing policy to use.
  * @param verbose Is this #engine talkative ?
+ * @param logger_max_steps Max number of particle steps before writing with logger
  * @param reparttype What type of repartition algorithm are we using ?
  * @param internal_units The system of units used internally.
  * @param physical_constants The #phys_const used for this run.
@@ -5209,6 +5244,14 @@ void engine_init(
   e->snapshotCompression =
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
   e->snapshotUnits = malloc(sizeof(struct unit_system));
+
+  /* Logger params */
+  char logger_name_file[PARSER_MAX_LINE_SIZE];
+  e->logger_max_steps = parser_get_opt_param_int(params, "Snapshots:logger_max_steps", 10);
+  parser_get_opt_param_string(params, "Snapshots:dump_file", logger_name_file, "dump.smew");
+  e->logger_dump = malloc(sizeof(struct dump));
+  dump_init(e->logger_dump, logger_name_file, 1024 * 1024 * 10);
+
   units_init_default(e->snapshotUnits, params, "Snapshots", internal_units);
   e->snapshotOutputCount = 0;
   e->dt_min = parser_get_param_double(params, "TimeIntegration:dt_min");
@@ -5563,6 +5606,10 @@ void engine_config(int restart, struct engine *e,
         "Time of first snapshot (%e) must be after the simulation start t=%e.",
         e->timeFirstSnapshot, e->timeBegin);
 
+  if (e->policy & engine_policy_logger)
+    if (e->nodeID == 0)
+      message("Expected output of over 9000\n Should write a real message...");
+
   /* Find the time of the first output */
   engine_compute_next_snapshot_time(e);
 
@@ -5783,6 +5830,7 @@ void engine_clean(struct engine *e) {
   free(e->runners);
   free(e->snapshotUnits);
   free(e->links);
+  free(e->logger_dump);
   scheduler_clean(&e->sched);
   space_clean(e->s);
   threadpool_clean(&e->threadpool);
