@@ -53,6 +53,12 @@ struct gpart {
   /* Type of the #gpart (DM, gas, star, ...) */
   enum part_type type;
 
+  /* Number of time step since last output */
+  short int last_output;
+  
+  /* offset at last writing */
+  size_t last_offset;
+
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Numer of gparts this gpart interacted with */

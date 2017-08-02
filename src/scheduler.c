@@ -1259,6 +1259,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
       case task_type_ghost:
       case task_type_kick1:
       case task_type_kick2:
+      case task_type_logger:
       case task_type_drift_part:
       case task_type_drift_gpart:
       case task_type_timestep:

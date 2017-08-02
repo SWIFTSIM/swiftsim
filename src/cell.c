@@ -2039,6 +2039,7 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
     if (c->grav_long_range != NULL) scheduler_activate(s, c->grav_long_range);
     if (c->cooling != NULL) scheduler_activate(s, c->cooling);
     if (c->sourceterms != NULL) scheduler_activate(s, c->sourceterms);
+    if (c->logger != NULL) scheduler_activate(s, c->logger);
   }
 
   return rebuild;

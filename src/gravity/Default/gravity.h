@@ -153,6 +153,8 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
 
   gp->time_bin = 0;
   gp->epsilon = 0.f;
+  gp->last_output = 0;
+  gp->last_offset = 0;
 
   gravity_init_gpart(gp);
 }

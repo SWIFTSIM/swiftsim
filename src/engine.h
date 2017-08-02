@@ -40,6 +40,7 @@
 #include "clocks.h"
 #include "collectgroup.h"
 #include "cooling_struct.h"
+#include "dump.h"
 #include "gravity_properties.h"
 #include "parser.h"
 #include "partition.h"
@@ -69,9 +70,10 @@ enum engine_policy {
   engine_policy_reconstruct_mpoles = (1 << 12),
   engine_policy_cooling = (1 << 13),
   engine_policy_sourceterms = (1 << 14),
-  engine_policy_stars = (1 << 15)
+  engine_policy_stars = (1 << 15),
+  engine_policy_logger = (1 << 16)
 };
-#define engine_maxpolicy 15
+#define engine_maxpolicy 16
 extern const char *engine_policy_names[];
 
 #define engine_queue_scale 1.2
@@ -211,6 +213,12 @@ struct engine {
   /* Need to dump some statistics ? */
   int save_stats;
 
+  /* Number of particle steps between dumping a chunk of data */
+  int logger_max_steps;
+
+  /* File name of the dump file */
+  struct dump *logger_dump;
+
   /* Need to dump a snapshot ? */
   int dump_snapshot;
 
@@ -263,6 +271,7 @@ void engine_drift_top_multipoles(struct engine *e);
 void engine_reconstruct_multipoles(struct engine *e);
 void engine_print_stats(struct engine *e);
 void engine_dump_snapshot(struct engine *e);
+void engine_dump_index(struct engine *e);
 void engine_init(struct engine *e, struct space *s,
                  const struct swift_params *params, int nr_nodes, int nodeID,
                  int nr_threads, int Ngas, int Ndm, int with_aff, int policy,

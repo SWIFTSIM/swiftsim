@@ -215,6 +215,9 @@ struct cell {
   /*! The second kick task */
   struct task *kick2;
 
+  /*! The logger task */
+  struct task *logger;
+
   /*! The task to compute time-steps */
   struct task *timestep;
 
