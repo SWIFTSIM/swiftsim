@@ -1875,10 +1875,13 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
  * @param c The top-level #cell to play with.
  * @param super Pointer to the deepest cell with tasks in this part of the tree.
  */
-void cell_set_super(struct cell *c, struct cell *super) {
+void cell_set_super(struct cell *c, struct cell *super, struct space *s) {
 
   /* Are we in a cell with some kind of self/pair task ? */
-  if (super == NULL && c->nr_tasks > 0) super = c;
+  if (super == NULL && c->nr_tasks > 0) {
+    super = c;
+    s->super_cells[atomic_inc(&s->super_cells_count)] = super;
+  }
 
   /* Set the super-cell */
   c->super = super;
@@ -1886,13 +1889,14 @@ void cell_set_super(struct cell *c, struct cell *super) {
   /* Recurse */
   if (c->split)
     for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL) cell_set_super(c->progeny[k], super);
+      if (c->progeny[k] != NULL) cell_set_super(c->progeny[k], super, s);
 }
 
 void cell_set_super_mapper(void *map_data, int num_elements, void *extra_data) {
+  struct space *s = (struct space *)extra_data;
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &((struct cell *)map_data)[ind];
-    cell_set_super(c, NULL);
+    cell_set_super(c, NULL, s);
   }
 }
 

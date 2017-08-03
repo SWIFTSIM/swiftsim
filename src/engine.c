@@ -2517,8 +2517,16 @@ void engine_maketasks(struct engine *e) {
 
   /* Now that the self/pair tasks are at the right level, set the super
    * pointers. */
+  if (s->super_cells_size < s->tot_cells) {
+    if (s->super_cells != NULL) free(s->super_cells);
+    if ((s->super_cells = (struct cell **)malloc(sizeof(struct cell *) *
+                                                 s->tot_cells)) == NULL)
+      error("Failed to allocate super cell buffer.");
+    s->super_cells_size = s->tot_cells;
+  }
+  s->super_cells_count = 0;
   threadpool_map(&e->threadpool, cell_set_super_mapper, cells, nr_cells,
-                 sizeof(struct cell), 0, NULL);
+                 sizeof(struct cell), 0, s);
 
   /* Append hierarchical tasks to each cell. */
   threadpool_map(&e->threadpool, engine_make_hierarchical_tasks_mapper, cells,
