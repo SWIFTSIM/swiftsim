@@ -107,6 +107,11 @@ struct space {
   /*! Buffer of unused cells for the sub-cells. */
   struct cell *cells_sub;
 
+  /*! Pointers to the super-cells in this space. */
+  struct cell **super_cells;
+  int super_cells_count;
+  int super_cells_size;
+
   /*! The multipoles associated with the top-level (level 0) cells */
   struct gravity_tensors *multipoles_top;
 
