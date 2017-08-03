@@ -1878,6 +1878,8 @@ int cell_unskip_tasks(struct cell *c, struct scheduler *s) {
  *
  * @param c The top-level #cell to play with.
  * @param super Pointer to the deepest cell with tasks in this part of the tree.
+ * @param s The #space in which the cells live, used to update the super_cells
+ *        list.
  */
 void cell_set_super(struct cell *c, struct cell *super, struct space *s) {
 
