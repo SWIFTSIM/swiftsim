@@ -868,10 +868,10 @@ void runner_do_unskip_mapper(void *map_data, int num_elements,
                              void *extra_data) {
 
   struct engine *e = (struct engine *)extra_data;
-  struct cell *cells = (struct cell *)map_data;
+  struct cell **cell_pointers = (struct cell **)map_data;
 
   for (int ind = 0; ind < num_elements; ind++) {
-    struct cell *c = &cells[ind];
+    struct cell *c = cell_pointers[ind];
     if (c != NULL) runner_do_unskip(c, e);
   }
 }
