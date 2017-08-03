@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 """
 Usage:
-    analsyse_tasks.py [options] input.dat
+    analsyse_threadpool_tasks.py [options] input.dat
 
-where input.dat is a thread info file for a step.  Use the '-y interval' flag
+where input.dat is a threadpool dump for a step.  Use the '-Y interval' flag
 of the swift command to create these.
 
-The output is an analysis of the task timings, including deadtime per thread
-and step, total amount of time spent for each task type, for the whole step
-and per thread and the minimum and maximum times spent per task type.
+The output is an analysis of the threadpool task timings, including deadtime
+per thread and step, total amount of time spent for each task type, for the
+whole step and per thread and the minimum and maximum times spent per task
+type.
 
 This file is part of SWIFT.
 Copyright (c) 2017 Peter W. Draper (p.w.draper@durham.ac.uk)
@@ -38,7 +39,7 @@ import argparse
 #  Handle the command line.
 parser = argparse.ArgumentParser(description="Analyse task dumps")
 
-parser.add_argument("input", help="Thread data file (-y output)")
+parser.add_argument("input", help="Threadpool data file (-y output)")
 parser.add_argument("-v", "--verbose", dest="verbose",
                     help="Verbose output (default: False)",
                     default=False, action="store_true")
@@ -46,76 +47,71 @@ parser.add_argument("-v", "--verbose", dest="verbose",
 args = parser.parse_args()
 infile = args.input
 
-#  Tasks and subtypes. Indexed as in tasks.h.
-TASKTYPES = ["none", "sort", "self", "pair", "sub_self", "sub_pair",
-             "init_grav", "ghost", "extra_ghost", "drift_part",
-             "drift_gpart", "kick1", "kick2", "timestep", "send", "recv",
-             "grav_top_level", "grav_long_range", "grav_ghost", "grav_mm",
-             "grav_down", "cooling", "sourceterms", "count"]
-
-SUBTYPES = ["none", "density", "gradient", "force", "grav", "external_grav",
-            "tend", "xv", "rho", "gpart", "multipole", "spart", "count"]
-
-SIDS = ["(-1,-1,-1)", "(-1,-1, 0)", "(-1,-1, 1)", "(-1, 0,-1)",
-        "(-1, 0, 0)", "(-1, 0, 1)", "(-1, 1,-1)", "(-1, 1, 0)",
-        "(-1, 1, 1)", "( 0,-1,-1)", "( 0,-1, 0)", "( 0,-1, 1)",
-        "( 0, 0,-1)"]
+#  Read header. First two lines.
+with open(infile) as infid:
+    head = [next(infid) for x in xrange(2)]
+header = head[1][2:].strip()
+header = eval(header)
+nthread = int(header['num_threads']) + 1
+CPU_CLOCK = float(header['cpufreq']) / 1000.0
+print "Number of threads: ", nthread - 1
+if args.verbose:
+    print "CPU frequency:", CPU_CLOCK * 1000.0
 
 #  Read input.
-data = pl.loadtxt( infile )
+data = pl.genfromtxt(infile, dtype=None, delimiter=" ")
 
-maxthread = int(max(data[:,0])) + 1
-print "# Maximum thread id:", maxthread
+#  Mixed types, so need to separate.
+tics = []
+tocs = []
+funcs = []
+threads = []
+chunks = []
+for i in data:
+    if i[0] != "#":
+        funcs.append(i[0].replace("_mapper", ""))
+        if i[1] < 0:
+            threads.append(nthread-1)
+        else:
+            threads.append(i[1])
+        chunks.append(i[2])
+        tics.append(i[3])
+        tocs.append(i[4])
+tics = pl.array(tics)
+tocs = pl.array(tocs)
+funcs = pl.array(funcs)
+threads = pl.array(threads)
+chunks = pl.array(chunks)
 
 #  Recover the start and end time
-full_step = data[0,:]
-tic_step = int(full_step[4])
-toc_step = int(full_step[5])
-updates = int(full_step[6])
-g_updates = int(full_step[7])
-s_updates = int(full_step[8])
-CPU_CLOCK = float(full_step[-1]) / 1000.0
-data = data[1:,:]
-if args.verbose:
-    print "# CPU frequency:", CPU_CLOCK * 1000.0
-print "#   updates:", updates
-print "# g_updates:", g_updates
-print "# s_updates:", s_updates
-    
-#  Avoid start and end times of zero.
-data = data[data[:,4] != 0]
-data = data[data[:,5] != 0]
+tic_step = min(tics)
+toc_step = max(tocs)
 
 #  Calculate the time range.
 total_t = (toc_step - tic_step)/ CPU_CLOCK
 print "# Data range: ", total_t, "ms"
 print
 
-#  Correct times to relative values.
+#  Correct times to relative millisecs.
 start_t = float(tic_step)
-data[:,4] -= start_t
-data[:,5] -= start_t
+tics = (tics - start_t) / CPU_CLOCK
+tocs = (tocs - start_t) / CPU_CLOCK
 
 tasks = {}
 tasks[-1] = []
-for i in range(maxthread):
+for i in range(nthread):
     tasks[i] = []
 
 #  Gather into by thread data.
-num_lines = pl.size(data) / pl.size(full_step)
-for line in range(num_lines):
-    thread = int(data[line,0])
-    tic = int(data[line,4]) / CPU_CLOCK
-    toc = int(data[line,5]) / CPU_CLOCK
-    tasktype = int(data[line,1])
-    subtype = int(data[line,2])
-    sid = int(data[line, -1])
+for i in range(len(tics)):
+    tasks[threads[i]].append([tics[i],tocs[i],funcs[i]])
 
-    tasks[thread].append([tic,toc,tasktype,subtype, sid])
+#  Don't actually process the fake thread.
+nthread = nthread - 1
 
 #  Sort by tic and gather used thread ids.
 threadids = []
-for i in range(maxthread):
+for i in range(nthread):
     if len(tasks[i]) > 0:
         tasks[i] = sorted(tasks[i], key=lambda task: task[0])
         threadids.append(i)
@@ -123,7 +119,7 @@ for i in range(maxthread):
 #  Times per task.
 print "# Task times:"
 print "# -----------"
-print "# {0:<17s}: {1:>7s} {2:>9s} {3:>9s} {4:>9s} {5:>9s} {6:>9s}"\
+print "# {0:<31s}: {1:>7s} {2:>9s} {3:>9s} {4:>9s} {5:>9s} {6:>9s}"\
       .format("type/subtype", "count","minimum", "maximum",
               "sum", "mean", "percent")
 alltasktimes = {}
@@ -131,7 +127,7 @@ sidtimes = {}
 for i in threadids:
     tasktimes = {}
     for task in tasks[i]:
-        key = TASKTYPES[task[2]] + "/" + SUBTYPES[task[3]]
+        key = task[2]
         dt = task[1] - task[0]
         if not key in tasktimes:
             tasktimes[key] = []
@@ -141,19 +137,12 @@ for i in threadids:
             alltasktimes[key] = []
         alltasktimes[key].append(dt)
 
-        my_sid = task[4]
-        if my_sid > -1:
-            if not my_sid in sidtimes:
-                sidtimes[my_sid] = []
-            sidtimes[my_sid].append(dt)
-                
-        
     print "# Thread : ", i
     for key in sorted(tasktimes.keys()):
         taskmin = min(tasktimes[key])
         taskmax = max(tasktimes[key])
         tasksum = sum(tasktimes[key])
-        print "{0:19s}: {1:7d} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.2f}"\
+        print "{0:33s}: {1:7d} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.2f}"\
               .format(key, len(tasktimes[key]), taskmin, taskmax, tasksum,
                       tasksum / len(tasktimes[key]), tasksum / total_t * 100.0)
     print
@@ -163,34 +152,10 @@ for key in sorted(alltasktimes.keys()):
     taskmin = min(alltasktimes[key])
     taskmax = max(alltasktimes[key])
     tasksum = sum(alltasktimes[key])
-    print "{0:19s}: {1:7d} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.2f}"\
+    print "{0:33s}: {1:7d} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.2f}"\
           .format(key, len(alltasktimes[key]), taskmin, taskmax, tasksum,
                   tasksum / len(alltasktimes[key]),
                   tasksum / (len(threadids) * total_t) * 100.0)
-print
-
-# For pairs, show stuf sorted by SID
-print "# By SID (all threads): "
-print "# {0:<17s}: {1:>7s} {2:>9s} {3:>9s} {4:>9s} {5:>9s} {6:>9s}"\
-    .format("Pair/Sub-pair SID", "count","minimum", "maximum",
-            "sum", "mean", "percent")
-
-for sid in range(0,13):
-    if sid in sidtimes:
-        sidmin = min(sidtimes[sid])
-        sidmax = max(sidtimes[sid])
-        sidsum = sum(sidtimes[sid])
-        sidcount = len(sidtimes[sid])
-        sidmean = sidsum / sidcount
-    else:
-        sidmin = 0.
-        sidmax = 0.
-        sidsum = 0.
-        sidcount = 0
-        sidmean = 0.
-    print "{0:3d} {1:15s}: {2:7d} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.4f} {7:9.2f}"\
-        .format(sid, SIDS[sid], sidcount, sidmin, sidmax, sidsum,
-                sidmean, sidsum / (len(threadids) * total_t) * 100.0)   
 print
 
 #  Dead times.
@@ -236,11 +201,11 @@ print "all      : {0:9d} {1:9.4f} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.2f}"\
               postdeadsum / (len(threadids) * total_t ) * 100.0)
 print
 
-#  Time in engine, i.e. from first to last tasks.
-print "# Time between tasks (engine deadtime):"
+#  Time in threadpool, i.e. from first to last tasks.
+print "# Time between tasks (threadpool deadtime):"
 print "# no.    : {0:>9s} {1:>9s} {2:>9s} {3:>9s} {4:>9s} {5:>9s}"\
       .format("count", "minimum", "maximum", "sum", "mean", "percent")
-enginedeadtimes = []
+threadpooldeadtimes = []
 for i in threadids:
     deadtimes = []
     last = tasks[i][0][0]
@@ -262,14 +227,14 @@ for i in threadids:
     print "thread {0:2d}: {1:9d} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.4f} {6:9.2f}"\
           .format(i, len(deadtimes), deadmin, deadmax, deadsum,
                   deadsum / len(deadtimes), deadsum / total_t * 100.0)
-    enginedeadtimes.extend(deadtimes)
+    threadpooldeadtimes.extend(deadtimes)
 
-deadmin = min(enginedeadtimes)
-deadmax = max(enginedeadtimes)
-deadsum = sum(enginedeadtimes)
+deadmin = min(threadpooldeadtimes)
+deadmax = max(threadpooldeadtimes)
+deadsum = sum(threadpooldeadtimes)
 print "all      : {0:9d} {1:9.4f} {2:9.4f} {3:9.4f} {4:9.4f} {5:9.2f}"\
-      .format(len(enginedeadtimes), deadmin, deadmax, deadsum,
-              deadsum / len(enginedeadtimes),
+      .format(len(threadpooldeadtimes), deadmin, deadmax, deadsum,
+              deadsum / len(threadpooldeadtimes),
               deadsum / (len(threadids) * total_t ) * 100.0)
 print
 

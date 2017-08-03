@@ -919,6 +919,9 @@ void engine_repartition(struct engine *e) {
 #else
   if (e->reparttype->type != REPART_NONE)
     error("SWIFT was not compiled with MPI and METIS support.");
+
+  /* Clear the repartition flag. */
+  e->forcerepart = 0;
 #endif
 }
 
@@ -933,8 +936,9 @@ void engine_repartition_trigger(struct engine *e) {
 
   /* Do nothing if there have not been enough steps since the last
    * repartition, don't want to repeat this too often or immediately after
-   * a repartition step. */
-  if (e->step - e->last_repartition >= 2) {
+   * a repartition step. Also nothing to do when requested. */
+  if (e->step - e->last_repartition >= 2 &&
+      e->reparttype->type != REPART_NONE) {
 
     /* Old style if trigger is >1 or this is the second step (want an early
      * repartition following the initial repartition). */
@@ -995,8 +999,9 @@ void engine_repartition_trigger(struct engine *e) {
     if (e->forcerepart) e->last_repartition = e->step;
   }
 
-  /* We always reset CPU time for next check. */
-  e->cputime_last_step = clocks_get_cputime_used();
+  /* We always reset CPU time for next check, unless it will not be used. */
+  if (e->reparttype->type != REPART_NONE)
+    e->cputime_last_step = clocks_get_cputime_used();
 #endif
 }
 
@@ -1677,6 +1682,16 @@ void engine_exchange_strays(struct engine *e, size_t offset_parts,
 #endif
 }
 
+/**
+ * @brief Constructs the top-level tasks for the short-range gravity
+ * and long-range gravity interactions.
+ *
+ * - One FTT task per MPI rank.
+ * - Multiple gravity ghosts for dependencies.
+ * - All top-cells get a self task.
+ * - All pairs within range according to the multipole acceptance
+ *   criterion get a pair task.
+ */
 void engine_make_self_gravity_tasks_mapper(void *map_data, int num_elements,
                                            void *extra_data) {
 
@@ -1687,6 +1702,7 @@ void engine_make_self_gravity_tasks_mapper(void *map_data, int num_elements,
   struct scheduler *sched = &e->sched;
   const int nodeID = e->nodeID;
   const int periodic = s->periodic;
+  const double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
   const int cdim[3] = {s->cdim[0], s->cdim[1], s->cdim[2]};
   const int cdim_ghost[3] = {s->cdim[0] / 4 + 1, s->cdim[1] / 4 + 1,
                              s->cdim[2] / 4 + 1};
@@ -1698,7 +1714,7 @@ void engine_make_self_gravity_tasks_mapper(void *map_data, int num_elements,
   for (int ind = 0; ind < num_elements; ind++) {
 
     /* Get the cell index. */
-    const int cid = (size_t)(map_data + ind);
+    const int cid = (size_t)(map_data) + ind;
     const int i = cid / (cdim[1] * cdim[2]);
     const int j = (cid / cdim[2]) % cdim[1];
     const int k = cid % cdim[2];
@@ -1742,8 +1758,9 @@ void engine_make_self_gravity_tasks_mapper(void *map_data, int num_elements,
           if (cj->nodeID != nodeID) continue;  // MATTHIEU
 
           /* Are the cells to close for a MM interaction ? */
-          if (!gravity_multipole_accept(ci->multipole, cj->multipole,
-                                        theta_crit_inv, 1)) {
+          if (!gravity_multipole_accept_rebuild(ci->multipole, cj->multipole,
+                                                theta_crit_inv, periodic,
+                                                dim)) {
 
             scheduler_addtask(sched, task_type_pair, task_subtype_grav, 0, 0,
                               ci, cj);
@@ -1807,6 +1824,11 @@ void engine_make_self_gravity_tasks(struct engine *e) {
   if (periodic) free(ghosts);
 }
 
+/**
+ * @brief Constructs the top-level tasks for the external gravity.
+ *
+ * @param e The #engine.
+ */
 void engine_make_external_gravity_tasks(struct engine *e) {
 
   struct space *s = e->s;
@@ -1860,7 +1882,7 @@ void engine_make_hydroloop_tasks_mapper(void *map_data, int num_elements,
   for (int ind = 0; ind < num_elements; ind++) {
 
     /* Get the cell index. */
-    const int cid = (size_t)(map_data + ind);
+    const int cid = (size_t)(map_data) + ind;
     const int i = cid / (cdim[1] * cdim[2]);
     const int j = (cid / cdim[2]) % cdim[1];
     const int k = cid % cdim[2];
@@ -1915,8 +1937,6 @@ void engine_make_hydroloop_tasks_mapper(void *map_data, int num_elements,
  * For each hydrodynamic and gravity task, construct the links with
  * the corresponding cell.  Similarly, construct the dependencies for
  * all the sorting tasks.
- *
- * @param e The #engine.
  */
 void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
                                         void *extra_data) {
@@ -2182,8 +2202,6 @@ static inline void engine_make_hydro_loops_dependencies(struct scheduler *sched,
  * corresponding to the second hydro loop over neighbours.
  * With all the relevant tasks for a given cell available, we construct
  * all the dependencies for that cell.
- *
- * @param e The #engine.
  */
 void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                               void *extra_data) {
@@ -2628,9 +2646,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       /* If this task does not involve any active cells, skip it. */
       if (!cell_is_active(t->ci, e) && !cell_is_active(t->cj, e)) continue;
 
-      /* Too much particle movement? */
-      if (cell_need_rebuild_for_pair(ci, cj)) *rebuild_space = 1;
-
       /* Only activate tasks that involve a local active cell. */
       if ((cell_is_active(ci, e) && ci->nodeID == engine_rank) ||
           (cj != NULL && cell_is_active(cj, e) && cj->nodeID == engine_rank)) {
@@ -2661,6 +2676,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       /* Only interested in density tasks as of here. */
       if (t->subtype == task_subtype_density) {
+
+        /* Too much particle movement? */
+        if (cell_need_rebuild_for_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
         /* Activate the send/recv tasks. */
@@ -2828,7 +2846,7 @@ int engine_marktasks(struct engine *e) {
   /* Run through the tasks and mark as skip or not. */
   size_t extra_data[3] = {(size_t)e, rebuild_space, (size_t)&e->sched};
   threadpool_map(&e->threadpool, engine_marktasks_mapper, s->tasks, s->nr_tasks,
-                 sizeof(struct task), 10000, extra_data);
+                 sizeof(struct task), 0, extra_data);
   rebuild_space = extra_data[1];
 
   if (e->verbose)
@@ -2975,39 +2993,14 @@ void engine_prepare(struct engine *e) {
  * @brief Implements a barrier for the #runner threads.
  *
  * @param e The #engine.
- * @param tid The thread ID
  */
-void engine_barrier(struct engine *e, int tid) {
+void engine_barrier(struct engine *e) {
 
-  /* First, get the barrier mutex. */
-  if (pthread_mutex_lock(&e->barrier_mutex) != 0)
-    error("Failed to get barrier mutex.");
+  /* Wait at the wait barrier. */
+  pthread_barrier_wait(&e->wait_barrier);
 
-  /* This thread is no longer running. */
-  e->barrier_running -= 1;
-
-  /* If all threads are in, send a signal... */
-  if (e->barrier_running == 0)
-    if (pthread_cond_broadcast(&e->barrier_cond) != 0)
-      error("Failed to broadcast barrier full condition.");
-
-  /* Wait for the barrier to open. */
-  while (e->barrier_launch == 0 || tid >= e->barrier_launchcount)
-    if (pthread_cond_wait(&e->barrier_cond, &e->barrier_mutex) != 0)
-      error("Error waiting for barrier to close.");
-
-  /* This thread has been launched. */
-  e->barrier_running += 1;
-  e->barrier_launch -= 1;
-
-  /* If I'm the last one out, signal the condition again. */
-  if (e->barrier_launch == 0)
-    if (pthread_cond_broadcast(&e->barrier_cond) != 0)
-      error("Failed to broadcast empty barrier condition.");
-
-  /* Last but not least, release the mutex. */
-  if (pthread_mutex_unlock(&e->barrier_mutex) != 0)
-    error("Failed to get unlock the barrier mutex.");
+  /* Wait at the run barrier. */
+  pthread_barrier_wait(&e->run_barrier);
 }
 
 /**
@@ -3273,9 +3266,8 @@ void engine_skip_drift(struct engine *e) {
  * @brief Launch the runners.
  *
  * @param e The #engine.
- * @param nr_runners The number of #runner to let loose.
  */
-void engine_launch(struct engine *e, int nr_runners) {
+void engine_launch(struct engine *e) {
 
   const ticks tic = getticks();
 
@@ -3288,15 +3280,10 @@ void engine_launch(struct engine *e, int nr_runners) {
   atomic_inc(&e->sched.waiting);
 
   /* Cry havoc and let loose the dogs of war. */
-  e->barrier_launch = nr_runners;
-  e->barrier_launchcount = nr_runners;
-  if (pthread_cond_broadcast(&e->barrier_cond) != 0)
-    error("Failed to broadcast barrier open condition.");
+  pthread_barrier_wait(&e->run_barrier);
 
   /* Load the tasks. */
-  pthread_mutex_unlock(&e->barrier_mutex);
   scheduler_start(&e->sched);
-  pthread_mutex_lock(&e->barrier_mutex);
 
   /* Remove the safeguard. */
   pthread_mutex_lock(&e->sched.sleep_mutex);
@@ -3305,9 +3292,7 @@ void engine_launch(struct engine *e, int nr_runners) {
   pthread_mutex_unlock(&e->sched.sleep_mutex);
 
   /* Sit back and wait for the runners to come home. */
-  while (e->barrier_launch || e->barrier_running)
-    if (pthread_cond_wait(&e->barrier_cond, &e->barrier_mutex) != 0)
-      error("Error while waiting for barrier.");
+  pthread_barrier_wait(&e->wait_barrier);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -3357,7 +3342,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Now, launch the calculation */
   TIMER_TIC;
-  engine_launch(e, e->nr_threads);
+  engine_launch(e);
   TIMER_TOC(timer_runners);
 
   /* Apply some conversions (e.g. internal energy -> entropy) */
@@ -3373,7 +3358,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     if (hydro_need_extra_init_loop) {
       engine_marktasks(e);
       engine_skip_force_and_kick(e);
-      engine_launch(e, e->nr_threads);
+      engine_launch(e);
     }
   }
 
@@ -3415,7 +3400,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 #endif
 
   /* Run the 0th time-step */
-  engine_launch(e, e->nr_threads);
+  engine_launch(e);
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
@@ -3589,7 +3574,7 @@ void engine_step(struct engine *e) {
 
   /* Start all the tasks. */
   TIMER_TIC;
-  engine_launch(e, e->nr_threads);
+  engine_launch(e);
   TIMER_TOC(timer_runners);
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
@@ -3732,7 +3717,7 @@ void engine_drift_all(struct engine *e) {
 #endif
 
   threadpool_map(&e->threadpool, engine_do_drift_all_mapper, e->s->cells_top,
-                 e->s->nr_cells, sizeof(struct cell), 1, e);
+                 e->s->nr_cells, sizeof(struct cell), 0, e);
 
   /* Synchronize particle positions */
   space_synchronize_particle_positions(e->s);
@@ -3784,7 +3769,7 @@ void engine_drift_top_multipoles(struct engine *e) {
   const ticks tic = getticks();
 
   threadpool_map(&e->threadpool, engine_do_drift_top_multipoles_mapper,
-                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 10, e);
+                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 0, e);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that all cells have been drifted to the current time. */
@@ -3822,7 +3807,7 @@ void engine_reconstruct_multipoles(struct engine *e) {
   const ticks tic = getticks();
 
   threadpool_map(&e->threadpool, engine_do_reconstruct_multipoles_mapper,
-                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 10, e);
+                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 0, e);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -4490,15 +4475,9 @@ void engine_init(struct engine *e, struct space *s,
   threadpool_init(&e->threadpool, e->nr_threads);
 
   /* First of all, init the barrier and lock it. */
-  if (pthread_mutex_init(&e->barrier_mutex, NULL) != 0)
-    error("Failed to initialize barrier mutex.");
-  if (pthread_cond_init(&e->barrier_cond, NULL) != 0)
-    error("Failed to initialize barrier condition variable.");
-  if (pthread_mutex_lock(&e->barrier_mutex) != 0)
-    error("Failed to lock barrier mutex.");
-  e->barrier_running = 0;
-  e->barrier_launch = 0;
-  e->barrier_launchcount = 0;
+  if (pthread_barrier_init(&e->wait_barrier, NULL, e->nr_threads + 1) != 0 ||
+      pthread_barrier_init(&e->run_barrier, NULL, e->nr_threads + 1) != 0)
+    error("Failed to initialize barrier.");
 
   /* Init the scheduler with enough tasks for the initial sorting tasks. */
   const int nr_tasks = 2 * s->tot_cells + 2 * e->nr_threads;
@@ -4512,7 +4491,6 @@ void engine_init(struct engine *e, struct space *s,
   for (int k = 0; k < e->nr_threads; k++) {
     e->runners[k].id = k;
     e->runners[k].e = e;
-    e->barrier_running += 1;
     if (pthread_create(&e->runners[k].thread, NULL, &runner_main,
                        &e->runners[k]) != 0)
       error("Failed to create runner thread.");
@@ -4575,9 +4553,7 @@ void engine_init(struct engine *e, struct space *s,
 #endif
 
   /* Wait for the runner threads to be in place. */
-  while (e->barrier_running || e->barrier_launch)
-    if (pthread_cond_wait(&e->barrier_cond, &e->barrier_mutex) != 0)
-      error("Error while waiting for runner threads to get in place.");
+  pthread_barrier_wait(&e->wait_barrier);
 }
 
 /**

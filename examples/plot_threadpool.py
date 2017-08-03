@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
 Usage:
-    plot_tasks.py [options] input.dat output.png
+    plot_threadpool.py [options] input.dat output.png
 
-where input.dat is a thread info file for a step.  Use the '-y interval' flag
-of the swift command to create these. The output plot will be called
+where input.dat is a threadpool info file for a step.  Use the '-Y interval'
+flag of the swift command to create these. The output plot will be called
 'output.png'. The --limit option can be used to produce plots with the same
 time span and the --expand option to expand each thread line into '*expand'
 lines, so that adjacent tasks of the same type can be distinguished. Other
@@ -39,9 +39,9 @@ import sys
 import argparse
 
 #  Handle the command line.
-parser = argparse.ArgumentParser(description="Plot task graphs")
+parser = argparse.ArgumentParser(description="Plot threadpool function graphs")
 
-parser.add_argument("input", help="Thread data file (-y output)")
+parser.add_argument("input", help="Threadpool data file (-Y output)")
 parser.add_argument("outpng", help="Name for output graphic file (PNG)")
 parser.add_argument("-l", "--limit", dest="limit",
                     help="Upper time limit in millisecs (def: depends on data)",
@@ -87,78 +87,60 @@ PLOT_PARAMS = {"axes.labelsize": 10,
                }
 pl.rcParams.update(PLOT_PARAMS)
 
-#  Tasks and subtypes. Indexed as in tasks.h.
-TASKTYPES = ["none", "sort", "self", "pair", "sub_self", "sub_pair",
-             "init_grav", "ghost", "extra_ghost", "drift_part",
-             "drift_gpart", "kick1", "kick2", "timestep", "send", "recv",
-             "grav_top_level", "grav_long_range", "grav_ghost", "grav_mm",
-             "grav_down", "cooling", "sourceterms", "count"]
-
-SUBTYPES = ["none", "density", "gradient", "force", "grav", "external_grav",
-            "tend", "xv", "rho", "gpart", "multipole", "spart", "count"]
-
-#  Task/subtypes of interest.
-FULLTYPES = ["self/force", "self/density", "self/grav", "sub_self/force",
-             "sub_self/density", "sub_self/grav", "pair/force", "pair/density",
-             "pair/grav", "sub_pair/force",
-             "sub_pair/density", "sub_pair/grav", "recv/xv", "send/xv",
-             "recv/rho", "send/rho",
-             "recv/tend", "send/tend"]
-
 #  A number of colours for the various types. Recycled when there are
 #  more task types than colours...
 colours = ["cyan", "lightgray", "darkblue", "yellow", "tan", "dodgerblue",
            "sienna", "aquamarine", "bisque", "blue", "green", "lightgreen",
            "brown", "purple", "moccasin", "olivedrab", "chartreuse",
-           "steelblue", "darkgreen", "green", "mediumseagreen",
+           "darksage", "darkgreen", "green", "mediumseagreen",
            "mediumaquamarine", "darkslategrey", "mediumturquoise",
            "black", "cadetblue", "skyblue", "red", "slategray", "gold",
            "slateblue", "blueviolet", "mediumorchid", "firebrick",
            "magenta", "hotpink", "pink", "orange", "lightgreen"]
 maxcolours = len(colours)
 
-#  Set colours of task/subtype.
-TASKCOLOURS = {}
-ncolours = 0
-for task in TASKTYPES:
-    TASKCOLOURS[task] = colours[ncolours]
-    ncolours = (ncolours + 1) % maxcolours
-
-SUBCOLOURS = {}
-for task in FULLTYPES:
-    SUBCOLOURS[task] = colours[ncolours]
-    ncolours = (ncolours + 1) % maxcolours
-
-for task in SUBTYPES:
-    SUBCOLOURS[task] = colours[ncolours]
-    ncolours = (ncolours + 1) % maxcolours
-
-#  For fiddling with colours...
-if args.verbose:
-    print "#Selected colours:"
-    for task in sorted(TASKCOLOURS.keys()):
-        print "# " + task + ": " + TASKCOLOURS[task]
-    for task in sorted(SUBCOLOURS.keys()):
-        print "# " + task + ": " + SUBCOLOURS[task]
-
-#  Read input.
-data = pl.loadtxt( infile )
-
-nthread = int(max(data[:,0])) + 1
-print "Number of threads:", nthread
-
-#  Recover the start and end time
-full_step = data[0,:]
-tic_step = int(full_step[4])
-toc_step = int(full_step[5])
-CPU_CLOCK = float(full_step[-1]) / 1000.0
-data = data[1:,:]
+#  Read header. First two lines.
+with open(infile) as infid:
+    head = [next(infid) for x in xrange(2)]
+header = head[1][2:].strip()
+header = eval(header)
+nthread = int(header['num_threads']) + 1
+CPU_CLOCK = float(header['cpufreq']) / 1000.0
+print "Number of threads: ", nthread
 if args.verbose:
     print "CPU frequency:", CPU_CLOCK * 1000.0
 
-#  Avoid start and end times of zero.
-data = data[data[:,4] != 0]
-data = data[data[:,5] != 0]
+#  Read input.
+data = pl.genfromtxt(infile, dtype=None, delimiter=" ")
+
+#  Mixed types, so need to separate.
+tics = []
+tocs = []
+funcs = []
+threads = []
+chunks = []
+for i in data:
+    if i[0] != "#":
+        funcs.append(i[0].replace("_mapper", ""))
+        if i[1] < 0:
+            threads.append(nthread-1)
+        else:
+            threads.append(i[1])
+        chunks.append(i[2])
+        tics.append(i[3])
+        tocs.append(i[4])
+tics = pl.array(tics)
+tocs = pl.array(tocs)
+funcs = pl.array(funcs)
+threads = pl.array(threads)
+chunks = pl.array(chunks)
+
+
+#  Recover the start and end time
+tic_step = min(tics)
+toc_step = max(tocs)
+
+#   Not known.
 
 #  Calculate the time range, if not given.
 delta_t = delta_t * CPU_CLOCK
@@ -170,9 +152,28 @@ if delta_t == 0:
 
 #  Once more doing the real gather and plots this time.
 start_t = float(tic_step)
-data[:,4] -= start_t
-data[:,5] -= start_t
+tics -= tic_step
+tocs -= tic_step
 end_t = (toc_step - start_t) / CPU_CLOCK
+
+#  Get all "task" names and assign colours.
+TASKTYPES = pl.unique(funcs)
+print TASKTYPES
+
+#  Set colours of task/subtype.
+TASKCOLOURS = {}
+ncolours = 0
+for task in TASKTYPES:
+    TASKCOLOURS[task] = colours[ncolours]
+    ncolours = (ncolours + 1) % maxcolours
+
+#  For fiddling with colours...
+if args.verbose:
+    print "#Selected colours:"
+    for task in sorted(TASKCOLOURS.keys()):
+        print "# " + task + ": " + TASKCOLOURS[task]
+    for task in sorted(SUBCOLOURS.keys()):
+        print "# " + task + ": " + SUBCOLOURS[task]
 
 tasks = {}
 tasks[-1] = []
@@ -184,9 +185,8 @@ ecounter = []
 for i in range(nthread):
     ecounter.append(0)
 
-num_lines = pl.size(data) / pl.size(full_step)
-for line in range(num_lines):
-    thread = int(data[line,0])
+for i in range(len(threads)):
+    thread = threads[i]
 
     # Expand to cover extra lines if expanding.
     ethread = thread * expand + (ecounter[thread] % expand)
@@ -194,22 +194,12 @@ for line in range(num_lines):
     thread = ethread
 
     tasks[thread].append({})
-    tasktype = TASKTYPES[int(data[line,1])]
-    subtype = SUBTYPES[int(data[line,2])]
-    tasks[thread][-1]["type"] = tasktype
-    tasks[thread][-1]["subtype"] = subtype
-    tic = int(data[line,4]) / CPU_CLOCK
-    toc = int(data[line,5]) / CPU_CLOCK
+    tasks[thread][-1]["type"] = funcs[i]
+    tic = tics[i] / CPU_CLOCK
+    toc = tocs[i] / CPU_CLOCK
     tasks[thread][-1]["tic"] = tic
     tasks[thread][-1]["toc"] = toc
-    if "self" in tasktype or "pair" in tasktype:
-        fulltype = tasktype + "/" + subtype
-        if fulltype in SUBCOLOURS:
-            tasks[thread][-1]["colour"] = SUBCOLOURS[fulltype]
-        else:
-            tasks[thread][-1]["colour"] = SUBCOLOURS[subtype]
-    else:
-        tasks[thread][-1]["colour"] = TASKCOLOURS[tasktype]
+    tasks[thread][-1]["colour"] = TASKCOLOURS[funcs[i]]
 
 # Use expanded threads from now on.
 nthread = nthread * expand
@@ -219,6 +209,18 @@ fig = pl.figure()
 ax = fig.add_subplot(1,1,1)
 ax.set_xlim(-delta_t * 0.01 / CPU_CLOCK, delta_t * 1.01 / CPU_CLOCK)
 ax.set_ylim(0, nthread)
+
+# Fake thread is used to colour the whole range, do that first.
+tictocs = []
+colours = []
+j = 0
+for task in tasks[nthread - expand]:
+    tictocs.append((task["tic"], task["toc"] - task["tic"]))
+    colours.append(task["colour"])
+ax.broken_barh(tictocs, [0,(nthread-1)], facecolors = colours, linewidth=0, alpha=0.15)
+
+# And we don't plot the fake thread.
+nthread = nthread - expand
 for i in range(nthread):
 
     #  Collect ranges and colours into arrays.
@@ -230,10 +232,7 @@ for i in range(nthread):
         colours.append(task["colour"])
 
         #  Legend support, collections don't add to this.
-        if task["subtype"] != "none":
-            qtask = task["type"] + "/" + task["subtype"]
-        else:
-            qtask = task["type"]
+        qtask = task["type"]
         if qtask not in typesseen:
             pl.plot([], [], color=task["colour"], label=qtask)
             typesseen.append(qtask)
