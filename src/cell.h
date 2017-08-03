@@ -392,7 +392,7 @@ void cell_check_multipole_drift_point(struct cell *c, void *data);
 void cell_reset_task_counters(struct cell *c);
 int cell_is_drift_needed(struct cell *c, const struct engine *e);
 int cell_unskip_tasks(struct cell *c, struct scheduler *s);
-void cell_set_super(struct cell *c, struct cell *super);
+void cell_set_super(struct cell *c, struct cell *super, struct space *s);
 void cell_drift_part(struct cell *c, const struct engine *e, int force);
 void cell_drift_gpart(struct cell *c, const struct engine *e);
 void cell_drift_multipole(struct cell *c, const struct engine *e);
