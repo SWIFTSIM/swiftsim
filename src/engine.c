@@ -258,7 +258,7 @@ void engine_make_hierarchical_tasks_mapper(void *map_data, int num_elements,
   struct engine *e = (struct engine *)extra_data;
 
   for (int ind = 0; ind < num_elements; ind++) {
-    struct cell *c = &((struct cell *)map_data)[ind];
+    struct cell *c = ((struct cell **)map_data)[ind];
     engine_make_hierarchical_tasks(e, c);
   }
 }
@@ -2547,8 +2547,9 @@ void engine_maketasks(struct engine *e) {
                  sizeof(struct cell), 0, s);
 
   /* Append hierarchical tasks to each cell. */
-  threadpool_map(&e->threadpool, engine_make_hierarchical_tasks_mapper, cells,
-                 nr_cells, sizeof(struct cell), 0, e);
+  threadpool_map(&e->threadpool, engine_make_hierarchical_tasks_mapper,
+                 s->super_cells, s->super_cells_count, sizeof(struct cell *), 0,
+                 e);
 
   /* Run through the tasks and make force tasks for each density task.
      Each force task depends on the cell ghosts and unlocks the kick task
