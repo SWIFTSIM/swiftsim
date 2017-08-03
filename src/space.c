@@ -2663,6 +2663,9 @@ void space_init(struct space *s, const struct swift_params *params,
   s->size_sparts = Nspart;
   s->sparts = sparts;
   s->nr_queues = 1; /* Temporary value until engine construction */
+  s->super_cells_size = 0;
+  s->super_cells_count = 0;
+  s->super_cells = NULL;
 
   /* Are we replicating the space ? */
   if (replicate < 1)
