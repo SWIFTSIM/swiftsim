@@ -4496,7 +4496,7 @@ void engine_init(struct engine *e, struct space *s,
   collectgroup_init();
 
   /* Initialize the threadpool. */
-  threadpool_init(&e->threadpool, e->nr_threads);
+  threadpool_init(&e->threadpool, e->nr_threads, e);
 
   /* First of all, init the barrier and lock it. */
   if (pthread_barrier_init(&e->wait_barrier, NULL, e->nr_threads + 1) != 0 ||

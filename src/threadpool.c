@@ -36,7 +36,9 @@
 /* Local headers. */
 #include "atomic.h"
 #include "clocks.h"
+#include "engine.h"
 #include "error.h"
+#include "scheduler.h"
 #include "minmax.h"
 
 #ifdef SWIFT_DEBUG_THREADPOOL
@@ -163,8 +165,10 @@ void threadpool_chomp(struct threadpool *tp, int tid) {
 void *threadpool_runner(void *data) {
 
   /* Our threadpool. */
-  struct threadpool *tp = (struct threadpool *)data;
-
+  struct threadpool_runner *tpr = (struct threadpool_runner *)data;
+  struct threadpool *tp = tpr->tp;
+  struct engine *e = tpr->e;
+  pthread_setspecific(e->sched.local_seed_pointer, &tpr->id);
   /* Main loop. */
   while (1) {
 
@@ -189,7 +193,7 @@ void *threadpool_runner(void *data) {
  * @param tp The #threadpool.
  * @param num_threads The number of threads.
  */
-void threadpool_init(struct threadpool *tp, int num_threads) {
+void threadpool_init(struct threadpool *tp, int num_threads, struct engine *e) {
 
   /* Initialize the thread counters. */
   tp->num_threads = num_threads;
@@ -229,10 +233,17 @@ void threadpool_init(struct threadpool *tp, int num_threads) {
                                          (num_threads - 1))) == NULL) {
     error("Failed to allocate thread array.");
   }
+  if ((tp->runners = (struct threadpool_runner *)malloc(sizeof(struct threadpool_runner) *
+                                                        (num_threads-1))) == NULL) {
+    error("Failed to allocated runner array.");
+  }
 
   /* Create and start the threads. */
   for (int k = 0; k < num_threads - 1; k++) {
-    if (pthread_create(&tp->threads[k], NULL, &threadpool_runner, tp) != 0)
+    tp->runners[k].tp = tp;
+    tp->runners[k].e = e;
+    tp->runners[k].id = k+1;
+    if (pthread_create(&tp->threads[k], NULL, &threadpool_runner, &tp->runners[k]) != 0)
       error("Failed to create threadpool runner thread.");
   }
 

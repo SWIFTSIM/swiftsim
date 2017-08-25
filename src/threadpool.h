@@ -63,11 +63,25 @@ struct mapper_log {
   int count;
 };
 
+/* Data of a threadpool runner */
+struct threadpool_runner{
+
+  /* The containing threadpool. */
+  struct threadpool *tp;
+  /* The engine... */
+  struct engine *e;
+  /* The thread ID*/
+  int id;
+};
+
 /* Data of a threadpool. */
 struct threadpool {
 
   /* The threads themselves. */
   pthread_t *threads;
+
+  /* The runner data associated with each thread. */
+  struct threadpool_runner *runners;
 
   /* This is where threads go to rest. */
   pthread_barrier_t wait_barrier;
@@ -91,7 +105,7 @@ struct threadpool {
 };
 
 /* Function prototypes. */
-void threadpool_init(struct threadpool *tp, int num_threads);
+void threadpool_init(struct threadpool *tp, int num_threads, struct engine *e);
 void threadpool_map(struct threadpool *tp, threadpool_map_function map_function,
                     void *map_data, size_t N, int stride, int chunk,
                     void *extra_data);
