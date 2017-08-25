@@ -1749,14 +1749,15 @@ void *runner_main(void *data) {
   struct runner *r = (struct runner *)data;
   struct engine *e = r->e;
   struct scheduler *sched = &e->sched;
-  unsigned int seed = r->id;
-  pthread_setspecific(sched->local_seed_pointer, &seed);
+  unsigned int seed = r->id+1;
   /* Main loop. */
   while (1) {
 
     /* Wait at the barrier. */
     engine_barrier(e);
 
+    if(pthread_getspecific(sched->local_seed_pointer) == NULL)
+      pthread_setspecific(sched->local_seed_pointer, &seed);
     /* Re-set the pointer to the previous task, as there is none. */
     struct task *t = NULL;
     struct task *prev = NULL;
