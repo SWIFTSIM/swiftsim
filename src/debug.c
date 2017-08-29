@@ -26,11 +26,13 @@
 /* Some standard headers. */
 #include <float.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /* This object's header. */
 #include "debug.h"
 
 /* Local includes. */
+#include "active.h"
 #include "cell.h"
 #include "engine.h"
 #include "hydro.h"
@@ -268,6 +270,79 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
   return result;
 }
 
+/**
+ * @brief map function for dumping cells. In MPI mode locally active cells
+ * only.
+ */
+static void dumpCells_map(struct cell *c, void *data) {
+  uintptr_t *ldata = (uintptr_t *)data;
+  FILE *file = (FILE *)ldata[0];
+  struct engine *e = (struct engine *)ldata[1];
+  float ntasks = c->nr_tasks;
+
+#if SWIFT_DEBUG_CHECKS
+  /* The c->nr_tasks field does not include all the tasks. So let's check this
+   * the hard way. Note pairs share the task 50/50 with the other cell. */
+  ntasks = 0.0f;
+  struct task *tasks = e->sched.tasks;
+  int nr_tasks = e->sched.nr_tasks;
+  for (int k = 0; k < nr_tasks; k++) {
+    if (tasks[k].cj == NULL) {
+      if (c == tasks[k].ci) {
+        ntasks = ntasks + 1.0f;
+      }
+    } else {
+      if (c == tasks[k].ci || c == tasks[k].cj) {
+        ntasks = ntasks + 0.5f;
+      }
+    }
+  }
+#endif
+
+  /* Only locally active cells are dumped. */
+  if (c->count > 0 || c->gcount > 0 || c->scount > 0)
+    fprintf(file,
+            "  %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6d %6d %6d %6d "
+            "%6.1f %20lld %6d %6d %6d %6d\n",
+            c->loc[0], c->loc[1], c->loc[2], c->width[0], c->width[1],
+            c->width[2], c->count, c->gcount, c->scount, c->depth, ntasks,
+            c->ti_end_min, get_time_bin(c->ti_end_min), (c->super == c),
+            cell_is_active(c, e), c->nodeID);
+}
+
+/**
+ * @brief Dump the location, depth, task counts and timebins and active state,
+ * for all cells to a simple text file.
+ *
+ * @param prefix base output filename
+ * @param s the space holding the cells to dump.
+ */
+void dumpCells(const char *prefix, struct space *s) {
+
+  FILE *file = NULL;
+
+  /* Name of output file. */
+  static int nseq = 0;
+  char fname[200];
+  int uniq = atomic_inc(&nseq);
+  sprintf(fname, "%s_%03d.dat", prefix, uniq);
+
+  file = fopen(fname, "w");
+
+  /* Header. */
+  fprintf(file,
+          "# %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s %6s "
+          "%20s %6s %6s %6s\n",
+          "x", "y", "z", "xw", "yw", "zw", "count", "gcount", "scount", "depth",
+          "tasks", "ti_end_min", "timebin", "issuper", "active", "rank");
+
+  uintptr_t data[2];
+  data[0] = (size_t)file;
+  data[1] = (size_t)s->e;
+  space_map_cells_pre(s, 1, dumpCells_map, &data);
+  fclose(file);
+}
+
 #ifdef HAVE_METIS
 
 /**
@@ -450,3 +525,69 @@ void dumpCellRanks(const char *prefix, struct cell *cells_top, int nr_cells) {
 }
 
 #endif /* HAVE_MPI */
+
+/**
+ * @brief parse the process /proc/self/statm file to get the process
+ *        memory use (in KB). Top field in ().
+ *
+ * @param size     total virtual memory (VIRT)
+ * @param resident resident non-swapped memory (RES)
+ * @param share    shared (mmap'd) memory  (SHR)
+ * @param trs      text (exe) resident set (CODE)
+ * @param lrs      library resident set
+ * @param drs      data+stack resident set (DATA)
+ * @param dt       dirty pages (nDRT)
+ */
+void getProcMemUse(long *size, long *resident, long *share, long *trs,
+                   long *lrs, long *drs, long *dt) {
+
+  /* Open the file. */
+  FILE *file = fopen("/proc/self/statm", "r");
+  if (file != NULL) {
+    int nscan = fscanf(file, "%ld %ld %ld %ld %ld %ld %ld", size, resident,
+                       share, trs, lrs, drs, dt);
+
+    if (nscan == 7) {
+      /* Convert pages into bytes. Usually 4096, but could be 512 on some
+       * systems so take care in conversion to KB. */
+      long sz = sysconf(_SC_PAGESIZE);
+      *size *= sz;
+      *resident *= sz;
+      *share *= sz;
+      *trs *= sz;
+      *lrs *= sz;
+      *drs *= sz;
+      *dt *= sz;
+
+      *size /= 1024;
+      *resident /= 1024;
+      *share /= 1024;
+      *trs /= 1024;
+      *lrs /= 1024;
+      *drs /= 1024;
+      *dt /= 1024;
+    } else {
+      error("Failed to read sufficient fields from /proc/self/statm");
+    }
+    fclose(file);
+  } else {
+    error("Failed to open /proc/self/statm");
+  }
+}
+
+/**
+ * @brief Print the current memory use of the process. A la "top".
+ */
+void printProcMemUse() {
+  long size;
+  long resident;
+  long share;
+  long trs;
+  long lrs;
+  long drs;
+  long dt;
+  getProcMemUse(&size, &resident, &share, &trs, &lrs, &drs, &dt);
+  printf("## VIRT = %ld , RES = %ld , SHR = %ld , CODE = %ld, DATA = %ld\n",
+         size, resident, share, trs, drs);
+  fflush(stdout);
+}

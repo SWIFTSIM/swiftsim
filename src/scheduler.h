@@ -52,7 +52,7 @@
 
 /* Flags . */
 #define scheduler_flag_none 0
-#define scheduler_flag_steal 1
+#define scheduler_flag_steal (1 << 1)
 
 /* Data of a scheduler. */
 struct scheduler {
@@ -102,6 +102,9 @@ struct scheduler {
 
   /* The node we are working on. */
   int nodeID;
+
+  /* 'Pointer' to the seed for the random number generator */
+  pthread_key_t local_seed_pointer;
 };
 
 /* Inlined functions (for speed). */
@@ -143,5 +146,6 @@ void scheduler_set_unlocks(struct scheduler *s);
 void scheduler_dump_queue(struct scheduler *s);
 void scheduler_print_tasks(const struct scheduler *s, const char *fileName);
 void scheduler_clean(struct scheduler *s);
+void scheduler_free_tasks(struct scheduler *s);
 
 #endif /* SWIFT_SCHEDULER_H */
