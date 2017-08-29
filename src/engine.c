@@ -3766,11 +3766,7 @@ void engine_step(struct engine *e) {
   /* Write a snapshot ? */
   if (e->dump_snapshot) {
 
-    /* Dump... */
-    if (e->policy & engine_policy_logger)
-      engine_dump_index(e);
-    else
-      engine_dump_snapshot(e);
+    engine_dump_snapshot(e);
 
     /* ... and find the next output time */
     engine_compute_next_snapshot_time(e);
@@ -4195,13 +4191,18 @@ void engine_dump_snapshot(struct engine *e) {
                         e->snapshotUnits, e->nodeID, e->nr_nodes,
                         MPI_COMM_WORLD, MPI_INFO_NULL);
 #else
+  /* Dump... */
   write_output_serial(e, e->snapshotBaseName, e->internal_units,
-                      e->snapshotUnits, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
-                      MPI_INFO_NULL);
+		      e->snapshotUnits, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
+		      MPI_INFO_NULL);
 #endif
 #else
-  write_output_single(e, e->snapshotBaseName, e->internal_units,
-                      e->snapshotUnits);
+  if (e->policy & engine_policy_logger)
+    write_index_single(e, e->snapshotBaseName, e->internal_units,
+		       e->snapshotUnits);
+  else
+    write_output_single(e, e->snapshotBaseName, e->internal_units,
+			e->snapshotUnits);
 #endif
 
   e->dump_snapshot = 0;
