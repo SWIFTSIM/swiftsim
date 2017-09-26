@@ -202,6 +202,9 @@ void engine_make_hierarchical_tasks(struct engine *e, struct cell *c) {
 
       scheduler_addunlock(s, c->kick2, c->timestep);
       scheduler_addunlock(s, c->timestep, c->kick1);
+      if (is_logger)
+	scheduler_addunlock(s, c->kick1, c->logger);
+
 
       /* Add the self-gravity tasks */
       if (is_self_gravity) {
