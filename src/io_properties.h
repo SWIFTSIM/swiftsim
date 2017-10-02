@@ -23,6 +23,8 @@
 /* Config parameters. */
 #include "../config.h"
 
+#include "common_io.h"
+
 /**
  * @brief The two sorts of data present in the GADGET IC files: compulsory to
  * start a run or optional.

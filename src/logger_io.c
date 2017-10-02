@@ -21,19 +21,18 @@
 /* Config parameters. */
 #include "../config.h"
 
-#if defined(HAVE_HDF5) && defined(WITH_MPI) && defined(HAVE_PARALLEL_HDF5) && !defined(WITH_LOGGER)
+#if defined(WITH_LOGGER)
 
 /* Some standard headers. */
 #include <hdf5.h>
 #include <math.h>
-#include <mpi.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* This object's header. */
-#include "parallel_io.h"
+#include "logger_io.h"
 
 /* Local includes. */
 #include "common_io.h"
@@ -51,27 +50,23 @@
 #include "units.h"
 #include "xmf.h"
 
+/*-----------------------------------------------------------------------------
+ * Routines reading an IC file
+ *-----------------------------------------------------------------------------*/
+
 /**
  * @brief Reads a data array from a given HDF5 group.
  *
- * @param grp The group from which to read.
- * @param name The name of the array to read.
- * @param type The #DATA_TYPE of the attribute.
+ * @param h_grp The group from which to read.
+ * @param prop The #io_props of the field to read
  * @param N The number of particles.
- * @param dim The dimension of the data (1 for scalar, 3 for vector)
- * @param part_c A (char*) pointer on the first occurrence of the field of
- *interest in the parts array
- * @param importance If COMPULSORY, the data must be present in the IC file. If
- *OPTIONAL, the array will be zeroed when the data is not present.
+ * @param internal_units The #unit_system used internally
+ * @param ic_units The #unit_system used in the ICs
  *
  * @todo A better version using HDF5 hyper-slabs to read the file directly into
- *the part array
- * will be written once the structures have been stabilized.
- *
- * Calls #error() if an error occurs.
+ * the part array will be written once the structures have been stabilized.
  */
-void readArray(hid_t grp, const struct io_props prop, size_t N,
-               long long N_total, long long offset,
+void readArray(hid_t h_grp, const struct io_props prop, size_t N,
                const struct unit_system* internal_units,
                const struct unit_system* ic_units) {
 
@@ -80,15 +75,19 @@ void readArray(hid_t grp, const struct io_props prop, size_t N,
   const size_t num_elements = N * prop.dimension;
 
   /* Check whether the dataspace exists or not */
-  const htri_t exist = H5Lexists(grp, prop.name, 0);
+  const htri_t exist = H5Lexists(h_grp, prop.name, 0);
   if (exist < 0) {
     error("Error while checking the existence of data set '%s'.", prop.name);
   } else if (exist == 0) {
     if (prop.importance == COMPULSORY) {
       error("Compulsory data set '%s' not present in the file.", prop.name);
     } else {
+      /* message("Optional data set '%s' not present. Zeroing this particle
+       * prop...", name);	   */
+
       for (size_t i = 0; i < N; ++i)
         memset(prop.field + i * prop.partSize, 0, copySize);
+
       return;
     }
   }
@@ -97,53 +96,27 @@ void readArray(hid_t grp, const struct io_props prop, size_t N,
   /*         prop.importance == COMPULSORY ? "compulsory" : "optional  ", */
   /*         prop.name); */
 
-  /* Open data space in file */
-  const hid_t h_data = H5Dopen2(grp, prop.name, H5P_DEFAULT);
-  if (h_data < 0) error("Error while opening data space '%s'.", prop.name);
+  /* Open data space */
+  const hid_t h_data = H5Dopen(h_grp, prop.name, H5P_DEFAULT);
+  if (h_data < 0) {
+    error("Error while opening data space '%s'.", prop.name);
+  }
 
   /* Check data type */
   const hid_t h_type = H5Dget_type(h_data);
   if (h_type < 0) error("Unable to retrieve data type from the file");
-  /* if (!H5Tequal(h_type, hdf5_type(type))) */
-  /*   error("Non-matching types between the code and the file"); */
+  // if (!H5Tequal(h_type, hdf5_type(type)))
+  //  error("Non-matching types between the code and the file");
 
   /* Allocate temporary buffer */
   void* temp = malloc(num_elements * typeSize);
   if (temp == NULL) error("Unable to allocate memory for temporary buffer");
 
-  /* Prepare information for hyper-slab */
-  hsize_t shape[2], offsets[2];
-  int rank;
-  if (prop.dimension > 1) {
-    rank = 2;
-    shape[0] = N;
-    shape[1] = prop.dimension;
-    offsets[0] = offset;
-    offsets[1] = 0;
-  } else {
-    rank = 2;
-    shape[0] = N;
-    shape[1] = 1;
-    offsets[0] = offset;
-    offsets[1] = 0;
-  }
-
-  /* Create data space in memory */
-  const hid_t h_memspace = H5Screate_simple(rank, shape, NULL);
-
-  /* Select hyper-slab in file */
-  const hid_t h_filespace = H5Dget_space(h_data);
-  H5Sselect_hyperslab(h_filespace, H5S_SELECT_SET, offsets, NULL, shape, NULL);
-
-  /* Set collective reading properties */
-  const hid_t h_plist_id = H5Pcreate(H5P_DATASET_XFER);
-  H5Pset_dxpl_mpio(h_plist_id, H5FD_MPIO_COLLECTIVE);
-
   /* Read HDF5 dataspace in temporary buffer */
   /* Dirty version that happens to work for vectors but should be improved */
   /* Using HDF5 dataspaces would be better */
-  const hid_t h_err = H5Dread(h_data, io_hdf5_type(prop.type), h_memspace,
-                              h_filespace, h_plist_id, temp);
+  const hid_t h_err = H5Dread(h_data, io_hdf5_type(prop.type), H5S_ALL, H5S_ALL,
+                              H5P_DEFAULT, temp);
   if (h_err < 0) {
     error("Error while reading data array '%s'.", prop.name);
   }
@@ -171,9 +144,6 @@ void readArray(hid_t grp, const struct io_props prop, size_t N,
 
   /* Free and close everything */
   free(temp);
-  H5Pclose(h_plist_id);
-  H5Sclose(h_filespace);
-  H5Sclose(h_memspace);
   H5Tclose(h_type);
   H5Dclose(h_data);
 }
@@ -189,19 +159,18 @@ void readArray(hid_t grp, const struct io_props prop, size_t N,
  * @param grp The group in which to write.
  * @param fileName The name of the file in which the data is written
  * @param xmfFile The FILE used to write the XMF description
+ * @param partTypeGroupName The name of the group containing the particles in
+ * the HDF5 file.
+ * @param props The #io_props of the field to read
  * @param N The number of particles to write.
- * @param N_total Total number of particles across all cores
- * @param offset Offset in the array where this mpi task starts writing
  * @param internal_units The #unit_system used internally
  * @param snapshot_units The #unit_system used in the snapshots
  *
  * @todo A better version using HDF5 hyper-slabs to write the file directly from
  * the part array will be written once the structures have been stabilized.
- *
  */
 void writeArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
                 char* partTypeGroupName, const struct io_props props, size_t N,
-                long long N_total, int mpi_rank, long long offset,
                 const struct unit_system* internal_units,
                 const struct unit_system* snapshot_units) {
 
@@ -253,80 +222,74 @@ void writeArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
   }
 
   /* Create data space */
-  const hid_t h_memspace = H5Screate(H5S_SIMPLE);
-  if (h_memspace < 0) {
-    error("Error while creating data space (memory) for field '%s'.",
-          props.name);
-  }
-
-  hid_t h_filespace = H5Screate(H5S_SIMPLE);
-  if (h_filespace < 0) {
-    error("Error while creating data space (file) for field '%s'.", props.name);
-  }
-
+  const hid_t h_space = H5Screate(H5S_SIMPLE);
   int rank;
   hsize_t shape[2];
-  hsize_t shape_total[2];
-  hsize_t offsets[2];
+  hsize_t chunk_shape[2];
+  if (h_space < 0) {
+    error("Error while creating data space for field '%s'.", props.name);
+  }
+
   if (props.dimension > 1) {
     rank = 2;
     shape[0] = N;
     shape[1] = props.dimension;
-    shape_total[0] = N_total;
-    shape_total[1] = props.dimension;
-    offsets[0] = offset;
-    offsets[1] = 0;
+    chunk_shape[0] = 1 << 16; /* Just a guess...*/
+    chunk_shape[1] = props.dimension;
   } else {
     rank = 1;
     shape[0] = N;
     shape[1] = 0;
-    shape_total[0] = N_total;
-    shape_total[1] = 0;
-    offsets[0] = offset;
-    offsets[1] = 0;
+    chunk_shape[0] = 1 << 16; /* Just a guess...*/
+    chunk_shape[1] = 0;
   }
 
-  /* Change shape of memory data space */
-  hid_t h_err = H5Sset_extent_simple(h_memspace, rank, shape, NULL);
+  /* Make sure the chunks are not larger than the dataset */
+  if (chunk_shape[0] > N) chunk_shape[0] = N;
+
+  /* Change shape of data space */
+  hid_t h_err = H5Sset_extent_simple(h_space, rank, shape, NULL);
   if (h_err < 0) {
-    error("Error while changing data space (memory) shape for field '%s'.",
-          props.name);
+    error("Error while changing data space shape for field '%s'.", props.name);
   }
 
-  /* Change shape of file data space */
-  h_err = H5Sset_extent_simple(h_filespace, rank, shape_total, NULL);
+  /* Dataset properties */
+  const hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
+
+  /* Set chunk size */
+  h_err = H5Pset_chunk(h_prop, rank, chunk_shape);
   if (h_err < 0) {
-    error("Error while changing data space (file) shape for field '%s'.",
-          props.name);
+    error("Error while setting chunk size (%llu, %llu) for field '%s'.",
+          chunk_shape[0], chunk_shape[1], props.name);
+  }
+
+  /* Impose data compression */
+  if (e->snapshotCompression > 0) {
+    h_err = H5Pset_deflate(h_prop, e->snapshotCompression);
+    if (h_err < 0) {
+      error("Error while setting compression options for field '%s'.",
+            props.name);
+    }
   }
 
   /* Create dataset */
-  const hid_t h_data =
-      H5Dcreate(grp, props.name, io_hdf5_type(props.type), h_filespace,
-                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t h_data = H5Dcreate(grp, props.name, io_hdf5_type(props.type),
+                                 h_space, H5P_DEFAULT, h_prop, H5P_DEFAULT);
   if (h_data < 0) {
-    error("Error while creating dataset '%s'.", props.name);
+    error("Error while creating dataspace '%s'.", props.name);
   }
 
-  H5Sclose(h_filespace);
-  h_filespace = H5Dget_space(h_data);
-  H5Sselect_hyperslab(h_filespace, H5S_SELECT_SET, offsets, NULL, shape, NULL);
-
-  /* Create property list for collective dataset write.    */
-  const hid_t h_plist_id = H5Pcreate(H5P_DATASET_XFER);
-  H5Pset_dxpl_mpio(h_plist_id, H5FD_MPIO_COLLECTIVE);
-
   /* Write temporary buffer to HDF5 dataspace */
-  h_err = H5Dwrite(h_data, io_hdf5_type(props.type), h_memspace, h_filespace,
-                   h_plist_id, temp);
+  h_err = H5Dwrite(h_data, io_hdf5_type(props.type), h_space, H5S_ALL,
+                   H5P_DEFAULT, temp);
   if (h_err < 0) {
     error("Error while writing data array '%s'.", props.name);
   }
 
   /* Write XMF description for this data set */
-  if (mpi_rank == 0)
-    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N_total,
-                   props.dimension, props.type);
+  if (xmfFile != NULL)
+    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N,
+		   props.dimension, props.type);
 
   /* Write unit conversion factors for this data set */
   char buffer[FIELD_BUFFER_SIZE];
@@ -342,27 +305,29 @@ void writeArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
 
   /* Free and close everything */
   free(temp);
+  H5Pclose(h_prop);
   H5Dclose(h_data);
-  H5Pclose(h_plist_id);
-  H5Sclose(h_memspace);
-  H5Sclose(h_filespace);
+  H5Sclose(h_space);
 }
 
 /**
- * @brief Reads an HDF5 initial condition file (GADGET-3 type) in parallel
+ * @brief Reads an HDF5 initial condition file (GADGET-3 type)
  *
  * @param fileName The file to read.
  * @param internal_units The system units used internally
- * @param dim (output) The dimension of the volume read from the file.
- * @param parts (output) The array of #part read from the file.
- * @param N (output) The number of particles read from the file.
+ * @param dim (output) The dimension of the volume.
+ * @param parts (output) Array of #part particles.
+ * @param gparts (output) Array of #gpart particles.
+ * @param sparts (output) Array of #spart particles.
+ * @param Ngas (output) number of Gas particles read.
+ * @param Ngparts (output) The number of #gpart read.
+ * @param Nstars (output) The number of #spart read.
  * @param periodic (output) 1 if the volume is periodic, 0 if not.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
  * InternalEnergy field
- * @param mpi_rank The MPI rank of this node
- * @param mpi_size The number of MPI ranks
- * @param comm The MPI communicator
- * @param info The MPI information object
+ * @param with_hydro Are we reading gas particles ?
+ * @param with_gravity Are we reading/creating #gpart arrays ?
+ * @param with_stars Are we reading star particles ?
  * @param dry_run If 1, don't read the particle. Only allocates the arrays.
  *
  * Opens the HDF5 file fileName and reads the particles contained
@@ -372,33 +337,27 @@ void writeArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
  * @warning Can not read snapshot distributed over more than 1 file !!!
  * @todo Read snapshots distributed in more than one file.
  *
- * Calls #error() if an error occurs.
- *
  */
-void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
-                      double dim[3], struct part** parts, struct gpart** gparts,
-                      struct spart** sparts, size_t* Ngas, size_t* Ngparts,
-                      size_t* Nstars, int* periodic, int* flag_entropy,
-                      int with_hydro, int with_gravity, int with_stars,
-                      int mpi_rank, int mpi_size, MPI_Comm comm, MPI_Info info,
-                      int dry_run) {
+void read_ic_single(char* fileName, const struct unit_system* internal_units,
+                    double dim[3], struct part** parts, struct gpart** gparts,
+                    struct spart** sparts, size_t* Ngas, size_t* Ngparts,
+                    size_t* Nstars, int* periodic, int* flag_entropy,
+                    int with_hydro, int with_gravity, int with_stars,
+                    int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
-  long long numParticles[swift_type_count] = {0};
-  long long numParticles_highWord[swift_type_count] = {0};
+  /* GADGET has 6 particle types. We only keep the type 0 & 1 for now...*/
+  int numParticles[swift_type_count] = {0};
+  int numParticles_highWord[swift_type_count] = {0};
   size_t N[swift_type_count] = {0};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
   int dimension = 3; /* Assume 3D if nothing is specified */
   size_t Ndm = 0;
 
   /* Open file */
   /* message("Opening file '%s' as IC.", fileName); */
-  hid_t h_plist_id = H5Pcreate(H5P_FILE_ACCESS);
-  H5Pset_fapl_mpio(h_plist_id, comm, info);
-  h_file = H5Fopen(fileName, H5F_ACC_RDONLY, h_plist_id);
+  h_file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (h_file < 0) {
     error("Error while opening file '%s'.", fileName);
   }
@@ -433,13 +392,13 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   io_read_attribute(h_grp, "Flag_Entropy_ICs", INT, flag_entropy_temp);
   *flag_entropy = flag_entropy_temp[0];
   io_read_attribute(h_grp, "BoxSize", DOUBLE, boxSize);
-  io_read_attribute(h_grp, "NumPart_Total", LONGLONG, numParticles);
-  io_read_attribute(h_grp, "NumPart_Total_HighWord", LONGLONG,
+  io_read_attribute(h_grp, "NumPart_Total", UINT, numParticles);
+  io_read_attribute(h_grp, "NumPart_Total_HighWord", UINT,
                     numParticles_highWord);
 
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
-    N_total[ptype] =
-        (numParticles[ptype]) + (numParticles_highWord[ptype] << 32);
+    N[ptype] = ((long long)numParticles[ptype]) +
+               ((long long)numParticles_highWord[ptype] << 32);
 
   /* Get the box size if not cubic */
   dim[0] = boxSize[0];
@@ -452,15 +411,8 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   else if (hydro_dimension == 1)
     dim[2] = dim[1] = dim[0];
 
-  /* message("Found %lld particles in a %speriodic box of size [%f %f %f].", */
-  /* 	  N_total[0], (periodic ? "": "non-"), dim[0], */
-  /* 	  dim[1], dim[2]); */
-
-  /* Divide the particles among the tasks. */
-  for (int ptype = 0; ptype < swift_type_count; ++ptype) {
-    offset[ptype] = mpi_rank * N_total[ptype] / mpi_size;
-    N[ptype] = (mpi_rank + 1) * N_total[ptype] / mpi_size - offset[ptype];
-  }
+  /* message("Found %d particles in a %speriodic box of size [%f %f %f].",  */
+  /* 	  *N, (periodic ? "": "non-"), dim[0], dim[1], dim[2]);  */
 
   /* Close header */
   H5Gclose(h_grp);
@@ -471,34 +423,32 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   io_read_unit_system(h_file, ic_units);
 
   /* Tell the user if a conversion will be needed */
-  if (mpi_rank == 0) {
-    if (units_are_equal(ic_units, internal_units)) {
+  if (units_are_equal(ic_units, internal_units)) {
 
-      message("IC and internal units match. No conversion needed.");
+    message("IC and internal units match. No conversion needed.");
 
-    } else {
+  } else {
 
-      message("Conversion needed from:");
-      message("(ICs) Unit system: U_M =      %e g.", ic_units->UnitMass_in_cgs);
-      message("(ICs) Unit system: U_L =      %e cm.",
-              ic_units->UnitLength_in_cgs);
-      message("(ICs) Unit system: U_t =      %e s.", ic_units->UnitTime_in_cgs);
-      message("(ICs) Unit system: U_I =      %e A.",
-              ic_units->UnitCurrent_in_cgs);
-      message("(ICs) Unit system: U_T =      %e K.",
-              ic_units->UnitTemperature_in_cgs);
-      message("to:");
-      message("(internal) Unit system: U_M = %e g.",
-              internal_units->UnitMass_in_cgs);
-      message("(internal) Unit system: U_L = %e cm.",
-              internal_units->UnitLength_in_cgs);
-      message("(internal) Unit system: U_t = %e s.",
-              internal_units->UnitTime_in_cgs);
-      message("(internal) Unit system: U_I = %e A.",
-              internal_units->UnitCurrent_in_cgs);
-      message("(internal) Unit system: U_T = %e K.",
-              internal_units->UnitTemperature_in_cgs);
-    }
+    message("Conversion needed from:");
+    message("(ICs) Unit system: U_M =      %e g.", ic_units->UnitMass_in_cgs);
+    message("(ICs) Unit system: U_L =      %e cm.",
+            ic_units->UnitLength_in_cgs);
+    message("(ICs) Unit system: U_t =      %e s.", ic_units->UnitTime_in_cgs);
+    message("(ICs) Unit system: U_I =      %e A.",
+            ic_units->UnitCurrent_in_cgs);
+    message("(ICs) Unit system: U_T =      %e K.",
+            ic_units->UnitTemperature_in_cgs);
+    message("to:");
+    message("(internal) Unit system: U_M = %e g.",
+            internal_units->UnitMass_in_cgs);
+    message("(internal) Unit system: U_L = %e cm.",
+            internal_units->UnitLength_in_cgs);
+    message("(internal) Unit system: U_t = %e s.",
+            internal_units->UnitTime_in_cgs);
+    message("(internal) Unit system: U_I = %e A.",
+            internal_units->UnitCurrent_in_cgs);
+    message("(internal) Unit system: U_T = %e K.",
+            internal_units->UnitTemperature_in_cgs);
   }
 
   /* Convert the dimensions of the box */
@@ -508,10 +458,10 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
 
   /* Allocate memory to store SPH particles */
   if (with_hydro) {
-    *Ngas = N[0];
-    if (posix_memalign((void*)parts, part_align,
-                       (*Ngas) * sizeof(struct part)) != 0)
-      error("Error while allocating memory for particles");
+    *Ngas = N[swift_type_gas];
+    if (posix_memalign((void*)parts, part_align, *Ngas * sizeof(struct part)) !=
+        0)
+      error("Error while allocating memory for SPH particles");
     bzero(*parts, *Ngas * sizeof(struct part));
   }
 
@@ -524,9 +474,9 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
     bzero(*sparts, *Nstars * sizeof(struct spart));
   }
 
-  /* Allocate memory to store gravity particles */
+  /* Allocate memory to store all gravity particles */
   if (with_gravity) {
-    Ndm = N[1];
+    Ndm = N[swift_type_dark_matter];
     *Ngparts = (with_hydro ? N[swift_type_gas] : 0) +
                N[swift_type_dark_matter] +
                (with_stars ? N[swift_type_star] : 0);
@@ -546,7 +496,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
     /* Don't do anything if no particle of this kind */
-    if (N_total[ptype] == 0) continue;
+    if (N[ptype] == 0) continue;
 
     /* Open the particle group in the file */
     char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
@@ -561,7 +511,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
     struct io_props list[100];
     size_t Nparticles = 0;
 
-    /* Read particle fields into the particle structure */
+    /* Read particle fields into the structure */
     switch (ptype) {
 
       case swift_type_gas:
@@ -592,8 +542,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
     /* Read everything */
     if (!dry_run)
       for (int i = 0; i < num_fields; ++i)
-        readArray(h_grp, list[i], Nparticles, N_total[ptype], offset[ptype],
-                  internal_units, ic_units);
+        readArray(h_grp, list[i], Nparticles, internal_units, ic_units);
 
     /* Close particle group */
     H5Gclose(h_grp);
@@ -615,39 +564,29 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   /* Clean up */
   free(ic_units);
 
-  /* Close property handler */
-  H5Pclose(h_plist_id);
-
   /* Close file */
   H5Fclose(h_file);
 }
 
 /**
- * @brief Writes an HDF5 output file (GADGET-3 type) with
- *its XMF descriptor
+ * @brief Writes an HDF5 output file (GADGET-3 type) with its XMF descriptor
  *
  * @param e The engine containing all the system.
  * @param baseName The common part of the snapshot file name.
  * @param internal_units The #unit_system used internally
  * @param snapshot_units The #unit_system used in the snapshots
- * @param mpi_rank The MPI rank of this node.
- * @param mpi_size The number of MPI ranks.
- * @param comm The MPI communicator.
- * @param info The MPI information object
  *
- * Creates an HDF5 output file and writes the particles
- * contained in the engine. If such a file already exists, it is
- * erased and replaced by the new one.
+ * Creates an HDF5 output file and writes the particles contained
+ * in the engine. If such a file already exists, it is erased and replaced
+ * by the new one.
  * The companion XMF file is also updated accordingly.
  *
  * Calls #error() if an error occurs.
  *
  */
-void write_output_parallel(struct engine* e, const char* baseName,
-                           const struct unit_system* internal_units,
-                           const struct unit_system* snapshot_units,
-                           int mpi_rank, int mpi_size, MPI_Comm comm,
-                           MPI_Info info) {
+void write_output_single(struct engine* e, const char* baseName,
+                         const struct unit_system* internal_units,
+                         const struct unit_system* snapshot_units) {
 
   hid_t h_file = 0, h_grp = 0;
   const size_t Ngas = e->s->nr_parts;
@@ -660,10 +599,11 @@ void write_output_parallel(struct engine* e, const char* baseName,
   struct gpart* dmparts = NULL;
   struct spart* sparts = e->s->sparts;
   static int outputCount = 0;
-  FILE* xmfFile = 0;
 
   /* Number of unassociated gparts */
   const size_t Ndm = Ntot > 0 ? Ntot - (Ngas + Nstars) : 0;
+
+  long long N_total[swift_type_count] = {Ngas, Ndm, 0, 0, Nstars, 0};
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
@@ -671,39 +611,21 @@ void write_output_parallel(struct engine* e, const char* baseName,
            outputCount);
 
   /* First time, we need to create the XMF file */
-  if (outputCount == 0 && mpi_rank == 0) xmf_create_file(baseName);
+  if (outputCount == 0) xmf_create_file(baseName);
 
   /* Prepare the XMF file for the new entry */
-  if (mpi_rank == 0) xmfFile = xmf_prepare_file(baseName);
+  FILE* xmfFile = 0;
+  xmfFile = xmf_prepare_file(baseName);
 
-  /* Open HDF5 file */
-  hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
-  H5Pset_fapl_mpio(plist_id, comm, info);
-  h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+  /* Write the part corresponding to this specific output */
+  xmf_write_outputheader(xmfFile, fileName, e->time);
+
+  /* Open file */
+  /* message("Opening file '%s'.", fileName); */
+  h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   if (h_file < 0) {
     error("Error while opening file '%s'.", fileName);
   }
-
-  /* Compute offset in the file and total number of
-   * particles */
-  size_t N[swift_type_count] = {Ngas, Ndm, 0, 0, Nstars, 0};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
-  MPI_Exscan(&N, &offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
-  for (int ptype = 0; ptype < swift_type_count; ++ptype)
-    N_total[ptype] = offset[ptype] + N[ptype];
-
-  /* The last rank now has the correct N_total. Let's
-   * broadcast from there */
-  MPI_Bcast(&N_total, 6, MPI_LONG_LONG_INT, mpi_size - 1, comm);
-
-  /* Now everybody konws its offset and the total number of
-   * particles of each
-   * type */
-
-  /* Write the part of the XMF file corresponding to this
-   * specific output */
-  if (mpi_rank == 0) xmf_write_outputheader(xmfFile, fileName, e->time);
 
   /* Open header to write simulation properties */
   /* message("Writing runtime parameters..."); */
@@ -713,6 +635,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
 
   /* Write the relevant information */
   io_write_attribute(h_grp, "PeriodicBoundariesOn", INT, &periodic, 1);
+  int index = 0;
+  io_write_attribute(h_grp, "IsIndexFile", INT, &index, 1);
 
   /* Close runtime parameters */
   H5Gclose(h_grp);
@@ -743,7 +667,7 @@ void write_output_parallel(struct engine* e, const char* baseName,
                      swift_type_count);
   io_write_attribute(h_grp, "NumPart_Total_HighWord", UINT,
                      numParticlesHighWord, swift_type_count);
-  double MassTable[6] = {0., 0., 0., 0., 0., 0.};
+  double MassTable[swift_type_count] = {0};
   io_write_attribute(h_grp, "MassTable", DOUBLE, MassTable, swift_type_count);
   unsigned int flagEntropy[swift_type_count] = {0};
   flagEntropy[0] = writeEntropyFlag();
@@ -790,7 +714,7 @@ void write_output_parallel(struct engine* e, const char* baseName,
   io_write_unit_system(h_file, internal_units, "InternalCodeUnits");
 
   /* Tell the user if a conversion will be needed */
-  if (e->verbose && mpi_rank == 0) {
+  if (e->verbose) {
     if (units_are_equal(snapshot_units, internal_units)) {
 
       message("Snapshot and internal units match. No conversion needed.");
@@ -826,13 +750,11 @@ void write_output_parallel(struct engine* e, const char* baseName,
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
     /* Don't do anything if no particle of this kind */
-    if (N_total[ptype] == 0) continue;
+    if (numParticles[ptype] == 0) continue;
 
-    /* Add the global information for that particle type to
-     * the XMF meta-file */
-    if (mpi_rank == 0)
-      xmf_write_groupheader(xmfFile, fileName, N_total[ptype],
-                            (enum part_type)ptype);
+    /* Add the global information for that particle type to the XMF meta-file */
+    xmf_write_groupheader(xmfFile, fileName, numParticles[ptype],
+                          (enum part_type)ptype);
 
     /* Open the particle group in the file */
     char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
@@ -841,18 +763,18 @@ void write_output_parallel(struct engine* e, const char* baseName,
     h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT,
                       H5P_DEFAULT);
     if (h_grp < 0) {
-      error("Error while opening particle group %s.", partTypeGroupName);
+      error("Error while creating particle group.\n");
     }
 
     int num_fields = 0;
     struct io_props list[100];
-    size_t Nparticles = 0;
+    size_t N = 0;
 
     /* Write particle fields from the particle structure */
     switch (ptype) {
 
       case swift_type_gas:
-        Nparticles = Ngas;
+        N = Ngas;
         hydro_write_particles(parts, list, &num_fields);
         break;
 
@@ -860,21 +782,19 @@ void write_output_parallel(struct engine* e, const char* baseName,
         /* Allocate temporary array */
         if (posix_memalign((void*)&dmparts, gpart_align,
                            Ndm * sizeof(struct gpart)) != 0)
-          error(
-              "Error while allocating temporart memory for "
-              "DM particles");
+          error("Error while allocating temporart memory for DM particles");
         bzero(dmparts, Ndm * sizeof(struct gpart));
 
         /* Collect the DM particles from gpart */
         io_collect_dm_gparts(gparts, Ntot, dmparts, Ndm);
 
         /* Write DM particles */
-        Nparticles = Ndm;
+        N = Ndm;
         darkmatter_write_particles(dmparts, list, &num_fields);
         break;
 
       case swift_type_star:
-        Nparticles = Nstars;
+        N = Nstars;
         star_write_particles(sparts, list, &num_fields);
         break;
 
@@ -884,30 +804,271 @@ void write_output_parallel(struct engine* e, const char* baseName,
 
     /* Write everything */
     for (int i = 0; i < num_fields; ++i)
-      writeArray(e, h_grp, fileName, xmfFile, partTypeGroupName, list[i],
-                 Nparticles, N_total[ptype], mpi_rank, offset[ptype],
+      writeArray(e, h_grp, fileName, xmfFile, partTypeGroupName, list[i], N,
                  internal_units, snapshot_units);
 
     /* Free temporary array */
     if (dmparts) {
       free(dmparts);
-      dmparts = 0;
+      dmparts = NULL;
     }
 
     /* Close particle group */
     H5Gclose(h_grp);
 
     /* Close this particle group in the XMF file as well */
-    if (mpi_rank == 0) xmf_write_groupfooter(xmfFile, (enum part_type)ptype);
+    xmf_write_groupfooter(xmfFile, (enum part_type)ptype);
   }
 
   /* Write LXMF file descriptor */
-  if (mpi_rank == 0) xmf_write_outputfooter(xmfFile, outputCount, e->time);
+  xmf_write_outputfooter(xmfFile, outputCount, e->time);
 
   /* message("Done writing particles..."); */
 
-  /* Close property descriptor */
-  H5Pclose(plist_id);
+  /* Close file */
+  H5Fclose(h_file);
+
+  ++outputCount;
+}
+
+
+/**
+ * @brief Writes an HDF5 index file
+ *
+ * @param e The engine containing all the system.
+ * @param baseName The common part of the snapshot file name.
+ * @param internal_units The #unit_system used internally
+ * @param snapshot_units The #unit_system used in the snapshots
+ *
+ * Creates an HDF5 output file and writes the offset and id of particles contained
+ * in the engine. If such a file already exists, it is erased and replaced
+ * by the new one.
+ *
+ * Calls #error() if an error occurs.
+ *
+ */
+void write_index_single(struct engine* e, const char* baseName,
+                         const struct unit_system* internal_units,
+                         const struct unit_system* snapshot_units) {
+
+  hid_t h_file = 0, h_grp = 0;
+  const size_t Ngas = e->s->nr_parts;
+  const size_t Nstars = e->s->nr_sparts;
+  const size_t Ntot = e->s->nr_gparts;
+  int periodic = e->s->periodic;
+  int numFiles = 1;
+  struct part* parts = e->s->parts;
+  struct gpart* gparts = e->s->gparts;
+  struct gpart* dmparts = NULL;
+  //struct spart* sparts = e->s->sparts;
+  static int outputCount = 0;
+
+  /* Number of unassociated gparts */
+  const size_t Ndm = Ntot > 0 ? Ntot - (Ngas + Nstars) : 0;
+
+  long long N_total[swift_type_count] = {Ngas, Ndm, 0, 0, Nstars, 0};
+
+  /* File name */
+  char fileName[FILENAME_BUFFER_SIZE];
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%04i.hdf5", baseName,
+           outputCount);
+
+  /* Open file */
+  /* message("Opening file '%s'.", fileName); */
+  h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_file < 0) {
+    error("Error while opening file '%s'.", fileName);
+  }
+
+  /* Open header to write simulation properties */
+  /* message("Writing runtime parameters..."); */
+  h_grp =
+      H5Gcreate(h_file, "/RuntimePars", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_grp < 0) error("Error while creating runtime parameters group\n");
+
+  /* Write the relevant information */
+  io_write_attribute(h_grp, "PeriodicBoundariesOn", INT, &periodic, 1);
+  int index = 1;
+  io_write_attribute(h_grp, "IsIndexFile", INT, &index, 1);
+
+  /* Close runtime parameters */
+  H5Gclose(h_grp);
+
+  /* Open header to write simulation properties */
+  /* message("Writing file header..."); */
+  h_grp = H5Gcreate(h_file, "/Header", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_grp < 0) error("Error while creating file header\n");
+
+  /* Print the relevant information and print status */
+  io_write_attribute(h_grp, "BoxSize", DOUBLE, e->s->dim, 3);
+  double dblTime = e->time;
+  io_write_attribute(h_grp, "Time", DOUBLE, &dblTime, 1);
+  int dimension = (int)hydro_dimension;
+  io_write_attribute(h_grp, "Dimension", INT, &dimension, 1);
+
+  /* GADGET-2 legacy values */
+  /* Number of particles of each type */
+  unsigned int numParticles[swift_type_count] = {0};
+  unsigned int numParticlesHighWord[swift_type_count] = {0};
+  for (int ptype = 0; ptype < swift_type_count; ++ptype) {
+    numParticles[ptype] = (unsigned int)N_total[ptype];
+    numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
+  }
+  io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N_total,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumPart_Total", UINT, numParticles,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumPart_Total_HighWord", UINT,
+                     numParticlesHighWord, swift_type_count);
+  double MassTable[swift_type_count] = {0};
+  io_write_attribute(h_grp, "MassTable", DOUBLE, MassTable, swift_type_count);
+  unsigned int flagEntropy[swift_type_count] = {0};
+  flagEntropy[0] = writeEntropyFlag();
+  io_write_attribute(h_grp, "Flag_Entropy_ICs", UINT, flagEntropy,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumFilesPerSnapshot", INT, &numFiles, 1);
+
+  /* Close header */
+  H5Gclose(h_grp);
+
+  /* Print the code version */
+  io_write_code_description(h_file);
+
+  /* Print the SPH parameters */
+  if (e->policy & engine_policy_hydro) {
+    h_grp = H5Gcreate(h_file, "/HydroScheme", H5P_DEFAULT, H5P_DEFAULT,
+                      H5P_DEFAULT);
+    if (h_grp < 0) error("Error while creating SPH group");
+    hydro_props_print_snapshot(h_grp, e->hydro_properties);
+    writeSPHflavour(h_grp);
+    H5Gclose(h_grp);
+  }
+
+  /* Print the gravity parameters */
+  if (e->policy & engine_policy_self_gravity) {
+    h_grp = H5Gcreate(h_file, "/GravityScheme", H5P_DEFAULT, H5P_DEFAULT,
+                      H5P_DEFAULT);
+    if (h_grp < 0) error("Error while creating gravity group");
+    gravity_props_print_snapshot(h_grp, e->gravity_properties);
+    H5Gclose(h_grp);
+  }
+
+  /* Print the runtime parameters */
+  h_grp =
+      H5Gcreate(h_file, "/Parameters", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_grp < 0) error("Error while creating parameters group");
+  parser_write_params_to_hdf5(e->parameter_file, h_grp);
+  H5Gclose(h_grp);
+
+  /* Print the system of Units used in the spashot */
+  io_write_unit_system(h_file, snapshot_units, "Units");
+
+  /* Print the system of Units used internally */
+  io_write_unit_system(h_file, internal_units, "InternalCodeUnits");
+
+  /* Tell the user if a conversion will be needed */
+  if (e->verbose) {
+    if (units_are_equal(snapshot_units, internal_units)) {
+
+      message("Snapshot and internal units match. No conversion needed.");
+
+    } else {
+
+      message("Conversion needed from:");
+      message("(Snapshot) Unit system: U_M =      %e g.",
+              snapshot_units->UnitMass_in_cgs);
+      message("(Snapshot) Unit system: U_L =      %e cm.",
+              snapshot_units->UnitLength_in_cgs);
+      message("(Snapshot) Unit system: U_t =      %e s.",
+              snapshot_units->UnitTime_in_cgs);
+      message("(Snapshot) Unit system: U_I =      %e A.",
+              snapshot_units->UnitCurrent_in_cgs);
+      message("(Snapshot) Unit system: U_T =      %e K.",
+              snapshot_units->UnitTemperature_in_cgs);
+      message("to:");
+      message("(internal) Unit system: U_M = %e g.",
+              internal_units->UnitMass_in_cgs);
+      message("(internal) Unit system: U_L = %e cm.",
+              internal_units->UnitLength_in_cgs);
+      message("(internal) Unit system: U_t = %e s.",
+              internal_units->UnitTime_in_cgs);
+      message("(internal) Unit system: U_I = %e A.",
+              internal_units->UnitCurrent_in_cgs);
+      message("(internal) Unit system: U_T = %e K.",
+              internal_units->UnitTemperature_in_cgs);
+    }
+  }
+
+  /* Loop over all particle types */
+  for (int ptype = 0; ptype < swift_type_count; ptype++) {
+
+    /* Don't do anything if no particle of this kind */
+    if (numParticles[ptype] == 0) continue;
+
+    /* Open the particle group in the file */
+    char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
+    snprintf(partTypeGroupName, PARTICLE_GROUP_BUFFER_SIZE, "/PartType%d",
+             ptype);
+    h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT,
+                      H5P_DEFAULT);
+    if (h_grp < 0) {
+      error("Error while creating particle group.\n");
+    }
+
+    int num_fields = 0;
+    struct io_props list[100];
+    size_t N = 0;
+
+    /* Write particle fields from the particle structure */
+    switch (ptype) {
+
+      case swift_type_gas:
+        N = Ngas;
+	hydro_write_index(parts, list, &num_fields);
+        break;
+
+      case swift_type_dark_matter:
+        /* Allocate temporary array */
+        if (posix_memalign((void*)&dmparts, gpart_align,
+                           Ndm * sizeof(struct gpart)) != 0)
+          error("Error while allocating temporart memory for DM particles");
+        bzero(dmparts, Ndm * sizeof(struct gpart));
+
+        /* Collect the DM particles from gpart */
+        io_collect_dm_gparts(gparts, Ntot, dmparts, Ndm);
+
+        /* Write DM particles */
+        N = Ndm;
+        darkmatter_write_index(dmparts, list, &num_fields);
+        break;
+
+      case swift_type_star:
+        N = Nstars;
+	error("TODO");
+        //star_write_index(sparts, list, &num_fields);
+        break;
+
+      default:
+        error("Particle Type %d not yet supported. Aborting", ptype);
+    }
+
+    /* Write everything */
+    for (int i = 0; i < num_fields; ++i)
+      writeArray(e, h_grp, fileName, NULL, partTypeGroupName, list[i], N,
+                 internal_units, snapshot_units);
+
+    /* Free temporary array */
+    if (dmparts) {
+      free(dmparts);
+      dmparts = NULL;
+    }
+
+    /* Close particle group */
+    H5Gclose(h_grp);
+
+  }
+
+  /* message("Done writing particles..."); */
 
   /* Close file */
   H5Fclose(h_file);

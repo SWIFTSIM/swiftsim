@@ -16,37 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_SERIAL_IO_H
-#define SWIFT_SERIAL_IO_H
+#ifndef SWIFT_LOGGER_IO_H
+#define SWIFT_LOGGER_IO_H
 
 /* Config parameters. */
 #include "../config.h"
 
-/* MPI headers. */
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
+#if defined(HAVE_HDF5) && !defined(WITH_MPI) && defined(WITH_LOGGER)
 
 /* Includes. */
 #include "engine.h"
 #include "part.h"
 #include "units.h"
 
-#if defined(HAVE_HDF5) && defined(WITH_MPI) && !defined(HAVE_PARALLEL_HDF5) && !defined(WITH_LOGGER)
-
-void read_ic_serial(char* fileName, const struct unit_system* internal_units,
+void read_ic_single(char* fileName, const struct unit_system* internal_units,
                     double dim[3], struct part** parts, struct gpart** gparts,
-                    struct spart** sparts, size_t* Ngas, size_t* Ngparts,
+                    struct spart** sparts, size_t* Ngas, size_t* Ndm,
                     size_t* Nstars, int* periodic, int* flag_entropy,
                     int with_hydro, int with_gravity, int with_stars,
-                    int mpi_rank, int mpi_size, MPI_Comm comm, MPI_Info info,
                     int dry_run);
 
-void write_output_serial(struct engine* e, const char* baseName,
+void write_output_single(struct engine* e, const char* baseName,
                          const struct unit_system* internal_units,
-                         const struct unit_system* snapshot_units, int mpi_rank,
-                         int mpi_size, MPI_Comm comm, MPI_Info info);
+                         const struct unit_system* snapshot_units);
 
+void write_index_single(struct engine* e, const char* baseName,
+			const struct unit_system* internal_units,
+			const struct unit_system* snapshot_units);
 #endif
 
-#endif /* SWIFT_SERIAL_IO_H */
+#endif /* SWIFT_LOGGER_IO_H */
