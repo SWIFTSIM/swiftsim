@@ -47,7 +47,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     sourceterms.h sourceterms_struct.h statistics.h memswap.h cache.h runner_doiact_vec.h profiler.h \
     dump.h logger.h active.h timeline.h xmf.h gravity_properties.h gravity_derivatives.h \
     gravity_softened_derivatives.h vector_power.h collectgroup.h hydro_space.h sort_part.h \
-    chemistry.h chemistry_io.h chemistry_struct.h cosmology.h restart.h
+    chemistry.h chemistry_io.h chemistry_struct.h cosmology.h restart.h logger_io.h
 
 # Common source files
 AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c \
@@ -59,13 +59,13 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c \
     statistics.c runner_doiact_vec.c profiler.c dump.c logger.c \
     part_type.c xmf.c gravity_properties.c gravity.c \
     collectgroup.c hydro_space.c equation_of_state.c \
-    chemistry.c cosmology.c restart.c
+    chemistry.c cosmology.c restart.c logger_io.c
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
 		 kernel_long_gravity.h vector.h cache.h runner_doiact.h runner_doiact_vec.h runner_doiact_grav.h runner_doiact_fft.h \
                  runner_doiact_nosort.h units.h intrinsics.h minmax.h kick.h timestep.h drift.h adiabatic_index.h io_properties.h \
-		 dimension.h part_type.h periodic.h memswap.h dump.h logger.h sign.h \
+		 dimension.h part_type.h periodic.h memswap.h dump.h logger.h sign.h logger.h logger_io.h \
 		 gravity.h gravity_io.h gravity_cache.h \
 		 gravity/Default/gravity.h gravity/Default/gravity_iact.h gravity/Default/gravity_io.h \
 		 gravity/Default/gravity_debug.h gravity/Default/gravity_part.h  \

@@ -16,27 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_SINGLE_IO_H
-#define SWIFT_SINGLE_IO_H
+#ifndef SWIFT_LOGGER_IO_H
+#define SWIFT_LOGGER_IO_H
 
 /* Config parameters. */
 #include "../config.h"
 
-#if defined(HAVE_HDF5) && !defined(WITH_MPI)
+#if defined(HAVE_HDF5) && !defined(WITH_MPI) && defined(WITH_LOGGER)
 
 /* Includes. */
 #include "engine.h"
 #include "part.h"
 #include "units.h"
 
-#if defined(HAVE_HDF5) && !defined(WITH_MPI)
-
 void read_ic_single(char* fileName, const struct unit_system* internal_units,
                     double dim[3], struct part** parts, struct gpart** gparts,
                     struct spart** sparts, size_t* Ngas, size_t* Ndm,
                     size_t* Nstars, int* periodic, int* flag_entropy,
                     int with_hydro, int with_gravity, int with_stars,
-                    int cleanup_h, double h, int nr_threads, int dry_run);
+                    int dry_run);
 
 void write_output_single(struct engine* e, const char* baseName,
                          const struct unit_system* internal_units,
@@ -45,7 +43,6 @@ void write_output_single(struct engine* e, const char* baseName,
 void write_index_single(struct engine* e, const char* baseName,
 			const struct unit_system* internal_units,
 			const struct unit_system* snapshot_units);
+#endif
 
-#endif /* HAVE_HDF5 && !WITH_MPI */
-
-#endif /* SWIFT_SINGLE_IO_H */
+#endif /* SWIFT_LOGGER_IO_H */
