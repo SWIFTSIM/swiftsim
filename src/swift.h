@@ -43,6 +43,7 @@
 #include "hydro_properties.h"
 #include "lock.h"
 #include "logger.h"
+#include "logger_io.h"
 #include "map.h"
 #include "multipole.h"
 #include "parallel_io.h"

@@ -58,6 +58,7 @@
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"
+#include "logger_io.h"
 #include "map.h"
 #include "minmax.h"
 #include "parallel_io.h"
