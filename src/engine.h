@@ -71,7 +71,6 @@ enum engine_policy {
   engine_policy_cooling = (1 << 13),
   engine_policy_sourceterms = (1 << 14),
   engine_policy_stars = (1 << 15),
-  engine_policy_logger = (1 << 16)
 };
 #define engine_maxpolicy 16
 extern const char *engine_policy_names[];
