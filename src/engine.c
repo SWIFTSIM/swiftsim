@@ -184,7 +184,6 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
 
   struct scheduler *s = &e->sched;
   const int is_with_cooling = (e->policy & engine_policy_cooling);
-  const int is_logger = (e->policy & engine_policy_logger);
 
   /* Are we in a super-cell ? */
   if (c->super == c) {
@@ -196,9 +195,10 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       c->kick1 = scheduler_addtask(s, task_type_kick1, task_subtype_none, 0, 0,
                                    c, NULL);
 
-      if (is_logger)
+#if defined(WITH_LOGGER)
 	c->logger = scheduler_addtask(s, task_type_logger, task_subtype_none, 0, 0,
 				      c, NULL);
+#endif
 	
 
       c->kick2 = scheduler_addtask(s, task_type_kick2, task_subtype_none, 0, 0,
@@ -215,9 +215,11 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       if (!is_with_cooling) scheduler_addunlock(s, c->end_force, c->kick2);
       scheduler_addunlock(s, c->kick2, c->timestep);
       scheduler_addunlock(s, c->timestep, c->kick1);
-      if (is_logger)
-	scheduler_addunlock(s, c->kick1, c->logger);
-    }
+
+#if defined(WITH_LOGGER)
+      scheduler_addunlock(s, c->kick1, c->logger);
+#endif
+}
 
   } else { /* We are above the super-cell so need to go deeper */
 
@@ -3166,8 +3168,10 @@ void engine_maketasks(struct engine *e) {
     e->size_links += s->tot_cells * ext_grav_tasks_per_cell;
   if (e->policy & engine_policy_self_gravity)
     e->size_links += s->tot_cells * self_grav_tasks_per_cell;
-  if (e->policy & engine_policy_logger)
-    e->size_links += s->tot_cells;
+
+#if defined(WITH_LOGGER)
+  e->size_links += s->tot_cells;
+#endif
 
   /* Allocate the new list */
   if ((e->links = (struct link *)malloc(sizeof(struct link) * e->size_links)) ==
@@ -3755,10 +3759,10 @@ int engine_estimate_nr_tasks(struct engine *e) {
   if (e->policy & engine_policy_stars) {
     n1 += 2;
   }
-  if (e->policy & engine_policy_logger) {
-    n1 += 1;
-    n2 += 1;
-  }
+#if defined(WITH_LOGGER)
+  n1 += 1;
+  n2 += 1;
+#endif
 
 #ifdef WITH_MPI
 
@@ -5326,11 +5330,10 @@ void engine_dump_snapshot(struct engine *e) {
                       e->snapshot_units, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
                       MPI_INFO_NULL);
 #endif
-#else
-  if (e->policy & engine_policy_logger)
+#elif defined(WITH_LOGGER)
     write_index_single(e, e->snapshotBaseName, e->internal_units,
 		       e->snapshotUnits);
-  else
+#else
     write_output_single(e, e->snapshotBaseName, e->internal_units,
 			e->snapshotUnits);
 #endif
@@ -5441,7 +5444,6 @@ void engine_unpin() {
  * @param Nstars total number of star particles in the simulation.
  * @param policy The queuing policy to use.
  * @param verbose Is this #engine talkative ?
- * @param logger_max_steps Max number of particle steps before writing with logger
  * @param reparttype What type of repartition algorithm are we using ?
  * @param internal_units The system of units used internally.
  * @param physical_constants The #phys_const used for this run.
@@ -5534,12 +5536,14 @@ void engine_init(struct engine *e, struct space *s,
 #endif
 
 
+#if defined(WITH_LOGGER)
   /* Logger params */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
   e->logger_max_steps = parser_get_opt_param_int(params, "Snapshots:logger_max_steps", 10);
   parser_get_opt_param_string(params, "Snapshots:dump_file", logger_name_file, "dump.smew");
   e->logger_dump = malloc(sizeof(struct dump));
   dump_init(e->logger_dump, logger_name_file, 1024 * 1024 * 10);
+#endif
 
   /* Make the space link back to the engine. */
   s->e = e;
@@ -5919,10 +5923,10 @@ void engine_config(int restart, struct engine *e,
           e->time_first_statistics, e->time_begin);
   }
 
-  /* Find the time of the first snapshot  output */
-  if (e->policy & engine_policy_logger)
-    if (e->nodeID == 0)
-      message("Expected output of over 9000\n Should write a real message...");
+#if defined(WITH_LOGGER)
+  if (e->nodeID == 0)
+    message("Expected output of over 9000\n Should write a real message...");
+#endif
 
   /* Find the time of the first output */
   engine_compute_next_snapshot_time(e);
@@ -6352,7 +6356,9 @@ void engine_clean(struct engine *e) {
   free(e->runners);
   free(e->snapshot_units);
   free(e->links);
+#if defined(WITH_LOGGER)
   free(e->logger_dump);
+#endif
   scheduler_clean(&e->sched);
   space_clean(e->s);
   threadpool_clean(&e->threadpool);
