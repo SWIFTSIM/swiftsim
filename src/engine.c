@@ -208,11 +208,10 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
 
       if (!is_with_cooling) scheduler_addunlock(s, c->end_force, c->kick2);
       scheduler_addunlock(s, c->kick2, c->timestep);
-#if defined(WITH_LOGGER)
-      scheduler_addunlock(s, c->timestep, c->logger);
-      scheduler_addunlock(s, c->logger, c->kick1);
-#else
       scheduler_addunlock(s, c->timestep, c->kick1);
+
+#if defined(WITH_LOGGER)
+      scheduler_addunlock(s, c->kick1, c->logger);
 #endif
 }
 
