@@ -1812,7 +1812,7 @@ void *runner_main(void *data) {
         if (!cell_is_active(ci, e) && t->type != task_type_sort &&
             t->type != task_type_send && t->type != task_type_recv &&
             t->type != task_type_kick1 && t->type != task_type_drift_part &&
-            t->type != task_type_drift_gpart)
+            t->type != task_type_drift_gpart && t->type != task_type_logger)
           error(
               "Task (type='%s/%s') should have been skipped ti_current=%lld "
               "c->ti_end_min=%lld",
