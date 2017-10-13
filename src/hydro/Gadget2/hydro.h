@@ -486,6 +486,7 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->v_full[1] = p->v[1];
   xp->v_full[2] = p->v[2];
   xp->entropy_full = p->entropy;
+  xp->last_output = SHRT_MAX;
 
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
