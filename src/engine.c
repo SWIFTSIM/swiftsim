@@ -4408,7 +4408,7 @@ void engine_step(struct engine *e) {
   e->step_props = engine_step_prop_none;
 
 #ifdef WITH_LOGGER
-  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
+  logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
 #endif
 
