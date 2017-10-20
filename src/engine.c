@@ -60,6 +60,7 @@
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"
+#include "logger.h"
 #include "logger_io.h"
 #include "map.h"
 #include "minmax.h"
@@ -4543,7 +4544,6 @@ void engine_step(struct engine *e) {
   e->step += 1;
   e->step_props = engine_step_prop_none;
 
-<<<<<<< b1cca9baaa02456063b13a317ef455ba58552d33
   if (e->policy & engine_policy_cosmology) {
     e->time_old = e->time;
     cosmology_update(e->cosmology, e->physical_constants, e->ti_current);
@@ -4558,8 +4558,11 @@ void engine_step(struct engine *e) {
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
     gravity_update(e->gravity_properties, e->cosmology);
-=======
->>>>>>> Split dump_snapshot and dump_index
+
+#ifdef WITH_LOGGER
+  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
+		       e->logger_dump);
+#endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
