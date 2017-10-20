@@ -3698,7 +3698,7 @@ void engine_step(struct engine *e) {
   e->timeStep = (e->ti_current - e->ti_old) * e->timeBase;
 
 #ifdef WITH_LOGGER
-  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
+  logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
 #endif
 
