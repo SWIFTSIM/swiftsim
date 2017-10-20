@@ -4587,7 +4587,7 @@ void engine_step(struct engine *e) {
     gravity_update(e->gravity_properties, e->cosmology);
 
 #ifdef WITH_LOGGER
-  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
+  logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
 #endif
 
