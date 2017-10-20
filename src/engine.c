@@ -57,6 +57,7 @@
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"
+#include "logger.h"
 #include "logger_io.h"
 #include "map.h"
 #include "minmax.h"
@@ -3696,6 +3697,10 @@ void engine_step(struct engine *e) {
   e->timeOld = e->ti_old * e->timeBase + e->timeBegin;
   e->timeStep = (e->ti_current - e->ti_old) * e->timeBase;
 
+#ifdef WITH_LOGGER
+  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
+		       e->logger_dump);
+#endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
