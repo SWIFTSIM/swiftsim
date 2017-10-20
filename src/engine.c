@@ -4406,6 +4406,7 @@ void engine_step(struct engine *e) {
   e->timeStep = (e->ti_current - e->ti_old) * e->timeBase;
   e->step_props = engine_step_prop_none;
 
+
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
 
@@ -4492,7 +4493,11 @@ void engine_step(struct engine *e) {
   /* Write a snapshot ? */
   if (e->dump_snapshot) {
 
+#if defined(WITH_LOGGER)
+    engine_dump_index(e);
+#else
     engine_dump_snapshot(e);
+#endif
 
     /* ... and find the next output time */
     engine_compute_next_snapshot_time(e);
@@ -5094,9 +5099,6 @@ void engine_dump_snapshot(struct engine *e) {
 		      e->snapshotUnits, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
 		      MPI_INFO_NULL);
 #endif
-#elif defined(WITH_LOGGER)
-    write_index_single(e, e->snapshotBaseName, e->internal_units,
-		       e->snapshotUnits);
 #else
     write_output_single(e, e->snapshotBaseName, e->internal_units,
 			e->snapshotUnits);
@@ -5117,14 +5119,27 @@ void engine_dump_snapshot(struct engine *e) {
  */
 void engine_dump_index(struct engine *e) {
 
+#if defined(WITH_LOGGER)
   struct clocks_time time1, time2;
   clocks_gettime(&time1);
 
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check that all cells have been drifted to the current time.
+   * That can include cells that have not
+   * previously been active on this rank. */
+  space_check_drift_point(e->s, e->ti_current,
+                          e->policy & engine_policy_self_gravity);
+
+  /* Be verbose about this */
+  if (e->nodeID == 0) message("writing index at t=%e.", e->time);
+#else
   if (e->verbose) message("writing index at t=%e.", e->time);
+#endif
 
   /* Dump... */
   /* Should use snapshotBaseName for the index name */
-  message("I am dumping an index file...");
+    write_index_single(e, e->snapshotBaseName, e->internal_units,
+		       e->snapshotUnits);
 
   e->dump_snapshot = 0;
 
@@ -5132,6 +5147,9 @@ void engine_dump_index(struct engine *e) {
   if (e->verbose)
     message("writing particle properties took %.3f %s.",
             (float)clocks_diff(&time1, &time2), clocks_getunit());
+#else
+  error("Logger disabled");
+#endif
 }
 
 #ifdef HAVE_SETAFFINITY
@@ -5264,6 +5282,7 @@ void engine_init(
   strcat(logger_name_file, ".dump");
   e->logger_dump = malloc(sizeof(struct dump));
   dump_init(e->logger_dump, logger_name_file, 1024 * 1024 * 100);
+  e->logger_time_offset = 0;
 #endif
 
   units_init_default(e->snapshotUnits, params, "Snapshots", internal_units);
