@@ -300,9 +300,10 @@ void io_write_attribute_s(hid_t grp, const char* name, const char* str) {
  */
 void io_read_unit_system(hid_t h_file, struct unit_system* us) {
 
-  hid_t h_grp = H5Gopen(h_file, "/Units", H5P_DEFAULT);
+  /* First check if it exists as this is *not* required. */
+  const htri_t exists = H5Lexists(h_file, "/Units", H5P_DEFAULT);
 
-  if (h_grp < 0) {
+  if (exists == 0) {
     message("'Units' group not found in ICs. Assuming CGS unit system.");
 
     /* Default to CGS */
@@ -313,7 +314,13 @@ void io_read_unit_system(hid_t h_file, struct unit_system* us) {
     us->UnitTemperature_in_cgs = 1.;
 
     return;
+  } else if (exists < 0) {
+    error("Serious problem with 'Units' group in ICs. H5Lexists gives %d",
+          exists);
   }
+
+  message("Reading IC units from ICs.");
+  hid_t h_grp = H5Gopen(h_file, "/Units", H5P_DEFAULT);
 
   /* Ok, Read the damn thing */
   io_read_attribute(h_grp, "Unit length in cgs (U_L)", DOUBLE,
@@ -368,6 +375,7 @@ void io_write_code_description(hid_t h_file) {
   h_grpcode = H5Gcreate1(h_file, "/Code", 0);
   if (h_grpcode < 0) error("Error while creating code group");
 
+  io_write_attribute_s(h_grpcode, "Code", "SWIFT");
   io_write_attribute_s(h_grpcode, "Code Version", package_version());
   io_write_attribute_s(h_grpcode, "Compiler Name", compiler_name());
   io_write_attribute_s(h_grpcode, "Compiler Version", compiler_version());

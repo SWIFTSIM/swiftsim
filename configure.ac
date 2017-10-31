@@ -152,7 +152,7 @@ if test "$enable_mpi" = "yes"; then
 fi
 AM_CONDITIONAL([HAVEMPI],[test $enable_mpi = "yes"])
 
-# Indicate that MPIRUN can be modified by an environement variable
+# Indicate that MPIRUN can be modified by an environment variable
 AC_ARG_VAR(MPIRUN, Path to the mpirun command if non-standard)
 
 # Add libtool support (now that CC is defined).
@@ -224,6 +224,18 @@ AC_ARG_ENABLE([debugging-checks],
 )
 if test "$enable_debugging_checks" = "yes"; then
    AC_DEFINE([SWIFT_DEBUG_CHECKS],1,[Enable expensive debugging])
+fi
+
+# Check whether we want to default to naive cell interactions
+AC_ARG_ENABLE([naive-interactions],
+   [AS_HELP_STRING([--enable-naive-interactions],
+     [Activate use of naive cell interaction functions @<:@yes/no@:>@]
+   )],
+   [enable_naive_interactions="$enableval"],
+   [enable_naive_interactions="no"]
+)
+if test "$enable_naive_interactions" = "yes"; then
+   AC_DEFINE([SWIFT_USE_NAIVE_INTERACTIONS],1,[Enable use of naive cell interaction functions])
 fi
 
 # Check if gravity force checks are on for some particles.
@@ -368,7 +380,7 @@ AX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS" CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
     non-standard location.]))
 
 
-# Check for metis. Note AX_LIB_METIS exists, but cannot be configured
+# Check for METIS. Note AX_LIB_METIS exists, but cannot be configured
 # to be default off (i.e. given no option it tries to locate METIS), so we
 # don't use that.
 have_metis="no"
@@ -602,10 +614,10 @@ if test "$enable_warn" != "no"; then
     # We will do this by hand instead and only default to the macro for unknown compilers
     case "$ax_cv_c_compiler_vendor" in
           gnu | clang)
-             CFLAGS="$CFLAGS -Wall -Wextra -Wno-unused-parameter"
+             CFLAGS="$CFLAGS -Wall -Wextra -Wno-unused-parameter -Wshadow"
           ;;
 	  intel)
-             CFLAGS="$CFLAGS -w2 -Wunused-variable"
+             CFLAGS="$CFLAGS -w2 -Wunused-variable -Wshadow"
           ;;
 	  *)
 	     AX_CFLAGS_WARN_ALL
@@ -627,7 +639,7 @@ fi
 # Hydro scheme.
 AC_ARG_WITH([hydro],
    [AS_HELP_STRING([--with-hydro=<scheme>],
-      [Hydro dynamics to use @<:@gadget2, minimal, hopkins, default, gizmo, shadowfax default: gadget2@:>@]
+      [Hydro dynamics to use @<:@gadget2, minimal, hopkins, default, gizmo, shadowfax debug default: gadget2@:>@]
    )],
    [with_hydro="$withval"],
    [with_hydro="gadget2"]
@@ -638,6 +650,9 @@ case "$with_hydro" in
    ;; 
    minimal)
       AC_DEFINE([MINIMAL_SPH], [1], [Minimal SPH])
+   ;; 
+   debug)
+      AC_DEFINE([DEBUG_INTERACTIONS_SPH], [1], [Debug SPH])
    ;; 
    hopkins)
       AC_DEFINE([HOPKINS_PE_SPH], [1], [Pressure-Entropy SPH])
@@ -842,10 +857,10 @@ esac
 #  Gravity multipole order
 AC_ARG_WITH([multipole-order],
    [AS_HELP_STRING([--with-multipole-order=<order>],
-      [order of the multipole and gravitational field expansion @<:@ default: 4@:>@]
+      [order of the multipole and gravitational field expansion @<:@ default: 5@:>@]
    )],
    [with_multipole_order="$withval"],
-   [with_multipole_order="4"]
+   [with_multipole_order="5"]
 )
 AC_DEFINE_UNQUOTED([SELF_GRAVITY_MULTIPOLE_ORDER], [$with_multipole_order], [Multipole order])
 
@@ -916,6 +931,7 @@ AC_MSG_RESULT([
    Task debugging       : $enable_task_debugging
    Threadpool debugging : $enable_threadpool_debugging
    Debugging checks     : $enable_debugging_checks
+   Naive interactions   : $enable_naive_interactions
    Gravity checks       : $gravity_force_checks
 
  ------------------------])
