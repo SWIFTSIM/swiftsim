@@ -443,6 +443,45 @@ AC_SUBST([METIS_LIBS])
 AC_SUBST([METIS_INCS])
 AM_CONDITIONAL([HAVEMETIS],[test -n "$METIS_LIBS"])
 
+# Check for grackle. 
+have_grackle="no"
+AC_ARG_WITH([grackle],
+    [AS_HELP_STRING([--with-grackle=PATH],
+       [root directory where grackle is installed @<:@yes/no@:>@]
+    )],
+    [],
+    [with_grackle="no"]
+)
+if test "x$with_grackle" != "xno"; then
+   AC_PROG_FC
+   AC_FC_LIBRARY_LDFLAGS
+   if test "x$with_grackle" != "xyes" -a "x$with_grackle" != "x"; then
+      GRACKLE_LIBS="-L$with_grackle/lib -lgrackle $FCLIBS"
+      GRACKLE_INCS="-I$with_grackle/include"
+   else
+      GRACKLE_LIBS="-lgrackle $FCLIBS"
+      GRACKLE_INCS=""
+   fi
+   have_grackle="yes"
+   AC_CHECK_LIB(
+      [grackle],
+      [initialize_grackle],
+      [AC_CHECK_HEADERS(
+         [grackle.h grackle_types.h grackle_macros.h],
+         [AC_DEFINE([HAVE_GRACKLE],1,[The GRACKLE library appears to be present.]),
+	  AC_DEFINE([CONFIG_BFLOAT_8],1,[Use doubles in grackle])
+	  ],
+         [AC_MSG_ERROR(Cannot find grackle headers!)]
+      )],
+      [AC_MSG_ERROR(Cannot find grackle library!)],
+      [$GRACKLE_LIBS]
+   )
+fi
+AC_SUBST([GRACKLE_LIBS])
+AC_SUBST([GRACKLE_INCS])
+AM_CONDITIONAL([HAVEGRACKLE],[test -n "$GRACKLE_LIBS"])
+
+
 #  Check for tcmalloc a fast malloc that is part of the gperftools.
 have_tcmalloc="no"
 AC_ARG_WITH([tcmalloc],
@@ -945,6 +984,7 @@ AC_MSG_RESULT([
     - parallel     : $have_parallel_hdf5
    Metis enabled   : $have_metis
    FFTW3 enabled   : $have_fftw3
+   GRACKLE enabled : $have_grackle
    libNUMA enabled : $have_numa
    Using tcmalloc  : $have_tcmalloc
    Using jemalloc  : $have_jemalloc
