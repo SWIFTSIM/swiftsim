@@ -2067,6 +2067,7 @@ void *runner_main(void *data) {
  */
 void runner_do_logger(struct runner *r, struct cell *c, int timer) {
 
+#ifdef WITH_LOGGER
   const struct engine *e = r->e;
   struct part *restrict parts = c->parts;
   struct xpart *restrict xparts = c->xparts;
@@ -2142,4 +2143,9 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
 
   }
   if (timer) TIMER_TOC(timer_logger);
+
+#else
+  error("Logger disabled, please enable it during configuration");
+#endif
+  
 }
