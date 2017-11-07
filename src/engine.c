@@ -4214,6 +4214,10 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_parts(s, e->verbose);
   space_init_gparts(s, e->verbose);
 
+#ifdef WITH_LOGGER
+  logger_ensure_size(e->total_nr_parts, e->logger_size);
+#endif
+  
   /* Now, launch the calculation */
   TIMER_TIC;
   engine_launch(e);
@@ -4412,6 +4416,7 @@ void engine_step(struct engine *e) {
   logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
   dump_ensure(e->logger_dump, e->logger_size);
+  logger_ensure_size(e->total_nr_parts, e->logger_size);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
