@@ -76,8 +76,8 @@ Snapshots:
   UnitCurrent_in_cgs:  1  # (Optional) Unit system for the outputs (Amperes)
   UnitTemp_in_cgs:     1  # (Optional) Unit system for the outputs (Kelvin)
   logger_max_steps:    10 # (Optional) Number of particle steps between two chunk writing if using logger
-  logger_size:         1e7 # buffer size of the logger file in bytes
-
+  logger_size:         10. # buffer size of the logger file in MB
+  
 # Parameters governing the conserved quantities statistics
 Statistics:
   delta_time:          1e-2      # Time between statistics output
