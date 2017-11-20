@@ -91,7 +91,8 @@ def pycooling_rate(Pointer p_units,
                    Pointer p_cooling,
                    Pointer p_constants,
                    np.ndarray [DTYPE_t, ndim=1] rho,
-                   np.ndarray[DTYPE_t, ndim=1] u):
+                   np.ndarray[DTYPE_t, ndim=1] u,
+                   double dt):
 
     if rho.shape[0] != u.shape[0]:
         raise Exception("Rho and u should be of the same size!")
@@ -133,8 +134,7 @@ def pycooling_rate(Pointer p_units,
     # compute cooling
     for i in range(N):
         # compute cooling
-        rate[i] = cooling_rate(constants, units, cooling, &p[i])
-
+        rate[i] = cooling_rate(constants, units, cooling, &p[i], dt)
         
     return rate
 

@@ -54,6 +54,9 @@ def getValueFromMakefile(f, key):
 with open(makefile, "r") as f:
     hdf5_root = getValueFromMakefile(f, "H5CC")
     cc = getValueFromMakefile(f, "CC")
+    # need to remove -L and -I
+    grackle_inc = getValueFromMakefile(f, "GRACKLE_INCS")[2:]
+    grackle_lib = getValueFromMakefile(f, "GRACKLE_LIBS")[2:]
 
 # python requirement
 install_requires = []
@@ -62,11 +65,13 @@ install_requires = []
 include = [
     numpy.get_include(),
     "../src",
-    hdf5_root + "/include"
+    "../",
+    hdf5_root + "/include",
+    grackle_inc
 ]
 
 # libraries
-lib = ["m", "hdf5", "swiftsim"]
+lib = ["m", "hdf5", "swiftsim", "grackle"]
 
 # Extension object required by setup
 ext = []
@@ -99,6 +104,7 @@ ldflags = "LDFLAGS"
 if ldflags not in os.environ:
     os.environ[ldflags] = ""
 os.environ[ldflags] += " -L" + hdf5_root + "/lib"
+os.environ[ldflags] += " -L" + grackle_lib
 
 
 # compiler

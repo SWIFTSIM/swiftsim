@@ -51,4 +51,5 @@ cdef extern from "cooling.h":
 
     float cooling_rate(
         const phys_const* const phys_const, const unit_system* us,
-        const cooling_function_data* cooling, const part* p)
+        const cooling_function_data* cooling, const part* p,
+        const double dt)
