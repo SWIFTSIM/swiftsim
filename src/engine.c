@@ -4415,8 +4415,8 @@ void engine_step(struct engine *e) {
 #ifdef WITH_LOGGER
   logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
-  dump_ensure(e->logger_dump, e->logger_size);
   logger_ensure_size(e->total_nr_parts, e->logger_size);
+  dump_ensure(e->logger_dump, e->logger_size);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
