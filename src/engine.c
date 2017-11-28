@@ -4657,7 +4657,7 @@ void engine_step(struct engine *e) {
   /* Write a snapshot ? */
   if (e->dump_snapshot) {
 
-#if defined(WITH_LOGGER)
+#ifdef WITH_LOGGER
     engine_dump_index(e);
 #else
     engine_dump_snapshot(e);
