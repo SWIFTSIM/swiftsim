@@ -29,7 +29,7 @@ GIT_CMD = @GIT_CMD@
 EXTRA_LIBS = $(HDF5_LIBS) $(PROFILER_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(GRACKLE_LIB)
 
 # MPI libraries.
-MPI_LIBS = $(METIS_LIBS) $(MPI_THREAD_LIBS)
+MPI_LIBS = $(METIS_LIBS) $(GRACKLE_LIB) $(MPI_THREAD_LIBS)
 MPI_FLAGS = -DWITH_MPI $(METIS_INCS)
 
 # Build the libswiftsim library
@@ -65,7 +65,6 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c \
     part_type.c xmf.c gravity_properties.c gravity.c \
     collectgroup.c hydro_space.c equation_of_state.c \
     $(GRACKLE_SRC)
-
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
