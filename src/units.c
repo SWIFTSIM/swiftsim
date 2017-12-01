@@ -594,10 +594,10 @@ double units_conversion_factor(const struct unit_system* from,
  * @param us The #unit_system
  */
 void units_print(const struct unit_system* us) {
-  printf("Units:\n");
-  printf("\tUnit Mass:        %g\n", us->UnitMass_in_cgs);
-  printf("\tUnit Length:      %g\n", us->UnitLength_in_cgs);
-  printf("\tUnit Time:        %g\n", us->UnitTime_in_cgs);
-  printf("\tUnit Current:     %g\n", us->UnitCurrent_in_cgs);
-  printf("\tUnit Temperature: %g\n", us->UnitTemperature_in_cgs);
+  message("Units:\n");
+  message("\tUnit Mass:        %g\n", us->UnitMass_in_cgs);
+  message("\tUnit Length:      %g\n", us->UnitLength_in_cgs);
+  message("\tUnit Time:        %g\n", us->UnitTime_in_cgs);
+  message("\tUnit Current:     %g\n", us->UnitCurrent_in_cgs);
+  message("\tUnit Temperature: %g\n", us->UnitTemperature_in_cgs);
 }
