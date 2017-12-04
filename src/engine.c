@@ -1202,12 +1202,13 @@ void engine_addtasks_recv(struct engine *e, struct cell *c, struct task *t_xv,
   c->recv_gradient = t_gradient;
   c->recv_ti = t_ti;
 
-/* Add dependencies. */
-#ifdef EXTRA_HYDRO_LOOP
+  /* Add dependencies. */
+  if (c->sorts != NULL) scheduler_addunlock(s, t_xv, c->sorts);
+
   for (struct link *l = c->density; l != NULL; l = l->next) {
-    scheduler_addunlock(s, t_xv, l->t);
     scheduler_addunlock(s, l->t, t_rho);
   }
+#ifdef EXTRA_HYDRO_LOOP
   for (struct link *l = c->gradient; l != NULL; l = l->next) {
     scheduler_addunlock(s, t_rho, l->t);
     scheduler_addunlock(s, l->t, t_gradient);
@@ -1216,17 +1217,11 @@ void engine_addtasks_recv(struct engine *e, struct cell *c, struct task *t_xv,
     scheduler_addunlock(s, t_gradient, l->t);
     scheduler_addunlock(s, l->t, t_ti);
   }
-  if (c->sorts != NULL) scheduler_addunlock(s, t_xv, c->sorts);
 #else
-  for (struct link *l = c->density; l != NULL; l = l->next) {
-    scheduler_addunlock(s, t_xv, l->t);
-    scheduler_addunlock(s, l->t, t_rho);
-  }
   for (struct link *l = c->force; l != NULL; l = l->next) {
     scheduler_addunlock(s, t_rho, l->t);
     scheduler_addunlock(s, l->t, t_ti);
   }
-  if (c->sorts != NULL) scheduler_addunlock(s, t_xv, c->sorts);
 #endif
 
   /* Recurse? */
