@@ -1235,7 +1235,7 @@ AC_MSG_RESULT([
    Using jemalloc   : $have_jemalloc
    CPU profiler     : $have_profiler
    Pthread barriers : $have_pthread_barrier
-   Logger          : $with_logger
+   Logger           : $with_logger
 
    Hydro scheme       : $with_hydro
    Dimensionality     : $with_dimension
