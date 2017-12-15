@@ -5962,11 +5962,6 @@ void engine_config(int restart, struct engine *e,
           e->time_first_statistics, e->time_begin);
   }
 
-#if defined(WITH_LOGGER)
-  if (e->nodeID == 0)
-    message("Expected output of over 9000\n Should write a real message...");
-#endif
-
   /* Find the time of the first output */
   engine_compute_next_snapshot_time(e);
 
@@ -6109,7 +6104,15 @@ void engine_config(int restart, struct engine *e,
     }
   }
 
-/* Free the affinity stuff */
+#ifdef WITH_LOGGER
+  if (e->nodeID == 0)
+    message("Expected output of over 9000\n Should write a real message...");
+  logger_write_file_header(dump_file, e);
+  dump_ensure(dump_file, e->logger_size);
+  e->logger_time_offset = 0;
+#endif
+
+  /* Free the affinity stuff */
 #if defined(HAVE_SETAFFINITY)
   if (with_aff) {
     free(cpuid);
