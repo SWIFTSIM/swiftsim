@@ -1001,6 +1001,7 @@ int main(int argc, char *argv[]) {
   engine_print_stats(&e);
 #ifdef WITH_LOGGER
   engine_dump_index(&e);
+  strcat(e.snapshotBaseName, "_end");
 #endif
   // write a final snapshot with logger, in order to facilitate a restart
   engine_dump_snapshot(&e);
