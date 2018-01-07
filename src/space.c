@@ -2803,7 +2803,8 @@ void space_convert_quantities(struct space *s, int verbose) {
  * recursively.
  */
 void space_init(struct space *s, const struct swift_params *params,
-                double dim[3], struct part *parts, struct gpart *gparts,
+                double dim[3], struct part *parts, struct xpart *xparts,
+		struct gpart *gparts,
                 struct spart *sparts, size_t Npart, size_t Ngpart,
                 size_t Nspart, int periodic, int replicate, int gravity,
                 int verbose, int dry_run) {
@@ -2820,6 +2821,7 @@ void space_init(struct space *s, const struct swift_params *params,
   s->nr_parts = Npart;
   s->size_parts = Npart;
   s->parts = parts;
+  s->xparts = xparts;
   s->nr_gparts = Ngpart;
   s->size_gparts = Ngpart;
   s->gparts = gparts;
@@ -2955,14 +2957,6 @@ void space_init(struct space *s, const struct swift_params *params,
           if (sparts[k].x[j] < 0 || sparts[k].x[j] >= s->dim[j])
             error("Not all s-particles are within the specified domain.");
     }
-  }
-
-  /* Allocate the extra parts array for the gas particles. */
-  if (Npart > 0) {
-    if (posix_memalign((void *)&s->xparts, xpart_align,
-                       Npart * sizeof(struct xpart)) != 0)
-      error("Failed to allocate xparts.");
-    bzero(s->xparts, Npart * sizeof(struct xpart));
   }
 
   hydro_space_init(&s->hs, s);

@@ -306,11 +306,12 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
  *
  */
 void read_ic_single(char* fileName, const struct unit_system* internal_units,
-                    double dim[3], struct part** parts, struct gpart** gparts,
+                    double dim[3], struct part** parts, struct xpart** xparts,
+		    struct gpart** gparts,
                     struct spart** sparts, size_t* Ngas, size_t* Ngparts,
                     size_t* Nstars, int* periodic, int* flag_entropy,
                     int with_hydro, int with_gravity, int with_stars,
-                    int n_threads, int dry_run) {
+		    int with_cooling, int n_threads, int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
@@ -430,6 +431,15 @@ void read_ic_single(char* fileName, const struct unit_system* internal_units,
         0)
       error("Error while allocating memory for SPH particles");
     bzero(*parts, *Ngas * sizeof(struct part));
+
+    /* Allocate the extra parts array for the gas particles. */
+    if (posix_memalign((void *)xparts, xpart_align,
+		       *Ngas * sizeof(struct xpart)) != 0)
+      error("Failed to allocate xparts.");
+    bzero(*xparts, *Ngas * sizeof(struct xpart));
+  }
+    
+
   }
 
   /* Allocate memory to store star particles */
@@ -485,6 +495,11 @@ void read_ic_single(char* fileName, const struct unit_system* internal_units,
         if (with_hydro) {
           Nparticles = *Ngas;
           hydro_read_particles(*parts, list, &num_fields);
+	  if (with_cooling) {
+	    int add_num_fields = 0;
+	    cooling_read_particles(*xparts, list+num_fields, &add_num_fields);
+	    num_fields += add_num_fields;
+	  }
         }
         break;
 

@@ -495,6 +495,7 @@ int main(int argc, char *argv[]) {
   struct part *parts = NULL;
   struct gpart *gparts = NULL;
   struct spart *sparts = NULL;
+  struct xpart *xparts = NULL;
   size_t Ngas = 0, Ngpart = 0, Nspart = 0;
   double dim[3] = {0., 0., 0.};
   int periodic = 0;
@@ -515,10 +516,10 @@ int main(int argc, char *argv[]) {
                  dry_run);
 #endif
 #else
-  read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sparts, &Ngas, &Ngpart,
+  read_ic_single(ICfileName, &us, dim, &parts, &xparts, &gparts, &sparts, &Ngas, &Ngpart,
                  &Nspart, &periodic, &flag_entropy_ICs, with_hydro,
                  (with_external_gravity || with_self_gravity), with_stars,
-                 nr_threads, dry_run);
+                 with_cooling, nr_threads, dry_run);
 #endif
   if (myrank == 0) {
     clocks_gettime(&toc);
@@ -559,7 +560,7 @@ int main(int argc, char *argv[]) {
   /* Initialize the space with these data. */
   if (myrank == 0) clocks_gettime(&tic);
   struct space s;
-  space_init(&s, params, dim, parts, gparts, sparts, Ngas, Ngpart, Nspart,
+  space_init(&s, params, dim, parts, xparts, gparts, sparts, Ngas, Ngpart, Nspart,
              periodic, replicate, with_self_gravity, talking, dry_run);
   if (myrank == 0) {
     clocks_gettime(&toc);

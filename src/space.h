@@ -180,7 +180,7 @@ void space_getcells(struct space *s, int nr_cells, struct cell **cells);
 int space_getsid(struct space *s, struct cell **ci, struct cell **cj,
                  double *shift);
 void space_init(struct space *s, const struct swift_params *params,
-                double dim[3], struct part *parts, struct gpart *gparts,
+                double dim[3], struct part *parts, struct xpart *xparts, struct gpart *gparts,
                 struct spart *sparts, size_t Npart, size_t Ngpart,
                 size_t Nspart, int periodic, int replicate, int gravity,
                 int verbose, int dry_run);
