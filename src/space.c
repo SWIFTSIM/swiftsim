@@ -3009,12 +3009,17 @@ void space_replicate(struct space *s, int replicate, int verbose) {
 
   /* Allocate space for new particles */
   struct part *parts = NULL;
+  struct xpart *xparts = NULL;
   struct gpart *gparts = NULL;
   struct spart *sparts = NULL;
 
   if (posix_memalign((void *)&parts, part_align,
                      s->nr_parts * sizeof(struct part)) != 0)
     error("Failed to allocate new part array.");
+
+  if (posix_memalign((void *)&xparts, xpart_align,
+                     s->nr_parts * sizeof(struct xpart)) != 0)
+    error("Failed to allocate new xpart array.");
 
   if (posix_memalign((void *)&gparts, gpart_align,
                      s->nr_gparts * sizeof(struct gpart)) != 0)
@@ -3033,6 +3038,8 @@ void space_replicate(struct space *s, int replicate, int verbose) {
         /* First copy the data */
         memcpy(parts + offset * nr_parts, s->parts,
                nr_parts * sizeof(struct part));
+        memcpy(xparts + offset * nr_parts, s->xparts,
+               nr_parts * sizeof(struct xpart));
         memcpy(sparts + offset * nr_sparts, s->sparts,
                nr_sparts * sizeof(struct spart));
         memcpy(gparts + offset * nr_gparts, s->gparts,
@@ -3083,9 +3090,11 @@ void space_replicate(struct space *s, int replicate, int verbose) {
 
   /* Replace the content of the space */
   free(s->parts);
+  free(s->xparts);
   free(s->gparts);
   free(s->sparts);
   s->parts = parts;
+  s->xparts = xparts;
   s->gparts = gparts;
   s->sparts = sparts;
 
