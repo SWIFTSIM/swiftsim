@@ -36,6 +36,7 @@
 
 /* Local includes. */
 #include "common_io.h"
+#include "cooling_io.h"
 #include "dimension.h"
 #include "engine.h"
 #include "error.h"
@@ -439,8 +440,6 @@ void read_ic_single(char* fileName, const struct unit_system* internal_units,
     bzero(*xparts, *Ngas * sizeof(struct xpart));
   }
     
-
-  }
 
   /* Allocate memory to store star particles */
   if (with_stars) {
