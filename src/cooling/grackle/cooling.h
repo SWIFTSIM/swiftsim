@@ -341,7 +341,6 @@ __attribute__((always_inline))INLINE static void cooling_init_backend(
   message("***************************************");
   message("initializing grackle cooling function");
   message("");
-  cooling_print_backend(cooling);
   message("Density Self Shielding = %g atom/cm3", threshold);
 
 
