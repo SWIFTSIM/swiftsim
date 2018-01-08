@@ -51,7 +51,8 @@
 __attribute__((always_inline)) INLINE static void cooling_init_part(
     const struct part* restrict p, struct xpart* restrict xp) {
 
-  xp->cooling_data.radiated_energy = 0.f;
+  
+  /* xp->cooling_data.radiated_energy = 0.f; */
 }
 
 /**
