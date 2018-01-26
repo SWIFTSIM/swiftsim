@@ -105,7 +105,7 @@ void phys_const_init(struct unit_system* us,
       units_general_cgs_conversion_factor(us, dimension_length);
 }
 
-void phys_const_print(struct phys_const* internal_const) {
+void phys_const_print(const struct phys_const* internal_const) {
 
   message("%25s = %e", "Gravitational constant",
           internal_const->const_newton_G);

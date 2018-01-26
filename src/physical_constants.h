@@ -80,6 +80,6 @@ struct phys_const {
 
 void phys_const_init(struct unit_system* us, struct phys_const* internal_const);
 
-void phys_const_print(struct phys_const* internal_const);
+void phys_const_print(const struct phys_const* internal_const);
 
 #endif /* SWIFT_PHYSICAL_CONSTANTS_H */
