@@ -98,6 +98,7 @@ void darkmatter_write_particles(const struct gpart* gparts,
 void darkmatter_write_index(struct gpart* gparts, struct io_props* list,
 			    int* num_fields) {
 
+#ifdef WITH_LOGGER
   /* Say how much we want to read */
   *num_fields = 2;
 
@@ -107,6 +108,9 @@ void darkmatter_write_index(struct gpart* gparts, struct io_props* list,
 
   list[1] = io_make_output_field("Offset", ULONGLONG, 1,
                                  UNIT_CONV_NO_UNITS, gparts, last_offset);
+#else
+  error("Cannot write index without logger");
+#endif
 }
 
 #endif /* SWIFT_DEFAULT_GRAVITY_IO_H */
