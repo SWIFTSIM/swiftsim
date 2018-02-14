@@ -129,7 +129,6 @@ __attribute__((always_inline)) INLINE static void gravity_init_gpart(
   gp->a_grav[1] = 0.f;
   gp->a_grav[2] = 0.f;
   gp->potential = 0.f;
-  gp->last_output = SHRT_MAX;
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM = 0.f;
@@ -203,7 +202,7 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
   gravity_init_gpart(gp);
 
 #ifdef WITH_LOGGER
-  gp->last_output = 0;
+  gp->last_output = SHRT_MAX;
   gp->last_offset = 0;
 #endif
 }
