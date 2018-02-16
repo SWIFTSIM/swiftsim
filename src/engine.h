@@ -72,7 +72,7 @@ enum engine_policy {
   engine_policy_sourceterms = (1 << 14),
   engine_policy_stars = (1 << 15),
 };
-#define engine_maxpolicy 16
+#define engine_maxpolicy 15
 extern const char *engine_policy_names[];
 
 /**
