@@ -89,15 +89,15 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
 
 #if COOLING_GRACKLE_MODE >= 3
   /* primordial chemistry >= 3 */
-  xp->cooling_data.DI_frac = grackle_data->HydrogenFractionByMass * grackle_data->DeuteriumToHydrogenRatio;
+  xp->cooling_data.DI_frac = grackle_data->HydrogenFractionByMass *
+                             grackle_data->DeuteriumToHydrogenRatio;
   xp->cooling_data.DII_frac = zero;
   xp->cooling_data.HDI_frac = zero;
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
-#endif // MODE >= 2
+#endif  // MODE >= 2
 
-#endif // MODE >= 1
-  
+#endif  // MODE >= 1
 }
 
 /**
@@ -117,7 +117,7 @@ __attribute__((always_inline)) INLINE static void cooling_compute_density(
   xp->cooling_data.HeIII_frac *= rho;
   xp->cooling_data.e_frac *= rho;
 
- #if COOLING_GRACKLE_MODE >= 2
+#if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   xp->cooling_data.HM_frac *= rho;
   xp->cooling_data.H2I_frac *= rho;
@@ -128,11 +128,11 @@ __attribute__((always_inline)) INLINE static void cooling_compute_density(
   xp->cooling_data.DI_frac *= rho;
   xp->cooling_data.DII_frac *= rho;
   xp->cooling_data.HDI_frac *= rho;
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
-#endif // MODE >= 2
+#endif  // MODE >= 2
 
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
   xp->cooling_data.metal_frac *= rho;
 }
@@ -154,7 +154,7 @@ __attribute__((always_inline)) INLINE static void cooling_compute_fraction(
   xp->cooling_data.HeIII_frac /= rho;
   xp->cooling_data.e_frac /= rho;
 
- #if COOLING_GRACKLE_MODE >= 2
+#if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   xp->cooling_data.HM_frac /= rho;
   xp->cooling_data.H2I_frac /= rho;
@@ -165,11 +165,11 @@ __attribute__((always_inline)) INLINE static void cooling_compute_fraction(
   xp->cooling_data.DI_frac /= rho;
   xp->cooling_data.DII_frac /= rho;
   xp->cooling_data.HDI_frac /= rho;
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
-#endif // MODE >= 2
+#endif  // MODE >= 2
 
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
   xp->cooling_data.metal_frac /= rho;
 }
@@ -204,7 +204,8 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
   message("CloudyTable             = %s", cooling->cloudy_table);
   message("UVbackground            = %d", cooling->uv_background);
   message("Redshift                = %g", cooling->redshift);
-  message("Solar Metal Fraction    = %g", cooling->chemistry.SolarMetalFractionByMass);
+  message("Solar Metal Fraction    = %g",
+          cooling->chemistry.SolarMetalFractionByMass);
   message("Units:");
   message("\tComoving     = %i", cooling->units.comoving_coordinates);
   message("\tLength       = %g", cooling->units.length_units);
@@ -212,55 +213,72 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
   message("\tTime         = %g", cooling->units.time_units);
   message("\tScale Factor = %g", cooling->units.a_units);
 #ifdef SWIFT_DEBUG_CHECKS
-  /*
-  const chemistry_data *tmp = &cooling->chemistry;
-  message("Debug:");
-  message("UVBackground                       = %i", tmp->UVbackground);
-  message("Grackle data file                  = %s", tmp->grackle_data_file);
-  message("CMB temperature floor              = %i", tmp->cmb_temperature_floor);
-  message("Gamma                              = %g", tmp->Gamma);
-  message("H2 on dust                         = %i", tmp->h2_on_dust);
-  message("Photoelectric heating              = %i", tmp->photoelectric_heating);
-  message("Photoelectric heating rate         = %g", tmp->photoelectric_heating_rate);
-  message("Use volumetric heating rate        = %i", tmp->use_volumetric_heating_rate);
-  message("Use specific heating rate          = %i", tmp->use_specific_heating_rate);
-  message("Three body                         = %i", tmp->three_body_rate);
-  message("Cie cooling                        = %i", tmp->cie_cooling);
-  message("h2 optical depth approx            = %i", tmp->h2_optical_depth_approximation);
-  message("ih2co                              = %i", tmp->ih2co);
-  message("ipiht                              = %i", tmp->ipiht);
+/*
+const chemistry_data *tmp = &cooling->chemistry;
+message("Debug:");
+message("UVBackground                       = %i", tmp->UVbackground);
+message("Grackle data file                  = %s", tmp->grackle_data_file);
+message("CMB temperature floor              = %i", tmp->cmb_temperature_floor);
+message("Gamma                              = %g", tmp->Gamma);
+message("H2 on dust                         = %i", tmp->h2_on_dust);
+message("Photoelectric heating              = %i", tmp->photoelectric_heating);
+message("Photoelectric heating rate         = %g",
+tmp->photoelectric_heating_rate);
+message("Use volumetric heating rate        = %i",
+tmp->use_volumetric_heating_rate);
+message("Use specific heating rate          = %i",
+tmp->use_specific_heating_rate);
+message("Three body                         = %i", tmp->three_body_rate);
+message("Cie cooling                        = %i", tmp->cie_cooling);
+message("h2 optical depth approx            = %i",
+tmp->h2_optical_depth_approximation);
+message("ih2co                              = %i", tmp->ih2co);
+message("ipiht                              = %i", tmp->ipiht);
 
-  message("Hydrogen Fraction                  = %g", tmp->HydrogenFractionByMass);
-  message("Deuterium/Hydrogen ratio           = %g", tmp->DeuteriumToHydrogenRatio);
-  message("Solar metal fraction               = %g", tmp->SolarMetalFractionByMass);
+message("Hydrogen Fraction                  = %g", tmp->HydrogenFractionByMass);
+message("Deuterium/Hydrogen ratio           = %g",
+tmp->DeuteriumToHydrogenRatio);
+message("Solar metal fraction               = %g",
+tmp->SolarMetalFractionByMass);
 
-  message("Number T bins                      = %i", tmp->NumberOfTemperatureBins);
-  message("Case B recombination               = %i", tmp->CaseBRecombination);
+message("Number T bins                      = %i",
+tmp->NumberOfTemperatureBins);
+message("Case B recombination               = %i", tmp->CaseBRecombination);
 
-  message("T start                            = %g", tmp->TemperatureStart);
-  message("T end                              = %g", tmp->TemperatureEnd);
+message("T start                            = %g", tmp->TemperatureStart);
+message("T end                              = %g", tmp->TemperatureEnd);
 
-  message("Number dust T bins                 = %i", tmp->NumberOfDustTemperatureBins);
-  message("Dust T start                       = %g", tmp->DustTemperatureStart);
-  message("Dust T end                         = %g", tmp->DustTemperatureEnd);
+message("Number dust T bins                 = %i",
+tmp->NumberOfDustTemperatureBins);
+message("Dust T start                       = %g", tmp->DustTemperatureStart);
+message("Dust T end                         = %g", tmp->DustTemperatureEnd);
 
-  message("Compton xray heating               = %i", tmp->Compton_xray_heating);
-  message("LW background sawtooth suppression = %i", tmp->LWbackground_sawtooth_suppression);
-  message("LW background intensity            = %g", tmp->LWbackground_intensity);
-  message("UV redshift on                     = %g", tmp->UVbackground_redshift_on);
-  message("UV redshift off                    = %g", tmp->UVbackground_redshift_off);
-  message("UV redshift fullon                 = %g", tmp->UVbackground_redshift_fullon);
-  message("UV redshift drop                   = %g", tmp->UVbackground_redshift_drop);
+message("Compton xray heating               = %i", tmp->Compton_xray_heating);
+message("LW background sawtooth suppression = %i",
+tmp->LWbackground_sawtooth_suppression);
+message("LW background intensity            = %g", tmp->LWbackground_intensity);
+message("UV redshift on                     = %g",
+tmp->UVbackground_redshift_on);
+message("UV redshift off                    = %g",
+tmp->UVbackground_redshift_off);
+message("UV redshift fullon                 = %g",
+tmp->UVbackground_redshift_fullon);
+message("UV redshift drop                   = %g",
+tmp->UVbackground_redshift_drop);
 
-  message("Cloudy electron fraction           = %g", tmp->cloudy_electron_fraction_factor);
+message("Cloudy electron fraction           = %g",
+tmp->cloudy_electron_fraction_factor);
 
-  message("Use radiative transfer             = %i", tmp->use_radiative_transfer);
-  message("RT coupled rate solver             = %i", tmp->radiative_transfer_coupled_rate_solver);
-  message("RT intermediate step               = %i", tmp->radiative_transfer_intermediate_step);
-  message("RT H only                          = %i", tmp->radiative_transfer_hydrogen_only);
+message("Use radiative transfer             = %i", tmp->use_radiative_transfer);
+message("RT coupled rate solver             = %i",
+tmp->radiative_transfer_coupled_rate_solver);
+message("RT intermediate step               = %i",
+tmp->radiative_transfer_intermediate_step);
+message("RT H only                          = %i",
+tmp->radiative_transfer_hydrogen_only);
 
-  message("Self shielding method              = %i", tmp->self_shielding_method);
-  */
+message("Self shielding method              = %i", tmp->self_shielding_method);
+*/
 #endif
 }
 
@@ -269,7 +287,8 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
  *
  * @param data the #grackle_field_data
  */
-__attribute__((always_inline)) INLINE static void cooling_malloc_data(grackle_field_data *data) {
+__attribute__((always_inline)) INLINE static void cooling_malloc_data(
+    grackle_field_data* data) {
 
 #if COOLING_GRACKLE_MODE >= 1
   /* primordial chemistry >= 1 */
@@ -279,21 +298,21 @@ __attribute__((always_inline)) INLINE static void cooling_malloc_data(grackle_fi
   data->HeII_density = malloc(sizeof(gr_float));
   data->HeIII_density = malloc(sizeof(gr_float));
   data->e_density = malloc(sizeof(gr_float));
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
 #if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   data->HM_density = malloc(sizeof(gr_float));
   data->H2I_density = malloc(sizeof(gr_float));
   data->H2II_density = malloc(sizeof(gr_float));
-#endif // MODE 2
+#endif  // MODE 2
 
 #if COOLING_GRACKLE_MODE >= 3
   /* primordial chemistry >= 3 */
   data->DI_density = malloc(sizeof(gr_float));
   data->DII_density = malloc(sizeof(gr_float));
   data->HDI_density = malloc(sizeof(gr_float));
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
   /* metal cooling = 1 */
   data->metal_density = malloc(sizeof(gr_float));
@@ -303,7 +322,6 @@ __attribute__((always_inline)) INLINE static void cooling_malloc_data(grackle_fi
 
   /* /\* specific heating rate *\/ */
   /* data->specific_heating_rate = NULL; */
-
 }
 
 /**
@@ -312,7 +330,8 @@ __attribute__((always_inline)) INLINE static void cooling_malloc_data(grackle_fi
  * @param data the #grackle_field_data
  */
 
-__attribute__((always_inline)) INLINE static void cooling_free_data(grackle_field_data *data) {
+__attribute__((always_inline)) INLINE static void cooling_free_data(
+    grackle_field_data* data) {
 
 #if COOLING_GRACKLE_MODE >= 1
   /* primordial chemistry >= 1 */
@@ -322,21 +341,21 @@ __attribute__((always_inline)) INLINE static void cooling_free_data(grackle_fiel
   free(data->HeII_density);
   free(data->HeIII_density);
   free(data->e_density);
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
 #if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   free(data->HM_density);
   free(data->H2I_density);
   free(data->H2II_density);
-#endif // MODE 2
+#endif  // MODE 2
 
 #if COOLING_GRACKLE_MODE >= 3
   /* primordial chemistry >= 3 */
   free(data->DI_density);
   free(data->DII_density);
   free(data->HDI_density);
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
   /* metal cooling = 1 */
   free(data->metal_density);
@@ -346,7 +365,6 @@ __attribute__((always_inline)) INLINE static void cooling_free_data(grackle_fiel
 
   /* /\* specific heating rate *\/ */
   /* data->specific_heating_rate = NULL; */
-
 }
 
 /**
@@ -357,7 +375,8 @@ __attribute__((always_inline)) INLINE static void cooling_free_data(grackle_fiel
  * @param data the #grackle_field_data
  * @param xp the #xpart
  */
-__attribute__((always_inline)) INLINE static void cooling_copy_to_data(grackle_field_data *data, const struct xpart *xp) {
+__attribute__((always_inline)) INLINE static void cooling_copy_to_data(
+    grackle_field_data* data, const struct xpart* xp) {
 
 #if COOLING_GRACKLE_MODE >= 1
   /* primordial chemistry >= 1 */
@@ -367,21 +386,21 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_data(grackle_f
   data->HeII_density[0] = xp->cooling_data.HeII_frac;
   data->HeIII_density[0] = xp->cooling_data.HeIII_frac;
   data->e_density[0] = xp->cooling_data.e_frac;
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
 #if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   data->HM_density[0] = xp->cooling_data.HM_frac;
   data->H2I_density[0] = xp->cooling_data.H2I_frac;
   data->H2II_density[0] = xp->cooling_data.H2II_frac;
-#endif // MODE 2
+#endif  // MODE 2
 
 #if COOLING_GRACKLE_MODE >= 3
   /* primordial chemistry >= 3 */
   data->DI_density[0] = xp->cooling_data.DI_frac;
   data->DII_density[0] = xp->cooling_data.DII_frac;
   data->HDI_density[0] = xp->cooling_data.HDI_frac;
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
   /* metal cooling = 1 */
   data->metal_density[0] = xp->cooling_data.metal_frac;
@@ -393,14 +412,14 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_data(grackle_f
   data->specific_heating_rate = NULL;
 }
 
-
 /**
  * @brief copy data to xp
  *
  * @param data the #grackle_field_data
  * @param xp the #xpart
  */
-__attribute__((always_inline)) INLINE static void cooling_copy_to_particle(const grackle_field_data *data, struct xpart *xp) {
+__attribute__((always_inline)) INLINE static void cooling_copy_to_particle(
+    const grackle_field_data* data, struct xpart* xp) {
 
 #if COOLING_GRACKLE_MODE >= 1
   /* primordial chemistry >= 1 */
@@ -410,21 +429,21 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_particle(const
   xp->cooling_data.HeII_frac = data->HeII_density[0];
   xp->cooling_data.HeIII_frac = data->HeIII_density[0];
   xp->cooling_data.e_frac = data->e_density[0];
-#endif // MODE >= 1
+#endif  // MODE >= 1
 
 #if COOLING_GRACKLE_MODE >= 2
   /* primordial chemistry >= 2 */
   xp->cooling_data.HM_frac = data->HM_density[0];
   xp->cooling_data.H2I_frac = data->H2I_density[0];
   xp->cooling_data.H2II_frac = data->H2II_density[0];
-#endif // MODE 2
+#endif  // MODE 2
 
 #if COOLING_GRACKLE_MODE >= 3
   /* primordial chemistry >= 3 */
   xp->cooling_data.DI_frac = data->DI_density[0];
   xp->cooling_data.DII_frac = data->DII_density[0];
   xp->cooling_data.HDI_frac = data->HDI_density[0];
-#endif // MODE >= 3
+#endif  // MODE >= 3
 
   /* metal cooling = 1 */
   xp->cooling_data.metal_frac = data->metal_density[0];
@@ -434,9 +453,7 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_particle(const
 
   /* /\* specific heating rate *\/ */
   /* data->specific_heating_rate = NULL; */
-
 }
-
 
 /**
  * @brief Compute the cooling rate and update the particle chemistry data
@@ -454,8 +471,7 @@ __attribute__((always_inline)) INLINE static double cooling_rate(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling,
-    struct part* restrict p, struct xpart* restrict xp,
-    double dt) {
+    struct part* restrict p, struct xpart* restrict xp, double dt) {
 
   /* set current time */
   code_units units = cooling->units;
@@ -617,7 +633,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
   cooling->units.velocity_units = cooling->units.a_units *
                                   cooling->units.length_units /
                                   cooling->units.time_units;
-  
+
   chemistry_data* chemistry = &cooling->chemistry;
 
   /* Create a chemistry object for parameters and rate data. */
@@ -628,7 +644,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
   // Set parameter values for chemistry.
   chemistry->use_grackle = 1;
   chemistry->with_radiative_cooling = 1;
-  
+
   /* molecular network with H, He, D
    From Cloudy table */
   chemistry->primordial_chemistry = COOLING_GRACKLE_MODE;
@@ -639,7 +655,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
   chemistry->use_radiative_transfer = 0;
   chemistry->use_volumetric_heating_rate = 0;
   chemistry->use_specific_heating_rate = 0;
-  
+
   /* Initialize the chemistry object. */
   if (initialize_chemistry_data(&cooling->units) == 0) {
     error("Error in initialize_chemistry_data.");
