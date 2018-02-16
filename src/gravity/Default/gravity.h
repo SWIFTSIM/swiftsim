@@ -21,8 +21,11 @@
 #define SWIFT_DEFAULT_GRAVITY_H
 
 #include <float.h>
+
+/* Local includes. */
 #include "gravity_properties.h"
 #include "minmax.h"
+
 
 /**
  * @brief Returns the mass of a particle
@@ -156,11 +159,6 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
   gp->epsilon = grav_props->epsilon;
 
   gravity_init_gpart(gp);
-
-#ifdef WITH_LOGGER
-  gp->last_output = SHRT_MAX;
-  gp->last_offset = 0;
-#endif
 }
 
 #endif /* SWIFT_DEFAULT_GRAVITY_H */

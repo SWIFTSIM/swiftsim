@@ -34,6 +34,7 @@
 #include "adiabatic_index.h"
 #include "approx_math.h"
 #include "dimension.h"
+#include "engine.h"
 #include "equation_of_state.h"
 #include "hydro_properties.h"
 #include "hydro_space.h"
@@ -520,5 +521,21 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
 }
+
+
+#ifdef WITH_LOGGER
+/**
+ * @brief Should this particle write its data now ?
+ *
+ * @param xp The #xpart.
+ * @param e The #engine containing information about the current time.
+ * @return 1 if the #part should write, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int xpart_should_write(
+    const struct xpart *xp, const struct engine *e) {
+
+  return (xp->last_output > e->logger_max_steps);  
+}
+#endif
 
 #endif /* SWIFT_GADGET2_HYDRO_H */

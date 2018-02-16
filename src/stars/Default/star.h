@@ -43,7 +43,7 @@ __attribute__((always_inline)) INLINE static float star_compute_timestep(
  */
 __attribute__((always_inline)) INLINE static void star_first_init_spart(
     struct spart* sp) {
-
+  
   sp->time_bin = 0;
 }
 
