@@ -29,6 +29,7 @@
 
 /* Local includes. */
 #include "const.h"
+#include "cooling_io.h"
 #include "error.h"
 #include "hydro.h"
 #include "io_properties.h"
@@ -36,16 +37,6 @@
 #include "part.h"
 #include "physical_constants.h"
 #include "units.h"
-
-/**
- * @brief Writes the current model of SPH to the file
- * @param h_grpsph The HDF5 group in which to write
- */
-__attribute__((always_inline)) INLINE static void cooling_write_flavour(
-    hid_t h_grpsph) {
-
-  io_write_attribute_s(h_grpsph, "Cooling Model", "Constant Lambda");
-}
 
 /**
  * @brief Calculates du/dt in code units for a particle.
