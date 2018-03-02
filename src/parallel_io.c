@@ -828,9 +828,11 @@ void write_output_parallel(struct engine* e, const char* baseName,
   int periodic = e->s->periodic;
   int numFiles = 1;
   struct part* parts = e->s->parts;
+  struct xpart* xparts = e->s->xparts;
   struct gpart* gparts = e->s->gparts;
   struct gpart* dmparts = NULL;
   struct spart* sparts = e->s->sparts;
+  const struct cooling_function_data *cooling = e->cooling_func;
   static int outputCount = 0;
   FILE* xmfFile = 0;
 
@@ -1060,6 +1062,7 @@ void write_output_parallel(struct engine* e, const char* baseName,
         Nparticles = Ngas;
         hydro_write_particles(parts, list, &num_fields);
         num_fields += chemistry_write_particles(parts, list + num_fields);
+	num_fields += cooling_write_particles(xparts, list + num_fields, cooling);
         break;
 
       case swift_type_dark_matter:
