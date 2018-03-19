@@ -613,7 +613,7 @@ int main(int argc, char *argv[]) {
   if (with_cooling && myrank == 0) cooling_print(&cooling_func);
 
   /* Initialise the chemistry */
-  struct chemistry_data chemistry;
+  struct chemistry_global_data chemistry;
   chemistry_init(params, &us, &prog_const, &chemistry);
   if (myrank == 0) chemistry_print(&chemistry);
 

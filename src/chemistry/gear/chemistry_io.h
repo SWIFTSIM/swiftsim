@@ -39,7 +39,7 @@ __attribute__((always_inline)) INLINE static int chemistry_read_particles(
   /* List what we want to read */
   list[0] =
       io_make_input_field("Z", FLOAT, 1, OPTIONAL, UNIT_CONV_NO_UNITS,
-                          parts, chemistry_global_data.Z);
+                          parts, chemistry_data.Z);
 
   return 1;
 }
@@ -67,7 +67,7 @@ __attribute__((always_inline)) INLINE static int chemistry_write_particles(
 
   /* List what we want to write */
   list[0] = io_make_output_field("Z", FLOAT, 1, UNIT_CONV_NO_UNITS,
-                                 parts, chemistry_global_data.Z);
+                                 parts, chemistry_data.Z);
 
   return 1;
 }
