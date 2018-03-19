@@ -43,8 +43,8 @@
 void chemistry_init(const struct swift_params* parameter_file,
                     const struct unit_system* us,
                     const struct phys_const* phys_const,
-                    struct chemistry_data* data);
+                    struct chemistry_global_data* data);
 
-void chemistry_print(const struct chemistry_data* data);
+void chemistry_print(const struct chemistry_global_data* data);
 
 #endif /* SWIFT_CHEMISTRY_H */

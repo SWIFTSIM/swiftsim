@@ -2620,7 +2620,7 @@ void space_synchronize_particle_positions(struct space *s) {
  * Calls hydro_first_init_part() on all the particles
  */
 void space_first_init_parts(struct space *s,
-                            const struct chemistry_data *chemistry) {
+                            const struct chemistry_global_data *chemistry) {
 
   const size_t nr_parts = s->nr_parts;
   struct part *restrict p = s->parts;

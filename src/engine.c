@@ -5126,7 +5126,7 @@ void engine_init(struct engine *e, struct space *s,
                  const struct gravity_props *gravity,
                  const struct external_potential *potential,
                  const struct cooling_function_data *cooling_func,
-                 const struct chemistry_data *chemistry,
+                 const struct chemistry_global_data *chemistry,
                  struct sourceterms *sourceterms) {
 
   /* Clean-up everything */
