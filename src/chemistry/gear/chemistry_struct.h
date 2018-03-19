@@ -27,13 +27,17 @@ enum chemistry_element { chemistry_element_count = 0 };
 /**
  * @brief Global chemical abundance information.
  */
-struct chemistry_data {};
+struct chemistry_global_data {
+
+  /* Initial metallicity Z */
+  float initial_metallicity;
+};
 
 /**
  * @brief Properties of the chemistry function.
  */
 struct chemistry_part_data {
-  float he_density;
+  float Z;
 };
 
 #endif /* SWIFT_CHEMISTRY_STRUCT_GEAR_H */

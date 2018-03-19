@@ -29,6 +29,7 @@
 #include <math.h>
 
 /* Local includes. */
+#include "chemistry_io.h"
 #include "chemistry_struct.h"
 #include "error.h"
 #include "hydro.h"
@@ -48,8 +49,12 @@
  * @param data The global chemistry information.
  */
 __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
-    const struct part* restrict p, struct xpart* restrict xp,
-    const struct chemistry_data* data) {}
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct chemistry_global_data* data) {
+  if (data->initial_metallicity != -1)
+    p->chemistry_data.Z = data->initial_metallicity;
+  
+}
 
 /**
  * @brief Initialises the chemistry properties.
@@ -63,14 +68,18 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
  */
 static INLINE void chemistry_init_backend(
     const struct swift_params* parameter_file, const struct unit_system* us,
-    const struct phys_const* phys_const, struct chemistry_data* data) {}
+    const struct phys_const* phys_const, struct chemistry_global_data* data) {
+
+  /* read parameters */
+  chemistry_read_parameters(parameter_file, us, phys_const, data);
+}
 
 /**
  * @brief Prints the properties of the chemistry model to stdout.
  *
- * @brief The #chemistry_data containing information about the current model.
+ * @brief The #chemistry_global_data containing information about the current model.
  */
-static INLINE void chemistry_print_backend(const struct chemistry_data* data) {
+static INLINE void chemistry_print_backend(const struct chemistry_global_data* data) {
 
   message("Chemistry function is 'gear'.");
 }

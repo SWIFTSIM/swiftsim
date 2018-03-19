@@ -20,6 +20,10 @@
 #define SWIFT_CHEMISTRY_IO_GEAR_H
 
 #include "io_properties.h"
+#include "parser.h"
+#include "part.h"
+#include "physical_constants.h"
+#include "units.h"
 
 /**
  * @brief Specifies which particle fields to read from a dataset
@@ -29,15 +33,26 @@
  *
  * @return Returns the number of fields to read.
  */
-int chemistry_read_particles(struct part* parts, struct io_props* list) {
+__attribute__((always_inline)) INLINE static int chemistry_read_particles(
+    struct part* parts, struct io_props* list) {
 
   /* List what we want to read */
   list[0] =
-      io_make_input_field("HeDensity", FLOAT, 1, COMPULSORY, UNIT_CONV_DENSITY,
-                          parts, chemistry_data.he_density);
+      io_make_input_field("Z", FLOAT, 1, OPTIONAL, UNIT_CONV_NO_UNITS,
+                          parts, chemistry_global_data.Z);
 
   return 1;
 }
+
+__attribute__((always_inline)) INLINE static void chemistry_read_parameters(
+    const struct swift_params* parameter_file, const struct unit_system* us,
+    const struct phys_const* phys_const, struct chemistry_global_data* data) {
+
+  data->initial_metallicity =
+    parser_get_opt_param_float(parameter_file, "GearChemistry:InitialMetallicity",
+			       -1);
+}
+
 
 /**
  * @brief Specifies which particle fields to write to a dataset
@@ -47,11 +62,12 @@ int chemistry_read_particles(struct part* parts, struct io_props* list) {
  *
  * @return Returns the number of fields to write.
  */
-int chemistry_write_particles(const struct part* parts, struct io_props* list) {
+__attribute__((always_inline)) INLINE static int chemistry_write_particles(
+    const struct part* parts, struct io_props* list) {
 
   /* List what we want to write */
-  list[0] = io_make_output_field("HeDensity", FLOAT, 1, UNIT_CONV_DENSITY,
-                                 parts, chemistry_data.he_density);
+  list[0] = io_make_output_field("Z", FLOAT, 1, UNIT_CONV_NO_UNITS,
+                                 parts, chemistry_global_data.Z);
 
   return 1;
 }
@@ -60,9 +76,11 @@ int chemistry_write_particles(const struct part* parts, struct io_props* list) {
  * @brief Writes the current model of SPH to the file
  * @param h_grpsph The HDF5 group in which to write
  */
-void chemistry_write_flavour(hid_t h_grpsph) {
+__attribute__((always_inline)) INLINE static void chemistry_write_flavour(
+    hid_t h_grpsph) {
 
   io_write_attribute_s(h_grpsph, "Chemistry Model", "GEAR");
 }
+
 
 #endif /* SWIFT_CHEMISTRY_IO_GEAR_H */
