@@ -40,6 +40,12 @@ LambdaCooling:
   hydrogen_mass_abundance:     0.75       # Hydrogen mass abundance (dimensionless)
   cooling_tstep_mult:          1.0        # Dimensionless pre-factor for the time-step condition
 
+# Dimensionless constant cooling (AB 13/02/18)
+ConstCooling:
+  cooling_rate:         10000.0
+  min_energy:           0.0
+  cooling_tstep_mult:   1.0
+
 # Cooling with Grackle 2.0
 GrackleCooling:
   GrackleCloudyTable: ../CloudyData_UVB=HM2012.h5 # Name of the Cloudy Table (available on the grackle bitbucket repository)
@@ -60,3 +66,6 @@ EAGLEChemistry:
   InitAbundance_Iron:      0.000
   CalciumOverSilicon:      0.0941736
   SulphurOverSilicon:      0.6054160
+
+EagleCooling:
+  filename:                /cosma5/data/Eagle/BG_Tables/CoolingTables/
