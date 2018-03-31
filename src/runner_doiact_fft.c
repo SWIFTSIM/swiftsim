@@ -31,6 +31,7 @@
 #include "engine.h"
 #include "error.h"
 #include "kernel_long_gravity.h"
+#include "part.h"
 #include "runner.h"
 #include "space.h"
 #include "timers.h"
@@ -89,15 +90,71 @@ __attribute__((always_inline)) INLINE static void multipole_to_mesh_CIC(
   if (k < 0 || k >= N) error("Invalid multipole position in z");
 #endif
 
+  const double mass = m->m_pole.M_000;
+
   /* CIC ! */
-  rho[row_major_id(i + 0, j + 0, k + 0, N)] += m->m_pole.M_000 * tx * ty * tz;
-  rho[row_major_id(i + 0, j + 0, k + 1, N)] += m->m_pole.M_000 * tx * ty * dz;
-  rho[row_major_id(i + 0, j + 1, k + 0, N)] += m->m_pole.M_000 * tx * dy * tz;
-  rho[row_major_id(i + 0, j + 1, k + 1, N)] += m->m_pole.M_000 * tx * dy * dz;
-  rho[row_major_id(i + 1, j + 0, k + 0, N)] += m->m_pole.M_000 * dx * ty * tz;
-  rho[row_major_id(i + 1, j + 0, k + 1, N)] += m->m_pole.M_000 * dx * ty * dz;
-  rho[row_major_id(i + 1, j + 1, k + 0, N)] += m->m_pole.M_000 * dx * dy * tz;
-  rho[row_major_id(i + 1, j + 1, k + 1, N)] += m->m_pole.M_000 * dx * dy * dz;
+  rho[row_major_id(i + 0, j + 0, k + 0, N)] += mass * tx * ty * tz;
+  rho[row_major_id(i + 0, j + 0, k + 1, N)] += mass * tx * ty * dz;
+  rho[row_major_id(i + 0, j + 1, k + 0, N)] += mass * tx * dy * tz;
+  rho[row_major_id(i + 0, j + 1, k + 1, N)] += mass * tx * dy * dz;
+  rho[row_major_id(i + 1, j + 0, k + 0, N)] += mass * dx * ty * tz;
+  rho[row_major_id(i + 1, j + 0, k + 1, N)] += mass * dx * ty * dz;
+  rho[row_major_id(i + 1, j + 1, k + 0, N)] += mass * dx * dy * tz;
+  rho[row_major_id(i + 1, j + 1, k + 1, N)] += mass * dx * dy * dz;
+}
+
+/**
+ * @brief Assigns a given gpart to a density mesh using the CIC method.
+ *
+ * Debugging routine.
+ *
+ * @param gp The #gpart.
+ * @param rho The density mesh.
+ * @param N the size of the mesh along one axis.
+ * @param fac The width of a mesh cell.
+ * @param dim The dimensions of the simulation box.
+ */
+__attribute__((always_inline)) INLINE static void gpart_to_mesh_CIC(
+    const struct gpart* gp, double* rho, int N, double fac,
+    const double dim[3]) {
+
+  /* Box wrap the multipole's position */
+  const double pos_x = box_wrap(gp->x[0], 0., dim[0]);
+  const double pos_y = box_wrap(gp->x[1], 0., dim[1]);
+  const double pos_z = box_wrap(gp->x[2], 0., dim[2]);
+
+  int i = (int)(fac * pos_x);
+  if (i >= N) i = N - 1;
+  const double dx = fac * pos_x - i;
+  const double tx = 1. - dx;
+
+  int j = (int)(fac * pos_y);
+  if (j >= N) j = N - 1;
+  const double dy = fac * pos_y - j;
+  const double ty = 1. - dy;
+
+  int k = (int)(fac * pos_z);
+  if (k >= N) k = N - 1;
+  const double dz = fac * pos_z - k;
+  const double tz = 1. - dz;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (i < 0 || i >= N) error("Invalid multipole position in x");
+  if (j < 0 || j >= N) error("Invalid multipole position in y");
+  if (k < 0 || k >= N) error("Invalid multipole position in z");
+#endif
+
+  const double mass = gp->mass;
+
+  /* CIC ! */
+  rho[row_major_id(i + 0, j + 0, k + 0, N)] += mass * tx * ty * tz;
+  rho[row_major_id(i + 0, j + 0, k + 1, N)] += mass * tx * ty * dz;
+  rho[row_major_id(i + 0, j + 1, k + 0, N)] += mass * tx * dy * tz;
+  rho[row_major_id(i + 0, j + 1, k + 1, N)] += mass * tx * dy * dz;
+  rho[row_major_id(i + 1, j + 0, k + 0, N)] += mass * dx * ty * tz;
+  rho[row_major_id(i + 1, j + 0, k + 1, N)] += mass * dx * ty * dz;
+  rho[row_major_id(i + 1, j + 1, k + 0, N)] += mass * dx * dy * tz;
+  rho[row_major_id(i + 1, j + 1, k + 1, N)] += mass * dx * dy * dz;
 }
 
 /**
@@ -151,6 +208,59 @@ __attribute__((always_inline)) INLINE static void mesh_to_multipole_CIC(
   m->pot.F_000 += pot[row_major_id(i + 1, j + 1, k + 1, N)] * dx * dy * dz;
 }
 
+/**
+ * @brief Computes the potential on a gpart from a given mesh using the CIC
+ * method.
+ *
+ * Debugging routine.
+ *
+ * @param gp The #gpart.
+ * @param pot The potential mesh.
+ * @param N the size of the mesh along one axis.
+ * @param fac width of a mesh cell.
+ * @param dim The dimensions of the simulation box.
+ */
+__attribute__((always_inline)) INLINE static void mesh_to_gparts_CIC(
+    struct gpart* gp, const double* pot, int N, double fac,
+    const double dim[3]) {
+
+  /* Box wrap the multipole's position */
+  const double pos_x = box_wrap(gp->x[0], 0., dim[0]);
+  const double pos_y = box_wrap(gp->x[1], 0., dim[1]);
+  const double pos_z = box_wrap(gp->x[2], 0., dim[2]);
+
+  int i = (int)(fac * pos_x);
+  if (i >= N) i = N - 1;
+  const double dx = fac * pos_x - i;
+  const double tx = 1. - dx;
+
+  int j = (int)(fac * pos_y);
+  if (j >= N) j = N - 1;
+  const double dy = fac * pos_y - j;
+  const double ty = 1. - dy;
+
+  int k = (int)(fac * pos_z);
+  if (k >= N) k = N - 1;
+  const double dz = fac * pos_z - k;
+  const double tz = 1. - dz;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (i < 0 || i >= N) error("Invalid multipole position in x");
+  if (j < 0 || j >= N) error("Invalid multipole position in y");
+  if (k < 0 || k >= N) error("Invalid multipole position in z");
+#endif
+
+  /* CIC ! */
+  gp->potential += pot[row_major_id(i + 0, j + 0, k + 0, N)] * tx * ty * tz;
+  gp->potential += pot[row_major_id(i + 0, j + 0, k + 1, N)] * tx * ty * dz;
+  gp->potential += pot[row_major_id(i + 0, j + 1, k + 0, N)] * tx * dy * tz;
+  gp->potential += pot[row_major_id(i + 0, j + 1, k + 1, N)] * tx * dy * dz;
+  gp->potential += pot[row_major_id(i + 1, j + 0, k + 0, N)] * dx * ty * tz;
+  gp->potential += pot[row_major_id(i + 1, j + 0, k + 1, N)] * dx * ty * dz;
+  gp->potential += pot[row_major_id(i + 1, j + 1, k + 0, N)] * dx * dy * tz;
+  gp->potential += pot[row_major_id(i + 1, j + 1, k + 1, N)] * dx * dy * dz;
+}
+
 #endif
 
 /**
@@ -181,7 +291,7 @@ void runner_do_grav_fft(struct runner* r, int timer) {
 
   /* Recover the list of top-level multipoles */
   const int nr_cells = s->nr_cells;
-  struct gravity_tensors* restrict multipoles = s->multipoles_top;
+  //struct gravity_tensors* restrict multipoles = s->multipoles_top;
 
 #ifdef SWIFT_DEBUG_CHECKS
   const struct cell* cells = s->cells_top;
@@ -211,8 +321,12 @@ void runner_do_grav_fft(struct runner* r, int timer) {
 
   /* Do a CIC mesh assignment of the multipoles */
   bzero(rho, N * N * N * sizeof(double));
-  for (int i = 0; i < nr_cells; ++i)
-    multipole_to_mesh_CIC(&multipoles[i], rho, N, cell_fac, dim);
+  /* for (int i = 0; i < nr_cells; ++i) */
+  /*   multipole_to_mesh_CIC(&multipoles[i], rho, N, cell_fac, dim); */
+
+  /* Do a CIC mesh assignment of the gparts */
+  for (size_t i = 0; i < s->nr_gparts; ++i)
+    gpart_to_mesh_CIC(&s->gparts[i], rho, N, cell_fac, dim);
 
   /* Fourier transform to go to magic-land */
   fftw_execute(forward_plan);
@@ -287,9 +401,13 @@ void runner_do_grav_fft(struct runner* r, int timer) {
   /* rho now contains the potential */
   /* This array is now again NxNxN real numbers */
 
-  /* Get the potential from the mesh using CIC */
-  for (int i = 0; i < nr_cells; ++i)
-    mesh_to_multipole_CIC(&multipoles[i], rho, N, cell_fac, dim);
+  /* Get the potential from the mesh to the gravity tensors using CIC */
+  /* for (int i = 0; i < nr_cells; ++i) */
+  /*   mesh_to_multipole_CIC(&multipoles[i], rho, N, cell_fac, dim); */
+
+  /* Get the potential from the mesh to the gparts using CIC */
+  for (size_t i = 0; i < s->nr_gparts; ++i)
+    mesh_to_gparts_CIC(&s->gparts[i], rho, N, cell_fac, dim);
 
   /* Clean-up the mess */
   fftw_destroy_plan(forward_plan);
@@ -306,6 +424,15 @@ void runner_do_grav_fft(struct runner* r, int timer) {
 }
 
 #ifdef HAVE_FFTW
+
+/**
+ * @brief Dump a real array of size NxNxN to stdout.
+ *
+ * Debugging routine.
+ *
+ * @param array The array to dump.
+ * @param N The side-length of the array to dump
+ */
 void print_array(double* array, int N) {
 
   for (int k = N - 1; k >= 0; --k) {
@@ -319,6 +446,14 @@ void print_array(double* array, int N) {
   }
 }
 
+/**
+ * @brief Dump a complex array of size NxNxN to stdout.
+ *
+ * Debugging routine.
+ *
+ * @param array The array to dump.
+ * @param N The side-length of the array to dump
+ */
 void print_carray(fftw_complex* array, int N) {
 
   for (int k = N - 1; k >= 0; --k) {
