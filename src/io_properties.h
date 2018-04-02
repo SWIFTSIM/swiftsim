@@ -103,7 +103,7 @@ struct io_props {
  * @brief Constructs an #io_props from its parameters
  */
 #define io_make_input_field(name, type, dim, importance, units, part, field) \
-  io_make_input_field_(name, type, dim, importance, units,		\
+  io_make_input_field_(name, type, dim, importance, units,                   \
                        (char*)(&(part[0]).field), sizeof(part[0]))
 
 /**
@@ -147,7 +147,8 @@ INLINE static struct io_props io_make_input_field_(
 /**
  * @brief Constructs an #io_props from its parameters
  */
-#define io_make_output_field(name, type, dim, units, part, field, default_output) \
+#define io_make_output_field(name, type, dim, units, part, field,          \
+                             default_output)                               \
   io_make_output_field_(name, type, dim, units, (char*)(&(part[0]).field), \
                         sizeof(part[0]), default_output)
 
@@ -192,9 +193,10 @@ INLINE static struct io_props io_make_output_field_(
  * @brief Constructs an #io_props (with conversion) from its parameters
  */
 #define io_make_output_field_convert_part(name, type, dim, units, part, xpart, \
-                                          convert, default_output)	\
-  io_make_output_field_convert_part_##type(				\
-					   name, type, dim, units, sizeof(part[0]), part, xpart, convert, default_output)
+                                          convert, default_output)             \
+  io_make_output_field_convert_part_##type(name, type, dim, units,             \
+                                           sizeof(part[0]), part, xpart,       \
+                                           convert, default_output)
 
 /**
  * @brief Construct an #io_props from its parameters
@@ -215,8 +217,7 @@ INLINE static struct io_props io_make_output_field_convert_part_FLOAT(
     const char name[FIELD_BUFFER_SIZE], enum IO_DATA_TYPE type, int dimension,
     enum unit_conversion_factor units, size_t partSize,
     const struct part* parts, const struct xpart* xparts,
-    conversion_func_part_float functionPtr,
-								      int default_output) {
+    conversion_func_part_float functionPtr, int default_output) {
 
   struct io_props r;
   strcpy(r.name, name);
@@ -284,11 +285,11 @@ INLINE static struct io_props io_make_output_field_convert_part_DOUBLE(
 /**
  * @brief Constructs an #io_props (with conversion) from its parameters
  */
-#define io_make_output_field_convert_gpart(name, type, dim, units, gpart, \
-                                           convert, default_output)	\
-  io_make_output_field_convert_gpart_##type(name, type, dim, units,	\
+#define io_make_output_field_convert_gpart(name, type, dim, units, gpart,     \
+                                           convert, default_output)           \
+  io_make_output_field_convert_gpart_##type(name, type, dim, units,           \
                                             sizeof(gpart[0]), gpart, convert, \
-					    default_output)
+                                            default_output)
 
 /**
  * @brief Construct an #io_props from its parameters
@@ -308,7 +309,7 @@ INLINE static struct io_props io_make_output_field_convert_gpart_FLOAT(
     const char name[FIELD_BUFFER_SIZE], enum IO_DATA_TYPE type, int dimension,
     enum unit_conversion_factor units, size_t gpartSize,
     const struct gpart* gparts, conversion_func_gpart_float functionPtr,
-								       int default_output) {
+    int default_output) {
 
   struct io_props r;
   strcpy(r.name, name);
@@ -349,7 +350,7 @@ INLINE static struct io_props io_make_output_field_convert_gpart_DOUBLE(
     const char name[FIELD_BUFFER_SIZE], enum IO_DATA_TYPE type, int dimension,
     enum unit_conversion_factor units, size_t gpartSize,
     const struct gpart* gparts, conversion_func_gpart_double functionPtr,
-									int default_output) {
+    int default_output) {
 
   struct io_props r;
   strcpy(r.name, name);

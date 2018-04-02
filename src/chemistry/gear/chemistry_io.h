@@ -51,13 +51,14 @@ int chemistry_read_particles(struct part* parts, struct io_props* list) {
 int chemistry_write_particles(const struct part* parts, struct io_props* list) {
 
   /* List what we want to write */
-  list[0] = io_make_output_field(
-      "SmoothedElementAbundance", FLOAT, chemistry_element_count,
-      UNIT_CONV_NO_UNITS, parts, chemistry_data.smoothed_metal_mass_fraction);
+  list[0] =
+      io_make_output_field("SmoothedElementAbundance", FLOAT,
+                           chemistry_element_count, UNIT_CONV_NO_UNITS, parts,
+                           chemistry_data.smoothed_metal_mass_fraction, 1);
 
   list[1] = io_make_output_field("ElementAbundance", FLOAT,
                                  chemistry_element_count, UNIT_CONV_NO_UNITS,
-                                 parts, chemistry_data.metal_mass_fraction);
+                                 parts, chemistry_data.metal_mass_fraction, 1);
 
   return 2;
 }
