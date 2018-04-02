@@ -5194,6 +5194,7 @@ void engine_unpin() {
  */
 void engine_init(
     struct engine *e, struct space *s, const struct swift_params *params,
+    const struct swift_params *output_fields,
     long long Ngas, long long Ndm, int policy, int verbose,
     struct repartition *reparttype, const struct unit_system *internal_units,
     const struct phys_const *physical_constants, struct cosmology *cosmo,
@@ -5252,6 +5253,7 @@ void engine_init(
   e->chemistry = chemistry;
   e->sourceterms = sourceterms;
   e->parameter_file = params;
+  e->output_fields = output_fields;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
