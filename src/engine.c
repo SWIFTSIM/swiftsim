@@ -5325,18 +5325,16 @@ void engine_unpin() {
  * @param chemistry The chemistry information.
  * @param sourceterms The properties of the source terms function.
  */
-void engine_init(struct engine *e, struct space *s,
-                 const struct swift_params *params, long long Ngas,
-                 long long Ndm, int policy, int verbose,
-                 struct repartition *reparttype,
-                 const struct unit_system *internal_units,
-                 const struct phys_const *physical_constants,
-                 struct cosmology *cosmo, const struct hydro_props *hydro,
-                 struct gravity_props *gravity,
-                 const struct external_potential *potential,
-                 const struct cooling_function_data *cooling_func,
-                 const struct chemistry_global_data *chemistry,
-                 struct sourceterms *sourceterms) {
+void engine_init(
+    struct engine *e, struct space *s, const struct swift_params *params,
+    const struct swift_params *output_fields,
+    long long Ngas, long long Ndm, int policy, int verbose,
+    struct repartition *reparttype, const struct unit_system *internal_units,
+    const struct phys_const *physical_constants, struct cosmology *cosmo,
+    const struct hydro_props *hydro, struct gravity_props *gravity,
+    const struct external_potential *potential,
+    const struct cooling_function_data *cooling_func,
+    const struct chemistry_data *chemistry, struct sourceterms *sourceterms) {
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
@@ -5388,6 +5386,7 @@ void engine_init(struct engine *e, struct space *s,
   e->chemistry = chemistry;
   e->sourceterms = sourceterms;
   e->parameter_file = params;
+  e->output_fields = output_fields;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
