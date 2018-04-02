@@ -335,9 +335,9 @@ void engine_print_stats(struct engine *e);
 void engine_dump_snapshot(struct engine *e);
 void engine_init(
     struct engine *e, struct space *s, const struct swift_params *params,
-    const struct swift_params *output_fields,
-    long long Ngas, long long Ndm, int policy, int verbose,
-    struct repartition *reparttype, const struct unit_system *internal_units,
+    const struct swift_params *output_fields, long long Ngas, long long Ndm,
+    int policy, int verbose, struct repartition *reparttype,
+    const struct unit_system *internal_units,
     const struct phys_const *physical_constants, struct cosmology *cosmo,
     const struct hydro_props *hydro, struct gravity_props *gravity,
     const struct external_potential *potential,

@@ -132,32 +132,32 @@ void hydro_write_particles(struct part* parts, struct io_props* list,
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_part(
-      "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, parts, convert_part_pos);
+      "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, parts, convert_part_pos, 1);
   list[1] = io_make_output_field("Velocities", FLOAT, 3, UNIT_CONV_SPEED, parts,
-                                 primitives.v);
+                                 primitives.v, 1);
   list[2] = io_make_output_field("Masses", FLOAT, 1, UNIT_CONV_MASS, parts,
-                                 conserved.mass);
+                                 conserved.mass, 1);
   list[3] = io_make_output_field("SmoothingLength", FLOAT, 1, UNIT_CONV_LENGTH,
-                                 parts, h);
+                                 parts, h, 1);
   list[4] = io_make_output_field_convert_part("InternalEnergy", FLOAT, 1,
                                               UNIT_CONV_ENERGY_PER_UNIT_MASS,
-                                              parts, convert_u);
+                                              parts, convert_u, 1);
   list[5] = io_make_output_field("ParticleIDs", ULONGLONG, 1,
-                                 UNIT_CONV_NO_UNITS, parts, id);
+                                 UNIT_CONV_NO_UNITS, parts, id, 1);
   list[6] = io_make_output_field("Acceleration", FLOAT, 3,
-                                 UNIT_CONV_ACCELERATION, parts, a_hydro);
+                                 UNIT_CONV_ACCELERATION, parts, a_hydro, 1);
   list[7] = io_make_output_field("Density", FLOAT, 1, UNIT_CONV_DENSITY, parts,
-                                 primitives.rho);
+                                 primitives.rho, 1);
   list[8] = io_make_output_field("Volume", FLOAT, 1, UNIT_CONV_VOLUME, parts,
-                                 cell.volume);
+                                 cell.volume, 1);
   list[9] = io_make_output_field("GradDensity", FLOAT, 3, UNIT_CONV_DENSITY,
-                                 parts, primitives.gradients.rho);
+                                 parts, primitives.gradients.rho, 1);
   list[10] = io_make_output_field_convert_part(
-      "Entropy", FLOAT, 1, UNIT_CONV_ENTROPY, parts, convert_A);
+      "Entropy", FLOAT, 1, UNIT_CONV_ENTROPY, parts, convert_A, 1);
   list[11] = io_make_output_field("Pressure", FLOAT, 1, UNIT_CONV_PRESSURE,
-                                  parts, primitives.P);
+                                  parts, primitives.P, 1);
   list[12] = io_make_output_field_convert_part(
-      "TotEnergy", FLOAT, 1, UNIT_CONV_ENERGY, parts, convert_Etot);
+      "TotEnergy", FLOAT, 1, UNIT_CONV_ENERGY, parts, convert_Etot, 1);
 }
 
 /**
