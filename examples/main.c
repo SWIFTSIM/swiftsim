@@ -482,7 +482,6 @@ int main(int argc, char *argv[]) {
   MPI_Bcast(output_fields, sizeof(struct swift_params), MPI_BYTE, 0,
             MPI_COMM_WORLD);
 #endif
-
   /* Check that we can write the snapshots by testing if the output
    * directory exists and is searchable and writable. */
   char basename[PARSER_MAX_LINE_SIZE];
@@ -828,6 +827,10 @@ int main(int argc, char *argv[]) {
                 &cooling_func, &chemistry, &sourceterms);
     engine_config(0, &e, params, nr_nodes, myrank, nr_threads, with_aff,
                   talking, restart_file);
+
+    /* check output field */
+    io_check_output_fields(output_fields, &e);
+
     if (myrank == 0) {
       clocks_gettime(&toc);
       message("engine_init took %.3f %s.", clocks_diff(&tic, &toc),
@@ -862,6 +865,7 @@ int main(int argc, char *argv[]) {
       message("Time integration ready to start. End of dry-run.");
     engine_clean(&e);
     free(params);
+    free(output_fields);
     return 0;
   }
 
@@ -1083,6 +1087,7 @@ int main(int argc, char *argv[]) {
   /* Clean everything */
   if (with_verbose_timers) timers_close_file();
   engine_clean(&e);
+  free(output_fields);
   free(params);
 
   /* Say goodbye. */
