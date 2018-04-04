@@ -4689,9 +4689,8 @@ void engine_step(struct engine *e) {
 
 #ifdef WITH_LOGGER
     engine_dump_index(e);
-#else
-    engine_dump_snapshot(e);
 #endif
+    engine_dump_snapshot(e);
 
     /* ... and find the next output time */
     engine_compute_next_snapshot_time(e);
