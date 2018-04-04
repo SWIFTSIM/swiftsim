@@ -75,8 +75,12 @@ Snapshots:
   UnitVelocity_in_cgs: 1  # (Optional) Unit system for the outputs (Centimeters per second)
   UnitCurrent_in_cgs:  1  # (Optional) Unit system for the outputs (Amperes)
   UnitTemp_in_cgs:     1  # (Optional) Unit system for the outputs (Kelvin)
-  logger_max_steps:    10 # (Optional) Number of particle steps between two chunk writing if using logger
-  logger_size:         10. # buffer size of the logger file in MB
+
+# Parameters governing the logger snapshot system
+Logger:
+  max_steps:            10     # (Optional) Update the particle log every this many updates
+  mmaped_buffer_size:   .01    # buffer size in GB
+  basename:             indice # Common part of the filenames
   
 # Parameters governing the conserved quantities statistics
 Statistics:
