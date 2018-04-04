@@ -266,7 +266,7 @@ struct engine {
   size_t logger_time_offset;
 
   /* Size of the dump file */
-  size_t logger_size;
+  size_t logger_buffer_size;
 #endif
 
   /* Need to dump a snapshot ? */
