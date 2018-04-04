@@ -4381,7 +4381,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 #ifdef WITH_LOGGER
   logger_log_timestamp(e->ti_old, &e->logger_time_offset,
 		       e->logger_dump);
-  logger_ensure_size(e->total_nr_parts, e->logger_size);
+  logger_ensure_size(e->total_nr_parts, e->logger_buffer_size);
 #endif
   
   /* Now, launch the calculation */
@@ -4597,8 +4597,8 @@ void engine_step(struct engine *e) {
 #ifdef WITH_LOGGER
   logger_log_timestamp(e->ti_current, &e->logger_time_offset,
 		       e->logger_dump);
-  logger_ensure_size(e->total_nr_parts, e->logger_size);
-  dump_ensure(e->logger_dump, e->logger_size);
+  logger_ensure_size(e->total_nr_parts, e->logger_buffer_size);
+  dump_ensure(e->logger_dump, e->logger_buffer_size);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
@@ -5391,8 +5391,7 @@ void engine_dump_index(struct engine *e) {
 #endif
 
   /* Dump... */
-  /* Should use snapshotBaseName for the index name */
-    write_index_single(e, e->snapshotBaseName, e->internal_units,
+    write_index_single(e, e->loggerBaseName, e->internal_units,
 		       e->snapshotUnits);
 
   e->dump_snapshot = 0;
@@ -6111,7 +6110,7 @@ void engine_config(int restart, struct engine *e,
   if (e->nodeID == 0)
     message("Expected output of over 9000\n Should write a real message...");
   logger_write_file_header(e->logger_dump, e);
-  dump_ensure(e->logger_dump, e->logger_size);
+  dump_ensure(e->logger_dump, e->logger_buffer_size);
   e->logger_time_offset = 0;
 #endif
 
