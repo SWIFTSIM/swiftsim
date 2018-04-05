@@ -54,27 +54,41 @@ GrackleCooling:
   GrackleHSShieldingDensityThreshold: 1.1708e-26 # self shielding threshold in internal system of units
 
 EAGLEChemistry:
-  InitMetallicity:         0.
-  InitAbundance_Hydrogen:  0.752
-  InitAbundance_Helium:    0.248
-  InitAbundance_Carbon:    0.000
-  InitAbundance_Nitrogen:  0.000
-  InitAbundance_Oxygen:    0.000
-  InitAbundance_Neon:      0.000
-  InitAbundance_Magnesium: 0.000
-  InitAbundance_Silicon:   0.000
-  InitAbundance_Iron:      0.000
+  InitMetallicity:         0.014
+  InitAbundance_Hydrogen:  0.706
+  InitAbundance_Helium:    0.280
+  InitAbundance_Carbon:    0.00207
+  InitAbundance_Nitrogen:  8.35e-4
+  InitAbundance_Oxygen:    0.00549
+  InitAbundance_Neon:      0.00141
+  InitAbundance_Magnesium: 5.91e-4
+  InitAbundance_Silicon:   6.83e-4
+  InitAbundance_Iron:      0.0011
   CalciumOverSilicon:      0.0941736
   SulphurOverSilicon:      0.6054160
+  #InitMetallicity:         0.
+  #InitAbundance_Hydrogen:  0.752
+  #InitAbundance_Helium:    0.248
+  #InitAbundance_Carbon:    0.000
+  #InitAbundance_Nitrogen:  0.000
+  #InitAbundance_Oxygen:    0.000
+  #InitAbundance_Neon:      0.000
+  #InitAbundance_Magnesium: 0.000
+  #InitAbundance_Silicon:   0.000
+  #InitAbundance_Iron:      0.000
+  #CalciumOverSilicon:      0.0941736
+  #SulphurOverSilicon:      0.6054160
 
 EagleCooling:
   filename:                /cosma5/data/Eagle/BG_Tables/CoolingTables/
+  reionisation_redshift:   8.898
 
 Cosmology:
   Omega_m:        0.307
   Omega_lambda:   0.693
   Omega_b:        0.0455
   h:              0.6777
-  a_begin:        0.0078125
+  #a_begin:        0.0078125
+  a_begin:        0.25
   a_end:          1.0
 
