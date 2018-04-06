@@ -9,4 +9,9 @@ Traditional (Density-Entropy) SPH
    :hidden:
    :caption: Contents:
 
-TBD
+Traditional, GADGET-2-like, Density-Entropy SPH is available in SWIFT with
+a Monaghan artificial viscosity scheme and Balsara switch.
+
+To use this hydro scheme, you need no extra configuration options -- it is the
+default!
+
