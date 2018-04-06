@@ -58,7 +58,7 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c \
     runner_doiact_fft.c threadpool.c cooling.c sourceterms.c \
     statistics.c runner_doiact_vec.c profiler.c dump.c logger.c \
     part_type.c xmf.c gravity_properties.c gravity.c \
-    collectgroup.c hydro_space.c equation_of_state.c \
+    collectgroup.c hydro_space.c \
     chemistry.c cosmology.c restart.c
 
 # Include files for distribution, not installation.
@@ -130,7 +130,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  chemistry/EAGLE/chemistry.h \
 		 chemistry/EAGLE/chemistry_io.h \
 		 chemistry/EAGLE/chemistry_struct.h\
-		 chemistry/EAGLE/chemistry_iact.h
+		 chemistry/EAGLE/chemistry_iact.h \
+                 equation_of_state/ideal_gas/equation_of_state.h \
+                 equation_of_state/isothermal/equation_of_state.h
 
 
 # Sources and flags for regular library

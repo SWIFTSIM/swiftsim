@@ -36,6 +36,7 @@
 #include "debug.h"
 #include "dump.h"
 #include "engine.h"
+#include "equation_of_state.h"
 #include "error.h"
 #include "gravity.h"
 #include "gravity_derivatives.h"

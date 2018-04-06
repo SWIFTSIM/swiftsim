@@ -289,6 +289,9 @@ struct engine {
   /* Properties of the chemistry model */
   const struct chemistry_data *chemistry;
 
+  /* Properties of the equation of state */
+  const struct eos_parameters *equation_of_state;
+
   /* Properties of source terms */
   struct sourceterms *sourceterms;
 
@@ -338,7 +341,8 @@ void engine_init(
     const struct hydro_props *hydro, struct gravity_props *gravity,
     const struct external_potential *potential,
     const struct cooling_function_data *cooling_func,
-    const struct chemistry_data *chemistry, struct sourceterms *sourceterms);
+    const struct chemistry_data *chemistry, struct sourceterms *sourceterms,
+    const struct eos_parameters *eos);
 void engine_config(int restart, struct engine *e,
                    const struct swift_params *params, int nr_nodes, int nodeID,
                    int nr_threads, int with_aff, int verbose,

@@ -82,14 +82,15 @@ struct hydro_props {
   float hydrogen_mass_fraction;
 };
 
-void hydro_props_print(const struct hydro_props *p);
+void hydro_props_print(const struct engine *e, const struct hydro_props *p);
 void hydro_props_init(struct hydro_props *p,
                       const struct phys_const *phys_const,
                       const struct unit_system *us,
                       const struct swift_params *params);
 
 #if defined(HAVE_HDF5)
-void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p);
+void hydro_props_print_snapshot(hid_t h_grpsph, const struct engine *e,
+				const struct hydro_props *p);
 #endif
 
 /* Dump/restore. */

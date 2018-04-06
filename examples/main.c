@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
   struct space s;
   struct spart *sparts = NULL;
   struct unit_system us;
+  struct eos_parameters equation_of_state;
 
   int nr_nodes = 1, myrank = 0;
 
@@ -611,7 +612,7 @@ int main(int argc, char *argv[]) {
     /* Initialise the hydro properties */
     if (with_hydro)
       hydro_props_init(&hydro_properties, &prog_const, &us, params);
-    if (with_hydro) eos_init(&eos, params);
+    if (with_hydro) eos_init(&equation_of_state, params);
 
     /* Initialise the gravity properties */
     if (with_self_gravity)
@@ -799,7 +800,8 @@ int main(int argc, char *argv[]) {
     engine_init(&e, &s, params, N_total[0], N_total[1], engine_policies,
                 talking, &reparttype, &us, &prog_const, &cosmo,
                 &hydro_properties, &gravity_properties, &potential,
-                &cooling_func, &chemistry, &sourceterms);
+                &cooling_func, &chemistry, &sourceterms,
+		&equation_of_state);
     engine_config(0, &e, params, nr_nodes, myrank, nr_threads, with_aff,
                   talking, restart_file);
     if (myrank == 0) {

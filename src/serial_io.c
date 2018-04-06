@@ -849,7 +849,7 @@ void write_output_serial(struct engine* e, const char* baseName,
       h_grp = H5Gcreate(h_file, "/HydroScheme", H5P_DEFAULT, H5P_DEFAULT,
                         H5P_DEFAULT);
       if (h_grp < 0) error("Error while creating SPH group");
-      hydro_props_print_snapshot(h_grp, e->hydro_properties);
+      hydro_props_print_snapshot(h_grp, e, e->hydro_properties);
       hydro_write_flavour(h_grp);
       H5Gclose(h_grp);
     }

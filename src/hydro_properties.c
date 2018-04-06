@@ -28,7 +28,9 @@
 #include "adiabatic_index.h"
 #include "common_io.h"
 #include "dimension.h"
+#include "engine.h"
 #include "error.h"
+#include "equation_of_state.h"
 #include "hydro.h"
 #include "kernel_hydro.h"
 
@@ -127,10 +129,10 @@ void hydro_props_init(struct hydro_props *p,
   p->minimal_internal_energy = u_min / mean_molecular_weight;
 }
 
-void hydro_props_print(const struct hydro_props *p) {
+void hydro_props_print(const struct engine *e, const struct hydro_props *p) {
 
   /* Print equation of state first */
-  eos_print(&eos);
+  eos_print(e->equation_of_state);
 
   /* Now SPH */
   message("Hydrodynamic scheme: %s in %dD.", SPH_IMPLEMENTATION,
@@ -164,9 +166,11 @@ void hydro_props_print(const struct hydro_props *p) {
 }
 
 #if defined(HAVE_HDF5)
-void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
+void hydro_props_print_snapshot(hid_t h_grpsph,
+				const struct engine *e,
+				const struct hydro_props *p) {
 
-  eos_print_snapshot(h_grpsph, &eos);
+  eos_print_snapshot(h_grpsph, e->equation_of_state);
 
   io_write_attribute_i(h_grpsph, "Dimension", (int)hydro_dimension);
   io_write_attribute_s(h_grpsph, "Scheme", SPH_IMPLEMENTATION);

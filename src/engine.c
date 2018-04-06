@@ -5191,6 +5191,7 @@ void engine_unpin() {
  * @param cooling_func The properties of the cooling function.
  * @param chemistry The chemistry information.
  * @param sourceterms The properties of the source terms function.
+ * @param eos The properties of the equation of state.
  */
 void engine_init(
     struct engine *e, struct space *s, const struct swift_params *params,
@@ -5200,7 +5201,8 @@ void engine_init(
     const struct hydro_props *hydro, struct gravity_props *gravity,
     const struct external_potential *potential,
     const struct cooling_function_data *cooling_func,
-    const struct chemistry_data *chemistry, struct sourceterms *sourceterms) {
+    const struct chemistry_data *chemistry, struct sourceterms *sourceterms,
+    const struct eos_parameters *eos) {
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
@@ -5251,6 +5253,7 @@ void engine_init(
   e->cooling_func = cooling_func;
   e->chemistry = chemistry;
   e->sourceterms = sourceterms;
+  e->equation_of_state = eos;
   e->parameter_file = params;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
@@ -5547,7 +5550,7 @@ void engine_config(int restart, struct engine *e,
 
   /* Print information about the hydro scheme */
   if (e->policy & engine_policy_hydro)
-    if (e->nodeID == 0) hydro_props_print(e->hydro_properties);
+    if (e->nodeID == 0) hydro_props_print(e, e->hydro_properties);
 
   /* Print information about the gravity scheme */
   if (e->policy & engine_policy_self_gravity)
