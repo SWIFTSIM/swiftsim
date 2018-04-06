@@ -17,5 +17,7 @@ and keep on your desk.
    :caption: Contents:
 
    compiling_code
-   configuration_options
    running_example
+   runtime_options
+   configuration_options
+   what_about_mpi
