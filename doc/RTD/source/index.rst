@@ -14,5 +14,5 @@ difference is the parameter file that will need to be adapted for SWIFT.
 .. toctree::
    :maxdepth: 2
 
-   HydroSchemes/index
    GettingStarted/index
+   HydroSchemes/index

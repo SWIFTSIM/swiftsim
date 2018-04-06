@@ -4,4 +4,18 @@
 Getting Started
 ===============
 
-So, you want to use SWIFT, eh?
+So, you want to use SWIFT? Below you should find all of the information you need
+to get up and running with some examples, and then build your own initial conditions
+for running.
+
+Also, you might want to consult our onboarding guide (available at
+http://www.swiftsim.com/onboarding.pdf) if you would like something to print out
+and keep on your desk.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   compiling_code
+   configuration_options
+   running_example
