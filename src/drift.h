@@ -78,7 +78,8 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
 __attribute__((always_inline)) INLINE static void drift_part(
     struct part *restrict p, struct xpart *restrict xp, double dt_drift,
     double dt_kick_hydro, double dt_kick_grav, double dt_therm,
-    integertime_t ti_old, integertime_t ti_current) {
+    integertime_t ti_old, integertime_t ti_current,
+    const struct eos_parameters *eos) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (p->ti_drift != ti_old)
@@ -105,7 +106,7 @@ __attribute__((always_inline)) INLINE static void drift_part(
   p->v[2] += xp->a_grav[2] * dt_kick_grav;
 
   /* Predict the values of the extra fields */
-  hydro_predict_extra(p, xp, dt_drift, dt_therm);
+  hydro_predict_extra(eos, p, xp, dt_drift, dt_therm);
 
   /* Compute offsets since last cell construction */
   for (int k = 0; k < 3; k++) {

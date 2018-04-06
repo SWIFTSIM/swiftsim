@@ -24,6 +24,7 @@
 
 /* Local headers. */
 #include "active.h"
+#include "adiabatic_index.h"
 #include "atomic.h"
 #include "cache.h"
 #include "cell.h"

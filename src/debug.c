@@ -64,12 +64,14 @@
  *
  * @param parts The array of particles.
  * @param xparts The array of particle extended data.
+ * @param eos The #eos_parameters
  * @param id The id too look for.
  * @param N The size of the array of particles.
  *
  * (Should be used for debugging only as it runs in O(N).)
  */
 void printParticle(const struct part *parts, const struct xpart *xparts,
+		   const struct eos_parameters *eos,
                    long long int id, size_t N) {
 
   int found = 0;
@@ -78,7 +80,7 @@ void printParticle(const struct part *parts, const struct xpart *xparts,
   for (size_t i = 0; i < N; i++)
     if (parts[i].id == id) {
       printf("## Particle[%zu]:\n id=%lld ", i, parts[i].id);
-      hydro_debug_particle(&parts[i], &xparts[i]);
+      hydro_debug_particle(&parts[i], &xparts[i], eos);
       found = 1;
       break;
     }
@@ -126,11 +128,13 @@ void printgParticle(const struct gpart *gparts, const struct part *parts,
  *
  * @param p The particle to print
  * @param xp The extended data ot the particle to print
+ * @param eos The #eos_parameters
  */
-void printParticle_single(const struct part *p, const struct xpart *xp) {
+void printParticle_single(const struct part *p, const struct xpart *xp,
+			  const struct eos_parameters *eos) {
 
   printf("## Particle: id=%lld ", p->id);
-  hydro_debug_particle(p, xp);
+  hydro_debug_particle(p, xp, eos);
   printf("\n");
 }
 

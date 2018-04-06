@@ -73,12 +73,13 @@ __attribute__((always_inline)) INLINE static void kick_gpart(
  * @param ti_start The starting (integer) time of the kick (for debugging
  * checks).
  * @param ti_end The ending (integer) time of the kick (for debugging checks).
+ * @param eos The #eos_parameters
  */
 __attribute__((always_inline)) INLINE static void kick_part(
     struct part *restrict p, struct xpart *restrict xp, double dt_kick_hydro,
     double dt_kick_grav, double dt_kick_therm, const struct cosmology *cosmo,
     const struct hydro_props *hydro_props, integertime_t ti_start,
-    integertime_t ti_end) {
+    integertime_t ti_end, const struct eos_parameters *eos) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (p->ti_kick != ti_start)
@@ -110,7 +111,7 @@ __attribute__((always_inline)) INLINE static void kick_part(
   }
 
   /* Extra kick work */
-  hydro_kick_extra(p, xp, dt_kick_therm, cosmo, hydro_props);
+  hydro_kick_extra(eos, p, xp, dt_kick_therm, cosmo, hydro_props);
   if (p->gpart != NULL) gravity_kick_extra(p->gpart, dt_kick_grav);
 }
 

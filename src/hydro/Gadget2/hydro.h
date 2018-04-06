@@ -44,56 +44,62 @@
 /**
  * @brief Returns the comoving internal energy of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  */
 __attribute__((always_inline)) INLINE static float
-hydro_get_comoving_internal_energy(const struct part *restrict p) {
+hydro_get_comoving_internal_energy(const struct eos_parameters *eos, const struct part *restrict p) {
 
-  return gas_internal_energy_from_entropy(p->rho, p->entropy);
+  return gas_internal_energy_from_entropy(eos, p->rho, p->entropy);
 }
 
 /**
  * @brief Returns the physical internal energy of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest.
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static float
-hydro_get_physical_internal_energy(const struct part *restrict p,
+hydro_get_physical_internal_energy(const struct eos_parameters *eos,
+				   const struct part *restrict p,
                                    const struct cosmology *cosmo) {
 
-  return gas_internal_energy_from_entropy(p->rho * cosmo->a3_inv, p->entropy);
+  return gas_internal_energy_from_entropy(eos, p->rho * cosmo->a3_inv, p->entropy);
 }
 
 /**
  * @brief Returns the comoving pressure of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  */
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
-    const struct part *restrict p) {
+    const struct eos_parameters *eos, const struct part *restrict p) {
 
-  return gas_pressure_from_entropy(p->rho, p->entropy);
+  return gas_pressure_from_entropy(eos, p->rho, p->entropy);
 }
 
 /**
  * @brief Returns the physical pressure of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  */
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
-    const struct part *restrict p, const struct cosmology *cosmo) {
+    const struct eos_parameters *eos, const struct part *restrict p, const struct cosmology *cosmo) {
 
-  return gas_pressure_from_entropy(p->rho * cosmo->a3_inv, p->entropy);
+  return gas_pressure_from_entropy(eos, p->rho * cosmo->a3_inv, p->entropy);
 }
 
 /**
  * @brief Returns the comoving entropy of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest.
  */
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_entropy(
-    const struct part *restrict p) {
+    const struct eos_parameters *eos, const struct part *restrict p) {
 
   return p->entropy;
 }
@@ -101,11 +107,13 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_entropy(
 /**
  * @brief Returns the physical entropy of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest.
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static float hydro_get_physical_entropy(
-    const struct part *restrict p, const struct cosmology *cosmo) {
+    const struct eos_parameters *eos, const struct part *restrict p,
+    const struct cosmology *cosmo) {
 
   /* Note: no cosmological conversion required here with our choice of
    * coordinates. */
@@ -115,10 +123,12 @@ __attribute__((always_inline)) INLINE static float hydro_get_physical_entropy(
 /**
  * @brief Returns the comoving sound speed of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  */
 __attribute__((always_inline)) INLINE static float
-hydro_get_comoving_soundspeed(const struct part *restrict p) {
+hydro_get_comoving_soundspeed(
+    const struct eos_parameters *eos, const struct part *restrict p) {
 
   return p->force.soundspeed;
 }
@@ -126,12 +136,14 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
 /**
  * @brief Returns the physical sound speed of a particle
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static float
-hydro_get_physical_soundspeed(const struct part *restrict p,
-                              const struct cosmology *cosmo) {
+hydro_get_physical_soundspeed(
+    const struct eos_parameters *eos, const struct part *restrict p,
+    const struct cosmology *cosmo) {
 
   return cosmo->a_factor_sound_speed * p->force.soundspeed;
 }
@@ -208,12 +220,13 @@ __attribute__((always_inline)) INLINE static void hydro_get_drifted_velocities(
  *
  * We assume a constant density.
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest
  */
 __attribute__((always_inline)) INLINE static float hydro_get_internal_energy_dt(
-    const struct part *restrict p) {
+    const struct eos_parameters *eos, const struct part *restrict p) {
 
-  return gas_internal_energy_from_entropy(p->rho, p->entropy_dt);
+  return gas_internal_energy_from_entropy(eos, p->rho, p->entropy_dt);
 }
 
 /**
@@ -221,13 +234,14 @@ __attribute__((always_inline)) INLINE static float hydro_get_internal_energy_dt(
  *
  * We assume a constant density.
  *
+ * @param eos The #eos_parameters
  * @param p The particle of interest.
  * @param du_dt The new time derivative of the internal energy.
  */
 __attribute__((always_inline)) INLINE static void hydro_set_internal_energy_dt(
-    struct part *restrict p, float du_dt) {
+    const struct eos_parameters *eos, struct part *restrict p, float du_dt) {
 
-  p->entropy_dt = gas_entropy_from_internal_energy(p->rho, du_dt);
+  p->entropy_dt = gas_entropy_from_internal_energy(eos, p->rho, du_dt);
 }
 
 /**
@@ -293,13 +307,14 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
  * @brief Finishes the density calculation.
  *
  * Multiplies the density and number of neighbours by the appropiate constants
- * and add the self-contribution term.
+ * and add the self-contribution term. 
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_density(
-    struct part *restrict p, const struct cosmology *cosmo) {
+    const struct eos_parameters *eos, struct part *restrict p, const struct cosmology *cosmo) {
 
   /* Some smoothing length multiples. */
   const float h = p->h;
@@ -363,12 +378,13 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  *
  * Computes viscosity term, conduction term and smoothing length gradient terms.
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon
  * @param xp The extended particle data to act upon
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
-    struct part *restrict p, struct xpart *restrict xp,
+    const struct eos_parameters *eos, struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo) {
 
   const float fac_mu = cosmo->a_factor_mu;
@@ -385,10 +401,10 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   const float abs_div_v = fabsf(p->density.div_v);
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = gas_pressure_from_entropy(eos, p->rho, p->entropy);
 
   /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
+  const float soundspeed = gas_soundspeed_from_pressure(eos, p->rho, pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float P_over_rho2 = pressure * rho_inv * rho_inv;
@@ -459,14 +475,15 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
 /**
  * @brief Predict additional particle fields forward in time when drifting
  *
+ * @param eos The #eos_parameters
  * @param p The particle
  * @param xp The extended data of the particle
  * @param dt_drift The drift time-step for positions.
  * @param dt_therm The drift time-step for thermal quantities.
  */
 __attribute__((always_inline)) INLINE static void hydro_predict_extra(
-    struct part *restrict p, const struct xpart *restrict xp, float dt_drift,
-    float dt_therm) {
+    const struct eos_parameters *eos, struct part *restrict p,
+    const struct xpart *restrict xp, float dt_drift, float dt_therm) {
 
   const float h_inv = 1.f / p->h;
 
@@ -488,10 +505,10 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->entropy += p->entropy_dt * dt_therm;
 
   /* Re-compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = gas_pressure_from_entropy(eos, p->rho, p->entropy);
 
   /* Compute the new sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
+  const float soundspeed = gas_soundspeed_from_pressure(eos, p->rho, pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;
@@ -507,21 +524,24 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
  *
  * Multiplies the forces and accelerationsby the appropiate constants
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_force(
-    struct part *restrict p, const struct cosmology *cosmo) {
+    const struct eos_parameters *eos, struct part *restrict p,
+    const struct cosmology *cosmo) {
 
   p->force.h_dt *= p->h * hydro_dimension_inv;
 
   p->entropy_dt = 0.5f * cosmo->a2_inv *
-                  gas_entropy_from_internal_energy(p->rho, p->entropy_dt);
+    gas_entropy_from_internal_energy(eos, p->rho, p->entropy_dt);
 }
 
 /**
  * @brief Kick the additional variables
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon
  * @param xp The particle extended data to act upon
  * @param dt_therm The time-step for this kick (for thermodynamic quantities)
@@ -529,7 +549,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  * @param hydro_props The constants used in the scheme
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
-    struct part *restrict p, struct xpart *restrict xp, float dt_therm,
+    const struct eos_parameters *eos, struct part *restrict p,
+    struct xpart *restrict xp, float dt_therm,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
 
   /* Do not decrease the entropy by more than a factor of 2 */
@@ -542,17 +563,17 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   const float density = p->rho * cosmo->a3_inv;
   const float min_energy = hydro_props->minimal_internal_energy;
   const float min_entropy =
-      gas_entropy_from_internal_energy(density, min_energy);
+    gas_entropy_from_internal_energy(eos, density, min_energy);
   if (xp->entropy_full < min_entropy) {
     xp->entropy_full = min_entropy;
     p->entropy_dt = 0.f;
   }
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, xp->entropy_full);
+  const float pressure = gas_pressure_from_entropy(eos, p->rho, xp->entropy_full);
 
   /* Compute the new sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
+  const float soundspeed = gas_soundspeed_from_pressure(eos, p->rho, pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;
@@ -567,25 +588,26 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
  *
  * Requires the density to be known
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon.
  * @param xp The extended data.
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo) {
+    const struct eos_parameters *eos, struct part *restrict p,
+    struct xpart *restrict xp, const struct cosmology *cosmo) {
 
   /* We read u in the entropy field. We now get (comoving) S from (physical) u
    * and (physical) rho. Note that comoving S == physical S */
   xp->entropy_full =
-      gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, p->entropy);
+    gas_entropy_from_internal_energy(eos, p->rho * cosmo->a3_inv, p->entropy);
   p->entropy = xp->entropy_full;
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = gas_pressure_from_entropy(eos, p->rho, p->entropy);
 
   /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
+  const float soundspeed = gas_soundspeed_from_pressure(eos, p->rho, pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;
@@ -601,11 +623,12 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
  * This function is called only once just after the ICs have been
  * read in to do some conversions.
  *
+ * @param eos The #eos_parameters
  * @param p The particle to act upon
  * @param xp The extended particle data to act upon
  */
 __attribute__((always_inline)) INLINE static void hydro_first_init_part(
-    struct part *restrict p, struct xpart *restrict xp) {
+    const struct eos_parameters *eos, struct part *restrict p, struct xpart *restrict xp) {
 
   p->time_bin = 0;
   xp->v_full[0] = p->v[0];
@@ -628,11 +651,13 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
  * field. The conversion to the actual variable happens later after
  * the initial fake time-step.
  *
+ * @param eos The #eos_parameters
  * @param p The #part to write to.
  * @param u_init The new initial internal energy.
  */
 __attribute__((always_inline)) INLINE static void
-hydro_set_init_internal_energy(struct part *p, float u_init) {
+hydro_set_init_internal_energy(
+    const struct eos_parameters *eos, struct part *p, float u_init) {
 
   p->entropy = u_init;
 }

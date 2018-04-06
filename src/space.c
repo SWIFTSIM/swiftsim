@@ -45,6 +45,7 @@
 #include "const.h"
 #include "cooling.h"
 #include "engine.h"
+#include "equation_of_state.h"
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"
@@ -2654,6 +2655,8 @@ void space_first_init_parts(struct space *s,
   const float u_init = hydro_props->initial_internal_energy;
   const float u_min = hydro_props->minimal_internal_energy;
 
+  const struct eos_parameters *eos = s->e->equation_of_state;
+
   for (size_t i = 0; i < nr_parts; ++i) {
 
     /* Convert velocities to internal units */
@@ -2671,11 +2674,11 @@ void space_first_init_parts(struct space *s,
     p[i].v[1] = p[i].v[2] = 0.f;
 #endif
 
-    hydro_first_init_part(&p[i], &xp[i]);
+    hydro_first_init_part(eos, &p[i], &xp[i]);
 
     /* Overwrite the internal energy? */
-    if (u_init > 0.f) hydro_set_init_internal_energy(&p[i], u_init);
-    if (u_min > 0.f) hydro_set_init_internal_energy(&p[i], u_min);
+    if (u_init > 0.f) hydro_set_init_internal_energy(eos, &p[i], u_init);
+    if (u_min > 0.f) hydro_set_init_internal_energy(eos, &p[i], u_min);
 
     /* Also initialise the chemistry */
     chemistry_first_init_part(&p[i], &xp[i], chemistry);
@@ -2826,8 +2829,9 @@ void space_convert_quantities_mapper(void *restrict map_data, int count,
   struct part *restrict parts = (struct part *)map_data;
   const ptrdiff_t index = parts - s->parts;
   struct xpart *restrict xparts = s->xparts + index;
+  const struct eos_parameters *eos = s->e->equation_of_state;
   for (int k = 0; k < count; k++)
-    hydro_convert_quantities(&parts[k], &xparts[k], cosmo);
+    hydro_convert_quantities(eos, &parts[k], &xparts[k], cosmo);
 }
 
 /**

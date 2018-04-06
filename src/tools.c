@@ -37,6 +37,7 @@
 #include "active.h"
 #include "cell.h"
 #include "cosmology.h"
+#include "equation_of_state.h"
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"
@@ -418,7 +419,8 @@ void self_all_force(struct runner *r, struct cell *ci) {
  */
 void engine_single_density(double *dim, long long int pid,
                            struct part *restrict parts, int N, int periodic,
-                           const struct cosmology *cosmo) {
+                           const struct cosmology *cosmo,
+			   const struct eos_parameters *eos) {
   double r2, dx[3];
   float fdx[3];
   struct part p;
@@ -454,7 +456,7 @@ void engine_single_density(double *dim, long long int pid,
   }
 
   /* Dump the result. */
-  hydro_end_density(&p, cosmo);
+  hydro_end_density(eos, &p, cosmo);
   message("part %lli (h=%e) has wcount=%e, rho=%e.", p.id, p.h,
           p.density.wcount, hydro_get_comoving_density(&p));
   fflush(stdout);

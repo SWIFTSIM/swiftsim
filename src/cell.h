@@ -42,6 +42,7 @@
 /* Avoid cyclic inclusions */
 struct engine;
 struct scheduler;
+struct eos_parameters;
 
 /* Max tag size set to 2^29 to take into account some MPI implementations
  * that use 2^31 as the upper bound on MPI tags and the fact that
@@ -503,7 +504,8 @@ void cell_reset_task_counters(struct cell *c);
 int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s);
 int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s);
 void cell_set_super(struct cell *c, struct cell *super);
-void cell_drift_part(struct cell *c, const struct engine *e, int force);
+void cell_drift_part(struct cell *c, const struct engine *e,
+		     int force, const struct eos_parameters *eos);
 void cell_drift_gpart(struct cell *c, const struct engine *e, int force);
 void cell_drift_multipole(struct cell *c, const struct engine *e);
 void cell_drift_all_multipoles(struct cell *c, const struct engine *e);

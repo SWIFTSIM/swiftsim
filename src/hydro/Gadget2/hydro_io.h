@@ -57,14 +57,15 @@ void hydro_read_particles(struct part* parts, struct io_props* list,
 
 void convert_part_u(const struct engine* e, const struct part* p,
                     const struct xpart* xp, float* ret) {
-
-  ret[0] = hydro_get_comoving_internal_energy(p);
+  const struct eos_parameters *eos = e->equation_of_state;
+  ret[0] = hydro_get_comoving_internal_energy(eos, p);
 }
 
 void convert_part_P(const struct engine* e, const struct part* p,
                     const struct xpart* xp, float* ret) {
 
-  ret[0] = hydro_get_comoving_pressure(p);
+  const struct eos_parameters *eos = e->equation_of_state;
+  ret[0] = hydro_get_comoving_pressure(eos, p);
 }
 
 void convert_part_pos(const struct engine* e, const struct part* p,

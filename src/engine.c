@@ -4621,13 +4621,14 @@ void engine_do_drift_all_mapper(void *map_data, int num_elements,
                                 void *extra_data) {
 
   struct engine *e = (struct engine *)extra_data;
+  const struct eos_parameters *eos = e->equation_of_state;
   struct cell *cells = (struct cell *)map_data;
 
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &cells[ind];
     if (c != NULL && c->nodeID == e->nodeID) {
       /* Drift all the particles */
-      cell_drift_part(c, e, 1);
+      cell_drift_part(c, e, 1, eos);
 
       /* Drift all the g-particles */
       cell_drift_gpart(c, e, 1);

@@ -657,6 +657,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_data *chemistry = e->chemistry;
+  const struct eos_parameters *eos = e->equation_of_state;
   const float hydro_h_max = e->hydro_properties->h_max;
   const float eps = e->hydro_properties->h_tolerance;
   const float hydro_eta_dim =
@@ -717,7 +718,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         } else {
 
           /* Finish the density calculation */
-          hydro_end_density(p, cosmo);
+          hydro_end_density(eos, p, cosmo);
           chemistry_end_density(p, chemistry, cosmo);
 
           /* Compute one step of the Newton-Raphson scheme */
@@ -777,7 +778,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         /* As of here, particle force variables will be set. */
 
         /* Compute variables required for the force loop */
-        hydro_prepare_force(p, xp, cosmo);
+        hydro_prepare_force(eos, p, xp, cosmo);
 
         /* The particle force values are now set.  Do _NOT_
            try to read any particle density variables! */
@@ -949,7 +950,8 @@ void runner_do_drift_part(struct runner *r, struct cell *c, int timer) {
 
   TIMER_TIC;
 
-  cell_drift_part(c, r->e, 0);
+  const struct eos_parameters *eos = r->e->equation_of_state;
+  cell_drift_part(c, r->e, 0, eos);
 
   if (timer) TIMER_TOC(timer_drift_part);
 }
@@ -982,6 +984,7 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const struct hydro_props *hydro_props = e->hydro_properties;
+  const struct eos_parameters *eos = e->equation_of_state;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   struct part *restrict parts = c->parts;
   struct xpart *restrict xparts = c->xparts;
@@ -1046,7 +1049,7 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
 
         /* do the kick */
         kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm, cosmo,
-                  hydro_props, ti_begin, ti_begin + ti_step / 2);
+                  hydro_props, ti_begin, ti_begin + ti_step / 2, eos);
 
         /* Update the accelerations to be used in the drift for hydro */
         if (p->gpart != NULL) {
@@ -1152,6 +1155,7 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const struct hydro_props *hydro_props = e->hydro_properties;
+  const struct eos_parameters *eos = e->equation_of_state;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int count = c->count;
   const int gcount = c->gcount;
@@ -1212,7 +1216,7 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the time-step with a second half-kick */
         kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm, cosmo,
-                  hydro_props, ti_begin + ti_step / 2, ti_begin + ti_step);
+                  hydro_props, ti_begin + ti_step / 2, ti_begin + ti_step, eos);
 
 #ifdef SWIFT_DEBUG_CHECKS
         /* Check that kick and the drift are synchronized */
@@ -1584,6 +1588,7 @@ void runner_do_end_force(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
+  const struct eos_parameters *eos = e->equation_of_state;
   const int count = c->count;
   const int gcount = c->gcount;
   const int scount = c->scount;
@@ -1612,7 +1617,7 @@ void runner_do_end_force(struct runner *r, struct cell *c, int timer) {
       if (part_is_active(p, e)) {
 
         /* Finish the force loop */
-        hydro_end_force(p, cosmo);
+        hydro_end_force(eos, p, cosmo);
       }
     }
 

@@ -2324,7 +2324,8 @@ int cell_has_tasks(struct cell *c) {
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
  */
-void cell_drift_part(struct cell *c, const struct engine *e, int force) {
+void cell_drift_part(struct cell *c, const struct engine *e,
+		     int force, const struct eos_parameters *eos) {
 
   const float hydro_h_max = e->hydro_properties->h_max;
   const integertime_t ti_old_part = c->ti_old_part;
@@ -2356,7 +2357,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Collect */
-        cell_drift_part(cp, e, force);
+        cell_drift_part(cp, e, force, eos);
 
         /* Update */
         dx_max = max(dx_max, cp->dx_max_part);
@@ -2403,7 +2404,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
 
       /* Drift... */
       drift_part(p, xp, dt_drift, dt_kick_hydro, dt_kick_grav, dt_therm,
-                 ti_old_part, ti_current);
+                 ti_old_part, ti_current, eos);
 
       /* Limit h to within the allowed range */
       p->h = min(p->h, hydro_h_max);

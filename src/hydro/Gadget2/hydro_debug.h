@@ -19,8 +19,11 @@
 #ifndef SWIFT_GADGET2_HYDRO_DEBUG_H
 #define SWIFT_GADGET2_HYDRO_DEBUG_H
 
+struct eos_parameters;
+
 __attribute__((always_inline)) INLINE static void hydro_debug_particle(
-    const struct part* p, const struct xpart* xp) {
+    const struct part* p, const struct xpart* xp,
+    const struct eos_parameters *eos) {
   printf(
       "x=[%.3e,%.3e,%.3e], "
       "v=[%.3e,%.3e,%.3e],v_full=[%.3e,%.3e,%.3e] \n a=[%.3e,%.3e,%.3e],\n "
@@ -31,7 +34,7 @@ __attribute__((always_inline)) INLINE static void hydro_debug_particle(
       p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2], xp->v_full[0],
       xp->v_full[1], xp->v_full[2], p->a_hydro[0], p->a_hydro[1], p->a_hydro[2],
       p->h, p->density.wcount, p->density.wcount_dh, p->mass, p->density.rho_dh,
-      p->rho, hydro_get_comoving_pressure(p), p->force.P_over_rho2, p->entropy,
+      p->rho, hydro_get_comoving_pressure(eos, p), p->force.P_over_rho2, p->entropy,
       p->entropy_dt, p->force.soundspeed, p->density.div_v, p->density.rot_v[0],
       p->density.rot_v[1], p->density.rot_v[2], p->force.balsara,
       p->force.v_sig, p->force.h_dt, p->time_bin);

@@ -119,6 +119,7 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
   const struct external_potential *potential = e->external_potential;
   const struct phys_const *phys_const = e->physical_constants;
   const struct cosmology *cosmo = e->cosmology;
+  const struct eos_parameters *eos = e->equation_of_state;
 
   /* Some constants from cosmology */
   const float a_inv = cosmo->a_inv;
@@ -164,8 +165,8 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
     hydro_get_drifted_velocities(p, xp, dt_kick_hydro, dt_kick_grav, v);
     const double x[3] = {p->x[0], p->x[1], p->x[2]};
     const float m = hydro_get_mass(p);
-    const float entropy = hydro_get_physical_entropy(p, cosmo);
-    const float u_inter = hydro_get_physical_internal_energy(p, cosmo);
+    const float entropy = hydro_get_physical_entropy(eos, p, cosmo);
+    const float u_inter = hydro_get_physical_internal_energy(eos, p, cosmo);
 
     /* Collect mass */
     stats.mass += m;

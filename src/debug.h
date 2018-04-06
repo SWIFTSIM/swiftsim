@@ -28,10 +28,12 @@
 #include "space.h"
 
 void printParticle(const struct part *parts, const struct xpart *xparts,
+		   const struct eos_parameters *eos,
                    long long int id, size_t N);
 void printgParticle(const struct gpart *gparts, const struct part *parts,
                     long long int id, size_t N);
-void printParticle_single(const struct part *p, const struct xpart *xp);
+void printParticle_single(const struct part *p, const struct xpart *xp,
+			  const struct eos_parameters *eos);
 void printgParticle_single(struct gpart *gp);
 
 int checkSpacehmax(struct space *s);
