@@ -9,7 +9,7 @@ Minimal (Density-Energy) SPH
    :hidden:
    :caption: Contents:
 
-This scheme is a textbook implementation of Density-Energy SPH, and can
-be used as a pedagogical example. It also implements a Monaghan AV scheme
-and Balsara switch, like the GADGET-2 scheme. It uses very similar equations,
-but differs in implementation details.
+This scheme is a textbook implementation of Density-Energy SPH, and can be used
+as a pedagogical example. It also implements a Monaghan AV scheme, like the
+GADGET-2 scheme. It uses very similar equations, but differs in implementation
+details.
