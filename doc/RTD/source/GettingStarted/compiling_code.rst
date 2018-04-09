@@ -16,7 +16,8 @@ HDF5
 Version 1.8.x or higher is required. Input and output files are stored as HDF5
 and are compatible with the existing GADGET-2 specification. Please consider
 using a build of parallel-HDF5, as SWIFT can leverage this when writing and
-reading snapshots.
+reading snapshots. We recommend using HDF5 > 1.10.x as this is `vastly superior`
+in parallel.
 
 MPI
 ~~~
@@ -29,7 +30,7 @@ The build system depends on libtool.
 
 FFTW
 ~~~~
-Version 3.3.x or higher is required.
+Version 3.3.x or higher is required for periodic gravity.
 
 METIS
 ~~~~~

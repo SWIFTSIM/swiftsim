@@ -27,8 +27,7 @@ will need to reconfigure with the following options:
    
    ./configure \
    --with-hydro=gizmo \
-   --with-riemann-solver=hllc \
-   --disable-vec
+   --with-riemann-solver=hllc
 
 
 To see the results that you should get, you should check out our developer

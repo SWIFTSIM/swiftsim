@@ -12,6 +12,7 @@ schemes available in SWIFT, as well as how to implement your own.
    :caption: Contents:
 
    traditional_sph
+   minimal_sph
    hopkins_sph
    gizmo
    adding_your_own

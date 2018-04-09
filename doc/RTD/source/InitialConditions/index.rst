@@ -66,7 +66,9 @@ In ``Header``, the following attributes are required:
   particles are of each type are in the initial conditions file.
 + ``NumPart_Total_HighWord``, a historical length-6 array that tells the code 
   the number of high word particles in the initial conditions there are. If
-  you are unsure, just set this to ``[0, 0, 0, 0, 0, 0]``.
+  you are unsure, just set this to ``[0, 0, 0, 0, 0, 0]``. This does have to be
+  present, but unlike GADGET-2, this can be a set of 0s unless you have more than
+  2^31 particles.
 + ``NumFilesPerSnapshot``, again a historical integer value that tells the code
   how many files there are per snapshot. You will probably want to set this to 1
   and simply have a single HDF5 file for your initial conditions; SWIFT can
