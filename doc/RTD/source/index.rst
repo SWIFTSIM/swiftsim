@@ -19,3 +19,4 @@ difference is the parameter file that will need to be adapted for SWIFT.
    HydroSchemes/index
    Cooling/index
    EquationOfState/index
+   NewOption/index
