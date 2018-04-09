@@ -1,6 +1,8 @@
 .. Hydrodynamics Schemes
    Josh Borrow 4th April 2018
 
+.. _hydro:
+   
 Hydrodynamics Schemes
 =====================
 

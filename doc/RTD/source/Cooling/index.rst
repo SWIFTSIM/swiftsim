@@ -1,6 +1,7 @@
 .. Equation of State
    Loic Hausammann, 7th April 2018
 
+.. _cooling:
 
 Cooling
 =======
@@ -28,16 +29,29 @@ Grackle
    
 Grackle is a chemistry and cooling library presented in B. Smith et al. 2016 (do not forget to cite if used).
 Four different modes are available: equilibrium, 6 species network (H, H\\( ^+ \\), e\\( ^- \\), He, He\\( ^+ \\) and He\\( ^{++} \\)), 9 species network (adds H\\(^-\\), H\\(_2\\) and H\\(_2^+\\)) and 12 species (adds D, D\\(^+\\) and HD).
+Following the same order, the swift cooling options are `grackle`, `grackle1`, `grackle2` and `grackle3` (the numbers correspond to the value of `primordial_chemistry` in Grackle).
 It also includes some self-shielding methods and UV background.
 In order to use the Grackle cooling, you will need to provide an HDF5 table computed by Cloudy.
+
+When starting a simulation without providing the different fractions, the code supposes an equilibrium and computes the fractions automatically.
 
 Eagle
 ~~~~~
 
 TODO
 
-How to Implement a New One
---------------------------
+How to Implement a New Cooling
+------------------------------
 
-We recommend to split the cooling in two functions: a first one computing the cooling rate and the second one that apply 
+The developper should provide at least one function for:
+ * writing the cooling name in HDF5
+ * cooling a particle
+ * the maximal time step possible
+ * initializing a particle
+ * computing the total energy radiated by a particle
+ * initializing the cooling parameters
+ * printing the cooling type
 
+For implementation details, see `src/cooling/none/cooling.h`
+
+See :ref:`new_option` for the full list of changes required.
