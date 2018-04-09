@@ -4,9 +4,6 @@
 Running an Example
 ==================
 
-<<<<<<< HEAD
-
-=======
 Now that you have built the code, you will want to run an example! To do that,
 you need to follow the following instructions (requires ``python2`` or
 ``python3`` with the ``h5py`` and other standard scientific packages, as well
@@ -39,4 +36,3 @@ wiki at https://gitlab.cosma.dur.ac.uk/swift/swiftsim/wikis/Sod_3D.
 
 If you don't get these results, please contact us on our GitHub page at
 https://github.com/SWIFTSIM/swiftsim/issues.
->>>>>>> add-onboarding-guide
