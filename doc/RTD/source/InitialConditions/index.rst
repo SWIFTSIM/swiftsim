@@ -29,15 +29,15 @@ Particle data is placed in groups that signify particle type.
 +=====================+========================+
 | ``PartType0``       | Gas                    |
 +---------------------+------------------------+
-| ``PartType1``       | Halo                   |
+| ``PartType1``       | Dark Matter            |
 +---------------------+------------------------+
-| ``PartType2``       | Disk                   |
+| ``PartType2``       | Ignored                |
 +---------------------+------------------------+
-| ``PartType3``       | Bulge                  |
+| ``PartType3``       | Ignored                |
 +---------------------+------------------------+
 | ``PartType4``       | Stars                  |
 +---------------------+------------------------+
-| ``PartType5``       | Boundary               |
+| ``PartType5``       | Black Holes            |
 +---------------------+------------------------+
 
 Currently, not all of these particle types are included in SWIFT. Note that the
