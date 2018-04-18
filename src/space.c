@@ -2634,7 +2634,7 @@ void space_synchronize_particle_positions(struct space *s) {
 }
 
 void space_first_init_parts_mapper(void *restrict map_data, int count,
-				   void *restrict extra_data) {
+                                   void *restrict extra_data) {
 
   struct part *restrict p = (struct part *)map_data;
   const struct space *restrict s = (struct space *)extra_data;
@@ -2684,7 +2684,6 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
     p[k].ti_drift = 0;
     p[k].ti_kick = 0;
 #endif
-
   }
 }
 
@@ -2704,11 +2703,11 @@ void space_first_init_parts(struct space *s, int verbose) {
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-	    clocks_getunit());
+            clocks_getunit());
 }
 
 void space_first_init_gparts_mapper(void *restrict map_data, int count,
-				    void *restrict extra_data) {
+                                    void *restrict extra_data) {
 
   struct gpart *restrict gp = (struct gpart *)map_data;
   const struct space *restrict s = (struct space *)extra_data;
@@ -2716,7 +2715,6 @@ void space_first_init_gparts_mapper(void *restrict map_data, int count,
   const struct cosmology *cosmo = s->e->cosmology;
   const float a_factor_vel = cosmo->a * cosmo->a;
   const struct gravity_props *grav_props = s->e->gravity_properties;
-
 
   for (int k = 0; k < count; k++) {
     /* Convert velocities to internal units */
@@ -2757,11 +2755,11 @@ void space_first_init_gparts(struct space *s, int verbose) {
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-	    clocks_getunit());
+            clocks_getunit());
 }
 
 void space_first_init_sparts_mapper(void *restrict map_data, int count,
-				    void *restrict extra_data) {
+                                    void *restrict extra_data) {
 
   struct spart *restrict sp = (struct spart *)map_data;
   const struct space *restrict s = (struct space *)extra_data;
@@ -2799,7 +2797,7 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
  *
  * Calls star_first_init_spart() on all the particles
  */
-  void space_first_init_sparts(struct space *s, int verbose) {
+void space_first_init_sparts(struct space *s, int verbose) {
   const ticks tic = getticks();
   if (s->nr_sparts > 0)
     threadpool_map(&s->e->threadpool, space_first_init_sparts_mapper, s->sparts,
@@ -2807,7 +2805,7 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-	    clocks_getunit());
+            clocks_getunit());
 }
 
 void space_init_parts_mapper(void *restrict map_data, int count,
