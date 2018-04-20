@@ -89,7 +89,6 @@ Cosmology:
   Omega_b:        0.0455
   h:              0.6777
   #a_begin:        0.0078125
-  #a_begin:        0.64935064935
   a_begin:        1.0
+  #a_begin:        0.5
   a_end:          1.0
-
