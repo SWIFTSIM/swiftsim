@@ -3,8 +3,8 @@
 
 .. _new_option:
    
-Adding Schemes
-==============
+General information for adding new schemes
+==========================================
 
 The following steps are required for any new options (such as new
 :ref:`hydro`, :ref:`chemistry`, :ref:`cooling`,
