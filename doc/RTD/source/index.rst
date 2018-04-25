@@ -17,4 +17,6 @@ difference is the parameter file that will need to be adapted for SWIFT.
    GettingStarted/index
    InitialConditions/index
    HydroSchemes/index
+   Cooling/index
    EquationOfState/index
+   NewOption/index
