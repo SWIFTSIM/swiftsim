@@ -91,7 +91,7 @@ void print_help_message() {
          "Execute a fixed number of time steps. When unset use the time_end "
          "parameter to stop.");
   printf("  %2s %14s %s\n", "-o", "{str}",
-	 "Generate a default output parameter file.");
+         "Generate a default output parameter file.");
   printf("  %2s %14s %s\n", "-P", "{sec:par:val}",
          "Set parameter value and overwrites values read from the parameters "
          "file. Can be used more than once.");
@@ -263,14 +263,14 @@ int main(int argc, char *argv[]) {
         }
         break;
       case 'o':
-	if (sscanf(optarg, "%s", output_parameters_filename) != 1) {
-	    if (myrank == 0) {
-	      printf("Error parsing output fields filename");
-	      print_help_message();
-	    }
-	    return 1;
-	}
-	break;
+        if (sscanf(optarg, "%s", output_parameters_filename) != 1) {
+          if (myrank == 0) {
+            printf("Error parsing output fields filename");
+            print_help_message();
+          }
+          return 1;
+        }
+        break;
       case 'P':
         cmdparams[nparams] = optarg;
         nparams++;
@@ -819,8 +819,8 @@ int main(int argc, char *argv[]) {
 
     /* Initialize the engine with the space and policies. */
     if (myrank == 0) clocks_gettime(&tic);
-    engine_init(&e, &s, params, N_total[0], N_total[1],
-                engine_policies, talking, &reparttype, &us, &prog_const, &cosmo,
+    engine_init(&e, &s, params, N_total[0], N_total[1], engine_policies,
+                talking, &reparttype, &us, &prog_const, &cosmo,
                 &hydro_properties, &gravity_properties, &potential,
                 &cooling_func, &chemistry, &sourceterms);
     engine_config(0, &e, params, nr_nodes, myrank, nr_threads, with_aff,
