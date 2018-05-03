@@ -295,9 +295,6 @@ struct engine {
   /* The (parsed) parameter file */
   const struct swift_params *parameter_file;
 
-  /* The (parsed) output fields */
-  const struct swift_params *output_fields;
-
   /* Temporary struct to hold a group of deferable properties (in MPI mode
    * these are reduced together, but may not be required just yet). */
   struct collectgroup1 collect_group1;
@@ -335,14 +332,14 @@ void engine_print_stats(struct engine *e);
 void engine_dump_snapshot(struct engine *e);
 void engine_init(
     struct engine *e, struct space *s, const struct swift_params *params,
-    const struct swift_params *output_fields, long long Ngas, long long Ndm,
+    long long Ngas, long long Ndm,
     int policy, int verbose, struct repartition *reparttype,
     const struct unit_system *internal_units,
     const struct phys_const *physical_constants, struct cosmology *cosmo,
     const struct hydro_props *hydro, struct gravity_props *gravity,
     const struct external_potential *potential,
     const struct cooling_function_data *cooling_func,
-    const struct chemistry_data *chemistry, struct sourceterms *sourceterms);
+    const struct chemistry_global_data *chemistry, struct sourceterms *sourceterms);
 void engine_config(int restart, struct engine *e,
                    const struct swift_params *params, int nr_nodes, int nodeID,
                    int nr_threads, int with_aff, int verbose,
