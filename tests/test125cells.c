@@ -403,7 +403,7 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
             main_cell->parts[pid].v[0], main_cell->parts[pid].v[1],
             main_cell->parts[pid].v[2], main_cell->parts[pid].h,
             hydro_get_comoving_density(&main_cell->parts[pid]),
-#if defined(MINIMAL_SPH) || defined(SHADOWFAX_SPH)
+#if defined(MINIMAL_SPH) || defined(SHADOWFAX_SPH) || defined(HOPKINS_PU_SPH)
             0.f,
 #else
             main_cell->parts[pid].density.div_v,
