@@ -7,5 +7,5 @@ then
     ./getIC.sh
 fi
 
-../swift -s -t 16 eagle_6.yml 2>&1 | tee output.log
+../swift -s -c -C -t 12 eagle_6.yml
 
