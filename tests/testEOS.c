@@ -85,8 +85,10 @@
 int main(int argc, char *argv[]) {
   float rho, log_rho, log_u, P;
   struct unit_system us;
+  struct swift_params *params =
+      (struct swift_params *)malloc(sizeof(struct swift_params));
+  if (params == NULL) error("Error allocating memory for the parameter file.");
   const struct phys_const *phys_const = 0;  // Unused placeholder
-  const struct swift_params *params = 0;    // Unused placeholder
   const float J_kg_to_erg_g = 1e4;          // Convert J/kg to erg/g
   char filename[64];
   // Output table params
@@ -193,8 +195,12 @@ int main(int argc, char *argv[]) {
     // SESAME
     case eos_planetary_type_SESAME:
       switch (mat_id) {
-        case eos_planetary_id_SESAME_iron:
-          printf("  SESAME iron \n");
+        case eos_planetary_id_SESAME_basalt:
+          printf("  SESAME basalt \n");
+          break;
+
+        case eos_planetary_id_SESAME_water:
+          printf("  SESAME water \n");
           break;
 
         default:
@@ -214,6 +220,20 @@ int main(int argc, char *argv[]) {
                                         &us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
   log_u_max += logf(J_kg_to_erg_g / units_cgs_conversion_factor(
                                         &us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
+
+  // Set the input parameters
+  // Which EOS to initialise
+  parser_set_param(params, "EoS:use_Til:1");
+  parser_set_param(params, "EoS:use_HM80:1");
+  parser_set_param(params, "EoS:use_ANEOS:0");
+  parser_set_param(params, "EoS:use_SESAME:0");
+  // Table file names
+  parser_set_param(params, "EoS:HM80_HHe_table_file:"
+                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_HHe.txt");
+  parser_set_param(params, "EoS:HM80_ice_table_file:"
+                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_ice.txt");
+  parser_set_param(params, "EoS:HM80_rock_table_file:"
+                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_roc.txt");
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);
