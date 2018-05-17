@@ -107,9 +107,9 @@ INLINE static void load_HM80_table(struct HM80_params *mat, char *table_file) {
   // Load table contents from file
   FILE *f = fopen(table_file, "r");
   int c;
-  for (int i = 0; i < mat->num_rho; i++) {
-    for (int j = 0; j < mat->num_u; j++) {
-      c = fscanf(f, "%f", &mat->table_P_rho_u[i * mat->num_rho + j]);
+  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
+    for (int i_u = 0; i_u < mat->num_u; i_u++) {
+      c = fscanf(f, "%f", &mat->table_P_rho_u[i_rho*mat->num_u + i_u]);
       if (c != 1) {
         error("Failed to read EOS table");
       }
@@ -137,9 +137,9 @@ INLINE static void convert_units_HM80(struct HM80_params *mat,
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
 
   // Table Pressures in Mbar
-  for (int i = 0; i < mat->num_rho; i++) {
-    for (int j = 0; j < mat->num_u; j++) {
-      mat->table_P_rho_u[i * mat->num_rho + j] *=
+  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
+    for (int i_u = 0; i_u < mat->num_u; i_u++) {
+      mat->table_P_rho_u[i_rho*mat->num_u + i_u] *=
           Mbar_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
     }
   }
@@ -205,7 +205,7 @@ INLINE static float HM80_pressure_from_internal_energy(
   const float log_rho = logf(density);
   const float log_u = logf(u);
 
-  // 2D interpolation (linear in log(rho), log(u)) to find P(rho, u)
+  // 2D interpolation (bilinear with log(rho), log(u)) to find P(rho, u)
   rho_idx = floorf((log_rho - mat->log_rho_min) * mat->inv_log_rho_step);
   u_idx = floorf((log_u - mat->log_u_min) * mat->inv_log_u_step);
 
@@ -215,7 +215,7 @@ INLINE static float HM80_pressure_from_internal_energy(
       (log_u - mat->log_u_min - u_idx * mat->log_u_step) * mat->inv_log_u_step;
 
   // Return zero pressure if below the table minimum/a
-  // Extrapolate the pressure for low densities
+  // Or extrapolate the pressure for low densities
   if (rho_idx < 0) {  // Too-low rho
     P = expf(logf((1 - intp_u) * mat->table_P_rho_u[u_idx] +
                   intp_u * mat->table_P_rho_u[u_idx + 1]) +
@@ -238,14 +238,16 @@ INLINE static float HM80_pressure_from_internal_energy(
   }
   // Normal interpolation within the table
   else {
-    P = (1.f - intp_rho) *
-            ((1.f - intp_u) * mat->table_P_rho_u[rho_idx * mat->num_u + u_idx] +
-             intp_u * mat->table_P_rho_u[rho_idx * mat->num_u + u_idx + 1]) +
-        intp_rho *
-            ((1 - intp_u) *
-                 mat->table_P_rho_u[(rho_idx + 1) * mat->num_u + u_idx] +
-             intp_u *
-                 mat->table_P_rho_u[(rho_idx + 1) * mat->num_u + u_idx + 1]);
+    P = (1.f - intp_rho) * (
+            (1.f - intp_u) *
+                mat->table_P_rho_u[rho_idx*mat->num_u + u_idx] +
+            intp_u *
+                mat->table_P_rho_u[rho_idx*mat->num_u + u_idx + 1]) +
+        intp_rho * (
+            (1.f - intp_u) *
+                mat->table_P_rho_u[(rho_idx + 1)*mat->num_u + u_idx] +
+            intp_u *
+                mat->table_P_rho_u[(rho_idx + 1)*mat->num_u + u_idx + 1]);
   }
 
   return P;
