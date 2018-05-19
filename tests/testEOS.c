@@ -81,7 +81,7 @@
  *
  */
 
-#ifdef EOS_PLANETARY
+//#ifdef EOS_PLANETARY
 int main(int argc, char *argv[]) {
   float rho, log_rho, log_u, P;
   struct unit_system us;
@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
   char filename[64];
   // Output table params
   const int num_rho = 100, num_u = 100;
-  float log_rho_min = logf(1e-4), log_rho_max = logf(30.f),
-        log_u_min = logf(1e4), log_u_max = logf(1e10),
+  float log_rho_min = logf(1e-4f), log_rho_max = logf(1e3f), // Densities (cgs)
+        log_u_min = logf(1e4f), log_u_max = logf(1e13f),     // Sp. int. energies (SI)
         log_rho_step = (log_rho_max - log_rho_min) / (num_rho - 1.f),
         log_u_step = (log_u_max - log_u_min) / (num_u - 1.f);
   float A1_rho[num_rho], A1_u[num_u];
@@ -196,11 +196,11 @@ int main(int argc, char *argv[]) {
     case eos_planetary_type_SESAME:
       switch (mat_id) {
         case eos_planetary_id_SESAME_basalt:
-          printf("  SESAME basalt \n");
+          printf("  SESAME basalt 7530 \n");
           break;
 
         case eos_planetary_id_SESAME_water:
-          printf("  SESAME water \n");
+          printf("  SESAME water 7154 \n");
           break;
 
         default:
@@ -213,7 +213,8 @@ int main(int argc, char *argv[]) {
   }
 
   // Convert to internal units (Earth masses and radii)
-  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
+  units_init(&us, 1.f, 1.f, 1.f, 1.f, 1.f); ///###
+//  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
   log_rho_min -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_rho_max -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_u_min += logf(J_kg_to_erg_g / units_cgs_conversion_factor(
@@ -226,7 +227,7 @@ int main(int argc, char *argv[]) {
   parser_set_param(params, "EoS:use_Til:1");
   parser_set_param(params, "EoS:use_HM80:1");
   parser_set_param(params, "EoS:use_ANEOS:0");
-  parser_set_param(params, "EoS:use_SESAME:0");
+  parser_set_param(params, "EoS:use_SESAME:1");
   // Table file names
   parser_set_param(params, "EoS:HM80_HHe_table_file:"
                    "/gpfs/data/dc-kege1/gihr_data/P_rho_u_HHe.txt");
@@ -234,9 +235,22 @@ int main(int argc, char *argv[]) {
                    "/gpfs/data/dc-kege1/gihr_data/P_rho_u_ice.txt");
   parser_set_param(params, "EoS:HM80_rock_table_file:"
                    "/gpfs/data/dc-kege1/gihr_data/P_rho_u_roc.txt");
+  parser_set_param(params, "EoS:SESAME_basalt_table_file:"
+                   "/gpfs/data/dc-kege1/gihr_data/SESAME_basalt_7530.txt");
+  parser_set_param(params, "EoS:SESAME_water_table_file:"
+                   "/gpfs/data/dc-kege1/gihr_data/SESAME_water_7154.txt");
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);
+
+
+//  ///###
+//  P = gas_pressure_from_internal_energy(3, 1e9, mat_id);
+//  printf("P = %f \n", P/1e12);
+//
+//  return 0;
+//  ///###
+
 
   // Output file
   sprintf(filename, "testEOS_rho_u_P_%d.txt", mat_id);
@@ -293,6 +307,6 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-#else
-int main() { return 0; }
-#endif
+//#else
+//int main() { return 0; }
+//#endif
