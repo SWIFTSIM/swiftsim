@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_MINIMAL_MULTI_MAT_HYDRO_DEBUG_H
-#define SWIFT_MINIMAL_MULTI_MAT_HYDRO_DEBUG_H
+#ifndef SWIFT_DENSITY_ENERGY_HYDRO_DEBUG_H
+#define SWIFT_DENSITY_ENERGY_HYDRO_DEBUG_H
 
 /**
- * @file MinimalMultiMat/hydro_debug.h
- * @brief MinimalMultiMat conservative implementation of SPH (Debugging
+ * @file DensityEnergy/hydro_debug.h
+ * @brief DensityEnergy conservative implementation of SPH (Debugging
  * routines)
  *
  * The thermal variable is the internal energy (u). Simple constant
@@ -50,4 +50,4 @@ __attribute__((always_inline)) INLINE static void hydro_debug_particle(
       p->time_bin, p->mat_id);
 }
 
-#endif /* SWIFT_MINIMAL_MULTI_MAT_HYDRO_DEBUG_H */
+#endif /* SWIFT_DENSITY_ENERGY_HYDRO_DEBUG_H */

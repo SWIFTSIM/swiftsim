@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_MINIMAL_MULTI_MAT_HYDRO_PART_H
-#define SWIFT_MINIMAL_MULTI_MAT_HYDRO_PART_H
+#ifndef SWIFT_DENSITY_ENERGY_HYDRO_PART_H
+#define SWIFT_DENSITY_ENERGY_HYDRO_PART_H
 
 /**
- * @file MinimalMultiMat/hydro_part.h
- * @brief MinimalMultiMat conservative implementation of SPH (Particle
+ * @file DensityEnergy/hydro_part.h
+ * @brief DensityEnergy conservative implementation of SPH (Particle
  * definition)
  *
  * The thermal variable is the internal energy (u). Simple constant
@@ -177,4 +177,4 @@ struct part {
 
 } SWIFT_STRUCT_ALIGN;
 
-#endif /* SWIFT_MINIMAL_MULTI_MAT_HYDRO_PART_H */
+#endif /* SWIFT_DENSITY_ENERGY_HYDRO_PART_H */

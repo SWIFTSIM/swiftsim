@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_MINIMAL_MULTI_MAT_HYDRO_IO_H
-#define SWIFT_MINIMAL_MULTI_MAT_HYDRO_IO_H
+#ifndef SWIFT_DENSITY_ENERGY_HYDRO_IO_H
+#define SWIFT_DENSITY_ENERGY_HYDRO_IO_H
 
 /**
- * @file MinimalMultiMat/hydro_io.h
- * @brief MinimalMultiMat conservative implementation of SPH (i/o routines)
+ * @file DensityEnergy/hydro_io.h
+ * @brief DensityEnergy conservative implementation of SPH (i/o routines)
  *
  * The thermal variable is the internal energy (u). Simple constant
  * viscosity term without switches is implemented. No thermal conduction
@@ -206,4 +206,4 @@ void hydro_write_flavour(hid_t h_grpsph) {
  */
 int writeEntropyFlag() { return 0; }
 
-#endif /* SWIFT_MINIMAL_MULTI_MAT_HYDRO_IO_H */
+#endif /* SWIFT_DENSITY_ENERGY_HYDRO_IO_H */

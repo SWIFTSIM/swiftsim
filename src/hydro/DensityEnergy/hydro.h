@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_MINIMAL_MULTI_MAT_HYDRO_H
-#define SWIFT_MINIMAL_MULTI_MAT_HYDRO_H
+#ifndef SWIFT_DENSITY_ENERGY_HYDRO_H
+#define SWIFT_DENSITY_ENERGY_HYDRO_H
 
 /**
- * @file MinimalMultiMat/hydro.h
+ * @file DensityEnergy/hydro.h
  * @brief Minimal conservative implementation of SPH (Non-neighbour loop
  * equations) with multiple materials.
  *
@@ -631,4 +631,4 @@ hydro_set_init_internal_energy(struct part *p, float u_init) {
   p->u = u_init;
 }
 
-#endif /* SWIFT_MINIMAL_MULTI_MAT_HYDRO_H */
+#endif /* SWIFT_DENSITY_ENERGY_HYDRO_H */

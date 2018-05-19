@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_MINIMAL_MULTI_MAT_HYDRO_IACT_H
-#define SWIFT_MINIMAL_MULTI_MAT_HYDRO_IACT_H
+#ifndef SWIFT_DENSITY_ENERGY_HYDRO_IACT_H
+#define SWIFT_DENSITY_ENERGY_HYDRO_IACT_H
 
 /**
- * @file MinimalMultiMat/hydro_iact.h
- * @brief MinimalMultiMat conservative implementation of SPH (Neighbour loop
+ * @file DensityEnergy/hydro_iact.h
+ * @brief DensityEnergy conservative implementation of SPH (Neighbour loop
  * equations)
  *
  * The thermal variable is the internal energy (u). Simple constant
@@ -337,4 +337,4 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->force.v_sig = max(pi->force.v_sig, v_sig);
 }
 
-#endif /* SWIFT_MINIMAL_MULTI_MAT_HYDRO_IACT_H */
+#endif /* SWIFT_DENSITY_ENERGY_HYDRO_IACT_H */
