@@ -50,9 +50,17 @@ extern struct eos_parameters eos;
  * @brief Master type for the planetary equation of state.
  */
 enum eos_planetary_type_id {
+
+  /*! Tillotson */
   eos_planetary_type_Til = 1,
+
+  /*! Hubbard & MacFarlane (1980) Uranus/Neptune */
   eos_planetary_type_HM80 = 2,
+
+  /*! ANEOS */
   eos_planetary_type_ANEOS = 3,
+
+  /*! SESAME */
   eos_planetary_type_SESAME = 4,
 } __attribute__((packed));
 
@@ -1152,24 +1160,24 @@ __attribute__((always_inline)) INLINE static void eos_init(
 
   // Hubbard & MacFarlane (1980)
   if (parser_get_opt_param_int(params, "EoS:planetary_use_HM80", 0)) {
-    set_HM80_HHe(&e->HM80_HHe, eos_planetary_id_HM80_HHe);
-    set_HM80_ice(&e->HM80_ice, eos_planetary_id_HM80_ice);
-    set_HM80_rock(&e->HM80_rock, eos_planetary_id_HM80_rock);
+      set_HM80_HHe(&e->HM80_HHe, eos_planetary_id_HM80_HHe);
+      set_HM80_ice(&e->HM80_ice, eos_planetary_id_HM80_ice);
+      set_HM80_rock(&e->HM80_rock, eos_planetary_id_HM80_rock);
 
-    parser_get_param_string(params, "EoS:planetary_HM80_HHe_table_file",
-                            HM80_HHe_table_file);
-    parser_get_param_string(params, "EoS:planetary_HM80_ice_table_file",
-                            HM80_ice_table_file);
-    parser_get_param_string(params, "EoS:planetary_HM80_rock_table_file",
-                            HM80_rock_table_file);
+      parser_get_param_string(params, "EoS:planetary_HM80_HHe_table_file",
+                              HM80_HHe_table_file);
+      parser_get_param_string(params, "EoS:planetary_HM80_ice_table_file",
+                              HM80_ice_table_file);
+      parser_get_param_string(params, "EoS:planetary_HM80_rock_table_file",
+                              HM80_rock_table_file);
 
-    load_HM80_table(&e->HM80_HHe, HM80_HHe_table_file);
-    load_HM80_table(&e->HM80_ice, HM80_ice_table_file);
-    load_HM80_table(&e->HM80_rock, HM80_rock_table_file);
+      load_table_HM80(&e->HM80_HHe, HM80_HHe_table_file);
+      load_table_HM80(&e->HM80_ice, HM80_ice_table_file);
+      load_table_HM80(&e->HM80_rock, HM80_rock_table_file);
 
-    convert_units_HM80(&e->HM80_HHe, us);
-    convert_units_HM80(&e->HM80_ice, us);
-    convert_units_HM80(&e->HM80_rock, us);
+      convert_units_HM80(&e->HM80_HHe, us);
+      convert_units_HM80(&e->HM80_ice, us);
+      convert_units_HM80(&e->HM80_rock, us);
   }
 
   // ANEOS
@@ -1192,11 +1200,11 @@ __attribute__((always_inline)) INLINE static void eos_init(
       parser_get_param_string(params, "EoS:SESAME_water_table_file",
                               SESAME_water_table_file);
 
-      load_SESAME_table(&e->SESAME_basalt, SESAME_basalt_table_file);
-      load_SESAME_table(&e->SESAME_water, SESAME_water_table_file);
+      load_table_SESAME(&e->SESAME_basalt, SESAME_basalt_table_file);
+      load_table_SESAME(&e->SESAME_water, SESAME_water_table_file);
 
-      prepare_SESAME_table(&e->SESAME_basalt, us);
-      prepare_SESAME_table(&e->SESAME_water, us);
+      prepare_table_SESAME(&e->SESAME_basalt, us);
+      prepare_table_SESAME(&e->SESAME_water, us);
 
       convert_units_SESAME(&e->SESAME_basalt, us);
       convert_units_SESAME(&e->SESAME_water, us);

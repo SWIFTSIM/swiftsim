@@ -99,10 +99,10 @@ INLINE static void set_HM80_rock(struct HM80_params *mat,
 }
 
 // Read the table from file
-INLINE static void load_HM80_table(struct HM80_params *mat, char *table_file) {
+INLINE static void load_table_HM80(struct HM80_params *mat, char *table_file) {
   // Allocate table memory
-  mat->table_P_rho_u =
-      (float *)malloc(mat->num_rho * mat->num_u * sizeof(float *));
+  mat->table_P_rho_u = (float *)malloc(mat->num_rho * mat->num_u *
+                                       sizeof(float));
 
   // Load table contents from file
   FILE *f = fopen(table_file, "r");

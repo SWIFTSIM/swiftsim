@@ -65,7 +65,7 @@ INLINE static void set_SESAME_water(struct SESAME_params *mat,
 }
 
 // Read the tables from file
-INLINE static void load_SESAME_table(struct SESAME_params *mat,
+INLINE static void load_table_SESAME(struct SESAME_params *mat,
                                      char *table_file) {
 
   // Load table contents from file
@@ -127,7 +127,7 @@ INLINE static void load_SESAME_table(struct SESAME_params *mat,
 }
 
 // Misc. modifications
-INLINE static void prepare_SESAME_table(struct SESAME_params *mat,
+INLINE static void prepare_table_SESAME(struct SESAME_params *mat,
                                         const struct unit_system *us) {
 
   // Convert densities to log(density)
