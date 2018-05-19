@@ -72,6 +72,9 @@
 #elif defined(MINIMAL_MULTI_MAT_SPH)
 #include "./hydro/MinimalMultiMat/hydro_part.h"
 #define hydro_need_extra_init_loop 0
+#elif defined(DENSITY_ENERGY_SPH)
+#include "./hydro/DensityEnergy/hydro_part.h"
+#define hydro_need_extra_init_loop 0
 #else
 #error "Invalid choice of SPH variant"
 #endif
