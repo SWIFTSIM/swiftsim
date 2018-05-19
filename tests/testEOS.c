@@ -81,7 +81,7 @@
  *
  */
 
-//#ifdef EOS_PLANETARY
+#ifdef EOS_PLANETARY
 int main(int argc, char *argv[]) {
   float rho, log_rho, log_u, P;
   struct unit_system us;
@@ -213,8 +213,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Convert to internal units (Earth masses and radii)
-  units_init(&us, 1.f, 1.f, 1.f, 1.f, 1.f); ///###
-//  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
+  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
   log_rho_min -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_rho_max -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_u_min += logf(J_kg_to_erg_g / units_cgs_conversion_factor(
@@ -242,15 +241,6 @@ int main(int argc, char *argv[]) {
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);
-
-
-//  ///###
-//  P = gas_pressure_from_internal_energy(3, 1e9, mat_id);
-//  printf("P = %f \n", P/1e12);
-//
-//  return 0;
-//  ///###
-
 
   // Output file
   sprintf(filename, "testEOS_rho_u_P_%d.txt", mat_id);
@@ -307,6 +297,6 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-//#else
-//int main() { return 0; }
-//#endif
+#else
+int main() { return 0; }
+#endif

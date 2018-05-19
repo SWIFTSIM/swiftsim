@@ -280,39 +280,6 @@ INLINE static float SESAME_pressure_from_internal_energy(
              (mat->table_log_u_rho_T[(rho_idx+1)*mat->num_u + (u_idx_2+1)] -
               mat->table_log_u_rho_T[(rho_idx+1)*mat->num_u + u_idx_2]);
 
-
-  ///###
-//  message("###");
-//  message("density %g", density);
-//  message("u %g", u);
-//  message("log_rho %g", log_rho);
-//  message("log_u %g", log_u);
-//  message("rho_idx %d", rho_idx);
-//  message("log_rho_tab %g  %g", mat->table_log_rho[rho_idx],
-//          mat->table_log_rho[rho_idx+1]);
-//  message("u_idx_1 %d", u_idx_1);
-//  message("u_idx_2 %d", u_idx_2);
-//  message("log_u_1_tab %g  %g", mat->table_log_u_rho_T[rho_idx*mat->num_u + u_idx_1],
-//          mat->table_log_u_rho_T[rho_idx*mat->num_u + u_idx_1 + 1]);
-//  message("log_u_2_tab %g  %g", mat->table_log_u_rho_T[(rho_idx+1)*mat->num_u + u_idx_2],
-//          mat->table_log_u_rho_T[(rho_idx+1)*mat->num_u + u_idx_2 + 1]);
-//  message("intp_rho %g", intp_rho);
-//  message("intp_u_1 %g", intp_u_1);
-//  message("intp_u_2 %g", intp_u_2);
-//
-//  message("P_1_tab %g  %g", mat->table_P_rho_T[rho_idx*mat->num_u + u_idx_1],
-//          mat->table_P_rho_T[rho_idx*mat->num_u + u_idx_1 + 1]);
-//  message("P_2_tab %g  %g", mat->table_P_rho_T[(rho_idx+1)*mat->num_u + u_idx_2],
-//          mat->table_P_rho_T[(rho_idx+1)*mat->num_u + u_idx_2 + 1]);
-//
-//  printf("\n");
-//  for (int i_u = 0; i_u < mat->num_u; i_u++) {
-//    printf("%d %d  %e \n", rho_idx, i_u, exp(mat->table_log_u_rho_T[rho_idx*mat->num_u + i_u]));
-//  }
-//  printf("\n\n");
-  ///###
-
-
   /// WIP behaviour outside table, for now just return 0...
   if (rho_idx < 0) {  // Too-low rho
     P = 0.f;
