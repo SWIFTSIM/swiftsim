@@ -18,8 +18,8 @@
  #
  ##############################################################################
 """
-Plot the output of testEOS to show how the equation of state pressure varies
-with density and specific internal energy.
+Plot the output of testEOS to show how the equation of state pressure and sound
+speed varies with density and specific internal energy.
 
 Usage:
     python  testEOS.py  (mat_id)
@@ -37,9 +37,13 @@ Text file contains:
     P_1_0   ...     ...     P_1_num_u
     ...     ...     ...     ...
     P_num_rho_0     ...     P_num_rho_num_u
+    c_0_0   c_0_1   ...     c_0_num_u           # Array of sound speeds, c(rho, u)
+    c_1_0   ...     ...     c_1_num_u
+    ...     ...     ...     ...
+    c_num_rho_0     ...     c_num_rho_num_u
 
 Note that the values tested extend beyond the range that most EOS are
-designed for (e.g. outside table limits), to help test the EOS in case of
+designed for (e.g. outside table limits), to help test the EOS in cases of
 unexpected particle behaviour.
 """
 
@@ -84,6 +88,7 @@ Di_mat_id = {mat_id : mat for mat, mat_id in Di_material.iteritems()}
 # Unit conversion
 Ba_to_Mbar = 1e-12
 erg_g_to_J_kg = 1e-4
+cm_s_to_m_s = 1e-2
 
 if __name__ == '__main__':
     # Sys args
@@ -103,7 +108,7 @@ if __name__ == '__main__':
         for mat_id, mat in sorted(Di_mat_id.iteritems()):
             print "  %s%s%d" % (mat, (20 - len("%s" % mat))*" ", mat_id)
 
-    filename = "testEOS_rho_u_P_%d.txt" % mat_id
+    filename = "testEOS_rho_u_P_c_%d.txt" % mat_id
 
     # Load the header info and density and energy arrays
     with open(filename) as f:
@@ -112,24 +117,29 @@ if __name__ == '__main__':
         A1_rho = np.array(f.readline().split(), dtype=float)
         A1_u = np.array(f.readline().split(), dtype=float)
 
-    # Load pressure array
+    # Load pressure and soundspeed arrays
     A2_P = np.loadtxt(filename, skiprows=4)
+    A2_c = A2_P[num_rho:]
+    A2_P = A2_P[:num_rho]
 
-    # Convert pressures from cgs Barye to Mbar
-    A2_P *= Ba_to_Mbar
     # Convert energies from cgs to SI
     A1_u *= erg_g_to_J_kg
+    # Convert pressures from cgs (Barye) to Mbar
+    A2_P *= Ba_to_Mbar
+    # Convert sound speeds from cgs to SI
+    A1_u *= cm_s_to_m_s
 
     # Check that the numbers are right
     assert A1_rho.shape == (num_rho,)
     assert A1_u.shape == (num_u,)
     assert A2_P.shape == (num_rho, num_u)
+    assert A2_c.shape == (num_rho, num_u)
 
     # Plot
+    # Pressure: P(rho) at fixed u
     plt.figure(figsize=(7, 7))
     ax = plt.gca()
 
-    # P(rho) at fixed u
     A1_colour = matplotlib.cm.rainbow(np.linspace(0, 1, num_u))
 
     for i_u, u in enumerate(A1_u):
@@ -147,7 +157,31 @@ if __name__ == '__main__':
     plt.title(mat)
     plt.tight_layout()
 
-    plt.savefig("testEOS_%d.png" % mat_id)
+    plt.savefig("testEOS_P_%d.png" % mat_id)
+    plt.close()
+
+    # Sound speed: c(rho) at fixed u
+    plt.figure(figsize=(7, 7))
+    ax = plt.gca()
+
+    A1_colour = matplotlib.cm.rainbow(np.linspace(0, 1, num_u))
+
+    for i_u, u in enumerate(A1_u):
+        if i_u%10 == 0:
+            plt.plot(A1_rho, A2_c[:, i_u], c=A1_colour[i_u],
+                     label=r"%.2e" % u)
+        else:
+            plt.plot(A1_rho, A2_c[:, i_u], c=A1_colour[i_u])
+
+    plt.legend(title="Sp. Int. Energy (J kg$^{-1}$)")
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlabel(r"Density (g cm$^{-3}$)")
+    plt.ylabel(r"Sound Speed (m s^{-1})")
+    plt.title(mat)
+    plt.tight_layout()
+
+    plt.savefig("testEOS_c_%d.png" % mat_id)
     plt.close()
 
 
