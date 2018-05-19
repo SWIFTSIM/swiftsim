@@ -74,6 +74,10 @@
  *  P_1_0   ...     ...     P_1_num_u
  *  ...     ...     ...     ...
  *  P_num_rho_0     ...     P_num_rho_num_u
+ *  c_0_0   c_0_1   ...     c_0_num_u           # Array of sound speeds, c(rho, u)
+ *  c_1_0   ...     ...     c_1_num_u
+ *  ...     ...     ...     ...
+ *  c_num_rho_0     ...     c_num_rho_num_u
  *
  * Note that the values tested extend beyond the range that most EOS are
  * designed for (e.g. outside table limits), to help test the EOS in case of
@@ -83,7 +87,7 @@
 
 #ifdef EOS_PLANETARY
 int main(int argc, char *argv[]) {
-  float rho, log_rho, log_u, P;
+  float rho, log_rho, log_u, P, c;
   struct unit_system us;
   struct swift_params *params =
       (struct swift_params *)malloc(sizeof(struct swift_params));
@@ -134,8 +138,10 @@ int main(int argc, char *argv[]) {
   printf("This is %s\n", package_description());
 
   // Check material ID
-  // Material base type
-  switch ((int)(mat_id / eos_planetary_type_factor)) {
+  const enum eos_planetary_type_id type = mat_id / eos_planetary_type_factor;
+
+  // Select the material base type
+  switch (type) {
     // Tillotson
     case eos_planetary_type_Til:
       switch (mat_id) {
@@ -243,7 +249,7 @@ int main(int argc, char *argv[]) {
   eos_init(&eos, phys_const, &us, params);
 
   // Output file
-  sprintf(filename, "testEOS_rho_u_P_%d.txt", mat_id);
+  sprintf(filename, "testEOS_rho_u_P_c_%d.txt", mat_id);
   FILE *f = fopen(filename, "w");
   if (f == NULL) {
     printf("Could not open output file!\n");
@@ -289,6 +295,21 @@ int main(int argc, char *argv[]) {
       if (do_output == 1)
         fprintf(f, "%.6e ",
                 P * units_cgs_conversion_factor(&us, UNIT_CONV_PRESSURE));
+    }
+
+    if (do_output == 1) fprintf(f, "\n");
+  }
+
+  // Sound speeds
+  for (int i = 0; i < num_rho; i++) {
+    rho = A1_rho[i];
+
+    for (int j = 0; j < num_u; j++) {
+      c = gas_soundspeed_from_internal_energy(rho, A1_u[j], mat_id);
+
+      if (do_output == 1)
+        fprintf(f, "%.6e ",
+                c * units_cgs_conversion_factor(&us, UNIT_CONV_SPEED));
     }
 
     if (do_output == 1) fprintf(f, "\n");
