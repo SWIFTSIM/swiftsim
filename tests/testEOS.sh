@@ -13,6 +13,8 @@ A1_mat_id=(
     200
     201
     202
+    401
+    402
 )
 
 for mat_id in "${A1_mat_id[@]}"

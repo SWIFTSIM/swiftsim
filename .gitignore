@@ -311,3 +311,6 @@ sympy-plots-for-*.tex/
 
 #ctags
 *tags
+
+# vim
+*.swp

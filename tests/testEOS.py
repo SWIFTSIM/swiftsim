@@ -74,7 +74,9 @@ Di_material = {
     'ANEOS_iron'        : Di_type['ANEOS']*type_factor,
     'MANEOS_forsterite' : Di_type['ANEOS']*type_factor + 1,
     # SESAME
-    'SESAME_iron'   : Di_type['SESAME']*type_factor,
+    'SESAME_iron'   : Di_type['SESAME']*type_factor,        # WIP
+    'SESAME_basalt' : Di_type['SESAME']*type_factor + 1,    # 7530
+    'SESAME_water'  : Di_type['SESAME']*type_factor + 2,    # 7154
 }
 # Invert so the mat_id are the keys
 Di_mat_id = {mat_id : mat for mat, mat_id in Di_material.iteritems()}
@@ -128,13 +130,14 @@ if __name__ == '__main__':
     ax = plt.gca()
 
     # P(rho) at fixed u
-    num_u_fix = 9
-    A1_idx = np.floor(np.linspace(0, num_u - 1, num_u_fix)).astype(int)
-    A1_colour = matplotlib.cm.rainbow(np.linspace(0, 1, num_u_fix))
+    A1_colour = matplotlib.cm.rainbow(np.linspace(0, 1, num_u))
 
-    for i, idx in enumerate(A1_idx):
-        plt.plot(A1_rho, A2_P[:, idx], c=A1_colour[i],
-                 label=r"%.2e" % A1_u[idx])
+    for i_u, u in enumerate(A1_u):
+        if i_u%10 == 0:
+            plt.plot(A1_rho, A2_P[:, i_u], c=A1_colour[i_u],
+                     label=r"%.2e" % u)
+        else:
+            plt.plot(A1_rho, A2_P[:, i_u], c=A1_colour[i_u])
 
     plt.legend(title="Sp. Int. Energy (J kg$^{-1}$)")
     plt.xscale('log')
