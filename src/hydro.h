@@ -66,6 +66,10 @@
 #include "./hydro/MinimalMultiMat/hydro.h"
 #include "./hydro/MinimalMultiMat/hydro_iact.h"
 #define SPH_IMPLEMENTATION "Minimal version of SPH with multiple materials"
+#elif defined(DENSITY_ENERGY_SPH)
+#include "./hydro/DensityEnergy/hydro.h"
+#include "./hydro/DensityEnergy/hydro_iact.h"
+#define SPH_IMPLEMENTATION "Density-energy version of SPH"
 #else
 #error "Invalid choice of SPH variant"
 #endif
