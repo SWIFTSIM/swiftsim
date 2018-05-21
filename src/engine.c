@@ -4371,22 +4371,23 @@ void engine_step(struct engine *e) {
   if (e->nodeID == 0) {
 
     /* Print some information to the screen */
-    printf("  %6d %14e %14e %14e %4d %4d %12zu %12zu %12zu %21.3f %6d %6d %6d %6d %.5e\n",
+    printf("  %6d %14e %14e %14e %4d %4d %12zu %12zu %12zu %21.3f %6d %.5e %6d %6d %.5e %6d\n",
            e->step, e->time, e->cosmology->a, e->time_step, e->min_active_bin,
            e->max_active_bin, e->updates, e->g_updates, e->s_updates,
-           e->wallclock_time, e->step_props, (n_eagle_cooling_rate_calls_1 - n_eagle_cooling_rate_calls_3)/n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_3, ((float) n_eagle_cooling_rate_calls_3)/((float) n_eagle_cooling_rate_calls_2));
+           e->wallclock_time, e->step_props, ((float) n_eagle_cooling_rate_calls_1)/((float) n_eagle_cooling_rate_calls_2), n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_3, ((float) n_eagle_cooling_rate_calls_3)/((float) n_eagle_cooling_rate_calls_2), n_eagle_cooling_rate_calls_4);
     fflush(stdout);
 
     fprintf(e->file_timesteps,
-            "  %6d %14e %14e %14e %4d %4d %12zu %12zu %12zu %21.3f %6d %6d %6d %6d %.5e\n",
+            "  %6d %14e %14e %14e %4d %4d %12zu %12zu %12zu %21.3f %6d %.5e %6d %6d %.5e %6d\n",
             e->step, e->time, e->cosmology->a, e->time_step, e->min_active_bin,
             e->max_active_bin, e->updates, e->g_updates, e->s_updates,
-            e->wallclock_time, e->step_props, (n_eagle_cooling_rate_calls_1 - n_eagle_cooling_rate_calls_3)/n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_3, ((float) n_eagle_cooling_rate_calls_3)/((float) n_eagle_cooling_rate_calls_2));
+            e->wallclock_time, e->step_props, ((float) (n_eagle_cooling_rate_calls_1 - 20*n_eagle_cooling_rate_calls_4))/((float) n_eagle_cooling_rate_calls_2), n_eagle_cooling_rate_calls_2, n_eagle_cooling_rate_calls_3, ((float) n_eagle_cooling_rate_calls_3)/((float) n_eagle_cooling_rate_calls_2), n_eagle_cooling_rate_calls_4);
     fflush(e->file_timesteps);
   }
   n_eagle_cooling_rate_calls_1 = 0;
   n_eagle_cooling_rate_calls_2 = 0;
   n_eagle_cooling_rate_calls_3 = 0;
+  n_eagle_cooling_rate_calls_4 = 0;
 
   /* Move forward in time */
   e->ti_old = e->ti_current;
