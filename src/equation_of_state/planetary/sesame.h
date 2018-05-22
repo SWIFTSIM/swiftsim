@@ -389,67 +389,9 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
 INLINE static float SESAME_soundspeed_from_pressure(
     float density, float P, const struct SESAME_params *mat) {
 
-  float c;
+  error("This EOS function is not yet implemented!");
 
-  int rho_idx, P_idx_1, P_idx_2;
-  float intp_rho, intp_P_1, intp_P_2;
-  const float log_rho = logf(density);
-
-  // 2D interpolation (bilinear with log(rho), P) to find c(rho, P)
-  // Density index
-  rho_idx = find_value_in_monot_incr_array(log_rho, mat->table_log_rho,
-                                           mat->num_rho);
-
-  // Pressure at this and the next density (in relevant slice of P array)
-  P_idx_1 = find_value_in_monot_incr_array(
-      P, mat->table_P_rho_T + rho_idx*mat->num_T, mat->num_T);
-  P_idx_2 = find_value_in_monot_incr_array(
-      P, mat->table_P_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
-
-  intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
-             (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
-  intp_P_1 = (P - mat->table_P_rho_T[rho_idx*mat->num_T + P_idx_1]) /
-             (mat->table_P_rho_T[rho_idx*mat->num_T + (P_idx_1+1)] -
-              mat->table_P_rho_T[rho_idx*mat->num_T + P_idx_1]);
-  intp_P_2 = (P - mat->table_P_rho_T[(rho_idx+1)*mat->num_T + P_idx_2]) /
-             (mat->table_P_rho_T[(rho_idx+1)*mat->num_T + (P_idx_2+1)] -
-              mat->table_P_rho_T[(rho_idx+1)*mat->num_T + P_idx_2]);
-
-  // Return zero if outside the table
-  if (rho_idx < 0) {                            // Too-low rho
-    c = 0.f;
-    if ((P_idx_1 < 0) || (P_idx_2 < 0)) {       // and too-low P
-      c = 0.f;
-    }
-  } else if ((P_idx_1 < 0) || (P_idx_2 < 0)) {  // Too-low P
-    c = 0.f;
-  }
-  else if (rho_idx >= mat->num_rho - 1) {       // Too-high rho
-    if ((P_idx_1 >= mat->num_T - 1) ||
-        (P_idx_2 >= mat->num_T - 1)) {          // and too-high P
-      c = 0.f;
-    } else {
-      c = 0.f;
-    }
-  } else if ((P_idx_1 >= mat->num_T - 1) ||
-             (P_idx_2 >= mat->num_T - 1)) {     // Too-high P
-    c = 0.f;
-  }
-  // Normal interpolation within the table
-  else {
-    c = (1.f - intp_rho) * (
-            (1.f - intp_P_1) *
-                mat->table_c_rho_T[rho_idx*mat->num_T + P_idx_1] +
-            intp_P_1 *
-                mat->table_c_rho_T[rho_idx*mat->num_T + P_idx_1 + 1]) +
-        intp_rho * (
-            (1.f - intp_P_2) *
-                mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + P_idx_2] +
-            intp_P_2 *
-                mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + P_idx_2 + 1]);
-  }
-
-  return c;
+  return 0;i
 }
 
 #endif /* SWIFT_SESAME_EQUATION_OF_STATE_H */
