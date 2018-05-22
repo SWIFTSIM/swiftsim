@@ -1195,9 +1195,9 @@ __attribute__((always_inline)) INLINE static void eos_init(
       set_SESAME_basalt(&e->SESAME_basalt, eos_planetary_id_SESAME_basalt);
       set_SESAME_water(&e->SESAME_water, eos_planetary_id_SESAME_water);
 
-      parser_get_param_string(params, "EoS:SESAME_basalt_table_file",
+      parser_get_param_string(params, "EoS:planetary_SESAME_basalt_table_file",
                               SESAME_basalt_table_file);
-      parser_get_param_string(params, "EoS:SESAME_water_table_file",
+      parser_get_param_string(params, "EoS:planetary_SESAME_water_table_file",
                               SESAME_water_table_file);
 
       load_table_SESAME(&e->SESAME_basalt, SESAME_basalt_table_file);
