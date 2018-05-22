@@ -153,7 +153,7 @@ INLINE static float HM80_internal_energy_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_entropy
@@ -162,7 +162,7 @@ INLINE static float HM80_pressure_from_entropy(float density, float entropy,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_pressure
@@ -171,7 +171,7 @@ INLINE static float HM80_entropy_from_pressure(float density, float pressure,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_entropy
@@ -180,14 +180,14 @@ INLINE static float HM80_soundspeed_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_internal_energy
 INLINE static float HM80_entropy_from_internal_energy(
     float density, float u, const struct HM80_params *mat) {
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_internal_energy
@@ -259,7 +259,7 @@ INLINE static float HM80_internal_energy_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_internal_energy
@@ -287,7 +287,7 @@ INLINE static float HM80_soundspeed_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 #endif /* SWIFT_HUBBARD_MACFARLANE_EQUATION_OF_STATE_H */
