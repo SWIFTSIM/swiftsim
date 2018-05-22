@@ -11,7 +11,8 @@ and velocity at infinity of 5 km s^-1 for a relatively head-on impact.
 
 Both bodies have a rocky core and icy mantle, with a hydrogen-helium atmosphere
 on the target as well. Although with this low number of particles it cannot be
-modelled in any detail.
+modelled in any detail. The equations of state tables can be downloaded as shown
+below.
 
 Setup
 -----
@@ -21,6 +22,10 @@ In `swiftsim/`:
 `$ ./configure --with-hydro=minimal-multi-mat --with-equation-of-state=planetary`
 
 `$ make`
+
+In `swiftsim/src/equation_of_state/planetary/`:
+
+`$ ./get_eos_tables.sh`
 
 In `swiftsim/examples/UranusImpact/`:
 
