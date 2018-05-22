@@ -57,11 +57,8 @@ enum eos_planetary_type_id {
   /*! Hubbard & MacFarlane (1980) Uranus/Neptune */
   eos_planetary_type_HM80 = 2,
 
-  /*! ANEOS */
-  eos_planetary_type_ANEOS = 3,
-
   /*! SESAME */
-  eos_planetary_type_SESAME = 4,
+  eos_planetary_type_SESAME = 3,
 } __attribute__((packed));
 
 /**
@@ -97,16 +94,6 @@ enum eos_planetary_material_id {
   eos_planetary_id_HM80_rock =
       eos_planetary_type_HM80 * eos_planetary_type_factor + 2,
 
-  /* ANEOS */
-
-  /*! ANEOS iron */
-  eos_planetary_id_ANEOS_iron =
-      eos_planetary_type_ANEOS * eos_planetary_type_factor,
-
-  /*! MANEOS forsterite */
-  eos_planetary_id_MANEOS_forsterite =
-      eos_planetary_type_ANEOS * eos_planetary_type_factor + 1,
-
   /* SESAME */
 
   /*! SESAME iron WIP */
@@ -123,7 +110,6 @@ enum eos_planetary_material_id {
 } __attribute__((packed));
 
 /* Individual EOS function headers. */
-#include "aneos.h"
 #include "hm80.h"
 #include "sesame.h"
 #include "tillotson.h"
@@ -134,7 +120,6 @@ enum eos_planetary_material_id {
 struct eos_parameters {
   struct Til_params Til_iron, Til_granite, Til_water;
   struct HM80_params HM80_HHe, HM80_ice, HM80_rock;
-  struct ANEOS_params ANEOS_iron, MANEOS_forsterite;
   struct SESAME_params SESAME_basalt, SESAME_water;
 };
 
@@ -197,27 +182,6 @@ gas_internal_energy_from_entropy(float density, float entropy,
         case eos_planetary_id_HM80_rock:
           return HM80_internal_energy_from_entropy(density, entropy,
                                                    &eos.HM80_rock);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_internal_energy_from_entropy(density, entropy,
-                                                    &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_internal_energy_from_entropy(density, entropy,
-                                                    &eos.MANEOS_forsterite);
           break;
 
         default:
@@ -305,26 +269,6 @@ __attribute__((always_inline)) INLINE static float gas_pressure_from_entropy(
 
         case eos_planetary_id_HM80_rock:
           return HM80_pressure_from_entropy(density, entropy, &eos.HM80_rock);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_pressure_from_entropy(density, entropy, &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_pressure_from_entropy(density, entropy,
-                                             &eos.MANEOS_forsterite);
           break;
 
         default:
@@ -421,26 +365,6 @@ __attribute__((always_inline)) INLINE static float gas_entropy_from_pressure(
       };
       break;
 
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_entropy_from_pressure(density, P, &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_entropy_from_pressure(density, P,
-                                             &eos.MANEOS_forsterite);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
     /* SESAME EoS */
     case eos_planetary_type_SESAME:;
 
@@ -519,27 +443,6 @@ __attribute__((always_inline)) INLINE static float gas_soundspeed_from_entropy(
 
         case eos_planetary_id_HM80_rock:
           return HM80_soundspeed_from_entropy(density, entropy, &eos.HM80_rock);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_soundspeed_from_entropy(density, entropy,
-                                               &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_soundspeed_from_entropy(density, entropy,
-                                               &eos.MANEOS_forsterite);
           break;
 
         default:
@@ -628,27 +531,6 @@ gas_entropy_from_internal_energy(float density, float u,
 
         case eos_planetary_id_HM80_rock:
           return HM80_entropy_from_internal_energy(density, u, &eos.HM80_rock);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_entropy_from_internal_energy(density, u,
-                                                    &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_entropy_from_internal_energy(density, u,
-                                                    &eos.MANEOS_forsterite);
           break;
 
         default:
@@ -746,27 +628,6 @@ gas_pressure_from_internal_energy(float density, float u,
       };
       break;
 
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_pressure_from_internal_energy(density, u,
-                                                     &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_pressure_from_internal_energy(density, u,
-                                                     &eos.MANEOS_forsterite);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
     /* SESAME EoS */
     case eos_planetary_type_SESAME:;
 
@@ -851,27 +712,6 @@ gas_internal_energy_from_pressure(float density, float P,
 
         case eos_planetary_id_HM80_rock:
           return HM80_internal_energy_from_pressure(density, P, &eos.HM80_rock);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_internal_energy_from_pressure(density, P,
-                                                     &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_internal_energy_from_pressure(density, P,
-                                                     &eos.MANEOS_forsterite);
           break;
 
         default:
@@ -973,27 +813,6 @@ gas_soundspeed_from_internal_energy(float density, float u,
       };
       break;
 
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_soundspeed_from_internal_energy(density, u,
-                                                       &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_soundspeed_from_internal_energy(density, u,
-                                                       &eos.MANEOS_forsterite);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
     /* SESAME EoS */
     case eos_planetary_type_SESAME:;
 
@@ -1081,26 +900,6 @@ __attribute__((always_inline)) INLINE static float gas_soundspeed_from_pressure(
       };
       break;
 
-    /* ANEOS EoS */
-    case eos_planetary_type_ANEOS:
-
-      /* Select the material */
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          return ANEOS_soundspeed_from_pressure(density, P, &eos.ANEOS_iron);
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          return ANEOS_soundspeed_from_pressure(density, P,
-                                                &eos.MANEOS_forsterite);
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d", mat_id);
-          return 0.f;
-      };
-      break;
-
     /* SESAME EoS */
     case eos_planetary_type_SESAME:;
 
@@ -1139,9 +938,9 @@ __attribute__((always_inline)) INLINE static void eos_init(
     const struct unit_system *us, const struct swift_params *params) {
 
   // Table file names
-  char Til_iron_table_file[PARSER_MAX_LINE_SIZE];
-  char Til_granite_table_file[PARSER_MAX_LINE_SIZE];
-  char Til_water_table_file[PARSER_MAX_LINE_SIZE];
+//  char Til_iron_table_file[PARSER_MAX_LINE_SIZE];
+//  char Til_granite_table_file[PARSER_MAX_LINE_SIZE];
+//  char Til_water_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_HHe_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_ice_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_rock_table_file[PARSER_MAX_LINE_SIZE];
@@ -1152,13 +951,24 @@ __attribute__((always_inline)) INLINE static void eos_init(
   // and convert to internal units
   // Tillotson
   if (parser_get_opt_param_int(params, "EoS:planetary_use_Til", 0)) {
-    set_Til_iron(&e->Til_iron, eos_planetary_id_Til_iron);
-    set_Til_granite(&e->Til_granite, eos_planetary_id_Til_granite);
-    set_Til_water(&e->Til_water, eos_planetary_id_Til_water);
+      set_Til_iron(&e->Til_iron, eos_planetary_id_Til_iron);
+      set_Til_granite(&e->Til_granite, eos_planetary_id_Til_granite);
+      set_Til_water(&e->Til_water, eos_planetary_id_Til_water);
 
-    convert_units_Til(&e->Til_iron, us);
-    convert_units_Til(&e->Til_granite, us);
-    convert_units_Til(&e->Til_water, us);
+//      parser_get_param_string(params, "EoS:planetary_Til_iron_table_file",
+//                              Til_iron_table_file);
+//      parser_get_param_string(params, "EoS:planetary_Til_granite_table_file",
+//                              Til_granite_table_file);
+//      parser_get_param_string(params, "EoS:planetary_Til_water_table_file",
+//                              Til_water_table_file);
+
+//      load_table_Til(&e->Til_iron, Til_iron_table_file);
+//      load_table_Til(&e->Til_granite, Til_granite_table_file);
+//      load_table_Til(&e->Til_water, Til_water_table_file);
+
+ //     convert_units_Til(&e->Til_iron, us);
+  //    convert_units_Til(&e->Til_granite, us);
+   //   convert_units_Til(&e->Til_water, us);
   }
 
   // Hubbard & MacFarlane (1980)
@@ -1181,16 +991,6 @@ __attribute__((always_inline)) INLINE static void eos_init(
       convert_units_HM80(&e->HM80_HHe, us);
       convert_units_HM80(&e->HM80_ice, us);
       convert_units_HM80(&e->HM80_rock, us);
-  }
-
-  // ANEOS
-  if (parser_get_opt_param_int(params, "EoS:planetary_use_ANEOS", 0)) {
-    set_ANEOS_iron(&e->ANEOS_iron, eos_planetary_id_ANEOS_iron);
-    set_MANEOS_forsterite(&e->MANEOS_forsterite,
-                          eos_planetary_id_MANEOS_forsterite);
-
-    convert_units_ANEOS(&e->ANEOS_iron, us);
-    convert_units_ANEOS(&e->MANEOS_forsterite, us);
   }
 
   // SESAME
