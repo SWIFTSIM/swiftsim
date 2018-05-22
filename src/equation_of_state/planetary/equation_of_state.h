@@ -1147,6 +1147,9 @@ __attribute__((always_inline)) INLINE static void eos_init(
     const struct unit_system *us, const struct swift_params *params) {
 
   // Table file names
+  char Til_iron_table_file[PARSER_MAX_LINE_SIZE];
+  char Til_granite_table_file[PARSER_MAX_LINE_SIZE];
+  char Til_water_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_HHe_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_ice_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_rock_table_file[PARSER_MAX_LINE_SIZE];

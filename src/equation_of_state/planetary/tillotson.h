@@ -41,6 +41,10 @@
 
 // Tillotson parameters
 struct Til_params {
+  float *table_c_rho_P;
+  int num_rho, num_P;
+  float log_rho_min, log_rho_max, log_rho_step, inv_log_rho_step, log_P_min,
+      log_P_max, log_P_step, inv_log_P_step;
   float rho_0, a, b, A, B, u_0, u_iv, u_cv, alpha, beta, eta_min, P_min;
   enum eos_planetary_material_id mat_id;
 };
@@ -61,6 +65,18 @@ INLINE static void set_Til_iron(struct Til_params *mat,
   mat->beta = 5.0f;
   mat->eta_min = 0.0f;
   mat->P_min = 0.0f;
+
+  mat->num_rho = 70;
+  mat->num_P = 100;
+  mat->log_rho_min = logf(1e1f);
+  mat->log_rho_max = logf(1e5f);
+  mat->log_rho_step = (mat->log_rho_max - mat->log_rho_min) / (mat->num_rho-1);
+  mat->log_P_min = logf(1e1f);
+  mat->log_P_max = logf(1e16f);
+  mat->log_P_step = (mat->log_P_max - mat->log_P_min) / (mat->num_P-1);
+
+  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
+  mat->inv_log_P_step = 1.f / mat->log_P_step;
 }
 INLINE static void set_Til_granite(struct Til_params *mat,
                                    enum eos_planetary_material_id mat_id) {
@@ -77,6 +93,18 @@ INLINE static void set_Til_granite(struct Til_params *mat,
   mat->beta = 5.0f;
   mat->eta_min = 0.0f;
   mat->P_min = 0.0f;
+
+  mat->num_rho = 70;
+  mat->num_P = 100;
+  mat->log_rho_min = logf(1e1f);
+  mat->log_rho_max = logf(1e5f);
+  mat->log_rho_step = (mat->log_rho_max - mat->log_rho_min) / (mat->num_rho-1);
+  mat->log_P_min = logf(1e1f);
+  mat->log_P_max = logf(1e16f);
+  mat->log_P_step = (mat->log_P_max - mat->log_P_min) / (mat->num_P-1);
+
+  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
+  mat->inv_log_P_step = 1.f / mat->log_P_step;
 }
 INLINE static void set_Til_water(struct Til_params *mat,
                                  enum eos_planetary_material_id mat_id) {
@@ -93,11 +121,46 @@ INLINE static void set_Til_water(struct Til_params *mat,
   mat->beta = 5.0f;
   mat->eta_min = 0.915f;
   mat->P_min = 0.0f;
+
+  mat->num_rho = 70;
+  mat->num_P = 100;
+  mat->log_rho_min = logf(1e1f);
+  mat->log_rho_max = logf(1e5f);
+  mat->log_rho_step = (mat->log_rho_max - mat->log_rho_min) / (mat->num_rho-1);
+  mat->log_P_min = logf(1e1f);
+  mat->log_P_max = logf(1e16f);
+  mat->log_P_step = (mat->log_P_max - mat->log_P_min) / (mat->num_P-1);
+
+  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
+  mat->inv_log_P_step = 1.f / mat->log_P_step;
 }
 
-// Convert from cgs to internal units
+// Read the table from file
+INLINE static void load_table_Til(struct Til_params *mat, char *table_file) {
+  // Allocate table memory
+  mat->table_c_rho_P = (float *)malloc(mat->num_rho * mat->num_P *
+                                       sizeof(float));
+
+  // Load table contents from file
+  FILE *f = fopen(table_file, "r");
+  int c;
+  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
+    for (int i_P = 0; i_P < mat->num_P; i_P++) {
+      c = fscanf(f, "%f", &mat->table_c_rho_P[i_rho*mat->num_P + i_P]);
+      if (c != 1) {
+        error("Failed to read EOS table");
+      }
+    }
+  }
+  fclose(f);
+}
+
+// Convert to internal units
 INLINE static void convert_units_Til(struct Til_params *mat,
                                      const struct unit_system *us) {
+  const float kg_m3_to_g_cm3 = 1e-3f;   // Convert kg/m^3 to g/cm^3
+  const float Pa_to_Ba = 1e1f;          // Convert Pa to Barye
+  const float m_s_to_cm_s = 1e2f;       // Convert m/s to cm/s
 
   mat->rho_0 /= units_cgs_conversion_factor(us, UNIT_CONV_DENSITY);
   mat->A /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
@@ -106,6 +169,27 @@ INLINE static void convert_units_Til(struct Til_params *mat,
   mat->u_iv /= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
   mat->u_cv /= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
   mat->P_min /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+
+  // All table values in SI
+  // Densities
+  mat->log_rho_min +=
+      logf(kg_m3_to_g_cm3 / units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+  mat->log_rho_max +=
+      logf(kg_m3_to_g_cm3 / units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+
+  // Pressures
+  mat->log_P_min +=
+      logf(Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
+  mat->log_P_max +=
+      logf(Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
+
+  // Sound speeds
+  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
+    for (int i_P = 0; i_P < mat->num_P; i_P++) {
+      mat->table_c_rho_P[i_rho*mat->num_P + i_P] *=
+          m_s_to_cm_s / units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
+    }
+  }
 }
 
 // gas_internal_energy_from_entropy
@@ -160,7 +244,7 @@ INLINE static float Til_pressure_from_internal_energy(
   const float mu = eta - 1.f;
   const float nu = 1.f / eta - 1.f;
   const float w = u / (mat->u_0 * eta_sq) + 1.f;
-  const float w_inv = 1.f / w_inv;
+  const float w_inv = 1.f / w;
   float P_c, P_e, P;
 
   // Condensed or cold
@@ -215,9 +299,9 @@ INLINE static float Til_soundspeed_from_internal_energy(
   const float mu = eta - 1.f;
   const float nu = 1.f / eta - 1.f;
   const float w = u / (mat->u_0 * eta_sq) + 1.f;
-  const float w_inv = 1.f / w_inv;
+  const float w_inv = 1.f / w;
   const float w_inv_sq = w_inv*w_inv;
-  float P_c, P_e, P, c_sq_c, c_sq_e, c_sq;
+  float P_c, P_e, c_sq_c, c_sq_e, c_sq;
 
   // Condensed or cold
   if (eta < mat->eta_min) {
@@ -230,14 +314,19 @@ INLINE static float Til_soundspeed_from_internal_energy(
            + mat->b * (w - 1.f) * w_inv_sq * (2.f*u + P_c * rho_inv)
            + (mat->A + mat->B * (eta_sq - 1.f)) * rho_inv;
 
-  c_sq_c = max(c_sq_c, mat->A / mat->rho_0);
+  c_sq_c = fmax(c_sq_c, mat->A / mat->rho_0);
 
   // Expanded and hot
   P_e = mat->a * density * u +
         (mat->b * density * u * w_inv +
          mat->A * mu * expf(-mat->beta * nu)) * expf(-mat->alpha * nu*nu);
 
-  c_sq_e = 1;///###wilo
+  c_sq_e = (1.f - mat->a) * P_e * rho_inv + expf(-mat->alpha * nu*nu) *
+           (mat->A / mat->rho_0 * expf(-mat->beta * nu) *
+            (1 + mu / eta_sq * (mat->beta + 2.f*mat->alpha * nu - eta)) +
+            mat->b * density * u * w_inv_sq / (eta*eta_sq) *
+            (2 * mat->alpha * nu * w / mat->rho_0 - rho_inv / mat->u_0 *
+             (P_e * rho_inv * eta_sq - 2.f*u)));
 
   // Condensed or cold state
   if ((1.f < eta) || (u < mat->u_iv)) {
@@ -252,7 +341,7 @@ INLINE static float Til_soundspeed_from_internal_energy(
     c_sq = ((u - mat->u_iv)*c_sq_e + (mat->u_cv - u)*c_sq_c) /
           (mat->u_cv - mat->u_iv);
 
-    c_sq = max(c_sq_c, mat->A / mat->rho_0);
+    c_sq = fmax(c_sq_c, mat->A / mat->rho_0);
   }
 
   return sqrtf(c_sq);
@@ -261,8 +350,41 @@ INLINE static float Til_soundspeed_from_internal_energy(
 // gas_soundspeed_from_pressure
 INLINE static float Til_soundspeed_from_pressure(float density, float P,
                                                  const struct Til_params *mat) {
+  float c;
 
-  float c = sqrtf(mat->A / mat->rho_0);
+  int rho_idx, P_idx;
+  float intp_rho, intp_P;
+  const float log_rho = logf(density);
+  const float log_P = logf(P);
+
+  // 2D interpolation (bilinear with log(rho), log(u)) to find c(rho, u)
+  rho_idx = floorf((log_rho - mat->log_rho_min) * mat->inv_log_rho_step);
+  P_idx = floorf((log_P - mat->log_P_min) * mat->inv_log_P_step);
+
+  intp_rho = (log_rho - mat->log_rho_min - rho_idx * mat->log_rho_step) *
+             mat->inv_log_rho_step;
+  intp_P =
+      (log_P - mat->log_P_min - P_idx * mat->log_P_step) * mat->inv_log_P_step;
+
+  // If outside the table then use the simple approximate sound speed
+  if ((rho_idx < 0) || (rho_idx >= mat->num_rho - 1) ||
+      (P_idx < 0) || (P_idx >= mat->num_P - 1)) {
+
+    c = sqrtf(mat->A / mat->rho_0);
+  }
+  // Normal interpolation within the table
+  else {
+    c = (1.f - intp_rho) * (
+            (1.f - intp_P) *
+                mat->table_c_rho_P[rho_idx*mat->num_P + P_idx] +
+            intp_P *
+                mat->table_c_rho_P[rho_idx*mat->num_P + P_idx + 1]) +
+        intp_rho * (
+            (1.f - intp_P) *
+                mat->table_c_rho_P[(rho_idx + 1)*mat->num_P + P_idx] +
+            intp_P *
+                mat->table_c_rho_P[(rho_idx + 1)*mat->num_P + P_idx + 1]);
+  }
 
   return c;
 }

@@ -118,7 +118,7 @@ INLINE static void load_table_HM80(struct HM80_params *mat, char *table_file) {
   fclose(f);
 }
 
-// Convert from cgs to internal units
+// Convert to internal units
 INLINE static void convert_units_HM80(struct HM80_params *mat,
                                       const struct unit_system *us) {
   const float Mbar_to_Ba = 1e12f;    // Convert Megabar to Barye
@@ -136,7 +136,7 @@ INLINE static void convert_units_HM80(struct HM80_params *mat,
       logf(J_kg_to_erg_g /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
 
-  // Table Pressures in Mbar
+  // Table pressures in Mbar
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_u = 0; i_u < mat->num_u; i_u++) {
       mat->table_P_rho_u[i_rho*mat->num_u + i_u] *=
