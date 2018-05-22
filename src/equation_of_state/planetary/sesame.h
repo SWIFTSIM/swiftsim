@@ -249,16 +249,14 @@ INLINE static float SESAME_pressure_from_internal_energy(
 
   // 2D interpolation (bilinear with log(rho), log(u)) to find P(rho, u)
   // Density index
-  find_value_in_monotonic_array(log_rho, mat->table_log_rho, mat->num_rho,
-                                &rho_idx);
+  rho_idx = find_value_in_monot_incr_array(log_rho, mat->table_log_rho,
+                                           mat->num_rho);
 
   // Sp. int. energy at this and the next density (in relevant slice of u array)
-  find_value_in_monotonic_array(log_u,
-                                mat->table_log_u_rho_T + rho_idx*mat->num_T,
-                                mat->num_T, &u_idx_1);
-  find_value_in_monotonic_array(log_u,
-                                mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T,
-                                mat->num_T, &u_idx_2);
+  u_idx_1 = find_value_in_monot_incr_array(
+      log_u, mat->table_log_u_rho_T + rho_idx*mat->num_T, mat->num_T);
+  u_idx_2 = find_value_in_monot_incr_array(
+      log_u, mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
 
   intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
              (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
@@ -332,16 +330,14 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
 
   // 2D interpolation (bilinear with log(rho), log(u)) to find c(rho, u)
   // Density index
-  find_value_in_monotonic_array(log_rho, mat->table_log_rho, mat->num_rho,
-                                &rho_idx);
+  rho_idx = find_value_in_monot_incr_array(log_rho, mat->table_log_rho,
+                                           mat->num_rho);
 
   // Sp. int. energy at this and the next density (in relevant slice of u array)
-  find_value_in_monotonic_array(log_u,
-                                mat->table_log_u_rho_T + rho_idx*mat->num_T,
-                                mat->num_T, &u_idx_1);
-  find_value_in_monotonic_array(log_u,
-                                mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T,
-                                mat->num_T, &u_idx_2);
+  u_idx_1 = find_value_in_monot_incr_array(
+      log_u, mat->table_log_u_rho_T + rho_idx*mat->num_T, mat->num_T);
+  u_idx_2 = find_value_in_monot_incr_array(
+      log_u, mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
 
   intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
              (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
@@ -401,16 +397,14 @@ INLINE static float SESAME_soundspeed_from_pressure(
 
   // 2D interpolation (bilinear with log(rho), P) to find c(rho, P)
   // Density index
-  find_value_in_monotonic_array(log_rho, mat->table_log_rho, mat->num_rho,
-                                &rho_idx);
+  rho_idx = find_value_in_monot_incr_array(log_rho, mat->table_log_rho,
+                                           mat->num_rho);
 
   // Pressure at this and the next density (in relevant slice of P array)
-  find_value_in_monotonic_array(P,
-                                mat->table_P_rho_T + rho_idx*mat->num_T,
-                                mat->num_T, &P_idx_1);
-  find_value_in_monotonic_array(P,
-                                mat->table_P_rho_T + (rho_idx+1)*mat->num_T,
-                                mat->num_T, &P_idx_2);
+  P_idx_1 = find_value_in_monot_incr_array(
+      P, mat->table_P_rho_T + rho_idx*mat->num_T, mat->num_T);
+  P_idx_2 = find_value_in_monot_incr_array(
+      P, mat->table_P_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
 
   intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
              (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
