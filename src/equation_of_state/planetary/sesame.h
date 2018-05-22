@@ -195,7 +195,7 @@ INLINE static float SESAME_internal_energy_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_entropy
@@ -204,7 +204,7 @@ INLINE static float SESAME_pressure_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_pressure
@@ -213,7 +213,7 @@ INLINE static float SESAME_entropy_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_entropy
@@ -222,14 +222,14 @@ INLINE static float SESAME_soundspeed_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_internal_energy
 INLINE static float SESAME_entropy_from_internal_energy(
     float density, float u, const struct SESAME_params *mat) {
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_internal_energy
@@ -310,7 +310,7 @@ INLINE static float SESAME_internal_energy_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_internal_energy
@@ -391,7 +391,7 @@ INLINE static float SESAME_soundspeed_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;i
+  return 0.f;
 }
 
 #endif /* SWIFT_SESAME_EQUATION_OF_STATE_H */

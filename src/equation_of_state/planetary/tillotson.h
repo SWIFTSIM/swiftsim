@@ -113,7 +113,7 @@ INLINE static float Til_internal_energy_from_entropy(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_entropy
@@ -122,7 +122,7 @@ INLINE static float Til_pressure_from_entropy(float density, float entropy,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_pressure
@@ -131,7 +131,7 @@ INLINE static float Til_entropy_from_pressure(float density, float pressure,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_entropy
@@ -140,14 +140,14 @@ INLINE static float Til_soundspeed_from_entropy(float density, float entropy,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_entropy_from_internal_energy
 INLINE static float Til_entropy_from_internal_energy(
     float density, float u, const struct Til_params *mat) {
 
-  return 0;
+  return 0.f;
 }
 
 // gas_pressure_from_internal_energy
@@ -201,7 +201,7 @@ INLINE static float Til_internal_energy_from_pressure(
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 // gas_soundspeed_from_internal_energy
@@ -268,7 +268,7 @@ INLINE static float Til_soundspeed_from_pressure(float density, float P,
 
   error("This EOS function is not yet implemented!");
 
-  return 0;
+  return 0.f;
 }
 
 #endif /* SWIFT_TILLOTSON_EQUATION_OF_STATE_H */
