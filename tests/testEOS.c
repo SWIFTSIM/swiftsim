@@ -182,22 +182,6 @@ int main(int argc, char *argv[]) {
       };
       break;
 
-    // ANEOS
-    case eos_planetary_type_ANEOS:
-      switch (mat_id) {
-        case eos_planetary_id_ANEOS_iron:
-          printf("  ANEOS iron \n");
-          break;
-
-        case eos_planetary_id_MANEOS_forsterite:
-          printf("  MANEOS forsterite \n");
-          break;
-
-        default:
-          error("Unknown material ID! mat_id = %d \n", mat_id);
-      };
-      break;
-
     // SESAME
     case eos_planetary_type_SESAME:
       switch (mat_id) {
@@ -229,20 +213,19 @@ int main(int argc, char *argv[]) {
 
   // Set the input parameters
   // Which EOS to initialise
-  parser_set_param(params, "EoS:use_Til:1");
-  parser_set_param(params, "EoS:use_HM80:1");
-  parser_set_param(params, "EoS:use_ANEOS:0");
-  parser_set_param(params, "EoS:use_SESAME:1");
+  parser_set_param(params, "EoS:planetary_use_Til:1");
+  parser_set_param(params, "EoS:planetary_use_HM80:1");
+  parser_set_param(params, "EoS:planetary_use_SESAME:1");
   // Table file names
-  parser_set_param(params, "EoS:HM80_HHe_table_file:"
-                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_HHe.txt");
-  parser_set_param(params, "EoS:HM80_ice_table_file:"
-                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_ice.txt");
-  parser_set_param(params, "EoS:HM80_rock_table_file:"
-                   "/gpfs/data/dc-kege1/gihr_data/P_rho_u_roc.txt");
-  parser_set_param(params, "EoS:SESAME_basalt_table_file:"
+  parser_set_param(params, "EoS:planetary_HM80_HHe_table_file:"
+                   "../src/equation_of_state/planetary/HM80_HHe.txt");
+  parser_set_param(params, "EoS:planetary_HM80_ice_table_file:"
+                   "../src/equation_of_state/planetary/HM80_ice.txt");
+  parser_set_param(params, "EoS:planetary_HM80_rock_table_file:"
+                   "../src/equation_of_state/planetary/HM80_rock.txt");
+  parser_set_param(params, "EoS:planetary_SESAME_basalt_table_file:"
                    "/gpfs/data/dc-kege1/gihr_data/SESAME_basalt_7530.txt");
-  parser_set_param(params, "EoS:SESAME_water_table_file:"
+  parser_set_param(params, "EoS:planetary_SESAME_water_table_file:"
                    "/gpfs/data/dc-kege1/gihr_data/SESAME_water_7154.txt");
 
   // Initialise the EOS materials
