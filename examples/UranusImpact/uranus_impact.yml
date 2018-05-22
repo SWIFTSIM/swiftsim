@@ -46,6 +46,6 @@ InitialConditions:
 EoS:
     planetary_use_HM80:   1             # Whether to initialise the Hubbard & MacFarlane (1980) EOS
                                         # Table file paths
-    planetary_HM80_HHe_table_file:    /gpfs/data/dc-kege1/gihr_data/P_rho_u_HHe.txt
-    planetary_HM80_ice_table_file:    /gpfs/data/dc-kege1/gihr_data/P_rho_u_ice.txt
-    planetary_HM80_rock_table_file:   /gpfs/data/dc-kege1/gihr_data/P_rho_u_roc.txt
+    planetary_HM80_HHe_table_file:    ../../src/equation_of_state/planetary/HM80_HHe.txt
+    planetary_HM80_ice_table_file:    ../../src/equation_of_state/planetary/HM80_ice.txt
+    planetary_HM80_rock_table_file:   ../../src/equation_of_state/planetary/HM80_rock.txt
