@@ -938,9 +938,6 @@ __attribute__((always_inline)) INLINE static void eos_init(
     const struct unit_system *us, const struct swift_params *params) {
 
   // Table file names
-//  char Til_iron_table_file[PARSER_MAX_LINE_SIZE];
-//  char Til_granite_table_file[PARSER_MAX_LINE_SIZE];
-//  char Til_water_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_HHe_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_ice_table_file[PARSER_MAX_LINE_SIZE];
   char HM80_rock_table_file[PARSER_MAX_LINE_SIZE];
@@ -955,20 +952,9 @@ __attribute__((always_inline)) INLINE static void eos_init(
       set_Til_granite(&e->Til_granite, eos_planetary_id_Til_granite);
       set_Til_water(&e->Til_water, eos_planetary_id_Til_water);
 
-//      parser_get_param_string(params, "EoS:planetary_Til_iron_table_file",
-//                              Til_iron_table_file);
-//      parser_get_param_string(params, "EoS:planetary_Til_granite_table_file",
-//                              Til_granite_table_file);
-//      parser_get_param_string(params, "EoS:planetary_Til_water_table_file",
-//                              Til_water_table_file);
-
-//      load_table_Til(&e->Til_iron, Til_iron_table_file);
-//      load_table_Til(&e->Til_granite, Til_granite_table_file);
-//      load_table_Til(&e->Til_water, Til_water_table_file);
-
- //     convert_units_Til(&e->Til_iron, us);
-  //    convert_units_Til(&e->Til_granite, us);
-   //   convert_units_Til(&e->Til_water, us);
+      convert_units_Til(&e->Til_iron, us);
+      convert_units_Til(&e->Til_granite, us);
+      convert_units_Til(&e->Til_water, us);
   }
 
   // Hubbard & MacFarlane (1980)

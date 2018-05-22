@@ -285,18 +285,9 @@ INLINE static float HM80_soundspeed_from_internal_energy(
 INLINE static float HM80_soundspeed_from_pressure(
     float density, float P, const struct HM80_params *mat) {
 
-  float c;
+  error("This EOS function is not yet implemented!");
 
-  // Bulk modulus
-  if (mat->bulk_mod != 0) {
-    c = sqrtf(mat->bulk_mod / density);
-  }
-  // Ideal gas
-  else {
-    c = sqrtf(hydro_gamma * P / density);
-  }
-
-  return c;
+  return 0;
 }
 
 #endif /* SWIFT_HUBBARD_MACFARLANE_EQUATION_OF_STATE_H */
