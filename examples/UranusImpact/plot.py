@@ -69,8 +69,7 @@ type_factor = 100
 Di_type = {
     'Til'       : 1,
     'HM80'      : 2,
-    'ANEOS'     : 3,
-    'SESAME'    : 4,
+    'SESAME'    : 3,
 }
 Di_material = {
     # Tillotson
@@ -78,14 +77,13 @@ Di_material = {
     'Til_granite'   : Di_type['Til']*type_factor + 1,
     'Til_water'     : Di_type['Til']*type_factor + 2,
     # Hubbard & MacFarlane (1980) Uranus/Neptune
-    'HM80_HHe'      : Di_type['HM80']*type_factor,      # Hydrogen-helium atmosphere
-    'HM80_ice'      : Di_type['HM80']*type_factor + 1,  # H20-CH4-NH3 ice mix
-    'HM80_rock'     : Di_type['HM80']*type_factor + 2,  # SiO2-MgO-FeS-FeO rock mix
-    # ANEOS
-    'ANEOS_iron'        : Di_type['ANEOS']*type_factor,
-    'MANEOS_forsterite' : Di_type['ANEOS']*type_factor + 1,
+    'HM80_HHe'      : Di_type['HM80']*type_factor,          # Hydrogen-helium atmosphere
+    'HM80_ice'      : Di_type['HM80']*type_factor + 1,      # H20-CH4-NH3 ice mix
+    'HM80_rock'     : Di_type['HM80']*type_factor + 2,      # SiO2-MgO-FeS-FeO rock mix
     # SESAME
     'SESAME_iron'   : Di_type['SESAME']*type_factor,
+    'SESAME_basalt' : Di_type['SESAME']*type_factor + 1,    # 7530
+    'SESAME_water'  : Di_type['SESAME']*type_factor + 2,    # 7154
 }
 
 # Material offset for impactor particles
