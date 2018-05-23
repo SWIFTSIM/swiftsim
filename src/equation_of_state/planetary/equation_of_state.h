@@ -59,7 +59,7 @@ enum eos_planetary_type_id {
 
   /*! SESAME */
   eos_planetary_type_SESAME = 3,
-} __attribute__((packed));
+};
 
 /**
  * @brief Minor type for the planetary equation of state.
@@ -107,7 +107,7 @@ enum eos_planetary_material_id {
   /*! SESAME water 7154 */
   eos_planetary_id_SESAME_water =
       eos_planetary_type_SESAME * eos_planetary_type_factor + 2,
-} __attribute__((packed));
+};
 
 /* Individual EOS function headers. */
 #include "hm80.h"
