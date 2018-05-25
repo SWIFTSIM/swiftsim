@@ -253,20 +253,7 @@ struct engine {
   int save_stats;
 
 #ifdef WITH_LOGGER
-  /* Number of particle steps between dumping a chunk of data */
-  short int logger_max_steps;
-
-  /* Logger basename */
-  char loggerBaseName[PARSER_MAX_LINE_SIZE];  
-
-  /* File name of the dump file */
-  struct dump *logger_dump;
-
-  /* timestamp offset for logger*/
-  size_t logger_time_offset;
-
-  /* Size of the dump file */
-  size_t logger_buffer_size;
+  struct logger *log;
 #endif
 
   /* Need to dump a snapshot ? */
