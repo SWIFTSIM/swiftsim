@@ -872,9 +872,8 @@ int main(int argc, char *argv[]) {
   /* Write the state of the system before starting time integration. */
 #ifdef WITH_LOGGER
     engine_dump_index(&e);
-#else
-    engine_dump_snapshot(&e);
 #endif
+    engine_dump_snapshot(&e);
     engine_print_stats(&e);
   }
 
@@ -1057,7 +1056,7 @@ int main(int argc, char *argv[]) {
   engine_drift_all(&e);
   engine_print_stats(&e);
 #ifdef WITH_LOGGER
-  dump_ensure(e.logger_dump, e.logger_size);
+  dump_ensure(e.logger_dump, e.logger_buffer_size);
   logger_log_all(parts, e.total_nr_parts, e.logger_dump);
   engine_dump_index(&e);
   strcat(e.snapshotBaseName, "_end");
