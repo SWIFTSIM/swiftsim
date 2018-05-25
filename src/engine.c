@@ -4379,8 +4379,8 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_gparts(s, e->verbose);
 
 #ifdef WITH_LOGGER
-  logger_write_timestamp(e->log);
-  logger_ensure_size(e->total_nr_parts, e->logger_buffer_size);
+  logger_log_timestamp(e->log, e->ti_current, &e->log->timestamp_offset);
+  logger_ensure_size(e->total_nr_parts, e->log->buffer_size);
 #endif
   
   /* Now, launch the calculation */
@@ -4594,9 +4594,8 @@ void engine_step(struct engine *e) {
     gravity_update(e->gravity_properties, e->cosmology);
 
 #ifdef WITH_LOGGER
-  logger_log_timestamp(e->ti_current, &e->logger_time_offset,
-		       e->logger_dump);
-  logger_ensure_size(e->total_nr_parts, e->logger_buffer_size);
+  logger_log_timestamp(e->log, e->ti_current, &e->log->timestamp_offset);
+  logger_ensure_size(e->total_nr_parts, e->log->buffer_size);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
@@ -5388,7 +5387,7 @@ void engine_dump_index(struct engine *e) {
 #endif
 
   /* Dump... */
-  write_index_single(e, e->loggerBaseName, e->internal_units,
+  write_index_single(e, e->log->base_name, e->internal_units,
 		     e->snapshotUnits);
 
   e->dump_snapshot = 0;
@@ -5566,7 +5565,7 @@ void engine_init(struct engine *e, struct space *s,
 
 #if defined(WITH_LOGGER)
   e->log = (struct logger *) malloc(sizeof(struct logger));
-  logger_init(e->log);
+  logger_init(e->log, params);
 #endif
 
   /* Make the space link back to the engine. */
@@ -6090,7 +6089,7 @@ void engine_config(int restart, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  logger_write_file_header(e->logger_dump, e);
+  logger_write_file_header(e->log->dump, e);
 #endif
 
   /* Free the affinity stuff */
