@@ -91,7 +91,7 @@ INLINE static void set_Til_water(struct Til_params *mat,
   mat->u_cv = 2.69e10f;
   mat->alpha = 10.0f;
   mat->beta = 5.0f;
-  mat->eta_min = 0.915f;
+  mat->eta_min = 0.0f;
   mat->P_min = 0.0f;
 }
 
