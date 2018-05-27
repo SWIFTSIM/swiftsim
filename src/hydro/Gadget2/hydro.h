@@ -618,7 +618,7 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->entropy_full = p->entropy;
 
 #ifdef WITH_LOGGER
-  logger_part_data_init(xp->logger_data);
+  logger_part_data_init(&xp->logger_data);
 #endif
 
   hydro_reset_acceleration(p);
@@ -653,7 +653,7 @@ hydro_set_init_internal_energy(struct part *p, float u_init) {
 __attribute__((always_inline)) INLINE static int xpart_should_write(
     const struct xpart *xp, const struct engine *e) {
 
-  return (xp->logger.last_output > e->log->delta_step);  
+  return (xp->logger_data.last_output > e->log->delta_step);  
 }
 #endif
 
