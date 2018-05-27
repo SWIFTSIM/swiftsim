@@ -4688,8 +4688,9 @@ void engine_step(struct engine *e) {
 
 #ifdef WITH_LOGGER
     engine_dump_index(e);
-#endif
+#else
     engine_dump_snapshot(e);
+#endif
 
     /* ... and find the next output time */
     engine_compute_next_snapshot_time(e);
@@ -5948,7 +5949,7 @@ void engine_config(int restart, struct engine *e,
           e->time_first_statistics, e->time_begin);
   }
 
-  /* Find the time of the first output */
+  /* Find the time of the first snapshot output */
   engine_compute_next_snapshot_time(e);
 
   /* Find the time of the first statistics output */
