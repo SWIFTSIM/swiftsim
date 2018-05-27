@@ -1056,10 +1056,9 @@ int main(int argc, char *argv[]) {
   engine_drift_all(&e);
   engine_print_stats(&e);
 #ifdef WITH_LOGGER
-  dump_ensure(e.logger_dump, e.logger_buffer_size);
-  logger_log_all(parts, e.total_nr_parts, e.logger_dump);
+  logger_ensure_size(e.log, e.total_nr_parts, e.total_nr_gparts, 0);
+  logger_log_all(e.log, &e);
   engine_dump_index(&e);
-  strcat(e.snapshotBaseName, "_end");
 #endif
   // write a final snapshot with logger, in order to facilitate a restart
   engine_dump_snapshot(&e);

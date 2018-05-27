@@ -4380,7 +4380,8 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
 #ifdef WITH_LOGGER
   logger_log_timestamp(e->log, e->ti_current, &e->log->timestamp_offset);
-  logger_ensure_size(e->total_nr_parts, e->log->buffer_size);
+  logger_ensure_size(e->log, e->total_nr_parts, e->total_nr_gparts,
+		     0);
 #endif
   
   /* Now, launch the calculation */
@@ -4595,7 +4596,8 @@ void engine_step(struct engine *e) {
 
 #ifdef WITH_LOGGER
   logger_log_timestamp(e->log, e->ti_current, &e->log->timestamp_offset);
-  logger_ensure_size(e->total_nr_parts, e->log->buffer_size);
+  logger_ensure_size(e->log, e->total_nr_parts, e->total_nr_gparts,
+		     0);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
@@ -5565,7 +5567,7 @@ void engine_init(struct engine *e, struct space *s,
 
 #if defined(WITH_LOGGER)
   e->log = (struct logger *) malloc(sizeof(struct logger));
-  logger_init(e->log, params);
+  logger_init(e->log, params, e);
 #endif
 
   /* Make the space link back to the engine. */
@@ -6089,7 +6091,7 @@ void engine_config(int restart, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  logger_write_file_header(e->log->dump, e);
+  logger_write_file_header(e->log, e);
 #endif
 
   /* Free the affinity stuff */
