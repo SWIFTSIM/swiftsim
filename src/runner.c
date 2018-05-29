@@ -710,15 +710,13 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         const float h_old_dim = pow_dimension(h_old);
         const float h_old_dim_minus_one = pow_dimension_minus_one(h_old);
         float h_new;
+        int has_no_neighbours = 0;
 
         if (p->density.wcount == 0.f) { /* No neighbours case */
 
-          /* Finish the density calculation */
-          hydro_end_density(p, cosmo);
-          chemistry_end_density(p, chemistry, cosmo);
-
           /* Double h and try again */
           h_new = 2.f * h_old;
+
         } else {
 
           /* Finish the density calculation */
@@ -771,11 +769,11 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* Ok, this particle is a lost cause... */
             p->h = hydro_h_max;
 
-            const float h_inv_dim = pow_dimension(1.f / p->h);
-
             /* Do some damage control if no neighbours at all were found */
-            if (p->density.wcount == kernel_root * h_inv_dim)
+            if (has_no_neighbours) {
               hydro_part_has_no_neighbours(p, xp, cosmo);
+              chemistry_part_has_no_neighbours(p, xp, chemistry, cosmo);
+            }
           }
         }
 
