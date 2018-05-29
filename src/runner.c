@@ -766,6 +766,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
           /* Double h and try again */
           h_new = 2.f * h_old;
+
         } else {
 
           /* Finish the density calculation */
