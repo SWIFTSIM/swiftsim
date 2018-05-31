@@ -48,6 +48,7 @@ struct SESAME_params {
   float *table_log_u_rho_T;
   float *table_P_rho_T;
   float *table_c_rho_T;
+  float *table_s_rho_T;
   int num_rho, num_T;
   enum eos_planetary_material_id mat_id;
 };
@@ -74,7 +75,7 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
 
   // Ignore header lines
   char buffer[64];
-  for (int i = 0; i < 4; i++) fgets(buffer, 64, f);
+  for (int i = 0; i < 5; i++) fgets(buffer, 64, f);
 
   // Table properties
   c = fscanf(f, "%d %d", &mat->num_rho, &mat->num_T);
@@ -90,6 +91,8 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
                                        sizeof(float));
   mat->table_c_rho_T = (float *)malloc(mat->num_rho * mat->num_T *
                                        sizeof(float));
+  mat->table_s_rho_T = (float *)malloc(mat->num_rho * mat->num_T *
+                                       sizeof(float));
 
   // Densities (not log yet)
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
@@ -99,14 +102,24 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
     }
   }
 
-  // Sp. int. energies (not log yet), pressures, and sound speeds
+  // Ignored temperatures 
+  float ignore;
+  for (int i_T = 0; i_T < mat->num_T; i_T++) {
+    c = fscanf(f, "%f", &ignore);
+    if (c != 1) {
+      error("Failed to read EOS table");
+    }
+  }
+
+  // Sp. int. energies (not log yet), pressures, sound speeds, and entropies
   for (int i_T = 0; i_T < mat->num_T; i_T++) {
     for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
-      c = fscanf(f, "%f %f %f",
+      c = fscanf(f, "%f %f %f %f",
                  &mat->table_log_u_rho_T[i_rho*mat->num_T + i_T],
                  &mat->table_P_rho_T[i_rho*mat->num_T + i_T],
-                 &mat->table_c_rho_T[i_rho*mat->num_T + i_T]);
-      if (c != 3) {
+                 &mat->table_c_rho_T[i_rho*mat->num_T + i_T],
+                 &mat->table_s_rho_T[i_rho*mat->num_T + i_T]);
+      if (c != 4) {
         error("Failed to read EOS table");
       }
     }
@@ -185,6 +198,8 @@ INLINE static void convert_units_SESAME(struct SESAME_params *mat,
           Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
       mat->table_c_rho_T[i_rho*mat->num_T + i_T] *=
           m_s_to_cm_s / units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
+      mat->table_s_rho_T[i_rho*mat->num_T + i_T] *=
+          J_kg_to_erg_g / units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY);
     }
   }
 }
