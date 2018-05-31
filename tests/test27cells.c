@@ -547,7 +547,7 @@ int main(int argc, char *argv[]) {
 
     /* Dump if necessary */
     if (i % 50 == 0) {
-      sprintf(outputFileName, "swift_dopair_27_%s.dat",
+      sprintf(outputFileName, "swift_dopair_27_%.150s.dat",
               outputFileNameExtension);
       dump_particle_fields(outputFileName, main_cell, cells);
     }
@@ -594,7 +594,7 @@ int main(int argc, char *argv[]) {
   end_calculation(main_cell, &cosmo);
 
   /* Dump */
-  sprintf(outputFileName, "brute_force_27_%s.dat", outputFileNameExtension);
+  sprintf(outputFileName, "brute_force_27_%.150s.dat", outputFileNameExtension);
   dump_particle_fields(outputFileName, main_cell, cells);
 
   /* Output timing */
