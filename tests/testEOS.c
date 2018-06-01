@@ -193,6 +193,10 @@ int main(int argc, char *argv[]) {
           printf("  SESAME water 7154 \n");
           break;
 
+        case eos_planetary_id_SS08_water:
+          printf("  Senft & Stewart (2008) SESAME-like water \n");
+          break;
+
         default:
           error("Unknown material ID! mat_id = %d \n", mat_id);
       };
@@ -224,9 +228,11 @@ int main(int argc, char *argv[]) {
   parser_set_param(params, "EoS:planetary_HM80_rock_table_file:"
                    "../src/equation_of_state/planetary/HM80_rock.txt");
   parser_set_param(params, "EoS:planetary_SESAME_basalt_table_file:"
-                   "/gpfs/data/dc-kege1/gihr_data/SESAME_basalt_7530.txt");
+                   "../src/equation_of_state/planetary/SESAME_basalt_7530.txt");
   parser_set_param(params, "EoS:planetary_SESAME_water_table_file:"
-                   "/gpfs/data/dc-kege1/gihr_data/SESAME_water_7154.txt");
+                   "../src/equation_of_state/planetary/SESAME_water_7154.txt");
+  parser_set_param(params, "EoS:planetary_SS08_water_table_file:"
+                   "../src/equation_of_state/planetary/SS08_water.txt");
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);

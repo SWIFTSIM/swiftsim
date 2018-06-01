@@ -77,6 +77,7 @@ Di_material = {
     'SESAME_iron'   : Di_type['SESAME']*type_factor,        # WIP
     'SESAME_basalt' : Di_type['SESAME']*type_factor + 1,    # 7530
     'SESAME_water'  : Di_type['SESAME']*type_factor + 2,    # 7154
+    'SS08_water'    : Di_type['SESAME']*type_factor + 3,    # Senft & Stewart (2008)
 }
 # Invert so the mat_id are the keys
 Di_mat_id = {mat_id : mat for mat, mat_id in Di_material.iteritems()}
