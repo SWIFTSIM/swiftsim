@@ -33,6 +33,7 @@
 #define TIME_ARRAY_MAX_SIZE 8192
 
 /* Avoid cyclic inclusion problems */
+struct cosmology;
 struct part;
 struct gpart;
 struct spart;
@@ -55,6 +56,12 @@ enum IO_DATA_TYPE {
   FLOAT,
   DOUBLE,
   CHAR
+};
+
+enum TIME_ARRAY_TYPE {
+  TIME_ARRAY_AGE,
+  TIME_ARRAY_REDSHIFT,
+  TIME_ARRAY_SCALE_FACTOR,
 };
 
 struct time_array {
@@ -113,7 +120,7 @@ void io_check_output_fields(const struct swift_params* params,
 
 void io_write_output_field_parameter(const char* filename);
 
-void time_array_read_file(struct time_array *times, const char* filename);
+void time_array_read_file(struct time_array *times, const char* filename, struct cosmology *cosmo);
 void time_array_print(const struct time_array *times);
 
 #endif /* SWIFT_COMMON_IO_H */
