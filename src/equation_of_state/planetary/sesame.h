@@ -54,6 +54,11 @@ struct SESAME_params {
 };
 
 // Parameter values for each material (cgs units)
+INLINE static void set_SESAME_iron(struct SESAME_params *mat,
+                                     enum eos_planetary_material_id mat_id) {
+  // SESAME 2140
+  mat->mat_id = mat_id;
+}
 INLINE static void set_SESAME_basalt(struct SESAME_params *mat,
                                      enum eos_planetary_material_id mat_id) {
   // SESAME 7530

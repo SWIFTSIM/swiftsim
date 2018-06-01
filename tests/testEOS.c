@@ -185,6 +185,10 @@ int main(int argc, char *argv[]) {
     // SESAME
     case eos_planetary_type_SESAME:
       switch (mat_id) {
+        case eos_planetary_id_SESAME_iron:
+          printf("  SESAME basalt 7530 \n");
+          break;
+
         case eos_planetary_id_SESAME_basalt:
           printf("  SESAME basalt 7530 \n");
           break;
@@ -227,6 +231,8 @@ int main(int argc, char *argv[]) {
                    "../src/equation_of_state/planetary/HM80_ice.txt");
   parser_set_param(params, "EoS:planetary_HM80_rock_table_file:"
                    "../src/equation_of_state/planetary/HM80_rock.txt");
+  parser_set_param(params, "EoS:planetary_SESAME_iron_table_file:"
+                   "../src/equation_of_state/planetary/SESAME_iron_2140.txt");
   parser_set_param(params, "EoS:planetary_SESAME_basalt_table_file:"
                    "../src/equation_of_state/planetary/SESAME_basalt_7530.txt");
   parser_set_param(params, "EoS:planetary_SESAME_water_table_file:"
