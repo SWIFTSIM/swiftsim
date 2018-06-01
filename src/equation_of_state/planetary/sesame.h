@@ -64,6 +64,11 @@ INLINE static void set_SESAME_water(struct SESAME_params *mat,
   // SESAME 7154
   mat->mat_id = mat_id;
 }
+INLINE static void set_SS08_water(struct SESAME_params *mat,
+                                    enum eos_planetary_material_id mat_id) {
+  // Senft & Stewart (2008)
+  mat->mat_id = mat_id;
+}
 
 // Read the tables from file
 INLINE static void load_table_SESAME(struct SESAME_params *mat,
@@ -74,13 +79,15 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
   int c;
 
   // Ignore header lines
-  char buffer[64];
-  for (int i = 0; i < 5; i++) fgets(buffer, 64, f);
+  char buffer[100];
+  for (int i = 0; i < 6; i++) {
+    fgets(buffer, 64, f);
+  }
 
   // Table properties
   c = fscanf(f, "%d %d", &mat->num_rho, &mat->num_T);
   if (c != 2) {
-    error("Failed to read EOS table");
+    error("Failed to read EOS table %s", table_file);
   }
 
   // Allocate table memory
@@ -98,16 +105,16 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     c = fscanf(f, "%f", &mat->table_log_rho[i_rho]);
     if (c != 1) {
-      error("Failed to read EOS table");
+      error("Failed to read EOS table %s", table_file);
     }
   }
 
-  // Ignored temperatures 
+  // Ignored temperatures
   float ignore;
   for (int i_T = 0; i_T < mat->num_T; i_T++) {
     c = fscanf(f, "%f", &ignore);
     if (c != 1) {
-      error("Failed to read EOS table");
+      error("Failed to read EOS table %s", table_file);
     }
   }
 
@@ -120,7 +127,7 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
                  &mat->table_c_rho_T[i_rho*mat->num_T + i_T],
                  &mat->table_s_rho_T[i_rho*mat->num_T + i_T]);
       if (c != 4) {
-        error("Failed to read EOS table");
+        error("Failed to read EOS table %s", table_file);
       }
     }
   }
