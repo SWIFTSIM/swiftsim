@@ -74,7 +74,7 @@ Di_material = {
     'HM80_ice'      : Di_type['HM80']*type_factor + 1,  # H20-CH4-NH3 ice mix
     'HM80_rock'     : Di_type['HM80']*type_factor + 2,  # SiO2-MgO-FeS-FeO rock mix
     # SESAME
-    'SESAME_iron'   : Di_type['SESAME']*type_factor,        # WIP
+    'SESAME_iron'   : Di_type['SESAME']*type_factor,        # 2140
     'SESAME_basalt' : Di_type['SESAME']*type_factor + 1,    # 7530
     'SESAME_water'  : Di_type['SESAME']*type_factor + 2,    # 7154
     'SS08_water'    : Di_type['SESAME']*type_factor + 3,    # Senft & Stewart (2008)
