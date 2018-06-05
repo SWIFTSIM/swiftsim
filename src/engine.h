@@ -186,7 +186,12 @@ struct engine {
   integertime_t ti_beg_max;
 
   /* Number of particles updated in the previous step */
-  size_t updates, g_updates, s_updates;
+  long long updates, g_updates, s_updates;
+
+  /* Number of updates since the last rebuild */
+  long long updates_since_rebuild;
+  long long g_updates_since_rebuild;
+  long long s_updates_since_rebuild;
 
   /* Properties of the previous step */
   int step_props;
@@ -384,8 +389,8 @@ void engine_makeproxies(struct engine *e);
 void engine_redistribute(struct engine *e);
 void engine_print_policy(struct engine *e);
 int engine_is_done(struct engine *e);
-void engine_pin();
-void engine_unpin();
+void engine_pin(void);
+void engine_unpin(void);
 void engine_clean(struct engine *e);
 int engine_estimate_nr_tasks(struct engine *e);
 
