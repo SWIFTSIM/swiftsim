@@ -44,7 +44,7 @@ struct HM80_params {
   float *table_P_rho_u;
   int num_rho, num_u;
   float log_rho_min, log_rho_max, log_rho_step, inv_log_rho_step, log_u_min,
-      log_u_max, log_u_step, inv_log_u_step, bulk_mod;
+      log_u_max, log_u_step, inv_log_u_step, bulk_mod, P_min_for_c_min;
   enum eos_planetary_material_id mat_id;
 };
 
@@ -60,7 +60,8 @@ INLINE static void set_HM80_HHe(struct HM80_params *mat,
   mat->log_u_min = 9.2103404f;
   mat->log_u_max = 22.3327037f;
   mat->log_u_step = 0.1325491f;
-  mat->bulk_mod = 0;
+  mat->bulk_mod = 0.f;
+  mat->P_min_for_c_min = 1e4f;
 
   mat->inv_log_rho_step = 1.f / mat->log_rho_step;
   mat->inv_log_u_step = 1.f / mat->log_u_step;
@@ -77,6 +78,7 @@ INLINE static void set_HM80_ice(struct HM80_params *mat,
   mat->log_u_max = 22.3327037f;
   mat->log_u_step = 0.0775123f;
   mat->bulk_mod = 2.0e10f;
+  mat->P_min_for_c_min = 0.f;
 
   mat->inv_log_rho_step = 1.f / mat->log_rho_step;
   mat->inv_log_u_step = 1.f / mat->log_u_step;
@@ -93,6 +95,7 @@ INLINE static void set_HM80_rock(struct HM80_params *mat,
   mat->log_u_max = 20.7232658f;
   mat->log_u_step = 0.1162922f;
   mat->bulk_mod = 3.49e11f;
+  mat->P_min_for_c_min = 0.f;
 
   mat->inv_log_rho_step = 1.f / mat->log_rho_step;
   mat->inv_log_u_step = 1.f / mat->log_u_step;
@@ -145,6 +148,7 @@ INLINE static void convert_units_HM80(struct HM80_params *mat,
   }
 
   mat->bulk_mod /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->P_min_for_c_min /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
 }
 
 // gas_internal_energy_from_entropy
@@ -276,6 +280,10 @@ INLINE static float HM80_soundspeed_from_internal_energy(
   else {
     P = HM80_pressure_from_internal_energy(density, u, mat);
     c = sqrtf(hydro_gamma * P / density);
+
+    if (c <= 0) {
+        c   = sqrtf(hydro_gamma * mat->P_min_for_c_min / density);
+    }
   }
 
   return c;
