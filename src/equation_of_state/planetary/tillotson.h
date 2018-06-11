@@ -45,11 +45,11 @@ struct Til_params {
   enum eos_planetary_material_id mat_id;
 };
 
-// Parameter values for each material (cgs units)
+// Parameter values for each material (SI units)
 INLINE static void set_Til_iron(struct Til_params *mat,
                                 enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->rho_0 = 7.800f;
+  mat->rho_0 = 7800.0f;
   mat->a = 0.5f;
   mat->b = 1.5f;
   mat->A = 1.28e12f;
@@ -65,7 +65,7 @@ INLINE static void set_Til_iron(struct Til_params *mat,
 INLINE static void set_Til_granite(struct Til_params *mat,
                                    enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->rho_0 = 2.680f;
+  mat->rho_0 = 2680.0f;
   mat->a = 0.5f;
   mat->b = 1.3f;
   mat->A = 1.8e11f;
@@ -81,7 +81,7 @@ INLINE static void set_Til_granite(struct Til_params *mat,
 INLINE static void set_Til_water(struct Til_params *mat,
                                  enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->rho_0 = 0.998f;
+  mat->rho_0 = 998.0f;
   mat->a = 0.7f;
   mat->b = 0.15f;
   mat->A = 2.18e10f;
@@ -98,6 +98,21 @@ INLINE static void set_Til_water(struct Til_params *mat,
 // Convert to internal units
 INLINE static void convert_units_Til(struct Til_params *mat,
                                      const struct unit_system *us) {
+
+  const float kg_m3_to_g_cm3 = 1e-3f;   // Convert kg/m^3 to g/cm^3
+  const float Pa_to_Ba = 1e1f;          // Convert Pascals to Barye
+  const float J_kg_to_erg_g = 1e4f;     // Convert J/kg to erg/g
+
+  // SI to cgs
+  mat->rho_0 *= kg_m3_to_g_cm3;
+  mat->A *= Pa_to_Ba;
+  mat->B *= Pa_to_Ba;
+  mat->u_0 *= J_kg_to_erg_g;
+  mat->u_iv *= J_kg_to_erg_g;
+  mat->u_cv *= J_kg_to_erg_g;
+  mat->P_min *= Pa_to_Ba;
+
+  // cgs to internal
   mat->rho_0 /= units_cgs_conversion_factor(us, UNIT_CONV_DENSITY);
   mat->A /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
   mat->B /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
