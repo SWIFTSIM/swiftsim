@@ -516,6 +516,12 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
     struct part *restrict p, const struct cosmology *cosmo) {
 
   p->force.h_dt *= p->h * hydro_dimension_inv;
+
+  /* Critical damping ~= -2 omega_0 v */
+  const float dmp_acc_term = -2.0f * 2.0e-2f;
+  p->a_hydro[0] += dmp_acc_term * p->v[0];
+  p->a_hydro[1] += dmp_acc_term * p->v[1];
+  p->a_hydro[2] += dmp_acc_term * p->v[2];
 }
 
 /**
