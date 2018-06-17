@@ -50,6 +50,7 @@ struct SESAME_params {
   float *table_c_rho_T;
   float *table_s_rho_T;
   int num_rho, num_T;
+  float P_tiny, c_tiny;
   enum eos_planetary_material_id mat_id;
 };
 
@@ -88,12 +89,17 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
   for (int i = 0; i < 6; i++) {
     fgets(buffer, 64, f);
   }
+  float ignore;
 
   // Table properties
   c = fscanf(f, "%d %d", &mat->num_rho, &mat->num_T);
   if (c != 2) {
     error("Failed to read EOS table %s", table_file);
   }
+
+  // Ignore the first elements of rho = 0, T = 0
+  mat->num_rho--;
+  mat->num_T--;
 
   // Allocate table memory
   mat->table_log_rho = (float *)malloc(mat->num_rho * sizeof(float));
@@ -107,16 +113,24 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
                                        sizeof(float));
 
   // Densities (not log yet)
-  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
-    c = fscanf(f, "%f", &mat->table_log_rho[i_rho]);
-    if (c != 1) {
-      error("Failed to read EOS table %s", table_file);
+  for (int i_rho = -1; i_rho < mat->num_rho; i_rho++) {
+    // Ignore the first elements of rho = 0, T = 0
+    if (i_rho == -1) {
+        c = fscanf(f, "%f", &ignore);
+        if (c != 1) {
+          error("Failed to read EOS table %s", table_file);
+        }
+    }
+    else {
+        c = fscanf(f, "%f", &mat->table_log_rho[i_rho]);
+        if (c != 1) {
+          error("Failed to read EOS table %s", table_file);
+        }
     }
   }
 
-  // Ignored temperatures
-  float ignore;
-  for (int i_T = 0; i_T < mat->num_T; i_T++) {
+  // Temperatures (ignored)
+  for (int i_T = -1; i_T < mat->num_T; i_T++) {
     c = fscanf(f, "%f", &ignore);
     if (c != 1) {
       error("Failed to read EOS table %s", table_file);
@@ -124,15 +138,24 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
   }
 
   // Sp. int. energies (not log yet), pressures, sound speeds, and entropies
-  for (int i_T = 0; i_T < mat->num_T; i_T++) {
-    for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
-      c = fscanf(f, "%f %f %f %f",
-                 &mat->table_log_u_rho_T[i_rho*mat->num_T + i_T],
-                 &mat->table_P_rho_T[i_rho*mat->num_T + i_T],
-                 &mat->table_c_rho_T[i_rho*mat->num_T + i_T],
-                 &mat->table_s_rho_T[i_rho*mat->num_T + i_T]);
-      if (c != 4) {
-        error("Failed to read EOS table %s", table_file);
+  for (int i_T = -1; i_T < mat->num_T; i_T++) {
+    for (int i_rho = -1; i_rho < mat->num_rho; i_rho++) {
+      // Ignore the first elements of rho = 0, T = 0
+      if ((i_T == -1) || (i_rho == -1)) {
+        c = fscanf(f, "%f %f %f %f", &ignore, &ignore, &ignore, &ignore);
+        if (c != 4) {
+          error("Failed to read EOS table %s", table_file);
+        }
+      }
+      else {
+        c = fscanf(f, "%f %f %f %f",
+                   &mat->table_log_u_rho_T[i_rho*mat->num_T + i_T],
+                   &mat->table_P_rho_T[i_rho*mat->num_T + i_T],
+                   &mat->table_c_rho_T[i_rho*mat->num_T + i_T],
+                   &mat->table_s_rho_T[i_rho*mat->num_T + i_T]);
+        if (c != 4) {
+          error("Failed to read EOS table %s", table_file);
+        }
       }
     }
   }
@@ -162,6 +185,10 @@ INLINE static void prepare_table_SESAME(struct SESAME_params *mat,
     }
   }
 
+  // Tiny pressure and soundspeed, initialise in the middle
+  mat->P_tiny = mat->table_P_rho_T[mat->num_rho/2*mat->num_T + mat->num_T/2];
+  mat->c_tiny = mat->table_c_rho_T[mat->num_rho/2*mat->num_T + mat->num_T/2];
+
   // Enforce that the 1D arrays of u (at each rho) are monotonic
   // This is necessary because, for some high-density u slices at very low T,
   // u decreases (very slightly) with T, which makes the interpolation fail
@@ -179,8 +206,22 @@ INLINE static void prepare_table_SESAME(struct SESAME_params *mat,
         }
         break;
       }
+
+      // Smallest positive pressure and sound speed
+      if ((mat->table_P_rho_T[i_rho*mat->num_T + i_T] < mat->P_tiny) &&
+          (mat->table_P_rho_T[i_rho*mat->num_T + i_T] > 0)) {
+        mat->P_tiny = mat->table_P_rho_T[i_rho*mat->num_T + i_T];
+      }
+      if ((mat->table_c_rho_T[i_rho*mat->num_T + i_T] < mat->c_tiny) &&
+          (mat->table_c_rho_T[i_rho*mat->num_T + i_T] > 0)) {
+        mat->c_tiny = mat->table_c_rho_T[i_rho*mat->num_T + i_T];
+      }
     }
   }
+
+  // Tiny pressure to allow interpolation near non-positive values
+  mat->P_tiny *= 1e-3f;
+  mat->c_tiny *= 1e-3f;
 }
 
 // Convert to internal units
@@ -214,6 +255,10 @@ INLINE static void convert_units_SESAME(struct SESAME_params *mat,
           J_kg_to_erg_g / units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY);
     }
   }
+
+  // Tiny pressure and sound speed
+  mat->P_tiny *= Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->c_tiny *= m_s_to_cm_s / units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
 }
 
 // gas_internal_energy_from_entropy
@@ -263,7 +308,7 @@ INLINE static float SESAME_entropy_from_internal_energy(
 INLINE static float SESAME_pressure_from_internal_energy(
     float density, float u, const struct SESAME_params *mat) {
 
-  float P;
+  float P, P_1, P_2, P_3, P_4;
 
   if (u <= 0.f) {
     return 0.f;
@@ -285,6 +330,26 @@ INLINE static float SESAME_pressure_from_internal_energy(
   u_idx_2 = find_value_in_monot_incr_array(
       log_u, mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
 
+  // If outside the table then extrapolate from the edge and edge-but-one values
+  if (rho_idx <= -1) {
+    rho_idx = 0;
+  }
+  else if (rho_idx >= mat->num_rho) {
+    rho_idx = mat->num_rho - 2;
+  }
+  if (u_idx_1 <= -1) {
+    u_idx_1 = 0;
+  }
+  else if (u_idx_1 >= mat->num_T) {
+    u_idx_1 = mat->num_T - 2;
+  }
+  if (u_idx_2 <= -1) {
+    u_idx_2 = 0;
+  }
+  else if (u_idx_2 >= mat->num_T) {
+    u_idx_2 = mat->num_T - 2;
+  }
+
   intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
              (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
   intp_u_1 = (log_u - mat->table_log_u_rho_T[rho_idx*mat->num_T + u_idx_1]) /
@@ -294,39 +359,44 @@ INLINE static float SESAME_pressure_from_internal_energy(
              (mat->table_log_u_rho_T[(rho_idx+1)*mat->num_T + (u_idx_2+1)] -
               mat->table_log_u_rho_T[(rho_idx+1)*mat->num_T + u_idx_2]);
 
-  // Return zero if outside the table
-  if (rho_idx < 0) {                            // Too-low rho
-    P = 0.f;
-    if ((u_idx_1 < 0) || (u_idx_2 < 0)) {       // and too-low u
-      P = 0.f;
+  // Table values
+  P_1 = mat->table_P_rho_T[rho_idx*mat->num_T + u_idx_1];
+  P_2 = mat->table_P_rho_T[rho_idx*mat->num_T + u_idx_1 + 1];
+  P_3 = mat->table_P_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2];
+  P_4 = mat->table_P_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2 + 1];
+
+  // If more than two table values are non-positive then return zero
+  int num_non_pos = 0;
+  if (P_1 <= 0.f) num_non_pos++;
+  if (P_2 <= 0.f) num_non_pos++;
+  if (P_3 <= 0.f) num_non_pos++;
+  if (P_4 <= 0.f) num_non_pos++;
+  if (num_non_pos > 2) {
+    return 0.f;
+  }
+  // If just one or two are non-positive then replace them with a tiny value
+  else if (num_non_pos > 0) {
+    // Unless already trying to extrapolate in which case return zero
+    if ((intp_rho < 0.f) || (intp_u_1 < 0.f) || (intp_u_2 < 0.f)) {
+      return 0.f;
     }
-  } else if ((u_idx_1 < 0) || (u_idx_2 < 0)) {  // Too-low u
-    P = 0.f;
+    if (P_1 <= 0.f) P_1 = mat->P_tiny;
+    if (P_2 <= 0.f) P_2 = mat->P_tiny;
+    if (P_3 <= 0.f) P_3 = mat->P_tiny;
+    if (P_4 <= 0.f) P_4 = mat->P_tiny;
   }
-  else if (rho_idx >= mat->num_rho - 1) {       // Too-high rho
-    if ((u_idx_1 >= mat->num_T - 1) ||
-        (u_idx_2 >= mat->num_T - 1)) {          // and too-high u
-      P = 0.f;
-    } else {
-      P = 0.f;
-    }
-  } else if ((u_idx_1 >= mat->num_T - 1) ||
-             (u_idx_2 >= mat->num_T - 1)) {     // Too-high u
-    P = 0.f;
-  }
-  // Normal interpolation within the table
-  else {
-    P = (1.f - intp_rho) * (
-            (1.f - intp_u_1) *
-                mat->table_P_rho_T[rho_idx*mat->num_T + u_idx_1] +
-            intp_u_1 *
-                mat->table_P_rho_T[rho_idx*mat->num_T + u_idx_1 + 1]) +
-        intp_rho * (
-            (1.f - intp_u_2) *
-                mat->table_P_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2] +
-            intp_u_2 *
-                mat->table_P_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2 + 1]);
-  }
+
+  // Interpolate with the log values
+  P_1 = logf(P_1);
+  P_2 = logf(P_2);
+  P_3 = logf(P_3);
+  P_4 = logf(P_4);
+
+  P = (1.f - intp_rho) * ((1.f - intp_u_1) * P_1 + intp_u_1 * P_2)
+      + intp_rho * ((1.f - intp_u_2) * P_3 + intp_u_2 * P_4);
+
+  // Convert back from log
+  P = expf(P);
 
   return P;
 }
@@ -344,7 +414,7 @@ INLINE static float SESAME_internal_energy_from_pressure(
 INLINE static float SESAME_soundspeed_from_internal_energy(
     float density, float u, const struct SESAME_params *mat) {
 
-  float c;
+  float c, c_1, c_2, c_3, c_4;
 
   if (u <= 0.f) {
     return 0.f;
@@ -366,6 +436,26 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
   u_idx_2 = find_value_in_monot_incr_array(
       log_u, mat->table_log_u_rho_T + (rho_idx+1)*mat->num_T, mat->num_T);
 
+  // If outside the table then extrapolate from the edge and edge-but-one values
+  if (rho_idx <= -1) {
+    rho_idx = 0;
+  }
+  else if (rho_idx >= mat->num_rho) {
+    rho_idx = mat->num_rho - 2;
+  }
+  if (u_idx_1 <= -1) {
+    u_idx_1 = 0;
+  }
+  else if (u_idx_1 >= mat->num_T) {
+    u_idx_1 = mat->num_T - 2;
+  }
+  if (u_idx_2 <= -1) {
+    u_idx_2 = 0;
+  }
+  else if (u_idx_2 >= mat->num_T) {
+    u_idx_2 = mat->num_T - 2;
+  }
+
   intp_rho = (log_rho - mat->table_log_rho[rho_idx]) /
              (mat->table_log_rho[rho_idx+1] - mat->table_log_rho[rho_idx]);
   intp_u_1 = (log_u - mat->table_log_u_rho_T[rho_idx*mat->num_T + u_idx_1]) /
@@ -375,39 +465,44 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
              (mat->table_log_u_rho_T[(rho_idx+1)*mat->num_T + (u_idx_2+1)] -
               mat->table_log_u_rho_T[(rho_idx+1)*mat->num_T + u_idx_2]);
 
-  // Return zero if outside the table
-  if (rho_idx < 0) {                            // Too-low rho
-    c = 0.f;
-    if ((u_idx_1 < 0) || (u_idx_2 < 0)) {       // and too-low u
-      c = 0.f;
+  // Table values
+  c_1 = mat->table_c_rho_T[rho_idx*mat->num_T + u_idx_1];
+  c_2 = mat->table_c_rho_T[rho_idx*mat->num_T + u_idx_1 + 1];
+  c_3 = mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2];
+  c_4 = mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2 + 1];
+
+  // If more than two table values are non-positive then return zero
+  int num_non_pos = 0;
+  if (c_1 <= 0.f) num_non_pos++;
+  if (c_2 <= 0.f) num_non_pos++;
+  if (c_3 <= 0.f) num_non_pos++;
+  if (c_4 <= 0.f) num_non_pos++;
+  if (num_non_pos > 2) {
+    return mat->c_tiny;
+  }
+  // If just one or two are non-positive then replace them with a tiny value
+  else if (num_non_pos > 0) {
+    // Unless already trying to extrapolate in which case return zero
+    if ((intp_rho < 0.f) || (intp_u_1 < 0.f) || (intp_u_2 < 0.f)) {
+      return mat->c_tiny;
     }
-  } else if ((u_idx_1 < 0) || (u_idx_2 < 0)) {  // Too-low u
-    c = 0.f;
+    if (c_1 <= 0.f) c_1 = mat->c_tiny;
+    if (c_2 <= 0.f) c_2 = mat->c_tiny;
+    if (c_3 <= 0.f) c_3 = mat->c_tiny;
+    if (c_4 <= 0.f) c_4 = mat->c_tiny;
   }
-  else if (rho_idx >= mat->num_rho - 1) {       // Too-high rho
-    if ((u_idx_1 >= mat->num_T - 1) ||
-        (u_idx_2 >= mat->num_T - 1)) {          // and too-high u
-      c = 0.f;
-    } else {
-      c = 0.f;
-    }
-  } else if ((u_idx_1 >= mat->num_T - 1) ||
-             (u_idx_2 >= mat->num_T - 1)) {     // Too-high u
-    c = 0.f;
-  }
-  // Normal interpolation within the table
-  else {
-    c = (1.f - intp_rho) * (
-            (1.f - intp_u_1) *
-                mat->table_c_rho_T[rho_idx*mat->num_T + u_idx_1] +
-            intp_u_1 *
-                mat->table_c_rho_T[rho_idx*mat->num_T + u_idx_1 + 1]) +
-        intp_rho * (
-            (1.f - intp_u_2) *
-                mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2] +
-            intp_u_2 *
-                mat->table_c_rho_T[(rho_idx + 1)*mat->num_T + u_idx_2 + 1]);
-  }
+
+  // Interpolate with the log values
+  c_1 = logf(c_1);
+  c_2 = logf(c_2);
+  c_3 = logf(c_3);
+  c_4 = logf(c_4);
+
+  c = (1.f - intp_rho) * ((1.f - intp_u_1) * c_1 + intp_u_1 * c_2)
+      + intp_rho * ((1.f - intp_u_2) * c_3 + intp_u_2 * c_4);
+
+  // Convert back from log
+  c = expf(c);
 
   return c;
 }
