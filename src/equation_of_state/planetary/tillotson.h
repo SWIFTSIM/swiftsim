@@ -52,11 +52,11 @@ INLINE static void set_Til_iron(struct Til_params *mat,
   mat->rho_0 = 7800.0f;
   mat->a = 0.5f;
   mat->b = 1.5f;
-  mat->A = 1.28e12f;
-  mat->B = 1.05e12f;
-  mat->u_0 = 9.5e10f;
-  mat->u_iv = 2.4e10f;
-  mat->u_cv = 8.67e10f;
+  mat->A = 1.28e11f;
+  mat->B = 1.05e11f;
+  mat->u_0 = 9.5e9f;
+  mat->u_iv = 2.4e9f;
+  mat->u_cv = 8.67e9f;
   mat->alpha = 5.0f;
   mat->beta = 5.0f;
   mat->eta_min = 0.0f;
@@ -68,11 +68,11 @@ INLINE static void set_Til_granite(struct Til_params *mat,
   mat->rho_0 = 2680.0f;
   mat->a = 0.5f;
   mat->b = 1.3f;
-  mat->A = 1.8e11f;
-  mat->B = 1.8e11f;
-  mat->u_0 = 1.6e11f;
-  mat->u_iv = 3.5e10f;
-  mat->u_cv = 1.8e11f;
+  mat->A = 1.8e10f;
+  mat->B = 1.8e10f;
+  mat->u_0 = 1.6e10f;
+  mat->u_iv = 3.5e9f;
+  mat->u_cv = 1.8e10f;
   mat->alpha = 5.0f;
   mat->beta = 5.0f;
   mat->eta_min = 0.0f;
@@ -84,14 +84,14 @@ INLINE static void set_Til_water(struct Til_params *mat,
   mat->rho_0 = 998.0f;
   mat->a = 0.7f;
   mat->b = 0.15f;
-  mat->A = 2.18e10f;
-  mat->B = 1.325e11f;
-  mat->u_0 = 7.0e10f;
-  mat->u_iv = 4.19e9f;
-  mat->u_cv = 2.69e10f;
+  mat->A = 2.18e9f;
+  mat->B = 1.325e10f;
+  mat->u_0 = 7.0e9f;
+  mat->u_iv = 4.19e8f;
+  mat->u_cv = 2.69e9f;
   mat->alpha = 10.0f;
   mat->beta = 5.0f;
-  mat->eta_min = 0.0f;
+  mat->eta_min = 0.9f;
   mat->P_min = 0.0f;
 }
 
