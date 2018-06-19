@@ -210,8 +210,11 @@ int main(int argc, char *argv[]) {
       error("Unknown material type! mat_id = %d \n", mat_id);
   }
 
-  // Convert to internal units (Earth masses and radii)
-  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
+  // Convert to internal units
+  // Earth masses and radii
+//  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
+  // SI
+  units_init(&us, 1000.f, 100.f, 1.f, 1.f, 1.f);
   log_rho_min -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_rho_max -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
   log_u_min += logf(J_kg_to_erg_g / units_cgs_conversion_factor(
@@ -242,6 +245,14 @@ int main(int argc, char *argv[]) {
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);
+
+  // Manual debug testing
+  if (1) {
+    printf("\n ### MANUAL DEBUG TESTING ### \n");
+    P = gas_pressure_from_internal_energy(1014.8, 209949, eos_planetary_id_Til_water);
+    printf("P = %.2e \n", P);
+    return 0;
+  }
 
   // Output file
   sprintf(filename, "testEOS_rho_u_P_c_%d.txt", mat_id);
