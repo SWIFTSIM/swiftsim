@@ -178,6 +178,42 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 }
 
 /**
+ * @brief Gradient interaction between two part*icles
+ * 
+ * @param r2 Comoving square distance between the two part*icles.
+ * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param hi Comoving smoothing-length of part*icle i.
+ * @param hj Comoving smoothing-length of part*icle j.
+ * @param pi First part*icle.
+ * @param pj Second part*icle.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+
+__attribute((always_inline)) INLINE static void runner_iact_gradient(
+    float r2, const float* dx, float hi, float hj,
+    struct part *restrict pi, struct part *restrict pj,
+    float a, float H) {}
+
+/**
+ * @brief Gradient interaction between two part*icles (non-symmetric version)
+ * 
+ * @param r2 Comoving square distance between the two part*icles.
+ * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param hi Comoving smoothing-length of part*icle i.
+ * @param hj Comoving smoothing-length of part*icle j.
+ * @param pi First part*icle.
+ * @param pj Second part*icle.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+
+__attribute((always_inline)) INLINE static void runner_iact_nonsym_gradient(
+    float r2, const float* dx, float hi, float hj,
+    struct part *restrict pi, struct part *restrict pj,
+    float a, float H) {}
+
+/**
  * @brief Force interaction between two part*icles.
  *
  * @param r2 Comoving square distance between the two part*icles.
