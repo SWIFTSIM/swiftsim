@@ -631,8 +631,8 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
 
       if (part_is_active(p, e)) {
 
-        /* Finish the gradient calculation */
-        hydro_end_gradient(p);
+        /* Get ready for a force calculation */
+        hydro_end_gradient(p, e);
 
         /* As of here, particle force variables will be set. */
 
@@ -794,23 +794,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           }
         }
 
-/* We now have a particle whose smoothing length has converged */
+        /* We now have a particle whose smoothing length has converged */
 
-#ifdef EXTRA_HYDRO_LOOP
-
-        /* As of here, particle gradient variables will be set. */
-        /* The force variables are set in the extra ghost. */
-
-        /* Compute variables required for the gradient loop */
-        hydro_prepare_gradient(p, xp, cosmo);
-
-        /* The particle gradient values are now set.  Do _NOT_
-           try to read any particle density variables! */
-
-        /* Prepare the particle for the gradient loop over neighbours */
-        hydro_reset_gradient(p);
-
-#else
+#ifndef EXTRA_HYDRO_LOOP
         /* As of here, particle force variables will be set. */
 
         /* Compute variables required for the force loop */
@@ -821,7 +807,15 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* Prepare the particle for the force loop over neighbours */
         hydro_reset_acceleration(p);
+#else
+        /* As of here, particle gradient variables will be set. */
+        /* The force variables are set in the extra ghost. */
 
+        /* Compute variables required for the gradient loop */
+        hydro_prepare_gradient(p, xp, cosmo);
+
+        /* Prepare the particle for the gradient loop over neighbours */
+        hydro_reset_gradient(p);
 #endif /* EXTRA_HYDRO_LOOP */
       }
 
