@@ -23,7 +23,7 @@
  * @file PressureEnergy/hydro_io.h
  * @brief P-U implementation of SPH (i/o routines)
  *
- * The thermal variable is the internal energy (u). A simple constant
+ * The thermal variable is the internal energy (u). A simple variable
  * viscosity term with a Balsara switch is implemented.
  *
  * No thermal conduction term is implemented.
@@ -185,7 +185,7 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
   /* Nothing in this minimal model... */
   io_write_attribute_s(h_grpsph, "Thermal Conductivity Model", "No treatment");
   io_write_attribute_s(h_grpsph, "Viscosity Model",
-                       "Minimal treatment as in Monaghan (1992)");
+                       "Variable viscosity as in Morris and Monaghan (1997)");
 
   /* Time integration properties */
   io_write_attribute_f(h_grpsph, "Maximal Delta u change over dt",

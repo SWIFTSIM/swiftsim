@@ -25,7 +25,7 @@
  * @brief P-U conservative implementation of SPH (Non-neighbour loop
  * equations)
  *
- * The thermal variable is the internal energy (u). A simple constant
+ * The thermal variable is the internal energy (u). A simple variable 
  * viscosity term with a Balsara switch is implemented.
  *
  * No thermal conduction term is implemented.
@@ -478,13 +478,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                             (1.f + common_factor * p->density.wcount_dh);
 
   /* Artificial viscosity */
-  /* TO BE MOVED TO CONFIG OPTIONS */
-  const float ell = 0.2;
-  const float alpha_star = 0.1; /* alpha-min */
-  /* ----------------------------- */
-  const float inverse_tau = ell * soundspeed / p->h;
+  const float inverse_tau = const_viscosity_length * soundspeed / p->h;
   const float source = max((-1.f * p->density.div_v), 0.f);
-  const float alpha_dt = source + (alpha_star - p->alpha) * inverse_tau;
+  const float alpha_dt = source + (const_viscosity_alpha_min - p->alpha) * inverse_tau;
 
   /* Update variables. */
   p->force.f = grad_h_term;
@@ -667,9 +663,9 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
-  
-  /* CONFIGURATION OPTION */
-  const float alpha_init = 0.1f;
+
+  /* Start out all particles with the maximal viscosity just for safety */  
+  const float alpha_init = const_viscosity_alpha_max;
   p->alpha = alpha_init;
 
   hydro_reset_acceleration(p);
