@@ -420,13 +420,13 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part *restrict p, struct xpart *restrict xp,
-(??)
+(??)    const struct cosmology *cosmo) {}
 
 /**
  * @brief Resets gradient values
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
-(??)
+(??)  struct part *restrict p) {}
 
 /**
  * @brief Finishes the gradient calculation.
@@ -435,7 +435,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param e The engine.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-(??)
+(??)  struct part *restrict p, const struct engine *restrict e) {}
 
 /**
  * @brief Prepare a particle for the force calculation.
@@ -479,12 +479,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                             (1.f + common_factor * p->density.wcount_dh);
 
   /* Artificial viscosity */
-  const float inverse_tau = const_viscosity_length * soundspeed / p->h;
+(??)
   const float source = max((-1.f * p->density.div_v), 0.f);
-  const float alpha_dt = source + (const_viscosity_alpha_min - p->alpha) * inverse_tau;
-
-  /* We can now "kick" the alpha ready for the force loop */
-  p->alpha += alpha_dt * dt_kick_hydro;
+(??)
 
   /* Update variables. */
   p->force.f = grad_h_term;
@@ -667,9 +664,7 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
-
-  /* Start out all particles with the usual viscosity just for safety */  
-  const float alpha_init = const_viscosity_alpha;
+(??)
   p->alpha = alpha_init;
 
   hydro_reset_acceleration(p);
