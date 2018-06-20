@@ -885,8 +885,8 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
 
       if (part_is_active(p, e)) {
 
-        /* Finish the gradient calculation */
-        hydro_end_gradient(p);
+        /* Get ready for a force calculation */
+        hydro_end_gradient(p, e);
 
         /* As of here, particle force variables will be set. */
 
@@ -1120,6 +1120,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           }
         }
 
+(??)/* We now have a particle whose smoothing length has converged */
           /* We now have a particle whose smoothing length has converged */
 
 #ifdef EXTRA_HYDRO_LOOP
