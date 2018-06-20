@@ -420,13 +420,13 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo) {/*UNUSED*/}
+(??)
 
 /**
  * @brief Resets gradient values
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
-  struct part *restrict p) {/*UNUSED*/}
+(??)
 
 /**
  * @brief Finishes the gradient calculation.
@@ -435,7 +435,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param e The engine.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-  struct part *restrict p, const struct engine *restrict e) {/*UNUSED*/}
+(??)
 
 /**
  * @brief Prepare a particle for the force calculation.
