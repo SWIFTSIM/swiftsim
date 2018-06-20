@@ -479,9 +479,13 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                             (1.f + common_factor * p->density.wcount_dh);
 
   /* Artificial viscosity */
-(??)
+(??)  /* TO BE MOVED TO CONFIG OPTIONS */
+(??)  const float ell = 0.2;
+(??)  const float alpha_star = 0.1; /* alpha-min */
+(??)  /* ----------------------------- */
+(??)  const float inverse_tau = ell * soundspeed / p->h;
   const float source = max((-1.f * p->density.div_v), 0.f);
-(??)
+(??)  const float alpha_dt = source + (alpha_star - p->alpha) * inverse_tau;
 
   /* Update variables. */
   p->force.f = grad_h_term;
@@ -664,7 +668,9 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
-(??)
+(??)  
+(??)  /* CONFIGURATION OPTION */
+(??)  const float alpha_init = 0.1f;
   p->alpha = alpha_init;
 
   hydro_reset_acceleration(p);
