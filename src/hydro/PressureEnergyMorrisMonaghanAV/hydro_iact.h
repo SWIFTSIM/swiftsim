@@ -194,7 +194,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 __attribute((always_inline)) INLINE static void runner_iact_gradient(
     float r2, const float* dx, float hi, float hj,
     struct part *restrict pi, struct part *restrict pj,
-(??)
+(??)    float a, float H) {}
 
 /**
  * @brief Gradient interaction between two part*icles (non-symmetric version)
@@ -212,7 +212,7 @@ __attribute((always_inline)) INLINE static void runner_iact_gradient(
 __attribute((always_inline)) INLINE static void runner_iact_nonsym_gradient(
     float r2, const float* dx, float hi, float hj,
     struct part *restrict pi, struct part *restrict pj,
-(??)
+(??)    float a, float H) {}
 
 /**
  * @brief Force interaction between two part*icles.
