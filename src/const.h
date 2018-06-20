@@ -23,11 +23,14 @@
 /* SPH Viscosity constants. */
 #define const_viscosity_alpha 0.8f
 #define const_viscosity_alpha_min \
-  0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
+  0.1f /* Values taken from (Morris&Monaghan 1997), not used in legacy gadget mode */
+       /* This is "alpha_*" as taken from the above paper */
 #define const_viscosity_alpha_max \
   2.0f /* Values taken from (Price,2004), not used in legacy gadget mode */
+       /* Also unused in the Monaghan & Morris tratment */
 #define const_viscosity_length \
-  0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
+  0.1f /* Value taken from (Morris&Monaghan, 1997), not used in legacy gadget mode */
+       /* This is "ell" in the Morris & Monaghan 1997 paper */
 
 /* SPH Thermal conductivity constants. */
 #define const_conductivity_alpha \
