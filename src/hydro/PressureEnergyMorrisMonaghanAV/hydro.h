@@ -419,13 +419,13 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo) {}
+    const struct cosmology *cosmo) {/*UNUSED*/}
 
 /**
  * @brief Resets gradient values
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
-  struct part *restrict p) {}
+  struct part *restrict p) {/*UNUSED*/}
 
 /**
  * @brief Finishes the gradient calculation.
@@ -434,7 +434,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param e The engine.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-  struct part *restrict p, const struct engine *restrict e) {}
+  struct part *restrict p, const struct engine *restrict e) {/*UNUSED*/}
 
 /**
  * @brief Prepare a particle for the force calculation.
@@ -477,10 +477,20 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                              hydro_one_over_gamma_minus_one) /
                             (1.f + common_factor * p->density.wcount_dh);
 
+  /* Artificial viscosity */
+  /* TO BE MOVED TO CONFIG OPTIONS */
+  const float ell = 0.2;
+  const float alpha_star = 0.1; /* alpha-min */
+  /* ----------------------------- */
+  const float inverse_tau = ell * soundspeed / p->h;
+  const float source = max((-1.f * p->density.div_v), 0.f);
+  const float alpha_dt = source + (alpha_star - p->alpha) * inverse_tau;
+
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
+  p->force.alpha_dt = alpha_dt;
 }
 
 /**
@@ -563,6 +573,9 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     p->rho *= expf_exact;
     p->pressure_bar *= expf_exact;
   }
+
+  /* Update artificial viscosity */
+  p->alpha += p->force.alpha_dt * dt_therm;
 
   /* Predict the internal energy */
   p->u += p->u_dt * dt_therm;
@@ -654,6 +667,10 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
+  
+  /* CONFIGURATION OPTION */
+  const float alpha_init = 0.1f;
+  p->alpha = alpha_init;
 
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);

@@ -105,6 +105,9 @@ struct part {
   /*! Particle pressure (weighted) */
   float pressure_bar;
 
+  /*! Artificial viscosity */
+  float alpha;
+
   /* Store density/force specific stuff. */
   union {
 
@@ -159,6 +162,10 @@ struct part {
 
       /*! Balsara switch */
       float balsara;
+
+      /*! Differential of the artificial viscosity */
+      float alpha_dt;
+
     } force;
   };
 
