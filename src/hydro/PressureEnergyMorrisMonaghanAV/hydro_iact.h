@@ -24,7 +24,7 @@
  * @file PressureEnergy/hydro_iact.h
  * @brief P-U implementation of SPH (Neighbour loop equations)
  *
- * The thermal variable is the internal energy (u). A simple constant
+ * The thermal variable is the internal energy (u). A simple variable
  * viscosity term with a Balsara switch is implemented.
  *
  * No thermal conduction term is implemented.
