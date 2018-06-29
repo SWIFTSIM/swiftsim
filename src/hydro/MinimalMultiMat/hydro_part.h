@@ -107,7 +107,7 @@ struct part {
   float rho;
 
   /* Store density/force specific stuff. */
-  union {
+//  union {
 
     /**
      * @brief Structure for the variables only used in the density loop over
@@ -126,6 +126,9 @@ struct part {
 
       /*! Derivative of density with respect to h */
       float rho_dh;
+
+      /*! Number of neighbours for debugging */
+      int num_ngb;
 
     } density;
 
@@ -154,7 +157,7 @@ struct part {
       float h_dt;
 
     } force;
-  };
+//  };
 
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
