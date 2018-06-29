@@ -22,6 +22,10 @@
 /**
  * @file PressureEnergy/hydro_debug.h
  * @brief P-U conservative implementation of SPH (Debugging routines)
+ *
+ * The thermal variable is the internal energy (u). A simple variable 
+ * viscosity term (Morris & Monaghan 1997) with a Balsara switch is
+ * implemented.
  */
 
 __attribute__((always_inline)) INLINE static void hydro_debug_particle(
