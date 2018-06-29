@@ -26,7 +26,8 @@
  * equations)
  *
  * The thermal variable is the internal energy (u). A simple variable 
- * viscosity term with a Balsara switch is implemented.
+ * viscosity term (Morris & Monaghan 1997) with a Balsara switch is
+ * implemented.
  *
  * No thermal conduction term is implemented.
  *
