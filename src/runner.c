@@ -886,7 +886,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
       if (part_is_active(p, e)) {
 
         /* Get ready for a force calculation */
-        hydro_end_gradient(p, e);
+        hydro_end_gradient(p);
 
         /* As of here, particle force variables will be set. */
 
