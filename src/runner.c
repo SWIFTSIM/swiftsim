@@ -668,6 +668,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   struct part *restrict parts = c->parts;
   struct xpart *restrict xparts = c->xparts;
   const struct engine *e = r->e;
+  /* Current time for getting time-steps later on for hydro_end_density */
+  const integertime_t ti_current = e->ti_current;
   const struct space *s = e->s;
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
@@ -689,6 +691,18 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL) runner_do_ghost(r, c->progeny[k], 0);
   } else {
+    /* Get the relevant time-steps for passing to hydro_prepare_force */
+    /* Currently only the hydro kick is calculated as this is the one required
+     * for evolving the artificial viscsoity parameter alpha */
+    const integertime_t ti_old_part = c->ti_old_part;
+    double dt_kick_hydro;
+
+    if (e->policy & engine_policy_cosmology) {
+      dt_kick_hydro =
+          cosmology_get_hydro_kick_factor(e->cosmology, ti_old_part, ti_current);
+    } else {
+      dt_kick_hydro = (ti_current - ti_old_part) * e->time_base;
+    }
 
     /* Init the list of active particles that have to be updated. */
     int *pid = NULL;
@@ -800,7 +814,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         /* As of here, particle force variables will be set. */
 
         /* Compute variables required for the force loop */
-        hydro_prepare_force(p, xp, cosmo);
+        hydro_prepare_force(p, xp, cosmo, dt_kick_hydro);
 
         /* The particle force values are now set.  Do _NOT_
            try to read any particle density variables! */
