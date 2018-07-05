@@ -405,8 +405,15 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the "grad h" term */
   const float rho_inv = 1.f / p->rho;
-  const float grad_h_term =
-      1.f / (1.f + hydro_dimension_inv * p->h * p->density.rho_dh * rho_inv);
+  float grad_h_term;
+  const float grad_h_term_inv =
+      1.f + hydro_dimension_inv * p->h * p->density.rho_dh * rho_inv;
+  /* Avoid 1/0 from only having one neighbour right at the edge of the kernel */
+  if (grad_h_term_inv != 0.f) {
+    grad_h_term = 1.f / grad_h_term_inv;
+  } else {
+    grad_h_term = 0.f;
+  }
 
   /* Update variables. */
   p->force.f = grad_h_term;
