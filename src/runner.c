@@ -781,6 +781,42 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
               p->density.wcount_dh * h_old_dim +
               hydro_dimension * p->density.wcount * h_old_dim_minus_one;
 
+          /* Skip if h is already h_max and we don't have enough neighbours */
+          if ((p->h == hydro_h_max) && (f < 0.f)) {
+
+/* We already have a particle whose smoothing length has converged */
+
+#ifdef EXTRA_HYDRO_LOOP
+
+        /* As of here, particle gradient variables will be set. */
+        /* The force variables are set in the extra ghost. */
+
+        /* Compute variables required for the gradient loop */
+        hydro_prepare_gradient(p, xp, cosmo);
+
+        /* The particle gradient values are now set.  Do _NOT_
+           try to read any particle density variables! */
+
+        /* Prepare the particle for the gradient loop over neighbours */
+        hydro_reset_gradient(p);
+
+#else
+        /* As of here, particle force variables will be set. */
+
+        /* Compute variables required for the force loop */
+        hydro_prepare_force(p, xp, cosmo);
+
+        /* The particle force values are now set.  Do _NOT_
+           try to read any particle density variables! */
+
+        /* Prepare the particle for the force loop over neighbours */
+        hydro_reset_acceleration(p);
+
+#endif /* EXTRA_HYDRO_LOOP */
+
+            continue;
+          }
+
           /* Avoid floating point exception from f_prime = 0 */
           h_new = h_old - f / (f_prime + FLT_MIN);
 
