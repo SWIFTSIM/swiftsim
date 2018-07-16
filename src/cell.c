@@ -2520,7 +2520,10 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       if (!(e->s->periodic)) {
         for (int i = 0; i < 3; i++) {
           if ((p->x[i] - xp->v_full[i] * dt_drift > e->s->dim[i]) ||
-              (p->x[i] - xp->v_full[i] * dt_drift < 0.f)) {
+              (p->x[i] - xp->v_full[i] * dt_drift < 0.f) ||
+              ((p->mass != 0.f) &&
+               ((p->x[i] < 0.01f * e->s->dim[i]) ||
+                (p->x[i] > 0.99f * e->s->dim[i])))) {
             /* (TEMPORARY) Crudely stop the particle manually */
             message("Particle %lld hit a box edge. \n"
                     "    pos = %.5e %.5e %.5e \n"
@@ -2530,11 +2533,11 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
                     (sqrtf(p->v[0]*p->v[0] + p->v[1]*p->v[1] + p->v[2]*p->v[2])
                      * 0.5f + p->gpart->potential) * p->mass);
             for (int j = 0; j < 3; j++) {
-              p->x[i] = 0.f;
-              p->v[i] = 0.f;
-              p->gpart->x[i] = 0.f;
-              p->gpart->v_full[i] = 0.f;
-              xp->v_full[i] = 0.f;
+              p->x[j] = 0.f;
+              p->v[j] = 0.f;
+              p->gpart->x[j] = 0.f;
+              p->gpart->v_full[j] = 0.f;
+              xp->v_full[j] = 0.f;
             }
             p->h = hydro_h_max;
             p->time_bin = time_bin_inhibited;
@@ -2663,11 +2666,14 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
       if (!(e->s->periodic)) {
         for (int i = 0; i < 3; i++) {
           if ((gp->x[i] - gp->v_full[i] * dt_drift > e->s->dim[i]) ||
-              (gp->x[i] - gp->v_full[i] * dt_drift < 0.f)) {
+              (gp->x[i] - gp->v_full[i] * dt_drift < 0.f) ||
+              ((gp->mass != 0.f) &&
+               ((gp->x[i] < 0.01f * e->s->dim[i]) ||
+                (gp->x[i] > 0.99f * e->s->dim[i])))) {
             /* (TEMPORARY) Crudely stop the particle manually */
             for (int j = 0; j < 3; j++) {
-              gp->x[i] = 0.f;
-              gp->v_full[i] = 0.f;
+              gp->x[j] = 0.f;
+              gp->v_full[j] = 0.f;
             }
             gp->time_bin = time_bin_inhibited;
             gp->mass = 0.f;
