@@ -5420,6 +5420,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
   e->snapshot_label_first =
       parser_get_opt_param_int(params, "Snapshots:label_first", 0);
+  if (e->snapshot_label_first < 0)  
+    error("Snapshots:label_first must be zero or positive");
   e->snapshot_label_delta =
       parser_get_opt_param_int(params, "Snapshots:label_delta", 1);
   e->snapshot_units = (struct unit_system *)malloc(sizeof(struct unit_system));
