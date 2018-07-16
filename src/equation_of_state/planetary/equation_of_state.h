@@ -1076,6 +1076,10 @@ __attribute__((always_inline)) INLINE static void eos_init(
       load_table_HM80(&e->HM80_ice, HM80_ice_table_file);
       load_table_HM80(&e->HM80_rock, HM80_rock_table_file);
 
+      prepare_table_HM80(&e->HM80_HHe);
+      prepare_table_HM80(&e->HM80_ice);
+      prepare_table_HM80(&e->HM80_rock);
+
       convert_units_HM80(&e->HM80_HHe, us);
       convert_units_HM80(&e->HM80_ice, us);
       convert_units_HM80(&e->HM80_rock, us);
@@ -1102,10 +1106,10 @@ __attribute__((always_inline)) INLINE static void eos_init(
       load_table_SESAME(&e->SESAME_water, SESAME_water_table_file);
       load_table_SESAME(&e->SS08_water, SS08_water_table_file);
 
-      prepare_table_SESAME(&e->SESAME_iron, us);
-      prepare_table_SESAME(&e->SESAME_basalt, us);
-      prepare_table_SESAME(&e->SESAME_water, us);
-      prepare_table_SESAME(&e->SS08_water, us);
+      prepare_table_SESAME(&e->SESAME_iron);
+      prepare_table_SESAME(&e->SESAME_basalt);
+      prepare_table_SESAME(&e->SESAME_water);
+      prepare_table_SESAME(&e->SS08_water);
 
       convert_units_SESAME(&e->SESAME_iron, us);
       convert_units_SESAME(&e->SESAME_basalt, us);

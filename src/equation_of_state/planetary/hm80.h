@@ -41,78 +41,78 @@
 
 // Hubbard & MacFarlane (1980) parameters
 struct HM80_params {
-  float *table_P_rho_u;
+  float *table_log_P_rho_u;
   int num_rho, num_u;
   float log_rho_min, log_rho_max, log_rho_step, inv_log_rho_step, log_u_min,
       log_u_max, log_u_step, inv_log_u_step, bulk_mod, P_min_for_c_min;
   enum eos_planetary_material_id mat_id;
 };
 
-// Parameter values for each material (cgs units)
+// Parameter values for each material (SI units)
 INLINE static void set_HM80_HHe(struct HM80_params *mat,
                                 enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->num_rho = 100;
-  mat->num_u = 100;
-  mat->log_rho_min = -9.2103404f;
-  mat->log_rho_max = 1.6094379f;
-  mat->log_rho_step = 0.1092907f;
-  mat->log_u_min = 9.2103404f;
-  mat->log_u_max = 22.3327037f;
-  mat->log_u_step = 0.1325491f;
   mat->bulk_mod = 0.f;
-  mat->P_min_for_c_min = 1e4f;
-
-  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
-  mat->inv_log_u_step = 1.f / mat->log_u_step;
+  mat->P_min_for_c_min = 1e3f;
 }
 INLINE static void set_HM80_ice(struct HM80_params *mat,
                                 enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->num_rho = 200;
-  mat->num_u = 200;
-  mat->log_rho_min = -6.9077553f;
-  mat->log_rho_max = 2.7080502f;
-  mat->log_rho_step = 0.0483206f;
-  mat->log_u_min = 6.9077553f;
-  mat->log_u_max = 22.3327037f;
-  mat->log_u_step = 0.0775123f;
-  mat->bulk_mod = 2.0e10f;
+  mat->bulk_mod = 2.0e9f;
   mat->P_min_for_c_min = 0.f;
-
-  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
-  mat->inv_log_u_step = 1.f / mat->log_u_step;
 }
 INLINE static void set_HM80_rock(struct HM80_params *mat,
                                  enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->num_rho = 100;
-  mat->num_u = 100;
-  mat->log_rho_min = -6.9077553f;
-  mat->log_rho_max = 2.9957323f;
-  mat->log_rho_step = 0.1000352f;
-  mat->log_u_min = 9.2103404f;
-  mat->log_u_max = 20.7232658f;
-  mat->log_u_step = 0.1162922f;
-  mat->bulk_mod = 3.49e11f;
+  mat->bulk_mod = 3.49e10f;
   mat->P_min_for_c_min = 0.f;
-
-  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
-  mat->inv_log_u_step = 1.f / mat->log_u_step;
 }
 
 // Read the table from file
 INLINE static void load_table_HM80(struct HM80_params *mat, char *table_file) {
-  // Allocate table memory
-  mat->table_P_rho_u = (float *)malloc(mat->num_rho * mat->num_u *
-                                       sizeof(float));
 
+  /* File contents:
+  header (four lines)
+  log_rho_min  log_rho_max  num_rho  log_u_min  log_u_max  num_u  (SI)
+  P_0_0   P_0_1   ...     P_0_num_u           # Array of pressures (Pa)
+  P_1_0   ...     ...     P_1_num_u
+  ...     ...     ...     ...
+  P_num_rho_0     ...     P_num_rho_num_u
+  T_0_0   T_0_1   ...     T_0_num_u           # Array of temperatures (K)
+  T_1_0   ...     ...     T_1_num_u
+  ...     ...     ...     ...
+  T_num_rho_0     ...     T_num_rho_num_u
+  */
+            
   // Load table contents from file
   FILE *f = fopen(table_file, "r");
   int c;
+  
+  // Ignore header lines
+  char buffer[100];
+  for (int i = 0; i < 4; i++) {
+    fgets(buffer, 100, f);
+  }
+  
+  // Table properties
+  c = fscanf(f, "%f %f %d %f %f %d", &mat->log_rho_min, &mat->log_rho_max, 
+             &mat->num_rho, &mat->log_u_min, &mat->log_u_max, &mat->num_u);
+  if (c != 6) {
+    error("Failed to read EOS table %s", table_file);
+  }
+  mat->log_rho_step = (mat->log_rho_max - mat->log_rho_min) / (mat->num_rho-1);
+  mat->log_u_step = (mat->log_u_max - mat->log_u_min) / (mat->num_u-1);
+  mat->inv_log_rho_step = 1.f / mat->log_rho_step;
+  mat->inv_log_u_step = 1.f / mat->log_u_step;
+  
+  // Allocate table memory
+  mat->table_log_P_rho_u = 
+      (float *)malloc(mat->num_rho*mat->num_u * sizeof(float));
+                 
+  // Pressures (not log yet)              
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_u = 0; i_u < mat->num_u; i_u++) {
-      c = fscanf(f, "%f", &mat->table_P_rho_u[i_rho*mat->num_u + i_u]);
+      c = fscanf(f, "%f", &mat->table_log_P_rho_u[i_rho*mat->num_u + i_u]);
       if (c != 1) {
         error("Failed to read EOS table");
       }
@@ -121,34 +121,49 @@ INLINE static void load_table_HM80(struct HM80_params *mat, char *table_file) {
   fclose(f);
 }
 
+// Misc. modifications
+INLINE static void prepare_table_HM80(struct HM80_params *mat) {
+
+  // Convert pressures to log(pressure)
+  for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
+    for (int i_u = 0; i_u < mat->num_u; i_u++) {
+      mat->table_log_P_rho_u[i_rho*mat->num_u + i_u] =
+        logf(mat->table_log_P_rho_u[i_rho*mat->num_u + i_u]);
+    }
+  }
+}
+
 // Convert to internal units
 INLINE static void convert_units_HM80(struct HM80_params *mat,
                                       const struct unit_system *us) {
-  const float Mbar_to_Ba = 1e12f;    // Convert Megabar to Barye
-  const float J_kg_to_erg_g = 1e4f;  // Convert J/kg to erg/g
+  const float kg_m3_to_g_cm3 = 1e-3f;   // Convert kg/m^3 to g/cm^3
+  const float Pa_to_Ba = 1e1f;          // Convert Pascals to Barye
+  const float J_kg_to_erg_g = 1e4f;     // Convert J/kg to erg/g
 
-  // Table densities in cgs
-  mat->log_rho_min -= logf(units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
-  mat->log_rho_max -= logf(units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
-
-  // Table energies in SI
-  mat->log_u_min +=
+  // All table values in SI
+  mat->log_rho_min += logf(kg_m3_to_g_cm3 / 
+                           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+  mat->log_rho_max += logf(kg_m3_to_g_cm3 / 
+                           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+                           
+  mat->log_u_min += 
       logf(J_kg_to_erg_g /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
-  mat->log_u_max +=
+  mat->log_u_max += 
       logf(J_kg_to_erg_g /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
 
-  // Table pressures in Mbar
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_u = 0; i_u < mat->num_u; i_u++) {
-      mat->table_P_rho_u[i_rho*mat->num_u + i_u] *=
-          Mbar_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+      mat->table_log_P_rho_u[i_rho*mat->num_u + i_u] +=
+          logf(Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
     }
   }
 
-  mat->bulk_mod /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
-  mat->P_min_for_c_min /= units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->bulk_mod *= 
+      Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->P_min_for_c_min *=
+      Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
 }
 
 // gas_internal_energy_from_entropy
@@ -197,64 +212,51 @@ INLINE static float HM80_entropy_from_internal_energy(
 // gas_pressure_from_internal_energy
 INLINE static float HM80_pressure_from_internal_energy(
     float density, float u, const struct HM80_params *mat) {
-
-  float P;
+  
+  float log_P, log_P_1, log_P_2, log_P_3, log_P_4;
 
   if (u <= 0.f) {
     return 0.f;
   }
 
-  int rho_idx, u_idx;
+  int idx_rho, idx_u;
   float intp_rho, intp_u;
   const float log_rho = logf(density);
   const float log_u = logf(u);
 
   // 2D interpolation (bilinear with log(rho), log(u)) to find P(rho, u)
-  rho_idx = floorf((log_rho - mat->log_rho_min) * mat->inv_log_rho_step);
-  u_idx = floorf((log_u - mat->log_u_min) * mat->inv_log_u_step);
+  idx_rho = floor((log_rho - mat->log_rho_min) * mat->inv_log_rho_step);
+  idx_u = floor((log_u - mat->log_u_min) * mat->inv_log_u_step);
 
-  intp_rho = (log_rho - mat->log_rho_min - rho_idx * mat->log_rho_step) *
-             mat->inv_log_rho_step;
-  intp_u =
-      (log_u - mat->log_u_min - u_idx * mat->log_u_step) * mat->inv_log_u_step;
-
-  // Return zero pressure if below the table minimum/a
-  // Or extrapolate the pressure for low densities
-  if (rho_idx < 0) {  // Too-low rho
-    P = expf(logf((1 - intp_u) * mat->table_P_rho_u[u_idx] +
-                  intp_u * mat->table_P_rho_u[u_idx + 1]) +
-             log_rho - mat->log_rho_min);
-    if (u_idx < 0) {  // and too-low u
-      P = 0.f;
-    }
-  } else if (u_idx < 0) {  // Too-low u
-    P = 0.f;
+  // If outside the table then extrapolate from the edge and edge-but-one values
+  if (idx_rho <= -1) {
+    idx_rho = 0;
   }
-  // Return an edge value if above the table maximum/a
-  else if (rho_idx >= mat->num_rho - 1) {  // Too-high rho
-    if (u_idx >= mat->num_u - 1) {         // and too-high u
-      P = mat->table_P_rho_u[(mat->num_rho - 1) * mat->num_u + mat->num_u - 1];
-    } else {
-      P = mat->table_P_rho_u[(mat->num_rho - 1) * mat->num_u + u_idx];
-    }
-  } else if (u_idx >= mat->num_u - 1) {  // Too-high u
-    P = mat->table_P_rho_u[rho_idx * mat->num_u + mat->num_u - 1];
+  else if (idx_rho >= mat->num_rho) {
+    idx_rho = mat->num_rho - 2;
   }
-  // Normal interpolation within the table
-  else {
-    P = (1.f - intp_rho) * (
-            (1.f - intp_u) *
-                mat->table_P_rho_u[rho_idx*mat->num_u + u_idx] +
-            intp_u *
-                mat->table_P_rho_u[rho_idx*mat->num_u + u_idx + 1]) +
-        intp_rho * (
-            (1.f - intp_u) *
-                mat->table_P_rho_u[(rho_idx + 1)*mat->num_u + u_idx] +
-            intp_u *
-                mat->table_P_rho_u[(rho_idx + 1)*mat->num_u + u_idx + 1]);
+  if (idx_u <= -1) {
+    idx_u = 0;
+  }
+  else if (idx_u >= mat->num_u) {
+    idx_u = mat->num_u - 2;
   }
 
-  return P;
+  intp_rho = (log_rho - mat->log_rho_min - idx_rho*mat->log_rho_step) 
+      * mat->inv_log_rho_step;
+  intp_u = (log_u - mat->log_u_min - idx_u*mat->log_u_step) 
+      * mat->inv_log_u_step;
+
+  // Table values
+  log_P_1 = mat->table_log_P_rho_u[idx_rho*mat->num_u + idx_u];
+  log_P_2 = mat->table_log_P_rho_u[idx_rho*mat->num_u + idx_u + 1];
+  log_P_3 = mat->table_log_P_rho_u[(idx_rho + 1)*mat->num_u + idx_u];
+  log_P_4 = mat->table_log_P_rho_u[(idx_rho + 1)*mat->num_u + idx_u + 1];
+
+  log_P = (1.f - intp_rho) * ((1.f - intp_u) * log_P_1 + intp_u * log_P_2)
+          + intp_rho * ((1.f - intp_u) * log_P_3 + intp_u * log_P_4);
+  
+  return expf(log_P);
 }
 
 // gas_internal_energy_from_pressure
