@@ -1013,6 +1013,11 @@ INLINE static void gravity_P2M(struct gravity_tensors *multi,
     vel[1] += gparts[k].v_full[1] * m;
     vel[2] += gparts[k].v_full[2] * m;
   }
+  
+  /* Prevent FPE from zero mass with the temporary outside-the-box particles */
+  if (mass == 0.f) {
+    mass = FLT_MIN;
+  }
 
   /* Final operation on CoM */
   const double imass = 1.0 / mass;
