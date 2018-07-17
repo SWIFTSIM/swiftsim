@@ -87,7 +87,7 @@
 
 #ifdef EOS_PLANETARY
 int main(int argc, char *argv[]) {
-  float rho, log_rho, log_u, P, c;
+  float rho, u, log_rho, log_u, P, c;
   struct unit_system us;
   struct swift_params *params =
       (struct swift_params *)malloc(sizeof(struct swift_params));
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
         log_u_step = (log_u_max - log_u_min) / (num_u - 1.f);
   float A1_rho[num_rho], A1_u[num_u];
   // Sys args
-  int mat_id, do_output;
+  int mat_id_in, do_output;
   // Default sys args
   const int mat_id_def = eos_planetary_id_HM80_ice;
   const int do_output_def = 0;
@@ -112,33 +112,37 @@ int main(int argc, char *argv[]) {
   switch (argc) {
     case 1:
       // Default both
-      mat_id = mat_id_def;
+      mat_id_in = mat_id_def;
       do_output = do_output_def;
       break;
 
     case 2:
       // Read mat_id, default do_output
-      mat_id = atoi(argv[1]);
+      mat_id_in = atoi(argv[1]);
       do_output = do_output_def;
       break;
 
     case 3:
       // Read both
-      mat_id = atoi(argv[1]);
+      mat_id_in = atoi(argv[1]);
       do_output = atoi(argv[2]);
       break;
 
     default:
       error("Invalid number of system arguments!\n");
-      mat_id = mat_id_def;  // Ignored, just here to keep the compiler happy
+      mat_id_in = mat_id_def;  // Ignored, just here to keep the compiler happy
       do_output = do_output_def;
   };
+  
+  enum eos_planetary_material_id mat_id = 
+      (enum eos_planetary_material_id)mat_id_in;
 
   /* Greeting message */
   printf("This is %s\n", package_description());
 
   // Check material ID
-  const enum eos_planetary_type_id type = mat_id / eos_planetary_type_factor;
+  const enum eos_planetary_type_id type =
+      (enum eos_planetary_type_id)(mat_id / eos_planetary_type_factor);
 
   // Select the material base type
   switch (type) {
@@ -249,8 +253,12 @@ int main(int argc, char *argv[]) {
   // Manual debug testing
   if (1) {
     printf("\n ### MANUAL DEBUG TESTING ### \n");
-    P = gas_pressure_from_internal_energy(1014.8, 209949, eos_planetary_id_Til_water);
-    printf("P = %.2e \n", P);
+    
+    rho = 5960;
+    u = 1.7e8;
+    P = gas_pressure_from_internal_energy(rho, u, eos_planetary_id_HM80_ice);
+    printf("u = %.2e,    rho = %.2e,    P = %.2e \n", u, rho, P);
+        
     return 0;
   }
 

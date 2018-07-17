@@ -232,13 +232,13 @@ INLINE static float HM80_pressure_from_internal_energy(
   if (idx_rho <= -1) {
     idx_rho = 0;
   }
-  else if (idx_rho >= mat->num_rho) {
+  else if (idx_rho >= mat->num_rho - 1) {
     idx_rho = mat->num_rho - 2;
   }
   if (idx_u <= -1) {
     idx_u = 0;
   }
-  else if (idx_u >= mat->num_u) {
+  else if (idx_u >= mat->num_u - 1) {
     idx_u = mat->num_u - 2;
   }
 
@@ -255,7 +255,7 @@ INLINE static float HM80_pressure_from_internal_energy(
 
   log_P = (1.f - intp_rho) * ((1.f - intp_u) * log_P_1 + intp_u * log_P_2)
           + intp_rho * ((1.f - intp_u) * log_P_3 + intp_u * log_P_4);
-  
+             
   return expf(log_P);
 }
 
