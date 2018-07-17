@@ -62,6 +62,7 @@
 #include "space.h"
 #include "space_getsid.h"
 #include "timers.h"
+#include "tools.h"
 
 /* Global variables. */
 int cell_next_tag = 0;
@@ -2526,16 +2527,12 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
                 (p->x[i] > 0.99f * e->s->dim[i])))) {
             /* (TEMPORARY) Crudely stop the particle manually */
             message("Particle %lld hit a box edge. \n"
-                    "    pos = %.5e %.5e %.5e \n"
-                    "    vel = %.5e %.5e %.5e \n"
-                    "    E_tot = %.5e",
+                    "  pos=%.4e %.4e %.4e  vel=%.2e %.2e %.2e  E_tot=%.3e",
                     p->id, p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2],
                     (sqrtf(p->v[0]*p->v[0] + p->v[1]*p->v[1] + p->v[2]*p->v[2])
                      * 0.5f + p->gpart->potential) * p->mass);
             for (int j = 0; j < 3; j++) {
-              p->x[j] = 0.f;
               p->v[j] = 0.f;
-              p->gpart->x[j] = 0.f;
               p->gpart->v_full[j] = 0.f;
               xp->v_full[j] = 0.f;
             }
@@ -2672,7 +2669,6 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
                 (gp->x[i] > 0.99f * e->s->dim[i])))) {
             /* (TEMPORARY) Crudely stop the particle manually */
             for (int j = 0; j < 3; j++) {
-              gp->x[j] = 0.f;
               gp->v_full[j] = 0.f;
             }
             gp->time_bin = time_bin_inhibited;
