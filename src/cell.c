@@ -2516,7 +2516,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       }
 #endif
 
-#if defined(MINIMAL_MULTI_MAT_SPH) || defined(DENSITY_ENERGY_SPH)
+#if defined(PLANETARY_SPH)
       /* Remove particles that cross the non-periodic box edge */
       if (!(e->s->periodic)) {
         for (int i = 0; i < 3; i++) {
@@ -2658,7 +2658,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
       /* Drift... */
       drift_gpart(gp, dt_drift, ti_old_gpart, ti_current);
 
-#if defined(MINIMAL_MULTI_MAT_SPH) || defined(DENSITY_ENERGY_SPH)
+#if defined(PLANETARY_SPH)
       /* Remove particles that cross the non-periodic box edge */
       if (!(e->s->periodic)) {
         for (int i = 0; i < 3; i++) {
