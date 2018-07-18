@@ -125,7 +125,15 @@ struct part {
       float wcount_dh;
 
       /*! Derivative of density with respect to h */
-      float rho_dh;
+      float rho_dh;      
+
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+      /*! Velocity divergence. */
+      float div_v;
+
+      /*! Velocity curl. */
+      float rot_v[3];
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
     } density;
 
@@ -152,6 +160,11 @@ struct part {
 
       /*! Time derivative of smoothing length  */
       float h_dt;
+
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+      /*! Balsara switch */
+      float balsara;
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
     } force;
   };
