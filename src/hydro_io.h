@@ -39,7 +39,7 @@
 #include "./hydro/GizmoMFM/hydro_io.h"
 #elif defined(SHADOWFAX_SPH)
 #include "./hydro/Shadowswift/hydro_io.h"
-#elif defined(MINIMAL_MULTI_MAT_SPH)
+#elif defined(PLANETARY_SPH)
 #include "./hydro/MinimalMultiMat/hydro_io.h"
 #else
 #error "Invalid choice of SPH variant"
