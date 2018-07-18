@@ -58,8 +58,6 @@
 #include "./hydro/Shadowswift/hydro_debug.h"
 #elif defined(MINIMAL_MULTI_MAT_SPH)
 #include "./hydro/MinimalMultiMat/hydro_debug.h"
-#elif defined(DENSITY_ENERGY_SPH)
-#include "./hydro/DensityEnergy/hydro_debug.h"
 #else
 #error "Invalid choice of SPH variant"
 #endif

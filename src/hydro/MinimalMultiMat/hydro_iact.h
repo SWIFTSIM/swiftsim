@@ -176,8 +176,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
                      (pi->v[1] - pj->v[1]) * dx[1] +
                      (pi->v[2] - pj->v[2]) * dx[2] + a2_Hubble * r2;
+                
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  /* Balsara term */
+  const float balsara_i = pi->force.balsara;
+  const float balsara_j = pj->force.balsara;
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
-  /* Are the particles moving towards each others ? */
+  /* Are the particles moving towards each other? */
   const float omega_ij = min(dvdr, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
@@ -186,9 +192,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float cj = pj->force.soundspeed;
   const float v_sig = ci + cj - 3.f * mu_ij;
 
-  /* Construct the full viscosity term */
+  /* Now construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  const float visc = -0.25f * const_viscosity_alpha * v_sig * mu_ij *
+                     (balsara_i + balsara_j) / rho_ij;
+#else
   const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -290,18 +301,31 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
                      (pi->v[1] - pj->v[1]) * dx[1] +
                      (pi->v[2] - pj->v[2]) * dx[2] + a2_Hubble * r2;
 
-  /* Are the particles moving towards each others ? */
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  /* Balsara term */
+  const float balsara_i = pi->force.balsara;
+  const float balsara_j = pj->force.balsara;
+#endif // MINIMAL_MULTI_MAT_BALSARA
+
+  /* Are the particles moving towards each other? */
   const float omega_ij = min(dvdr, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
-  /* Compute sound speeds and signal velocity */
+  /* Compute sound speeds */
   const float ci = pi->force.soundspeed;
   const float cj = pj->force.soundspeed;
+  
+  /* Signal velocity */
   const float v_sig = ci + cj - 3.f * mu_ij;
 
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  const float visc = -0.25f * const_viscosity_alpha * v_sig * mu_ij *
+                     (balsara_i + balsara_j) / rho_ij;
+#else
   const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;

@@ -44,6 +44,12 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
+/*
+ * Note: Define MINIMAL_MULTI_MAT_BALSARA to use the Balsara (1995) switch for  
+ * the artificial viscosity, instead of the default Monaghan (1992).
+ * i.e. compile with:  make CFLAGS=-DMINIMAL_MULTI_MAT_BALSARA  to use.
+ */
+
 /**
  * @brief Returns the comoving internal energy of a particle
  *
@@ -392,6 +398,18 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo) {
 
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  const float fac_mu = cosmo->a_factor_mu;
+
+  /* Compute the norm of the curl */
+  const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
+                             p->density.rot_v[1] * p->density.rot_v[1] +
+                             p->density.rot_v[2] * p->density.rot_v[2]);
+
+  /* Compute the norm of div v */
+  const float abs_div_v = fabsf(p->density.div_v);
+#endif // MINIMAL_MULTI_MAT_BALSARA
+
   /* Compute the pressure */
   const float pressure =
       gas_pressure_from_internal_energy(p->rho, p->u, p->mat_id);
@@ -411,11 +429,21 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   } else {
     grad_h_term = 0.f;
   }
+  
+#ifdef MINIMAL_MULTI_MAT_BALSARA
+  /* Compute the Balsara switch */
+  const float balsara = 
+      abs_div_v / (abs_div_v + curl_v + 0.0001f * fac_mu * soundspeed / p->h);
+#endif // MINIMAL_MULTI_MAT_BALSARA
 
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.pressure = pressure;
-  p->force.soundspeed = soundspeed;
+  p->force.soundspeed = soundspeed;  
+  
+#ifdef MINIMAL_MULTI_MAT_BALSARA	
+  p->force.balsara = balsara;
+#endif // MINIMAL_MULTI_MAT_BALSARA
 }
 
 /**
