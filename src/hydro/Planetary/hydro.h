@@ -45,7 +45,7 @@
 #include "minmax.h"
 
 /*
- * Note: Define PLANETARY_SPH_BALSARA to use the Balsara (1995) switch for  
+ * Note: Define PLANETARY_SPH_BALSARA to use the Balsara (1995) switch for
  * the artificial viscosity, instead of the default Monaghan (1992).
  * i.e. compile with:  make CFLAGS=-DPLANETARY_SPH_BALSARA  to use.
  */
@@ -408,7 +408,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the norm of div v */
   const float abs_div_v = fabsf(p->density.div_v);
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Compute the pressure */
   const float pressure =
@@ -429,21 +429,21 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   } else {
     grad_h_term = 0.f;
   }
-  
+
 #ifdef PLANETARY_SPH_BALSARA
   /* Compute the Balsara switch */
-  const float balsara = 
+  const float balsara =
       abs_div_v / (abs_div_v + curl_v + 0.0001f * fac_mu * soundspeed / p->h);
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.pressure = pressure;
-  p->force.soundspeed = soundspeed;  
-  
-#ifdef PLANETARY_SPH_BALSARA	
+  p->force.soundspeed = soundspeed;
+
+#ifdef PLANETARY_SPH_BALSARA
   p->force.balsara = balsara;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 }
 
 /**

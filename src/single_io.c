@@ -628,8 +628,8 @@ void write_output_single(struct engine* e, const char* baseName,
              e->snapshot_output_count + e->snapshot_label_first);
   else
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%06i.hdf5", baseName,
-             e->snapshot_output_count * e->snapshot_label_delta
-             + e->snapshot_label_first);
+             e->snapshot_output_count * e->snapshot_label_delta +
+                 e->snapshot_label_first);
 
   /* First time, we need to create the XMF file */
   if (e->snapshot_output_count == 0) xmf_create_file(baseName);

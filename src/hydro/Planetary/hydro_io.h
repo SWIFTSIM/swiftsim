@@ -204,7 +204,7 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
 #else
   io_write_attribute_s(h_grpsph, "Viscosity Model",
                        "Minimal treatment as in Monaghan (1992)");
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Time integration properties */
   io_write_attribute_f(h_grpsph, "Maximal Delta u change over dt",
