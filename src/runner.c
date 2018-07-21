@@ -788,29 +788,29 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
 #ifdef EXTRA_HYDRO_LOOP
 
-        /* As of here, particle gradient variables will be set. */
-        /* The force variables are set in the extra ghost. */
+            /* As of here, particle gradient variables will be set. */
+            /* The force variables are set in the extra ghost. */
 
-        /* Compute variables required for the gradient loop */
-        hydro_prepare_gradient(p, xp, cosmo);
+            /* Compute variables required for the gradient loop */
+            hydro_prepare_gradient(p, xp, cosmo);
 
-        /* The particle gradient values are now set.  Do _NOT_
-           try to read any particle density variables! */
+            /* The particle gradient values are now set.  Do _NOT_
+               try to read any particle density variables! */
 
-        /* Prepare the particle for the gradient loop over neighbours */
-        hydro_reset_gradient(p);
+            /* Prepare the particle for the gradient loop over neighbours */
+            hydro_reset_gradient(p);
 
 #else
-        /* As of here, particle force variables will be set. */
+            /* As of here, particle force variables will be set. */
 
-        /* Compute variables required for the force loop */
-        hydro_prepare_force(p, xp, cosmo);
+            /* Compute variables required for the force loop */
+            hydro_prepare_force(p, xp, cosmo);
 
-        /* The particle force values are now set.  Do _NOT_
-           try to read any particle density variables! */
+            /* The particle force values are now set.  Do _NOT_
+               try to read any particle density variables! */
 
-        /* Prepare the particle for the force loop over neighbours */
-        hydro_reset_acceleration(p);
+            /* Prepare the particle for the force loop over neighbours */
+            hydro_reset_acceleration(p);
 
 #endif /* EXTRA_HYDRO_LOOP */
 

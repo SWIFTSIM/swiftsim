@@ -124,7 +124,7 @@ struct part {
       float wcount_dh;
 
       /*! Derivative of density with respect to h */
-      float rho_dh;      
+      float rho_dh;
 
 #ifdef PLANETARY_SPH_BALSARA
       /*! Velocity divergence. */
@@ -132,7 +132,7 @@ struct part {
 
       /*! Velocity curl. */
       float rot_v[3];
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
     } density;
 
@@ -163,7 +163,7 @@ struct part {
 #ifdef PLANETARY_SPH_BALSARA
       /*! Balsara switch */
       float balsara;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
     } force;
   };

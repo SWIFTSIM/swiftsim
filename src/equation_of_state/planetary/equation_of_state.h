@@ -996,8 +996,7 @@ __attribute__((always_inline)) INLINE static float gas_soundspeed_from_pressure(
       /* Select the material */
       switch (mat_id) {
         case eos_planetary_id_SESAME_iron:
-          return SESAME_soundspeed_from_pressure(density, P,
-                                                 &eos.SESAME_iron);
+          return SESAME_soundspeed_from_pressure(density, P, &eos.SESAME_iron);
           break;
 
         case eos_planetary_id_SESAME_basalt:
@@ -1006,13 +1005,11 @@ __attribute__((always_inline)) INLINE static float gas_soundspeed_from_pressure(
           break;
 
         case eos_planetary_id_SESAME_water:
-          return SESAME_soundspeed_from_pressure(density, P,
-                                                 &eos.SESAME_water);
+          return SESAME_soundspeed_from_pressure(density, P, &eos.SESAME_water);
           break;
 
         case eos_planetary_id_SS08_water:
-          return SESAME_soundspeed_from_pressure(density, P,
-                                                 &eos.SS08_water);
+          return SESAME_soundspeed_from_pressure(density, P, &eos.SS08_water);
           break;
 
         default:
@@ -1050,71 +1047,71 @@ __attribute__((always_inline)) INLINE static void eos_init(
   // and convert to internal units
   // Tillotson
   if (parser_get_opt_param_int(params, "EoS:planetary_use_Til", 0)) {
-      set_Til_iron(&e->Til_iron, eos_planetary_id_Til_iron);
-      set_Til_granite(&e->Til_granite, eos_planetary_id_Til_granite);
-      set_Til_water(&e->Til_water, eos_planetary_id_Til_water);
+    set_Til_iron(&e->Til_iron, eos_planetary_id_Til_iron);
+    set_Til_granite(&e->Til_granite, eos_planetary_id_Til_granite);
+    set_Til_water(&e->Til_water, eos_planetary_id_Til_water);
 
-      convert_units_Til(&e->Til_iron, us);
-      convert_units_Til(&e->Til_granite, us);
-      convert_units_Til(&e->Til_water, us);
+    convert_units_Til(&e->Til_iron, us);
+    convert_units_Til(&e->Til_granite, us);
+    convert_units_Til(&e->Til_water, us);
   }
 
   // Hubbard & MacFarlane (1980)
   if (parser_get_opt_param_int(params, "EoS:planetary_use_HM80", 0)) {
-      set_HM80_HHe(&e->HM80_HHe, eos_planetary_id_HM80_HHe);
-      set_HM80_ice(&e->HM80_ice, eos_planetary_id_HM80_ice);
-      set_HM80_rock(&e->HM80_rock, eos_planetary_id_HM80_rock);
+    set_HM80_HHe(&e->HM80_HHe, eos_planetary_id_HM80_HHe);
+    set_HM80_ice(&e->HM80_ice, eos_planetary_id_HM80_ice);
+    set_HM80_rock(&e->HM80_rock, eos_planetary_id_HM80_rock);
 
-      parser_get_param_string(params, "EoS:planetary_HM80_HHe_table_file",
-                              HM80_HHe_table_file);
-      parser_get_param_string(params, "EoS:planetary_HM80_ice_table_file",
-                              HM80_ice_table_file);
-      parser_get_param_string(params, "EoS:planetary_HM80_rock_table_file",
-                              HM80_rock_table_file);
+    parser_get_param_string(params, "EoS:planetary_HM80_HHe_table_file",
+                            HM80_HHe_table_file);
+    parser_get_param_string(params, "EoS:planetary_HM80_ice_table_file",
+                            HM80_ice_table_file);
+    parser_get_param_string(params, "EoS:planetary_HM80_rock_table_file",
+                            HM80_rock_table_file);
 
-      load_table_HM80(&e->HM80_HHe, HM80_HHe_table_file);
-      load_table_HM80(&e->HM80_ice, HM80_ice_table_file);
-      load_table_HM80(&e->HM80_rock, HM80_rock_table_file);
+    load_table_HM80(&e->HM80_HHe, HM80_HHe_table_file);
+    load_table_HM80(&e->HM80_ice, HM80_ice_table_file);
+    load_table_HM80(&e->HM80_rock, HM80_rock_table_file);
 
-      prepare_table_HM80(&e->HM80_HHe);
-      prepare_table_HM80(&e->HM80_ice);
-      prepare_table_HM80(&e->HM80_rock);
+    prepare_table_HM80(&e->HM80_HHe);
+    prepare_table_HM80(&e->HM80_ice);
+    prepare_table_HM80(&e->HM80_rock);
 
-      convert_units_HM80(&e->HM80_HHe, us);
-      convert_units_HM80(&e->HM80_ice, us);
-      convert_units_HM80(&e->HM80_rock, us);
+    convert_units_HM80(&e->HM80_HHe, us);
+    convert_units_HM80(&e->HM80_ice, us);
+    convert_units_HM80(&e->HM80_rock, us);
   }
 
   // SESAME
   if (parser_get_opt_param_int(params, "EoS:planetary_use_SESAME", 0)) {
-      set_SESAME_iron(&e->SESAME_iron, eos_planetary_id_SESAME_iron);
-      set_SESAME_basalt(&e->SESAME_basalt, eos_planetary_id_SESAME_basalt);
-      set_SESAME_water(&e->SESAME_water, eos_planetary_id_SESAME_water);
-      set_SS08_water(&e->SESAME_water, eos_planetary_id_SS08_water);
+    set_SESAME_iron(&e->SESAME_iron, eos_planetary_id_SESAME_iron);
+    set_SESAME_basalt(&e->SESAME_basalt, eos_planetary_id_SESAME_basalt);
+    set_SESAME_water(&e->SESAME_water, eos_planetary_id_SESAME_water);
+    set_SS08_water(&e->SESAME_water, eos_planetary_id_SS08_water);
 
-      parser_get_param_string(params, "EoS:planetary_SESAME_iron_table_file",
-                              SESAME_iron_table_file);
-      parser_get_param_string(params, "EoS:planetary_SESAME_basalt_table_file",
-                              SESAME_basalt_table_file);
-      parser_get_param_string(params, "EoS:planetary_SESAME_water_table_file",
-                              SESAME_water_table_file);
-      parser_get_param_string(params, "EoS:planetary_SS08_water_table_file",
-                              SS08_water_table_file);
+    parser_get_param_string(params, "EoS:planetary_SESAME_iron_table_file",
+                            SESAME_iron_table_file);
+    parser_get_param_string(params, "EoS:planetary_SESAME_basalt_table_file",
+                            SESAME_basalt_table_file);
+    parser_get_param_string(params, "EoS:planetary_SESAME_water_table_file",
+                            SESAME_water_table_file);
+    parser_get_param_string(params, "EoS:planetary_SS08_water_table_file",
+                            SS08_water_table_file);
 
-      load_table_SESAME(&e->SESAME_iron, SESAME_iron_table_file);
-      load_table_SESAME(&e->SESAME_basalt, SESAME_basalt_table_file);
-      load_table_SESAME(&e->SESAME_water, SESAME_water_table_file);
-      load_table_SESAME(&e->SS08_water, SS08_water_table_file);
+    load_table_SESAME(&e->SESAME_iron, SESAME_iron_table_file);
+    load_table_SESAME(&e->SESAME_basalt, SESAME_basalt_table_file);
+    load_table_SESAME(&e->SESAME_water, SESAME_water_table_file);
+    load_table_SESAME(&e->SS08_water, SS08_water_table_file);
 
-      prepare_table_SESAME(&e->SESAME_iron);
-      prepare_table_SESAME(&e->SESAME_basalt);
-      prepare_table_SESAME(&e->SESAME_water);
-      prepare_table_SESAME(&e->SS08_water);
+    prepare_table_SESAME(&e->SESAME_iron);
+    prepare_table_SESAME(&e->SESAME_basalt);
+    prepare_table_SESAME(&e->SESAME_water);
+    prepare_table_SESAME(&e->SS08_water);
 
-      convert_units_SESAME(&e->SESAME_iron, us);
-      convert_units_SESAME(&e->SESAME_basalt, us);
-      convert_units_SESAME(&e->SESAME_water, us);
-      convert_units_SESAME(&e->SS08_water, us);
+    convert_units_SESAME(&e->SESAME_iron, us);
+    convert_units_SESAME(&e->SESAME_basalt, us);
+    convert_units_SESAME(&e->SESAME_water, us);
+    convert_units_SESAME(&e->SS08_water, us);
   }
 }
 

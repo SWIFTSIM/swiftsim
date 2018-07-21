@@ -74,7 +74,8 @@
  *  P_1_0   ...     ...     P_1_num_u
  *  ...     ...     ...     ...
  *  P_num_rho_0     ...     P_num_rho_num_u
- *  c_0_0   c_0_1   ...     c_0_num_u           # Array of sound speeds, c(rho, u)
+ *  c_0_0   c_0_1   ...     c_0_num_u           # Array of sound speeds, c(rho,
+ * u)
  *  c_1_0   ...     ...     c_1_num_u
  *  ...     ...     ...     ...
  *  c_num_rho_0     ...     c_num_rho_num_u
@@ -97,9 +98,10 @@ int main(int argc, char *argv[]) {
   char filename[64];
   // Output table params
   const int num_rho = 100, num_u = 100;
-  float log_rho_min = logf(1e-4f), log_rho_max = logf(1e3f), // Densities (cgs)
-        log_u_min = logf(1e4f), log_u_max = logf(1e13f),     // Sp. int. energies (SI)
-        log_rho_step = (log_rho_max - log_rho_min) / (num_rho - 1.f),
+  float log_rho_min = logf(1e-4f), log_rho_max = logf(1e3f),  // Densities (cgs)
+      log_u_min = logf(1e4f),
+        log_u_max = logf(1e13f),  // Sp. int. energies (SI)
+      log_rho_step = (log_rho_max - log_rho_min) / (num_rho - 1.f),
         log_u_step = (log_u_max - log_u_min) / (num_u - 1.f);
   float A1_rho[num_rho], A1_u[num_u];
   // Sys args
@@ -133,8 +135,8 @@ int main(int argc, char *argv[]) {
       mat_id_in = mat_id_def;  // Ignored, just here to keep the compiler happy
       do_output = do_output_def;
   };
-  
-  enum eos_planetary_material_id mat_id = 
+
+  enum eos_planetary_material_id mat_id =
       (enum eos_planetary_material_id)mat_id_in;
 
   /* Greeting message */
@@ -216,7 +218,7 @@ int main(int argc, char *argv[]) {
 
   // Convert to internal units
   // Earth masses and radii
-//  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
+  //  units_init(&us, 5.9724e27, 6.3710e8, 1.f, 1.f, 1.f);
   // SI
   units_init(&us, 1000.f, 100.f, 1.f, 1.f, 1.f);
   log_rho_min -= logf(units_cgs_conversion_factor(&us, UNIT_CONV_DENSITY));
@@ -232,19 +234,26 @@ int main(int argc, char *argv[]) {
   parser_set_param(params, "EoS:planetary_use_HM80:1");
   parser_set_param(params, "EoS:planetary_use_SESAME:1");
   // Table file names
-  parser_set_param(params, "EoS:planetary_HM80_HHe_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_HM80_HHe_table_file:"
                    "../src/equation_of_state/planetary/HM80_HHe.txt");
-  parser_set_param(params, "EoS:planetary_HM80_ice_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_HM80_ice_table_file:"
                    "../src/equation_of_state/planetary/HM80_ice.txt");
-  parser_set_param(params, "EoS:planetary_HM80_rock_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_HM80_rock_table_file:"
                    "../src/equation_of_state/planetary/HM80_rock.txt");
-  parser_set_param(params, "EoS:planetary_SESAME_iron_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_SESAME_iron_table_file:"
                    "../src/equation_of_state/planetary/SESAME_iron_2140.txt");
-  parser_set_param(params, "EoS:planetary_SESAME_basalt_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_SESAME_basalt_table_file:"
                    "../src/equation_of_state/planetary/SESAME_basalt_7530.txt");
-  parser_set_param(params, "EoS:planetary_SESAME_water_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_SESAME_water_table_file:"
                    "../src/equation_of_state/planetary/SESAME_water_7154.txt");
-  parser_set_param(params, "EoS:planetary_SS08_water_table_file:"
+  parser_set_param(params,
+                   "EoS:planetary_SS08_water_table_file:"
                    "../src/equation_of_state/planetary/SS08_water.txt");
 
   // Initialise the EOS materials
@@ -253,12 +262,12 @@ int main(int argc, char *argv[]) {
   // Manual debug testing
   if (1) {
     printf("\n ### MANUAL DEBUG TESTING ### \n");
-    
+
     rho = 5960;
     u = 1.7e8;
     P = gas_pressure_from_internal_energy(rho, u, eos_planetary_id_HM80_ice);
     printf("u = %.2e,    rho = %.2e,    P = %.2e \n", u, rho, P);
-        
+
     return 0;
   }
 
