@@ -175,12 +175,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
                      (pi->v[1] - pj->v[1]) * dx[1] +
                      (pi->v[2] - pj->v[2]) * dx[2] + a2_Hubble * r2;
-                
+
 #ifdef PLANETARY_SPH_BALSARA
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
   const float balsara_j = pj->force.balsara;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Are the particles moving towards each other? */
   const float omega_ij = min(dvdr, 0.f);
@@ -198,7 +198,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
                      (balsara_i + balsara_j) / rho_ij;
 #else
   const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -230,9 +230,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float du_dt_i = sph_du_term_i + visc_du_term;
   const float du_dt_j = sph_du_term_j + visc_du_term;
 
-  /* Internal energy time derivatibe */
-  pi->u_dt += du_dt_i * mj;
-  pj->u_dt += du_dt_j * mi;
+  /* Internal energy time derivative */
+  pi->u_dt += 0.f * du_dt_i * mj;
+  pj->u_dt += 0.f * du_dt_j * mi;
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
@@ -304,7 +304,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
   const float balsara_j = pj->force.balsara;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Are the particles moving towards each other? */
   const float omega_ij = min(dvdr, 0.f);
@@ -313,7 +313,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Compute sound speeds */
   const float ci = pi->force.soundspeed;
   const float cj = pj->force.soundspeed;
-  
+
   /* Signal velocity */
   const float v_sig = ci + cj - 3.f * mu_ij;
 
@@ -324,7 +324,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
                      (balsara_i + balsara_j) / rho_ij;
 #else
   const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
-#endif // PLANETARY_SPH_BALSARA
+#endif  // PLANETARY_SPH_BALSARA
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -350,8 +350,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term;
 
-  /* Internal energy time derivatibe */
-  pi->u_dt += du_dt_i * mj;
+  /* Internal energy time derivative */
+  pi->u_dt += 0.f * du_dt_i * mj;
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
