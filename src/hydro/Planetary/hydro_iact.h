@@ -230,9 +230,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float du_dt_i = sph_du_term_i + visc_du_term;
   const float du_dt_j = sph_du_term_j + visc_du_term;
 
-  /* Internal energy time derivatibe */
-  pi->u_dt += du_dt_i * mj;
-  pj->u_dt += du_dt_j * mi;
+  /* Internal energy time derivative */
+  pi->u_dt += 0.f * du_dt_i * mj;
+  pj->u_dt += 0.f * du_dt_j * mi;
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
@@ -350,8 +350,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term;
 
-  /* Internal energy time derivatibe */
-  pi->u_dt += du_dt_i * mj;
+  /* Internal energy time derivative */
+  pi->u_dt += 0.f * du_dt_i * mj;
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
