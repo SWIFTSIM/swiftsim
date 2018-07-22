@@ -236,25 +236,25 @@ int main(int argc, char *argv[]) {
   // Table file names
   parser_set_param(params,
                    "EoS:planetary_HM80_HHe_table_file:"
-                   "../src/equation_of_state/planetary/HM80_HHe.txt");
+                   "../examples/planetary_HM80_HHe.txt");
   parser_set_param(params,
                    "EoS:planetary_HM80_ice_table_file:"
-                   "../src/equation_of_state/planetary/HM80_ice.txt");
+                   "../examples/planetary_HM80_ice.txt");
   parser_set_param(params,
                    "EoS:planetary_HM80_rock_table_file:"
-                   "../src/equation_of_state/planetary/HM80_rock.txt");
+                   "../examples/planetary_HM80_rock.txt");
   parser_set_param(params,
                    "EoS:planetary_SESAME_iron_table_file:"
-                   "../src/equation_of_state/planetary/SESAME_iron_2140.txt");
+                   "../examples/planetary_SESAME_iron_2140.txt");
   parser_set_param(params,
                    "EoS:planetary_SESAME_basalt_table_file:"
-                   "../src/equation_of_state/planetary/SESAME_basalt_7530.txt");
+                   "../examples/planetary_SESAME_basalt_7530.txt");
   parser_set_param(params,
                    "EoS:planetary_SESAME_water_table_file:"
-                   "../src/equation_of_state/planetary/SESAME_water_7154.txt");
+                   "../examples/planetary_SESAME_water_7154.txt");
   parser_set_param(params,
                    "EoS:planetary_SS08_water_table_file:"
-                   "../src/equation_of_state/planetary/SS08_water.txt");
+                   "../examples/planetary_SS08_water.txt");
 
   // Initialise the EOS materials
   eos_init(&eos, phys_const, &us, params);
