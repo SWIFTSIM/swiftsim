@@ -962,7 +962,7 @@ case "$with_hydro" in
       AC_DEFINE([SHADOWFAX_SPH], [1], [Shadowfax SPH])
    ;;
    planetary)
-      AC_DEFINE([PLANETARY_SPH], [1], [Minimal Multiple Material SPH])
+      AC_DEFINE([PLANETARY_SPH], [1], [Planetary SPH])
    ;;
 
 
