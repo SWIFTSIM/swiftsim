@@ -5455,13 +5455,6 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->cputime_last_step = 0;
   e->last_repartition = 0;
 #endif
-#ifdef PLANETARY_SPH
-#ifdef PLANETARY_SPH_BALSARA
-  message("Planetary SPH: Balsara switch enabled");
-#else
-  message("Planetary SPH: Balsara switch disabled");
-#endif  // PLANETARY_SPH_BALSARA
-#endif  // PLANETARY_SPH
 
   /* Make the space link back to the engine. */
   s->e = e;
