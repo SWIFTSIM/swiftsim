@@ -752,16 +752,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         if (!part_is_active(p, e)) error("Ghost applied to inactive particle");
 #endif
 
-        ///### Super-crudely damp particles for settling unstable initial conditions
-        if (e->step%10 == 0) {
-          for (int j = 0; j < 3; j++) {
-            p->v[j] = 0.f;
-            p->gpart->v_full[j] = 0.f;
-            xp->v_full[j] = 0.f;
-          }
-        } 
-        ///###
-
         /* Get some useful values */
         const float h_old = p->h;
         const float h_old_dim = pow_dimension(h_old);
