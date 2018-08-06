@@ -6504,6 +6504,12 @@ void engine_compute_next_snapshot_time(struct engine *e) {
  */
 void engine_compute_next_statistics_time(struct engine *e) {
 
+  /* Do outputlist file case */
+  if (e->outputlist_stats) {
+    engine_read_next_statistics_time(e);
+    return;
+  }
+
   /* Find upper-bound on last output */
   double time_end;
   if (e->policy & engine_policy_cosmology)
@@ -6608,6 +6614,199 @@ void engine_compute_next_stf_time(struct engine *e) {
           e->ti_nextSTF * e->time_base + e->time_begin;
       if (e->verbose)
         message("Next output time set to t=%e.", next_snapshot_time);
+    }
+  }
+}
+
+/**
+ * @brief Read the next time (on the time line) for a dump
+ *
+ * @param e The #engine.
+ */
+void engine_read_next_snapshot_time(struct engine *e) {
+
+  int is_cosmo = e->policy & engine_policy_cosmology;
+  const struct outputlist *t = e->outputlist_snapshots;
+
+  /* Find upper-bound on last output */
+  double time_end;
+  if (is_cosmo)
+    time_end = e->cosmology->a_end;
+  else
+    time_end = e->time_end;
+
+  /* Find next snasphot above current time */
+  double time;
+  time = t->times[0];
+  size_t ind = 0;
+  while (time < time_end) {
+
+    /* Output time on the integer timeline */
+    if (is_cosmo)
+      e->ti_next_snapshot = log(time / e->cosmology->a_begin) / e->time_base;
+    else
+      e->ti_next_snapshot = (time - e->time_begin) / e->time_base;
+
+    /* Found it? */
+    if (e->ti_next_snapshot > e->ti_current) break;
+
+    ind += 1;
+    if (ind == t->size) break;
+
+    time = t->times[ind];
+  }
+
+  /* Deal with last snapshot */
+  if (e->ti_next_snapshot >= max_nr_timesteps || ind == t->size ||
+      time >= time_end) {
+    e->ti_next_snapshot = -1;
+    if (e->verbose) message("No further output time.");
+  } else {
+
+    /* Be nice, talk... */
+    if (is_cosmo) {
+      const double next_snapshot_time =
+          exp(e->ti_next_snapshot * e->time_base) * e->cosmology->a_begin;
+      if (e->verbose)
+        message("Next snapshot time set to a=%e.", next_snapshot_time);
+    } else {
+      const double next_snapshot_time =
+          e->ti_next_snapshot * e->time_base + e->time_begin;
+      if (e->verbose)
+        message("Next snapshot time set to t=%e.", next_snapshot_time);
+    }
+  }
+}
+
+/**
+ * @brief Read the next time (on the time line) for a statistics dump
+ *
+ * @param e The #engine.
+ */
+void engine_read_next_statistics_time(struct engine *e) {
+
+  int is_cosmo = e->policy & engine_policy_cosmology;
+  const struct outputlist *t = e->outputlist_stats;
+
+  /* Find upper-bound on last output */
+  double time_end;
+  if (is_cosmo)
+    time_end = e->cosmology->a_end;
+  else
+    time_end = e->time_end;
+
+  /* Find next snasphot above current time */
+  double time = t->times[0];
+  size_t ind = 0;
+  while (time < time_end) {
+
+    /* Output time on the integer timeline */
+    if (is_cosmo)
+      e->ti_next_stats = log(time / e->cosmology->a_begin) / e->time_base;
+    else
+      e->ti_next_stats = (time - e->time_begin) / e->time_base;
+
+    /* Found it? */
+    if (e->ti_next_stats > e->ti_current) break;
+
+    ind += 1;
+    if (ind == t->size) break;
+
+    time = t->times[ind];
+  }
+
+  /* Deal with last statistics */
+  if (e->ti_next_stats >= max_nr_timesteps || ind == t->size ||
+      time >= time_end) {
+    e->ti_next_stats = -1;
+    if (e->verbose) message("No further output time.");
+  } else {
+
+    /* Be nice, talk... */
+    if (is_cosmo) {
+      const double next_statistics_time =
+          exp(e->ti_next_stats * e->time_base) * e->cosmology->a_begin;
+      if (e->verbose)
+        message("Next output time for stats set to a=%e.",
+                next_statistics_time);
+    } else {
+      const double next_statistics_time =
+          e->ti_next_stats * e->time_base + e->time_begin;
+      if (e->verbose)
+        message("Next output time for stats set to t=%e.",
+                next_statistics_time);
+    }
+  }
+}
+
+/**
+ * @brief Initialize all the outputlist required by the engine
+ *
+ * @param e The #engine.
+ * @param params The #swift_params.
+ */
+void engine_init_outputlists(struct engine *e, struct swift_params *params) {
+
+  char filename[PARSER_MAX_LINE_SIZE];
+  struct outputlist *list;
+
+  /* get cosmo */
+  struct cosmology *cosmo = NULL;
+  if (e->policy & engine_policy_cosmology) cosmo = e->cosmology;
+
+  /* Deal with snapshots */
+  int outputlist_on =
+      parser_get_opt_param_int(params, "Snapshots:output_list_on", 0);
+
+  /* Read outputlist for snapshots */
+  if (outputlist_on) {
+    e->outputlist_snapshots =
+        (struct outputlist *)malloc(sizeof(struct outputlist));
+    list = e->outputlist_snapshots;
+
+    parser_get_param_string(params, "Snapshots:output_list", filename);
+
+    message("Reading snapshots output file.");
+    outputlist_read_file(list, filename, cosmo);
+
+    if (list->size < 2)
+      error("You need to provide more snapshots in '%s'", filename);
+
+    /* Set data for later checks */
+    if (cosmo) {
+      e->delta_time_snapshot = list->times[1] / list->times[0];
+      e->a_first_snapshot = list->times[0];
+    } else {
+      e->delta_time_snapshot = list->times[1] - list->times[0];
+      e->time_first_snapshot = list->times[0];
+    }
+  }
+
+  /* Deal with stats */
+  outputlist_on =
+      parser_get_opt_param_int(params, "Statistics:output_list_on", 0);
+
+  /* Read outputlist for stats */
+  if (outputlist_on) {
+    e->outputlist_stats =
+        (struct outputlist *)malloc(sizeof(struct outputlist));
+    list = e->outputlist_stats;
+
+    parser_get_param_string(params, "Statistics:output_list", filename);
+
+    message("Reading statistics output file.");
+    outputlist_read_file(list, filename, cosmo);
+
+    if (list->size < 2)
+      error("You need to provide more snapshots in '%s'", filename);
+
+    /* Set data for later checks */
+    if (cosmo) {
+      e->delta_time_statistics = list->times[1] / list->times[0];
+      e->a_first_statistics = list->times[0];
+    } else {
+      e->delta_time_statistics = list->times[1] - list->times[0];
+      e->time_first_statistics = list->times[0];
     }
   }
 }
@@ -6797,8 +6996,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   parser_struct_dump(e->parameter_file, stream);
   if (e->outputlist_snapshots)
     outputlist_struct_dump(e->outputlist_snapshots, stream);
-  if (e->outputlist_stats)
-    outputlist_struct_dump(e->outputlist_stats, stream);
+  if (e->outputlist_stats) outputlist_struct_dump(e->outputlist_stats, stream);
 }
 
 /**
