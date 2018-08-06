@@ -2664,7 +2664,7 @@ void engine_make_starloop_tasks_mapper(void *map_data, int num_elements,
 
     /* Skip cells without star particles */
     if (ci->scount == 0) continue;
-
+    
     /* If the cells is local build a self-interaction */
     if (ci->nodeID == nodeID)
       scheduler_addtask(sched, task_type_self, task_subtype_star_density, 0, 0, ci,
@@ -2689,13 +2689,13 @@ void engine_make_starloop_tasks_mapper(void *map_data, int num_elements,
           struct cell *cj = &cells[cjd];
 
           /* Is that neighbour local and does it have particles ? */
-          if (cid >= cjd || cj->scount == 0 ||
+          if (cid >= cjd || cj->count == 0 ||
               (ci->nodeID != nodeID && cj->nodeID != nodeID))
             continue;
 
           /* Construct the pair task */
           const int sid = sortlistID[(kk + 1) + 3 * ((jj + 1) + 3 * (ii + 1))];
-          scheduler_addtask(sched, task_type_pair, task_subtype_star_density, sid, 0,
+	  scheduler_addtask(sched, task_type_pair, task_subtype_star_density, sid, 0,
                             ci, cj);
         }
       }
@@ -3281,8 +3281,6 @@ void engine_link_star_tasks_mapper(void *map_data, int num_elements,
       if (t->cj->nodeID == nodeID) {
         if (t->ci->super_hydro != t->cj->super)
           engine_make_star_loops_dependencies(sched, t, t->cj);
-        if (t->ci->super != t->cj->super)
-          scheduler_addunlock(sched, t, t->cj->super->end_force);
       }
 
     }
@@ -3299,7 +3297,6 @@ void engine_link_star_tasks_mapper(void *map_data, int num_elements,
       /* that are local and are not descendant of the same super_hydro-cells */
       if (t->ci->nodeID == nodeID) {
         engine_make_star_loops_dependencies(sched, t, t->ci);
-        scheduler_addunlock(sched, t, t->ci->super->end_force);
       } else
         error("oo");
     }
@@ -3322,13 +3319,10 @@ void engine_link_star_tasks_mapper(void *map_data, int num_elements,
       /* that are local and are not descendant of the same super_hydro-cells */
       if (t->ci->nodeID == nodeID) {
         engine_make_star_loops_dependencies(sched, t, t->ci);
-        scheduler_addunlock(sched, t, t->ci->super->end_force);
       }
       if (t->cj->nodeID == nodeID) {
         if (t->ci->super != t->cj->super)
           engine_make_star_loops_dependencies(sched, t, t->cj);
-        if (t->ci->super != t->cj->super)
-          scheduler_addunlock(sched, t, t->cj->super->end_force);
       }
     }
   }
@@ -4725,6 +4719,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   /* Init the particle data (by hand). */
   space_init_parts(s, e->verbose);
   space_init_gparts(s, e->verbose);
+  space_init_sparts(s, e->verbose);
 
   /* Now, launch the calculation */
   TIMER_TIC;
@@ -4773,6 +4768,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   /* Init the particle data (by hand). */
   space_init_parts(e->s, e->verbose);
   space_init_gparts(e->s, e->verbose);
+  space_init_sparts(e->s, e->verbose);
 
   /* Print the number of active tasks ? */
   if (e->verbose) engine_print_task_counts(e);
