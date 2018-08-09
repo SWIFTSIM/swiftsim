@@ -255,7 +255,7 @@ void velociraptor_invoke(struct engine *e) {
     swift_parts[i].v[2] = gparts[i].v_full[2] / a;
     swift_parts[i].mass = gravity_get_mass(&gparts[i]);
     swift_parts[i].potential = gravity_get_comoving_potential(
-        &gparts[i]);  // MATTHIEU: Need factors here?
+        &gparts[i]);
     swift_parts[i].type = gparts[i].type;
 
     /* Set gas particle IDs from their hydro counterparts and set internal
