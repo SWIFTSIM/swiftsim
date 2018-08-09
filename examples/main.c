@@ -945,7 +945,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef HAVE_VELOCIRAPTOR
     /* Call VELOCIraptor for the first time after the first snapshot dump. */
-    //if (e.policy & engine_policy_structure_finding) {
+    // if (e.policy & engine_policy_structure_finding) {
     // velociraptor_init(&e);
     // velociraptor_invoke(&e);
     //}

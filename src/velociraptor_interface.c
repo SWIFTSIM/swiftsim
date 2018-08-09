@@ -30,8 +30,8 @@
 /* Local includes. */
 #include "common_io.h"
 #include "engine.h"
-#include "swift_velociraptor_part.h"
 #include "hydro.h"
+#include "swift_velociraptor_part.h"
 
 #ifdef HAVE_VELOCIRAPTOR
 
@@ -78,8 +78,9 @@ void velociraptor_init(struct engine *e) {
   message("Omega_cdm: %e", cosmo_info.Omega_cdm);
   message("w_de: %e", cosmo_info.w_de);
 
-  if(e->cosmology->w != -1.) error("w_de is not 1. It is: %lf", e->cosmology->w);
-  
+  if (e->cosmology->w != -1.)
+    error("w_de is not 1. It is: %lf", e->cosmology->w);
+
   /* Set unit conversions. */
   unit_info.lengthtokpc = 1.0;
   unit_info.velocitytokms = 1.0;
@@ -126,10 +127,10 @@ void velociraptor_init(struct engine *e) {
   sim_info.icellwidth[2] = s->iwidth[2] / unit_info.lengthtokpc;
 
   /* Only allocate cell location array on first call to velociraptor_init(). */
-  if(e->cell_loc == NULL) {
+  if (e->cell_loc == NULL) {
     /* Allocate and populate top-level cell locations. */
     if (posix_memalign((void **)&(e->cell_loc), 32,
-          s->nr_cells * sizeof(struct cell_loc)) != 0)
+                       s->nr_cells * sizeof(struct cell_loc)) != 0)
       error("Failed to allocate top-level cell locations for VELOCIraptor.");
 
     for (int i = 0; i < s->nr_cells; i++) {
@@ -246,13 +247,11 @@ void velociraptor_invoke(struct engine *e) {
     swift_parts[i].x[0] = gparts[i].x[0];
     swift_parts[i].x[1] = gparts[i].x[1];
     swift_parts[i].x[2] = gparts[i].x[2];
-    swift_parts[i].v[0] =
-        gparts[i].v_full[0] / a;
+    swift_parts[i].v[0] = gparts[i].v_full[0] / a;
     swift_parts[i].v[1] = gparts[i].v_full[1] / a;
     swift_parts[i].v[2] = gparts[i].v_full[2] / a;
     swift_parts[i].mass = gravity_get_mass(&gparts[i]);
-    swift_parts[i].potential = gravity_get_comoving_potential(
-        &gparts[i]);
+    swift_parts[i].potential = gravity_get_comoving_potential(&gparts[i]);
     swift_parts[i].type = gparts[i].type;
 
     /* Set gas particle IDs from their hydro counterparts and set internal

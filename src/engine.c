@@ -4983,8 +4983,8 @@ void engine_step(struct engine *e) {
   /* Perform structure finding? */
   if (run_stf) {
 
-    // MATTHIEU: Add a drift_all here. And check the order with the order i/o
-    // options.
+  // MATTHIEU: Add a drift_all here. And check the order with the order i/o
+  // options.
 
 #ifdef HAVE_VELOCIRAPTOR
     velociraptor_init(e);
