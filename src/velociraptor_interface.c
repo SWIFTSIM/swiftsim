@@ -78,6 +78,8 @@ void velociraptor_init(struct engine *e) {
   message("Omega_cdm: %e", cosmo_info.Omega_cdm);
   message("w_de: %e", cosmo_info.w_de);
 
+  if(e->cosmology->w != -1.) error("w_de is not 1. It is: %lf", e->cosmology->w);
+  
   /* Set unit conversions. */
   unit_info.lengthtokpc = 1.0;
   unit_info.velocitytokms = 1.0;
