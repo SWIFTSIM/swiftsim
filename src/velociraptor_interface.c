@@ -126,9 +126,7 @@ void velociraptor_init(struct engine *e) {
   sim_info.icellwidth[2] = s->iwidth[2] / unit_info.lengthtokpc;
 
   /* Only allocate cell location array on first call to velociraptor_init(). */
-  static int first_init = 1;
-
-  if(first_init) {
+  if(e->cell_loc == NULL) {
     /* Allocate and populate top-level cell locations. */
     if (posix_memalign((void **)&(e->cell_loc), 32,
           s->nr_cells * sizeof(struct cell_loc)) != 0)
@@ -139,7 +137,6 @@ void velociraptor_init(struct engine *e) {
       e->cell_loc[i].loc[1] = unit_info.lengthtokpc * s->cells_top[i].loc[1];
       e->cell_loc[i].loc[2] = unit_info.lengthtokpc * s->cells_top[i].loc[2];
     }
-    first_init = 0;
   }
 
   sim_info.cell_loc = e->cell_loc;
