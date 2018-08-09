@@ -31,6 +31,7 @@
 #include "common_io.h"
 #include "engine.h"
 #include "swift_velociraptor_part.h"
+#include "hydro.h"
 
 #ifdef HAVE_VELOCIRAPTOR
 
@@ -230,10 +231,10 @@ void velociraptor_invoke(struct engine *e) {
   bzero(swift_parts, nr_gparts * sizeof(struct swift_vel_part));
 
   const float energy_scale = 1.0;
-  const float a2 = e->cosmology->a * e->cosmology->a;
+  const float a = e->cosmology->a;
 
   message("Energy scaling factor: %f", energy_scale);
-  message("a^2: %f", a2);
+  message("a: %f", a);
 
   /* Convert particle properties into VELOCIraptor units */
   for (size_t i = 0; i < nr_gparts; i++) {
@@ -241,9 +242,9 @@ void velociraptor_invoke(struct engine *e) {
     swift_parts[i].x[1] = gparts[i].x[1];
     swift_parts[i].x[2] = gparts[i].x[2];
     swift_parts[i].v[0] =
-        gparts[i].v_full[0] / a2;  // MATTHIEU: Check this a^2 !!
-    swift_parts[i].v[1] = gparts[i].v_full[1] / a2;
-    swift_parts[i].v[2] = gparts[i].v_full[2] / a2;
+        gparts[i].v_full[0] / a;
+    swift_parts[i].v[1] = gparts[i].v_full[1] / a;
+    swift_parts[i].v[2] = gparts[i].v_full[2] / a;
     swift_parts[i].mass = gravity_get_mass(&gparts[i]);
     swift_parts[i].potential = gravity_get_comoving_potential(
         &gparts[i]);  // MATTHIEU: Need factors here?
