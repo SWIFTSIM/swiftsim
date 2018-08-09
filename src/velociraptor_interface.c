@@ -84,7 +84,7 @@ void velociraptor_init(struct engine *e) {
   unit_info.masstosolarmass = 1.0;
   unit_info.energyperunitmass = 1.0;
   unit_info.gravity = e->physical_constants->const_newton_G;
-  unit_info.hubbleunit = e->cosmology->H; /* TODO: double check this. */
+  unit_info.hubbleunit = e->cosmology->H0 / e->cosmology->h;
 
   message("Length conversion factor: %e", unit_info.lengthtokpc);
   message("Velocity conversion factor: %e", unit_info.velocitytokms);
@@ -123,15 +123,21 @@ void velociraptor_init(struct engine *e) {
   sim_info.icellwidth[1] = s->iwidth[1] / unit_info.lengthtokpc;
   sim_info.icellwidth[2] = s->iwidth[2] / unit_info.lengthtokpc;
 
-  /* Allocate and populate top-level cell locations. */
-  if (posix_memalign((void **)&(e->cell_loc), 32,
-                     s->nr_cells * sizeof(struct cell_loc)) != 0)
-    error("Failed to allocate top-level cell locations for VELOCIraptor.");
+  /* Only allocate cell location array on first call to velociraptor_init(). */
+  static int first_init = 1;
 
-  for (int i = 0; i < s->nr_cells; i++) {
-    e->cell_loc[i].loc[0] = unit_info.lengthtokpc * s->cells_top[i].loc[0];
-    e->cell_loc[i].loc[1] = unit_info.lengthtokpc * s->cells_top[i].loc[1];
-    e->cell_loc[i].loc[2] = unit_info.lengthtokpc * s->cells_top[i].loc[2];
+  if(first_init) {
+    /* Allocate and populate top-level cell locations. */
+    if (posix_memalign((void **)&(e->cell_loc), 32,
+          s->nr_cells * sizeof(struct cell_loc)) != 0)
+      error("Failed to allocate top-level cell locations for VELOCIraptor.");
+
+    for (int i = 0; i < s->nr_cells; i++) {
+      e->cell_loc[i].loc[0] = unit_info.lengthtokpc * s->cells_top[i].loc[0];
+      e->cell_loc[i].loc[1] = unit_info.lengthtokpc * s->cells_top[i].loc[1];
+      e->cell_loc[i].loc[2] = unit_info.lengthtokpc * s->cells_top[i].loc[2];
+    }
+    first_init = 0;
   }
 
   sim_info.cell_loc = e->cell_loc;
