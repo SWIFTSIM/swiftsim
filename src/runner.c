@@ -784,10 +784,11 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           /* Skip if h is already h_max and we don't have enough neighbours */
           if ((p->h == hydro_h_max) && (f < 0.f)) {
 
-/* We have a particle whose smoothing length is already set (wants to be larger
- * but has already hit the maximum). So, just tidy up as if the smoothing length
- * had converged correctly, then continue on to the next particle.
- */
+          /* We have a particle whose smoothing length is already set (wants to
+           * be larger but has already hit the maximum). So, just tidy up as if
+           * the smoothing length had converged correctly, then continue on to
+           * the next particle.
+           */
 
 #ifdef EXTRA_HYDRO_LOOP
 
