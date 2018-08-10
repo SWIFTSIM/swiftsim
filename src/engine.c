@@ -69,6 +69,7 @@
 #include "map.h"
 #include "memswap.h"
 #include "minmax.h"
+#include "outputlist.h"
 #include "parallel_io.h"
 #include "part.h"
 #include "partition.h"
@@ -117,7 +118,7 @@ int engine_rank;
  */
 struct end_of_step_data {
 
-  int updates, g_updates, s_updates;
+  size_t updates, g_updates, s_updates;
   integertime_t ti_hydro_end_min, ti_hydro_end_max, ti_hydro_beg_max;
   integertime_t ti_gravity_end_min, ti_gravity_end_max, ti_gravity_beg_max;
   struct engine *e;
@@ -3196,7 +3197,7 @@ void engine_maketasks(struct engine *e) {
                    s->nr_cells, 1, 0, e);
 
   if (e->verbose)
-    message("Making hydro tasks took %.3f %s (including reweight).",
+    message("Making hydro tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   tic2 = getticks();
@@ -3205,7 +3206,7 @@ void engine_maketasks(struct engine *e) {
   if (e->policy & engine_policy_self_gravity) engine_make_self_gravity_tasks(e);
 
   if (e->verbose)
-    message("Making gravity tasks took %.3f %s (including reweight).",
+    message("Making gravity tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   /* Add the external gravity tasks. */
@@ -3251,7 +3252,7 @@ void engine_maketasks(struct engine *e) {
   scheduler_splittasks(sched);
 
   if (e->verbose)
-    message("Splitting tasks took %.3f %s (including reweight).",
+    message("Splitting tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -3271,7 +3272,7 @@ void engine_maketasks(struct engine *e) {
                  sched->tasks, sched->nr_tasks, sizeof(struct task), 0, e);
 
   if (e->verbose)
-    message("Counting and linking tasks took %.3f %s (including reweight).",
+    message("Counting and linking tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   tic2 = getticks();
@@ -3282,7 +3283,7 @@ void engine_maketasks(struct engine *e) {
                  sizeof(struct cell), 0, e);
 
   if (e->verbose)
-    message("Setting super-pointers took %.3f %s (including reweight).",
+    message("Setting super-pointers took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   /* Append hierarchical tasks to each cell. */
@@ -3299,7 +3300,7 @@ void engine_maketasks(struct engine *e) {
                    sched->tasks, sched->nr_tasks, sizeof(struct task), 0, e);
 
   if (e->verbose)
-    message("Making extra hydroloop tasks took %.3f %s (including reweight).",
+    message("Making extra hydroloop tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   tic2 = getticks();
@@ -3309,7 +3310,7 @@ void engine_maketasks(struct engine *e) {
     engine_link_gravity_tasks(e);
 
   if (e->verbose)
-    message("Linking gravity tasks took %.3f %s (including reweight).",
+    message("Linking gravity tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
 #ifdef WITH_MPI
@@ -3370,7 +3371,7 @@ void engine_maketasks(struct engine *e) {
   scheduler_set_unlocks(sched);
 
   if (e->verbose)
-    message("Setting unlocks took %.3f %s (including reweight).",
+    message("Setting unlocks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   tic2 = getticks();
@@ -3379,17 +3380,11 @@ void engine_maketasks(struct engine *e) {
   scheduler_ranktasks(sched);
 
   if (e->verbose)
-    message("Ranking the tasks took %.3f %s (including reweight).",
+    message("Ranking the tasks took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
-
-  tic2 = getticks();
 
   /* Weight the tasks. */
   scheduler_reweight(sched, e->verbose);
-
-  if (e->verbose)
-    message("Reweighting tasks took %.3f %s (including reweight).",
-            clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
   /* Set the tasks age. */
   e->tasks_age = 0;
@@ -4037,7 +4032,7 @@ void engine_prepare(struct engine *e) {
   int drifted_all = 0;
 
   /* Unskip active tasks and check for rebuild */
-  if (!e->forcerepart && !e->restarting) engine_unskip(e);
+  if (!e->forcerebuild && !e->forcerepart && !e->restarting) engine_unskip(e);
 
 #ifdef WITH_MPI
   MPI_Allreduce(MPI_IN_PLACE, &e->forcerebuild, 1, MPI_INT, MPI_MAX,
@@ -4085,7 +4080,7 @@ void engine_prepare(struct engine *e) {
   TIMER_TOC2(timer_prepare);
 
   if (e->verbose)
-    message("took %.3f %s (including unskip and reweight).",
+    message("took %.3f %s (including unskip, rebuild and reweight).",
             clocks_from_ticks(getticks() - tic), clocks_getunit());
 }
 
@@ -4118,7 +4113,7 @@ void engine_collect_end_of_step_recurse(struct cell *c) {
 #endif /* WITH_MPI */
 
   /* Counters for the different quantities. */
-  int updated = 0, g_updated = 0, s_updated = 0;
+  size_t updated = 0, g_updated = 0, s_updated = 0;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
@@ -4171,7 +4166,7 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
   int *local_cells = (int *)map_data;
 
   /* Local collectible */
-  int updates = 0, g_updates = 0, s_updates = 0;
+  size_t updates = 0, g_updates = 0, s_updates = 0;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
@@ -4794,8 +4789,8 @@ void engine_step(struct engine *e) {
   /* Print the number of active tasks ? */
   if (e->verbose) engine_print_task_counts(e);
 
-/* Dump local cells and active particle counts. */
-/* dumpCells("cells", 0, 0, 0, 0, e->s, e->nodeID, e->step); */
+    /* Dump local cells and active particle counts. */
+    /* dumpCells("cells", 0, 0, 0, 0, e->s, e->nodeID, e->step); */
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we have the correct total mass in the top-level multipoles */
@@ -4847,11 +4842,11 @@ void engine_step(struct engine *e) {
 
   /* Save some statistics ? */
   int save_stats = 0;
-  if (e->ti_end_min >= e->ti_next_stats && e->ti_next_stats > 0) save_stats = 1;
+  if (e->ti_end_min > e->ti_next_stats && e->ti_next_stats > 0) save_stats = 1;
 
   /* Do we want a snapshot? */
   int dump_snapshot = 0;
-  if (e->ti_end_min >= e->ti_next_snapshot && e->ti_next_snapshot > 0)
+  if (e->ti_end_min > e->ti_next_snapshot && e->ti_next_snapshot > 0)
     dump_snapshot = 1;
 
   /* Do we want to perform structure finding? */
@@ -4860,7 +4855,7 @@ void engine_step(struct engine *e) {
     if (e->stf_output_freq_format == STEPS && e->step % e->deltaStepSTF == 0)
       run_stf = 1;
     else if (e->stf_output_freq_format == TIME &&
-             e->ti_end_min >= e->ti_nextSTF && e->ti_nextSTF > 0)
+             e->ti_end_min > e->ti_nextSTF && e->ti_nextSTF > 0)
       run_stf = 1;
   }
 
@@ -4982,13 +4977,16 @@ void engine_step(struct engine *e) {
   /* Perform structure finding? */
   if (run_stf) {
 
-    // MATTHIEU: Add a drift_all here. And check the order with the order i/o
-    // options.
+  // MATTHIEU: Add a drift_all here. And check the order with the order i/o
+  // options.
 
+#ifdef HAVE_VELOCIRAPTOR
+    velociraptor_init(e);
     velociraptor_invoke(e);
 
     /* ... and find the next output time */
     if (e->stf_output_freq_format == TIME) engine_compute_next_stf_time(e);
+#endif
   }
 
   /* Restore the information we stored */
@@ -5802,6 +5800,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->chemistry = chemistry;
   e->sourceterms = sourceterms;
   e->parameter_file = params;
+  e->cell_loc = NULL;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
@@ -5833,6 +5832,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
     e->time_base_inv = e->cosmology->time_base_inv;
     e->ti_current = 0;
   }
+
+  engine_init_output_lists(e, params);
 }
 
 /**
@@ -5893,7 +5894,6 @@ void engine_config(int restart, struct engine *e, struct swift_params *params,
         parser_get_param_double(params, "StructureFinding:time_first");
     e->a_first_stf = parser_get_opt_param_double(
         params, "StructureFinding:scale_factor_first", 0.1);
-    // velociraptor_init(e);
     e->stf_output_freq_format =
         parser_get_param_int(params, "StructureFinding:output_time_format");
     if (e->stf_output_freq_format == STEPS) {
@@ -5906,6 +5906,9 @@ void engine_config(int restart, struct engine *e, struct swift_params *params,
       error(
           "Invalid flag (%d) set for output time format of structure finding.",
           e->stf_output_freq_format);
+
+    /* overwrite input if outputlist */
+    if (e->output_list_stf) e->stf_output_freq_format = TIME;
   }
 
   /* Get the number of queues */
@@ -6439,6 +6442,12 @@ void engine_print_policy(struct engine *e) {
  * @param e The #engine.
  */
 void engine_compute_next_snapshot_time(struct engine *e) {
+  /* Do outputlist file case */
+  if (e->output_list_snapshots) {
+    output_list_read_next_time(e->output_list_snapshots, e, "snapshots",
+                               &e->ti_next_snapshot);
+    return;
+  }
 
   /* Find upper-bound on last output */
   double time_end;
@@ -6497,6 +6506,12 @@ void engine_compute_next_snapshot_time(struct engine *e) {
  * @param e The #engine.
  */
 void engine_compute_next_statistics_time(struct engine *e) {
+  /* Do output_list file case */
+  if (e->output_list_stats) {
+    output_list_read_next_time(e->output_list_stats, e, "stats",
+                               &e->ti_next_stats);
+    return;
+  }
 
   /* Find upper-bound on last output */
   double time_end;
@@ -6557,6 +6572,11 @@ void engine_compute_next_statistics_time(struct engine *e) {
  * @param e The #engine.
  */
 void engine_compute_next_stf_time(struct engine *e) {
+  /* Do output_list file case */
+  if (e->output_list_stf) {
+    output_list_read_next_time(e->output_list_stf, e, "stf", &e->ti_nextSTF);
+    return;
+  }
 
   /* Find upper-bound on last output */
   double time_end;
@@ -6603,6 +6623,53 @@ void engine_compute_next_stf_time(struct engine *e) {
       if (e->verbose)
         message("Next output time set to t=%e.", next_snapshot_time);
     }
+  }
+}
+
+/**
+ * @brief Initialize all the output_list required by the engine
+ *
+ * @param e The #engine.
+ * @param params The #swift_params.
+ */
+void engine_init_output_lists(struct engine *e, struct swift_params *params) {
+  /* Deal with snapshots */
+  double snaps_time_first;
+  e->output_list_snapshots = NULL;
+  output_list_init(&e->output_list_snapshots, e, "Snapshots",
+                   &e->delta_time_snapshot, &snaps_time_first);
+
+  if (e->output_list_snapshots) {
+    if (e->policy & engine_policy_cosmology)
+      e->a_first_snapshot = snaps_time_first;
+    else
+      e->time_first_snapshot = snaps_time_first;
+  }
+
+  /* Deal with stats */
+  double stats_time_first;
+  e->output_list_stats = NULL;
+  output_list_init(&e->output_list_stats, e, "Statistics",
+                   &e->delta_time_statistics, &stats_time_first);
+
+  if (e->output_list_stats) {
+    if (e->policy & engine_policy_cosmology)
+      e->a_first_statistics = stats_time_first;
+    else
+      e->time_first_statistics = stats_time_first;
+  }
+
+  /* Deal with stf */
+  double stf_time_first;
+  e->output_list_stf = NULL;
+  output_list_init(&e->output_list_stf, e, "StructureFinding", &e->deltaTimeSTF,
+                   &stf_time_first);
+
+  if (e->output_list_stf) {
+    if (e->policy & engine_policy_cosmology)
+      e->a_first_stf = stf_time_first;
+    else
+      e->timeFirstSTFOutput = stf_time_first;
   }
 }
 
@@ -6739,6 +6806,18 @@ void engine_clean(struct engine *e) {
   }
   free(e->runners);
   free(e->snapshot_units);
+  if (e->output_list_snapshots) {
+    output_list_clean(e->output_list_snapshots);
+    free(e->output_list_snapshots);
+  }
+  if (e->output_list_stats) {
+    output_list_clean(e->output_list_stats);
+    free(e->output_list_stats);
+  }
+  if (e->output_list_stf) {
+    output_list_clean(e->output_list_stf);
+    free(e->output_list_stf);
+  }
   free(e->links);
   free(e->cell_loc);
   scheduler_clean(&e->sched);
@@ -6781,6 +6860,11 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   chemistry_struct_dump(e->chemistry, stream);
   sourceterms_struct_dump(e->sourceterms, stream);
   parser_struct_dump(e->parameter_file, stream);
+  if (e->output_list_snapshots)
+    output_list_struct_dump(e->output_list_snapshots, stream);
+  if (e->output_list_stats)
+    output_list_struct_dump(e->output_list_stats, stream);
+  if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
 }
 
 /**
@@ -6875,6 +6959,27 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct swift_params *)malloc(sizeof(struct swift_params));
   parser_struct_restore(parameter_file, stream);
   e->parameter_file = parameter_file;
+
+  if (e->output_list_snapshots) {
+    struct output_list *output_list_snapshots =
+        (struct output_list *)malloc(sizeof(struct output_list));
+    output_list_struct_restore(output_list_snapshots, stream);
+    e->output_list_snapshots = output_list_snapshots;
+  }
+
+  if (e->output_list_stats) {
+    struct output_list *output_list_stats =
+        (struct output_list *)malloc(sizeof(struct output_list));
+    output_list_struct_restore(output_list_stats, stream);
+    e->output_list_stats = output_list_stats;
+  }
+
+  if (e->output_list_stf) {
+    struct output_list *output_list_stf =
+        (struct output_list *)malloc(sizeof(struct output_list));
+    output_list_struct_restore(output_list_stf, stream);
+    e->output_list_stf = output_list_stf;
+  }
 
   /* Want to force a rebuild before using this engine. Wait to repartition.*/
   e->forcerebuild = 1;

@@ -153,7 +153,7 @@ void dump_indv_particle_fields(char *fileName, struct part *p) {
 #else
           0.f, 0.f, 0.f
 #endif
-          );
+  );
 
   fclose(file);
 }
