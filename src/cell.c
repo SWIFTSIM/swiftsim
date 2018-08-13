@@ -2563,13 +2563,8 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
             /* (TEMPORARY) Crudely stop the particle manually */
             message(
                 "Particle %lld hit a box edge. \n"
-                "  pos=%.4e %.4e %.4e  vel=%.2e %.2e %.2e  E_tot=%.3e",
-                p->id, p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2],
-                (sqrtf(p->v[0] * p->v[0] + p->v[1] * p->v[1] +
-                       p->v[2] * p->v[2]) *
-                     0.5f +
-                 p->gpart->potential) *
-                    p->mass);
+                "  pos=%.4e %.4e %.4e  vel=%.2e %.2e %.2e",
+                p->id, p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2]);
             for (int j = 0; j < 3; j++) {
               p->v[j] = 0.f;
               p->gpart->v_full[j] = 0.f;
