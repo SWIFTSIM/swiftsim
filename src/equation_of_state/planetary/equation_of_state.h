@@ -1148,7 +1148,7 @@ __attribute__((always_inline)) INLINE static void eos_print_snapshot(
  * @param e the struct
  * @param stream the file stream
  */
-void eos_struct_dump(const struct eos_parameters *e, FILE *stream) {
+static inline void eos_struct_dump(const struct eos_parameters *e, FILE *stream) {
   restart_write_blocks((void *)e, sizeof(struct eos_parameters), 1, stream, 
                        "eos_parameters", "equation of state");
 }
@@ -1160,7 +1160,7 @@ void eos_struct_dump(const struct eos_parameters *e, FILE *stream) {
  * @param e the struct
  * @param stream the file stream
  */
-void eos_struct_restore(struct eos_parameters *e, FILE *stream) {
+static inline void eos_struct_restore(struct eos_parameters *e, FILE *stream) {
   restart_read_blocks((void *)e, sizeof(struct eos_parameters), 1, stream, NULL, 
                       "equation of state");
 }
