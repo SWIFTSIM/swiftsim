@@ -40,6 +40,7 @@
 #include "inline.h"
 #include "physical_constants.h"
 #include "units.h"
+#include "restart.h"
 
 extern struct eos_parameters eos;
 
@@ -1139,5 +1140,29 @@ __attribute__((always_inline)) INLINE static void eos_print_snapshot(
   io_write_attribute_s(h_grpsph, "Equation of state", "Planetary");
 }
 #endif
+
+/**
+ * @brief Write an equation of state struct to the given FILE as a stream of 
+ * bytes.
+ *
+ * @param e the struct
+ * @param stream the file stream
+ */
+void eos_struct_dump(const struct eos_parameters *e, FILE *stream) {
+  restart_write_blocks((void *)e, sizeof(struct eos_parameters), 1, stream, 
+                       "eos_parameters", "equation of state");
+}
+
+/**
+ * @brief Restore an equation of state struct from the given FILE as a stream of
+ * bytes.
+ *
+ * @param e the struct
+ * @param stream the file stream
+ */
+void eos_struct_restore(struct eos_parameters *e, FILE *stream) {
+  restart_read_blocks((void *)e, sizeof(struct eos_parameters), 1, stream, NULL, 
+                      "equation of state");
+}
 
 #endif /* SWIFT_PLANETARY_EQUATION_OF_STATE_H */

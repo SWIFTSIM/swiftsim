@@ -62,6 +62,7 @@
 #include "cosmology.h"
 #include "cycle.h"
 #include "debug.h"
+#include "equation_of_state.h"
 #include "error.h"
 #include "gravity.h"
 #include "gravity_cache.h"
@@ -6865,6 +6866,10 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stats)
     output_list_struct_dump(e->output_list_stats, stream);
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
+
+#ifdef EOS_PLANETARY
+  eos_struct_dump(&eos, stream);
+#endif
 }
 
 /**
@@ -6980,6 +6985,10 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
     output_list_struct_restore(output_list_stf, stream);
     e->output_list_stf = output_list_stf;
   }
+    
+#ifdef EOS_PLANETARY
+  eos_struct_restore(&eos, stream);
+#endif
 
   /* Want to force a rebuild before using this engine. Wait to repartition.*/
   e->forcerebuild = 1;
