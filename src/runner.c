@@ -782,13 +782,11 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
               hydro_dimension * p->density.wcount * h_old_dim_minus_one;
 
           /* Skip if h is already h_max and we don't have enough neighbours */
-          if ((p->h == hydro_h_max) && (f < 0.f)) {
+          if ((p->h >= hydro_h_max) && (f < 0.f)) {
 
           /* We have a particle whose smoothing length is already set (wants to
            * be larger but has already hit the maximum). So, just tidy up as if
-           * the smoothing length had converged correctly, then continue on to
-           * the next particle.
-           */
+           * the smoothing length had converged correctly  */
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -820,6 +818,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
             continue;
           }
+
+          /* Normal case: Use Newton-Raphson to get a better value of h */
 
           /* Avoid floating point exception from f_prime = 0 */
           h_new = h_old - f / (f_prime + FLT_MIN);

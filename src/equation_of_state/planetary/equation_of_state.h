@@ -39,8 +39,8 @@
 #include "common_io.h"
 #include "inline.h"
 #include "physical_constants.h"
-#include "units.h"
 #include "restart.h"
+#include "units.h"
 
 extern struct eos_parameters eos;
 

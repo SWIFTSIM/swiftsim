@@ -141,13 +141,11 @@ INLINE static void convert_units_HM80(struct HM80_params *mat,
   units_init_si(&si);
 
   // All table values in SI
-  mat->log_rho_min +=
-      logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) / 
-           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
-  mat->log_rho_max +=
-      logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) / 
-           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
-           
+  mat->log_rho_min += logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) /
+                           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+  mat->log_rho_max += logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) /
+                           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+
   mat->log_u_min +=
       logf(units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
@@ -158,17 +156,15 @@ INLINE static void convert_units_HM80(struct HM80_params *mat,
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_u = 0; i_u < mat->num_u; i_u++) {
       mat->table_log_P_rho_u[i_rho * mat->num_u + i_u] +=
-          logf(units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+          logf(units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) /
                units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
     }
   }
 
-  mat->bulk_mod *=
-      units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
-      units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
-  mat->P_min_for_c_min *=
-      units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
-      units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->bulk_mod *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) /
+                   units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->P_min_for_c_min *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) /
+                          units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
 }
 
 // gas_internal_energy_from_entropy

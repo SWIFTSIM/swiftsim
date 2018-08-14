@@ -101,7 +101,7 @@ INLINE static void convert_units_Til(struct Til_params *mat,
 
   struct unit_system si;
   units_init_si(&si);
-  
+
   // SI to cgs
   mat->rho_0 *= units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY);
   mat->A *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE);
