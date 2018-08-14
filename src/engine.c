@@ -6866,10 +6866,6 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stats)
     output_list_struct_dump(e->output_list_stats, stream);
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
-
-#ifdef EOS_PLANETARY
-  eos_struct_dump(&eos, stream);
-#endif
 }
 
 /**
@@ -6987,7 +6983,7 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   }
     
 #ifdef EOS_PLANETARY
-  eos_struct_restore(&eos, stream);
+  eos_init(&eos, e->physical_constants, e->snapshot_units, e->parameter_file);
 #endif
 
   /* Want to force a rebuild before using this engine. Wait to repartition.*/
