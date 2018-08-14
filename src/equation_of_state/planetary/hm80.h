@@ -137,34 +137,38 @@ INLINE static void prepare_table_HM80(struct HM80_params *mat) {
 // Convert to internal units
 INLINE static void convert_units_HM80(struct HM80_params *mat,
                                       const struct unit_system *us) {
-  const float kg_m3_to_g_cm3 = 1e-3f;  // Convert kg/m^3 to g/cm^3
-  const float Pa_to_Ba = 1e1f;         // Convert Pascals to Barye
-  const float J_kg_to_erg_g = 1e4f;    // Convert J/kg to erg/g
+  struct unit_system si;
+  units_init_si(&si);
 
   // All table values in SI
   mat->log_rho_min +=
-      logf(kg_m3_to_g_cm3 / units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+      logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) / 
+           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
   mat->log_rho_max +=
-      logf(kg_m3_to_g_cm3 / units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
-
+      logf(units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) / 
+           units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+           
   mat->log_u_min +=
-      logf(J_kg_to_erg_g /
+      logf(units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
   mat->log_u_max +=
-      logf(J_kg_to_erg_g /
+      logf(units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
            units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
 
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_u = 0; i_u < mat->num_u; i_u++) {
       mat->table_log_P_rho_u[i_rho * mat->num_u + i_u] +=
-          logf(Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
+          logf(units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+               units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE));
     }
   }
 
   mat->bulk_mod *=
-      Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+      units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+      units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
   mat->P_min_for_c_min *=
-      Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+      units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+      units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
 }
 
 // gas_internal_energy_from_entropy

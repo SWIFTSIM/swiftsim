@@ -227,36 +227,42 @@ INLINE static void prepare_table_SESAME(struct SESAME_params *mat) {
 INLINE static void convert_units_SESAME(struct SESAME_params *mat,
                                         const struct unit_system *us) {
 
-  const float kg_m3_to_g_cm3 = 1e-3f;  // Convert kg/m^3 to g/cm^3
-  const float Pa_to_Ba = 1e1f;         // Convert Pascals to Barye
-  const float J_kg_to_erg_g = 1e4f;    // Convert J/kg to erg/g
-  const float m_s_to_cm_s = 1e2f;      // Convert m/s to cm/s
-
+  struct unit_system si;
+  units_init_si(&si);
+  
   // All table values in SI
   // Densities (log)
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     mat->table_log_rho[i_rho] += logf(
-        kg_m3_to_g_cm3 / units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
+        units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY) / 
+        units_cgs_conversion_factor(us, UNIT_CONV_DENSITY));
   }
 
   // Sp. Int. Energies (log), pressures, and sound speeds
   for (int i_rho = 0; i_rho < mat->num_rho; i_rho++) {
     for (int i_T = 0; i_T < mat->num_T; i_T++) {
-      mat->table_log_u_rho_T[i_rho * mat->num_T + i_T] +=
-          logf(J_kg_to_erg_g /
-               units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
+      mat->table_log_u_rho_T[i_rho * mat->num_T + i_T] += logf(
+          units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
+          units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS));
       mat->table_P_rho_T[i_rho * mat->num_T + i_T] *=
-          Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+          units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+          units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
       mat->table_c_rho_T[i_rho * mat->num_T + i_T] *=
-          m_s_to_cm_s / units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
+          units_cgs_conversion_factor(&si, UNIT_CONV_SPEED) / 
+          units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
       mat->table_s_rho_T[i_rho * mat->num_T + i_T] *=
-          J_kg_to_erg_g / units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY);
+          units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) / 
+          units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY);
     }
   }
 
   // Tiny pressure and sound speed
-  mat->P_tiny *= Pa_to_Ba / units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
-  mat->c_tiny *= m_s_to_cm_s / units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
+  mat->P_tiny *= 
+      units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) / 
+      units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+  mat->c_tiny *= 
+      units_cgs_conversion_factor(&si, UNIT_CONV_SPEED) / 
+      units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
 }
 
 // gas_internal_energy_from_entropy

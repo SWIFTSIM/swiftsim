@@ -99,18 +99,17 @@ INLINE static void set_Til_water(struct Til_params *mat,
 INLINE static void convert_units_Til(struct Til_params *mat,
                                      const struct unit_system *us) {
 
-  const float kg_m3_to_g_cm3 = 1e-3f;  // Convert kg/m^3 to g/cm^3
-  const float Pa_to_Ba = 1e1f;         // Convert Pascals to Barye
-  const float J_kg_to_erg_g = 1e4f;    // Convert J/kg to erg/g
-
+  struct unit_system si;
+  units_init_si(&si);
+  
   // SI to cgs
-  mat->rho_0 *= kg_m3_to_g_cm3;
-  mat->A *= Pa_to_Ba;
-  mat->B *= Pa_to_Ba;
-  mat->u_0 *= J_kg_to_erg_g;
-  mat->u_iv *= J_kg_to_erg_g;
-  mat->u_cv *= J_kg_to_erg_g;
-  mat->P_min *= Pa_to_Ba;
+  mat->rho_0 *= units_cgs_conversion_factor(&si, UNIT_CONV_DENSITY);
+  mat->A *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE);
+  mat->B *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE);
+  mat->u_0 *= units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  mat->u_iv *= units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  mat->u_cv *= units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  mat->P_min *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE);
 
   // cgs to internal
   mat->rho_0 /= units_cgs_conversion_factor(us, UNIT_CONV_DENSITY);
