@@ -60,7 +60,6 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
       sqrtf(hydro_gamma * p->P / p->rho);
   vmax = max(vmax, p->timestepvars.vmax);
 
-  // MATTHIEU: Bert is this correct? Do we need more cosmology terms here?
   const float psize = cosmo->a * cosmo->a *
                       powf(p->geometry.volume / hydro_dimension_unit_sphere,
                            hydro_dimension_inv);
@@ -542,13 +541,9 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     p->v[1] += p->flux.momentum[1] * dt_drift * m_inv;
     p->v[2] += p->flux.momentum[2] * dt_drift * m_inv;
 
-    xp->v_full[0] = p->v[0];
-    xp->v_full[1] = p->v[1];
-    xp->v_full[2] = p->v[2];
-
 #if !defined(EOS_ISOTHERMAL_GAS)
 #ifdef GIZMO_TOTAL_ENERGY
-    const float Etot = p->conserved.energy + p->flux.energy * dt_therm;
+    const float Etot = p->conserved.energy + p->flux.energy * dt_drift;
     const float v2 =
         (p->v[0] * p->v[0] + p->v[1] * p->v[1] + p->v[2] * p->v[2]);
     const float u = (Etot * m_inv - 0.5f * v2);
@@ -605,7 +600,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     struct part* p, struct xpart* xp, const float dt_therm, const float dt_grav,
-    const struct cosmology* cosmo, const struct hydro_props* hydro_props) {
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    integertime_t ti_start, integertime_t ti_end) {
 
   float a_grav[3];
 

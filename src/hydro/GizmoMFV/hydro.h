@@ -662,7 +662,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     struct part* p, struct xpart* xp, const float dt_therm, const float dt_grav,
-    const struct cosmology* cosmo, const struct hydro_props* hydro_props) {
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    integertime_t ti_start, integertime_t ti_end) {
 
   float a_grav[3];
 
@@ -688,8 +689,11 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     p->conserved.momentum[1] += p->conserved.mass * a_grav[1] * dt_grav;
     p->conserved.momentum[2] += p->conserved.mass * a_grav[2] * dt_grav;
 
+    const float dt_corr =
+        cosmology_get_corr_kick_factor(cosmo, ti_start, ti_end);
+
     p->conserved.energy -=
-        0.5f * dt_grav * cosmo->a * cosmo->a *
+        0.5f * dt_corr *
         (p->gravity.mflux[0] * a_grav[0] + p->gravity.mflux[1] * a_grav[1] +
          p->gravity.mflux[2] * a_grav[2]);
   }
