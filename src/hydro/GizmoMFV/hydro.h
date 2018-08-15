@@ -68,14 +68,13 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
   vmax = max(vmax, p->timestepvars.vmax);
 
   // MATTHIEU: Bert is this correct? Do we need more cosmology terms here?
-  const float psize =
-      cosmo->a * powf(p->geometry.volume / hydro_dimension_unit_sphere,
-                      hydro_dimension_inv);
+  const float psize = powf(p->geometry.volume / hydro_dimension_unit_sphere,
+                           hydro_dimension_inv);
   float dt = FLT_MAX;
   if (vmax > 0.) {
     dt = psize / vmax;
   }
-  return CFL_condition * dt;
+  return cosmo->a * cosmo->a * CFL_condition * dt;
 }
 
 /**
@@ -544,7 +543,10 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
-    struct part* p, struct xpart* xp, const struct cosmology* cosmo) {}
+    struct part* p, struct xpart* xp, const struct cosmology* cosmo) {
+
+  p->conserved.energy /= cosmo->a_factor_internal_energy;
+}
 
 /**
  * @brief Extra operations to be done during the drift
@@ -576,6 +578,8 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   if (h_corr < 2.0f && h_corr > 0.) {
     p->h *= h_corr;
   }
+
+  return;
 
   /* drift the primitive variables based on the old fluxes */
   if (p->geometry.volume > 0.) {
@@ -657,8 +661,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  * @param half_dt Half the physical time step.
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
-    struct part* p, struct xpart* xp, float dt, const struct cosmology* cosmo,
-    const struct hydro_props* hydro_props) {
+    struct part* p, struct xpart* xp, const float dt_therm, const float dt_grav,
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props) {
 
   float a_grav[3];
 
@@ -672,35 +676,35 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     a_grav[2] = p->gpart->a_grav[2];
 
 #ifdef GIZMO_TOTAL_ENERGY
-    p->conserved.energy += dt * (p->conserved.momentum[0] * a_grav[0] +
-                                 p->conserved.momentum[1] * a_grav[1] +
-                                 p->conserved.momentum[2] * a_grav[2]);
+    p->conserved.energy += dt_grav * (p->conserved.momentum[0] * a_grav[0] +
+                                      p->conserved.momentum[1] * a_grav[1] +
+                                      p->conserved.momentum[2] * a_grav[2]);
 #endif
 
     /* Kick the momentum for half a time step */
     /* Note that this also affects the particle movement, as the velocity for
        the particles is set after this. */
-    p->conserved.momentum[0] += p->conserved.mass * a_grav[0] * dt;
-    p->conserved.momentum[1] += p->conserved.mass * a_grav[1] * dt;
-    p->conserved.momentum[2] += p->conserved.mass * a_grav[2] * dt;
+    p->conserved.momentum[0] += p->conserved.mass * a_grav[0] * dt_grav;
+    p->conserved.momentum[1] += p->conserved.mass * a_grav[1] * dt_grav;
+    p->conserved.momentum[2] += p->conserved.mass * a_grav[2] * dt_grav;
 
     p->conserved.energy -=
-        0.5f * dt *
+        0.5f * dt_grav *
         (p->gravity.mflux[0] * a_grav[0] + p->gravity.mflux[1] * a_grav[1] +
          p->gravity.mflux[2] * a_grav[2]);
   }
 
   /* Update conserved variables. */
-  p->conserved.mass += p->conserved.flux.mass * dt;
-  p->conserved.momentum[0] += p->conserved.flux.momentum[0] * dt;
-  p->conserved.momentum[1] += p->conserved.flux.momentum[1] * dt;
-  p->conserved.momentum[2] += p->conserved.flux.momentum[2] * dt;
+  p->conserved.mass += p->conserved.flux.mass * dt_therm;
+  p->conserved.momentum[0] += p->conserved.flux.momentum[0] * dt_therm;
+  p->conserved.momentum[1] += p->conserved.flux.momentum[1] * dt_therm;
+  p->conserved.momentum[2] += p->conserved.flux.momentum[2] * dt_therm;
 #if defined(EOS_ISOTHERMAL_GAS)
   /* We use the EoS equation in a sneaky way here just to get the constant u */
   p->conserved.energy =
       p->conserved.mass * gas_internal_energy_from_entropy(0.f, 0.f);
 #else
-  p->conserved.energy += p->conserved.flux.energy * dt;
+  p->conserved.energy += p->conserved.flux.energy * dt_therm;
 #endif
 
   /* Apply the minimal energy limit */
