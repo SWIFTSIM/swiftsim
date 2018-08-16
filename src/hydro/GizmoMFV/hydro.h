@@ -581,16 +581,16 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* drift the primitive variables based on the old fluxes */
   if (p->geometry.volume > 0.) {
-    p->primitives.rho += p->conserved.flux.mass * dt_drift / p->geometry.volume;
+    p->primitives.rho += p->conserved.flux.mass * dt_therm / p->geometry.volume;
   }
 
   if (p->conserved.mass > 0.) {
     p->primitives.v[0] +=
-        p->conserved.flux.momentum[0] * dt_drift / p->conserved.mass;
+        p->conserved.flux.momentum[0] * dt_therm / p->conserved.mass;
     p->primitives.v[1] +=
-        p->conserved.flux.momentum[1] * dt_drift / p->conserved.mass;
+        p->conserved.flux.momentum[1] * dt_therm / p->conserved.mass;
     p->primitives.v[2] +=
-        p->conserved.flux.momentum[2] * dt_drift / p->conserved.mass;
+        p->conserved.flux.momentum[2] * dt_therm / p->conserved.mass;
 
 #if !defined(EOS_ISOTHERMAL_GAS)
 #ifdef GIZMO_TOTAL_ENERGY
@@ -609,7 +609,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 #endif
   }
 
-  /* we use a sneaky way to get the gravitational contribtuion to the
+  /* we use a sneaky way to get the gravitational contribution to the
      velocity update */
   p->primitives.v[0] += p->v[0] - xp->v_full[0];
   p->primitives.v[1] += p->v[1] - xp->v_full[1];
@@ -707,6 +707,19 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
       p->conserved.mass * gas_internal_energy_from_entropy(0.f, 0.f);
 #else
   p->conserved.energy += p->conserved.flux.energy * dt_therm;
+#endif
+
+#ifndef HYDRO_GAMMA_5_3
+  const float Pcorr = (dt_hydro - dt_therm) * p->geometry.volume;
+  p->conserved.momentum[0] -= Pcorr * p->primitives.gradients.P[0];
+  p->conserved.momentum[1] -= Pcorr * p->primitives.gradients.P[1];
+  p->conserved.momentum[2] -= Pcorr * p->primitives.gradients.P[2];
+#ifdef GIZMO_TOTAL_ENERGY
+  p->conserved.energy -=
+      Pcorr * (p->primitives.v[0] * p->primitives.gradients.P[0] +
+               p->primitives.v[1] * p->primitives.gradients.P[1] +
+               p->primitives.v[2] * p->primitives.gradients.P[2]);
+#endif
 #endif
 
   /* Apply the minimal energy limit */

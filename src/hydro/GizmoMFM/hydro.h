@@ -620,6 +620,13 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   p->conserved.energy += p->flux.energy * dt_therm;
 #endif
 
+#ifndef HYDRO_GAMMA_5_3
+  const float Pcorr = (dt_hydro - dt_therm) * p->geometry.volume;
+  p->conserved.momentum[0] -= Pcorr * p->gradients.P[0];
+  p->conserved.momentum[1] -= Pcorr * p->gradients.P[1];
+  p->conserved.momentum[2] -= Pcorr * p->gradients.P[2];
+#endif
+
   /* Apply the minimal energy limit */
   const float min_energy =
       hydro_props->minimal_internal_energy * cosmo->a_factor_internal_energy;
