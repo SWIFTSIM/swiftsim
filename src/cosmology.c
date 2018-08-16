@@ -782,6 +782,7 @@ void cosmology_clean(struct cosmology *c) {
   free(c->drift_fac_interp_table);
   free(c->grav_kick_fac_interp_table);
   free(c->hydro_kick_fac_interp_table);
+  free(c->hydro_kick_corr_interp_table);
   free(c->time_interp_table);
   free(c->scale_factor_interp_table);
 }
