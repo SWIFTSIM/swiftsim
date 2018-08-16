@@ -602,9 +602,9 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  * @param hydro_props Additional hydro properties.
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
-    struct part* p, struct xpart* xp, const float dt_therm, const float dt_grav,
-    const float dt_hydro, const float dt_kick_corr,
-    const struct cosmology* cosmo, const struct hydro_props* hydro_props) {
+    struct part* p, struct xpart* xp, float dt_therm, float dt_grav,
+    float dt_hydro, float dt_kick_corr, const struct cosmology* cosmo,
+    const struct hydro_props* hydro_props) {
 
   float a_grav[3];
 
