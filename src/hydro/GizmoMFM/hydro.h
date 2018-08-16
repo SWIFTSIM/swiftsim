@@ -591,17 +591,20 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
 /**
  * @brief Extra operations done during the kick
  *
- * Not used for GIZMO.
- *
  * @param p Particle to act upon.
  * @param xp Extended particle data to act upon.
- * @param dt Physical time step.
- * @param half_dt Half the physical time step.
+ * @param dt_therm Thermal energy time-step @f$\frac{dt}{a^2}@f$.
+ * @param dt_grav Gravity time-step @f$\frac{dt}{a}@f$.
+ * @param dt_hydro Hydro acceleration time-step
+ * @f$\frac{dt}{a^{3(\gamma{}-1)}}@f$.
+ * @param dt_kick_corr Gravity correction time-step @f$adt@f$.
+ * @param cosmo Cosmology.
+ * @param hydro_props Additional hydro properties.
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     struct part* p, struct xpart* xp, const float dt_therm, const float dt_grav,
-    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
-    integertime_t ti_start, integertime_t ti_end) {
+    const float dt_hydro, const float dt_kick_corr,
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props) {
 
   float a_grav[3];
 
