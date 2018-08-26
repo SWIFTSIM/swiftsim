@@ -223,8 +223,7 @@ struct engine {
 
   char snapshot_base_name[PARSER_MAX_LINE_SIZE];
   int snapshot_compression;
-  int snapshot_label_first;
-  int snapshot_label_delta;
+  int snapshot_label_time_on;
   struct unit_system *snapshot_units;
   int snapshot_output_count;
 
