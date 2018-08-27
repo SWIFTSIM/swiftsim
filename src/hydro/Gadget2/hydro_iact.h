@@ -921,7 +921,7 @@ runner_iact_nonsym_2_vec_force(
 
   /* Add the Hubble flow */
   dvdr_Hubble.v = vec_add(dvdr.v, v_a2_Hubble.v);
-  dvdr_Hubble_2.v = vec_add(dvdr_2.v, v_a2_Hubble.v)
+  dvdr_Hubble_2.v = vec_add(dvdr_2.v, v_a2_Hubble.v);
   
   /* Compute the relative velocity. (This is 0 if the particles move away from
    * each other and negative otherwise) */
