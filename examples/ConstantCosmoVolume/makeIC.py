@@ -25,7 +25,7 @@ T_i = 100.           # Initial temperature of the gas (in K)
 z_i = 100.           # Initial redshift
 gamma = 5./3.        # Gas adiabatic index
 numPart_1D = 32
-glassFile = "glassCube_32.hdf5"
+glassFile = "gravity_glassCube_32.hdf5"
 fileName = "constantBox.hdf5"
 
 
