@@ -4504,6 +4504,11 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_parts(s, e->verbose);
   space_init_gparts(s, e->verbose);
 
+  /* Update the cooling function */
+  if (e->policy & engine_policy_cooling)
+    cooling_update(e->physical_constants, e->internal_units, e->cosmology,
+                   e->cooling_func);
+
   /* Now, launch the calculation */
   TIMER_TIC;
   engine_launch(e);
@@ -4717,6 +4722,11 @@ void engine_step(struct engine *e) {
     e->time_old = e->ti_old * e->time_base + e->time_begin;
     e->time_step = (e->ti_current - e->ti_old) * e->time_base;
   }
+
+  /* Update the cooling function */
+  if (e->policy & engine_policy_cooling)
+    cooling_update(e->physical_constants, e->internal_units, e->cosmology,
+                   e->cooling_func);
 
   /*****************************************************/
   /* OK, we now know what the next end of time-step is */
