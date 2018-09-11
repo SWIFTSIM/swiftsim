@@ -4162,13 +4162,6 @@ void engine_collect_end_of_step_recurse(struct cell *c,
   c->updated = updated;
   c->g_updated = g_updated;
   c->s_updated = s_updated;
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (c->ti_hydro_end_min == e->ti_current)
-    error("Gathered a minimal hydro step equal to the current time.");
-  if (c->ti_gravity_end_min == e->ti_current)
-    error("Gathered a minimal gravity step equal to the current time.");
-#endif
 }
 
 void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
