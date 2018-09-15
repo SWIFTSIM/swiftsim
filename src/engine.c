@@ -5782,8 +5782,10 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   parser_get_param_string(params, "Snapshots:basename", e->snapshot_base_name);
   e->snapshot_compression =
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
-  e->snapshot_label_time_on =
-      parser_get_opt_param_int(params, "Snapshots:label_time_on", 0);
+  e->snapshot_int_time_label_on =
+      parser_get_opt_param_int(params, "Snapshots:int_time_label_on", 0);
+  if ((e->snapshot_int_time_label_on == 1) && (e->time_end < 1.f))
+    error("Snapshot integer time labels enabled but end time < 1");
   e->snapshot_units = (struct unit_system *)malloc(sizeof(struct unit_system));
   units_init_default(e->snapshot_units, params, "Snapshots", internal_units);
   e->snapshot_output_count = 0;
