@@ -758,7 +758,7 @@ void write_output_serial(struct engine* e, const char* baseName,
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  if (e->snapshot_label_time_on == 1)
+  if (e->snapshot_int_time_label_on == 1)
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%06i.hdf5", baseName,
              (int) round(e->time));
   else
