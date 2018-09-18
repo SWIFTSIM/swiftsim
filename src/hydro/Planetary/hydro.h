@@ -398,7 +398,7 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo, const double dt_alpha) {
+    const struct cosmology *cosmo, const float dt_alpha) {
 
 #ifdef PLANETARY_SPH_BALSARA
   const float fac_mu = cosmo->a_factor_mu;
