@@ -5039,14 +5039,8 @@ void engine_check_for_dumps(struct engine *e) {
 
     /* Perform structure finding? */
     if (run_stf) {
-
-<<<<<<< HEAD
-    // MATTHIEU: Add a drift_all here. And check the order with the other i/o
-    // options.
-=======
       // MATTHIEU: Add a drift_all here. And check the order with the order i/o
       // options.
->>>>>>> Formatting
 
 #ifdef HAVE_VELOCIRAPTOR
       velociraptor_init(e);
