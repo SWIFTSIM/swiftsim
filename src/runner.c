@@ -642,6 +642,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
   struct xpart *restrict xparts = c->xparts;
   const int count = c->count;
   const struct engine *e = r->e;
+  const integertime_t ti_end = e->ti_current;
   const double time_base = e->time_base;
   const struct cosmology *cosmo = e->cosmology;
 
@@ -667,13 +668,13 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
         /* Calculate the time-step for passing to hydro_prepare_force, used for
          * the evolution of alpha factors (i.e. those involved in the artificial
          * viscosity and thermal conduction terms) */
-        const integertime_t ti_step = get_integer_timestep(p->time_bin);
-        const integertime_t ti_end = e->ti_current;
-
-        const double dt_alpha =
-            with_cosmology
-                ? cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end)
-                : get_timestep(p->time_bin, time_base);
+	double dt_alpha;
+	if (with_cosmology) {
+          const integertime_t ti_step = get_integer_timestep(p->time_bin);
+	  dt_alpha = cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end);
+	} else {
+          dt_alpha = get_timestep(p->time_bin, time_base);
+	}
 
         /* Finish the gradient calculation */
         hydro_end_gradient(p);
@@ -717,6 +718,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_global_data *chemistry = e->chemistry;
   const double time_base = e->time_base;
+  const integertime_t ti_end = e->ti_current;
   const float hydro_h_max = e->hydro_properties->h_max;
   const float eps = e->hydro_properties->h_tolerance;
   const float hydro_eta_dim =
@@ -775,12 +777,13 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         /* Calculate the time-step for passing to hydro_prepare_force, used for
          * the evolution of alpha factors (i.e. those involved in the artificial
          * viscosity and thermal conduction terms) */
-        const integertime_t ti_step = get_integer_timestep(p->time_bin);
-        const integertime_t ti_end = e->ti_current;
-        const double dt_alpha =
-            with_cosmology
-                ? cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end)
-                : get_timestep(p->time_bin, time_base);
+	double dt_alpha;
+	if (with_cosmology) {
+          const integertime_t ti_step = get_integer_timestep(p->time_bin);
+	  dt_alpha = cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end);
+	} else {
+          dt_alpha = get_timestep(p->time_bin, time_base);
+	}
 
         if (p->density.wcount == 0.f) { /* No neighbours case */
 

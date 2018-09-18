@@ -390,7 +390,7 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo, const double dt_alpha) {
+    const struct cosmology *cosmo, const float dt_alpha) {
 
   /* Compute the pressure */
   const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);

@@ -456,7 +456,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part* restrict p, struct xpart* restrict xp,
-    const struct cosmology* cosmo, const double dt_alpha) {
+    const struct cosmology* cosmo, const float dt_alpha) {
 
   /* Initialise values that are used in the force loop */
   p->flux.momentum[0] = 0.0f;
