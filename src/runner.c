@@ -642,6 +642,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
   struct xpart *restrict xparts = c->xparts;
   const int count = c->count;
   const struct engine *e = r->e;
+  const double time_base = e->time_base;
   const struct cosmology *cosmo = e->cosmology;
 
   TIMER_TIC;
@@ -663,6 +664,16 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
       struct xpart *restrict xp = &xparts[i];
 
       if (part_is_active(p, e)) {
+        /* Calculate the time-step for passing to hydro_prepare_force, used for
+         * the evolution of alpha factors (i.e. those involved in the artificial
+         * viscosity and thermal conduction terms) */
+        const integertime_t ti_step = get_integer_timestep(p->time_bin);
+        const integertime_t ti_end = e->ti_current;
+
+        const double dt_alpha =
+            with_cosmology
+                ? cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end)
+                : get_timestep(p->time_bin, time_base);
 
         /* Finish the gradient calculation */
         hydro_end_gradient(p);
@@ -670,7 +681,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
         /* As of here, particle force variables will be set. */
 
         /* Compute variables required for the force loop */
-        hydro_prepare_force(p, xp, cosmo);
+        hydro_prepare_force(p, xp, cosmo, dt_alpha);
 
         /* The particle force values are now set.  Do _NOT_
            try to read any particle density variables! */
@@ -705,10 +716,12 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_global_data *chemistry = e->chemistry;
+  const double time_base = e->time_base;
   const float hydro_h_max = e->hydro_properties->h_max;
   const float eps = e->hydro_properties->h_tolerance;
   const float hydro_eta_dim =
       pow_dimension(e->hydro_properties->eta_neighbours);
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int max_smoothing_iter = e->hydro_properties->max_smoothing_iterations;
   int redo = 0, count = 0;
 
@@ -759,6 +772,16 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         float h_new;
         int has_no_neighbours = 0;
 
+        /* Calculate the time-step for passing to hydro_prepare_force, used for
+         * the evolution of alpha factors (i.e. those involved in the artificial
+         * viscosity and thermal conduction terms) */
+        const integertime_t ti_step = get_integer_timestep(p->time_bin);
+        const integertime_t ti_end = e->ti_current;
+        const double dt_alpha =
+            with_cosmology
+                ? cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end)
+                : get_timestep(p->time_bin, time_base);
+
         if (p->density.wcount == 0.f) { /* No neighbours case */
 
           /* Flag that there were no neighbours */
@@ -784,9 +807,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           /* Skip if h is already h_max and we don't have enough neighbours */
           if ((p->h >= hydro_h_max) && (f < 0.f)) {
 
-          /* We have a particle whose smoothing length is already set (wants to
-           * be larger but has already hit the maximum). So, just tidy up as if
-           * the smoothing length had converged correctly  */
+            /* We have a particle whose smoothing length is already set (wants
+             * to be larger but has already hit the maximum). So, just tidy up
+             * as if the smoothing length had converged correctly  */
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -806,7 +829,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* As of here, particle force variables will be set. */
 
             /* Compute variables required for the force loop */
-            hydro_prepare_force(p, xp, cosmo);
+            hydro_prepare_force(p, xp, cosmo, dt_alpha);
 
             /* The particle force values are now set.  Do _NOT_
                try to read any particle density variables! */
@@ -868,7 +891,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           }
         }
 
-          /* We now have a particle whose smoothing length has converged */
+        /* We now have a particle whose smoothing length has converged */
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -888,7 +911,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         /* As of here, particle force variables will be set. */
 
         /* Compute variables required for the force loop */
-        hydro_prepare_force(p, xp, cosmo);
+        hydro_prepare_force(p, xp, cosmo, dt_alpha);
 
         /* The particle force values are now set.  Do _NOT_
            try to read any particle density variables! */
