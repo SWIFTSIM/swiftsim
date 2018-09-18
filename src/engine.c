@@ -5039,6 +5039,7 @@ void engine_check_for_dumps(struct engine *e) {
 
     /* Perform structure finding? */
     if (run_stf) {
+    
       // MATTHIEU: Add a drift_all here. And check the order with the order i/o
       // options.
 
