@@ -775,9 +775,10 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         float h_new;
         int has_no_neighbours = 0;
 
-        /* Calculate the time-step for passing to hydro_prepare_force, used for
-         * the evolution of alpha factors (i.e. those involved in the artificial
-         * viscosity and thermal conduction terms) */
+#ifndef EXTRA_HYDRO_LOOP
+        /* Calculate the time-step for passing to hydro_prepare_force, used
+         * for the evolution of alpha factors (i.e. those involved in the
+         * artificial viscosity and thermal conduction terms) */
         double dt_alpha;
         if (with_cosmology) {
           const integertime_t ti_step = get_integer_timestep(p->time_bin);
@@ -785,6 +786,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         } else {
           dt_alpha = get_timestep(p->time_bin, time_base);
         }
+#endif
 
         if (p->density.wcount == 0.f) { /* No neighbours case */
 
@@ -811,9 +813,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           /* Skip if h is already h_max and we don't have enough neighbours */
           if ((p->h >= hydro_h_max) && (f < 0.f)) {
 
-          /* We have a particle whose smoothing length is already set (wants
-           * to be larger but has already hit the maximum). So, just tidy up
-           * as if the smoothing length had converged correctly  */
+            /* We have a particle whose smoothing length is already set (wants
+             * to be larger but has already hit the maximum). So, just tidy up
+             * as if the smoothing length had converged correctly  */
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -895,7 +897,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           }
         }
 
-          /* We now have a particle whose smoothing length has converged */
+        /* We now have a particle whose smoothing length has converged */
 
 #ifdef EXTRA_HYDRO_LOOP
 
