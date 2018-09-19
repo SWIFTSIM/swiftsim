@@ -643,6 +643,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
   const int count = c->count;
   const struct engine *e = r->e;
   const integertime_t ti_end = e->ti_current;
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const double time_base = e->time_base;
   const struct cosmology *cosmo = e->cosmology;
 
