@@ -416,28 +416,6 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
 }
 
 /**
- * @brief Prepare a particle for the gradient calculation.
- */
-__attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo) {/*UNUSED*/}
-
-/**
- * @brief Resets gradient values
- */
-__attribute__((always_inline)) INLINE static void hydro_reset_gradient(
-(??)  struct part *restrict p) {}
-
-/**
- * @brief Finishes the gradient calculation.
- * 
- * @param p The particle to act upon
- * @param e The engine.
- */
-__attribute__((always_inline)) INLINE static void hydro_end_gradient(
-  struct part *restrict p, const struct engine *restrict e) {/*UNUSED*/}
-
-/**
  * @brief Prepare a particle for the force calculation.
  *
  * This function is called in the ghost task to convert some quantities coming
@@ -450,12 +428,16 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
  * @param p The particle to act upon
  * @param xp The extended particle data to act upon
  * @param cosmo The current cosmological model.
+ * @param dt_alpha The time-step used to evolve non-cosmological quantities such
+ *                 as the artificial viscosity.
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo, float dt_kick_hydro) {
+    const struct cosmology *cosmo, const float dt_alpha) {
 
   const float fac_mu = cosmo->a_factor_mu;
+
+  const float h_inv = 1.f / p->h;
 
   /* Compute the norm of the curl */
   const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
@@ -470,7 +452,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the Balsara switch */
   const float balsara =
-      abs_div_v / (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
+      abs_div_v / (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu * h_inv);
 
   /* Compute the "grad h" term */
   const float common_factor = p->h / (hydro_dimension * p->density.wcount);
@@ -478,23 +460,18 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                              hydro_one_over_gamma_minus_one) /
                             (1.f + common_factor * p->density.wcount_dh);
 
-  /* Artificial viscosity */
-(??)  /* TO BE MOVED TO CONFIG OPTIONS */
-(??)  const float ell = 0.2;
-(??)  const float alpha_star = 0.1; /* alpha-min */
-(??)  /* ----------------------------- */
-(??)  const float inverse_tau = ell * soundspeed / p->h;
-  const float source = max((-1.f * p->density.div_v), 0.f);
-(??)  const float alpha_dt = source + (alpha_star - p->alpha) * inverse_tau;
+  /* Artificial viscosity updates */
 
-  /* We can now "kick" the alpha ready for the force loop */
-  p->alpha += alpha_dt * dt_kick_hydro;
+  const float inverse_tau = const_viscosity_length * soundspeed * h_inv;
+  const float source_term = -1.f * min(p->density.div_v, 0.f);
+  const float alpha_time_differential = 
+    source_term + (const_viscosity_alpha_min - p->alpha) * inverse_tau;
 
   /* Update variables. */
+  p->alpha += alpha_time_differential * dt_alpha;
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
-  p->force.alpha_dt = alpha_dt;
 }
 
 /**
@@ -578,9 +555,6 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     p->pressure_bar *= expf_exact;
   }
 
-  /* Update artificial viscosity */
-  p->alpha += p->force.alpha_dt * dt_therm;
-
   /* Predict the internal energy */
   p->u += p->u_dt * dt_therm;
 
@@ -617,17 +591,30 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  * @param p The particle to act upon.
  * @param xp The particle extended data to act upon.
  * @param dt_therm The time-step for this kick (for thermodynamic quantities).
+ * @param dt_grav The time-step for this kick (for gravity quantities).
+ * @param dt_hydro The time-step for this kick (for hydro quantities).
+ * @param dt_kick_corr The time-step for this kick (for gravity corrections).
+ * @param cosmo The cosmological model.
+ * @param hydro_props The constants used in the scheme
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     struct part *restrict p, struct xpart *restrict xp, float dt_therm,
-    const struct cosmology *cosmo,
-    const struct hydro_props *restrict hydro_properties) {
+    float dt_grav, float dt_hydro, float dt_kick_corr,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
 
   /* Do not decrease the energy by more than a factor of 2*/
   if (dt_therm > 0. && p->u_dt * dt_therm < -0.5f * xp->u_full) {
     p->u_dt = -0.5f * xp->u_full / dt_therm;
   }
   xp->u_full += p->u_dt * dt_therm;
+
+  /* Apply the minimal energy limit */
+  const float min_energy =
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
+  if (xp->u_full < min_energy) {
+    xp->u_full = min_energy;
+    p->u_dt = 0.f;
+  }
 
   /* Compute the sound speed */
   const float soundspeed = hydro_get_comoving_soundspeed(p);
@@ -645,10 +632,31 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
  *
  * @param p The particle to act upon
  * @param xp The extended particle to act upon
+ * @param cosmo The cosmological model.
+ * @param hydro_props The constants used in the scheme.
  */
 __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo) {}
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
+
+  /* Convert the physcial internal energy to the comoving one. */
+  /* u' = a^(3(g-1)) u */
+  const float factor = 1.f / cosmo->a_factor_internal_energy;
+  p->u *= factor;
+  xp->u_full = p->u;
+
+  /* Apply the minimal energy limit */
+  const float min_energy =
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
+  if (xp->u_full < min_energy) {
+    xp->u_full = min_energy;
+    p->u = min_energy;
+    p->u_dt = 0.f;
+  }
+
+  /* Note that unlike Minimal the pressure and sound speed cannot be calculated
+   * here because they are smoothed properties in this scheme. */
+}
 
 /**
  * @brief Initialises the particles for the first time
@@ -671,10 +679,8 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
-(??)
-(??)  /* Start out all particles with the maximal viscosity just for safety */  
-(??)  const float alpha_init = const_viscosity_alpha_max;
-  p->alpha = alpha_init;
+  /* Start out with a 'regular' AV for comparison to other schemes */
+  p->alpha = const_viscosity_alpha;
 
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
@@ -697,4 +703,4 @@ hydro_set_init_internal_energy(struct part *p, float u_init) {
   p->u = u_init;
 }
 
-#endif /* SWIFT_*_HYDRO_H */
+#endif /* SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_H */
