@@ -272,7 +272,7 @@ if plot_alpha:
     ylabel(r"${\rm{Viscosity}}~\alpha$", labelpad=0)
     # Show location of shock
     plot([x_56, x_56], [-100, 100], color="k", alpha=0.5, ls="dashed", lw=1.2)
-    ylim(0, 2)
+    ylim(0, 1)
 else:
     plot(x, S, '.', color='r', ms=4.0)
     plot(x_s, s_s, '--', color='k', alpha=0.8, lw=1.2)
