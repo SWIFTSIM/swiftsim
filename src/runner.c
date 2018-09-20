@@ -835,18 +835,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
             /* As of here, particle force variables will be set. */
 
-            /* Calculate the time-step for passing to hydro_prepare_force.
-             * This is the physical time between the start and end of the
-             * time-step without any scale-factor powers. */
-            double dt_alpha;
-            if (with_cosmology) {
-              const integertime_t ti_step = get_integer_timestep(p->time_bin);
-              dt_alpha =
-                  cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end);
-            } else {
-              dt_alpha = get_timestep(p->time_bin, time_base);
-            }
-
             /* Compute variables required for the force loop */
             hydro_prepare_force(p, xp, cosmo, dt_alpha);
 
@@ -943,17 +931,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         }
 
         /* As of here, particle force variables will be set. */
-
-        /* Calculate the time-step for passing to hydro_prepare_force.
-         * This is the physical time between the start and end of the time-step
-         * without any scale-factor powers. */
-        double dt_alpha;
-        if (with_cosmology) {
-          const integertime_t ti_step = get_integer_timestep(p->time_bin);
-          dt_alpha = cosmology_get_delta_time(cosmo, ti_end - ti_step, ti_end);
-        } else {
-          dt_alpha = get_timestep(p->time_bin, time_base);
-        }
 
         /* Compute variables required for the force loop */
         hydro_prepare_force(p, xp, cosmo, dt_alpha);
