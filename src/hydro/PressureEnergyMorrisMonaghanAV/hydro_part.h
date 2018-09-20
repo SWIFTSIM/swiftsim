@@ -163,10 +163,6 @@ struct part {
 
       /*! Balsara switch */
       float balsara;
-
-      /*! Differential of the artificial viscosity */
-      float alpha_dt;
-
     } force;
   };
 
@@ -188,4 +184,4 @@ struct part {
 
 } SWIFT_STRUCT_ALIGN;
 
-#endif /* SWIFT_*_HYDRO_PART_H */
+#endif /* SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_PART_H */

@@ -137,6 +137,15 @@ INLINE static void convert_part_vel(const struct engine* e,
   ret[2] *= cosmo->a_inv;
 }
 
+INLINE static void convert_part_potential(const struct engine* e,
+                                          const struct part* p,
+                                          const struct xpart* xp, float* ret) {
+  if (p->gpart != NULL)
+    ret[0] = gravity_get_comoving_potential(p->gpart);
+  else
+    ret[0] = 0.f;
+}
+
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -149,7 +158,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                          struct io_props* list,
                                          int* num_fields) {
 
-  *num_fields = 10;
+  *num_fields = 11;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_part("Coordinates", DOUBLE, 3,
@@ -174,6 +183,9 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                               UNIT_CONV_ENTROPY_PER_UNIT_MASS,
                                               parts, xparts, convert_S);
   list[9] = io_make_output_field("Viscosity", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, alpha);
+  list[10] = io_make_output_field_convert_part("Potential", FLOAT, 1,
+                                              UNIT_CONV_POTENTIAL, parts,
+                                              xparts, convert_part_potential);
 }
 
 /**
@@ -200,4 +212,4 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
  */
 INLINE static int writeEntropyFlag(void) { return 0; }
 
-#endif /* SWIFT_*_HYDRO_IO_H */
+#endif /* SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_IO_H */
