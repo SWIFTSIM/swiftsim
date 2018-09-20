@@ -179,42 +179,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 }
 
 /**
- * @brief Gradient interaction between two part*icles
- * 
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
- * @param hi Comoving smoothing-length of part*icle i.
- * @param hj Comoving smoothing-length of part*icle j.
- * @param pi First part*icle.
- * @param pj Second part*icle.
- * @param a Current scale factor.
- * @param H Current Hubble parameter.
- */
-
-__attribute((always_inline)) INLINE static void runner_iact_gradient(
-    float r2, const float* dx, float hi, float hj,
-    struct part *restrict pi, struct part *restrict pj,
-(??)    float a, float H) {}
-
-/**
- * @brief Gradient interaction between two part*icles (non-symmetric version)
- * 
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
- * @param hi Comoving smoothing-length of part*icle i.
- * @param hj Comoving smoothing-length of part*icle j.
- * @param pi First part*icle.
- * @param pj Second part*icle.
- * @param a Current scale factor.
- * @param H Current Hubble parameter.
- */
-
-__attribute((always_inline)) INLINE static void runner_iact_nonsym_gradient(
-    float r2, const float* dx, float hi, float hj,
-    struct part *restrict pi, struct part *restrict pj,
-(??)    float a, float H) {}
-
-/**
  * @brief Force interaction between two part*icles.
  *
  * @param r2 Comoving square distance between the two part*icles.
@@ -269,10 +233,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Compute dv dot r. */
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
                      (pi->v[1] - pj->v[1]) * dx[1] +
-                     (pi->v[2] - pj->v[2]) * dx[2] + a2_Hubble * r2;
+                     (pi->v[2] - pj->v[2]) * dx[2];
+
+  /* Includes the hubble flow term; not used for du/dt */
+  const float dvdr_Hubble = dvdr + a2_Hubble * r2;
 
   /* Are the part*icles moving towards each others ? */
-  const float omega_ij = min(dvdr, 0.f);
+  const float omega_ij = min(dvdr_Hubble, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
@@ -289,6 +256,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float alpha = 0.5f * (pi->alpha + pj->alpha);
   const float visc = -0.25f * alpha * v_sig * mu_ij *
                      (balsara_i + balsara_j) / rho_ij;
+
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -395,10 +363,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Compute dv dot r. */
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
                      (pi->v[1] - pj->v[1]) * dx[1] +
-                     (pi->v[2] - pj->v[2]) * dx[2] + a2_Hubble * r2;
+                     (pi->v[2] - pj->v[2]) * dx[2];
+
+  /* Includes the hubble flow term; not used for du/dt */
+  const float dvdr_Hubble = dvdr + a2_Hubble * r2;
 
   /* Are the part*icles moving towards each others ? */
-  const float omega_ij = min(dvdr, 0.f);
+  const float omega_ij = min(dvdr_Hubble, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
@@ -444,7 +415,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term;
 
-  /* Internal energy time derivatibe */
+  /* Internal energy time derivative */
   pi->u_dt += du_dt_i * mj;
 
   /* Get the time derivative for h. */
@@ -454,4 +425,4 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->force.v_sig = max(pi->force.v_sig, v_sig);
 }
 
-#endif /* SWIFT_*_HYDRO_IACT_H */
+#endif /* SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_IACT_H */
