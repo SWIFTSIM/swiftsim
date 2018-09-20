@@ -932,7 +932,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
 
       if (part_is_active(p, e)) {
 
-        /* Get ready for a force calculation */
+        /* Finish the gradient calculation */
         hydro_end_gradient(p);
 
         /* As of here, particle force variables will be set. */
@@ -980,8 +980,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
   const struct engine *e = r->e;
-  /* Current time for getting time-steps later on for hydro_end_density */
-  const integertime_t ti_current = e->ti_current;
   const struct space *s = e->s;
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
@@ -1003,18 +1001,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL) runner_do_ghost(r, c->progeny[k], 0);
   } else {
-    /* Get the relevant time-steps for passing to hydro_prepare_force */
-    /* Currently only the hydro kick is calculated as this is the one required
-     * for evolving the artificial viscsoity parameter alpha */
-    const integertime_t ti_old_part = c->ti_old_part;
-    double dt_kick_hydro;
-
-    if (e->policy & engine_policy_cosmology) {
-      dt_kick_hydro =
-          cosmology_get_hydro_kick_factor(e->cosmology, ti_old_part, ti_current);
-    } else {
-      dt_kick_hydro = (ti_current - ti_old_part) * e->time_base;
-    }
 
     /* Init the list of active particles that have to be updated. */
     int *pid = NULL;
@@ -1180,7 +1166,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           }
         }
 
-(??)/* We now have a particle whose smoothing length has converged */
           /* We now have a particle whose smoothing length has converged */
 
 #ifdef EXTRA_HYDRO_LOOP
