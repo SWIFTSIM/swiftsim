@@ -44,4 +44,4 @@ __attribute__((always_inline)) INLINE static void hydro_debug_particle(
       p->density.pressure_bar_dh, p->pressure_bar, p->time_bin, p->alpha);
 }
 
-#endif /* SWIFT_*L_HYDRO_DEBUG_H */
+#endif /* SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_DEBUG_H */
