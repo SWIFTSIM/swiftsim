@@ -29,7 +29,7 @@
   2.0f /* Values taken from (Price,2004), not used in legacy gadget mode */
        /* Also unused in the Monaghan & Morris tratment */
 #define const_viscosity_length \
-  0.1f /* Value taken from (Morris&Monaghan, 1997), not used in legacy gadget mode */
+  0.2f /* Value taken from (Morris&Monaghan, 1997), not used in legacy gadget mode */
        /* This is "ell" in the Morris & Monaghan 1997 paper */
 
 /* SPH Thermal conductivity constants. */
