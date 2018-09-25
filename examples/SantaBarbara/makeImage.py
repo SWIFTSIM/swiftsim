@@ -109,18 +109,29 @@ def generate_views(data: SimulationData, res=2048) -> Tuple[np.ndarray]:
         plot=False,
         xsize=res,
         ysize=res,
+        logscale=False,
         p=0,
         np=48,
     )
     zoomed_res = (res * 6) // 10
+    mask = np.logical_and(
+        np.logical_and(
+            data.coordinates[0] > (data.boxsize/2-4-20),
+            data.coordinates[0] < (data.boxsize/2+6-20)
+        ),
+        np.logical_and(
+            data.coordinates[1] > (data.boxsize/2-3.5-20),
+            data.coordinates[1] < (data.boxsize/2+6.5-20)
+        )
+    )
     qv_zoomed = QuickView(
-        data.coordinates,
-        data.masses,
+        data.coordinates.T[mask].T,
+        data.masses[mask],
         r="infinity",
         plot=False,
         xsize=zoomed_res,
         ysize=zoomed_res,
-        extent=[-4 - 20, 6 - 20, -3.5 - 20, 6.5 - 20],
+        logscale=False,
         np=48,
     )
 
@@ -140,7 +151,12 @@ def create_plot(data: SimulationData, res=2048, cmap="viridis", text_color="whit
     ax.axis("off")
     fig.subplots_adjust(0, 0, 1, 1)
 
-    ax.imshow(img_all, origin="lower", extent=[-1, 1, -1, 1], cmap=cmap)
+    ax.imshow(
+        np.log10(img_all + np.min(img_all[img_all != 0])),
+        origin="lower",
+        extent=[-1, 1, -1, 1],
+        cmap=cmap,
+    )
 
     lower_left = [(-24 / (0.5 * data.boxsize)), (-23.5 / (0.5 * data.boxsize))]
     zoom_rect = Rectangle(
@@ -233,8 +249,6 @@ if __name__ == "__main__":
     except IndexError:
         res = 2048
 
-    
-
     # Read in the data from file
 
     try:
@@ -248,4 +262,7 @@ if __name__ == "__main__":
 
     fig, ax = create_plot(data, res, cmap, text_color)
 
-    fig.savefig(f"SantaBarbara_{data.sph_name[:8]}_{cmap}_PartType{part_type}_res{res}.png", dpi=res // 8)
+    fig.savefig(
+        f"SantaBarbara_{data.sph_name[:8]}_{cmap}_PartType{part_type}_res{res}.png",
+        dpi=res // 8,
+    )
