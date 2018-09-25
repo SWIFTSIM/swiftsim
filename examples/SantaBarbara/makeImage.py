@@ -59,7 +59,7 @@ def read_data_from_file(filename: str, part_type=0) -> SimulationData:
 
         sph_name = file["HydroScheme"].attrs["Scheme"].decode("utf-8")
         unit_mass = (
-            float(file["Units"].attrs["Unit mass in cgs (U_M)"]) / 2e30
+            float(file["Units"].attrs["Unit mass in cgs (U_M)"]) / 2e33
         )  # in M_sun
 
         dark_matter_mass = float(file["PartType1/Masses"][0]) * unit_mass
