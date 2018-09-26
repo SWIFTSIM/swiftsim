@@ -14,8 +14,12 @@ import h5py
 from collections import namedtuple
 from typing import Tuple
 
+import makeImage
+
 # Simulation data
-SimulationData = namedtuple("SimulationData", ["gas", "dark_matter", "metadata"])
+SimulationParticleData = namedtuple(
+    "SimulationData", ["gas", "dark_matter", "metadata"]
+)
 ParticleData = namedtuple(
     "ParticleData", ["coordinates", "radii", "masses", "densities", "energies"]
 )
@@ -43,7 +47,7 @@ def get_energies(handle: h5py.File):
     return u
 
 
-def load_data(filename: str, center: np.array) -> SimulationData:
+def load_data(filename: str, center: np.array) -> SimulationParticleData:
     """
     Loads the relevant data for making the profiles, as well as some metadata
     for the plot.
@@ -78,7 +82,7 @@ def load_data(filename: str, center: np.array) -> SimulationData:
             hydroscheme=dict(file["HydroScheme"].attrs),
         )
 
-        simulation_data = SimulationData(
+        simulation_data = SimulationParticleData(
             gas=gas_data, dark_matter=dm_data, metadata=metadata
         )
 
@@ -171,7 +175,9 @@ def T(u, metadata: MetaData):
     return ret
 
 
-def get_radial_temperature_profile(data: SimulationData, bins: int) -> np.ndarray:
+def get_radial_temperature_profile(
+    data: SimulationParticleData, bins: int
+) -> np.ndarray:
     """
     Gets the radial gas density profile, after generating similar bins to those
     used in similar works.
@@ -189,7 +195,7 @@ def get_radial_temperature_profile(data: SimulationData, bins: int) -> np.ndarra
     return histogram / counts  # need to get mean value in bin
 
 
-def get_radial_entropy_profile(data: SimulationData, bins: int) -> np.ndarray:
+def get_radial_entropy_profile(data: SimulationParticleData, bins: int) -> np.ndarray:
     """
     Gets the radial gas density profile, after generating similar bins to those
     used in similar works.
@@ -213,13 +219,14 @@ def get_radial_entropy_profile(data: SimulationData, bins: int) -> np.ndarray:
     return histogram / counts  # need to get mean value in bin
 
 
-def create_plot(data: SimulationData, bins: int):
+def create_plot(
+    data: SimulationParticleData, bins: int, create_images: bool, image_data: np.ndarray
+):
     """
     Creates the figure and axes objects and plots the data on them.
     """
 
-    fig, axes = plt.subplots(2, 2, figsize=(8, 8), sharex=True)
-    axes = axes.flatten()
+    fig, axes = plt.subplots(2, 3, figsize=(12, 8))
 
     gas_density, bin_edges = get_radial_density_profile(
         data.gas.radii, data.gas.masses, bins=bins
@@ -232,24 +239,67 @@ def create_plot(data: SimulationData, bins: int):
 
     bin_centers = [0.5 * (x + y) for x, y in zip(bin_edges[:-1], bin_edges[1:])]
 
-    axes[0].loglog()
-    axes[0].scatter(bin_centers, gas_density)
-    axes[0].set_ylabel(r"$\rho_{\rm gas} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
-    axes[0].set_xlabel(r"R [Mpc]")
+    axes[0][0].loglog()
+    axes[0][0].scatter(bin_centers, gas_density)
+    axes[0][0].set_ylabel(r"$\rho_{\rm gas} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
+    axes[0][0].set_xlabel(r"R [Mpc]")
 
-    axes[1].scatter(bin_centers, entropy / 10000)
-    axes[1].set_ylabel(r"Entropy $A(R)$ [Arbirtary]")
-    axes[1].set_xlabel(r"R [Mpc]")
+    axes[0][1].scatter(bin_centers, entropy / 10000)
+    axes[0][1].set_ylabel(r"Entropy $A(R)$ [Arbirtary]")
+    axes[0][1].set_xlabel(r"R [Mpc]")
 
-    axes[2].loglog()
-    axes[2].scatter(bin_centers, temperature)
-    axes[2].set_ylabel(r"$T_{\rm gas} (R)$ [K]")
-    axes[2].set_xlabel(r"R [Mpc]")
+    if create_images:
+        axes[0][2].imshow(np.log10(image_data))
+        axes[0][2].axis("off")
 
-    axes[3].loglog()
-    axes[3].scatter(bin_centers, dm_density)
-    axes[3].set_ylabel(r"$\rho_{\rm DM} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
-    axes[3].set_xlabel(r"R [Mpc]")
+    axes[1][0].loglog()
+    axes[1][0].scatter(bin_centers, temperature)
+    axes[1][0].set_ylabel(r"$T_{\rm gas} (R)$ [K]")
+    axes[1][0].set_xlabel(r"R [Mpc]")
+
+    axes[1][1].loglog()
+    axes[1][1].scatter(bin_centers, dm_density)
+    axes[1][1].set_ylabel(r"$\rho_{\rm DM} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
+    axes[1][1].set_xlabel(r"R [Mpc]")
+
+    axes[1][2].text(
+        -0.49,
+        0.9,
+        "Santa Barbara with $\\gamma={:2f}$ in 3D".format(data.metadata.hydroscheme['Adiabatic index'][0]),
+    )
+
+    scheme_list = data.metadata.hydroscheme["Scheme"].decode("utf-8").split(" ")
+    i = 4
+    while i < len(scheme_list):
+        scheme_list.insert(i, "\n")
+        i += (4+1)
+    wrapped_scheme = " ".join(scheme_list)
+
+    axes[1][2].text(-0.49, 0.8, wrapped_scheme)
+
+    axes[1][2].plot([-0.49, 0.1], [0.62, 0.62], "k-", lw=1)
+
+    axes[1][2].text(
+        -0.49, 0.5, f"SWIFT {data.metadata.code['Git Revision'].decode('utf-8')}"
+    )
+
+    axes[1][2].text(
+        -0.49,
+        0.3,
+        data.metadata.hydroscheme["Kernel function"].decode("utf-8"),
+        fontsize=10,
+    )
+    axes[1][2].text(
+        -0.49,
+        0.2,
+        "{:2f} neighbours ($\\eta={:3f}$)".format(
+            data.metadata.hydroscheme["Kernel target N_ngb"][0],
+            data.metadata.hydroscheme["Kernel eta"][0],
+        ),
+    )
+    axes[1][2].set_xlim(-0.5, 0.5)
+    axes[1][2].set_ylim(0, 1)
+    axes[1][2].axis("off")
 
     fig.tight_layout()
 
@@ -261,6 +311,7 @@ if __name__ == "__main__":
 
     filename = "santabarbara_{:04d}.hdf5".format(int(sys.argv[1]))
     catalogue_filename = f"{sys.argv[2]}/santabarbara.properties"
+    create_images = True
 
     try:
         bins = int(sys.argv[3])
@@ -270,6 +321,18 @@ if __name__ == "__main__":
     halo_center = get_halo_center(catalogue_filename)
     simulation_data = load_data(filename, halo_center)
 
-    fig, _ = create_plot(data=simulation_data, bins=bins)
+    if create_images:
+        data = makeImage.read_data_from_file(filename, part_type=0)
+        _, image_data = makeImage.generate_views(data)
+        del data
+    else:
+        image_data = None
+
+    fig, _ = create_plot(
+        data=simulation_data,
+        bins=bins,
+        create_images=create_images,
+        image_data=image_data,
+    )
 
     fig.savefig("santabarbara.png", dpi=300)
