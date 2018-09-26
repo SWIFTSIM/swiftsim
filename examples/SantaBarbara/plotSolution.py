@@ -16,6 +16,7 @@ from typing import Tuple
 
 try:
     import makeImage
+
     create_images = True
 except:
     create_images = False
@@ -233,17 +234,21 @@ def nfw(R, halo_data: HaloData):
     """
 
     R_s = halo_data.Rvir / halo_data.c
-    rho_0 = (4 * np.pi * R_s**3) / (halo_data.Mvir)
-    rho_0 *= (np.log(1 + halo_data.c) - halo_data.c / (halo_data.c + 1))
+    rho_0 = (4 * np.pi * R_s ** 3) / (halo_data.Mvir)
+    rho_0 *= np.log(1 + halo_data.c) - halo_data.c / (halo_data.c + 1)
     rho_0 = 1.0 / rho_0
 
     ratio = R / R_s
 
-    return rho_0 / (ratio * (1 + ratio)**2)
+    return rho_0 / (ratio * (1 + ratio) ** 2)
 
 
 def create_plot(
-    data: SimulationParticleData, halo_data: HaloData, bins: int, create_images: bool, image_data: np.ndarray
+    data: SimulationParticleData,
+    halo_data: HaloData,
+    bins: int,
+    create_images: bool,
+    image_data: np.ndarray,
 ):
     """
     Creates the figure and axes objects and plots the data on them.
@@ -261,11 +266,11 @@ def create_plot(
     entropy = get_radial_entropy_profile(data, bins=bins)
 
     bin_centers = [0.5 * (x + y) for x, y in zip(bin_edges[:-1], bin_edges[1:])]
-    nfw_R = np.logspace(-2, 1, bins*100)
+    nfw_R = np.logspace(-2, 1, bins * 100)
     nfw_rho = nfw(nfw_R, halo_data)
 
     axes[0][0].loglog()
-    axes[0][0].plot(nfw_R, 0.1*nfw_rho, ls="dashed", color="grey")
+    axes[0][0].plot(nfw_R, 0.1 * nfw_rho, ls="dashed", color="grey")
     axes[0][0].scatter(bin_centers, gas_density)
     axes[0][0].set_ylabel(r"$\rho_{\rm gas} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
     axes[0][0].set_xlabel(r"R [Mpc]")
@@ -273,13 +278,15 @@ def create_plot(
 
     axes[0][1].semilogx()
     axes[0][1].scatter(bin_centers, np.log(entropy))
-    axes[0][1].set_ylabel(r"Entropy $\log(A$ [K ($10^{10}$ M$_\odot$)$^{2/3}$ Mpc$^{-2}$])")
+    axes[0][1].set_ylabel(
+        r"Entropy $\log(A$ [K ($10^{10}$ M$_\odot$)$^{2/3}$ Mpc$^{-2}$])"
+    )
     axes[0][1].set_xlabel(r"R [Mpc]")
     axes[0][1].set_xlim(0.01, 10)
 
     if create_images:
         axes[0][2].imshow(np.log10(image_data))
-        
+
     axes[0][2].set_xticks([])
     axes[0][2].set_yticks([])
 
@@ -291,7 +298,7 @@ def create_plot(
 
     axes[1][1].loglog()
     axes[1][1].scatter(bin_centers, dm_density)
-    axes[1][1].plot(nfw_R, 0.9*nfw_rho, ls="dashed", color="grey")
+    axes[1][1].plot(nfw_R, 0.9 * nfw_rho, ls="dashed", color="grey")
     axes[1][1].set_ylabel(r"$\rho_{\rm DM} (R)$ [$10^{10}$ M$_\odot$ Mpc$^{-3}$]")
     axes[1][1].set_xlabel(r"R [Mpc]")
     axes[1][1].set_xlim(0.01, 10)
@@ -302,20 +309,22 @@ def create_plot(
             halo_data.c, halo_data.Rvir, halo_data.Mvir
         ),
         va="bottom",
-        ha="left"
+        ha="left",
     )
 
     axes[1][2].text(
         -0.49,
         0.7,
-        "Santa Barbara with $\\gamma={:2.2f}$ in 3D".format(data.metadata.hydroscheme['Adiabatic index'][0]),
+        "Santa Barbara with $\\gamma={:2.2f}$ in 3D".format(
+            data.metadata.hydroscheme["Adiabatic index"][0]
+        ),
     )
 
     scheme_list = data.metadata.hydroscheme["Scheme"].decode("utf-8").split(" ")
     i = 4
     while i < len(scheme_list):
         scheme_list.insert(i, "\n")
-        i += (4+1)
+        i += 4 + 1
     wrapped_scheme = " ".join(scheme_list)
     wrapped_scheme.replace("\n ", "\n")
 
@@ -380,4 +389,3 @@ if __name__ == "__main__":
     )
 
     fig.savefig("santabarbara.png", dpi=300)
-
