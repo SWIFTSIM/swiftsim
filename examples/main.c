@@ -1090,13 +1090,13 @@ int main(int argc, char *argv[]) {
                   e.sched.tasks[l].rid, e.sched.tasks[l].type,
                   e.sched.tasks[l].subtype, (e.sched.tasks[l].cj == NULL),
                   e.sched.tasks[l].tic, e.sched.tasks[l].toc,
-                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->count
+                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->hydro.count
                                                 : 0,
-                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->count
+                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->hydro.count
                                                 : 0,
-                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->gcount
+                  (e.sched.tasks[l].ci != NULL) ? e.sched.tasks[l].ci->grav.gcount
                                                 : 0,
-                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->gcount
+                  (e.sched.tasks[l].cj != NULL) ? e.sched.tasks[l].cj->grav.gcount
                                                 : 0,
                   e.sched.tasks[l].flags, e.sched.tasks[l].sid);
             }
@@ -1126,10 +1126,10 @@ int main(int argc, char *argv[]) {
               e.sched.tasks[l].rid, e.sched.tasks[l].type,
               e.sched.tasks[l].subtype, (e.sched.tasks[l].cj == NULL),
               e.sched.tasks[l].tic, e.sched.tasks[l].toc,
-              (e.sched.tasks[l].ci == NULL) ? 0 : e.sched.tasks[l].ci->count,
-              (e.sched.tasks[l].cj == NULL) ? 0 : e.sched.tasks[l].cj->count,
-              (e.sched.tasks[l].ci == NULL) ? 0 : e.sched.tasks[l].ci->gcount,
-              (e.sched.tasks[l].cj == NULL) ? 0 : e.sched.tasks[l].cj->gcount,
+              (e.sched.tasks[l].ci == NULL) ? 0 : e.sched.tasks[l].ci->hydro.count,
+              (e.sched.tasks[l].cj == NULL) ? 0 : e.sched.tasks[l].cj->hydro.count,
+              (e.sched.tasks[l].ci == NULL) ? 0 : e.sched.tasks[l].ci->grav.gcount,
+              (e.sched.tasks[l].cj == NULL) ? 0 : e.sched.tasks[l].cj->grav.gcount,
               e.sched.tasks[l].sid);
         }
       }
