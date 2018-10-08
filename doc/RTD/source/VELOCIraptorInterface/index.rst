@@ -85,7 +85,11 @@ Besides the ``.catalog_parttypes`` file, there is also a ``.catalog_parttypes.un
 Properties file
 ~~~~~~~~~~~~~~~
 The Fourth file is the ``.properties`` file, this file contains mainly physical usefull information of the corresponding halos. Some usefull physical parameters are:
-- 
+- ``Mass_200crit``: The mass of a halo with an overdensity on average of :math:`\Delta=200` based on the critical density of the Universe.
+- ``Mass_200mean``: The mass of a halo with an overdensity on average of :math:`\Delta=200` based on the mean density of the Universe.
+- ``Mass_FOF``: The friends-of-friends mass of the halos.
+- ``Mvir``: The viral mass of the halos.
+- ``Other parameters``: Soon
 
 
 
