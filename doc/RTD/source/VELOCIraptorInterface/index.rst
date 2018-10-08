@@ -11,6 +11,9 @@ After this we will explain what the outputs of VELOCIraptor will be.
 Configuring SWIFT
 -----------------
 
+In the following three paragraphs we will explain how to setup VELOCIraptor, how to compile it and how to compile SWIFT with VELOCIraptor. 
+
+
 Setting up VELOCIraptor
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -26,9 +29,10 @@ Currently the best version that works with SWIFT is the swift-interface branch o
 
 To get the default that works with SWIFT simply copy the SWIFT template file in the ``Makefile.config``::
 
+  cd stf
   cp Makefile.config.SWIFT-template Makefile.config
 
-Depending on your compiler you want to change the first 20 lines of your ``Makefile.config`` to work with your compiler and either have MPI on or off. 
+Depending on your compiler you want to change the first 20 lines of your ``Makefile.config`` to work with your compiler and whether you want to use MPI or not. 
 
 
 Compiling VELOCIraptor
@@ -36,7 +40,8 @@ Compiling VELOCIraptor
 
 The next part will be to compile VELOCIraptor, this can simply be done by using::
 
-  make 
+  make lib
+  make libstf
 
 After the compilation of your code, there is an additional folder created in the ``VELOCIraptor-stf/stf`` directory called ``lib`` this directory has the libary of VELOCIraptor and is required to run SWIFT with VELOCIraptor.
 
@@ -53,7 +58,7 @@ In which ``./autogen.sh`` only needs to be run once after the code is cloned fro
   cd examples/SmallCosmoVolume 
   ../swift -c -s -G -x -t 8 small_cosmo_volume.yml
 
-In which ther is an additional ``-x`` option which activates the VELOCIraptor interface. 
+In which there is an additional ``-x`` option which activates the VELOCIraptor interface. 
 
 
 VELOCIraptor Output
@@ -80,7 +85,7 @@ The second file that is produced by VELOCIraptor is the ``.catalog_particles`` f
 + The ``Num_of_particles_in_groups`` and ``Num_of_particles_in_groups`` parameter: Gives the total number of particles in the file or which are found in the halo. 
 + The ``Particle_IDs``: The list of particles as sorted by halo, in which halo the individual particles are present can be found by using the ``.catalog_group`` file and the corresponding ``Offset`` list. 
 
-Besides the ``.catalog_particles`` file, there is also a ``.catalog_particles.unbound`` file, this file contains the same information but only for the unbound particles, a particle can only be present in one of these two lists. <!-- check -->
+Besides the ``.catalog_particles`` file, there is also a ``.catalog_particles.unbound`` file, this file contains the same information but only for the unbound particles, a particle can only be present in one of these two lists. 
 
 Catalog_parttypes file
 ~~~~~~~~~~~~~~~~~~~~~~
