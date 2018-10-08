@@ -4,7 +4,7 @@
 VELOCIraptor Interface
 ======================
 
-In SWIFT it is possible to run a cosmological simulation and at the same time do an on the fly halo finder at specific predefined intervals. 
+In SWIFT it is possible to run a cosmological simulation and at the same time do on the fly halo finding at specific predefined intervals. 
 Because of this we will explain on this page how we can set up an simulation using VELOCIraptor (formerly STructure Finder). 
 After this we will explain what the outputs of VELOCIraptor will be.
 
@@ -38,7 +38,7 @@ Depending on your compiler you want to change the first 20 lines of your ``Makef
 Compiling VELOCIraptor
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The next part will be to compile VELOCIraptor, this can simply be done by using::
+After we downloaded the files and made a configuration file we can compile VELOCIraptor as follows::
 
   make lib
   make libstf
@@ -53,10 +53,21 @@ The next part is compiling SWIFT with VELOCIraptor and assumes you already downl
   ./configure --with-velociraptor=/path/to/VELOCIraptor-STF/stf/lib
   make 
 
-In which ``./autogen.sh`` only needs to be run once after the code is cloned from the GitLab_, and ``/path/to/`` is the path to the ``VELOCIraptor-STF`` directory on your machine. In general ``./configure`` can be run with other options as desired. After this we can run SWIFT with VELOCIraptor, in the case of the Small Cosmological Volume example this will can be run as::
+In which ``./autogen.sh`` only needs to be run once after the code is cloned from the GitLab_, and ``/path/to/`` is the path to the ``VELOCIraptor-STF`` directory on your machine. In general ``./configure`` can be run with other options as desired. After this we can run SWIFT with VELOCIraptor, but for this we first need to add several lines to the yaml file of our simulation::
 
-  cd examples/SmallCosmoVolume 
-  ../swift -c -s -G -x -t 8 small_cosmo_volume.yml
+  
+  #structure finding options
+  StructureFinding:
+    config_file_name:     stf_input_6dfof_dmonly_sub.cfg
+    basename:             ./stf
+    output_time_format:   1
+    scale_factor_first:   0.02
+    delta_time:           1.02
+
+In which we specify the ``.cfg`` file that is used by VELOCIraptor. In the case of the Small Cosmological Volume DMO example we can run a simulation with halo finder as::
+
+  cd examples/SmallCosmoVolume_DM 
+  ../swift -c -s -G -x -t 8 small_cosmo_volume_dm.yml
 
 In which there is an additional ``-x`` option which activates the VELOCIraptor interface. 
 
@@ -99,7 +110,7 @@ Besides the ``.catalog_parttypes`` file, there is also a ``.catalog_parttypes.un
 
 Properties file
 ~~~~~~~~~~~~~~~
-The Fourth file is the ``.properties`` file, this file contains mainly physical usefull information of the corresponding halos. Some usefull physical parameters are:
+The Fourth file is the ``.properties`` file, this file contains mainly physical useful information of the corresponding halos. Some usefull physical parameters are:
 
 + ``Mass_200crit``: The mass of a halo with an overdensity on average of :math:`\Delta=200` based on the critical density of the Universe.
 + ``Mass_200mean``: The mass of a halo with an overdensity on average of :math:`\Delta=200` based on the mean density of the Universe.
