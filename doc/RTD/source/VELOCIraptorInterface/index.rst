@@ -15,14 +15,17 @@ Setting up VELOCIraptor
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Before we can run SWIFT with VELOCIraptor we first need to download VELOCIraptor. This can be done by cloning the repository on GitHub_::
+
   git clone https://github.com/pelahi/VELOCIraptor-STF
 
 Currently the best version that works with SWIFT is the swift-interface branch of VELOCIraptor, to get this branch use::
+
   cd VELOCIraptor-STF
   git fetch
   git checkout swift-interface
 
 To get the default that works with SWIFT simply copy the SWIFT template file in the ``Makefile.config``::
+
   cp Makefile.config.SWIFT-template Makefile.config
 
 Depending on your compiler you want to change the first 20 lines of your ``Makefile.config`` to work with your compiler and either have MPI on or off. 
@@ -32,6 +35,7 @@ Compiling VELOCIraptor
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The next part will be to compile VELOCIraptor, this can simply be done by using::
+
   make 
 
 After the compilation of your code, there is an additional folder created in the ``VELOCIraptor-stf/stf`` directory called ``lib`` this directory has the libary of VELOCIraptor and is required to run SWIFT with VELOCIraptor.
@@ -39,13 +43,16 @@ After the compilation of your code, there is an additional folder created in the
 Compiling SWIFT
 ~~~~~~~~~~~~~~~
 The next part is compiling SWIFT with VELOCIraptor and assumes you already downloaded SWIFT from the GitLab_, this can be done by running::
+
   ./autogen.sh
   ./configure --with-velociraptor=/path/to/VELOCIraptor-STF/stf/lib
   make 
 
 In which ``./autogen.sh`` only needs to be run once after the code is cloned from the GitLab_, and ``/path/to/`` is the path to the ``VELOCIraptor-STF`` directory on your machine. In general ``./configure`` can be run with other options as desired. After this we can run SWIFT with VELOCIraptor, in the case of the Small Cosmological Volume example this will can be run as::
+
   cd examples/SmallCosmoVolume 
   ../swift -c -s -G -x -t 8 small_cosmo_volume.yml
+
 In which ther is an additional ``-x`` option which activates the VELOCIraptor interface. 
 
 
