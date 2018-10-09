@@ -88,7 +88,7 @@ struct hydro_props {
   struct viscosity {
     /*! For the fixed, simple case. Also used to set the initial AV
         coefficient for variable schemes. */
-    float fixed_alpha;
+    float alpha_fixed;
 
     /*! Artificial viscosity (max) for the variable case (e.g. M&M) */
     float alpha_max;

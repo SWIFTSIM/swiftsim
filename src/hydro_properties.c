@@ -120,8 +120,8 @@ void hydro_props_init(struct hydro_props *p,
       params, "SPH:H_mass_fraction", default_H_fraction);
 
   /* Read the artificial viscosity parameters from the file, if they exist */
-  p->viscosity.fixed_alpha = parser_get_opt_param_float(
-    params, "SPH:Viscosity:fixed_alpha", hydro_props_default_viscosity_alpha
+  p->viscosity.alpha = parser_get_opt_param_float(
+    params, "SPH:Viscosity:alpha", hydro_props_default_viscosity_alpha
   );
   
   p->viscosity.alpha_max = parser_get_opt_param_float(
@@ -188,9 +188,9 @@ void hydro_props_print(const struct hydro_props *p) {
 
   message("Hydrodynamic integration: CFL parameter: %.4f.", p->CFL_condition);
 
-  message("Artificial viscosity parameters set to fixed: %.3f, max: %.3f, "
+  message("Artificial viscosity parameters set to alpha: %.3f, max: %.3f, "
           "min: %.3f, length: %.3f.",
-          p->viscosity.fixed_alpha, p->viscosity.alpha_max,
+          p->viscosity.alpha, p->viscosity.alpha_max,
           p->viscosity.alpha_min, p->viscosity.length);
 
   message(
