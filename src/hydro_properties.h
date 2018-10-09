@@ -85,7 +85,7 @@ struct hydro_props {
   float hydrogen_ionization_temperature;
 
   /*! Artificial viscosity parameters */
-  struct viscosity {
+  struct {
     /*! For the fixed, simple case. Also used to set the initial AV
         coefficient for variable schemes. */
     float alpha;
@@ -98,7 +98,7 @@ struct hydro_props {
 
     /*! The decay length of the artificial viscosity (used in M&M, etc.) */
     float length;
-  }
+  } viscosity;
 };
 
 void hydro_props_print(const struct hydro_props *p);

@@ -936,6 +936,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct space *s = e->s;
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
+  const struct hydro_props *hydro_props = e->hydro_properties;
   const struct chemistry_global_data *chemistry = e->chemistry;
   const float hydro_h_max = e->hydro_properties->h_max;
   const float eps = e->hydro_properties->h_tolerance;

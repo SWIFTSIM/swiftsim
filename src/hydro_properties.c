@@ -121,19 +121,19 @@ void hydro_props_init(struct hydro_props *p,
 
   /* Read the artificial viscosity parameters from the file, if they exist */
   p->viscosity.alpha = parser_get_opt_param_float(
-    params, "SPH:Viscosity:alpha", hydro_props_default_viscosity_alpha
+    params, "SPH:viscosity_alpha", hydro_props_default_viscosity_alpha
   );
   
   p->viscosity.alpha_max = parser_get_opt_param_float(
-    params, "SPH:Viscosity:alpha_max", hydro_props_default_viscosity_alpha_max
+    params, "SPH:viscosity_alpha_max", hydro_props_default_viscosity_alpha_max
   );
 
   p->viscosity.alpha_min = parser_get_opt_param_float(
-    params, "SPH:Viscosity:alpha_min", hydro_props_default_viscosity_alpha_min
+    params, "SPH:viscosity_alpha_min", hydro_props_default_viscosity_alpha_min
   );
 
   p->viscosity.length = parser_get_opt_param_float(
-    params, "SPH:Viscosity:length", hydro_props_default_viscosity_length
+    params, "SPH:viscosity_length", hydro_props_default_viscosity_length
   );
 
   /* Compute the initial energy (Note the temp. read is in internal units) */
@@ -251,14 +251,12 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
                        p->hydrogen_mass_fraction);
   io_write_attribute_f(h_grpsph, "Hydrogen ionization transition temperature",
                        p->hydrogen_ionization_temperature);
-  io_write_attribute_f(h_grpsph, "Alpha viscosity", hydro_props->viscosity.alpha);
+  io_write_attribute_f(h_grpsph, "Alpha viscosity", p->viscosity.alpha);
   io_write_attribute_f(h_grpsph, "Alpha viscosity (max)",
-                       hydro_props->viscosity.alpha_max);
+                       p->viscosity.alpha_max);
   io_write_attribute_f(h_grpsph, "Alpha viscosity (min)",
-                       hydro_props->viscosity.alpha_min);
-  io_write_attribute_f(h_grpsph, "Viscosity decay length",
-                       hydro_props->viscosity.length);
-
+                       p->viscosity.alpha_min);
+  io_write_attribute_f(h_grpsph, "Viscosity decay length", p->viscosity.length);
 }
 #endif
 
