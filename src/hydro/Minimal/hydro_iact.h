@@ -186,9 +186,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float cj = pj->force.soundspeed;
   const float v_sig = ci + cj - const_viscosity_beta * mu_ij;
 
+  /* Grab balsara switches */
+  const float balsara_i = pi->force.balsara;
+  const float balsara_j = pj->force.balsara;
+
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
+  const float visc = -0.25f * v_sig * (balsara_i + balsara_j) * mu_ij / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -302,9 +306,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float cj = pj->force.soundspeed;
   const float v_sig = ci + cj - const_viscosity_beta * mu_ij;
 
+  /* Grab balsara switches */
+  const float balsara_i = pi->force.balsara;
+  const float balsara_j = pj->force.balsara;
+
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.5f * const_viscosity_alpha * v_sig * mu_ij / rho_ij;
+  const float visc = -0.25f * v_sig * (balsara_i + balsara_j) * mu_ij / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
