@@ -115,4 +115,7 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p);
 void hydro_props_struct_dump(const struct hydro_props *p, FILE *stream);
 void hydro_props_struct_restore(const struct hydro_props *p, FILE *stream);
 
+/* Setup for tests */
+void hydro_props_init_no_hydro(struct hydro_props *p);
+
 #endif /* SWIFT_HYDRO_PROPERTIES */

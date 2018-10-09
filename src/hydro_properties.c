@@ -261,6 +261,43 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
 #endif
 
 /**
+ * @brief Initialises a hydro_props struct with somewhat useful values for
+ *        the automated test suite. This is not intended for production use,
+ *        but rather to fill for the purposes of mocking.
+ * 
+ * @param p the struct
+ */
+void hydro_props_init_no_hydro(struct hydro_props *p) {
+  p->eta_neighbours = 1.2348;
+  p->h_tolerance = hydro_props_default_h_tolerance;
+  p->target_neighbours = pow_dimension(p->eta_neighbours) * kernel_norm;
+  const float delta_eta = p->eta_neighbours * (1.f + p->h_tolerance);
+  p->delta_neighbours =
+      (pow_dimension(delta_eta) - pow_dimension(p->eta_neighbours)) *
+      kernel_norm;
+  p->h_max = hydro_props_default_h_max;
+  p->max_smoothing_iterations = hydro_props_default_max_iterations;
+  p->CFL_condition = 0.1;
+  p->log_max_h_change = logf(powf(1.4, hydro_dimension_inv));
+  
+  /* These values are inconsistent and in a production run would probably lead
+     to a crash. Again, this function is intended for mocking use in unit tests
+     and is _not_ to be used otherwise! */
+  p->minimal_temperature = hydro_props_default_min_temp;
+  p->minimal_internal_energy = 0.f;
+  p->initial_temperature = hydro_props_default_init_temp;
+  p->initial_internal_energy = 0.f;
+
+  p->hydrogen_mass_fraction = 0.755;
+  p->hydrogen_ionization_temperature = hydro_props_default_H_ionization_temperature;
+
+  p->viscosity.alpha = hydro_props_default_viscosity_alpha;
+  p->viscosity.alpha_max= hydro_props_default_viscosity_alpha_max;
+  p->viscosity.alpha_min= hydro_props_default_viscosity_alpha_min;
+  p->viscosity.length= hydro_props_default_viscosity_length;
+}
+
+/**
  * @brief Write a hydro_props struct to the given FILE as a stream of bytes.
  *
  * @param p the struct
