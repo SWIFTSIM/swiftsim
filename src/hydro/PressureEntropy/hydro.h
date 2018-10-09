@@ -505,7 +505,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the Balsara switch */
   const float balsara =
-      abs_div_v / (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
+      hydro_props->viscosity.alpha * abs_div_v /
+      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_bar_inv = 1.f / p->rho_bar;

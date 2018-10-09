@@ -497,8 +497,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Now construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.25f * const_viscosity_alpha * v_sig * mu_ij *
-                     (balsara_i + balsara_j) / rho_ij;
+  const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Now, convolve with the kernel */
   const float visc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -620,8 +619,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Now construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.25f * const_viscosity_alpha * v_sig * mu_ij *
-                     (balsara_i + balsara_j) / rho_ij;
+  const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Now, convolve with the kernel */
   const float visc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -654,8 +652,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 }
 
 #ifdef WITH_VECTORIZATION
+/* This is done for old compatibility reasons; the alpha parameter is now passed
+   as a runtime parameter and included in the balsara switch; JAMES: Please check
+   this. */
 static const vector const_viscosity_alpha_fac =
-    FILL_VEC(-0.25f * const_viscosity_alpha);
+    FILL_VEC(-0.25f);
 
 /**
  * @brief Force interaction computed using 1 vector

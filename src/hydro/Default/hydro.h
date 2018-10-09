@@ -494,6 +494,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   p->force.balsara =
       normDiv_v / (normDiv_v + normRot_v + 0.0001f * fac_mu * fc * h_inv);
 
+  /* Set the AV property */
+  p->alpha = hydro_props->viscosity.alpha;
+
   /* Viscosity parameter decay time */
   /* const float tau = h / (2.f * const_viscosity_length * p->force.soundspeed);
    */
