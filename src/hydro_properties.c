@@ -40,6 +40,13 @@
 #define hydro_props_default_init_temp 0.f
 #define hydro_props_default_min_temp 0.f
 #define hydro_props_default_H_ionization_temperature 1e4
+#define hydro_props_default_viscosity_alpha 0.8f
+#define hydro_props_default_viscosity_alpha_min \
+  0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
+#define hydro_props_default_viscosity_alpha_max \
+  2.0f /* Values taken from (Price,2004), not used in legacy gadget mode */
+#define hydro_props_default_viscosity_length \
+  0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
 
 /**
  * @brief Initialize the global properties of the hydro scheme.
@@ -112,6 +119,23 @@ void hydro_props_init(struct hydro_props *p,
   p->hydrogen_mass_fraction = parser_get_opt_param_double(
       params, "SPH:H_mass_fraction", default_H_fraction);
 
+  /* Read the artificial viscosity parameters from the file, if they exist */
+  p->viscosity.fixed_alpha = parser_get_opt_param_float(
+    params, "SPH:Viscosity:fixed_alpha", hydro_props_default_viscosity_alpha
+  );
+  
+  p->viscosity.alpha_max = parser_get_opt_param_float(
+    params, "SPH:Viscosity:alpha_max", hydro_props_default_viscosity_alpha_max
+  );
+
+  p->viscosity.alpha_min = parser_get_opt_param_float(
+    params, "SPH:Viscosity:alpha_min", hydro_props_default_viscosity_alpha_min
+  );
+
+  p->viscosity.length = parser_get_opt_param_float(
+    params, "SPH:Viscosity:length", hydro_props_default_viscosity_length
+  );
+
   /* Compute the initial energy (Note the temp. read is in internal units) */
   /* u_init = k_B T_init / (mu m_p (gamma - 1)) */
   double u_init = phys_const->const_boltzmann_k / phys_const->const_proton_mass;
@@ -164,6 +188,11 @@ void hydro_props_print(const struct hydro_props *p) {
 
   message("Hydrodynamic integration: CFL parameter: %.4f.", p->CFL_condition);
 
+  message("Artificial viscosity parameters set to fixed: %.3f, max: %.3f, "
+          "min: %.3f, length: %.3f.",
+          p->viscosity.fixed_alpha, p->viscosity.alpha_max,
+          p->viscosity.alpha_min, p->viscosity.length);
+
   message(
       "Hydrodynamic integration: Max change of volume: %.2f "
       "(max|dlog(h)/dt|=%f).",
@@ -181,6 +210,7 @@ void hydro_props_print(const struct hydro_props *p) {
 
   if (p->minimal_temperature != hydro_props_default_min_temp)
     message("Minimal gas temperature set to %f", p->minimal_temperature);
+
 
     // Matthieu: Temporary location for this i/o business.
 

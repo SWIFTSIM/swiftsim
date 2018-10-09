@@ -78,11 +78,27 @@ struct hydro_props {
   /*! Initial internal energy per unit mass */
   float initial_internal_energy;
 
-  /*! Primoridal hydrogen mass fraction for initial energy conversion */
+  /*! Primordial hydrogen mass fraction for initial energy conversion */
   float hydrogen_mass_fraction;
 
   /*! Temperature of the neutral to ionized transition of Hydrogen */
   float hydrogen_ionization_temperature;
+
+  /*! Artificial viscosity parameters */
+  struct viscosity {
+    /*! For the fixed, simple case. Also used to set the initial AV
+        coefficient for variable schemes. */
+    float fixed_alpha;
+
+    /*! Artificial viscosity (max) for the variable case (e.g. M&M) */
+    float alpha_max;
+
+    /*! Artificial viscosity (min) for the variable case (e.g. M&M) */
+    float alpha_min;
+
+    /*! The decay length of the artificial viscosity (used in M&M, etc.) */
+    float length;
+  }
 };
 
 void hydro_props_print(const struct hydro_props *p);
