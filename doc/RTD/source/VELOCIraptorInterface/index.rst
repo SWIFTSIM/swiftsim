@@ -50,7 +50,9 @@ VELOCIraptor as follows::
 
 After the compilation of your code, there is an additional folder created in
 the ``VELOCIraptor-stf/stf`` directory called ``lib`` this directory has the
-libary of VELOCIraptor and is required to run SWIFT with VELOCIraptor.
+libary of VELOCIraptor and is required to run SWIFT with
+VELOCIraptor. Note that VELOCIraptor needs a serial version of the
+HDF5 library, not a parallel build.
 
 Compiling SWIFT
 ~~~~~~~~~~~~~~~
