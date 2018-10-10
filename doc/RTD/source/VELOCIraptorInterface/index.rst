@@ -7,7 +7,7 @@ VELOCIraptor Interface
 In SWIFT it is possible to run a cosmological simulation and at the same time
 do on the fly halo finding at specific predefined intervals.  Because of this
 we will explain on this page how we can set up an simulation using VELOCIraptor
-(formerly STructure Finder).  After this we will explain what the outputs of
+(formerly STructure Finder) [#velo]_.  After this we will explain what the outputs of
 VELOCIraptor will be.
 
 Configuring SWIFT
@@ -82,8 +82,9 @@ we first need to add several lines to the yaml file of our simulation::
     scale_factor_first:   0.02
     delta_time:           1.02
 
-In which we specify the ``.cfg`` file that is used by VELOCIraptor. In the case
-of the Small Cosmological Volume DMO example we can run a simulation with halo
+In which we specify the ``.cfg`` file that is used by VELOCIraptor and the 
+other parameters which SWIFT needs to use [#deltatime]_. In the case of 
+the Small Cosmological Volume DMO example we can run a simulation with halo
 finder as::
 
   cd examples/SmallCosmoVolume_DM 
@@ -109,10 +110,7 @@ data in the ``.catalog_group`` files are:
 
 + The ``group_size``: gives a list of all the halos and the number of particles
   in the halo, this list is numbered from 0 until the number of groups minus
-  one. It is important that the groups are not ordered in any way, but in 
-  most cases more massive groups appear earlier in the list, but this is not
-  guaranteed for larger simulations. The order of the groups is more a matter
-  of the way that VELOCIraptor searches instead of a physical reason.
+  one. It is important that the groups are not ordered in any way [#order]_ 
 + The ``Num_of_groups`` or ``Total_num_of_groups``: gives the total number of
   groups in the snapshot.
 + The ``Offset`` list: This list gives the offset off the particles. In the
@@ -174,6 +172,8 @@ are:
   :math:`\Delta=200` based on the mean density of the Universe.
 + ``Mass_FOF``: The friends-of-friends mass of the halos.
 + ``Mvir``: The viral mass of the halos.
++ ``Xc``, ``Yc`` and ``Zc``: The x,y and z center positions of the halos 
+  [#center]_.
 + ``Other parameters``: Soon
 
 
@@ -181,4 +181,17 @@ are:
 
 .. _GitHub: https://github.com/pelahi/VELOCIraptor-STF
 .. _GitLab: https://gitlab.cosma.dur.ac.uk/swift/swiftsim
-   
+.. _Velociraptor: http://adsabs.harvard.edu/abs/2011MNRAS.418..320E
+.. [#velo] For technical information regarding VELOCIraptor see: Velociraptor_
+.. [#deltatime] The current version of SWIFT has the limitation that the 
+   ``delta_time`` of VELOCIraptor needs to be related to the ``delta_time`` 
+   of the snapshot output, this means that if the snapshot ``delta_time`` is
+   given by :math:`1.02`, the ``delta_time`` of VELOCIraptor needs to be 
+   a positive power of this like :math:`1.02^n` in which :math:`n` is a 
+   positive integer.
+.. [#order] In most cases more massive groups appear earlier in the list, but 
+   this is not guaranteed for larger simulations. The order of the groups is 
+   more a matter of the way that VELOCIraptor searches instead of a physical 
+   reason.
+.. [#center] This is not the average positions of the halos particles, but
+   the halo position found by the VELOCIraptor algorithm.
