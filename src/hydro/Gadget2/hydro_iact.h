@@ -652,11 +652,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 }
 
 #ifdef WITH_VECTORIZATION
-/* This is done for old compatibility reasons; the alpha parameter is now passed
-   as a runtime parameter and included in the balsara switch; JAMES: Please check
-   this. */
-static const vector const_viscosity_alpha_fac =
-    FILL_VEC(-0.25f);
 
 /**
  * @brief Force interaction computed using 1 vector
@@ -747,7 +742,7 @@ runner_iact_nonsym_1_vec_force(
 
   /* Now construct the full viscosity term */
   rho_ij.v = vec_mul(vec_set1(0.5f), vec_add(pirho.v, pjrho.v));
-  visc.v = vec_div(vec_mul(const_viscosity_alpha_fac.v,
+  visc.v = vec_div(vec_mul(vec_set1(-0.25f),
                            vec_mul(v_sig.v, vec_mul(mu_ij.v, balsara.v))),
                    rho_ij.v);
 
@@ -938,11 +933,11 @@ runner_iact_nonsym_2_vec_force(
   rho_ij.v = vec_mul(vec_set1(0.5f), vec_add(pirho.v, pjrho.v));
   rho_ij_2.v = vec_mul(vec_set1(0.5f), vec_add(pirho.v, pjrho_2.v));
 
-  visc.v = vec_div(vec_mul(const_viscosity_alpha_fac.v,
+  visc.v = vec_div(vec_mul(vec_set1(-0.25f),
                            vec_mul(v_sig.v, vec_mul(mu_ij.v, balsara.v))),
                    rho_ij.v);
   visc_2.v =
-      vec_div(vec_mul(const_viscosity_alpha_fac.v,
+      vec_div(vec_mul(vec_set1(-0.25f),
                       vec_mul(v_sig_2.v, vec_mul(mu_ij_2.v, balsara_2.v))),
               rho_ij_2.v);
 
