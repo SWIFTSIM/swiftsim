@@ -10,6 +10,12 @@ we will explain on this page how we can set up an simulation using VELOCIraptor
 (formerly STructure Finder) [#velo]_.  After this we will explain what the outputs of
 VELOCIraptor will be.
 
+What is VELOCIraptor?
+---------------------
+
+VELOCIraptor is a halofinder algorithm.
+
+
 Configuring SWIFT
 -----------------
 
@@ -167,13 +173,24 @@ useful information of the corresponding halos. Some usefull physical parameters
 are:
 
 + ``Mass_200crit``: The mass of a halo with an overdensity on average of
-  :math:`\Delta=200` based on the critical density of the Universe.
+  :math:`\Delta=200` based on the critical density of the Universe 
+  (:math:`M_{200}`).
 + ``Mass_200mean``: The mass of a halo with an overdensity on average of
-  :math:`\Delta=200` based on the mean density of the Universe.
+  :math:`\Delta=200` based on the mean density of the Universe 
+  (:math:`M_{200}`).
 + ``Mass_FOF``: The friends-of-friends mass of the halos.
 + ``Mvir``: The viral mass of the halos.
 + ``Xc``, ``Yc`` and ``Zc``: The x,y and z center positions of the halos 
   [#center]_.
++ ``Xc_gas``, ``Yc_gas``, ``Zc_gas``: The offset of the center positions of
+  the halo based on the gas, to find the position of the gas the offsets 
+  need to be added to ``Xc``, ``Yc`` and ``Zc``. 
++ ``R_200crit``: The :math:`R_{200}` radius of the halo based on the 
+  critical density of the Universe
++ ``R_200mean``: The :math:`R_{200}` radius of the halo based on the 
+  mean density ofthe Universe.
++ ``cNFW``: The concentration of the halo.
++ ``Rvir``: The virial radius of the halo (:math:`R_{vir}`).
 + ``Other parameters``: Soon
 
 
