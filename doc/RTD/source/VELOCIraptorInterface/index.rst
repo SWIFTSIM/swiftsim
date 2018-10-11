@@ -204,6 +204,26 @@ of the halo:
   the halo based on the gas, to find the position of the gas the offsets 
   need to be added to ``Xc``, ``Yc`` and ``Zc``. 
 
+As well every halo has properties about the velocity dispersion stored
+in the ``.properties`` file:
+
++ The complete velocity dispersion tensor (:math:`\sigma_{ij}`) which has 
+  an array per component which gives the value for all the halos. In 
+  general these components are called ``veldisp_ij`` in which i and j are 
+  given by ``x``, ``y`` or ``z``. This means that there are nine 
+  components stored in the ``.properties`` file. This omits the fact 
+  that the dispersion tensor by nature is a symmetric tensor. All the 
+  components are given by: 
+  ``veldisp_xx``, ``veldisp_xy``, ``veldisp_xz``, ``veldisp_yx``, 
+  ``veldisp_yy``, ``veldisp_yz``, ``veldisp_zx``, ``veldisp_zy``, 
+  and ``veldisp_zz`` [#velodisp]_.
++ ``sigV``, the scalar velocity dispersion which corresponds with the 
+  trace of the velocity dispersion tensor 
+  (:math:`\sigma = \text{Tr}(\sigma_{ij})`).
++ ``eig_ij``: Are the normalized eigenvectors of the velocity 
+  dispersion, :math:`\sigma_{ij}`.
+
+
 And some more properties which do not have a specified category yet:
 
 + ``Mass_FOF``: The friends-of-friends mass of the halos.
@@ -229,3 +249,10 @@ And some more properties which do not have a specified category yet:
    reason.
 .. [#center] This is not the average positions of the halos particles, but
    the halo position found by the VELOCIraptor algorithm.
+.. [#velodisp] In the velocity dispersion tensor ( :math:`\sigma_{ij}` )  
+   the following relations are satisfied between components:
+
+   + :math:`\sigma_{xy}=\sigma_{yx}`
+   + :math:`\sigma_{xz}=\sigma_{zx}`
+   + :math:`\sigma_{yz}=\sigma_{yz}`
+
