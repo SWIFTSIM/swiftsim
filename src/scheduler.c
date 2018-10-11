@@ -2542,3 +2542,63 @@ void scheduler_free_tasks(struct scheduler *s) {
   }
   s->size = 0;
 }
+
+/**
+ * @brief write down each task level
+ */
+void scheduler_write_task_level(const struct scheduler *s) {
+  /* init */
+  const int max_depth = 30;
+  const struct task *tasks = s->tasks;
+  int nr_tasks = s->nr_tasks;
+
+  /* Init counter */
+  int size = task_type_count * task_subtype_count * max_depth;
+  int *count = (int*) malloc(size * sizeof(int));
+  if (count == NULL)
+    error("Failed to allocate memory");
+
+  for(int i = 0; i < size; i++) count[i] = 0;
+
+  /* Count tasks */
+  for(int i = 0; i < nr_tasks; i++) {
+    const struct task *t = &tasks[i];
+    if (t->ci) {
+
+      if ((int) t->ci->depth >= max_depth)
+	error("Cell is too deep, you need to increase max_depth");
+
+      int ind = t->type * task_subtype_count * max_depth;
+      ind += t->subtype * max_depth;
+      ind += (int) t->ci->depth;
+
+      count[ind] += 1;
+    }
+  }
+
+  /* Open file */
+  char filename[200] = "task_level.txt";
+  FILE *f = fopen(filename, "w");
+  if (f == NULL) error("Error opening task level file.");
+
+  /* Print header */
+  fprintf(f, "# task_type, task_subtype, depth, count\n");
+
+  /* Print tasks level */
+  for(int i = 0; i < size; i++) {
+    if (count[i] == 0)
+      continue;
+
+    int type = i / (task_subtype_count * max_depth);
+    int subtype = i - task_subtype_count * max_depth * type;
+    subtype /= max_depth;
+    int depth = i - task_subtype_count * max_depth * type;
+    depth -= subtype * max_depth;
+    fprintf(f, "%s %s %i %i\n", taskID_names[type],
+	    subtaskID_names[subtype], depth, count[i]);
+  }
+
+  /* clean up */
+  fclose(f);
+  free(count);
+}
