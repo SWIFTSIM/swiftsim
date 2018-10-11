@@ -3357,8 +3357,8 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
       engine_make_stars_loops_dependencies(sched, t, t->ci);
 
       if (t->ci == t->ci->super)
-	scheduler_addunlock(sched, t->ci->super->stars.ghost_out,
-			    t->ci->super->hydro.end_force);
+        scheduler_addunlock(sched, t->ci->super->stars.ghost_out,
+                            t->ci->super->hydro.end_force);
     }
 
     /* Otherwise, pair interaction? */

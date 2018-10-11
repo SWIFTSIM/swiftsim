@@ -412,7 +412,6 @@ int cell_pack_end_step(struct cell *restrict c,
   pcells[0].grav.ti_end_max = c->grav.ti_end_max;
   pcells[0].hydro.dx_max_part = c->hydro.dx_max_part;
   pcells[0].stars.dx_max_part = c->stars.dx_max_part;
-  
 
   /* Fill in the progeny, depth-first recursion. */
   int count = 1;
@@ -1181,7 +1180,6 @@ void cell_sanitize(struct cell *c, int treated) {
       if (sparts[i].h == 0.f || sparts[i].h > upper_h_max)
         sparts[i].h = upper_h_max;
     }
-    
   }
 
   /* Recurse and gather the new h_max values */
@@ -1202,7 +1200,8 @@ void cell_sanitize(struct cell *c, int treated) {
 
     /* Get the new value of h_max */
     for (int i = 0; i < count; ++i) h_max = max(h_max, parts[i].h);
-    for (int i = 0; i < scount; ++i) stars_h_max = max(stars_h_max, sparts[i].h);
+    for (int i = 0; i < scount; ++i)
+      stars_h_max = max(stars_h_max, sparts[i].h);
   }
 
   /* Record the change */
@@ -1642,7 +1641,7 @@ void cell_activate_drift_gpart(struct cell *c, struct scheduler *s) {
 void cell_activate_drift_spart(struct cell *c, struct scheduler *s) {
   cell_activate_drift_gpart(c, s);
 }
-  
+
 /**
  * @brief Activate the sorts up a cell hierarchy.
  */
@@ -3365,7 +3364,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
 
   float dx_max = 0.f, dx2_max = 0.f;
   float cell_h_max = 0.f;
-  
+
   /* Drift irrespective of cell flags? */
   force |= c->grav.do_drift;
 
@@ -3388,16 +3387,16 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
         /* Recurse */
         cell_drift_gpart(cp, e, force);
 
-	/* Update */
-	dx_max = max(dx_max, cp->stars.dx_max_part);
-	cell_h_max = max(cell_h_max, cp->stars.h_max);
+        /* Update */
+        dx_max = max(dx_max, cp->stars.dx_max_part);
+        cell_h_max = max(cell_h_max, cp->stars.h_max);
       }
     }
 
     /* Store the values */
     c->stars.h_max = cell_h_max;
     c->stars.dx_max_part = dx_max;
-    
+
     /* Update the time of the last drift */
     c->grav.ti_old_part = ti_current;
 
@@ -3449,7 +3448,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
         }
       }
 #endif
-      
+
       /* Init gravity force fields. */
       if (gpart_is_active(gp, e)) {
         gravity_init_gpart(gp);
@@ -3477,17 +3476,17 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
 
       /* Limit h to within the allowed range */
       sp->h = min(sp->h, stars_h_max);
-      
+
       /* Compute (square of) motion since last cell construction */
       const float dx2 = sp->x_diff[0] * sp->x_diff[0] +
-	sp->x_diff[1] * sp->x_diff[1] +
-	sp->x_diff[2] * sp->x_diff[2];
+                        sp->x_diff[1] * sp->x_diff[1] +
+                        sp->x_diff[2] * sp->x_diff[2];
       dx2_max = max(dx2_max, dx2);
 
       /* Maximal smoothing length */
       cell_h_max = max(cell_h_max, sp->h);
 
-    }      /* Note: no need to compute dx_max as all spart have a gpart */
+    } /* Note: no need to compute dx_max as all spart have a gpart */
 
     /* Now, get the maximal particle motion from its square */
     dx_max = sqrtf(dx2_max);
