@@ -168,29 +168,46 @@ the unbound particles.
 Properties file
 ~~~~~~~~~~~~~~~
 
-The Fourth file is the ``.properties`` file, this file contains mainly physical
-useful information of the corresponding halos. Some usefull physical parameters
-are:
+The Fourth file is the ``.properties`` file, this file contains mainy physical
+useful information of the corresponding halos. This can be divided in several
+useful groups of physical parameters, the first group are the properties 
+based on the critical density of the Universe:
 
 + ``Mass_200crit``: The mass of a halo with an overdensity on average of
   :math:`\Delta=200` based on the critical density of the Universe 
   (:math:`M_{200}`).
++ ``R_200crit``: The :math:`R_{200}` radius of the halo based on the 
+  critical density of the Universe
+
+And similar properties which are instead based on the mean density of 
+the Universe:
+
 + ``Mass_200mean``: The mass of a halo with an overdensity on average of
   :math:`\Delta=200` based on the mean density of the Universe 
   (:math:`M_{200}`).
-+ ``Mass_FOF``: The friends-of-friends mass of the halos.
++ ``R_200mean``: The :math:`R_{200}` radius of the halo based on the 
+  mean density ofthe Universe.
+
+Furthermore the ``.properties`` file contains information about the virial 
+mass and the virial radius as:
+
 + ``Mvir``: The viral mass of the halos.
++ ``Rvir``: The virial radius of the halo (:math:`R_{vir}`).
+
+And some NFW specific properties like the concentration and exact position
+of the halo:
+
++ ``cNFW``: The concentration of the halo.
 + ``Xc``, ``Yc`` and ``Zc``: The x,y and z center positions of the halos 
   [#center]_.
 + ``Xc_gas``, ``Yc_gas``, ``Zc_gas``: The offset of the center positions of
   the halo based on the gas, to find the position of the gas the offsets 
   need to be added to ``Xc``, ``Yc`` and ``Zc``. 
-+ ``R_200crit``: The :math:`R_{200}` radius of the halo based on the 
-  critical density of the Universe
-+ ``R_200mean``: The :math:`R_{200}` radius of the halo based on the 
-  mean density ofthe Universe.
-+ ``cNFW``: The concentration of the halo.
-+ ``Rvir``: The virial radius of the halo (:math:`R_{vir}`).
+
+And some more properties which do not have a specified category yet:
+
++ ``Mass_FOF``: The friends-of-friends mass of the halos.
+
 + ``Other parameters``: Soon
 
 
