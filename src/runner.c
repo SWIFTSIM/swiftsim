@@ -2314,7 +2314,7 @@ void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
   const integertime_t ti_current = r->e->ti_current;
 
   error("Need to add h_max computation");
-  
+
   TIMER_TIC;
 
   integertime_t ti_gravity_end_min = max_nr_timesteps;

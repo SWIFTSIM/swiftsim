@@ -1837,8 +1837,8 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
           cost = 1.f * (wscale * gcount_i) * gcount_i;
         else if (t->subtype == task_subtype_external_grav)
           cost = 1.f * wscale * gcount_i;
-	else if (t->subtype == task_subtype_stars_density)
-	  cost = 1.f * wscale * scount_i * count_i;
+        else if (t->subtype == task_subtype_stars_density)
+          cost = 1.f * wscale * scount_i * count_i;
         else
           cost = 1.f * (wscale * count_i) * count_i;
         break;
@@ -1850,15 +1850,14 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
           else
             cost = 2.f * (wscale * gcount_i) * gcount_j;
         } else if (t->subtype == task_subtype_stars_density) {
-	  if (t->ci->nodeID != nodeID)
-	    cost = 3.f * wscale * count_i * scount_j * sid_scale[t->flags];
-	  else if (t->cj->nodeID != nodeID)
-	    cost = 3.f * wscale * scount_i * count_j * sid_scale[t->flags];
-	  else
-	    cost = 2.f * wscale * (scount_i * count_j +
-				   scount_j * count_i) * sid_scale[t->flags];
-	}
-	else {
+          if (t->ci->nodeID != nodeID)
+            cost = 3.f * wscale * count_i * scount_j * sid_scale[t->flags];
+          else if (t->cj->nodeID != nodeID)
+            cost = 3.f * wscale * scount_i * count_j * sid_scale[t->flags];
+          else
+            cost = 2.f * wscale * (scount_i * count_j + scount_j * count_i) *
+                   sid_scale[t->flags];
+        } else {
           if (t->ci->nodeID != nodeID || t->cj->nodeID != nodeID)
             cost = 3.f * (wscale * count_i) * count_j * sid_scale[t->flags];
           else
@@ -1868,33 +1867,33 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
 
       case task_type_sub_pair:
 #ifdef SWIFT_DEBUG_CHECKS
-	if (t->flags < 0) error("Negative flag value!");
+        if (t->flags < 0) error("Negative flag value!");
 #endif
-	if (t->subtype == task_subtype_stars_density) {
-	  if (t->ci->nodeID != nodeID) {
-	    cost = 3.f * (wscale * count_i) * scount_j * sid_scale[t->flags];
-	  } else if (t->cj->nodeID != nodeID) {
-	    cost = 3.f * (wscale * scount_i) * count_j * sid_scale[t->flags];
-	  } else {
-	    cost = 2.f * wscale * (scount_i * count_j +
-				   scount_j * count_i) * sid_scale[t->flags];
-	  }
-	  
-	} else {
-	  if (t->ci->nodeID != nodeID || t->cj->nodeID != nodeID) {
-	    cost = 3.f * (wscale * count_i) * count_j * sid_scale[t->flags];
-	  } else {
-	    cost = 2.f * (wscale * count_i) * count_j * sid_scale[t->flags];
-	  }
-	}
-	  break;
+        if (t->subtype == task_subtype_stars_density) {
+          if (t->ci->nodeID != nodeID) {
+            cost = 3.f * (wscale * count_i) * scount_j * sid_scale[t->flags];
+          } else if (t->cj->nodeID != nodeID) {
+            cost = 3.f * (wscale * scount_i) * count_j * sid_scale[t->flags];
+          } else {
+            cost = 2.f * wscale * (scount_i * count_j + scount_j * count_i) *
+                   sid_scale[t->flags];
+          }
+
+        } else {
+          if (t->ci->nodeID != nodeID || t->cj->nodeID != nodeID) {
+            cost = 3.f * (wscale * count_i) * count_j * sid_scale[t->flags];
+          } else {
+            cost = 2.f * (wscale * count_i) * count_j * sid_scale[t->flags];
+          }
+        }
+        break;
 
       case task_type_sub_self:
-	if (t->subtype == task_subtype_stars_density) {
-	  cost = 1.f * (wscale * scount_i) * count_i;
-	} else {
-	  cost = 1.f * (wscale * count_i) * count_i;
-	}
+        if (t->subtype == task_subtype_stars_density) {
+          cost = 1.f * (wscale * scount_i) * count_i;
+        } else {
+          cost = 1.f * (wscale * count_i) * count_i;
+        }
         break;
       case task_type_ghost:
         if (t->ci == t->ci->hydro.super) cost = wscale * count_i;
@@ -2554,23 +2553,22 @@ void scheduler_write_task_level(const struct scheduler *s) {
 
   /* Init counter */
   int size = task_type_count * task_subtype_count * max_depth;
-  int *count = (int*) malloc(size * sizeof(int));
-  if (count == NULL)
-    error("Failed to allocate memory");
+  int *count = (int *)malloc(size * sizeof(int));
+  if (count == NULL) error("Failed to allocate memory");
 
-  for(int i = 0; i < size; i++) count[i] = 0;
+  for (int i = 0; i < size; i++) count[i] = 0;
 
   /* Count tasks */
-  for(int i = 0; i < nr_tasks; i++) {
+  for (int i = 0; i < nr_tasks; i++) {
     const struct task *t = &tasks[i];
     if (t->ci) {
 
-      if ((int) t->ci->depth >= max_depth)
-	error("Cell is too deep, you need to increase max_depth");
+      if ((int)t->ci->depth >= max_depth)
+        error("Cell is too deep, you need to increase max_depth");
 
       int ind = t->type * task_subtype_count * max_depth;
       ind += t->subtype * max_depth;
-      ind += (int) t->ci->depth;
+      ind += (int)t->ci->depth;
 
       count[ind] += 1;
     }
@@ -2585,17 +2583,16 @@ void scheduler_write_task_level(const struct scheduler *s) {
   fprintf(f, "# task_type, task_subtype, depth, count\n");
 
   /* Print tasks level */
-  for(int i = 0; i < size; i++) {
-    if (count[i] == 0)
-      continue;
+  for (int i = 0; i < size; i++) {
+    if (count[i] == 0) continue;
 
     int type = i / (task_subtype_count * max_depth);
     int subtype = i - task_subtype_count * max_depth * type;
     subtype /= max_depth;
     int depth = i - task_subtype_count * max_depth * type;
     depth -= subtype * max_depth;
-    fprintf(f, "%s %s %i %i\n", taskID_names[type],
-	    subtaskID_names[subtype], depth, count[i]);
+    fprintf(f, "%s %s %i %i\n", taskID_names[type], subtaskID_names[subtype],
+            depth, count[i]);
   }
 
   /* clean up */

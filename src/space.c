@@ -281,9 +281,9 @@ void space_regrid(struct space *s, int verbose) {
         if (c->hydro.h_max > h_max) {
           h_max = s->cells_top[k].hydro.h_max;
         }
-	if (c->stars.h_max > h_max) {
-	  h_max = s->cells_top[k].stars.h_max;
-	}
+        if (c->stars.h_max > h_max) {
+          h_max = s->cells_top[k].stars.h_max;
+        }
       }
     } else if (s->cells_top != NULL) {
       for (int k = 0; k < s->nr_cells; k++) {

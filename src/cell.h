@@ -689,7 +689,6 @@ cell_can_recurse_in_pair_stars_task(const struct cell *c) {
                        c->stars.dx_max_part_old) < 0.5f * c->dmin);
 }
 
-
 /**
  * @brief Can a sub-self stars task recurse to a lower level based
  * on the status of the particles in the cell.
