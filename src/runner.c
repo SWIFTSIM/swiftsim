@@ -283,7 +283,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         for (struct cell *finger = c; finger != NULL; finger = finger->parent) {
 
           /* Run through this cell's density interactions. */
-          for (struct link *l = finger->hydro.density; l != NULL; l = l->next) {
+          for (struct link *l = finger->stars.density; l != NULL; l = l->next) {
 
 #ifdef SWIFT_DEBUG_CHECKS
             if (l->t->ti_run < r->e->ti_current)
@@ -2313,6 +2313,8 @@ void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
   const size_t nr_sparts = c->stars.count;
   const integertime_t ti_current = r->e->ti_current;
 
+  error("Need to add h_max computation");
+  
   TIMER_TIC;
 
   integertime_t ti_gravity_end_min = max_nr_timesteps;
