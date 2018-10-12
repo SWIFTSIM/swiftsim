@@ -79,7 +79,7 @@ useful information of the corresponding halos. This can be divided in several
 useful groups of physical parameters, the first group are the properties 
 based on the critical density of the Universe:
 
-+ ``Mass_200crit``: The mass of a halo with an overdensity on average of
++ ``Mass_200crit``: The mass of a halo with an over density on average of
   :math:`\Delta=200` based on the critical density of the Universe 
   (:math:`M_{200}`).
 + ``R_200crit``: The :math:`R_{200}` radius of the halo based on the 
@@ -88,7 +88,7 @@ based on the critical density of the Universe:
 And similar properties which are instead based on the mean density of 
 the Universe:
 
-+ ``Mass_200mean``: The mass of a halo with an overdensity on average of
++ ``Mass_200mean``: The mass of a halo with an over density on average of
   :math:`\Delta=200` based on the mean density of the Universe 
   (:math:`M_{200}`).
 + ``R_200mean``: The :math:`R_{200}` radius of the halo based on the 
@@ -104,9 +104,9 @@ And some NFW specific properties like the concentration and exact position
 of the halo:
 
 + ``cNFW``: The concentration of the halo.
-+ ``Xc``, ``Yc`` and ``Zc``: The x,y and z center positions of the halos 
++ ``Xc``, ``Yc`` and ``Zc``: The x,y and z centre positions of the halos 
   [#center]_.
-+ ``Xc_gas``, ``Yc_gas``, ``Zc_gas``: The offset of the center positions of
++ ``Xc_gas``, ``Yc_gas``, ``Zc_gas``: The offset of the centre positions of
   the halo based on the gas, to find the position of the gas the offsets 
   need to be added to ``Xc``, ``Yc`` and ``Zc``. 
 

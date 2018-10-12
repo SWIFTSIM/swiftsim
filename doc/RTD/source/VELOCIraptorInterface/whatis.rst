@@ -30,7 +30,7 @@ The VELOCIraptor algorithm consist basically off the following steps [#ref]_:
    and their corresponding density, this results in more equal density 
    distributed nodes. This is also the implicit step in the algorithm that 
    takes into account the absolute positions of the particles.
-2. The next part is calculating the the center of mass velocity and the 
+2. The next part is calculating the the centre of mass velocity and the 
    velocity distribution for every individual node in the kd-tree. 
 3. Than the algorithm estimates the background velocity density function for
    every particle based on the cell of the particle and the six nearest

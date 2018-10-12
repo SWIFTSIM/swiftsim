@@ -23,7 +23,7 @@ git repository as::
   git clone https://github.com/pelahi/VELOCIraptor-STF
 
 Similar to the SWIFT with VELOCIraptor configuration, we can use the 
-swift-interface branch to analyze individual snapshots. We can use this branch
+swift-interface branch to analyse individual snapshots. We can use this branch
 by doing::
 
   cd VELOCIraptor-STF
@@ -57,8 +57,32 @@ run a simulation with SPH [#nosph]_)
 Running VELOCIraptor on a Snapshot
 ----------------------------------
 
-After the code is compile the next step is calculating 
+After the code is compile the next step is using VELOCIraptor on a single 
+snapshot of a simulation. The code has several options which can be used, which
+can be displayed by running a terminal command of an invalid letter like::
 
+  ./stf-gas -h
+
+which gives the information about the usage of the command::
+
+  USAGE:
+
+  -C <configuration file (overrides other options)> 
+  -I <input format [Gadget (Default) 1, HDF (if implemented)2, TIPSY 3, RAMSES 4, HDF 2, NCHILADA 5>
+  -i <input file> 
+  -s <number of files per output for gadget input 1 [default]>
+  -Z <number of threads used in parallel read (1)>
+  -o <output filename>
+   ===== EXTRA OPTIONS FOR GADGET INPUT ====== 
+  -g <number of extra sph/gas blocks for gadget>
+  -s <number of extra star blocks for gadget>
+  -b <number of extra bh blocks for gadget>
+   ===== EXTRA OPTIONS REQUIRED FOR RAMSES INPUT ====== 
+  -t <ramses snapnumber>
+
+After this we can run a VELOCIraptor on a snapshot as::
+  
+  ./stf-gas -i input -o output -C configfile.txt
 
 
 .. [#nosph] In the case that in the ``Makefile.config`` it is indicate that the 
