@@ -183,7 +183,6 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
       h_grpsph, "Viscosity Model",
       "Morris & Monaghan (1997), Rosswog, Davies, Thielemann & "
       "Piran (2000) with additional Balsara (1995) switch");
-  io_write_attribute_f(h_grpsph, "Viscosity beta", 2.f);
 
   /* Time integration properties */
   io_write_attribute_f(h_grpsph, "Maximal Delta u change over dt",

@@ -257,6 +257,7 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
   io_write_attribute_f(h_grpsph, "Alpha viscosity (min)",
                        p->viscosity.alpha_min);
   io_write_attribute_f(h_grpsph, "Viscosity decay length", p->viscosity.length);
+  io_write_attribute_f(h_grpsph, "Beta viscosity", const_viscosity_beta);
 }
 #endif
 
