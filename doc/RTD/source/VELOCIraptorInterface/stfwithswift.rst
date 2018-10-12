@@ -56,7 +56,7 @@ VELOCIraptor. Note that VELOCIraptor needs a serial version of the
 HDF5 library, not a parallel build.
 
 Compiling SWIFT
-~~~~~~~~~~~~~~
+---------------
 The next part is compiling SWIFT with VELOCIraptor and assumes you already
 downloaded SWIFT from the GitLab_, this can be done by running::
 
