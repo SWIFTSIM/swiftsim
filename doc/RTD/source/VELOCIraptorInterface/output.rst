@@ -97,7 +97,7 @@ the Universe:
 Furthermore the ``.properties`` file contains information about the virial 
 mass and the virial radius as:
 
-+ ``Mvir``: The viral mass of the halos.
++ ``Mvir``: The virial mass of the halos.
 + ``Rvir``: The virial radius of the halo (:math:`R_{vir}`).
 
 And some NFW specific properties like the concentration and exact position
