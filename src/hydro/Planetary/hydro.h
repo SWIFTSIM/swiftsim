@@ -497,7 +497,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
 
-#ifndef PLANETARY_SPH_NO_BALSARA
   const float fac_mu = cosmo->a_factor_mu;
 
   /* Compute the norm of the curl */
@@ -507,7 +506,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the norm of div v */
   const float abs_div_v = fabsf(p->density.div_v);
-#endif
 
   /* Compute the pressure */
   const float pressure =
@@ -529,8 +527,10 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     grad_h_term = 0.f;
   }
 
-#ifndef PLANETARY_SPH_NO_BALSARA
   /* Compute the Balsara switch */
+#ifdef PLANETARY_SPH_NO_BALSARA
+  const float balsara = hydro_props->viscosity.alpha;
+#else
   const float balsara =
       hydro_props->viscosity.alpha * abs_div_v /
       (abs_div_v + curl_v + 0.0001f * fac_mu * soundspeed / p->h);
@@ -540,10 +540,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   p->force.f = grad_h_term;
   p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
-
-#ifndef PLANETARY_SPH_NO_BALSARA
   p->force.balsara = balsara;
-#endif
 }
 
 /**
