@@ -616,5 +616,8 @@ int main(int argc, char *argv[]) {
   /* Clean things to make the sanitizer happy ... */
   for (int i = 0; i < 27; ++i) clean_up(cells[i]);
 
+  cache_clean(&runner.ci_cache);
+  cache_clean(&runner.cj_cache);
+
   return 0;
 }
