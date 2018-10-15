@@ -590,6 +590,7 @@ int main(int argc, char *argv[]) {
   prog_const.const_newton_G = 1.f;
 
   struct hydro_props hp;
+  hydro_props_init_no_hydro(&hp);
   hp.eta_neighbours = h;
   hp.h_tolerance = 1e0;
   hp.h_max = FLT_MAX;
