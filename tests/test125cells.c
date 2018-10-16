@@ -671,7 +671,8 @@ int main(int argc, char *argv[]) {
       runner_do_sort(&runner, cells[j], 0x1FFF, 0, 0);
 
 /* Do the density calculation */
-#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION))
+#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION) || \
+      defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH))
 
 /* Initialise the particle cache. */
 #ifdef WITH_VECTORIZATION
