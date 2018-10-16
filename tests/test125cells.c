@@ -671,8 +671,9 @@ int main(int argc, char *argv[]) {
       runner_do_sort(&runner, cells[j], 0x1FFF, 0, 0);
 
 /* Do the density calculation */
-#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION) || \
-      defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH))
+#if !((defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
+       defined(HOPKINS_PU_SPH)) &&                        \
+      defined(WITH_VECTORIZATION))
 
 /* Initialise the particle cache. */
 #ifdef WITH_VECTORIZATION
@@ -722,8 +723,9 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < 27; ++j) runner_do_ghost(&runner, inner_cells[j], 0);
 
 /* Do the force calculation */
-#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION) || \
-      defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH))
+#if !((defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
+       defined(HOPKINS_PU_SPH)) &&                        \
+      defined(WITH_VECTORIZATION))
 
 #ifdef WITH_VECTORIZATION
     /* Initialise the cache. */
@@ -816,8 +818,9 @@ int main(int argc, char *argv[]) {
 // 0);
 
 /* Do the density calculation */
-#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION) || \
-      defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH))
+#if !((defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
+       defined(HOPKINS_PU_SPH)) &&                        \
+      defined(WITH_VECTORIZATION))
 
   /* Run all the pairs (only once !)*/
   for (int i = 0; i < 5; i++) {
@@ -858,8 +861,9 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < 27; ++j) runner_do_ghost(&runner, inner_cells[j], 0);
 
 /* Do the force calculation */
-#if !(defined(MINIMAL_SPH) && defined(WITH_VECTORIZATION) || \
-      defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH))
+#if !((defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
+       defined(HOPKINS_PU_SPH)) &&                        \
+      defined(WITH_VECTORIZATION))
 
   /* Do the pairs (for the central 27 cells) */
   for (int i = 1; i < 4; i++) {
