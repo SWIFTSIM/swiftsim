@@ -21,7 +21,10 @@
 #define SWIFT_CONST_H
 
 /* SPH Viscosity constants. */
-
+/* Cosmology default beta=3.0. Planetary default beta=4.0
+ * Alpha can be set in the parameter file.
+ * Beta is defined as in e.g. Price (2010) Eqn (103) */
+#define const_viscosity_beta 3.0f
 
 /* SPH Thermal conductivity constants. */
 #define const_conductivity_alpha \
