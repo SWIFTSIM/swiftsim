@@ -428,12 +428,14 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
  * @param p The particle to act upon
  * @param xp The extended particle data to act upon
  * @param cosmo The current cosmological model.
+ * @param hydro_props Hydrodynamic properties.
  * @param dt_alpha The time-step used to evolve non-cosmological quantities such
  *                 as the artificial viscosity.
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo, const float dt_alpha) {
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const float dt_alpha) {
 
   const float fac_mu = cosmo->a_factor_mu;
 
@@ -462,10 +464,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Artificial viscosity updates */
 
-  const float inverse_tau = const_viscosity_length * soundspeed * h_inv;
+  const float inverse_tau = hydro_props->viscosity.length * soundspeed * h_inv;
   const float source_term = -1.f * min(p->density.div_v, 0.f);
+
+  /* Compute da/dt */
   const float alpha_time_differential = 
-    source_term + (const_viscosity_alpha_min - p->alpha) * inverse_tau;
+    source_term + (hydro_props->viscosity.alpha_min - p->alpha) * inverse_tau;
 
   /* Update variables. */
   p->alpha += alpha_time_differential * dt_alpha;
@@ -654,6 +658,9 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
     p->u_dt = 0.f;
   }
 
+  /* Start out with a 'regular' AV for comparison to other schemes */
+  p->alpha = hydro_props->viscosity.alpha;
+
   /* Note that unlike Minimal the pressure and sound speed cannot be calculated
    * here because they are smoothed properties in this scheme. */
 }
@@ -679,8 +686,6 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[1] = 0.f;
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
-  /* Start out with a 'regular' AV for comparison to other schemes */
-  p->alpha = const_viscosity_alpha;
 
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
