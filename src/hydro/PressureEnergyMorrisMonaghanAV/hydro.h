@@ -25,7 +25,7 @@
  * @brief P-U conservative implementation of SPH (Non-neighbour loop
  * equations)
  *
- * The thermal variable is the internal energy (u). A simple variable 
+ * The thermal variable is the internal energy (u). A simple variable
  * viscosity term (Morris & Monaghan 1997) with a Balsara switch is
  * implemented.
  *
@@ -170,6 +170,60 @@ hydro_get_physical_soundspeed(const struct part *restrict p,
                               const struct cosmology *cosmo) {
 
   return cosmo->a_factor_sound_speed * p->force.soundspeed;
+}
+
+/**
+ * @brief Returns the comoving internal energy of a particle drifted to the
+ * current time.
+ *
+ * @param p The particle of interest
+ */
+__attribute__((always_inline)) INLINE static float
+hydro_get_drifted_comoving_internal_energy(const struct part *restrict p) {
+
+  return p->u;
+}
+
+/**
+ * @brief Returns the physical internal energy of a particle drifted to the
+ * current time.
+ *
+ * @param p The particle of interest.
+ * @param cosmo The cosmological model.
+ */
+__attribute__((always_inline)) INLINE static float
+hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
+                                           const struct cosmology *cosmo) {
+
+  return p->u * cosmo->a_factor_internal_energy;
+}
+
+/**
+ * @brief Returns the comoving entropy of a particle drifted to the
+ * current time.
+ *
+ * @param p The particle of interest.
+ */
+__attribute__((always_inline)) INLINE static float
+hydro_get_drifted_comoving_entropy(const struct part *restrict p) {
+
+  return gas_entropy_from_internal_energy(p->rho, p->u);
+}
+
+/**
+ * @brief Returns the physical entropy of a particle drifted to the
+ * current time.
+ *
+ * @param p The particle of interest.
+ * @param cosmo The cosmological model.
+ */
+__attribute__((always_inline)) INLINE static float
+hydro_get_drifted_physical_entropy(const struct part *restrict p,
+                                   const struct cosmology *cosmo) {
+
+  /* Note: no cosmological conversion required here with our choice of
+   * coordinates. */
+  return gas_entropy_from_internal_energy(p->rho, p->u);
 }
 
 /**
@@ -377,7 +431,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->density.rot_v[2] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
 
   /* Finish calculation of the velocity divergence */
-  p->density.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
+  p->density.div_v *=
+      h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
 }
 
 /**
@@ -468,8 +523,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   const float source_term = -1.f * min(p->density.div_v, 0.f);
 
   /* Compute da/dt */
-  const float alpha_time_differential = 
-    source_term + (hydro_props->viscosity.alpha_min - p->alpha) * inverse_tau;
+  const float alpha_time_differential =
+      source_term + (hydro_props->viscosity.alpha_min - p->alpha) * inverse_tau;
 
   /* Update variables. */
   p->alpha += alpha_time_differential * dt_alpha;
