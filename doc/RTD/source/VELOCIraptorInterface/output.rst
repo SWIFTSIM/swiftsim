@@ -196,6 +196,14 @@ Most Bound Particle (MBP):
 + ``VXcmbp``, ``VYcmbp`` and ``VZcmbp`` are the velocities of the most bound
   halo particle [#check]_.
 
+Energy properties of the halos:
+"""""""""""""""""""""""""""""""
+
++ ``Ekin``, the kinetic energy of the halo.
++ ``Epot``, the potential energy of the halo.
++ ``Krot``, the rotational energy of the halo.
++ ``Krot_gas``, the rotational energy of the gas in the halo.
+
 Several Mass types:
 """""""""""""""""""
 This is a list of masses which cannot be categorized as easy as the other 
@@ -209,7 +217,13 @@ properties.
   density
 + ``M_gas_Rvmax``: The gas mass within the maximum rotation velocity.
 
+Several Radius types:
+"""""""""""""""""""""
 
++ ``R_HalfMass``: Radius of half the mass of the halo.
++ ``R_HalfMass_gas``: Radius of half the gas mass of the halo.
++ ``R_size``:
++ ``Rmax``: 
 
 
 
