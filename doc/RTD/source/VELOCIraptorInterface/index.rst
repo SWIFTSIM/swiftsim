@@ -12,6 +12,7 @@ with VELOCIraptor, the third subsection explains how to configure a standalone
 version of VELOCIraptor and the last subsection explains how the output format
 of VELOCIraptor works.
 
+<<<<<<< HEAD
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
