@@ -46,8 +46,8 @@ The VELOCIraptor algorithm consist basically off the following steps [#ref]_:
    particle.
 6. The fractional difference is calculated between the local velocity density 
    function and the background velocity density function.
-7. Based on the calculated ratio outliers are picked and the outliers grouped
-   together in halos and subhalos.
+7. Based on the calculated ratio outliers are picked and the outliers are  
+   grouped together in halos and subhalos.
   
 
 
