@@ -245,7 +245,10 @@ for rank in ranks:
         fig = pl.figure()
         ax = fig.add_subplot(1,1,1)
         ax.set_xlim(-delta_t * 0.01 / CPU_CLOCK, delta_t * 1.01 / CPU_CLOCK)
-        ax.set_ylim(0, nthread*expand)
+        if nthread == 0:
+            ax.set_ylim(0, expand)
+        else:
+            ax.set_ylim(0, nthread*expand)
         if mintic < 0:
             start_t = tic_step
         else:
@@ -305,7 +308,7 @@ for rank in ranks:
         fig = pl.figure()
         ax = fig.add_subplot(1,1,1)
         ax.set_xlim(-delta_t * 0.01 / CPU_CLOCK, delta_t * 1.01 / CPU_CLOCK)
-        ax.set_ylim(0, nethread)
+        ax.set_ylim(0.5, nethread+1.0)
         for i in range(nethread):
 
             #  Collect ranges and colours into arrays.
@@ -327,16 +330,14 @@ for rank in ranks:
                     typesseen.append(qtask)
 
             #  Now plot.
-            ax.broken_barh(tictocs, [i+0.05,0.90], facecolors = colours, linewidth=0)
+            ax.broken_barh(tictocs, [i+0.55,0.9], facecolors = colours, linewidth=0)
 
 
     #  Legend and room for it.
     nrow = len(typesseen) / 8
     ax.fill_between([0, 0], nethread, nethread + nrow, facecolor="white")
-    ax.set_ylim(0, nethread)
     if data.size > 0 and not args.nolegend:
         ax.fill_between([0, 0], nethread, nethread + nrow, facecolor="white")
-        ax.set_ylim(0, nethread)
         ax.legend(loc="lower left", shadow=True,
                   bbox_to_anchor=(0., 1.0, 1., 0.2), mode="expand", ncol=8)
 
