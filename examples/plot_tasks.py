@@ -331,15 +331,14 @@ for rank in ranks:
 
 
     #  Legend and room for it.
-    nrow = len(typesseen) / 5
-    ax.fill_between([0, 0], nethread+0.5, nethread + nrow + 0.5, facecolor="white")
-    ax.set_ylim(0, nethread + 0.5)
+    nrow = len(typesseen) / 8
+    ax.fill_between([0, 0], nethread, nethread + nrow, facecolor="white")
+    ax.set_ylim(0, nethread)
     if data.size > 0 and not args.nolegend:
-        ax.fill_between([0, 0], nethread+0.5, nethread + nrow + 0.5, facecolor="white")
-        ax.set_ylim(0, nethread + 0.5)
-        ax.legend(loc=1, shadow=True, bbox_to_anchor=(0., 1.05 ,1., 0.2), mode="expand", ncol=5)
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width, box.height*0.8])
+        ax.fill_between([0, 0], nethread, nethread + nrow, facecolor="white")
+        ax.set_ylim(0, nethread)
+        ax.legend(loc="lower left", shadow=True,
+                  bbox_to_anchor=(0., 1.0, 1., 0.2), mode="expand", ncol=8)
 
     # Start and end of time-step
     if mintic < 0:
@@ -366,7 +365,7 @@ for rank in ranks:
         outpng = outbase + str(rank) + ".png"
     else:
         outpng = outbase + ".png"
-    pl.savefig(outpng)
+    pl.savefig(outpng, bbox_inches="tight")
     print("Graphics done, output written to", outpng)
 
 sys.exit(0)
