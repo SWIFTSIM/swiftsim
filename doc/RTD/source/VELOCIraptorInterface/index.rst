@@ -19,4 +19,3 @@ of VELOCIraptor works.
    stfwithswift
    stfalone
    output 
-   
