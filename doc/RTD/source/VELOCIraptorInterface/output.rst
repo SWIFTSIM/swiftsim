@@ -112,6 +112,10 @@ NFW profile properties:
 + ``Xc_gas``, ``Yc_gas``, ``Zc_gas``: The offset of the centre positions of
   the halo based on the gas, to find the position of the gas the offsets 
   need to be added to ``Xc``, ``Yc`` and ``Zc``. 
++ ``VXc``, ``VYc`` and ``VZc`` are the velocities in the centre of the halo
+  [#check]_.
++ ``VXc_gas``, ``VYc_gas`` and ``VZc_gas`` are the velocities of the gas  in
+  the centre of the halo [#check]_.
 
 Velocity Dispersion related:
 """"""""""""""""""""""""""""
@@ -147,15 +151,12 @@ Intertia Tensor properties:
   1. ``q_gas`` is the semi-major over major for only gas; 
   2. ``s_gas`` is the minor over major for only gas.
 
-Spin parameters:
-""""""""""""""""
+
+Angular momentum and spin parameters:
+"""""""""""""""""""""""""""""""""""""
 
 + ``lambda_b`` is the bullock spin parameter, see the paper by Bullock et al.
   (2001) [#Bullock]_. 
-
-Angular momentum:
-"""""""""""""""""
-
 + ``Lx``, ``Ly`` and ``Lz`` are the angular momentum of the halos, the 
   calculation includes all the particle types.
 + ``Lx_gas``, ``Ly_gas`` and ``Lz_gas`` are the angular momentum for only 
@@ -186,6 +187,15 @@ Bryan and Norman 1998 properties:
   halo [#BN98]_. 
 + ``R_BN98``, the Bryan and Norman (1998) corresponding radius[#BN98]_.
 
+Most Bound Particle (MBP):
+""""""""""""""""""""""""""
+
++ ``ID_mbp``, the ID of the most bound particle in the halo.
++ ``Xcmbp``, ``Ycmbp`` and ``Zcmbp`` are the positions of the most bound 
+  halo particle [#check]_.
++ ``VXcmbp``, ``VYcmbp`` and ``VZcmbp`` are the velocities of the most bound
+  halo particle [#check]_.
+
 Several Mass types:
 """""""""""""""""""
 This is a list of masses which cannot be categorized as easy as the other 
@@ -201,11 +211,6 @@ properties.
 
 
 
-And some more properties which do not have a specified category yet:
-
-  + ``Mass_FOF``: The friends-of-friends mass of the halos.
-
-  + ``Other parameters``: Soon
 
 
 
@@ -228,3 +233,4 @@ And some more properties which do not have a specified category yet:
    https://arxiv.org/abs/astro-ph/0011001. 
 .. [#BN98] The Bryan and Norman (1998) paper can be found here: 
    https://arxiv.org/abs/astro-ph/9710107
+.. [#check] Needs to be checked.
