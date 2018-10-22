@@ -134,19 +134,72 @@ Velocity Dispersion related:
 Intertia Tensor properties:
 """""""""""""""""""""""""""
 
-+ ``eig_ij``: Are the normalized eigenvectors of the velocity 
-  dispersion, :math:`\sigma_{ij}`.
++ ``eig_ij``: Are the normalized eigenvectors of the inertia tensor.
 + The eigenvalue ratios: 
+
   1. ``q`` is the semi-major over major; 
   2. ``s`` is the minor over major.
+
++ ``eig_ij_gas``: Are the normalized eigenvectors of the inertia tensor for
+  only the gas particles.
 + The eigenvalue ratios for only the gas, similar to all particles:
+
   1. ``q_gas`` is the semi-major over major for only gas; 
   2. ``s_gas`` is the minor over major for only gas.
 
 Spin parameters:
 """"""""""""""""
 
-+ ``lambda_b`` is the bullock spin parameter, see the paper by Bullock et al. (2001) [#Bullock]_. 
++ ``lambda_b`` is the bullock spin parameter, see the paper by Bullock et al.
+  (2001) [#Bullock]_. 
+
+Angular momentum:
+"""""""""""""""""
+
++ ``Lx``, ``Ly`` and ``Lz`` are the angular momentum of the halos, the 
+  calculation includes all the particle types.
++ ``Lx_gas``, ``Ly_gas`` and ``Lz_gas`` are the angular momentum for only 
+  the gas particles in the snapshot.
+
+Structure types:
+""""""""""""""""
+
++ ``ID`` is the halo ID.
++ ``Structuretype`` is the parameter that indicates what kind of structure 
+  the current halo is. Halos have a structure type of ``10`` and subhalos
+  have a structure type of ``15``.
++ ``hostHaloID``, indicates the halo ID number of the host halo, in the case
+  that the halo has no parent (e.g. is the largest halo), the hostHaloID will
+  be ``-1``.
++ ``numSubStruct``, the number of substructures or subhalos in the halo.
+
+Particle types:
+"""""""""""""""
+
++ ``npart`` is the number of particles in the halo (all types of particles).
++ ``n_gas`` is the number of gas particles in the halo.
+
+Bryan and Norman 1998 properties:
+"""""""""""""""""""""""""""""""""
+
++ ``Mass_BN98``, The Bryan and Norman (1998) determination of the mass of the
+  halo [#BN98]_. 
++ ``R_BN98``, the Bryan and Norman (1998) corresponding radius[#BN98]_.
+
+Several Mass types:
+"""""""""""""""""""
+This is a list of masses which cannot be categorized as easy as the other 
+properties.
+
++ ``Mass_FOF``: The friends-of-friends mass of the halos.
++ ``M_gas``: The gas mass in the halo.
++ ``Mass_tot``: The total mass of the halo
++ ``M_gas_30kpc``: The gas mass within 30 kpc of the halo centre.
++ ``M_gas_500c``: The gas mass of the overdensity of 500 times the critical
+  density
++ ``M_gas_Rvmax``: The gas mass within the maximum rotation velocity.
+
+
 
 And some more properties which do not have a specified category yet:
 
@@ -173,3 +226,5 @@ And some more properties which do not have a specified category yet:
 .. [#Bullock] The Bullock spin parameter is given by 
    :math:`\lambda = \frac{J}{\sqrt{2}MVR}`, for more information see 
    https://arxiv.org/abs/astro-ph/0011001. 
+.. [#BN98] The Bryan and Norman (1998) paper can be found here: 
+   https://arxiv.org/abs/astro-ph/9710107
