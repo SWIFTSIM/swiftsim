@@ -76,8 +76,11 @@ Properties file
 
 The Fourth file is the ``.properties`` file, this file contains mainy physical
 useful information of the corresponding halos. This can be divided in several
-useful groups of physical parameters, the first group are the properties 
-based on the critical density of the Universe:
+useful groups of physical parameters, on this page we have divided the several
+variables which are present in the ``.properties`` file.
+
+Critical Density related:
+"""""""""""""""""""""""""
 
 + ``Mass_200crit``: The mass of a halo with an over density on average of
   :math:`\Delta=200` based on the critical density of the Universe 
@@ -85,8 +88,8 @@ based on the critical density of the Universe:
 + ``R_200crit``: The :math:`R_{200}` radius of the halo based on the 
   critical density of the Universe
 
-And similar properties which are instead based on the mean density of 
-the Universe:
+Mean Density related:
+"""""""""""""""""""""
 
 + ``Mass_200mean``: The mass of a halo with an over density on average of
   :math:`\Delta=200` based on the mean density of the Universe 
@@ -94,14 +97,14 @@ the Universe:
 + ``R_200mean``: The :math:`R_{200}` radius of the halo based on the 
   mean density ofthe Universe.
 
-Furthermore the ``.properties`` file contains information about the virial 
-mass and the virial radius as:
+Virial properties:
+""""""""""""""""""
 
 + ``Mvir``: The virial mass of the halos.
 + ``Rvir``: The virial radius of the halo (:math:`R_{vir}`).
 
-And some NFW specific properties like the concentration and exact position
-of the halo:
+NFW profile properties:
+"""""""""""""""""""""""
 
 + ``cNFW``: The concentration of the halo.
 + ``Xc``, ``Yc`` and ``Zc``: The x,y and z centre positions of the halos 
@@ -110,8 +113,8 @@ of the halo:
   the halo based on the gas, to find the position of the gas the offsets 
   need to be added to ``Xc``, ``Yc`` and ``Zc``. 
 
-As well every halo has properties about the velocity dispersion stored
-in the ``.properties`` file:
+Velocity Dispersion related:
+""""""""""""""""""""""""""""
 
 + The complete velocity dispersion tensor (:math:`\sigma_{ij}`) which has 
   an array per component which gives the value for all the halos. In 
@@ -126,8 +129,24 @@ in the ``.properties`` file:
 + ``sigV``, the scalar velocity dispersion which corresponds with the 
   trace of the velocity dispersion tensor 
   (:math:`\sigma = \text{Tr}(\sigma_{ij})`).
+
+
+Intertia Tensor properties:
+"""""""""""""""""""""""""""
+
 + ``eig_ij``: Are the normalized eigenvectors of the velocity 
   dispersion, :math:`\sigma_{ij}`.
++ The eigenvalue ratios: 
+  1. ``q`` is the semi-major over major; 
+  2. ``s`` is the minor over major.
++ The eigenvalue ratios for only the gas, similar to all particles:
+  1. ``q_gas`` is the semi-major over major for only gas; 
+  2. ``s_gas`` is the minor over major for only gas.
+
+Spin parameters:
+""""""""""""""""
+
++ ``lambda_b`` is the bullock spin parameter, see the paper by Bullock et al. (2001) [#Bullock]_. 
 
 And some more properties which do not have a specified category yet:
 
@@ -142,10 +161,15 @@ And some more properties which do not have a specified category yet:
    more a matter of the way that VELOCIraptor searches instead of a physical 
    reason.
 .. [#center] This is not the average positions of the halos particles, but
-   the halo position found by the VELOCIraptor algorithm.
+   the halo position found by the VELOCIraptor algorithm. This includes a 
+   fit for all the parameters including the gas particles or other types of
+   particles.
 .. [#velodisp] In the velocity dispersion tensor ( :math:`\sigma_{ij}` )  
    the following relations are satisfied between components:
 
    + :math:`\sigma_{xy}=\sigma_{yx}`
    + :math:`\sigma_{xz}=\sigma_{zx}`
    + :math:`\sigma_{yz}=\sigma_{yz}`
+.. [#Bullock] The Bullock spin parameter is given by 
+   :math:`\lambda = \frac{J}{\sqrt{2}MVR}`, for more information see 
+   https://arxiv.org/abs/astro-ph/0011001. 
