@@ -131,12 +131,17 @@ void readArray(hid_t h_grp, const struct io_props props, size_t N,
     } else {
       float* temp_f = (float*)temp;
 			float maximum = 0.0;
+			float minimum = FLT_MAX;
       for (size_t i = 0; i < num_elements; ++i) {
 				if (fabsf(temp_f[i]) > maximum) maximum = fabsf(temp_f[i]);
+				if (fabsf(temp_f[i]) < minimum) minimum = fabsf(temp_f[i]);
 			  temp_f[i] *= unit_factor;
 			}
 			if ((unit_factor*maximum) > FLT_MAX) {
 				error("Unit conversion results in numbers larger than floats");
+			}
+			if ((unit_factor*minimum) < FLT_MIN) {
+				error("Numbers smaller than float precission");
 			}
 
     }
