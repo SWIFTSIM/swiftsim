@@ -122,6 +122,11 @@ void readArray(hid_t h_grp, const struct io_props props, size_t N,
       units_conversion_factor(ic_units, internal_units, props.units);
   if (unit_factor != 1. && exist != 0) {
 
+	  /* Check whether the unit_factor is smaller than the size of a float */
+		if (unit_factor > FLT_MAX) {
+		error("Error unit conversion is too large for float");
+		}
+		
     /* message("Converting ! factor=%e", factor); */
 
     if (io_is_double_precision(props.type)) {
