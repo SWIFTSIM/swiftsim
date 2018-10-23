@@ -131,25 +131,25 @@ void readArray(hid_t h_grp, const struct io_props props, size_t N,
     } else {
       float* temp_f = (float*)temp;
 
-			/* maximum and minimum quantities */
-			float maximum = 0.0;
-			float minimum = FLT_MAX;
+      /* maximum and minimum quantities */
+      float maximum = 0.0;
+      float minimum = FLT_MAX;
 
-			/* Loop that converts the Units */
+      /* Loop that converts the Units */
       for (size_t i = 0; i < num_elements; ++i) {
-			  /* Find the absolute minimum and maximum values */
-				if (fabsf(temp_f[i]) > maximum) maximum = fabsf(temp_f[i]);
-				if (fabsf(temp_f[i]) < minimum) minimum = fabsf(temp_f[i]);
-				/* Convert the float units */
-			  temp_f[i] *= unit_factor;
-			}
-			/* The two possible errors: larger than float or smaller 
-			 * than float precission. */
-			if ((unit_factor*maximum) > FLT_MAX) {
-				error("Unit conversion results in numbers larger than floats");
-			} else if ((unit_factor*minimum) < FLT_MIN) {
-				error("Numbers smaller than float precission");
-			}
+        /* Find the absolute minimum and maximum values */
+        if (fabsf(temp_f[i]) > maximum) maximum = fabsf(temp_f[i]);
+        if (fabsf(temp_f[i]) < minimum) minimum = fabsf(temp_f[i]);
+        /* Convert the float units */
+        temp_f[i] *= unit_factor;
+      }
+      /* The two possible errors: larger than float or smaller 
+       * than float precission. */
+      if ((unit_factor*maximum) > FLT_MAX) {
+        error("Unit conversion results in numbers larger than floats");
+      } else if ((unit_factor*minimum) < FLT_MIN) {
+        error("Numbers smaller than float precission");
+      }
 
     }
   }
