@@ -122,10 +122,6 @@ void readArray(hid_t h_grp, const struct io_props props, size_t N,
       units_conversion_factor(ic_units, internal_units, props.units);
   if (unit_factor != 1. && exist != 0) {
 
-	  /* Check whether the unit_factor is smaller than the size of a float */
-		if (unit_factor > FLT_MAX) {
-		error("Error unit conversion is too large for float");
-		}
 		
     /* message("Converting ! factor=%e", factor); */
 
@@ -134,7 +130,15 @@ void readArray(hid_t h_grp, const struct io_props props, size_t N,
       for (size_t i = 0; i < num_elements; ++i) temp_d[i] *= unit_factor;
     } else {
       float* temp_f = (float*)temp;
-      for (size_t i = 0; i < num_elements; ++i) temp_f[i] *= unit_factor;
+			float maximum = 0.0;
+      for (size_t i = 0; i < num_elements; ++i) {
+				if (fabsf(temp_f[i]) > maximum) maximum = fabsf(temp_f[i]);
+			  temp_f[i] *= unit_factor;
+			}
+			if ((unit_factor*maximum) > FLT_MAX) {
+				error("Unit conversion results in numbers larger than floats");
+			}
+
     }
   }
 
