@@ -138,7 +138,35 @@ void readArray_chunk(hid_t h_data, hid_t h_plist_id,
       for (size_t i = 0; i < num_elements; ++i) temp_d[i] *= factor;
     } else {
       float* temp_f = (float*)temp;
-      for (size_t i = 0; i < num_elements; ++i) temp_f[i] *= factor;
+
+      #ifdef SWIFT_DEBUG_CHECKS
+        /* maximum and minimum quantities */
+        float maximum = 0.0;
+        float minimum = FLT_MAX;
+        float abstemp_f;
+      #endif
+
+      /* Loop that converts the Units */
+      for (size_t i = 0; i < num_elements; ++i) {
+        #ifdef SWIFT_DEBUG_CHECKS
+          /* Calculate the absolute value of the variable */
+          abstemp_f = fabsf(temp_f[i]);
+          /* Find the absolute minimum and maximum values */
+          maximum = max(maximum,abstemp_f);
+          minimum = min(minimum,abstemp_f);
+        #endif
+        /* Convert the float units */
+        temp_f[i] *= factor;
+      }
+      #ifdef SWIFT_DEBUG_CHECKS
+        /* The two possible errors: larger than float or smaller
+         * than float precission. */
+        if ((unit_factor*maximum) > FLT_MAX) {
+          error("Unit conversion results in numbers larger than floats");
+        } else if ((unit_factor*minimum) < FLT_MIN) {
+          error("Numbers smaller than float precission");
+        }
+      #endif
     }
   }
 
