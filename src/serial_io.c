@@ -176,9 +176,9 @@ void readArray(hid_t grp, const struct io_props props, size_t N,
 #ifdef SWIFT_DEBUG_CHECKS
       /* The two possible errors: larger than float or smaller
        * than float precision. */
-      if (unit_factor * maximum > FLT_MAX) {
+      if (factor * maximum > FLT_MAX) {
         error("Unit conversion results in numbers larger than floats");
-      } else if (unit_factor * minimum < FLT_MIN) {
+      } else if (factor * minimum < FLT_MIN) {
         error("Numbers smaller than float precision");
       }
 #endif

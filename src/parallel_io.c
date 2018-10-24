@@ -161,9 +161,9 @@ void readArray_chunk(hid_t h_data, hid_t h_plist_id,
 #ifdef SWIFT_DEBUG_CHECKS
       /* The two possible errors: larger than float or smaller
        * than float precission. */
-      if (unit_factor * maximum > FLT_MAX) {
+      if (factor * maximum > FLT_MAX) {
         error("Unit conversion results in numbers larger than floats");
-      } else if (unit_factor * minimum < FLT_MIN) {
+      } else if (factor * minimum < FLT_MIN) {
         error("Numbers smaller than float precision");
       }
 #endif
