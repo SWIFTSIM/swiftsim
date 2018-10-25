@@ -1,7 +1,7 @@
 # Define the system of units to use internally. 
 InternalUnitSystem:
-  UnitMass_in_cgs:     1.98848e43    # 10^10 Msun 
-  UnitLength_in_cgs:   3.08567758e24 # 1 Mpc 
+  UnitMass_in_cgs:     1.98848e43    # 10^10 M_sun in grams
+  UnitLength_in_cgs:   3.08567758e24 # Mpc in centimeters
   UnitVelocity_in_cgs: 1e5           # 1 km/s 
   UnitCurrent_in_cgs:  1             # Amperes
   UnitTemp_in_cgs:     1             # Kelvin
@@ -26,7 +26,7 @@ Scheduler:
 
 # Parameters governing the snapshots
 Snapshots:
-  basename:            santabarbara 
+  basename:            santabarbara_low
   scale_factor_first:  0.05
   delta_time:          1.02
 
@@ -39,9 +39,9 @@ Statistics:
 Gravity:
   eta:                    0.025  
   theta:                  0.5
-  comoving_softening:     0.01    # 10 kpc = 1/25 mean inter-particle separation
-  max_physical_softening: 0.00263 # 10 ckpc = 2.63 pkpc at z=2.8 (EAGLE-like evolution of softening).
-  mesh_side_length:       128
+  comoving_softening:     0.02    # 20 kpc = 1/25 mean inter-particle separation
+  max_physical_softening: 0.00526 # 20 ckpc = 5.26 pkpc at z=2.8 (EAGLE-like evolution of softening).
+  mesh_side_length:       64
 
 # Parameters of the hydro scheme
 SPH:
@@ -52,7 +52,7 @@ SPH:
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:  ./SantaBarbara.hdf5
+  file_name:  ./SantaBarbara_128.hdf5
   periodic:   1
   cleanup_h_factors: 1              # ICs were generated for Gadget, we need to get rid of h-factors
   cleanup_velocity_factors: 1       # ICs were generated for Gadget, we need to get rid of sqrt(a) factors in the velocity

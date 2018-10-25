@@ -53,6 +53,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 
   float wi, wj, wi_dx, wj_dx;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin == time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin == time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
+
   /* Get r. */
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -127,6 +134,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 
   float wi, wi_dx;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin == time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin == time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
+
   /* Get the masses. */
   const float mj = pj->mass;
 
@@ -180,6 +194,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 __attribute__((always_inline)) INLINE static void runner_iact_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin == time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin == time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -266,7 +287,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float sph_du_term_j = P_over_rho2_j * dvdr * r_inv * wj_dr;
 
   /* Viscosity term */
-  const float visc_du_term = 0.5f * visc_acc_term * dvdr;
+  const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term;
@@ -300,6 +321,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin == time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin == time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -381,7 +409,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float sph_du_term_i = P_over_rho2_i * dvdr * r_inv * wi_dr;
 
   /* Viscosity term */
-  const float visc_du_term = 0.5f * visc_acc_term * dvdr;
+  const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term;
