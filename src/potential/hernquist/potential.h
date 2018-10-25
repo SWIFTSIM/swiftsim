@@ -47,6 +47,10 @@ struct external_potential {
   /*! Scale length (often as a, to prevent confusion we use al) */
   double al;
 
+  /*! Square of the softening length. Acceleration tends to zero within this    
+   * distance from the origin */
+  double epsilon2;
+
   /*! Time-step condition pre-factor */
   double timestep_mult;
 };
@@ -99,9 +103,9 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
  * Note that the accelerations are multiplied by Newton's G constant
  * later on.
  *
- * a_x = -(v_rot^2 / G) * x / (r^2 + epsilon^2)
- * a_y = -(v_rot^2 / G) * y / (r^2 + epsilon^2)
- * a_z = -(v_rot^2 / G) * z / (r^2 + epsilon^2)
+ * a_x = - GM / (a+r)^2 * x/r
+ * a_y = - GM / (a+r)^2 * y/r
+ * a_z = - GM / (a+r)^2 * z/r
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
@@ -115,7 +119,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-  const float r = sqrtf( dx * dx + dy * dy + dz * dz);
+  const float r = sqrtf( dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float r_plus_a_inv = 1.f / (r + potential->al);
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
   const float preterm = -phys_const->const_newton_G * potential->mass;
@@ -130,7 +134,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
  * @brief Computes the gravitational potential energy of a particle in an
  * isothermal potential.
  *
- * phi = -0.5 * vrot^2 * ln(r^2 + epsilon^2)
+ * phi = - GM/(r+a)
  *
  * @param time The current time (unused here).
  * @param potential The #external_potential used in the run.
@@ -175,9 +179,12 @@ static INLINE void potential_init_backend(
   } 
 
   potential->mass = 
-      parser_get_param_double(parameter_file, "HernquistPotential:Mass");
+      parser_get_param_double(parameter_file, "HernquistPotential:mass");
   potential->al = parser_get_param_double(parameter_file, 
                                           "Hernquistpotential:scalelength");
+  const float epsilon = parser_get_param_double(parameter_file,
+                        "HernquistPotential:epsilon");
+  potential->epsilon2 = epsilon*epsilon;
   potential->timestep_mult = parser_get_param_float(
       parameter_file, "HernquistPotential:timestep_mult");
 }
