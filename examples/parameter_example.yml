@@ -175,6 +175,7 @@ EoS:
 
 # Point mass external potentials
 PointMassPotential:
+  useabspos:       0        # 0 -> positions based on centre, 1 -> absolute positions 
   position:        [50.,50.0,50.]      # location of external point mass (internal units)
   mass:            1e10                # mass of external point mass (internal units)
   timestep_mult:   0.03                # Dimensionless pre-factor for the time-step condition
@@ -182,10 +183,19 @@ PointMassPotential:
 
 # Isothermal potential parameters
 IsothermalPotential:
+  useabspos:       0        # 0 -> positions based on centre, 1 -> absolute positions 
   position:        [100.,100.,100.]    # Location of centre of isothermal potential with respect to centre of the box (internal units)
   vrot:            200.     # Rotation speed of isothermal potential (internal units)
   timestep_mult:   0.03     # Dimensionless pre-factor for the time-step condition
   epsilon:         0.1      # Softening size (internal units)
+  
+# Hernquist potential parameters
+HernquistPotential:
+  useabspos:       0        # 0 -> positions based on centre, 1 -> absolute positions 
+  position:        [100.,100.,100.]    # Location of centre of isothermal potential with respect to centre of the box (if 0) otherwise absolute (if 1) (internal units)
+  Mass:            1e10     # Mass of the Hernquist potential
+  ScaleLength:     10.0     # Scale length of the potential
+  timestep_mult:   0.03     # Dimensionless pre-factor for the time-step condition
 
 # Disk-patch potential parameters
 DiscPatchPotential:
