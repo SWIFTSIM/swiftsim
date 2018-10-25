@@ -42,7 +42,7 @@ struct external_potential {
   double x[3];
 
   /*! Mass of the potential */
-  double M;
+  double mass;
 
   /*! Scale length (often as a, to prevent confusion we use al) */
   double al;
@@ -115,10 +115,11 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-  const float r2_plus_epsilon2_inv =
-      1.f / (dx * dx + dy * dy + dz * dz + potential->epsilon2);
-
-  const float term = -potential->vrot2_over_G * r2_plus_epsilon2_inv;
+  const float r = sqrtf( dx * dx + dy * dy + dz * dz);
+  const float r_plus_a_inv = 1.f / (r + potential->al);
+  const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
+  const float preterm = -phys_const->const_newton_G * potential->mass;
+  const float term = preterm * r_plus_a_inv2 / r;
 
   g->a_grav[0] += term * dx;
   g->a_grav[1] += term * dy;
@@ -144,9 +145,9 @@ external_gravity_get_potential_energy(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-
-  return 0.5f * potential->vrot * potential->vrot *
-         logf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
+  const float r = sqrtf( dx*dx + dy*dy + dz*dz);
+  const float r_plus_alinv = 1.f / ( r + potential->al );
+  return -phys_const->const_newton_G * potential->mass * r_plus_alinv;
 }
 
 /**
@@ -173,7 +174,7 @@ static INLINE void potential_init_backend(
     potential->x[2] += s->dim[2] / 2.;
   } 
 
-  potential->M = 
+  potential->mass = 
       parser_get_param_double(parameter_file, "HernquistPotential:Mass");
   potential->al = parser_get_param_double(parameter_file, 
                                           "Hernquistpotential:scalelength");
