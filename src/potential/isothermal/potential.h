@@ -148,7 +148,7 @@ external_gravity_get_potential_energy(
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
-  return -0.5f * potential->vrot * potential->vrot *
+  return 0.5f * potential->vrot * potential->vrot *
          logf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
 }
 
