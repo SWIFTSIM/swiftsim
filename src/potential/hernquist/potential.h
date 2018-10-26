@@ -17,7 +17,7 @@
  *
  ******************************************************************************/
 #ifndef SWIFT_POTENTIAL_HERNQUIST_H
-#define SWIFT_POTENTIAL_ISOTHERMAL_H
+#define SWIFT_POTENTIAL_HERNQUIST_H
 
 /* Config parameters. */
 #include "../config.h"
@@ -59,6 +59,8 @@ struct external_potential {
  * @brief Computes the time-step due to the acceleration from an Hernquist 
  * potential
  *
+ * dota = GM/((a+r)^2 r) ( - vecv + vecx * vecv dot vecv /r * ( 1/r + 2/(a+r)))
+ *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
  * @param phys_const The physical constants in internal units.
@@ -71,25 +73,30 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 
   const float G_newton = phys_const->const_newton_G;
 
+  /* Calculate the relative potential with respect to the centre of the 
+   * potential */
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
-  const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz);
+  /* calculate the radius  */
+  const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz 
+                               + potential->epsilon2);
   const float r_plus_a_inv = 1.f / ( r2_sqrt + potential->al );
-
-  const float r2_plus_epsilon2_inv =
-      1.f / (dx * dx + dy * dy + dz * dz + potential->epsilon2);
+  const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
+  const float r2_sqrt_inv = 1.f / r2_sqrt;
+  const float prefac = - G_newton * potential->mass * r2_sqrt_inv 
+                         * r_plus_a_inv2;
   const float drdv =
       dx * (g->v_full[0]) + dy * (g->v_full[1]) + dz * (g->v_full[2]);
-  const double vrot = potential->vrot;
-
-  const float dota_x = vrot * vrot * r2_plus_epsilon2_inv *
-                       (g->v_full[0] - 2.f * drdv * dx * r2_plus_epsilon2_inv);
-  const float dota_y = vrot * vrot * r2_plus_epsilon2_inv *
-                       (g->v_full[1] - 2.f * drdv * dy * r2_plus_epsilon2_inv);
-  const float dota_z = vrot * vrot * r2_plus_epsilon2_inv *
-                       (g->v_full[2] - 2.f * drdv * dz * r2_plus_epsilon2_inv);
+  
+  const float dota_x = prefac * ( -g->v_full[0] + drdv * dx * r2_sqrt_inv * (
+                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
+  
+  const float dota_y = prefac * ( -g->v_full[1] + drdv * dy * r2_sqrt_inv * (
+                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
+  const float dota_z = prefac * ( -g->v_full[2] + drdv * dz * r2_sqrt_inv * (
+                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
   const float dota_2 = dota_x * dota_x + dota_y * dota_y + dota_z * dota_z;
   const float a_2 = g->a_grav[0] * g->a_grav[0] + g->a_grav[1] * g->a_grav[1] +
                     g->a_grav[2] * g->a_grav[2];
@@ -98,7 +105,7 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 }
 
 /**
- * @brief Computes the gravitational acceleration from an isothermal potential.
+ * @brief Computes the gravitational acceleration from an Hernquist potential.
  *
  * Note that the accelerations are multiplied by Newton's G constant
  * later on.
@@ -116,9 +123,12 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
     double time, const struct external_potential* potential,
     const struct phys_const* const phys_const, struct gpart* g) {
 
+  /* Determine the position relative to the centre of the potential */
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
+  
+  /* Calculate the acceleration */
   const float r = sqrtf( dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float r_plus_a_inv = 1.f / (r + potential->al);
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
@@ -132,7 +142,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
 
 /**
  * @brief Computes the gravitational potential energy of a particle in an
- * isothermal potential.
+ * Hernquist potential.
  *
  * phi = - GM/(r+a)
  *
@@ -181,7 +191,7 @@ static INLINE void potential_init_backend(
   potential->mass = 
       parser_get_param_double(parameter_file, "HernquistPotential:mass");
   potential->al = parser_get_param_double(parameter_file, 
-                                          "Hernquistpotential:scalelength");
+                                          "HernquistPotential:scalelength");
   const float epsilon = parser_get_param_double(parameter_file,
                         "HernquistPotential:epsilon");
   potential->epsilon2 = epsilon*epsilon;
@@ -202,8 +212,8 @@ static inline void potential_print_backend(
       "%e, %e), mass = %e "
       "scale length = %e"
       "timestep multiplier = %e",
-      potential->x[0], potential->x[1], potential->x[2], potential->M,
-      potential->al, potential->timestep_mult;
+      potential->x[0], potential->x[1], potential->x[2], potential->mass,
+      potential->al, potential->timestep_mult);
 }
 
-#endif /* SWIFT_ISOTHERMAL_H */
+#endif /* SWIFT_POTENTIAL_HERNQUIST_H */

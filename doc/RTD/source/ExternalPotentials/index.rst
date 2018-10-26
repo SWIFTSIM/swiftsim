@@ -27,3 +27,8 @@ potential. In this potential the ``ifdef`` statements need to be changed to the
 specific potential and the ``struct`` and ``potential_init_backend`` need to be
 changed such that it uses your potential and reads the correct potential from
 the parameter file during running the program.
+
+Add the potential to the ``potential.h`` file in the ``src`` directory.
+
+Add the potential to the ``config.h`` header such that we can configure the 
+program to use the correct potential.
