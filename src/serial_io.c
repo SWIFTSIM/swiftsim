@@ -165,7 +165,7 @@ void readArray(hid_t grp, const struct io_props props, size_t N,
 #ifdef SWIFT_DEBUG_CHECKS
         /* Find the absolute minimum and maximum values */
         const float abstemp_f = fabsf(temp_f[i]);
-        if ( abstemp_f != 0.f ) {
+        if (abstemp_f != 0.f) {
           maximum = max(maximum, abstemp_f);
           minimum = min(minimum, abstemp_f);
         }

@@ -150,7 +150,7 @@ void readArray_chunk(hid_t h_data, hid_t h_plist_id,
 #ifdef SWIFT_DEBUG_CHECKS
         /* Find the absolute minimum and maximum values */
         const float abstemp_f = fabsf(temp_f[i]);
-        if ( abstemp_f != 0.f ) {
+        if (abstemp_f != 0.f) {
           maximum = max(maximum, abstemp_f);
           minimum = min(minimum, abstemp_f);
         }
