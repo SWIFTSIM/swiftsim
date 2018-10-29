@@ -1,5 +1,7 @@
 ###############################################################################
  # This file is part of SWIFT.
+ # Copyright (c) 2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
+ # Modified version of the Isothermal potential makeIC.py:
  # Copyright (c) 2016 John A. Regan (john.a.regan@durham.ac.uk)
  #                    Tom Theuns (tom.theuns@durham.ac.uk)
  # 
@@ -40,19 +42,29 @@ const_unit_length_in_cgs   =   (1000*PARSEC_IN_CGS)
 const_unit_mass_in_cgs     =   (SOLAR_MASS_IN_CGS)
 const_unit_velocity_in_cgs =   (1e5)
 
-print "UnitMass_in_cgs:     ", const_unit_mass_in_cgs 
-print "UnitLength_in_cgs:   ", const_unit_length_in_cgs
-print "UnitVelocity_in_cgs: ", const_unit_velocity_in_cgs
+print("UnitMass_in_cgs:     ", const_unit_mass_in_cgs)
+print("UnitLength_in_cgs:   ", const_unit_length_in_cgs)
+print("UnitVelocity_in_cgs: ", const_unit_velocity_in_cgs)
+
+def hernquistcircvel(r,M,a):
+    ''' Function that calculates the circular velocity in a 
+    Hernquist potential.
+    r: radius from centre of potential
+    M: mass of the Hernquist potential
+    a: Scale length of the potential
+    '''
+    return NEWTON_GRAVITY_CGS * M * r / (r+a)**2
 
 
-# rotation speed of isothermal potential [km/s]
-vrot_kms = 200.
+# Properties of the Hernquist potential
+Mass = 1e11
+scaleLength = 30 # kpc
+
 
 # derived units
 const_unit_time_in_cgs = (const_unit_length_in_cgs / const_unit_velocity_in_cgs)
 const_G                = ((NEWTON_GRAVITY_CGS*const_unit_mass_in_cgs*const_unit_time_in_cgs*const_unit_time_in_cgs/(const_unit_length_in_cgs*const_unit_length_in_cgs*const_unit_length_in_cgs)))
-print 'G=', const_G
-vrot   = vrot_kms * 1e5 / const_unit_velocity_in_cgs
+print('G=', const_G)
 
 
 # Parameters
@@ -62,10 +74,9 @@ Radius  = 100.          # maximum radius of particles [kpc]
 G       = const_G 
 
 N       = int(sys.argv[1])  # Number of particles
-icirc   = int(sys.argv[2])  # if = 0, all particles are on circular orbits, if = 1, Lz/Lcirc uniform in ]0,1[
 L       = N**(1./3.)
 
-fileName = "Isothermal.hdf5" 
+fileName = "Hernquist.hdf5" 
 
 
 #---------------------------------------------------
@@ -103,28 +114,26 @@ numpy.random.seed(1234)
 #Particle group
 grp1 = file.create_group("/PartType1")
 #generate particle positions
-radius = Radius * (numpy.random.rand(N))**(1./3.) + 10.
+radius = Radius * (numpy.random.rand(N))**(1./3.) 
 ctheta = -1. + 2 * numpy.random.rand(N)
 stheta = numpy.sqrt(1.-ctheta**2)
 phi    =  2 * math.pi * numpy.random.rand(N)
 r      = numpy.zeros((numPart, 3))
 r[:,0] = radius
 
-import matplotlib.pyplot as plt
-plt.plot(r[:,0],'.')
-plt.show()
+#import matplotlib.pyplot as plt
+#plt.plot(r[:,0],'.')
+#plt.show()
 
 
 #
-speed  = vrot
 v      = numpy.zeros((numPart, 3))
-omega  = speed / radius
+v[:,0] = hernquistcircvel(radius,Mass,scaleLength)
+omega  = v[:,0] / radius
 period = 2.*math.pi/omega
-print 'period = minimum = ',min(period), ' maximum = ',max(period)
+print('period = minimum = ',min(period), ' maximum = ',max(period))
 
 omegav = omega
-if (icirc != 0):
-    omegav = omega * numpy.random.rand(N)
 
 v[:,0] = -omegav * r[:,1]
 v[:,1] =  omegav * r[:,0]
