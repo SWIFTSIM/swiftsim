@@ -100,7 +100,6 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dota_2 = dota_x * dota_x + dota_y * dota_y + dota_z * dota_z;
   const float a_2 = g->a_grav[0] * g->a_grav[0] + g->a_grav[1] * g->a_grav[1] +
                     g->a_grav[2] * g->a_grav[2];
-
   return potential->timestep_mult * sqrtf(a_2 / dota_2);
 }
 
