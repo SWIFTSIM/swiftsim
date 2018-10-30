@@ -75,7 +75,7 @@
 #elif defined(ANARCHY_PU_SPH)
 #include "./hydro/AnarchyPU/hydro.h"
 #include "./hydro/AnarchyPU/hydro_iact.h"
-#define SPH_IMPLENETATION "ANARCHY (Pressure-Energy) SPH (Dalla Vecchia+ in prep)"
+#define SPH_IMPLEMENTATION "ANARCHY (Pressure-Energy) SPH (Dalla Vecchia+ in prep)"
 #else
 #error "Invalid choice of SPH variant"
 #endif
