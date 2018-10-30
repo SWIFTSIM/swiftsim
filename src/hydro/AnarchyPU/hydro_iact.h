@@ -178,6 +178,84 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 }
 
 /**
+ * @brief Calculate the gradient interaction between particle i and particle j
+ *
+ * This method wraps around hydro_gradients_collect, which can be an empty
+ * method, in which case no gradients are used.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_gradient(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H) {
+
+    /* We need to construct the maximal signal velocity between our particle
+     * and all of it's neighbours */
+
+    const float dv_dx = \
+        (pi->v[0] - pj->v[0]) * dx[0] + \
+        (pi->v[1] - pj->v[1]) * dx[1] + \
+        (pi->v[2] - pj->v[2]) * dx[2];
+
+    const float dv_dx_factor_i = min(0, 3.f*dv_dx);
+    const float dv_dx_factor_j = min(0, -3.f*dv_dx);
+
+    const float new_v_sig_i = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_i;
+    const float new_v_sig_j = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_j;
+
+    /* Update if we need to */
+    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig_i);
+    pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig_j);
+
+}
+
+/**
+ * @brief Calculate the gradient interaction between particle i and particle j:
+ * non-symmetric version
+ *
+ * This method wraps around hydro_gradients_nonsym_collect, which can be an
+ * empty method, in which case no gradients are used.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H) {
+
+    /* We need to construct the maximal signal velocity between our particle
+     * and all of it's neighbours */
+
+    const float dv_dx = \
+        (pi->v[0] - pj->v[0]) * dx[0] + \
+        (pi->v[1] - pj->v[1]) * dx[1] + \
+        (pi->v[2] - pj->v[2]) * dx[2];
+
+    const float dv_dx_factor_i = min(0, 3.f*dv_dx);
+
+    const float new_v_sig_i = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_i;
+
+    /* Update if we need to */
+    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig_i);
+
+}
+
+/**
  * @brief Force interaction between two part*icles.
  *
  * @param r2 Comoving square distance between the two part*icles.
@@ -252,7 +330,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float alpha = (pi->viscosity.alpha + pj->viscosity.alpha);
+  const float visc = -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -297,10 +376,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
   pj->force.h_dt -= mi * dvdr * r_inv / rhoi * wj_dr;
-
-  /* Update the signal velocity. */
-  pi->force.v_sig = max(pi->force.v_sig, v_sig);
-  pj->force.v_sig = max(pj->force.v_sig, v_sig);
 }
 
 /**
@@ -379,7 +454,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
-  const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float alpha = (pi->viscosity.alpha + pj->viscosity.alpha);
+  const float visc = -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -414,9 +490,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
-
-  /* Update the signal velocity. */
-  pi->force.v_sig = max(pi->force.v_sig, v_sig);
 }
 
 #endif /* SWIFT_MINIMAL_HYDRO_IACT_H */

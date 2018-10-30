@@ -382,7 +382,7 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
 
   /* CFL condition */
   const float dt_cfl = 2.f * kernel_gamma * CFL_condition * cosmo->a * p->h /
-                       (cosmo->a_factor_sound_speed * p->force.v_sig);
+                       (cosmo->a_factor_sound_speed * p->viscosity.v_sig);
 
   const float dt_u_change =
       (p->u_dt != 0.0f) ? fabsf(const_max_u_change * p->u / p->u_dt) : FLT_MAX;
@@ -477,6 +477,81 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 }
 
 /**
+ * @brief Prepare a particle for the gradient calculation.
+ *
+ * This function is called after the density loop and before the gradient loop.
+ *
+ * We use it to set the physical timestep for the particle and to copy the
+ * actual velocities, which we need to boost our interfaces during the flux
+ * calculation. We also initialize the variables used for the time step
+ * calculation.
+ *
+ * @param p The particle to act upon.
+ * @param xp The extended particle data to act upon.
+ * @param cosmo The cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct cosmology* cosmo) {
+
+  const float fac_mu = cosmo->a_factor_mu;
+
+  /* Compute the norm of the curl */
+  const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
+                             p->density.rot_v[1] * p->density.rot_v[1] +
+                             p->density.rot_v[2] * p->density.rot_v[2]);
+
+  /* Compute the norm of div v */
+  const float abs_div_v = fabsf(p->density.div_v);
+
+  /* Compute the sound speed -- see theory section for justification */
+  const float soundspeed = hydro_get_comoving_soundspeed(p);
+
+  /* Compute the Balsara switch */
+  const float balsara = abs_div_v /
+      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
+
+  /* Compute the "grad h" term */
+  const float common_factor = p->h / (hydro_dimension * p->density.wcount);
+  const float grad_h_term = (p->density.pressure_bar_dh * common_factor *
+                             hydro_one_over_gamma_minus_one) /
+                            (1.f + common_factor * p->density.wcount_dh);
+
+  /* Update variables. */
+  p->force.f = grad_h_term;
+  p->force.soundspeed = soundspeed;
+  p->force.balsara = balsara;
+  p->force.div_v = p->density.div_v;
+}
+
+/**
+ * @brief Resets the variables that are required for a gradient calculation.
+ *
+ * This function is called after hydro_prepare_gradient.
+ *
+ * @param p The particle to act upon.
+ * @param xp The extended particle data to act upon.
+ * @param cosmo The cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void hydro_reset_gradient(
+    struct part* restrict p) {
+      p->viscosity.v_sig = 0.f;
+    }
+
+/**
+ * @brief Finishes the gradient calculation.
+ *
+ * Just a wrapper around hydro_gradients_finalize, which can be an empty method,
+ * in which case no gradients are used.
+ *
+ * This method also initializes the force loop variables.
+ *
+ * @param p The particle to act upon.
+ */
+__attribute__((always_inline)) INLINE static void hydro_end_gradient(
+    struct part* p) {}
+
+/**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
  *
  * In the desperate case where a particle has no neighbours (likely because
@@ -498,6 +573,7 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
 
   /* Re-set problematic values */
   p->rho = p->mass * kernel_root * h_inv_dim;
+  p->viscosity.v_sig = 0.f;
   p->pressure_bar =
       p->mass * p->u * hydro_gamma_minus_one * kernel_root * h_inv_dim;
   p->density.wcount = kernel_root * h_inv_dim;
@@ -532,35 +608,17 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
+    
+    /* Here we need to update the artificial viscosity */
 
-  const float fac_mu = cosmo->a_factor_mu;
+    const float tau = p->h / (2.f * hydro_props->viscosity.alpha * hydro_props->viscosity.length);
+    const float div_v_dt = (p->force.div_v - p->viscosity.div_v_prev) / dt_alpha;
+    const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
+    const float alpha_loc = hydro_props->viscosity.alpha_max * (S / (p->h + S));
+    const float alpha_dt = (alpha_loc - p->viscosity.alpha) / tau;
 
-  /* Compute the norm of the curl */
-  const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
-                             p->density.rot_v[1] * p->density.rot_v[1] +
-                             p->density.rot_v[2] * p->density.rot_v[2]);
-
-  /* Compute the norm of div v */
-  const float abs_div_v = fabsf(p->density.div_v);
-
-  /* Compute the sound speed -- see theory section for justification */
-  const float soundspeed = hydro_get_comoving_soundspeed(p);
-
-  /* Compute the Balsara switch */
-  const float balsara =
-      hydro_props->viscosity.alpha * abs_div_v /
-      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
-
-  /* Compute the "grad h" term */
-  const float common_factor = p->h / (hydro_dimension * p->density.wcount);
-  const float grad_h_term = (p->density.pressure_bar_dh * common_factor *
-                             hydro_one_over_gamma_minus_one) /
-                            (1.f + common_factor * p->density.wcount_dh);
-
-  /* Update variables. */
-  p->force.f = grad_h_term;
-  p->force.soundspeed = soundspeed;
-  p->force.balsara = balsara;
+    /* Finally, we can update the actual value of the alpha */
+    p->viscosity.alpha += alpha_dt * dt_alpha;
 }
 
 /**
@@ -582,7 +640,6 @@ __attribute__((always_inline)) INLINE static void hydro_reset_acceleration(
   /* Reset the time derivatives. */
   p->u_dt = 0.0f;
   p->force.h_dt = 0.0f;
-  p->force.v_sig = p->force.soundspeed;
 }
 
 /**
@@ -745,6 +802,13 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   /* Note that unlike Minimal the pressure and sound speed cannot be calculated
    * here because they are smoothed properties in this scheme. */
+
+  /* Set the initial value of the artificial viscosity based on the non-variable
+     schemes for safety */
+
+  p->viscosity.alpha = hydro_props->viscosity.alpha;
+  /* Initialise this here to keep all the AV variables together */
+  p->viscosity.div_v_prev = 0.f;
 }
 
 /**

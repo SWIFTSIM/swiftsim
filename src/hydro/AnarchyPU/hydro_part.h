@@ -105,6 +105,18 @@ struct part {
   /*! Particle pressure (weighted) */
   float pressure_bar;
 
+  /* Store viscosity information in a separate struct. */
+  struct {
+    /*! Particle velocity divergence from previous step */
+    float div_v_prev;
+
+    /*! Artificial viscosity parameter */
+    float alpha;
+
+    /*! Signal velocity */
+    float v_sig;
+  } viscosity;
+
   /* Store density/force specific stuff. */
   union {
 
@@ -151,14 +163,13 @@ struct part {
       /*! Particle soundspeed. */
       float soundspeed;
 
-      /*! Particle signal velocity */
-      float v_sig;
-
       /*! Time derivative of smoothing length  */
       float h_dt;
 
       /*! Balsara switch */
       float balsara;
+
+      float div_v;
     } force;
   };
 
