@@ -71,7 +71,7 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
     const struct phys_const* restrict phys_const,
     const struct gpart* restrict g) {
 
-  const float G_newton = phys_const->const_newton_G;
+  /* const float G_newton = phys_const->const_newton_G; */
 
   /* Calculate the relative potential with respect to the centre of the 
    * potential */
