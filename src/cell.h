@@ -454,6 +454,27 @@ struct cell {
     /*! Values of dx_max before the drifts, used for sub-cell tasks. */
     float dx_max_part_old;
 
+    /*! Maximum particle movement in this cell since the last sort. */
+    float dx_max_sort;
+
+    /*! Values of dx_max_sort before the drifts, used for sub-cell tasks. */
+    float dx_max_sort_old;
+
+    /*! Bit mask of sort directions that will be needed in the next timestep. */
+    unsigned int requires_sorts;
+
+    /*! Pointer for the sorted indices. */
+    struct entry *sort[13];
+
+    /*! Bit-mask indicating the sorted directions */
+    unsigned int sorted;
+
+    /*! Bit mask of sorts that need to be computed for this cell. */
+    unsigned int do_sort;
+
+    /*! Do any of this cell's sub-cells need to be sorted? */
+    char do_sub_sort;
+
     /*! Dependency implicit task for the star ghost  (in->ghost->out)*/
     struct task *ghost_in;
 
@@ -462,6 +483,9 @@ struct cell {
 
     /*! The star ghost task itself */
     struct task *ghost;
+
+    /*! The task computing this cell's sorts. */
+    struct task *sorts;
 
     /*! Linked list of the tasks computing this cell's star density. */
     struct link *density;

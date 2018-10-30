@@ -85,5 +85,6 @@ void runner_do_unskip_mapper(void *map_data, int num_elements,
                              void *extra_data);
 void runner_do_drift_all_mapper(void *map_data, int num_elements,
                                 void *extra_data);
+void runner_do_sort_ascending(struct entry *sort, int N);
 
 #endif /* SWIFT_RUNNER_H */
