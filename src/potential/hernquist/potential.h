@@ -81,9 +81,6 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 
   /* calculate the radius  */
 
-  const float r2 = dx * dx + dy * dy + dz * dz 
-                    + potential->epsilon2; 
-  
   const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz 
                                + potential->epsilon2);
   
