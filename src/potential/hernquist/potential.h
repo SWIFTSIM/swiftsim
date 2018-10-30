@@ -80,8 +80,13 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dz = g->x[2] - potential->x[2];
 
   /* calculate the radius  */
+
+  const float r2 = dx * dx + dy * dy + dz * dz 
+                    + potential->epsilon2; 
+  /*
   const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz 
                                + potential->epsilon2);
+  
   const float r_plus_a_inv = 1.f / ( r2_sqrt + potential->al );
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
   const float r2_sqrt_inv = 1.f / r2_sqrt;
@@ -98,9 +103,11 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dota_z = prefac * ( -g->v_full[2] + drdv * dz * r2_sqrt_inv * (
                         r2_sqrt_inv + 2.f * r_plus_a_inv ) );
   const float dota_2 = dota_x * dota_x + dota_y * dota_y + dota_z * dota_z;
+
+  */ 
   const float a_2 = g->a_grav[0] * g->a_grav[0] + g->a_grav[1] * g->a_grav[1] +
                     g->a_grav[2] * g->a_grav[2];
-  return potential->timestep_mult * sqrtf(a_2 / dota_2);
+  return potential->timestep_mult * sqrtf(r2/a_2);
 }
 
 /**
