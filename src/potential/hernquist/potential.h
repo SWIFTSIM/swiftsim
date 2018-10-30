@@ -71,7 +71,7 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
     const struct phys_const* restrict phys_const,
     const struct gpart* restrict g) {
 
-  /* const float G_newton = phys_const->const_newton_G; */
+  const float G_newton = phys_const->const_newton_G; 
 
   /* Calculate the relative potential with respect to the centre of the 
    * potential */
@@ -83,7 +83,7 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 
   const float r2 = dx * dx + dy * dy + dz * dz 
                     + potential->epsilon2; 
-  /*
+  
   const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz 
                                + potential->epsilon2);
   
@@ -104,10 +104,10 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
                         r2_sqrt_inv + 2.f * r_plus_a_inv ) );
   const float dota_2 = dota_x * dota_x + dota_y * dota_y + dota_z * dota_z;
 
-  */ 
+   
   const float a_2 = g->a_grav[0] * g->a_grav[0] + g->a_grav[1] * g->a_grav[1] +
                     g->a_grav[2] * g->a_grav[2];
-  return potential->timestep_mult * sqrtf(r2/a_2);
+  return potential->timestep_mult * sqrtf(a_2/dota_2);
 }
 
 /**
