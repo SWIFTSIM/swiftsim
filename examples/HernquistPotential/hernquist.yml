@@ -19,13 +19,13 @@ Statistics:
   
 # Parameters governing the snapshots
 Snapshots:
-  basename:            Isothermal # Common part of the name of output files
+  basename:            hernquist # Common part of the name of output files
   time_first:          0.         # Time of the first output (in internal units)
   delta_time:          0.02       # Time difference between consecutive outputs (in internal units)
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:  Isothermal.hdf5       # The file to read
+  file_name:  Hernquist.hdf5       # The file to read
   periodic:   1
   shift:      [200.,200.,200.]      # Shift all particles to be in the potential
  
@@ -33,7 +33,7 @@ InitialConditions:
 HernquistPotential:
   useabspos:       0          # Whether to use absolute position (1) or relative potential to centre of box (0)
   position:        [0.,0.,0.]
-  mass:            1e13
+  mass:            1e11
   scalelength:     300.0
   timestep_mult:   0.3       # controls time step
   epsilon:         0.         # No softening at the centre of the halo
