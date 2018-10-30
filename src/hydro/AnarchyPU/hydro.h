@@ -611,14 +611,32 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     
     /* Here we need to update the artificial viscosity */
 
-    const float tau = p->h / (2.f * hydro_props->viscosity.alpha * hydro_props->viscosity.length);
+    /* Timescale for decay */
+    const float tau = p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
+    /* Construct time differential of div.v implicitly */
     const float div_v_dt = (p->force.div_v - p->viscosity.div_v_prev) / dt_alpha;
+    /* Construct the source term for the AV; if shock detected this is _positive_ as
+     * div_v_dt should be _negative_ before the shock hits */
     const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
-    const float alpha_loc = hydro_props->viscosity.alpha_max * (S / (p->h + S));
-    const float alpha_dt = (alpha_loc - p->viscosity.alpha) / tau;
+    const float v_sig_square = p->viscosity.v_sig * p->viscosity.v_sig; 
+    /* Calculate the current appropriate value of the AV based on the above */
+    const float alpha_loc = hydro_props->viscosity.alpha_max * (S / (v_sig_square + S));
 
-    /* Finally, we can update the actual value of the alpha */
-    p->viscosity.alpha += alpha_dt * dt_alpha;
+
+    if (alpha_loc > p->viscosity.alpha) {
+      /* Reset the value of alpha to the appropriate value */
+      p->viscosity.alpha = alpha_loc;
+    } else {
+      /* Integrate the alpha forward in time to decay back to alpha = 0 */
+      const float alpha_dt = (alpha_loc - p->viscosity.alpha) / tau;
+
+      /* Finally, we can update the actual value of the alpha */
+      p->viscosity.alpha += alpha_dt * dt_alpha;
+    }
+
+    if (p->viscosity.alpha < hydro_props->viscosity.alpha_min) {
+      p->viscosity.alpha = hydro_props->viscosity.alpha_min;
+    }
 }
 
 /**
