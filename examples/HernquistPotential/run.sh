@@ -7,7 +7,7 @@ then
     python makeIC.py 1000 0
 fi
 
-rm -rf Isothermal_*.hdf5
-../swift -g -t 1 isothermal.yml 2>&1 | tee output.log
+rm -rf hernquist_*.hdf5
+../swift -g -t 1 hernquist.yml 2>&1 | tee output.log
 
 python energy_plot.py
