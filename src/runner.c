@@ -622,12 +622,12 @@ void runner_do_sort_ascending(struct entry *sort, int N) {
 #define RUNNER_CHECK_SORTS(TYPE)                                     \
   void runner_check_sorts_##TYPE(struct cell *c, int flags) {        \
                                                                      \
-    if (flags & ~c->hydro.sorted)                                    \
+    if (flags & ~c->TYPE.sorted)				     \
       error("Inconsistent sort flags (downward)!");                  \
     if (c->split)                                                    \
       for (int k = 0; k < 8; k++)                                    \
-        if (c->progeny[k] != NULL && c->progeny[k]->hydro.count > 0) \
-          runner_check_sorts_##TYPE(c->progeny[k], c->hydro.sorted); \
+        if (c->progeny[k] != NULL && c->progeny[k]->TYPE.count > 0) \
+          runner_check_sorts_##TYPE(c->progeny[k], c->TYPE.sorted); \
   }
 #else
 #define RUNNER_CHECK_SORTS(TYPE)                                       \

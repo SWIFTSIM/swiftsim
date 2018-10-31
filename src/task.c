@@ -472,6 +472,10 @@ int task_lock(struct task *t) {
       } else if (subtype == task_subtype_stars_density) {
         if (ci->stars.hold) return 0;
         if (cell_slocktree(ci) != 0) return 0;
+	if (cell_locktree(ci) != 0) {
+          cell_sunlocktree(ci);
+          return 0;
+	}
       } else {
         if (cell_locktree(ci) != 0) return 0;
       }
@@ -500,7 +504,7 @@ int task_lock(struct task *t) {
         if (ci->stars.hold || cj->stars.hold) return 0;
         if (cell_slocktree(ci) != 0) return 0;
         if (cell_slocktree(cj) != 0) {
-          cell_unlocktree(ci);
+          cell_sunlocktree(ci);
           return 0;
         }
       } else {

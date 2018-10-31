@@ -1157,9 +1157,9 @@ int main(int argc, char *argv[]) {
 #ifdef SWIFT_DEBUG_THREADPOOL
     /* Dump the task data using the given frequency. */
     if (dump_threadpool && (dump_threadpool == 1 || j % dump_threadpool == 1)) {
-      char dumpfile[40];
+      char dumpfile[50];
 #ifdef WITH_MPI
-      snprintf(dumpfile, 40, "threadpool_info-rank%d-step%d.dat", engine_rank,
+      snprintf(dumpfile, 50, "threadpool_info-rank%.4d-step%.4d.dat", engine_rank,
                j + 1);
 #else
       snprintf(dumpfile, 40, "threadpool_info-step%d.dat", j + 1);
