@@ -639,6 +639,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     if (p->viscosity.alpha < hydro_props->viscosity.alpha_min) {
       p->viscosity.alpha = hydro_props->viscosity.alpha_min;
     }
+
+    /* Set our old div_v to the one for the next loop */
+    p->viscosity.div_v_prev = p->force.div_v;
 }
 
 /**
