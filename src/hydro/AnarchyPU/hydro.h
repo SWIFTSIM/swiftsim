@@ -614,7 +614,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     /* Timescale for decay */
     const float tau = p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
     /* Construct time differential of div.v implicitly */
-    const float div_v_dt = (p->force.div_v - p->viscosity.div_v_prev) / dt_alpha;
+    const float div_v_dt =
+        dt_alpha == 0.f ? 0.f
+                        : (p->force.div_v - p->viscosity.div_v_prev) / dt_alpha;
     /* Construct the source term for the AV; if shock detected this is _positive_ as
      * div_v_dt should be _negative_ before the shock hits */
     const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
