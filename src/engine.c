@@ -449,6 +449,10 @@ void engine_make_hierarchical_tasks_stars(struct engine *e, struct cell *c) {
   /* Are we in a super-cell ? */
   if (c->super == c) {
 
+    /* Add the sort task. */
+    c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
+                                       task_subtype_none, 0, 0, c, NULL);
+
     /* Local tasks only... */
     if (c->nodeID == e->nodeID) {
 
@@ -2902,6 +2906,14 @@ void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, t, finger->hydro.sorts);
     }
 
+    /* Link stars sort tasks to all the higher sort task. */
+    if (t_type == task_type_stars_sort) {
+      for (struct cell *finger = t->ci->parent; finger != NULL;
+           finger = finger->parent)
+        if (finger->stars.sorts != NULL)
+          scheduler_addunlock(sched, t, finger->stars.sorts);
+    }
+
     /* Link self tasks to cells. */
     else if (t_type == task_type_self) {
       atomic_inc(&ci->nr_tasks);
@@ -3472,6 +3484,10 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
   for (int ind = 0; ind < num_elements; ind++) {
     struct task *t = &((struct task *)map_data)[ind];
 
+    /* Sort tasks depend on the drift of the cell. */
+    if (t->type == task_type_stars_sort && t->ci->nodeID == engine_rank) {
+      scheduler_addunlock(sched, t->ci->super->grav.drift, t);
+    }
     /* Self-interaction? */
     if (t->type == task_type_self && t->subtype == task_subtype_stars_density) {
 
@@ -3495,10 +3511,12 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
       if (t->ci->nodeID == engine_rank)
         scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
       scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
       if (t->ci->super != t->cj->super) {
         if (t->cj->nodeID == engine_rank)
           scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
         scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+        scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
       }
 
       /* Now, build all the dependencies for the stars for the cells */
@@ -3520,6 +3538,7 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
       /* Make all density tasks depend on the drift and sorts. */
       scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
       scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
 
       /* Now, build all the dependencies for the stars for the cells */
       /* that are local and are not descendant of the same super-cells */
@@ -3537,10 +3556,11 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
       if (t->ci->nodeID == engine_rank)
         scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
       scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
       if (t->ci->super != t->cj->super) {
         if (t->cj->nodeID == engine_rank)
           scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
-        scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+        scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
       }
 
       /* Now, build all the dependencies for the stars for the cells */
@@ -3976,9 +3996,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         scheduler_activate(s, t);
 
         /* Set the correct sorting flags */
-        if (t_type == task_type_pair &&
-            (t_subtype == task_subtype_density ||
-             t_subtype == task_subtype_stars_density)) {
+        if (t_type == task_type_pair && t_subtype == task_subtype_density) {
 
           /* Store some values. */
           atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
@@ -3998,8 +4016,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
         /* Store current values of dx_max and h_max. */
         else if (t_type == task_type_sub_pair &&
-                 (t_subtype == task_subtype_density ||
-                  t_subtype == task_subtype_stars_density)) {
+                 (t_subtype == task_subtype_density)) {
           cell_activate_subcell_hydro_tasks(t->ci, t->cj, s);
         }
       }
@@ -4017,8 +4034,15 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           /* Store some values. */
           atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
           atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+
+          atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+          atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+
           ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
           cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+
+          ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+          cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
           /* Activate the hydro drift tasks. */
           if (ci_nodeID == nodeID) {
@@ -4033,6 +4057,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           /* Check the sorts and activate them if needed. */
           cell_activate_sorts(ci, t->flags, s);
           cell_activate_sorts(cj, t->flags, s);
+
+          cell_activate_stars_sorts(ci, t->flags, s);
+          cell_activate_stars_sorts(cj, t->flags, s);
 
         }
 

@@ -1738,9 +1738,9 @@ void cell_activate_stars_sorts_up(struct cell *c, struct scheduler *s) {
 #endif
         scheduler_activate(s, parent->stars.sorts);
         if (parent->nodeID == engine_rank) {
-	  cell_activate_drift_part(parent, s);
-	  cell_activate_drift_spart(parent, s);
-	}
+          cell_activate_drift_part(parent, s);
+          cell_activate_drift_spart(parent, s);
+        }
         break;
       }
     }
@@ -3028,10 +3028,10 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
         atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
         atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
 
-	ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+        ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
         cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
-	ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+        ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
         cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
         /* Activate the drift tasks. */

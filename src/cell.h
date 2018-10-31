@@ -502,6 +502,12 @@ struct cell {
     /*! Spin lock for various uses (#spart case). */
     swift_lock_type lock;
 
+#ifdef SWIFT_DEBUG_CHECKS
+
+    /*! Last (integer) time the cell's sort arrays were updated. */
+    integertime_t ti_sort;
+
+#endif
   } stars;
 
 #ifdef WITH_MPI
@@ -668,6 +674,7 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
 void cell_activate_drift_part(struct cell *c, struct scheduler *s);
 void cell_activate_drift_gpart(struct cell *c, struct scheduler *s);
 void cell_activate_sorts(struct cell *c, int sid, struct scheduler *s);
+void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_clear_drift_flags(struct cell *c, void *data);
 void cell_set_super_mapper(void *map_data, int num_elements, void *extra_data);
 int cell_has_tasks(struct cell *c);
