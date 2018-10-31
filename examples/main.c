@@ -994,7 +994,7 @@ int main(int argc, char *argv[]) {
 
     /* Write the state of the system before starting time integration. */
 #ifdef WITH_LOGGER
-    logger_log_all(e.log, &e);
+    logger_log_all(e.logger, &e);
     engine_dump_index(&e);
 #endif
     engine_dump_snapshot(&e);
@@ -1211,7 +1211,7 @@ int main(int argc, char *argv[]) {
   engine_drift_all(&e);
   engine_print_stats(&e);
 #ifdef WITH_LOGGER
-  logger_log_all(e.log, &e);
+  logger_log_all(e.logger, &e);
   engine_dump_index(&e);
 #endif
   // write a final snapshot with logger, in order to facilitate a restart
