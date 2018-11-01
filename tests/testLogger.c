@@ -34,6 +34,7 @@
 
 void test_log_parts(struct logger *log) {
   struct dump *d = log->dump;
+  message("Mask: %i, %i, %i", logger_mask_x, logger_mask_h, logger_mask_timestamp);
 
   /* Write several copies of a part to the dump. */
   struct part p;
