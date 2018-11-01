@@ -226,7 +226,7 @@ void zero_particle_fields_force(struct cell *c, const struct cosmology *cosmo,
     p->viscosity.alpha = 0.8;
     p->viscosity.div_v = 0.f;
     p->viscosity.div_v_previous_step = 0.f;
-    p->viscosity.v_sig = 0.f;
+    p->viscosity.v_sig = hydro_get_comoving_soundspeed(p);
 #endif /* ANARCHY_PU_SPH viscosity variables */
 
     /* And prepare for a round of force tasks. */
