@@ -156,7 +156,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
   const int max_smoothing_iter = stars_properties->max_smoothing_iterations;
   int redo = 0, scount = 0;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Anything to do here? */
   if (!cell_is_active_stars(c, e)) return;
@@ -337,7 +337,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
     free(sid);
   }
 
-  if (timer) TIMER_TOC(timer_do_stars_ghost);
+  // if (timer) TIMER_TOC(timer_do_stars_ghost);
 }
 
 /**

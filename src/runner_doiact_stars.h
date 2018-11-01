@@ -31,7 +31,7 @@ void runner_doself_stars_density(struct runner *r, struct cell *c, int timer) {
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Anything to do here? */
   if (!cell_is_active_stars(c, e)) return;
@@ -82,7 +82,7 @@ void runner_doself_stars_density(struct runner *r, struct cell *c, int timer) {
     } /* loop over the parts in ci. */
   }   /* loop over the sparts in ci. */
 
-  TIMER_TOC(timer_doself_stars_density);
+  // TIMER_TOC(timer_doself_stars_density);
 }
 
 /**
@@ -160,12 +160,12 @@ void runner_dosubpair_stars_density(struct runner *r, struct cell *restrict ci,
 void runner_dopair_stars_density(struct runner *r, struct cell *restrict ci,
                                  struct cell *restrict cj, int timer) {
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   runner_dosubpair_stars_density(r, ci, cj);
   runner_dosubpair_stars_density(r, cj, ci);
 
-  if (timer) TIMER_TOC(timer_dopair_stars_density);
+  // if (timer) TIMER_TOC(timer_dopair_stars_density);
 }
 
 /**
@@ -192,7 +192,7 @@ void runner_dopair_subset_stars_density(struct runner *r,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   const int count_j = cj->hydro.count;
   struct part *restrict parts_j = cj->hydro.parts;
@@ -242,7 +242,7 @@ void runner_dopair_subset_stars_density(struct runner *r,
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
 
-  TIMER_TOC(timer_dopair_subset_naive);
+  // TIMER_TOC(timer_dopair_subset_naive);
 }
 
 /**
@@ -263,7 +263,7 @@ void runner_doself_subset_stars_density(struct runner *r,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -315,7 +315,7 @@ void runner_doself_subset_stars_density(struct runner *r,
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
 
-  TIMER_TOC(timer_doself_subset_stars_density);
+  // TIMER_TOC(timer_doself_subset_stars_density);
 }
 
 /**
@@ -376,7 +376,7 @@ void runner_dosub_subset_stars_density(struct runner *r, struct cell *ci,
   const struct engine *e = r->e;
   struct space *s = e->s;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Should we even bother? */
   if (!cell_is_active_stars(ci, e) &&
@@ -944,7 +944,7 @@ void runner_dosub_subset_stars_density(struct runner *r, struct cell *ci,
 
   } /* otherwise, pair interaction. */
 
-  if (gettimer) TIMER_TOC(timer_dosub_subset);
+  // if (gettimer) TIMER_TOC(timer_dosub_subset);
 }
 
 /**
@@ -1064,7 +1064,7 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
   struct space *s = r->e->s;
   const struct engine *e = r->e;
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Should we even bother? */
   if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
@@ -1371,7 +1371,7 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
     runner_dopair_branch_stars_density(r, ci, cj);
   }
 
-  if (gettimer) TIMER_TOC(TIMER_DOSUB_PAIR);
+  // if (gettimer) TIMER_TOC(TIMER_DOSUB_PAIR);
 }
 
 /**
@@ -1384,7 +1384,7 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
 void runner_dosub_self_stars_density(struct runner *r, struct cell *ci,
                                      int gettimer) {
 
-  TIMER_TIC;
+  // TIMER_TIC;
 
   /* Should we even bother? */
   if (ci->stars.count == 0 || !cell_is_active_stars(ci, r->e)) return;
@@ -1409,5 +1409,5 @@ void runner_dosub_self_stars_density(struct runner *r, struct cell *ci,
     runner_doself_branch_stars_density(r, ci);
   }
 
-  if (gettimer) TIMER_TOC(timer_dosub_self_stars_density);
+  // if (gettimer) TIMER_TOC(timer_dosub_self_stars_density);
 }
