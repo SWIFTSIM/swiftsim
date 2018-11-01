@@ -32,8 +32,44 @@ with $n_d$ the number of spatial dimensions, and the final transformation
 being the one to internal code velocity units,
 \begin{equation}
 \nabla \cdot \mathbf{v}_p = 
-    \frac{1}{a^2} \nabla' \cdot \mathbf{v} + n_d H(a).
+    \frac{1}{a^2} \nabla' \cdot \mathbf{v}' + n_d H(a).
 \label{eqn:divvcodeunits}
 \end{equation}
 We note that there is no similar hubble flow term in the expression for
 $\nabla \times \mathbf{v}_p$.
+
+In some more complex schemes, such as the one presented by \cite{Cullen2010},
+the time differential of the velocity divergence is used as a way to differentiate
+the pre- and post-shock region.
+
+Building on the above, we take the time differential of both sides,
+\begin{equation}
+    \frac{{\mathrm d}}{{\mathrm d} t} \nabla \cdot \mathbf{v}_p = 
+    \frac{{\mathrm d}}{{\mathrm d} t} \left(
+    	\frac{1}{a^2} \nabla' \cdot \mathbf{v}' + n_d H(a)
+    \right).
+    \nonumber
+\end{equation}
+Collecting the factors, we see
+\begin{align}
+    \frac{{\mathrm d}}{{\mathrm d} t} \nabla \cdot \mathbf{v}_p = 
+    \frac{1}{a^2} &\left(
+    	\frac{{\mathrm d}}{{\mathrm d} t} \nabla ' \cdot \mathbf{v}' -
+    	2H(a) \nabla' \cdot \mathbf{v}'
+    \right) \\
+    + n_d &\left(
+    	\frac{\ddot{a}}{a} - \frac{\dot{a}}{a^2}
+    \right).
+    \label{eqn:divvdtcodeunits}
+\end{align}
+This looks like quite a mess, but in most cases we calculate this implicitly
+from the velocity divergence itself, and so we do not actually need to take
+into account these factors; i.e. we actually calculate
+\begin{equation}
+    \frac{\mathrm d}{{\mathrm d} t} \nabla \cdot \mathbf{v}_p = 
+    \frac{
+    	\nabla \cdot \mathbf{v}_p (t + {\mathrm d}t) - \nabla \cdot \mathbf{v}_p (t)
+    }{dt},
+	\label{eqn:divvdtcodeunitsimplicit}
+\end{equation}
+meaning that the above is taken into account self-consistently.
