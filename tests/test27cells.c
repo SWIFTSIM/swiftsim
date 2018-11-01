@@ -290,6 +290,12 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
             main_cell->hydro.parts[pid].density.rot_v[0],
             main_cell->hydro.parts[pid].density.rot_v[1],
             main_cell->hydro.parts[pid].density.rot_v[2]
+#elif defined(ANARCHY_PU_SPH)
+            /* this is required because of the variable AV scheme */
+            main_cell->hydro.parts[pid].viscosity.div_v,
+            main_cell->hydro.parts[pid].density.rot_v[0],
+            main_cell->hydro.parts[pid].density.rot_v[1],
+            main_cell->hydro.parts[pid].density.rot_v[2]
 #else
             0., 0., 0., 0.
 #endif

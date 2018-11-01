@@ -428,6 +428,9 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
     defined(HOPKINS_PU_SPH_MONAGHAN) || defined(ANARCHY_PU_SPH)
             main_cell->hydro.parts[pid].force.v_sig, 0.f,
             main_cell->hydro.parts[pid].u_dt
+#elif defined(ANARCHY_PU_SPH)
+            main_cell->hydro.parts[pid].viscosity.v_sig, 0.f,
+            main_cell->hydro.parts[pid].u_dt
 #else
             0.f, 0.f, 0.f
 #endif
