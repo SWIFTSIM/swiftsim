@@ -420,10 +420,11 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->pressure_bar = 0.f;
   p->density.pressure_bar_dh = 0.f;
 
-  p->density.div_v = 0.f;
   p->density.rot_v[0] = 0.f;
   p->density.rot_v[1] = 0.f;
   p->density.rot_v[2] = 0.f;
+
+  p->viscosity.div_v = 0.f;
 }
 
 /**
@@ -473,7 +474,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->density.rot_v[2] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
 
   /* Finish calculation of the velocity divergence */
-  p->density.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2;
+  p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
 }
 
 /**
@@ -502,7 +503,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
                              p->density.rot_v[2] * p->density.rot_v[2]);
 
   /* Compute the norm of div v */
-  const float abs_div_v = fabsf(p->density.div_v);
+  const float abs_div_v = fabsf(p->viscosity.div_v);
 
   /* Compute the sound speed -- see theory section for justification */
   const float soundspeed = hydro_get_comoving_soundspeed(p);
@@ -521,7 +522,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
-  p->force.div_v = p->density.div_v;
 }
 
 /**
@@ -581,10 +581,12 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   p->density.wcount_dh = 0.f;
   p->density.pressure_bar_dh = 0.f;
 
-  p->density.div_v = 0.f;
   p->density.rot_v[0] = 0.f;
   p->density.rot_v[1] = 0.f;
   p->density.rot_v[2] = 0.f;
+
+  /* Probably not shocking, so this is safe to do */
+  p->viscosity.div_v = 0.f;
 }
 
 /**
@@ -616,7 +618,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     /* Construct time differential of div.v implicitly */
     const float div_v_dt =
         dt_alpha == 0.f ? 0.f
-                        : (p->force.div_v - p->viscosity.div_v_prev) / dt_alpha;
+                        : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
     /* Construct the source term for the AV; if shock detected this is _positive_ as
      * div_v_dt should be _negative_ before the shock hits */
     const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
@@ -641,7 +643,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     }
 
     /* Set our old div_v to the one for the next loop */
-    p->viscosity.div_v_prev = p->force.div_v;
+    p->viscosity.div_v_previous_step = p->viscosity.div_v;
 }
 
 /**
@@ -831,7 +833,7 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   p->viscosity.alpha = hydro_props->viscosity.alpha;
   /* Initialise this here to keep all the AV variables together */
-  p->viscosity.div_v_prev = 0.f;
+  p->viscosity.div_v_previous_step = 0.f;
 }
 
 /**

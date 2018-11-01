@@ -99,8 +99,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   dv[2] = pi->v[2] - pj->v[2];
   const float dvdr = dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2];
 
-  pi->density.div_v -= faci * dvdr;
-  pj->density.div_v -= facj * dvdr;
+  pi->viscosity.div_v -= faci * dvdr;
+  pj->viscosity.div_v -= facj * dvdr;
 
   /* Compute dv cross r */
   curlvr[0] = dv[1] * dx[2] - dv[2] * dx[1];
@@ -165,7 +165,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   dv[2] = pi->v[2] - pj->v[2];
   const float dvdr = dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2];
 
-  pi->density.div_v -= faci * dvdr;
+  pi->viscosity.div_v -= faci * dvdr;
 
   /* Compute dv cross r */
   curlvr[0] = dv[1] * dx[2] - dv[2] * dx[1];

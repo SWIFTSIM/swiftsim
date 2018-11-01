@@ -107,14 +107,19 @@ struct part {
 
   /* Store viscosity information in a separate struct. */
   struct {
+
+    /* Particle velocity divergence */
+    float div_v;
+
     /*! Particle velocity divergence from previous step */
-    float div_v_prev;
+    float div_v_previous_step;
 
     /*! Artificial viscosity parameter */
     float alpha;
 
     /*! Signal velocity */
     float v_sig;
+
   } viscosity;
 
   /* Store density/force specific stuff. */
@@ -144,8 +149,6 @@ struct part {
       /*! Particle velocity curl. */
       float rot_v[3];
 
-      /*! Particle velocity divergence. */
-      float div_v;
     } density;
 
     /**
@@ -169,7 +172,6 @@ struct part {
       /*! Balsara switch */
       float balsara;
 
-      float div_v;
     } force;
   };
 
