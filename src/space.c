@@ -2631,9 +2631,9 @@ void space_list_useful_top_level_cells(struct space *s) {
       s->nr_local_cells_with_tasks++;
     }
 
-    const int has_particles = (c->hydro.count > 0) || (c->grav.count > 0) ||
-                              (c->stars.count > 0) ||
-                              (c->grav.multipole->m_pole.M_000 > 0.f);
+    const int has_particles =
+        (c->hydro.count > 0) || (c->grav.count > 0) || (c->stars.count > 0) ||
+        (c->grav.multipole != NULL && c->grav.multipole->m_pole.M_000 > 0.f);
 
     if (has_particles) {
       s->cells_with_particles_top[s->nr_cells_with_particles] = i;
@@ -2753,6 +2753,9 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
   for (int k = 0; k < count; k++) {
 
     hydro_first_init_part(&p[k], &xp[k]);
+#ifdef WITH_LOGGER
+    logger_part_data_init(&xp[k].logger_data);
+#endif
 
     /* Overwrite the internal energy? */
     if (u_init > 0.f) hydro_set_init_internal_energy(&p[k], u_init);

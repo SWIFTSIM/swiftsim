@@ -593,8 +593,22 @@ int main(int argc, char *argv[]) {
 
   /* How often to check for the stop file and dump restarts and exit the
    * application. */
-  int restart_stop_steps =
+  const int restart_stop_steps =
       parser_get_opt_param_int(params, "Restarts:stop_steps", 100);
+
+  /* Get the maximal wall-clock time of this run */
+  const float restart_max_hours_runtime =
+      parser_get_opt_param_float(params, "Restarts:max_run_time", FLT_MAX);
+
+  /* Do we want to resubmit when we hit the limit? */
+  const int resubmit_after_max_hours =
+      parser_get_opt_param_int(params, "Restarts:resubmit_on_exit", 0);
+
+  /* What command should we run to resubmit at the end? */
+  char resubmit_command[PARSER_MAX_LINE_SIZE];
+  if (resubmit_after_max_hours)
+    parser_get_param_string(params, "Restarts:resubmit_command",
+                            resubmit_command);
 
   /* If restarting, look for the restart files. */
   if (restart) {
@@ -993,6 +1007,10 @@ int main(int argc, char *argv[]) {
     engine_init_particles(&e, flag_entropy_ICs, clean_smoothing_length_values);
 
     /* Write the state of the system before starting time integration. */
+#ifdef WITH_LOGGER
+    logger_log_all(e.logger, &e);
+    engine_dump_index(&e);
+#endif
     engine_dump_snapshot(&e);
     engine_print_stats(&e);
 
@@ -1034,7 +1052,7 @@ int main(int argc, char *argv[]) {
 
   /* Main simulation loop */
   /* ==================== */
-  int force_stop = 0;
+  int force_stop = 0, resubmit = 0;
   for (int j = 0; !engine_is_done(&e) && e.step - 1 != nsteps && !force_stop;
        j++) {
 
@@ -1053,6 +1071,13 @@ int main(int argc, char *argv[]) {
       force_stop = restart_stop_now(restart_dir, 0);
       if (myrank == 0 && force_stop)
         message("Forcing application exit, dumping restart files...");
+    }
+
+    /* Did we exceed the maximal runtime? */
+    if (clocks_get_hours_since_start() > restart_max_hours_runtime) {
+      force_stop = 1;
+      message("Runtime limit reached, dumping restart files...");
+      if (resubmit_after_max_hours) resubmit = 1;
     }
 
     /* Also if using nsteps to exit, will not have saved any restarts on exit,
@@ -1204,17 +1229,24 @@ int main(int argc, char *argv[]) {
   }
 
   /* Write final output. */
-  engine_drift_all(&e);
-  engine_print_stats(&e);
-  engine_dump_snapshot(&e);
+  if (!force_stop) {
+    engine_drift_all(&e);
+    engine_print_stats(&e);
+#ifdef WITH_LOGGER
+    logger_log_all(e.logger, &e);
+    engine_dump_index(&e);
+#endif
+    // write a final snapshot with logger, in order to facilitate a restart
+    engine_dump_snapshot(&e);
 
 #ifdef HAVE_VELOCIRAPTOR
-  /* Call VELOCIraptor at the end of the run to find groups. */
-  if (e.policy & engine_policy_structure_finding) {
-    velociraptor_init(&e);
-    velociraptor_invoke(&e);
-  }
+    /* Call VELOCIraptor at the end of the run to find groups. */
+    if (e.policy & engine_policy_structure_finding) {
+      velociraptor_init(&e);
+      velociraptor_invoke(&e);
+    }
 #endif
+  }
 
 #ifdef WITH_MPI
   if ((res = MPI_Finalize()) != MPI_SUCCESS)
@@ -1224,6 +1256,15 @@ int main(int argc, char *argv[]) {
   /* Remove the stop file if used. Do this anyway, we could have missed the
    * stop file if normal exit happened first. */
   if (myrank == 0) force_stop = restart_stop_now(restart_dir, 1);
+
+  /* Did we want to run a re-submission command just before dying? */
+  if (myrank == 0 && resubmit) {
+    message("Running the resubmission command:");
+    restart_resubmit(resubmit_command);
+    fflush(stdout);
+    fflush(stderr);
+    message("resubmission command completed.");
+  }
 
   /* Clean everything */
   if (with_verbose_timers) timers_close_file();
