@@ -44,7 +44,7 @@
 struct external_potential {
 
   /*! Position of the centre of potential */
-  double x, y, z;
+  double x[3];
 
   /*! The density parameter for the potential rho_0 */
   double rho_0;
@@ -67,6 +67,12 @@ struct external_potential {
   /*! Time-step condition pre_factor */
   double timestep_mult;
 
+  /*! Minimum time step */
+  double mintime;
+
+  /*! the NFW lnthing */
+  double lnthing;
+
   double eps;
 
   double vel_20;
@@ -86,7 +92,18 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
     const struct phys_const* restrict phys_const,
     const struct gpart* restrict g) {
 
-    return 1e-4;
+  const float dx = g->x[0] - potential->x[0];
+  const float dy = g->x[1] - potential->x[1];
+  const float dz = g->x[2] - potential->x[2];
+  
+  const float r = sqrtf(dx*dx + dy*dy + dz*dz + potential->eps*potential->eps);
+
+  const float mr = potential->virial_mass * ( log(1.f + r/potential->r_s) - 
+       r/(r+potential->r_s) ) / potential->lnthing;
+
+  const float period = 2 * M_PI * r * sqrtf(r) / sqrtf(phys_const->const_newton_G * mr);
+  
+  return max(potential->timestep_mult*period, potential->mintime);
 }
 
 /**
@@ -110,9 +127,9 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
     double time, const struct external_potential* restrict potential,
     const struct phys_const* restrict phys_const, struct gpart* restrict g) {
 
-  const float dx = g->x[0] - potential->x;
-  const float dy = g->x[1] - potential->y;
-  const float dz = g->x[2] - potential->z;
+  const float dx = g->x[0] - potential->x[0];
+  const float dy = g->x[1] - potential->x[1];
+  const float dz = g->x[2] - potential->x[2];
 
   const float r = sqrtf(dx*dx + dy*dy + dz*dz + potential->eps*potential->eps);
   const float term1 = 1.0f*potential->pre_factor;
@@ -140,9 +157,9 @@ external_gravity_get_potential_energy(
     double time, const struct external_potential* potential,
     const struct phys_const* const phys_const, const struct gpart* g) {
 
-  const float dx = g->x[0] - potential->x;
-  const float dy = g->x[1] - potential->y;
-  const float dz = g->x[2] - potential->z;
+  const float dx = g->x[0] - potential->x[0];
+  const float dy = g->x[1] - potential->x[1];
+  const float dz = g->x[2] - potential->x[2];
 
   const float r = sqrtf(dx*dx + dy*dy +dz*dz + potential->eps*potential->eps);
   const float term1 = -potential->pre_factor / r;
@@ -165,15 +182,15 @@ static INLINE void potential_init_backend(
     const struct phys_const* phys_const, const struct unit_system* us,
     const struct space* s, struct external_potential* potential) {
 
-  potential->x =
-      s->dim[0] / 2. +
-      parser_get_param_double(parameter_file, "NFWPotential:position_x");
-  potential->y =
-      s->dim[1] / 2. +
-      parser_get_param_double(parameter_file, "NFWPotential:position_y");
-  potential->z =
-      s->dim[2] / 2. +
-      parser_get_param_double(parameter_file, "NFWPotential:position_z");
+  const int useabspos = 
+      parser_get_param_int(parameter_file, "NFWPotential:useabspos");
+  parser_get_param_double_array(parameter_file, "NFWPotential:position",
+                                 3, potential->x);   
+  if ( useabspos == 0) {     
+    potential->x[0] += s->dim[0] / 2.;     
+    potential->x[1] += s->dim[1] / 2.;     
+    potential->x[2] += s->dim[2] / 2.;   
+  } 
   potential->timestep_mult = parser_get_param_float(
       parameter_file, "NFWPotential:timestep_mult");
   potential->c = parser_get_param_float(
@@ -195,6 +212,13 @@ static INLINE void potential_init_backend(
 
  	potential->vel_20 = sqrtf(-potential->pre_factor * phys_const->const_newton_G *
       ( 1.0f/(20.0f + potential->r_s) - logf( 1.0f + 20.0f/potential->r_s )/20.0f ));
+  potential->lnthing = log(1.f + potential->c) - potential->c/(1 + potential->c);
+  const float sqrtgm = sqrtf( phys_const->const_newton_G * potential->virial_mass);
+  const float epslnthing = log(1.f + potential->eps/potential->r_s) 
+                            - potential->eps/(potential->eps + potential->r_s);
+  
+  potential->mintime = 2.f * M_PI * potential->eps * sqrtf(potential->eps) * 
+              sqrtf(potential->lnthing / epslnthing) / sqrtgm * potential->timestep_mult;
 }
 
 /**
@@ -208,9 +232,11 @@ static INLINE void potential_print_backend(
   message(
       "External potential is 'NFW' with properties are (x,y,z) = (%e, "
       "%e, %e), scale radius = %e "
-      "timestep multiplier = %e, scale density = %e, vel at 20kpc = %e",
-      potential->x, potential->y, potential->z, potential->r_s,
-      potential->timestep_mult, potential->rho_0, potential->vel_20 );
+      "timestep multiplier = %e, scale density = %e, vel at 20kpc = %e,"
+      "mintime = %e",
+      potential->x[0], potential->x[1], potential->x[2], potential->r_s,
+      potential->timestep_mult, potential->rho_0, potential->vel_20, 
+      potential->mintime);
 }
 
 #endif /* SWIFT_POTENTIAL_NFW_H */
