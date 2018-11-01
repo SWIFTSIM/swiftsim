@@ -138,7 +138,37 @@ void readArray_chunk(hid_t h_data, hid_t h_plist_id,
       for (size_t i = 0; i < num_elements; ++i) temp_d[i] *= factor;
     } else {
       float* temp_f = (float*)temp;
-      for (size_t i = 0; i < num_elements; ++i) temp_f[i] *= factor;
+
+#ifdef SWIFT_DEBUG_CHECKS
+      float maximum = 0.;
+      float minimum = FLT_MAX;
+#endif
+
+      /* Loop that converts the Units */
+      for (size_t i = 0; i < num_elements; ++i) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+        /* Find the absolute minimum and maximum values */
+        const float abstemp_f = fabsf(temp_f[i]);
+        if (abstemp_f != 0.f) {
+          maximum = max(maximum, abstemp_f);
+          minimum = min(minimum, abstemp_f);
+        }
+#endif
+
+        /* Convert the float units */
+        temp_f[i] *= factor;
+      }
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* The two possible errors: larger than float or smaller
+       * than float precission. */
+      if (factor * maximum > FLT_MAX) {
+        error("Unit conversion results in numbers larger than floats");
+      } else if (factor * minimum < FLT_MIN) {
+        error("Numbers smaller than float precision");
+      }
+#endif
     }
   }
 
@@ -1256,8 +1286,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
 #if H5_VERSION_GE(1, 10, 0)
   h_err = H5Pset_all_coll_metadata_ops(plist_id, 1);
   if (h_err < 0) error("Error setting collective meta-data on all ops");
-  // h_err = H5Pset_coll_metadata_write(plist_id, 1);
-  // if (h_err < 0) error("Error setting collective meta-data writes");
+    // h_err = H5Pset_coll_metadata_write(plist_id, 1);
+    // if (h_err < 0) error("Error setting collective meta-data writes");
 #endif
 
 #ifdef IO_SPEED_MEASUREMENT
