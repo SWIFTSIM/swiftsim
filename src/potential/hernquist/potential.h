@@ -50,6 +50,9 @@ struct external_potential {
   /*! Square of the softening length. Acceleration tends to zero within this    
    * distance from the origin */
   double epsilon2;
+  
+  /* Minimum timestep of the potential */
+  double mintime;
 
   /*! Time-step condition pre-factor */
   double timestep_mult;
@@ -81,30 +84,14 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 
   /* calculate the radius  */
 
-  const float r2_sqrt = sqrtf(dx * dx + dy * dy + dz * dz 
+  const float r = sqrtf(dx * dx + dy * dy + dz * dz 
                                + potential->epsilon2);
-  
-  const float r_plus_a_inv = 1.f / ( r2_sqrt + potential->al );
-  const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
-  const float r2_sqrt_inv = 1.f / r2_sqrt;
-  const float prefac = - G_newton * potential->mass * r2_sqrt_inv 
-                         * r_plus_a_inv2;
-  const float drdv =
-      dx * (g->v_full[0]) + dy * (g->v_full[1]) + dz * (g->v_full[2]);
-  
-  const float dota_x = prefac * ( -g->v_full[0] + drdv * dx * r2_sqrt_inv * (
-                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
-  
-  const float dota_y = prefac * ( -g->v_full[1] + drdv * dy * r2_sqrt_inv * (
-                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
-  const float dota_z = prefac * ( -g->v_full[2] + drdv * dz * r2_sqrt_inv * (
-                        r2_sqrt_inv + 2.f * r_plus_a_inv ) );
-  const float dota_2 = dota_x * dota_x + dota_y * dota_y + dota_z * dota_z;
-
-   
-  const float a_2 = g->a_grav[0] * g->a_grav[0] + g->a_grav[1] * g->a_grav[1] +
-                    g->a_grav[2] * g->a_grav[2];
-  return potential->timestep_mult * sqrtf(a_2/dota_2);
+  const float sqrtgm = sqrtf(G_newton * potential->mass);
+  /* Calculate the circular orbital period */
+  const float period = 2.f * M_PI * sqrtf(r) * potential->al  
+                      * (1 + r/potential->al) / sqrtgm;
+  message("Orbital time is %e", period); 
+  return max(potential->timestep_mult * period,potential->mintime);
 }
 
 /**
@@ -135,7 +122,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float r = sqrtf( dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float r_plus_a_inv = 1.f / (r + potential->al);
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
-  const float preterm = -phys_const->const_newton_G * potential->mass;
+  const float preterm = - potential->mass;
   const float term = preterm * r_plus_a_inv2 / r;
 
   g->a_grav[0] += term * dx;
@@ -198,8 +185,11 @@ static INLINE void potential_init_backend(
   const float epsilon = parser_get_param_double(parameter_file,
                         "HernquistPotential:epsilon");
   potential->epsilon2 = epsilon*epsilon;
+  const float sqrtgm = sqrtf(phys_const->const_newton_G * potential->mass);
   potential->timestep_mult = parser_get_param_float(
       parameter_file, "HernquistPotential:timestep_mult");
+  potential->mintime = 2.f * sqrtf(epsilon) * potential->al * M_PI 
+                        * (1+ epsilon/potential->al)/sqrtgm * potential->timestep_mult;
 }
 
 /**
@@ -213,10 +203,10 @@ static inline void potential_print_backend(
   message(
       "external potential is 'hernquist' with properties are (x,y,z) = (%e, "
       "%e, %e), mass = %e "
-      "scale length = %e"
+      "scale length = %e , minimum time = %e "
       "timestep multiplier = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->mass,
-      potential->al, potential->timestep_mult);
+      potential->al,potential->mintime, potential->timestep_mult);
 }
 
 #endif /* SWIFT_POTENTIAL_HERNQUIST_H */

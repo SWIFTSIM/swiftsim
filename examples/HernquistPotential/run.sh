@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Generate the initial conditions if they are not present.
-if [ ! -e Isothermal.hdf5 ]
+if [ ! -e Hernquist.hdf5 ]
 then
     echo "Generating initial conditions for the isothermal potential box example..."
-    python makeIC.py 1000 0
+    python3 makeIC.py 1000 0
 fi
 
 rm -rf hernquist_*.hdf5
 ../swift -g -t 1 hernquist.yml 2>&1 | tee output.log
 
-python energy_plot.py
+

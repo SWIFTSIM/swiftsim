@@ -25,6 +25,7 @@ import sys
 import numpy
 import math
 import random
+import numpy as np
 
 # Generates N particles in a spherical distribution centred on [0,0,0], to be moved in an isothermal potential
 # usage: python makeIC.py 1000 0 : generate 1000 particles on circular orbits
@@ -36,6 +37,7 @@ NEWTON_GRAVITY_CGS  = 6.67408e-8
 SOLAR_MASS_IN_CGS   = 1.98848e33
 PARSEC_IN_CGS       = 3.08567758e18
 YEAR_IN_CGS         = 3.15569252e7
+print("Value of G in cgs:", NEWTON_GRAVITY_CGS) 
 
 # choice of units
 const_unit_length_in_cgs   =   (1000*PARSEC_IN_CGS)
@@ -46,19 +48,11 @@ print("UnitMass_in_cgs:     ", const_unit_mass_in_cgs)
 print("UnitLength_in_cgs:   ", const_unit_length_in_cgs)
 print("UnitVelocity_in_cgs: ", const_unit_velocity_in_cgs)
 
-def hernquistcircvel(r,M,a):
-    ''' Function that calculates the circular velocity in a 
-    Hernquist potential.
-    r: radius from centre of potential
-    M: mass of the Hernquist potential
-    a: Scale length of the potential
-    '''
-    return NEWTON_GRAVITY_CGS * M * r / (r+a)**2
 
 
 # Properties of the Hernquist potential
-Mass = 1e11
-scaleLength = 30 # kpc
+Mass = 1e15
+scaleLength = 30. # kpc
 
 
 # derived units
@@ -66,6 +60,14 @@ const_unit_time_in_cgs = (const_unit_length_in_cgs / const_unit_velocity_in_cgs)
 const_G                = ((NEWTON_GRAVITY_CGS*const_unit_mass_in_cgs*const_unit_time_in_cgs*const_unit_time_in_cgs/(const_unit_length_in_cgs*const_unit_length_in_cgs*const_unit_length_in_cgs)))
 print('G=', const_G)
 
+def hernquistcircvel(r,M,a):
+    ''' Function that calculates the circular velocity in a 
+    Hernquist potential.
+    r: radius from centre of potential
+    M: mass of the Hernquist potential
+    a: Scale length of the potential
+    '''
+    return (const_G * M * r)**.5/ (r+a)
 
 # Parameters
 periodic= 1            # 1 For periodic box
@@ -74,6 +76,7 @@ Radius  = 100.          # maximum radius of particles [kpc]
 G       = const_G 
 
 N       = int(sys.argv[1])  # Number of particles
+N = 5
 L       = N**(1./3.)
 
 fileName = "Hernquist.hdf5" 
@@ -114,10 +117,18 @@ numpy.random.seed(1234)
 #Particle group
 grp1 = file.create_group("/PartType1")
 #generate particle positions
-radius = Radius * (numpy.random.rand(N))**(1./3.) 
-ctheta = -1. + 2 * numpy.random.rand(N)
-stheta = numpy.sqrt(1.-ctheta**2)
-phi    =  2 * math.pi * numpy.random.rand(N)
+# radius = Radius * (numpy.random.rand(N))**(1./3.) + 10.
+radius = np.zeros(N)
+radius[0] = 10
+radius[1] = 20
+radius[2] = 30
+radius[3] = 40
+radius[4] = 50
+# this part is not even used:
+#ctheta = -1. + 2 * numpy.random.rand(N)
+#stheta = numpy.sqrt(1.-ctheta**2)
+#phi    =  2 * math.pi * numpy.random.rand(N)
+# end
 r      = numpy.zeros((numPart, 3))
 r[:,0] = radius
 
@@ -125,13 +136,16 @@ r[:,0] = radius
 #plt.plot(r[:,0],'.')
 #plt.show()
 
-
+#print('Mass = ', Mass)
+#print('radius = ', radius)
+#print('scaleLength = ',scaleLength)
 #
 v      = numpy.zeros((numPart, 3))
-v[:,0] = hernquistcircvel(radius,Mass,scaleLength)
+#v[:,0] = hernquistcircvel(radius,Mass,scaleLength)
 omega  = v[:,0] / radius
 period = 2.*math.pi/omega
 print('period = minimum = ',min(period), ' maximum = ',max(period))
+print('Circular velocity = minimum =',min(v[:,0]), ' maximum = ',max(v[:,0])) 
 
 omegav = omega
 

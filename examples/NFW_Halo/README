@@ -1,0 +1,6 @@
+This just provides a test that the NFW potential is giving the correct orbit as calculated
+by Jo Bovy's galpy package. [python2.7]
+
+python makeIC.py
+./run.sh
+python makePlots.py
