@@ -408,7 +408,7 @@ static void scheduler_splittask_hydro(struct task *t, struct scheduler *s) {
     /* Reset the redo flag. */
     redo = 0;
 
-    /* Non-splittable task? */
+    /* Empty task? */
     if ((t->ci == NULL) || (t->type == task_type_pair && t->cj == NULL) ||
         t->ci->hydro.count == 0 || (t->cj != NULL && t->cj->hydro.count == 0)) {
       t->type = task_type_none;
@@ -883,7 +883,7 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
     /* Reset the redo flag. */
     redo = 0;
 
-    /* Non-splittable task? */
+    /* Empty task? */
     if ((t->ci == NULL) || (t->type == task_type_pair && t->cj == NULL) ||
         t->ci->stars.count == 0 || (t->cj != NULL && t->cj->stars.count == 0)) {
       t->type = task_type_none;

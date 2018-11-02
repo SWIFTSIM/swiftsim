@@ -101,7 +101,7 @@ void runner_dosubpair_stars_density(struct runner *r, struct cell *restrict ci,
   const struct cosmology *cosmo = e->cosmology;
 
   /* Anything to do here? */
-  if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
+  if (!cell_is_active_stars(ci, e)) return;
 
   const int scount_i = ci->stars.count;
   const int count_j = cj->hydro.count;
@@ -384,7 +384,7 @@ void runner_dosub_subset_stars_density(struct runner *r, struct cell *ci,
   if (!cell_is_active_stars(ci, e) &&
       (cj == NULL || !cell_is_active_stars(cj, e)))
     return;
-  if (ci->stars.count == 0 || (cj != NULL && cj->stars.count == 0)) return;
+  if (ci->stars.count == 0 && (cj != NULL && cj->stars.count == 0)) return;
 
   /* Find out in which sub-cell of ci the parts are. */
   struct cell *sub = NULL;
@@ -971,6 +971,33 @@ void runner_doself_branch_stars_density(struct runner *r, struct cell *c) {
   runner_doself_stars_density(r, c, 1);
 }
 
+#define RUNNER_STARS_CHECK_SORT(TYPE, PART)				\
+  void runner_stars_check_sort_##TYPE(struct cell *cj, struct cell *ci, const int sid) { \
+    const struct entry *restrict sort_j = cj->TYPE.sort[sid];		\
+									\
+    for (int pjd = 0; pjd < cj->TYPE.count; pjd++) {			\
+      const struct PART *p = &cj->TYPE.parts[sort_j[pjd].i];		\
+      const float d = p->x[0] * runner_shift[sid][0] +			\
+	p->x[1] * runner_shift[sid][1] +				\
+	p->x[2] * runner_shift[sid][2];					\
+      if ((fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >		\
+	  1.0e-4 * max(fabsf(d), cj->TYPE.dx_max_sort_old) &&		\
+	  (fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >		\
+	  cj->width[0] * 1.0e-10)					\
+	error(								\
+	      "particle shift diff exceeds dx_max_sort in cell cj. cj->nodeID=%d " \
+	      "ci->nodeID=%d d=%e sort_j[pjd].d=%e cj->" #TYPE ".dx_max_sort=%e " \
+	      "cj->" #TYPE ".dx_max_sort_old=%e",			\
+	      cj->nodeID, ci->nodeID, d, sort_j[pjd].d, cj->TYPE.dx_max_sort, \
+	      cj->TYPE.dx_max_sort_old);				\
+    }									\
+									\
+  }
+
+RUNNER_STARS_CHECK_SORT(hydro, part)
+RUNNER_STARS_CHECK_SORT(stars, spart)
+
+
 /**
  * @brief Determine which version of DOPAIR1 needs to be called depending on the
  * orientation of the cells or whether DOPAIR1 needs to be called at all.
@@ -984,65 +1011,60 @@ void runner_dopair_branch_stars_density(struct runner *r, struct cell *ci,
                                         struct cell *cj) {
 
   const struct engine *restrict e = r->e;
+  const int ci_active = cell_is_active_stars(ci, e);
+  const int cj_active = cell_is_active_stars(cj, e);
 
   /* Anything to do here? */
-  if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-
-  /* Check that cells are drifted. */
-  if (!cell_are_part_drifted(ci, e) || !cell_are_part_drifted(cj, e))
-    error("Interacting undrifted cells.");
+  if (!ci_active && !cj_active) return;
 
   /* Get the sort ID. */
   double shift[3] = {0.0, 0.0, 0.0};
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
-  /* Have the cells been sorted? */
-  if (!(ci->hydro.sorted & (1 << sid)) ||
-      ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin)
-    error("Interacting unsorted cells.");
-  if (!(cj->hydro.sorted & (1 << sid)) ||
-      cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
-    error("Interacting unsorted cells.");
+  /* Check that cells are drifted. */
+  if (ci_active) {
+    if (!cell_are_spart_drifted(ci, e) || !cell_are_part_drifted(cj, e))
+      error("Interacting undrifted cells.");
+
+    /* Have the cells been sorted? */
+    if (!(ci->stars.sorted & (1 << sid)) ||
+	ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin)
+      error("Interacting unsorted cells.");
+
+    if (!(cj->hydro.sorted & (1 << sid)) ||
+	cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
+      error("Interacting unsorted cells.");
+    
+  }
+
+  if (cj_active) {
+
+    if (!cell_are_part_drifted(ci, e) || !cell_are_spart_drifted(cj, e))
+      error("Interacting undrifted cells.");
+
+      /* Have the cells been sorted? */
+    if (!(ci->hydro.sorted & (1 << sid)) ||
+	ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin)
+      error("Interacting unsorted cells.");
+
+    if (!(cj->stars.sorted & (1 << sid)) ||
+	cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin)
+      error("Interacting unsorted cells.");
+}
+
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Pick-out the sorted lists. */
-  const struct entry *restrict sort_i = ci->hydro.sort[sid];
-  const struct entry *restrict sort_j = cj->hydro.sort[sid];
+  if (ci_active) {
+    runner_stars_check_sort_hydro(cj, ci, sid);
+    runner_stars_check_sort_stars(ci, cj, sid);
+  }
+  if (cj_active) {
+    runner_stars_check_sort_hydro(ci, cj, sid);
+    runner_stars_check_sort_stars(cj, ci, sid);
 
-  /* Check that the dx_max_sort values in the cell are indeed an upper
-     bound on particle movement. */
-  for (int pid = 0; pid < ci->hydro.count; pid++) {
-    const struct part *p = &ci->hydro.parts[sort_i[pid].i];
-    const float d = p->x[0] * runner_shift[sid][0] +
-                    p->x[1] * runner_shift[sid][1] +
-                    p->x[2] * runner_shift[sid][2];
-    if (fabsf(d - sort_i[pid].d) - ci->hydro.dx_max_sort >
-            1.0e-4 * max(fabsf(d), ci->hydro.dx_max_sort_old) &&
-        fabsf(d - sort_i[pid].d) - ci->hydro.dx_max_sort >
-            ci->width[0] * 1.0e-10)
-      error(
-          "particle shift diff exceeds dx_max_sort in cell ci. ci->nodeID=%d "
-          "cj->nodeID=%d d=%e sort_i[pid].d=%e ci->hydro.dx_max_sort=%e "
-          "ci->hydro.dx_max_sort_old=%e",
-          ci->nodeID, cj->nodeID, d, sort_i[pid].d, ci->hydro.dx_max_sort,
-          ci->hydro.dx_max_sort_old);
   }
-  for (int pjd = 0; pjd < cj->hydro.count; pjd++) {
-    const struct part *p = &cj->hydro.parts[sort_j[pjd].i];
-    const float d = p->x[0] * runner_shift[sid][0] +
-                    p->x[1] * runner_shift[sid][1] +
-                    p->x[2] * runner_shift[sid][2];
-    if ((fabsf(d - sort_j[pjd].d) - cj->hydro.dx_max_sort) >
-            1.0e-4 * max(fabsf(d), cj->hydro.dx_max_sort_old) &&
-        (fabsf(d - sort_j[pjd].d) - cj->hydro.dx_max_sort) >
-            cj->width[0] * 1.0e-10)
-      error(
-          "particle shift diff exceeds dx_max_sort in cell cj. cj->nodeID=%d "
-          "ci->nodeID=%d d=%e sort_j[pjd].d=%e cj->hydro.dx_max_sort=%e "
-          "cj->hydro.dx_max_sort_old=%e",
-          cj->nodeID, ci->nodeID, d, sort_j[pjd].d, cj->hydro.dx_max_sort,
-          cj->hydro.dx_max_sort_old);
-  }
+
 #endif /* SWIFT_DEBUG_CHECKS */
 
   runner_dopair_stars_density(r, ci, cj, 1);
@@ -1070,7 +1092,8 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
 
   /* Should we even bother? */
   if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-  if (ci->stars.count == 0 || cj->stars.count == 0) return;
+  if ((ci->stars.count == 0 || cj->hydro.count == 0) &&
+      (cj->stars.count == 0 || ci->hydro.count == 0)) return;
 
   /* Get the type of pair if not specified explicitly. */
   double shift[3];
@@ -1357,23 +1380,50 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
   /* Otherwise, compute the pair directly. */
   else if (cell_is_active_stars(ci, e) || cell_is_active_stars(cj, e)) {
 
-    /* Make sure both cells are drifted to the current timestep. */
-    if (!cell_are_part_drifted(ci, e) || !cell_are_part_drifted(cj, e))
-      error("Interacting undrifted cells.");
+    if (cell_is_active_stars(ci, e)) {
 
-    /* Do any of the cells need to be sorted first? */
-    if (!(ci->hydro.sorted & (1 << sid)) ||
-        ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx)
-      error("Interacting unsorted cell.");
-    if (!(cj->hydro.sorted & (1 << sid)) ||
-        cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
-      error("Interacting unsorted cell.");
+      /* Make sure both cells are drifted to the current timestep. */
+      if (!cell_are_spart_drifted(ci, e))
+	error("Interacting undrifted cells.");
 
+      if (!cell_are_part_drifted(cj, e))
+	error("Interacting undrifted cells.");
+
+      /* Do any of the cells need to be sorted first? */
+      if (!(ci->stars.sorted & (1 << sid)) ||
+	  ci->stars.dx_max_sort_old > ci->dmin * space_maxreldx)
+	error("Interacting unsorted cell. %p, %p", ci->super, cj->super);
+
+      if (!(cj->hydro.sorted & (1 << sid)) ||
+	  cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
+	error("Interacting unsorted cell.");
+
+    }
+
+    if (cell_is_active_stars(cj, e)) {
+
+      /* Make sure both cells are drifted to the current timestep. */
+      if (!cell_are_part_drifted(ci, e))
+	error("Interacting undrifted cells.");
+
+      if (!cell_are_spart_drifted(cj, e))
+	error("Interacting undrifted cells.");
+      
+      /* Do any of the cells need to be sorted first? */
+      if (!(ci->hydro.sorted & (1 << sid)) ||
+	  ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx)
+	error("Interacting unsorted cell.");
+
+      if (!(cj->stars.sorted & (1 << sid)) ||
+	  cj->stars.dx_max_sort_old > cj->dmin * space_maxreldx)
+	error("Interacting unsorted cell. %p, %p", ci->super, cj->super);
+    }
+    
     /* Compute the interactions. */
     runner_dopair_branch_stars_density(r, ci, cj);
   }
 
-  if (gettimer) TIMER_TOC(TIMER_DOSUB_PAIR);
+  if (gettimer) TIMER_TOC(timer_dosub_pair_stars_density);
 }
 
 /**
@@ -1407,6 +1457,9 @@ void runner_dosub_self_stars_density(struct runner *r, struct cell *ci,
 
   /* Otherwise, compute self-interaction. */
   else {
+
+    /* Drift the cell to the current timestep if needed. */
+    if (!cell_are_spart_drifted(ci, r->e)) error("Interacting undrifted cell.");
 
     runner_doself_branch_stars_density(r, ci);
   }

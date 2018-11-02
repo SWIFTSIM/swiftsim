@@ -673,6 +673,7 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
                                                struct scheduler *s);
 void cell_activate_drift_part(struct cell *c, struct scheduler *s);
 void cell_activate_drift_gpart(struct cell *c, struct scheduler *s);
+void cell_activate_drift_spart(struct cell *c, struct scheduler *s);
 void cell_activate_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_clear_drift_flags(struct cell *c, void *data);

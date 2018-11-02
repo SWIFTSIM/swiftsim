@@ -2153,7 +2153,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
   if (cj == NULL) {
 
     /* Do anything? */
-    if (ci->stars.count == 0 || !cell_is_active_stars(ci, e)) return;
+    if (ci->stars.count == 0 || !cell_is_active_stars(ci, e)
+	|| ci->hydro.count == 0) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_stars_task(ci)) {
@@ -2181,7 +2182,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 
     /* Should we even bother? */
     if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-    if (ci->stars.count == 0 || cj->stars.count == 0) return;
+    if ((ci->stars.count == 0 && cj->hydro.count) ||
+	(cj->stars.count == 0 && ci->hydro.count)) return;
 
     /* Get the orientation of the pair. */
     double shift[3];
@@ -2468,27 +2470,39 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
     /* Otherwise, activate the sorts and drifts. */
     else if (cell_is_active_stars(ci, e) || cell_is_active_stars(cj, e)) {
 
-      /* We are going to interact this pair, so store some values. */
-      atomic_or(&ci->hydro.requires_sorts, 1 << sid);
-      atomic_or(&cj->hydro.requires_sorts, 1 << sid);
-      atomic_or(&ci->stars.requires_sorts, 1 << sid);
-      atomic_or(&cj->stars.requires_sorts, 1 << sid);
-      ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
-      cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
-      ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
-      cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+      if (cell_is_active_stars(ci, e)) {
+	/* We are going to interact this pair, so store some values. */
+	atomic_or(&cj->hydro.requires_sorts, 1 << sid);
+	atomic_or(&ci->stars.requires_sorts, 1 << sid);
 
-      /* Activate the drifts if the cells are local. */
-      if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
-      if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
-      if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
-      if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
+	cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+	ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-      /* Do we need to sort the cells? */
-      cell_activate_sorts(ci, sid, s);
-      cell_activate_sorts(cj, sid, s);
-      cell_activate_stars_sorts(ci, sid, s);
-      cell_activate_stars_sorts(cj, sid, s);
+	/* Activate the drifts if the cells are local. */
+	if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
+	if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+
+	/* Do we need to sort the cells? */
+	cell_activate_sorts(cj, sid, s);
+	cell_activate_stars_sorts(ci, sid, s);
+      }
+
+      if (cell_is_active_stars(cj, e)) {
+	/* We are going to interact this pair, so store some values. */
+	atomic_or(&cj->stars.requires_sorts, 1 << sid);
+	atomic_or(&ci->hydro.requires_sorts, 1 << sid);
+
+	ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+	cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+	
+	/* Activate the drifts if the cells are local. */
+	if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
+	if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
+
+	/* Do we need to sort the cells? */
+	cell_activate_sorts(ci, sid, s);
+	cell_activate_stars_sorts(cj, sid, s);
+      }
     }
   } /* Otherwise, pair interation */
 }
@@ -3015,38 +3029,50 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 
       /* Activate drifts */
       if (t->type == task_type_self) {
-        if (ci->nodeID == nodeID) cell_activate_drift_part(ci, s);
-        if (ci->nodeID == nodeID) cell_activate_drift_spart(ci, s);
+        if (ci->nodeID == nodeID) {
+	  cell_activate_drift_part(ci, s);
+	  cell_activate_drift_spart(ci, s);
+	}
       }
 
       /* Set the correct sorting flags and activate hydro drifts */
       else if (t->type == task_type_pair) {
         /* Store some values. */
-        atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
-        atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+	if (ci_active && ci->nodeID == nodeID) {
+	  /* stars for ci */
+	  atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+	  ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-        atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
-        atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+	  /* hydro for cj */
+	  atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+	  cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
-        ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
-        cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+	  /* Activate the drift tasks. */
+	  cell_activate_drift_spart(ci, s);
+	  cell_activate_drift_part(cj, s);
 
-        ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
-        cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_stars_sorts(ci, t->flags, s);
+	  cell_activate_sorts(cj, t->flags, s);
+	}
+	if (cj_active && cj->nodeID == nodeID) {
+	  /* hydro for ci */
+	  atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+	  ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
-        /* Activate the drift tasks. */
-        if (ci->nodeID == nodeID) cell_activate_drift_part(ci, s);
-        if (cj->nodeID == nodeID) cell_activate_drift_part(cj, s);
+	  /* stars for cj */
+	  atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+	  cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
-        if (ci->nodeID == nodeID) cell_activate_drift_spart(ci, s);
-        if (cj->nodeID == nodeID) cell_activate_drift_spart(cj, s);
+	  /* Activate the drift tasks. */
+	  cell_activate_drift_spart(cj, s);
+	  cell_activate_drift_part(ci, s);
 
-        /* Check the sorts and activate them if needed. */
-        cell_activate_sorts(ci, t->flags, s);
-        cell_activate_sorts(cj, t->flags, s);
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_sorts(ci, t->flags, s);
+	  cell_activate_stars_sorts(cj, t->flags, s);
+	}
 
-        cell_activate_stars_sorts(ci, t->flags, s);
-        cell_activate_stars_sorts(cj, t->flags, s);
       }
       /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_pair || t->type == task_type_sub_self) {

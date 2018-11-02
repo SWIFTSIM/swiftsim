@@ -631,7 +631,7 @@ void runner_do_sort_ascending(struct entry *sort, int N) {
   }
 #else
 #define RUNNER_CHECK_SORTS(TYPE)                                       \
-  void runner_check_##TYPE_sorts(struct cell *c, int flags) {          \
+  void runner_check_sorts_##TYPE(struct cell *c, int flags) {          \
     error("Calling debugging code without debugging flag activated."); \
   }
 #endif
@@ -895,8 +895,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
   if (flags == 0 && !c->stars.do_sub_sort) return;
 
   /* Check that the particles have been moved to the current time */
-  if (flags &&
-      (!cell_are_part_drifted(c, r->e) || !cell_are_spart_drifted(c, r->e)))
+  if (flags && !cell_are_spart_drifted(c, r->e))
     error("Sorting un-drifted cell c->nodeID=%d", c->nodeID);
 
 #ifdef SWIFT_DEBUG_CHECKS
