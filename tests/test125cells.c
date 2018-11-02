@@ -834,11 +834,11 @@ int main(int argc, char *argv[]) {
 
   ticks self_time = timings[26];
 
-  message("Corner calculations took       : %15lli ticks.", corner_time / runs);
-  message("Edge calculations took         : %15lli ticks.", edge_time / runs);
-  message("Face calculations took         : %15lli ticks.", face_time / runs);
-  message("Self calculations took         : %15lli ticks.", self_time / runs);
-  message("SWIFT calculation took         : %15lli ticks.", time / runs);
+  message("Corner calculations took:     %15lli ticks.", corner_time / runs);
+  message("Edge calculations took:       %15lli ticks.", edge_time / runs);
+  message("Face calculations took:       %15lli ticks.", face_time / runs);
+  message("Self calculations took:       %15lli ticks.", self_time / runs);
+  message("SWIFT calculation took:       %15lli ticks.", time / runs);
 
   for (int j = 0; j < 125; ++j)
     reset_particles(cells[j], &space.hs, vel, press, size, rho);
@@ -897,7 +897,6 @@ int main(int argc, char *argv[]) {
 
 #ifdef EXTRA_HYDRO_LOOP
     /* We need to do the gradient loop and the extra ghost! */
-    message("Extra hydro loop detected, running gradient loop in test125cells.");
 
     /* Run all the pairs (only once !)*/
     for (int i = 0; i < 5; i++) {
@@ -962,7 +961,7 @@ int main(int argc, char *argv[]) {
   const ticks toc = getticks();
 
   /* Output timing */
-  message("Brute force calculation took : %15lli ticks.", toc - tic);
+  message("Brute force calculation took: %15lli ticks.", toc - tic);
 
   sprintf(outputFileName, "brute_force_125_%.150s.dat",
           outputFileNameExtension);
