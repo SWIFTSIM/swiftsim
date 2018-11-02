@@ -464,9 +464,17 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
 void runner_dopair1_branch_density(struct runner *r, struct cell *ci,
                                    struct cell *cj);
 void runner_doself1_branch_density(struct runner *r, struct cell *ci);
+void runner_doself1_density(struct runner *r, struct cell *ci);
+#ifdef EXTRA_HYDRO_LOOP
+void runner_dopair1_branch_gradient(struct runner *r, struct cell *ci,
+                                    struct cell *cj);
+void runner_doself1_gradient(struct runner *r, struct cell *ci);
+#endif /* EXTRA_HYDRO LOOP */
 void runner_dopair2_branch_force(struct runner *r, struct cell *ci,
                                  struct cell *cj);
 void runner_doself2_branch_force(struct runner *r, struct cell *ci);
+void runner_doself2_force(struct runner *r, struct cell *ci);
+void runner_doself2_force_vec(struct runner *r, struct cell *ci);
 
 /* And go... */
 int main(int argc, char *argv[]) {
@@ -678,7 +686,7 @@ int main(int argc, char *argv[]) {
     cache_init(&runner.cj_cache, 512);
 #endif
 
-    /* Run all the pairs (only once !)*/
+    /* Run all the  (only once !)*/
     for (int i = 0; i < 5; i++) {
       for (int j = 0; j < 5; j++) {
         for (int k = 0; k < 5; k++) {
@@ -714,6 +722,49 @@ int main(int argc, char *argv[]) {
 
     /* Ghost to finish everything on the central cells */
     for (int j = 0; j < 27; ++j) runner_do_ghost(&runner, inner_cells[j], 0);
+
+#ifdef EXTRA_HYDRO_LOOP
+    /* We need to do the gradient loop and the extra ghost! */
+    message("Extra hydro loop detected, running gradient loop in test125cells.");
+
+    /* Run all the pairs (only once !)*/
+    for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+        for (int k = 0; k < 5; k++) {
+
+          struct cell *ci = cells[i * 25 + j * 5 + k];
+
+          for (int ii = -1; ii < 2; ii++) {
+            int iii = i + ii;
+            if (iii < 0 || iii >= 5) continue;
+            iii = (iii + 5) % 5;
+            for (int jj = -1; jj < 2; jj++) {
+              int jjj = j + jj;
+              if (jjj < 0 || jjj >= 5) continue;
+              jjj = (jjj + 5) % 5;
+              for (int kk = -1; kk < 2; kk++) {
+                int kkk = k + kk;
+                if (kkk < 0 || kkk >= 5) continue;
+                kkk = (kkk + 5) % 5;
+
+                struct cell *cj = cells[iii * 25 + jjj * 5 + kkk];
+
+                if (cj > ci) runner_dopair1_branch_gradient(&runner, ci, cj);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    /* And now the self-interaction for the central cells */
+    for (int j = 0; j < 27; ++j)
+      runner_doself1_gradient(&runner, inner_cells[j]);
+
+    /* Extra ghost to finish everything on the central cells */
+    for (int j = 0; j < 27; ++j) runner_do_extra_ghost(&runner, inner_cells[j], 0);
+
+#endif /* EXTRA_HYDRO_LOOP */
 
       /* Do the force calculation */
 
@@ -843,6 +894,49 @@ int main(int argc, char *argv[]) {
 
   /* Ghost to finish everything on the central cells */
   for (int j = 0; j < 27; ++j) runner_do_ghost(&runner, inner_cells[j], 0);
+
+#ifdef EXTRA_HYDRO_LOOP
+    /* We need to do the gradient loop and the extra ghost! */
+    message("Extra hydro loop detected, running gradient loop in test125cells.");
+
+    /* Run all the pairs (only once !)*/
+    for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+        for (int k = 0; k < 5; k++) {
+
+          struct cell *ci = cells[i * 25 + j * 5 + k];
+
+          for (int ii = -1; ii < 2; ii++) {
+            int iii = i + ii;
+            if (iii < 0 || iii >= 5) continue;
+            iii = (iii + 5) % 5;
+            for (int jj = -1; jj < 2; jj++) {
+              int jjj = j + jj;
+              if (jjj < 0 || jjj >= 5) continue;
+              jjj = (jjj + 5) % 5;
+              for (int kk = -1; kk < 2; kk++) {
+                int kkk = k + kk;
+                if (kkk < 0 || kkk >= 5) continue;
+                kkk = (kkk + 5) % 5;
+
+                struct cell *cj = cells[iii * 25 + jjj * 5 + kkk];
+
+                if (cj > ci) pairs_all_gradient(&runner, ci, cj);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    /* And now the self-interaction for the central cells */
+    for (int j = 0; j < 27; ++j)
+      self_all_gradient(&runner, inner_cells[j]);
+
+    /* Extra ghost to finish everything on the central cells */
+    for (int j = 0; j < 27; ++j) runner_do_extra_ghost(&runner, inner_cells[j], 0);
+
+#endif /* EXTRA_HYDRO_LOOP */
 
   /* Do the force calculation */
 
