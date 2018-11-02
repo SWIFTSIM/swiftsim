@@ -535,8 +535,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
     struct part* restrict p) {
-      p->viscosity.v_sig = 2.f * p->force.soundspeed;
-    }
+  p->viscosity.v_sig = 2.f * p->force.soundspeed;
+}
 
 /**
  * @brief Finishes the gradient calculation.
@@ -610,40 +610,40 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
-    
-    /* Here we need to update the artificial viscosity */
+  
+  /* Here we need to update the artificial viscosity */
 
-    /* Timescale for decay */
-    const float tau = p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
-    /* Construct time differential of div.v implicitly */
-    const float div_v_dt =
-        dt_alpha == 0.f ? 0.f
-                        : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
-    /* Construct the source term for the AV; if shock detected this is _positive_ as
-     * div_v_dt should be _negative_ before the shock hits */
-    const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
-    const float v_sig_square = p->viscosity.v_sig * p->viscosity.v_sig; 
-    /* Calculate the current appropriate value of the AV based on the above */
-    const float alpha_loc = hydro_props->viscosity.alpha_max * (S / (v_sig_square + S));
+  /* Timescale for decay */
+  const float tau = p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
+  /* Construct time differential of div.v implicitly */
+  const float div_v_dt =
+      dt_alpha == 0.f ? 0.f
+                      : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
+  /* Construct the source term for the AV; if shock detected this is _positive_ as
+    * div_v_dt should be _negative_ before the shock hits */
+  const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
+  const float v_sig_square = p->viscosity.v_sig * p->viscosity.v_sig; 
+  /* Calculate the current appropriate value of the AV based on the above */
+  const float alpha_loc = hydro_props->viscosity.alpha_max * S / (v_sig_square + S);
 
 
-    if (alpha_loc > p->viscosity.alpha) {
-      /* Reset the value of alpha to the appropriate value */
-      p->viscosity.alpha = alpha_loc;
-    } else {
-      /* Integrate the alpha forward in time to decay back to alpha = 0 */
-      const float alpha_dt = (alpha_loc - p->viscosity.alpha) / tau;
+  if (alpha_loc > p->viscosity.alpha) {
+    /* Reset the value of alpha to the appropriate value */
+    p->viscosity.alpha = alpha_loc;
+  } else {
+    /* Integrate the alpha forward in time to decay back to alpha = 0 */
+    const float alpha_dt = (alpha_loc - p->viscosity.alpha) / tau;
 
-      /* Finally, we can update the actual value of the alpha */
-      p->viscosity.alpha += alpha_dt * dt_alpha;
-    }
+    /* Finally, we can update the actual value of the alpha */
+    p->viscosity.alpha += alpha_dt * dt_alpha;
+  }
 
-    if (p->viscosity.alpha < hydro_props->viscosity.alpha_min) {
-      p->viscosity.alpha = hydro_props->viscosity.alpha_min;
-    }
+  if (p->viscosity.alpha < hydro_props->viscosity.alpha_min) {
+    p->viscosity.alpha = hydro_props->viscosity.alpha_min;
+  }
 
-    /* Set our old div_v to the one for the next loop */
-    p->viscosity.div_v_previous_step = p->viscosity.div_v;
+  /* Set our old div_v to the one for the next loop */
+  p->viscosity.div_v_previous_step = p->viscosity.div_v;
 }
 
 /**
