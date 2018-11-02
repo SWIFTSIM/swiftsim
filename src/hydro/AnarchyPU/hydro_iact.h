@@ -200,20 +200,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
     /* We need to construct the maximal signal velocity between our particle
      * and all of it's neighbours */
 
-    const float dv_dx = \
-        (pi->v[0] - pj->v[0]) * dx[0] + \
-        (pi->v[1] - pj->v[1]) * dx[1] + \
+    const float dv_dx = 
+        (pi->v[0] - pj->v[0]) * dx[0] + 
+        (pi->v[1] - pj->v[1]) * dx[1] + 
         (pi->v[2] - pj->v[2]) * dx[2];
 
-    const float dv_dx_factor_i = min(0, 3.f*dv_dx);
-    const float dv_dx_factor_j = min(0, -3.f*dv_dx);
+    const float dv_dx_factor = min(0, 3.f*dv_dx);
 
-    const float new_v_sig_i = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_i;
-    const float new_v_sig_j = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_j;
+    const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
     /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig_i);
-    pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig_j);
+    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
+    pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
 
 }
 
@@ -241,18 +239,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
     /* We need to construct the maximal signal velocity between our particle
      * and all of it's neighbours */
 
-    const float dv_dx = \
-        (pi->v[0] - pj->v[0]) * dx[0] + \
-        (pi->v[1] - pj->v[1]) * dx[1] + \
+    const float dv_dx = 
+        (pi->v[0] - pj->v[0]) * dx[0] + 
+        (pi->v[1] - pj->v[1]) * dx[1] + 
         (pi->v[2] - pj->v[2]) * dx[2];
 
-    const float dv_dx_factor_i = min(0, 3.f*dv_dx);
+    const float dv_dx_factor = min(0, 3.f*dv_dx);
 
-    const float new_v_sig_i = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor_i;
+    const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
     /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig_i);
-
+    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
 }
 
 /**
