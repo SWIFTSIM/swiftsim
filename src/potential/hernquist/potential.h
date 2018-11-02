@@ -90,7 +90,6 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   /* Calculate the circular orbital period */
   const float period = 2.f * M_PI * sqrtf(r) * potential->al  
                       * (1 + r/potential->al) / sqrtgm;
-  message("Orbital time is %e", period); 
   return max(potential->timestep_mult * period,potential->mintime);
 }
 
