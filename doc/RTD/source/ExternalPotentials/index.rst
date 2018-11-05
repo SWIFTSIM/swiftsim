@@ -4,7 +4,7 @@
 External Potentials in SWIFT
 ============================
 
-SWIFT can be run with an external potential on this page we will summaraize the
+SWIFT can be run with an external potential on this page we will summarize the
 current potentials which can be run with SWIFT and how to implement your own 
 potential in SWIFT.
 
@@ -54,7 +54,7 @@ called ``potential.h``.
 Configuring the potential 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-THe first thing is copying a ``potential.h`` file from an already implemented 
+To get started you can copy a ``potential.h`` file from an already implemented 
 potentials. In this potential the ``ifdef`` statements need to be changed to the
 specific potential and the ``struct`` and ``potential_init_backend`` need to be
 changed such that it uses your potential and reads the correct potential from
