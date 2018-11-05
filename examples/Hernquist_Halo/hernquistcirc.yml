@@ -25,10 +25,7 @@ Statistics:
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:          test_nfw.hdf5 # The file to read
-  shift_x:            0.          # (Optional) A shift to apply to all particles read from the ICs (in internal units).
-  shift_y:            0.
-  shift_z:            0.
+  file_name:          circularorbitshernquist.hdf5 # The file to read
   periodic:           0
 
 # Hernquist potential parameters
