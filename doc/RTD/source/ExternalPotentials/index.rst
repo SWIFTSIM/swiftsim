@@ -25,16 +25,17 @@ give a short overview of the potentials that are implemented in the code:
    and the position.
 5. Hernquist potential (hernquist): An potential that is given by the Hernquist 
    potential: 
-   .. math:: 
-      \Phi(r) = - \frac{GM}{r+a}.
+   
+   :math:`\Phi(r) = - \frac{GM}{r+a}.`
 
    The free paramters of Hernquist potential are the mass and the scale length,
    also the softening is a free parameter. The potential can be set at any 
    position in the box.
 6. NFW potential (nfw): The most used potential to describe dark matter halos, the  
-   potential is given by :
-   :raw-math:`$$\Phi(r) = - \frac{4\pi G \rho_0 R_s^3}{r} \ln \left( 1+ 
-   \frac{r}{R_s} \right).$$`
+   potential is given by:
+
+   :math:`\Phi(r) = - \frac{4\pi G \rho_0 R_s^3}{r} \ln \left( 1+ 
+   \frac{r}{R_s} \right).`
 
    This potential has as free paramters the concentration of the DM halo, the
    virial mass (:math:`M_{200}`) and the critical density.
