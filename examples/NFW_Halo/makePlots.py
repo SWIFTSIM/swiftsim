@@ -38,8 +38,8 @@ def read_data():
             break
 
         boxSize = sim["/Header"].attrs["BoxSize"][0]
-        pos = sim["/PartType1/Coordinates"][:, :] - boxSize/2.0
-        R = np.append(R, np.sqrt(pos[0, 0]**2 + pos[0, 1]**2))
+        pos = sim["/PartType1/Coordinates"][:, :] - boxSize / 2.0
+        R = np.append(R, np.sqrt(pos[0, 0] ** 2 + pos[0, 1] ** 2))
         z = np.append(z, pos[0, 2])
     return (R, z)
 
@@ -48,13 +48,18 @@ def galpy_nfw_orbit():
     # Setting up the potential
     nfw = NFWPotential(conc=C, mvir=M_200, H=70.0, wrtcrit=True, overdens=200)
     nfw.turn_physical_on()
-    vxvv = [8.*units.kpc, 0.*units.km/units.s, 240.*units.km/units.s,
-            0.*units.pc, 5.*units.km/units.s]
+    vxvv = [
+        8.0 * units.kpc,
+        0.0 * units.km / units.s,
+        240.0 * units.km / units.s,
+        0.0 * units.pc,
+        5.0 * units.km / units.s,
+    ]
 
     # Calculating the orbit
-    ts = np.linspace(0., 0.58, 1000)*units.Gyr
+    ts = np.linspace(0.0, 0.58, 1000) * units.Gyr
     o = Orbit(vxvv=vxvv)
-    o.integrate(ts, nfw, method='odeint')
+    o.integrate(ts, nfw, method="odeint")
 
     return o
 
@@ -63,6 +68,6 @@ o = galpy_nfw_orbit()
 (R, z) = read_data()
 
 o.plot()
-plt.scatter(R, z, s=1, color='black', marker='x')
+plt.scatter(R, z, s=1, color="black", marker="x")
 plt.savefig("comparison.png")
 plt.close()
