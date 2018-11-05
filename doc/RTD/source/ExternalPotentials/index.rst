@@ -11,7 +11,7 @@ potential in SWIFT.
 Implemented External Potentials
 -------------------------------
 
-Currently there are several potentials implemented in SWIFT, on this page we 
+Currently there are several potentials implemented in SWIFT. On this page we 
 give a short overview of the potentials that are implemented in the code:
 
 1. No potential (none)
@@ -23,14 +23,13 @@ give a short overview of the potentials that are implemented in the code:
    to a density profile which is :math:`\propto r^{-2}` and a potential which is 
    logarithmic. This potential has as free parameters the rotation velocity 
    and the position.
-5. Hernquist potential (hernquist): An potential that is given by the Hernquist 
+5. Hernquist potential (hernquist): A potential that is given by the Hernquist 
    potential: 
    
    :math:`\Phi(r) = - \frac{GM}{r+a}.`
 
-   The free paramters of Hernquist potential are the mass and the scale length,
-   also the softening is a free parameter. The potential can be set at any 
-   position in the box.
+   The free paramters of Hernquist potential are mass, scale length,
+   and softening. The potential can be set at any position in the box.
 6. NFW potential (nfw): The most used potential to describe dark matter halos, the  
    potential is given by:
 
@@ -55,10 +54,11 @@ Configuring the potential
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To get started you can copy a ``potential.h`` file from an already implemented 
-potentials. In this potential the ``ifdef`` statements need to be changed to the
-specific potential and the ``struct`` and ``potential_init_backend`` need to be
-changed such that it uses your potential and reads the correct potential from
-the parameter file during running the program.
+potential. In this potential the header guards (e.g. ``#IFDEF <>``) need to be 
+changed to the specific potential and the ``struct`` and 
+``potential_init_backend`` need to be  changed such that it uses your potential 
+and reads the correct potential from the parameter file during running the 
+program.
 
 Add the potential to the ``potential.h`` file in the ``src`` directory such that
 the program knows that it is possible to run with this potential.
