@@ -64,18 +64,12 @@ grp.attrs["PeriodicBoundariesOn"] = 1
 
 # Particle group
 grp1 = file.create_group("/PartType1")
-ds = grp1.create_dataset("Velocities", (N_PARTICLES, 3), "f")
-ds[()] = vel
+ds = grp1.create_dataset("Velocities", (N_PARTICLES, 3), "f", data=vel)
 
-ds = grp1.create_dataset("Masses", (N_PARTICLES,), "f")
-ds[()] = mass
+ds = grp1.create_dataset("Masses", (N_PARTICLES,), "f", data=mass)
 
-ds = grp1.create_dataset("ParticleIDs", (N_PARTICLES,), "L")
-ds[()] = ids
+ds = grp1.create_dataset("ParticleIDs", (N_PARTICLES,), "L", data=ids)
 
-ds = grp1.create_dataset("Coordinates", (N_PARTICLES, 3), "d")
-ds[()] = pos
+ds = grp1.create_dataset("Coordinates", (N_PARTICLES, 3), "d", data=pos)
 
 file.close()
-
-

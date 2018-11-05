@@ -153,21 +153,15 @@ omegav = omega
 v[:, 0] = -omegav * r[:, 1]
 v[:, 1] = omegav * r[:, 0]
 
-ds = grp1.create_dataset("Velocities", (numPart, 3), "f")
-ds[()] = v
-v = numpy.zeros(1)
+ds = grp1.create_dataset("Velocities", (numPart, 3), "f", data=v)
 
 m = numpy.full((numPart,), mass, dtype="f")
-ds = grp1.create_dataset("Masses", (numPart,), "f")
-ds[()] = m
-m = numpy.zeros(1)
+ds = grp1.create_dataset("Masses", (numPart,), "f", data=m)
 
 ids = 1 + numpy.linspace(0, numPart, numPart, endpoint=False)
-ds = grp1.create_dataset("ParticleIDs", (numPart,), "L")
-ds[()] = ids
+ds = grp1.create_dataset("ParticleIDs", (numPart,), "L", data=ids)
 
-ds = grp1.create_dataset("Coordinates", (numPart, 3), "d")
-ds[()] = r
+ds = grp1.create_dataset("Coordinates", (numPart, 3), "d", data=r)
 
 
 file.close()
