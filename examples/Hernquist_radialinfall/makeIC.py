@@ -1,9 +1,6 @@
 ###############################################################################
  # This file is part of SWIFT.
  # Copyright (c) 2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
- # Modified version of the Isothermal potential makeIC.py:
- # Copyright (c) 2016 John A. Regan (john.a.regan@durham.ac.uk)
- #                    Tom Theuns (tom.theuns@durham.ac.uk)
  # 
  # This program is free software: you can redistribute it and/or modify
  # it under the terms of the GNU Lesser General Public License as published
@@ -33,20 +30,15 @@ import numpy as np
 # all particles move in the xy plane, and start at y=0
 
 # physical constants in cgs
-NEWTON_GRAVITY_CGS  = 6.67408e-8
-SOLAR_MASS_IN_CGS   = 1.98848e33
-PARSEC_IN_CGS       = 3.08567758e18
-YEAR_IN_CGS         = 3.15569252e7
-print("Value of G in cgs:", NEWTON_GRAVITY_CGS) 
+NEWTON_GRAVITY_CGS = 6.67408e-8
+SOLAR_MASS_IN_CGS = 1.98848e33
+PARSEC_IN_CGS = 3.08567758e18
+YEAR_IN_CGS = 3.15569252e7
 
 # choice of units
-const_unit_length_in_cgs   =   (1000*PARSEC_IN_CGS)
-const_unit_mass_in_cgs     =   (SOLAR_MASS_IN_CGS)
-const_unit_velocity_in_cgs =   (1e5)
-
-print("UnitMass_in_cgs:     ", const_unit_mass_in_cgs)
-print("UnitLength_in_cgs:   ", const_unit_length_in_cgs)
-print("UnitVelocity_in_cgs: ", const_unit_velocity_in_cgs)
+const_unit_length_in_cgs = (1000*PARSEC_IN_CGS)
+const_unit_mass_in_cgs = (SOLAR_MASS_IN_CGS)
+const_unit_velocity_in_cgs = (1e5)
 
 
 
@@ -71,10 +63,10 @@ def hernquistcircvel(r,M,a):
     return (const_G * M * r)**.5/ (r+a)
 
 # Parameters
-periodic= 1            # 1 For periodic box
+periodic = 1            # 1 For periodic box
 boxSize = 400.         #  [kpc]
-Radius  = 100.          # maximum radius of particles [kpc]
-G       = const_G 
+Radius = 100.          # maximum radius of particles [kpc]
+G = const_G 
 
 N = 5
 L       = N**(1./3.)
