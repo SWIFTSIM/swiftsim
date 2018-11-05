@@ -41,7 +41,7 @@ struct external_potential {
   /*! Position of the centre of potential */
   double x[3];
 
-  /*! Mass of the potential */
+  /*! Mass of the halo */
   double mass;
 
   /*! Scale length (often as a, to prevent confusion we use al) */
@@ -51,10 +51,12 @@ struct external_potential {
    * distance from the origin */
   double epsilon2;
   
-  /* Minimum timestep of the potential */
+  /* Minimum timestep of the potential given by the timestep multiple 
+   * times the orbital time at the softening length */
   double mintime;
 
-  /*! Time-step condition pre-factor */
+  /*! Time-step condition pre-factor, is multiplied times the circular orbital time to get 
+   * the time steps */
   double timestep_mult;
 };
 

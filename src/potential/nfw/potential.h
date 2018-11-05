@@ -67,10 +67,12 @@ struct external_potential {
   /*! Time-step condition pre_factor */
   double timestep_mult;
 
-  /*! Minimum time step */
+  /*! Minimum time step based on the orbital time at the softening times
+   * the timestep_mult */
   double mintime;
 
   /*! the NFW lnthing */
+  /* lnthing = ln(1+c) - c/(1+c) */
   double lnthing;
 
   double eps;
@@ -112,11 +114,9 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
  * Note that the accelerations are multiplied by Newton's G constant
  * later on.
  *
- * TODO
- * NEED TO UPDATE THESE
- * a_x = -(v_rot^2 / G) * x / (r^2 + epsilon^2)
- * a_y = -(v_rot^2 / G) * y / (r^2 + epsilon^2)
- * a_z = -(v_rot^2 / G) * z / (r^2 + epsilon^2)
+ * a_x = 4 pi \rho_0 r_s^3 ( 1/((r+rs)*r^2) - log(1+r/rs)/r^3) * x
+ * a_y = 4 pi \rho_0 r_s^3 ( 1/((r+rs)*r^2) - log(1+r/rs)/r^3) * y
+ * a_z = 4 pi \rho_0 r_s^3 ( 1/((r+rs)*r^2) - log(1+r/rs)/r^3) * z
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
