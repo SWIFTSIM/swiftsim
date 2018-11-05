@@ -39,7 +39,6 @@ yy = np.zeros((numbpar,lengthrun))
 zz = np.zeros((numbpar,lengthrun))
 time = np.zeros(lengthrun)
 for i in range(0,lengthrun):
-    print(i)
     Data = h5py.File('output_%04d.hdf5'%i,'r')
     header = Data['Header']
     time[i] = header.attrs['Time']
