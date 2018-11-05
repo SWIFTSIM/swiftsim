@@ -125,7 +125,8 @@ FULLTYPES = ["self/force", "self/density", "self/grav", "sub_self/force",
              "sub_pair/force",
              "sub_pair/density", "recv/xv", "send/xv", "recv/rho", "send/rho",
              "recv/tend", "send/tend", "recv/gpart", "send/gpart", "self/stars_density",
-             "pair/stars_density", "sub_self/stars_density", "sub_pair/stars_density"]
+             "pair/stars_density", "sub_self/stars_density", "sub_pair/stars_density",
+             "stars_sort/none"]
 
 #  A number of colours for the various types. Recycled when there are
 #  more task types than colours...

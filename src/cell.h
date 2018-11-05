@@ -475,6 +475,9 @@ struct cell {
     /*! Do any of this cell's sub-cells need to be sorted? */
     char do_sub_sort;
 
+    /*! Maximum end of (integer) time step in this cell for gravity tasks. */
+    integertime_t ti_end_min;
+
     /*! Dependency implicit task for the star ghost  (in->ghost->out)*/
     struct task *ghost_in;
 

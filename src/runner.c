@@ -2040,6 +2040,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
                 ti_gravity_beg_max = 0;
 
+  integertime_t ti_stars_end_min = max_nr_timesteps;
+
   /* No children? */
   if (!c->split) {
 
@@ -2214,6 +2216,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* What is the next sync-point ? */
         ti_gravity_end_min = min(ti_current + ti_new_step, ti_gravity_end_min);
         ti_gravity_end_max = max(ti_current + ti_new_step, ti_gravity_end_max);
+	ti_stars_end_min = min(ti_current + ti_new_step, ti_stars_end_min);
 
         /* What is the next starting point for this cell ? */
         ti_gravity_beg_max = max(ti_current, ti_gravity_beg_max);
@@ -2230,6 +2233,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* What is the next sync-point ? */
         ti_gravity_end_min = min(ti_end, ti_gravity_end_min);
         ti_gravity_end_max = max(ti_end, ti_gravity_end_max);
+        ti_stars_end_min = min(ti_end, ti_stars_end_min);
 
         const integertime_t ti_beg =
             get_integer_time_begin(ti_current + 1, sp->time_bin);
@@ -2261,6 +2265,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         ti_gravity_end_min = min(cp->grav.ti_end_min, ti_gravity_end_min);
         ti_gravity_end_max = max(cp->grav.ti_end_max, ti_gravity_end_max);
         ti_gravity_beg_max = max(cp->grav.ti_beg_max, ti_gravity_beg_max);
+
+	ti_stars_end_min = min(cp->stars.ti_end_min, ti_stars_end_min);
       }
   }
 
@@ -2277,6 +2283,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   c->grav.ti_end_min = ti_gravity_end_min;
   c->grav.ti_end_max = ti_gravity_end_max;
   c->grav.ti_beg_max = ti_gravity_beg_max;
+  c->stars.ti_end_min = ti_stars_end_min;
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (c->hydro.ti_end_min == e->ti_current &&
@@ -2285,6 +2292,9 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   if (c->grav.ti_end_min == e->ti_current &&
       c->grav.ti_end_min < max_nr_timesteps)
     error("End of next gravity step is current time!");
+  if (c->stars.ti_end_min == e->ti_current &&
+      c->stars.ti_end_min < max_nr_timesteps)
+    error("End of next stars step is current time!");
 #endif
 
   if (timer) TIMER_TOC(timer_timestep);

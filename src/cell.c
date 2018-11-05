@@ -2153,8 +2153,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
   if (cj == NULL) {
 
     /* Do anything? */
-    if (ci->stars.count == 0 || !cell_is_active_stars(ci, e)
-	|| ci->hydro.count == 0) return;
+    if (!cell_is_active_stars(ci, e) || ci->hydro.count == 0 ||
+	ci->stars.count == 0) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_stars_task(ci)) {
@@ -2182,8 +2182,10 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 
     /* Should we even bother? */
     if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-    if ((ci->stars.count == 0 && cj->hydro.count) ||
-	(cj->stars.count == 0 && ci->hydro.count)) return;
+    
+    int should_do = ci->stars.count != 0 && cj->hydro.count != 0;
+    should_do |= cj->stars.count != 0 && ci->hydro.count != 0;
+    if (!should_do) return;
 
     /* Get the orientation of the pair. */
     double shift[3];
@@ -2468,9 +2470,10 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
     }
 
     /* Otherwise, activate the sorts and drifts. */
-    else if (cell_is_active_stars(ci, e) || cell_is_active_stars(cj, e)) {
+    else {
 
-      if (cell_is_active_stars(ci, e)) {
+      if (cell_is_active_stars(ci, e) && cj->hydro.count != 0 &&
+	  ci->stars.count != 0) {
 	/* We are going to interact this pair, so store some values. */
 	atomic_or(&cj->hydro.requires_sorts, 1 << sid);
 	atomic_or(&ci->stars.requires_sorts, 1 << sid);
@@ -2487,7 +2490,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 	cell_activate_stars_sorts(ci, sid, s);
       }
 
-      if (cell_is_active_stars(cj, e)) {
+      if (cell_is_active_stars(cj, e) && ci->hydro.count != 0 &&
+	  cj->stars.count != 0) {
 	/* We are going to interact this pair, so store some values. */
 	atomic_or(&cj->stars.requires_sorts, 1 << sid);
 	atomic_or(&ci->hydro.requires_sorts, 1 << sid);
@@ -3038,40 +3042,44 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Set the correct sorting flags and activate hydro drifts */
       else if (t->type == task_type_pair) {
         /* Store some values. */
-	if (ci_active && ci->nodeID == nodeID) {
-	  /* stars for ci */
-	  atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
-	  ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-	  /* hydro for cj */
-	  atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
-	  cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+	/* Do ci */
+	/* stars for ci */
+	atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+	ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-	  /* Activate the drift tasks. */
+	/* hydro for cj */
+	atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+	cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+
+	/* Activate the drift tasks. */
+	if (ci->nodeID == nodeID)
 	  cell_activate_drift_spart(ci, s);
+	if (cj->nodeID == nodeID)
 	  cell_activate_drift_part(cj, s);
 
-	  /* Check the sorts and activate them if needed. */
-	  cell_activate_stars_sorts(ci, t->flags, s);
-	  cell_activate_sorts(cj, t->flags, s);
-	}
-	if (cj_active && cj->nodeID == nodeID) {
-	  /* hydro for ci */
-	  atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
-	  ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+	/* Check the sorts and activate them if needed. */
+	cell_activate_stars_sorts(ci, t->flags, s);
+	cell_activate_sorts(cj, t->flags, s);
 
-	  /* stars for cj */
-	  atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
-	  cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+	/* Do cj */
+	/* hydro for ci */
+	atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+	ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
-	  /* Activate the drift tasks. */
+	/* stars for cj */
+	atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+	cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+
+	/* Activate the drift tasks. */
+	if (cj->nodeID == nodeID)
 	  cell_activate_drift_spart(cj, s);
+	if (ci->nodeID == nodeID)
 	  cell_activate_drift_part(ci, s);
 
-	  /* Check the sorts and activate them if needed. */
-	  cell_activate_sorts(ci, t->flags, s);
-	  cell_activate_stars_sorts(cj, t->flags, s);
-	}
+	/* Check the sorts and activate them if needed. */
+	cell_activate_sorts(ci, t->flags, s);
+	cell_activate_stars_sorts(cj, t->flags, s);
 
       }
       /* Store current values of dx_max and h_max. */
@@ -3724,7 +3732,7 @@ void cell_drift_multipole(struct cell *c, const struct engine *e) {
 void cell_check_timesteps(struct cell *c) {
 #ifdef SWIFT_DEBUG_CHECKS
 
-  if (c->hydro.ti_end_min == 0 && c->grav.ti_end_min == 0 && c->nr_tasks > 0)
+  if (c->hydro.ti_end_min == 0 && c->grav.ti_end_min == 0 && c->stars.ti_end_min == 0 && c->nr_tasks > 0)
     error("Cell without assigned time-step");
 
   if (c->split) {

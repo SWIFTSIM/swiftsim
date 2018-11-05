@@ -126,6 +126,7 @@ struct end_of_step_data {
   size_t inhibited, g_inhibited, s_inhibited;
   integertime_t ti_hydro_end_min, ti_hydro_end_max, ti_hydro_beg_max;
   integertime_t ti_gravity_end_min, ti_gravity_end_max, ti_gravity_beg_max;
+  integertime_t ti_stars_end_min;
   struct engine *e;
 };
 
@@ -2836,11 +2837,11 @@ void engine_make_starsloop_tasks_mapper(void *map_data, int num_elements,
     /* Get the cell */
     struct cell *ci = &cells[cid];
 
-    /* Skip cells without star particles */
+    /* Skip cells without particles */
     if (ci->stars.count == 0 && ci->hydro.count == 0) continue;
 
     /* If the cells is local build a self-interaction */
-    if (ci->nodeID == nodeID && ci->stars.count != 0)
+    if (ci->nodeID == nodeID)
       scheduler_addtask(sched, task_type_self, task_subtype_stars_density, 0, 0,
                         ci, NULL);
 
@@ -2863,14 +2864,12 @@ void engine_make_starsloop_tasks_mapper(void *map_data, int num_elements,
           struct cell *cj = &cells[cjd];
 
           /* Is that neighbour local and does it have particles ? */
-	  const int do_not_interact = ((cj->hydro.count == 0 || ci->stars.count == 0) &&
-				       (cj->stars.count == 0 || ci->hydro.count == 0));
-          if (cid >= cjd || do_not_interact ||
+          if (cid >= cjd || (cj->stars.count == 0 && cj->hydro.count == 0) ||
               (ci->nodeID != nodeID && cj->nodeID != nodeID))
             continue;
 
           /* Construct the pair task */
-          const int sid = sortlistID[(kk + 1) + 3 * ((jj + 1) + 3 * (ii + 1))];
+	  const int sid = sortlistID[(kk + 1) + 3 * ((jj + 1) + 3 * (ii + 1))];
           scheduler_addtask(sched, task_type_pair, task_subtype_stars_density,
                             sid, 0, ci, cj);
         }
@@ -3510,14 +3509,13 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
              t->subtype == task_subtype_stars_density) {
 
       /* Make all density tasks depend on the drift and the sorts. */
-      if (cell_is_active_stars(t->ci, e)) {
-        if (t->cj->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
-        scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+      if (t->cj->nodeID == engine_rank)
+	scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
+      scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
 
-	scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
-      }
-      if (cell_is_active_stars(t->cj, e) && t->ci->super != t->cj->super) {
+      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+
+      if (t->ci->super != t->cj->super) {
 	if (t->ci->nodeID == engine_rank)
 	  scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
 	scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
@@ -3559,14 +3557,13 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
              t->subtype == task_subtype_stars_density) {
 
       /* Make all density tasks depend on the drift. */
-      if (cell_is_active_stars(t->ci, e)) {
-        if (t->cj->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
-        scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+      if (t->cj->nodeID == engine_rank)
+	scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
+      scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
 
-	scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
-      }
-      if (cell_is_active_stars(t->cj, e) && t->ci->super != t->cj->super) {
+      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+
+      if (t->ci->super != t->cj->super) {
 	if (t->ci->nodeID == engine_rank)
 	  scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
 	scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
@@ -3621,6 +3618,12 @@ void engine_maketasks(struct engine *e) {
     threadpool_map(&e->threadpool, engine_make_starsloop_tasks_mapper, NULL,
                    s->nr_cells, 1, 0, e);
   }
+
+  if (e->verbose)
+    message("Making stars tasks took %.3f %s.",
+            clocks_from_ticks(getticks() - tic2), clocks_getunit());
+
+  tic2 = getticks();
 
   /* Add the self gravity tasks. */
   if (e->policy & engine_policy_self_gravity) engine_make_self_gravity_tasks(e);
@@ -4037,51 +4040,49 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           ((ci_active_stars && ci->nodeID == engine_rank) ||
            (cj_active_stars && cj->nodeID == engine_rank))) {
 
-        scheduler_activate(s, t);
-
+	scheduler_activate(s, t);
+	
         /* Set the correct sorting flags */
         if (t_type == task_type_pair) {
 
-	  if (ci_active_stars) {
-	    /* Store some values. */
-	    atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
-	    atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+	  /* Do ci */
+	  /* Store some values. */
+	  atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+	  atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
 
-	    cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
-	    ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+	  cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+	  ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-	    /* Activate the hydro drift tasks. */
-	    if (ci_nodeID == nodeID)
-	      cell_activate_drift_spart(ci, s);
+	  /* Activate the hydro drift tasks. */
+	  if (ci_nodeID == nodeID)
+	    cell_activate_drift_spart(ci, s);
 
-	    if (cj_nodeID == nodeID)
-	      cell_activate_drift_part(cj, s);
+	  if (cj_nodeID == nodeID)
+	    cell_activate_drift_part(cj, s);
 
-	    /* Check the sorts and activate them if needed. */
-	    cell_activate_sorts(cj, t->flags, s);
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_sorts(cj, t->flags, s);
 	    
-	    cell_activate_stars_sorts(ci, t->flags, s);
-	  }
+	  cell_activate_stars_sorts(ci, t->flags, s);
 
-	  if (cj_active_stars) {
-	    /* Store some values. */
-	    atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
-	    atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+	  /* Do cj */
+	  /* Store some values. */
+	  atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+	  atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
 	    
-	    ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
-	    cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+	  ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+	  cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
-	    /* Activate the hydro drift tasks. */
-	    if (ci_nodeID == nodeID)
-	      cell_activate_drift_part(ci, s);
+	  /* Activate the hydro drift tasks. */
+	  if (ci_nodeID == nodeID)
+	    cell_activate_drift_part(ci, s);
 
-	    if (cj_nodeID == nodeID)
-	      cell_activate_drift_spart(cj, s);
+	  if (cj_nodeID == nodeID)
+	    cell_activate_drift_spart(cj, s);
 
-	    /* Check the sorts and activate them if needed. */
-	    cell_activate_sorts(ci, t->flags, s);
-	    cell_activate_stars_sorts(cj, t->flags, s);
-	  }
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_sorts(ci, t->flags, s);
+	  cell_activate_stars_sorts(cj, t->flags, s);
         }
 
         /* Store current values of dx_max and h_max. */
@@ -4759,6 +4760,7 @@ void engine_collect_end_of_step_recurse(struct cell *c,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
                 ti_gravity_beg_max = 0;
+  integertime_t ti_stars_end_min = max_nr_timesteps;
 
   /* Collect the values from the progeny. */
   for (int k = 0; k < 8; k++) {
@@ -4777,6 +4779,8 @@ void engine_collect_end_of_step_recurse(struct cell *c,
       ti_gravity_end_min = min(ti_gravity_end_min, cp->grav.ti_end_min);
       ti_gravity_end_max = max(ti_gravity_end_max, cp->grav.ti_end_max);
       ti_gravity_beg_max = max(ti_gravity_beg_max, cp->grav.ti_beg_max);
+
+      ti_stars_end_min = min(ti_stars_end_min, cp->stars.ti_end_min);
 
       updated += cp->hydro.updated;
       g_updated += cp->grav.updated;
@@ -4800,6 +4804,7 @@ void engine_collect_end_of_step_recurse(struct cell *c,
   c->grav.ti_end_min = ti_gravity_end_min;
   c->grav.ti_end_max = ti_gravity_end_max;
   c->grav.ti_beg_max = ti_gravity_beg_max;
+  c->stars.ti_end_min = ti_stars_end_min;
   c->hydro.updated = updated;
   c->grav.updated = g_updated;
   c->stars.updated = s_updated;
@@ -4834,6 +4839,7 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
                 ti_gravity_beg_max = 0;
+  integertime_t ti_stars_end_min = max_nr_timesteps;
 
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &s->cells_top[local_cells[ind]];
@@ -4853,6 +4859,9 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
         ti_gravity_end_min = min(ti_gravity_end_min, c->grav.ti_end_min);
       ti_gravity_end_max = max(ti_gravity_end_max, c->grav.ti_end_max);
       ti_gravity_beg_max = max(ti_gravity_beg_max, c->grav.ti_beg_max);
+
+      if (c->stars.ti_end_min > e->ti_current)
+	ti_stars_end_min = min(ti_stars_end_min, c->stars.ti_end_min);
 
       updated += c->hydro.updated;
       g_updated += c->grav.updated;
@@ -4892,6 +4901,10 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
         max(ti_gravity_end_max, data->ti_gravity_end_max);
     data->ti_gravity_beg_max =
         max(ti_gravity_beg_max, data->ti_gravity_beg_max);
+
+    if (ti_stars_end_min > e->ti_current)
+    data->ti_stars_end_min =
+        min(ti_stars_end_min, data->ti_stars_end_min);
   }
 
   if (lock_unlock(&s->lock) != 0) error("Failed to unlock the space");

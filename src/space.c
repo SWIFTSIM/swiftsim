@@ -227,6 +227,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->hydro.ti_end_max = -1;
     c->grav.ti_end_min = -1;
     c->grav.ti_end_max = -1;
+    c->stars.ti_end_min = -1;
 #ifdef SWIFT_DEBUG_CHECKS
     c->cellID = 0;
 #endif
@@ -1969,6 +1970,7 @@ void space_split_recursive(struct space *s, struct cell *c,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
                 ti_gravity_beg_max = 0;
+  integertime_t ti_stars_end_min = max_nr_timesteps;
   struct part *parts = c->hydro.parts;
   struct gpart *gparts = c->grav.parts;
   struct spart *sparts = c->stars.parts;
@@ -2126,6 +2128,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         ti_gravity_end_min = min(ti_gravity_end_min, cp->grav.ti_end_min);
         ti_gravity_end_max = max(ti_gravity_end_max, cp->grav.ti_end_max);
         ti_gravity_beg_max = max(ti_gravity_beg_max, cp->grav.ti_beg_max);
+        ti_stars_end_min = min(ti_stars_end_min, cp->stars.ti_end_min);
 
         /* Increase the depth */
         if (cp->maxdepth > maxdepth) maxdepth = cp->maxdepth;
@@ -2252,6 +2255,7 @@ void space_split_recursive(struct space *s, struct cell *c,
 
     timebin_t hydro_time_bin_min = num_time_bins, hydro_time_bin_max = 0;
     timebin_t gravity_time_bin_min = num_time_bins, gravity_time_bin_max = 0;
+    timebin_t stars_time_bin_min = num_time_bins;
 
     /* parts: Get dt_min/dt_max and h_max. */
     for (int k = 0; k < count; k++) {
@@ -2289,6 +2293,8 @@ void space_split_recursive(struct space *s, struct cell *c,
 #endif
       gravity_time_bin_min = min(gravity_time_bin_min, sparts[k].time_bin);
       gravity_time_bin_max = max(gravity_time_bin_max, sparts[k].time_bin);
+      stars_time_bin_min = min(stars_time_bin_min, sparts[k].time_bin);
+
       stars_h_max = max(stars_h_max, sparts[k].h);
 
       /* Reset x_diff */
@@ -2306,6 +2312,7 @@ void space_split_recursive(struct space *s, struct cell *c,
     ti_gravity_end_max = get_integer_time_end(ti_current, gravity_time_bin_max);
     ti_gravity_beg_max =
         get_integer_time_begin(ti_current + 1, gravity_time_bin_max);
+    ti_stars_end_min = get_integer_time_end(ti_current, stars_time_bin_min);
 
     /* Construct the multipole and the centre of mass*/
     if (s->gravity) {
@@ -2343,6 +2350,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   c->grav.ti_end_min = ti_gravity_end_min;
   c->grav.ti_end_max = ti_gravity_end_max;
   c->grav.ti_beg_max = ti_gravity_beg_max;
+  c->stars.ti_end_min = ti_stars_end_min;
   c->stars.h_max = stars_h_max;
   c->maxdepth = maxdepth;
 

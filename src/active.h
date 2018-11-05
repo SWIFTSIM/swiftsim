@@ -85,16 +85,7 @@ __attribute__((always_inline)) INLINE static int cell_are_gpart_drifted(
 __attribute__((always_inline)) INLINE static int cell_are_spart_drifted(
     const struct cell *c, const struct engine *e) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (c->grav.ti_old_part > e->ti_current)
-    error(
-        "Cell has been drifted too far forward in time! c->ti_old=%lld (t=%e) "
-        "and e->ti_current=%lld (t=%e)",
-        c->grav.ti_old_part, c->grav.ti_old_part * e->time_base, e->ti_current,
-        e->ti_current * e->time_base);
-#endif
-
-  return (c->grav.ti_old_part == e->ti_current);
+  return cell_are_gpart_drifted(c, e);
 }
 
 /* Are cells / particles active for regular tasks ? */
@@ -165,6 +156,28 @@ __attribute__((always_inline)) INLINE static int cell_is_active_gravity(
 }
 
 /**
+ * @brief Does a cell contain any s-particle finishing their time-step now ?
+ *
+ * @param c The #cell.
+ * @param e The #engine containing information about the current time.
+ * @return 1 if the #cell contains at least an active particle, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int cell_is_active_stars(
+    const struct cell *c, const struct engine *e) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->stars.ti_end_min < e->ti_current)
+    error(
+        "cell in an impossible time-zone! c->ti_end_min=%lld (t=%e) and "
+        "e->ti_current=%lld (t=%e, a=%e)",
+        c->stars.ti_end_min, c->stars.ti_end_min * e->time_base, e->ti_current,
+        e->ti_current * e->time_base, e->cosmology->a);
+#endif
+
+  return (c->stars.ti_end_min == e->ti_current);
+}
+
+/**
  * @brief Does a cell contain any multipole requiring calculation ?
  *
  * @param c The #cell.
@@ -196,23 +209,6 @@ __attribute__((always_inline)) INLINE static int cell_is_all_active_gravity(
 #endif
 
   return (c->grav.ti_end_max == e->ti_current);
-}
-
-/**
- * @brief Does a cell contain any s-particle finishing their time-step now ?
- *
- * @param c The #cell.
- * @param e The #engine containing information about the current time.
- * @return 1 if the #cell contains at least an active particle, 0 otherwise.
- */
-__attribute__((always_inline)) INLINE static int cell_is_active_stars(
-    const struct cell *c, const struct engine *e) {
-
-  // LOIC: Need star-specific implementation
-  if (c->stars.count == 0)
-    return 0;
-
-  return cell_is_active_gravity(c, e);
 }
 
 /**
@@ -299,7 +295,6 @@ __attribute__((always_inline)) INLINE static int spart_is_active(
         "e->ti_current=%lld",
         ti_end, ti_current);
 #endif
-
   return (spart_bin <= max_active_bin);
 }
 

@@ -38,6 +38,8 @@ void runner_doself_stars_density(struct runner *r, struct cell *c, int timer) {
   /* Anything to do here? */
   if (!cell_is_active_stars(c, e)) return;
 
+  if (c->hydro.count == 0 && c->stars.count == 0) return;
+
   /* Cosmological terms */
   const float a = cosmo->a;
   const float H = cosmo->H;
@@ -164,8 +166,10 @@ void runner_dopair_stars_density(struct runner *r, struct cell *restrict ci,
 
   TIMER_TIC;
 
-  runner_dosubpair_stars_density(r, ci, cj);
-  runner_dosubpair_stars_density(r, cj, ci);
+  if (ci->stars.count == 0 || cj->hydro.count == 0)
+    runner_dosubpair_stars_density(r, ci, cj);
+  if (cj->stars.count == 0 || ci->hydro.count == 0)
+    runner_dosubpair_stars_density(r, cj, ci);
 
   if (timer) TIMER_TOC(timer_dopair_stars_density);
 }
@@ -384,7 +388,6 @@ void runner_dosub_subset_stars_density(struct runner *r, struct cell *ci,
   if (!cell_is_active_stars(ci, e) &&
       (cj == NULL || !cell_is_active_stars(cj, e)))
     return;
-  if (ci->stars.count == 0 && (cj != NULL && cj->stars.count == 0)) return;
 
   /* Find out in which sub-cell of ci the parts are. */
   struct cell *sub = NULL;
@@ -1022,48 +1025,44 @@ void runner_dopair_branch_stars_density(struct runner *r, struct cell *ci,
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
   /* Check that cells are drifted. */
-  if (ci_active) {
-    if (!cell_are_spart_drifted(ci, e) || !cell_are_part_drifted(cj, e))
-      error("Interacting undrifted cells.");
+  if ((ci->stars.count != 0 && !cell_are_spart_drifted(ci, e)) ||
+      (cj->hydro.count != 0 && !cell_are_part_drifted(cj, e)))
+    error("Interacting undrifted cells.");
 
-    /* Have the cells been sorted? */
-    if (!(ci->stars.sorted & (1 << sid)) ||
-	ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin)
-      error("Interacting unsorted cells.");
+  /* Have the cells been sorted? */
+  if (ci->stars.count != 0 &&
+      (!(ci->stars.sorted & (1 << sid)) ||
+       ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin))
+    error("Interacting unsorted cells.");
 
-    if (!(cj->hydro.sorted & (1 << sid)) ||
-	cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
-      error("Interacting unsorted cells.");
+  if (cj->hydro.count != 0 &&
+      (!(cj->hydro.sorted & (1 << sid)) ||
+       cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
+    error("Interacting unsorted cells.");
     
-  }
+  if (ci->hydro.count != 0 &&
+      (!cell_are_part_drifted(ci, e) || !cell_are_spart_drifted(cj, e)))
+    error("Interacting undrifted cells.");
 
-  if (cj_active) {
+  /* Have the cells been sorted? */
+  if (ci->hydro.count != 0 &&
+      (!(ci->hydro.sorted & (1 << sid)) ||
+       ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin))
+    error("Interacting unsorted cells.");
 
-    if (!cell_are_part_drifted(ci, e) || !cell_are_spart_drifted(cj, e))
-      error("Interacting undrifted cells.");
-
-      /* Have the cells been sorted? */
-    if (!(ci->hydro.sorted & (1 << sid)) ||
-	ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin)
-      error("Interacting unsorted cells.");
-
-    if (!(cj->stars.sorted & (1 << sid)) ||
-	cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin)
-      error("Interacting unsorted cells.");
-}
+  if (cj->stars.count != 0 &&
+      (!(cj->stars.sorted & (1 << sid)) ||
+       cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin))
+    error("Interacting unsorted cells.");
 
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Pick-out the sorted lists. */
-  if (ci_active) {
-    runner_stars_check_sort_hydro(cj, ci, sid);
-    runner_stars_check_sort_stars(ci, cj, sid);
-  }
-  if (cj_active) {
-    runner_stars_check_sort_hydro(ci, cj, sid);
-    runner_stars_check_sort_stars(cj, ci, sid);
+  runner_stars_check_sort_hydro(cj, ci, sid);
+  runner_stars_check_sort_stars(ci, cj, sid);
 
-  }
+  runner_stars_check_sort_hydro(ci, cj, sid);
+  runner_stars_check_sort_stars(cj, ci, sid);
 
 #endif /* SWIFT_DEBUG_CHECKS */
 
@@ -1092,8 +1091,10 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
 
   /* Should we even bother? */
   if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-  if ((ci->stars.count == 0 || cj->hydro.count == 0) &&
-      (cj->stars.count == 0 || ci->hydro.count == 0)) return;
+  
+  int should_do = ci->stars.count != 0 && cj->hydro.count != 0;
+  should_do |= cj->stars.count != 0 && ci->hydro.count != 0;
+  if (!should_do) return;
 
   /* Get the type of pair if not specified explicitly. */
   double shift[3];
@@ -1378,47 +1379,50 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
   }
 
   /* Otherwise, compute the pair directly. */
-  else if (cell_is_active_stars(ci, e) || cell_is_active_stars(cj, e)) {
+  else {
 
-    if (cell_is_active_stars(ci, e)) {
+    const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0;
+    const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0;
+
+    if (do_ci) {
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_spart_drifted(ci, e))
-	error("Interacting undrifted cells.");
+	error("Interacting undrifted cells (sparts).");
 
       if (!cell_are_part_drifted(cj, e))
-	error("Interacting undrifted cells.");
+	error("Interacting undrifted cells (parts).");
 
       /* Do any of the cells need to be sorted first? */
       if (!(ci->stars.sorted & (1 << sid)) ||
-	  ci->stars.dx_max_sort_old > ci->dmin * space_maxreldx)
-	error("Interacting unsorted cell. %p, %p", ci->super, cj->super);
+	   ci->stars.dx_max_sort_old > ci->dmin * space_maxreldx)
+	error("Interacting unsorted cell (sparts).");
 
       if (!(cj->hydro.sorted & (1 << sid)) ||
-	  cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
-	error("Interacting unsorted cell.");
+	   cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
+	error("Interacting unsorted cell (parts).");
 
     }
 
-    if (cell_is_active_stars(cj, e)) {
+    if (do_cj) {
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_part_drifted(ci, e))
-	error("Interacting undrifted cells.");
+	error("Interacting undrifted cells (parts).");
 
       if (!cell_are_spart_drifted(cj, e))
-	error("Interacting undrifted cells.");
+	error("Interacting undrifted cells (sparts).");
       
       /* Do any of the cells need to be sorted first? */
       if (!(ci->hydro.sorted & (1 << sid)) ||
-	  ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx)
-	error("Interacting unsorted cell.");
+	   ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx)
+	error("Interacting unsorted cell (parts).");
 
       if (!(cj->stars.sorted & (1 << sid)) ||
-	  cj->stars.dx_max_sort_old > cj->dmin * space_maxreldx)
-	error("Interacting unsorted cell. %p, %p", ci->super, cj->super);
+	   cj->stars.dx_max_sort_old > cj->dmin * space_maxreldx)
+	error("Interacting unsorted cell (sparts).");
+
     }
-    
     /* Compute the interactions. */
     runner_dopair_branch_stars_density(r, ci, cj);
   }
@@ -1439,7 +1443,8 @@ void runner_dosub_self_stars_density(struct runner *r, struct cell *ci,
   TIMER_TIC;
 
   /* Should we even bother? */
-  if (ci->stars.count == 0 || !cell_is_active_stars(ci, r->e)) return;
+  if (ci->hydro.count == 0 || ci->stars.count == 0 ||
+      !cell_is_active_stars(ci, r->e)) return;
 
   /* Recurse? */
   if (cell_can_recurse_in_self_stars_task(ci)) {
