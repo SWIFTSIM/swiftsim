@@ -1016,41 +1016,45 @@ void runner_dopair_branch_stars_density(struct runner *r, struct cell *ci,
   const struct engine *restrict e = r->e;
   const int ci_active = cell_is_active_stars(ci, e);
   const int cj_active = cell_is_active_stars(cj, e);
+  const int do_ci = (ci->stars.count != 0 && cj->hydro.count != 0 &&
+		     ci_active);
+  const int do_cj = (cj->stars.count != 0 && ci->hydro.count != 0 &&
+		     cj_active);
 
   /* Anything to do here? */
-  if (!ci_active && !cj_active) return;
+  if (!do_ci && !do_cj) return;
 
   /* Get the sort ID. */
   double shift[3] = {0.0, 0.0, 0.0};
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
   /* Check that cells are drifted. */
-  if ((ci->stars.count != 0 && !cell_are_spart_drifted(ci, e)) ||
-      (cj->hydro.count != 0 && !cell_are_part_drifted(cj, e)))
+  if (do_ci && (!cell_are_spart_drifted(ci, e) ||
+		!cell_are_part_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   /* Have the cells been sorted? */
-  if (ci->stars.count != 0 &&
+  if (do_ci &&
       (!(ci->stars.sorted & (1 << sid)) ||
        ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin))
     error("Interacting unsorted cells.");
 
-  if (cj->hydro.count != 0 &&
+  if (do_ci &&
       (!(cj->hydro.sorted & (1 << sid)) ||
        cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
     error("Interacting unsorted cells.");
     
-  if (ci->hydro.count != 0 &&
+  if (do_cj &&
       (!cell_are_part_drifted(ci, e) || !cell_are_spart_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   /* Have the cells been sorted? */
-  if (ci->hydro.count != 0 &&
+  if (do_cj &&
       (!(ci->hydro.sorted & (1 << sid)) ||
        ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin))
     error("Interacting unsorted cells.");
 
-  if (cj->stars.count != 0 &&
+  if (do_cj &&
       (!(cj->stars.sorted & (1 << sid)) ||
        cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin))
     error("Interacting unsorted cells.");
@@ -1058,11 +1062,15 @@ void runner_dopair_branch_stars_density(struct runner *r, struct cell *ci,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Pick-out the sorted lists. */
-  runner_stars_check_sort_hydro(cj, ci, sid);
-  runner_stars_check_sort_stars(ci, cj, sid);
+  if (do_ci) {
+    runner_stars_check_sort_hydro(cj, ci, sid);
+    runner_stars_check_sort_stars(ci, cj, sid);
+  }
 
-  runner_stars_check_sort_hydro(ci, cj, sid);
-  runner_stars_check_sort_stars(cj, ci, sid);
+  if (do_cj) {
+    runner_stars_check_sort_hydro(ci, cj, sid);
+    runner_stars_check_sort_stars(cj, ci, sid);
+  }
 
 #endif /* SWIFT_DEBUG_CHECKS */
 
@@ -1090,10 +1098,8 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
   TIMER_TIC;
 
   /* Should we even bother? */
-  if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-  
-  int should_do = ci->stars.count != 0 && cj->hydro.count != 0;
-  should_do |= cj->stars.count != 0 && ci->hydro.count != 0;
+  int should_do = ci->stars.count != 0 && cj->hydro.count != 0 && cell_is_active_stars(ci, e);
+  should_do |= cj->stars.count != 0 && ci->hydro.count != 0 && cell_is_active_stars(cj, e);
   if (!should_do) return;
 
   /* Get the type of pair if not specified explicitly. */
@@ -1381,8 +1387,8 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
   /* Otherwise, compute the pair directly. */
   else {
 
-    const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0;
-    const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0;
+    const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0 && cell_is_active_stars(ci, e);
+    const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0 && cell_is_active_stars(cj, e);
 
     if (do_ci) {
 
@@ -1423,8 +1429,10 @@ void runner_dosub_pair_stars_density(struct runner *r, struct cell *ci,
 	error("Interacting unsorted cell (sparts).");
 
     }
+
     /* Compute the interactions. */
-    runner_dopair_branch_stars_density(r, ci, cj);
+    if (do_ci || do_cj)
+      runner_dopair_branch_stars_density(r, ci, cj);
   }
 
   if (gettimer) TIMER_TOC(timer_dosub_pair_stars_density);
