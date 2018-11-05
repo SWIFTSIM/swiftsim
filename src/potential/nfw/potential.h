@@ -64,7 +64,9 @@ struct external_potential {
   /*! The virial mass */
   double virial_mass;
 
-  /*! Time-step condition pre_factor */
+  /*! Time-step condition pre_factor, this factor is used to multiply times the 
+   * orbital time, so in the case of 0.01 we take 1% of the orbital time as 
+   * the time integration steps */
   double timestep_mult;
 
   /*! Minimum time step based on the orbital time at the softening times
