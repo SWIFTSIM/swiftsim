@@ -1,15 +1,15 @@
 .. External potentials in SWIFT
    Folkert Nobels, 25th October 2018
    
-External Potentials in SWIFT
-============================
+External Potentials 
+===================
 
 SWIFT can be run with an external potential on this page we will summarize the
 current potentials which can be run with SWIFT and how to implement your own 
 potential in SWIFT.
 
-External Potentials
--------------------
+Implemented External Potentials
+-------------------------------
 
 Currently there are several potentials implemented in SWIFT, on this page we 
 give a short overview of the potentials that are implemented in the code:
