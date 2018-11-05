@@ -206,16 +206,16 @@ static INLINE void potential_init_backend(
 
 	double virial_radius = cbrtf( 3.0*potential->virial_mass/(800.0f*potential->rho_c*M_PI) );
 	potential->r_s = virial_radius / potential->c;
+  potential->lnthing = log(1.f + potential->c) - potential->c/(1 + potential->c);
 
-	potential->rho_0 = (200.0f/3.0f) * potential->c * potential->c * potential->c * potential->rho_c /
-			( logf(1.0f + potential->c) - potential->c/(1.0f + potential->c) );
+	potential->rho_0 = potential->virial_mass / (4.f * M_PI * pow(potential->r_s, 3)
+                      * potential->lnthing);
 
 	potential->pre_factor = 4.0f * M_PI * potential->rho_0
  												* potential->r_s * potential->r_s * potential->r_s;
 
  	potential->vel_20 = sqrtf(-potential->pre_factor * phys_const->const_newton_G *
       ( 1.0f/(20.0f + potential->r_s) - logf( 1.0f + 20.0f/potential->r_s )/20.0f ));
-  potential->lnthing = log(1.f + potential->c) - potential->c/(1 + potential->c);
   const float sqrtgm = sqrtf( phys_const->const_newton_G * potential->virial_mass);
   const float epslnthing = log(1.f + potential->eps/potential->r_s) 
                             - potential->eps/(potential->eps + potential->r_s);

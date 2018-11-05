@@ -37,5 +37,4 @@ NFWPotential:
   position:           [0.0,0.0,0.0]      # Location of centre of isothermal potential with respect to centre of the box (internal units)
   concentration:      8.
   virial_mass:        2.0e+12  # Virial mass (internal units)
-  critical_density:   136.0    # Universe critical density (internal units)
   timestep_mult:      0.01      # Dimensionless pre-factor for the time-step condition
