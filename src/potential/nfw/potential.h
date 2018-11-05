@@ -84,7 +84,8 @@ struct external_potential {
 
 /**
  * @brief Computes the time-step due to the acceleration from the NFW potential
- *        as a fraction (timestep_mult) of the dynamical time of that particle.
+ *        as a fraction (timestep_mult) of the circular orbital time of that 
+ *        particle.
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.

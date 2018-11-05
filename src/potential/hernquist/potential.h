@@ -62,9 +62,7 @@ struct external_potential {
 
 /**
  * @brief Computes the time-step due to the acceleration from an Hernquist 
- * potential
- *
- * dota = GM/((a+r)^2 r) ( - vecv + vecx * vecv dot vecv /r * ( 1/r + 2/(a+r)))
+ *        potential based on a fraction of the circular orbital time
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
