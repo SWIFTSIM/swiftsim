@@ -183,16 +183,15 @@ static INLINE void potential_init_backend(
     const struct unit_system* us, const struct space* s,
     struct external_potential* potential) {
 
-  const int useabspos = 
+  const int useabspos =
       parser_get_param_int(parameter_file, "PointMassPotential:useabspos");
   parser_get_param_double_array(parameter_file, "PointMassPotential:position",
                                 3, potential->x);
-  if ( useabspos == 0) {
+  if (useabspos == 0) {
     potential->x[0] += s->dim[0] / 2.;
     potential->x[1] += s->dim[1] / 2.;
     potential->x[2] += s->dim[2] / 2.;
-  } 
-
+  }
 
   potential->mass =
       parser_get_param_double(parameter_file, "PointMassPotential:mass");

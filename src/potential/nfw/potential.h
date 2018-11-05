@@ -37,9 +37,9 @@
 
 /**
  * @brief External Potential Properties - NFW Potential
-		rho(r) = rho_0 / ( (r/R_s)*(1+r/R_s)^2 )
+                rho(r) = rho_0 / ( (r/R_s)*(1+r/R_s)^2 )
 
-	We however parameterise this in terms of c and virial_mass
+        We however parameterise this in terms of c and virial_mass
  */
 struct external_potential {
 
@@ -64,8 +64,8 @@ struct external_potential {
   /*! The virial mass */
   double virial_mass;
 
-  /*! Time-step condition pre_factor, this factor is used to multiply times the 
-   * orbital time, so in the case of 0.01 we take 1% of the orbital time as 
+  /*! Time-step condition pre_factor, this factor is used to multiply times the
+   * orbital time, so in the case of 0.01 we take 1% of the orbital time as
    * the time integration steps */
   double timestep_mult;
 
@@ -84,7 +84,7 @@ struct external_potential {
 
 /**
  * @brief Computes the time-step due to the acceleration from the NFW potential
- *        as a fraction (timestep_mult) of the circular orbital time of that 
+ *        as a fraction (timestep_mult) of the circular orbital time of that
  *        particle.
  *
  * @param time The current time.
@@ -100,15 +100,18 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-  
-  const float r = sqrtf(dx*dx + dy*dy + dz*dz + potential->eps*potential->eps);
 
-  const float mr = potential->virial_mass * ( log(1.f + r/potential->r_s) - 
-       r/(r+potential->r_s) ) / potential->lnthing;
+  const float r =
+      sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
 
-  const float period = 2 * M_PI * r * sqrtf(r) / sqrtf(phys_const->const_newton_G * mr);
-  
-  return max(potential->timestep_mult*period, potential->mintime);
+  const float mr = potential->virial_mass *
+                   (log(1.f + r / potential->r_s) - r / (r + potential->r_s)) /
+                   potential->lnthing;
+
+  const float period =
+      2 * M_PI * r * sqrtf(r) / sqrtf(phys_const->const_newton_G * mr);
+
+  return max(potential->timestep_mult * period, potential->mintime);
 }
 
 /**
@@ -134,14 +137,15 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
-  const float r = sqrtf(dx*dx + dy*dy + dz*dz + potential->eps*potential->eps);
-  const float term1 = 1.0f*potential->pre_factor;
-  const float term2 = (1.0f/((r + potential->r_s)*r*r) -
-                       logf( 1.0f + r/potential->r_s )/(r*r*r));
+  const float r =
+      sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
+  const float term1 = 1.0f * potential->pre_factor;
+  const float term2 = (1.0f / ((r + potential->r_s) * r * r) -
+                       logf(1.0f + r / potential->r_s) / (r * r * r));
 
-  g->a_grav[0] += term1*term2*dx;
-  g->a_grav[1] += term1*term2*dy;
-  g->a_grav[2] += term1*term2*dz;
+  g->a_grav[0] += term1 * term2 * dx;
+  g->a_grav[1] += term1 * term2 * dy;
+  g->a_grav[2] += term1 * term2 * dz;
 }
 
 /**
@@ -164,11 +168,12 @@ external_gravity_get_potential_energy(
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
-  const float r = sqrtf(dx*dx + dy*dy +dz*dz + potential->eps*potential->eps);
+  const float r =
+      sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
   const float term1 = -potential->pre_factor / r;
-  const float term2 = logf(1.0f + r/potential->r_s);
+  const float term2 = logf(1.0f + r / potential->r_s);
 
-  return term1*term2;
+  return term1 * term2;
 }
 
 /**
@@ -181,47 +186,53 @@ external_gravity_get_potential_energy(
  * @param potential The external potential properties to initialize
  */
 static INLINE void potential_init_backend(
-    struct swift_params* parameter_file,
-    const struct phys_const* phys_const, const struct unit_system* us,
-    const struct space* s, struct external_potential* potential) {
+    struct swift_params* parameter_file, const struct phys_const* phys_const,
+    const struct unit_system* us, const struct space* s,
+    struct external_potential* potential) {
 
-  const int useabspos = 
+  const int useabspos =
       parser_get_param_int(parameter_file, "NFWPotential:useabspos");
-  parser_get_param_double_array(parameter_file, "NFWPotential:position",
-                                 3, potential->x);   
-  if ( useabspos == 0) {     
-    potential->x[0] += s->dim[0] / 2.;     
-    potential->x[1] += s->dim[1] / 2.;     
-    potential->x[2] += s->dim[2] / 2.;   
-  } 
-  potential->timestep_mult = parser_get_param_float(
-      parameter_file, "NFWPotential:timestep_mult");
-  potential->c = parser_get_param_float(
-      parameter_file, "NFWPotential:concentration");
-	potential->virial_mass = parser_get_param_float(
-	  	parameter_file, "NFWPotential:virial_mass");
-	potential->rho_c = parser_get_param_float(
-	  	parameter_file, "NFWPotential:critical_density");
-	potential->eps = 0.05;
+  parser_get_param_double_array(parameter_file, "NFWPotential:position", 3,
+                                potential->x);
+  if (useabspos == 0) {
+    potential->x[0] += s->dim[0] / 2.;
+    potential->x[1] += s->dim[1] / 2.;
+    potential->x[2] += s->dim[2] / 2.;
+  }
+  potential->timestep_mult =
+      parser_get_param_float(parameter_file, "NFWPotential:timestep_mult");
+  potential->c =
+      parser_get_param_float(parameter_file, "NFWPotential:concentration");
+  potential->virial_mass =
+      parser_get_param_float(parameter_file, "NFWPotential:virial_mass");
+  potential->rho_c =
+      parser_get_param_float(parameter_file, "NFWPotential:critical_density");
+  potential->eps = 0.05;
 
-	double virial_radius = cbrtf( 3.0*potential->virial_mass/(800.0f*potential->rho_c*M_PI) );
-	potential->r_s = virial_radius / potential->c;
-  potential->lnthing = log(1.f + potential->c) - potential->c/(1 + potential->c);
+  double virial_radius =
+      cbrtf(3.0 * potential->virial_mass / (800.0f * potential->rho_c * M_PI));
+  potential->r_s = virial_radius / potential->c;
+  potential->lnthing =
+      log(1.f + potential->c) - potential->c / (1 + potential->c);
 
-	potential->rho_0 = potential->virial_mass / (4.f * M_PI * pow(potential->r_s, 3)
-                      * potential->lnthing);
+  potential->rho_0 = potential->virial_mass /
+                     (4.f * M_PI * pow(potential->r_s, 3) * potential->lnthing);
 
-	potential->pre_factor = 4.0f * M_PI * potential->rho_0
- 												* potential->r_s * potential->r_s * potential->r_s;
+  potential->pre_factor = 4.0f * M_PI * potential->rho_0 * potential->r_s *
+                          potential->r_s * potential->r_s;
 
- 	potential->vel_20 = sqrtf(-potential->pre_factor * phys_const->const_newton_G *
-      ( 1.0f/(20.0f + potential->r_s) - logf( 1.0f + 20.0f/potential->r_s )/20.0f ));
-  const float sqrtgm = sqrtf( phys_const->const_newton_G * potential->virial_mass);
-  const float epslnthing = log(1.f + potential->eps/potential->r_s) 
-                            - potential->eps/(potential->eps + potential->r_s);
-  
-  potential->mintime = 2.f * M_PI * potential->eps * sqrtf(potential->eps) * 
-              sqrtf(potential->lnthing / epslnthing) / sqrtgm * potential->timestep_mult;
+  potential->vel_20 =
+      sqrtf(-potential->pre_factor * phys_const->const_newton_G *
+            (1.0f / (20.0f + potential->r_s) -
+             logf(1.0f + 20.0f / potential->r_s) / 20.0f));
+  const float sqrtgm =
+      sqrtf(phys_const->const_newton_G * potential->virial_mass);
+  const float epslnthing = log(1.f + potential->eps / potential->r_s) -
+                           potential->eps / (potential->eps + potential->r_s);
+
+  potential->mintime = 2.f * M_PI * potential->eps * sqrtf(potential->eps) *
+                       sqrtf(potential->lnthing / epslnthing) / sqrtgm *
+                       potential->timestep_mult;
 }
 
 /**
@@ -238,7 +249,7 @@ static INLINE void potential_print_backend(
       "timestep multiplier = %e, scale density = %e, vel at 20kpc = %e,"
       "mintime = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->r_s,
-      potential->timestep_mult, potential->rho_0, potential->vel_20, 
+      potential->timestep_mult, potential->rho_0, potential->vel_20,
       potential->mintime);
 }
 

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2018 Folkert Nobels (nobels@strw.leidenuniv.nl) 
+ * Copyright (c) 2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -47,21 +47,21 @@ struct external_potential {
   /*! Scale length (often as a, to prevent confusion we use al) */
   double al;
 
-  /*! Square of the softening length. Acceleration tends to zero within this    
+  /*! Square of the softening length. Acceleration tends to zero within this
    * distance from the origin */
   double epsilon2;
-  
-  /* Minimum timestep of the potential given by the timestep multiple 
+
+  /* Minimum timestep of the potential given by the timestep multiple
    * times the orbital time at the softening length */
   double mintime;
 
-  /*! Time-step condition pre-factor, is multiplied times the circular orbital time to get 
-   * the time steps */
+  /*! Time-step condition pre-factor, is multiplied times the circular orbital
+   * time to get the time steps */
   double timestep_mult;
 };
 
 /**
- * @brief Computes the time-step in a Hernquist potential based on a 
+ * @brief Computes the time-step in a Hernquist potential based on a
  *        fraction of the circular orbital time
  *
  * @param time The current time.
@@ -74,9 +74,9 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
     const struct phys_const* restrict phys_const,
     const struct gpart* restrict g) {
 
-  const float G_newton = phys_const->const_newton_G; 
+  const float G_newton = phys_const->const_newton_G;
 
-  /* Calculate the relative potential with respect to the centre of the 
+  /* Calculate the relative potential with respect to the centre of the
    * potential */
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
@@ -84,13 +84,12 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 
   /* calculate the radius  */
 
-  const float r = sqrtf(dx * dx + dy * dy + dz * dz 
-                               + potential->epsilon2);
+  const float r = sqrtf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float sqrtgm = sqrtf(G_newton * potential->mass);
   /* Calculate the circular orbital period */
-  const float period = 2.f * M_PI * sqrtf(r) * potential->al  
-                      * (1 + r/potential->al) / sqrtgm;
-  return max(potential->timestep_mult * period,potential->mintime);
+  const float period =
+      2.f * M_PI * sqrtf(r) * potential->al * (1 + r / potential->al) / sqrtgm;
+  return max(potential->timestep_mult * period, potential->mintime);
 }
 
 /**
@@ -116,12 +115,12 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-  
+
   /* Calculate the acceleration */
-  const float r = sqrtf( dx * dx + dy * dy + dz * dz + potential->epsilon2);
+  const float r = sqrtf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float r_plus_a_inv = 1.f / (r + potential->al);
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
-  const float preterm = - potential->mass;
+  const float preterm = -potential->mass;
   const float term = preterm * r_plus_a_inv2 / r;
 
   g->a_grav[0] += term * dx;
@@ -148,8 +147,8 @@ external_gravity_get_potential_energy(
   const float dx = g->x[0] - potential->x[0];
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
-  const float r = sqrtf( dx*dx + dy*dy + dz*dz);
-  const float r_plus_alinv = 1.f / ( r + potential->al );
+  const float r = sqrtf(dx * dx + dy * dy + dz * dz);
+  const float r_plus_alinv = 1.f / (r + potential->al);
   return -phys_const->const_newton_G * potential->mass * r_plus_alinv;
 }
 
@@ -167,28 +166,29 @@ static INLINE void potential_init_backend(
     const struct unit_system* us, const struct space* s,
     struct external_potential* potential) {
 
-  const int useabspos = 
+  const int useabspos =
       parser_get_param_int(parameter_file, "HernquistPotential:useabspos");
   parser_get_param_double_array(parameter_file, "HernquistPotential:position",
                                 3, potential->x);
-  if ( useabspos == 0) {
+  if (useabspos == 0) {
     potential->x[0] += s->dim[0] / 2.;
     potential->x[1] += s->dim[1] / 2.;
     potential->x[2] += s->dim[2] / 2.;
-  } 
+  }
 
-  potential->mass = 
+  potential->mass =
       parser_get_param_double(parameter_file, "HernquistPotential:mass");
-  potential->al = parser_get_param_double(parameter_file, 
-                                          "HernquistPotential:scalelength");
-  const float epsilon = parser_get_param_double(parameter_file,
-                        "HernquistPotential:epsilon");
-  potential->epsilon2 = epsilon*epsilon;
+  potential->al =
+      parser_get_param_double(parameter_file, "HernquistPotential:scalelength");
+  const float epsilon =
+      parser_get_param_double(parameter_file, "HernquistPotential:epsilon");
+  potential->epsilon2 = epsilon * epsilon;
   const float sqrtgm = sqrtf(phys_const->const_newton_G * potential->mass);
   potential->timestep_mult = parser_get_param_float(
       parameter_file, "HernquistPotential:timestep_mult");
-  potential->mintime = 2.f * sqrtf(epsilon) * potential->al * M_PI 
-                        * (1+ epsilon/potential->al)/sqrtgm * potential->timestep_mult;
+  potential->mintime = 2.f * sqrtf(epsilon) * potential->al * M_PI *
+                       (1 + epsilon / potential->al) / sqrtgm *
+                       potential->timestep_mult;
 }
 
 /**
@@ -205,7 +205,7 @@ static inline void potential_print_backend(
       "scale length = %e , minimum time = %e "
       "timestep multiplier = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->mass,
-      potential->al,potential->mintime, potential->timestep_mult);
+      potential->al, potential->mintime, potential->timestep_mult);
 }
 
 #endif /* SWIFT_POTENTIAL_HERNQUIST_H */
