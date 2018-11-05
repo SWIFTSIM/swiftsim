@@ -33,7 +33,7 @@ InitialConditions:
 HernquistPotential:
   useabspos:       0          # Whether to use absolute position (1) or relative potential to centre of box (0)
   position:        [0.,0.,0.]
-  mass:            1e15
+  mass:            1e9
   scalelength:     1.0
   timestep_mult:   0.01      # controls time step
   epsilon:         2.0         # No softening at the centre of the halo

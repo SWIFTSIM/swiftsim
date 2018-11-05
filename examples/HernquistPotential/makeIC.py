@@ -63,9 +63,10 @@ print('G=', const_G)
 def hernquistcircvel(r,M,a):
     ''' Function that calculates the circular velocity in a 
     Hernquist potential.
-    r: radius from centre of potential
-    M: mass of the Hernquist potential
-    a: Scale length of the potential
+    @param r: radius from centre of potential
+    @param M: mass of the Hernquist potential
+    @param a: Scale length of the potential
+    @return: circular velocity
     '''
     return (const_G * M * r)**.5/ (r+a)
 
@@ -75,7 +76,6 @@ boxSize = 400.         #  [kpc]
 Radius  = 100.          # maximum radius of particles [kpc]
 G       = const_G 
 
-N       = int(sys.argv[1])  # Number of particles
 N = 5
 L       = N**(1./3.)
 
