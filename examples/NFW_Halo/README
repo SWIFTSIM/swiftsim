@@ -1,3 +1,5 @@
-This just provides a test that the NFW potential is giving the correct orbit as calculated
-by Jo Bovy's galpy package.
+This just provides a test that the NFW potential is giving the correct orbit 
+as calculated by Jo Bovy's galpy package. If galpy is not installed on your 
+system you can install it by using:
+pip install galpy --user
 

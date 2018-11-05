@@ -25,7 +25,6 @@ from galpy.util import bovy_conversion
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units
-import write_gadget as wg
 import h5py as h5
 
 C = 8.0
