@@ -61,8 +61,8 @@ struct external_potential {
 };
 
 /**
- * @brief Computes the time-step due to the acceleration from an Hernquist 
- *        potential based on a fraction of the circular orbital time
+ * @brief Computes the time-step in a Hernquist potential based on a 
+ *        fraction of the circular orbital time
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
