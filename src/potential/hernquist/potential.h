@@ -44,7 +44,8 @@ struct external_potential {
   /*! Mass of the halo */
   double mass;
 
-  /*! Scale length (often as a, to prevent confusion we use al) */
+  /*! Scale length (often as a, to prevent confusion with the cosmological
+   * scale-factor we use al) */
   double al;
 
   /*! Square of the softening length. Acceleration tends to zero within this
@@ -83,13 +84,17 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dz = g->x[2] - potential->x[2];
 
   /* calculate the radius  */
-
   const float r = sqrtf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
-  const float sqrtgm = sqrtf(G_newton * potential->mass);
+  const float sqrtgm_inv = 1.f / sqrtf(G_newton * potential->mass);
+
   /* Calculate the circular orbital period */
-  const float period =
-      2.f * M_PI * sqrtf(r) * potential->al * (1 + r / potential->al) / sqrtgm;
-  return max(potential->timestep_mult * period, potential->mintime);
+  const float period = 2.f * M_PI * sqrtf(r) * potential->al *
+                       (1 + r / potential->al) * sqrtgm_inv;
+
+  /* Time-step as a fraction of the cirecular orbital time */
+  const float time_step = potential->timestep_mult * period;
+
+  return max(time_step, potential->mintime);
 }
 
 /**
@@ -120,8 +125,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float r = sqrtf(dx * dx + dy * dy + dz * dz + potential->epsilon2);
   const float r_plus_a_inv = 1.f / (r + potential->al);
   const float r_plus_a_inv2 = r_plus_a_inv * r_plus_a_inv;
-  const float preterm = -potential->mass;
-  const float term = preterm * r_plus_a_inv2 / r;
+  const float term = -potential->mass * r_plus_a_inv2 / r;
 
   g->a_grav[0] += term * dx;
   g->a_grav[1] += term * dy;
@@ -166,26 +170,34 @@ static INLINE void potential_init_backend(
     const struct unit_system* us, const struct space* s,
     struct external_potential* potential) {
 
-  const int useabspos =
-      parser_get_param_int(parameter_file, "HernquistPotential:useabspos");
+  /* Read in the position of the centre of potential */
   parser_get_param_double_array(parameter_file, "HernquistPotential:position",
                                 3, potential->x);
-  if (useabspos == 0) {
+
+  /* Is the position absolute or relative to the centre of the box? */
+  const int useabspos =
+      parser_get_param_int(parameter_file, "HernquistPotential:useabspos");
+
+  if (!useabspos) {
     potential->x[0] += s->dim[0] / 2.;
     potential->x[1] += s->dim[1] / 2.;
     potential->x[2] += s->dim[2] / 2.;
   }
 
+  /* Read the other parameters of the model */
   potential->mass =
       parser_get_param_double(parameter_file, "HernquistPotential:mass");
   potential->al =
       parser_get_param_double(parameter_file, "HernquistPotential:scalelength");
+  potential->timestep_mult = parser_get_param_float(
+      parameter_file, "HernquistPotential:timestep_mult");
   const float epsilon =
       parser_get_param_double(parameter_file, "HernquistPotential:epsilon");
   potential->epsilon2 = epsilon * epsilon;
+
+  /* Compute the minimal time-step. */
+  /* This is the circular orbital time at the softened radius */
   const float sqrtgm = sqrtf(phys_const->const_newton_G * potential->mass);
-  potential->timestep_mult = parser_get_param_float(
-      parameter_file, "HernquistPotential:timestep_mult");
   potential->mintime = 2.f * sqrtf(epsilon) * potential->al * M_PI *
                        (1 + epsilon / potential->al) / sqrtgm *
                        potential->timestep_mult;

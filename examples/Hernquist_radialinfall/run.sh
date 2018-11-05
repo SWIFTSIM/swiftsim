@@ -3,7 +3,7 @@
 # Generate the initial conditions if they are not present.
 if [ ! -e Hernquist.hdf5 ]
 then
-    echo "Generating initial conditions for the isothermal potential box example..."
+    echo "Generate initial conditions for radial orbits"
     if command -v python3 &>/dev/null; then
         python3 makeIC.py 
     else 

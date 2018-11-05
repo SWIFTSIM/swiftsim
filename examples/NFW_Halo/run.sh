@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if [ ! -i test_nfw.hdf5 ]
+if [ ! -e test_nfw.hdf5 ]
+then
+    echo "Generate initial conditions for NFW example"	
     if command -v python3 &>/dev/null; then
         python3 makeIC.py
     else 
@@ -10,8 +12,6 @@ fi
 
 # self gravity G, external potential g, hydro s, threads t and high verbosity v
 ../swift -g -t 6 test.yml 2>&1 | tee output.log
-
-
 
 if command -v python3 &>/dev/null; then
     python3 makePlots.py

@@ -46,23 +46,20 @@ struct external_potential {
   /*! Position of the centre of potential */
   double x[3];
 
-  /*! The density parameter for the potential rho_0 */
-  double rho_0;
-
   /*! The scale radius of the NFW potential */
   double r_s;
 
-  /*! The pre-factor 4*pi*G*rho_0*r_s*r_s*r_s */
+  /*! The pre-factor \f$ 4 \pi G \rho_0 \r_s^3 \f$ */
   double pre_factor;
 
   /*! The critical density of the universe */
   double rho_c;
 
   /*! The concentration parameter */
-  double c;
+  double c_200;
 
   /*! The virial mass */
-  double virial_mass;
+  double M_200;
 
   /*! Time-step condition pre_factor, this factor is used to multiply times the
    * orbital time, so in the case of 0.01 we take 1% of the orbital time as
@@ -73,13 +70,11 @@ struct external_potential {
    * the timestep_mult */
   double mintime;
 
-  /*! the NFW lnthing */
-  /* lnthing = ln(1+c) - c/(1+c) */
-  double lnthing;
+  /*! Common log term \f$ \ln(1+c_{200}) - \frac{c_{200}}{1 + c_{200}} \f$ */
+  double log_c200_term;
 
+  /*! Softening length */
   double eps;
-
-  double vel_20;
 };
 
 /**
@@ -104,14 +99,17 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float r =
       sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
 
-  const float mr = potential->virial_mass *
-                   (log(1.f + r / potential->r_s) - r / (r + potential->r_s)) /
-                   potential->lnthing;
+  const float mr = potential->M_200 *
+                   (logf(1.f + r / potential->r_s) - r / (r + potential->r_s)) /
+                   potential->log_c200_term;
 
   const float period =
-      2 * M_PI * r * sqrtf(r) / sqrtf(phys_const->const_newton_G * mr);
+      2 * M_PI * r * sqrtf(r / (phys_const->const_newton_G * mr));
 
-  return max(potential->timestep_mult * period, potential->mintime);
+  /* Time-step as a fraction of the circular period */
+  const float time_step = potential->timestep_mult * period;
+
+  return max(time_step, potential->mintime);
 }
 
 /**
@@ -139,7 +137,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
 
   const float r =
       sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
-  const float term1 = 1.0f * potential->pre_factor;
+  const float term1 = potential->pre_factor;
   const float term2 = (1.0f / ((r + potential->r_s) * r * r) -
                        logf(1.0f + r / potential->r_s) / (r * r * r));
 
@@ -190,48 +188,56 @@ static INLINE void potential_init_backend(
     const struct unit_system* us, const struct space* s,
     struct external_potential* potential) {
 
-  const int useabspos =
-      parser_get_param_int(parameter_file, "NFWPotential:useabspos");
+  /* Read in the position of the centre of potential */
   parser_get_param_double_array(parameter_file, "NFWPotential:position", 3,
                                 potential->x);
-  if (useabspos == 0) {
+
+  /* Is the position absolute or relative to the centre of the box? */
+  const int useabspos =
+      parser_get_param_int(parameter_file, "NFWPotential:useabspos");
+
+  if (!useabspos) {
     potential->x[0] += s->dim[0] / 2.;
     potential->x[1] += s->dim[1] / 2.;
     potential->x[2] += s->dim[2] / 2.;
   }
+
+  /* Read the other parameters of the model */
   potential->timestep_mult =
-      parser_get_param_float(parameter_file, "NFWPotential:timestep_mult");
-  potential->c =
-      parser_get_param_float(parameter_file, "NFWPotential:concentration");
-  potential->virial_mass =
-      parser_get_param_float(parameter_file, "NFWPotential:virial_mass");
+      parser_get_param_double(parameter_file, "NFWPotential:timestep_mult");
+  potential->c_200 =
+      parser_get_param_double(parameter_file, "NFWPotential:concentration");
+  potential->M_200 =
+      parser_get_param_double(parameter_file, "NFWPotential:M_200");
   potential->rho_c =
-      parser_get_param_float(parameter_file, "NFWPotential:critical_density");
+      parser_get_param_double(parameter_file, "NFWPotential:critical_density");
   potential->eps = 0.05;
 
-  double virial_radius =
-      cbrtf(3.0 * potential->virial_mass / (800.0f * potential->rho_c * M_PI));
-  potential->r_s = virial_radius / potential->c;
-  potential->lnthing =
-      log(1.f + potential->c) - potential->c / (1 + potential->c);
+  /* Compute R_200 */
+  const double R_200 =
+      cbrtf(3.0 * potential->M_200 / (4. * M_PI * 200.0 * potential->rho_c));
 
-  potential->rho_0 = potential->virial_mass /
-                     (4.f * M_PI * pow(potential->r_s, 3) * potential->lnthing);
+  /* NFW scale-radius */
+  potential->r_s = R_200 / potential->c_200;
+  const double r_s3 = potential->r_s * potential->r_s * potential->r_s;
 
-  potential->pre_factor = 4.0f * M_PI * potential->rho_0 * potential->r_s *
-                          potential->r_s * potential->r_s;
+  /* Log(c_200) term appearing in many expressions */
+  potential->log_c200_term =
+      log(1. + potential->c_200) - potential->c_200 / (1. + potential->c_200);
 
-  potential->vel_20 =
-      sqrtf(-potential->pre_factor * phys_const->const_newton_G *
-            (1.0f / (20.0f + potential->r_s) -
-             logf(1.0f + 20.0f / potential->r_s) / 20.0f));
-  const float sqrtgm =
-      sqrtf(phys_const->const_newton_G * potential->virial_mass);
-  const float epslnthing = log(1.f + potential->eps / potential->r_s) -
-                           potential->eps / (potential->eps + potential->r_s);
+  const double rho_0 =
+      potential->M_200 / (4.f * M_PI * r_s3 * potential->log_c200_term);
 
-  potential->mintime = 2.f * M_PI * potential->eps * sqrtf(potential->eps) *
-                       sqrtf(potential->lnthing / epslnthing) / sqrtgm *
+  /* Pre-factor for the accelerations (note G is multiplied in later on) */
+  potential->pre_factor = 4.0f * M_PI * rho_0 * r_s3;
+
+  /* Compute the orbital time at the softening radius */
+  const double sqrtgm = sqrt(phys_const->const_newton_G * potential->M_200);
+  const double epslnthing = log(1.f + potential->eps / potential->r_s) -
+                            potential->eps / (potential->eps + potential->r_s);
+
+  potential->mintime = 2. * M_PI * potential->eps * sqrtf(potential->eps) *
+                       sqrtf(potential->log_c200_term / epslnthing) / sqrtgm *
                        potential->timestep_mult;
 }
 
@@ -246,11 +252,9 @@ static INLINE void potential_print_backend(
   message(
       "External potential is 'NFW' with properties are (x,y,z) = (%e, "
       "%e, %e), scale radius = %e "
-      "timestep multiplier = %e, scale density = %e, vel at 20kpc = %e,"
-      "mintime = %e",
+      "timestep multiplier = %e, mintime = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->r_s,
-      potential->timestep_mult, potential->rho_0, potential->vel_20,
-      potential->mintime);
+      potential->timestep_mult, potential->mintime);
 }
 
 #endif /* SWIFT_POTENTIAL_NFW_H */
