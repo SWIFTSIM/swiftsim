@@ -2181,10 +2181,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
   else {
 
     /* Should we even bother? */
-    if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
-    
-    int should_do = ci->stars.count != 0 && cj->hydro.count != 0;
-    should_do |= cj->stars.count != 0 && ci->hydro.count != 0;
+    int should_do = ci->stars.count != 0 && cj->hydro.count != 0 && cell_is_active_stars(ci, e);
+    should_do |= cj->stars.count != 0 && ci->hydro.count != 0 && cell_is_active_stars(cj, e);
     if (!should_do) return;
 
     /* Get the orientation of the pair. */
@@ -2472,8 +2470,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
     /* Otherwise, activate the sorts and drifts. */
     else {
 
-      if (cell_is_active_stars(ci, e) && cj->hydro.count != 0 &&
-	  ci->stars.count != 0) {
+      if (cell_is_active_stars(ci, e)) {
 	/* We are going to interact this pair, so store some values. */
 	atomic_or(&cj->hydro.requires_sorts, 1 << sid);
 	atomic_or(&ci->stars.requires_sorts, 1 << sid);
@@ -2490,8 +2487,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 	cell_activate_stars_sorts(ci, sid, s);
       }
 
-      if (cell_is_active_stars(cj, e) && ci->hydro.count != 0 &&
-	  cj->stars.count != 0) {
+      if (cell_is_active_stars(cj, e)) {
 	/* We are going to interact this pair, so store some values. */
 	atomic_or(&cj->stars.requires_sorts, 1 << sid);
 	atomic_or(&ci->hydro.requires_sorts, 1 << sid);
@@ -3042,8 +3038,9 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Set the correct sorting flags and activate hydro drifts */
       else if (t->type == task_type_pair) {
         /* Store some values. */
-
+	
 	/* Do ci */
+
 	/* stars for ci */
 	atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
 	ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
@@ -3063,6 +3060,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 	cell_activate_sorts(cj, t->flags, s);
 
 	/* Do cj */
+
 	/* hydro for ci */
 	atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
 	ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
@@ -3080,7 +3078,6 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 	/* Check the sorts and activate them if needed. */
 	cell_activate_sorts(ci, t->flags, s);
 	cell_activate_stars_sorts(cj, t->flags, s);
-
       }
       /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_pair || t->type == task_type_sub_self) {

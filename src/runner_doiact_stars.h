@@ -166,9 +166,9 @@ void runner_dopair_stars_density(struct runner *r, struct cell *restrict ci,
 
   TIMER_TIC;
 
-  if (ci->stars.count == 0 || cj->hydro.count == 0)
+  if (ci->stars.count != 0 || cj->hydro.count != 0)
     runner_dosubpair_stars_density(r, ci, cj);
-  if (cj->stars.count == 0 || ci->hydro.count == 0)
+  if (cj->stars.count != 0 || ci->hydro.count != 0)
     runner_dosubpair_stars_density(r, cj, ci);
 
   if (timer) TIMER_TOC(timer_dopair_stars_density);

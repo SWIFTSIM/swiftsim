@@ -7,5 +7,5 @@ then
     ./getIC.sh
 fi
 
-../swift -y 1 -b -c -G -s -S -t 8 zoom_in.yml 2>&1 | tee output.log
+../swift -b -c -G -s -S -t 8 zoom_in.yml 2>&1 | tee output.log
 

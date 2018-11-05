@@ -3937,7 +3937,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       }
 #endif
 
-      /* Activate the star density */
+      /* Activate the drift for star density */
       else if (t_type == task_type_self &&
                t_subtype == task_subtype_stars_density) {
         if (cell_is_active_stars(ci, e)) {
