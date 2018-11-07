@@ -24,7 +24,7 @@
  * @file PressureEnergy/hydro_iact.h
  * @brief P-U implementation of SPH (Neighbour loop equations)
  *
- * The thermal variable is the internal energy (u). A simple variable 
+ * The thermal variable is the internal energy (u). A simple variable
  * viscosity term (Morris & Monaghan 1997) with a Balsara switch is
  * implemented.
  *
@@ -254,9 +254,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
   const float alpha = 0.5f * (pi->alpha + pj->alpha);
-  const float visc = -0.25f * alpha * v_sig * mu_ij *
-                     (balsara_i + balsara_j) / rho_ij;
-
+  const float visc =
+      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -384,8 +383,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Construct the full viscosity term */
   const float rho_ij = 0.5f * (rhoi + rhoj);
   const float alpha = 0.5f * (pi->alpha + pj->alpha);
-  const float visc = -0.25f * alpha * v_sig * mu_ij *
-                     (balsara_i + balsara_j) / rho_ij;
+  const float visc =
+      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
