@@ -256,7 +256,6 @@ static void accumulate_counts(struct space *s, double *counts) {
 
   bzero(counts, sizeof(double) * s->nr_cells);
 
-  double sum = 0.0;
   for (size_t k = 0; k < s->nr_parts; k++) {
     for (int j = 0; j < 3; j++) {
       if (parts[k].x[j] < 0.0)
@@ -268,12 +267,11 @@ static void accumulate_counts(struct space *s, double *counts) {
         cell_getid(cdim, parts[k].x[0] * iwidth[0], parts[k].x[1] * iwidth[1],
                    parts[k].x[2] * iwidth[2]);
     counts[cid]++;
-    sum++;
   }
 
-  /* Keep the sum in the range of IDX_MAX. */
-  if (sum > (double)IDX_MAX) {
-    double vscale = (double)(IDX_MAX - 1000) / sum;
+  /* Keep the sum of particles in the range of IDX_MAX. */
+  if (s->nr_parts > (size_t)IDX_MAX) {
+      double vscale = (double)(IDX_MAX - 1000) / (double)s->nr_parts;
     for (int k = 0; k < s->nr_cells; k++) counts[k] *= vscale;
   }
 }
