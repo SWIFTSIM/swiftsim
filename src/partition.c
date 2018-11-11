@@ -249,7 +249,6 @@ static void graph_init(struct space *s, idx_t *adjncy, idx_t *xadj) {
  */
 static void accumulate_counts(struct space *s, double *counts) {
 
-  struct part *parts = s->parts;
   int *cdim = s->cdim;
   double iwidth[3] = {s->iwidth[0], s->iwidth[1], s->iwidth[2]};
   double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
@@ -258,20 +257,47 @@ static void accumulate_counts(struct space *s, double *counts) {
 
   for (size_t k = 0; k < s->nr_parts; k++) {
     for (int j = 0; j < 3; j++) {
-      if (parts[k].x[j] < 0.0)
-        parts[k].x[j] += dim[j];
-      else if (parts[k].x[j] >= dim[j])
-        parts[k].x[j] -= dim[j];
+      if (s->parts[k].x[j] < 0.0)
+        s->parts[k].x[j] += dim[j];
+      else if (s->parts[k].x[j] >= dim[j])
+        s->parts[k].x[j] -= dim[j];
     }
     const int cid =
-        cell_getid(cdim, parts[k].x[0] * iwidth[0], parts[k].x[1] * iwidth[1],
-                   parts[k].x[2] * iwidth[2]);
+        cell_getid(cdim, s->parts[k].x[0] * iwidth[0], s->parts[k].x[1] * iwidth[1],
+                   s->parts[k].x[2] * iwidth[2]);
     counts[cid]++;
   }
 
-  /* Keep the sum of particles in the range of IDX_MAX. */
-  if (s->nr_parts > (size_t)IDX_MAX) {
-      double vscale = (double)(IDX_MAX - 1000) / (double)s->nr_parts;
+  for (size_t k = 0; k < s->nr_gparts; k++) {
+    for (int j = 0; j < 3; j++) {
+      if (s->gparts[k].x[j] < 0.0)
+        s->gparts[k].x[j] += dim[j];
+      else if (s->gparts[k].x[j] >= dim[j])
+        s->gparts[k].x[j] -= dim[j];
+    }
+    const int cid =
+        cell_getid(cdim, s->gparts[k].x[0] * iwidth[0], s->gparts[k].x[1] * iwidth[1],
+                   s->gparts[k].x[2] * iwidth[2]);
+    counts[cid]++;
+  }
+
+  for (size_t k = 0; k < s->nr_sparts; k++) {
+    for (int j = 0; j < 3; j++) {
+      if (s->sparts[k].x[j] < 0.0)
+        s->sparts[k].x[j] += dim[j];
+      else if (s->sparts[k].x[j] >= dim[j])
+        s->sparts[k].x[j] -= dim[j];
+    }
+    const int cid =
+        cell_getid(cdim, s->sparts[k].x[0] * iwidth[0], s->sparts[k].x[1] * iwidth[1],
+                   s->sparts[k].x[2] * iwidth[2]);
+    counts[cid]++;
+  }
+
+  /* Keep the sum of particles across all ranks in the range of IDX_MAX. */
+  if ((s->e->total_nr_parts + s->e->total_nr_gparts + s->e->total_nr_sparts)> (long long)IDX_MAX) {
+      double vscale = (double)(IDX_MAX - 1000) /
+          (double)(s->e->total_nr_parts + s->e->total_nr_gparts + s->e->total_nr_sparts);
     for (int k = 0; k < s->nr_cells; k++) counts[k] *= vscale;
   }
 }
