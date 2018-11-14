@@ -240,6 +240,48 @@ static void graph_init(struct space *s, idx_t *adjncy, idx_t *xadj) {
 #endif
 
 #if defined(WITH_MPI) && (defined(HAVE_METIS) || defined(HAVE_PARMETIS))
+struct counts_mapper_data {
+  double *counts;
+  size_t size;
+  struct space *s;
+};
+
+#define ACCUMULATE_SIZES_MAPPER(TYPE)                                          \
+  accumulate_sizes_mapper_##TYPE(void *map_data, int num_elements,             \
+                                 void *extra_data) {                           \
+    struct TYPE *parts = (struct TYPE *)map_data;                              \
+    struct counts_mapper_data *mydata =                                        \
+        (struct counts_mapper_data *)extra_data;                               \
+    double size = mydata->size;                                                \
+    int *cdim = mydata->s->cdim;                                               \
+    double iwidth[3] = {mydata->s->iwidth[0], mydata->s->iwidth[1],            \
+                        mydata->s->iwidth[2]};                                 \
+    double dim[3] = {mydata->s->dim[0], mydata->s->dim[1], mydata->s->dim[2]}; \
+    double *lcounts = NULL;                                                    \
+    if ((lcounts = (double *)calloc(sizeof(double), mydata->s->nr_cells)) ==   \
+        NULL)                                                                  \
+      error("Failed to allocate counts thread-specific buffer");               \
+    for (size_t k = 0; k < num_elements; k++) {                                \
+      for (int j = 0; j < 3; j++) {                                            \
+        if (parts[k].x[j] < 0.0)                                               \
+          parts[k].x[j] += dim[j];                                             \
+        else if (parts[k].x[j] >= dim[j])                                      \
+          parts[k].x[j] -= dim[j];                                             \
+      }                                                                        \
+      const int cid =                                                          \
+          cell_getid(cdim, parts[k].x[0] * iwidth[0],                          \
+                     parts[k].x[1] * iwidth[1], parts[k].x[2] * iwidth[2]);    \
+      lcounts[cid] += size;                                                    \
+    }                                                                          \
+    for (int k = 0; k < mydata->s->nr_cells; k++)                              \
+      atomic_add_d(&mydata->counts[k], lcounts[k]);                            \
+    free(lcounts);                                                             \
+  }
+
+static void ACCUMULATE_SIZES_MAPPER(part);
+static void ACCUMULATE_SIZES_MAPPER(gpart);
+static void ACCUMULATE_SIZES_MAPPER(spart);
+
 /**
  * @brief Accumulate total memory size in particles per cell.
  *
@@ -249,53 +291,26 @@ static void graph_init(struct space *s, idx_t *adjncy, idx_t *xadj) {
  */
 static void accumulate_sizes(struct space *s, double *counts) {
 
-  int *cdim = s->cdim;
-  double iwidth[3] = {s->iwidth[0], s->iwidth[1], s->iwidth[2]};
-  double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
-
   bzero(counts, sizeof(double) * s->nr_cells);
 
+  struct counts_mapper_data mapper_data;
+  mapper_data.counts = counts;
+  mapper_data.s = s;
+
   double hsize = (double)sizeof(struct part);
-  for (size_t k = 0; k < s->nr_parts; k++) {
-    for (int j = 0; j < 3; j++) {
-      if (s->parts[k].x[j] < 0.0)
-        s->parts[k].x[j] += dim[j];
-      else if (s->parts[k].x[j] >= dim[j])
-        s->parts[k].x[j] -= dim[j];
-    }
-    const int cid =
-        cell_getid(cdim, s->parts[k].x[0] * iwidth[0],
-                   s->parts[k].x[1] * iwidth[1], s->parts[k].x[2] * iwidth[2]);
-    counts[cid] += hsize;
-  }
+  mapper_data.size = hsize;
+  threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_part, s->parts,
+                 s->nr_parts, sizeof(struct part), 0, &mapper_data);
 
   double gsize = (double)sizeof(struct gpart);
-  for (size_t k = 0; k < s->nr_gparts; k++) {
-    for (int j = 0; j < 3; j++) {
-      if (s->gparts[k].x[j] < 0.0)
-        s->gparts[k].x[j] += dim[j];
-      else if (s->gparts[k].x[j] >= dim[j])
-        s->gparts[k].x[j] -= dim[j];
-    }
-    const int cid = cell_getid(cdim, s->gparts[k].x[0] * iwidth[0],
-                               s->gparts[k].x[1] * iwidth[1],
-                               s->gparts[k].x[2] * iwidth[2]);
-    counts[cid] += gsize;
-  }
+  mapper_data.size = gsize;
+  threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_gpart, s->gparts,
+                 s->nr_gparts, sizeof(struct gpart), 0, &mapper_data);
 
   double ssize = (double)sizeof(struct spart);
-  for (size_t k = 0; k < s->nr_sparts; k++) {
-    for (int j = 0; j < 3; j++) {
-      if (s->sparts[k].x[j] < 0.0)
-        s->sparts[k].x[j] += dim[j];
-      else if (s->sparts[k].x[j] >= dim[j])
-        s->sparts[k].x[j] -= dim[j];
-    }
-    const int cid = cell_getid(cdim, s->sparts[k].x[0] * iwidth[0],
-                               s->sparts[k].x[1] * iwidth[1],
-                               s->sparts[k].x[2] * iwidth[2]);
-    counts[cid] += ssize;
-  }
+  mapper_data.size = ssize;
+  threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_spart, s->sparts,
+                 s->nr_sparts, sizeof(struct spart), 0, &mapper_data);
 
   /* Keep the sum of particles across all ranks in the range of IDX_MAX. */
   if ((s->e->total_nr_parts * hsize + s->e->total_nr_gparts * gsize +
@@ -1527,6 +1542,7 @@ void partition_repartition(struct repartition *reparttype, int nodeID,
  */
 void partition_initial_partition(struct partition *initial_partition,
                                  int nodeID, int nr_nodes, struct space *s) {
+  ticks tic = getticks();
 
   /* Geometric grid partitioning. */
   if (initial_partition->type == INITPART_GRID) {
@@ -1641,6 +1657,10 @@ void partition_initial_partition(struct partition *initial_partition,
     error("SWIFT was not compiled with MPI support");
 #endif
   }
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }
 
 /**
