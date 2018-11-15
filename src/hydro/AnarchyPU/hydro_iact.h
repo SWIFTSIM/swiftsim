@@ -210,9 +210,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
     const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
     /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
+    pi->viscosity.v_sig = max(pi->viscoWsity.v_sig, new_v_sig);
     pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
 
+    /* Calculate Del^2 u for the thermal diffusion coefficient. */
+    const float r = sqrtf(r);
+
+    const float delta_u = pi->u - pj->u;
+    pi->diffusion.laplace_u += pj->m * delta_u * F_ij / (pj->rho * r)
+    pj->diffusion.laplace_u -= pi->m * delta_u * F_ji / (pi->rho * r)
 }
 
 /**
@@ -250,6 +256,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 
     /* Update if we need to */
     pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
+
+    /* Calculate Del^2 u for the thermal diffusion coefficient. */
+    const float r = sqrtf(r);
+
+    const float delta_u = pi->u - pj->u;
+    pi->diffusion.laplace_u += pj->m * delta_u * F_ij / (pj->rho * r)
 }
 
 /**
@@ -362,9 +374,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
+  /* Diffusion term */
+  /* TODO: Differential alpha_diff */
+  const float alpha_diff = 0.1;
+  /* TODO: Check wi_dr is F_ij */
+  const float diff_du_term =
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+
   /* Assemble the energy equation term */
-  const float du_dt_i = sph_du_term_i + visc_du_term;
-  const float du_dt_j = sph_du_term_j + visc_du_term;
+  const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
+  const float du_dt_j = sph_du_term_j + visc_du_term - diff_du_term;
 
   /* Internal energy time derivative */
   pi->u_dt += du_dt_i * mj;
@@ -479,8 +498,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
+  /* Diffusion term */
+  /* TODO: Differential alpha_diff */
+  const float alpha_diff = 0.1;
+  /* TODO: Check wi_dr is F_ij */
+  const float diff_du_term =
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+
   /* Assemble the energy equation term */
-  const float du_dt_i = sph_du_term_i + visc_du_term;
+  const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
 
   /* Internal energy time derivatibe */
   pi->u_dt += du_dt_i * mj;

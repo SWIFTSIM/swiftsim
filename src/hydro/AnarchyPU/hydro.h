@@ -425,6 +425,7 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->density.rot_v[2] = 0.f;
 
   p->viscosity.div_v = 0.f;
+  p->diffusion.laplace_u = 0.f;
 }
 
 /**
@@ -549,7 +550,11 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-    struct part* p) {}
+    struct part* p) {
+      /* Include the extra factors in the del^2 u */
+      /* TODO: Cosmology factors */
+      p->laplace_u *= 2;
+}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -587,6 +592,7 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
 
   /* Probably not shocking, so this is safe to do */
   p->viscosity.div_v = 0.f;
+  p->diffusion.laplace_u = 0.f;
 }
 
 /**
@@ -644,6 +650,26 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Set our old div_v to the one for the next loop */
   p->viscosity.div_v_previous_step = p->viscosity.div_v;
+
+  /* Now for the diffusive alpha */
+  /* TODO: Replace this with something in hydro_properties */
+  const float beta_diff = 0.01;
+  const float alpha_diff_max = 1.0;
+  const float alpha_diff_min = 0.0;
+
+
+  const float sqrt_u = sqrtf(p->u);
+  /* Calculate initial value of alpha dt before bounding */
+  /* TODO: Cosmology factors? */
+  float alpha_diff_dt = beta_diff * p->h * p->diffusion.laplace_u / sqrt_u;
+
+  if (alpha_diff_dt > alpha_diff_max) {
+    alpha_diff_dt = alpha_diff_max;
+  } else if (alpha_diff_dt < alpha_diff_min) {
+    alpha_diff_dt = alpha_diff_min;
+  }
+
+  p->diffusion.alpha += alpha_diff_dt * dt_alpha;
 }
 
 /**
@@ -834,6 +860,9 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
   p->viscosity.alpha = hydro_props->viscosity.alpha;
   /* Initialise this here to keep all the AV variables together */
   p->viscosity.div_v_previous_step = 0.f;
+
+  /* Set the initial values for the thermal diffusion */
+  p->diffusion.alpha = hydro_props->diffusion.alpha;
 }
 
 /**

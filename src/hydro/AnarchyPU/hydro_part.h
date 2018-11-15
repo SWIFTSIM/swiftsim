@@ -122,6 +122,17 @@ struct part {
 
   } viscosity;
 
+  /* Store thermal diffusion information in a separate struct. */
+  struct {
+
+    /* del^2 u, a smoothed quantity */
+    float laplace_u;
+
+    /* Thermal diffusion coefficient */
+    float alpha;
+    
+  } diffusion;
+
   /* Store density/force specific stuff. */
   union {
 
