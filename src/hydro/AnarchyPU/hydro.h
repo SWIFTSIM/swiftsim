@@ -495,7 +495,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part* restrict p, struct xpart* restrict xp,
     const struct cosmology* cosmo) {
 
-  const float fac_mu = cosmo->a_factor_mu;
+  const float fac_B = cosmo->a_factor_Balsara_eps;
 
   /* Compute the norm of the curl */
   const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
@@ -510,7 +510,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
 
   /* Compute the Balsara switch */
   const float balsara = abs_div_v /
-      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_mu / p->h);
+      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_B / p->h);
 
   /* Compute the "grad h" term */
   const float common_factor = p->h / (hydro_dimension * p->density.wcount);
