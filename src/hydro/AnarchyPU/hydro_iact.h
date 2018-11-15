@@ -506,7 +506,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
 
-  /* Internal energy time derivatibe */
+  /* Internal energy time derivative */
   pi->u_dt += du_dt_i * mj;
 
   /* Get the time derivative for h. */
