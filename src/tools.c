@@ -259,6 +259,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
   }
 }
 
+#ifdef EXTRA_HDYRO_LOOP
 void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
 
   float r2, hi, hj, hig2, hjg2, dx[3];
@@ -335,6 +336,9 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
     }
   }
 }
+#else
+void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {}
+#endif /* EXTRA_HDYRO_LOOP */
 
 void pairs_all_force(struct runner *r, struct cell *ci, struct cell *cj) {
 
@@ -537,6 +541,7 @@ void self_all_density(struct runner *r, struct cell *ci) {
   }
 }
 
+#ifdef EXTRA_HYDRO_LOOP
 void self_all_gradient(struct runner *r, struct cell *ci) {
   float r2, hi, hj, hig2, hjg2, dxi[3];  //, dxj[3];
   struct part *pi, *pj;
@@ -587,6 +592,9 @@ void self_all_gradient(struct runner *r, struct cell *ci) {
     }
   }
 }
+#else
+void self_all_gradient(struct runner *r, struct cell *ci) {}
+#endif /* EXTRA_HYDRO_LOOP */
 
 void self_all_force(struct runner *r, struct cell *ci) {
   float r2, hi, hj, hig2, hjg2, dxi[3];  //, dxj[3];
