@@ -652,21 +652,17 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   p->viscosity.div_v_previous_step = p->viscosity.div_v;
 
   /* Now for the diffusive alpha */
-  /* TODO: Replace this with something in hydro_properties */
-  const float beta_diff = 0.01;
-  const float alpha_diff_max = 1.0;
-  const float alpha_diff_min = 0.0;
-
 
   const float sqrt_u = sqrtf(p->u);
   /* Calculate initial value of alpha dt before bounding */
   /* TODO: Cosmology factors? */
-  float alpha_diff_dt = beta_diff * p->h * p->diffusion.laplace_u / sqrt_u;
+  float alpha_diff_dt =
+      hydro_props->diffusion.beta * p->h * p->diffusion.laplace_u / sqrt_u;
 
-  if (alpha_diff_dt > alpha_diff_max) {
-    alpha_diff_dt = alpha_diff_max;
-  } else if (alpha_diff_dt < alpha_diff_min) {
-    alpha_diff_dt = alpha_diff_min;
+  if (alpha_diff_dt > hydro_props->diffusion.alpha_max) {
+    alpha_diff_dt = hydro_props->diffusion.alpha_max;
+  } else if (alpha_diff_dt < hydro_props->diffusion.alpha_min) {
+    alpha_diff_dt = hydro_props->diffusion.alpha_min;
   }
 
   p->diffusion.alpha += alpha_diff_dt * dt_alpha;

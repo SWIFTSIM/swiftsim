@@ -108,7 +108,7 @@ struct part {
   /* Store viscosity information in a separate struct. */
   struct {
 
-    /* Particle velocity divergence */
+    /*! Particle velocity divergence */
     float div_v;
 
     /*! Particle velocity divergence from previous step */
@@ -125,12 +125,12 @@ struct part {
   /* Store thermal diffusion information in a separate struct. */
   struct {
 
-    /* del^2 u, a smoothed quantity */
+    /*! del^2 u, a smoothed quantity */
     float laplace_u;
 
-    /* Thermal diffusion coefficient */
+    /*! Thermal diffusion coefficient */
     float alpha;
-    
+
   } diffusion;
 
   /* Store density/force specific stuff. */

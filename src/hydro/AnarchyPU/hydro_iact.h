@@ -375,8 +375,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  /* TODO: Differential alpha_diff */
-  const float alpha_diff = 0.1;
+  const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* TODO: Check wi_dr is F_ij */
   const float diff_du_term =
       alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
@@ -499,8 +498,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  /* TODO: Differential alpha_diff */
-  const float alpha_diff = 0.1;
+  const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* TODO: Check wi_dr is F_ij */
   const float diff_du_term =
       alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
