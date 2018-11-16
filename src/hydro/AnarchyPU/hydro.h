@@ -666,13 +666,16 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   float alpha_diff_dt =
       hydro_props->diffusion.beta * p->h * p->diffusion.laplace_u / sqrt_u;
 
-  if (alpha_diff_dt > hydro_props->diffusion.alpha_max) {
-    alpha_diff_dt = hydro_props->diffusion.alpha_max;
-  } else if (alpha_diff_dt < hydro_props->diffusion.alpha_min) {
-    alpha_diff_dt = hydro_props->diffusion.alpha_min;
+  float new_diffusion_alpha = p->diffusion.alpha + alpha_diff_dt * dt_alpha;
+
+  if (new_diffusion_alpha > hydro_props->diffusion.alpha_max) {
+    new_diffusion_alpha = hydro_props->diffusion.alpha_max;
+  } else if (new_diffusion_alpha < hydro_props->diffusion.alpha_min) {
+    new_diffusion_alpha = hydro_props->diffusion.alpha_min;
   }
 
-  p->diffusion.alpha += alpha_diff_dt * dt_alpha;
+  p->diffusion.alpha = new_diffusion_alpha;
+
 }
 
 /**

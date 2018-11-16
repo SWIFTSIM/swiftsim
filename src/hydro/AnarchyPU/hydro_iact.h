@@ -343,9 +343,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
-  const float ci = pi->force.soundspeed;
-  const float cj = pj->force.soundspeed;
-  const float v_sig = ci + cj - const_viscosity_beta * mu_ij;
+  const float v_sig = 0.5 * (pi->viscosity.v_sig + pj->viscosity.v_sig);
 
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
@@ -392,7 +390,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dx + wj_dx) / rho_ij;
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -473,9 +471,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
-  const float ci = pi->force.soundspeed;
-  const float cj = pj->force.soundspeed;
-  const float v_sig = ci + cj - const_viscosity_beta * mu_ij;
+  const float v_sig = 0.5 * (pi->viscosity.v_sig + pj->viscosity.v_sig);
 
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
@@ -515,7 +511,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dx + wj_dx) / rho_ij;
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
