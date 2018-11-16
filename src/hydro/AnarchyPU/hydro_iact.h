@@ -387,7 +387,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff = pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble;
+  const float v_diff = max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
@@ -509,7 +509,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff = pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble;
+  const float v_diff = max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
