@@ -194,7 +194,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                                xparts, convert_viscosity);
   list[11] = io_make_output_field_convert_part("Diffusion", FLOAT, 1,
                                                UNIT_CONV_NO_UNITS, parts,
-                                               xparts, convert_viscosity);
+                                               xparts, convert_diffusion);
 }
 
 /**
