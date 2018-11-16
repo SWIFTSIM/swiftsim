@@ -284,8 +284,7 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
             main_cell->hydro.parts[pid].density.wcount,
             main_cell->hydro.parts[pid].density.wcount_dh,
 #if defined(GADGET2_SPH) || defined(DEFAULT_SPH) || defined(HOPKINS_PE_SPH) || \
-    defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH_MONAGHAN) || \
-    defined(ANARCHY_PU_SPH)
+    defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH_MONAGHAN)
             main_cell->hydro.parts[pid].density.div_v,
             main_cell->hydro.parts[pid].density.rot_v[0],
             main_cell->hydro.parts[pid].density.rot_v[1],

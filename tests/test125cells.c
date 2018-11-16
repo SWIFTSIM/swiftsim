@@ -427,7 +427,7 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
             main_cell->hydro.parts[pid].force.v_sig, 0.f,
             main_cell->hydro.parts[pid].force.u_dt
 #elif defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
-    defined(HOPKINS_PU_SPH_MONAGHAN) || defined(ANARCHY_PU_SPH)
+    defined(HOPKINS_PU_SPH_MONAGHAN)
             main_cell->hydro.parts[pid].force.v_sig, 0.f,
             main_cell->hydro.parts[pid].u_dt
 #elif defined(ANARCHY_PU_SPH)
