@@ -390,9 +390,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Diffusion term */
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
-  /* TODO: Check wi_dr is F_ij */
+  /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dx + wj_dx) / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -513,9 +513,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Diffusion term */
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
-  /* TODO: Check wi_dr is F_ij */
+  /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+      alpha_diff * fac_mu * v_sig * (pi->u - pj->u) * (wi_dx + wj_dx) / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
