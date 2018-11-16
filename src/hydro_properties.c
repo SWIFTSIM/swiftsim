@@ -48,7 +48,7 @@
 #define hydro_props_default_viscosity_length \
   0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
 /* Following values taken directly from the ANARCHY paper (Schaller+ 2015) */
-#define hydro_props_default_diffusion_alpha 0.1f
+#define hydro_props_default_diffusion_alpha 0.0f
 #define hydro_props_default_diffusion_beta 0.01f
 #define hydro_props_default_diffusion_alpha_max 1.0f
 #define hydro_props_default_diffusion_alpha_min 0.0f
@@ -332,6 +332,11 @@ void hydro_props_init_no_hydro(struct hydro_props *p) {
   p->viscosity.alpha_max = hydro_props_default_viscosity_alpha_max;
   p->viscosity.alpha_min = hydro_props_default_viscosity_alpha_min;
   p->viscosity.length = hydro_props_default_viscosity_length;
+
+  p->diffusion.alpha = hydro_props_default_diffusion_alpha;
+  p->diffusion.beta = hydro_props_default_diffusion_beta;
+  p->diffusion.alpha_max = hydro_props_default_diffusion_alpha_max;
+  p->diffusion.alpha_min = hydro_props_default_diffusion_alpha_min;
 }
 
 /**

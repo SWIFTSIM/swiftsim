@@ -38,7 +38,7 @@ SPH:
   viscosity_alpha_max:   2.0      # (Optional) Maximal value for the artificial viscosity in schemes that allow alpha to vary.
   viscosity_alpha_min:   0.1      # (Optional) Minimal value for the artificial viscosity in schemes that allow alpha to vary.
   viscosity_length:      0.1      # (Optional) Decay length for the artificial viscosity in schemes that allow alpha to vary.
-  diffusion_alpha:       0.1      # (Optional) Override the initial value for the thermal diffusion coefficient in schemes with thermal diffusion.
+  diffusion_alpha:       0.0      # (Optional) Override the initial value for the thermal diffusion coefficient in schemes with thermal diffusion.
   diffusion_beta:        0.01     # (Optional) Override the decay/rise rate tuning parameter for the thermal diffusion.
   diffusion_alpha_max:   1.0      # (Optional) Override the maximal thermal diffusion coefficient that is allowed for a given particle.
   diffusion_alpha_min:   0.0      # (Optional) Override the minimal thermal diffusion coefficient that is allowed for a given particle.
