@@ -550,9 +550,17 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-    struct part* p) {
-      /* Include the extra factors in the del^2 u */
-      p->diffusion.laplace_u *= 2;
+    struct part *p) {
+
+  /* Some smoothing length multiples. */
+  const float h = p->h;
+  const float h_inv = 1.0f / h;                       /* 1/h */
+  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
+
+  /* Include the extra factors in the del^2 u */
+
+  p->diffusion.laplace_u *= 2 * h_inv_dim_plus_one;
 }
 
 /**
