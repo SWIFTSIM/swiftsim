@@ -145,6 +145,12 @@ INLINE static void convert_viscosity(const struct engine* e,
   ret[0] = p->viscosity.alpha;
 }
 
+INLINE static void convert_diffusion(const struct engine* e,
+                                     const struct part* p,
+                                     const struct xpart* xp, float* ret) {
+  ret[0] = p->diffusion.alpha;
+}
+
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -157,7 +163,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                          struct io_props* list,
                                          int* num_fields) {
 
-  *num_fields = 11;
+  *num_fields = 12;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_part("Coordinates", DOUBLE, 3,
@@ -184,6 +190,9 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                               UNIT_CONV_POTENTIAL, parts,
                                               xparts, convert_part_potential);
   list[10] = io_make_output_field_convert_part("Viscosity", FLOAT, 1,
+                                               UNIT_CONV_NO_UNITS, parts,
+                                               xparts, convert_viscosity);
+  list[10] = io_make_output_field_convert_part("Diffusion", FLOAT, 1,
                                                UNIT_CONV_NO_UNITS, parts,
                                                xparts, convert_viscosity);
 }

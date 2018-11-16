@@ -552,8 +552,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
     struct part* p) {
       /* Include the extra factors in the del^2 u */
-      /* TODO: Cosmology factors */
-      p->laplace_u *= 2;
+      p->diffusion.laplace_u *= 2;
 }
 
 /**
@@ -655,7 +654,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   const float sqrt_u = sqrtf(p->u);
   /* Calculate initial value of alpha dt before bounding */
-  /* TODO: Cosmology factors? */
+  /* alpha_diff_dt is cosmology-less */
   float alpha_diff_dt =
       hydro_props->diffusion.beta * p->h * p->diffusion.laplace_u / sqrt_u;
 

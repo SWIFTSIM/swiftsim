@@ -210,15 +210,23 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
     const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
     /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscoWsity.v_sig, new_v_sig);
+    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
     pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
 
     /* Calculate Del^2 u for the thermal diffusion coefficient. */
-    const float r = sqrtf(r);
+    /* Need to get some kernel values F_ij = wi_dx */
+    float wi, wi_dx, wj, wj_dx;
 
-    const float delta_u = pi->u - pj->u;
-    pi->diffusion.laplace_u += pj->m * delta_u * F_ij / (pj->rho * r)
-    pj->diffusion.laplace_u -= pi->m * delta_u * F_ji / (pi->rho * r)
+    const float r = sqrtf(r2);
+    const float ui = r / hi;
+    const float uj = r / hj;
+
+    kernel_deval(ui, &wi, &wi_dx);
+    kernel_deval(uj, &wj, &wj_dx);
+
+    const float delta_u_factor = (pi->u - pj->u) / r;
+    pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
+    pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
 }
 
 /**
@@ -258,10 +266,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
     pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
 
     /* Calculate Del^2 u for the thermal diffusion coefficient. */
-    const float r = sqrtf(r);
+    /* Need to get some kernel values F_ij = wi_dx */
+    float wi, wi_dx;
 
-    const float delta_u = pi->u - pj->u;
-    pi->diffusion.laplace_u += pj->m * delta_u * F_ij / (pj->rho * r)
+    const float r = sqrtf(r2);
+    const float ui = r / hi;
+
+    kernel_deval(ui, &wi, &wi_dx);
+
+    const float delta_u_factor = (pi->u - pj->u) / r;
+    pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
 }
 
 /**
