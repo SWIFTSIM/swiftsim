@@ -246,6 +246,9 @@ struct counts_mapper_data {
   struct space *s;
 };
 
+/* Generic function for accumulating sized counts for TYPE parts. Note uses
+ * local memory to reduce contention, the amount of memory required is
+ * precalculated by an additional loop determining the range of cell IDs. */
 #define ACCUMULATE_SIZES_MAPPER(TYPE)                                          \
   accumulate_sizes_mapper_##TYPE(void *map_data, int num_elements,             \
                                  void *extra_data) {                           \
@@ -258,10 +261,9 @@ struct counts_mapper_data {
                         mydata->s->iwidth[2]};                                 \
     double dim[3] = {mydata->s->dim[0], mydata->s->dim[1], mydata->s->dim[2]}; \
     double *lcounts = NULL;                                                    \
-    if ((lcounts = (double *)calloc(sizeof(double), mydata->s->nr_cells)) ==   \
-        NULL)                                                                  \
-      error("Failed to allocate counts thread-specific buffer");               \
-    for (size_t k = 0; k < num_elements; k++) {                                \
+    int lcid = mydata->s->nr_cells;                                            \
+    int ucid = 0;                                                              \
+    for (int k = 0; k < num_elements; k++) {                                   \
       for (int j = 0; j < 3; j++) {                                            \
         if (parts[k].x[j] < 0.0)                                               \
           parts[k].x[j] += dim[j];                                             \
@@ -271,15 +273,45 @@ struct counts_mapper_data {
       const int cid =                                                          \
           cell_getid(cdim, parts[k].x[0] * iwidth[0],                          \
                      parts[k].x[1] * iwidth[1], parts[k].x[2] * iwidth[2]);    \
-      lcounts[cid] += size;                                                    \
+      if (cid > ucid) ucid = cid;                                              \
+      if (cid < lcid) lcid = cid;                                              \
     }                                                                          \
-    for (int k = 0; k < mydata->s->nr_cells; k++)                              \
-      atomic_add_d(&mydata->counts[k], lcounts[k]);                            \
+    int nused = ucid - lcid + 1;                                               \
+    if ((lcounts = (double *)calloc(sizeof(double), nused)) == NULL)           \
+      error("Failed to allocate counts thread-specific buffer");               \
+    for (int k = 0; k < num_elements; k++) {                                   \
+      const int cid =                                                          \
+          cell_getid(cdim, parts[k].x[0] * iwidth[0],                          \
+                     parts[k].x[1] * iwidth[1], parts[k].x[2] * iwidth[2]);    \
+      lcounts[cid - lcid] += size;                                             \
+    }                                                                          \
+    for (int k = 0; k < nused; k++)                                            \
+      atomic_add_d(&mydata->counts[k + lcid], lcounts[k]);                     \
     free(lcounts);                                                             \
   }
 
+/**
+ * @brief Accumulate the sized counts of particles per cell.
+ * Threadpool helper for accumulating the counts of particles per cell.
+ *
+ * part version.
+ */
 static void ACCUMULATE_SIZES_MAPPER(part);
+
+/**
+ * @brief Accumulate the sized counts of particles per cell.
+ * Threadpool helper for accumulating the counts of particles per cell.
+ *
+ * gpart version.
+ */
 static void ACCUMULATE_SIZES_MAPPER(gpart);
+
+/**
+ * @brief Accumulate the sized counts of particles per cell.
+ * Threadpool helper for accumulating the counts of particles per cell.
+ *
+ * spart version.
+ */
 static void ACCUMULATE_SIZES_MAPPER(spart);
 
 /**
@@ -300,17 +332,20 @@ static void accumulate_sizes(struct space *s, double *counts) {
   double hsize = (double)sizeof(struct part);
   mapper_data.size = hsize;
   threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_part, s->parts,
-                 s->nr_parts, sizeof(struct part), 0, &mapper_data);
+                 s->nr_parts, sizeof(struct part), space_splitsize,
+                 &mapper_data);
 
   double gsize = (double)sizeof(struct gpart);
   mapper_data.size = gsize;
   threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_gpart, s->gparts,
-                 s->nr_gparts, sizeof(struct gpart), 0, &mapper_data);
+                 s->nr_gparts, sizeof(struct gpart), space_splitsize,
+                 &mapper_data);
 
   double ssize = (double)sizeof(struct spart);
   mapper_data.size = ssize;
   threadpool_map(&s->e->threadpool, accumulate_sizes_mapper_spart, s->sparts,
-                 s->nr_sparts, sizeof(struct spart), 0, &mapper_data);
+                 s->nr_sparts, sizeof(struct spart), space_splitsize,
+                 &mapper_data);
 
   /* Keep the sum of particles across all ranks in the range of IDX_MAX. */
   if ((s->e->total_nr_parts * hsize + s->e->total_nr_gparts * gsize +
