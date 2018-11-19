@@ -66,6 +66,7 @@ AC_ARG_ENABLE([logger],
 if test "$with_logger" = "yes"; then
    AC_DEFINE([WITH_LOGGER], 1, [logger enabled])
 fi
+AM_CONDITIONAL([HAVELOGGER],[test $with_logger = "yes"])
 
 # Interprocedural optimization support. Needs special handling for linking and
 # archiving as well as compilation with Intels, needs to be done before
@@ -852,6 +853,50 @@ fi
 AC_SUBST([TBBMALLOC_LIBS])
 AM_CONDITIONAL([HAVETBBMALLOC],[test -n "$TBBMALLOC_LIBS"])
 
+# Check for python.
+have_python="no"
+AC_ARG_WITH([python],
+    [AS_HELP_STRING([--with-python=PATH],
+       [root directory where python is installed @<:@yes/no@:>@]
+    )],
+    [with_python="$withval"],
+    [with_python="no"]
+)
+if test "x$with_python" != "xno"; then
+   AC_CACHE_CHECK(
+   "python version",
+   ac_cv_ver_python,
+   [ac_cv_ver_python=`python -c 'import sys;print(sys.version[[:3]])' 2> /dev/null`])
+   
+   if test "x$with_python" != "xyes" -a "x$with_python" != "x"; then
+      PYTHON_LIBS=""
+      PYTHON_INCS="-I$with_python/include/python$ac_cv_ver_python"
+   else
+      PYTHON_LIBS=""
+      PYTHON_INCS=""
+   fi
+   have_python="yes"
+
+   AC_CHECK_PROGS(
+	[PYTHON_BIN],
+	[python$ac_cv_ver_python],
+	[AC_MSG_ERROR(Cannot find python binary!)],
+	[$with_python/bin]
+	)
+
+   AC_CHECK_LIB(
+      [python${ac_cv_ver_python}m],
+      [PyArg_ParseTuple],
+      [AC_DEFINE([HAVE_PYTHON],1,[The python library appears to be present.])
+      ],
+      [AC_MSG_ERROR(Cannot find python library!)]
+      )
+fi
+AC_SUBST([PYTHON_LIBS])
+AC_SUBST([PYTHON_INCS])
+AM_CONDITIONAL([HAVEPYTHON],[test -n "$PYTHON_LIBS"])
+
+
 # Check for HDF5. This is required.
 AX_LIB_HDF5
 if test "$with_hdf5" != "yes"; then
@@ -1578,7 +1623,7 @@ DX_INIT_DOXYGEN(libswift,doc/Doxyfile,doc/)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
 # Handle .in files.
-AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile doc/Makefile doc/Doxyfile tests/Makefile logger/Makefile])
 AC_CONFIG_FILES([tools/Makefile])
 AC_CONFIG_FILES([tests/testReading.sh], [chmod +x tests/testReading.sh])
 AC_CONFIG_FILES([tests/testActivePair.sh], [chmod +x tests/testActivePair.sh])
@@ -1633,6 +1678,7 @@ AC_MSG_RESULT([
    Pthread barriers     : $have_pthread_barrier
    VELOCIraptor enabled : $have_velociraptor
    Particle Logger      : $with_logger
+   Python enabled       : $have_python
 
    Hydro scheme       : $with_hydro
    Dimensionality     : $with_dimension
