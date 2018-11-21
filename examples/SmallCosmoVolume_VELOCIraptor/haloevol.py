@@ -72,7 +72,7 @@ for j in itervalues:
     plt.text(xplace, 10 ** -3.5, "$z=%2.2f$" % redshift)
 
     m, dndlogm = getHMFz(redshift)
-    plt.plot(m / 0.7, dndlogm * 0.7 ** 3, label="Sheth al. 2001")
+    plt.plot(m / 0.7, dndlogm * 0.7 ** 3, label="Sheth et al. 2001")
 
     m, dndlogm = getHMFztinker(redshift)
     plt.plot(m / 0.7, dndlogm * 0.7 ** 3, label="Tinker et al. 2008")
