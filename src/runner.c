@@ -2616,9 +2616,11 @@ void runner_do_recv_gpart(struct runner *r, struct cell *c, int timer) {
  *
  * @param r The runner thread.
  * @param c The cell.
+ * @param clear_sorts Should we clear the sort flag and hence trigger a sort ?
  * @param timer Are we timing this ?
  */
-void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
+void runner_do_recv_spart(struct runner *r, struct cell *c, int clear_sorts,
+			  int timer) {
 
 #ifdef WITH_MPI
 
@@ -2626,18 +2628,21 @@ void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
   const size_t nr_sparts = c->stars.count;
   const integertime_t ti_current = r->e->ti_current;
 
-  error("Need to add h_max computation");
-
   TIMER_TIC;
 
   integertime_t ti_gravity_end_min = max_nr_timesteps;
   integertime_t ti_gravity_end_max = 0;
+  integertime_t ti_stars_end_min = max_nr_timesteps;
   timebin_t time_bin_min = num_time_bins;
   timebin_t time_bin_max = 0;
+  float h_max = 0.f;
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (c->nodeID == engine_rank) error("Updating a local cell!");
 #endif
+
+  /* Clear this cell's sorted mask. */
+  if (clear_sorts) c->stars.sorted = 0;
 
   /* If this cell is a leaf, collect the particle data. */
   if (!c->split) {
@@ -2647,22 +2652,27 @@ void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
       if (sparts[k].time_bin == time_bin_inhibited) continue;
       time_bin_min = min(time_bin_min, sparts[k].time_bin);
       time_bin_max = max(time_bin_max, sparts[k].time_bin);
+      h_max = max(h_max, sparts[k].h);
     }
 
     /* Convert into a time */
     ti_gravity_end_min = get_integer_time_end(ti_current, time_bin_min);
     ti_gravity_end_max = get_integer_time_end(ti_current, time_bin_max);
+    ti_stars_end_min = get_integer_time_end(ti_current, time_bin_min);
   }
 
   /* Otherwise, recurse and collect. */
   else {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL && c->progeny[k]->stars.count > 0) {
-        runner_do_recv_spart(r, c->progeny[k], 0);
+        runner_do_recv_spart(r, c->progeny[k], clear_sorts, 0);
         ti_gravity_end_min =
             min(ti_gravity_end_min, c->progeny[k]->grav.ti_end_min);
         ti_gravity_end_max =
             max(ti_gravity_end_max, c->progeny[k]->grav.ti_end_max);
+        ti_stars_end_min =
+            min(ti_stars_end_min, c->progeny[k]->stars.ti_end_min);
+        h_max = max(h_max, c->progeny[k]->stars.h_max);
       }
     }
   }
@@ -2673,12 +2683,19 @@ void runner_do_recv_spart(struct runner *r, struct cell *c, int timer) {
         "Received a cell at an incorrect time c->ti_end_min=%lld, "
         "e->ti_current=%lld.",
         ti_gravity_end_min, ti_current);
+
+  if (ti_stars_end_min < ti_current)
+    error(
+        "Received a cell at an incorrect time c->ti_end_min=%lld, "
+        "e->ti_current=%lld.",
+        ti_stars_end_min, ti_current);
 #endif
 
   /* ... and store. */
   // c->grav.ti_end_min = ti_gravity_end_min;
   // c->grav.ti_end_max = ti_gravity_end_max;
   c->grav.ti_old_part = ti_current;
+  c->stars.h_max = h_max;
 
   if (timer) TIMER_TOC(timer_dorecv_spart);
 
@@ -2886,7 +2903,7 @@ void *runner_main(void *data) {
           } else if (t->subtype == task_subtype_gpart) {
             runner_do_recv_gpart(r, ci, 1);
           } else if (t->subtype == task_subtype_spart) {
-            runner_do_recv_spart(r, ci, 1);
+            runner_do_recv_spart(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_multipole) {
             cell_unpack_multipoles(ci, (struct gravity_tensors *)t->buff);
             free(t->buff);
