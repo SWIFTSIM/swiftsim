@@ -1918,7 +1918,7 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
 
     /* Add the send tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_send_hydro(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL, /*t_gradient=*/NULL);
 
@@ -1944,7 +1944,7 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
 
     /* Add the recv tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_recv_hydro(e, ci, NULL, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a gravity

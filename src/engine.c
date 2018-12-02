@@ -1145,7 +1145,7 @@ void engine_exchange_cells(struct engine *e) {
   size_t count_parts_in = 0, count_gparts_in = 0, count_sparts_in = 0;
   for (int k = 0; k < nr_proxies; k++)
     for (int j = 0; j < e->proxies[k].nr_cells_in; j++) {
-      if (e->proxies[k].cells_in_type[j] & proxy_cell_type_hydro)
+      if (e->proxies[k].cells_in_type[j] & proxy_cell_type_hydro_and_stars)
         count_parts_in += e->proxies[k].cells_in[j]->hydro.count;
       if (e->proxies[k].cells_in_type[j] & proxy_cell_type_gravity)
         count_gparts_in += e->proxies[k].cells_in[j]->grav.count;
@@ -1186,7 +1186,7 @@ void engine_exchange_cells(struct engine *e) {
   for (int k = 0; k < nr_proxies; k++) {
     for (int j = 0; j < e->proxies[k].nr_cells_in; j++) {
 
-      if (e->proxies[k].cells_in_type[j] & proxy_cell_type_hydro) {
+      if (e->proxies[k].cells_in_type[j] & proxy_cell_type_hydro_and_stars) {
         cell_link_parts(e->proxies[k].cells_in[j], parts);
         parts = &parts[e->proxies[k].cells_in[j]->hydro.count];
       }
@@ -3604,7 +3604,7 @@ void engine_makeproxies(struct engine *e) {
                       abs(j - jjj + cdim[1]) <= 1) &&
                      (abs(k - kkk) <= 1 || abs(k - kkk - cdim[2]) <= 1 ||
                       abs(k - kkk + cdim[2]) <= 1)))
-                  proxy_type |= (int)proxy_cell_type_hydro;
+                  proxy_type |= (int)proxy_cell_type_hydro_and_stars;
               }
 
               /* In the gravity case, check distances using the MAC. */
