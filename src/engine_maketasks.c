@@ -428,21 +428,20 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     /*                           0, c, NULL); */
   }
 
-  c->mpi.hydro.recv_xv = t_xv;
-  /* c->mpi.hydro.recv_rho = t_rho; */
+  if (t_xv != NULL) {
+    c->mpi.hydro.recv_xv = t_xv;
+    /* c->mpi.hydro.recv_rho = t_rho; */
 
-  /* Add dependencies. */
-  message("before %p %p", t_xv, c->stars.density);
-  if (c->hydro.sorts != NULL) scheduler_addunlock(s, t_xv, c->hydro.sorts);
-  message("after");
+    /* Add dependencies. */
+    if (c->hydro.sorts != NULL) scheduler_addunlock(s, t_xv, c->hydro.sorts);
 
-  for (struct link *l = c->stars.density; l != NULL; l = l->next) {
-    scheduler_addunlock(s, t_xv, l->t);
-    /* scheduler_addunlock(s, l->t, t_rho); */
+    for (struct link *l = c->stars.density; l != NULL; l = l->next) {
+      scheduler_addunlock(s, t_xv, l->t);
+      /* scheduler_addunlock(s, l->t, t_rho); */
+    }
+    /* for (struct link *l = c->hydro.force; l != NULL; l = l->next) */
+    /*   scheduler_addunlock(s, t_rho, l->t); */
   }
-  /* for (struct link *l = c->hydro.force; l != NULL; l = l->next) */
-  /*   scheduler_addunlock(s, t_rho, l->t); */
-
   /* Recurse? */
   if (c->split)
     for (int k = 0; k < 8; k++)
