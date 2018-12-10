@@ -21,6 +21,7 @@
 
 /* Config parameters. */
 #include "../config.h"
+#include <stdint.h>
 
 #ifdef HAVE_IMMINTRIN_H
 /* Include the header file with the intrinsics for Intel architecture. */
@@ -33,7 +34,7 @@
 #endif
 
 /* Macro for in-place swap of two values a and b of type t. a and b are
-   assumed to be of type char* so that the pointer arithmetic works. */
+   assumed to be of type uint8_t* so that the pointer arithmetic works. */
 #define swap_loop(type, a, b, count) \
   while (count >= sizeof(type)) {    \
     register type temp = *(type *)a; \
@@ -62,7 +63,7 @@
  */
 __attribute__((always_inline)) inline void memswap(void *void_a, void *void_b,
                                                    size_t bytes) {
-  char *a = (char *)void_a, *b = (char *)void_b;
+  int8_t *a = (int8_t *)void_a, *b = (int8_t *)void_b;
 #if defined(__AVX512F__) && defined(__INTEL_COMPILER)
   swap_loop(__m512i, a, b, bytes);
 #endif
@@ -75,10 +76,10 @@ __attribute__((always_inline)) inline void memswap(void *void_a, void *void_b,
 #ifdef __ALTIVEC__
   swap_loop(vector int, a, b, bytes);
 #endif
-  swap_loop(size_t, a, b, bytes);
-  swap_loop(int, a, b, bytes);
-  swap_loop(short, a, b, bytes);
-  swap_loop(char, a, b, bytes);
+  swap_loop(int64_t, a, b, bytes);
+  swap_loop(int32_t, a, b, bytes);
+  swap_loop(int16_t, a, b, bytes);
+  swap_loop(int8_t, a, b, bytes);
 }
 
 /**
@@ -96,7 +97,7 @@ __attribute__((always_inline)) inline void memswap(void *void_a, void *void_b,
 __attribute__((always_inline)) inline void memswap_unaligned(void *void_a,
                                                              void *void_b,
                                                              size_t bytes) {
-  char *a = (char *)void_a, *b = (char *)void_b;
+  int8_t *a = (int8_t *)void_a, *b = (int8_t *)void_b;
 #ifdef __AVX512F__
   while (bytes >= sizeof(__m512i)) {
     register __m512i temp;
@@ -134,10 +135,10 @@ __attribute__((always_inline)) inline void memswap_unaligned(void *void_a,
   // Power8 supports unaligned load/stores, but not sure what it will do here.
   swap_loop(vector int, a, b, bytes);
 #endif
-  swap_loop(size_t, a, b, bytes);
-  swap_loop(int, a, b, bytes);
-  swap_loop(short, a, b, bytes);
-  swap_loop(char, a, b, bytes);
+  swap_loop(int64_t, a, b, bytes);
+  swap_loop(int32_t, a, b, bytes);
+  swap_loop(int16_t, a, b, bytes);
+  swap_loop(int8_t, a, b, bytes);
 }
 
 #endif /* SWIFT_MEMSWAP_H */
