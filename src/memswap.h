@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Copyright (c) 2016 Pedro Gonnet (pedro.gonnet@durham.ac.uk)
- *
+ *               2018 STFC (author email aidan.chalk@stfc.ac.uk)
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
