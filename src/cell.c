@@ -1230,6 +1230,8 @@ void cell_clean_links(struct cell *c, void *data) {
   c->hydro.force = NULL;
   c->grav.grav = NULL;
   c->grav.mm = NULL;
+  // TODO Alexei
+  c->stars.density = NULL;
 }
 
 /**
@@ -3129,6 +3131,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
+      error("");
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
