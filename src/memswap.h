@@ -61,9 +61,9 @@
  * @param void_b Pointer to the second element.
  * @param bytes Size, in bytes, of the data pointed to by @c a and @c b.
  */
-__attribute__((always_inline)) inline void memswap(void *void_a, void *void_b,
+__attribute__((always_inline)) inline void memswap(void *restrict void_a, void *restrict void_b,
                                                    size_t bytes) {
-  int8_t *a = (int8_t *)void_a, *b = (int8_t *)void_b;
+  int8_t *restrict a = (int8_t *)void_a, *restrict b = (int8_t *)void_b;
 #if defined(__AVX512F__) && defined(__INTEL_COMPILER)
   swap_loop(__m512i, a, b, bytes);
 #endif
@@ -94,10 +94,10 @@ __attribute__((always_inline)) inline void memswap(void *void_a, void *void_b,
  * @param void_b Pointer to the second element.
  * @param bytes Size, in bytes, of the data pointed to by @c a and @c b.
  */
-__attribute__((always_inline)) inline void memswap_unaligned(void *void_a,
-                                                             void *void_b,
+__attribute__((always_inline)) inline void memswap_unaligned(void *restrict void_a,
+                                                             void *restrict void_b,
                                                              size_t bytes) {
-  int8_t *a = (int8_t *)void_a, *b = (int8_t *)void_b;
+  int8_t *restrict a = (int8_t *)void_a, *restrict b = (int8_t *)void_b;
 #ifdef __AVX512F__
   while (bytes >= sizeof(__m512i)) {
     register __m512i temp;
