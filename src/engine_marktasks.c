@@ -327,7 +327,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       if (t_subtype == task_subtype_density) {
 
         /* Too much particle movement? */
-        if (cell_need_rebuild_for_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
         /* Activate the send/recv tasks. */
@@ -423,9 +423,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       if (t->subtype == task_subtype_stars_density) {
 
         /* Too much particle movement? */
-        if (cell_need_rebuild_for_stars_pair(ci, cj)) {
-          *rebuild_space = 1;
-        }
+        if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1;
 
         // LOIC: Need implementing MPI case
       }

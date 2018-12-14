@@ -937,14 +937,15 @@ cell_can_split_self_gravity_task(const struct cell *c) {
 }
 
 /**
- * @brief Have particles in a pair of cells moved too much and require a rebuild
+ * @brief Have gas particles in a pair of cells moved too much and require a
+ * rebuild
  * ?
  *
  * @param ci The first #cell.
  * @param cj The second #cell.
  */
-__attribute__((always_inline)) INLINE static int cell_need_rebuild_for_pair(
-    const struct cell *ci, const struct cell *cj) {
+__attribute__((always_inline)) INLINE static int
+cell_need_rebuild_for_hydro_pair(const struct cell *ci, const struct cell *cj) {
 
   /* Is the cut-off radius plus the max distance the parts in both cells have */
   /* moved larger than the cell size ? */
@@ -955,7 +956,8 @@ __attribute__((always_inline)) INLINE static int cell_need_rebuild_for_pair(
 }
 
 /**
- * @brief Have particles in a pair of cells moved too much and require a rebuild
+ * @brief Have star particles in a pair of cells moved too much and require a
+ * rebuild
  * ?
  *
  * @param ci The first #cell.
