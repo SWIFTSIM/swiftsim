@@ -360,6 +360,7 @@ void task_unlock(struct task *t) {
         cell_sunlocktree(ci);
       } else if (subtype == task_subtype_stars_feedback) {
         cell_sunlocktree(ci);
+        cell_unlocktree(ci);
       } else {
         cell_unlocktree(ci);
       }
@@ -378,6 +379,8 @@ void task_unlock(struct task *t) {
       } else if (subtype == task_subtype_stars_feedback) {
         cell_sunlocktree(ci);
         cell_sunlocktree(cj);
+        cell_unlocktree(ci);
+        cell_unlocktree(cj);
       } else {
         cell_unlocktree(ci);
         cell_unlocktree(cj);
@@ -486,8 +489,13 @@ int task_lock(struct task *t) {
         if (cell_slocktree(ci) != 0) return 0;
       } else if (subtype == task_subtype_stars_feedback) {
         if (ci->stars.hold) return 0;
+        if (ci->hydro.hold) return 0;
         if (cell_slocktree(ci) != 0) return 0;
-      } else {
+        if (cell_locktree(ci) != 0) {
+          cell_sunlocktree(ci);
+          return 0;
+        }
+      } else { /* subtype == hydro */
         if (ci->hydro.hold) return 0;
         if (cell_locktree(ci) != 0) return 0;
       }
@@ -520,13 +528,26 @@ int task_lock(struct task *t) {
           return 0;
         }
       } else if (subtype == task_subtype_stars_feedback) {
+        /* Lock the stars and the gas particles in both cells */
         if (ci->stars.hold || cj->stars.hold) return 0;
+        if (ci->hydro.hold || cj->hydro.hold) return 0;
         if (cell_slocktree(ci) != 0) return 0;
         if (cell_slocktree(cj) != 0) {
           cell_sunlocktree(ci);
           return 0;
         }
-      } else {
+        if (cell_locktree(ci) != 0) {
+          cell_sunlocktree(ci);
+          cell_sunlocktree(cj);
+          return 0;
+        }
+        if (cell_locktree(cj) != 0) {
+          cell_sunlocktree(ci);
+          cell_sunlocktree(cj);
+          cell_unlocktree(ci);
+          return 0;
+        }
+      } else { /* subtype == hydro */
         /* Lock the parts in both cells */
         if (ci->hydro.hold || cj->hydro.hold) return 0;
         if (cell_locktree(ci) != 0) return 0;
