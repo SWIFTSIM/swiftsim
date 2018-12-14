@@ -2926,9 +2926,6 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
     sp[k].v[1] *= a_factor_vel;
     sp[k].v[2] *= a_factor_vel;
 
-    // MATTHIEU: TO DO: Read smoothing lengths from ICs!!!!
-    // sp[k].h = s->dim[0] / 10. / kernel_gamma;
-
 #ifdef HYDRO_DIMENSION_2D
     sp[k].x[2] = 0.f;
     sp[k].v[2] = 0.f;
