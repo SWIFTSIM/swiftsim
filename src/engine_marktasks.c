@@ -239,7 +239,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
-      /* Stars */
+      /* Stars density */
       if (t_subtype == task_subtype_stars_density &&
           ((ci_active_stars && ci->nodeID == engine_rank) ||
            (cj_active_stars && cj->nodeID == engine_rank))) {
@@ -296,6 +296,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
+      /* Stars feedback */
       if (t_subtype == task_subtype_stars_feedback &&
           ((ci_active_stars && ci->nodeID == engine_rank) ||
            (cj_active_stars && cj->nodeID == engine_rank))) {
