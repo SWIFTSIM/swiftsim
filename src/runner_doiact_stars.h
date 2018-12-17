@@ -1055,8 +1055,17 @@ void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj) {
   const struct engine *restrict e = r->e;
   const int ci_active = cell_is_active_stars(ci, e);
   const int cj_active = cell_is_active_stars(cj, e);
-  const int do_ci = (ci->stars.count != 0 && cj->hydro.count != 0 && ci_active);
-  const int do_cj = (cj->stars.count != 0 && ci->hydro.count != 0 && cj_active);
+#ifdef ONLY_LOCAL
+    const int ci_local = ci->nodeID == engine_rank;
+    const int cj_local = cj->nodeID == engine_rank;
+#else
+    const int ci_local = 1;
+    const int cj_local = 1;
+#endif
+  const int do_ci = (ci->stars.count != 0 && cj->hydro.count != 0 && ci_active &&
+		     ci_local);
+  const int do_cj = (cj->stars.count != 0 && ci->hydro.count != 0 && cj_active &&
+		     cj_local);
 
   /* Anything to do here? */
   if (!do_ci && !do_cj) return;
@@ -1341,10 +1350,17 @@ void DOSUB_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   /* Otherwise, compute the pair directly. */
   else {
 
+#ifdef ONLY_LOCAL
+    const int ci_local = ci->nodeID == engine_rank;
+    const int cj_local = cj->nodeID == engine_rank;
+#else
+    const int ci_local = 1;
+    const int cj_local = 1;
+#endif
     const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                      cell_is_active_stars(ci, e);
+                      cell_is_active_stars(ci, e) && ci_local;
     const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                      cell_is_active_stars(cj, e);
+                      cell_is_active_stars(cj, e) && cj_local;
 
     if (do_ci) {
 
