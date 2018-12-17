@@ -890,8 +890,15 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
     redo = 0;
 
     /* Empty task? */
+    /* Need defines in order to evaluate after check for t->ci == NULL */
+#define pair_no_part t->type == task_type_pair &&		\
+      (t->ci->stars.count == 0 || t->cj->hydro.count == 0)  &&	\
+      (t->cj->stars.count == 0 || t->ci->hydro.count == 0)
+#define self_no_part t->type == task_type_self &&		\
+      (t->ci->stars.count == 0 || t->ci->hydro.count == 0)
+
     if ((t->ci == NULL) || (t->type == task_type_pair && t->cj == NULL) ||
-        t->ci->stars.count == 0 || (t->cj != NULL && t->cj->stars.count == 0)) {
+        (self_no_part) || (pair_no_part)) {
       t->type = task_type_none;
       t->subtype = task_subtype_none;
       t->cj = NULL;
@@ -970,14 +977,22 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
       double shift[3];
       const int sid = space_getsid(s->space, &ci, &cj, shift);
 
+      /* Compute number of interactions */
+      const int ci_interaction  =
+	(ci->stars.count * cj->hydro.count);
+      const int cj_interaction =
+	(cj->stars.count * ci->hydro.count);
+      
+      const int number_interactions =
+	(ci_interaction + cj_interaction) * sid_scale[sid];
+	
       /* Should this task be split-up? */
       if (cell_can_split_pair_stars_task(ci) &&
           cell_can_split_pair_stars_task(cj)) {
 
         /* Replace by a single sub-task? */
-        if (scheduler_dosub && /* Use division to avoid integer overflow. */
-            ci->stars.count * sid_scale[sid] <
-                space_subsize_pair_stars / cj->stars.count &&
+	if (scheduler_dosub &&
+	    number_interactions < space_subsize_pair_stars &&
             !sort_is_corner(sid)) {
 
           /* Make this task a sub task. */
@@ -1326,7 +1341,7 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
 
         /* Otherwise, break it up if it is too large? */
       } else if (scheduler_doforcesplit && ci->split && cj->split &&
-                 (ci->stars.count > space_maxsize / cj->stars.count)) {
+                 (number_interactions > space_maxsize)) {
 
         /* Replace the current task. */
         t->type = task_type_none;
@@ -2158,8 +2173,9 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-	  if (t->subtype == task_subtype_xv)
-	    printf("recv,%lli\n", t->flags);
+#define show 0
+	  if (show && t->subtype == task_subtype_xv)
+	    printf("%i,recv,%lli\n", engine_rank, t->flags);
           err = MPI_Irecv(t->ci->hydro.parts, t->ci->hydro.count, part_mpi_type,
                           t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
                           &t->req);
@@ -2211,8 +2227,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-	  if (t->subtype == task_subtype_xv)
-	    printf("send,%lli\n", t->flags);
+	  if (show && t->subtype == task_subtype_xv)
+	    printf("%i,send,%lli\n", engine_rank, t->flags);
           if ((t->ci->hydro.count * sizeof(struct part)) > s->mpi_message_limit)
             err = MPI_Isend(t->ci->hydro.parts, t->ci->hydro.count,
                             part_mpi_type, t->cj->nodeID, t->flags,

@@ -2770,9 +2770,10 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
       /* Check whether there was too much particle motion, i.e. the
          cell neighbour conditions were violated. */
-      if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_hydro_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
+      error("");
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
@@ -3083,38 +3084,42 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Set the correct sorting flags and activate hydro drifts */
       else if (t->type == task_type_pair) {
         /* Do ci */
-        /* stars for ci */
-        atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
-        ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+	if (ci_active && cj->hydro.count != 0 && ci->stars.count != 0) {
+	  /* stars for ci */
+	  atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+	  ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
-        /* hydro for cj */
-        atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
-        cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+	  /* hydro for cj */
+	  atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+	  cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
-        /* Activate the drift tasks. */
-        if (ci->nodeID == nodeID) cell_activate_drift_spart(ci, s);
-        if (cj->nodeID == nodeID) cell_activate_drift_part(cj, s);
+	  /* Activate the drift tasks. */
+	  if (ci->nodeID == nodeID) cell_activate_drift_spart(ci, s);
+	  if (cj->nodeID == nodeID) cell_activate_drift_part(cj, s);
 
-        /* Check the sorts and activate them if needed. */
-        cell_activate_stars_sorts(ci, t->flags, s);
-        cell_activate_hydro_sorts(cj, t->flags, s);
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_stars_sorts(ci, t->flags, s);
+	  cell_activate_hydro_sorts(cj, t->flags, s);
+	}
 
         /* Do cj */
-        /* hydro for ci */
-        atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
-        ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+	if (cj_active && ci->hydro.count != 0 && cj->stars.count != 0) {
+	  /* hydro for ci */
+	  atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+	  ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
-        /* stars for cj */
-        atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
-        cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+	  /* stars for cj */
+	  atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+	  cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
-        /* Activate the drift tasks. */
-        if (cj->nodeID == nodeID) cell_activate_drift_spart(cj, s);
-        if (ci->nodeID == nodeID) cell_activate_drift_part(ci, s);
+	  /* Activate the drift tasks. */
+	  if (cj->nodeID == nodeID) cell_activate_drift_spart(cj, s);
+	  if (ci->nodeID == nodeID) cell_activate_drift_part(ci, s);
 
-        /* Check the sorts and activate them if needed. */
-        cell_activate_hydro_sorts(ci, t->flags, s);
-        cell_activate_stars_sorts(cj, t->flags, s);
+	  /* Check the sorts and activate them if needed. */
+	  cell_activate_hydro_sorts(ci, t->flags, s);
+	  cell_activate_stars_sorts(cj, t->flags, s);
+	}
 
       }
       /* Store current values of dx_max and h_max. */
@@ -3128,7 +3133,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 
       /* Check whether there was too much particle motion, i.e. the
          cell neighbour conditions were violated. */
-      if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_stars_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_hydro_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
       error("");
@@ -3143,8 +3149,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* } */
         }
 
-        /* If the foreign cell is active, we want its ti_end values. */
-        if (ci_active) scheduler_activate(s, ci->mpi.recv_ti);
+        /* /\* If the foreign cell is active, we want its ti_end values. *\/ */
+        /* if (ci_active) scheduler_activate(s, ci->mpi.recv_ti); */
 
         /* Is the foreign cell active and will need stuff from us? */
         if (ci_active) {
@@ -3162,8 +3168,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* } */
         }
 
-        /* If the local cell is active, send its ti_end values. */
-        if (cj_active) scheduler_activate_send(s, cj->mpi.send_ti, ci_nodeID);
+        /* /\* If the local cell is active, send its ti_end values. *\/ */
+        /* if (cj_active) scheduler_activate_send(s, cj->mpi.send_ti, ci_nodeID); */
 
       } else if (cj_nodeID != nodeID) {
 
@@ -3175,8 +3181,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* } */
         }
 
-        /* If the foreign cell is active, we want its ti_end values. */
-        if (cj_active) scheduler_activate(s, cj->mpi.recv_ti);
+        /* /\* If the foreign cell is active, we want its ti_end values. *\/ */
+        /* if (cj_active) scheduler_activate(s, cj->mpi.recv_ti); */
 
         /* Is the foreign cell active and will need stuff from us? */
         if (cj_active) {
@@ -3195,8 +3201,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* } */
         }
 
-        /* If the local cell is active, send its ti_end values. */
-        if (ci_active) scheduler_activate_send(s, ci->mpi.send_ti, cj_nodeID);
+        /* /\* If the local cell is active, send its ti_end values. *\/ */
+        /* if (ci_active) scheduler_activate_send(s, ci->mpi.send_ti, cj_nodeID); */
       }
 #endif
     }

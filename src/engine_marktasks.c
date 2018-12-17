@@ -53,6 +53,8 @@
 #include "proxy.h"
 #include "timers.h"
 
+#define show 0 // (cj->mpi.tag == 40 || ci->mpi.tag == 40) && ci->nodeID != cj->nodeID
+
 #ifdef WITH_MPI
 /**
  * @brief Activate the MPI for the stars
@@ -64,15 +66,25 @@ void engine_activate_stars_mpi(
   const int nodeID = e->nodeID;
   const int ci_nodeID = ci->nodeID;
   const int cj_nodeID = cj->nodeID;
-  const int ci_active_stars = cell_is_active_stars(ci, e);
-  const int cj_active_stars = cell_is_active_stars(cj, e);
+  const int ci_active_stars = cell_is_active_stars(ci, e) &&
+    ci->stars.count != 0 && cj->hydro.count != 0;
+  const int cj_active_stars = cell_is_active_stars(cj, e) &&
+    cj->stars.count != 0 && ci->hydro.count != 0;
 
+  if (show)
+    message("ci: %i (%i); cj: %i (%i); %i - %i",
+	    ci_active_stars, ci_nodeID,
+	    cj_active_stars, cj_nodeID,
+	    cell_is_active_hydro(ci, e), cell_is_active_hydro(cj, e));
+  
   /* Activate the send/recv tasks. */
   if (ci_nodeID != nodeID) {
     
     /* If the local cell is active, receive data from the foreign cell. */
     if (cj_active_stars) {
       scheduler_activate(s, ci->mpi.hydro.recv_xv);
+      if (show)
+	message("activating ci recv");
       /* if (ci_active_hydro) { */
       /* 	scheduler_activate(s, ci->mpi.hydro.recv_rho); */
       /* } */
@@ -83,6 +95,8 @@ void engine_activate_stars_mpi(
 
     /* Is the foreign cell active and will need stuff from us? */
     if (ci_active_stars) {
+      if (show)
+	message("activating cj send");
 
       struct link *l =
 	scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
@@ -107,6 +121,8 @@ void engine_activate_stars_mpi(
 
     /* If the local cell is active, receive data from the foreign cell. */
     if (ci_active_stars) {
+      if (show)
+	message("activating cj recv");
       scheduler_activate(s, cj->mpi.hydro.recv_xv);
       /* if (cj_active_hydro) { */
       /* 	scheduler_activate(s, cj->mpi.hydro.recv_rho); */
@@ -119,6 +135,8 @@ void engine_activate_stars_mpi(
     /* Is the foreign cell active and will need stuff from us? */
     if (cj_active_stars) {
 
+      if (show)
+	message("activating ci send");
       struct link *l =
 	scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
 
@@ -394,7 +412,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       if (t_subtype == task_subtype_density) {
 
         /* Too much particle movement? */
-        if (cell_need_rebuild_for_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
         /* Activate the send/recv tasks. */
@@ -402,6 +420,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           /* If the local cell is active, receive data from the foreign cell. */
           if (cj_active_hydro) {
+	    if (show)
+	      message("activating ci recv");
             scheduler_activate(s, ci->mpi.hydro.recv_xv);
             if (ci_active_hydro) {
               scheduler_activate(s, ci->mpi.hydro.recv_rho);
@@ -416,6 +436,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           /* Is the foreign cell active and will need stuff from us? */
           if (ci_active_hydro) {
+	    if (show)
+	      message("activating cj send");
 
             struct link *l =
                 scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
@@ -444,6 +466,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           /* If the local cell is active, receive data from the foreign cell. */
           if (ci_active_hydro) {
+	    if (show)
+	      message("activating cj recv");
+
             scheduler_activate(s, cj->mpi.hydro.recv_xv);
             if (cj_active_hydro) {
               scheduler_activate(s, cj->mpi.hydro.recv_rho);
@@ -458,6 +483,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           /* Is the foreign cell active and will need stuff from us? */
           if (cj_active_hydro) {
+	    if (show)
+	      message("activating ci send");
 
             struct link *l =
                 scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
@@ -490,7 +517,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       if (t->subtype == task_subtype_stars_density) {
 
         /* Too much particle movement? */
-        if (cell_need_rebuild_for_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
 	engine_activate_stars_mpi(e, s, ci, cj);

@@ -902,8 +902,9 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
   if (flags == 0 && !c->stars.do_sub_sort) return;
 
   /* Check that the particles have been moved to the current time */
-  if (flags && !cell_are_spart_drifted(c, r->e))
+  if (flags && !cell_are_spart_drifted(c, r->e)) {
     error("Sorting un-drifted cell c->nodeID=%d", c->nodeID);
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Make sure the sort flags are consistent (downward). */

@@ -230,34 +230,55 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
   /* If so, attach send tasks. */
   if (l != NULL) {
 
-    /* Create the tasks and their dependencies? */
     if (t_xv == NULL) {
-
       /* Make sure this cell is tagged. */
       cell_ensure_tagged(ci);
 
-      t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv, ci->mpi.tag,
-                               0, ci, cj);
-      /* t_rho = scheduler_addtask(s, task_type_send, task_subtype_rho, */
-      /*                           ci->mpi.tag, 0, ci, cj); */
+      /* Get the task if created in hydro part */
+      struct link *hydro = NULL;
+      for(hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
+	if (hydro->t->ci->nodeID == nodeID ||
+	    (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
+	  break;
+	}
+      }
 
-      /* /\* The send_rho task should unlock the super_hydro-cell's kick task. *\/ */
-      /* scheduler_addunlock(s, t_rho, ci->super->end_force); */
+      /* Already exists, just need to get it */
+      if (hydro != NULL) {
+	t_xv = hydro->t;
 
-      /* /\* The send_rho task depends on the cell's ghost task. *\/ */
-      /* scheduler_addunlock(s, ci->hydro.super->hydro.ghost_out, t_rho); */
+	/* This task does not exists, need to create it */
+      } else {
+	/* Create the tasks and their dependencies? */
+	t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv, ci->mpi.tag,
+				 0, ci, cj);
+
+	/* Drift before you send */
+	scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);      
+
+      }
 
       /* The send_xv task should unlock the super_stars-cell's ghost task. */
       scheduler_addunlock(s, t_xv, ci->super->stars.ghost_in);
 
-      /* Drift before you send */
-      scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
+    // ALEXEI: Need to do the same than before
+    /* t_rho = scheduler_addtask(s, task_type_send, task_subtype_rho, */
+    /*                           ci->mpi.tag, 0, ci, cj); */
+
+    /* /\* The send_rho task should unlock the super_hydro-cell's kick task. *\/ */
+    /* scheduler_addunlock(s, t_rho, ci->super->end_force); */
+
+    /* /\* The send_rho task depends on the cell's ghost task. *\/ */
+    /* scheduler_addunlock(s, ci->hydro.super->hydro.ghost_out, t_rho); */
+
     }
 
     /* Add them to the local cell. */
     engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
     /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
+
   }
+
 
   /* Recurse? */
   if (ci->split)
@@ -416,14 +437,13 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
   /* Have we reached a level where there are any stars tasks ? */
   if (t_xv == NULL && c->stars.density != NULL) {
 
-#ifdef SWIFT_DEBUG_CHECKS
     /* Make sure this cell has a valid tag. */
-    if (c->mpi.tag < 0) error("Trying to receive from untagged cell.");
-#endif  // SWIFT_DEBUG_CHECKS
+    cell_ensure_tagged(c);
 
     /* Create the tasks. */
-    t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag, 0,
-                             c, NULL);
+    if (c->mpi.hydro.recv_xv == NULL)
+      t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag, 0,
+			       c, NULL);
     /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho, c->mpi.tag, */
     /*                           0, c, NULL); */
   }
@@ -433,15 +453,16 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     /* c->mpi.hydro.recv_rho = t_rho; */
 
     /* Add dependencies. */
-    if (c->hydro.sorts != NULL) scheduler_addunlock(s, t_xv, c->hydro.sorts);
-
-    for (struct link *l = c->stars.density; l != NULL; l = l->next) {
-      scheduler_addunlock(s, t_xv, l->t);
-      /* scheduler_addunlock(s, l->t, t_rho); */
-    }
-    /* for (struct link *l = c->hydro.force; l != NULL; l = l->next) */
-    /*   scheduler_addunlock(s, t_rho, l->t); */
+    if (c->hydro.sorts != NULL) scheduler_addunlock(s, c->mpi.hydro.recv_xv,
+						    c->hydro.sorts);
   }
+
+  for (struct link *l = c->stars.density; l != NULL; l = l->next) {
+    scheduler_addunlock(s, c->mpi.hydro.recv_xv, l->t);
+    /* scheduler_addunlock(s, l->t, t_rho); */
+  }
+  /* for (struct link *l = c->hydro.force; l != NULL; l = l->next) */
+  /*   scheduler_addunlock(s, t_rho, l->t); */
   /* Recurse? */
   if (c->split)
     for (int k = 0; k < 8; k++)
