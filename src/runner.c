@@ -99,7 +99,9 @@
 
 /* Import the stars density loop functions. */
 #define FUNCTION density
+#define ONLY_LOCAL 1
 #include "runner_doiact_stars.h"
+#undef ONLY_LOCAL
 #undef FUNCTION
 
 /* Import the stars feedback loop functions. */
@@ -885,6 +887,9 @@ void runner_do_hydro_sort(struct runner *r, struct cell *c, int flags,
 void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
                           int cleanup, int clock) {
 
+  // TODO
+  if (c->nodeID != engine_rank)
+    return;
   struct entry *fingers[8];
   const int count = c->stars.count;
   struct spart *sparts = c->stars.parts;

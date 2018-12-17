@@ -68,6 +68,9 @@ void scheduler_clear_active(struct scheduler *s) { s->active_count = 0; }
 void scheduler_addunlock(struct scheduler *s, struct task *ta,
                          struct task *tb) {
 #ifdef SWIFT_DEBUG_CHECKS
+  if (tb != NULL && ta == NULL) {
+    message("%i->%i", tb->type, tb->subtype);
+  }
   if (ta == NULL) error("Unlocking task is NULL.");
   if (tb == NULL) error("Unlocked task is NULL.");
 #endif
@@ -984,7 +987,7 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
 	(cj->stars.count * ci->hydro.count);
       
       const int number_interactions =
-	(ci_interaction + cj_interaction) * sid_scale[sid];
+	(ci_interaction + cj_interaction);
 	
       /* Should this task be split-up? */
       if (cell_can_split_pair_stars_task(ci) &&
@@ -992,7 +995,8 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
 
         /* Replace by a single sub-task? */
 	if (scheduler_dosub &&
-	    number_interactions < space_subsize_pair_stars &&
+	    number_interactions * sid_scale[sid] <
+	    space_subsize_pair_stars &&
             !sort_is_corner(sid)) {
 
           /* Make this task a sub task. */

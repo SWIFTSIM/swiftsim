@@ -2773,7 +2773,6 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_hydro_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
-      error("");
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
@@ -3137,7 +3136,6 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_hydro_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
-      error("");
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 

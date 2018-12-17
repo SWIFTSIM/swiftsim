@@ -74,6 +74,12 @@
  * @param timer 1 if the time is to be recorded.
  */
 void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->nodeID != engine_rank)
+    error("Should be run on a different node");
+#endif
+
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
@@ -137,6 +143,11 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
  */
 void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
                            struct cell *restrict cj) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != engine_rank)
+    error("Should be run on a different node");
+#endif
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
@@ -202,9 +213,16 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
 void DOPAIR1_STARS(struct runner *r, struct cell *restrict ci,
                    struct cell *restrict cj, int timer) {
 
-  if (ci->stars.count != 0 && cj->hydro.count != 0)
+#ifdef ONLY_LOCAL
+  const int ci_local = ci->nodeID == engine_rank;
+  const int cj_local = cj->nodeID == engine_rank;
+#else
+  const int ci_local = 1;
+  const int cj_local = 1;
+#endif
+  if (ci_local && ci->stars.count != 0 && cj->hydro.count != 0)
     DO_NONSYM_PAIR1_STARS(r, ci, cj);
-  if (cj->stars.count != 0 && ci->hydro.count != 0)
+  if (cj_local && cj->stars.count != 0 && ci->hydro.count != 0)
     DO_NONSYM_PAIR1_STARS(r, cj, ci);
 }
 
@@ -227,6 +245,10 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                           int scount, struct cell *restrict cj,
                           const double *shift) {
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != engine_rank)
+    error("Should be run on a different node");
+#endif
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
@@ -292,6 +314,11 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
 void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                           struct spart *restrict sparts, int *restrict ind,
                           int scount) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != engine_rank)
+    error("Should be run on a different node");
+#endif
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;

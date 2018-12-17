@@ -258,23 +258,13 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
       }
 
-      /* The send_xv task should unlock the super_stars-cell's ghost task. */
-      scheduler_addunlock(s, t_xv, ci->super->stars.ghost_in);
-
-    // ALEXEI: Need to do the same than before
-    /* t_rho = scheduler_addtask(s, task_type_send, task_subtype_rho, */
-    /*                           ci->mpi.tag, 0, ci, cj); */
-
-    /* /\* The send_rho task should unlock the super_hydro-cell's kick task. *\/ */
-    /* scheduler_addunlock(s, t_rho, ci->super->end_force); */
-
-    /* /\* The send_rho task depends on the cell's ghost task. *\/ */
-    /* scheduler_addunlock(s, ci->hydro.super->hydro.ghost_out, t_rho); */
+    // TODO Alexei: addunlock
 
     }
 
     /* Add them to the local cell. */
     engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
+    // TODO Alexei: addlink
     /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
 
   }
@@ -1737,7 +1727,7 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
     if (t->type == task_type_self && t->subtype == task_subtype_stars_density) {
 
       /* Make the self-density tasks depend on the drifts. */
-      scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
+      scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
 
       scheduler_addunlock(sched, t->ci->super->grav.drift, t);
 
@@ -1753,21 +1743,21 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
              t->subtype == task_subtype_stars_density) {
 
       /* Make all density tasks depend on the drift and the sorts. */
-      if (t->cj->nodeID == engine_rank)
-        scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
-      scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+      if (t->ci->nodeID == engine_rank)
+        scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
+      scheduler_addunlock(sched, t->ci->hydro.super->hydro.sorts, t);
 
-      if (t->cj->nodeID == engine_rank)
-        scheduler_addunlock(sched, t->cj->super->grav.drift, t);
+      if (t->ci->nodeID == engine_rank)
+        scheduler_addunlock(sched, t->ci->super->grav.drift, t);
       scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
 
       if (t->ci->super != t->cj->super) {
-        if (t->ci->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
-        scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
+        scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
 
-        if (t->ci->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->ci->super->grav.drift, t);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t->cj->super->grav.drift, t);
         scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
       }
 
@@ -1788,8 +1778,8 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
              t->subtype == task_subtype_stars_density) {
 
       /* Make all density tasks depend on the drift and sorts. */
-      scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
-      scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+      scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
+      scheduler_addunlock(sched, t->ci->hydro.super->hydro.sorts, t);
       scheduler_addunlock(sched, t->ci->super->grav.drift, t);
       scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
 
@@ -1807,8 +1797,8 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
 
       /* Make all density tasks depend on the drift. */
       if (t->cj->nodeID == engine_rank)
-        scheduler_addunlock(sched, t->cj->super->hydro.drift, t);
-      scheduler_addunlock(sched, t->cj->super->hydro.sorts, t);
+        scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
+      scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
 
       if (t->cj->nodeID == engine_rank)
         scheduler_addunlock(sched, t->cj->super->grav.drift, t);
@@ -1816,8 +1806,8 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
 
       if (t->ci->super != t->cj->super) {
         if (t->ci->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->ci->super->hydro.drift, t);
-        scheduler_addunlock(sched, t->ci->super->hydro.sorts, t);
+          scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
+        scheduler_addunlock(sched, t->ci->hydro.super->hydro.sorts, t);
 
         if (t->ci->nodeID == engine_rank)
           scheduler_addunlock(sched, t->ci->super->grav.drift, t);
