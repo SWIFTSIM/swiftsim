@@ -108,6 +108,7 @@ const char *engine_policy_names[] = {"none",
                                      "cosmological integration",
                                      "drift everything",
                                      "reconstruct multi-poles",
+                                     "temperature",
                                      "cooling",
                                      "stars",
                                      "structure finding",
@@ -1889,6 +1890,10 @@ int engine_estimate_nr_tasks(struct engine *e) {
   int n1 = 0;
   int n2 = 0;
   if (e->policy & engine_policy_hydro) {
+    /* 2 self (density, force), 1 sort, 26/2 density pairs
+       26/2 force pairs, 1 drift, 3 ghosts, 2 kicks, 1 time-step,
+       1 end_force, 2 extra space
+     */
     n1 += 37;
     n2 += 2;
 #ifdef WITH_MPI
@@ -1916,16 +1921,25 @@ int engine_estimate_nr_tasks(struct engine *e) {
     n1 += 2;
   }
   if (e->policy & engine_policy_cooling) {
+    /* Cooling task + extra space */
     n1 += 2;
   }
   if (e->policy & engine_policy_star_formation) {
     n1 += 1;
   }
   if (e->policy & engine_policy_stars) {
-    /* 1 self, 1 sort, 26/2 pairs */
-    n1 += 15;
+    /* 2 self (density, feedback), 1 sort, 26/2 density pairs
+       26/2 feedback pairs, 1 drift, 3 ghosts, 2 kicks, 1 time-step,
+       1 end_force, 2 extra space
+     */
+    n1 += 37;
+    n2 += 2;
+#ifdef WITH_MPI
+    n1 += 6;
+#endif
   }
 #if defined(WITH_LOGGER)
+  /* each cell logs its particles */
   n1 += 1;
 #endif
 
@@ -2703,6 +2717,11 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_gparts(s, e->verbose);
   space_init_sparts(s, e->verbose);
 
+  /* Update the cooling function */
+  if ((e->policy & engine_policy_cooling) ||
+      (e->policy & engine_policy_temperature))
+    cooling_update(e->cosmology, e->cooling_func, /*restart_flag=*/0);
+
 #ifdef WITH_LOGGER
   /* Mark the first time step in the particle logger file. */
   logger_log_timestamp(e->logger, e->ti_current, e->time,
@@ -2954,6 +2973,11 @@ void engine_step(struct engine *e) {
     e->time_old = e->ti_old * e->time_base + e->time_begin;
     e->time_step = (e->ti_current - e->ti_old) * e->time_base;
   }
+
+  /* Update the cooling function */
+  if ((e->policy & engine_policy_cooling) ||
+      (e->policy & engine_policy_temperature))
+    cooling_update(e->cosmology, e->cooling_func, /*restart_flag=*/0);
 
   /*****************************************************/
   /* OK, we now know what the next end of time-step is */
@@ -4029,7 +4053,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  struct pm_mesh *mesh,
                  const struct external_potential *potential,
-                 const struct cooling_function_data *cooling_func,
+                 struct cooling_function_data *cooling_func,
                  const struct chemistry_global_data *chemistry) {
 
   /* Clean-up everything */
@@ -4762,6 +4786,7 @@ void engine_print_policy(struct engine *e) {
  * @param e The #engine.
  */
 void engine_compute_next_snapshot_time(struct engine *e) {
+
   /* Do outputlist file case */
   if (e->output_list_snapshots) {
     output_list_read_next_time(e->output_list_snapshots, e, "snapshots",
@@ -4782,6 +4807,8 @@ void engine_compute_next_snapshot_time(struct engine *e) {
     time = e->a_first_snapshot;
   else
     time = e->time_first_snapshot;
+
+  int found_snapshot_time = 0;
   while (time < time_end) {
 
     /* Output time on the integer timeline */
@@ -4791,7 +4818,10 @@ void engine_compute_next_snapshot_time(struct engine *e) {
       e->ti_next_snapshot = (time - e->time_begin) / e->time_base;
 
     /* Found it? */
-    if (e->ti_next_snapshot > e->ti_current) break;
+    if (e->ti_next_snapshot > e->ti_current) {
+      found_snapshot_time = 1;
+      break;
+    }
 
     if (e->policy & engine_policy_cosmology)
       time *= e->delta_time_snapshot;
@@ -4800,7 +4830,7 @@ void engine_compute_next_snapshot_time(struct engine *e) {
   }
 
   /* Deal with last snapshot */
-  if (e->ti_next_snapshot >= max_nr_timesteps) {
+  if (!found_snapshot_time) {
     e->ti_next_snapshot = -1;
     if (e->verbose) message("No further output time.");
   } else {
@@ -4846,6 +4876,8 @@ void engine_compute_next_statistics_time(struct engine *e) {
     time = e->a_first_statistics;
   else
     time = e->time_first_statistics;
+
+  int found_stats_time = 0;
   while (time < time_end) {
 
     /* Output time on the integer timeline */
@@ -4855,7 +4887,10 @@ void engine_compute_next_statistics_time(struct engine *e) {
       e->ti_next_stats = (time - e->time_begin) / e->time_base;
 
     /* Found it? */
-    if (e->ti_next_stats > e->ti_current) break;
+    if (e->ti_next_stats > e->ti_current) {
+      found_stats_time = 1;
+      break;
+    }
 
     if (e->policy & engine_policy_cosmology)
       time *= e->delta_time_statistics;
@@ -4864,7 +4899,7 @@ void engine_compute_next_statistics_time(struct engine *e) {
   }
 
   /* Deal with last statistics */
-  if (e->ti_next_stats >= max_nr_timesteps) {
+  if (!found_stats_time) {
     e->ti_next_stats = -1;
     if (e->verbose) message("No further output time.");
   } else {
@@ -4911,6 +4946,8 @@ void engine_compute_next_stf_time(struct engine *e) {
     time = e->a_first_stf_output;
   else
     time = e->time_first_stf_output;
+
+  int found_stf_time = 0;
   while (time < time_end) {
 
     /* Output time on the integer timeline */
@@ -4920,7 +4957,10 @@ void engine_compute_next_stf_time(struct engine *e) {
       e->ti_next_stf = (time - e->time_begin) / e->time_base;
 
     /* Found it? */
-    if (e->ti_next_stf > e->ti_current) break;
+    if (e->ti_next_stf > e->ti_current) {
+      found_stf_time = 1;
+      break;
+    }
 
     if (e->policy & engine_policy_cosmology)
       time *= e->delta_time_stf;
@@ -4929,7 +4969,7 @@ void engine_compute_next_stf_time(struct engine *e) {
   }
 
   /* Deal with last snapshot */
-  if (e->ti_next_stf >= max_nr_timesteps) {
+  if (!found_stf_time) {
     e->ti_next_stf = -1;
     if (e->verbose) message("No further output time.");
   } else {
@@ -5275,7 +5315,7 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   struct cooling_function_data *cooling_func =
       (struct cooling_function_data *)malloc(
           sizeof(struct cooling_function_data));
-  cooling_struct_restore(cooling_func, stream);
+  cooling_struct_restore(cooling_func, stream, e->cosmology);
   e->cooling_func = cooling_func;
 
   struct chemistry_global_data *chemistry =

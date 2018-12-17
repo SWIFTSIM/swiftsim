@@ -64,6 +64,7 @@
 #include "stars.h"
 #include "timers.h"
 #include "tools.h"
+#include "tracers.h"
 
 /* Global variables. */
 int cell_next_tag = 0;
@@ -2771,7 +2772,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
       /* Check whether there was too much particle motion, i.e. the
          cell neighbour conditions were violated. */
-      if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_hydro_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
       /* Activate the send/recv tasks. */
@@ -3125,7 +3126,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 
       /* Check whether there was too much particle motion, i.e. the
          cell neighbour conditions were violated. */
-      if (cell_need_rebuild_for_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_stars_pair(ci, cj)) rebuild = 1;
 
 #ifdef WITH_MPI
       error("MPI with stars not implemented");
@@ -3211,6 +3212,10 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
 
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID && cell_is_active_stars(c, e)) {
+
+    /* Un-skip the feedback tasks involved with this cell. */
+    for (struct link *l = c->stars.feedback; l != NULL; l = l->next)
+      scheduler_activate(s, l->t);
 
     if (c->stars.ghost_in != NULL) scheduler_activate(s, c->stars.ghost_in);
     if (c->stars.ghost_out != NULL) scheduler_activate(s, c->stars.ghost_out);
@@ -3353,6 +3358,7 @@ int cell_has_tasks(struct cell *c) {
  */
 void cell_drift_part(struct cell *c, const struct engine *e, int force) {
 
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const float hydro_h_max = e->hydro_properties->h_max;
   const integertime_t ti_old_part = c->hydro.ti_old_part;
   const integertime_t ti_current = e->ti_current;
@@ -3419,7 +3425,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
 
     /* Drift from the last time the cell was drifted to the current time */
     double dt_drift, dt_kick_grav, dt_kick_hydro, dt_therm;
-    if (e->policy & engine_policy_cosmology) {
+    if (with_cosmology) {
       dt_drift =
           cosmology_get_drift_factor(e->cosmology, ti_old_part, ti_current);
       dt_kick_grav =
@@ -3449,6 +3455,11 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       /* Drift... */
       drift_part(p, xp, dt_drift, dt_kick_hydro, dt_kick_grav, dt_therm,
                  ti_old_part, ti_current);
+
+      /* Update the tracers properties */
+      tracers_after_drift(p, xp, e->internal_units, e->physical_constants,
+                          with_cosmology, e->cosmology, e->hydro_properties,
+                          e->cooling_func, e->time);
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure the particle does not drift by more than a box length. */
@@ -3509,6 +3520,9 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       if (part_is_active(p, e)) {
         hydro_init_part(p, &e->s->hs);
         chemistry_init_part(p, e->chemistry);
+        tracers_after_init(p, xp, e->internal_units, e->physical_constants,
+                           with_cosmology, e->cosmology, e->hydro_properties,
+                           e->cooling_func, e->time);
       }
     }
 

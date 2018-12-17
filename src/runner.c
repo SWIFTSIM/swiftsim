@@ -64,6 +64,7 @@
 #include "task.h"
 #include "timers.h"
 #include "timestep.h"
+#include "tracers.h"
 
 #define TASK_LOOP_DENSITY 0
 #define TASK_LOOP_GRADIENT 1
@@ -96,8 +97,15 @@
 /* Import the gravity loop functions. */
 #include "runner_doiact_grav.h"
 
-/* Import the stars loop functions. */
+/* Import the stars density loop functions. */
+#define FUNCTION density
 #include "runner_doiact_stars.h"
+#undef FUNCTION
+
+/* Import the stars feedback loop functions. */
+#define FUNCTION feedback
+#include "runner_doiact_stars.h"
+#undef FUNCTION
 
 /**
  * @brief Intermediate task after the density to check that the smoothing
@@ -1982,6 +1990,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
   const integertime_t ti_current = e->ti_current;
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int count = c->hydro.count;
   const int gcount = c->grav.count;
   const int scount = c->stars.count;
@@ -2036,6 +2045,11 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* Update particle */
         p->time_bin = get_time_bin(ti_new_step);
         if (p->gpart != NULL) p->gpart->time_bin = p->time_bin;
+
+        /* Update the tracers properties */
+        tracers_after_timestep(p, xp, e->internal_units, e->physical_constants,
+                               with_cosmology, e->cosmology,
+                               e->hydro_properties, e->cooling_func, e->time);
 
         /* Number of updated particles */
         updated++;
@@ -2725,6 +2739,8 @@ void *runner_main(void *data) {
             runner_do_grav_external(r, ci, 1);
           else if (t->subtype == task_subtype_stars_density)
             runner_doself_stars_density(r, ci, 1);
+          else if (t->subtype == task_subtype_stars_feedback)
+            runner_doself_stars_feedback(r, ci, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
@@ -2742,6 +2758,8 @@ void *runner_main(void *data) {
             runner_dopair_recursive_grav(r, ci, cj, 1);
           else if (t->subtype == task_subtype_stars_density)
             runner_dopair_stars_density(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_stars_feedback)
+            runner_dopair_stars_feedback(r, ci, cj, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
@@ -2757,6 +2775,8 @@ void *runner_main(void *data) {
             runner_dosub_self2_force(r, ci, 1);
           else if (t->subtype == task_subtype_stars_density)
             runner_dosub_self_stars_density(r, ci, 1);
+          else if (t->subtype == task_subtype_stars_feedback)
+            runner_dosub_self_stars_feedback(r, ci, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
@@ -2772,6 +2792,8 @@ void *runner_main(void *data) {
             runner_dosub_pair2_force(r, ci, cj, t->flags, 1);
           else if (t->subtype == task_subtype_stars_density)
             runner_dosub_pair_stars_density(r, ci, cj, t->flags, 1);
+          else if (t->subtype == task_subtype_stars_feedback)
+            runner_dosub_pair_stars_feedback(r, ci, cj, t->flags, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;
@@ -2942,9 +2964,13 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_part(e->logger, p,
-                          logger_mask_x | logger_mask_v | logger_mask_a |
-                              logger_mask_u | logger_mask_h | logger_mask_rho |
-                              logger_mask_consts,
+                          logger_mask_data[logger_x].mask |
+                              logger_mask_data[logger_v].mask |
+                              logger_mask_data[logger_a].mask |
+                              logger_mask_data[logger_u].mask |
+                              logger_mask_data[logger_h].mask |
+                              logger_mask_data[logger_rho].mask |
+                              logger_mask_data[logger_consts].mask,
                           &xp->logger_data.last_offset);
 
           /* Set counter back to zero */
