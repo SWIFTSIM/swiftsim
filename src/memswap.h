@@ -76,10 +76,10 @@ __attribute__((always_inline)) inline void memswap(void *restrict void_a, void *
 #ifdef __ALTIVEC__
   swap_loop(vector int, a, b, bytes);
 #endif
-  swap_loop(int64_t, a, b, bytes);
-  swap_loop(int32_t, a, b, bytes);
-  swap_loop(int16_t, a, b, bytes);
-  swap_loop(int8_t, a, b, bytes);
+  swap_loop(int_least64_t, a, b, bytes);
+  swap_loop(int_least32_t, a, b, bytes);
+  swap_loop(int_least16_t, a, b, bytes);
+  swap_loop(int_least8_t, a, b, bytes);
 }
 
 /**
@@ -135,10 +135,10 @@ __attribute__((always_inline)) inline void memswap_unaligned(void *restrict void
   // Power8 supports unaligned load/stores, but not sure what it will do here.
   swap_loop(vector int, a, b, bytes);
 #endif
-  swap_loop(int64_t, a, b, bytes);
-  swap_loop(int32_t, a, b, bytes);
-  swap_loop(int16_t, a, b, bytes);
-  swap_loop(int8_t, a, b, bytes);
+  swap_loop(int_least64_t, a, b, bytes);
+  swap_loop(int_least32_t, a, b, bytes);
+  swap_loop(int_least16_t, a, b, bytes);
+  swap_loop(int_least8_t, a, b, bytes);
 }
 
 #endif /* SWIFT_MEMSWAP_H */
