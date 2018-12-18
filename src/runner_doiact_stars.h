@@ -76,8 +76,7 @@
 void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (c->nodeID != engine_rank)
-    error("Should be run on a different node");
+  if (c->nodeID != engine_rank) error("Should be run on a different node");
 #endif
 
   const struct engine *e = r->e;
@@ -145,8 +144,7 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
                            struct cell *restrict cj) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != engine_rank)
-    error("Should be run on a different node");
+  if (ci->nodeID != engine_rank) error("Should be run on a different node");
 #endif
 
   const struct engine *e = r->e;
@@ -246,8 +244,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                           const double *shift) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != engine_rank)
-    error("Should be run on a different node");
+  if (ci->nodeID != engine_rank) error("Should be run on a different node");
 #endif
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
@@ -316,8 +313,7 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                           int scount) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != engine_rank)
-    error("Should be run on a different node");
+  if (ci->nodeID != engine_rank) error("Should be run on a different node");
 #endif
 
   const struct engine *e = r->e;
@@ -1056,16 +1052,16 @@ void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj) {
   const int ci_active = cell_is_active_stars(ci, e);
   const int cj_active = cell_is_active_stars(cj, e);
 #ifdef ONLY_LOCAL
-    const int ci_local = ci->nodeID == engine_rank;
-    const int cj_local = cj->nodeID == engine_rank;
+  const int ci_local = ci->nodeID == engine_rank;
+  const int cj_local = cj->nodeID == engine_rank;
 #else
-    const int ci_local = 1;
-    const int cj_local = 1;
+  const int ci_local = 1;
+  const int cj_local = 1;
 #endif
-  const int do_ci = (ci->stars.count != 0 && cj->hydro.count != 0 && ci_active &&
-		     ci_local);
-  const int do_cj = (cj->stars.count != 0 && ci->hydro.count != 0 && cj_active &&
-		     cj_local);
+  const int do_ci =
+      (ci->stars.count != 0 && cj->hydro.count != 0 && ci_active && ci_local);
+  const int do_cj =
+      (cj->stars.count != 0 && ci->hydro.count != 0 && cj_active && cj_local);
 
   /* Anything to do here? */
   if (!do_ci && !do_cj) return;

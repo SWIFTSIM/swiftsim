@@ -179,6 +179,14 @@ int checkSpacehmax(struct space *s) {
     }
   }
 
+  float cell_stars_h_max = 0.0f;
+  for (int k = 0; k < s->nr_cells; k++) {
+    if (s->cells_top[k].nodeID == s->e->nodeID &&
+        s->cells_top[k].stars.h_max > cell_stars_h_max) {
+      cell_stars_h_max = s->cells_top[k].stars.h_max;
+    }
+  }
+
   /* Now all particles. */
   float part_h_max = 0.0f;
   for (size_t k = 0; k < s->nr_parts; k++) {
@@ -187,10 +195,20 @@ int checkSpacehmax(struct space *s) {
     }
   }
 
+  /* Now all the sparticles. */
+  float spart_h_max = 0.0f;
+  for (size_t k = 0; k < s->nr_sparts; k++) {
+    if (s->sparts[k].h > spart_h_max) {
+      spart_h_max = s->sparts[k].h;
+    }
+  }
+
   /*  If within some epsilon we are OK. */
-  if (fabsf(cell_h_max - part_h_max) <= FLT_EPSILON) return 1;
+  if (fabsf(cell_h_max - part_h_max) <= FLT_EPSILON &&
+      fabsf(cell_stars_h_max - spart_h_max) <= FLT_EPSILON) return 1;
 
   /* There is a problem. Hunt it down. */
+  /* part */
   for (int k = 0; k < s->nr_cells; k++) {
     if (s->cells_top[k].nodeID == s->e->nodeID) {
       if (s->cells_top[k].hydro.h_max > part_h_max) {
@@ -207,6 +225,23 @@ int checkSpacehmax(struct space *s) {
     }
   }
 
+  /* spart */
+  for (int k = 0; k < s->nr_cells; k++) {
+    if (s->cells_top[k].nodeID == s->e->nodeID) {
+      if (s->cells_top[k].stars.h_max > spart_h_max) {
+        message("cell %d is inconsistent (%f > %f)", k,
+                s->cells_top[k].stars.h_max, spart_h_max);
+      }
+    }
+  }
+
+  for (size_t k = 0; k < s->nr_sparts; k++) {
+    if (s->sparts[k].h > cell_stars_h_max) {
+      message("spart %lld is inconsistent (%f > %f)", s->sparts[k].id,
+              s->sparts[k].h, cell_stars_h_max);
+    }
+  }
+  
   return 0;
 }
 

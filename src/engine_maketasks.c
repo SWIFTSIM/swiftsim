@@ -81,7 +81,10 @@ void engine_addtasks_send_gravity(struct engine *e, struct cell *ci,
     if (t_grav == NULL) {
 
       /* Make sure this cell is tagged. */
+      int test = ci->mpi.tag < 0;
       cell_ensure_tagged(ci);
+      if (test)
+	message("tagging %i", ci->mpi.tag);
 
       t_grav = scheduler_addtask(s, task_type_send, task_subtype_gpart,
                                  ci->mpi.tag, 0, ci, cj);
@@ -140,7 +143,10 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
     if (t_xv == NULL) {
 
       /* Make sure this cell is tagged. */
+      int test = ci->mpi.tag < 0;
       cell_ensure_tagged(ci);
+      if (test)
+	message("tagging %i", ci->mpi.tag);
 
       t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv, ci->mpi.tag,
                                0, ci, cj);
@@ -232,43 +238,42 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
     if (t_xv == NULL) {
       /* Make sure this cell is tagged. */
+      int test = ci->mpi.tag < 0;
       cell_ensure_tagged(ci);
+      if (test)
+	message("tagging %i", ci->mpi.tag);
 
       /* Get the task if created in hydro part */
       struct link *hydro = NULL;
-      for(hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
-	if (hydro->t->ci->nodeID == nodeID ||
-	    (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
-	  break;
-	}
+      for (hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
+        if (hydro->t->ci->nodeID == nodeID ||
+            (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
+          break;
+        }
       }
 
       /* Already exists, just need to get it */
       if (hydro != NULL) {
-	t_xv = hydro->t;
+        t_xv = hydro->t;
 
-	/* This task does not exists, need to create it */
+        /* This task does not exists, need to create it */
       } else {
-	/* Create the tasks and their dependencies? */
-	t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv, ci->mpi.tag,
-				 0, ci, cj);
+        /* Create the tasks and their dependencies? */
+        t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv,
+                                 ci->mpi.tag, 0, ci, cj);
 
-	/* Drift before you send */
-	scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);      
-
+        /* Drift before you send */
+        scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
       }
 
-    // TODO Alexei: addunlock
-
+      // TODO Alexei: addunlock
     }
 
     /* Add them to the local cell. */
     engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
     // TODO Alexei: addlink
     /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
-
   }
-
 
   /* Recurse? */
   if (ci->split)
@@ -317,7 +322,10 @@ void engine_addtasks_send_timestep(struct engine *e, struct cell *ci,
     if (t_ti == NULL) {
 
       /* Make sure this cell is tagged. */
+      int test = ci->mpi.tag < 0;
       cell_ensure_tagged(ci);
+      if (test)
+	message("tagging %i", ci->mpi.tag);
 
       t_ti = scheduler_addtask(s, task_type_send, task_subtype_tend,
                                ci->mpi.tag, 0, ci, cj);
@@ -427,14 +435,17 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
   /* Have we reached a level where there are any stars tasks ? */
   if (t_xv == NULL && c->stars.density != NULL) {
 
+#ifdef SWIFT_DEBUG_CHECKS
     /* Make sure this cell has a valid tag. */
-    cell_ensure_tagged(c);
+    if (c->mpi.tag < 0) error("Trying to receive from untagged cell.");
+#endif  // SWIFT_DEBUG_CHECKS
 
     /* Create the tasks. */
     if (c->mpi.hydro.recv_xv == NULL)
-      t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag, 0,
-			       c, NULL);
-    /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho, c->mpi.tag, */
+      t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag,
+                               0, c, NULL);
+    /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho,
+     * c->mpi.tag, */
     /*                           0, c, NULL); */
   }
 
@@ -443,8 +454,8 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     /* c->mpi.hydro.recv_rho = t_rho; */
 
     /* Add dependencies. */
-    if (c->hydro.sorts != NULL) scheduler_addunlock(s, c->mpi.hydro.recv_xv,
-						    c->hydro.sorts);
+    if (c->hydro.sorts != NULL)
+      scheduler_addunlock(s, c->mpi.hydro.recv_xv, c->hydro.sorts);
   }
 
   for (struct link *l = c->stars.density; l != NULL; l = l->next) {
@@ -2050,13 +2061,15 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
 
     /* Add the send tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro_and_stars))
+    if ((e->policy & engine_policy_hydro) &&
+        (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_send_hydro(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL, /*t_gradient=*/NULL);
 
     /* Add the send tasks for the cells in the proxy that have a stars
      * connection. */
-    if ((e->policy & engine_policy_feedback) && (type & proxy_cell_type_hydro_and_stars))
+    if ((e->policy & engine_policy_feedback) &&
+        (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_send_stars(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL);
 
@@ -2082,12 +2095,14 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
 
     /* Add the recv tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro_and_stars))
+    if ((e->policy & engine_policy_hydro) &&
+        (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_recv_hydro(e, ci, NULL, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a stars
      * connection. */
-    if ((e->policy & engine_policy_feedback) && (type & proxy_cell_type_hydro_and_stars))
+    if ((e->policy & engine_policy_feedback) &&
+        (type & proxy_cell_type_hydro_and_stars))
       engine_addtasks_recv_stars(e, ci, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a gravity

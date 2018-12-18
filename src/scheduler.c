@@ -68,9 +68,6 @@ void scheduler_clear_active(struct scheduler *s) { s->active_count = 0; }
 void scheduler_addunlock(struct scheduler *s, struct task *ta,
                          struct task *tb) {
 #ifdef SWIFT_DEBUG_CHECKS
-  if (tb != NULL && ta == NULL) {
-    message("%i->%i", tb->type, tb->subtype);
-  }
   if (ta == NULL) error("Unlocking task is NULL.");
   if (tb == NULL) error("Unlocked task is NULL.");
 #endif
@@ -894,10 +891,12 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
 
     /* Empty task? */
     /* Need defines in order to evaluate after check for t->ci == NULL */
-#define pair_no_part t->type == task_type_pair &&		\
-      (t->ci->stars.count == 0 || t->cj->hydro.count == 0)  &&	\
+#define pair_no_part                                          \
+  t->type == task_type_pair &&                                \
+      (t->ci->stars.count == 0 || t->cj->hydro.count == 0) && \
       (t->cj->stars.count == 0 || t->ci->hydro.count == 0)
-#define self_no_part t->type == task_type_self &&		\
+#define self_no_part           \
+  t->type == task_type_self && \
       (t->ci->stars.count == 0 || t->ci->hydro.count == 0)
 
     if ((t->ci == NULL) || (t->type == task_type_pair && t->cj == NULL) ||
@@ -981,22 +980,18 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
       const int sid = space_getsid(s->space, &ci, &cj, shift);
 
       /* Compute number of interactions */
-      const int ci_interaction  =
-	(ci->stars.count * cj->hydro.count);
-      const int cj_interaction =
-	(cj->stars.count * ci->hydro.count);
-      
-      const int number_interactions =
-	(ci_interaction + cj_interaction);
-	
+      const int ci_interaction = (ci->stars.count * cj->hydro.count);
+      const int cj_interaction = (cj->stars.count * ci->hydro.count);
+
+      const int number_interactions = (ci_interaction + cj_interaction);
+
       /* Should this task be split-up? */
       if (cell_can_split_pair_stars_task(ci) &&
           cell_can_split_pair_stars_task(cj)) {
 
         /* Replace by a single sub-task? */
-	if (scheduler_dosub &&
-	    number_interactions * sid_scale[sid] <
-	    space_subsize_pair_stars &&
+        if (scheduler_dosub &&
+            number_interactions * sid_scale[sid] < space_subsize_pair_stars &&
             !sort_is_corner(sid)) {
 
           /* Make this task a sub task. */
@@ -2177,9 +2172,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-#define show 0
-	  if (show && t->subtype == task_subtype_xv)
-	    printf("%i,recv,%lli\n", engine_rank, t->flags);
+	  if (t->subtype == task_subtype_xv && t->flags == 65)
+	    message("Receving %i", t->ci->hydro.count);
           err = MPI_Irecv(t->ci->hydro.parts, t->ci->hydro.count, part_mpi_type,
                           t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
                           &t->req);
@@ -2204,6 +2198,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           error("Unknown communication sub-type");
         }
         if (err != MPI_SUCCESS) {
+	  message("%i", t->subtype);
           mpi_error(err, "Failed to emit irecv for particle data.");
         }
         qid = 1 % s->nr_queues;
@@ -2231,8 +2226,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-	  if (show && t->subtype == task_subtype_xv)
-	    printf("%i,send,%lli\n", engine_rank, t->flags);
+	  if (t->subtype == task_subtype_xv && t->flags == 65)
+	    message("Sending %i", t->ci->hydro.count);
           if ((t->ci->hydro.count * sizeof(struct part)) > s->mpi_message_limit)
             err = MPI_Isend(t->ci->hydro.parts, t->ci->hydro.count,
                             part_mpi_type, t->cj->nodeID, t->flags,

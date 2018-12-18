@@ -888,8 +888,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
                           int cleanup, int clock) {
 
   // TODO
-  if (c->nodeID != engine_rank)
-    return;
+  if (c->nodeID != engine_rank) return;
   struct entry *fingers[8];
   const int count = c->stars.count;
   struct spart *sparts = c->stars.parts;
@@ -2626,7 +2625,7 @@ void runner_do_recv_gpart(struct runner *r, struct cell *c, int timer) {
  * @param timer Are we timing this ?
  */
 void runner_do_recv_spart(struct runner *r, struct cell *c, int clear_sorts,
-			  int timer) {
+                          int timer) {
 
 #ifdef WITH_MPI
 

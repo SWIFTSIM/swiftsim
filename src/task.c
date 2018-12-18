@@ -300,14 +300,12 @@ float task_overlap(const struct task *restrict ta,
     if (tb->cj != NULL) size_union += tb->cj->stars.count;
 
     /* Compute the intersection of the cell data. */
-    /* const size_t size_intersect = task_cell_overlap_spart(ta->ci, tb->ci) + */
-    /*                               task_cell_overlap_spart(ta->ci, tb->cj) + */
-    /*                               task_cell_overlap_spart(ta->cj, tb->ci) + */
-    /*                               task_cell_overlap_spart(ta->cj, tb->cj); */
+    const size_t size_intersect = task_cell_overlap_spart(ta->ci, tb->ci) +
+                                  task_cell_overlap_spart(ta->ci, tb->cj) +
+                                  task_cell_overlap_spart(ta->cj, tb->ci) +
+                                  task_cell_overlap_spart(ta->cj, tb->cj);
 
-    // TODO
-    return 0.f;
-    // return ((float)size_intersect) / (size_union - size_intersect);
+    return ((float)size_intersect) / (size_union - size_intersect);
   }
 
   /* Else, no overlap */

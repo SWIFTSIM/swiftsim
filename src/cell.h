@@ -940,14 +940,14 @@ cell_can_split_self_gravity_task(const struct cell *c) {
  * @param ci The first #cell.
  * @param cj The second #cell.
  */
-__attribute__((always_inline)) INLINE static int cell_need_rebuild_for_hydro_pair(
-    const struct cell *ci, const struct cell *cj) {
+__attribute__((always_inline)) INLINE static int
+cell_need_rebuild_for_hydro_pair(const struct cell *ci, const struct cell *cj) {
 
   /* Is the cut-off radius plus the max distance the parts in both cells have */
   /* moved larger than the cell size ? */
   /* Note ci->dmin == cj->dmin */
   return (kernel_gamma * max(ci->hydro.h_max, cj->hydro.h_max) +
-	  ci->hydro.dx_max_part + cj->hydro.dx_max_part >
+              ci->hydro.dx_max_part + cj->hydro.dx_max_part >
           cj->dmin);
 }
 /**
@@ -957,14 +957,14 @@ __attribute__((always_inline)) INLINE static int cell_need_rebuild_for_hydro_pai
  * @param ci The first #cell.
  * @param cj The second #cell.
  */
-__attribute__((always_inline)) INLINE static int cell_need_rebuild_for_stars_pair(
-    const struct cell *ci, const struct cell *cj) {
+__attribute__((always_inline)) INLINE static int
+cell_need_rebuild_for_stars_pair(const struct cell *ci, const struct cell *cj) {
 
   /* Is the cut-off radius plus the max distance the parts in both cells have */
   /* moved larger than the cell size ? */
   /* Note ci->dmin == cj->dmin */
   return (kernel_gamma * max(ci->stars.h_max, cj->stars.h_max) +
-	  ci->stars.dx_max_part + cj->stars.dx_max_part >
+              ci->stars.dx_max_part + cj->stars.dx_max_part >
           cj->dmin);
 }
 
