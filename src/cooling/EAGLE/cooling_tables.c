@@ -31,6 +31,7 @@
 #include <string.h>
 
 /* Local includes. */
+#include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "cooling_tables.h"
 #include "error.h"
@@ -210,6 +211,10 @@ void read_cooling_header(const char *fname,
   /* Check value */
   if (N_SolarAbundances != eagle_cooling_N_abundances)
     error("Invalid solar abundances array length.");
+
+  /* Check value */
+  if (N_SolarAbundances != chemistry_element_count + 2)
+    error("Number of abundances not compatible with the chemistry model.");
 
   dataset = H5Dopen(tempfile_id, "/Header/Number_of_metals", H5P_DEFAULT);
   status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
