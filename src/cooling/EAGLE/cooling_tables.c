@@ -39,7 +39,7 @@
 /**
  * @brief Names of the elements in the order they are stored in the files
  */
-static const char *eagle_tables_element_names[9] = {
+static const char *eagle_tables_element_names[eagle_cooling_N_metal] = {
     "Carbon",  "Nitrogen", "Oxygen",  "Neon", "Magnesium",
     "Silicon", "Sulphur",  "Calcium", "Iron"};
 
