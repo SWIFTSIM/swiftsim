@@ -526,12 +526,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   }
   const float grad_h_term_inv =
       1.f + hydro_dimension_inv * p->h * rho_dh * rho_inv;
-  /* Avoid 1/0 from only having one neighbour right at the edge of the kernel */
-  if (grad_h_term_inv == 0.f) {
-    grad_h_term = 0.f;
-  } else {
-    grad_h_term = 1.f / grad_h_term_inv;
-  }
+  grad_h_term = 1.f / grad_h_term_inv;
 
   /* Compute the Balsara switch */
 #ifdef PLANETARY_SPH_NO_BALSARA
