@@ -242,6 +242,10 @@ void read_cooling_header(const char *fname,
   if (posix_memalign((void **)&cooling->SolarAbundances, SWIFT_STRUCT_ALIGNMENT,
                      N_SolarAbundances * sizeof(float)) != 0)
     error("Failed to allocate Solar abundances table");
+  if (posix_memalign((void **)&cooling->SolarAbundances_inv,
+                     SWIFT_STRUCT_ALIGNMENT,
+                     N_SolarAbundances * sizeof(float)) != 0)
+    error("Failed to allocate Solar abundances inverses table");
 
   /* read in values for each of the arrays */
   dataset = H5Dopen(tempfile_id, "/Solar/Temperature_bins", H5P_DEFAULT);
@@ -289,6 +293,10 @@ void read_cooling_header(const char *fname,
   }
   for (int i = 0; i < N_nH; i++) {
     cooling->nH[i] = log10(cooling->nH[i]);
+  }
+  /* Compute inverse of solar mass fractions */
+  for (int i = 0; i < N_SolarAbundances; ++i) {
+    cooling->SolarAbundances_inv[i] = 1.f / cooling->SolarAbundances[i];
   }
 
 #else

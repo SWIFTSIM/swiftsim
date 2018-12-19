@@ -65,8 +65,11 @@ struct cooling_function_data {
   /*! Internal energy bins */
   float *Therm;
 
-  /*! Solar mass fractions */
+  /*! Mass fractions of elements for solar abundances (from the tables) */
   float *SolarAbundances;
+
+  /*! Inverse of the solar mass fractions */
+  float *SolarAbundances_inv;
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[eagle_table_path_name_length];

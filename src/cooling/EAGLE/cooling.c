@@ -869,6 +869,7 @@ void cooling_clean(struct cooling_function_data *cooling) {
   free(cooling->HeFrac);
   free(cooling->Therm);
   free(cooling->SolarAbundances);
+  free(cooling->SolarAbundances_inv);
 
   /* Free the tables */
   free(cooling->table.metal_heating);
