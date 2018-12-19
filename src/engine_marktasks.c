@@ -73,8 +73,6 @@ void engine_activate_stars_mpi(struct engine *e, struct scheduler *s,
 
     /* If the local cell is active, receive data from the foreign cell. */
     if (cj_active_stars) {
-      if (ci->mpi.tag == 65)
-	message("here %i %i", ci->nodeID, cj->nodeID);
       scheduler_activate(s, ci->mpi.hydro.recv_xv);
       /* if (ci_active_hydro) { */
       /* 	scheduler_activate(s, ci->mpi.hydro.recv_rho); */
@@ -86,13 +84,6 @@ void engine_activate_stars_mpi(struct engine *e, struct scheduler *s,
 
     /* Is the foreign cell active and will need stuff from us? */
     if (ci_active_stars) {
-      if (cj->mpi.tag == 65) {
-	message("%lli, %lli, %i", ci->hydro.ti_end_min,
-		ci->stars.ti_end_min, ci->nodeID);
-	message("activate 1 %lli, %lli, %lli, %i, %i",
-		e->ti_current, cj->hydro.ti_end_min,
-		cj->stars.ti_end_min, cj->nodeID, cj->hydro.count);
-      }
 
       struct link *l =
           scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
@@ -117,8 +108,6 @@ void engine_activate_stars_mpi(struct engine *e, struct scheduler *s,
   } else if (cj_nodeID != nodeID) {
     /* If the local cell is active, receive data from the foreign cell. */
     if (ci_active_stars) {
-      if (cj->mpi.tag == 65)
-	message("yop  %i %i", cj->nodeID, ci->nodeID);
 
       scheduler_activate(s, cj->mpi.hydro.recv_xv);
       /* if (cj_active_hydro) { */
@@ -132,8 +121,6 @@ void engine_activate_stars_mpi(struct engine *e, struct scheduler *s,
     /* Is the foreign cell active and will need stuff from us? */
     if (cj_active_stars) {
 
-      if (ci->mpi.tag == 65)
-	message("activate 2");
       struct link *l =
           scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
 
@@ -434,8 +421,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           /* Is the foreign cell active and will need stuff from us? */
           if (ci_active_hydro) {
-	    if (cj->mpi.tag == 65)
-	      message("activate 3");
             struct link *l =
                 scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
 
@@ -479,8 +464,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           /* Is the foreign cell active and will need stuff from us? */
           if (cj_active_hydro) {
 
-	    if (ci->mpi.tag == 65)
-	      message("activate 4");
             struct link *l =
                 scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
 
@@ -512,8 +495,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       if (t->subtype == task_subtype_stars_density) {
 
       /* Too much particle movement? */
-      /* if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1; */
-      /* if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1; */
+      if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1;
+      if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
         engine_activate_stars_mpi(e, s, ci, cj);

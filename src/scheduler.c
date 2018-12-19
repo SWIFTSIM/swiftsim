@@ -2172,8 +2172,9 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-	  if (t->subtype == task_subtype_xv && t->flags == 65)
-	    message("Receving %i", t->ci->hydro.count);
+#define show 0
+	  if (t->subtype == task_subtype_xv && show)
+	    printf("recv,%lli", t->flags);
           err = MPI_Irecv(t->ci->hydro.parts, t->ci->hydro.count, part_mpi_type,
                           t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
                           &t->req);
@@ -2226,8 +2227,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
-	  if (t->subtype == task_subtype_xv && t->flags == 65)
-	    message("Sending %i", t->ci->hydro.count);
+	  if (t->subtype == task_subtype_xv && show)
+	    printf("send,%lli", t->flags);
           if ((t->ci->hydro.count * sizeof(struct part)) > s->mpi_message_limit)
             err = MPI_Isend(t->ci->hydro.parts, t->ci->hydro.count,
                             part_mpi_type, t->cj->nodeID, t->flags,
