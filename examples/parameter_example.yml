@@ -282,8 +282,6 @@ EAGLEChemistry:
   InitAbundance_Magnesium: 0.000        # Inital fraction of particle mass in Magnesium
   InitAbundance_Silicon:   0.000        # Inital fraction of particle mass in Silicon
   InitAbundance_Iron:      0.000        # Inital fraction of particle mass in Iron
-  CalciumOverSilicon:      0.0941736    # Constant ratio of Calcium over Silicon abundance
-  SulphurOverSilicon:      0.6054160    # Constant ratio of Sulphur over Silicon abundance
 
 # Structure finding options (requires velociraptor)
 StructureFinding:
