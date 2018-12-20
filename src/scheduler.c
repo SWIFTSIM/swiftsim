@@ -949,10 +949,10 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
           /* Make a task for each pair of progeny */
           for (int j = 0; j < 8; j++)
             if (ci->progeny[j] != NULL &&
-		(ci->progeny[j]->stars.count || ci->progeny[j]->hydro.count))
+                (ci->progeny[j]->stars.count || ci->progeny[j]->hydro.count))
               for (int k = j + 1; k < 8; k++)
-                if (ci->progeny[k] != NULL &&
-		    (ci->progeny[k]->stars.count || ci->progeny[k]->hydro.count))
+                if (ci->progeny[k] != NULL && (ci->progeny[k]->stars.count ||
+                                               ci->progeny[k]->hydro.count))
                   scheduler_splittask_stars(
                       scheduler_addtask(s, task_type_pair, t->subtype,
                                         sub_sid_flag[j][k], 0, ci->progeny[j],
@@ -1355,10 +1355,10 @@ static void scheduler_splittask_stars(struct task *t, struct scheduler *s) {
 
         for (int j = 0; j < 8; j++)
           if (ci->progeny[j] != NULL &&
-	      (ci->progeny[j]->stars.count || ci->progeny[j]->hydro.count))
+              (ci->progeny[j]->stars.count || ci->progeny[j]->hydro.count))
             for (int k = 0; k < 8; k++)
-              if (cj->progeny[k] != NULL &&
-		  (cj->progeny[k]->stars.count || cj->progeny[k]->hydro.count)) {
+              if (cj->progeny[k] != NULL && (cj->progeny[k]->stars.count ||
+                                             cj->progeny[k]->hydro.count)) {
                 struct task *tl =
                     scheduler_addtask(s, task_type_pair, t->subtype, 0, 0,
                                       ci->progeny[j], cj->progeny[k]);

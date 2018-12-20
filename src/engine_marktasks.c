@@ -72,7 +72,8 @@ void engine_activate_stars_mpi(struct engine *e, struct scheduler *s,
   if (ci_nodeID != nodeID) {
 
     // TODO Alexei: here I think you will just need to uncomment the code
-    // and modify it from hydro to stars (this is almost just a copy from the hydro)
+    // and modify it from hydro to stars (this is almost just a copy from the
+    // hydro)
     /* If the local cell is active, receive data from the foreign cell. */
     if (cj_active_stars) {
       scheduler_activate(s, ci->mpi.hydro.recv_xv);
@@ -496,9 +497,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       /* Only interested in stars_density tasks as of here. */
       if (t->subtype == task_subtype_stars_density) {
 
-      /* Too much particle movement? */
-      if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1;
-      if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
+        /* Too much particle movement? */
+        if (cell_need_rebuild_for_stars_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_hydro_pair(ci, cj)) *rebuild_space = 1;
 
 #ifdef WITH_MPI
         engine_activate_stars_mpi(e, s, ci, cj);

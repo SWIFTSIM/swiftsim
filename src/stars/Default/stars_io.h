@@ -60,7 +60,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          struct io_props *list,
                                          int *num_fields) {
 
-  /* Say how much we want to write */
+/* Say how much we want to write */
 #ifdef DEBUG_INTERACTIONS_STARS
   *num_fields = 6;
 #else

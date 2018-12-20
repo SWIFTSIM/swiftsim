@@ -233,8 +233,8 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
     struct link *hydro = NULL;
     for (hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
       if (hydro->t->ci->nodeID == nodeID ||
-	  (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
-	break;
+          (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
+        break;
       }
     }
 
@@ -245,16 +245,16 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
       /* Already exists, just need to get it */
       if (hydro != NULL) {
-	// TODO Alexei: set t_feedback
+        // TODO Alexei: set t_feedback
         t_xv = hydro->t;
 
         /* This task does not exists, need to create it */
       } else {
 
-	// TODO Alexei: create task and do correct unlocks
+        // TODO Alexei: create task and do correct unlocks
 
-	/* Make sure this cell is tagged. */
-	cell_ensure_tagged(ci);
+        /* Make sure this cell is tagged. */
+        cell_ensure_tagged(ci);
 
         /* Create the tasks and their dependencies? */
         t_xv = scheduler_addtask(s, task_type_send, task_subtype_xv,
@@ -263,13 +263,12 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
         /* Drift before you send */
         scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
       }
-
     }
 
     if (hydro == NULL) {
       engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
-    // TODO Alexei: addlink
-    /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
+      // TODO Alexei: addlink
+      /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
     }
   }
 
@@ -427,10 +426,9 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
 #ifdef WITH_MPI
   struct scheduler *s = &e->sched;
   int new_task = 0;
-  
+
   /* Have we reached a level where there are any stars (or hydro) tasks ? */
-  if (t_xv == NULL &&
-      (c->stars.density != NULL || c->hydro.density != NULL)) {
+  if (t_xv == NULL && (c->stars.density != NULL || c->hydro.density != NULL)) {
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure this cell has a valid tag. */
@@ -443,11 +441,10 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
       t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag,
                                0, c, NULL);
       // TODO Alexei: create t_feedback task
-    /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho,
-     * c->mpi.tag, */
-    /*                           0, c, NULL); */
-    }
-    else {
+      /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho,
+       * c->mpi.tag, */
+      /*                           0, c, NULL); */
+    } else {
       // TODO Alexei: set t_feedback
       t_xv = c->mpi.hydro.recv_xv;
     }
@@ -889,7 +886,7 @@ void engine_make_hierarchical_tasks_stars(struct engine *e, struct cell *c) {
       // TODO Alexei: do not need to be only on local node with feedback
       /* Add the sort task. */
       c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
-					 task_subtype_none, 0, 0, c, NULL);
+                                         task_subtype_none, 0, 0, c, NULL);
 
       /* Generate the ghost tasks. */
       c->stars.ghost_in =
@@ -1768,23 +1765,23 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
 
       if (t->ci->nodeID == engine_rank) {
         scheduler_addunlock(sched, t->ci->super->grav.drift, t);
-	// TODO Alexei: the stars in foreign cells need to be sorted before
-	// the feedback loop and after the ghosts
-	scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+        // TODO Alexei: the stars in foreign cells need to be sorted before
+        // the feedback loop and after the ghosts
+        scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
       }
 
       if (t->ci->hydro.super != t->cj->hydro.super) {
-	if (t->cj->nodeID == engine_rank)
-	  scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
-	scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
+        if (t->cj->nodeID == engine_rank)
+          scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
+        scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
       }
-      
+
       if (t->ci->super != t->cj->super) {
         if (t->cj->nodeID == engine_rank) {
           scheduler_addunlock(sched, t->cj->super->grav.drift, t);
-	  // TODO Alexei: same here, sort before feedback
-	  scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
-	}
+          // TODO Alexei: same here, sort before feedback
+          scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+        }
       }
 
       /* Now, build all the dependencies for the stars for the cells */
@@ -1828,8 +1825,8 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
 
       if (t->cj->nodeID == engine_rank) {
         scheduler_addunlock(sched, t->cj->super->grav.drift, t);
-	// TODO Alexei: Still the same
-	scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+        // TODO Alexei: Still the same
+        scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
       }
 
       if (t->ci->hydro.super != t->cj->hydro.super) {
@@ -1841,9 +1838,9 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
       if (t->ci->super != t->cj->super) {
         if (t->ci->nodeID == engine_rank) {
           scheduler_addunlock(sched, t->ci->super->grav.drift, t);
-	  // TODO Alexei: still the same
-	  scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
-	}
+          // TODO Alexei: still the same
+          scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+        }
       }
 
       /* Now, build all the dependencies for the stars for the cells */
@@ -1924,8 +1921,8 @@ void engine_make_starsloop_tasks_mapper(void *map_data, int num_elements,
 
           /* Is that neighbour local and does it have particles ? */
           if (cid >= cjd ||
-	      ((cj->stars.count == 0 || ci->hydro.count == 0)
-	       && (cj->hydro.count == 0 || ci->stars.count == 0)) ||
+              ((cj->stars.count == 0 || ci->hydro.count == 0) &&
+               (cj->hydro.count == 0 || ci->stars.count == 0)) ||
               (ci->nodeID != nodeID && cj->nodeID != nodeID))
             continue;
 
@@ -2128,15 +2125,13 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
 
     /* Add the send tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) &&
-        (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro))
       engine_addtasks_send_hydro(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL, /*t_gradient=*/NULL);
 
     /* Add the send tasks for the cells in the proxy that have a stars
      * connection. */
-    if ((e->policy & engine_policy_feedback) &&
-        (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_feedback) && (type & proxy_cell_type_hydro))
       engine_addtasks_send_stars(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL);
 
@@ -2162,14 +2157,12 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
 
     /* Add the recv tasks for the cells in the proxy that have a hydro
      * connection. */
-    if ((e->policy & engine_policy_hydro) &&
-        (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro))
       engine_addtasks_recv_hydro(e, ci, NULL, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a stars
      * connection. */
-    if ((e->policy & engine_policy_feedback) &&
-        (type & proxy_cell_type_hydro))
+    if ((e->policy & engine_policy_feedback) && (type & proxy_cell_type_hydro))
       engine_addtasks_recv_stars(e, ci, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a gravity

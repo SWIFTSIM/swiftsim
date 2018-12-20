@@ -205,7 +205,8 @@ int checkSpacehmax(struct space *s) {
 
   /*  If within some epsilon we are OK. */
   if (fabsf(cell_h_max - part_h_max) <= FLT_EPSILON &&
-      fabsf(cell_stars_h_max - spart_h_max) <= FLT_EPSILON) return 1;
+      fabsf(cell_stars_h_max - spart_h_max) <= FLT_EPSILON)
+    return 1;
 
   /* There is a problem. Hunt it down. */
   /* part */
@@ -241,7 +242,7 @@ int checkSpacehmax(struct space *s) {
               s->sparts[k].h, cell_stars_h_max);
     }
   }
-  
+
   return 0;
 }
 
@@ -303,9 +304,9 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
 
     struct spart *const sp = &sparts[k];
 
-    if (sp->x[0] < loc_min[0] || sp->x[0] >= loc_max[0] || sp->x[1] < loc_min[1] ||
-        sp->x[1] >= loc_max[1] || sp->x[2] < loc_min[2] ||
-        sp->x[2] >= loc_max[2]) {
+    if (sp->x[0] < loc_min[0] || sp->x[0] >= loc_max[0] ||
+        sp->x[1] < loc_min[1] || sp->x[1] >= loc_max[1] ||
+        sp->x[2] < loc_min[2] || sp->x[2] >= loc_max[2]) {
 
       message(
           "Inconsistent part position p->x=[%e %e %e], c->loc=[%e %e %e] "
@@ -354,8 +355,8 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
     result = 0;
   }
   if (c->stars.dx_max_part != stars_dx_max) {
-    message("%d Inconsistent stars_dx_max: %f != %f", *depth, c->stars.dx_max_part,
-            stars_dx_max);
+    message("%d Inconsistent stars_dx_max: %f != %f", *depth,
+            c->stars.dx_max_part, stars_dx_max);
     message("location: %f %f %f", c->loc[0], c->loc[1], c->loc[2]);
     result = 0;
   }

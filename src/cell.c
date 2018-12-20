@@ -1786,9 +1786,8 @@ void cell_activate_stars_sorts_up(struct cell *c, struct scheduler *s) {
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s) {
 
   // TODO Alexei, remove this
-  if (c->nodeID != engine_rank)
-    return;
-  
+  if (c->nodeID != engine_rank) return;
+
   /* Do we need to re-sort? */
   if (c->stars.dx_max_sort > space_maxreldx * c->dmin) {
 
@@ -3145,8 +3144,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
-	// TODO Alexei: In this section, you will find some comments that
-	// are from the hydro code. It should look the same for the feedback.
+        // TODO Alexei: In this section, you will find some comments that
+        // are from the hydro code. It should look the same for the feedback.
         /* If the local cell is active, receive data from the foreign cell. */
         if (cj_active) {
           scheduler_activate(s, ci->mpi.hydro.recv_xv);
