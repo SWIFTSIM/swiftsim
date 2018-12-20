@@ -884,12 +884,12 @@ void engine_make_hierarchical_tasks_stars(struct engine *e, struct cell *c) {
   /* Are we in a super-cell ? */
   if (c->super == c) {
 
-    /* Add the sort task. */
-    c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
-                                       task_subtype_none, 0, 0, c, NULL);
-
     /* Local tasks only... */
     if (c->nodeID == e->nodeID) {
+      // TODO Alexei: do not need to be only on local node with feedback
+      /* Add the sort task. */
+      c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
+					 task_subtype_none, 0, 0, c, NULL);
 
       /* Generate the ghost tasks. */
       c->stars.ghost_in =
@@ -1766,18 +1766,25 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
       scheduler_addunlock(sched, t->ci->hydro.super->hydro.sorts, t);
 
-      if (t->ci->nodeID == engine_rank)
+      if (t->ci->nodeID == engine_rank) {
         scheduler_addunlock(sched, t->ci->super->grav.drift, t);
-      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+	// TODO Alexei: the stars in foreign cells need to be sorted before
+	// the feedback loop and after the ghosts
+	scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+      }
 
+      if (t->ci->hydro.super != t->cj->hydro.super) {
+	if (t->cj->nodeID == engine_rank)
+	  scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
+	scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
+      }
+      
       if (t->ci->super != t->cj->super) {
-        if (t->cj->nodeID == engine_rank)
-          scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
-        scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
-
-        if (t->cj->nodeID == engine_rank)
+        if (t->cj->nodeID == engine_rank) {
           scheduler_addunlock(sched, t->cj->super->grav.drift, t);
-        scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+	  // TODO Alexei: same here, sort before feedback
+	  scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+	}
       }
 
       /* Now, build all the dependencies for the stars for the cells */
@@ -1819,18 +1826,24 @@ void engine_link_stars_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, t->cj->hydro.super->hydro.drift, t);
       scheduler_addunlock(sched, t->cj->hydro.super->hydro.sorts, t);
 
-      if (t->cj->nodeID == engine_rank)
+      if (t->cj->nodeID == engine_rank) {
         scheduler_addunlock(sched, t->cj->super->grav.drift, t);
-      scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+	// TODO Alexei: Still the same
+	scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+      }
 
-      if (t->ci->super != t->cj->super) {
+      if (t->ci->hydro.super != t->cj->hydro.super) {
         if (t->ci->nodeID == engine_rank)
           scheduler_addunlock(sched, t->ci->hydro.super->hydro.drift, t);
         scheduler_addunlock(sched, t->ci->hydro.super->hydro.sorts, t);
+      }
 
-        if (t->ci->nodeID == engine_rank)
+      if (t->ci->super != t->cj->super) {
+        if (t->ci->nodeID == engine_rank) {
           scheduler_addunlock(sched, t->ci->super->grav.drift, t);
-        scheduler_addunlock(sched, t->cj->super->stars.sorts, t);
+	  // TODO Alexei: still the same
+	  scheduler_addunlock(sched, t->ci->super->stars.sorts, t);
+	}
       }
 
       /* Now, build all the dependencies for the stars for the cells */

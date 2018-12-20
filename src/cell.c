@@ -1785,6 +1785,10 @@ void cell_activate_stars_sorts_up(struct cell *c, struct scheduler *s) {
  */
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s) {
 
+  // TODO Alexei, remove this
+  if (c->nodeID != engine_rank)
+    return;
+  
   /* Do we need to re-sort? */
   if (c->stars.dx_max_sort > space_maxreldx * c->dmin) {
 
