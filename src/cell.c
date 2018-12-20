@@ -1232,7 +1232,7 @@ void cell_clean_links(struct cell *c, void *data) {
   c->hydro.force = NULL;
   c->grav.grav = NULL;
   c->grav.mm = NULL;
-  // TODO Alexei
+  // TODO Alexei: set feedback to NULL
   c->stars.density = NULL;
 }
 
@@ -3141,6 +3141,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
+	// TODO Alexei: In this section, you will find some comments that
+	// are from the hydro code. It should look the same for the feedback.
         /* If the local cell is active, receive data from the foreign cell. */
         if (cj_active) {
           scheduler_activate(s, ci->mpi.hydro.recv_xv);

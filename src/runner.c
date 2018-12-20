@@ -235,9 +235,6 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           /* Skip if h is already h_max and we don't have enough neighbours */
           if ((sp->h >= stars_h_max) && (f < 0.f)) {
 
-#ifdef DEBUG_INTERACTIONS_STARS
-	    sp->num_ngb_density = 0;
-#endif
             /* Ok, we are done with this particle */
             continue;
           }
@@ -898,8 +895,6 @@ void runner_do_hydro_sort(struct runner *r, struct cell *c, int flags,
 void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
                           int cleanup, int clock) {
 
-  // TODO
-  if (c->nodeID != engine_rank) return;
   struct entry *fingers[8];
   const int count = c->stars.count;
   struct spart *sparts = c->stars.parts;

@@ -238,14 +238,20 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       }
     }
 
+    // TODO Alexei: I guess that you can assume that if the send_xv exists,
+    // send_rho exists too
+
     if (t_xv == NULL) {
 
       /* Already exists, just need to get it */
       if (hydro != NULL) {
+	// TODO Alexei: set t_feedback
         t_xv = hydro->t;
 
         /* This task does not exists, need to create it */
       } else {
+
+	// TODO Alexei: create task and do correct unlocks
 
 	/* Make sure this cell is tagged. */
 	cell_ensure_tagged(ci);
@@ -258,7 +264,6 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
         scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
       }
 
-      // TODO Alexei: addunlock
     }
 
     if (hydro == NULL) {
@@ -416,7 +421,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
  * @param t_xv The recv_xv #task, if it has already been created.
  * @param t_rho The recv_rho #task, if it has already been created.
  */
-void engine_addtasks_recv_stars(struct engine *e, struct cell *c, struct cell *cj,
+void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
                                 struct task *t_xv, struct task *t_rho) {
 
 #ifdef WITH_MPI
@@ -437,15 +442,18 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c, struct cell *c
       new_task = 1;
       t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag,
                                0, c, NULL);
+      // TODO Alexei: create t_feedback task
     /* t_rho = scheduler_addtask(s, task_type_recv, task_subtype_rho,
      * c->mpi.tag, */
     /*                           0, c, NULL); */
     }
     else {
+      // TODO Alexei: set t_feedback
       t_xv = c->mpi.hydro.recv_xv;
     }
   }
 
+  // TODO Alexei: set pointer
   c->mpi.hydro.recv_xv = t_xv;
   /* c->mpi.hydro.recv_rho = t_rho; */
 
@@ -454,17 +462,21 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c, struct cell *c
     scheduler_addunlock(s, t_xv, c->hydro.sorts);
   }
 
+  // TODO Alexei: You will need to sort the particles after receiving the spart
+
   for (struct link *l = c->stars.density; l != NULL; l = l->next) {
     scheduler_addunlock(s, t_xv, l->t);
+    // TODO Alexei: I guess that you will need to unlock the recv here
     /* scheduler_addunlock(s, l->t, t_rho); */
   }
+  // TODO Alexei: unlock feedback task
   /* for (struct link *l = c->hydro.force; l != NULL; l = l->next) */
   /*   scheduler_addunlock(s, t_rho, l->t); */
   /* Recurse? */
   if (c->split)
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL)
-        engine_addtasks_recv_stars(e, c->progeny[k], cj, t_xv, t_rho);
+        engine_addtasks_recv_stars(e, c->progeny[k], t_xv, t_rho);
 
 #else
   error("SWIFT was not compiled with MPI support.");
@@ -2130,8 +2142,6 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
 
   for (int k = 0; k < num_elements; k++) {
     struct cell *ci = cell_type_pairs[k].ci;
-    // TODO remove it
-    struct cell *cj = cell_type_pairs[k].cj;
     const int type = cell_type_pairs[k].type;
 
     /* Add the recv task for the particle timesteps. */
@@ -2147,7 +2157,7 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
      * connection. */
     if ((e->policy & engine_policy_feedback) &&
         (type & proxy_cell_type_hydro))
-      engine_addtasks_recv_stars(e, ci, cj, NULL, NULL);
+      engine_addtasks_recv_stars(e, ci, NULL, NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a gravity
      * connection. */

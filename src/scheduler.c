@@ -2206,7 +2206,6 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           error("Unknown communication sub-type");
         }
         if (err != MPI_SUCCESS) {
-	  message("%i", t->subtype);
           mpi_error(err, "Failed to emit irecv for particle data.");
         }
         qid = 1 % s->nr_queues;

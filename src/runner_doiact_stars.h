@@ -144,7 +144,9 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
                            struct cell *restrict cj) {
 
 #ifdef SWIFT_DEBUG_CHECKS
+#ifdef ONLY_LOCAL
   if (ci->nodeID != engine_rank) error("Should be run on a different node");
+#endif
 #endif
 
   const struct engine *e = r->e;
