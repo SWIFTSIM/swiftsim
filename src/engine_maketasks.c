@@ -229,16 +229,16 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
   /* If so, attach send tasks. */
   if (l != NULL) {
+    /* Get the task if created in hydro part */
+    struct link *hydro = NULL;
+    for (hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
+      if (hydro->t->ci->nodeID == nodeID ||
+	  (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
+	break;
+      }
+    }
 
     if (t_xv == NULL) {
-      /* Get the task if created in hydro part */
-      struct link *hydro = NULL;
-      for (hydro = ci->mpi.hydro.send_xv; hydro != NULL; hydro = hydro->next) {
-        if (hydro->t->ci->nodeID == nodeID ||
-            (hydro->t->cj != NULL && hydro->t->cj->nodeID == nodeID)) {
-          break;
-        }
-      }
 
       /* Already exists, just need to get it */
       if (hydro != NULL) {
@@ -261,10 +261,11 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       // TODO Alexei: addunlock
     }
 
-    /* Add them to the local cell. */
-    engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
+    if (hydro == NULL) {
+      engine_addlink(e, &ci->mpi.hydro.send_xv, t_xv);
     // TODO Alexei: addlink
     /* engine_addlink(e, &ci->mpi.hydro.send_rho, t_rho); */
+    }
   }
 
   /* Recurse? */
@@ -1897,7 +1898,9 @@ void engine_make_starsloop_tasks_mapper(void *map_data, int num_elements,
           struct cell *cj = &cells[cjd];
 
           /* Is that neighbour local and does it have particles ? */
-          if (cid >= cjd || (cj->stars.count == 0 && cj->hydro.count == 0) ||
+          if (cid >= cjd ||
+	      ((cj->stars.count == 0 || ci->hydro.count == 0)
+	       && (cj->hydro.count == 0 || ci->stars.count == 0)) ||
               (ci->nodeID != nodeID && cj->nodeID != nodeID))
             continue;
 
@@ -1905,6 +1908,50 @@ void engine_make_starsloop_tasks_mapper(void *map_data, int num_elements,
           const int sid = sortlistID[(kk + 1) + 3 * ((jj + 1) + 3 * (ii + 1))];
           scheduler_addtask(sched, task_type_pair, task_subtype_stars_density,
                             sid, 0, ci, cj);
+
+#ifdef SWIFT_DEBUG_CHECKS
+#ifdef WITH_MPI
+
+          /* Let's cross-check that we had a proxy for that cell */
+          if (ci->nodeID == nodeID && cj->nodeID != engine_rank) {
+
+            /* Find the proxy for this node */
+            const int proxy_id = e->proxy_ind[cj->nodeID];
+            if (proxy_id < 0)
+              error("No proxy exists for that foreign node %d!", cj->nodeID);
+
+            const struct proxy *p = &e->proxies[proxy_id];
+
+            /* Check whether the cell exists in the proxy */
+            int n = 0;
+            for (n = 0; n < p->nr_cells_in; n++)
+              if (p->cells_in[n] == cj) break;
+            if (n == p->nr_cells_in)
+              error(
+                  "Cell %d not found in the proxy but trying to construct "
+                  "stars task!",
+                  cjd);
+          } else if (cj->nodeID == nodeID && ci->nodeID != engine_rank) {
+
+            /* Find the proxy for this node */
+            const int proxy_id = e->proxy_ind[ci->nodeID];
+            if (proxy_id < 0)
+              error("No proxy exists for that foreign node %d!", ci->nodeID);
+
+            const struct proxy *p = &e->proxies[proxy_id];
+
+            /* Check whether the cell exists in the proxy */
+            int n = 0;
+            for (n = 0; n < p->nr_cells_in; n++)
+              if (p->cells_in[n] == ci) break;
+            if (n == p->nr_cells_in)
+              error(
+                  "Cell %d not found in the proxy but trying to construct "
+                  "stars task!",
+                  cid);
+          }
+#endif /* WITH_MPI */
+#endif /* SWIFT_DEBUG_CHECKS */
         }
       }
     }

@@ -232,6 +232,17 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               sp->density.wcount_dh * h_old_dim +
               hydro_dimension * sp->density.wcount * h_old_dim_minus_one;
 
+          /* Skip if h is already h_max and we don't have enough neighbours */
+          if ((sp->h >= stars_h_max) && (f < 0.f)) {
+
+#ifdef DEBUG_INTERACTIONS_STARS
+	    sp->num_ngb_density = 0;
+#endif
+            /* Ok, we are done with this particle */
+            continue;
+          }
+
+          /* Normal case: Use Newton-Raphson to get a better value of h */
           /* Avoid floating point exception from f_prime = 0 */
           h_new = h_old - f / (f_prime + FLT_MIN);
 #ifdef SWIFT_DEBUG_CHECKS

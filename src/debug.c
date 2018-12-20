@@ -260,6 +260,8 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
 
   float h_max = 0.0f;
   float dx_max = 0.0f;
+  float stars_h_max = 0.0f;
+  float stars_dx_max = 0.0f;
   int result = 1;
 
   const double loc_min[3] = {c->loc[0], c->loc[1], c->loc[2]};
@@ -295,6 +297,33 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
     dx_max = max(dx_max, sqrt(dx2));
   }
 
+  const size_t nr_sparts = c->stars.count;
+  struct spart *sparts = c->stars.parts;
+  for (size_t k = 0; k < nr_sparts; k++) {
+
+    struct spart *const sp = &sparts[k];
+
+    if (sp->x[0] < loc_min[0] || sp->x[0] >= loc_max[0] || sp->x[1] < loc_min[1] ||
+        sp->x[1] >= loc_max[1] || sp->x[2] < loc_min[2] ||
+        sp->x[2] >= loc_max[2]) {
+
+      message(
+          "Inconsistent part position p->x=[%e %e %e], c->loc=[%e %e %e] "
+          "c->width=[%e %e %e]",
+          sp->x[0], sp->x[1], sp->x[2], c->loc[0], c->loc[1], c->loc[2],
+          c->width[0], c->width[1], c->width[2]);
+
+      result = 0;
+    }
+
+    const float dx2 = sp->x_diff[0] * sp->x_diff[0] +
+                      sp->x_diff[1] * sp->x_diff[1] +
+                      sp->x_diff[2] * sp->x_diff[2];
+
+    stars_h_max = max(stars_h_max, sp->h);
+    stars_dx_max = max(stars_dx_max, sqrt(dx2));
+  }
+
   if (c->split) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
@@ -314,6 +343,19 @@ int checkCellhdxmax(const struct cell *c, int *depth) {
   if (c->hydro.dx_max_part != dx_max) {
     message("%d Inconsistent dx_max: %f != %f", *depth, c->hydro.dx_max_part,
             dx_max);
+    message("location: %f %f %f", c->loc[0], c->loc[1], c->loc[2]);
+    result = 0;
+  }
+
+  if (c->stars.h_max != stars_h_max) {
+    message("%d Inconsistent stars_h_max: cell %f != parts %f", *depth,
+            c->stars.h_max, stars_h_max);
+    message("location: %f %f %f", c->loc[0], c->loc[1], c->loc[2]);
+    result = 0;
+  }
+  if (c->stars.dx_max_part != stars_dx_max) {
+    message("%d Inconsistent stars_dx_max: %f != %f", *depth, c->stars.dx_max_part,
+            stars_dx_max);
     message("location: %f %f %f", c->loc[0], c->loc[1], c->loc[2]);
     result = 0;
   }

@@ -180,6 +180,7 @@ int cell_pack(struct cell *restrict c, struct pcell *restrict pc,
 
   /* Start by packing the data of the current cell. */
   pc->hydro.h_max = c->hydro.h_max;
+  pc->stars.h_max = c->stars.h_max;
   pc->hydro.ti_end_min = c->hydro.ti_end_min;
   pc->hydro.ti_end_max = c->hydro.ti_end_max;
   pc->grav.ti_end_min = c->grav.ti_end_min;
@@ -284,6 +285,7 @@ int cell_unpack(struct pcell *restrict pc, struct cell *restrict c,
 
   /* Unpack the current pcell. */
   c->hydro.h_max = pc->hydro.h_max;
+  c->stars.h_max = pc->stars.h_max;
   c->hydro.ti_end_min = pc->hydro.ti_end_min;
   c->hydro.ti_end_max = pc->hydro.ti_end_max;
   c->grav.ti_end_min = pc->grav.ti_end_min;
