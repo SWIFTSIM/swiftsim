@@ -51,7 +51,7 @@ void queue_get_incoming(struct queue *q) {
   while (1) {
 
     /* Is there a next element? */
-    const int ind = q->first_incoming % queue_incoming_size;
+    const int ind = atomic_load(&q->first_incoming) % queue_incoming_size;
     if (q->tid_incoming[ind] < 0) break;
 
     /* Get the next offset off the DEQ. */
@@ -101,7 +101,7 @@ void queue_insert(struct queue *q, struct task *t) {
   const int ind = atomic_inc(&q->last_incoming) % queue_incoming_size;
 
   /* Spin until the new offset can be stored. */
-  while (atomic_cas(&q->tid_incoming[ind], -1, t - q->tasks) != -1) {
+  while (!atomic_cas(&q->tid_incoming[ind], -1, t - q->tasks)) {
 
     /* Try to get the queue lock, non-blocking, ensures that at
        least somebody is working on this queue. */
