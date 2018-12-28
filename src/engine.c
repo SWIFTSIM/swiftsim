@@ -288,7 +288,7 @@ static void *engine_do_redistribute(int *counts, char *parts,
 
 /* Support for engine_redistribute threadpool dest mappers. */
 struct redist_mapper_data {
-  int *counts;
+  atomic_int *counts;
   int *dest;
   int nodeID;
   int nr_nodes;
