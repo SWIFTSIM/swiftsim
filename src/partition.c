@@ -241,7 +241,7 @@ static void graph_init(struct space *s, idx_t *adjncy, idx_t *xadj) {
 
 #if defined(WITH_MPI) && (defined(HAVE_METIS) || defined(HAVE_PARMETIS))
 struct counts_mapper_data {
-  double *counts;
+  atomic_double *counts;
   size_t size;
   struct space *s;
 };
@@ -1179,8 +1179,8 @@ void partition_gather_weights(void *map_data, int num_elements,
   struct task *tasks = (struct task *)map_data;
   struct weights_mapper_data *mydata = (struct weights_mapper_data *)extra_data;
 
-  double *weights_e = mydata->weights_e;
-  double *weights_v = mydata->weights_v;
+  atomic_double *weights_e = mydata->weights_e;
+  atomic_double *weights_v = mydata->weights_v;
   idx_t *inds = mydata->inds;
   int eweights = mydata->eweights;
   int nodeID = mydata->nodeID;
