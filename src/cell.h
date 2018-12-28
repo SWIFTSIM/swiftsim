@@ -52,7 +52,7 @@ struct scheduler;
 #define cell_align 128
 
 /* Global variables. */
-extern int cell_next_tag;
+extern atomic_int cell_next_tag;
 
 /* Struct to temporarily buffer the particle locations and bin id. */
 struct cell_buff {
@@ -331,7 +331,7 @@ struct cell {
     int inhibited;
 
     /*! Is the #part data of this cell being used in a sub-cell? */
-    int hold;
+    atomic_int hold;
 
     /*! Bit mask of sort directions that will be needed in the next timestep. */
     unsigned int requires_sorts;
@@ -444,13 +444,13 @@ struct cell {
     int inhibited;
 
     /*! Is the #gpart data of this cell being used in a sub-cell? */
-    int phold;
+    atomic_int phold;
 
     /*! Is the #multipole data of this cell being used in a sub-cell? */
-    int mhold;
+    atomic_int mhold;
 
     /*! Number of M-M tasks that are associated with this cell. */
-    short int nr_mm_tasks;
+    atomic_short nr_mm_tasks;
 
     /*! Does this cell need to be drifted (gravity)? */
     char do_drift;
@@ -536,7 +536,7 @@ struct cell {
     int inhibited;
 
     /*! Is the #spart data of this cell being used in a sub-cell? */
-    int hold;
+    atomic_int hold;
 
 #ifdef SWIFT_DEBUG_CHECKS
     /*! Last (integer) time the cell's sort arrays were updated. */
@@ -637,7 +637,7 @@ struct cell {
   int nodeID;
 
   /*! Number of tasks that are associated with this cell. */
-  short int nr_tasks;
+  atomic_short nr_tasks;
 
   /*! The depth of this cell in the tree. */
   char depth;
