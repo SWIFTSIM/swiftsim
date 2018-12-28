@@ -70,7 +70,7 @@ struct scheduler {
   int nr_tasks, size, tasks_next;
 
   /* Total number of waiting tasks. */
-  int waiting;
+  atomic_int waiting;
 
   /* The task array. */
   struct task *tasks;
@@ -80,7 +80,7 @@ struct scheduler {
 
   /* List of initial tasks. */
   int *tid_active;
-  int active_count;
+  atomic_int active_count;
 
   /* The task unlocks. */
   struct task **volatile unlocks;
