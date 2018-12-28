@@ -211,13 +211,13 @@ struct space {
   struct task *grav_top_level;
 
   /*! Minimal mass of all the #part */
-  float min_part_mass;
+  atomic_float min_part_mass;
 
   /*! Minimal mass of all the dark-matter #gpart */
-  float min_gpart_mass;
+  atomic_float min_gpart_mass;
 
   /*! Minimal mass of all the #spart */
-  float min_spart_mass;
+  atomic_float min_spart_mass;
 
   /*! Sum of the norm of the velocity of all the #part */
   atomic_float sum_part_vel_norm;
