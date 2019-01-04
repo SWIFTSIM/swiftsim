@@ -2654,7 +2654,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   }
 
   /* Check the depth. */
-  while (depth > (maxdepth = s->maxdepth)) {
+  while (depth > (maxdepth = atomic_read(&s->maxdepth))) {
     atomic_cas(&s->maxdepth, maxdepth, depth);
   }
 
@@ -2718,7 +2718,7 @@ void space_split_recursive(struct space *s, struct cell *c,
       cp->mpi.tag = -1;
 #endif  // WITH_MPI
 #ifdef SWIFT_DEBUG_CHECKS
-      cp->cellID = last_cell_id++;
+      cp->cellID = atomic_inc(&last_cell_id);
 #endif
     }
 
