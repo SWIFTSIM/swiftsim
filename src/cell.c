@@ -552,13 +552,13 @@ int cell_locktree(struct cell *c) {
   TIMER_TIC
 
   /* First of all, try to lock this cell. */
-  if (c->hydro.hold || lock_trylock(&c->hydro.lock) != 0) {
+  if (atomic_read(&c->hydro.hold) || lock_trylock(&c->hydro.lock) != 0) {
     TIMER_TOC(timer_locktree);
     return 1;
   }
 
   /* Did somebody hold this cell in the meantime? */
-  if (c->hydro.hold) {
+  if (atomic_read(&c->hydro.hold)) {
 
     /* Unlock this cell. */
     if (lock_unlock(&c->hydro.lock) != 0) error("Failed to unlock cell.");
@@ -1754,9 +1754,11 @@ void cell_activate_hydro_sorts_up(struct cell *c, struct scheduler *s) {
   } else {
 
     for (struct cell *parent = c->parent;
-         parent != NULL && !parent->hydro.do_sub_sort;
+         parent != NULL && !atomic_read(&parent->hydro.do_sub_sort);
          parent = parent->parent) {
-      parent->hydro.do_sub_sort = 1;
+
+      atomic_write_c(&parent->hydro.do_sub_sort, 1);
+
       if (parent == c->hydro.super) {
 #ifdef SWIFT_DEBUG_CHECKS
         if (parent->hydro.sorts == NULL)
