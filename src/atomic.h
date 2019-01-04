@@ -52,7 +52,7 @@ atomic_write_u(volatile unsigned int *const address, const unsigned int y) {
 
 __attribute__((always_inline)) INLINE static void
 atomic_write_f(volatile float *const address, const float y) {
-  int *const address_int = (int *const)address;
+  int *const address_int = (int *)address;
 
   typedef union {
     float as_float;
@@ -67,7 +67,7 @@ atomic_write_f(volatile float *const address, const float y) {
 
 __attribute__((always_inline)) INLINE static void
 atomic_write_c(volatile char *const address, const char y) {
-  int *const address_int = (int *const)address;
+  int *const address_int = (int *)address;
 
   typedef union {
     char as_char;
@@ -83,7 +83,7 @@ atomic_write_c(volatile char *const address, const char y) {
 __attribute__((always_inline)) INLINE static float
 atomic_read_f(const volatile float *const address) {
 
-  int *const address_int = (int *const)address;
+  int *const address_int = (int *)address;
 
   typedef union {
     float as_float;
@@ -98,7 +98,7 @@ atomic_read_f(const volatile float *const address) {
 __attribute__((always_inline)) INLINE static unsigned int
 atomic_read_u(const volatile unsigned int *const address) {
 
-  int *const address_int = (int *const)address;
+  int *const address_int = (int *)address;
 
   typedef union {
     unsigned int as_uint;
