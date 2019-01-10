@@ -67,7 +67,7 @@
 #include "tracers.h"
 
 /* Global variables. */
-int cell_next_tag = 0;
+atomic_int cell_next_tag = 0;
 
 /**
  * @brief Get the size of the cell subtree.
