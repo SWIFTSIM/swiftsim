@@ -552,13 +552,13 @@ int cell_locktree(struct cell *c) {
   TIMER_TIC
 
   /* First of all, try to lock this cell. */
-  if (atomic_read(&c->hydro.hold) || lock_trylock(&c->hydro.lock) != 0) {
+  if (atomic_load(&c->hydro.hold) || lock_trylock(&c->hydro.lock) != 0) {
     TIMER_TOC(timer_locktree);
     return 1;
   }
 
   /* Did somebody hold this cell in the meantime? */
-  if (atomic_read(&c->hydro.hold)) {
+  if (atomic_load(&c->hydro.hold)) {
 
     /* Unlock this cell. */
     if (lock_unlock(&c->hydro.lock) != 0) error("Failed to unlock cell.");
@@ -1616,7 +1616,7 @@ void cell_clear_limiter_flags(struct cell *c, void *data) {
 void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
 
   /* If this cell is already marked for drift, quit early. */
-  if (atomic_read(&c->hydro.do_drift)) return;
+  if (atomic_load(&c->hydro.do_drift)) return;
 
   /* Mark this cell for drifting. */
   atomic_write_c(&c->hydro.do_drift, 1);
@@ -1631,7 +1631,7 @@ void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
     scheduler_activate(s, c->hydro.drift);
   } else {
     for (struct cell *parent = c->parent;
-         parent != NULL && !atomic_read(&parent->hydro.do_sub_drift);
+         parent != NULL && !atomic_load(&parent->hydro.do_sub_drift);
          parent = parent->parent) {
 
       /* Mark this cell for drifting */
@@ -1706,7 +1706,7 @@ void cell_activate_drift_spart(struct cell *c, struct scheduler *s) {
 void cell_activate_limiter(struct cell *c, struct scheduler *s) {
 
   /* If this cell is already marked for drift, quit early. */
-  if (atomic_read(&c->hydro.do_limiter)) return;
+  if (atomic_load(&c->hydro.do_limiter)) return;
 
   /* Mark this cell for limiting. */
   atomic_write_c(&c->hydro.do_limiter, 1);
@@ -1721,7 +1721,7 @@ void cell_activate_limiter(struct cell *c, struct scheduler *s) {
     scheduler_activate(s, c->timestep_limiter);
   } else {
     for (struct cell *parent = c->parent;
-         parent != NULL && !atomic_read(&parent->hydro.do_sub_limiter);
+         parent != NULL && !atomic_load(&parent->hydro.do_sub_limiter);
          parent = parent->parent) {
 
       /* Mark this cell for limiting */
@@ -1754,7 +1754,7 @@ void cell_activate_hydro_sorts_up(struct cell *c, struct scheduler *s) {
   } else {
 
     for (struct cell *parent = c->parent;
-         parent != NULL && !atomic_read(&parent->hydro.do_sub_sort);
+         parent != NULL && !atomic_load(&parent->hydro.do_sub_sort);
          parent = parent->parent) {
 
       atomic_write_c(&parent->hydro.do_sub_sort, 1);
@@ -1778,13 +1778,13 @@ void cell_activate_hydro_sorts_up(struct cell *c, struct scheduler *s) {
 void cell_activate_hydro_sorts(struct cell *c, int sid, struct scheduler *s) {
 
   /* Do we need to re-sort? */
-  if (atomic_read_f(&c->hydro.dx_max_sort) > space_maxreldx * c->dmin) {
+  if (atomic_load_f(&c->hydro.dx_max_sort) > space_maxreldx * c->dmin) {
 
     /* Climb up the tree to active the sorts in that direction */
     for (struct cell *finger = c; finger != NULL; finger = finger->parent) {
 
       const unsigned int requires_sorts =
-          atomic_read(&finger->hydro.requires_sorts);
+          atomic_load(&finger->hydro.requires_sorts);
 
       if (requires_sorts) {
         atomic_or(&finger->hydro.do_sort, requires_sorts);
@@ -1797,7 +1797,7 @@ void cell_activate_hydro_sorts(struct cell *c, int sid, struct scheduler *s) {
   }
 
   /* Has this cell been sorted at all for the given sid? */
-  if (!(atomic_read_u(&c->hydro.sorted) & (1 << sid)) ||
+  if (!(atomic_load_u(&c->hydro.sorted) & (1 << sid)) ||
       c->nodeID != engine_rank) {
     atomic_or(&c->hydro.do_sort, (1 << sid));
     cell_activate_hydro_sorts_up(c, s);
@@ -1881,12 +1881,12 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
   const int with_limiter = (e->policy & engine_policy_limiter);
 
   /* Store the current dx_max and h_max values. */
-  const float dx_max_part_i = atomic_read_f(&ci->hydro.dx_max_part);
+  const float dx_max_part_i = atomic_load_f(&ci->hydro.dx_max_part);
   atomic_write_f(&ci->hydro.dx_max_part_old, dx_max_part_i);
   atomic_write_f(&ci->hydro.h_max_old, ci->hydro.h_max);
 
   if (cj != NULL) {
-    const float dx_max_part_j = atomic_read_f(&cj->hydro.dx_max_part);
+    const float dx_max_part_j = atomic_load_f(&cj->hydro.dx_max_part);
     atomic_write_f(&cj->hydro.dx_max_part_old, dx_max_part_j);
     atomic_write_f(&cj->hydro.h_max_old, cj->hydro.h_max);
   }
@@ -2214,8 +2214,8 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
       atomic_or(&ci->hydro.requires_sorts, 1 << sid);
       atomic_or(&cj->hydro.requires_sorts, 1 << sid);
 
-      const float dx_max_sort_i = atomic_read_f(&ci->hydro.dx_max_sort);
-      const float dx_max_sort_j = atomic_read_f(&cj->hydro.dx_max_sort);
+      const float dx_max_sort_i = atomic_load_f(&ci->hydro.dx_max_sort);
+      const float dx_max_sort_j = atomic_load_f(&cj->hydro.dx_max_sort);
 
       atomic_write_f(&ci->hydro.dx_max_sort_old, dx_max_sort_i);
       atomic_write_f(&cj->hydro.dx_max_sort_old, dx_max_sort_j);
@@ -2829,8 +2829,8 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
         atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
 
-        const float dx_max_sort_i = atomic_read_f(&ci->hydro.dx_max_sort);
-        const float dx_max_sort_j = atomic_read_f(&cj->hydro.dx_max_sort);
+        const float dx_max_sort_i = atomic_load_f(&ci->hydro.dx_max_sort);
+        const float dx_max_sort_j = atomic_load_f(&cj->hydro.dx_max_sort);
 
         atomic_write_f(&ci->hydro.dx_max_sort_old, dx_max_sort_i);
         atomic_write_f(&cj->hydro.dx_max_sort_old, dx_max_sort_j);
