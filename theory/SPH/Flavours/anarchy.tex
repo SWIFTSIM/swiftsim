@@ -1,0 +1,50 @@
+\section{ANARCHY-SPH}
+\label{sec:sph:anarchy}
+
+This section is loosely based on Dalla Vecchia (\textit{in prep.}), also described in section 2.2.2 of
+\cite{Schaller2015}.\\
+
+The version of ANARCHY that is currently implemented in \swift{} is based on the Pressure-Energy
+(P-U) SPH scheme, rather than the original Pressure-Entropy. This was chosen to make the
+implementation of sub-grid physics easier, as well as injection of energy more accurate as
+no iteration of the entropy-energy relation is required.
+
+ANARCH SPH comprises of:
+\begin{itemize}
+	\item Pressure-Energy SPH
+	\item \citet[][, henceforth C\&D]{cullen2010} variable artificial viscosity
+	\item A basic thermal diffusion term
+	\item The time-step limiter from \citet{durier2012}.
+\end{itemize}
+
+\subsection{Equations of Motion}
+
+The following smoothed quantities are required, and are calculated in the density loop:
+\begin{itemize}
+	\item $\rho_i = [h_i^{-n_d}]\sum_j m_j w_{i}$
+	\item $(d\rho/dh)_i = - [h_i^{-n_d - 1}]\sum_j m_j ( n_d * w_i + x_i \nabla_i w_i)$
+	\item $\bar{P}_i = [(\gamma - 1)h_i^{-n_d}]\sum_j m_j u_j w_{i}$
+	\item $(d\bar{P}/dh)_i = - [(\gamma - 1)h_i^{-n_d - 1}]\sum_j m_j u_j ( n_d * w_i + x_i \nabla_i w_i)$
+	\item $n_i = [h_i^{-n_d}]\sum_j w_{i}$
+	\item $(dn/dh)_i = - [h_i^{-n_d - 1}]\sum_j ( n_d * w_i + x_i \nabla_i w_i)$
+	\item $(\nabla \cdot \mathbf{v})_i = - [a^{-2} \rho_i^{-1} h^{-n_d - 1}]\sum_j m_j \mathbf{v}_{ij} \cdot \tilde{\mathbf{x}}_{ij} \nabla_i w_i$
+	% Think the cosmo factor entering here is wrong...
+	\item $(\nabla \times \mathbf{v})_i = - [a^{-2} \rho_i^{-1} h^{-n_d - 1} + Hn_d]\sum_j m_j \mathbf{v}_{ij} \times \tilde{\mathbf{x}}_{ij} \nabla_i w_i$
+\end{itemize}
+
+
+\end{itemize}
+with quantities in brackets added in {\tt hydro\_end\_density} and:
+\begin{itemize}
+	\item $h_i$ the smoothing length of particle $i$
+	\item $n_d$ the number of hydro dimensions
+	\item $m_j$ the mass of particle $j$
+	\item $w_{i}$ the dimensionless kernel evalulated at $x_i = r / h_i$
+	\item $r$ the interparticle separation of particles $i$ and $j$
+	\item $u_i$ the internal energy of the particle
+	\item $\gamma$ the ratio of specific heats
+	\item $\mathbf{v}_ij$ the difference between the velocities of particle $i$ and $j$
+	\item $\tilde{\mathbf{x}}_{ij}$ the unit vector connecting particles $i$ and $j$
+	\item $a$ the current scale factor
+	\item $H$ the current Hubble constant
+\end{itemize}
