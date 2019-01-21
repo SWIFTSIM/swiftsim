@@ -194,39 +194,39 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_gradient(
-    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
+    struct part* restrict pj, float a, float H) {
 
-    /* We need to construct the maximal signal velocity between our particle
-     * and all of it's neighbours */
+  /* We need to construct the maximal signal velocity between our particle
+   * and all of it's neighbours */
 
-    const float dv_dx = 
-        (pi->v[0] - pj->v[0]) * dx[0] + 
-        (pi->v[1] - pj->v[1]) * dx[1] + 
-        (pi->v[2] - pj->v[2]) * dx[2];
+  const float dv_dx = (pi->v[0] - pj->v[0]) * dx[0] +
+                      (pi->v[1] - pj->v[1]) * dx[1] +
+                      (pi->v[2] - pj->v[2]) * dx[2];
 
-    const float dv_dx_factor = min(0, 3.f*dv_dx);
+  const float dv_dx_factor = min(0, 3.f * dv_dx);
 
-    const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
+  const float new_v_sig =
+      pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
-    /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
-    pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
+  /* Update if we need to */
+  pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
+  pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
 
-    /* Calculate Del^2 u for the thermal diffusion coefficient. */
-    /* Need to get some kernel values F_ij = wi_dx */
-    float wi, wi_dx, wj, wj_dx;
+  /* Calculate Del^2 u for the thermal diffusion coefficient. */
+  /* Need to get some kernel values F_ij = wi_dx */
+  float wi, wi_dx, wj, wj_dx;
 
-    const float r = sqrtf(r2);
-    const float ui = r / hi;
-    const float uj = r / hj;
+  const float r = sqrtf(r2);
+  const float ui = r / hi;
+  const float uj = r / hj;
 
-    kernel_deval(ui, &wi, &wi_dx);
-    kernel_deval(uj, &wj, &wj_dx);
+  kernel_deval(ui, &wi, &wi_dx);
+  kernel_deval(uj, &wj, &wj_dx);
 
-    const float delta_u_factor = (pi->u - pj->u) / r;
-    pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
-    pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
+  const float delta_u_factor = (pi->u - pj->u) / r;
+  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
+  pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
 }
 
 /**
@@ -247,35 +247,35 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
-    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
+    struct part* restrict pj, float a, float H) {
 
-    /* We need to construct the maximal signal velocity between our particle
-     * and all of it's neighbours */
+  /* We need to construct the maximal signal velocity between our particle
+   * and all of it's neighbours */
 
-    const float dv_dx = 
-        (pi->v[0] - pj->v[0]) * dx[0] + 
-        (pi->v[1] - pj->v[1]) * dx[1] + 
-        (pi->v[2] - pj->v[2]) * dx[2];
+  const float dv_dx = (pi->v[0] - pj->v[0]) * dx[0] +
+                      (pi->v[1] - pj->v[1]) * dx[1] +
+                      (pi->v[2] - pj->v[2]) * dx[2];
 
-    const float dv_dx_factor = min(0, 3.f*dv_dx);
+  const float dv_dx_factor = min(0, 3.f * dv_dx);
 
-    const float new_v_sig = pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
+  const float new_v_sig =
+      pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
 
-    /* Update if we need to */
-    pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
+  /* Update if we need to */
+  pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
 
-    /* Calculate Del^2 u for the thermal diffusion coefficient. */
-    /* Need to get some kernel values F_ij = wi_dx */
-    float wi, wi_dx;
+  /* Calculate Del^2 u for the thermal diffusion coefficient. */
+  /* Need to get some kernel values F_ij = wi_dx */
+  float wi, wi_dx;
 
-    const float r = sqrtf(r2);
-    const float ui = r / hi;
+  const float r = sqrtf(r2);
+  const float ui = r / hi;
 
-    kernel_deval(ui, &wi, &wi_dx);
+  kernel_deval(ui, &wi, &wi_dx);
 
-    const float delta_u_factor = (pi->u - pj->u) / r;
-    pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
+  const float delta_u_factor = (pi->u - pj->u) / r;
+  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
 }
 
 /**
@@ -352,7 +352,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc = -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float visc =
+      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -387,7 +388,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff = max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
+  const float v_diff =
+      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
@@ -481,7 +483,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc = -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float visc =
+      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
@@ -509,7 +512,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff = max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
+  const float v_diff =
+      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5 * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
@@ -539,8 +543,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
  *
  */
 __attribute__((always_inline)) INLINE static void runner_iact_limiter(
-    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
+    struct part* restrict pj, float a, float H) {
 
   /* Nothing to do here if both particles are active */
 }
@@ -559,15 +563,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_limiter(
  *
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_limiter(
-    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
+    struct part* restrict pj, float a, float H) {
 
   /* Wake up the neighbour? */
-  if (pi->viscosity.v_sig > const_limiter_max_v_sig_ratio * pj->viscosity.v_sig) {
+  if (pi->viscosity.v_sig >
+      const_limiter_max_v_sig_ratio * pj->viscosity.v_sig) {
 
     pj->wakeup = time_bin_awake;
   }
 }
-
 
 #endif /* SWIFT_MINIMAL_HYDRO_IACT_H */

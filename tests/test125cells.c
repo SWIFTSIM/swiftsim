@@ -401,8 +401,8 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
             main_cell->hydro.parts[pid].v[0], main_cell->hydro.parts[pid].v[1],
             main_cell->hydro.parts[pid].v[2], main_cell->hydro.parts[pid].h,
             hydro_get_comoving_density(&main_cell->hydro.parts[pid]),
-#if defined(MINIMAL_SPH) || defined(PLANETARY_SPH) ||   \
-    defined(GIZMO_MFV_SPH) || defined(SHADOWFAX_SPH) || \
+#if defined(MINIMAL_SPH) || defined(PLANETARY_SPH) ||              \
+    defined(GIZMO_MFV_SPH) || defined(SHADOWFAX_SPH) ||            \
     defined(HOPKINS_PU_SPH) || defined(HOPKINS_PU_SPH_MONAGHAN) || \
     defined(ANARCHY_PU_SPH)
             0.f,
@@ -727,7 +727,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef EXTRA_HYDRO_LOOP
     /* We need to do the gradient loop and the extra ghost! */
-    message("Extra hydro loop detected, running gradient loop in test125cells.");
+    message(
+        "Extra hydro loop detected, running gradient loop in test125cells.");
 
     /* Run all the pairs (only once !)*/
     for (int i = 0; i < 5; i++) {
@@ -764,7 +765,8 @@ int main(int argc, char *argv[]) {
       runner_doself1_gradient(&runner, inner_cells[j]);
 
     /* Extra ghost to finish everything on the central cells */
-    for (int j = 0; j < 27; ++j) runner_do_extra_ghost(&runner, inner_cells[j], 0);
+    for (int j = 0; j < 27; ++j)
+      runner_do_extra_ghost(&runner, inner_cells[j], 0);
 
 #endif /* EXTRA_HYDRO_LOOP */
 
@@ -898,44 +900,44 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < 27; ++j) runner_do_ghost(&runner, inner_cells[j], 0);
 
 #ifdef EXTRA_HYDRO_LOOP
-    /* We need to do the gradient loop and the extra ghost! */
+  /* We need to do the gradient loop and the extra ghost! */
 
-    /* Run all the pairs (only once !)*/
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-        for (int k = 0; k < 5; k++) {
+  /* Run all the pairs (only once !)*/
+  for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < 5; j++) {
+      for (int k = 0; k < 5; k++) {
 
-          struct cell *ci = cells[i * 25 + j * 5 + k];
+        struct cell *ci = cells[i * 25 + j * 5 + k];
 
-          for (int ii = -1; ii < 2; ii++) {
-            int iii = i + ii;
-            if (iii < 0 || iii >= 5) continue;
-            iii = (iii + 5) % 5;
-            for (int jj = -1; jj < 2; jj++) {
-              int jjj = j + jj;
-              if (jjj < 0 || jjj >= 5) continue;
-              jjj = (jjj + 5) % 5;
-              for (int kk = -1; kk < 2; kk++) {
-                int kkk = k + kk;
-                if (kkk < 0 || kkk >= 5) continue;
-                kkk = (kkk + 5) % 5;
+        for (int ii = -1; ii < 2; ii++) {
+          int iii = i + ii;
+          if (iii < 0 || iii >= 5) continue;
+          iii = (iii + 5) % 5;
+          for (int jj = -1; jj < 2; jj++) {
+            int jjj = j + jj;
+            if (jjj < 0 || jjj >= 5) continue;
+            jjj = (jjj + 5) % 5;
+            for (int kk = -1; kk < 2; kk++) {
+              int kkk = k + kk;
+              if (kkk < 0 || kkk >= 5) continue;
+              kkk = (kkk + 5) % 5;
 
-                struct cell *cj = cells[iii * 25 + jjj * 5 + kkk];
+              struct cell *cj = cells[iii * 25 + jjj * 5 + kkk];
 
-                if (cj > ci) pairs_all_gradient(&runner, ci, cj);
-              }
+              if (cj > ci) pairs_all_gradient(&runner, ci, cj);
             }
           }
         }
       }
     }
+  }
 
-    /* And now the self-interaction for the central cells */
-    for (int j = 0; j < 27; ++j)
-      self_all_gradient(&runner, inner_cells[j]);
+  /* And now the self-interaction for the central cells */
+  for (int j = 0; j < 27; ++j) self_all_gradient(&runner, inner_cells[j]);
 
-    /* Extra ghost to finish everything on the central cells */
-    for (int j = 0; j < 27; ++j) runner_do_extra_ghost(&runner, inner_cells[j], 0);
+  /* Extra ghost to finish everything on the central cells */
+  for (int j = 0; j < 27; ++j)
+    runner_do_extra_ghost(&runner, inner_cells[j], 0);
 
 #endif /* EXTRA_HYDRO_LOOP */
 

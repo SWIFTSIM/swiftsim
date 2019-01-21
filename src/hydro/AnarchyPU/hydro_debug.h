@@ -37,7 +37,8 @@ __attribute__((always_inline)) INLINE static void hydro_debug_particle(
       xp->v_full[1], xp->v_full[2], p->a_hydro[0], p->a_hydro[1], p->a_hydro[2],
       p->u, p->u_dt, p->viscosity.v_sig, hydro_get_comoving_pressure(p), p->h,
       p->force.h_dt, (int)p->density.wcount, p->mass, p->density.rho_dh, p->rho,
-      p->density.pressure_bar_dh, p->pressure_bar, p->viscosity.alpha, p->time_bin);
+      p->density.pressure_bar_dh, p->pressure_bar, p->viscosity.alpha,
+      p->time_bin);
 }
 
 #endif /* SWIFT_ANARCHY_PU_HYDRO_DEBUG_H */

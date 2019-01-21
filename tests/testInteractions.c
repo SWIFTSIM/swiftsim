@@ -111,8 +111,8 @@ struct part *make_particles(size_t count, double *offset, double spacing,
  */
 void prepare_force(struct part *parts, size_t count) {
 
-#if !defined(GIZMO_MFV_SPH) && !defined(SHADOWFAX_SPH) && \
-    !defined(MINIMAL_SPH) && !defined(PLANETARY_SPH) &&   \
+#if !defined(GIZMO_MFV_SPH) && !defined(SHADOWFAX_SPH) &&            \
+    !defined(MINIMAL_SPH) && !defined(PLANETARY_SPH) &&              \
     !defined(HOPKINS_PU_SPH) && !defined(HOPKINS_PU_SPH_MONAGHAN) && \
     !defined(ANARCHY_PU_SPH)
   struct part *p;

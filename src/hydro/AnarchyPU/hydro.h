@@ -485,7 +485,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->density.rot_v[2] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
 
   /* Finish calculation of the velocity divergence */
-  p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
+  p->viscosity.div_v *=
+      h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
 }
 
 /**
@@ -503,8 +504,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
-    struct part* restrict p, struct xpart* restrict xp,
-    const struct cosmology* cosmo) {
+    struct part *restrict p, struct xpart *restrict xp,
+    const struct cosmology *cosmo) {
 
   const float fac_B = cosmo->a_factor_Balsara_eps;
 
@@ -520,8 +521,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
   const float soundspeed = hydro_get_comoving_soundspeed(p);
 
   /* Compute the Balsara switch */
-  const float balsara = abs_div_v /
-      (abs_div_v + curl_v + 0.0001f * soundspeed * fac_B / p->h);
+  const float balsara =
+      abs_div_v / (abs_div_v + curl_v + 0.0001f * soundspeed * fac_B / p->h);
 
   /* Compute the "grad h" term */
   const float common_factor = p->h / (hydro_dimension * p->density.wcount);
@@ -545,7 +546,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
  * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
-    struct part* restrict p) {
+    struct part *restrict p) {
   p->viscosity.v_sig = 2.f * p->force.soundspeed;
 }
 
@@ -633,22 +634,24 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
-  
+
   /* Here we need to update the artificial viscosity */
 
   /* Timescale for decay */
-  const float tau = p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
+  const float tau =
+      p->h / (2.f * p->viscosity.v_sig * hydro_props->viscosity.length);
   /* Construct time differential of div.v implicitly */
   const float div_v_dt =
-      dt_alpha == 0.f ? 0.f
-                      : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
-  /* Construct the source term for the AV; if shock detected this is _positive_ as
-    * div_v_dt should be _negative_ before the shock hits */
+      dt_alpha == 0.f
+          ? 0.f
+          : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
+  /* Construct the source term for the AV; if shock detected this is _positive_
+   * as div_v_dt should be _negative_ before the shock hits */
   const float S = p->h * p->h * max(0.f, -1.f * div_v_dt);
-  const float v_sig_square = p->viscosity.v_sig * p->viscosity.v_sig; 
+  const float v_sig_square = p->viscosity.v_sig * p->viscosity.v_sig;
   /* Calculate the current appropriate value of the AV based on the above */
-  const float alpha_loc = hydro_props->viscosity.alpha_max * S / (v_sig_square + S);
-
+  const float alpha_loc =
+      hydro_props->viscosity.alpha_max * S / (v_sig_square + S);
 
   if (alpha_loc > p->viscosity.alpha) {
     /* Reset the value of alpha to the appropriate value */
@@ -685,7 +688,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   }
 
   p->diffusion.alpha = new_diffusion_alpha;
-
 }
 
 /**

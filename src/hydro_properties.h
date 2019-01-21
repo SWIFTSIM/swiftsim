@@ -109,7 +109,8 @@ struct hydro_props {
   /*! Thermal diffusion parameters */
   struct {
 
-    /*! Initialisation value, or the case for constant thermal diffusion coeffs */
+    /*! Initialisation value, or the case for constant thermal diffusion coeffs
+     */
     float alpha;
 
     /*! Tuning parameter for speed of ramp up/down */
