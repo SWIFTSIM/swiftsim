@@ -198,15 +198,22 @@ if __name__ == "__main__":
     mean_range = [temp_in_group.min(), temp_in_group.max()]
     halo_range = [halo_temperatures.min(), halo_temperatures.max()]
 
-    plt.plot(mean_range, halo_range, lw=2, linestyle="--", color="grey", label="1:1")
+    bottom = min([halo_range[0], mean_range[0]])
+    top = max([halo_range[1], mean_range[1]])
+
+    plt.plot(
+        [bottom, top],
+        [bottom, top],
+        lw=2, linestyle="--", color="grey", label="1:1"
+    )
     
-    ax.scatter(temp_in_group, halo_temperatures, s=2, edgecolor="none", label="Halos")
+    ax.scatter(halo_temperatures, temp_in_group, s=2, edgecolor="none", label="Halos")
 
-    ax.set_xlabel("Mean Group Temperature [K]")
-    ax.set_ylabel("Halo Virial Temperature [K]")
+    ax.set_ylabel("Mean Group Temperature [K]")
+    ax.set_xlabel("Halo Virial Temperature [K]")
 
-    ax.set_xlim(mean_range)
-    ax.set_ylim(halo_range)
+    ax.set_ylim(mean_range)
+    ax.set_xlim(halo_range)
 
     ax.legend(frameon=False)
 
