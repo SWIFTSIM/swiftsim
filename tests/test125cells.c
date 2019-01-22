@@ -466,11 +466,10 @@ void dump_particle_fields(char *fileName, struct cell *main_cell,
 void runner_dopair1_branch_density(struct runner *r, struct cell *ci,
                                    struct cell *cj);
 void runner_doself1_branch_density(struct runner *r, struct cell *ci);
-void runner_doself1_density(struct runner *r, struct cell *ci);
 #ifdef EXTRA_HYDRO_LOOP
 void runner_dopair1_branch_gradient(struct runner *r, struct cell *ci,
                                     struct cell *cj);
-void runner_doself1_gradient(struct runner *r, struct cell *ci);
+void runner_doself1_branch_gradient(struct runner *r, struct cell *ci);
 #endif /* EXTRA_HYDRO LOOP */
 void runner_dopair2_branch_force(struct runner *r, struct cell *ci,
                                  struct cell *cj);
@@ -762,7 +761,7 @@ int main(int argc, char *argv[]) {
 
     /* And now the self-interaction for the central cells */
     for (int j = 0; j < 27; ++j)
-      runner_doself1_gradient(&runner, inner_cells[j]);
+      runner_doself1_branch_gradient(&runner, inner_cells[j]);
 
     /* Extra ghost to finish everything on the central cells */
     for (int j = 0; j < 27; ++j)
