@@ -302,7 +302,7 @@ __attribute__((always_inline)) INLINE static float
 hydro_get_physical_internal_energy_dt(const struct part *restrict p,
                                       const struct cosmology *cosmo) {
 
-  return p->u_dt * cosmo->a_factor_internal_energy;
+  return p->u_dt * cosmo->a_factor_internal_energy; 
 }
 
 /**
@@ -334,7 +334,7 @@ hydro_set_physical_internal_energy_dt(struct part *restrict p,
                                       const struct cosmology *cosmo,
                                       float du_dt) {
 
-  p->u_dt = du_dt * cosmo->a_factor_internal_energy;
+  p->u_dt = du_dt / cosmo->a_factor_internal_energy;
 }
 
 /**
