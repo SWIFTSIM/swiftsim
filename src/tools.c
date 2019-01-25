@@ -259,7 +259,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
   }
 }
 
-#ifdef EXTRA_HDYRO_LOOP
+#ifdef EXTRA_HYDRO_LOOP
 void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
 
   float r2, hi, hj, hig2, hjg2, dx[3];
@@ -295,7 +295,7 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
       }
 
       /* Hit or miss? */
-      if (r2 < hig2 || r2 < hjg2) {
+      if (r2 < hig2 && !part_is_inhibited(pj, e)) {
 
         /* Interact */
         runner_iact_nonsym_gradient(r2, dx, hi, hj, pi, pj, a, H);
@@ -328,7 +328,7 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
       }
 
       /* Hit or miss? */
-      if (r2 < hjg2 || r2 < hig2) {
+      if (r2 < hjg2 && !part_is_inhibited(pi, e)) {
 
         /* Interact */
         runner_iact_nonsym_gradient(r2, dx, hj, pi->h, pj, pi, a, H);
@@ -336,8 +336,6 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
     }
   }
 }
-#else
-void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {}
 #endif /* EXTRA_HDYRO_LOOP */
 
 void pairs_all_force(struct runner *r, struct cell *ci, struct cell *cj) {
@@ -573,14 +571,14 @@ void self_all_gradient(struct runner *r, struct cell *ci) {
       }
 
       /* Hit or miss? */
-      if (r2 < hig2 && part_is_active(pi, e)) {
+      if (r2 < hig2 && part_is_active(pi, e) && !part_is_inhibited(pj, e)) {
 
         /* Interact */
         runner_iact_nonsym_gradient(r2, dxi, hi, hj, pi, pj, a, H);
       }
 
       /* Hit or miss? */
-      if (r2 < hjg2 && part_is_active(pj, e)) {
+      if (r2 < hjg2 && part_is_active(pj, e) && !part_is_inhibited(pi, e)) {
 
         dxi[0] = -dxi[0];
         dxi[1] = -dxi[1];
@@ -592,8 +590,6 @@ void self_all_gradient(struct runner *r, struct cell *ci) {
     }
   }
 }
-#else
-void self_all_gradient(struct runner *r, struct cell *ci) {}
 #endif /* EXTRA_HYDRO_LOOP */
 
 void self_all_force(struct runner *r, struct cell *ci) {
