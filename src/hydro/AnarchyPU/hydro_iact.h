@@ -204,7 +204,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
                       (pi->v[1] - pj->v[1]) * dx[1] +
                       (pi->v[2] - pj->v[2]) * dx[2];
 
-  const float dv_dx_factor = min(0, 3.f * dv_dx);
+  const float dv_dx_factor = min(0, const_viscosity_beta * dv_dx);
 
   const float new_v_sig =
       pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
@@ -257,7 +257,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
                       (pi->v[1] - pj->v[1]) * dx[1] +
                       (pi->v[2] - pj->v[2]) * dx[2];
 
-  const float dv_dx_factor = min(0, 3.f * dv_dx);
+  const float dv_dx_factor = min(0, const_viscosity_beta * dv_dx);
 
   const float new_v_sig =
       pi->force.soundspeed + pj->force.soundspeed - dv_dx_factor;
