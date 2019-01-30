@@ -4568,9 +4568,9 @@ void space_write_cell(
     sprintf(hydro_superID, "%i", c->hydro.super->cellID);
 
   /* Write line for current cell */
-  fprintf(f, "%i,%i,%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ",
-	  c->cellID, parent, c->stars.count,
-	  c->hydro.count, c->grav.count,
+  fprintf(f, "%i,%i,%i,", c->cellID, parent, c->nodeID);
+  fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ",
+	  c->stars.count, c->hydro.count, c->grav.count,
 	  superID, hydro_superID,
 	  c->loc[0], c->loc[1], c->loc[2],
 	  c->width[0], c->width[1], c->width[2]);
@@ -4585,7 +4585,7 @@ void space_write_cell(
 
 
 /**
- * @brief Write a csv file containing the cell hierachy
+ * @brief Write a csv file containing the cell hierarchy
  *
  * @param s The #space.
  */
@@ -4594,24 +4594,31 @@ void space_write_cell_hierarchy(const struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Open file */
-  char filename[200] = "cell_hierachy.csv";
+  char filename[200];
+  sprintf(filename, "cell_hierarchy_%04i.csv", engine_rank);
   FILE *f = fopen(filename, "w");
   if (f == NULL) error("Error opening task level file.");
 
-  const int parent = root_cell_id;
+  const int root_id = root_cell_id;
   /* Write header */
-  fprintf(f, "name,parent,hydro_count,stars_count,gpart_count,super,hydro_super,"
-	  "loc1,loc2,loc3,width1,width2,width3,");
-  fprintf(f, "hydro_h_max,stars_h_max\n");
+  if (engine_rank == 0) {
+    fprintf(f, "name,parent,mpi_rank,");
+    fprintf(f, "hydro_count,stars_count,gpart_count,super,hydro_super,"
+	    "loc1,loc2,loc3,width1,width2,width3,");
+    fprintf(f, "hydro_h_max,stars_h_max\n");
 
-  /* Write root data */
-  fprintf(f, "%i, ,%li,%li,%li, , , , , , , , , ",
-	  parent, s->nr_parts, s->nr_sparts, s->nr_gparts);
-  fprintf(f, ",\n");
+    /* Write root data */
+    fprintf(f, "%i, ,-1,", root_id);
+    fprintf(f, "%li,%li,%li, , , , , , , , , ",
+	    s->nr_parts, s->nr_sparts, s->nr_gparts);
+    fprintf(f, ",\n");
+  }
 
   /* Write all the top level cells (and their children) */
   for(int i = 0; i < s->nr_cells; i++) {
-    space_write_cell(s, f, &s->cells_top[i], parent);
+    struct cell *c = &s->cells_top[i];
+    if (c->nodeID == engine_rank)
+      space_write_cell(s, f, c);
   }
 
   /* Cleanup */
