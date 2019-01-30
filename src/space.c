@@ -4537,22 +4537,37 @@ void space_struct_restore(struct space *s, FILE *stream) {
 #endif
 }
 
+#define root_cell_id 0
+/**
+ * @brief write a single cell in a csv file.
+ *
+ * @param s The #space.
+ * @param f The file to use (already open).
+ * @param c The current #cell.
+ */
 void space_write_cell(
-    const struct space *s, FILE *f, const struct cell *c,
-    int parent) {
+    const struct space *s, FILE *f, const struct cell *c) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   if (c == NULL)
     return;
 
+  /* Get parent ID */
+  int parent = root_cell_id;
+  if (c->parent != NULL)
+    parent = c->parent->cellID;
+    
+  /* Get super ID */
   char superID[100] = "";
   if (c->super != NULL)
     sprintf(superID, "%i", c->super->cellID);
 
+  /* Get hydro super ID */
   char hydro_superID[100] = "";
   if (c->hydro.super != NULL)
     sprintf(hydro_superID, "%i", c->hydro.super->cellID);
-  
+
+  /* Write line for current cell */
   fprintf(f, "%i,%i,%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ",
 	  c->cellID, parent, c->stars.count,
 	  c->hydro.count, c->grav.count,
@@ -4561,34 +4576,45 @@ void space_write_cell(
 	  c->width[0], c->width[1], c->width[2]);
   fprintf(f, "%g, %g\n", c->hydro.h_max, c->stars.h_max);
 
-  parent = c->cellID;
-
+  /* Write children */
   for(int i=0; i < 8; i++) {
-    space_write_cell(s, f, c->progeny[i],
-		     parent);
+    space_write_cell(s, f, c->progeny[i]);
   }
 #endif
 }
 
 
+/**
+ * @brief Write a csv file containing the cell hierachy
+ *
+ * @param s The #space.
+ */
 void space_write_cell_hierarchy(const struct space *s) {
 
 #ifdef SWIFT_DEBUG_CHECKS
+
+  /* Open file */
   char filename[200] = "cell_hierachy.csv";
   FILE *f = fopen(filename, "w");
   if (f == NULL) error("Error opening task level file.");
 
+  const int parent = root_cell_id;
+  /* Write header */
   fprintf(f, "name,parent,hydro_count,stars_count,gpart_count,super,hydro_super,"
 	  "loc1,loc2,loc3,width1,width2,width3,");
   fprintf(f, "hydro_h_max,stars_h_max\n");
-  fprintf(f, "0, ,%li,%li,%li, , , , , , , , , ", s->nr_parts, s->nr_sparts, s->nr_gparts);
+
+  /* Write root data */
+  fprintf(f, "%i, ,%li,%li,%li, , , , , , , , , ",
+	  parent, s->nr_parts, s->nr_sparts, s->nr_gparts);
   fprintf(f, ",\n");
 
-  int parent = 0;
+  /* Write all the top level cells (and their children) */
   for(int i = 0; i < s->nr_cells; i++) {
     space_write_cell(s, f, &s->cells_top[i], parent);
   }
 
+  /* Cleanup */
   fclose(f);
 #endif
 }
