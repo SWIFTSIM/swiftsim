@@ -4536,3 +4536,59 @@ void space_struct_restore(struct space *s, FILE *stream) {
                     s->nr_sparts, 1);
 #endif
 }
+
+void space_write_cell(
+    const struct space *s, FILE *f, const struct cell *c,
+    int parent) {
+#ifdef SWIFT_DEBUG_CHECKS
+
+  if (c == NULL)
+    return;
+
+  char superID[100] = "";
+  if (c->super != NULL)
+    sprintf(superID, "%i", c->super->cellID);
+
+  char hydro_superID[100] = "";
+  if (c->hydro.super != NULL)
+    sprintf(hydro_superID, "%i", c->hydro.super->cellID);
+  
+  fprintf(f, "%i,%i,%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ",
+	  c->cellID, parent, c->stars.count,
+	  c->hydro.count, c->grav.count,
+	  superID, hydro_superID,
+	  c->loc[0], c->loc[1], c->loc[2],
+	  c->width[0], c->width[1], c->width[2]);
+  fprintf(f, "%g, %g\n", c->hydro.h_max, c->stars.h_max);
+
+  parent = c->cellID;
+
+  for(int i=0; i < 8; i++) {
+    space_write_cell(s, f, c->progeny[i],
+		     parent);
+  }
+#endif
+}
+
+
+void space_write_cell_hierarchy(const struct space *s) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  char filename[200] = "cell_hierachy.csv";
+  FILE *f = fopen(filename, "w");
+  if (f == NULL) error("Error opening task level file.");
+
+  fprintf(f, "name,parent,hydro_count,stars_count,gpart_count,super,hydro_super,"
+	  "loc1,loc2,loc3,width1,width2,width3,");
+  fprintf(f, "hydro_h_max,stars_h_max\n");
+  fprintf(f, "0, ,%li,%li,%li, , , , , , , , , ", s->nr_parts, s->nr_sparts, s->nr_gparts);
+  fprintf(f, ",\n");
+
+  int parent = 0;
+  for(int i = 0; i < s->nr_cells; i++) {
+    space_write_cell(s, f, &s->cells_top[i], parent);
+  }
+
+  fclose(f);
+#endif
+}
