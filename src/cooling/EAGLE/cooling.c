@@ -332,10 +332,17 @@ INLINE static double bisection_iter(
                                          abundance_ratio, n_H_index, d_n_H,
                                          He_index, d_He, cooling,
                                          /*dLambdaNet_du=*/NULL);
+      // Debugging max iterations crash
+      if (redshift <= 5.9302993 && ID == 5925215 || i >= bisection_max_iterations - 10) {
+        message("cooling particle %llu iteration %d u_ini_cgs %.5e u_lower_cgs %.5e u_upper_cgs %.5e LambdaNet_cgs %.5e ratefact_cgs %.5e dt_cgs %.5e",
+                  ID, i, u_ini_cgs, u_lower_cgs, u_upper_cgs, LambdaNet_cgs, ratefact_cgs, dt_cgs);
+      }
       i++;
     }
 
     if (i >= bisection_max_iterations) {
+      // Debugging max iterations crash
+      if (ID == 5925215) message("n_H_cgs %.5e n_H_index %d d_n_H %.5e He_index %d d_He %.5e", n_H_cgs, n_H_index, d_n_H, He_index, d_He);
       error(
           "particle %llu exceeded max iterations searching for bounds when "
           "cooling",
@@ -368,10 +375,17 @@ INLINE static double bisection_iter(
                                          abundance_ratio, n_H_index, d_n_H,
                                          He_index, d_He, cooling,
                                          /*dLambdaNet_du=*/NULL);
+      // Debugging max iterations crash
+      if (redshift <= 5.9302993 && ID == 5925215 || i >= bisection_max_iterations - 10) {
+        message("heating particle %llu iteration %d u_ini_cgs %.5e u_lower_cgs %.5e u_upper_cgs %.5e LambdaNet_cgs %.5e ratefact_cgs %.5e dt_cgs %.5e",
+                  ID, i, u_ini_cgs, u_lower_cgs, u_upper_cgs, LambdaNet_cgs, ratefact_cgs, dt_cgs);
+      }
       i++;
     }
 
     if (i >= bisection_max_iterations) {
+      // Debugging max iterations crash
+      if (ID == 5925215) message("n_H_cgs %.5e n_H_index %d d_n_H %.5e He_index %d d_He %.5e", n_H_cgs, n_H_index, d_n_H, He_index, d_He);
       error(
           "particle %llu exceeded max iterations searching for bounds when "
           "heating",
@@ -405,6 +419,11 @@ INLINE static double bisection_iter(
       u_upper_cgs = u_next_cgs;
     } else {
       u_lower_cgs = u_next_cgs;
+    }
+    // Debugging max iterations crash
+    if (redshift <= 5.9302993 && ID == 5925215 || i >= bisection_max_iterations - 10) {
+      message("particle %llu iteration %d u_ini_cgs %.5e u_lower_cgs %.5e u_upper_cgs %.5e LambdaNet_cgs %.5e ratefact_cgs %.5e dt_cgs %.5e",
+                ID, i, u_ini_cgs, u_lower_cgs, u_upper_cgs, LambdaNet_cgs, ratefact_cgs, dt_cgs);
     }
 
     i++;
