@@ -4545,22 +4545,18 @@ void space_struct_restore(struct space *s, FILE *stream) {
  * @param f The file to use (already open).
  * @param c The current #cell.
  */
-void space_write_cell(
-    const struct space *s, FILE *f, const struct cell *c) {
+void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
 #ifdef SWIFT_DEBUG_CHECKS
 
-  if (c == NULL)
-    return;
+  if (c == NULL) return;
 
   /* Get parent ID */
   int parent = root_cell_id;
-  if (c->parent != NULL)
-    parent = c->parent->cellID;
-    
+  if (c->parent != NULL) parent = c->parent->cellID;
+
   /* Get super ID */
   char superID[100] = "";
-  if (c->super != NULL)
-    sprintf(superID, "%i", c->super->cellID);
+  if (c->super != NULL) sprintf(superID, "%i", c->super->cellID);
 
   /* Get hydro super ID */
   char hydro_superID[100] = "";
@@ -4569,20 +4565,17 @@ void space_write_cell(
 
   /* Write line for current cell */
   fprintf(f, "%i,%i,%i,", c->cellID, parent, c->nodeID);
-  fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ",
-	  c->stars.count, c->hydro.count, c->grav.count,
-	  superID, hydro_superID,
-	  c->loc[0], c->loc[1], c->loc[2],
-	  c->width[0], c->width[1], c->width[2]);
+  fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->stars.count,
+          c->hydro.count, c->grav.count, superID, hydro_superID, c->loc[0],
+          c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
   fprintf(f, "%g, %g\n", c->hydro.h_max, c->stars.h_max);
 
   /* Write children */
-  for(int i=0; i < 8; i++) {
+  for (int i = 0; i < 8; i++) {
     space_write_cell(s, f, c->progeny[i]);
   }
 #endif
 }
-
 
 /**
  * @brief Write a csv file containing the cell hierarchy
@@ -4603,22 +4596,22 @@ void space_write_cell_hierarchy(const struct space *s) {
   /* Write header */
   if (engine_rank == 0) {
     fprintf(f, "name,parent,mpi_rank,");
-    fprintf(f, "hydro_count,stars_count,gpart_count,super,hydro_super,"
-	    "loc1,loc2,loc3,width1,width2,width3,");
+    fprintf(f,
+            "hydro_count,stars_count,gpart_count,super,hydro_super,"
+            "loc1,loc2,loc3,width1,width2,width3,");
     fprintf(f, "hydro_h_max,stars_h_max\n");
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
-    fprintf(f, "%li,%li,%li, , , , , , , , , ",
-	    s->nr_parts, s->nr_sparts, s->nr_gparts);
+    fprintf(f, "%li,%li,%li, , , , , , , , , ", s->nr_parts, s->nr_sparts,
+            s->nr_gparts);
     fprintf(f, ",\n");
   }
 
   /* Write all the top level cells (and their children) */
-  for(int i = 0; i < s->nr_cells; i++) {
+  for (int i = 0; i < s->nr_cells; i++) {
     struct cell *c = &s->cells_top[i];
-    if (c->nodeID == engine_rank)
-      space_write_cell(s, f, c);
+    if (c->nodeID == engine_rank) space_write_cell(s, f, c);
   }
 
   /* Cleanup */
