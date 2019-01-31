@@ -156,7 +156,7 @@ def make_movie(args, density_bounds, temperature_bounds, bins):
         t = metadata.t * units.units["Unit time in cgs (U_t)"]
         t.convert_to_units(Gyr)
         
-        x = "$a$: {:2.2f}\n$z$: {:2.2f}\n$t$ {:2.2f}".format(
+        x = "$a$: {:2.2f}\n$z$: {:2.2f}\n$t$: {:2.2f}".format(
             metadata.a, metadata.z, t
         )
 
