@@ -36,6 +36,7 @@
 #define hydro_props_default_max_iterations 30
 #define hydro_props_default_volume_change 1.4f
 #define hydro_props_default_h_max FLT_MAX
+#define hydro_props_default_h_min_ratio 0.f
 #define hydro_props_default_h_tolerance 1e-4
 #define hydro_props_default_init_temp 0.f
 #define hydro_props_default_min_temp 0.f
@@ -103,6 +104,10 @@ void hydro_props_init(struct hydro_props *p,
   /* Maximal smoothing length */
   p->h_max = parser_get_opt_param_float(params, "SPH:h_max",
                                         hydro_props_default_h_max);
+
+  /* Minimal smoothing length ratio to softening */
+  p->h_min_ratio = parser_get_opt_param_float(params, "SPH:h_min_ratio",
+                                              hydro_props_default_h_min_ratio);
 
   /* Number of iterations to converge h */
   p->max_smoothing_iterations = parser_get_opt_param_int(

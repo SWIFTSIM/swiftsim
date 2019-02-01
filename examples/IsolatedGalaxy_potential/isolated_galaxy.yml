@@ -39,7 +39,7 @@ Scheduler:
 # Parameters related to the initial conditions
 InitialConditions:
   file_name:  3e11-star-only-static-potential-galaxy.hdf5  # The file to read
-  periodic:                    0    # Are we running with periodic ICs?
+  periodic:                    0    # Are we running w/ith periodic ICs?
 
 # Hernquist potential parameters
 HernquistPotential:

@@ -57,6 +57,9 @@ struct hydro_props {
   /*! Maximal smoothing length */
   float h_max;
 
+  /*! Minimal smoothing length ratio to softening length */
+  float h_min_ratio;
+
   /*! Maximal number of iterations to converge h */
   int max_smoothing_iterations;
 

@@ -1192,7 +1192,10 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_global_data *chemistry = e->chemistry;
+  const struct gravity_props *grav_props = e->gravity_properties;
+  const int with_gravity = e->policy & engine_policy_self_gravity;
   const float hydro_h_max = e->hydro_properties->h_max;
+  const float hydro_h_min_ratio = e->hydro_properties->h_min_ratio;
   const float eps = e->hydro_properties->h_tolerance;
   const float hydro_eta_dim =
       pow_dimension(e->hydro_properties->eta_neighbours);
@@ -1257,6 +1260,12 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         const float h_old = p->h;
         const float h_old_dim = pow_dimension(h_old);
         const float h_old_dim_minus_one = pow_dimension_minus_one(h_old);
+
+        /* Softening and minimal smoothing */
+        const float softening =
+            with_gravity ? gravity_get_softening(p->gpart, grav_props) : 0.f;
+        const float hydro_h_min = softening * hydro_h_min_ratio;
+
         float h_new;
         int has_no_neighbours = 0;
 
@@ -1293,11 +1302,13 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 #endif
 
           /* Skip if h is already h_max and we don't have enough neighbours */
-          if ((p->h >= hydro_h_max) && (f < 0.f)) {
+          if (((p->h >= hydro_h_max) && (f < 0.f)) ||
+              ((p->h <= hydro_h_min) && (f > 0.f))) {
 
           /* We have a particle whose smoothing length is already set (wants
-           * to be larger but has already hit the maximum). So, just tidy up
-           * as if the smoothing length had converged correctly  */
+           * to be larger but has already hit the maximum OR wants to be smaller
+           * but has already reached the minimum). So, just tidy up as if the
+           * smoothing length had converged correctly  */
 
 #ifdef EXTRA_HYDRO_LOOP
 
