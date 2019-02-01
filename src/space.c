@@ -4565,8 +4565,8 @@ void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
 
   /* Write line for current cell */
   fprintf(f, "%i,%i,%i,", c->cellID, parent, c->nodeID);
-  fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->stars.count,
-          c->hydro.count, c->grav.count, superID, hydro_superID, c->loc[0],
+  fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
+          c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
   fprintf(f, "%g, %g\n", c->hydro.h_max, c->stars.h_max);
 
