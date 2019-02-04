@@ -2793,8 +2793,9 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Udpate the hydro properties */
   if (e->policy & engine_policy_hydro)
-    hydro_props_update(e->hydro_properties, e->gravity_properties, e->cosmology);
-  
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
+
   /* Start by setting the particles in a good state */
   if (e->nodeID == 0) message("Setting particles to a valid state...");
   engine_first_init_particles(e);
@@ -3090,8 +3091,9 @@ void engine_step(struct engine *e) {
 
   /* Udpate the hydro properties */
   if (e->policy & engine_policy_hydro)
-    hydro_props_update(e->hydro_properties, e->gravity_properties, e->cosmology);
-  
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
+
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
       ((double)e->g_updates_since_rebuild >
@@ -3291,7 +3293,7 @@ void engine_check_for_dumps(struct engine *e) {
 #endif
         }
 
-          /* Dump... */
+        /* Dump... */
 #ifdef WITH_LOGGER
         /* Write a file containing the offsets in the particle logger. */
         engine_dump_index(e);

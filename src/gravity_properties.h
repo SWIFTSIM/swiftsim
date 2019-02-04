@@ -90,7 +90,8 @@ void gravity_props_print(const struct gravity_props *p);
 void gravity_props_init(struct gravity_props *p, struct swift_params *params,
                         const struct cosmology *cosmo, int with_cosmology,
                         int periodic);
-void gravity_props_update(struct gravity_props *p, const struct cosmology *cosmo);
+void gravity_props_update(struct gravity_props *p,
+                          const struct cosmology *cosmo);
 
 #if defined(HAVE_HDF5)
 void gravity_props_print_snapshot(hid_t h_grpsph,

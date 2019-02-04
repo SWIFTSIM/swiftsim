@@ -102,7 +102,8 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
   gravity_props_update(p, cosmo);
 }
 
-void gravity_props_update(struct gravity_props *p, const struct cosmology *cosmo) {
+void gravity_props_update(struct gravity_props *p,
+                          const struct cosmology *cosmo) {
 
   /* Current softening lengths */
   double softening;

@@ -66,7 +66,7 @@ struct hydro_props {
 
   /*! Minimal smoothing length */
   float h_min;
-  
+
   /*! Maximal number of iterations to converge h */
   int max_smoothing_iterations;
 
@@ -141,9 +141,8 @@ void hydro_props_init(struct hydro_props *p,
                       const struct unit_system *us,
                       struct swift_params *params);
 
-void hydro_props_update(struct hydro_props *p,
-			const struct gravity_props *gp,
-			const struct cosmology *cosmo);
+void hydro_props_update(struct hydro_props *p, const struct gravity_props *gp,
+                        const struct cosmology *cosmo);
 
 #if defined(HAVE_HDF5)
 void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p);
