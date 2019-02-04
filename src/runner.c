@@ -1192,10 +1192,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_global_data *chemistry = e->chemistry;
-  const struct gravity_props *grav_props = e->gravity_properties;
-  const int with_gravity = e->policy & engine_policy_self_gravity;
   const float hydro_h_max = e->hydro_properties->h_max;
-  const float hydro_h_min_ratio = e->hydro_properties->h_min_ratio;
+  const float hydro_h_min = e->hydro_properties->h_min;
   const float eps = e->hydro_properties->h_tolerance;
   const float hydro_eta_dim =
       pow_dimension(e->hydro_properties->eta_neighbours);
@@ -1260,11 +1258,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         const float h_old = p->h;
         const float h_old_dim = pow_dimension(h_old);
         const float h_old_dim_minus_one = pow_dimension_minus_one(h_old);
-
-        /* Softening and minimal smoothing */
-        const float softening =
-            with_gravity ? gravity_get_softening(p->gpart, grav_props) : 0.f;
-        const float hydro_h_min = softening * hydro_h_min_ratio;
 
         float h_new;
         int has_no_neighbours = 0;
@@ -1410,8 +1403,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             p->h = h_new;
           }
 
-          /* If below the absolute maximum, try again */
-          if (p->h < hydro_h_max) {
+          /* If within the allowed range, try again */
+          if (p->h < hydro_h_max && p->h > hydro_h_min) {
 
             /* Flag for another round of fun */
             pid[redo] = pid[i];
@@ -1427,7 +1420,18 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* Off we go ! */
             continue;
 
-          } else {
+          } else if (p->h <= hydro_h_min) {
+
+            /* Ok, this particle is a lost cause... */
+            p->h = hydro_h_min;
+
+            /* Do some damage control if no neighbours at all were found */
+            if (has_no_neighbours) {
+              hydro_part_has_no_neighbours(p, xp, cosmo);
+              chemistry_part_has_no_neighbours(p, xp, chemistry, cosmo);
+            }
+
+          } else if (p->h >= hydro_h_max) {
 
             /* Ok, this particle is a lost cause... */
             p->h = hydro_h_max;
