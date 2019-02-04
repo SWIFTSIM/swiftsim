@@ -30,6 +30,7 @@
 #include "dimension.h"
 #include "equation_of_state.h"
 #include "error.h"
+#include "gravity_properties.h"
 #include "hydro.h"
 #include "kernel_hydro.h"
 #include "parser.h"
