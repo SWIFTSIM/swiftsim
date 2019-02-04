@@ -2789,8 +2789,12 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
 
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties, e->cosmology);
+  
   /* Start by setting the particles in a good state */
   if (e->nodeID == 0) message("Setting particles to a valid state...");
   engine_first_init_particles(e);
@@ -3082,8 +3086,12 @@ void engine_step(struct engine *e) {
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
 
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties, e->cosmology);
+  
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
       ((double)e->g_updates_since_rebuild >
@@ -4083,7 +4091,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,
-                 struct cosmology *cosmo, const struct hydro_props *hydro,
+                 struct cosmology *cosmo, struct hydro_props *hydro,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  struct pm_mesh *mesh,
                  const struct external_potential *potential,
