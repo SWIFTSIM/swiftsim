@@ -2681,7 +2681,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_end_force ||
         t->type == task_type_grav_long_range || t->type == task_type_grav_mm ||
         t->type == task_type_grav_down || t->type == task_type_cooling ||
-        t->type == task_type_extra_ghost || t->subtype == task_subtype_gradient)
+        t->type == task_type_extra_ghost || t->subtype == task_subtype_gradient ||
+	t->subtype == task_subtype_stars_feedback || t->type == task_type_stars_sort_foreign)
       t->skip = 1;
   }
 
@@ -2719,7 +2720,6 @@ void engine_skip_drift(struct engine *e) {
  * @param e The #engine.
  */
 void engine_launch(struct engine *e) {
-
   const ticks tic = getticks();
 
 #ifdef SWIFT_DEBUG_CHECKS
