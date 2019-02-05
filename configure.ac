@@ -1135,7 +1135,7 @@ AC_CHECK_HEADERS([immintrin.h], [], [],
 ])
 AC_CHECK_HEADERS([altivec.h], [], [],
 [#ifdef HAVE_ALTIVEC_H
-# include <altivec.h.h>
+# include <altivec.h>
 #endif
 ])
 
