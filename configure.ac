@@ -700,12 +700,13 @@ if test "x$with_fftw" != "xno"; then
       fi
    fi
 fi
+
 AC_ARG_WITH([arm-fftw],
     [AS_HELP_STRING([--with-arm-fftw=PATH],
       [root directory where arm fft library is installed @<:@yes/no@:>@]
     )],
     [with_arm_fftw="$withval"],
-    [with_arm_fftw="test"]
+    [with_arm_fftw=no]
 )
 if test "x$with_arm_fftw" != "xno"; then
 
@@ -723,13 +724,14 @@ if test "x$with_arm_fftw" != "xno"; then
       AC_CHECK_LIB([armpl_lp64],[fftw_malloc],[have_fftw="yes"],[have_fftw="no"],$FFTW_LIBS)
       if test "x$have_arm_fftw" != "xno"; then
       	 AC_DEFINE([HAVE_FFTW],1,[The FFTW library appears to be present.])
+	 have_fftw="yes - ARM"
       fi
    # FFTW was specified, check that it was a valid location.
    else
       AC_CHECK_LIB([armpl_lp64],[fftw_malloc],
          AC_DEFINE([HAVE_FFTW],1,[The FFTW library appears to be present.]),
          AC_MSG_ERROR(something is wrong with the FFTW library!), $FFTW_LIBS)
-      have_fftw="yes"
+      have_fftw="yes - ARM"
    fi
 
    # FFTW was requested not to be used.
@@ -752,14 +754,14 @@ if test "x$with_arm_fftw" != "xno"; then
 
       # Verify that the library is threaded
       AC_CHECK_LIB([armpl_lp64],[fftw_init_threads],[have_threaded_fftw="yes"],
-		   [have_threaded_fftw="no"], $FFTW_THREADED_LIBS)
+                  [have_threaded_fftw="no"], $FFTW_THREADED_LIBS)
 
       # If found, update things
       if test "x$have_threaded_fftw" = "xyes"; then
          AC_DEFINE([HAVE_THREADED_FFTW],1,[The threaded FFTW library appears to be present.])
          FFTW_LIBS=$FFTW_THREADED_LIBS
          FFTW_INCS=$FFTW_THREADED_INCS
-	 have_fftw="yes - threaded"
+         have_fftw="yes - ARM - threaded"
       fi
    fi
 fi
