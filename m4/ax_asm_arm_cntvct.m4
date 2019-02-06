@@ -4,7 +4,7 @@
 #
 # SYNOPSIS
 #
-#   AX_ASM_ARM_PMCCNTR
+#   AX_ASM_ARM_CNTVCT
 #
 # DESCRIPTION
 #
@@ -20,9 +20,9 @@
 
 #serial 1
 
-AC_DEFUN([AX_ASM_ARM_PMCCNTR],
-[AC_CACHE_CHECK([for PMCCNTR_EL0 asm instruction on ARM v8.1a],
-   [ax_cv_asm_arm_pmccntr_works],
+AC_DEFUN([AX_ASM_ARM_CNTVCT],
+[AC_CACHE_CHECK([for CNTVCT_EL0 asm instruction on ARM v8.1a],
+   [ax_cv_asm_arm_cntvct_works],
     [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdint.h>
 
@@ -30,15 +30,15 @@ int
 main()
 {
    uint64_t cc = 0;
-   asm volatile("mrs %0, PMCCNTR_EL0" : "=r"(cc));
+   asm volatile("mrs %0,  CNTVCT_EL0" : "=r"(Rt));
    return 0;
 }
     ]])],
-    [ax_cv_asm_arm_pmccntr_works=yes],
-    [ax_cv_asm_arm_pmccntr_works=no],
-    [ax_cv_asm_arm_pmccntr_works=no])])
-if test "$ax_cv_asm_arm_pmccntr_works" = "yes" ; then
-  AC_DEFINE([HAVE_ARMV8_PMCCNTR_EL0], [1],
-    [Define to 1 if the ARM v8.1a instruction PMCCNTR_EL0 exists.])
+    [ax_cv_asm_arm_cntvct_works=yes],
+    [ax_cv_asm_arm_cntvct_works=no],
+    [ax_cv_asm_arm_cntvct_works=no])])
+if test "$ax_cv_asm_arm_cntvct_works" = "yes" ; then
+  AC_DEFINE([HAVE_ARMV8_CNTVCT_EL0], [1],
+    [Define to 1 if the ARM v8.1a instruction CNTVCT_EL0 exists.])
 fi
 ])
