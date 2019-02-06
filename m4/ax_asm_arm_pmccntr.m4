@@ -1,13 +1,11 @@
 #
-#
-#
-#
 # SYNOPSIS
 #
 #   AX_ASM_ARM_PMCCNTR
 #
 # DESCRIPTION
 #
+#   Check whether the PMCCNTR_EL0 exists on this platform.
 #
 # LICENSE
 #

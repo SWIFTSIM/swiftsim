@@ -1,13 +1,11 @@
 #
-#
-#
-#
 # SYNOPSIS
 #
 #   AX_ASM_ARM_CNTVCT
 #
 # DESCRIPTION
 #
+#   Check whether the CNTVCT_EL0 exists on this platform.
 #
 # LICENSE
 #
