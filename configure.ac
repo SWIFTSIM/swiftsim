@@ -333,6 +333,8 @@ elif test "$no_gravity_below_id" != "no"; then
    AC_DEFINE_UNQUOTED([SWIFT_NO_GRAVITY_BELOW_ID], [$enableval] ,[Particles with smaller ID than this will have zero gravity forces])
 fi
 
+# Check whether we have any of the ARM v8.1 tick timers
+AX_ASM_ARM_PMCCNTR
 
 # Define HAVE_POSIX_MEMALIGN if it works.
 AX_FUNC_POSIX_MEMALIGN
