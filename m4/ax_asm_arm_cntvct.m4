@@ -30,7 +30,7 @@ int
 main()
 {
    uint64_t cc = 0;
-   asm volatile("mrs %0,  CNTVCT_EL0" : "=r"(Rt));
+   asm volatile("mrs %0,  CNTVCT_EL0" : "=r"(cc));
    return 0;
 }
     ]])],
