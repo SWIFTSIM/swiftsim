@@ -81,7 +81,7 @@ __attribute__((always_inline)) inline void memswap(void *restrict void_a,
   swap_loop(int_least32_t, a, b, bytes);
   swap_loop(int_least16_t, a, b, bytes);
   swap_loop(int_least8_t, a, b, bytes);
-#ifdef __clang__
+#if defined(__clang__) && defined(__aarch64__)
   __sync_synchronize();
 #endif
 }
@@ -142,7 +142,7 @@ __attribute__((always_inline)) inline void memswap_unaligned(
   swap_loop(int_least32_t, a, b, bytes);
   swap_loop(int_least16_t, a, b, bytes);
   swap_loop(int_least8_t, a, b, bytes);
-#ifdef __clang__
+#if defined(__clang__) && defined(__aarch64__)
   __sync_synchronize();
 #endif
 }
