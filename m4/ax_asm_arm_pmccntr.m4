@@ -29,7 +29,7 @@ int
 main()
 {
    uint64_t cc = 0;
-   asm volatile("mrs %0, PMCCNTR_EL0" : "=r"(cc));
+   __asm__ __volatile__("mrs %0, PMCCNTR_EL0" : "=r"(cc));
    return 0;
 }
     ]])],
