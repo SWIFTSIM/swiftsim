@@ -2792,7 +2792,12 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
+
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
 
   /* Start by setting the particles in a good state */
   if (e->nodeID == 0) message("Setting particles to a valid state...");
@@ -3085,7 +3090,12 @@ void engine_step(struct engine *e) {
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
+
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
 
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
@@ -3936,24 +3946,23 @@ void engine_dump_snapshot(struct engine *e) {
   }
 #endif
 
-  /* Dump... */
-  /* #if defined(HAVE_HDF5) */
-  /* #if defined(WITH_MPI) */
-  /* #if defined(HAVE_PARALLEL_HDF5) */
-  /*   write_output_parallel(e, e->snapshot_base_name, e->internal_units, */
-  /*                         e->snapshot_units, e->nodeID, e->nr_nodes, */
-  /*                         MPI_COMM_WORLD, MPI_INFO_NULL); */
-  /* #else */
-  /*   write_output_serial(e, e->snapshot_base_name, e->internal_units, */
-  /*                       e->snapshot_units, e->nodeID, e->nr_nodes,
-   * MPI_COMM_WORLD, */
-  /*                       MPI_INFO_NULL); */
-  /* #endif */
-  /* #else */
-  /*   write_output_single(e, e->snapshot_base_name, e->internal_units, */
-  /*                       e->snapshot_units); */
-  /* #endif */
-  /* #endif */
+/* Dump... */
+#if defined(HAVE_HDF5)
+#if defined(WITH_MPI)
+#if defined(HAVE_PARALLEL_HDF5)
+  write_output_parallel(e, e->snapshot_base_name, e->internal_units,
+                        e->snapshot_units, e->nodeID, e->nr_nodes,
+                        MPI_COMM_WORLD, MPI_INFO_NULL);
+#else
+  write_output_serial(e, e->snapshot_base_name, e->internal_units,
+                      e->snapshot_units, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
+                      MPI_INFO_NULL);
+#endif
+#else
+  write_output_single(e, e->snapshot_base_name, e->internal_units,
+                      e->snapshot_units);
+#endif
+#endif
 
   /* Flag that we dumped a snapshot */
   e->step_props |= engine_step_prop_snapshot;
@@ -4089,7 +4098,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,
-                 struct cosmology *cosmo, const struct hydro_props *hydro,
+                 struct cosmology *cosmo, struct hydro_props *hydro,
                  const struct entropy_floor_properties *entropy_floor,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  struct pm_mesh *mesh,
