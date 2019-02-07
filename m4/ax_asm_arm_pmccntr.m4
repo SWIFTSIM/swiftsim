@@ -5,7 +5,8 @@
 #
 # DESCRIPTION
 #
-#   Check whether the PMCCNTR_EL0 exists on this platform.
+#   Check whether the PMCCNTR_EL0 exists on this platform. Defines
+#   HAVE_ARMV8_PMCCNTR_EL0 if true.
 #
 # LICENSE
 #

@@ -5,7 +5,8 @@
 #
 # DESCRIPTION
 #
-#   Check whether the CNTVCT_EL0 exists on this platform.
+#   Check whether the CNTVCT_EL0 exists on this platform. Defines
+#   HAVE_ARMV8_CNTVCT_EL0 if true.
 #
 # LICENSE
 #
