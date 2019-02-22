@@ -37,6 +37,8 @@
 #include "./star_formation/EAGLE/star_formation.h"
 #elif defined(STAR_FORMATION_GEAR)
 #include "./star_formation/GEAR/star_formation.h"
+#elif defined(STAR_FORMATION_COLIBRE)
+#include "./star_formation/COLIBRE/star_formation.h"
 #else
 #error "Invalid choice of star formation law"
 #endif
