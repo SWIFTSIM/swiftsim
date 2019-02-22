@@ -34,6 +34,8 @@
 #include "./star_formation/EAGLE/star_formation_io.h"
 #elif defined(STAR_FORMATION_GEAR)
 #include "./star_formation/GEAR/star_formation_io.h"
+#elif defined(STAR_FORMATION_COLIBRE)
+#include "./star_formation/COLIBRE/star_formation_io.h"
 #else
 #error "Invalid choice of star formation model."
 #endif

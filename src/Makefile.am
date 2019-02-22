@@ -67,6 +67,12 @@ if HAVEEAGLEFEEDBACK
 EAGLE_FEEDBACK_SOURCES += feedback/EAGLE/feedback.c
 endif
 
+# source files for COLIBRE cooling
+COLIBRE_COOLING_SOURCES =
+if HAVECOLIBRECOOLING
+COLIBRE_COOLING_SOURCES += cooling/COLIBRE/cooling.c cooling/COLIBRE/cooling_tables.c
+endif
+
 # Common source files
 AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c \
     engine_marktasks.c engine_drift.c serial_io.c timers.c debug.c scheduler.c \
@@ -79,7 +85,8 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c 
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c \
-    $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES)
+    $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
+    $(COLIBRE_COOLING_SOURCES)
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
@@ -148,6 +155,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 stars/Default/stars_debug.h stars/Default/stars_part.h  \
 		 stars/EAGLE/stars.h stars/EAGLE/stars_iact.h stars/EAGLE/stars_io.h \
 		 stars/EAGLE/stars_debug.h stars/EAGLE/stars_part.h \
+		 stars/COLIBRE/stars.h stars/COLIBRE/stars_iact.h stars/COLIBRE/stars_io.h \
+		 stars/COLIBRE/stars_debug.h stars/COLIBRE/stars_part.h \
 	         potential/none/potential.h potential/point_mass/potential.h \
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
                  potential/sine_wave/potential.h \
@@ -172,6 +181,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/grackle/cooling_io.h \
 		 cooling/EAGLE/cooling.h cooling/EAGLE/cooling_struct.h \
                  cooling/EAGLE/cooling_io.h cooling/EAGLE/interpolate.h cooling/EAGLE/cooling_rates.h \
+		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h \
+                 cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \
@@ -184,12 +195,19 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 chemistry/EAGLE/chemistry_io.h \
 		 chemistry/EAGLE/chemistry_struct.h\
 		 chemistry/EAGLE/chemistry_iact.h \
+                 chemistry/COLIBRE/chemistry.h \
+		 chemistry/COLIBRE/chemistry_io.h \
+		 chemistry/COLIBRE/chemistry_struct.h\
+		 chemistry/COLIBRE/chemistry_iact.h \
 	         entropy_floor/none/entropy_floor.h \
                  entropy_floor/EAGLE/entropy_floor.h \
+                 entropy_floor/COLIBRE/entropy_floor.h \
 		 tracers/none/tracers.h tracers/none/tracers_struct.h \
                  tracers/none/tracers_io.h \
 		 tracers/EAGLE/tracers.h tracers/EAGLE/tracers_struct.h \
                  tracers/EAGLE/tracers_io.h \
+		 tracers/COLIBRE/tracers.h tracers/COLIBRE/tracers_struct.h \
+                 tracers/COLIBRE/tracers_io.h \
 	         feedback/none/feedback.h feedback/none/feedback_struct.h feedback/none/feedback_iact.h \
                  feedback/none/feedback_properties.h \
 	         feedback/EAGLE/feedback.h feedback/EAGLE/feedback_struct.h feedback/EAGLE/feedback_iact.h \
