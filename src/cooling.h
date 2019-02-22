@@ -47,6 +47,8 @@
 #include "./cooling/grackle/cooling.h"
 #elif defined(COOLING_EAGLE)
 #include "./cooling/EAGLE/cooling.h"
+#elif defined(COOLING_COLIBRE)
+#include "./cooling/COLIBRE/cooling.h"
 #else
 #error "Invalid choice of cooling function."
 #endif

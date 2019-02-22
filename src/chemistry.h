@@ -38,6 +38,9 @@
 #elif defined(CHEMISTRY_EAGLE)
 #include "./chemistry/EAGLE/chemistry.h"
 #include "./chemistry/EAGLE/chemistry_iact.h"
+#elif defined(CHEMISTRY_COLIBRE)
+#include "./chemistry/COLIBRE/chemistry.h"
+#include "./chemistry/COLIBRE/chemistry_iact.h"
 #else
 #error "Invalid choice of chemistry function."
 #endif
