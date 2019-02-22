@@ -1301,7 +1301,7 @@ AC_SUBST([NUMA_INCS])
 # As an example for this, see the call to AC_ARG_WITH for cooling.
 AC_ARG_WITH([subgrid],
 	[AS_HELP_STRING([--with-subgrid=<subgrid>],
-		[Master switch for subgrid methods. Inexperienced user should start from here @<:@none, GEAR, EAGLE default: none@:>@]
+		[Master switch for subgrid methods. Inexperienced users should start here @<:@none, GEAR, EAGLE, COLIBRE default: none@:>@]
 	)],
 	[with_subgrid="$withval"],
 	[with_subgrid=none]
@@ -1341,6 +1341,15 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
+   ;;
+   COLIBRE)
+   with_subgrid_cooling=COLIBRE
+   with_subgrid_chemistry=COLIBRE
+   with_subgrid_tracers=COLIBRE
+   with_subgrid_entropy_floor=COLIBRE
+   with_subgrid_stars=COLIBRE
+   with_subgrid_star_formation=COLIBRE
+   with_subgrid_feedback=none
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -1593,7 +1602,7 @@ esac
 #  Cooling function
 AC_ARG_WITH([cooling],
    [AS_HELP_STRING([--with-cooling=<function>],
-      [cooling function @<:@none, const-du, const-lambda, EAGLE, grackle, grackle1, grackle2, grackle3 default: none@:>@]
+      [cooling function @<:@none, const-du, const-lambda, EAGLE, COLIBRE, grackle, grackle1, grackle2, grackle3 default: none@:>@]
    )],
    [with_cooling="$withval"],
    [with_cooling="none"]
@@ -1639,6 +1648,9 @@ case "$with_cooling" in
    EAGLE)
       AC_DEFINE([COOLING_EAGLE], [1], [Cooling following the EAGLE model])
    ;;
+   COLIBRE)
+      AC_DEFINE([COOLING_COLIBRE], [1], [Cooling following the COLIBRE model])
+   ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
    ;;
@@ -1647,7 +1659,7 @@ esac
 #  chemistry function
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
-      [chemistry function @<:@none, GEAR, EAGLE default: none@:>@]
+      [chemistry function @<:@none, GEAR, EAGLE, COLIBRE default: none@:>@]
    )],
    [with_chemistry="$withval"],
    [with_chemistry="none"]
@@ -1671,6 +1683,9 @@ case "$with_chemistry" in
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
    ;;
+   COLIBRE)
+      AC_DEFINE([CHEMISTRY_COLIBRE], [1], [Chemistry taken from the COLIBRE model])
+   ;;
    *)
       AC_MSG_ERROR([Unknown chemistry function: $with_chemistry])
    ;;
@@ -1679,7 +1694,7 @@ esac
 #  Particle tracers
 AC_ARG_WITH([tracers],
    [AS_HELP_STRING([--with-tracers=<function>],
-      [chemistry function @<:@none, EAGLE default: none@:>@]
+      [chemistry function @<:@none, EAGLE, COLIBRE default: none@:>@]
    )],
    [with_tracers="$withval"],
    [with_tracers="none"]
@@ -1700,6 +1715,9 @@ case "$with_tracers" in
    EAGLE)
       AC_DEFINE([TRACERS_EAGLE], [1], [Tracers taken from the EAGLE model])
    ;;
+   COLIBRE)
+      AC_DEFINE([TRACERS_COLIBRE], [1], [Tracers taken from the COLIBRE model])
+   ;;
    *)
       AC_MSG_ERROR([Unknown tracers choice: $with_tracers])
    ;;
@@ -1708,7 +1726,7 @@ esac
 # Stellar model.
 AC_ARG_WITH([stars],
    [AS_HELP_STRING([--with-stars=<model>],
-      [Stellar model to use @<:@none, EAGLE, GEAR, debug default: none@:>@]
+      [Stellar model to use @<:@none, EAGLE, COLIBRE, GEAR, debug default: none@:>@]
    )],
    [with_stars="$withval"],
    [with_stars="none"]
@@ -1725,6 +1743,9 @@ fi
 case "$with_stars" in
    EAGLE)
       AC_DEFINE([STARS_EAGLE], [1], [EAGLE stellar model])
+   ;;
+   COLIBRE)
+      AC_DEFINE([STARS_COLIBRE], [1], [COLIBRE stellar model])
    ;;
    GEAR)
       AC_DEFINE([STARS_GEAR], [1], [GEAR stellar model])
@@ -1841,7 +1862,7 @@ esac
 #  Entropy floor
 AC_ARG_WITH([entropy-floor], 
     [AS_HELP_STRING([--with-entropy-floor=<floor>],
-       [entropy floor @<:@none, EAGLE, default: none@:>@] 
+       [entropy floor @<:@none, EAGLE, COLIBRE, default: none@:>@] 
     )],
     [with_entropy_floor="$withval"],
     [with_entropy_floor="none"]
@@ -1861,6 +1882,9 @@ case "$with_entropy_floor" in
    EAGLE)
       AC_DEFINE([ENTROPY_FLOOR_EAGLE], [1], [EAGLE entropy floor])
    ;;
+   COLIBRE)
+      AC_DEFINE([ENTROPY_FLOOR_COLIBRE], [1], [COLIBRE entropy floor])
+   ;;
    *)
       AC_MSG_ERROR([Unknown entropy floor model])
    ;;
@@ -1869,7 +1893,7 @@ esac
 #  Star formation
 AC_ARG_WITH([star-formation], 
     [AS_HELP_STRING([--with-star-formation=<sfm>],
-       [star formation @<:@none, EAGLE, GEAR, default: none@:>@] 
+       [star formation @<:@none, EAGLE, GEAR, COLIBRE, default: none@:>@] 
     )],
     [with_star_formation="$withval"],
     [with_star_formation="none"]
@@ -1891,6 +1915,9 @@ case "$with_star_formation" in
    ;;
    GEAR)
       AC_DEFINE([STAR_FORMATION_GEAR], [1], [GEAR star formation model (Revaz and Jablonka (2018))])
+   ;;
+   COLIBRE)
+      AC_DEFINE([STAR_FORMATION_COLIBRE], [1], [COLIBRE star formation model (Schaye and Dalla Vecchia (2008))])
    ;;
    *)
       AC_MSG_ERROR([Unknown star formation model])
@@ -1917,6 +1944,8 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
 # Check if using EAGLE cooling
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
+# Check if using COLIBRE cooling
+AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
