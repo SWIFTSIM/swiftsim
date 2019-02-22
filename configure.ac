@@ -1352,6 +1352,15 @@ case "$with_subgrid" in
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
    ;;
+   COLIBRE)
+   with_subgrid_cooling=COLIBRE
+   with_subgrid_chemistry=COLIBRE
+   with_subgrid_tracers=COLIBRE
+   with_subgrid_entropy_floor=COLIBRE
+   with_subgrid_stars=COLIBRE
+   with_subgrid_star_formation=COLIBRE
+   with_subgrid_feedback=none
+   ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
    ;;

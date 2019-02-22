@@ -137,8 +137,8 @@ void get_cooling_redshifts(struct cooling_function_data *cooling) {
   /* We are done with this file */
   fclose(infile);
 
-  /* COLIBRE cooling assumes cooling->Redshifts table is in increasing order.
-   * Test this. */
+  /* COLIBRE cooling assumes cooling->Redshifts table is in increasing order. Test
+   * this. */
   for (int i = 0; i < N_Redshifts - 1; i++) {
     if (cooling->Redshifts[i + 1] < cooling->Redshifts[i]) {
       error("table should be in increasing order\n");
