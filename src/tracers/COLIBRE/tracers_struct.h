@@ -16,26 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_TRACERS_STRUCT_H
-#define SWIFT_TRACERS_STRUCT_H
+#ifndef SWIFT_TRACERS_STRUCT_COLIBRE_H
+#define SWIFT_TRACERS_STRUCT_COLIBRE_H
 
 /**
- * @file src/tracers_struct.h
- * @brief Branches between the different particle data tracers
+ * @brief Properties of the tracers stored in the extended particle data.
  */
+struct tracers_xpart_data {
 
-/* Config parameters. */
-#include "../config.h"
+  /*! Maximum temperature achieved by this particle */
+  float maximum_temperature;
 
-/* Import the right cooling definition */
-#if defined(TRACERS_NONE)
-#include "./tracers/none/tracers_struct.h"
-#elif defined(TRACERS_EAGLE)
-#include "./tracers/EAGLE/tracers_struct.h"
-#elif defined(TRACERS_COLIBRE)
-#include "./tracers/COLIBRE/tracers_struct.h"
-#else
-#error "Invalid choice of tracers."
-#endif
+  /*! Anonymous union for the cosmological non-cosmological runs distinction */
+  union {
 
-#endif /* SWIFT_TRACERS_STRUCT_H */
+    /*! Scale-factor at which the maximal temperature was reached */
+    float maximum_temperature_scale_factor;
+
+    /*! Time at which the maximal temperature was reached */
+    float maximum_temperature_time;
+  };
+};
+
+#endif /* SWIFT_TRACERS_STRUCT_COLIBRE_H */
