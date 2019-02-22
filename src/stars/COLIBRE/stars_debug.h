@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,28 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_STRUCT_H
-#define SWIFT_CHEMISTRY_STRUCT_H
+#ifndef SWIFT_COLIBRE_STARS_DEBUG_H
+#define SWIFT_COLIBRE_STARS_DEBUG_H
 
-/**
- * @file src/chemistry_struct.h
- * @brief Branches between the different chemistry functions.
- */
+__attribute__((always_inline)) INLINE static void stars_debug_particle(
+    const struct spart* p) {
+  printf(
+      "x=[%.3e,%.3e,%.3e], "
+      "v_full=[%.3e,%.3e,%.3e] p->mass=%.3e \n t_begin=%d, t_end=%d\n",
+      p->x[0], p->x[1], p->x[2], p->v_full[0], p->v_full[1], p->v_full[2],
+      p->mass, p->ti_begin, p->ti_end);
+}
 
-/* Config parameters. */
-#include "../config.h"
-
-/* Import the right chemistry definition */
-#if defined(CHEMISTRY_NONE)
-#include "./chemistry/none/chemistry_struct.h"
-#elif defined(CHEMISTRY_GEAR)
-#include "./chemistry/GEAR/chemistry_struct.h"
-#elif defined(CHEMISTRY_EAGLE)
-#include "./chemistry/EAGLE/chemistry_struct.h"
-#elif defined(CHEMISTRY_COLIBRE)
-#include "./chemistry/COLIBRE/chemistry_struct.h"
-#else
-#error "Invalid choice of chemistry function."
-#endif
-
-#endif /* SWIFT_CHEMISTRY_STRUCT_H */
+#endif /* SWIFT_COLIBRE_STARS_DEBUG_H */

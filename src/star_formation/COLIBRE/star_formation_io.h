@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,28 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_STRUCT_H
-#define SWIFT_CHEMISTRY_STRUCT_H
-
-/**
- * @file src/chemistry_struct.h
- * @brief Branches between the different chemistry functions.
- */
+#ifndef SWIFT_STAR_FORMATION_COLIBRE_IO_H
+#define SWIFT_STAR_FORMATION_COLIBRE_IO_H
 
 /* Config parameters. */
 #include "../config.h"
 
-/* Import the right chemistry definition */
-#if defined(CHEMISTRY_NONE)
-#include "./chemistry/none/chemistry_struct.h"
-#elif defined(CHEMISTRY_GEAR)
-#include "./chemistry/GEAR/chemistry_struct.h"
-#elif defined(CHEMISTRY_EAGLE)
-#include "./chemistry/EAGLE/chemistry_struct.h"
-#elif defined(CHEMISTRY_COLIBRE)
-#include "./chemistry/COLIBRE/chemistry_struct.h"
-#else
-#error "Invalid choice of chemistry function."
-#endif
+/* Local includes */
+#include "io_properties.h"
 
-#endif /* SWIFT_CHEMISTRY_STRUCT_H */
+/**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param parts The particle array.
+ * @param xparts The extended data particle array.
+ * @param list The list of i/o properties to write.
+ *
+ * @return Returns the number of fields to write.
+ */
+__attribute__((always_inline)) INLINE static int star_formation_write_particles(
+    const struct part* parts, const struct xpart* xparts,
+    struct io_props* list) {
+
+  list[0] =
+      io_make_output_field("SFR", FLOAT, 1, UNIT_CONV_SFR, xparts, sf_data.SFR);
+
+  return 1;
+}
+
+#endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */
