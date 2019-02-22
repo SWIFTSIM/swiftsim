@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2018 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,28 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_STRUCT_H
-#define SWIFT_CHEMISTRY_STRUCT_H
+#ifndef SWIFT_TRACERS_STRUCT_COLIBRE_H
+#define SWIFT_TRACERS_STRUCT_COLIBRE_H
 
 /**
- * @file src/chemistry_struct.h
- * @brief Branches between the different chemistry functions.
+ * @brief Properties of the tracers stored in the extended particle data.
  */
+struct tracers_xpart_data {
 
-/* Config parameters. */
-#include "../config.h"
+  /*! Maximum temperature achieved by this particle */
+  float maximum_temperature;
 
-/* Import the right chemistry definition */
-#if defined(CHEMISTRY_NONE)
-#include "./chemistry/none/chemistry_struct.h"
-#elif defined(CHEMISTRY_GEAR)
-#include "./chemistry/GEAR/chemistry_struct.h"
-#elif defined(CHEMISTRY_EAGLE)
-#include "./chemistry/EAGLE/chemistry_struct.h"
-#elif defined(CHEMISTRY_COLIBRE)
-#include "./chemistry/COLIBRE/chemistry_struct.h"
-#else
-#error "Invalid choice of chemistry function."
-#endif
+  /*! Anonymous union for the cosmological non-cosmological runs distinction */
+  union {
 
-#endif /* SWIFT_CHEMISTRY_STRUCT_H */
+    /*! Scale-factor at which the maximal temperature was reached */
+    float maximum_temperature_scale_factor;
+
+    /*! Time at which the maximal temperature was reached */
+    float maximum_temperature_time;
+  };
+};
+
+#endif /* SWIFT_TRACERS_STRUCT_COLIBRE_H */

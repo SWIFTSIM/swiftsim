@@ -36,6 +36,8 @@
 #include "./entropy_floor/none/entropy_floor.h"
 #elif defined(ENTROPY_FLOOR_EAGLE)
 #include "./entropy_floor/EAGLE/entropy_floor.h"
+#elif defined(ENTROPY_FLOOR_COLIBRE)
+#include "./entropy_floor/COLIBRE/entropy_floor.h"
 #endif
 
 #endif /* SWIFT_ENTROPY_FLOOR_H */

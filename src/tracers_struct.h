@@ -32,6 +32,8 @@
 #include "./tracers/none/tracers_struct.h"
 #elif defined(TRACERS_EAGLE)
 #include "./tracers/EAGLE/tracers_struct.h"
+#elif defined(TRACERS_COLIBRE)
+#include "./tracers/COLIBRE/tracers_struct.h"
 #else
 #error "Invalid choice of tracers."
 #endif
