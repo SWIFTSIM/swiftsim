@@ -16,29 +16,3 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_SCALAR_DIFFUSION_STRUCT_H
-#define SWIFT_SCALAR_DIFFUSION_STRUCT_H
-
-/**
- * @brief Diffusion particle data traced by the #part.
- */
-struct diffusion_part_data {
-    
-    /*! Scalar S at time step *before* diffusion with neighbouring particles */
-    float scalar;
-    
-    /*! Scalar S at time step *after* diffusion with neighbouring particles  */
-    float a_scalar;
-
-    /*! Tensor of the velocity shear */
-    float shear_tensor[3][3];
-    
-    /*! Diffusion coefficient as defined by the Smagorinsky model */
-    float diffusion_coefficient;
-    
-    /*! Diffusion rate */
-    float diffusion_rate;
-};
-
-#endif /* SWIFT_SCALAR_DIFFUSION_STRUCT_H */
-
