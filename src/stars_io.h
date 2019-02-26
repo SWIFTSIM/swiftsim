@@ -19,7 +19,7 @@
 #ifndef SWIFT_STARS_IO_H
 #define SWIFT_STARS_IO_H
 
-#include "../config.h"
+#include "config.h"
 #include "./const.h"
 
 /* Load the correct star type */

@@ -25,7 +25,7 @@
  */
 
 /* Config parameters. */
-#include "../config.h"
+#include "config.h"
 
 #include "common_io.h"
 #include "error.h"

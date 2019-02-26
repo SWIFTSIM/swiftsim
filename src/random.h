@@ -20,7 +20,7 @@
 #define SWIFT_RANDOM_H
 
 /* COde configuration */
-#include "../config.h"
+#include "config.h"
 
 /* Standard header */
 #include <stdlib.h>

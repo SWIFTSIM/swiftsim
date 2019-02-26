@@ -20,7 +20,7 @@
 #define SWIFT_TIMESTEP_LIMITER_H
 
 /* Config parameters. */
-#include "../config.h"
+#include "config.h"
 
 /**
  * @brief Wakes up a particle by rewinding it's kick1 back in time and applying

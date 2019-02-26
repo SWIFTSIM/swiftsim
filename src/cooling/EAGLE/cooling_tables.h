@@ -25,7 +25,7 @@
  */
 
 /* Config parameters. */
-#include "../config.h"
+#include "config.h"
 
 #include "cooling_struct.h"
 
