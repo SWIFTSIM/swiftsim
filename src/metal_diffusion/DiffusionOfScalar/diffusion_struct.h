@@ -20,7 +20,7 @@
 #define SWIFT_SCALAR_DIFFUSION_STRUCT_COLIBRE_H
 
 /**
- * @brief Chemical abundances traced by the #part in the COLIBRE model.
+ * @brief Diffusion particle data traced by the #part.
  */
 struct diffusion_part_data {
     
