@@ -42,25 +42,44 @@ def get_data_list(start: int, stop: int, handle: str):
     return data
 
 
-def setup_axes(size=[8, 4], dpi=300):
+def setup_axes(size=[8, 8], dpi=300):
     """
     Sets up the axes with the correct labels, etc.
     """
-    fig, ax = plt.subplots(ncols=2, figsize=size, dpi=dpi)
+    fig, ax = plt.subplots(ncols=2, nrows=2, figsize=size, dpi=dpi)
 
-    ax.flatten()
+    ax = ax.flatten()
 
     ax[0].axis("off")
     ax[1].set_xlabel("Time [s]")
     ax[1].set_ylabel("Relative energy difference $u/\\left<u\\right>$")
 
+    ax[2].set_xlabel("Time [s]")
+    ax[2].set_ylabel("Deviation in position relative to MIPS [$\\times 10^{6}$]")
+
+    ax[3].set_xlabel("Time [s]")
+    ax[3].set_ylabel("Deviation from mean pressure $(\\rho_i - \\bar{\\rho}) / \\bar{\\rho}$ [$\\times 10^{6}$]")
+
     return fig, ax
 
-
-def extract_plottables(data_list):
+def mean_std_max_min(data):
     """
-    Extracts the plottables. Returns:
+    Returns:
     mean, stdev, max, min
+    for your data.
+    """
+    means = np.array([np.mean(x) for x in data])
+    stdevs = np.array([np.std(x) for x in data])
+    maxs = np.array([np.max(x) for x in data])
+    mins = np.array([np.min(x) for x in data])
+
+    return means, stdevs, maxs, mins
+
+
+def extract_plottables_u(data_list):
+    """
+    Extracts the plottables for the internal energies. Returns:
+    mean, stdev, max, min differences between adjacent internal energies
     """
 
     data = [
@@ -68,12 +87,37 @@ def extract_plottables(data_list):
         for x in data_list
     ]
 
-    means = np.array([np.mean(x) for x in data])
-    stdevs = np.array([np.std(x) for x in data])
-    maxs = np.array([np.max(x) for x in data])
-    mins = np.array([np.min(x) for x in data])
+    return mean_std_max_min(data)
 
-    return means, stdevs, maxs, mins
+
+def extract_plottables_x(data_list):
+    """
+    Extracts the plottables for positions. Returns:
+    mean, stdev, max, min * 1e6 deviations from original position
+    """
+
+    n_part = data_list[0].metadata.n_gas
+    boxsize = data_list[0].metadata.boxsize[0].value
+    dx = boxsize / n_part
+
+    original_x = np.arange(n_part, dtype=float) * dx + (0.5 * dx)
+    
+    deviations = [1e6 * abs(original_x - x.gas.coordinates.value[:, 0]) / dx for x in data_list]
+
+    return mean_std_max_min(deviations)
+
+
+def extract_plottables_rho(data_list):
+    """
+    Extracts the plottables for pressure. Returns:
+    mean, stdev, max, min * 1e6 deviations from mean density 
+    """
+
+    P = [x.gas.density.value for x in data_list]
+    mean_P = [np.mean(x) for x in P]
+    deviations = [1e6 * (x - y) / x for x, y in zip(mean_P, P)]
+
+    return mean_std_max_min(deviations)
 
 
 def make_plot(start: int, stop: int, handle: str):
@@ -84,7 +128,9 @@ def make_plot(start: int, stop: int, handle: str):
     data_list = get_data_list(start, stop, handle)
     data_dump = get_data_dump(data_list[0].metadata)
     t = [x.metadata.t for x in data_list]
-    means, stdevs, maxs, mins = extract_plottables(data_list)
+    means, stdevs, maxs, mins = extract_plottables_u(data_list)
+    x_means, x_stdevs, x_maxs, x_mins = extract_plottables_x(data_list)
+    rho_means, rho_stdevs, rho_maxs, rho_mins = extract_plottables_rho(data_list)
 
     ax[0].text(
         0.5,
@@ -103,9 +149,25 @@ def make_plot(start: int, stop: int, handle: str):
     ax[1].plot(t, maxs, label="Max", linestyle="dashed", c="C1")
     ax[1].plot(t, mins, label="Min", linestyle="dashed", c="C2")
 
+    ax[2].fill_between(
+        t, x_means - x_stdevs, x_means + x_stdevs, color="C0", alpha=0.5, edgecolor="none"
+    )
+    ax[2].plot(t, x_means, label="Mean", c="C0")
+    ax[2].plot(t, x_maxs, label="Max", linestyle="dashed", c="C1")
+    ax[2].plot(t, x_mins, label="Min", linestyle="dashed", c="C2")
+
+    ax[3].fill_between(
+        t, rho_means - rho_stdevs, rho_means + rho_stdevs, color="C0", alpha=0.5, edgecolor="none"
+    )
+    ax[3].plot(t, rho_means, label="Mean", c="C0")
+    ax[3].plot(t, rho_maxs, label="Max", linestyle="dashed", c="C1")
+    ax[3].plot(t, rho_mins, label="Min", linestyle="dashed", c="C2")
+
     ax[1].legend(loc=1, markerfirst=False)
 
     ax[1].set_xlim(t[0], t[-1])
+    ax[2].set_xlim(t[0], t[-1])
+    ax[3].set_xlim(t[0], t[-1])
 
     fig.tight_layout()
 
