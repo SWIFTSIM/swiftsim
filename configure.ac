@@ -1265,6 +1265,7 @@ with_subgrid_entropy_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
+with_subgrid_diffusion=none
 
 case "$with_subgrid" in
    yes)
@@ -1280,6 +1281,7 @@ case "$with_subgrid" in
 	with_subgrid_stars=GEAR
 	with_subgrid_star_formation=none
 	with_subgrid_feedback=thermal
+        with_subgrid_diffusion=none
    ;;
    EAGLE)
 	with_subgrid_cooling=EAGLE
@@ -1289,6 +1291,7 @@ case "$with_subgrid" in
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=none
+        with_subgrid_diffusion=DiffusionOfElemenetAbundance
    ;;
    COLIBRE)
    with_subgrid_cooling=COLIBRE
@@ -1298,6 +1301,7 @@ case "$with_subgrid" in
    with_subgrid_stars=COLIBRE
    with_subgrid_star_formation=COLIBRE
    with_subgrid_feedback=none
+   with_subgrid_diffusion=DiffusionOfElemenetAbundance
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -1547,6 +1551,8 @@ case "$with_riemann" in
       AC_MSG_ERROR([Unknown Riemann solver: $with_riemann])
    ;;
 esac
+
+
 #  Cooling function
 AC_ARG_WITH([cooling],
    [AS_HELP_STRING([--with-cooling=<function>],
@@ -1638,6 +1644,39 @@ case "$with_chemistry" in
       AC_MSG_ERROR([Unknown chemistry function: $with_chemistry])
    ;;
 esac
+
+#  diffusion function
+AC_ARG_WITH([diffusion],
+   [AS_HELP_STRING([--with-diffusion=<function>],
+      [diffusion function @<:@none, DiffusionOfElementAbudance, DiffusionOfScalar default: none@:>@]
+   )],
+   [with_diffusion="$withval"],
+   [with_diffusion="none"]
+)
+
+if test "$with_subgrid" != "none"; then
+   if test "$with_diffusion" != "none"; then
+      AC_MSG_ERROR([Cannot provide with-subgrid and with-diffusion together])
+   else
+      with_diffusion="$with_subgrid_diffusion"
+   fi
+fi
+
+case "$with_diffusion" in
+   none)
+      AC_DEFINE([METAL_DIFFUSION_NONE], [1], [No diffusion function])
+   ;;
+   DiffusionOfElementAbundance)
+      AC_DEFINE([METAL_DIFFUSION_DIFFUSIONOFELEMENTABUNDANCE], [1], [Diffusion on element abundances])
+   ;;
+   DiffusionOfScalar)
+      AC_DEFINE([METAL_DIFFUSION_DIFFUSIONOFSCALAR], [1], [Diffusion on passive scalar])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown diffusion function: $with_diffusion])
+   ;;
+esac
+
 
 #  Particle tracers
 AC_ARG_WITH([tracers],
@@ -1935,6 +1974,7 @@ AC_MSG_RESULT([
    Entropy floor        : $with_entropy_floor
    Cooling function     : $with_cooling
    Chemistry            : $with_chemistry
+   Diffusion		: $with_diffusion
    Tracers              : $with_tracers
    Stellar model        : $with_stars
    Star formation model : $with_star_formation
