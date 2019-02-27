@@ -1,8 +1,8 @@
-Contact Discontinuity 1D
-========================
+Diffusion 1D
+============
 
 This is a very simple, 1D test. It sets up a uniform density particle
-distribution, with contact discontinuities generated at every particle.
+distribution, with energy discontinuities generated at every particle.
 Particles have their internal energy set in a binary manner, with them
 alternating between "low" and "high" states. Under a standard SPH
 scheme, we expect to see no evolution whatsoever in the box. However,

@@ -15,7 +15,7 @@ TimeIntegration:
 
 # Parameters governing the snapshots
 Snapshots:
-  basename:            contact # Common part of the name of output files
+  basename:            diffusion # Common part of the name of output files
   time_first:          0.    # Time of the first output (in internal units)
   delta_time:          1e-1  # Time difference between consecutive outputs (in internal units)
 
@@ -34,5 +34,5 @@ SPH:
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:  ./contact.hdf5          # The file to read
+  file_name:  ./diffusion.hdf5          # The file to read
   periodic:   1

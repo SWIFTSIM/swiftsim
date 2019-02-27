@@ -140,4 +140,4 @@ if __name__ == "__main__":
     writer.gas.internal_energy = get_particle_u(low, high, n_part)
     writer.gas.smoothing_length = get_particle_hsml(boxsize, n_part)
 
-    writer.write("contact.hdf5")
+    writer.write("diffusion.hdf5")

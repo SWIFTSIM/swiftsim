@@ -208,17 +208,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s",
         "--snapshot",
-        help="First part of the snapshot filename. Default: contact",
+        help="First part of the snapshot filename. Default: diffusion",
         type=str,
-        default="contact",
+        default="diffusion",
     )
 
     parser.add_argument(
         "-o",
         "--output",
-        help="Output filename. Default: contact.png",
+        help="Output filename. Default: diffusion.png",
         type=str,
-        default="contact.png",
+        default="diffusion.png",
     )
 
     args = vars(parser.parse_args())

@@ -3,7 +3,7 @@
 beta=(1.0 0.1 0.01 0.001)
 swift_location="../../swift"
 flags="--hydro --limiter --threads=2"
-parameter="contact.yml"
+parameter="diffusion.yml"
 make_ic_script="makeIC.py"
 plot_script="plotSolution.py"
 
