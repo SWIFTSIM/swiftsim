@@ -30,6 +30,11 @@ def get_data_dump(metadata):
     """
     Gets a big data dump from the SWIFT metadata.
     """
+    
+    try:
+        diffusion = metadata.diffusion_info
+    except:
+        diffusion = "No info"
 
     output = (
         "SWIFT\n"
@@ -43,6 +48,9 @@ def get_data_dump(metadata):
         + "\n\n"
         + "Viscosity\n"
         + metadata.viscosity_info
+        + "\n\n"
+        + "Diffusion\n"
+        + diffusion
     )
 
     return output
@@ -74,7 +82,6 @@ def setup_axes(size=[8, 8], dpi=300):
     ax[2].set_ylabel("Deviation in position relative to MIPS [$\\times 10^{6}$]")
 
     ax[3].set_xlabel("Time [s]")
-    ax[3].set_ylabel("Deviation from mean density $(\\rho_i - \\bar{\\rho}) / \\bar{\\rho}$ [$\\times 10^{6}$]")
 
     return fig, ax
 
@@ -136,6 +143,17 @@ def extract_plottables_rho(data_list):
     return mean_std_max_min(deviations)
 
 
+def extract_plottables_diff(data_list):
+    """
+    Extracts the plottables for pressure. Returns:
+    mean, stdev, max, min * 1e6 deviations from mean density 
+    """
+
+    P = [x.gas.diffusion.value for x in data_list]
+
+    return mean_std_max_min(P)
+
+
 def make_plot(start: int, stop: int, handle: str):
     """
     Makes the plot and returns the figure and axes objects.
@@ -146,7 +164,6 @@ def make_plot(start: int, stop: int, handle: str):
     t = [x.metadata.t for x in data_list]
     means, stdevs, maxs, mins = extract_plottables_u(data_list)
     x_means, x_stdevs, x_maxs, x_mins = extract_plottables_x(data_list)
-    rho_means, rho_stdevs, rho_maxs, rho_mins = extract_plottables_rho(data_list)
 
     ax[0].text(
         0.5,
@@ -172,12 +189,29 @@ def make_plot(start: int, stop: int, handle: str):
     ax[2].plot(t, x_maxs, label="Max", linestyle="dashed", c="C1")
     ax[2].plot(t, x_mins, label="Min", linestyle="dashed", c="C2")
 
-    ax[3].fill_between(
-        t, rho_means - rho_stdevs, rho_means + rho_stdevs, color="C0", alpha=0.5, edgecolor="none"
-    )
-    ax[3].plot(t, rho_means, label="Mean", c="C0")
-    ax[3].plot(t, rho_maxs, label="Max", linestyle="dashed", c="C1")
-    ax[3].plot(t, rho_mins, label="Min", linestyle="dashed", c="C2")
+    try:
+        # Give diffusion info a go; this may not be present
+        diff_means, diff_stdevs, diff_maxs, diff_mins = extract_plottables_diff(data_list)
+
+        ax[3].set_ylabel(r"Diffusion parameter $\alpha_{diff}$")
+        ax[3].fill_between(
+            t, diff_means - diff_stdevs, diff_means + diff_stdevs, color="C0", alpha=0.5, edgecolor="none"
+        )
+        ax[3].plot(t, diff_means, label="Mean", c="C0")
+        ax[3].plot(t, diff_maxs, label="Max", linestyle="dashed", c="C1")
+        ax[3].plot(t, diff_mins, label="Min", linestyle="dashed", c="C2")
+
+    except:
+        # Diffusion info must not be present.
+        rho_means, rho_stdevs, rho_maxs, rho_mins = extract_plottables_rho(data_list)
+
+        ax[3].set_ylabel("Deviation from mean density $(\\rho_i - \\bar{\\rho}) / \\bar{\\rho}$ [$\\times 10^{6}$]")
+        ax[3].fill_between(
+            t, rho_means - rho_stdevs, rho_means + rho_stdevs, color="C0", alpha=0.5, edgecolor="none"
+        )
+        ax[3].plot(t, rho_means, label="Mean", c="C0")
+        ax[3].plot(t, rho_maxs, label="Max", linestyle="dashed", c="C1")
+        ax[3].plot(t, rho_mins, label="Min", linestyle="dashed", c="C2")
 
     ax[1].legend(loc=1, markerfirst=False)
 
