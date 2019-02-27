@@ -26,7 +26,7 @@
 
 /* Local includes. */
 #include "chemistry_io.h"
-#include "diffusion_io.h"
+#include "metal_diffusion_io.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity_io.h"

@@ -45,7 +45,7 @@
 #include "const.h"
 #include "cooling.h"
 #include "debug.h"
-#include "diffusion.h"
+#include "metal_diffusion.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity.h"

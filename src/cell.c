@@ -50,7 +50,7 @@
 #include "active.h"
 #include "atomic.h"
 #include "chemistry.h"
-#include "diffusion.h"
+#include "metal_diffusion.h"
 #include "drift.h"
 #include "engine.h"
 #include "error.h"

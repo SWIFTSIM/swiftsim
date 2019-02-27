@@ -46,7 +46,7 @@
 #include "const.h"
 #include "cooling.h"
 #include "debug.h"
-#include "diffusion.h"
+#include "metal_diffusion.h"
 #include "drift.h"
 #include "engine.h"
 #include "entropy_floor.h"
