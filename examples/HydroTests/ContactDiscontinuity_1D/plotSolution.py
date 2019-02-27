@@ -58,7 +58,7 @@ def setup_axes(size=[8, 8], dpi=300):
     ax[2].set_ylabel("Deviation in position relative to MIPS [$\\times 10^{6}$]")
 
     ax[3].set_xlabel("Time [s]")
-    ax[3].set_ylabel("Deviation from mean pressure $(\\rho_i - \\bar{\\rho}) / \\bar{\\rho}$ [$\\times 10^{6}$]")
+    ax[3].set_ylabel("Deviation from mean density $(\\rho_i - \\bar{\\rho}) / \\bar{\\rho}$ [$\\times 10^{6}$]")
 
     return fig, ax
 
