@@ -45,3 +45,16 @@ __attribute__((always_inline)) INLINE static void diffusion_init_part(
     cpd->smoothed_metal_mass_fraction_total = 0.f;
     cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
 }
+
+/**
+ * @brief Initialises the passive scalar array to be diffused.
+ *
+ * @param parameter_file The parsed parameter file.
+ * @param data The properties to initialise.
+ */
+static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
+                                          struct diffusion_global_data* data) {
+    
+    /* Read the passive scalar from initial conditions */
+    data->initial_scalar = parser_get_opt_param_float(parameter_file, "Diffusion:init_passive_scalar", -1);
+}
