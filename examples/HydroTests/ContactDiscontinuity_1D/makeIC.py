@@ -27,7 +27,7 @@ def get_particle_u(low: float, high: float, n_part: int) -> np.array:
     indicies = np.arange(n_part)
     u = unyt.unyt_array(np.empty(n_part, dtype=float), low.units)
     u[...] = low
-    u[indicies % 2] = high
+    u[(indicies % 2).astype(bool)] = high
 
     return u
 
