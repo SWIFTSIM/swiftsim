@@ -39,6 +39,7 @@
 #include "cell.h"
 #include "chemistry.h"
 #include "cosmology.h"
+#include "diffusion.h"
 #include "error.h"
 #include "gravity.h"
 #include "hydro.h"

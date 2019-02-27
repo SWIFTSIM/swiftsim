@@ -30,14 +30,12 @@
  * @param num_fields The number of i/o fields to read.
  */
 INLINE static void diffusion_read_particles(struct part* parts,
-                                        struct io_props* list,
-                                        int* num_fields) {
-    
-    *num_fields = 1;
+                                        struct io_props* list) {
     
     /* List what we want to read */
     list[0] = io_make_input_field("PassiveScalar", FLOAT, 1, COMPULSORY, UNIT_CONV_NO_UNITS,
                                   parts, diffusion_data.scalar);
+    return 1;
 }
 
 /**
@@ -48,10 +46,7 @@ INLINE static void diffusion_read_particles(struct part* parts,
  * @param num_fields The number of i/o fields to write.
  */
 INLINE static void diffusion_write_particles(const struct part* parts,
-                                         struct io_props* list,
-                                         int* num_fields) {
-    
-    *num_fields = 4;
+                                         struct io_props* list) {
     
     /* List what we want to write */
     list[0] = io_make_output_field("PassiveScalar", FLOAT, 1, COMPULSORY, UNIT_CONV_NO_UNITS,
@@ -62,4 +57,18 @@ INLINE static void diffusion_write_particles(const struct part* parts,
     list[2] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_coefficient);
     
     list[3] = io_make_output_field("DiffusionRate", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_rate);
+    
+    return 4;
 }
+
+#ifdef HAVE_HDF5
+
+/**
+ * @brief Writes the current model of SPH to the file
+ * @param h_grp The HDF5 group in which to write
+ */
+INLINE static void diffusion_write_flavour(hid_t h_grp) {
+}
+#endif
+
+#endif /* SWIFT_DIFFUSION_IO_H */

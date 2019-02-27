@@ -36,6 +36,7 @@
 #include "cosmology.h"
 #include "cycle.h"
 #include "debug.h"
+#include "diffusion.h"
 #include "dump.h"
 #include "engine.h"
 #include "entropy_floor.h"

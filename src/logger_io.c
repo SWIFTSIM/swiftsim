@@ -38,6 +38,7 @@
 #include "chemistry_io.h"
 #include "common_io.h"
 #include "cooling.h"
+#include "diffusion_io.h"
 #include "dimension.h"
 #include "engine.h"
 #include "error.h"

@@ -26,7 +26,6 @@
 /* Some standard headers. */
 
 /* Local includes. */
-#include "chemistry_struct.h"
 #include "hydro.h"
 #include "parser.h"
 #include "part.h"

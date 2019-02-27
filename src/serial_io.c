@@ -40,6 +40,7 @@
 #include "chemistry_io.h"
 #include "common_io.h"
 #include "cooling_io.h"
+#include "diffusion_io.h"
 #include "dimension.h"
 #include "engine.h"
 #include "entropy_floor.h"
@@ -685,6 +686,7 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
               Nparticles = *Ngas;
               hydro_read_particles(*parts, list, &num_fields);
               num_fields += chemistry_read_particles(*parts, list + num_fields);
+              num_fields += diffusion_read_particles(*parts, list + num_fields);
             }
             break;
 
@@ -930,6 +932,7 @@ void write_output_serial(struct engine* e, const char* baseName,
     entropy_floor_write_flavour(h_grp);
     cooling_write_flavour(h_grp, e->cooling_func);
     chemistry_write_flavour(h_grp);
+    diffusion_write_flavour(h_grp);
     tracers_write_flavour(h_grp);
     H5Gclose(h_grp);
 
@@ -1113,6 +1116,7 @@ void write_output_serial(struct engine* e, const char* baseName,
               Nparticles = Ngas;
               hydro_write_particles(parts, xparts, list, &num_fields);
               num_fields += chemistry_write_particles(parts, list + num_fields);
+              num_fields += diffusion_write_particles(parts, list + num_fields);
               if (with_cooling || with_temperature) {
                 num_fields += cooling_write_particles(
                     parts, xparts, list + num_fields, e->cooling_func);
@@ -1148,6 +1152,8 @@ void write_output_serial(struct engine* e, const char* baseName,
                                     &num_fields);
               num_fields +=
                   chemistry_write_particles(parts_written, list + num_fields);
+              num_fields +=
+                diffusion_write_particles(parts_written, list + num_fields);
               if (with_cooling || with_temperature) {
                 num_fields +=
                     cooling_write_particles(parts_written, xparts_written,
