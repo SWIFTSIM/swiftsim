@@ -74,25 +74,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--mass",
-        help="Particle mass in grams. Default: 1.0",
+        help="Particle mass in grams. Default: 1e-4",
         type=float,
-        default=1.0,
+        default=1e-4,
     )
 
     parser.add_argument(
         "-l",
         "--low",
-        help="Low value for the internal energy (in ergs/g). Default: 1.0",
+        help="Low value for the internal energy (in ergs/g). Default: 1e-6",
         type=float,
-        default=1.0,
+        default=1e-6,
     )
 
     parser.add_argument(
         "-t",
         "--high",
-        help="Top/high value for the internal energy (in ergs/g). Default: 1.0",
+        help="Top/high value for the internal energy (in ergs/g). Default: 1e-4",
         type=float,
-        default=10.0,
+        default=1e-4,
     )
 
     parser.add_argument(
@@ -115,8 +115,11 @@ if __name__ == "__main__":
 
     writer = Writer(cgs, boxsize, dimension=1)
 
-    writer.gas.coordinates = get_particle_positions(boxsize, n_part)
-    writer.gas.velocities = np.zeros(n_part) * unyt.cm / unyt.s
+    coordinates = np.zeros((n_part, 3), dtype=float) * unyt.cm
+    coordinates[:, 0] = get_particle_positions(boxsize, n_part)
+
+    writer.gas.coordinates = coordinates
+    writer.gas.velocities = np.zeros((n_part, 3), dtype=float) * unyt.cm / unyt.s
     writer.gas.masses = get_particle_masses(mass, n_part)
     writer.gas.internal_energy = get_particle_u(low, high, n_part)
     writer.gas.smoothing_length = get_particle_hsml(boxsize, n_part)
