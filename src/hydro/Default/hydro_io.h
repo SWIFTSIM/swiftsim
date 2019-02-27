@@ -163,7 +163,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
   list[8] = io_make_output_field_convert_part(
       "Pressure", FLOAT, 1, UNIT_CONV_PRESSURE, parts, xparts, convert_P);
 
-  list[0] = io_make_output_field_convert_part("Potential", FLOAT, 1,
+  list[9] = io_make_output_field_convert_part("Potential", FLOAT, 1,
                                               UNIT_CONV_POTENTIAL, parts,
                                               xparts, convert_part_potential);
 }

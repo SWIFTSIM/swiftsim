@@ -16,20 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+#ifndef SWIFT_METAL_DIFFUSION_STRUCT_H
+#define SWIFT_METAL_DIFFUSION_STRUCT_H
+
+/**
+ * @file src/.?./diffusion_struct.h
+ * @brief Branches between the two diffusion functions:
+ * 1) Diffusion of pasive scalar diffusion (useful for 2D hydrodynamic tests),
+ * 2) Diffusion of element abundance
+ */
+
 /* Config parameters. */
 #include "../config.h"
 
-/* This object's header. */
-#include "diffusion.h"
+/* Import the right diffusion definition */
+#if defined(DIFFUSION_NONE)
+#include "./metal_diffusion/none/diffusion_struct.h"
+#elif defined(SCALAR_DIFFUSION)
+#include "./metal_diffusion/DiffusionOfScalar/diffusion_struct.h"
+#elif defined(METAL_DIFFUSION)
+#include "./metal_diffusion/DiffusionOfElementAbundance/diffusion_struct.h"
+#else
+#error "Invalid choice of diffusion function."
+#endif
 
-/**
- * @brief Initialises the passive scalar arrays.
- *
- * Calls diffusion_init_backend for the chosen diffusion function.
- * @param parameter_file The parsed parameter file.
- * @param data The properties to initialise.  */
-void diffusion_init(struct swift_params* parameter_file,
-                    struct diffusion_global_data* data) {
-    
-    diffusion_init_backend(parameter_file, data);
-}
+#endif /* SWIFT_DIFFUSION_STRUCT_H */

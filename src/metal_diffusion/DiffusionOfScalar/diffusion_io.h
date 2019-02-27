@@ -16,3 +16,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+#ifndef SWIFT_DIFFUSION_IO_H
+#define SWIFT_DIFFUSION_IO_H
+
+#include "diffusion.h"
+#include "io_properties.h"
+
+/**
+ * @brief Specifies which particle fields to read from a dataset
+ *
+ * @param parts The particle array.
+ * @param list The list of i/o properties to read.
+ * @param num_fields The number of i/o fields to read.
+ */
+INLINE static void diffusion_read_particles(struct part* parts,
+                                        struct io_props* list,
+                                        int* num_fields) {
+    
+    *num_fields = 1;
+    
+    /* List what we want to read */
+    list[0] = io_make_input_field("PassiveScalar", FLOAT, 1, COMPULSORY, UNIT_CONV_NO_UNITS,
+                                  parts, diffusion_data.scalar);
+}
+
+/**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param parts The particle array.
+ * @param list The list of i/o properties to write.
+ * @param num_fields The number of i/o fields to write.
+ */
+INLINE static void diffusion_write_particles(const struct part* parts,
+                                         struct io_props* list,
+                                         int* num_fields) {
+    
+    *num_fields = 4;
+    
+    /* List what we want to write */
+    list[0] = io_make_output_field("PassiveScalar", FLOAT, 1, COMPULSORY, UNIT_CONV_NO_UNITS,
+                                   parts, diffusion_data.scalar);
+    
+    list[1] = io_make_output_field("VelocityShearTensor", FLOAT, 3, 3, UNIT_CONV_NO_UNITS, parts, diffusion_data.shear_tensor);
+    
+    list[2] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_coefficient);
+    
+    list[3] = io_make_output_field("DiffusionRate", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_rate);
+}

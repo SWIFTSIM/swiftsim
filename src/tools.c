@@ -101,6 +101,8 @@ void pairs_n2(double *dim, struct part *restrict parts, int N, int periodic) {
       if (r2 < parts[j].h * parts[j].h || r2 < parts[k].h * parts[k].h) {
         runner_iact_density(r2, NULL, parts[j].h, parts[k].h, &parts[j],
                             &parts[k], a, H);
+        runner_iact_shear_tensor(r2, parts[j].h, parts[k].h, &parts[j], &parts[k]);
+          
         /* if ( parts[j].h / parts[k].h > maxratio )
             {
             maxratio = parts[j].h / parts[k].h;
@@ -152,6 +154,7 @@ void pairs_single_density(double *dim, long long int pid,
   printf("pairs_single: part[%i].id == %lli.\n", k, pid);
 
   hydro_init_part(&p, NULL);
+  diffusion_init_part(&p, NULL);
 
   /* Loop over all particle pairs. */
   for (k = 0; k < N; k++) {
@@ -169,6 +172,7 @@ void pairs_single_density(double *dim, long long int pid,
     r2 = fdx[0] * fdx[0] + fdx[1] * fdx[1] + fdx[2] * fdx[2];
     if (r2 < p.h * p.h) {
       runner_iact_nonsym_density(r2, fdx, p.h, parts[k].h, &p, &parts[k], a, H);
+      runner_iact_nonsym_shear_tensor(r2, p.h, parts[k].h, &p, &parts[k]);
       /* printf( "pairs_simple: interacting particles %lli [%i,%i,%i] and %lli
          [%i,%i,%i], r=%e.\n" ,
           pid , (int)(p.x[0]*ih) , (int)(p.x[1]*ih) , (int)(p.x[2]*ih) ,
@@ -222,6 +226,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
         /* Interact */
         runner_iact_nonsym_density(r2, dx, hi, pj->h, pi, pj, a, H);
         runner_iact_nonsym_chemistry(r2, dx, hi, pj->h, pi, pj, a, H);
+        runner_iact_nonsym_shear_tensor(r2, hi, pj->h, pi, pj);
       }
     }
   }
@@ -254,6 +259,7 @@ void pairs_all_density(struct runner *r, struct cell *ci, struct cell *cj) {
         /* Interact */
         runner_iact_nonsym_density(r2, dx, hj, pi->h, pj, pi, a, H);
         runner_iact_nonsym_chemistry(r2, dx, hj, pi->h, pj, pi, a, H);
+        runner_iact_nonsym_shear_tensor(r2, hj, pi->h, pj, pi);
       }
     }
   }
@@ -522,6 +528,7 @@ void self_all_density(struct runner *r, struct cell *ci) {
         /* Interact */
         runner_iact_nonsym_density(r2, dxi, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_chemistry(r2, dxi, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_shear_tensor(r2, hi, hj, pi, pj);
       }
 
       /* Hit or miss? */
@@ -534,6 +541,7 @@ void self_all_density(struct runner *r, struct cell *ci) {
         /* Interact */
         runner_iact_nonsym_density(r2, dxi, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_chemistry(r2, dxi, hj, hi, pj, pi, a, H);
+        runner_iact_nonsym_shear_tensor(r2, hj, hi, pj, pi);
       }
     }
   }
@@ -691,6 +699,7 @@ void engine_single_density(double *dim, long long int pid,
 
   /* Clear accumulators. */
   hydro_init_part(&p, NULL);
+  diffusion_init_part(&p, NULL);
 
   /* Loop over all particle pairs (force). */
   for (k = 0; k < N; k++) {
@@ -708,6 +717,7 @@ void engine_single_density(double *dim, long long int pid,
     r2 = fdx[0] * fdx[0] + fdx[1] * fdx[1] + fdx[2] * fdx[2];
     if (r2 < p.h * p.h * kernel_gamma2) {
       runner_iact_nonsym_density(r2, fdx, p.h, parts[k].h, &p, &parts[k], a, H);
+      runner_iact_nonsym_shear_tensor(r2, p.h, parts[k].h, &p, &parts[k]);
     }
   }
 

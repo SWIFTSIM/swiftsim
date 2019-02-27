@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_H
-#define SWIFT_DIFFUSION_H
+#ifndef SWIFT_METAL_DIFFUSION_H
+#define SWIFT_METAL_DIFFUSION_H
 
 /**
  * @file src/.?./diffusion.h
@@ -34,11 +34,15 @@
 #include "./metal_diffusion/none/diffusion.h"
 #include "./metal_diffusion/none/diffusion_iact.h"
 #elif defined(SCALAR_DIFFUSION)
-#include "./metal_diffusion/DiffusionOfScalar/metal_diffusion.h"
-#include "./metal_diffusion/DiffusionOfScalar/metal_diffusion_iact.h"
+#include "./metal_diffusion/DiffusionOfScalar/diffusion.h"
+#include "./metal_diffusion/DiffusionOfScalar/diffusion_iact.h"
 #elif defined(METAL_DIFFUSION)
-#include "./metal_diffusion/DiffusionOfElementAbundance/metal_diffusion.h"
-#include "./metal_diffusion/DiffusionOfElementAbundance/metal_diffusion_iact.h"
+#include "./metal_diffusion/DiffusionOfElementAbundance/diffusion.h"
+#include "./metal_diffusion/DiffusionOfElementAbundance/diffusion_iact.h"
 #else
 #error "Invalid choice of diffusion function."
 #endif
+
+/* Common functions */
+void diffusion_init(struct swift_params* parameter_file,
+                    struct diffusion_global_data* data);

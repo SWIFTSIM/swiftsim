@@ -21,6 +21,7 @@
 
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "diffusion_struct.h"
 #include "tracers_struct.h"
 
 /* Extra particle data not needed during the SPH loops over neighbours. */
@@ -132,6 +133,9 @@ struct part {
 
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
+    
+  /* Chemistry information */
+  struct diffusion_part_data diffusion_data;
 
   /* Particle time-bin */
   timebin_t time_bin;
