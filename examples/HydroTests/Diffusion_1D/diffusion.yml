@@ -9,7 +9,7 @@ InternalUnitSystem:
 # Parameters governing the time integration
 TimeIntegration:
   time_begin: 0.    # The starting time of the simulation (in internal units).
-  time_end:   5e-0  # The end time of the simulation (in internal units).
+  time_end:   1e-0  # The end time of the simulation (in internal units).
   dt_min:     1e-7  # The minimal time-step size of the simulation (in internal units).
   dt_max:     1e-2  # The maximal time-step size of the simulation (in internal units).
 
@@ -17,7 +17,7 @@ TimeIntegration:
 Snapshots:
   basename:            diffusion # Common part of the name of output files
   time_first:          0.    # Time of the first output (in internal units)
-  delta_time:          1e-1  # Time difference between consecutive outputs (in internal units)
+  delta_time:          2e-2  # Time difference between consecutive outputs (in internal units)
 
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -27,7 +27,7 @@ Statistics:
 SPH:
   resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
   CFL_condition:         0.1      # Courant-Friedrich-Levy condition for time integration.
-  diffusion_alpha:       0.0      # (Optional) Override the initial value for the thermal diffusion coefficient in schemes with thermal diffusion.
+  diffusion_alpha:       0.2      # (Optional) Override the initial value for the thermal diffusion coefficient in schemes with thermal diffusion.
   diffusion_beta:        0.01     # (Optional) Override the decay/rise rate tuning parameter for the thermal diffusion.
   diffusion_alpha_max:   1.0      # (Optional) Override the maximal thermal diffusion coefficient that is allowed for a given particle.
   diffusion_alpha_min:   0.0      # (Optional) Override the minimal thermal diffusion coefficient that is allowed for a given particle.
