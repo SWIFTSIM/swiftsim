@@ -26,6 +26,7 @@
 /* Some standard headers. */
 
 /* Local includes. */
+#include "diffusion_struct.h"
 #include "hydro.h"
 #include "parser.h"
 #include "part.h"
@@ -39,7 +40,8 @@
  * @param dp #diffusion_part_data containing information of diffusion arrays.
  */
 __attribute__((always_inline)) INLINE static void diffusion_init_part(
-    struct part* restrict p, const struct diffusion_part_data* dp) {}
+    struct part* restrict p, const struct diffusion_part_data* dp) {
+}
 
 /**
  * @brief Sets the diffusion properties of the particles to a valid starting point
@@ -61,3 +63,5 @@ __attribute__((always_inline)) INLINE static void diffusion_first_init_part(
 static INLINE void diffusion_init_backend(struct swift_params* parameter_file,
                                           struct diffusion_global_data* data) {
 }
+
+#endif

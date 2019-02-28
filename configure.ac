@@ -1291,7 +1291,7 @@ case "$with_subgrid" in
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=none
-        with_subgrid_diffusion=DiffusionOfElemenetAbundance
+        with_subgrid_diffusion=metals
    ;;
    COLIBRE)
    with_subgrid_cooling=COLIBRE
@@ -1301,7 +1301,7 @@ case "$with_subgrid" in
    with_subgrid_stars=COLIBRE
    with_subgrid_star_formation=COLIBRE
    with_subgrid_feedback=none
-   with_subgrid_diffusion=DiffusionOfElemenetAbundance
+   with_subgrid_diffusion=metals
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -1648,7 +1648,7 @@ esac
 #  diffusion function
 AC_ARG_WITH([diffusion],
    [AS_HELP_STRING([--with-diffusion=<function>],
-      [diffusion function @<:@none, DiffusionOfElementAbudance, DiffusionOfScalar default: none@:>@]
+      [diffusion function @<:@none, METAL_DIFFUSION, SCALAR_DIFFUSION default: none@:>@]
    )],
    [with_diffusion="$withval"],
    [with_diffusion="none"]
@@ -1664,13 +1664,13 @@ fi
 
 case "$with_diffusion" in
    none)
-      AC_DEFINE([METAL_DIFFUSION_NONE], [1], [No diffusion function])
+      AC_DEFINE([DIFFUSION_NONE], [1], [No diffusion function])
    ;;
-   DiffusionOfElementAbundance)
-      AC_DEFINE([METAL_DIFFUSION_DIFFUSIONOFELEMENTABUNDANCE], [1], [Diffusion on element abundances])
+   metals)
+      AC_DEFINE([METAL_DIFFUSION], [1], [Diffusion on element abundances])
    ;;
-   DiffusionOfScalar)
-      AC_DEFINE([METAL_DIFFUSION_DIFFUSIONOFSCALAR], [1], [Diffusion on passive scalar])
+   scalar)
+      AC_DEFINE([SCALAR_DIFFUSION], [1], [Diffusion on passive scalar])
    ;;
    *)
       AC_MSG_ERROR([Unknown diffusion function: $with_diffusion])

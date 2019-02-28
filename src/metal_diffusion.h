@@ -46,3 +46,5 @@
 /* Common functions */
 void diffusion_init(struct swift_params* parameter_file,
                     struct diffusion_global_data* data);
+
+#endif
