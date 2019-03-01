@@ -22,12 +22,6 @@
 /**
  * @brief Diffusion particle data traced by the #part.
  */
-struct diffusion_global_data {
-    
-    /*! Initial value of the passive scalar S given at the start of the run */
-    float initial_scalar;
-};
-
 struct diffusion_part_data {
     
     /*! Scalar S at time step *before* diffusion with neighbouring particles */

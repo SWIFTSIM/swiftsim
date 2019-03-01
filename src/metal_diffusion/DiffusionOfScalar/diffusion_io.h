@@ -31,10 +31,10 @@
  */
 INLINE static int diffusion_read_particles(struct part* parts,
                                         struct io_props* list) {
-    
     /* List what we want to read */
-    list[0] = io_make_input_field("PassiveScalar", FLOAT, 1, OPTIONAL, UNIT_CONV_NO_UNITS,
+    list[0] = io_make_input_field("PassiveScalar", FLOAT, 1, COMPULSORY, UNIT_CONV_NO_UNITS,
                                   parts, diffusion_data.scalar);
+    message("Reading passive scalar array");
     return 1;
 }
 
@@ -54,9 +54,9 @@ INLINE static int diffusion_write_particles(const struct part* parts,
     
     /*list[1] = io_make_output_field("VelocityShearTensor", FLOAT, 3, 3, UNIT_CONV_NO_UNITS, parts, diffusion_data.shear_tensor);*/
     
-    list[2] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_coefficient);
+    list[1] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_coefficient);
     
-    list[3] = io_make_output_field("DiffusionRate", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_rate);
+    list[2] = io_make_output_field("DiffusionRate", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_rate);
     
     return 3;
 }

@@ -1232,7 +1232,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const struct hydro_space *hs = &s->hs;
   const struct cosmology *cosmo = e->cosmology;
   const struct chemistry_global_data *chemistry = e->chemistry;
-  const struct diffusion_global_data *diffusion = e->diffusion;
   const float hydro_h_max = e->hydro_properties->h_max;
   const float hydro_h_min = e->hydro_properties->h_min;
   const float eps = e->hydro_properties->h_tolerance;
@@ -1458,7 +1457,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* Re-initialise everything */
             hydro_init_part(p, hs);
             chemistry_init_part(p, chemistry);
-            diffusion_init_part(p, diffusion);
+            diffusion_init_part(p);
 
             /* Off we go ! */
             continue;

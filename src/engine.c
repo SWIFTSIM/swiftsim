@@ -62,7 +62,6 @@
 #include "cosmology.h"
 #include "cycle.h"
 #include "debug.h"
-#include "metal_diffusion.h"
 #include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "error.h"
@@ -4132,7 +4131,6 @@ void engine_unpin(void) {
  * @param cooling_func The properties of the cooling function.
  * @param starform The #star_formation model of this run.
  * @param chemistry The chemistry information.
- * @param diffusion The metal diffusion information.
  */
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  long long Ngas, long long Ngparts, long long Nstars,
@@ -4146,8 +4144,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  const struct external_potential *potential,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
-                 const struct chemistry_global_data *chemistry,
-                 const struct diffusion_global_data *diffusion) {
+                 const struct chemistry_global_data *chemistry) {
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
@@ -4215,7 +4212,6 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->cooling_func = cooling_func;
   e->star_formation = starform;
   e->chemistry = chemistry;
-  e->diffusion = diffusion;
   e->parameter_file = params;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
@@ -5340,7 +5336,6 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
   chemistry_struct_dump(e->chemistry, stream);
-  diffusion_struct_dump(e->diffusion, stream);
   parser_struct_dump(e->parameter_file, stream);
   if (e->output_list_snapshots)
     output_list_struct_dump(e->output_list_snapshots, stream);
@@ -5448,12 +5443,6 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   chemistry_struct_restore(chemistry, stream);
   e->chemistry = chemistry;
     
-  struct diffusion_global_data *diffusion =
-    (struct diffusion_global_data *)malloc(
-        sizeof(struct diffusion_global_data));
-  diffusion_struct_restore(diffusion, stream);
-  e->diffusion = diffusion;
-
   struct swift_params *parameter_file =
       (struct swift_params *)malloc(sizeof(struct swift_params));
   parser_struct_restore(parameter_file, stream);

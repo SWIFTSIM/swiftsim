@@ -42,7 +42,7 @@
  * @param dp #diffusion_part_data containing information of diffusion arrays.
  */
 __attribute__((always_inline)) INLINE static void diffusion_init_part(
-    struct part* restrict p, const struct diffusion_global_data* cd) {
+    struct part* restrict p) {
     
     struct diffusion_part_data* dp = &p->diffusion_data;
 
@@ -62,35 +62,21 @@ __attribute__((always_inline)) INLINE static void diffusion_init_part(
  * @param dp Pointer to the diffusion particle data.
  */
 __attribute__((always_inline)) INLINE static void diffusion_first_init_part(
-       const struct diffusion_global_data* data,
        struct part* restrict p){
     
     // Add initialization of the passive scalar.
-        p->diffusion_data.scalar = data->initial_scalar;
+        p->diffusion_data.a_scalar = p->diffusion_data.scalar;
     
-    diffusion_init_part(p, data);
+    diffusion_init_part(p);
 }
 
-
-/**
- * @brief Initialises the passive scalar array to be diffused.
- *
- * @param parameter_file The parsed parameter file.
- * @param data The properties to initialise.
- */
-static INLINE void diffusion_init_backend(struct swift_params* parameter_file,
-                                          struct diffusion_global_data* data) {
-    
-    /* Read the passive scalar from initial conditions */
-    data->initial_scalar = parser_get_opt_param_float(parameter_file, "Diffusion:init_passive_scalar", -1);
-}
 
 /**
  * @brief Prints the properties of the diffusion model to stdout.
- * @brief The #diffusion_global_data containing information about the current
+ * @brief The #diffusion_part_data containing information about the current
  * model. */
 static INLINE void diffusion_print_backend(
-                                           const struct diffusion_global_data* data) {
+                                           const struct diffusion_part_data* data) {
     
     message("Diffusion model is 'SCALAR': diffusion of given passive scalar");
 }

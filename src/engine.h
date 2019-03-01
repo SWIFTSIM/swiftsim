@@ -379,7 +379,7 @@ struct engine {
   const struct chemistry_global_data *chemistry;
 
   /* Properties of the diffusion model */
-  const struct diffusion_global_data *diffusion;
+  const struct diffusion_part_data *diffusion;
 
   /* The (parsed) parameter file */
   struct swift_params *parameter_file;
@@ -438,8 +438,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  const struct external_potential *potential,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
-                 const struct chemistry_global_data *chemistry,
-                 const struct diffusion_global_data *diffusion);
+                 const struct chemistry_global_data *chemistry);
 void engine_config(int restart, struct engine *e, struct swift_params *params,
                    int nr_nodes, int nodeID, int nr_threads, int with_aff,
                    int verbose, const char *restart_file);

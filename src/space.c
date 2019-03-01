@@ -3358,7 +3358,6 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
   const int with_gravity = e->policy & engine_policy_self_gravity;
 
   const struct chemistry_global_data *chemistry = e->chemistry;
-  const struct diffusion_global_data *diffusion = e->diffusion;
   const struct cooling_function_data *cool_func = e->cooling_func;
 
   /* Check that the smoothing lengths are non-zero */
@@ -3406,7 +3405,7 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
     chemistry_first_init_part(phys_const, us, cosmo, chemistry, &p[k], &xp[k]);
 
     /* Also initialise the diffusion */
-    diffusion_first_init_part(diffusion, &p[k]);
+    diffusion_first_init_part(&p[k]);
 
     /* And the cooling */
     cooling_first_init_part(phys_const, us, cosmo, cool_func, &p[k], &xp[k]);

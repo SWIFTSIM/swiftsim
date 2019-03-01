@@ -45,14 +45,14 @@
 
 /* Common functions */
 void diffusion_init(struct swift_params* parameter_file,
-                    struct diffusion_global_data* data);
+                    struct diffusion_part_data* data);
 
-void diffusion_print(const struct diffusion_global_data* data);
+void diffusion_print(const struct diffusion_part_data* data);
 
 /* Dump/restore. */
-void diffusion_struct_dump(const struct diffusion_global_data* diffusion,
+void diffusion_struct_dump(const struct diffusion_part_data* diffusion,
                            FILE* stream);
-void diffusion_struct_restore(const struct diffusion_global_data* diffusion,
+void diffusion_struct_restore(const struct diffusion_part_data* diffusion,
                               FILE* stream);
 
 

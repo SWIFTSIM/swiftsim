@@ -23,26 +23,14 @@
 #include "metal_diffusion.h"
 
 /**
- * @brief Initialises the passive scalar arrays.
- *
- * Calls diffusion_init_backend for the chosen diffusion function.
- * @param parameter_file The parsed parameter file.
- * @param data The properties to initialise.  */
-void diffusion_init(struct swift_params* parameter_file,
-                    struct diffusion_global_data* data) {
-    
-    diffusion_init_backend(parameter_file, data);
-}
-
-/**
  * @brief Prints the properties of the diffusion model to stdout.
  *
  * Calls diffusion_print_backend for the chosen diffusion model.
  *
- * @brief The #diffusion_global_data containing information about the current
+ * @brief The #diffusion_part_data containing information about the current
  * model.
  */
-void diffusion_print(const struct diffusion_global_data* data) {
+void diffusion_print(const struct diffusion_part_data* data) {
     diffusion_print_backend(data);
 }
 
@@ -52,11 +40,8 @@ void diffusion_print(const struct diffusion_global_data* data) {
  * @param diffusion the struct
  * @param stream the file stream
  */
-void diffusion_struct_dump(const struct diffusion_global_data* diffusion,
-                           FILE* stream) {
-    restart_write_blocks((void*)diffusion, sizeof(struct diffusion_global_data),
-                         1, stream, "diffusion", "diffusion function");
-}
+void diffusion_struct_dump(const struct diffusion_part_data* diffusion,
+                           FILE* stream) {}
 
 /**
  * @brief Restore a hydro_props struct from the given FILE as a stream of
@@ -65,8 +50,8 @@ void diffusion_struct_dump(const struct diffusion_global_data* diffusion,
  * @param diffusion the struct
  * @param stream the file stream
  */
-void diffusion_struct_restore(const struct diffusion_global_data* diffusion,
+void diffusion_struct_restore(const struct diffusion_part_data* diffusion,
                               FILE* stream) {
-    restart_read_blocks((void*)diffusion, sizeof(struct diffusion_global_data), 1,
+    restart_read_blocks((void*)diffusion, sizeof(struct diffusion_part_data), 1,
                         stream, NULL, "diffusion function");
 }
