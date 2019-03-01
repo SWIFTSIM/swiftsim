@@ -16,14 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_H
-#define SWIFT_DIFFUSION_H
+#ifndef SWIFT_DIFFUSION_NONE_H
+#define SWIFT_DIFFUSION_NONE_H
 
 /**
  * @file src/metal_diffusion/DiffusionOfScalar/diffusion.h
  */
 
 /* Some standard headers. */
+#include <float.h>
+#include <math.h>
 
 /* Local includes. */
 #include "diffusion_struct.h"
@@ -40,7 +42,7 @@
  * @param dp #diffusion_part_data containing information of diffusion arrays.
  */
 __attribute__((always_inline)) INLINE static void diffusion_init_part(
-    struct part* restrict p, const struct diffusion_part_data* dp) {
+    struct part* restrict p, const struct diffusion_global_data* data) {
 }
 
 /**
@@ -50,9 +52,20 @@ __attribute__((always_inline)) INLINE static void diffusion_init_part(
  */
 __attribute__((always_inline)) INLINE static void diffusion_first_init_part(
        const struct diffusion_global_data* data,
-       struct diffusion_part_data* dp){
+       struct part* restrict p){
 }
 
+/**
+ * @brief Prints the properties of the diffusion model to stdout.
+ *
+ * @brief The #diffusion_global_data containing information about the current
+ * model.
+ */
+static INLINE void diffusion_print_backend(
+                                           const struct diffusion_global_data* data) {
+    
+    message("Diffusion function is 'No diffusion'.");
+}
 
 /**
  * @brief Initialises the passive scalar array to be diffused.

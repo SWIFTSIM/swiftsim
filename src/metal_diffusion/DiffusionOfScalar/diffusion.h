@@ -26,6 +26,7 @@
 /* Some standard headers. */
 
 /* Local includes. */
+#include "diffusion_struct.h"
 #include "hydro.h"
 #include "parser.h"
 #include "part.h"
@@ -39,7 +40,7 @@
  * @param dp #diffusion_part_data containing information of diffusion arrays.
  */
 __attribute__((always_inline)) INLINE static void diffusion_init_part(
-    struct part* restrict p, const struct diffusion_part_data* dp) {
+    struct part* restrict p, const struct diffusion_global_data* cd) {
     
     struct diffusion_part_data* dp = &p->diffusion_data;
 
@@ -60,11 +61,10 @@ __attribute__((always_inline)) INLINE static void diffusion_init_part(
  */
 __attribute__((always_inline)) INLINE static void diffusion_first_init_part(
        const struct diffusion_global_data* data,
-       struct diffusion_part_data* dp){
+       struct part* restrict p){
     
     // Add initialization of the passive scalar.
-        dp->scalar = data->initial_scalar;
-        dp->a_scalar = data->initial_scalar;
+        p->diffusion_data.scalar = data->initial_scalar;
     
     diffusion_init_part(p, data);
 }
@@ -82,3 +82,15 @@ static INLINE void diffusion_init_backend(struct swift_params* parameter_file,
     /* Read the passive scalar from initial conditions */
     data->initial_scalar = parser_get_opt_param_float(parameter_file, "Diffusion:init_passive_scalar", -1);
 }
+
+/**
+ * @brief Prints the properties of the diffusion model to stdout.
+ * @brief The #diffusion_global_data containing information about the current
+ * model. */
+static INLINE void diffusion_print_backend(
+                                           const struct diffusion_global_data* data) {
+    
+    message("Diffusion model is 'SCALAR': diffusion of given passive scalar");
+}
+
+#endif

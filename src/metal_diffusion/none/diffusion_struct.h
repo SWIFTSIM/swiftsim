@@ -16,19 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_SCALAR_DIFFUSION_STRUCT_H
-#define SWIFT_SCALAR_DIFFUSION_STRUCT_H
+#ifndef SWIFT_SCALAR_DIFFUSION_STRUCT_NONE_H
+#define SWIFT_SCALAR_DIFFUSION_STRUCT_NONE_H
 
 /**
  * @brief Diffusion particle data traced by the #part.
  */
-struct diffusion_global_data {
-    
-};
+struct diffusion_global_data {};
 
-struct diffusion_part_data {
-    
-};
+struct diffusion_part_data {};
 
 #endif /* SWIFT_SCALAR_DIFFUSION_STRUCT_H */
 

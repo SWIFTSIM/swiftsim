@@ -1538,7 +1538,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_sher_tensor(r2, hi, hj, pi, pj);
+            runner_iact_shear_tensor(r2, hi, hj, pi, pj);
 #endif
           } else {
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);

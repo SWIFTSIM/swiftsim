@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_IACT_H
-#define SWIFT_DIFFUSION_IACT_H
+#ifndef SWIFT_DIFFUSION_IACT_NONE_H
+#define SWIFT_DIFFUSION_IACT_NONE_H
 
 /**
  * @file DiffusionOfScalar/diffusion_iact.h

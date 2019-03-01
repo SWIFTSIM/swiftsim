@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_IO_H
-#define SWIFT_DIFFUSION_IO_H
+#ifndef SWIFT_DIFFUSION_IO_NONE_H
+#define SWIFT_DIFFUSION_IO_NONE_H
 
-#include "diffusion.h"
+
 #include "io_properties.h"
 
 /**
@@ -29,9 +29,8 @@
  * @param list The list of i/o properties to read.
  * @param num_fields The number of i/o fields to read.
  */
-INLINE static void diffusion_read_particles(struct part* parts,
+INLINE static int diffusion_read_particles(struct part* parts,
                                         struct io_props* list) {
-    
     return 0;
 }
 
@@ -42,7 +41,7 @@ INLINE static void diffusion_read_particles(struct part* parts,
  * @param list The list of i/o properties to write.
  * @param num_fields The number of i/o fields to write.
  */
-INLINE static void diffusion_write_particles(const struct part* parts,
+INLINE static int diffusion_write_particles(const struct part* parts,
                                          struct io_props* list) {
     return 0;
 }
@@ -54,7 +53,8 @@ INLINE static void diffusion_write_particles(const struct part* parts,
  * @param h_grp The HDF5 group in which to write
  */
 INLINE static void diffusion_write_flavour(hid_t h_grp) {
+    io_write_attribute_s(h_grp, "Diffusion Model", "None");
 }
 #endif
 
-#endif /* SWIFT_DIFFUSION_IO_H */
+#endif /* SWIFT_DIFFUSION_IO_NONE_H */

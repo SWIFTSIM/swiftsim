@@ -20,7 +20,7 @@
 #include "../config.h"
 
 /* This object's header. */
-#include "diffusion.h"
+#include "metal_diffusion.h"
 
 /**
  * @brief Initialises the passive scalar arrays.
@@ -32,4 +32,41 @@ void diffusion_init(struct swift_params* parameter_file,
                     struct diffusion_global_data* data) {
     
     diffusion_init_backend(parameter_file, data);
+}
+
+/**
+ * @brief Prints the properties of the diffusion model to stdout.
+ *
+ * Calls diffusion_print_backend for the chosen diffusion model.
+ *
+ * @brief The #diffusion_global_data containing information about the current
+ * model.
+ */
+void diffusion_print(const struct diffusion_global_data* data) {
+    diffusion_print_backend(data);
+}
+
+/**
+ * @brief Write a diffusion struct to the given FILE as a stream of bytes.
+ *
+ * @param diffusion the struct
+ * @param stream the file stream
+ */
+void diffusion_struct_dump(const struct diffusion_global_data* diffusion,
+                           FILE* stream) {
+    restart_write_blocks((void*)diffusion, sizeof(struct diffusion_global_data),
+                         1, stream, "diffusion", "diffusion function");
+}
+
+/**
+ * @brief Restore a hydro_props struct from the given FILE as a stream of
+ * bytes.
+ *
+ * @param diffusion the struct
+ * @param stream the file stream
+ */
+void diffusion_struct_restore(const struct diffusion_global_data* diffusion,
+                              FILE* stream) {
+    restart_read_blocks((void*)diffusion, sizeof(struct diffusion_global_data), 1,
+                        stream, NULL, "diffusion function");
 }
