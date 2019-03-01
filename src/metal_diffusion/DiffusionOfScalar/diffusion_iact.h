@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_IACT_H
-#define SWIFT_DIFFUSION_IACT_H
+#ifndef SWIFT_DIFFUSION_IACT_SCALAR_H
+#define SWIFT_DIFFUSION_IACT_SCALAR_H
 
 /**
  * @file DiffusionOfScalar/diffusion_iact.h
@@ -46,7 +46,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     /* Get mass */
     float mj = pj->mass;
     float mi = pi->mass;
-
+    float wi, wj, dwi_dx, dwj_dx;
+    
     /* Get r */
     float r = sqrtf(r2);
 
@@ -104,6 +105,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tenso
     
     /* Get mass */
     float mi = pi->mass;
+    float wi, dwi_dx;
     
     /* Get r */
     float r = sqrtf(r2);

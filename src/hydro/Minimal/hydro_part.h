@@ -34,6 +34,7 @@
 
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "metal_diffusion_struct.h"
 #include "star_formation_struct.h"
 #include "tracers_struct.h"
 
@@ -172,6 +173,9 @@ struct part {
 
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
+    
+  /* Diffusion information */
+  struct diffusion_part_data diffusion_data;
 
   /*! Time-step length */
   timebin_t time_bin;

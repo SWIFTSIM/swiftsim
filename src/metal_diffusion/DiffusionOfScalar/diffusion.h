@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DIFFUSION_H
-#define SWIFT_DIFFUSION_H
+#ifndef SWIFT_DIFFUSION_SCALAR_H
+#define SWIFT_DIFFUSION_SCALAR_H
 
 /**
  * @file src/metal_diffusion/DiffusionOfScalar/diffusion.h

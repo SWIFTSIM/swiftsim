@@ -23,6 +23,7 @@
 #include "cooling_struct.h"
 #include "tracers_struct.h"
 #include "voronoi_cell.h"
+#include "metal_diffusion_struct.h"
 
 /* Extra particle data not needed during the computation. */
 struct xpart {
@@ -179,6 +180,9 @@ struct part {
 
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
+
+  /* Diffusion information */
+  struct diffusion_part_data diffusion_data;
 
   /* Time-step length */
   timebin_t time_bin;
