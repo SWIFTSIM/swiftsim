@@ -24,6 +24,8 @@
  */
 
 /* Some standard headers. */
+#include <float.h>
+#include <math.h>
 
 /* Local includes. */
 #include "diffusion_struct.h"
@@ -93,4 +95,41 @@ static INLINE void diffusion_print_backend(
     message("Diffusion model is 'SCALAR': diffusion of given passive scalar");
 }
 
+/**
+ * @brief Calculates the diffusion coefficient at the end of the density loop.
+ *
+ * @param p The particle to act upon.
+ */
+__attribute__((always_inline)) INLINE static void diffusion_coefficient_end_density(
+                                                                        struct part* restrict p) {
+    
+    /* Some data from part */
+    const float h = p->h;
+    const float density = p->rho; /* 1 / h^d * rho */
+    struct diffusion_part_data* dp = &p->diffusion_data;
+    float shear_tensor_S[3][3];
+    int k;
+    /* Norm of shear_tensor from density loop */
+    float TShearTensorN = (1.f/3.f) * (p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2]) / density;
+    
+    /* I define a new shear_tensor "shear_tensor_S" */
+    for (k = 0; k < 3; k++){
+        shear_tensor_S[k][0] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][0] + p->diffusion_data.shear_tensor[0][k]);
+        if (k == 0) shear_tensor_S[k][0] -= TShearTensorN;
+        shear_tensor_S[k][1] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][1] + p->diffusion_data.shear_tensor[1][k]);
+        if (k == 1) shear_tensor_S[k][1] -= TShearTensorN;
+        shear_tensor_S[k][2] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][2] + p->diffusion_data.shear_tensor[2][k]);
+        if (k == 2) shear_tensor_S[k][2] -= TShearTensorN;
+    }
+    /* Calculate the trace */
+    float NormTensor = 0.f;
+    for (k = 0; k < 3; k++){
+        NormTensor += fabs(shear_tensor_S[k][0] * shear_tensor_S[k][0]) + fabs(shear_tensor_S[k][1] * shear_tensor_S[k][1]) + fabs(shear_tensor_S[k][2] * shear_tensor_S[k][2]);
+    }
+    NormTensor = sqrt(NormTensor);
+    
+    // ok, combine to get the diffusion coefficient //
+    dp->diffusion_coefficient = density * NormTensor * h * h; /*Check code units*/
+
+}
 #endif
