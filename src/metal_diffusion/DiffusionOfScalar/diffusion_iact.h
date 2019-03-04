@@ -54,8 +54,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     /* part j*/
     /* Get the kernel for hj */
     float hj_inv = 1.0f / hj;
-    float hjd_inv;
-    hjd_inv = pow_dimension_plus_one(hj_inv); /* 1/h^(d+1) */
     
     /* Compute the kernel function for pj */
     const float xj = r * hj_inv;
@@ -66,8 +64,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     /* part i*/
     /* Get the kernel for hi */
     float hi_inv = 1.0f / hi;
-    float hid_inv;
-    hid_inv = pow_dimension_plus_one(hi_inv); /* 1/h^(d+1) */
     
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;

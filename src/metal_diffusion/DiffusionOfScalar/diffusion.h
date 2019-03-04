@@ -82,29 +82,45 @@ static INLINE void diffusion_print_backend(
 }
 
 /**
- * @brief Calculates the diffusion coefficient at the end of the density loop.
+ * @brief Finishes the calculation of the velocity shear tensor,
+ * and calculates the diffusion coefficient at the end of the density loop.
  *
  * @param p The particle to act upon.
+ * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_density(
-                                                                        struct part* restrict p) {
+                                                                        struct part* restrict p, const struct cosmology *cosmo) {
     
-    /* Some data from part */
-    const float h = p->h;
-    const float density = p->rho; /* 1 / h^d * rho */
-    struct diffusion_part_data* dp = &p->diffusion_data;
-    float shear_tensor_S[3][3];
     int k;
-    /* Norm of shear_tensor from density loop */
-    float TShearTensorN = (1.f/3.f) * (p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2]) / density;
+    /* Some smoothing length multiples. */
+    const float h = p->h;
+    const float h_inv = 1.0f / h;                       /* 1/h */
+    const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+    const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
+    struct diffusion_part_data* dp = &p->diffusion_data;
+    
+    const float rho_inv = 1.f / p->rho; /* 1 / rho / h^d */
+    const float a_inv2 = cosmo->a2_inv;
+    
+    /* Velocity shear tensor in physical coordinates */
+    for (k = 0; k < 3; k++){
+        p->diffusion_data.shear_tensor[k][0] *= a_inv2 * h_inv_dim_plus_one * rho_inv;
+        p->diffusion_data.shear_tensor[k][1] *= a_inv2 * h_inv_dim_plus_one * rho_inv;
+        p->diffusion_data.shear_tensor[k][2] *= a_inv2 * h_inv_dim_plus_one * rho_inv;
+    }
+    
+    float shear_tensor_S[3][3];
+    /* Norm of shear_tensor (in physical coordinates) */
+    float TShearTensorN = p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2];
+    TShearTensorN *= (1.f/3.f) * rho_inv
     
     /* I define a new shear_tensor "shear_tensor_S" */
     for (k = 0; k < 3; k++){
-        shear_tensor_S[k][0] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][0] + p->diffusion_data.shear_tensor[0][k]);
+        shear_tensor_S[k][0] = 0.5 * rho_inv * (p->diffusion_data.shear_tensor[k][0] + p->diffusion_data.shear_tensor[0][k]);
         if (k == 0) shear_tensor_S[k][0] -= TShearTensorN;
-        shear_tensor_S[k][1] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][1] + p->diffusion_data.shear_tensor[1][k]);
+        shear_tensor_S[k][1] = 0.5 * rho_inv * (p->diffusion_data.shear_tensor[k][1] + p->diffusion_data.shear_tensor[1][k]);
         if (k == 1) shear_tensor_S[k][1] -= TShearTensorN;
-        shear_tensor_S[k][2] = (0.5 / density) * (p->diffusion_data.shear_tensor[k][2] + p->diffusion_data.shear_tensor[2][k]);
+        shear_tensor_S[k][2] = 0.5 * rho_inv * (p->diffusion_data.shear_tensor[k][2] + p->diffusion_data.shear_tensor[2][k]);
         if (k == 2) shear_tensor_S[k][2] -= TShearTensorN;
     }
     /* Calculate the trace */
@@ -114,8 +130,8 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     }
     NormTensor = sqrt(NormTensor);
     
-    // ok, combine to get the diffusion coefficient //
-    dp->diffusion_coefficient = density * NormTensor * h * h; /*Check code units*/
+    // We can now combine to get the diffusion coefficient //
+    dp->diffusion_coefficient = p->rho * NormTensor * pow_dimension(h_dim); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
 
 }
 #endif
