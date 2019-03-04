@@ -112,7 +112,7 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     float shear_tensor_S[3][3];
     /* Norm of shear_tensor (in physical coordinates) */
     float TShearTensorN = p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2];
-    TShearTensorN *= (1.f/3.f) * rho_inv
+    TShearTensorN *= (1.f/3.f) * rho_inv;
     
     /* I define a new shear_tensor "shear_tensor_S" */
     for (k = 0; k < 3; k++){
@@ -131,7 +131,7 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient //
-    dp->diffusion_coefficient = p->rho * NormTensor * pow_dimension(h_dim); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
+    dp->diffusion_coefficient = p->rho * NormTensor * pow_dimension(h); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
 
 }
 #endif
