@@ -30,6 +30,11 @@ def get_data_dump(metadata):
     """
     Gets a big data dump from the SWIFT metadata.
     """
+
+    try:
+        viscosity = metadata.viscosity_info
+    except:
+        viscosity = "No info"
     
     try:
         diffusion = metadata.diffusion_info
@@ -47,7 +52,7 @@ def get_data_dump(metadata):
         + metadata.hydro_info
         + "\n\n"
         + "Viscosity\n"
-        + metadata.viscosity_info
+        + viscosity
         + "\n\n"
         + "Diffusion\n"
         + diffusion
