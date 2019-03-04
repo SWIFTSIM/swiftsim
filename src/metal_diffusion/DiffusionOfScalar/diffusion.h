@@ -97,7 +97,6 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     const float h_inv = 1.0f / h;                       /* 1/h */
     const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
     const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
-    struct diffusion_part_data* dp = &p->diffusion_data;
     
     const float rho_inv = 1.f / p->rho; /* 1 / rho / h^d */
     const float a_inv2 = cosmo->a2_inv;
@@ -131,7 +130,7 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient //
-    dp->diffusion_coefficient = p->rho * NormTensor * pow_dimension(h); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
+    p->diffusion_data.diffusion_coefficient = p->rho * NormTensor * pow_dimension(h); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
 
 }
 #endif
