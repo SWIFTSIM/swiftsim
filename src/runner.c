@@ -585,7 +585,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   TIMER_TIC;
 
   /* Initialize the star formation logger information */
-  starformation_init_SFH(c->stars.sfh);
+  star_formation_init_SFH(c->stars.sfh);
 
   /* Anything to do here? */
   if (!cell_is_active_hydro(c, e)) return;
@@ -649,7 +649,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                                            with_cosmology);
 
             /* Update the Star formation history */
-            starformation_update_SFH(sp, c->stars.sfh);
+            star_formation_update_SFH(sp, c->stars.sfh);
           }
 
         } else { /* Are we not star-forming? */
