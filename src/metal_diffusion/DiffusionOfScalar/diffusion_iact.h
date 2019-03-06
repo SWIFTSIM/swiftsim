@@ -59,7 +59,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     const float xj = r * hj_inv;
     kernel_deval(xj, &wj, &dwj_dx);
     float dwj_r = dwj_dx / r;
-    float mj_dwj_r = mj * dwj_r;
+    float mi_dwj_r = mi * dwj_r;
 
     /* part i*/
     /* Get the kernel for hi */
@@ -69,17 +69,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
     float dwi_r = dwi_dx / r;
-    float mi_dwi_r = mi * dwi_r;
+    float mj_dwi_r = mj * dwi_r;
     
     /* Compute shear tensor */
     for (int k = 0; k < 3; k++){
-        dj->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwj_r;
-        dj->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwj_r;
-        dj->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwj_r;
+        dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwj_r;
+        dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwj_r;
+        dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwj_r;
         
-        di->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwi_r;
-        di->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwi_r;
-        di->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwi_r;
+        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwi_r;
     }
 }
 
@@ -100,7 +100,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tenso
     struct diffusion_part_data *di = &pi->diffusion_data;
     
     /* Get mass */
-    float mi = pi->mass;
+    float mj = pj->mass;
     float wi, dwi_dx;
     
     /* Get r */
@@ -108,20 +108,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tenso
     
     /* Get the kernel for hi */
     float hi_inv = 1.0f / hi;
-    float hid_inv;
-    hid_inv = pow_dimension_plus_one(hi_inv); /* 1/h^(d+1) */
     
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
     float dwi_r = dwi_dx / r;
-    float mi_dwi_r = mi * dwi_r;
+    float mj_dwi_r = mj * dwi_r;
     
     /* Compute shear tensor */
     for (int k = 0; k < 3; k++){
-        di->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwi_r;
-        di->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwi_r;
-        di->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwi_r;
+        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwi_r;
     }
 }
 
@@ -222,7 +220,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
                                                                                       float r2, float hi, float hj, struct part *restrict pi,
                                                                                       struct part *restrict pj, float time_base, integertime_t t_current,
                                                                                       const struct cosmology *cosmo, const int with_cosmology) {
-    
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
     
@@ -288,5 +285,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     di->a_scalar += K_ji * (di->scalar - dj->scalar) * dt;
     
 }
+
 
 #endif /* SWIFT_DIFFUSION_IACT_H */
