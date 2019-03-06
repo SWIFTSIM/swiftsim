@@ -137,7 +137,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tenso
  */
 __attribute__((always_inline)) INLINE static void runner_iact_scalar_diffusion(
                                                                            float r2, float hi, float hj, struct part *restrict pi,
-                                                                           struct part *restrict pj) {
+                                                                               struct part *restrict pj, float time_base, integertime_t t_current,
+                                                                               const struct cosmology *cosmo, const int with_cosmology) {
     
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
@@ -158,8 +159,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_scalar_diffusion(
     /* Compute the kernel function for pj */
     const float xj = r * hj_inv;
     kernel_deval(xj, &wj, &dwj_dx);
-    float dwj_r = dwj_dx / r;
-    float mj_dwj_r = mj * dwj_r;
     
     /* part i */
     /* Get the kernel for hi */
@@ -169,16 +168,125 @@ __attribute__((always_inline)) INLINE static void runner_iact_scalar_diffusion(
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
-    float dwi_r = dwi_dx / r;
-    float mi_dwi_r = mi * dwi_r;
+    
+    float dw_r = 0.5f * (dwi_dx + dwj_dx) / r;
+    float mj_dw_r = mj * dw_r;
+
+    /* Compute K_ij coefficient (see Correa et al., in prep.) */
+    float K_ij;
+    K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
+    K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
+    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+    float K_ji = K_ij * mi / mj;
+    
+    /* Manage time interval of particles i & j to be the smallest */
+    double dt;
+    if (with_cosmology) {
+        const integertime_t ti_step = get_integer_timestep(pi->time_bin);
+        const integertime_t ti_begin =
+        get_integer_time_begin(t_current - 1, pi->time_bin);
+        dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
+    } else {
+        dt = get_timestep(pi->time_bin, time_base);
+    }
+    /* Same for particle j */
+    double dt_j;
+    if (with_cosmology) {
+        const integertime_t tj_step = get_integer_timestep(pj->time_bin);
+        const integertime_t tj_begin =
+        get_integer_time_begin(t_current - 1, pj->time_bin);
+        dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
+    } else {
+        dt_j = get_timestep(pj->time_bin, time_base);
+    }
+    if (dt_j < dt) dt = dt_j;
+    
+    /* Update a_scalar (scalar after diffusion) */
+    di->a_scalar += K_ji * (di->scalar - dj->scalar) * dt;
+    dj->a_scalar += K_ji * (dj->scalar - di->scalar) * dt;
+
+}
+
+
+/**
+ * @brief do metal diffusion computation in the FORCE LOOP?
+ * (nonsymmetric version)
+ *
+ * @param r2 Comoving square distance between the two particles.
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi First particle.
+ * @param pj Second particle.
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diffusion(
+                                                                                      float r2, float hi, float hj, struct part *restrict pi,
+                                                                                      struct part *restrict pj, float time_base, integertime_t t_current,
+                                                                                      const struct cosmology *cosmo, const int with_cosmology) {
+    
+    struct diffusion_part_data *di = &pi->diffusion_data;
+    struct diffusion_part_data *dj = &pj->diffusion_data;
+    
+    /* Get mass */
+    float mj = pj->mass;
+    float mi = pi->mass;
+    float wi, wj, dwi_dx, dwj_dx;
+    
+    /* Get r */
+    float r = sqrtf(r2);
+    
+    /* part j */
+    /* Get the kernel for hj */
+    float hj_inv = 1.0f / hj;
+    const float rho_j_inv = 1.0f / pj->rho;
+    
+    /* Compute the kernel function for pj */
+    const float xj = r * hj_inv;
+    kernel_deval(xj, &wj, &dwj_dx);
+    
+    /* part i */
+    /* Get the kernel for hi */
+    float hi_inv = 1.0f / hi;
+    const float rho_i_inv = 1.0f / pi->rho;
+    
+    /* Compute the kernel function for pi */
+    const float xi = r * hi_inv;
+    kernel_deval(xi, &wi, &dwi_dx);
+    
+    float dw_r = 0.5f * (dwi_dx + dwj_dx) / r;
+    float mj_dw_r = mj * dw_r;
     
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
     float K_ij;
     K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
     K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
-    K_ij *= rho_i_inv * rho_j_inv * mj_dwj_r;
-    float K_ji = K_ij * mass_i / mass_j;
+    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+    float K_ji = K_ij * mi / mj;
     
+    /* Manage time interval of particles i & j to be the smallest */
+    double dt;
+    if (with_cosmology) {
+        const integertime_t ti_step = get_integer_timestep(pi->time_bin);
+        const integertime_t ti_begin =
+        get_integer_time_begin(t_current - 1, pi->time_bin);
+        dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
+    } else {
+        dt = get_timestep(pi->time_bin, time_base);
+    }
+    /* Same for particle j */
+    double dt_j;
+    if (with_cosmology) {
+        const integertime_t tj_step = get_integer_timestep(pj->time_bin);
+        const integertime_t tj_begin =
+        get_integer_time_begin(t_current - 1, pj->time_bin);
+        dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
+    } else {
+        dt_j = get_timestep(pj->time_bin, time_base);
+    }
+    if (dt_j < dt) dt = dt_j;
+    
+    /* Update a_scalar (scalar after diffusion) */
+    di->a_scalar += K_ji * (di->scalar - dj->scalar) * dt;
     
 }
+
 #endif /* SWIFT_DIFFUSION_IACT_H */

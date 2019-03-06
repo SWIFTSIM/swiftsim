@@ -133,4 +133,15 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     p->diffusion_data.diffusion_coefficient = p->rho * NormTensor * pow_dimension(h); /* rho / h^d * Norm tensor (physical coordinates) * h^d */
 
 }
+
+/**
+ * @brief Updates the passive scalar after diffusion at the end of the graident loop.
+ *
+ * @param p The particle to act upon.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void diffusion_end_gradient(struct part* restrict p) {
+    
+    p->diffusion_data.scalar = p->diffusion_data.a_scalar;
+}
 #endif
