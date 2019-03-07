@@ -21,14 +21,60 @@ Plots the solution for the ContactDiscontinuity_1D test.
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+try:
+    from scipy.integrate import solve_ivp
+    solve_ode = True
+except:
+    solve_ode = False
+
 from swiftsimio import load
 
 matplotlib.use("Agg")
 
+def solve_analytic(u_0, u_1, t_0, t_1, alpha=0.1):
+    """
+    Solves the analytic equation:
+
+    $$
+        \frac{d \Delta}{d t} = \kappa \alpha (
+            \sqrt{u_0 + \Delta} + \sqrt{u_1 + \Delta}
+        ) (
+            u_1 - u_0 - 2 \Delta
+        )
+    $$
+
+    from time t0 to t1.
+
+    + alpha is the gradient term 
+    + u_0 is the "low" state
+    + u_1 is the "high" state.
+    """
+
+    if not solve_ode:
+        return [0.0], [0.0]
+
+    def gradient(t, u):
+        """
+        Returns du0/dt, du1/dt
+        """
+
+        common = alpha * (np.sqrt(u[0]) + np.sqrt(u[1])) * (u[0] - u[1])
+
+        return np.array([-1.0 * common, 1.0 * common])
+
+    ret = solve_ivp(gradient, t_span=[t_0.value, t_1.value], y0=[u_0.value, u_1.value], t_eval=np.linspace(t_0.value, t_1.value, 100))
+
+    t = ret.t
+    high = ret.y[1]
+    low = ret.y[0]
+
+    return t, (high - low) * u_0.units
+
 
 def get_data_dump(metadata):
     """
-    Gets a big data dump from the SWIFT metadata.
+    Gets a big data dump from the SWIFT metadata
     """
 
     try:
@@ -170,6 +216,12 @@ def make_plot(start: int, stop: int, handle: str):
     means, stdevs, maxs, mins = extract_plottables_u(data_list)
     x_means, x_stdevs, x_maxs, x_mins = extract_plottables_x(data_list)
 
+    try:
+        alpha = np.mean([np.mean(x.gas.diffusion) for x in data_list])
+    except AttributeError:
+        # Must be using a non-diffusive scheme.
+        alpha = 0.0
+
     ax[0].text(
         0.5,
         0.5,
@@ -186,6 +238,28 @@ def make_plot(start: int, stop: int, handle: str):
     ax[1].plot(t, means, label="Mean", c="C0")
     ax[1].plot(t, maxs, label="Max", linestyle="dashed", c="C1")
     ax[1].plot(t, mins, label="Min", linestyle="dashed", c="C2")
+
+    if solve_ode:
+        times_ode, diff = solve_analytic(
+            u_0=data_list[0].gas.internal_energy.min(),
+            u_1=data_list[0].gas.internal_energy.max(),
+            t_0=t[0],
+            t_1=t[-1],
+            alpha=(
+                np.sqrt(5.0/3.0 * (5.0/3.0 - 1.0)) * 
+                alpha / data_list[0].gas.smoothing_length[0].value
+            )
+        )
+
+        ax[1].plot(
+            times_ode,
+            (diff) / np.mean(data_list[0].gas.internal_energy),
+            label="Analytic",
+            linestyle="dotted",
+            c="C3"
+        )
+
+        #import pdb;pdb.set_trace()
 
     ax[2].fill_between(
         t, x_means - x_stdevs, x_means + x_stdevs, color="C0", alpha=0.5, edgecolor="none"
