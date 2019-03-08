@@ -98,7 +98,7 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
     const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
     
-    const float rho_inv = 1.0f / p->rho; /* 1 / rho / h^d */
+    const float rho_inv = 1.0f / p->rho; /* 1 / rho */
     /*const float a_inv2 = cosmo->a2_inv;*/
     
     /* Velocity shear tensor (check physical coordinates) */
@@ -125,12 +125,12 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     /* Calculate the trace */
     float NormTensor = 0.0f;
     for (k = 0; k < 3; k++){
-        NormTensor += fabs(shear_tensor_S[k][0] * shear_tensor_S[k][0]) + fabs(shear_tensor_S[k][1] * shear_tensor_S[k][1]) + fabs(shear_tensor_S[k][2] * shear_tensor_S[k][2]);
+        NormTensor += shear_tensor_S[k][0] * shear_tensor_S[k][0] + shear_tensor_S[k][1] * shear_tensor_S[k][1] + shear_tensor_S[k][2] * shear_tensor_S[k][2];
     }
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient //
-    p->diffusion_data.diffusion_coefficient = p->rho * NormTensor * h * h; /* rho * Norm tensor (physical coordinates) * h^2 */
+    p->diffusion_data.diffusion_coefficient = 0.01 * p->rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
     
     /* Velocity shear tensor goes back to zero for next loop */
     for (k = 0; k < 3; k++){

@@ -73,13 +73,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     
     /* Compute shear tensor */
     for (int k = 0; k < 3; k++){
-        dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwj_r;
-        dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwj_r;
-        dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwj_r;
-        
         di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwi_r;
         di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwi_r;
         di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwi_r;
+        
+        dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwj_r;
+        dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwj_r;
+        dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwj_r;
     }
 }
 
