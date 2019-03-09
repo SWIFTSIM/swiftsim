@@ -2731,6 +2731,7 @@ void engine_skip_force_and_kick(struct engine *e) {
   /* Run through the cells and clear some flags. */
   space_map_cells_pre(e->s, 1, cell_clear_drift_flags, NULL);
   space_map_cells_pre(e->s, 1, cell_clear_limiter_flags, NULL);
+  space_map_cells_pre(e->s, 1, cell_clear_feedback_application_flags, NULL);
 }
 
 /**

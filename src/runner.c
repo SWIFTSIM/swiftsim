@@ -2885,6 +2885,66 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
   if (timer) TIMER_TOC(timer_end_grav_force);
 }
 
+void runner_do_apply_feedback(struct runner *r, struct cell *c, int force,
+                              int timer) {
+
+  const struct engine *e = r->e;
+  const struct cosmology *cosmo = e->cosmology;
+  const integertime_t ti_current = e->ti_current;
+  const int count = c->hydro.count;
+  struct part *restrict parts = c->hydro.parts;
+  struct xpart *restrict xparts = c->hydro.xparts;
+
+  TIMER_TIC;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check that we only limit local cells. */
+  if (c->nodeID != engine_rank)
+    error("Applying feedback to a foreign cell is nope.");
+#endif
+
+  force |= c->hydro.do_apply_feedback;
+
+  /* Early abort? */
+  if (c->hydro.count == 0) {
+
+    /* Clear the limiter flags. */
+    c->hydro.do_apply_feedback = 0;
+    c->hydro.do_sub_apply_feedback = 0;
+    return;
+  }
+
+  /* Loop over the progeny ? */
+  if (c->split && (force || c->hydro.do_sub_limiter)) {
+    for (int k = 0; k < 8; k++) {
+      if (c->progeny[k] != NULL) {
+        struct cell *restrict cp = c->progeny[k];
+
+        /* Recurse */
+        runner_do_apply_feedback(r, cp, force, 0);
+      }
+    }
+  } else if (!c->split && force) {
+
+    /* Loop over the gas particles in this cell. */
+    for (int k = 0; k < count; k++) {
+
+      /* Get a handle on the part. */
+      struct part *restrict p = &parts[k];
+      struct xpart *restrict xp = &xparts[k];
+
+      /* Avoid inhibited particles */
+      if (part_is_inhibited(p, e)) continue;
+
+      feedback_apply(p, xp, cosmo, ti_current);
+    }
+  }
+
+  /* Clear the feedback application flags. */
+  c->hydro.do_apply_feedback = 0;
+  c->hydro.do_sub_apply_feedback = 0;
+}
+
 /**
  * @brief Construct the cell properties from the received #part.
  *

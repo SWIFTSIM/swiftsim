@@ -369,6 +369,12 @@ struct cell {
     /*! Do any of this cell's sub-cells need to be limited? */
     char do_sub_limiter;
 
+    /*! Does this cell need to be applied feedback to? */
+    char do_apply_feedback;
+
+    /*! Do any of this cell's sub-cells need to be applied feedback to? */
+    char do_sub_apply_feedback;
+
 #ifdef SWIFT_DEBUG_CHECKS
 
     /*! Last (integer) time the cell's sort arrays were updated. */
@@ -770,6 +776,7 @@ void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_limiter(struct cell *c, struct scheduler *s);
 void cell_clear_drift_flags(struct cell *c, void *data);
 void cell_clear_limiter_flags(struct cell *c, void *data);
+void cell_clear_feedback_application_flags(struct cell *c, void *data);
 void cell_set_super_mapper(void *map_data, int num_elements, void *extra_data);
 void cell_check_spart_pos(const struct cell *c,
                           const struct spart *global_sparts);

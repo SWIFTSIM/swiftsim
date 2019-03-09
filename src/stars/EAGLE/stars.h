@@ -22,6 +22,7 @@
 #include <float.h>
 
 #include "dimension.h"
+#include "hydro.h"
 #include "hydro_properties.h"
 #include "inline.h"
 #include "minmax.h"
@@ -224,6 +225,22 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 __attribute__((always_inline)) INLINE static void feedback_part_reset(
     struct part* p) {
 
+  p->feedback_data.delta_u = 0.f;
+}
+
+__attribute__((always_inline)) INLINE static void feedback_apply(
+    struct part* p, struct xpart* xp, const struct cosmology* cosmo,
+    const integertime_t ti_current) {
+
+  /* Apply the total change in energy */
+  const float delta_u = p->feedback_data.delta_u;
+  const float old_u = hydro_get_physical_internal_energy(p, xp, cosmo);
+  const float new_u = old_u + delta_u;
+
+  hydro_set_physical_internal_energy(p, xp, cosmo, new_u);
+  hydro_set_drifted_physical_internal_energy(p, cosmo, new_u);
+
+  /* Be safe, make sure the energy injection is reset */
   p->feedback_data.delta_u = 0.f;
 }
 

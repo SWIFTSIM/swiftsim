@@ -1852,6 +1852,14 @@ void cell_clear_limiter_flags(struct cell *c, void *data) {
 }
 
 /**
+ * @brief Clear the feedback application flags on the given cell.
+ */
+void cell_clear_feedback_application_flags(struct cell *c, void *data) {
+  c->hydro.do_apply_feedback = 0;
+  c->hydro.do_sub_apply_feedback = 0;
+}
+
+/**
  * @brief Activate the #part drifts on the given cell.
  */
 void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
