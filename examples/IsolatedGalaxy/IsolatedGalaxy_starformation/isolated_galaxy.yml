@@ -99,6 +99,9 @@ EAGLEStarFormation:
 
 EAGLEFeedback:
   SNII_Energy_erg:                  1.0e51     # Energy of one SNII explosion in ergs.
+  SNII_DeltaT_K:                    3.1622e7   # Change in temperature to apply to the gas particles impacted by SNII feedback in Kelvin.
+  SNII_Min_mass_Msun:               6.0        # Minimal mass of a star to be considered a SNII in solar masses
+  SNII_Max_mass_Msun:               100.0      # Maximal mass of a star to be considered a SNII in solar masses
   
 # Parameters for the EAGLE "equation of state"
 EAGLEEntropyFloor:

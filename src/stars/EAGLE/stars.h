@@ -183,8 +183,11 @@ void stars_evolve_spart(struct spart* restrict sp,
  * well as the probability to do so.
  *
  * @param sp The particle to act upon
- * @param cosmo The current cosmological model.
  * @param stars_properties The #stars_props
+ * @param hydro_properties The properties of the hydro scheme.
+ * @param us The current system of units.
+ * @param phys_const The physical constants in the internal system of units.
+ * @param cosmo The current cosmological model.
  */
 void stars_prepare_feedback(struct spart* restrict sp,
                             const struct stars_props* stars_properties,

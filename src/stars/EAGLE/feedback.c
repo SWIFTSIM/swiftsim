@@ -84,6 +84,20 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   return 1.;
 }
 
+/**
+ * @brief Compute the stellar properties required for feedback after
+ * the density loop has finished.
+ *
+ * In EAGLE this function computes the energy to inject per event as
+ * well as the probability to do so.
+ *
+ * @param sp The particle to act upon
+ * @param stars_properties The #stars_props
+ * @param hydro_properties The properties of the hydro scheme.
+ * @param us The current system of units.
+ * @param phys_const The physical constants in the internal system of units.
+ * @param cosmo The current cosmological model.
+ */
 void stars_prepare_feedback(struct spart* sp,
                             const struct stars_props* star_props,
                             const struct hydro_props* hydro_props,

@@ -64,8 +64,16 @@ void stars_props_init(struct stars_props *sp,
       params, "Stars:max_ghost_iterations", p->max_smoothing_iterations);
 
   /* Properties of the EAGLE feedback model */
+  sp->feedback.delta_T =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_DeltaT_K");
   sp->feedback.E_SNe_cgs =
       parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_erg");
+  sp->feedback.SNII_min_mass_Msun =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Min_mass_Msun");
+  sp->feedback.SNII_max_mass_Msun =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Max_mass_Msun");
+
+  /* Convert the relevant ones to internal units */
   sp->feedback.E_SNe = sp->feedback.E_SNe_cgs /
                        units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
 }
@@ -77,6 +85,7 @@ void stars_props_init(struct stars_props *sp,
  */
 void stars_props_print(const struct stars_props *sp) {
 
+  /* Kernel considerations */
   message("Stars kernel: %s with eta=%f (%.2f neighbours).", kernel_name,
           sp->eta_neighbours, sp->target_neighbours);
 
@@ -86,7 +95,15 @@ void stars_props_print(const struct stars_props *sp) {
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
 
-  // message(
+  /* Feedback properties */
+  message(
+      "Feedback: SNII energy injection of %e erg with a temperature change of "
+      "%e K.",
+      sp->feedback.E_SNe_cgs, sp->feedback.delta_T);
+  message(
+      "Feedback: Stars between %.3f and %.3f solar masses are considered to be "
+      "SNII.",
+      sp->feedback.SNII_min_mass_Msun, sp->feedback.SNII_max_mass_Msun);
 }
 
 #if defined(HAVE_HDF5)

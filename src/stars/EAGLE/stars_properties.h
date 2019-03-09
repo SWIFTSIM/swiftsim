@@ -89,6 +89,12 @@ struct stars_props {
     /*! Energy of one super-nova in internal units */
     double E_SNe;
 
+    /*! Minimal stellar mass for a SNII in solar masses */
+    double SNII_min_mass_Msun;
+
+    /*! Maximal stellar mass for a SNII in solar masses */
+    double SNII_max_mass_Msun;
+
   } feedback;
 };
 
