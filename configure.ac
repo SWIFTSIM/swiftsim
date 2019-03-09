@@ -1836,6 +1836,9 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 # Check if using EAGLE cooling
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 
+# Check if using EAGLE stars
+AM_CONDITIONAL([HAVEEAGLESTARS], [test $with_stars = "EAGLE"])
+
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
 AC_CONFIG_FILES([argparse/Makefile tools/Makefile])
