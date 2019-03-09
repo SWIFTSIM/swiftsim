@@ -196,19 +196,14 @@ __attribute__((always_inline)) INLINE static integertime_t get_spart_timestep(
     new_dt_ext = external_gravity_timestep(e->time, e->external_potential,
                                            e->physical_constants, sp->gpart);
 
+  /* Note that there is no hydro acceleration (since this is a star!) */
   const float a_hydro[3] = {0.f, 0.f, 0.f};
   if (e->policy & engine_policy_self_gravity)
     new_dt_self = gravity_compute_timestep_self(
         sp->gpart, a_hydro, e->gravity_properties, e->cosmology);
 
-  /* Limit change in smoothing length */
-  const float dt_h_change = (sp->feedback.h_dt != 0.0f)
-                                ? fabsf(e->stars_properties->log_max_h_change *
-                                        sp->h / sp->feedback.h_dt)
-                                : FLT_MAX;
-
   /* Take the minimum of all */
-  float new_dt = min4(new_dt_stars, new_dt_self, new_dt_ext, dt_h_change);
+  float new_dt = min3(new_dt_stars, new_dt_self, new_dt_ext);
 
   /* Apply the maximal displacement constraint (FLT_MAX  if non-cosmological)*/
   new_dt = min(new_dt, e->dt_max_RMS_displacement);

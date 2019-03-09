@@ -20,6 +20,9 @@
 #define SWIFT_EAGLE_STARS_H
 
 #include <float.h>
+
+#include "dimension.h"
+#include "inline.h"
 #include "minmax.h"
 
 /**
@@ -68,22 +71,13 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
 /**
  * @brief Predict additional particle fields forward in time when drifting
  *
+ * Nothing to do in the EAGLE model. No additional field needs drifting.
+ *
  * @param sp The particle
  * @param dt_drift The drift time-step for positions.
  */
 __attribute__((always_inline)) INLINE static void stars_predict_extra(
-    struct spart* restrict sp, float dt_drift) {
-
-  // MATTHIEU
-  /* const float h_inv = 1.f / sp->h; */
-
-  /* /\* Predict smoothing length *\/ */
-  /* const float w1 = sp->feedback.h_dt * h_inv * dt_drift; */
-  /* if (fabsf(w1) < 0.2f) */
-  /*   sp->h *= approx_expf(w1); /\* 4th order expansion of exp(w) *\/ */
-  /* else */
-  /*   sp->h *= expf(w1); */
-}
+    struct spart* restrict sp, float dt_drift) {}
 
 /**
  * @brief Sets the values to be predicted in the drifts to their values at a
@@ -97,18 +91,21 @@ __attribute__((always_inline)) INLINE static void stars_reset_predicted_values(
 /**
  * @brief Finishes the calculation of (non-gravity) forces acting on stars
  *
- * Multiplies the forces and accelerations by the appropiate constants
+ * Multiplies the forces and accelerations by the appropiate constants.
+ *
+ * Nothing to do in the EAGLE model since we do not accumulate quantities
+ * in the feedback loop.
  *
  * @param sp The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void stars_end_feedback(
-    struct spart* sp) {
-
-  sp->feedback.h_dt *= sp->h * hydro_dimension_inv;
-}
+    struct spart* sp) {}
 
 /**
  * @brief Kick the additional variables
+ *
+ * Nothing to do here in the EAGLE model. Stars do not carry additional
+ * variables that are integrated forward in time.
  *
  * @param sp The particle to act upon
  * @param dt The time-step for this kick
@@ -117,7 +114,9 @@ __attribute__((always_inline)) INLINE static void stars_kick_extra(
     struct spart* sp, float dt) {}
 
 /**
- * @brief Finishes the calculation of density on stars
+ * @brief Finishes the calculation of density on stars.
+ *
+ * This loop is used to multiply in missing factors.
  *
  * @param sp The particle to act upon
  * @param cosmo The current cosmological model.
@@ -143,6 +142,9 @@ __attribute__((always_inline)) INLINE static void stars_end_density(
  * @brief Sets all particle fields to sensible values when the #spart has 0
  * ngbs.
  *
+ * This should only happen in pathological cases and is here to be used as
+ * a damage mitigation exercise.
+ *
  * @param sp The particle to act upon
  * @param cosmo The current cosmological model.
  */
@@ -152,6 +154,7 @@ __attribute__((always_inline)) INLINE static void stars_spart_has_no_neighbours(
   /* Re-set problematic values */
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
+  sp->density.neighbour_mass = 0.f;
   sp->rho_gas = 0.f;
 }
 
@@ -165,9 +168,24 @@ __attribute__((always_inline)) INLINE static void stars_spart_has_no_neighbours(
  * @param cosmo The current cosmological model.
  * @param stars_properties The #stars_props
  */
-__attribute__((always_inline)) INLINE static void stars_evolve_spart(
-    struct spart* restrict sp, const struct stars_props* stars_properties,
-    const struct cosmology* cosmo) {}
+void stars_evolve_spart(struct spart* restrict sp,
+                        const struct stars_props* stars_properties,
+                        const struct cosmology* cosmo);
+
+/**
+ * @brief Compute the stellar properties required for feedback after
+ * the density loop has finished.
+ *
+ * In EAGLE this function computes the energy to inject per event as
+ * well as the probability to do so.
+ *
+ * @param sp The particle to act upon
+ * @param cosmo The current cosmological model.
+ * @param stars_properties The #stars_props
+ */
+void stars_prepare_feedback(struct spart* restrict sp,
+                            const struct stars_props* stars_properties,
+                            const struct cosmology* cosmo);
 
 /**
  * @brief Reset acceleration fields of a particle
@@ -175,13 +193,12 @@ __attribute__((always_inline)) INLINE static void stars_evolve_spart(
  * This is the equivalent of hydro_reset_acceleration.
  * We do not compute the acceleration on star, therefore no need to use it.
  *
+ * Nothing to do there in the EAGLE model as we do not accumulate quantities
+ * in the feedback loop.
+ *
  * @param p The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void stars_reset_feedback(
-    struct spart* restrict p) {
-
-  /* Reset time derivative */
-  p->feedback.h_dt = 0.f;
-}
+    struct spart* restrict p) {}
 
 #endif /* SWIFT_EAGLE_STARS_H */

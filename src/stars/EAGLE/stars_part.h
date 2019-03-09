@@ -82,8 +82,8 @@ struct spart {
 
   struct {
 
-    /* Change in smoothing length over time. */
-    float h_dt;
+    /*! Probability that a given gas neighbour receives feedback energy */
+    float probability;
 
   } feedback;
 

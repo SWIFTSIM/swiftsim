@@ -81,8 +81,8 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  sparts, mass_init);
   list[7] = io_make_output_field("BirthTime", FLOAT, 1, UNIT_CONV_TIME, sparts,
                                  birth_time);
-  list[8] = io_make_output_field("NeighbourGasDensity", FLOAT, 1, UNIT_CONV_DENSITY,
-                                 sparts, rho_gas);
+  list[8] = io_make_output_field("NeighbourGasDensity", FLOAT, 1,
+                                 UNIT_CONV_DENSITY, sparts, rho_gas);
   list[9] = io_make_output_field("NeighbourGasMass", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, density.neighbour_mass);
 }

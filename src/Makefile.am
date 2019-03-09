@@ -62,7 +62,7 @@ endif
 # source files for EAGLE stars
 EAGLE_STARS_SOURCES =
 if HAVEEAGLESTARS
-EAGLE_STARS_SOURCES += stars/EAGLE/imf.c
+EAGLE_STARS_SOURCES += stars/EAGLE/imf.c stars/EAGLE/feedback.c stars/EAGLE/evolution.c
 endif
 
 # Common source files

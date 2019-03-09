@@ -49,7 +49,7 @@ double eagle_stars_dying_mass(const struct eagle_stars_imf *imf_model,
       }
 
       /* Logarithm of age in years */
-      const double log_age = log10(age) + 9.;
+      // const double log_age = log10(age) + 9.;
 
     } break;
 

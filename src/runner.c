@@ -240,6 +240,13 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           if (((sp->h >= stars_h_max) && (f < 0.f)) ||
               ((sp->h <= stars_h_min) && (f > 0.f))) {
 
+            /* Compute the stellar evolution  */
+            stars_evolve_spart(sp, e->stars_properties, cosmo);
+
+            /* Compute the feedback-related quantities */
+            stars_prepare_feedback(sp, e->stars_properties, cosmo);
+
+            /* Reset the quantites accumulated in the feedback loop */
             stars_reset_feedback(sp);
 
             /* Ok, we are done with this particle */
@@ -335,10 +342,15 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         }
 
         /* We now have a particle whose smoothing length has converged */
-        stars_reset_feedback(sp);
 
         /* Compute the stellar evolution  */
         stars_evolve_spart(sp, e->stars_properties, cosmo);
+
+        /* Compute the feedback-related quantities */
+        stars_prepare_feedback(sp, e->stars_properties, cosmo);
+
+        /* Reset the quantites accumulated in the feedback loop */
+        stars_reset_feedback(sp);
       }
 
       /* We now need to treat the particles whose smoothing length had not
