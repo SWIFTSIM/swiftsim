@@ -54,6 +54,7 @@
 #include "part_type.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
+#include "stars_properties.h"
 #include "tracers_io.h"
 #include "units.h"
 #include "velociraptor_io.h"

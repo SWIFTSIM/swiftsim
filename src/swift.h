@@ -71,6 +71,7 @@
 #include "star_formation.h"
 #include "stars.h"
 #include "stars_io.h"
+#include "stars_properties.h"
 #include "task.h"
 #include "threadpool.h"
 #include "timeline.h"

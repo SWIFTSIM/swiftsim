@@ -94,11 +94,11 @@ void stars_prepare_feedback(struct spart* sp,
   /* Skip particles that were in the ICs. */
   if (sp->birth_time < 0.) return;
 
-  /* Properties of the model */
+  /* Properties of the model (all in internal units) */
   const double deltaT = eagle_feedback_temperature_change(star_props);
   const double N_SNe = eagle_feedback_number_of_SNe(sp, star_props);
   const double f_E = eagle_feedback_energy_fraction(sp, star_props);
-  const double E_SNe = star_props->feedback.E_SNe; /* Internal units */
+  const double E_SNe = star_props->feedback.E_SNe;
 
   /* Some constants (all in internal units) */
   const double mu_ionised = hydro_props->mu_ionised;
@@ -126,6 +126,8 @@ void stars_prepare_feedback(struct spart* sp,
     /* Normal case */
     delta_u = deltaT * k_B / (mu_ionised * hydro_gamma_minus_one * m_p);
   }
+
+  message("Probability: %e delta_u: %e", prob, delta_u);
 
   /* Store all of this in the star particle for application in the feedback loop
    */

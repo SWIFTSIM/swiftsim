@@ -169,6 +169,20 @@ __attribute__((always_inline)) INLINE static void stars_evolve_spart(
     const struct cosmology* cosmo) {}
 
 /**
+ * @brief Compute the stellar properties required for feedback after
+ * the density loop has finished.
+ *
+ * Nothing to do here (no feedback model).
+ *
+ * @param sp The particle to act upon
+ * @param cosmo The current cosmological model.
+ * @param stars_properties The #stars_props
+ */
+__attribute__((always_inline)) INLINE static void stars_prepare_feedback(
+    struct spart* restrict sp, const struct stars_props* stars_properties,
+    const struct hydro_props* hydro_properties, const struct unit_system* us,
+    const struct phys_const* pyhs_consts, const struct cosmology* cosmo) {}
+/**
  * @brief Reset acceleration fields of a particle
  *
  * This is the equivalent of hydro_reset_acceleration.

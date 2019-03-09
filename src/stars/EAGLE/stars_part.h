@@ -20,9 +20,6 @@
 #ifndef SWIFT_EAGLE_STAR_PART_H
 #define SWIFT_EAGLE_STAR_PART_H
 
-/* Some standard headers. */
-#include <stdlib.h>
-
 /* Read chemistry */
 #include "chemistry_struct.h"
 #include "tracers_struct.h"
@@ -129,61 +126,5 @@ struct spart {
 #endif
 
 } SWIFT_STRUCT_ALIGN;
-
-/**
- * @brief Contains all the constants and parameters of the stars scheme
- */
-struct stars_props {
-
-  /*! Resolution parameter */
-  float eta_neighbours;
-
-  /*! Target weightd number of neighbours (for info only)*/
-  float target_neighbours;
-
-  /*! Smoothing length tolerance */
-  float h_tolerance;
-
-  /*! Tolerance on neighbour number  (for info only)*/
-  float delta_neighbours;
-
-  /*! Maximal number of iterations to converge h */
-  int max_smoothing_iterations;
-
-  /*! Properties of the EAGLE feedback model */
-  struct {
-
-    /*! Temperature change to apply to the gas particles heated by feedback */
-    double delta_T;
-
-    /*! Maximal fraction of the available SNe energy to inject */
-    double f_E_max;
-
-    /*! Minimal fraction of the available SNe energy to inject */
-    double f_E_min;
-
-    /*! Width of the sigmoid used in the feedback energy fraction model. */
-    double sigma;
-
-    /*! Anchor point for the metallicity dependance of the feedback energy
-     * fraction model. */
-    double Z_0;
-
-    /*! Anchor point for the density dependance of the feedback energy fraction
-     * model. */
-    double rho_0;
-
-    /*! Power-law of the density dependance of the feedback energy fraction
-     * model. */
-    double n_n;
-
-    /*! Energy of one super-nova in cgs units */
-    double E_SNe_cgs;
-
-    /*! Energy of one super-nova in internal units */
-    double E_SNe;
-
-  } feedback;
-};
 
 #endif /* SWIFT_EAGLE_STAR_PART_H */

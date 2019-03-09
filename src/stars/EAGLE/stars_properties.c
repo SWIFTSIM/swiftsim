@@ -26,6 +26,7 @@
 #include "hydro_properties.h"
 #include "kernel_hydro.h"
 #include "restart.h"
+#include "units.h"
 
 /**
  * @brief Initialize the global properties of the stars scheme.
@@ -39,10 +40,9 @@
  * @param p The already read-in properties of the hydro scheme.
  */
 void stars_props_init(struct stars_props *sp,
-		      const struct phys_const *phys_const,
-		      const struct unit_system *us,
-		      struct swift_params *params,
-		      const struct hydro_props *p) {
+                      const struct phys_const *phys_const,
+                      const struct unit_system *us, struct swift_params *params,
+                      const struct hydro_props *p) {
 
   /* Kernel properties */
   sp->eta_neighbours = parser_get_opt_param_float(
@@ -63,8 +63,11 @@ void stars_props_init(struct stars_props *sp,
   sp->max_smoothing_iterations = parser_get_opt_param_int(
       params, "Stars:max_ghost_iterations", p->max_smoothing_iterations);
 
-  /* Initialize with solar abundance */
-  // sp->chemistry_data.smoothed_metal_mass_fraction_total =
+  /* Properties of the EAGLE feedback model */
+  sp->feedback.E_SNe_cgs =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_erg");
+  sp->feedback.E_SNe = sp->feedback.E_SNe_cgs /
+                       units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
 }
 
 /**
@@ -74,7 +77,6 @@ void stars_props_init(struct stars_props *sp,
  */
 void stars_props_print(const struct stars_props *sp) {
 
-  /* Now stars */
   message("Stars kernel: %s with eta=%f (%.2f neighbours).", kernel_name,
           sp->eta_neighbours, sp->target_neighbours);
 
@@ -83,11 +85,13 @@ void stars_props_print(const struct stars_props *sp) {
 
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
+
+  // message(
 }
 
 #if defined(HAVE_HDF5)
 void stars_props_print_snapshot(hid_t h_grpstars,
-				const struct stars_props *sp) {
+                                const struct stars_props *sp) {
 
   io_write_attribute_s(h_grpstars, "Kernel function", kernel_name);
   io_write_attribute_f(h_grpstars, "Kernel target N_ngb",
@@ -106,8 +110,7 @@ void stars_props_print_snapshot(hid_t h_grpstars,
  * @param p the struct
  * @param stream the file stream
  */
-void stars_props_struct_dump(const struct stars_props *p,
-                                           FILE *stream) {
+void stars_props_struct_dump(const struct stars_props *p, FILE *stream) {
   restart_write_blocks((void *)p, sizeof(struct stars_props), 1, stream,
                        "starsprops", "stars props");
 }
@@ -119,8 +122,7 @@ void stars_props_struct_dump(const struct stars_props *p,
  * @param p the struct
  * @param stream the file stream
  */
-void stars_props_struct_restore(const struct stars_props *p,
-                                              FILE *stream) {
+void stars_props_struct_restore(const struct stars_props *p, FILE *stream) {
   restart_read_blocks((void *)p, sizeof(struct stars_props), 1, stream, NULL,
                       "stars props");
 }

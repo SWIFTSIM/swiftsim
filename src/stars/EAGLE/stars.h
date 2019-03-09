@@ -26,6 +26,7 @@
 #include "inline.h"
 #include "minmax.h"
 #include "stars_part.h"
+#include "stars_properties.h"
 
 /**
  * @brief Computes the gravity time-step of a given star particle.

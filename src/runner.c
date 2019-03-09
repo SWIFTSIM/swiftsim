@@ -64,6 +64,7 @@
 #include "star_formation.h"
 #include "star_formation_iact.h"
 #include "stars.h"
+#include "stars_properties.h"
 #include "task.h"
 #include "timers.h"
 #include "timestep.h"

@@ -85,7 +85,7 @@
 #include "single_io.h"
 #include "sort_part.h"
 #include "star_formation.h"
-#include "stars_io.h"
+#include "stars_properties.h"
 #include "statistics.h"
 #include "timers.h"
 #include "tools.h"

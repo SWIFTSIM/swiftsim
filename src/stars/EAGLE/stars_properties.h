@@ -93,23 +93,18 @@ struct stars_props {
 };
 
 void stars_props_init(struct stars_props *sp,
-		      const struct phys_const *phys_const,
-		      const struct unit_system *us,
-		      struct swift_params *params,
-		      const struct hydro_props *p);
+                      const struct phys_const *phys_const,
+                      const struct unit_system *us, struct swift_params *params,
+                      const struct hydro_props *p);
 
 void stars_props_print(const struct stars_props *sp);
 
 #if defined(HAVE_HDF5)
-void stars_props_print_snapshot(hid_t h_grpstars,
-				const struct stars_props *sp);
+void stars_props_print_snapshot(hid_t h_grpstars, const struct stars_props *sp);
 #endif
 
+void stars_props_struct_dump(const struct stars_props *p, FILE *stream);
 
-void stars_props_struct_dump(const struct stars_props *p,
-			     FILE *stream);
-
-void stars_props_struct_restore(const struct stars_props *p,
-				FILE *stream);
+void stars_props_struct_restore(const struct stars_props *p, FILE *stream);
 
 #endif /* SWIFT_EAGLE_STAR_PROPERTIES_H */

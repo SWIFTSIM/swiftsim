@@ -33,6 +33,7 @@
 #include "error.h"
 #include "stars.h"
 #include "stars_part.h"
+#include "stars_properties.h"
 
 void stars_evolve_spart(struct spart* restrict sp,
                         const struct stars_props* stars_properties,

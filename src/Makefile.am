@@ -50,7 +50,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     chemistry.h chemistry_io.h chemistry_struct.h cosmology.h restart.h space_getsid.h utilities.h \
     mesh_gravity.h cbrt.h exp10.h velociraptor_interface.h swift_velociraptor_part.h outputlist.h \
     logger_io.h tracers_io.h tracers.h tracers_struct.h star_formation_io.h \
-    star_formation_struct.h star_formation.h star_formation_iact.h \
+    star_formation_struct.h star_formation.h star_formation_iact.h stars_properties.h \
     velociraptor_struct.h velociraptor_io.h random.h
 
 # source files for EAGLE cooling
@@ -62,7 +62,7 @@ endif
 # source files for EAGLE stars
 EAGLE_STARS_SOURCES =
 if HAVEEAGLESTARS
-EAGLE_STARS_SOURCES += stars/EAGLE/imf.c stars/EAGLE/feedback.c stars/EAGLE/evolution.c
+EAGLE_STARS_SOURCES += stars/EAGLE/stars_properties.c stars/EAGLE/imf.c stars/EAGLE/feedback.c stars/EAGLE/evolution.c
 endif
 
 # Common source files
@@ -142,9 +142,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  riemann/riemann_checks.h \
 	 	 stars.h stars_io.h \
 		 stars/Default/stars.h stars/Default/stars_iact.h stars/Default/stars_io.h \
-		 stars/Default/stars_debug.h stars/Default/stars_part.h  \
+		 stars/Default/stars_debug.h stars/Default/stars_part.h  stars/Default/stars_properties.h \
 		 stars/EAGLE/stars.h stars/EAGLE/stars_iact.h stars/EAGLE/stars_io.h \
-		 stars/EAGLE/stars_debug.h stars/EAGLE/stars_part.h \
+		 stars/EAGLE/stars_debug.h stars/EAGLE/stars_part.h stars/EAGLE/stars_properties.h \
 	         potential/none/potential.h potential/point_mass/potential.h \
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
                  potential/sine_wave/potential.h \
