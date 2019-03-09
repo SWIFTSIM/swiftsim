@@ -33,6 +33,7 @@
 
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "feedback_struct.h"
 #include "logger.h"
 #include "star_formation_struct.h"
 #include "tracers_struct.h"
@@ -147,6 +148,9 @@ struct part {
 
     } force;
   };
+
+  /* Data from feedback */
+  struct feedback_part_data feedback_data;
 
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;

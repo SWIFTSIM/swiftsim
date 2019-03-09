@@ -58,7 +58,8 @@ double eagle_feedback_number_of_SNe(const struct spart* sp,
                                     const struct stars_props* props) {
 
   // MATTHIEU: Add IMF integration!
-  return sp->mass_init * 1.;
+  // Constant is for Chabrier IMF between 6 and 100 Msun.
+  return sp->mass_init * 0.017362 * 1e10;
 }
 
 /**
@@ -103,7 +104,8 @@ void stars_prepare_feedback(struct spart* sp,
                             const struct hydro_props* hydro_props,
                             const struct unit_system* us,
                             const struct phys_const* phys_const,
-                            const struct cosmology* cosmo) {
+                            const struct cosmology* cosmo,
+                            const integertime_t ti_current) {
 
   /* Skip particles that were in the ICs. */
   if (sp->birth_time < 0.) return;
@@ -121,7 +123,7 @@ void stars_prepare_feedback(struct spart* sp,
 
   /* Calculate the heating probability */
   double prob = E_SNe * mu_ionised * hydro_gamma_minus_one * m_p / k_B;
-  prob *= N_SNe * f_E / (deltaT * sp->density.neighbour_mass);
+  prob *= (N_SNe * f_E) / (deltaT * sp->density.neighbour_mass);
 
   /* Calculate the change in internal energy of the gas particles that get
    * heated */
@@ -143,8 +145,8 @@ void stars_prepare_feedback(struct spart* sp,
 
   message("Probability: %e delta_u: %e", prob, delta_u);
 
-  /* Store all of this in the star particle for application in the feedback loop
-   */
+  /* Store all of this in the star particle for use in the feedback loop */
   sp->feedback.probability = prob;
   sp->feedback.delta_u = delta_u;
+  sp->feedback.ti_current = ti_current;
 }

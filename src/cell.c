@@ -3832,6 +3832,9 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       drift_part(p, xp, dt_drift, dt_kick_hydro, dt_kick_grav, dt_therm,
                  ti_old_part, ti_current);
 
+      /* Reset the feedback accumulators */
+      feedback_part_reset(p);
+
       /* Update the tracers properties */
       tracers_after_drift(p, xp, e->internal_units, e->physical_constants,
                           with_cosmology, e->cosmology, e->hydro_properties,

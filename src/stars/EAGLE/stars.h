@@ -25,6 +25,7 @@
 #include "hydro_properties.h"
 #include "inline.h"
 #include "minmax.h"
+#include "part.h"
 #include "stars_part.h"
 #include "stars_properties.h"
 
@@ -95,14 +96,16 @@ __attribute__((always_inline)) INLINE static void stars_reset_predicted_values(
  * @brief Finishes the calculation of (non-gravity) forces acting on stars
  *
  * Multiplies the forces and accelerations by the appropiate constants.
- *
- * Nothing to do in the EAGLE model since we do not accumulate quantities
- * in the feedback loop.
+ * And reset properties.
  *
  * @param sp The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void stars_end_feedback(
-    struct spart* sp) {}
+    struct spart* sp) {
+
+  /* Make sure this star won't do feedback again */
+  sp->feedback.probability = -1;
+}
 
 /**
  * @brief Kick the additional variables
@@ -188,13 +191,15 @@ void stars_evolve_spart(struct spart* restrict sp,
  * @param us The current system of units.
  * @param phys_const The physical constants in the internal system of units.
  * @param cosmo The current cosmological model.
+ * @param ti_current The current time on the time-line (for random numbers).
  */
 void stars_prepare_feedback(struct spart* restrict sp,
                             const struct stars_props* stars_properties,
                             const struct hydro_props* hydro_properties,
                             const struct unit_system* us,
                             const struct phys_const* pyhs_consts,
-                            const struct cosmology* cosmo);
+                            const struct cosmology* cosmo,
+                            const integertime_t ti_current);
 
 /**
  * @brief Reset acceleration fields of a particle
@@ -209,5 +214,14 @@ void stars_prepare_feedback(struct spart* restrict sp,
  */
 __attribute__((always_inline)) INLINE static void stars_reset_feedback(
     struct spart* restrict p) {}
+
+/**
+ * @brief Reset the energy received by a particle
+ */
+__attribute__((always_inline)) INLINE static void feedback_part_reset(
+    struct part* p) {
+
+  p->feedback_data.delta_u = 0.f;
+}
 
 #endif /* SWIFT_EAGLE_STARS_H */

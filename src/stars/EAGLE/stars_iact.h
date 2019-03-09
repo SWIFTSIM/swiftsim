@@ -19,6 +19,8 @@
 #ifndef SWIFT_EAGLE_STARS_IACT_H
 #define SWIFT_EAGLE_STARS_IACT_H
 
+#include "random.h"
+
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *
@@ -76,7 +78,19 @@ runner_iact_nonsym_stars_density(float r2, const float *dx, float hi, float hj,
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_stars_feedback(float r2, const float *dx, float hi, float hj,
-                                  struct spart *restrict si,
-                                  struct part *restrict pj, float a, float H) {}
+                                  const struct spart *restrict spi,
+                                  struct part *restrict pj, float a, float H) {
+
+  /* Are we lucky? */
+  const float prob_j = random_unit_interval(pj->id, spi->feedback.ti_current,
+                                            random_number_stellar_feedback);
+
+  /* Should we inject energy in this particle? */
+  if (prob_j < spi->feedback.probability) {
+
+    /* Inject energy into the gas particle */
+    pj->feedback_data.delta_u += spi->feedback.delta_u;
+  }
+}
 
 #endif /* SWIFT_EAGLE_STARS_IACT_H */

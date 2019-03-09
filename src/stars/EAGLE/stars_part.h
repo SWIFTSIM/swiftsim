@@ -86,6 +86,9 @@ struct spart {
      * feedback energy */
     float delta_u;
 
+    /*! Current time (on the timeline) for random numbers */
+    integertime_t ti_current;
+
   } feedback;
 
   /*! Union for the birth time and birht scale factor */

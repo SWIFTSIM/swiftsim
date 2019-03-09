@@ -181,7 +181,9 @@ __attribute__((always_inline)) INLINE static void stars_evolve_spart(
 __attribute__((always_inline)) INLINE static void stars_prepare_feedback(
     struct spart* restrict sp, const struct stars_props* stars_properties,
     const struct hydro_props* hydro_properties, const struct unit_system* us,
-    const struct phys_const* pyhs_consts, const struct cosmology* cosmo) {}
+    const struct phys_const* pyhs_consts, const struct cosmology* cosmo,
+    const integertime_t ti_current) {}
+
 /**
  * @brief Reset acceleration fields of a particle
  *
@@ -202,5 +204,13 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
   p->num_ngb_force = 0;
 #endif
 }
+
+/**
+ * @brief Reset the energy received by a particle.
+ *
+ * Nothing to do in the defaul (non-feedback) model.
+ */
+__attribute__((always_inline)) INLINE static void feedback_part_reset(
+    struct part* p) {}
 
 #endif /* SWIFT_DEFAULT_STARS_H */
