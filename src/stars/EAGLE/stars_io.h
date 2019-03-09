@@ -62,7 +62,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          int *num_fields) {
 
   /* Say how much we want to write */
-  *num_fields = 9;
+  *num_fields = 10;
 
   /* List what we want to write */
   list[0] = io_make_output_field("Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH,
@@ -81,8 +81,10 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  sparts, mass_init);
   list[7] = io_make_output_field("BirthTime", FLOAT, 1, UNIT_CONV_TIME, sparts,
                                  birth_time);
-  list[8] = io_make_output_field("GasDensity", FLOAT, 1, UNIT_CONV_DENSITY,
+  list[8] = io_make_output_field("NeighbourGasDensity", FLOAT, 1, UNIT_CONV_DENSITY,
                                  sparts, rho_gas);
+  list[9] = io_make_output_field("NeighbourGasMass", FLOAT, 1, UNIT_CONV_MASS,
+                                 sparts, density.neighbour_mass);
 }
 
 /**

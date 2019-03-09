@@ -41,14 +41,9 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
 __attribute__((always_inline)) INLINE static void stars_init_spart(
     struct spart* sp) {
 
-#ifdef DEBUG_INTERACTIONS_STARS
-  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_STARS; ++i)
-    sp->ids_ngbs_density[i] = -1;
-  sp->num_ngb_density = 0;
-#endif
-
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
+  sp->density.neighbour_mass = 0.f;
   sp->rho_gas = 0.f;
 }
 
@@ -140,6 +135,8 @@ __attribute__((always_inline)) INLINE static void stars_end_density(
   sp->rho_gas *= h_inv_dim;
   sp->density.wcount *= h_inv_dim;
   sp->density.wcount_dh *= h_inv_dim_plus_one;
+
+  /* Note: Nothing to do for the total neighbour gas mass */
 }
 
 /**
@@ -185,12 +182,6 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 
   /* Reset time derivative */
   p->feedback.h_dt = 0.f;
-
-#ifdef DEBUG_INTERACTIONS_STARS
-  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_STARS; ++i)
-    p->ids_ngbs_force[i] = -1;
-  p->num_ngb_force = 0;
-#endif
 }
 
 #endif /* SWIFT_EAGLE_STARS_H */

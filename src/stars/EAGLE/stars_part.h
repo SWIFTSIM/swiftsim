@@ -69,11 +69,14 @@ struct spart {
 
   struct {
 
-    /* Number of neighbours. */
+    /*! Number of neighbours. */
     float wcount;
 
-    /* Number of neighbours spatial derivative. */
+    /*! Number of neighbours spatial derivative. */
     float wcount_dh;
+
+    /*! Total mass in the gas neighbours. */
+    float neighbour_mass;
 
   } density;
 

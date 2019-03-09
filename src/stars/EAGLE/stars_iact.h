@@ -58,12 +58,8 @@ runner_iact_nonsym_stars_density(float r2, const float *dx, float hi, float hj,
   /* Compute contribution to the density */
   si->rho_gas += mj * wi;
 
-#ifdef DEBUG_INTERACTIONS_STARS
-  /* Update ngb counters */
-  if (si->num_ngb_density < MAX_NUM_OF_NEIGHBOURS_STARS)
-    si->ids_ngbs_density[si->num_ngb_density] = pj->id;
-  ++si->num_ngb_density;
-#endif
+  /* Mass of the gas neighbours */
+  si->density.neighbour_mass += mj;
 }
 
 /**
