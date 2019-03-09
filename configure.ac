@@ -1288,7 +1288,7 @@ case "$with_subgrid" in
 	with_subgrid_entropy_floor=EAGLE
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
-	with_subgrid_feedback=none
+	with_subgrid_feedback=EAGLE
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -1689,7 +1689,7 @@ esac
 # Feedback model
 AC_ARG_WITH([feedback],
    [AS_HELP_STRING([--with-feedback=<model>],
-      [Feedback model to use @<:@none, thermal, debug default: none@:>@]
+      [Feedback model to use @<:@none, EAGLE, debug default: none@:>@]
    )],
    [with_feedback="$withval"],
    [with_feedback="none"]
@@ -1704,12 +1704,12 @@ if test "$with_subgrid" != "none"; then
 fi
 
 case "$with_feedback" in
-   thermal)
-      AC_DEFINE([FEEDBACK_THERMAL], [1], [Thermal Blastwave])
-   ;;
    none)
+      AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
    ;;
-
+   EAGLE)
+      AC_DEFINE([FEEDBACK_EAGLE], [1], [Thermal Blastwave])
+   ;;
    *)
       AC_MSG_ERROR([Unknown feedback model: $with_feedback])
    ;;
