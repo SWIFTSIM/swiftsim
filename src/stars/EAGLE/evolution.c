@@ -28,15 +28,12 @@
 /* Some standard headers. */
 #include <math.h>
 
-
 /* Local includes */
-#include "error.h"
 #include "cosmology.h"
-#include "stars_part.h"
+#include "error.h"
 #include "stars.h"
+#include "stars_part.h"
 
 void stars_evolve_spart(struct spart* restrict sp,
-			const struct stars_props* stars_properties,
-			const struct cosmology* cosmo) {
-
-}
+                        const struct stars_props* stars_properties,
+                        const struct cosmology* cosmo) {}

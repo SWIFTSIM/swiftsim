@@ -22,8 +22,10 @@
 #include <float.h>
 
 #include "dimension.h"
+#include "hydro_properties.h"
 #include "inline.h"
 #include "minmax.h"
+#include "stars_part.h"
 
 /**
  * @brief Computes the gravity time-step of a given star particle.
@@ -185,6 +187,9 @@ void stars_evolve_spart(struct spart* restrict sp,
  */
 void stars_prepare_feedback(struct spart* restrict sp,
                             const struct stars_props* stars_properties,
+                            const struct hydro_props* hydro_properties,
+                            const struct unit_system* us,
+                            const struct phys_const* pyhs_consts,
                             const struct cosmology* cosmo);
 
 /**

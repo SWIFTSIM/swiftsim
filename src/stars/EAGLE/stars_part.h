@@ -85,6 +85,10 @@ struct spart {
     /*! Probability that a given gas neighbour receives feedback energy */
     float probability;
 
+    /*! Change in internal energy to apply to the gas neighbour that receive
+     * feedback energy */
+    float delta_u;
+
   } feedback;
 
   /*! Union for the birth time and birht scale factor */
@@ -146,8 +150,40 @@ struct stars_props {
   /*! Maximal number of iterations to converge h */
   int max_smoothing_iterations;
 
-  /*! Maximal change of h over one time-step */
-  float log_max_h_change;
+  /*! Properties of the EAGLE feedback model */
+  struct {
+
+    /*! Temperature change to apply to the gas particles heated by feedback */
+    double delta_T;
+
+    /*! Maximal fraction of the available SNe energy to inject */
+    double f_E_max;
+
+    /*! Minimal fraction of the available SNe energy to inject */
+    double f_E_min;
+
+    /*! Width of the sigmoid used in the feedback energy fraction model. */
+    double sigma;
+
+    /*! Anchor point for the metallicity dependance of the feedback energy
+     * fraction model. */
+    double Z_0;
+
+    /*! Anchor point for the density dependance of the feedback energy fraction
+     * model. */
+    double rho_0;
+
+    /*! Power-law of the density dependance of the feedback energy fraction
+     * model. */
+    double n_n;
+
+    /*! Energy of one super-nova in cgs units */
+    double E_SNe_cgs;
+
+    /*! Energy of one super-nova in internal units */
+    double E_SNe;
+
+  } feedback;
 };
 
 #endif /* SWIFT_EAGLE_STAR_PART_H */

@@ -29,13 +29,106 @@
 #include <math.h>
 
 /* Local includes */
-#include "error.h"
+#include "adiabatic_index.h"
 #include "cosmology.h"
-#include "stars_part.h"
+#include "error.h"
 #include "stars.h"
+#include "stars_part.h"
 
-void stars_prepare_feedback(struct spart* restrict sp,
-                            const struct stars_props* stars_properties,
+/**
+ * @brief Return the change in temperature (in Kelvin) to apply to a
+ * gas particle affected by SNII feedback.
+ *
+ * @param props The properties of the stellar model.
+ */
+double eagle_feedback_temperature_change(const struct stars_props* props) {
+
+  /* In the EAGLE model, the change of temperature is constant */
+  return props->feedback.delta_T;
+}
+
+/**
+ * @brief Computes the number of super-novae exploding for a given
+ * star particle.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the stellar model.
+ */
+double eagle_feedback_number_of_SNe(const struct spart* sp,
+                                    const struct stars_props* props) {
+
+  // MATTHIEU: Add IMF integration!
+  return sp->mass_init * 1.;
+}
+
+/**
+ * @brief Computes the fraction of the available super-novae energy to
+ * inject for a given event.
+ *
+ * Note that the fraction can be > 1.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the stellar model.
+ */
+double eagle_feedback_energy_fraction(const struct spart* sp,
+                                      const struct stars_props* props) {
+
+  /* const double f_E_max = props->feedback.f_E_max; */
+  /* const double f_E_max = props->feedback.f_E_max; */
+  /* const double sigma = props->feedback.sigma; */
+  /* const double Z_0 = props->feedback.Z_0; */
+  /* const double rho_0 = props->feedback.rho_0; */
+  /* const double n_n = props->feedback.n_n; */
+
+  // MATTHIEU: Add full EAGLE model.
+  return 1.;
+}
+
+void stars_prepare_feedback(struct spart* sp,
+                            const struct stars_props* star_props,
+                            const struct hydro_props* hydro_props,
+                            const struct unit_system* us,
+                            const struct phys_const* phys_const,
                             const struct cosmology* cosmo) {
 
+  /* Skip particles that were in the ICs. */
+  if (sp->birth_time < 0.) return;
+
+  /* Properties of the model */
+  const double deltaT = eagle_feedback_temperature_change(star_props);
+  const double N_SNe = eagle_feedback_number_of_SNe(sp, star_props);
+  const double f_E = eagle_feedback_energy_fraction(sp, star_props);
+  const double E_SNe = star_props->feedback.E_SNe; /* Internal units */
+
+  /* Some constants (all in internal units) */
+  const double mu_ionised = hydro_props->mu_ionised;
+  const double m_p = phys_const->const_proton_mass;
+  const double k_B = phys_const->const_boltzmann_k;
+
+  /* Calculate the heating probability */
+  double prob = E_SNe * mu_ionised * hydro_gamma_minus_one * m_p / k_B;
+  prob *= N_SNe * f_E / (deltaT * sp->density.neighbour_mass);
+
+  /* Calculate the change in internal energy of the gas particles that get
+   * heated */
+  double delta_u;
+  if (prob > 1.) {
+
+    /* Special case: we need to adjust the energy irrespective of the
+       desired deltaT to ensure we inject all the available energy. */
+
+    prob = 1.;
+
+    delta_u = E_SNe * N_SNe / sp->density.neighbour_mass;
+
+  } else {
+
+    /* Normal case */
+    delta_u = deltaT * k_B / (mu_ionised * hydro_gamma_minus_one * m_p);
+  }
+
+  /* Store all of this in the star particle for application in the feedback loop
+   */
+  sp->feedback.probability = prob;
+  sp->feedback.delta_u = delta_u;
 }

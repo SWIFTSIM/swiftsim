@@ -125,14 +125,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* Initialize with solar abundance */
   // sp->chemistry_data.smoothed_metal_mass_fraction_total =
-
-  /* Time integration properties */
-  const float max_volume_change =
-      parser_get_opt_param_float(params, "Stars:max_volume_change", -1);
-  if (max_volume_change == -1)
-    sp->log_max_h_change = p->log_max_h_change;
-  else
-    sp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 }
 
 /**
@@ -149,11 +141,6 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
   message("Stars relative tolerance in h: %.5f (+/- %.4f neighbours).",
           sp->h_tolerance, sp->delta_neighbours);
 
-  message(
-      "Stars integration: Max change of volume: %.2f "
-      "(max|dlog(h)/dt|=%f).",
-      pow_dimension(expf(sp->log_max_h_change)), sp->log_max_h_change);
-
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
 }
@@ -169,10 +156,6 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
   io_write_attribute_f(h_grpstars, "Kernel eta", sp->eta_neighbours);
   io_write_attribute_f(h_grpstars, "Smoothing length tolerance",
                        sp->h_tolerance);
-  io_write_attribute_f(h_grpstars, "Volume log(max(delta h))",
-                       sp->log_max_h_change);
-  io_write_attribute_f(h_grpstars, "Volume max change time-step",
-                       pow_dimension(expf(sp->log_max_h_change)));
   io_write_attribute_i(h_grpstars, "Max ghost iterations",
                        sp->max_smoothing_iterations);
 }

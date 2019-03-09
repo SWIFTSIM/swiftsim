@@ -244,7 +244,9 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             stars_evolve_spart(sp, e->stars_properties, cosmo);
 
             /* Compute the feedback-related quantities */
-            stars_prepare_feedback(sp, e->stars_properties, cosmo);
+            stars_prepare_feedback(sp, e->stars_properties, e->hydro_properties,
+                                   e->internal_units, e->physical_constants,
+                                   cosmo);
 
             /* Reset the quantites accumulated in the feedback loop */
             stars_reset_feedback(sp);
@@ -347,7 +349,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         stars_evolve_spart(sp, e->stars_properties, cosmo);
 
         /* Compute the feedback-related quantities */
-        stars_prepare_feedback(sp, e->stars_properties, cosmo);
+        stars_prepare_feedback(sp, e->stars_properties, e->hydro_properties,
+                               e->internal_units, e->physical_constants, cosmo);
 
         /* Reset the quantites accumulated in the feedback loop */
         stars_reset_feedback(sp);
