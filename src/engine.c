@@ -3119,6 +3119,7 @@ void engine_step(struct engine *e) {
     e->time_step = e->time - e->time_old;
   } else {
     e->time = e->ti_current * e->time_base + e->time_begin;
+    e->cosmology->time = e->time;
     e->time_old = e->ti_old * e->time_base + e->time_begin;
     e->time_step = (e->ti_current - e->ti_old) * e->time_base;
   }

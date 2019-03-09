@@ -52,6 +52,9 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
   sp->density.wcount_dh = 0.f;
   sp->density.neighbour_mass = 0.f;
   sp->rho_gas = 0.f;
+  sp->feedback.probability = 0.f;
+  sp->feedback.delta_u = 0.f;
+  sp->feedback.ti_current = -1;
 }
 
 /**
@@ -104,7 +107,7 @@ __attribute__((always_inline)) INLINE static void stars_end_feedback(
     struct spart* sp) {
 
   /* Make sure this star won't do feedback again */
-  sp->feedback.probability = -1;
+  sp->feedback.probability = 0.f;
 }
 
 /**
@@ -191,15 +194,15 @@ void stars_evolve_spart(struct spart* restrict sp,
  * @param us The current system of units.
  * @param phys_const The physical constants in the internal system of units.
  * @param cosmo The current cosmological model.
+ * @param with_cosmology Are we running with cosmology on?
  * @param ti_current The current time on the time-line (for random numbers).
  */
-void stars_prepare_feedback(struct spart* restrict sp,
-                            const struct stars_props* stars_properties,
-                            const struct hydro_props* hydro_properties,
-                            const struct unit_system* us,
-                            const struct phys_const* pyhs_consts,
-                            const struct cosmology* cosmo,
-                            const integertime_t ti_current);
+void stars_prepare_feedback(
+    struct spart* restrict sp, const struct stars_props* stars_properties,
+    const struct hydro_props* hydro_properties, const struct unit_system* us,
+    const struct phys_const* pyhs_consts, const struct cosmology* cosmo,
+    const int with_cosmology, const integertime_t ti_current,
+    const double time_base);
 
 /**
  * @brief Reset acceleration fields of a particle

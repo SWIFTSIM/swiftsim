@@ -102,6 +102,7 @@ EAGLEFeedback:
   SNII_DeltaT_K:                    3.1622e7   # Change in temperature to apply to the gas particles impacted by SNII feedback in Kelvin.
   SNII_Min_mass_Msun:               6.0        # Minimal mass of a star to be considered a SNII in solar masses
   SNII_Max_mass_Msun:               100.0      # Maximal mass of a star to be considered a SNII in solar masses
+  SNII_delay_years:                 1.0e6      # Delay between star birth and SNII explosion in years.
   
 # Parameters for the EAGLE "equation of state"
 EAGLEEntropyFloor:

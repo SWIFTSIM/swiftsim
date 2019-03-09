@@ -72,10 +72,15 @@ void stars_props_init(struct stars_props *sp,
       parser_get_param_double(params, "EAGLEFeedback:SNII_Min_mass_Msun");
   sp->feedback.SNII_max_mass_Msun =
       parser_get_param_double(params, "EAGLEFeedback:SNII_Max_mass_Msun");
+  sp->feedback.SNII_feedback_delay_years =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_delay_years");
 
   /* Convert the relevant ones to internal units */
   sp->feedback.E_SNe = sp->feedback.E_SNe_cgs /
                        units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
+  sp->feedback.SNII_feedback_delay =
+      sp->feedback.SNII_feedback_delay_years * 365. * 24. * 3600. /
+      units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 }
 
 /**
@@ -104,6 +109,9 @@ void stars_props_print(const struct stars_props *sp) {
       "Feedback: Stars between %.3f and %.3f solar masses are considered to be "
       "SNII.",
       sp->feedback.SNII_min_mass_Msun, sp->feedback.SNII_max_mass_Msun);
+  message("Feedback: Stars will explode after %e years. %e",
+          sp->feedback.SNII_feedback_delay_years,
+          sp->feedback.SNII_feedback_delay);
 }
 
 #if defined(HAVE_HDF5)

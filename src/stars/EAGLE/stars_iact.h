@@ -81,6 +81,9 @@ runner_iact_nonsym_stars_feedback(float r2, const float *dx, float hi, float hj,
                                   const struct spart *restrict spi,
                                   struct part *restrict pj, float a, float H) {
 
+  /* Skip stars that don't do feedback */
+  if (spi->feedback.probability <= 0.) return;
+
   /* Are we lucky? */
   const float prob_j = random_unit_interval(pj->id, spi->feedback.ti_current,
                                             random_number_stellar_feedback);
@@ -90,6 +93,9 @@ runner_iact_nonsym_stars_feedback(float r2, const float *dx, float hi, float hj,
 
     /* Inject energy into the gas particle */
     pj->feedback_data.delta_u += spi->feedback.delta_u;
+
+    message("star %lld injecting energy in gas particle %lld. prob=%f r=%f",
+            spi->id, pj->id, spi->feedback.probability, prob_j);
   }
 }
 

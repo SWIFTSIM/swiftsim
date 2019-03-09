@@ -134,6 +134,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
   struct spart *restrict sparts = c->stars.parts;
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
+  const int with_cosmology = e->policy & engine_policy_cosmology;
   const float stars_h_max = e->hydro_properties->h_max;
   const float stars_h_min = e->hydro_properties->h_min;
   const float eps = e->stars_properties->h_tolerance;
@@ -247,7 +248,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             /* Compute the feedback-related quantities */
             stars_prepare_feedback(sp, e->stars_properties, e->hydro_properties,
                                    e->internal_units, e->physical_constants,
-                                   cosmo, e->ti_current);
+                                   cosmo, with_cosmology, e->ti_current,
+                                   e->time_base);
 
             /* Reset the quantites accumulated in the feedback loop */
             stars_reset_feedback(sp);
@@ -352,7 +354,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         /* Compute the feedback-related quantities */
         stars_prepare_feedback(sp, e->stars_properties, e->hydro_properties,
                                e->internal_units, e->physical_constants, cosmo,
-                               e->ti_current);
+                               with_cosmology, e->ti_current, e->time_base);
 
         /* Reset the quantites accumulated in the feedback loop */
         stars_reset_feedback(sp);

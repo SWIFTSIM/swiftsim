@@ -99,54 +99,72 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
  * @param phys_const The physical constants in the internal system of units.
  * @param cosmo The current cosmological model.
  */
-void stars_prepare_feedback(struct spart* sp,
-                            const struct stars_props* star_props,
-                            const struct hydro_props* hydro_props,
-                            const struct unit_system* us,
-                            const struct phys_const* phys_const,
-                            const struct cosmology* cosmo,
-                            const integertime_t ti_current) {
+void stars_prepare_feedback(
+    struct spart* sp, const struct stars_props* star_props,
+    const struct hydro_props* hydro_props, const struct unit_system* us,
+    const struct phys_const* phys_const, const struct cosmology* cosmo,
+    const int with_cosmology, const integertime_t ti_current,
+    const double time_base) {
 
   /* Skip particles that were in the ICs. */
-  if (sp->birth_time < 0.) return;
+  if (sp->birth_time < 0. || sp->feedback.probability == -1) return;
 
-  /* Properties of the model (all in internal units) */
-  const double deltaT = eagle_feedback_temperature_change(star_props);
-  const double N_SNe = eagle_feedback_number_of_SNe(sp, star_props);
-  const double f_E = eagle_feedback_energy_fraction(sp, star_props);
-  const double E_SNe = star_props->feedback.E_SNe;
-
-  /* Some constants (all in internal units) */
-  const double mu_ionised = hydro_props->mu_ionised;
-  const double m_p = phys_const->const_proton_mass;
-  const double k_B = phys_const->const_boltzmann_k;
-
-  /* Calculate the heating probability */
-  double prob = E_SNe * mu_ionised * hydro_gamma_minus_one * m_p / k_B;
-  prob *= (N_SNe * f_E) / (deltaT * sp->density.neighbour_mass);
-
-  /* Calculate the change in internal energy of the gas particles that get
-   * heated */
-  double delta_u;
-  if (prob > 1.) {
-
-    /* Special case: we need to adjust the energy irrespective of the
-       desired deltaT to ensure we inject all the available energy. */
-
-    prob = 1.;
-
-    delta_u = E_SNe * N_SNe / sp->density.neighbour_mass;
-
+  /* Star and end of the time-step, star's birth time (all internal units) */
+  double current_time, birth_time, old_time;
+  if (with_cosmology) {
+    current_time = cosmo->time;
+    old_time = cosmo->time;  // MATTHIEU
+    birth_time =
+        cosmology_get_time_since_big_bang(cosmo, sp->birth_scale_factor);
   } else {
-
-    /* Normal case */
-    delta_u = deltaT * k_B / (mu_ionised * hydro_gamma_minus_one * m_p);
+    current_time = cosmo->time;
+    old_time = current_time - get_timestep(sp->time_bin, time_base);
+    birth_time = sp->birth_time;
   }
 
-  message("Probability: %e delta_u: %e", prob, delta_u);
+  /* Is it time to go supernova? */
+  if ((current_time - birth_time >= star_props->feedback.SNII_feedback_delay) &&
+      (old_time - birth_time < star_props->feedback.SNII_feedback_delay)) {
 
-  /* Store all of this in the star particle for use in the feedback loop */
-  sp->feedback.probability = prob;
-  sp->feedback.delta_u = delta_u;
-  sp->feedback.ti_current = ti_current;
+    /* Properties of the model (all in internal units) */
+    const double deltaT = eagle_feedback_temperature_change(star_props);
+    const double N_SNe = eagle_feedback_number_of_SNe(sp, star_props);
+    const double f_E = eagle_feedback_energy_fraction(sp, star_props);
+    const double E_SNe = star_props->feedback.E_SNe;
+
+    /* Some constants (all in internal units) */
+    const double mu_ionised = hydro_props->mu_ionised;
+    const double m_p = phys_const->const_proton_mass;
+    const double k_B = phys_const->const_boltzmann_k;
+
+    /* Calculate the heating probability */
+    double prob = E_SNe * mu_ionised * hydro_gamma_minus_one * m_p / k_B;
+    prob *= (N_SNe * f_E) / (deltaT * sp->density.neighbour_mass);
+
+    /* Calculate the change in internal energy of the gas particles that get
+     * heated */
+    double delta_u;
+    if (prob > 1.) {
+
+      /* Special case: we need to adjust the energy irrespective of the
+         desired deltaT to ensure we inject all the available energy. */
+
+      prob = 1.;
+
+      delta_u = E_SNe * N_SNe / sp->density.neighbour_mass;
+
+    } else {
+
+      /* Normal case */
+      delta_u = deltaT * k_B / (mu_ionised * hydro_gamma_minus_one * m_p);
+    }
+
+    message("ID=%lld Probability: %e delta_u: %e birth_time: %e", sp->id, prob,
+            delta_u, sp->birth_time);
+
+    /* Store all of this in the star particle for use in the feedback loop */
+    sp->feedback.probability = prob;
+    sp->feedback.delta_u = delta_u;
+    sp->feedback.ti_current = ti_current;
+  }
 }

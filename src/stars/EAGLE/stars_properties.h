@@ -95,6 +95,12 @@ struct stars_props {
     /*! Maximal stellar mass for a SNII in solar masses */
     double SNII_max_mass_Msun;
 
+    /*! Time between birth of star and SNII feedback in years */
+    double SNII_feedback_delay_years;
+
+    /*! Time between birth of star and SNII feedback in internal units */
+    double SNII_feedback_delay;
+
   } feedback;
 };
 

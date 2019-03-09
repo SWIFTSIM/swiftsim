@@ -410,6 +410,8 @@ INLINE static void star_formation_copy_properties(
     sp->birth_time = e->time;
   }
 
+  message("Star born! id=%lld", sp->id);
+
   /* Store the chemistry struct in the star particle */
   sp->chemistry_data = p->chemistry_data;
 
