@@ -4546,7 +4546,7 @@ void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
  */
 void space_write_cell_hierarchy(const struct space *s) {
 
-#ifdef SWIFT_DEBUG_CHECKS
+#ifdef SWIFT_CELL_GRAPH
 
   /* Open file */
   char filename[200];
