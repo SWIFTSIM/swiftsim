@@ -2020,6 +2020,45 @@ void cell_activate_limiter(struct cell *c, struct scheduler *s) {
 }
 
 /**
+ * @brief Activate the application of feedback on a given #cell.
+ */
+void cell_activate_feedback_apply(struct cell *c, struct scheduler *s) {
+
+  /* If this cell is already marked for drift, quit early. */
+  if (c->hydro.do_apply_feedback) return;
+
+  /* Mark this cell for drifting. */
+  c->hydro.do_apply_feedback = 1;
+
+  /* Set the do_sub_drifts all the way up and activate the super drift
+     if this has not yet been done. */
+  if (c == c->hydro.super) {
+#ifdef SWIFT_DEBUG_CHECKS
+    if (c->hydro.feedback_apply == NULL)
+      error("Trying to activate un-existing c->hydro.feedback_apply");
+#endif
+    scheduler_activate(s, c->hydro.feedback_apply);
+  } else {
+    for (struct cell *parent = c->parent;
+         parent != NULL && !parent->hydro.do_sub_apply_feedback;
+         parent = parent->parent) {
+
+      /* Mark this cell for drifting */
+      parent->hydro.do_sub_apply_feedback = 1;
+
+      if (parent == c->hydro.super) {
+#ifdef SWIFT_DEBUG_CHECKS
+        if (parent->hydro.feedback_apply == NULL)
+          error("Trying to activate un-existing parent->hydro.feedback_apply");
+#endif
+        scheduler_activate(s, parent->hydro.feedback_apply);
+        break;
+      }
+    }
+  }
+}
+
+/**
  * @brief Activate the sorts up a cell hierarchy.
  */
 void cell_activate_hydro_sorts_up(struct cell *c, struct scheduler *s) {
@@ -2551,6 +2590,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
       /* We have reached the bottom of the tree: activate drift */
       cell_activate_drift_spart(ci, s);
       cell_activate_drift_part(ci, s);
+      cell_activate_feedback_apply(ci, s);
     }
   }
 
@@ -2856,6 +2896,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+        if (cj->nodeID == engine_rank) cell_activate_feedback_apply(cj, s);
 
         /* Do we need to sort the cells? */
         cell_activate_hydro_sorts(cj, sid, s);
@@ -2872,6 +2913,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
+        if (ci->nodeID == engine_rank) cell_activate_feedback_apply(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
 
         /* Do we need to sort the cells? */
@@ -3436,6 +3478,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     /* Activate the drifts */
     if (t->type == task_type_self && ci_active) {
       cell_activate_drift_part(ci, s);
+      cell_activate_feedback_apply(ci, s);
       cell_activate_drift_spart(ci, s);
     }
 
@@ -3460,6 +3503,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* Activate the drift tasks. */
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+          if (cj_nodeID == nodeID) cell_activate_feedback_apply(cj, s);
 
           /* Check the sorts and activate them if needed. */
           cell_activate_stars_sorts(ci, t->flags, s);
@@ -3479,6 +3523,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* Activate the drift tasks. */
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+          if (ci_nodeID == nodeID) cell_activate_feedback_apply(ci, s);
 
           /* Check the sorts and activate them if needed. */
           cell_activate_hydro_sorts(ci, t->flags, s);
@@ -3528,6 +3573,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
           cell_activate_drift_part(cj, s);
+          cell_activate_feedback_apply(cj, s);
         }
 
       } else if (cj_nodeID != nodeID) {
@@ -3558,6 +3604,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
           cell_activate_drift_part(ci, s);
+          cell_activate_feedback_apply(ci, s);
         }
       }
 #endif

@@ -2915,7 +2915,7 @@ void runner_do_apply_feedback(struct runner *r, struct cell *c, int force,
   }
 
   /* Loop over the progeny ? */
-  if (c->split && (force || c->hydro.do_sub_limiter)) {
+  if (c->split && (force || c->hydro.do_sub_apply_feedback)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *restrict cp = c->progeny[k];
@@ -3439,6 +3439,9 @@ void *runner_main(void *data) {
           break;
         case task_type_star_formation:
           runner_do_star_formation(r, t->ci, 1);
+          break;
+        case task_type_feedback_apply:
+          runner_do_apply_feedback(r, t->ci, 0, 1);
           break;
         default:
           error("Unknown/invalid task type (%d).", t->type);

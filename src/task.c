@@ -85,7 +85,8 @@ const char *taskID_names[task_type_count] = {"none",
                                              "stars_ghost_in",
                                              "stars_ghost",
                                              "stars_ghost_out",
-                                             "stars_sort"};
+                                             "stars_sort",
+                                             "feedback_apply"};
 
 /* Sub-task type names. */
 const char *subtaskID_names[task_subtype_count] = {
@@ -149,6 +150,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
     case task_type_timestep_limiter:
     case task_type_cooling:
     case task_type_end_hydro_force:
+    case task_type_feedback_apply:
       return task_action_part;
       break;
 
@@ -367,6 +369,7 @@ void task_unlock(struct task *t) {
     case task_type_ghost:
     case task_type_end_hydro_force:
     case task_type_timestep_limiter:
+    case task_type_feedback_apply:
       cell_unlocktree(ci);
       break;
 
@@ -495,6 +498,7 @@ int task_lock(struct task *t) {
     case task_type_ghost:
     case task_type_end_hydro_force:
     case task_type_timestep_limiter:
+    case task_type_feedback_apply:
       if (ci->hydro.hold) return 0;
       if (cell_locktree(ci) != 0) return 0;
       break;

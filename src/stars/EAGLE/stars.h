@@ -240,6 +240,8 @@ __attribute__((always_inline)) INLINE static void feedback_apply(
   /* Anything to do here? */
   if (p->feedback_data.delta_u == 0.f) return;
 
+  message("Applying feedback to particle %lld", p->id);
+
   /* Apply the total change in energy from all the SN events */
   const float delta_u = p->feedback_data.delta_u;
   const float old_u = hydro_get_physical_internal_energy(p, xp, cosmo);

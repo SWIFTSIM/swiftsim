@@ -829,6 +829,12 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
       c->hydro.drift = scheduler_addtask(s, task_type_drift_part,
                                          task_subtype_none, 0, 0, c, NULL);
 
+      /* Feedback application task */
+      if (with_feedback) {
+        c->hydro.feedback_apply = scheduler_addtask(
+            s, task_type_feedback_apply, task_subtype_none, 0, 0, c, NULL);
+      }
+
       /* Add the task finishing the force calculation */
       c->hydro.end_force = scheduler_addtask(s, task_type_end_hydro_force,
                                              task_subtype_none, 0, 0, c, NULL);
@@ -894,6 +900,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
 
         scheduler_addunlock(s, c->super->kick2, c->stars.stars_in);
         scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
+        scheduler_addunlock(s, c->hydro.feedback_apply, c->super->timestep);
 
         if (with_star_formation) {
           scheduler_addunlock(s, c->hydro.star_formation, c->stars.stars_in);
@@ -1587,6 +1594,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             t_star_feedback);
         scheduler_addunlock(sched, t_star_feedback,
                             ci->hydro.super->stars.stars_out);
+        scheduler_addunlock(sched, t_star_feedback,
+                            ci->hydro.super->hydro.feedback_apply);
       }
 
       if (with_limiter) {
@@ -1711,6 +1720,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_feedback);
           scheduler_addunlock(sched, t_star_feedback,
                               ci->hydro.super->stars.stars_out);
+          scheduler_addunlock(sched, t_star_feedback,
+                              ci->hydro.super->hydro.feedback_apply);
         }
 
         if (with_limiter) {
@@ -1747,6 +1758,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_feedback);
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
+            scheduler_addunlock(sched, t_star_feedback,
+                                cj->hydro.super->hydro.feedback_apply);
           }
 
           if (with_limiter) {
@@ -1844,6 +1857,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             t_star_feedback);
         scheduler_addunlock(sched, t_star_feedback,
                             ci->hydro.super->stars.stars_out);
+        scheduler_addunlock(sched, t_star_feedback,
+                            ci->hydro.super->hydro.feedback_apply);
       }
 
       if (with_limiter) {
@@ -1969,6 +1984,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_feedback);
           scheduler_addunlock(sched, t_star_feedback,
                               ci->hydro.super->stars.stars_out);
+          scheduler_addunlock(sched, t_star_feedback,
+                              ci->hydro.super->hydro.feedback_apply);
         }
 
         if (with_limiter) {
@@ -2007,6 +2024,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_feedback);
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
+            scheduler_addunlock(sched, t_star_feedback,
+                                cj->hydro.super->hydro.feedback_apply);
           }
 
           if (with_limiter) {

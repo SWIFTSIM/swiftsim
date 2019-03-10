@@ -140,6 +140,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           scheduler_activate(s, t);
           cell_activate_drift_part(ci, s);
           cell_activate_drift_spart(ci, s);
+          cell_activate_feedback_apply(ci, s);
         }
       }
 
@@ -274,6 +275,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+            if (cj_nodeID == nodeID) cell_activate_feedback_apply(cj, s);
 
             /* Check the sorts and activate them if needed. */
             cell_activate_hydro_sorts(cj, t->flags, s);
@@ -293,6 +295,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+            if (ci_nodeID == nodeID) cell_activate_feedback_apply(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
 
             /* Check the sorts and activate them if needed. */
@@ -468,6 +471,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
             cell_activate_drift_part(cj, s);
+            cell_activate_feedback_apply(cj, s);
           }
 
         } else if (cj_nodeID != nodeID) {
@@ -498,6 +502,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
             cell_activate_drift_part(ci, s);
+            cell_activate_feedback_apply(ci, s);
           }
         }
 #endif

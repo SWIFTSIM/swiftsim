@@ -296,6 +296,9 @@ struct cell {
     /*! Task for star formation */
     struct task *star_formation;
 
+    /*! Task applying the effect of feedback onto the gas particles */
+    struct task *feedback_apply;
+
     /*! Max smoothing length in this cell. */
     double h_max;
 
@@ -774,6 +777,7 @@ void cell_activate_drift_spart(struct cell *c, struct scheduler *s);
 void cell_activate_hydro_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_limiter(struct cell *c, struct scheduler *s);
+void cell_activate_feedback_apply(struct cell *c, struct scheduler *s);
 void cell_clear_drift_flags(struct cell *c, void *data);
 void cell_clear_limiter_flags(struct cell *c, void *data);
 void cell_clear_feedback_application_flags(struct cell *c, void *data);

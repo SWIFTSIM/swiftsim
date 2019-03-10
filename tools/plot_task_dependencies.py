@@ -181,7 +181,8 @@ def taskIsHydro(name):
         "ghost_out",
         "extra_ghost",
         "cooling",
-        "star_formation"
+        "star_formation",
+        "feedback_apply"
     ]
     if name in task_name:
         return True
@@ -514,6 +515,7 @@ if __name__ == "__main__":
         writeFooter(f)
 
     call(["dot", "-Tpng", dot_output, "-o", png_output])
+    call(["rm", dot_output])
 
     print("You will find the graph in %s" % png_output)
 
