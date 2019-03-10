@@ -225,18 +225,27 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 __attribute__((always_inline)) INLINE static void feedback_part_reset(
     struct part* p) {
 
-  p->feedback_data.delta_u = 0.f;
+#ifdef SWIFT_DEBUG_CHECKS
+  if (p->feedback_data.delta_u != 0.f)
+    error("Feedback energy was not injected for particle %lld", p->id);
+#endif
+
+  // p->feedback_data.delta_u = 0.f;
 }
 
 __attribute__((always_inline)) INLINE static void feedback_apply(
     struct part* p, struct xpart* xp, const struct cosmology* cosmo,
     const integertime_t ti_current) {
 
-  /* Apply the total change in energy */
+  /* Anything to do here? */
+  if (p->feedback_data.delta_u == 0.f) return;
+
+  /* Apply the total change in energy from all the SN events */
   const float delta_u = p->feedback_data.delta_u;
   const float old_u = hydro_get_physical_internal_energy(p, xp, cosmo);
   const float new_u = old_u + delta_u;
 
+  /* Update the internal energy and the drifted one. */
   hydro_set_physical_internal_energy(p, xp, cosmo, new_u);
   hydro_set_drifted_physical_internal_energy(p, cosmo, new_u);
 
