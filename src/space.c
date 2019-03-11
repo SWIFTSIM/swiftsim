@@ -4508,7 +4508,7 @@ void space_struct_restore(struct space *s, FILE *stream) {
  * @param c The current #cell.
  */
 void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
-#ifdef SWIFT_DEBUG_CHECKS
+#ifdef SWIFT_CELL_GRAPH
 
   if (c == NULL) return;
 
