@@ -74,15 +74,29 @@ double eagle_feedback_number_of_SNe(const struct spart* sp,
 double eagle_feedback_energy_fraction(const struct spart* sp,
                                       const struct stars_props* props) {
 
-  /* const double f_E_max = props->feedback.f_E_max; */
-  /* const double f_E_max = props->feedback.f_E_max; */
-  /* const double sigma = props->feedback.sigma; */
-  /* const double Z_0 = props->feedback.Z_0; */
-  /* const double rho_0 = props->feedback.rho_0; */
-  /* const double n_n = props->feedback.n_n; */
+  /* Model parameters */
+  const double f_E_max = props->feedback.f_E_max;
+  const double f_E_min = props->feedback.f_E_min;
+  const double Z_0 = props->feedback.Z_0;
+  const double n_0 = props->feedback.n_0_cgs;
+  const double n_Z = props->feedback.n_Z;
+  const double n_n = props->feedback.n_n;
 
-  // MATTHIEU: Add full EAGLE model.
-  return 1.;
+  /* Star properties */
+
+  /* Smoothed metallicity (metal mass fraction) at birth time of the star */
+  const double Z_smooth = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+
+  /* Physical density of the gas at the star's birth time */
+  const double rho_birth = sp->birth_density;
+  const double n_birth = rho_birth * props->feedback.conv_factor_rho_to_n_cgs;
+
+  /* Calculate f_E */
+  const double Z_term = pow(max(Z_smooth, 1e-6) / Z_0, n_Z);
+  const double n_term = pow(n_birth / n_0, -n_n);
+  const double denonimator = 1. + Z_term * n_term;
+
+  return f_E_min + (f_E_max - f_E_min) / denonimator;
 }
 
 /**

@@ -103,6 +103,12 @@ EAGLEFeedback:
   SNII_Min_mass_Msun:               6.0        # Minimal mass of a star to be considered a SNII in solar masses
   SNII_Max_mass_Msun:               100.0      # Maximal mass of a star to be considered a SNII in solar masses
   SNII_delay_years:                 1.0e6      # Delay between star birth and SNII explosion in years.
+  SNII_Energy_fraction_min:         0.3
+  SNII_Energy_fraction_max:         3.0
+  SNII_Energy_fraction_Z_0:         0.0012663729 # Z_sun / 10
+  SNII_Energy_fraction_n_0_H_p_cm3: 0.67         # cm^-3
+  SNII_Energy_fraction_n_n:         0.8686       # 2/ln(10)
+  SNII_Energy_fraction_n_Z:         0.8686       # 2/ln(10)
   
 # Parameters for the EAGLE "equation of state"
 EAGLEEntropyFloor:

@@ -25,6 +25,7 @@
 #include "common_io.h"
 #include "hydro_properties.h"
 #include "kernel_hydro.h"
+#include "physical_constants.h"
 #include "restart.h"
 #include "units.h"
 
@@ -75,12 +76,32 @@ void stars_props_init(struct stars_props *sp,
   sp->feedback.SNII_feedback_delay_years =
       parser_get_param_double(params, "EAGLEFeedback:SNII_delay_years");
 
+  /* Properties of the energy fraction model */
+  sp->feedback.f_E_min =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_fraction_min");
+  sp->feedback.f_E_max =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_fraction_max");
+  sp->feedback.Z_0 =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_fraction_Z_0");
+  sp->feedback.n_0_cgs = parser_get_param_double(
+      params, "EAGLEFeedback:SNII_Energy_fraction_n_0_H_p_cm3");
+  sp->feedback.n_n =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_fraction_n_n");
+  sp->feedback.n_Z =
+      parser_get_param_double(params, "EAGLEFeedback:SNII_Energy_fraction_n_Z");
+
   /* Convert the relevant ones to internal units */
   sp->feedback.E_SNe = sp->feedback.E_SNe_cgs /
                        units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
   sp->feedback.SNII_feedback_delay =
       sp->feedback.SNII_feedback_delay_years * 365. * 24. * 3600. /
       units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+
+  /* Conversion factor from mass density in internal units to Hydrogen
+     number density in cgs. We assume primoridal H abundance. */
+  sp->feedback.conv_factor_rho_to_n_cgs =
+      (p->hydrogen_mass_fraction / phys_const->const_proton_mass) *
+      units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 }
 
 /**

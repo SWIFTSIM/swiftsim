@@ -68,20 +68,25 @@ struct stars_props {
     /*! Minimal fraction of the available SNe energy to inject */
     double f_E_min;
 
-    /*! Width of the sigmoid used in the feedback energy fraction model. */
-    double sigma;
-
     /*! Anchor point for the metallicity dependance of the feedback energy
      * fraction model. */
     double Z_0;
 
-    /*! Anchor point for the density dependance of the feedback energy fraction
-     * model. */
-    double rho_0;
+    /*! Anchor point for the number density dependance of the feedback energy
+     * fraction model in cgs. */
+    double n_0_cgs;
 
     /*! Power-law of the density dependance of the feedback energy fraction
      * model. */
     double n_n;
+
+    /*! Power-law of the metallicity dependance of the feedback energy fraction
+     * model. */
+    double n_Z;
+
+    /*! Conversion factor from mass density in internal units to
+     * Hydrogen number density in cgs */
+    double conv_factor_rho_to_n_cgs;
 
     /*! Energy of one super-nova in cgs units */
     double E_SNe_cgs;
