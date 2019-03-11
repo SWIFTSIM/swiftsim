@@ -113,12 +113,18 @@ void stars_prepare_feedback(
   double current_time, birth_time, old_time;
   if (with_cosmology) {
     current_time = cosmo->time;
-    old_time = cosmo->time;  // MATTHIEU
+    const integertime_t ti_begin =
+        ti_current - get_integer_timestep(sp->time_bin);
+    const double delta_time =
+        cosmology_get_delta_time(cosmo, ti_begin, ti_current);
+    old_time = current_time - delta_time;
     birth_time =
         cosmology_get_time_since_big_bang(cosmo, sp->birth_scale_factor);
   } else {
     current_time = cosmo->time;
-    old_time = current_time - get_timestep(sp->time_bin, time_base);
+    const integertime_t ti_begin = get_integer_timestep(sp->time_bin);
+    const double delta_time = (ti_current - ti_begin) * time_base;
+    old_time = current_time - delta_time;
     birth_time = sp->birth_time;
   }
 
