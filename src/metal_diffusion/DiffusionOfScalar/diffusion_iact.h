@@ -26,6 +26,14 @@
  * following the Smagorinsky model described in Correa et al (2019).
  */
 
+/* Standard headers */
+#include <float.h>
+#include <math.h>
+
+/* Local headers. */
+#include "dimension.h"
+#include "kernel_hydro.h"
+
 /**
  * @brief do shear tensor computation in DENSITY LOOP
  * (symmetric version)
@@ -229,7 +237,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     
     /* Get mass */
     float mj = pj->mass;
-    float mi = pi->mass;
     float wi, wj, dwi_dx, dwj_dx;
     
     /* Get r */
@@ -238,6 +245,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     /* part j */
     /* Get the kernel for hj */
     float hj_inv = 1.0f / hj;
+    const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
+    const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
     const float rho_j_inv = 1.0f / pj->rho;
     
     /* Compute the kernel function for pj */
@@ -247,13 +256,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     /* part i */
     /* Get the kernel for hi */
     float hi_inv = 1.0f / hi;
+    const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+    const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
     const float rho_i_inv = 1.0f / pi->rho;
     
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
     
-    float dw_r = 0.5f * (dwi_dx + dwj_dx) / r;
+    
+    float dw_r = 0.5f * (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) / r;
     float mj_dw_r = mj * dw_r;
     
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
@@ -261,7 +273,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
     K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
     K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-    float K_ji = K_ij * mi / mj;
     
     /* Manage time interval of particles i & j to be the smallest */
     double dt;
@@ -286,7 +297,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_scalar_diff
     if (dt_j < dt) dt = dt_j;
     
     /* Update a_scalar (scalar after diffusion) */
-    di->a_scalar += K_ji * (di->scalar - dj->scalar) * dt;
+    di->a_scalar += K_ij * (di->scalar - dj->scalar) * dt;
     
 }
 
