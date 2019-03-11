@@ -229,10 +229,16 @@ __attribute__((always_inline)) INLINE static void feedback_part_reset(
   if (p->feedback_data.delta_u != 0.f)
     error("Feedback energy was not injected for particle %lld", p->id);
 #endif
-
-  // p->feedback_data.delta_u = 0.f;
 }
 
+/**
+ * @param Apply the feedback-injected energy to a gas particle.
+ *
+ * @param p The #part to act on.
+ * @param xp The extended particle data.
+ * @param cosmo The current cosmological model.
+ * @param ti_current The current time on the integer time-line.
+ */
 __attribute__((always_inline)) INLINE static void feedback_apply(
     struct part* p, struct xpart* xp, const struct cosmology* cosmo,
     const integertime_t ti_current) {
