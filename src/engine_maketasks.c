@@ -903,6 +903,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
         scheduler_addunlock(s, c->hydro.feedback_apply, c->super->timestep);
 
         if (with_star_formation) {
+          scheduler_addunlock(s, c->stars.drift, c->hydro.star_formation);
           scheduler_addunlock(s, c->hydro.star_formation, c->stars.stars_in);
         }
       }
