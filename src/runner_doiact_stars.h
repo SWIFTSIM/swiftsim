@@ -83,8 +83,8 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
 
   /* Anything to do here? */
+  if (c->stars.count == 0 || c->hydro.count == 0) return;
   if (!cell_is_active_stars(c, e)) return;
-  if (c->hydro.count == 0 && c->stars.count == 0) return;
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -100,7 +100,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
 
     /* Get a hold of the ith spart in ci. */
     struct spart *restrict si = &sparts[sid];
-    if (!spart_is_active(si, e) || spart_is_inhibited(si, e)) continue;
+    if (!spart_is_active(si, e)) continue;
 
     const float hi = si->h;
     const float hig2 = hi * hi * kernel_gamma2;
@@ -113,7 +113,9 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
 
       /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts[pjd];
-      const float hj = pj->h;
+
+      /* Early abort? */
+      if (part_is_inhibited(pj, e)) continue;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - c->loc[0]),
@@ -128,8 +130,8 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
         error("Particle pj not drifted to current time");
 #endif
 
-      if (r2 > 0.f && r2 < hig2) {
-        IACT_STARS(r2, dx, hi, hj, si, pj, a, H);
+      if (r2 < hig2) {
+        IACT_STARS(r2, dx, hi, pj->h, si, pj, a, H);
       }
     } /* loop over the parts in ci. */
   }   /* loop over the sparts in ci. */
@@ -182,7 +184,8 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
 
     /* Get a hold of the ith spart in ci. */
     struct spart *restrict si = &sparts_i[sid];
-    if (!spart_is_active(si, e) || spart_is_inhibited(si, e)) continue;
+    if (!spart_is_active(si, e)) continue;
+
     const float hi = si->h;
     const float hig2 = hi * hi * kernel_gamma2;
     const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
@@ -194,7 +197,9 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
 
       /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts_j[pjd];
-      const float hj = pj->h;
+
+      /* Early abort? */
+      if (part_is_inhibited(pj, e)) continue;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - cj->loc[0]),
@@ -209,7 +214,7 @@ void DO_NONSYM_PAIR1_STARS(struct runner *r, struct cell *restrict ci,
         error("Particle pj not drifted to current time");
 #endif
 
-      if (r2 < hig2) IACT_STARS(r2, dx, hi, hj, si, pj, a, H);
+      if (r2 < hig2) IACT_STARS(r2, dx, hi, pj->h, si, pj, a, H);
 
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -285,6 +290,8 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
       /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts_j[pjd];
 
+      if (part_is_inhibited(pj, e)) continue;
+
       /* Compute the pairwise distance. */
       float r2 = 0.0f;
       float dx[3];
@@ -355,7 +362,9 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
 
       /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts_j[pjd];
-      const float hj = pj->h;
+
+      /* Early abort? */
+      if (part_is_inhibited(pj, e)) continue;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - ci->loc[0]),
@@ -371,8 +380,8 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
 #endif
 
       /* Hit or miss? */
-      if (r2 > 0.f && r2 < hig2) {
-        IACT_STARS(r2, dx, hi, hj, spi, pj, a, H);
+      if (r2 < hig2) {
+        IACT_STARS(r2, dx, hi, pj->h, spi, pj, a, H);
       }
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
