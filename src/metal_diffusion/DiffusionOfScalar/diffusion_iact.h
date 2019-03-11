@@ -45,7 +45,7 @@
  * @param pj Second particle.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
-        float r2, float hi, float hj, struct part *restrict pi,
+        float r2, const float* dx, float hi, float hj, struct part *restrict pi,
         struct part *restrict pj) {
     
     struct diffusion_part_data *di = &pi->diffusion_data;
@@ -81,13 +81,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
     
     /* Compute shear tensor */
     for (int k = 0; k < 3; k++){
-        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwi_r;
-        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwi_r;
-        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * dx[k] * mj_dwi_r;
+        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * dx[k] * mj_dwi_r;
+        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * dx[k] * mj_dwi_r;
         
-        dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * pj->x[k] * mi_dwj_r;
-        dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * pj->x[k] * mi_dwj_r;
-        dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * pj->x[k] * mi_dwj_r;
+        dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * dx[k] * mi_dwj_r;
+        dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * dx[k] * mi_dwj_r;
+        dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * dx[k] * mi_dwj_r;
     }
 }
 
@@ -102,7 +102,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_shear_tensor(
  * @param pj Second particle.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tensor(
-    float r2, float hi, float hj, struct part *restrict pi,
+    float r2, const float* dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj) {
     
     struct diffusion_part_data *di = &pi->diffusion_data;
@@ -125,9 +125,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_shear_tenso
     
     /* Compute shear tensor */
     for (int k = 0; k < 3; k++){
-        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * pi->x[k] * mj_dwi_r;
-        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * pi->x[k] * mj_dwi_r;
-        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * pi->x[k] * mj_dwi_r;
+        di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * dx[k] * mj_dwi_r;
+        di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * dx[k] * mj_dwi_r;
+        di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * dx[k] * mj_dwi_r;
     }
 }
 

@@ -32,6 +32,7 @@
 #include "hydro.h"
 #include "parser.h"
 #include "part.h"
+#include "dimension.h"
 
 /**
  * @brief Prepares a particle for the diffusion calculation.
