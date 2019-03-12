@@ -58,12 +58,6 @@ struct chemistry_part_data {
   /*! Fraction of the particle mass in *all* metals */
   float metal_mass_fraction_total;
 
-  /*! Smoothed fraction of the particle mass in a given element */
-  float smoothed_metal_mass_fraction[chemistry_element_count];
-
-  /*! Smoothed fraction of the particle mass in *all* metals */
-  float smoothed_metal_mass_fraction_total;
-
   /*! Mass coming from SNIa */
   float mass_from_SNIa;
 
@@ -84,9 +78,7 @@ struct chemistry_part_data {
 
   /*! Fraction of total gas mass in Iron coming from SNIa */
   float iron_mass_fraction_from_SNIa;
-
-  /*! Smoothed fraction of total gas mass in Iron coming from SNIa */
-  float smoothed_iron_mass_fraction_from_SNIa;
+    
 };
 
 /**

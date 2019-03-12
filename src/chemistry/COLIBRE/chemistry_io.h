@@ -62,48 +62,36 @@ INLINE static int chemistry_write_particles(const struct part* parts,
                                  chemistry_element_count, UNIT_CONV_NO_UNITS,
                                  parts, chemistry_data.metal_mass_fraction);
 
-  list[1] = io_make_output_field(
-      "SmoothedElementAbundance", FLOAT, chemistry_element_count,
-      UNIT_CONV_NO_UNITS, parts, chemistry_data.smoothed_metal_mass_fraction);
-
-  list[2] =
+  list[1] =
       io_make_output_field("Metallicity", FLOAT, 1, UNIT_CONV_NO_UNITS, parts,
                            chemistry_data.metal_mass_fraction_total);
 
-  list[3] = io_make_output_field(
-      "SmoothedMetallicity", FLOAT, 1, UNIT_CONV_NO_UNITS, parts,
-      chemistry_data.smoothed_metal_mass_fraction_total);
-
-  list[4] = io_make_output_field("TotalMassFromSNIa", FLOAT, 1, UNIT_CONV_MASS,
+  list[2] = io_make_output_field("TotalMassFromSNIa", FLOAT, 1, UNIT_CONV_MASS,
                                  parts, chemistry_data.mass_from_SNIa);
 
-  list[5] = io_make_output_field("MetalMassFracFromSNIa", FLOAT, 1,
+  list[3] = io_make_output_field("MetalMassFracFromSNIa", FLOAT, 1,
                                  UNIT_CONV_NO_UNITS, parts,
                                  chemistry_data.metal_mass_fraction_from_SNIa);
 
-  list[6] = io_make_output_field("TotalMassFromAGB", FLOAT, 1, UNIT_CONV_MASS,
+  list[4] = io_make_output_field("TotalMassFromAGB", FLOAT, 1, UNIT_CONV_MASS,
                                  parts, chemistry_data.mass_from_AGB);
 
-  list[7] =
+  list[5] =
       io_make_output_field("MetalMassFracFromAGB", FLOAT, 1, UNIT_CONV_NO_UNITS,
                            parts, chemistry_data.metal_mass_fraction_from_AGB);
 
-  list[8] = io_make_output_field("TotalMassFromSNII", FLOAT, 1, UNIT_CONV_MASS,
+  list[6] = io_make_output_field("TotalMassFromSNII", FLOAT, 1, UNIT_CONV_MASS,
                                  parts, chemistry_data.mass_from_SNII);
 
-  list[9] = io_make_output_field("MetalMassFracFromSNII", FLOAT, 1,
+  list[7] = io_make_output_field("MetalMassFracFromSNII", FLOAT, 1,
                                  UNIT_CONV_NO_UNITS, parts,
                                  chemistry_data.metal_mass_fraction_from_SNII);
 
-  list[10] =
+  list[8] =
       io_make_output_field("IronMassFracFromSNIa", FLOAT, 1, UNIT_CONV_NO_UNITS,
                            parts, chemistry_data.iron_mass_fraction_from_SNIa);
 
-  list[11] = io_make_output_field(
-      "SmoothedIronMassFracFromSNIa", FLOAT, 1, UNIT_CONV_NO_UNITS, parts,
-      chemistry_data.smoothed_iron_mass_fraction_from_SNIa);
-
-  return 12;
+  return 9;
 }
 
 /**
@@ -140,48 +128,37 @@ INLINE static int chemistry_write_sparticles(const struct spart* sparts,
                                  chemistry_element_count, UNIT_CONV_NO_UNITS,
                                  sparts, chemistry_data.metal_mass_fraction);
 
-  list[1] = io_make_output_field(
-      "SmoothedElementAbundance", FLOAT, chemistry_element_count,
-      UNIT_CONV_NO_UNITS, sparts, chemistry_data.smoothed_metal_mass_fraction);
 
-  list[2] =
+  list[1] =
       io_make_output_field("Metallicity", FLOAT, 1, UNIT_CONV_NO_UNITS, sparts,
                            chemistry_data.metal_mass_fraction_total);
-
-  list[3] = io_make_output_field(
-      "SmoothedMetallicity", FLOAT, 1, UNIT_CONV_NO_UNITS, sparts,
-      chemistry_data.smoothed_metal_mass_fraction_total);
-
-  list[4] = io_make_output_field("TotalMassFromSNIa", FLOAT, 1, UNIT_CONV_MASS,
+    
+  list[2] = io_make_output_field("TotalMassFromSNIa", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, chemistry_data.mass_from_SNIa);
 
-  list[5] = io_make_output_field("MetalMassFracFromSNIa", FLOAT, 1,
+  list[3] = io_make_output_field("MetalMassFracFromSNIa", FLOAT, 1,
                                  UNIT_CONV_NO_UNITS, sparts,
                                  chemistry_data.metal_mass_fraction_from_SNIa);
 
-  list[6] = io_make_output_field("TotalMassFromAGB", FLOAT, 1, UNIT_CONV_MASS,
+  list[4] = io_make_output_field("TotalMassFromAGB", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, chemistry_data.mass_from_AGB);
 
-  list[7] =
+  list[5] =
       io_make_output_field("MetalMassFracFromAGB", FLOAT, 1, UNIT_CONV_NO_UNITS,
                            sparts, chemistry_data.metal_mass_fraction_from_AGB);
 
-  list[8] = io_make_output_field("TotalMassFromSNII", FLOAT, 1, UNIT_CONV_MASS,
+  list[6] = io_make_output_field("TotalMassFromSNII", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, chemistry_data.mass_from_SNII);
 
-  list[9] = io_make_output_field("MetalMassFracFromSNII", FLOAT, 1,
+  list[7] = io_make_output_field("MetalMassFracFromSNII", FLOAT, 1,
                                  UNIT_CONV_NO_UNITS, sparts,
                                  chemistry_data.metal_mass_fraction_from_SNII);
 
-  list[10] =
+  list[8] =
       io_make_output_field("IronMassFracFromSNIa", FLOAT, 1, UNIT_CONV_NO_UNITS,
                            sparts, chemistry_data.iron_mass_fraction_from_SNIa);
 
-  list[11] = io_make_output_field(
-      "SmoothedIronMassFracFromSNIa", FLOAT, 1, UNIT_CONV_NO_UNITS, sparts,
-      chemistry_data.smoothed_iron_mass_fraction_from_SNIa);
-
-  return 12;
+  return 9;
 }
 
 #ifdef HAVE_HDF5

@@ -44,15 +44,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
 
-  struct chemistry_part_data *chi = &pi->chemistry_data;
-  struct chemistry_part_data *chj = &pj->chemistry_data;
-
   float wi, dwi_dx;
   float wj, dwj_dx;
 
   /* Get the masses. */
-  const float mi = hydro_get_mass(pi);
-  const float mj = hydro_get_mass(pj);
+  float mj = pj->mass;
+  float mi = pi->mass;
 
   /* Get r */
   const float r = sqrtf(r2);
@@ -64,28 +61,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   /* Compute the kernel function for pj */
   const float uj = r / hj;
   kernel_eval(uj, &wj, &dwj_dx);
-
-  /* Compute contribution to the smooth metallicity */
-  for (int i = 0; i < chemistry_element_count; i++) {
-    chi->smoothed_metal_mass_fraction[i] +=
-        mj * chj->metal_mass_fraction[i] * wi;
-    chj->smoothed_metal_mass_fraction[i] +=
-        mi * chi->metal_mass_fraction[i] * wj;
-  }
-
-  // Smooth metal mass fraction of all metals
-  chi->smoothed_metal_mass_fraction_total +=
-      mj * chj->metal_mass_fraction_total * wi;
-  chj->smoothed_metal_mass_fraction_total +=
-      mi * chi->metal_mass_fraction_total * wj;
-
-  // Smooth iron mass fraction from SNIa
-  chi->smoothed_iron_mass_fraction_from_SNIa +=
-      mj * chj->iron_mass_fraction_from_SNIa * wi;
-  chj->smoothed_iron_mass_fraction_from_SNIa +=
-      mi * chi->iron_mass_fraction_from_SNIa * wj;
     
-  // Let's now calculate the shear tensor
   struct diffusion_part_data *di = &pi->diffusion_data;
   struct diffusion_part_data *dj = &pj->diffusion_data;
     
@@ -126,14 +102,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
-
-  struct chemistry_part_data *chi = &pi->chemistry_data;
-  const struct chemistry_part_data *chj = &pj->chemistry_data;
-
+    
   float wi, dwi_dx;
 
   /* Get the masses. */
-  const float mj = hydro_get_mass(pj);
+  float mj = pj->mass;
 
   /* Get r */
   const float r = sqrtf(r2);
@@ -141,20 +114,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
   /* Compute the kernel function for pi */
   const float ui = r / hi;
   kernel_eval(ui, &wi, &dwi_dx);
-
-  /* Compute contribution to the smooth metallicity */
-  for (int i = 0; i < chemistry_element_count; i++) {
-    chi->smoothed_metal_mass_fraction[i] +=
-        mj * chj->metal_mass_fraction[i] * wi;
-  }
-
-  // Smooth metal mass fraction of all metals
-  chi->smoothed_metal_mass_fraction_total +=
-      mj * chj->metal_mass_fraction_total * wi;
-
-  // Smooth iron mass fraction from SNIa
-  chi->smoothed_iron_mass_fraction_from_SNIa +=
-      mj * chj->iron_mass_fraction_from_SNIa * wi;
     
   /* Compute shear tensor */
    float dwi_r = dwi_dx / r;

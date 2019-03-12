@@ -62,59 +62,77 @@ chemistry_get_element_name(enum chemistry_element elem) {
 __attribute__((always_inline)) INLINE static void chemistry_init_part(
     struct part* restrict p, const struct chemistry_global_data* cd) {
 
-  struct chemistry_part_data* cpd = &p->chemistry_data;
+    struct diffusion_part_data* dp = &p->diffusion_data;
 
-  for (int i = 0; i < chemistry_element_count; i++) {
-    cpd->smoothed_metal_mass_fraction[i] = 0.f;
-  }
-
-  cpd->smoothed_metal_mass_fraction_total = 0.f;
-  cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
+    dp->diffusion_coefficient = 0.0f;
+    dp->diffusion_rate = 0.0f;
     
+    for (int k = 0; k < 3; k++) {
+        dp->shear_tensor[0][k] = 0.0f;
+        dp->shear_tensor[1][k] = 0.0f;
+        dp->shear_tensor[2][k] = 0.0f;
+    }
 }
 
 /**
- * @brief Finishes the smooth metal calculation.
- *
- * Multiplies the smoothed metallicity and number of neighbours by the
- * appropiate constants and add the self-contribution term.
- *
- * This function requires the #hydro_end_density to have been called.
+ * @brief Finishes the calculation of the velocity shear tensor,
+ * and calculates the diffusion coefficient at the end of the density loop.
  *
  * @param p The particle to act upon.
- * @param cd #chemistry_global_data containing chemistry informations.
  * @param cosmo The current cosmological model.
  */
+
 __attribute__((always_inline)) INLINE static void chemistry_end_density(
-    struct part* restrict p, const struct chemistry_global_data* cd,
-    const struct cosmology* cosmo) {
+    struct part* restrict p, const struct cosmology* cosmo) {
 
-  /* Some smoothing length multiples. */
-  const float h = p->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float factor = pow_dimension(h_inv) / p->rho; /* 1 / h^d * rho */
-  const float m = hydro_get_mass(p);
-
-  struct chemistry_part_data* cpd = &p->chemistry_data;
-
-  for (int i = 0; i < chemistry_element_count; i++) {
-    /* Final operation on the density (add self-contribution). */
-    cpd->smoothed_metal_mass_fraction[i] +=
-        m * cpd->metal_mass_fraction[i] * kernel_root;
-
-    /* Finish the calculation by inserting the missing h-factors */
-    cpd->smoothed_metal_mass_fraction[i] *= factor;
-  }
-
-  /* Smooth mass fraction of all metals */
-  cpd->smoothed_metal_mass_fraction_total +=
-      m * cpd->metal_mass_fraction_total * kernel_root;
-  cpd->smoothed_metal_mass_fraction_total *= factor;
-
-  /* Smooth iron mass fraction from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa +=
-      m * cpd->iron_mass_fraction_from_SNIa * kernel_root;
-  cpd->smoothed_iron_mass_fraction_from_SNIa *= factor;
+    int k;
+    /* Some smoothing length multiples. */
+    const float h = p->h;
+    const float h_inv = 1.0f / h;                       /* 1/h */
+    const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+    const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
+    
+    const float rho_inv = 1.0f / p->rho; /* 1 / rho */
+    /*const float a_inv2 = cosmo->a2_inv;*/
+    
+    /* Velocity shear tensor (check physical coordinates) */
+    for (k = 0; k < 3; k++){
+        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv;
+        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv;
+        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv;
+    }
+    
+    float shear_tensor_S[3][3];
+    /* Norm of shear_tensor (in physical coordinates) */
+    float TShearTensorN = p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2];
+    TShearTensorN *= (1.0f/3.0f);
+    
+    /* I define a new shear_tensor "shear_tensor_S" */
+    for (k = 0; k < 3; k++){
+        shear_tensor_S[k][0] = 0.5 * (p->diffusion_data.shear_tensor[k][0] + p->diffusion_data.shear_tensor[0][k]);
+        if (k == 0) shear_tensor_S[k][0] -= TShearTensorN;
+        shear_tensor_S[k][1] = 0.5 * (p->diffusion_data.shear_tensor[k][1] + p->diffusion_data.shear_tensor[1][k]);
+        if (k == 1) shear_tensor_S[k][1] -= TShearTensorN;
+        shear_tensor_S[k][2] = 0.5 * (p->diffusion_data.shear_tensor[k][2] + p->diffusion_data.shear_tensor[2][k]);
+        if (k == 2) shear_tensor_S[k][2] -= TShearTensorN;
+    }
+    /* Calculate the trace */
+    float NormTensor = 0.0f;
+    for (k = 0; k < 3; k++){
+        NormTensor += shear_tensor_S[k][0] * shear_tensor_S[k][0] + shear_tensor_S[k][1] * shear_tensor_S[k][1] + shear_tensor_S[k][2] * shear_tensor_S[k][2];
+    }
+    NormTensor = sqrt(NormTensor);
+    
+    // We can now combine to get the diffusion coefficient //
+    p->diffusion_data.diffusion_coefficient = p->rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
+    
+    /* Velocity shear tensor goes back to zero for next loop */
+    for (k = 0; k < 3; k++){
+        p->diffusion_data.shear_tensor[k][0] = 0.0f;
+        p->diffusion_data.shear_tensor[k][1] = 0.0f;
+        p->diffusion_data.shear_tensor[k][2] = 0.0f;
+    }
+    
 }
 
 /**
@@ -133,18 +151,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
 
   /* Just make all the smoothed fields default to the un-smoothed values */
   struct chemistry_part_data* cpd = &p->chemistry_data;
-
-  /* Total metal mass fraction */
-  cpd->smoothed_metal_mass_fraction_total = cpd->metal_mass_fraction_total;
-
-  /* Iron frac from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa =
-      cpd->iron_mass_fraction_from_SNIa;
-
-  /* Individual metal mass fractions */
-  for (int i = 0; i < chemistry_element_count; i++) {
-    cpd->smoothed_metal_mass_fraction[i] = cpd->metal_mass_fraction[i];
-  }
+  // CC: Not sure what to do here
 }
 
 /**
@@ -170,12 +177,15 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
 
-    for (int elem = 0; elem < chemistry_element_count; ++elem)
-      p->chemistry_data.metal_mass_fraction[elem] =
-          data->initial_metal_mass_fraction[elem];
+    for (int elem = 0; elem < chemistry_element_count; ++elem){
+        p->chemistry_data.metal_mass_fraction[elem] = data->initial_metal_mass_fraction[elem];
+        p->diffusion_data.dmetal_mass_fraction[elem] = data->initial_metal_mass_fraction[elem];
+    }
   }
+    
   chemistry_init_part(p, data);
 }
+
 
 /**
  * @brief Initialises the chemistry properties.
@@ -218,6 +228,18 @@ static INLINE void chemistry_print_backend(
 
   message("Chemistry model is 'COLIBRE' tracking %d elements.",
           chemistry_element_count);
+}
+
+/**
+ * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
+ *
+ * @param p The particle to act upon.
+ */
+__attribute__((always_inline)) INLINE static void diffusion_end_force(struct part* restrict p) {
+    
+    for (int elem = 0; elem < chemistry_element_count; ++elem){
+        p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
+    }
 }
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */
