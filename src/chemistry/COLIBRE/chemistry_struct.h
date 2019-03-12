@@ -89,4 +89,24 @@ struct chemistry_part_data {
   float smoothed_iron_mass_fraction_from_SNIa;
 };
 
+/**
+ * @brief Diffusion particle data traced by the #part.
+ */
+struct diffusion_part_data {
+    
+    /*! Fraction of the particle mass in a given element */
+    /*! This array is duplicated to be used after the diffusion routine */
+    float dmetal_mass_fraction[chemistry_element_count];
+    
+    /*! Tensor of the velocity shear */
+    float shear_tensor[3][3];
+    
+    /*! Diffusion coefficient as defined by the Smagorinsky model */
+    float diffusion_coefficient;
+    
+    /*! Diffusion rate */
+    float diffusion_rate[chemistry_element_count];
+};
+
+
 #endif /* SWIFT_CHEMISTRY_STRUCT_COLIBRE_H */

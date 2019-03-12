@@ -70,6 +70,7 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
 
   cpd->smoothed_metal_mass_fraction_total = 0.f;
   cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
+    
 }
 
 /**

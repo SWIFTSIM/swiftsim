@@ -107,6 +107,24 @@ INLINE static int chemistry_write_particles(const struct part* parts,
 }
 
 /**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param parts The particle array.
+ * @param list The list of i/o properties to write.
+ * @param num_fields The number of i/o fields to write.
+ */
+INLINE static int diffusion_write_particles(const struct part* parts,
+                                            struct io_props* list) {
+    
+    /* List what we want to write */
+    list[0] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_coefficient);
+    
+    list[1] = io_make_output_field("DiffusionRate", FLOAT, chemistry_element_count, UNIT_CONV_NO_UNITS, parts, diffusion_data.diffusion_rate);
+    
+    return 2;
+}
+
+/**
  * @brief Specifies which star particle fields to write to a dataset
  *
  * @param sparts The star particle array.
