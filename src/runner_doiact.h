@@ -217,10 +217,9 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       }
       if (r2 < hjg2 && pj_active) {
@@ -232,10 +231,9 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
 
       }
@@ -340,20 +338,18 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         } else if (pi_active) {
 
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         } else if (pj_active) {
 
@@ -364,10 +360,9 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       }
@@ -459,20 +454,18 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       } else if (doi) {
 
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       } else if (doj) {
 
@@ -483,10 +476,9 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -577,20 +569,18 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       } else if (doi) {
 
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       } else if (doj) {
 
@@ -601,10 +591,9 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -694,10 +683,9 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, pj->h, pi, pj, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hi, pj->h, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, pj->h, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hi, pj->h, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -794,10 +782,9 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -853,10 +840,9 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -1000,10 +986,9 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-        runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-        runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+        runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -1171,10 +1156,9 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -1262,10 +1246,9 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the parts in ci. */
@@ -1556,10 +1539,9 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the active parts in cj. */
@@ -1629,19 +1611,17 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           } else {
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           }
         }
@@ -1736,10 +1716,9 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over the active parts in ci. */
@@ -1812,19 +1791,17 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-            runner_iact_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           } else {
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-            runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           }
         }
@@ -2014,10 +1991,9 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over all other particles. */
@@ -2069,20 +2045,18 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           } else if (doi) {
 
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           } else if (doj) {
 
@@ -2092,10 +2066,9 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-            runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           }
         }
@@ -2223,10 +2196,9 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
-          runner_iact_nonsym_shear_tensor(r2, dx, hj, hi, pj, pi);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-          runner_iact_nonsym_scalar_diffusion(r2, hj, hi, pj, pi, time_base, t_current, cosmo, with_cosmology);
+          runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
         }
       } /* loop over all other particles. */
@@ -2273,19 +2245,17 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           } else {
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
-            runner_iact_nonsym_shear_tensor(r2, dx, hi, hj, pi, pj);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
-            runner_iact_nonsym_scalar_diffusion(r2, hi, hj, pi, pj, time_base, t_current, cosmo, with_cosmology);
+            runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
 #endif
           }
         }
