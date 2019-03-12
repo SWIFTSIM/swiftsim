@@ -131,7 +131,7 @@ __attribute__((always_inline)) INLINE static void diffusion_coefficient_end_dens
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient //
-    p->diffusion_data.diffusion_coefficient = 0.01 * p->rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
+    p->diffusion_data.diffusion_coefficient = p->rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
     
     /* Velocity shear tensor goes back to zero for next loop */
     for (k = 0; k < 3; k++){
