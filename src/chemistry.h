@@ -53,6 +53,11 @@ void chemistry_init(struct swift_params* parameter_file,
 
 void chemistry_print(const struct chemistry_global_data* data);
 
+void diffusion_init(struct swift_params* parameter_file,
+                    struct diffusion_part_data* data);
+
+void diffusion_print(const struct diffusion_part_data* data);
+
 /* Dump/restore. */
 void chemistry_struct_dump(const struct chemistry_global_data* chemistry,
                            FILE* stream);
