@@ -3643,6 +3643,9 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     if (c->stars.ghost != NULL) scheduler_activate(s, c->stars.ghost);
     if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
     if (c->stars.stars_out != NULL) scheduler_activate(s, c->stars.stars_out);
+    if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+    if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+    if (c->timestep != NULL) scheduler_activate(s, c->timestep);
     if (c->logger != NULL) scheduler_activate(s, c->logger);
   }
 
@@ -3685,7 +3688,8 @@ void cell_set_super(struct cell *c, struct cell *super, const int with_hydro,
 void cell_set_super_hydro(struct cell *c, struct cell *super_hydro) {
 
   /* Are we in a cell with some kind of self/pair task ? */
-  if (super_hydro == NULL && c->hydro.density != NULL) super_hydro = c;
+  if (super_hydro == NULL && (c->hydro.density != NULL || c->stars.count > 0))
+      super_hydro = c;
 
   /* Set the super-cell */
   c->hydro.super = super_hydro;
