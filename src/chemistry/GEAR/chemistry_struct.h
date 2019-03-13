@@ -58,4 +58,6 @@ struct chemistry_part_data {
   float Z;
 };
 
+struct diffusion_part_data {};
+
 #endif /* SWIFT_CHEMISTRY_STRUCT_GEAR_H */

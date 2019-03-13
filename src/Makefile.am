@@ -51,7 +51,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     mesh_gravity.h cbrt.h exp10.h velociraptor_interface.h swift_velociraptor_part.h outputlist.h \
     logger_io.h tracers_io.h tracers.h tracers_struct.h star_formation_io.h \
     star_formation_struct.h star_formation.h velociraptor_struct.h velociraptor_io.h \
-    random.h metal_diffusion.h metal_diffusion_io.h metal_diffusion_struct.h
+    random.h 
 
 # source files for EAGLE cooling
 EAGLE_COOLING_SOURCES =
@@ -76,7 +76,6 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c 
     part_type.c xmf.c gravity_properties.c gravity.c \
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
-    metal_diffusion.c \
     outputlist.c velociraptor_dummy.c logger_io.c $(EAGLE_COOLING_SOURCES) \
 	$(COLIBRE_COOLING_SOURCES)
 
@@ -196,20 +195,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 tracers/EAGLE/tracers.h tracers/EAGLE/tracers_struct.h \
                  tracers/EAGLE/tracers_io.h
 		 tracers/COLIBRE/tracers.h tracers/COLIBRE/tracers_struct.h \
-                 tracers/COLIBRE/tracers_io.h \
-		 metal_diffusion/none/diffusion.h \
-		 metal_diffusion/none/diffusion_io.h \
-		 metal_diffusion/none/diffusion_struct.h \
-		 metal_diffusion/none/diffusion_iact.h \
-		 metal_diffusion/DiffusionOfScalar/diffusion.h \
-		 metal_diffusion/DiffusionOfScalar/diffusion_io.h \
-		 metal_diffusion/DiffusionOfScalar/diffusion_struct.h \
-		 metal_diffusion/DiffusionOfScalar/diffusion_iact.h \
-		 metal_diffusion/DiffusionOfElementAbundance/diffusion.h \
-		 metal_diffusion/DiffusionOfElementAbundance/diffusion_io.h \
-		 metal_diffusion/DiffusionOfElementAbundance/diffusion_struct.h \
-		 metal_diffusion/DiffusionOfElementAbundance/diffusion_iact.h 
-
+                 tracers/COLIBRE/tracers_io.h 
 
 
 # Sources and flags for regular library

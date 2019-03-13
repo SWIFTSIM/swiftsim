@@ -38,7 +38,6 @@
 #include "clocks.h"
 #include "collectgroup.h"
 #include "cooling_struct.h"
-#include "metal_diffusion_struct.h"
 #include "dump.h"
 #include "gravity_properties.h"
 #include "mesh_gravity.h"

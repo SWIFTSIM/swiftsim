@@ -46,7 +46,6 @@
 #include "const.h"
 #include "cooling.h"
 #include "debug.h"
-#include "metal_diffusion.h"
 #include "drift.h"
 #include "engine.h"
 #include "entropy_floor.h"
@@ -1182,7 +1181,7 @@ void runner_do_extra_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the gradient calculation */
         hydro_end_gradient(p);
-        diffusion_end_gradient(p);
+        
 
         /* As of here, particle force variables will be set. */
 
@@ -1316,7 +1315,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           /* Finish the density calculation */
           hydro_end_density(p, cosmo);
           chemistry_end_density(p, chemistry, cosmo);
-          diffusion_coefficient_end_density(p, cosmo);
 
           /* Compute one step of the Newton-Raphson scheme */
           const float n_sum = p->density.wcount * h_old_dim;
@@ -1458,7 +1456,6 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* Re-initialise everything */
             hydro_init_part(p, hs);
             chemistry_init_part(p, chemistry);
-            diffusion_init_part(p);
 
             /* Off we go ! */
             continue;
@@ -2618,6 +2615,7 @@ void runner_do_end_force(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         hydro_end_force(p, cosmo);
+        chemistry_end_force(p);
       }
     }
 

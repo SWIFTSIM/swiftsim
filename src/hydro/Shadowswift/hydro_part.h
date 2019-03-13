@@ -23,7 +23,6 @@
 #include "cooling_struct.h"
 #include "tracers_struct.h"
 #include "voronoi_cell.h"
-#include "metal_diffusion_struct.h"
 
 /* Extra particle data not needed during the computation. */
 struct xpart {

@@ -56,6 +56,20 @@ INLINE static int chemistry_write_particles(const struct part* parts,
 }
 
 /**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param parts The particle array.
+ * @param list The list of i/o properties to write.
+ * @param num_fields The number of i/o fields to write.
+ */
+INLINE static int diffusion_write_particles(const struct part* parts,
+                                            struct io_props* list) {
+    
+    return 0;
+}
+
+
+/**
  * @brief Specifies which sparticle fields to write to a dataset
  *
  * @param sparts The sparticle array.

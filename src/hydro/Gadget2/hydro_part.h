@@ -33,7 +33,6 @@
 
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
-#include "metal_diffusion_struct.h"
 #include "logger.h"
 #include "star_formation_struct.h"
 #include "tracers_struct.h"

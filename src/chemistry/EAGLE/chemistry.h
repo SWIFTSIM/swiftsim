@@ -219,4 +219,12 @@ static INLINE void chemistry_print_backend(
           chemistry_element_count);
 }
 
+/**
+ * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
+ *
+ * @param p The particle to act upon.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p) {}
+
+
 #endif /* SWIFT_CHEMISTRY_EAGLE_H */

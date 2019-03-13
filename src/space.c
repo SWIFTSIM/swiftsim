@@ -45,7 +45,6 @@
 #include "const.h"
 #include "cooling.h"
 #include "debug.h"
-#include "metal_diffusion.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity.h"
@@ -3404,9 +3403,6 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
     /* Also initialise the chemistry */
     chemistry_first_init_part(phys_const, us, cosmo, chemistry, &p[k], &xp[k]);
 
-    /* Also initialise the diffusion */
-    diffusion_first_init_part(&p[k]);
-
     /* And the cooling */
     cooling_first_init_part(phys_const, us, cosmo, cool_func, &p[k], &xp[k]);
 
@@ -3432,7 +3428,6 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
  * Calls hydro_first_init_part() on all the particles
  * Calls chemistry_first_init_part() on all the particles
  * Calls cooling_first_init_part() on all the particles
- * Calls diffusion_first_init_part() on all the particles
  */
 void space_first_init_parts(struct space *s, int verbose) {
 

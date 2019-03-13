@@ -142,7 +142,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
  *
  */
 __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
-                                                                        float r2, float hi, float hj, struct part *restrict pi,
+                                                                        float r2, const float *dx, float hi, float hj, struct part *restrict pi,
                                                                         struct part *restrict pj, float a, float H, float time_base, integertime_t t_current,
                                                                         const struct cosmology *cosmo, const int with_cosmology) {
     
@@ -242,7 +242,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
  *
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
-                                                                                      float r2, float hi, float hj, struct part *restrict pi,
+                                                                                      float r2, const float *dx, float hi, float hj, struct part *restrict pi,
                                                                                       struct part *restrict pj, float a, float H, float time_base, integertime_t t_current,
                                                                                       const struct cosmology *cosmo, const int with_cosmology) {
     struct diffusion_part_data *di = &pi->diffusion_data;

@@ -33,7 +33,6 @@
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "star_formation_struct.h"
-#include "metal_diffusion_struct.h"
 #include "tracers_struct.h"
 
 /* Extra particle data not needed during the SPH loops over neighbours. */

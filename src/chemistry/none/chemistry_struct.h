@@ -43,4 +43,6 @@ struct chemistry_global_data {};
  */
 struct chemistry_part_data {};
 
+struct diffusion_part_data {};
+
 #endif /* SWIFT_CHEMISTRY_STRUCT_NONE_H */

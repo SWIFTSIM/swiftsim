@@ -35,7 +35,6 @@
 
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
-#include "metal_diffusion_struct.h"
 #include "equation_of_state.h"  // For enum material_id
 #include "star_formation_struct.h"
 #include "tracers_struct.h"

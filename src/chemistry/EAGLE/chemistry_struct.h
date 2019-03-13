@@ -89,4 +89,6 @@ struct chemistry_part_data {
   float smoothed_iron_mass_fraction_from_SNIa;
 };
 
+struct diffusion_part_data {};
+
 #endif /* SWIFT_CHEMISTRY_STRUCT_EAGLE_H */

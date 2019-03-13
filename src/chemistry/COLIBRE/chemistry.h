@@ -240,7 +240,7 @@ static INLINE void chemistry_print_backend(
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void diffusion_end_force(struct part* restrict p) {
+__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p) {
     
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
