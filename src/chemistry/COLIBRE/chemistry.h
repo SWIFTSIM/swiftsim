@@ -133,6 +133,11 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
         p->diffusion_data.shear_tensor[k][2] = 0.0f;
     }
     
+    /* Getting ready for diffusion rate calculation in <FORCE LOOP> */
+    for (int elem = 0; elem < chemistry_element_count; ++elem){
+        p->diffusion_data.diffusion_rate[elem] = 0.0f;
+    }
+    
 }
 
 /**

@@ -47,9 +47,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   float wi, dwi_dx;
   float wj, dwj_dx;
 
-  /* Get the masses. */
-  float mj = pj->mass;
-  float mi = pi->mass;
+  /* Get the masses, I use hydro_get function because in --with-hydro=gizmo */
+  /* option the mass is not part of the particle data.                      */
+  float mj = hydro_get_mass(pj);
+  float mi = hydro_get_mass(pi);
 
   /* Get r */
   const float r = sqrtf(r2);
@@ -106,7 +107,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
   float wi, dwi_dx;
 
   /* Get the masses. */
-  float mj = pj->mass;
+  float mj = hydro_get_mass(pj);
 
   /* Get r */
   const float r = sqrtf(r2);
@@ -148,77 +149,82 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
     
-    struct chemistry_part_data *chi = &pi->chemistry_data;
-    struct chemistry_part_data *chj = &pj->chemistry_data;
+    if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
     
-    /* Get mass */
-    float mj = pj->mass;
-    float mi = pi->mass;
-    float wi, wj, dwi_dx, dwj_dx;
-    
-    /* Get r */
-    float r = sqrtf(r2);
-    
-    /* part j */
-    /* Get the kernel for hj */
-    float hj_inv = 1.0f / hj;
-    const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
-    const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
-    const float rho_j_inv = 1.0f / pj->rho;
-    
-    /* Compute the kernel function for pj */
-    const float xj = r * hj_inv;
-    kernel_deval(xj, &wj, &dwj_dx);
-    
-    /* part i */
-    /* Get the kernel for hi */
-    float hi_inv = 1.0f / hi;
-    const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
-    const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
-    const float rho_i_inv = 1.0f / pi->rho;
-    
-    /* Compute the kernel function for pi */
-    const float xi = r * hi_inv;
-    kernel_deval(xi, &wi, &dwi_dx);
-    
-    float dw_r = 0.5f * (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) / r;
-    float mj_dw_r = mj * dw_r;
-    
-    /* Compute K_ij coefficient (see Correa et al., in prep.) */
-    float K_ij;
-    K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
-    K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
-    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-    float K_ji = K_ij * mi / mj;
-    
-    /* Manage time interval of particles i & j to be the smallest */
-    double dt;
-    if (with_cosmology) {
-        const integertime_t ti_step = get_integer_timestep(pi->time_bin);
-        const integertime_t ti_begin =
-        get_integer_time_begin(t_current - 1, pi->time_bin);
-        dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
-    } else {
-        dt = get_timestep(pi->time_bin, time_base);
+        struct chemistry_part_data *chi = &pi->chemistry_data;
+        struct chemistry_part_data *chj = &pj->chemistry_data;
+        
+        /* Get mass */
+        float mj = hydro_get_mass(pj);
+        float mi = hydro_get_mass(pi);
+        float wi, wj, dwi_dx, dwj_dx;
+        
+        /* Get r */
+        float r = sqrtf(r2);
+        
+        /* part j */
+        /* Get the kernel for hj */
+        float hj_inv = 1.0f / hj;
+        const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
+        const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
+        const float rho_j_inv = 1.0f / pj->rho;
+        
+        /* Compute the kernel function for pj */
+        const float xj = r * hj_inv;
+        kernel_deval(xj, &wj, &dwj_dx);
+        
+        /* part i */
+        /* Get the kernel for hi */
+        float hi_inv = 1.0f / hi;
+        const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+        const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
+        const float rho_i_inv = 1.0f / pi->rho;
+        
+        /* Compute the kernel function for pi */
+        const float xi = r * hi_inv;
+        kernel_deval(xi, &wi, &dwi_dx);
+        
+        float dw_r = 0.5f * (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) / r;
+        float mj_dw_r = mj * dw_r;
+        
+        /* Compute K_ij coefficient (see Correa et al., in prep.) */
+        float K_ij;
+        K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
+        K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
+        K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+        float K_ji = K_ij * mi / mj;
+        
+        /* Manage time interval of particles i & j to be the smallest */
+        double dt;
+        if (with_cosmology) {
+            const integertime_t ti_step = get_integer_timestep(pi->time_bin);
+            const integertime_t ti_begin =
+            get_integer_time_begin(t_current - 1, pi->time_bin);
+            dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
+        } else {
+            dt = get_timestep(pi->time_bin, time_base);
+        }
+        /* Same for particle j */
+        double dt_j;
+        if (with_cosmology) {
+            const integertime_t tj_step = get_integer_timestep(pj->time_bin);
+            const integertime_t tj_begin =
+            get_integer_time_begin(t_current - 1, pj->time_bin);
+            dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
+        } else {
+            dt_j = get_timestep(pj->time_bin, time_base);
+        }
+        if (dt_j < dt) dt = dt_j;
+        
+        /* Compute contribution to the metal abundance */
+        for (int i = 0; i < chemistry_element_count; i++) {
+            di->dmetal_mass_fraction[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) * dt;
+            dj->dmetal_mass_fraction[i] += K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]) * dt;
+            
+            di->diffusion_rate[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
+            dj->diffusion_rate[i] += K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]);
+        }
     }
-    /* Same for particle j */
-    double dt_j;
-    if (with_cosmology) {
-        const integertime_t tj_step = get_integer_timestep(pj->time_bin);
-        const integertime_t tj_begin =
-        get_integer_time_begin(t_current - 1, pj->time_bin);
-        dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
-    } else {
-        dt_j = get_timestep(pj->time_bin, time_base);
-    }
-    if (dt_j < dt) dt = dt_j;
-    
-    /* Compute contribution to the metal abundance */
-    for (int i = 0; i < chemistry_element_count; i++) {
-        di->dmetal_mass_fraction[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) * dt;
-        dj->dmetal_mass_fraction[i] += K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]) * dt;
-    }
-    
 }
 
 
@@ -242,74 +248,77 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
     
-    struct chemistry_part_data *chi = &pi->chemistry_data;
-    struct chemistry_part_data *chj = &pj->chemistry_data;
+    if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
     
-    /* Get mass */
-    float mj = pj->mass;
-    float wi, wj, dwi_dx, dwj_dx;
-    
-    /* Get r */
-    float r = sqrtf(r2);
-    
-    /* part j */
-    /* Get the kernel for hj */
-    float hj_inv = 1.0f / hj;
-    const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
-    const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
-    const float rho_j_inv = 1.0f / pj->rho;
-    
-    /* Compute the kernel function for pj */
-    const float xj = r * hj_inv;
-    kernel_deval(xj, &wj, &dwj_dx);
-    
-    /* part i */
-    /* Get the kernel for hi */
-    float hi_inv = 1.0f / hi;
-    const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
-    const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
-    const float rho_i_inv = 1.0f / pi->rho;
-    
-    /* Compute the kernel function for pi */
-    const float xi = r * hi_inv;
-    kernel_deval(xi, &wi, &dwi_dx);
-    
-    float dw_r = 0.5f * (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) / r;
-    float mj_dw_r = mj * dw_r;
-    
-    /* Compute K_ij coefficient (see Correa et al., in prep.) */
-    float K_ij;
-    K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
-    K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
-    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-    
-    /* Manage time interval of particles i & j to be the smallest */
-    double dt;
-    if (with_cosmology) {
-        const integertime_t ti_step = get_integer_timestep(pi->time_bin);
-        const integertime_t ti_begin =
-        get_integer_time_begin(t_current - 1, pi->time_bin);
-        dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
-    } else {
-        dt = get_timestep(pi->time_bin, time_base);
+        struct chemistry_part_data *chi = &pi->chemistry_data;
+        struct chemistry_part_data *chj = &pj->chemistry_data;
+        
+        /* Get mass */
+        float mj = hydro_get_mass(pj);
+        float wi, wj, dwi_dx, dwj_dx;
+        
+        /* Get r */
+        float r = sqrtf(r2);
+        
+        /* part j */
+        /* Get the kernel for hj */
+        float hj_inv = 1.0f / hj;
+        const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
+        const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
+        const float rho_j_inv = 1.0f / pj->rho;
+        
+        /* Compute the kernel function for pj */
+        const float xj = r * hj_inv;
+        kernel_deval(xj, &wj, &dwj_dx);
+        
+        /* part i */
+        /* Get the kernel for hi */
+        float hi_inv = 1.0f / hi;
+        const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+        const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
+        const float rho_i_inv = 1.0f / pi->rho;
+        
+        /* Compute the kernel function for pi */
+        const float xi = r * hi_inv;
+        kernel_deval(xi, &wi, &dwi_dx);
+        
+        float dw_r = 0.5f * (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) / r;
+        float mj_dw_r = mj * dw_r;
+        
+        /* Compute K_ij coefficient (see Correa et al., in prep.) */
+        float K_ij;
+        K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
+        K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
+        K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+        
+        /* Manage time interval of particles i & j to be the smallest */
+        double dt;
+        if (with_cosmology) {
+            const integertime_t ti_step = get_integer_timestep(pi->time_bin);
+            const integertime_t ti_begin =
+            get_integer_time_begin(t_current - 1, pi->time_bin);
+            dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
+        } else {
+            dt = get_timestep(pi->time_bin, time_base);
+        }
+        /* Same for particle j */
+        double dt_j;
+        if (with_cosmology) {
+            const integertime_t tj_step = get_integer_timestep(pj->time_bin);
+            const integertime_t tj_begin =
+            get_integer_time_begin(t_current - 1, pj->time_bin);
+            dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
+        } else {
+            dt_j = get_timestep(pj->time_bin, time_base);
+        }
+        if (dt_j < dt) dt = dt_j;
+        
+        /* Compute contribution to the metal abundance */
+        for (int i = 0; i < chemistry_element_count; i++) {
+            di->dmetal_mass_fraction[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) * dt;            
+            di->diffusion_rate[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
+        }
     }
-    /* Same for particle j */
-    double dt_j;
-    if (with_cosmology) {
-        const integertime_t tj_step = get_integer_timestep(pj->time_bin);
-        const integertime_t tj_begin =
-        get_integer_time_begin(t_current - 1, pj->time_bin);
-        dt_j = cosmology_get_delta_time(cosmo, tj_begin, tj_begin + tj_step);
-    } else {
-        dt_j = get_timestep(pj->time_bin, time_base);
-    }
-    if (dt_j < dt) dt = dt_j;
-    
-    /* Compute contribution to the metal abundance */
-    for (int i = 0; i < chemistry_element_count; i++) {
-        di->dmetal_mass_fraction[i] += K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) * dt;
-    }
-    
 }
 
 #endif /* SWIFT_COLIBRE_CHEMISTRY_IACT_H */
