@@ -25,7 +25,7 @@
 /* Some standard headers. */
 #include <math.h>
 
-#ifndef __GNUC__
+/*#ifndef __GNUC__*/
 
 /* Local headers. */
 #include "inline.h"
@@ -58,6 +58,6 @@ __attribute__((always_inline, const)) INLINE static float exp10f(
   return expf(x * (float)M_LN10);
 }
 
-#endif /* __GNUC__ */
+/*#endif*/ /* __GNUC__ */
 
 #endif /* SWIFT_EXP10_H */

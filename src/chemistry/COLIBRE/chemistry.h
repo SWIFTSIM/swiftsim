@@ -65,7 +65,10 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     struct diffusion_part_data* dp = &p->diffusion_data;
 
     dp->diffusion_coefficient = 0.0f;
-    dp->diffusion_rate = 0.0f;
+    
+    for (int elem = 0; elem < chemistry_element_count; ++elem){
+        dp->diffusion_rate[elem] = 0.0f;
+    }
     
     for (int k = 0; k < 3; k++) {
         dp->shear_tensor[0][k] = 0.0f;
@@ -83,7 +86,8 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
  */
 
 __attribute__((always_inline)) INLINE static void chemistry_end_density(
-    struct part* restrict p, const struct cosmology* cosmo) {
+     struct part* restrict p, const struct chemistry_global_data* cd,
+     const struct cosmology* cosmo) {
 
     int k;
     /* Some smoothing length multiples. */
@@ -155,7 +159,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  const struct cosmology* cosmo) {
 
   /* Just make all the smoothed fields default to the un-smoothed values */
-  struct chemistry_part_data* cpd = &p->chemistry_data;
+  //struct chemistry_part_data* cpd = &p->chemistry_data;
   // CC: Not sure what to do here
 }
 
@@ -240,7 +244,7 @@ static INLINE void chemistry_print_backend(
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p) {
+__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {
     
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];

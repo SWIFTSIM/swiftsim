@@ -138,6 +138,6 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p) {}
+__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {}
 
 #endif /* SWIFT_CHEMISTRY_NONE_H */

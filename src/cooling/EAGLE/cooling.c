@@ -539,7 +539,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
       Helium_reion_heat_cgs / (dt_cgs * ratefact_cgs);
 
   /* Let's compute the internal energy at the end of the step */
-  double u_final_cgs;
+  double u_final_cgs = 0.0;
 
   /* First try an explicit integration (note we ignore the derivative) */
   const double LambdaNet_cgs =

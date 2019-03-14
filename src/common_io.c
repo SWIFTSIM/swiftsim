@@ -1425,7 +1425,6 @@ void io_check_output_fields(const struct swift_params* params,
       case swift_type_gas:
         hydro_write_particles(&p, &xp, list, &num_fields);
         num_fields += chemistry_write_particles(&p, list + num_fields);
-        num_fields += diffusion_write_particles(&p, list + num_fields);
         break;
 
       case swift_type_dark_matter:
@@ -1512,7 +1511,6 @@ void io_write_output_field_parameter(const char* filename) {
       case swift_type_gas:
         hydro_write_particles(NULL, NULL, list, &num_fields);
         num_fields += chemistry_write_particles(NULL, list + num_fields);
-        num_fields += diffusion_write_particles(NULL, list + num_fields);
         break;
 
       case swift_type_dark_matter:

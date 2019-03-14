@@ -44,8 +44,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
 
-  float wi, dwi_dx;
-  float wj, dwj_dx;
+  struct diffusion_part_data *di = &pi->diffusion_data;
+  struct diffusion_part_data *dj = &pj->diffusion_data;
+
+  float dwi_dx, dwj_dx;
 
   /* Get the masses, I use hydro_get function because in --with-hydro=gizmo */
   /* option the mass is not part of the particle data.                      */
@@ -57,14 +59,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
 
   /* Compute the kernel function for pi */
   const float ui = r / hi;
-  kernel_eval(ui, &wi, &dwi_dx);
+  kernel_eval(ui, &dwi_dx);
 
   /* Compute the kernel function for pj */
   const float uj = r / hj;
-  kernel_eval(uj, &wj, &dwj_dx);
-    
-  struct diffusion_part_data *di = &pi->diffusion_data;
-  struct diffusion_part_data *dj = &pj->diffusion_data;
+  kernel_eval(uj, &dwj_dx);
     
   float dwj_r = dwj_dx / r;
   float mi_dwj_r = mi * dwj_r;
@@ -104,7 +103,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
     
-  float wi, dwi_dx;
+  struct diffusion_part_data *di = &pi->diffusion_data;
+  float dwi_dx;
 
   /* Get the masses. */
   float mj = hydro_get_mass(pj);
@@ -114,7 +114,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
 
   /* Compute the kernel function for pi */
   const float ui = r / hi;
-  kernel_eval(ui, &wi, &dwi_dx);
+  kernel_eval(ui, &dwi_dx);
     
   /* Compute shear tensor */
    float dwi_r = dwi_dx / r;
