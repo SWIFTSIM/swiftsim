@@ -694,11 +694,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Calculate initial value of alpha dt before bounding */
   /* alpha_diff_dt is cosmology-less */
   /* Evolution term: following Schaller+ 2015 */
-  float alpha_diff_dt = 
+  float alpha_diff_dt =
       hydro_props->diffusion.beta * p->h * p->diffusion.laplace_u / sqrt_u;
   /* Decay term: not documented in Schaller+ 2015 but was present
    * in the original EAGLE code and in Schaye+ 2015 */
-  alpha_diff_dt -= (p->diffusion.alpha - hydro_props->diffusion.alpha_min) / tau;
+  alpha_diff_dt -=
+      (p->diffusion.alpha - hydro_props->diffusion.alpha_min) / tau;
 
   float new_diffusion_alpha = p->diffusion.alpha;
   new_diffusion_alpha += alpha_diff_dt * dt_alpha;
