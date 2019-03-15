@@ -192,6 +192,27 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     }
   }
     
+  /* I will add a modification to the initial set-up until enrichment is ON */
+  /* Let's say metal rich core of solar metallicity, and outskirts of a */
+  /* factor of 1000 lower metallicity */
+    float a = 1.0f/1000.0f;
+    float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
+    
+    float r2 = (p->x[0]-2282.34) * (p->x[0]-2282.34);
+    r2 += (p->x[1]-2282.34) * (p->x[1]-2282.34);
+    if (r2 > 142.57){
+        for (int elem = 0; elem < 2; ++elem){
+            p->chemistry_data.metal_mass_fraction[elem] *= b;
+            p->diffusion_data.dmetal_mass_fraction[elem] *= b;
+        }
+        p->chemistry_data.metal_mass_fraction_total *= a;
+        
+        for (int elem = 2; elem < chemistry_element_count; ++elem){
+            p->chemistry_data.metal_mass_fraction[elem] *= a;
+            p->diffusion_data.dmetal_mass_fraction[elem] *= a;
+        }
+    }
+    
   chemistry_init_part(p, data);
 }
 
