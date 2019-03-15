@@ -30,33 +30,26 @@
 #include "part.h"
 #include "units.h"
 
-void write_index_single(struct engine* e, const char* baseName,
-                        const struct unit_system* internal_units,
-                        const struct unit_system* snapshot_units);
+void logger_write_index_file(struct logger *log, struct engine* e);
 
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
  * @param parts The particle array.
- * @param list The list of i/o properties to write.
- * @param num_fields The number of i/o fields to write.
+ * @param xparts The extra particle array.
+ * @param N number of particles.
+ * @param f File to use.
  *
  * In this version, we only want the ids and the offset.
  */
 __attribute__((always_inline)) INLINE static void hydro_write_index(
-    const struct part* parts, const struct xpart* xparts, struct io_props* list,
-    int* num_fields) {
+    const struct part* parts, const struct xpart* xparts,
+    size_t N, FILE *f) {
 
-  *num_fields = 2;
-
-  /* List what we want to write */
-  list[0] =
-      io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
-                           parts, id, "will be erased");
-
-  list[1] =
-      io_make_output_field("Offset", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
-                           xparts, logger_data.last_offset, "will be erased");
+  for(size_t i = 0; i < N; i++) {
+    fprintf(f, "%lli %zi\n", parts[i].id,
+	    xparts[i].logger_data.last_offset);
+  }
 }
 #endif
 

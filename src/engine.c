@@ -4742,8 +4742,7 @@ void engine_dump_index(struct engine *e) {
   }
 
   /* Dump... */
-  write_index_single(e, e->logger->base_name, e->internal_units,
-                     e->snapshot_units);
+  logger_write_index_file(e->logger, e);
 
   /* Flag that we dumped a snapshot */
   e->step_props |= engine_step_prop_logger_index;
