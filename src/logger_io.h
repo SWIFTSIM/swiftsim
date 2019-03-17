@@ -30,7 +30,34 @@
 #include "part.h"
 #include "units.h"
 
+/* Overwrite a few HDF5 functions in order to avoid code duplication */
+#define hid_t FILE *
+#define io_write_attribute_s(file, params, value) {		\
+    fprintf(file, "    %s: %s\n", params, value);		\
+  }
+#define io_write_attribute_d(file, params, value) {		\
+    fprintf(file, "    %s: %g\n", params, value);		\
+  }
+#define io_write_attribute_f(file, params, value) {		\
+    fprintf(file, "    %s: %g\n", params, value);		\
+  }
+#define io_write_attribute_i(file, params, value) {		\
+    fprintf(file, "    %s: %i\n", params, value);		\
+  }
+#define io_write_attribute_l(file, params, value) {		\
+    fprintf(file, "    %s: %li\n", params, value);		\
+  }
+
+#define io_write_attribute(file, params, type, value, dim) {	\
+    fprintf(file, "    %s: [", params);				\
+    for(int i = 0; i < dim-1; i++) {				\
+      fprintf(file, type ", ", value[i]);			\
+    }								\
+    fprintf(file, type "]\n", value[dim-1]);			\
+}
+
 void logger_write_index_file(struct logger *log, struct engine* e);
+void logger_write_description(struct logger *log, struct engine* e);
 
 /**
  * @brief Specifies which particle fields to write to a dataset

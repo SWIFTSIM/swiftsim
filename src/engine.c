@@ -3490,6 +3490,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   /* Make sure that we have enough space in the particle logger file
    * to store the particles in current time step. */
   logger_ensure_size(e->logger, e->total_nr_parts, e->total_nr_gparts, 0);
+  logger_write_description(e->logger, e);
 #endif
 
   /* Now, launch the calculation */
