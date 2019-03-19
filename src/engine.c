@@ -62,6 +62,7 @@
 #include "cosmology.h"
 #include "cycle.h"
 #include "debug.h"
+#include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "error.h"
 #include "gravity.h"
@@ -83,6 +84,7 @@
 #include "serial_io.h"
 #include "single_io.h"
 #include "sort_part.h"
+#include "star_formation.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"
@@ -1902,6 +1904,35 @@ void engine_print_task_counts(const struct engine *e) {
   const int nr_tasks = sched->nr_tasks;
   const struct task *const tasks = sched->tasks;
 
+  /* Global tasks and cells when using MPI. */
+#ifdef WITH_MPI
+  if (e->nodeID == 0 && e->total_nr_tasks > 0)
+    printf(
+        "[%04i] %s engine_print_task_counts: System total: %lld,"
+        " no. cells: %lld\n",
+        e->nodeID, clocks_get_timesincestart(), e->total_nr_tasks,
+        e->total_nr_cells);
+  fflush(stdout);
+#endif
+
+  /* Report value that can be used to estimate the task_per_cells parameter. */
+  float tasks_per_cell = (float)nr_tasks / (float)e->s->tot_cells;
+
+#ifdef WITH_MPI
+  message("Total = %d (per cell = %.2f)", nr_tasks, tasks_per_cell);
+
+  /* And the system maximum on rank 0, only after first step, increase by our
+   * margin to allow for some variation in repartitioning. */
+  if (e->nodeID == 0 && e->total_nr_tasks > 0) {
+    message("Total = %d (maximum per cell = %.2f)", nr_tasks,
+            e->tasks_per_cell_max * engine_tasks_per_cell_margin);
+  }
+
+#else
+  message("Total = %d (per cell = %.2f)", nr_tasks, tasks_per_cell);
+#endif
+  fflush(stdout);
+
   /* Count and print the number of each task type. */
   int counts[task_type_count + 1];
   for (int k = 0; k <= task_type_count; k++) counts[k] = 0;
@@ -1911,8 +1942,7 @@ void engine_print_task_counts(const struct engine *e) {
     else
       counts[(int)tasks[k].type] += 1;
   }
-  message("Total = %d  (per cell = %d)", nr_tasks,
-          (int)ceil((double)nr_tasks / e->s->tot_cells));
+
 #ifdef WITH_MPI
   printf("[%04i] %s engine_print_task_counts: task counts are [ %s=%i",
          e->nodeID, clocks_get_timesincestart(), taskID_names[0], counts[0]);
@@ -1937,7 +1967,7 @@ void engine_print_task_counts(const struct engine *e) {
  * @brief if necessary, estimate the number of tasks required given
  *        the current tasks in use and the numbers of cells.
  *
- * If e->tasks_per_cell is set greater than 0 then that value is used
+ * If e->tasks_per_cell is set greater than 0.0 then that value is used
  * as the estimate of the average number of tasks per cell,
  * otherwise we attempt an estimate.
  *
@@ -1947,8 +1977,13 @@ void engine_print_task_counts(const struct engine *e) {
  */
 int engine_estimate_nr_tasks(const struct engine *e) {
 
-  int tasks_per_cell = e->tasks_per_cell;
-  if (tasks_per_cell > 0) return e->s->tot_cells * tasks_per_cell;
+  float tasks_per_cell = e->tasks_per_cell;
+  if (tasks_per_cell > 0.0f) {
+    if (e->verbose)
+      message("tasks per cell given as: %.2f, so maximum tasks: %d",
+              e->tasks_per_cell, (int)(e->s->tot_cells * tasks_per_cell));
+    return (int)(e->s->tot_cells * tasks_per_cell);
+  }
 
   /* Our guess differs depending on the types of tasks we are using, but we
    * basically use a formula <n1>*ntopcells + <n2>*(totcells - ntopcells).
@@ -2053,15 +2088,15 @@ int engine_estimate_nr_tasks(const struct engine *e) {
   int ncells = e->s->tot_cells;
 #endif
 
-  double ntasks = n1 * ntop + n2 * (ncells - ntop);
+  float ntasks = n1 * ntop + n2 * (ncells - ntop);
   if (ncells > 0) tasks_per_cell = ceil(ntasks / ncells);
 
-  if (tasks_per_cell < 1.0) tasks_per_cell = 1.0;
+  if (tasks_per_cell < 1.0f) tasks_per_cell = 1.0f;
   if (e->verbose)
-    message("tasks per cell estimated as: %d, maximum tasks: %d",
-            tasks_per_cell, ncells * tasks_per_cell);
+    message("tasks per cell estimated as: %.2f, maximum tasks: %d",
+            tasks_per_cell, (int)(ncells * tasks_per_cell));
 
-  return ncells * tasks_per_cell;
+  return (int)(ncells * tasks_per_cell);
 }
 
 /**
@@ -2083,6 +2118,23 @@ void engine_rebuild(struct engine *e, int repartitioned,
 
   /* Re-build the space. */
   space_rebuild(e->s, repartitioned, e->verbose);
+
+  /* Report the number of cells and memory */
+  if (e->verbose)
+    message(
+        "Nr. of top-level cells: %d Nr. of local cells: %d memory use: %zd MB.",
+        e->s->nr_cells, e->s->tot_cells,
+        (e->s->nr_cells + e->s->tot_cells) * sizeof(struct cell) /
+            (1024 * 1024));
+
+  /* Report the number of multipoles and memory */
+  if (e->verbose && (e->policy & engine_policy_self_gravity))
+    message(
+        "Nr. of top-level mpoles: %d Nr. of local mpoles: %d memory use: %zd "
+        "MB.",
+        e->s->nr_cells, e->s->tot_cells,
+        (e->s->nr_cells + e->s->tot_cells) * sizeof(struct gravity_tensors) /
+            (1024 * 1024));
 
   const ticks tic2 = getticks();
 
@@ -2494,7 +2546,9 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
       &e->collect_group1, data.updated, data.g_updated, data.s_updated,
       data.inhibited, data.g_inhibited, data.s_inhibited, data.ti_hydro_end_min,
       data.ti_hydro_end_max, data.ti_hydro_beg_max, data.ti_gravity_end_min,
-      data.ti_gravity_end_max, data.ti_gravity_beg_max, e->forcerebuild);
+      data.ti_gravity_end_max, data.ti_gravity_beg_max, e->forcerebuild,
+      e->s->tot_cells, e->sched.nr_tasks,
+      (float)e->sched.nr_tasks / (float)e->s->tot_cells);
 
 /* Aggregate collective data from the different nodes for this step. */
 #ifdef WITH_MPI
@@ -2656,15 +2710,21 @@ void engine_skip_force_and_kick(struct engine *e) {
 
     /* Skip everything that updates the particles */
     if (t->type == task_type_drift_part || t->type == task_type_drift_gpart ||
-        t->type == task_type_kick1 || t->type == task_type_kick2 ||
-        t->type == task_type_timestep ||
+        t->type == task_type_drift_spart || t->type == task_type_kick1 ||
+        t->type == task_type_kick2 || t->type == task_type_timestep ||
         t->type == task_type_timestep_limiter ||
         t->subtype == task_subtype_force ||
         t->subtype == task_subtype_limiter || t->subtype == task_subtype_grav ||
-        t->type == task_type_end_force ||
+        t->type == task_type_end_hydro_force ||
+        t->type == task_type_end_grav_force ||
         t->type == task_type_grav_long_range || t->type == task_type_grav_mm ||
-        t->type == task_type_grav_down || t->type == task_type_cooling ||
-        t->type == task_type_extra_ghost || t->subtype == task_subtype_gradient)
+        t->type == task_type_grav_down || t->type == task_type_grav_down_in ||
+        t->type == task_type_drift_gpart_out || t->type == task_type_cooling ||
+        t->type == task_type_stars_in || t->type == task_type_stars_out ||
+        t->type == task_type_star_formation ||
+        t->type == task_type_extra_ghost ||
+        t->subtype == task_subtype_gradient ||
+        t->subtype == task_subtype_stars_feedback)
       t->skip = 1;
   }
 
@@ -2688,7 +2748,8 @@ void engine_skip_drift(struct engine *e) {
     struct task *t = &tasks[i];
 
     /* Skip everything that moves the particles */
-    if (t->type == task_type_drift_part || t->type == task_type_drift_gpart)
+    if (t->type == task_type_drift_part || t->type == task_type_drift_gpart ||
+        t->type == task_type_drift_spart)
       t->skip = 1;
   }
 
@@ -2702,7 +2763,6 @@ void engine_skip_drift(struct engine *e) {
  * @param e The #engine.
  */
 void engine_launch(struct engine *e) {
-
   const ticks tic = getticks();
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -2772,7 +2832,12 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
+
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
 
   /* Start by setting the particles in a good state */
   if (e->nodeID == 0) message("Setting particles to a valid state...");
@@ -2797,7 +2862,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   /* Update the cooling function */
   if ((e->policy & engine_policy_cooling) ||
       (e->policy & engine_policy_temperature))
-    cooling_update(e->cosmology, e->cooling_func);
+    cooling_update(e->cosmology, e->cooling_func, e->s);
 
 #ifdef WITH_LOGGER
   /* Mark the first time step in the particle logger file. */
@@ -2846,8 +2911,8 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   /* Now time to get ready for the first time-step */
   if (e->nodeID == 0) message("Running initial fake time-step.");
 
-  /* Prepare all the tasks again for a new round */
-  engine_marktasks(e);
+  /* Construct all cells again for a new round (need to update h_max) */
+  engine_rebuild(e, 0, 0);
 
   /* No drift this time */
   engine_skip_drift(e);
@@ -3016,7 +3081,9 @@ void engine_step(struct engine *e) {
         e->step, e->time, e->cosmology->a, e->cosmology->z, e->time_step,
         e->min_active_bin, e->max_active_bin, e->updates, e->g_updates,
         e->s_updates, e->wallclock_time, e->step_props);
+#ifdef SWIFT_DEBUG_CHECKS
     fflush(stdout);
+#endif
 
     if (!e->restarting)
       fprintf(
@@ -3026,7 +3093,9 @@ void engine_step(struct engine *e) {
           e->step, e->time, e->cosmology->a, e->cosmology->z, e->time_step,
           e->min_active_bin, e->max_active_bin, e->updates, e->g_updates,
           e->s_updates, e->wallclock_time, e->step_props);
+#ifdef SWIFT_DEBUG_CHECKS
     fflush(e->file_timesteps);
+#endif
   }
 
   /* We need some cells to exist but not the whole task stuff. */
@@ -3058,7 +3127,7 @@ void engine_step(struct engine *e) {
   /* Update the cooling function */
   if ((e->policy & engine_policy_cooling) ||
       (e->policy & engine_policy_temperature))
-    cooling_update(e->cosmology, e->cooling_func);
+    cooling_update(e->cosmology, e->cooling_func, e->s);
 
   /*****************************************************/
   /* OK, we now know what the next end of time-step is */
@@ -3066,7 +3135,12 @@ void engine_step(struct engine *e) {
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
-    gravity_update(e->gravity_properties, e->cosmology);
+    gravity_props_update(e->gravity_properties, e->cosmology);
+
+  /* Udpate the hydro properties */
+  if (e->policy & engine_policy_hydro)
+    hydro_props_update(e->hydro_properties, e->gravity_properties,
+                       e->cosmology);
 
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
@@ -3881,6 +3955,78 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
 #endif
 }
 
+#ifdef DEBUG_INTERACTIONS_STARS
+/**
+ * @brief Exchange the feedback counters between stars
+ * @param e The #engine.
+ */
+void engine_collect_stars_counter(struct engine *e) {
+
+#ifdef WITH_MPI
+  if (e->total_nr_sparts > 1e5) {
+    message("WARNING: too many sparts, skipping exchange of counters");
+    return;
+  }
+
+  /* Get number of sparticles for each rank */
+  size_t *n_sparts = (size_t *)malloc(e->nr_nodes * sizeof(size_t));
+
+  int err = MPI_Allgather(&e->s->nr_sparts_foreign, 1, MPI_UNSIGNED_LONG,
+                          n_sparts, 1, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+  if (err != MPI_SUCCESS) error("Communication failed");
+
+  /* Compute derivated quantities */
+  int total = 0;
+  int *n_sparts_int = (int *)malloc(e->nr_nodes * sizeof(int));
+  int *displs = (int *)malloc(e->nr_nodes * sizeof(int));
+  for (int i = 0; i < e->nr_nodes; i++) {
+    displs[i] = total;
+    total += n_sparts[i];
+    n_sparts_int[i] = n_sparts[i];
+  }
+
+  /* Get all sparticles */
+  struct spart *sparts = (struct spart *)malloc(total * sizeof(struct spart));
+  err = MPI_Allgatherv(e->s->sparts_foreign, e->s->nr_sparts_foreign,
+                       spart_mpi_type, sparts, n_sparts_int, displs,
+                       spart_mpi_type, MPI_COMM_WORLD);
+  if (err != MPI_SUCCESS) error("Communication failed");
+
+  /* Reset counters */
+  for (size_t i = 0; i < e->s->nr_sparts_foreign; i++) {
+    e->s->sparts_foreign[i].num_ngb_force = 0;
+  }
+
+  /* Update counters */
+  struct spart *local_sparts = e->s->sparts;
+  for (size_t i = 0; i < e->s->nr_sparts; i++) {
+    const long long id_i = local_sparts[i].id;
+
+    for (int j = 0; j < total; j++) {
+      const long long id_j = sparts[j].id;
+
+      if (id_j == id_i) {
+        if (j >= displs[engine_rank] &&
+            j < displs[engine_rank] + n_sparts_int[engine_rank]) {
+          error(
+              "Found a local spart in foreign cell ID=%lli: j=%i, displs=%i, "
+              "n_sparts=%i",
+              id_j, j, displs[engine_rank], n_sparts_int[engine_rank]);
+        }
+
+        local_sparts[i].num_ngb_force += sparts[j].num_ngb_force;
+      }
+    }
+  }
+
+  free(n_sparts);
+  free(n_sparts_in);
+  free(sparts);
+#endif
+}
+
+#endif
+
 /**
  * @brief Writes a snapshot with the current state of the engine
  *
@@ -3915,6 +4061,10 @@ void engine_dump_snapshot(struct engine *e) {
       message("Dumping snapshot at t=%e",
               e->ti_current * e->time_base + e->time_begin);
   }
+#endif
+
+#ifdef DEBUG_INTERACTIONS_STARS
+  engine_collect_stars_counter(e);
 #endif
 
 /* Dump... */
@@ -4055,11 +4205,13 @@ void engine_unpin(void) {
  * @param physical_constants The #phys_const used for this run.
  * @param cosmo The #cosmology used for this run.
  * @param hydro The #hydro_props used for this run.
+ * @param entropy_floor The #entropy_floor_properties for this run.
  * @param gravity The #gravity_props used for this run.
  * @param stars The #stars_props used for this run.
  * @param mesh The #pm_mesh used for the long-range periodic forces.
  * @param potential The properties of the external potential.
  * @param cooling_func The properties of the cooling function.
+ * @param starform The #star_formation model of this run.
  * @param chemistry The chemistry information.
  */
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
@@ -4067,11 +4219,13 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,
-                 struct cosmology *cosmo, const struct hydro_props *hydro,
+                 struct cosmology *cosmo, struct hydro_props *hydro,
+                 const struct entropy_floor_properties *entropy_floor,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  struct pm_mesh *mesh,
                  const struct external_potential *potential,
                  struct cooling_function_data *cooling_func,
+                 const struct star_formation *starform,
                  const struct chemistry_global_data *chemistry) {
 
   /* Clean-up everything */
@@ -4132,17 +4286,21 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->physical_constants = physical_constants;
   e->cosmology = cosmo;
   e->hydro_properties = hydro;
+  e->entropy_floor = entropy_floor;
   e->gravity_properties = gravity;
   e->stars_properties = stars;
   e->mesh = mesh;
   e->external_potential = potential;
   e->cooling_func = cooling_func;
+  e->star_formation = starform;
   e->chemistry = chemistry;
   e->parameter_file = params;
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
 #endif
+  e->total_nr_cells = 0;
+  e->total_nr_tasks = 0;
 
 #if defined(WITH_LOGGER)
   e->logger = (struct logger *)malloc(sizeof(struct logger));
@@ -4453,8 +4611,10 @@ void engine_config(int restart, struct engine *e, struct swift_params *params,
   engine_print_policy(e);
 
   /* Print information about the hydro scheme */
-  if (e->policy & engine_policy_hydro)
+  if (e->policy & engine_policy_hydro) {
     if (e->nodeID == 0) hydro_props_print(e->hydro_properties);
+    if (e->nodeID == 0) entropy_floor_print(e->entropy_floor);
+  }
 
   /* Print information about the gravity scheme */
   if (e->policy & engine_policy_self_gravity)
@@ -4673,8 +4833,10 @@ void engine_config(int restart, struct engine *e, struct swift_params *params,
    * On restart this number cannot be estimated (no cells yet), so we recover
    * from the end of the dumped run. Can be changed on restart. */
   e->tasks_per_cell =
-      parser_get_opt_param_int(params, "Scheduler:tasks_per_cell", 0);
-  int maxtasks = 0;
+      parser_get_opt_param_float(params, "Scheduler:tasks_per_cell", 0.0);
+  e->tasks_per_cell_max = 0.0f;
+
+  float maxtasks = 0;
   if (restart)
     maxtasks = e->restart_max_tasks;
   else
@@ -5248,11 +5410,13 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
 
   phys_const_struct_dump(e->physical_constants, stream);
   hydro_props_struct_dump(e->hydro_properties, stream);
+  entropy_floor_struct_dump(e->entropy_floor, stream);
   gravity_props_struct_dump(e->gravity_properties, stream);
   stars_props_struct_dump(e->stars_properties, stream);
   pm_mesh_struct_dump(e->mesh, stream);
   potential_struct_dump(e->external_potential, stream);
   cooling_struct_dump(e->cooling_func, stream);
+  starformation_struct_dump(e->star_formation, stream);
   chemistry_struct_dump(e->chemistry, stream);
   parser_struct_dump(e->parameter_file, stream);
   if (e->output_list_snapshots)
@@ -5319,6 +5483,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   hydro_props_struct_restore(hydro_properties, stream);
   e->hydro_properties = hydro_properties;
 
+  struct entropy_floor_properties *entropy_floor =
+      (struct entropy_floor_properties *)malloc(
+          sizeof(struct entropy_floor_properties));
+  entropy_floor_struct_restore(entropy_floor, stream);
+  e->entropy_floor = entropy_floor;
+
   struct gravity_props *gravity_properties =
       (struct gravity_props *)malloc(sizeof(struct gravity_props));
   gravity_props_struct_restore(gravity_properties, stream);
@@ -5343,6 +5513,11 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
           sizeof(struct cooling_function_data));
   cooling_struct_restore(cooling_func, stream, e->cosmology);
   e->cooling_func = cooling_func;
+
+  struct star_formation *star_formation =
+      (struct star_formation *)malloc(sizeof(struct star_formation));
+  starformation_struct_restore(star_formation, stream);
+  e->star_formation = star_formation;
 
   struct chemistry_global_data *chemistry =
       (struct chemistry_global_data *)malloc(

@@ -23,30 +23,31 @@
  * @file src/cooling/none/cooling.h
  * @brief Empty infrastructure for the cases without cooling function
  */
+#include "../config.h"
 
 /* Some standard headers. */
 #include <float.h>
 #include <math.h>
 
 /* Local includes. */
-#include "error.h"
+#include "cooling_struct.h"
+#include "cosmology.h"
+#include "entropy_floor.h"
 #include "hydro.h"
-#include "parser.h"
+#include "hydro_properties.h"
 #include "part.h"
-#include "physical_constants.h"
-#include "units.h"
 
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
  *
- * @param phys_const The physical constants in internal units.
- * @param us The internal system of units.
  * @param cosmo The current cosmological model.
  * @param cooling The #cooling_function_data used in the run.
+ * @param s The #space containing all the particles.
  */
 INLINE static void cooling_update(const struct cosmology* cosmo,
-                                  struct cooling_function_data* cooling) {
+                                  struct cooling_function_data* cooling,
+                                  struct space* s) {
   // Add content if required.
 }
 
@@ -70,6 +71,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct unit_system* restrict us,
     const struct cosmology* restrict cosmo,
     const struct hydro_props* hydro_props,
+    const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* restrict cooling,
     struct part* restrict p, struct xpart* restrict xp, const float dt,
     const float dt_therm) {}

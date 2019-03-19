@@ -9,6 +9,82 @@ This section of the documentation gives a brief description of the
 different components of the EAGLE sub-grid model. We mostly focus on
 the parameters and values output in the snapshots.
 
+.. _EAGLE_entropy_floors:
+
+Entropy floors
+~~~~~~~~~~~~~~
+
+The gas particles in the EAGLE model are prevented from cooling below a
+certain temperature. The temperature limit depends on the density of the
+particles. Two floors are used in conjonction. Both are implemented as
+polytropic "equations of states" :math:`P = P_c
+\left(\rho/\rho_c\right)^\gamma`, with the constants derived from the user
+input given in terms of temperature and Hydrogen number density.
+
+The first limit, labelled as ``Cool``, is typically used to prevent
+low-density high-metallicity particles to cool below the warm phase because
+of over-cooling induced by the absence of metal diffusion. This limit plays
+only a small role in practice. The second limit, labelled as ``Jeans``, is
+used to prevent the fragmentation of high-density gas into clumps that
+cannot be resolved by the coupled hydro+gravity solver. The two limits are
+sketched on the following figure. An additional over-density criterion is
+applied to prevent gas not collapsed into structures from being
+affected. This criterion demands that :math:`\rho > \Delta_{\rm floor}
+\Omega_b \rho_{\rm crit}`, with :math:`\Delta_{\rm floor}` specified by the
+user and :math:`\rho_{\rm crit}` the critical density at that redshift
+[#f1]_.
+
+.. figure:: EAGLE_entropy_floor.svg
+    :width: 400px
+    :align: center
+    :figclass: align-center
+    :alt: Phase-space diagram displaying the two entropy floors used
+	  in the EAGLE model.
+
+    Temperature-density plane with the two entropy floors used in the EAGLE
+    model indicated by the black lines. Gas particles are not allowed to be
+    below either of these two floors; they are hence forbidden to enter the
+    grey-shaded region. The floors are specified by the position in the
+    plane of the starting point of each line (black circle) and their slope
+    (dashed lines). The parameter names governing the behaviour of the
+    floors are indicated on the figure. Note that unlike what is shown on
+    the figure for clarity reasons, typical values for EAGLE runs place
+    both anchors at the same temperature.
+
+
+The model is governed by 4 parameters for each of the two
+limits. These are given in the ``EAGLEEntropyFloor`` section of the
+YAML file. The parameters are the Hydrogen number density (in
+:math:`cm^{-3}`) and temperature (in :math:`K`) of the anchor point of
+each floor as well as the power-law slope of each floor and the
+minimal over-density required to apply the limit. For a normal
+EAGLE run, that section of the parameter file reads:
+
+.. code:: YAML
+
+  EAGLEEntropyFloor:
+     Jeans_density_threshold_H_p_cm3: 0.1       # Physical density above which the EAGLE Jeans limiter entropy floor kicks in, expressed in Hydrogen atoms per cm^3.
+     Jeans_over_density_threshold:    10.       # Overdensity above which the EAGLE Jeans limiter entropy floor can kick in.
+     Jeans_temperature_norm_K:        8000      # Temperature of the EAGLE Jeans limiter entropy floor at the density threshold, expressed in Kelvin.
+     Jeans_gamma_effective:           1.3333333 # Slope of the EAGLE Jeans limiter entropy floor
+     Cool_density_threshold_H_p_cm3:  1e-5      # Physical density above which the EAGLE Cool limiter entropy floor kicks in, expressed in Hydrogen atoms per cm^3.
+     Cool_over_density_threshold:     10.       # Overdensity above which the EAGLE Cool limiter entropy floor can kick in.
+     Cool_temperature_norm_K:         8000      # Temperature of the EAGLE Cool limiter entropy floor at the density threshold, expressed in Kelvin.
+     Cool_gamma_effective:            1.        # Slope of the EAGLE Cool limiter entropy floor
+
+SWIFT will convert the temperature normalisations and Hydrogen number
+density thresholds into internal energies and densities respectively
+assuming a neutral gas with primoridal abundance pattern. This implies
+that the floor may not be exactly at the position given in the YAML
+file if the gas has different properties. This is especially the case
+for the temperature limit which will often be lower than the imposed
+floor by a factor :math:`\frac{\mu_{\rm neutral}}{\mu_{ionised}}
+\approx \frac{1.22}{0.59} \approx 2` due to the different ionisation
+states of the gas.
+
+Note that the model only makes sense if the ``Cool`` threshold is at a lower
+density than the ``Jeans`` threshold.
+
 .. _EAGLE_chemical_tracers:
 
 Chemical tracers
@@ -18,7 +94,7 @@ The gas particles in the EAGLE model carry metal abundance information in the
 form of metal mass fractions. We follow explicitly 9 of the 11 elements that
 `Wiersma et al. (2009)b <http://adsabs.harvard.edu/abs/2009MNRAS.399..574W>`_
 traced in their chemical enrichment model. These are: `H`, `He`, `C`, `N`, `O`,
-`Ne`, `Mg`, `Si` and `Fe` [#f1]_. We additionally follow the total metal mass fraction
+`Ne`, `Mg`, `Si` and `Fe` [#f2]_. We additionally follow the total metal mass fraction
 (i.e. absolute metallicity) `Z`. This is typically larger than the sum of the 7
 metals that are individually traced since this will also contain the
 contribution of all the elements that are not individually followed.  We note
@@ -204,7 +280,7 @@ these elements from the abundance of `Si`. More specifically, we assume that
 their abundance by mass relative to the table's solar abundance pattern is the
 same as the relative abundance of `Si` (i.e. :math:`[Ca/Si] = 0` and
 :math:`[S/Si] = 0`). Users can optionally modify the ratios used for `S` and
-`Ca`.
+`Ca`. Note that we use the *smoothed* abundances of elements for all calculations.
 
 Above the redshift of Hydrogen re-ionization we use the extra table containing
 net cooling rates for gas exposed to the CMB and a UV + X-ray background at
@@ -212,9 +288,13 @@ redshift nine truncated above 1 Rydberg. At the redshift or re-ionization, we
 additionally inject a fixed user-defined amount of energy per unit mass to all
 the gas particles.
 
-In addition to the tables we inject extra energy from Helium re-ionization using
-a Gaussian model with a user-defined redshift for the centre, width and total
-amount of energy injected per unit mass.
+In addition to the tables we inject extra energy from Helium II re-ionization
+using a Gaussian model with a user-defined redshift for the centre, width and
+total amount of energy injected per unit mass. Additional energy is also
+injected instantaneously for Hydrogen re-ionisation to all particles (active and
+inactive) to make sure the whole Universe reaches the expected temperature
+quickly (i.e not just via the interaction with the now much stronger UV
+background).
 
 For non-cosmological run, we use the :math:`z = 0` table and the interpolation
 along the redshift dimension then becomes a trivial operation.
@@ -250,7 +330,7 @@ they are listed for every gas particle:
 +---------------------+-------------------------------------+-----------+-------------------------------------+
 
 Note that if one is running without cooling switched on at runtime, the
-temperatures can be computed by passing the ``--temparature`` runtime flag (see
+temperatures can be computed by passing the ``--temperature`` runtime flag (see
 :ref:`cmdline-options`). Note that the tables then have to be available as in
 the case with cooling switched on.
 
@@ -265,9 +345,10 @@ implicit problem. A valid section of the YAML file looks like:
    EAGLECooling:
      dir_name:     /path/to/the/Wiersma/tables/directory # Absolute or relative path
      H_reion_z:            11.5      # Redhift of Hydrogen re-ionization
+     H_reion_ev_p_H:        2.0      # Energy injected in eV per Hydrogen atom for Hydrogen re-ionization.
      He_reion_z_centre:     3.5      # Centre of the Gaussian used for Helium re-ionization
      He_reion_z_sigma:      0.5      # Width of the Gaussian used for Helium re-ionization
-     He_reion_ev_p_H:       2.0      # Energy injected in eV per Hydrogen atom for Helium re-ionization.
+     He_reion_ev_p_H:       2.0      # Energy injected in eV per Hydrogen atom for Helium II re-ionization.
 
 And the optional parameters are:
 
@@ -336,9 +417,15 @@ Black-hole accretion
 AGN feedback
 ~~~~~~~~~~~~
 
-.. [#f1] `Wiersma et al. (2009)b
+.. [#f1] Recall that in a non-cosmological run the critical density is
+	 set to 0, effectively removing the over-density
+	 constraint of the floors.
+
+.. [#f2] `Wiersma et al. (2009)b
 	 <http://adsabs.harvard.edu/abs/2009MNRAS.399..574W>`_ originally also
 	 followed explicitly `Ca` and and `S`. They are omitted in the EAGLE
 	 model but, when needed, their abundance with respect to solar is
 	 assumed to be the same as the abundance of `Si` with respect to solar
 	 (See the section :ref:`EAGLE_cooling`)
+
+

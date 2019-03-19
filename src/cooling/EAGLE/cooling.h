@@ -26,20 +26,23 @@
 
 /* Local includes. */
 #include "cooling_struct.h"
-#include "cosmology.h"
-#include "hydro_properties.h"
-#include "part.h"
-#include "physical_constants.h"
-#include "units.h"
+
+struct part;
+struct xpart;
+struct cosmology;
+struct hydro_props;
+struct entropy_floor_properties;
+struct space;
 
 void cooling_update(const struct cosmology *cosmo,
-                    struct cooling_function_data *cooling);
+                    struct cooling_function_data *cooling, struct space *s);
 
-void cooling_cool_part(const struct phys_const *restrict phys_const,
-                       const struct unit_system *restrict us,
-                       const struct cosmology *restrict cosmo,
-                       const struct hydro_props *restrict hydro_properties,
-                       const struct cooling_function_data *restrict cooling,
+void cooling_cool_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct cosmology *cosmo,
+                       const struct hydro_props *hydro_properties,
+                       const struct entropy_floor_properties *floor_props,
+                       const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm);
 
@@ -68,13 +71,14 @@ float cooling_get_temperature(
 
 float cooling_get_radiated_energy(const struct xpart *restrict xp);
 
+void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
+                                   const struct cosmology *cosmo,
+                                   struct space *s);
+
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           struct cooling_function_data *cooling);
-
-void cooling_restore_tables(struct cooling_function_data *cooling,
-                            const struct cosmology *cosmo);
 
 void cooling_print_backend(const struct cooling_function_data *cooling);
 

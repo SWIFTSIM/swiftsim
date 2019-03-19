@@ -27,6 +27,13 @@
 /* Config parameters. */
 #include "../config.h"
 
+/* Local includes */
+#include "parser.h"
+#include "physical_constants.h"
+#include "restart.h"
+#include "space.h"
+#include "units.h"
+
 /* Import the right cooling definition */
 #if defined(COOLING_NONE)
 #include "./cooling/none/cooling.h"

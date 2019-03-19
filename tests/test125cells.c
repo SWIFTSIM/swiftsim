@@ -601,6 +601,8 @@ int main(int argc, char *argv[]) {
   hp.eta_neighbours = h;
   hp.h_tolerance = 1e0;
   hp.h_max = FLT_MAX;
+  hp.h_min = 0.f;
+  hp.h_min_ratio = 0.f;
   hp.max_smoothing_iterations = 10;
   hp.CFL_condition = 0.1;
 
@@ -807,7 +809,7 @@ int main(int argc, char *argv[]) {
     timings[26] += getticks() - self_tic;
 
     /* Finally, give a gentle kick */
-    runner_do_end_force(&runner, main_cell, 0);
+    runner_do_end_hydro_force(&runner, main_cell, 0);
     const ticks toc = getticks();
     time += toc - tic;
 
@@ -958,7 +960,7 @@ int main(int argc, char *argv[]) {
   self_all_force(&runner, main_cell);
 
   /* Finally, give a gentle kick */
-  runner_do_end_force(&runner, main_cell, 0);
+  runner_do_end_hydro_force(&runner, main_cell, 0);
   // runner_do_kick2(&runner, main_cell, 0);
 
   const ticks toc = getticks();
