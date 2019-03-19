@@ -82,7 +82,7 @@ int space_extra_gparts = space_extra_gparts_default;
 
 /*! Expected maximal number of strays received at a rebuild */
 int space_expected_max_nr_strays = space_expected_max_nr_strays_default;
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
 int last_cell_id;
 #endif
 
@@ -255,7 +255,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->grav.ti_end_max = -1;
     c->stars.ti_end_min = -1;
     c->stars.ti_end_max = -1;
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
     c->cellID = 0;
 #endif
     if (s->with_self_gravity)
@@ -560,7 +560,7 @@ void space_regrid(struct space *s, int verbose) {
           c->mpi.grav.send = NULL;
 #endif  // WITH_MPI
           if (s->with_self_gravity) c->grav.multipole = &s->multipoles_top[cid];
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
           c->cellID = -last_cell_id;
           last_cell_id++;
 #endif
@@ -1536,7 +1536,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
     c->grav.ti_old_multipole = ti_current;
     c->stars.ti_old_part = ti_current;
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
     c->cellID = -last_cell_id;
     last_cell_id++;
 #endif
@@ -2729,7 +2729,7 @@ void space_split_recursive(struct space *s, struct cell *c,
 #ifdef WITH_MPI
       cp->mpi.tag = -1;
 #endif  // WITH_MPI
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
       cp->cellID = last_cell_id++;
 #endif
     }
@@ -3962,7 +3962,7 @@ void space_init(struct space *s, struct swift_params *params,
   /* Init the space lock. */
   if (lock_init(&s->lock) != 0) error("Failed to create space spin-lock.");
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   last_cell_id = 1;
 #endif
 
