@@ -23,3 +23,12 @@ An interactive graph of the cells is available with the configuration option ``-
 During a run, SWIFT will generate a ``cell_hierarchy_*.csv`` file per MPI rank.
 The command ``tools/make_cell_hierarchy.sh cell_hierarchy_*.csv`` merges the files together and generates the file ``cell_hierarchy.html``
 that contains the graph and can be read with your favorite web browser.
+
+With chrome, you will need to install ``npm`` and then run the following commands
+
+.. code-block:: bash
+   
+   npm install http-server -g
+   http-server .
+
+Now you can open the web page ``http://localhost:8080/cell_hierarchy.html``.
