@@ -119,30 +119,28 @@ __attribute__((always_inline)) INLINE void get_index_1d(
   swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
 
   /* Distance between elements in the array */
-  const float delta = (size - 1) / (table[size - 1] - table[0]);
+  /* Do not use first or last entry, might be an extra bin with uneven spacing */
+  const float delta = (size - 3) / (table[size - 2] - table[1]);
+  int istart, iend;
 
-  if (x < table[0] + epsilon) {
-    /* We are below the first element */
-    *i = 0;
-    *dx = 0.f;
-  } else if (x < table[size - 1] - epsilon) {
-    /* Normal case */
-    *i = (x - table[0]) * delta;
+  /* Check for an extra entry at the beginning (e.g. metallicity) */
+  istart =  0;
+  iend   = size - 1;
+  if ( fabs(table[1] - table[0]) > delta + epsilon ) istart = 1;
+  if ( fabs(table[size - 1] - table[size - 2]) > delta + epsilon ) iend = size - 2;
 
-#ifdef SWIFT_DEBUG_CHECKS
-    if (*i > size || *i < 0) {
-      error(
-          "trying to get index for value outside table range. Table size: %d, "
-          "calculated index: %d, value: %.5e, table[0]: %.5e, grid size: %.5e",
-          size, *i, x, table[0], delta);
-    }
-#endif
-
-    *dx = (x - table[*i]) * delta;
+  /*extra array at the beginning */
+  if (x < table[istart] + epsilon) {
+        /* We are before the first element */
+        *i  = 0;
+        *dx = 0.f;
+  } else if (x < table[iend] - epsilon) {
+        *i = (x - table[1]) * delta + 1;
+        *dx = (x - table[*i]) * delta;
   } else {
-    /* We are after the last element */
-    *i = size - 2;
-    *dx = 1.f;
+        /* We are after the last element */
+        *i = iend - 1;
+        *dx = 1.f;
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -391,6 +389,105 @@ __attribute__((always_inline)) INLINE float interpolation_4d(
 
   return result;
 }
+
+
+
+/**
+ * @brief Interpolates a 5 dimensional array in the first 4 dimensions and 
+ * adds the individual contributions from the 5th dimension according to their weights
+ *
+ * @param table The table to interpolate
+ * @param weights The weights for summing up the individual contributions
+ * @param istart, iend Start and stop index for 5th dimension
+ * @param xi, yi, zi, wi Indices of table element
+ * @param dx, dy, dz, dw Distance between the point and the index in units of the grid
+ * spacing.
+ * @param Nx, Ny, Nz, Nw, Nv Sizes of array dimensions
+ */
+__attribute__((always_inline)) INLINE double interpolation4d_plus_summation(const float *table, const float *weights,
+    const int istart, const int iend,
+    const int xi, const int yi, const int zi, const int wi,
+    const float dx, const float dy, const float dz, const float dw,
+    const int Nx, const int Ny, const int Nz, const int Nw, const int Nv) {
+
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f - dz;
+  const float tw = 1.f - dw;
+
+
+  float result;
+  double result_global = 0.;
+
+  int i;
+
+  for (i = istart; i <= iend; i ++) {
+
+          /* Linear interpolation along each axis. We read the table 2^4=16 times */
+          result = tx * ty * tz * tw *
+              table[row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+
+          result +=
+              tx * ty * tz * dw *
+              table[row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+
+          result +=
+              tx * ty * dz * tw *
+              table[row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              tx * dy * tz * tw *
+              table[row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * ty * tz * tw *
+              table[row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+
+          result +=
+              tx * ty * dz * dw *
+              table[row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              tx * dy * tz * dw *
+              table[row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * ty * tz * dw *
+              table[row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              tx * dy * dz * tw *
+              table[row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * ty * dz * tw *
+              table[row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * dy * tz * tw *
+              table[row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+
+          result +=
+              dx * dy * dz * tw *
+              table[row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 0, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * dy * tz * dw *
+              table[row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              dx * ty * dz * dw *
+              table[row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+          result +=
+              tx * dy * dz * dw *
+              table[row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+
+          result +=
+              dx * dy * dz * dw *
+              table[row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1, i, Nx, Ny, Nz, Nw, Nv)];
+
+
+          result_global += weights[i] * pow(10., result);
+
+  }
+
+  return result_global;
+}
+
+
+
 
 /**
  * @brief Interpolate a flattened 4D table at a given position but avoid the
