@@ -48,18 +48,15 @@
 #include "space.h"
 #include "units.h"
 
-/* Maximum number of iterations for newton
- * and bisection integration schemes */
-static const int newton_max_iterations = 15;
+/* Maximum number of iterations for 
+ * bisection integration schemes */
 static const int bisection_max_iterations = 150;
 
 /* Tolerances for termination criteria. */
 static const float explicit_tolerance = 0.05;
-static const float newton_tolerance = 1.0e-4;
 static const float bisection_tolerance = 1.0e-6;
 static const float rounding_tolerance = 1.0e-4;
 static const double bracket_factor = 1.5;              /* sqrt(1.1) */
-static const double newton_log_u_guess_cgs = 12.30103; /* log10(2e12) */
 
 /**
  * @brief Common operations performed on the cooling function at a
@@ -327,12 +324,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Get the Hydrogen and Helium mass fractions */
   const float XH =
       p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_H];
-  const float XHe =
-      p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_He];
-
-  /* Get the Helium mass fraction. Note that this is He / (H + He), i.e. a
-   * metal-free Helium mass fraction as per the Wiersma+08 definition */
-  const float HeFrac = XHe / (XH + XHe);
 
   /* convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H =
@@ -350,7 +341,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   float  d_red, d_met, d_n_H;
   int    red_index, met_index, n_H_index;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, redshift, &red_index, &d_red);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &red_index, &d_red);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol, &met_index, &d_met);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &n_H_index, &d_n_H);
 
@@ -370,7 +361,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* First try an explicit integration (note we ignore the derivative) */
   const double LambdaNet_cgs =
-      Lambda_He_reion_cgs + colibre_cooling_rate(log(u_0_cgs), cosmo->z, n_H_cgs, ZZsol, abundance_ratio,
+      Lambda_He_reion_cgs + colibre_cooling_rate(log(u_0_cgs), cosmo->z, n_H_cgs, pow(10., logZZsol), abundance_ratio,
                                                  n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
 
   /* if cooling rate is small, take the explicit solution */
@@ -523,18 +514,20 @@ float cooling_get_temperature(
   const double n_H = rho * XH / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
+  const float logZZsol = log10( p->chemistry_data.smoothed_metal_mass_fraction_total / cooling->Zsol[0] );
+
   /* compute hydrogen number density, metallicity and redshift indices and
    * offsets  */
 
   float  d_red, d_met, d_n_H;
   int    red_index, met_index, n_H_index;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, redshift, &red_index, &d_red);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &red_index, &d_red);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol, &met_index, &d_met);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &n_H_index, &d_n_H);
 
   /* Compute the log10 of the temperature by interpolating the table */
-  const double log_10_T = eagle_convert_u_to_temp(
+  const double log_10_T = colibre_convert_u_to_temp(
       log10(u_cgs), cosmo->z, n_H_index, d_n_H, met_index, d_met, red_index, d_red,
       cooling);
 
@@ -732,16 +725,17 @@ void cooling_clean(struct cooling_function_data *cooling) {
   free(cooling->Abundances_inv);
   free(cooling->atomicmass);
   free(cooling->LogMassFractions);
-  free(cooling->);
-  free(cooling->);
-  free(cooling->);
+  free(cooling->MassFractions);
 
   /* Free the tables */
-  free(cooling->table.metal_heating);
-  free(cooling->table.electron_abundance);
-  free(cooling->table.temperature);
-  free(cooling->table.H_plus_He_heating);
-  free(cooling->table.H_plus_He_electron_abundance);
+  free(cooling->table.Tcooling);
+  free(cooling->table.Ucooling);
+  free(cooling->table.Theating);
+  free(cooling->table.Uheating);
+  free(cooling->table.Telectron_fraction);
+  free(cooling->table.Uelectron_fraction);
+  free(cooling->table.T_from_U);
+  free(cooling->table.U_from_T);
 }
 
 /**
@@ -760,14 +754,23 @@ void cooling_struct_dump(const struct cooling_function_data *cooling,
   cooling_copy.Redshifts = NULL;
   cooling_copy.nH = NULL;
   cooling_copy.Temp = NULL;
+  cooling_copy.Metallicity = NULL;
   cooling_copy.Therm = NULL;
-  cooling_copy.SolarAbundances = NULL;
-  cooling_copy.SolarAbundances_inv = NULL;
-  cooling_copy.table.metal_heating = NULL;
-  cooling_copy.table.H_plus_He_heating = NULL;
-  cooling_copy.table.H_plus_He_electron_abundance = NULL;
-  cooling_copy.table.temperature = NULL;
-  cooling_copy.table.electron_abundance = NULL;
+  cooling_copy.LogAbundances = NULL;
+  cooling_copy.Abundances = NULL;
+  cooling_copy.Abundances_inv = NULL;
+  cooling_copy.atomicmass = NULL;
+  cooling_copy.LogMassFractions = NULL;
+  cooling_copy.MassFractions = NULL;
+
+  cooling_copy.table.Tcooling = NULL;
+  cooling_copy.table.Theating = NULL;
+  cooling_copy.table.Telectron_fraction = NULL;
+  cooling_copy.table.Ucooling = NULL;
+  cooling_copy.table.Uheating = NULL;
+  cooling_copy.table.Uelectron_fraction = NULL;
+  cooling_copy.table.T_from_U = NULL;
+  cooling_copy.table.U_from_T = NULL;
 
   restart_write_blocks((void *)&cooling_copy,
                        sizeof(struct cooling_function_data), 1, stream,

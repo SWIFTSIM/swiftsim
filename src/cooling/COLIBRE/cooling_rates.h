@@ -51,6 +51,8 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(int i) {
 	/* other elements, if used, scale with metallicity */ 
 	if ( i == element_OA) return -1;
 
+	return -1;
+
 }
 
 
@@ -80,7 +82,7 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
     const struct part *p, const struct cooling_function_data *cooling,
     float ratio_solar[colibre_cooling_N_elementtypes]) {
 
-    int i, j, indx1d, indxS, indxCa;
+    int i, indx1d, indxS, indxCa;
     float totmass = 0., metalmass = 0.;
     int met_index;
     float d_met, logZZsol, ZZsol, Mfrac;
@@ -107,14 +109,14 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
 	    /* mass fraction S */
 	    indxS  = row_major_index_2d(cooling->indxZsol, element_S , colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
 	    Mfrac = cooling->S_over_Si_ratio_in_solar * cooling->atomicmass[element_S] / cooling->atomicmass[element_Si] *
-		    cooling->Abundances[indxS] * cooling->Abundances_inv[indx1d]
+		    cooling->Abundances[indxS] * cooling->Abundances_inv[indx1d];
 	    totmass   += Mfrac;
 	    metalmass += Mfrac;
 
 	    /* mass fraction Ca*/
 	    indxCa = row_major_index_2d(cooling->indxZsol, element_Ca, colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
 	    Mfrac = cooling->Ca_over_Si_ratio_in_solar * cooling->atomicmass[element_Ca] / cooling->atomicmass[element_Si] *
-		    cooling->Abundances[indxCa] * cooling->Abundances_inv[indx1d]
+		    cooling->Abundances[indxCa] * cooling->Abundances_inv[indx1d];
 	    totmass += Mfrac; 
 	    metalmass += Mfrac;
 	}
@@ -241,7 +243,7 @@ __attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
   float log_10_T;
 
   /* Temperature from internal energy */
-  log_10_T = interpolation4d(cooling->table.T_from_U,
+  log_10_T = interpolation_4d(cooling->table.T_from_U,
                    red_index, u_index, met_index, n_H_index,
                    d_red, d_u, d_met, d_n_H,
                    colibre_cooling_N_redshifts, colibre_cooling_N_internalenergy,
@@ -389,7 +391,7 @@ INLINE double colibre_cooling_rate(
                    colibre_cooling_N_metallicity, colibre_cooling_N_density, colibre_cooling_N_heattypes);
 
     /* Temperature from internal energy */
-    logtemp = interpolation4d(cooling->table.T_from_U,
+    logtemp = interpolation_4d(cooling->table.T_from_U,
                    red_index, U_index, met_index, n_H_index,
                    d_red, d_U, d_met, d_n_H,
                    colibre_cooling_N_redshifts, colibre_cooling_N_internalenergy,

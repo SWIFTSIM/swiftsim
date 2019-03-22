@@ -40,9 +40,9 @@
 /**
  * @brief Names of the elements in the order they are stored in the files
  */
-static const char *eagle_tables_element_names[eagle_cooling_N_metal] = {
+/* static const char *eagle_tables_element_names[eagle_cooling_N_metal] = {
     "Carbon",  "Nitrogen", "Oxygen",  "Neon", "Magnesium",
-    "Silicon", "Sulphur",  "Calcium", "Iron"};
+    "Silicon", "Sulphur",  "Calcium", "Iron"}; */
 
 /**
  * @brief Reads in COLIBRE cooling table header. Consists of tables

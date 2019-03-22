@@ -88,6 +88,26 @@ __attribute__((always_inline)) INLINE int row_major_index_4d(
 }
 
 /**
+ * @brief Returns the 1d index of element with 5d indices x,y,z,w
+ * from a flattened 5d array in row major order
+ *
+ * @param x, y, z, v, w Indices of element of interest
+ * @param Nx, Ny, Nz, Nv, Nw Sizes of array dimensions
+ */
+__attribute__((always_inline)) INLINE int row_major_index_5d(
+    const int  x, const int  y, const int  z, const int  w, const int v,
+    const int Nx, const int Ny, const int Nz, const int Nw, const int Nv) {
+
+  assert(x < Nx);
+  assert(y < Ny);
+  assert(z < Nz);
+  assert(w < Nw);
+  assert(v < Nv);
+
+  return x * Ny * Nz * Nw * Nv + y * Nz * Nw * Nv + z * Nw * Nv + w * Nv + v;
+}
+
+/**
  * @brief Finds the index of a value in a table and compute delta to nearest
  * element.
  *
