@@ -1035,6 +1035,8 @@ size_t io_sizeof_type(enum IO_DATA_TYPE type) {
       return sizeof(double);
     case CHAR:
       return sizeof(char);
+    case SIZE_T:
+      return sizeof(size_t);
     default:
       error("Unknown type");
       return 0;

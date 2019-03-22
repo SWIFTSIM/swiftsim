@@ -71,12 +71,13 @@ void logger_write_description(struct logger *log, struct engine* e);
  */
 __attribute__((always_inline)) INLINE static void hydro_write_index(
     const struct part* parts, const struct xpart* xparts,
-    size_t N, FILE *f) {
+    struct io_props *list) {
 
-  for(size_t i = 0; i < N; i++) {
-    fprintf(f, "%lli %zi\n", parts[i].id,
-	    xparts[i].logger_data.last_offset);
-  }
+  /* List what we want to write */
+  list[0] = io_make_input_field("ParticleIDs", ULONGLONG, 1, COMPULSORY,
+                                UNIT_CONV_NO_UNITS, parts, id);
+  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
+				 xparts, logger_data.last_offset);
 }
 #endif
 

@@ -56,6 +56,63 @@
 #include "version.h"
 #include "xmf.h"
 
+
+/**
+ * @brief Copy the particle data into a temporary buffer ready for i/o.
+ *
+ * @param temp The buffer to be filled. Must be allocated and aligned properly.
+ * @param e The #engine.
+ * @param props The #io_props corresponding to the particle field we are
+ * copying.
+ * @param N The number of particles to copy
+ */
+void logger_io_copy_temp_buffer(void* temp, const struct engine* e,
+                         struct io_props props, size_t N) {
+
+  const size_t typeSize = io_sizeof_type(props.type);
+  const size_t copySize = typeSize * props.dimension;
+
+  /* Copy particle data to temporary buffer */
+
+  /* Prepare some parameters */
+  char* temp_c = (char*)temp;
+  props.start_temp_c = temp_c;
+
+  /* Copy the whole thing into a buffer */
+  threadpool_map((struct threadpool*)&e->threadpool, io_copy_mapper, temp_c,
+		 N, copySize, 0, (void*)&props);
+}
+
+/**
+ * @brief Writes the data array in the index file.
+ *
+ * @param e The #engine we are writing from.
+ * @param f The file to use.
+ * @param props The #io_props of the two fields to write.
+ * @param N The number of particles to write.
+ */
+void writeIndexArray(const struct engine* e, FILE *f,
+		     const struct io_props props, size_t N) {
+
+  const size_t typeSize = io_sizeof_type(props.type);
+  const size_t num_elements = N * props.dimension;
+
+  /* Allocate temporary buffer */
+  void* temp = NULL;
+  if (posix_memalign((void**)&temp, IO_BUFFER_ALIGNMENT,
+                     num_elements * typeSize) != 0)
+    error("Unable to allocate temporary i/o buffer");
+
+  /* Copy the particle data to the temporary buffer */
+  logger_io_copy_temp_buffer(temp, e, props, N);
+
+  /* Write data to file */
+  fwrite(temp, typeSize, num_elements, f);
+
+  /* Free everything */
+  free(temp);
+}
+
 /**
  * @brief Writes a logger index file
  *
@@ -101,16 +158,20 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
   }
 
     
-  /* Open header to write simulation properties */
-  fprintf(f, "# Time=%g IntergerTime=%lli\n", e->time, e->ti_current);
-  fprintf(f, "# Number of particles\n# ");
-  for(int i = 0; i < swift_type_count; i++) {
-    fprintf(f, "%lli ", N_total[i]);
-  }
-  fprintf(f, "\n");
+  /* Write double time */
+  fwrite(&e->time, sizeof(double), 1, f);
+
+  /* Write integer time */
+  fwrite(&e->ti_current, sizeof(integertime_t), 1, f);
+
+  /* Write number of particles */
+  fwrite(N_total, sizeof(long long), swift_type_count, f);
 
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
+    size_t N = 0;
+
+    struct io_props list[2];
 
     /* Don't do anything if no particle of this kind */
     if (N_total[ptype] == 0) continue;
@@ -119,7 +180,8 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
     switch (ptype) {
 
       case swift_type_gas:
-        hydro_write_index(parts, xparts, Ngas, f);
+	N = Ngas;
+        hydro_write_index(parts, xparts, list);
         break;
 
       case swift_type_dark_matter:
@@ -133,6 +195,12 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
       default:
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
+
+    /* Write ids */
+    writeIndexArray(e, f, list[0], N);
+
+    /* Write offset */
+    writeIndexArray(e, f, list[1], N);
 
   }
 
