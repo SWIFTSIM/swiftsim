@@ -53,7 +53,7 @@
 #define colibre_cooling_N_temperature 86
 
 /*! Number of different bins along the redshift axis of the tables */
-#define colibre_cooling_N_redshifts 10a
+#define colibre_cooling_N_redshifts 10
 
 /*! Number of different bins along the density axis of the tables */
 #define colibre_cooling_N_density 71
