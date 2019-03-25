@@ -71,7 +71,6 @@ void cooling_update(const struct cosmology *cosmo,
   /* Current redshift */
   const float redshift = cosmo->z;
 
-
   /* Does this timestep straddle Hydrogen reionization? If so, we need to input
    * extra heat */
   if (!cooling->H_reion_done && (redshift < cooling->H_reion_z)) {
@@ -110,7 +109,7 @@ INLINE static double bisection_iter(
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index, float d_red,
     double Lambda_He_reion_cgs, double ratefact_cgs, float ZZsol,
     const struct cooling_function_data *restrict cooling,
-    const float abundance_ratio[chemistry_element_count + 2], double dt_cgs,
+    const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
     long long ID) {
 
   /* Bracketing */
@@ -314,7 +313,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * Note that we need to add S and Ca that are in the tables but not tracked
    * by the particles themselves.
    * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe] */
-  float abundance_ratio[chemistry_element_count + 2];
+  float abundance_ratio[chemistry_element_count + 3];
   float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
 
   /* Get the Hydrogen and Helium mass fractions */

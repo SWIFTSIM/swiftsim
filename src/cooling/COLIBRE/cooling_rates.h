@@ -109,14 +109,16 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
 	    /* mass fraction S */
 	    indxS  = row_major_index_2d(cooling->indxZsol, element_S , colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
 	    Mfrac = cooling->S_over_Si_ratio_in_solar * cooling->atomicmass[element_S] / cooling->atomicmass[element_Si] *
-		    cooling->Abundances[indxS] * cooling->Abundances_inv[indx1d];
+		    cooling->Abundances[indxS] * cooling->Abundances_inv[indx1d] * 
+                    p->chemistry_data.smoothed_metal_mass_fraction[element_from_table_to_code(element_Si)];
 	    totmass   += Mfrac;
 	    metalmass += Mfrac;
 
 	    /* mass fraction Ca*/
 	    indxCa = row_major_index_2d(cooling->indxZsol, element_Ca, colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
 	    Mfrac = cooling->Ca_over_Si_ratio_in_solar * cooling->atomicmass[element_Ca] / cooling->atomicmass[element_Si] *
-		    cooling->Abundances[indxCa] * cooling->Abundances_inv[indx1d];
+		    cooling->Abundances[indxCa] * cooling->Abundances_inv[indx1d] * 
+                    p->chemistry_data.smoothed_metal_mass_fraction[element_from_table_to_code(element_Si)];
 	    totmass += Mfrac; 
 	    metalmass += Mfrac;
 	}
@@ -261,37 +263,6 @@ __attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
 }
 
 /**
- * @brief Compute the Compton cooling rate from the CMB at a given
- * redshift, electron abundance, temperature and Hydrogen density.
- *
- * Uses an analytic formula.
- *
- * @param cooling The #cooling_function_data used in the run.
- * @param redshift The current redshift.
- * @param n_H_cgs The Hydrogen number density in CGS units.
- * @param temperature The temperature.
- * @param electron_abundance The electron abundance.
- */
-__attribute__((always_inline)) INLINE double eagle_Compton_cooling_rate(
-    const struct cooling_function_data *cooling, const double redshift,
-    const double n_H_cgs, const double temperature,
-    const double electron_abundance) {
-
-  const double zp1 = 1. + redshift;
-  const double zp1p2 = zp1 * zp1;
-  const double zp1p4 = zp1p2 * zp1p2;
-
-  /* CMB temperature at this redshift */
-  const double T_CMB = cooling->T_CMB_0 * zp1;
-
-  /* Compton cooling rate */
-  return cooling->compton_rate_cgs * (temperature - T_CMB) * zp1p4 *
-         electron_abundance / n_H_cgs;
-}
-
-
-
-/**
  * @brief Computes the net cooling rate (cooling - heating) for a given element abundance ratio,
  * internal energy, redshift, and density. The unit of the net cooling rate is 
  * Lambda / nH**2 [erg cm^3 s-1] and all input values are in cgs. 
@@ -402,9 +373,6 @@ INLINE double colibre_cooling_rate(
     /* Analytic Compton cooling rate: Lambda_Compton / n_H**2 */
     Compton_cooling_rate = cooling->compton_rate_cgs * (temp - T_CMB) * zp1p4 * 
 			   electron_fraction / n_H_cgs; 
-
-    //printf("%.4f\t%.4f\t%.4e\t%.4e\t%.4e\t%.4e\n", log_u_cgs, logtemp, cooling_rate, heating_rate, Compton_cooling_rate,
-    //                                         electron_fraction);
 
     net_cooling_rate = heating_rate - cooling_rate - Compton_cooling_rate;
 
