@@ -25,7 +25,7 @@
 /* Local headers. */
 #include "swift.h"
 
-#if defined(COOLING_COLIBRE) && defined(CHEMISTRY_COLIBRE) 
+#if defined(COOLING_COLIBRE) && defined(CHEMISTRY_COLIBRE) && defined(GADGET2_SPH)
 #include "cooling/COLIBRE/cooling_rates.h"
 #include "cooling/COLIBRE/cooling_tables.h"
 
