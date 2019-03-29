@@ -3571,7 +3571,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
 #else
     const int ci_nodeID = nodeID;
-    const int cj_nodeID = nodeID;
+    const int cj_nodeID = (cj != NULL) ? nodeID : -1;
 #endif
 
     if ((ci_active && cj_nodeID == nodeID) ||
