@@ -3422,7 +3422,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     const int cj_active = (cj != NULL) ? cell_is_active_stars(cj, e) : 0;
 #ifdef WITH_MPI
     const int ci_nodeID = ci->nodeID;
-    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : ci->nodeID;
 #else
     const int ci_nodeID = nodeID;
     const int cj_nodeID = nodeID;
@@ -3568,10 +3568,10 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     const int cj_active = (cj != NULL) ? cell_is_active_stars(cj, e) : 0;
 #ifdef WITH_MPI
     const int ci_nodeID = ci->nodeID;
-    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : ci->nodeID;
 #else
     const int ci_nodeID = nodeID;
-    const int cj_nodeID = (cj != NULL) ? nodeID : -1;
+    const int cj_nodeID = nodeID;
 #endif
 
     if ((ci_active && cj_nodeID == nodeID) ||
