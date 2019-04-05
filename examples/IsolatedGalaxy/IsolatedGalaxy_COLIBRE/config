@@ -1,0 +1,1 @@
+./configure --with-subgrid=COLIBRE --with-hydro=anarchy-pu --with-kernel=wendland-C2 --disable-hand-vec --with-ext-potential=hernquist --enable-optimization=no --enable-debug=yes
