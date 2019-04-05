@@ -5,6 +5,28 @@ from pylab import *
 from scipy import stats
 import h5py as h5
 
+def get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z):
+	with h5.File(COLIBRECooling_dir_name, "r") as f:
+		RedshiftBins       = f['TableBins/RedshiftBins'].value
+		MetallicityBins    = f['TableBins/MetallicityBins'].value
+		TemperatureBins    = f['TableBins/TemperatureBins'].value
+		DensityBins        = f['TableBins/DensityBins'].value
+		InternalEnergyBins = f['TableBins/InternalEnergyBins'].value
+
+		ThermEq = f['ThermEq/Temperature'].value
+		Zsol    = f['SolarMetallicity'].value
+
+		metallicity = np.log10(COLIBRE_Z / Zsol)
+
+		idx_red = (np.abs(RedshiftBins- redshift)).argmin()
+		idx_met = (np.abs(MetallicityBins- metallicity)).argmin()
+
+		Teq = ThermEq[idx_red, idx_met, :]
+		neq = DensityBins
+
+	return neq, Teq
+
+
 # Plot parameters
 params = {
     "axes.labelsize": 10,
@@ -42,14 +64,20 @@ G_in_cgs = 6.67259e-8
 pc_in_cgs = 3.08567758e18
 Msun_p_pc2 = Msun_in_cgs / pc_in_cgs**2
 
-# Gemoetry info
+# Geometry info
 boxsize = f["/Header"].attrs["BoxSize"]
 centre = boxsize / 2.0
+
+# Redshift 
+redshift = float(f["/Header"].attrs["Redshift"])
+timeSU = float(f["/Header"].attrs["Time"])
 
 # Read units
 unit_length_in_cgs = f["/Units"].attrs["Unit length in cgs (U_L)"]
 unit_mass_in_cgs = f["/Units"].attrs["Unit mass in cgs (U_M)"]
 unit_time_in_cgs = f["/Units"].attrs["Unit time in cgs (U_t)"]
+
+time = timeSU * unit_time_in_cgs / year_in_cgs / 1.e6
 
 # Calculate Gravitational constant in internal units
 G = G_in_cgs * ( unit_length_in_cgs**3 / unit_mass_in_cgs / unit_time_in_cgs**2)**(-1)
@@ -70,6 +98,12 @@ EOS_temp_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:EOS_temperatu
 
 # Read reference metallicity
 COLIBRE_Z = float(f["/Parameters"].attrs["COLIBREChemistry:init_abundance_metal"])
+
+# Read cooling table filename
+COLIBRECooling_dir_name = f["/Parameters"].attrs["COLIBRECooling:dir_name"]
+COLIBRECooling_dir_name
+
+neq, Teq = get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z) 
 
 # Read parameters of the entropy floor
 COLIBREfloor_Jeans_rho_norm = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Jeans_density_threshold_H_p_cm3"])
@@ -143,12 +177,14 @@ figure()
 subplot(111, xscale="log", yscale="log")
 plot(eos_cool_rho, eos_cool_T, "k--", lw=0.6)
 plot(eos_Jeans_rho, eos_Jeans_T, "k--", lw=0.6)
+plot(np.power(10., neq), np.power(10., Teq), "k-", lw = 0.6)
 scatter(gas_nH, gas_T, s=0.2)
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Temperature}~T~[{\\rm K}]$", labelpad=2)
+text(1.e1, 4.e4, 't = %.2f Myr'%(time))
 xlim(3e-6, 3e5)
 ylim(1.0, 2e5)
-savefig("rhoT.png", dpi=200)
+savefig("rhoT_%3.3i.png"%(snap), dpi=200)
 
 # Plot the phase space diagram for SF gas
 figure()
