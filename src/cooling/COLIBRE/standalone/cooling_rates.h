@@ -6,4 +6,3 @@ double colibre_cooling_rate(
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
     const struct cooling_function_data *restrict cooling);
- 

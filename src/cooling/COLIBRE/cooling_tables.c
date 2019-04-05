@@ -54,7 +54,7 @@
  */
 /* ------------------------ UPDATED ---------------------------- */
 void read_cooling_header(struct cooling_function_data *cooling) {
-/* ------------------------ UPDATED ---------------------------- */
+  /* ------------------------ UPDATED ---------------------------- */
 
 #ifdef HAVE_HDF5
 
@@ -62,8 +62,10 @@ void read_cooling_header(struct cooling_function_data *cooling) {
   herr_t status;
 
   /* read sizes of array dimensions */
-  hid_t tempfile_id = H5Fopen(cooling->cooling_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (tempfile_id < 0) error("unable to open file %s\n", cooling->cooling_table_path);
+  hid_t tempfile_id =
+      H5Fopen(cooling->cooling_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (tempfile_id < 0)
+    error("unable to open file %s\n", cooling->cooling_table_path);
 
   /* allocate arrays of bins */
   if (posix_memalign((void **)&cooling->Temp, SWIFT_STRUCT_ALIGNMENT,
@@ -86,115 +88,116 @@ void read_cooling_header(struct cooling_function_data *cooling) {
                      colibre_cooling_N_internalenergy * sizeof(float)) != 0)
     error("Failed to allocate internal energy table\n");
 
-  if (posix_memalign((void **)&cooling->LogAbundances,
-                     SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_metallicity * colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->LogAbundances, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_metallicity *
+                         colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate abundance array\n");
 
-  if (posix_memalign((void **)&cooling->Abundances,
-                     SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_metallicity * colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->Abundances, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_metallicity *
+                         colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate abundance array\n");
 
-  if (posix_memalign((void **)&cooling->Abundances_inv,
-                     SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_metallicity * colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->Abundances_inv, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_metallicity *
+                         colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate abundance array\n");
 
-  if (posix_memalign((void **)&cooling->atomicmass,
-                     SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->atomicmass, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate atomic masses array\n");
 
-  if (posix_memalign((void **)&cooling->Zsol,
-                     SWIFT_STRUCT_ALIGNMENT,
+  if (posix_memalign((void **)&cooling->Zsol, SWIFT_STRUCT_ALIGNMENT,
                      1 * sizeof(float)) != 0)
     error("Failed to allocate solar metallicity array\n");
 
   if (posix_memalign((void **)&cooling->LogMassFractions,
                      SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_metallicity * colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+                     colibre_cooling_N_metallicity *
+                         colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate log mass fraction array\n");
 
-
-
-  if (posix_memalign((void **)&cooling->MassFractions,
-                     SWIFT_STRUCT_ALIGNMENT,
-                     colibre_cooling_N_metallicity * colibre_cooling_N_elementtypes
-                     * sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->MassFractions, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_metallicity *
+                         colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate mass fraction array\n");
 
   /* read in bins and misc information */
   dataset = H5Dopen(tempfile_id, "/TableBins/TemperatureBins", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->Temp);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->Temp);
   if (status < 0) error("error reading temperature bins\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/TableBins/RedshiftBins", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->Redshifts);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->Redshifts);
   if (status < 0) error("error reading redshift bins\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/TableBins/DensityBins", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->nH);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->nH);
   if (status < 0) error("error reading density bins\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/TableBins/MetallicityBins", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->Metallicity);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->Metallicity);
   if (status < 0) error("error reading metallicity bins\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/TableBins/InternalEnergyBins", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->Therm);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->Therm);
   if (status < 0) error("error reading internal energy bins\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/TotalAbundances", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->LogAbundances);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->LogAbundances);
   if (status < 0) error("error reading total abundances\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/ElementMasses", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->atomicmass);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->atomicmass);
   if (status < 0) error("error reading element masses\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   dataset = H5Dopen(tempfile_id, "/SolarMetallicity", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->Zsol);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->Zsol);
   if (status < 0) error("error reading solar metallicity \n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* find the metallicity bin that refers to solar metallicity */
-  int i,j, indx1d;
+  int i, j, indx1d;
   float tol = 1.e-3;
   for (i = 0; i < colibre_cooling_N_metallicity; i++) {
-          if (fabs(cooling->Metallicity[i]) < tol) {
-             cooling->indxZsol = i;
-          }
+    if (fabs(cooling->Metallicity[i]) < tol) {
+      cooling->indxZsol = i;
+    }
   }
 
   /* set some additional useful abundance arrays */
-  for (i = 0; i < colibre_cooling_N_metallicity; i++){
-      for (j = 0; j < colibre_cooling_N_elementtypes; j++){
-          indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
-          cooling->Abundances[indx1d]     = pow(10., cooling->LogAbundances[indx1d]);
-          cooling->Abundances_inv[indx1d] = 1. / cooling->Abundances[indx1d];
-          cooling->MassFractions[indx1d]  = pow(10., cooling->LogMassFractions[indx1d]);
-      }
+  for (i = 0; i < colibre_cooling_N_metallicity; i++) {
+    for (j = 0; j < colibre_cooling_N_elementtypes; j++) {
+      indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
+                                  colibre_cooling_N_elementtypes);
+      cooling->Abundances[indx1d] = pow(10., cooling->LogAbundances[indx1d]);
+      cooling->Abundances_inv[indx1d] = 1. / cooling->Abundances[indx1d];
+      cooling->MassFractions[indx1d] =
+          pow(10., cooling->LogMassFractions[indx1d]);
+    }
   }
 
 #else
@@ -202,134 +205,142 @@ void read_cooling_header(struct cooling_function_data *cooling) {
 #endif
 }
 
-
 /**
  *  @brief Allocate space for cooling tables and read them
- * 
+ *
  *  @param cooling #cooling_function_data structure
  **/
 /* ------------------------ UPDATED ---------------------------- */
 void read_cooling_tables(struct cooling_function_data *restrict cooling) {
-/* ------------------------ UPDATED ---------------------------- */
+  /* ------------------------ UPDATED ---------------------------- */
 
 #ifdef HAVE_HDF5
   hid_t dataset;
   herr_t status;
 
   /* open hdf5 file */
-  hid_t tempfile_id = H5Fopen(cooling->cooling_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (tempfile_id < 0) error("unable to open file %s\n", cooling->cooling_table_path);
+  hid_t tempfile_id =
+      H5Fopen(cooling->cooling_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (tempfile_id < 0)
+    error("unable to open file %s\n", cooling->cooling_table_path);
 
   /* Allocate and read arrays to store cooling tables. */
   /* Cooling (temperature) */
-  if (posix_memalign((void **)&cooling->table.Tcooling,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_temperature * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_cooltypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Tcooling, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_cooltypes * sizeof(float)) != 0)
     error("Failed to allocate Tcooling array\n");
 
   dataset = H5Dopen(tempfile_id, "/Tdep/Cooling", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Tcooling);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Tcooling);
   if (status < 0) error("error reading Tcooling\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Cooling (internal energy) */
-  if (posix_memalign((void **)&cooling->table.Ucooling,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_internalenergy * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_cooltypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Ucooling, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_cooltypes * sizeof(float)) != 0)
     error("Failed to allocate Ucooling array\n");
 
   dataset = H5Dopen(tempfile_id, "/Udep/Cooling", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Ucooling);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Ucooling);
   if (status < 0) error("error reading Ucooling\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Heating (temperature) */
-  if (posix_memalign((void **)&cooling->table.Theating,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_temperature * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_heattypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Theating, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_heattypes * sizeof(float)) != 0)
     error("Failed to allocate Theating array\n");
 
   dataset = H5Dopen(tempfile_id, "/Tdep/Heating", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Theating);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Theating);
   if (status < 0) error("error reading Theating\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Heating (internal energy) */
-  if (posix_memalign((void **)&cooling->table.Uheating,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_internalenergy * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_heattypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Uheating, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_heattypes * sizeof(float)) != 0)
     error("Failed to allocate Uheating array\n");
 
   dataset = H5Dopen(tempfile_id, "/Udep/Heating", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Uheating);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Uheating);
   if (status < 0) error("error reading Uheating\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Electron fraction (temperature) */
-  if (posix_memalign((void **)&cooling->table.Telectron_fraction,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_temperature * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_electrontypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Telectron_fraction, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_electrontypes * sizeof(float)) != 0)
     error("Failed to allocate Telectron_fraction array\n");
 
   dataset = H5Dopen(tempfile_id, "/Tdep/ElectronFractionsVol", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Telectron_fraction);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Telectron_fraction);
   if (status < 0) error("error reading electron_fraction (temperature)\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Electron fraction (internal energy) */
-  if (posix_memalign((void **)&cooling->table.Uelectron_fraction,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_internalenergy * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density * colibre_cooling_N_electrontypes *
-                     sizeof(float)) != 0)
+  if (posix_memalign(
+          (void **)&cooling->table.Uelectron_fraction, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              colibre_cooling_N_electrontypes * sizeof(float)) != 0)
     error("Failed to allocate Uelectron_fraction array\n");
 
   dataset = H5Dopen(tempfile_id, "/Udep/ElectronFractionsVol", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.Uelectron_fraction);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Uelectron_fraction);
   if (status < 0) error("error reading electron_fraction (internal energy)\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
   /* Internal energy from temperature */
-  if (posix_memalign((void **)&cooling->table.U_from_T,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_temperature * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density *
-                     sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->table.U_from_T, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_temperature *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate U_from_T array\n");
 
   dataset = H5Dopen(tempfile_id, "/Tdep/U_from_T", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.U_from_T);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.U_from_T);
   if (status < 0) error("error reading U_from_T array\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
-
   /* Temperature from interal energy */
-  if (posix_memalign((void **)&cooling->table.T_from_U,
-                     SWIFT_STRUCT_ALIGNMENT, colibre_cooling_N_redshifts *
-                     colibre_cooling_N_internalenergy * colibre_cooling_N_metallicity *
-                     colibre_cooling_N_density *
-                     sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->table.T_from_U, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_internalenergy *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate T_from_U array\n");
 
   dataset = H5Dopen(tempfile_id, "/Udep/T_from_U", H5P_DEFAULT);
-  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, cooling->table.T_from_U);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.T_from_U);
   if (status < 0) error("error reading T_from_U array\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
@@ -342,5 +353,3 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   error("Need HDF5 to read cooling tables");
 #endif
 }
-
-
