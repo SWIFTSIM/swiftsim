@@ -14,5 +14,4 @@ int main(int argc, char **argv) {
 
   /* Print cooling function for the parameters set there */
   cooling_function(&cooling, &part);
-
 }

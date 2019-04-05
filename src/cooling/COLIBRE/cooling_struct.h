@@ -49,7 +49,6 @@ struct cooling_tables {
 
   /* array to get U from T */
   float *U_from_T;
-
 };
 
 /**
@@ -120,10 +119,12 @@ struct cooling_function_data {
   /*! He reionization energy in CGS units */
   float He_reion_heat_cgs;
 
-  /*! Internal energy conversion from internal units to CGS (for quick access) */
+  /*! Internal energy conversion from internal units to CGS (for quick access)
+   */
   double internal_energy_to_cgs;
 
-  /*! Internal energy conversion from CGS to internal units (for quick access) */
+  /*! Internal energy conversion from CGS to internal units (for quick access)
+   */
   double internal_energy_from_cgs;
 
   /*! Number density conversion from internal units to CGS (for quick access) */

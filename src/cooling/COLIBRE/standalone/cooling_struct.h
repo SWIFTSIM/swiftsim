@@ -34,7 +34,7 @@ struct cooling_tables {
 
   /* array of all heating processes (internal energy) */
   float *Uheating;
- 
+
   /* array of all electron abundances (temperature) */
   float *Telectron_fraction;
 
@@ -46,16 +46,15 @@ struct cooling_tables {
 
   /* array to get U from T */
   float *U_from_T;
-
 };
 
 /**
  * @brief Properties of the particle / resolution element
  */
 struct particle_data {
-   float *metal_mass_fraction;
-   float *metal_mass;
-};  
+  float *metal_mass_fraction;
+  float *metal_mass;
+};
 
 /**
  * @brief Properties of the cooling function.
@@ -90,7 +89,7 @@ struct cooling_function_data {
 
   /*! Mass fractions of all included elements */
   float *LogMassFractions;
-  float *MassFractions; 
+  float *MassFractions;
 
   /*! Index for solar metallicity in the metallicity dimension */
   int indxZsol;
@@ -103,6 +102,4 @@ struct cooling_function_data {
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[table_path_name_length];
-
 };
-
