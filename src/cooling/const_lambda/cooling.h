@@ -125,7 +125,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   /* Current energy (in internal units) */
   const float u_old_com = hydro_get_comoving_internal_energy(p, xp);
 
-  /* Y' */
+  /* Y' = RHS of the comoving equation for du/dt that will be integrated
+     forward in time using dt_therm */
   const float hydro_du_dt_com = hydro_get_comoving_internal_energy_dt(p);
 
   /* Calculate cooling du_dt (in cgs units) */
