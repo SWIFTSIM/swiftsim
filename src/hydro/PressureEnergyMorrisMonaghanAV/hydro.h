@@ -614,9 +614,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Artificial viscosity updates */
 
-  /* Need to divide by a^2 here because this is a timescale and we need to
-     introduce the time-integration factor to balance out the scale-free
-     nature of the artificial viscosity (i.e. dt has a^2 built in) */
+  /* We divide by a^2 here to make this transform under cosmology the
+   * same as the velocity (which in SWIFT has an extra 1/a^2 factor.
+   * See the cosmology theory documents for more information. */
   const float inverse_tau =
       (hydro_props->viscosity.length * cosmo->a2_inv) * soundspeed * h_inv;
   const float source_term = -1.f * min(p->density.div_v, 0.f);
