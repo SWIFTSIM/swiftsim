@@ -125,7 +125,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   /* Current energy (in internal units) */
   const float u_old_com = hydro_get_comoving_internal_energy(p, xp);
 
-  /* Y' */
+  /* Y' = RHS of the comoving equation for du/dt that will be integrated
+     forward in time using dt_therm */
   const float hydro_du_dt_com = hydro_get_comoving_internal_energy_dt(p);
 
   /* Calculate cooling du_dt (in cgs units) */
@@ -276,7 +277,7 @@ INLINE static float cooling_get_temperature(
   const double mu_ionised = hydro_props->mu_ionised;
 
   /* Particle temperature */
-  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
+  const double u = hydro_get_drifted_physical_internal_energy(p, cosmo);
 
   /* Temperature over mean molecular weight */
   const double T_over_mu = hydro_gamma_minus_one * u * m_H / k_B;

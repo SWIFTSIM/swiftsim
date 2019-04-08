@@ -87,25 +87,30 @@ def get_data(handle: float, n_snaps: int):
     radiated_energies = []
 
     for snap in range(n_snaps):
-        data = load(f"data/{handle}_{snap:04d}.hdf5")
-
-        if snap == 0:
-            t0 = data.metadata.t.to(Myr).value
-
-        times.append(data.metadata.t.to(Myr).value - t0)
-        temps.append(np.mean(data.gas.temperature.to(K).value))
-        densities.append(
-            np.mean(data.gas.density.to(mh / cm ** 3).value)
-            / (data.metadata.scale_factor ** 3)
-        )
-
         try:
-            energies.append(
-                np.mean((data.gas.internal_energy * data.gas.masses).to(erg).value)
-                * data.metadata.scale_factor ** (2)
+            data = load(f"data/{handle}_{snap:04d}.hdf5")
+
+            if snap == 0:
+                t0 = data.metadata.t.to(Myr).value
+
+            times.append(data.metadata.t.to(Myr).value - t0)
+            temps.append(np.mean(data.gas.temperature.to(K).value))
+            densities.append(
+                np.mean(data.gas.density.to(mh / cm ** 3).value)
+                / (data.metadata.scale_factor ** 3)
             )
-            radiated_energies.append(np.mean(data.gas.radiated_energy.to(erg).value))
-        except AttributeError:
+
+            try:
+                energies.append(
+                    np.mean((data.gas.internal_energy * data.gas.masses).to(erg).value)
+                    * data.metadata.scale_factor ** (2)
+                )
+                radiated_energies.append(
+                    np.mean(data.gas.radiated_energy.to(erg).value)
+                )
+            except AttributeError:
+                continue
+        except OSError:
             continue
 
     return times, temps, densities, energies, radiated_energies
@@ -147,11 +152,11 @@ def plot_single_data(
 
     ax[2].plot(data[0], data[3], label=label_energy, ls="dotted", C=f"C{run}")
 
-    ax[2].plot(data[0], data[4], label=label_radiated, ls="dashed", C=f"C{run}")
+    # ax[2].plot(data[0], data[4], label=label_radiated, ls="dashed", C=f"C{run}")
 
-    ax[2].plot(
-        data[0], [x + y for x, y in zip(*data[3:5])], label=label_sum, C=f"C{run}"
-    )
+    # ax[2].plot(
+    #    data[0], [x + y for x, y in zip(*data[3:5])], label=label_sum, C=f"C{run}"
+    # )
 
     return
 
@@ -180,17 +185,20 @@ def make_plot(handles, names, timestep_names, n_snaps=100):
 
     info_axis = ax[-1]
 
-    info = get_data_dump(load(f"data/{handles[0]}_0000.hdf5").metadata)
+    try:
+        info = get_data_dump(load(f"data/{handles[0]}_0000.hdf5").metadata)
 
-    info_axis.text(
-        0.5,
-        0.45,
-        info,
-        ha="center",
-        va="center",
-        fontsize=7,
-        transform=info_axis.transAxes,
-    )
+        info_axis.text(
+            0.5,
+            0.45,
+            info,
+            ha="center",
+            va="center",
+            fontsize=7,
+            transform=info_axis.transAxes,
+        )
+    except OSError:
+        pass
 
     info_axis.axis("off")
 
