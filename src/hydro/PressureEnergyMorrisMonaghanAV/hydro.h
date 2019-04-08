@@ -614,6 +614,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Artificial viscosity updates */
 
+  /* TODO: Actually work out why this cosmology factor is correct
+   * and update the SPH / cosmology theory documents. */
+
   /* We divide by a^2 here to make this transform under cosmology the
    * same as the velocity (which in SWIFT has an extra 1/a^2 factor.
    * See the cosmology theory documents for more information. */
