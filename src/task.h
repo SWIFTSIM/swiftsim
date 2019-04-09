@@ -105,6 +105,7 @@ enum task_subtypes {
   task_subtype_spart,
   task_subtype_stars_density,
   task_subtype_stars_feedback,
+  task_subtype_sf_counts,
   task_subtype_count
 } __attribute__((packed));
 

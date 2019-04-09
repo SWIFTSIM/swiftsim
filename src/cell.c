@@ -175,6 +175,7 @@ int cell_link_sparts(struct cell *c, struct spart *sparts) {
 #endif
 
   c->stars.parts = sparts;
+  c->stars.parts_rebuild = sparts;
 
   /* Fill the progeny recursively, depth-first. */
   if (c->split) {
@@ -977,6 +978,90 @@ int cell_unpack_multipoles(struct cell *restrict c,
 }
 
 /**
+ * @brief Pack the counts for star formation of the given cell and all it's
+ * sub-cells.
+ *
+ * @param c The #cell.
+ * @param pcells (output) The multipole information we pack into
+ *
+ * @return The number of packed cells.
+ */
+int cell_pack_sf_counts(struct cell *restrict c,
+                        struct pcell_sf *restrict pcells) {
+
+#ifdef WITH_MPI
+
+  /* Pack this cell's data. */
+  pcells[0].stars.delta_from_rebuild = c->stars.parts - c->stars.parts_rebuild;
+  pcells[0].stars.count = c->stars.count;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->stars.parts_rebuild == NULL)
+    error("Star particles array at rebuild is NULL! c->depth=%d", c->depth);
+
+  if (pcells[0].stars.delta_from_rebuild < 0)
+    error("Stars part pointer moved in the wrong direction!");
+
+  if (pcells[0].stars.delta_from_rebuild > 0 && c->depth == 0)
+    error("Shifting the top-level pointer is not allowed!");
+#endif
+
+  /* Fill in the progeny, depth-first recursion. */
+  int count = 1;
+  for (int k = 0; k < 8; k++)
+    if (c->progeny[k] != NULL) {
+      count += cell_pack_sf_counts(c->progeny[k], &pcells[count]);
+    }
+
+  /* Return the number of packed values. */
+  return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
+}
+
+/**
+ * @brief Unpack the counts for star formation of a given cell and its
+ * sub-cells.
+ *
+ * @param c The #cell
+ * @param pcells The multipole information to unpack
+ *
+ * @return The number of cells created.
+ */
+int cell_unpack_sf_counts(struct cell *restrict c,
+                          struct pcell_sf *restrict pcells) {
+
+#ifdef WITH_MPI
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->stars.parts_rebuild == NULL)
+    error("Star particles array at rebuild is NULL!");
+#endif
+
+  /* Unpack this cell's data. */
+  c->stars.count = pcells[0].stars.count;
+  c->stars.parts = c->stars.parts_rebuild + pcells[0].stars.delta_from_rebuild;
+
+  /* Fill in the progeny, depth-first recursion. */
+  int count = 1;
+  for (int k = 0; k < 8; k++)
+    if (c->progeny[k] != NULL) {
+      count += cell_unpack_sf_counts(c->progeny[k], &pcells[count]);
+    }
+
+  /* Return the number of packed values. */
+  return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
+}
+
+/**
  * @brief Lock a cell for access to its array of #part and hold its parents.
  *
  * @param c The #cell.
@@ -1540,6 +1625,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
     c->progeny[k]->stars.count = bucket_count[k];
     c->progeny[k]->stars.count_total = c->progeny[k]->stars.count;
     c->progeny[k]->stars.parts = &c->stars.parts[bucket_offset[k]];
+    c->progeny[k]->stars.parts_rebuild = c->progeny[k]->stars.parts;
   }
 
   /* Now do the same song and dance for the bparts. */
@@ -3367,6 +3453,10 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
   struct engine *e = s->space->e;
   const int nodeID = e->nodeID;
   const int with_limiter = (e->policy & engine_policy_limiter);
+#ifdef WITH_MPI
+  const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_feedback = e->policy & engine_policy_feedback;
+#endif
   int rebuild = 0;
 
   /* Un-skip the density tasks involved with this cell. */
@@ -3476,6 +3566,16 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         if (cj_active || with_limiter)
           scheduler_activate_send(s, cj->mpi.hydro.send_ti, ci_nodeID);
 
+        /* Propagating new star counts? */
+        if (with_star_formation && with_feedback) {
+          if (ci_active && ci->hydro.count > 0) {
+            scheduler_activate(s, ci->mpi.stars.recv_sf_counts);
+          }
+          if (cj_active && cj->hydro.count > 0) {
+            scheduler_activate_send(s, cj->mpi.stars.send_sf_counts, ci_nodeID);
+          }
+        }
+
       } else if (cj_nodeID != nodeID) {
 
         /* If the local cell is active, receive data from the foreign cell. */
@@ -3522,6 +3622,16 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         /* If the local cell is active, send its ti_end values. */
         if (ci_active || with_limiter)
           scheduler_activate_send(s, ci->mpi.hydro.send_ti, cj_nodeID);
+
+        /* Propagating new star counts? */
+        if (with_star_formation && with_feedback) {
+          if (cj_active && cj->hydro.count > 0) {
+            scheduler_activate(s, cj->mpi.stars.recv_sf_counts);
+          }
+          if (ci_active && ci->hydro.count > 0) {
+            scheduler_activate_send(s, ci->mpi.stars.send_sf_counts, cj_nodeID);
+          }
+        }
       }
 #endif
     }
