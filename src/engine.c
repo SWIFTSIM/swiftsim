@@ -1848,7 +1848,8 @@ void engine_allocate_foreign_particles(struct engine *e) {
       }
 
       /* For stars, we just use the numbers in the top-level cells */
-      count_sparts_in += e->proxies[k].cells_in[j]->stars.count;
+      count_sparts_in +=
+          e->proxies[k].cells_in[j]->stars.count + space_extra_sparts;
     }
   }
 
@@ -1921,7 +1922,8 @@ void engine_allocate_foreign_particles(struct engine *e) {
 
       /* For stars, we just use the numbers in the top-level cells */
       cell_link_sparts(e->proxies[k].cells_in[j], sparts);
-      sparts = &sparts[e->proxies[k].cells_in[j]->stars.count];
+      sparts =
+          &sparts[e->proxies[k].cells_in[j]->stars.count + space_extra_sparts];
     }
   }
 
@@ -2893,7 +2895,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->subtype == task_subtype_tend_part ||
         t->subtype == task_subtype_tend_gpart ||
         t->subtype == task_subtype_tend_spart ||
-        t->subtype == task_subtype_rho || t->subtype == task_subtype_gpart)
+        t->subtype == task_subtype_rho || t->subtype == task_subtype_gpart ||
+        t->subtype == task_subtype_sf_counts)
       t->skip = 1;
   }
 

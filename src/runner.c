@@ -267,12 +267,6 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                 n_target, left[i], right[i]);
           }
 
-#ifdef SWIFT_DEBUG_CHECKS
-          if ((f > 0.f && h_new > h_old) || (f < 0.f && h_new < h_old))
-            error(
-                "Smoothing length correction not going in the right direction");
-#endif
-
           /* Safety check: truncate to the range [ h_old/2 , 2h_old ]. */
           h_new = min(h_new, 2.f * h_old);
           h_new = max(h_new, 0.5f * h_old);
@@ -646,6 +640,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
             /* Did we get a star? (Or did we run out of spare ones?) */
             if (sp != NULL) {
+
+              message("Formed a star!");
 
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
@@ -3429,11 +3425,11 @@ void *runner_main(void *data) {
         case task_type_send:
           if (t->subtype == task_subtype_tend_part) {
             free(t->buff);
-          }
-          if (t->subtype == task_subtype_tend_gpart) {
+          } else if (t->subtype == task_subtype_tend_gpart) {
             free(t->buff);
-          }
-          if (t->subtype == task_subtype_tend_spart) {
+          } else if (t->subtype == task_subtype_tend_spart) {
+            free(t->buff);
+          } else if (t->subtype == task_subtype_sf_counts) {
             free(t->buff);
           }
           break;
@@ -3446,6 +3442,10 @@ void *runner_main(void *data) {
             free(t->buff);
           } else if (t->subtype == task_subtype_tend_spart) {
             cell_unpack_end_step_stars(ci, (struct pcell_step_stars *)t->buff);
+            free(t->buff);
+          } else if (t->subtype == task_subtype_sf_counts) {
+            cell_unpack_sf_counts(ci, (struct pcell_sf *)t->buff);
+            cell_clear_stars_sort_flags(ci);
             free(t->buff);
           } else if (t->subtype == task_subtype_xv) {
             runner_do_recv_part(r, ci, 1, 1);

@@ -209,6 +209,7 @@ SUBTYPES = [
     "spart",
     "stars_density",
     "stars_feedback",
+    "sf_counts",
     "count",
 ]
 
@@ -246,6 +247,8 @@ FULLTYPES = [
     "send/gpart",
     "recv/spart",
     "send/spart",
+    "send/sf_counts",
+    "recv/sf_counts",
     "self/stars_density",
     "pair/stars_density",
     "sub_self/stars_density",

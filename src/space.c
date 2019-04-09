@@ -244,6 +244,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->hydro.xparts = NULL;
     c->grav.parts = NULL;
     c->stars.parts = NULL;
+    c->stars.parts_rebuild = NULL;
     c->hydro.do_sub_sort = 0;
     c->stars.do_sub_sort = 0;
     c->hydro.do_sub_drift = 0;
@@ -1617,6 +1618,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
       c->hydro.xparts = xfinger;
       c->grav.parts = gfinger;
       c->stars.parts = sfinger;
+      c->stars.parts_rebuild = c->stars.parts;
 
       c->hydro.count_total = c->hydro.count + space_extra_parts;
       c->grav.count_total = c->grav.count + space_extra_gparts;
