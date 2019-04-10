@@ -288,7 +288,7 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
     engine_addlink(e, &ci->mpi.stars.send, t_feedback);
     engine_addlink(e, &ci->mpi.stars.send_ti, t_ti);
-    if (with_star_formation) {
+    if (with_star_formation && ci->hydro.count > 0) {
       engine_addlink(e, &ci->mpi.stars.send_sf_counts, t_sf_counts);
     }
   }
