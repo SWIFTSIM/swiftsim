@@ -20,3 +20,4 @@ cgs (i.e. cm^-3). Different metallicities may be specified in
 testCooling.yml
 
 ./configure --with-subgrid=COLIBRE
+./configure --with-cooling=COLIBRE --with-chemistry=COLIBRE --with-tracers=EAGLE --with-entropy-floor=EAGLE --with-stars=EAGLE --with-star-formation=EAGLE
