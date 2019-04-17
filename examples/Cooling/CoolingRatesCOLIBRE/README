@@ -7,13 +7,16 @@ to files and plotted with a python script (cooling_rates_plot.py).
 
 The test may be run by:
 ./getCoolingTables.sh ---> TO BE DONE
-./cooling_rates -z X -d Y
-python plot_cooling_rates.py ---> TO BE DONE
 
-where X is the redshift at which the cooling rates are evaluated and Y
+redshift="0.0"
+logdensity="0.00"
+./cooling_rates -z $redshift -d $logdensity
+python plot_result_cooling.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
+python plot_result_heating.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
+
+where redshift is the redshift at which the cooling rates are evaluated and logdensity
 is the base 10 logarithm of the hydrogen number density expressed in
 cgs (i.e. cm^-3). Different metallicities may be specified in
 testCooling.yml
 
 ./configure --with-subgrid=COLIBRE
-

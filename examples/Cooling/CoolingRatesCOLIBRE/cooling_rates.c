@@ -25,8 +25,7 @@
 /* Local headers. */
 #include "swift.h"
 
-#if defined(COOLING_COLIBRE) && defined(CHEMISTRY_COLIBRE) && \
-    defined(GADGET2_SPH)
+#if defined(COOLING_COLIBRE) && defined(CHEMISTRY_COLIBRE) && defined(GADGET2_SPH)
 #include "cooling/COLIBRE/cooling_rates.h"
 #include "cooling/COLIBRE/cooling_tables.h"
 
@@ -60,10 +59,11 @@ void set_quantities(struct part *restrict p, struct xpart *restrict xp,
   xp->entropy_full = p->entropy;
 
   for (int j = 0; j < chemistry_element_count; j++) {
-    p->chemistry_data.smoothed_metal_mass_fraction[j] =
-        p->chemistry_data.metal_mass_fraction[j];
+	p->chemistry_data.smoothed_metal_mass_fraction[j] = p->chemistry_data.metal_mass_fraction[j];
   }
+
 }
+
 
 /**
  * @brief Produces contributions to cooling rates for different
@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
   struct phys_const internal_const;
   struct cooling_function_data cooling;
   struct cosmology cosmo;
+  struct space s;
   const char *parametersFileName = "./cooling_rates.yml";
 
   /* Initialize CPU frequency, this also starts time. */
@@ -140,19 +141,36 @@ int main(int argc, char **argv) {
       log(scale_factor / cosmo.a_begin) / cosmo.time_base;
   cosmology_update(&cosmo, &internal_const, ti_current);
   message("Redshift is %f", cosmo.z);
+  message("Density is [log nH]%f", log_10_nh);
 
   // Init cooling
   cooling_init(params, &us, &internal_const, &cooling);
   cooling_print(&cooling);
 
+
   // extract mass fractions, calculate table indices and offsets
   float XH = p.chemistry_data.metal_mass_fraction[chemistry_element_H];
 
+  char cool_outputfile[35];
+  sprintf(cool_outputfile, "cooling_output_lognH%.2f.dat", log_10_nh);
+  char heat_outputfile[35];
+  sprintf(heat_outputfile, "heating_output_lognH%.2f.dat", log_10_nh);
+  char net_outputfile[35];
+  sprintf(net_outputfile, "netcooling_output_lognH%.2f.dat", log_10_nh);
+
   // Calculate contributions from metals to cooling rate
   // open file
-  FILE *output_file = fopen("cooling_output.dat", "w");
+  FILE *output_file = fopen(cool_outputfile, "w");
   if (output_file == NULL) {
     error("Error opening output file!\n");
+  }
+  FILE *output_file_heat = fopen(heat_outputfile, "w");
+  if (output_file_heat == NULL) {
+    error("Error opening output file (heat)!\n");
+  }
+  FILE *output_file_net = fopen(net_outputfile, "w");
+  if (output_file_net == NULL) {
+    error("Error opening output file (net)!\n");
   }
 
   // set hydrogen number density
@@ -171,15 +189,14 @@ int main(int argc, char **argv) {
                 internal_const.const_proton_mass *
                 cooling.number_density_to_cgs;
 
-  float d_red, d_met, d_n_H;
-  int red_index, met_index, n_H_index;
+  float  d_red, d_met, d_n_H;
+  int    red_index, met_index, n_H_index;
 
-  get_index_1d(cooling.Redshifts, colibre_cooling_N_redshifts, cosmo.z,
-               &red_index, &d_red);
-  get_index_1d(cooling.Metallicity, colibre_cooling_N_metallicity, logZZsol,
-               &met_index, &d_met);
-  get_index_1d(cooling.nH, colibre_cooling_N_density, log10(inn_h), &n_H_index,
-               &d_n_H);
+  double lambda_net, temperature;
+
+  get_index_1d(cooling.Redshifts, colibre_cooling_N_redshifts, cosmo.z, &red_index, &d_red);
+  get_index_1d(cooling.Metallicity, colibre_cooling_N_metallicity, logZZsol, &met_index, &d_met);
+  get_index_1d(cooling.nH, colibre_cooling_N_density, log10(inn_h), &n_H_index, &d_n_H);
 
   // Loop over internal energy
   for (int j = 0; j < npts; j++) {
@@ -193,19 +210,42 @@ int main(int argc, char **argv) {
         cooling.internal_energy_to_cgs;
 
     // calculate temperature
-    const double temperature =
-        colibre_convert_u_to_temp(log10(u), cosmo.z, n_H_index, d_n_H,
-                                  met_index, d_met, red_index, d_red, &cooling);
-
+    temperature = colibre_convert_u_to_temp(
+        log10(u), cosmo.z, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling);
+    
     // calculate cooling rates
-    const double lambda_net = colibre_cooling_rate(
-        log10(u), cosmo.z, nh, pow(10., logZZsol), abundance_ratio, n_H_index,
-        d_n_H, met_index, d_met, red_index, d_red, &cooling);
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, pow(10., logZZsol), 
+        abundance_ratio, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling, 0,1,0,-1);
 
-    // Dump...
-    fprintf(output_file, "%.5e %.5e\n", exp(M_LN10 * temperature), lambda_net);
+    fprintf(output_file, "%.5e %.5e", exp(M_LN10 * temperature), lambda_net);
+    for (int icool = 0; icool < colibre_cooling_N_cooltypes-2; icool++) {
+         lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, pow(10., logZZsol), 
+            abundance_ratio, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling, 1,1,icool,-1);
+	 fprintf(output_file, " %.5e", lambda_net);
+    }
+    fprintf(output_file, "\n");
+
+    // calculate heating rates
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, pow(10., logZZsol),
+        abundance_ratio, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling, 1,0,-1,0);
+
+    fprintf(output_file_heat, "%.5e %.5e", exp(M_LN10 * temperature), lambda_net);
+    for (int iheat = 0; iheat < colibre_cooling_N_heattypes-2; iheat++) {
+         lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, pow(10., logZZsol),
+            abundance_ratio, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling, 1,1,-1,iheat);
+         fprintf(output_file_heat, " %.5e", lambda_net);
+    }
+    fprintf(output_file_heat, "\n");
+
+    // calculate standard net cooling
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, pow(10., logZZsol),
+        abundance_ratio, n_H_index, d_n_H, met_index, d_met, red_index, d_red, &cooling, 0,0,0,0);
+    fprintf(output_file_net, "%.5e %.5e\n",  exp(M_LN10 * temperature), lambda_net);
+
   }
   fclose(output_file);
+  fclose(output_file_heat);
+  fclose(output_file_net);
   message("done cooling rates test");
 
   /* Clean everything */
@@ -224,9 +264,9 @@ int main(int argc, char **argv) {
   unsigned long long cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
-  message(
-      "This test is only defined for the COLIBRE cooling model and Gadget-2 "
-      "SPH.");
+  message("This test is only defined for the COLIBRE cooling model and Gadget-2 SPH.");
   return 0;
 }
 #endif
+
+
