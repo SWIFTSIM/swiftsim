@@ -25,7 +25,7 @@ TimeIntegration:
 Snapshots:
   basename:   output      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
-  delta_time: 0.001        # Time difference between consecutive outputs (in internal units)
+  delta_time: 0.01023     # Time difference between consecutive outputs (in internal units) 0.01023 TU = 10 Myr
 
   
 # Parameters governing the conserved quantities statistics
@@ -41,6 +41,7 @@ InitialConditions:
   
 # Parameters for the hydrodynamics scheme
 SPH:
+  minimal_temperature:   10.      # Minimum allowed gas temperature
   resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
   CFL_condition:         0.1      # Courant-Friedrich-Levy condition for time integration.
   h_min_ratio:           0.1      # Minimal smoothing in units of softening.
