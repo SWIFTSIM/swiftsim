@@ -41,3 +41,8 @@ parameters:
   - Running the code with a factor 6 higher resolution idealized disks, use 
     highres6.hdf5, see getIC.sh.
   - Running with different SPH schemes like Anarchy-PU.
+
+
+tested config options:
+./configure --with-subgrid=COLIBRE --with-hydro=anarchy-pu --with-kernel=wendland-C2 --disable-hand-vec --with-ext-potential=hernquist --enable-optimization=no --enable-debug=yes
+

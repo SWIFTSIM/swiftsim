@@ -29,26 +29,6 @@
 
 #include "cooling_struct.h"
 
-#define eagle_cooling_N_redshifts 49
-
-/*! Number of redshift bins loaded at any given point int time */
-#define eagle_cooling_N_loaded_redshifts 2
-
-/*! Number of different bins along the temperature axis of the tables */
-#define eagle_cooling_N_temperature 176
-
-/*! Number of different bins along the density axis of the tables */
-#define eagle_cooling_N_density 41
-
-/*! Number of different bins along the metal axis of the tables */
-#define eagle_cooling_N_metal 9
-
-/*! Number of different bins along the metal axis of the tables */
-#define eagle_cooling_N_He_frac 7
-
-/*! Number of different bins along the abundances axis of the tables */
-#define eagle_cooling_N_abundances 11
-
 /*! Number of different bins along the temperature axis of the tables */
 #define colibre_cooling_N_temperature 86
 

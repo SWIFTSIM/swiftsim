@@ -83,18 +83,18 @@ time = timeSU * unit_time_in_cgs / year_in_cgs / 1.e6
 G = G_in_cgs * ( unit_length_in_cgs**3 / unit_mass_in_cgs / unit_time_in_cgs**2)**(-1)
 
 # Read parameters of the SF model
-KS_law_slope = float(f["/Parameters"].attrs["COLIBREStarFormation:KS_exponent"])
-KS_law_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:KS_normalisation"])
-KS_thresh_Z0 = float(f["/Parameters"].attrs["COLIBREStarFormation:threshold_Z0"])
-KS_thresh_slope = float(f["/Parameters"].attrs["COLIBREStarFormation:threshold_slope"])
-KS_thresh_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:threshold_norm_H_p_cm3"])
-KS_gas_fraction = float(f["/Parameters"].attrs["COLIBREStarFormation:gas_fraction"])
-KS_thresh_max_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:threshold_max_density_H_p_cm3"])
-KS_high_den_thresh = float(f["/Parameters"].attrs["COLIBREStarFormation:KS_high_density_threshold_H_p_cm3"])
-KS_law_slope_high_den = float(f["/Parameters"].attrs["COLIBREStarFormation:KS_high_density_exponent"])
-EOS_gamma_effective = float(f["/Parameters"].attrs["COLIBREStarFormation:EOS_gamma_effective"])                           
-EOS_density_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:EOS_density_norm_H_p_cm3"])                           
-EOS_temp_norm = float(f["/Parameters"].attrs["COLIBREStarFormation:EOS_temperature_norm_K"])                           
+KS_law_slope = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_exponent"])
+KS_law_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_normalisation"])
+KS_thresh_Z0 = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_Z0"])
+KS_thresh_slope = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_slope"])
+KS_thresh_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_norm_H_p_cm3"])
+KS_gas_fraction = float(f["/Parameters"].attrs["EAGLEStarFormation:gas_fraction"])
+KS_thresh_max_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_max_density_H_p_cm3"])
+KS_high_den_thresh = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_high_density_threshold_H_p_cm3"])
+KS_law_slope_high_den = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_high_density_exponent"])
+EOS_gamma_effective = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_gamma_effective"])                           
+EOS_density_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_density_norm_H_p_cm3"])                           
+EOS_temp_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_temperature_norm_K"])                           
 
 # Read reference metallicity
 COLIBRE_Z = float(f["/Parameters"].attrs["COLIBREChemistry:init_abundance_metal"])
@@ -106,12 +106,12 @@ COLIBRECooling_dir_name
 neq, Teq = get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z) 
 
 # Read parameters of the entropy floor
-COLIBREfloor_Jeans_rho_norm = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Jeans_density_threshold_H_p_cm3"])
-COLIBREfloor_Jeans_temperature_norm_K = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Jeans_temperature_norm_K"])
-COLIBREfloor_Jeans_gamma_effective = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Jeans_gamma_effective"])
-COLIBREfloor_cool_rho_norm = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Cool_density_threshold_H_p_cm3"])
-COLIBREfloor_cool_temperature_norm_K = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Cool_temperature_norm_K"])
-COLIBREfloor_cool_gamma_effective = float(f["/Parameters"].attrs["COLIBREEntropyFloor:Cool_gamma_effective"])
+COLIBREfloor_Jeans_rho_norm = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_density_threshold_H_p_cm3"])
+COLIBREfloor_Jeans_temperature_norm_K = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_temperature_norm_K"])
+COLIBREfloor_Jeans_gamma_effective = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_gamma_effective"])
+COLIBREfloor_cool_rho_norm = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_density_threshold_H_p_cm3"])
+COLIBREfloor_cool_temperature_norm_K = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_temperature_norm_K"])
+COLIBREfloor_cool_gamma_effective = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_gamma_effective"])
 
 # Properties of the KS law
 KS_law_norm_cgs = KS_law_norm * Msun_in_cgs / ( 1e6 * pc_in_cgs**2 * year_in_cgs )

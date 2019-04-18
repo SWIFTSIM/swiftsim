@@ -6,7 +6,7 @@ values of the internal energy. The resulting cooling rates are written
 to files and plotted with a python script (cooling_rates_plot.py).
 
 The test may be run by:
-./getCoolingTables.sh ---> TO BE DONE
+./getCoolingTables.sh ---> TO BE DONE, on cosma the link to the tables is in the parameter file
 
 redshift="0.0"
 logdensity="0.00"
@@ -20,4 +20,3 @@ cgs (i.e. cm^-3). Different metallicities may be specified in
 testCooling.yml
 
 ./configure --with-subgrid=COLIBRE
-./configure --with-cooling=COLIBRE --with-chemistry=COLIBRE --with-tracers=EAGLE --with-entropy-floor=EAGLE --with-stars=EAGLE --with-star-formation=EAGLE

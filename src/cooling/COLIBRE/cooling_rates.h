@@ -195,34 +195,17 @@ __attribute__((always_inline)) INLINE double eagle_helium_reionization_extraheat
 
 /**
  * @brief Computes the log_10 of the temperature corresponding to a given
- * internal energy, hydrogen number density, Helium fraction and redshift.
- *
- * Note that the redshift is implicitly passed in via the currently loaded
- * tables in the #cooling_function_data.
- *
- * For the low-z case, we interpolate the flattened 4D table 'u_to_temp' that
- * is arranged in the following way:
- * - 1st dim: redshift, length = eagle_cooling_N_loaded_redshifts
- * - 2nd dim: Hydrogen density, length = eagle_cooling_N_density
- * - 3rd dim: Helium fraction, length = eagle_cooling_N_He_frac
- * - 4th dim: Internal energy, length = eagle_cooling_N_temperature
- *
- * For the high-z case, we interpolate the flattened 3D table 'u_to_temp' that
- * is arranged in the following way:
- * - 1st dim: Hydrogen density, length = eagle_cooling_N_density
- * - 2nd dim: Helium fraction, length = eagle_cooling_N_He_frac
- * - 3rd dim: Internal energy, length = eagle_cooling_N_temperature
+ * internal energy, hydrogen number density, metallicity and redshift
  *
  * @param log_10_u_cgs Log base 10 of internal energy in cgs.
  * @param redshift Current redshift.
  * @param n_H_index Index along the Hydrogen density dimension.
- * @param He_index Index along the Helium fraction dimension.
  * @param d_n_H Offset between Hydrogen density and table[n_H_index].
- * @param d_He Offset between helium fraction and table[He_index].
+ * @param met_index Index along the metallicity dimension.
+ * @param d_met Offset between metallicity and table[met_index].
+ * @param red_index Index along the redshift dimension.
+ * @param d_red Offset between redshift and table[red_index].
  * @param cooling #cooling_function_data structure.
- *
- * @param compute_dT_du Do we want to compute dT/du ?
- * @param dT_du (return) The value of dT/du
  *
  * @return log_10 of the temperature.
  */

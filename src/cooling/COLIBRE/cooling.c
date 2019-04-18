@@ -116,14 +116,17 @@ INLINE static double bisection_iter(
   double u_lower_cgs = u_ini_cgs;
   double u_upper_cgs = u_ini_cgs;
 
+  int icoolcase = 0;
+
   /*************************************/
   /* Let's get a first guess           */
   /*************************************/
 
   double LambdaNet_cgs =
       Lambda_He_reion_cgs +
-      colibre_cooling_rate(log(u_ini_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                         n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                         n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 
+			 icoolcase, icoolcase, icoolcase, icoolcase);
 
   /*************************************/
   /* Let's try to bracket the solution */
@@ -138,8 +141,9 @@ INLINE static double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log(u_lower_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                                 n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                                 n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 
+			         icoolcase, icoolcase, icoolcase, icoolcase);
 
     int i = 0;
     while (u_lower_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs >
@@ -151,8 +155,9 @@ INLINE static double bisection_iter(
 
       /* Compute a new rate */
       LambdaNet_cgs = Lambda_He_reion_cgs +
-                      colibre_cooling_rate(log(u_lower_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                                           n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+                      colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                                           n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling,
+			                   icoolcase, icoolcase, icoolcase, icoolcase);
       i++;
     }
 
@@ -171,8 +176,9 @@ INLINE static double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log(u_upper_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                             n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                             n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 
+			     icoolcase, icoolcase, icoolcase, icoolcase);
 
     int i = 0;
     while (u_upper_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs <
@@ -184,8 +190,9 @@ INLINE static double bisection_iter(
 
       /* Compute a new rate */
       LambdaNet_cgs = Lambda_He_reion_cgs +
-                      colibre_cooling_rate(log(u_upper_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                                           n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+                      colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                                           n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 
+			                   icoolcase, icoolcase, icoolcase, icoolcase);
       i++;
     }
 
@@ -214,8 +221,9 @@ INLINE static double bisection_iter(
     /* New rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log(u_next_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
-                             n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs, ZZsol, abundance_ratio,
+                             n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling,
+			     icoolcase, icoolcase, icoolcase, icoolcase);
 
     /* Where do we go next? */
     if (u_next_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs > 0.0) {
@@ -336,6 +344,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
   float  d_red, d_met, d_n_H;
   int    red_index, met_index, n_H_index;
 
+  int icoolcase = 0;
+
   get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &red_index, &d_red);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol, &met_index, &d_met);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &n_H_index, &d_n_H);
@@ -354,8 +364,9 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* First try an explicit integration (note we ignore the derivative) */
   const double LambdaNet_cgs =
-      Lambda_He_reion_cgs + colibre_cooling_rate(log(u_0_cgs), cosmo->z, n_H_cgs, pow(10., logZZsol), abundance_ratio,
-                                                 n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 0,0,0,0);
+      Lambda_He_reion_cgs + colibre_cooling_rate(log10(u_0_cgs), cosmo->z, n_H_cgs, pow(10., logZZsol), abundance_ratio,
+                                                 n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling, 
+						 icoolcase, icoolcase, icoolcase, icoolcase);
 
   /* if cooling rate is small, take the explicit solution */
   if (fabs(ratefact_cgs * LambdaNet_cgs * dt_cgs) <

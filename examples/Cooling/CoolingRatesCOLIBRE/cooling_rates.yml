@@ -28,7 +28,7 @@ COLIBREChemistry:
   init_abundance_Iron:      0.00129199252
 
 COLIBRECooling:
-  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_04/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_04_02/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               11.5
   H_reion_eV_p_H:          2.0
   He_reion_z_centre:       3.5

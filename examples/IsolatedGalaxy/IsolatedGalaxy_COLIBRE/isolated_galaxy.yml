@@ -49,7 +49,7 @@ SPH:
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
-  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_04/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_04_02/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
   H_reion_eV_p_H:          2.0
   He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
@@ -82,8 +82,8 @@ HernquistPotential:
   timestep_mult:   0.01     # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
   epsilon:         0.01      # Softening size (internal units)
  
-# COLIBRE star formation parameters
-COLIBREStarFormation:
+# EAGLE star formation parameters
+EAGLEStarFormation:
   EOS_density_norm_H_p_cm3:          0.1       # Physical density used for the normalisation of the EOS assumed for the star-forming gas in Hydrogen atoms per cm^3.
   EOS_temperature_norm_K:            10.      # Temperature om the polytropic EOS assumed for star-forming gas at the density normalisation in Kelvin.
   EOS_gamma_effective:               1.3333333 # Slope the of the polytropic EOS assumed for the star-forming gas.
@@ -99,8 +99,8 @@ COLIBREStarFormation:
   threshold_slope:                   -0.64     # Slope of the metal-dependant star formation threshold
   threshold_max_density_H_p_cm3:     10.0      # Maximal density of the metal-dependant density threshold for star formation in Hydrogen atoms per cm^3.
   
-# Parameters for the COLIBRE "equation of state"
-COLIBREEntropyFloor:
+# Parameters for the EAGLE "equation of state"
+EAGLEEntropyFloor:
   Jeans_density_threshold_H_p_cm3: 0.1       # Physical density above which the COLIBRE Jeans limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
   Jeans_over_density_threshold:    10.       # Overdensity above which the COLIBRE Jeans limiter entropy floor can kick in.
   Jeans_temperature_norm_K:        10.      # Temperature of the COLIBRE Jeans limiter entropy floor at the density threshold expressed in Kelvin.

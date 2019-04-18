@@ -19,7 +19,7 @@
 #ifndef SWIFT_COOLING_STRUCT_COLIBRE_H
 #define SWIFT_COOLING_STRUCT_COLIBRE_H
 
-#define eagle_table_path_name_length 500
+#define colibre_table_path_name_length 500
 
 /**
  * @brief struct containing cooling tables
@@ -93,7 +93,7 @@ struct cooling_function_data {
   float *Zsol;
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
-  char cooling_table_path[eagle_table_path_name_length];
+  char cooling_table_path[colibre_table_path_name_length];
 
   /*! Redshit of H reionization */
   float H_reion_z;
