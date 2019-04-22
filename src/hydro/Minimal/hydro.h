@@ -382,7 +382,6 @@ hydro_set_drifted_physical_entropy(struct part *p,
   p->force.soundspeed = soundspeed;
 }
 
-
 /**
  * @brief Sets the physical internal energy of a particle
  *
