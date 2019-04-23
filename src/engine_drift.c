@@ -167,6 +167,9 @@ void engine_do_drift_all_spart_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
+      // debugging print statements
+      //message("space spart id %llu", s->sparts[0].id);
+      //message("cell spart id %llu", c->stars.parts[0].id);
       cell_drift_spart(c, e, /* force the drift=*/1);
     }
   }

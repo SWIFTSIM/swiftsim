@@ -28,8 +28,7 @@
  * @param feedback the #feedback_props structure
  * @param cosmo #cosmology structure
  */
-void feedback_restore_tables(struct feedback_props *feedback,
-                            const struct cosmology *cosmo) {
+void feedback_restore_tables(struct feedback_props *feedback) {
 
 }
 
