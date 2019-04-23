@@ -88,6 +88,7 @@
 #include "star_formation.h"
 #include "star_formation_logger.h"
 #include "star_formation_logger_struct.h"
+#include "feedback_restart.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"
@@ -6078,6 +6079,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   potential_struct_dump(e->external_potential, stream);
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
+  feedback_struct_dump(e->feedback_props, stream);
   chemistry_struct_dump(e->chemistry, stream);
   parser_struct_dump(e->parameter_file, stream);
   if (e->output_list_snapshots)
@@ -6179,6 +6181,11 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct star_formation *)malloc(sizeof(struct star_formation));
   starformation_struct_restore(star_formation, stream);
   e->star_formation = star_formation;
+
+  struct feedback_props *feedback_properties =
+      (struct feedback_props *)malloc(sizeof(struct feedback_props));
+  feedback_struct_restore(feedback_properties, stream);
+  e->feedback_props = feedback_properties;
 
   struct chemistry_global_data *chemistry =
       (struct chemistry_global_data *)malloc(

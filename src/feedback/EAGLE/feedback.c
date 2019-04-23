@@ -991,3 +991,4 @@ void feedback_props_init(struct feedback_props* fp,
 
   message("initialized stellar feedback");
 }
+
