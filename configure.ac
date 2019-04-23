@@ -1349,7 +1349,8 @@ case "$with_subgrid" in
 	with_subgrid_entropy_floor=EAGLE
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
-	with_subgrid_feedback=none
+	with_subgrid_feedback=EAGLE
+	with_subgrid_black_holes=none
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
