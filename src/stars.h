@@ -39,4 +39,4 @@
 #error "Invalid choice of star model"
 #endif
 
-#endif
+#endif /* SWIFT_STARS_H */

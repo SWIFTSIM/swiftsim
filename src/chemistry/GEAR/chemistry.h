@@ -172,13 +172,12 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   chemistry_init_part(p, data);
 }
 
-
 /**
  * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p) {}
+__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {}
 
 
 #endif /* SWIFT_CHEMISTRY_GEAR_H */

@@ -217,6 +217,7 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -231,6 +232,7 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -338,6 +340,7 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -347,6 +350,7 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -360,6 +364,7 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -454,6 +459,7 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -463,6 +469,7 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -476,6 +483,7 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -569,6 +577,7 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -578,6 +587,7 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -591,6 +601,7 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -683,6 +694,7 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, pj->h, pi, pj, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hi, pj->h, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hi, pj->h, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -782,6 +794,7 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -840,6 +853,7 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -869,6 +883,9 @@ void DOPAIR_SUBSET_BRANCH(struct runner *r, struct cell *restrict ci,
                           int count, struct cell *restrict cj) {
 
   const struct engine *e = r->e;
+
+  /* Anything to do here? */
+  if (cj->hydro.count == 0) return;
 
   /* Get the relative distance between the pairs, wrapping. */
   double shift[3] = {0.0, 0.0, 0.0};
@@ -986,6 +1003,7 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
         runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1156,6 +1174,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1246,6 +1265,7 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1270,6 +1290,9 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 void DOPAIR1_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *restrict e = r->e;
+
+  /* Anything to do here? */
+  if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
 
   /* Anything to do here? */
   if (!cell_is_active_hydro(ci, e) && !cell_is_active_hydro(cj, e)) return;
@@ -1539,6 +1562,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1611,6 +1635,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1619,6 +1644,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1716,6 +1742,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1791,6 +1818,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+            runner_iact_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1799,6 +1827,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+            runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -1830,6 +1859,9 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 void DOPAIR2_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *restrict e = r->e;
+
+  /* Anything to do here? */
+  if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
 
   /* Anything to do here? */
   if (!cell_is_active_hydro(ci, e) && !cell_is_active_hydro(cj, e)) return;
@@ -1991,6 +2023,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2045,6 +2078,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2054,6 +2088,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2066,6 +2101,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+            runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2092,6 +2128,9 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
 void DOSELF1_BRANCH(struct runner *r, struct cell *c) {
 
   const struct engine *restrict e = r->e;
+
+  /* Anything to do here? */
+  if (c->hydro.count == 0) return;
 
   /* Anything to do here? */
   if (!cell_is_active_hydro(c, e)) return;
@@ -2196,6 +2235,7 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
+          runner_iact_nonsym_star_formation(r2, dx, hj, hi, pj, pi, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
           runner_iact_nonsym_diffusion(r2, dx, hj, hi, pj, pi, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2245,6 +2285,7 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2253,6 +2294,7 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
+            runner_iact_nonsym_star_formation(r2, dx, hi, hj, pi, pj, a, H);
 #endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
             runner_iact_nonsym_diffusion(r2, dx, hi, hj, pi, pj, a, H, time_base, t_current, cosmo, with_cosmology);
@@ -2279,6 +2321,9 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
 void DOSELF2_BRANCH(struct runner *r, struct cell *c) {
 
   const struct engine *restrict e = r->e;
+
+  /* Anything to do here? */
+  if (c->hydro.count == 0) return;
 
   /* Anything to do here? */
   if (!cell_is_active_hydro(c, e)) return;

@@ -1,3 +1,25 @@
+/*******************************************************************************
+ * This file is part of SWIFT.
+ * Copyright (c) 2018 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ *                    Loic Hausammann (loic.hausammann@epfl.ch)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ******************************************************************************/
+#ifndef SWIFT_DEFAULT_STARS_IACT_H
+#define SWIFT_DEFAULT_STARS_IACT_H
+
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *
@@ -11,10 +33,11 @@
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_stars_density(float r2, const float *dx, float hi, float hj,
+runner_iact_nonsym_stars_density(const float r2, const float *dx,
+                                 const float hi, const float hj,
                                  struct spart *restrict si,
-                                 const struct part *restrict pj, float a,
-                                 float H) {
+                                 const struct part *restrict pj, const float a,
+                                 const float H) {
 
   float wi, wi_dx;
 
@@ -35,6 +58,8 @@ runner_iact_nonsym_stars_density(float r2, const float *dx, float hi, float hj,
   /* Update ngb counters */
   if (si->num_ngb_density < MAX_NUM_OF_NEIGHBOURS_STARS)
     si->ids_ngbs_density[si->num_ngb_density] = pj->id;
+
+  /* Update ngb counters */
   ++si->num_ngb_density;
 #endif
 }
@@ -52,6 +77,19 @@ runner_iact_nonsym_stars_density(float r2, const float *dx, float hi, float hj,
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_stars_feedback(float r2, const float *dx, float hi, float hj,
-                                  struct spart *restrict si,
-                                  struct part *restrict pj, float a, float H) {}
+runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
+                                  const float hi, const float hj,
+                                  const struct spart *restrict si,
+                                  struct part *restrict pj, const float a,
+                                  const float H) {
+#ifdef DEBUG_INTERACTIONS_STARS
+  /* Update ngb counters */
+  if (si->num_ngb_force < MAX_NUM_OF_NEIGHBOURS_STARS)
+    si->ids_ngbs_force[si->num_ngb_force] = pj->id;
+
+  /* Update ngb counters */
+  ++si->num_ngb_force;
+#endif
+}
+
+#endif

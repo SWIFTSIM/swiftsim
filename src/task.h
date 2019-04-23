@@ -52,9 +52,11 @@ enum task_types {
   task_type_ghost_out, /* Implicit */
   task_type_extra_ghost,
   task_type_drift_part,
+  task_type_drift_spart,
+  task_type_drift_bpart,
   task_type_drift_gpart,
   task_type_drift_gpart_out, /* Implicit */
-  task_type_end_force,
+  task_type_end_hydro_force,
   task_type_kick1,
   task_type_kick2,
   task_type_timestep,
@@ -66,12 +68,17 @@ enum task_types {
   task_type_grav_down_in, /* Implicit */
   task_type_grav_down,
   task_type_grav_mesh,
+  task_type_end_grav_force,
   task_type_cooling,
   task_type_star_formation,
+  task_type_star_formation_in,  /* Implicit */
+  task_type_star_formation_out, /* Implicit */
   task_type_logger,
-  task_type_stars_ghost_in,
+  task_type_stars_in,       /* Implicit */
+  task_type_stars_out,      /* Implicit */
+  task_type_stars_ghost_in, /* Implicit */
   task_type_stars_ghost,
-  task_type_stars_ghost_out,
+  task_type_stars_ghost_out, /* Implicit */
   task_type_stars_sort,
   task_type_count
 } __attribute__((packed));
@@ -87,7 +94,10 @@ enum task_subtypes {
   task_subtype_limiter,
   task_subtype_grav,
   task_subtype_external_grav,
-  task_subtype_tend,
+  task_subtype_tend_part,
+  task_subtype_tend_gpart,
+  task_subtype_tend_spart,
+  task_subtype_tend_bpart,
   task_subtype_xv,
   task_subtype_rho,
   task_subtype_gpart,

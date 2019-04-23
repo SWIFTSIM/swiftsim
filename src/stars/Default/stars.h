@@ -40,9 +40,10 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
  * read in to do some conversions.
  *
  * @param sp The particle to act upon
+ * @param stars_properties The properties of the stellar model.
  */
 __attribute__((always_inline)) INLINE static void stars_first_init_spart(
-    struct spart* sp) {
+    struct spart* sp, const struct stars_props* stars_properties) {
 
   sp->time_bin = 0;
 }
@@ -66,6 +67,15 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
 }
 
 /**
+ * @brief Predict additional particle fields forward in time when drifting
+ *
+ * @param sp The particle
+ * @param dt_drift The drift time-step for positions.
+ */
+__attribute__((always_inline)) INLINE static void stars_predict_extra(
+    struct spart* restrict sp, float dt_drift) {}
+
+/**
  * @brief Sets the values to be predicted in the drifts to their values at a
  * kick time
  *
@@ -77,11 +87,9 @@ __attribute__((always_inline)) INLINE static void stars_reset_predicted_values(
 /**
  * @brief Finishes the calculation of (non-gravity) forces acting on stars
  *
- * Multiplies the forces and accelerations by the appropiate constants
- *
  * @param sp The particle to act upon
  */
-__attribute__((always_inline)) INLINE static void stars_end_force(
+__attribute__((always_inline)) INLINE static void stars_end_feedback(
     struct spart* sp) {}
 
 /**
@@ -134,17 +142,31 @@ __attribute__((always_inline)) INLINE static void stars_spart_has_no_neighbours(
 }
 
 /**
- * @brief Evolve the stellar properties of a #spart.
+ * @brief Reset acceleration fields of a particle
  *
- * This function allows for example to compute the SN rate before sending
- * this information to a different MPI rank.
+ * This is the equivalent of hydro_reset_acceleration.
+ * We do not compute the acceleration on star, therefore no need to use it.
  *
- * @param sp The particle to act upon
- * @param cosmo The current cosmological model.
- * @param stars_properties The #stars_props
+ * @param p The particle to act upon
  */
-__attribute__((always_inline)) INLINE static void stars_evolve_spart(
-    struct spart* restrict sp, const struct stars_props* stars_properties,
-    const struct cosmology* cosmo) {}
+__attribute__((always_inline)) INLINE static void stars_reset_feedback(
+    struct spart* restrict p) {
+
+#ifdef DEBUG_INTERACTIONS_STARS
+  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_STARS; ++i)
+    p->ids_ngbs_force[i] = -1;
+  p->num_ngb_force = 0;
+#endif
+}
+
+/**
+ * @brief Initializes constants related to stellar evolution, initializes imf,
+ * reads and processes yield tables
+ *
+ * @param params swift_params parameters structure
+ * @param stars stars_props data structure
+ */
+inline static void stars_evolve_init(struct swift_params* params,
+                                     struct stars_props* restrict stars) {}
 
 #endif /* SWIFT_DEFAULT_STARS_H */

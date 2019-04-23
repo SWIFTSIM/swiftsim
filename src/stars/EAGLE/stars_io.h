@@ -35,7 +35,7 @@ INLINE static void stars_read_particles(struct spart *sparts,
                                         int *num_fields) {
 
   /* Say how much we want to read */
-  *num_fields = 5;
+  *num_fields = 6;
 
   /* List what we want to read */
   list[0] = io_make_input_field("Coordinates", DOUBLE, 3, COMPULSORY,
@@ -48,6 +48,8 @@ INLINE static void stars_read_particles(struct spart *sparts,
                                 UNIT_CONV_NO_UNITS, sparts, id);
   list[4] = io_make_input_field("SmoothingLength", FLOAT, 1, OPTIONAL,
                                 UNIT_CONV_LENGTH, sparts, h);
+  list[5] = io_make_input_field("Masses", FLOAT, 1, COMPULSORY, UNIT_CONV_MASS,
+                                sparts, mass_init);
 }
 
 /**
@@ -62,7 +64,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          int *num_fields) {
 
   /* Say how much we want to write */
-  *num_fields = 8;
+  *num_fields = 9;
 
   /* List what we want to write */
   list[0] = io_make_output_field("Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH,
@@ -77,10 +79,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  sparts, h);
   list[5] = io_make_output_field("BirthDensity", FLOAT, 1, UNIT_CONV_DENSITY,
                                  sparts, birth_density);
-  list[6] = io_make_output_field("Initial_Masses", FLOAT, 1, UNIT_CONV_MASS,
+  list[6] = io_make_output_field("InitialMasses", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, mass_init);
-  list[7] = io_make_output_field("Birth_time", FLOAT, 1, UNIT_CONV_TIME, sparts,
+  list[7] = io_make_output_field("BirthTime", FLOAT, 1, UNIT_CONV_TIME, sparts,
                                  birth_time);
+  list[8] = io_make_output_field("FeedbackEnergyFraction", FLOAT, 1,
+                                 UNIT_CONV_NO_UNITS, sparts, f_E);
 }
 
 /**
@@ -93,12 +97,14 @@ INLINE static void stars_write_particles(const struct spart *sparts,
  * @param us The internal unit system.
  * @param params The parsed parameters.
  * @param p The already read-in properties of the hydro scheme.
+ * @param cosmo The cosmological model.
  */
 INLINE static void stars_props_init(struct stars_props *sp,
                                     const struct phys_const *phys_const,
                                     const struct unit_system *us,
                                     struct swift_params *params,
-                                    const struct hydro_props *p) {
+                                    const struct hydro_props *p,
+                                    const struct cosmology *cosmo) {
 
   /* Kernel properties */
   sp->eta_neighbours = parser_get_opt_param_float(
@@ -115,15 +121,9 @@ INLINE static void stars_props_init(struct stars_props *sp,
       (pow_dimension(delta_eta) - pow_dimension(sp->eta_neighbours)) *
       kernel_norm;
 
-  /* Maximal smoothing length */
-  sp->h_max = parser_get_opt_param_float(params, "Stars:h_max", p->h_max);
-
   /* Number of iterations to converge h */
   sp->max_smoothing_iterations = parser_get_opt_param_int(
       params, "Stars:max_ghost_iterations", p->max_smoothing_iterations);
-
-  /* Initialize with solar abundance */
-  // sp->chemistry_data.smoothed_metal_mass_fraction_total =
 
   /* Time integration properties */
   const float max_volume_change =
@@ -132,6 +132,11 @@ INLINE static void stars_props_init(struct stars_props *sp,
     sp->log_max_h_change = p->log_max_h_change;
   else
     sp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
+
+  /* Read birth time to set all stars in ICs to (defaults to -1 to indicate star
+   * present in ICs) */
+  sp->spart_first_init_birth_time =
+      parser_get_opt_param_float(params, "Stars:birth_time", -1);
 }
 
 /**
@@ -153,9 +158,6 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
       "(max|dlog(h)/dt|=%f).",
       pow_dimension(expf(sp->log_max_h_change)), sp->log_max_h_change);
 
-  if (sp->h_max != FLT_MAX)
-    message("Maximal smoothing length allowed: %.4f", sp->h_max);
-
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
 }
@@ -171,7 +173,6 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
   io_write_attribute_f(h_grpstars, "Kernel eta", sp->eta_neighbours);
   io_write_attribute_f(h_grpstars, "Smoothing length tolerance",
                        sp->h_tolerance);
-  io_write_attribute_f(h_grpstars, "Maximal smoothing length", sp->h_max);
   io_write_attribute_f(h_grpstars, "Volume log(max(delta h))",
                        sp->log_max_h_change);
   io_write_attribute_f(h_grpstars, "Volume max change time-step",

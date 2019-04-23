@@ -22,8 +22,9 @@
 /* Some standard headers. */
 #include <stdlib.h>
 
-/* Read chemistry */
+/* Read additional subgrid models */
 #include "chemistry_struct.h"
+#include "feedback_struct.h"
 #include "tracers_struct.h"
 
 /**
@@ -61,6 +62,7 @@ struct spart {
   timebin_t time_bin;
 
   struct {
+
     /* Number of neighbours. */
     float wcount;
 
@@ -68,6 +70,16 @@ struct spart {
     float wcount_dh;
 
   } density;
+
+  /* Not used in the default stars */
+  union {
+    double birth_time;
+
+    double birth_scale_factor;
+  };
+
+  /*! Feedback structure */
+  struct feedback_spart_data feedback_data;
 
   /*! Tracer structure */
   struct tracers_xpart_data tracers_data;
@@ -86,11 +98,17 @@ struct spart {
 #endif
 
 #ifdef DEBUG_INTERACTIONS_STARS
+  /*! Number of interactions in the density SELF and PAIR */
+  int num_ngb_density;
+
   /*! List of interacting particles in the density SELF and PAIR */
   long long ids_ngbs_density[MAX_NUM_OF_NEIGHBOURS_STARS];
 
-  /*! Number of interactions in the density SELF and PAIR */
-  int num_ngb_density;
+  /*! Number of interactions in the force SELF and PAIR */
+  int num_ngb_force;
+
+  /*! List of interacting particles in the force SELF and PAIR */
+  long long ids_ngbs_force[MAX_NUM_OF_NEIGHBOURS_STARS];
 #endif
 
 } SWIFT_STRUCT_ALIGN;
@@ -111,9 +129,6 @@ struct stars_props {
 
   /*! Tolerance on neighbour number  (for info only)*/
   float delta_neighbours;
-
-  /*! Maximal smoothing length */
-  float h_max;
 
   /*! Maximal number of iterations to converge h */
   int max_smoothing_iterations;

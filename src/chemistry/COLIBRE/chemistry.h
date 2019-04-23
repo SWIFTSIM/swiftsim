@@ -141,7 +141,6 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->diffusion_data.diffusion_rate[elem] = 0.0f;
     }
-    
 }
 
 /**
@@ -158,9 +157,9 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
 
-  /* Just make all the smoothed fields default to the un-smoothed values */
   //struct chemistry_part_data* cpd = &p->chemistry_data;
-  // CC: Not sure what to do here
+  // CC: Not sure what to do here, better to add message
+    error("Needs implementing!");
 }
 
 /**

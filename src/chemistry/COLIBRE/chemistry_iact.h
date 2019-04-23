@@ -53,7 +53,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   /* option the mass is not part of the particle data.                      */
   float mj = hydro_get_mass(pj);
   float mi = hydro_get_mass(pi);
-
+    
   /* Get r */
   const float r = sqrtf(r2);
 
@@ -102,7 +102,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
-    
+
   struct diffusion_part_data *di = &pi->diffusion_data;
   float dwi_dx;
 
