@@ -20,6 +20,8 @@
 #define SWIFT_EAGLE_FEEDBACK_RESTART_H
 
 #include "feedback.h"
+#include "imf.h"
+#include "yield_tables.h"
 
 /**
  * @brief Zero pointers in yield_table structs
@@ -45,7 +47,7 @@ void zero_yield_table_pointers(struct yield_table table){
  * @param feedback the #feedback_props structure
  * @param cosmo #cosmology structure
  */
-void feedback_restore_tables(struct feedback_props *feedback) {
+void feedback_restore_tables(struct feedback_props *fp) {
   
   /* Initialise the IMF ------------------------------------------------- */
 
@@ -60,10 +62,6 @@ void feedback_restore_tables(struct feedback_props *feedback) {
                     /*(stellar_yields=)*/ NULL, fp);
 
   /* Initialise the yields ---------------------------------------------- */
-
-  /* Read yield table filepath  */
-  parser_get_param_string(params, "EAGLEFeedback:filename",
-                          fp->yield_table_path);
 
   /* Allocate yield tables  */
   allocate_yield_tables(fp);
@@ -128,6 +126,7 @@ void feedback_struct_dump(const struct feedback_props *feedback,
   feedback_copy.imf = NULL;
   feedback_copy.imf_mass_bin = NULL;
   feedback_copy.imf_mass_bin_log10 = NULL;
+  feedback_copy.num_SNII_per_msun = 0;
 
   restart_write_blocks((void *)&feedback_copy,
                        sizeof(struct feedback_props), 1, stream,
