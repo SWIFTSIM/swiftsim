@@ -6114,9 +6114,6 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   space_struct_restore(s, stream);
   e->s = s;
   s->e = e;
-  // debugging print statements
-  //message("space spart id %llu",s->sparts[0].id);
-  //message("cells_top spart id %llu",s->cells_top->stars.parts[0].id);
 
   struct unit_system *us =
       (struct unit_system *)malloc(sizeof(struct unit_system));
