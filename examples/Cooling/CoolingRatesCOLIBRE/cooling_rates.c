@@ -78,9 +78,9 @@ int main(int argc, char **argv) {
   struct part p;
   struct xpart xp;
   struct phys_const internal_const;
+  struct hydro_props hydro_properties;
   struct cooling_function_data cooling;
   struct cosmology cosmo;
-  struct space s;
   const char *parametersFileName = "./cooling_rates.yml";
 
   /* Initialize CPU frequency, this also starts time. */
@@ -126,6 +126,9 @@ int main(int argc, char **argv) {
   units_init_from_params(&us, params, "InternalUnitSystem");
   phys_const_init(&us, params, &internal_const);
 
+  // Init properties of hydro
+  hydro_props_init(&hydro_properties, &internal_const, &us, params);
+
   // Init chemistry
   chemistry_init(params, &us, &internal_const, &chem_data);
   chemistry_first_init_part(&internal_const, &us, &cosmo, &chem_data, &p, &xp);
@@ -143,7 +146,7 @@ int main(int argc, char **argv) {
   message("Density is [log nH]%f", log_10_nh);
 
   // Init cooling
-  cooling_init(params, &us, &internal_const, &cooling);
+  cooling_init(params, &us, &internal_const, &hydro_properties, &cooling);
   cooling_print(&cooling);
 
   // extract mass fractions, calculate table indices and offsets
