@@ -25,23 +25,4 @@
 /* Local includes */
 #include "io_properties.h"
 
-/**
- * @brief Specifies which particle fields to write to a dataset
- *
- * @param parts The particle array.
- * @param xparts The extended data particle array.
- * @param list The list of i/o properties to write.
- *
- * @return Returns the number of fields to write.
- */
-__attribute__((always_inline)) INLINE static int star_formation_write_particles(
-    const struct part* parts, const struct xpart* xparts,
-    struct io_props* list) {
-
-  list[0] =
-      io_make_output_field("SFR", FLOAT, 1, UNIT_CONV_SFR, xparts, sf_data.SFR);
-
-  return 1;
-}
-
 #endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */
