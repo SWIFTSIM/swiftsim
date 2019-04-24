@@ -4639,12 +4639,12 @@ void space_init(struct space *s, struct swift_params *params,
   space_extra_bparts = parser_get_opt_param_int(
       params, "Scheduler:cell_extra_bparts", space_extra_bparts_default);
 
-  engine_max_parts_per_ghost = 
+  engine_max_parts_per_ghost =
       parser_get_opt_param_int(params, "Scheduler:engine_max_parts_per_ghost",
-                               engine_max_parts_per_ghost_default); 
-  engine_max_sparts_per_ghost = 
+                               engine_max_parts_per_ghost_default);
+  engine_max_sparts_per_ghost =
       parser_get_opt_param_int(params, "Scheduler:engine_max_sparts_per_ghost",
-                               engine_max_sparts_per_ghost_default); 
+                               engine_max_sparts_per_ghost_default);
 
   if (verbose) {
     message("max_size set to %d split_size set to %d", space_maxsize,

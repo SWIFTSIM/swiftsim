@@ -111,10 +111,6 @@ enum engine_step_properties {
 #define engine_max_sparts_per_ghost_default 1000
 #define engine_tasks_per_cell_margin 1.2
 
-extern int engine_max_parts_per_ghost;
-extern int engine_max_sparts_per_ghost;
-
-
 /**
  * @brief The rank of the engine as a global variable (for messages).
  */
