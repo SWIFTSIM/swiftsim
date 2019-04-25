@@ -988,20 +988,6 @@ __attribute__((always_inline)) INLINE static void hydro_set_physical_entropy(
 }
 
 /**
- * @brief Sets the drifted physical entropy of a particle
- *
- * @param p The particle of interest.
- * @param cosmo Cosmology data structure
- * @param entropy The physical internal energy
- */
-__attribute__((always_inline)) INLINE static void
-hydro_set_drifted_physical_entropy(struct part* p,
-                                   const struct cosmology* cosmo,
-                                   const float entropy) {
-  error("Needs implementing");
-}
-
-/**
  * @brief Sets the physical internal energy of a particle
  *
  * @param p The particle of interest.
