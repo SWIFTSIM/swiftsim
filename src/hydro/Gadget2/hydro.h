@@ -676,12 +676,14 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->entropy += p->entropy_dt * dt_therm;
 
   /* Check against entropy floor */
-  const float floor = entropy_floor(p, cosmo, floor_props);
+  const float floor_A = entropy_floor(p, cosmo, floor_props);
+
+  /* Check against absolute minimum */
   const float min_u = hydro_props->minimal_internal_energy;
   const float min_A =
       gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u);
 
-  p->entropy = max(p->entropy, floor);
+  p->entropy = max(p->entropy, floor_A);
   p->entropy = max(p->entropy, min_A);
 
   const float h_inv = 1.f / p->h;
@@ -742,7 +744,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
  * @param dt_hydro The time-step for this kick (for hydro forces)
  * @param dt_kick_corr The time-step for this kick (for correction of the kick)
  * @param cosmo The cosmological model.
- * @param hydro_props The constants used in the scheme
+ * @param hydro_props The constants used in the scheme.
+ * @param floor_props The properties of the entropy floor.
  */
 __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     struct part *restrict p, struct xpart *restrict xp, float dt_therm,
@@ -758,13 +761,15 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
       max(xp->entropy_full + delta_entropy, 0.5f * xp->entropy_full);
 
   /* Check against entropy floor */
-  const float floor = entropy_floor(p, cosmo, floor_props);
+  const float floor_A = entropy_floor(p, cosmo, floor_props);
+
+  /* Check against absolute minimum */
   const float min_u = hydro_props->minimal_internal_energy;
   const float min_A =
       gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u);
 
   /* Take highest of both limits */
-  const float entropy_min = max(min_A, floor);
+  const float entropy_min = max(min_A, floor_A);
 
   if (xp->entropy_full < entropy_min) {
     xp->entropy_full = entropy_min;
