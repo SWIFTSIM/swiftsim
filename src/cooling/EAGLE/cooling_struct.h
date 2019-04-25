@@ -126,9 +126,6 @@ struct cooling_function_data {
 
   /*! Index of the previous tables along the redshift index of the tables */
   int previous_z_index;
-
-  /*! Are we doing Newton-Raphson iterations? */
-  int newton_flag;
 };
 
 /**

@@ -587,38 +587,11 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   } else {
 
-    int bisection_flag = 1;
-
-    // MATTHIEU: TO DO restore the Newton-Raphson scheme
-    if (0 && cooling->newton_flag) {
-
-      /* Ok, try a Newton-Raphson scheme instead */
-      double log_u_final_cgs =
-          newton_iter(log(u_0_cgs), u_0_cgs, n_H_index, d_n_H, He_index, d_He,
-                      Lambda_He_reion_cgs, p, cosmo, cooling, phys_const,
-                      abundance_ratio, dt_cgs, &bisection_flag);
-
-      /* Check if newton scheme sent us to a higher energy despite being in
-         a  cooling regime If it did try newton scheme with a better guess.
-         (Guess internal energy near equilibrium solution).  */
-      if (LambdaNet_cgs < 0 && log_u_final_cgs > log(u_0_cgs)) {
-        bisection_flag = 0;
-        log_u_final_cgs =
-            newton_iter(newton_log_u_guess_cgs, u_0_cgs, n_H_index, d_n_H,
-                        He_index, d_He, Lambda_He_reion_cgs, p, cosmo, cooling,
-                        phys_const, abundance_ratio, dt_cgs, &bisection_flag);
-      }
-
-      u_final_cgs = exp(log_u_final_cgs);
-    }
-
-    /* Alright, all else failed, let's bisect */
-    if (bisection_flag || !(cooling->newton_flag)) {
-      u_final_cgs =
-          bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, He_index,
-                         d_He, Lambda_He_reion_cgs, ratefact_cgs, cooling,
-                         abundance_ratio, dt_cgs, p->id);
-    }
+    /* Otherwise, go the bisection route. */
+    u_final_cgs =
+        bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, He_index,
+                       d_He, Lambda_He_reion_cgs, ratefact_cgs, cooling,
+                       abundance_ratio, dt_cgs, p->id);
   }
 
   /* Convert back to internal units */
@@ -923,10 +896,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* set previous_z_index and to last value of redshift table*/
   cooling->previous_z_index = eagle_cooling_N_redshifts - 2;
-
-  /* Check if we are running with the newton scheme */
-  cooling->newton_flag = parser_get_opt_param_int(
-      parameter_file, "EAGLECooling:newton_integration", 0);
 }
 
 /**
