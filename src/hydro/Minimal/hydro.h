@@ -355,34 +355,6 @@ __attribute__((always_inline)) INLINE static void hydro_set_physical_entropy(
 }
 
 /**
- * @brief Sets the drifted physical entropy of a particle
- *
- * @param p The particle of interest.
- * @param cosmo Cosmology data structure
- * @param entropy The physical entropy
- */
-__attribute__((always_inline)) INLINE static void
-hydro_set_drifted_physical_entropy(struct part *p,
-                                   const struct cosmology *cosmo,
-                                   const float entropy) {
-
-  /* Note there is no conversion from physical to comoving entropy */
-  const float comoving_entropy = entropy;
-
-  p->u = gas_internal_energy_from_entropy(p->rho, comoving_entropy);
-
-  /* Now recompute the extra quantities */
-
-  /* Compute the sound speed */
-  const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
-
-  /* Update variables. */
-  p->force.pressure = pressure;
-  p->force.soundspeed = soundspeed;
-}
-
-/**
  * @brief Sets the physical internal energy of a particle
  *
  * @param p The particle of interest.
