@@ -86,6 +86,10 @@ int space_extra_bparts = space_extra_bparts_default;
 /*! Number of extra #gpart we allocate memory for per top-level cell */
 int space_extra_gparts = space_extra_gparts_default;
 
+/*! Maximum number of particles per ghost */
+int engine_max_parts_per_ghost = engine_max_parts_per_ghost_default;
+int engine_max_sparts_per_ghost = engine_max_sparts_per_ghost_default;
+
 /*! Expected maximal number of strays received at a rebuild */
 int space_expected_max_nr_strays = space_expected_max_nr_strays_default;
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
@@ -1885,7 +1889,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
     const int is_local = (c->nodeID == engine_rank);
     const int has_particles = (c->hydro.count > 0) || (c->grav.count > 0) ||
-                              (c->stars.count > 0) | (c->black_holes.count > 0);
+                              (c->stars.count > 0) ||
+                              (c->black_holes.count > 0);
 
     if (is_local) {
       c->hydro.parts = finger;
@@ -4634,6 +4639,13 @@ void space_init(struct space *s, struct swift_params *params,
       params, "Scheduler:cell_extra_gparts", space_extra_gparts_default);
   space_extra_bparts = parser_get_opt_param_int(
       params, "Scheduler:cell_extra_bparts", space_extra_bparts_default);
+
+  engine_max_parts_per_ghost =
+      parser_get_opt_param_int(params, "Scheduler:engine_max_parts_per_ghost",
+                               engine_max_parts_per_ghost_default);
+  engine_max_sparts_per_ghost =
+      parser_get_opt_param_int(params, "Scheduler:engine_max_sparts_per_ghost",
+                               engine_max_sparts_per_ghost_default);
 
   if (verbose) {
     message("max_size set to %d split_size set to %d", space_maxsize,
