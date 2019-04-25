@@ -31,6 +31,11 @@
 #include "error.h"
 #include "inline.h"
 
+/* Pre-declarations to avoid cyclic inclusions */
+static float hydro_get_physical_density(const struct part *restrict p,
+                                        const struct cosmology *cosmo);
+static float hydro_get_comoving_density(const struct part *restrict p);
+
 /* Import the right entropy floor definition */
 #if defined(ENTROPY_FLOOR_NONE)
 #include "./entropy_floor/none/entropy_floor.h"

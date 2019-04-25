@@ -4093,7 +4093,6 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
   const integertime_t ti_current = e->ti_current;
   struct part *const parts = c->hydro.parts;
   struct xpart *const xparts = c->hydro.xparts;
-  const struct entropy_floor_properties *floor = e->entropy_floor;
 
   float dx_max = 0.f, dx2_max = 0.f;
   float dx_max_sort = 0.0f, dx2_max_sort = 0.f;
@@ -4184,20 +4183,8 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
 
       /* Drift... */
       drift_part(p, xp, dt_drift, dt_kick_hydro, dt_kick_grav, dt_therm,
-                 ti_old_part, ti_current);
-
-      /* Limit imposed by the absolute minimum */
-      const float u_minimum = e->hydro_properties->minimal_internal_energy;
-      const float u_part =
-          hydro_get_drifted_physical_internal_energy(p, e->cosmology);
-      const float u_final = max(u_minimum, u_part);
-      hydro_set_drifted_physical_internal_energy(p, e->cosmology, u_final);
-
-      /* Limit imposed by the entropy floor */
-      const float A_floor = entropy_floor(p, e->cosmology, floor);
-      const float A_part = hydro_get_drifted_physical_entropy(p, e->cosmology);
-      const float A_final = max(A_floor, A_part);
-      hydro_set_drifted_physical_entropy(p, e->cosmology, A_final);
+                 ti_old_part, ti_current, e->cosmology, e->hydro_properties,
+                 e->entropy_floor);
 
       /* Update the tracers properties */
       tracers_after_drift(p, xp, e->internal_units, e->physical_constants,
