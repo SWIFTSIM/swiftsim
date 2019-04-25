@@ -95,6 +95,9 @@ void feedback_restore_tables(struct feedback_props *fp) {
 void feedback_struct_dump(const struct feedback_props *feedback,
                          FILE *stream) {
 
+  // Write a file to check everything is the same after restoring (remove for production)
+  print_feedback_struct(feedback);
+
   /* To make sure everything is restored correctly, we zero all the pointers to
      tables. If they are not restored correctly, we would crash after restart on
      the first call to the feedback routines. Helps debugging. */
@@ -148,6 +151,8 @@ void feedback_struct_restore(struct feedback_props *feedback, FILE *stream) {
                       stream, NULL, "feedback function");
 
   feedback_restore_tables(feedback);
+  // Write a file to check everything is the same after restoring (remove for production)
+  print_feedback_struct(feedback);
 }
 
 #endif /* SWIFT_EAGLE_FEEDBACK_RESTART_H */

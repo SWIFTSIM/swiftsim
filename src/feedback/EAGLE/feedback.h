@@ -172,4 +172,6 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   sp->mass -= sp->feedback_data.to_distribute.mass;
 }
 
+void print_feedback_struct(const struct feedback_props *);
+
 #endif /* SWIFT_FEEDBACK_EAGLE_H */
