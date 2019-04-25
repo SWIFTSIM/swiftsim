@@ -498,14 +498,12 @@ void cooling_cool_part(const struct phys_const *phys_const,
 #endif
 
   /* Get internal energy at the last kick step */
-  /* MATTHIEU: Is this really what we want? Shouldn't it be the drifted energy?
-   */
   const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
 
   /* Get the change in internal energy due to hydro forces */
   const float hydro_du_dt = hydro_get_physical_internal_energy_dt(p, cosmo);
 
-  /* Get internal energy at the end of the next kick step (assuming dt does not
+  /* Get internal energy at the end of the step (assuming dt does not
    * increase) */
   double u_0 = (u_start + hydro_du_dt * dt_therm);
 
@@ -605,13 +603,13 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Limit imposed by the entropy floor */
   const double A_floor = entropy_floor(p, cosmo, floor_props);
-  const double rho = hydro_get_physical_density(p, cosmo);
-  const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
+  const double rho_physical = hydro_get_physical_density(p, cosmo);
+  const double u_floor = gas_internal_energy_from_entropy(rho_physical, A_floor);
   u_final = max(u_final, u_floor);
 
   /* Expected change in energy over the next kick step
      (assuming no change in dt) */
-  const double delta_u = u_final - u_start;
+  const double delta_u = u_final - max(u_start, u_floor);
 
   /* Turn this into a rate of change (including cosmology term) */
   const float cooling_du_dt = delta_u / dt_therm;
