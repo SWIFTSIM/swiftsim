@@ -350,40 +350,6 @@ __attribute__((always_inline)) INLINE static void hydro_set_physical_entropy(
 }
 
 /**
- * @brief Sets the drifted physical entropy of a particle
- *
- * @param p The particle of interest.
- * @param cosmo Cosmology data structure
- * @param entropy The physical internal energy
- */
-__attribute__((always_inline)) INLINE static void
-hydro_set_drifted_physical_entropy(struct part *p,
-                                   const struct cosmology *cosmo,
-                                   const float entropy) {
-
-  /* Note there is no conversion from physical to comoving entropy */
-  p->entropy = entropy;
-
-  /* Now recompute the extra quantities */
-
-  /* Inverse of the co-moving density */
-  const float rho_inv = 1.f / p->rho;
-
-  /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
-
-  /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
-
-  /* Divide the pressure by the density squared to get the SPH term */
-  const float P_over_rho2 = pressure * rho_inv * rho_inv;
-
-  /* Update variables. */
-  p->force.P_over_rho2 = P_over_rho2;
-  p->force.soundspeed = soundspeed;
-}
-
-/**
  * @brief Sets the physical internal energy of a particle
  *
  * @param p The particle of interest.
