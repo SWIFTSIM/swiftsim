@@ -696,16 +696,17 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* We use in this function that h is the radius of support */
   const float kernel_support_physical = p->h * cosmo->a * kernel_gamma;
+  const float kernel_support_physical_inv = 1.f / kernel_support_physical;
   const float v_sig_physical = p->viscosity.v_sig * cosmo->a_factor_sound_speed;
   const float soundspeed_physical = hydro_get_physical_soundspeed(p, cosmo);
 
   const float sound_crossing_time_inverse =
-      soundspeed_physical / kernel_support_physical;
+      soundspeed_physical * kernel_support_physical_inv;
 
   /* Construct time differential of div.v implicitly following the ANARCHY spec
    */
 
-  float div_v_dt =
+  const float div_v_dt =
       dt_alpha == 0.f
           ? 0.f
           : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
@@ -734,9 +735,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                              hydro_props->viscosity.length);
   }
 
-  if (p->viscosity.alpha < hydro_props->viscosity.alpha_min) {
-    p->viscosity.alpha = hydro_props->viscosity.alpha_min;
-  }
+  /* Check that we did not hit the minimum */
+  p->viscosity.alpha =
+      max(p->viscosity.alpha, hydro_props->viscosity.alpha_min);
 
   /* Set our old div_v to the one for the next loop */
   p->viscosity.div_v_previous_step = p->viscosity.div_v;
@@ -744,18 +745,20 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Now for the diffusive alpha */
 
   const float diffusion_timescale_physical_inverse =
-      v_sig_physical / kernel_support_physical;
+      v_sig_physical * kernel_support_physical_inv;
 
-  const float sqrt_u = sqrtf(p->u);
+  const float sqrt_u_inv = 1.f / sqrtf(p->u);
+
   /* Calculate initial value of alpha dt before bounding */
   /* Evolution term: following Schaller+ 2015. This is made up of several
-     cosmology factors: physical h, sound speed from u / sqrt(u), and the
-     1 / a^2 coming from the laplace operator. */
+     cosmology factors: physical smoothing length, sound speed from laplace(u) /
+     sqrt(u), and the 1 / a^2 coming from the laplace operator. */
   float alpha_diff_dt = hydro_props->diffusion.beta * kernel_support_physical *
-                        p->diffusion.laplace_u * cosmo->a_factor_sound_speed /
-                        (sqrt_u * cosmo->a * cosmo->a);
+                        p->diffusion.laplace_u * cosmo->a_factor_sound_speed *
+                        sqrt_u_inv * cosmo->a2_inv;
+
   /* Decay term: not documented in Schaller+ 2015 but was present
-   * in the original EAGLE code and in Schaye+ 2015 */
+   * in the original EAGLE code and in appendix of Schaye+ 2015 */
   alpha_diff_dt -= (p->diffusion.alpha - hydro_props->diffusion.alpha_min) *
                    diffusion_timescale_physical_inverse;
 
@@ -763,11 +766,10 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   new_diffusion_alpha += alpha_diff_dt * dt_alpha;
 
   /* Consistency checks to ensure min < alpha < max */
-  if (new_diffusion_alpha > hydro_props->diffusion.alpha_max) {
-    new_diffusion_alpha = hydro_props->diffusion.alpha_max;
-  } else if (new_diffusion_alpha < hydro_props->diffusion.alpha_min) {
-    new_diffusion_alpha = hydro_props->diffusion.alpha_min;
-  }
+  new_diffusion_alpha =
+      min(new_diffusion_alpha, hydro_props->diffusion.alpha_max);
+  new_diffusion_alpha =
+      max(new_diffusion_alpha, hydro_props->diffusion.alpha_min);
 
   p->diffusion.alpha = new_diffusion_alpha;
 }
