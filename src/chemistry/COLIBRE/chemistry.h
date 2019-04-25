@@ -247,6 +247,27 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 }
 
 /**
+ * @brief Sets the chemistry properties of the sparticles to a valid start
+ * state.
+ *
+ * @param data The global chemistry information.
+ * @param sp Pointer to the sparticle data.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
+                                                                             const struct chemistry_global_data* data, struct spart* restrict sp) {
+    
+    /* Initialize mass fractions for total metals and each metal individually */
+    if (data->initial_metal_mass_fraction_total != -1) {
+        sp->chemistry_data.metal_mass_fraction_total =
+        data->initial_metal_mass_fraction_total;
+        
+        for (int elem = 0; elem < chemistry_element_count; ++elem)
+        sp->chemistry_data.metal_mass_fraction[elem] =
+        data->initial_metal_mass_fraction[elem];
+    }
+}
+
+/**
  * @brief Prints the properties of the chemistry model to stdout.
  *
  * @brief The #chemistry_global_data containing information about the current
@@ -269,6 +290,20 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(struct par
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
     }
+    
+    struct chemistry_part_data* cpd = &p->chemistry_data;
+    
+    for (int i = 0; i < chemistry_element_count; i++) {
+        /* Final operation on the density (add self-contribution). */
+        cpd->smoothed_metal_mass_fraction[i] = cpd->metal_mass_fraction[i];
+    }
+    
+    /* Smooth mass fraction of all metals */
+    cpd->smoothed_metal_mass_fraction_total = cpd->metal_mass_fraction_total;
+    
+    /* Smooth iron mass fraction from SNIa */
+    cpd->smoothed_iron_mass_fraction_from_SNIa = cpd->iron_mass_fraction_from_SNIa;
 }
+
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */
