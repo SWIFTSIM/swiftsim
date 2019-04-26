@@ -88,7 +88,7 @@
 #include "star_formation.h"
 #include "star_formation_logger.h"
 #include "star_formation_logger_struct.h"
-#include "feedback_restart.h"
+#include "feedback.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"

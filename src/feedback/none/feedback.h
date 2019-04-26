@@ -114,4 +114,39 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     const struct cosmology* cosmo, const struct unit_system* us,
     const double star_age_beg_step, const double dt) {}
 
+/**
+ * @brief Restore feedback tables (if applicable) after
+ * restart
+ *
+ * @param feedback the #feedback_props structure
+ * @param cosmo #cosmology structure
+ */
+inline void feedback_restore_tables(struct feedback_props *feedback) {
+
+}
+
+/**
+ * @brief Write a feedback struct to the given FILE as a stream of bytes.
+ *
+ * @param feedback the struct
+ * @param stream the file stream
+ */
+inline void feedback_struct_dump(const struct feedback_props *feedback,
+                         FILE *stream) {
+}
+
+/**
+ * @brief Restore a hydro_props struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Read the structure from the stream and restore the feedback tables by
+ * re-reading them.
+ *
+ * @param feedback the struct
+ * @param stream the file stream
+ * @param cosmo #cosmology structure
+ */
+inline void feedback_struct_restore(struct feedback_props *feedback, FILE *stream) {
+}
+
 #endif /* SWIFT_FEEDBACK_NONE_H */

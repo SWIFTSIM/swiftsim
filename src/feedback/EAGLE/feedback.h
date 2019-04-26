@@ -172,4 +172,13 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   sp->mass -= sp->feedback_data.to_distribute.mass;
 }
 
+void zero_yield_table_pointers(struct yield_table table);
+
+void feedback_restore_tables(struct feedback_props *fp);
+
+void feedback_struct_dump(const struct feedback_props *feedback,
+                         FILE *stream);
+
+void feedback_struct_restore(struct feedback_props *feedback, FILE *stream);
+
 #endif /* SWIFT_FEEDBACK_EAGLE_H */
