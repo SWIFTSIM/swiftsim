@@ -1002,7 +1002,7 @@ void feedback_props_init(struct feedback_props* fp,
  * @param table yield_table struct in which pointers to tables
  * set to NULL
  */
-void zero_yield_table_pointers(struct yield_table table){
+void zero_yield_table_pointers(struct yield_table table) {
   table.mass = NULL;
   table.metallicity = NULL;
   table.yield_IMF_resampled = NULL;
@@ -1020,8 +1020,8 @@ void zero_yield_table_pointers(struct yield_table table){
  * @param feedback the #feedback_props structure
  * @param cosmo #cosmology structure
  */
-void feedback_restore_tables(struct feedback_props *fp) {
-  
+void feedback_restore_tables(struct feedback_props* fp) {
+
   init_imf(fp);
 
   /* Allocate yield tables  */
@@ -1053,8 +1053,7 @@ void feedback_restore_tables(struct feedback_props *fp) {
  * @param feedback the struct
  * @param stream the file stream
  */
-void feedback_struct_dump(const struct feedback_props *feedback,
-                         FILE *stream) {
+void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream) {
 
   /* To make sure everything is restored correctly, we zero all the pointers to
      tables. If they are not restored correctly, we would crash after restart on
@@ -1088,9 +1087,8 @@ void feedback_struct_dump(const struct feedback_props *feedback,
   feedback_copy.imf_mass_bin = NULL;
   feedback_copy.imf_mass_bin_log10 = NULL;
 
-  restart_write_blocks((void *)&feedback_copy,
-                       sizeof(struct feedback_props), 1, stream,
-                       "feedback", "feedback function");
+  restart_write_blocks((void*)&feedback_copy, sizeof(struct feedback_props), 1,
+                       stream, "feedback", "feedback function");
 }
 
 /**
@@ -1103,9 +1101,9 @@ void feedback_struct_dump(const struct feedback_props *feedback,
  * @param feedback the struct
  * @param stream the file stream
  */
-void feedback_struct_restore(struct feedback_props *feedback, FILE *stream) {
-  restart_read_blocks((void *)feedback, sizeof(struct feedback_props), 1,
-                      stream, NULL, "feedback function");
+void feedback_struct_restore(struct feedback_props* feedback, FILE* stream) {
+  restart_read_blocks((void*)feedback, sizeof(struct feedback_props), 1, stream,
+                      NULL, "feedback function");
 
   feedback_restore_tables(feedback);
 }
