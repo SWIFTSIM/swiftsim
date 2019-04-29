@@ -75,7 +75,7 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
  * @param ti_current Integer end of time-step (for debugging checks).
  * @param cosmo The cosmological model.
  * @param hydro_props The properties of the hydro scheme.
- * @param floor_props The properties of the entropy floor.
+ * @param floor The properties of the entropy floor.
  */
 __attribute__((always_inline)) INLINE static void drift_part(
     struct part *restrict p, struct xpart *restrict xp, double dt_drift,
