@@ -1022,19 +1022,7 @@ void zero_yield_table_pointers(struct yield_table table){
  */
 void feedback_restore_tables(struct feedback_props *fp) {
   
-  /* Initialise the IMF ------------------------------------------------- */
-
   init_imf(fp);
-
-  /* Calculate number of type II SN per unit solar mass based on our choice
-   * of IMF and integration limits for type II SNe.
-   * Note: No weighting by yields here. */
-  fp->num_SNII_per_msun =
-      integrate_imf(fp->log10_SNII_min_mass_msun, fp->log10_SNII_max_mass_msun,
-                    eagle_imf_integration_no_weight,
-                    /*(stellar_yields=)*/ NULL, fp);
-
-  /* Initialise the yields ---------------------------------------------- */
 
   /* Allocate yield tables  */
   allocate_yield_tables(fp);
@@ -1099,7 +1087,6 @@ void feedback_struct_dump(const struct feedback_props *feedback,
   feedback_copy.imf = NULL;
   feedback_copy.imf_mass_bin = NULL;
   feedback_copy.imf_mass_bin_log10 = NULL;
-  feedback_copy.num_SNII_per_msun = 0;
 
   restart_write_blocks((void *)&feedback_copy,
                        sizeof(struct feedback_props), 1, stream,
