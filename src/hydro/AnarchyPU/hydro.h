@@ -604,6 +604,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
     struct part *restrict p) {
+
   p->viscosity.v_sig = 2.f * p->force.soundspeed;
 }
 
@@ -628,7 +629,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
 
   /* Include the extra factors in the del^2 u */
 
-  p->diffusion.laplace_u *= 2 * h_inv_dim_plus_one;
+  p->diffusion.laplace_u *= 2.f * h_inv_dim_plus_one;
 }
 
 /**

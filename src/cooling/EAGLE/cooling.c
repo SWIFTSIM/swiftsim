@@ -604,7 +604,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Limit imposed by the entropy floor */
   const double A_floor = entropy_floor(p, cosmo, floor_props);
   const double rho_physical = hydro_get_physical_density(p, cosmo);
-  const double u_floor = gas_internal_energy_from_entropy(rho_physical, A_floor);
+  const double u_floor =
+      gas_internal_energy_from_entropy(rho_physical, A_floor);
   u_final = max(u_final, u_floor);
 
   /* Expected change in energy over the next kick step

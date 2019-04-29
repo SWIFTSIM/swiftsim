@@ -672,7 +672,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   const float floor_u =
       gas_internal_energy_from_entropy(p->rho * cosmo->a3_inv, floor_A);
 
-  /* Check agains absolute minimum */
+  /* Check against absolute minimum */
   const float min_u = hydro_props->minimal_internal_energy;
 
   p->u = max(p->u, floor_u);
