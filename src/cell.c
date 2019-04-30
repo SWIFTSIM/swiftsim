@@ -1784,6 +1784,8 @@ void cell_clean_links(struct cell *c, void *data) {
   c->grav.mm = NULL;
   c->stars.density = NULL;
   c->stars.feedback = NULL;
+  c->black_holes.density = NULL;
+  c->black_holes.feedback = NULL;
 }
 
 /**
