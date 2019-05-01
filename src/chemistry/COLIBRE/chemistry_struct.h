@@ -108,6 +108,7 @@ struct diffusion_part_data {
     
     /*! Diffusion rate */
     float diffusion_rate[chemistry_element_count];
+
 };
 
 #endif /* SWIFT_CHEMISTRY_STRUCT_COLIBRE_H */

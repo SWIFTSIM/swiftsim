@@ -157,7 +157,6 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
-
     /* Make all the fields default values */
     struct chemistry_part_data* cpd = &p->chemistry_data;
     

@@ -185,7 +185,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
     if ((right = (float *)malloc(sizeof(float) * c->stars.count)) == NULL)
       error("Can't allocate memory for right.");
     for (int k = 0; k < c->stars.count; k++)
-      if (spart_is_active(&sparts[k], e)) {
+      if (spart_is_active(&sparts[k], e) &&
+          feedback_is_active(&sparts[k], e->time, cosmo, with_cosmology)) {
         sid[scount] = k;
         h_0[scount] = sparts[k].h;
         left[scount] = 0.f;
@@ -378,7 +379,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             star_age_end_of_step = cosmology_get_delta_time_from_scale_factors(
                 cosmo, sp->birth_scale_factor, (float)cosmo->a);
           } else {
-            star_age_end_of_step = e->time - sp->birth_time;
+            star_age_end_of_step = (float)e->time - sp->birth_time;
           }
 
           /* Has this star been around for a while ? */
@@ -441,7 +442,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             /* Otherwise, sub-self interaction? */
             else if (l->t->type == task_type_sub_self)
               runner_dosub_subset_stars_density(r, finger, sparts, sid, scount,
-                                                NULL, -1, 1);
+                                                NULL, 1);
 
             /* Otherwise, sub-pair interaction? */
             else if (l->t->type == task_type_sub_pair) {
@@ -449,10 +450,10 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               /* Left or right? */
               if (l->t->ci == finger)
                 runner_dosub_subset_stars_density(r, finger, sparts, sid,
-                                                  scount, l->t->cj, -1, 1);
+                                                  scount, l->t->cj, 1);
               else
                 runner_dosub_subset_stars_density(r, finger, sparts, sid,
-                                                  scount, l->t->ci, -1, 1);
+                                                  scount, l->t->ci, 1);
             }
           }
         }
@@ -734,7 +735,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
-                                             with_cosmology);
+                                             with_cosmology, phys_const,
+                                             hydro_props, us, cooling);
 
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
@@ -907,7 +909,7 @@ void runner_do_hydro_sort(struct runner *r, struct cell *c, int flags,
   } else {
     flags &= ~c->hydro.sorted;
   }
-  if (flags == 0 && !c->hydro.do_sub_sort) return;
+  if (flags == 0 && !cell_get_flag(c, cell_flag_do_hydro_sub_sort)) return;
 
   /* Check that the particles have been moved to the current time */
   if (flags && !cell_are_part_drifted(c, r->e))
@@ -1090,7 +1092,7 @@ void runner_do_hydro_sort(struct runner *r, struct cell *c, int flags,
 
   /* Clear the cell's sort flags. */
   c->hydro.do_sort = 0;
-  c->hydro.do_sub_sort = 0;
+  cell_clear_flag(c, cell_flag_do_hydro_sub_sort);
   c->hydro.requires_sorts = 0;
 
   if (clock) TIMER_TOC(timer_dosort);
@@ -1129,7 +1131,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
   } else {
     flags &= ~c->stars.sorted;
   }
-  if (flags == 0 && !c->stars.do_sub_sort) return;
+  if (flags == 0 && !cell_get_flag(c, cell_flag_do_stars_sub_sort)) return;
 
   /* Check that the particles have been moved to the current time */
   if (flags && !cell_are_spart_drifted(c, r->e)) {
@@ -1307,7 +1309,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
 
   /* Clear the cell's sort flags. */
   c->stars.do_sort = 0;
-  c->stars.do_sub_sort = 0;
+  cell_clear_flag(c, cell_flag_do_stars_sub_sort);
   c->stars.requires_sorts = 0;
 
   if (clock) TIMER_TOC(timer_do_stars_sort);
@@ -1609,14 +1611,12 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
         const float h_init = h_0[i];
         const float h_old = p->h;
         const float h_old_dim = pow_dimension(h_old);
-        // const float h_old_inv_dim = pow_dimension(1.f / h_old);
         const float h_old_dim_minus_one = pow_dimension_minus_one(h_old);
 
         float h_new;
         int has_no_neighbours = 0;
 
-        if (p->density.wcount == 0.f) {
-          // 1e-5 * kernel_root * h_old_inv_dim) { /* No neighbours case */
+        if (p->density.wcount == 0.f) { /* No neighbours case */
 
           /* Flag that there were no neighbours */
           has_no_neighbours = 1;
@@ -1899,7 +1899,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             /* Otherwise, sub-self interaction? */
             else if (l->t->type == task_type_sub_self)
               runner_dosub_subset_density(r, finger, parts, pid, count, NULL,
-                                          -1, 1);
+                                          1);
 
             /* Otherwise, sub-pair interaction? */
             else if (l->t->type == task_type_sub_pair) {
@@ -1907,10 +1907,10 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
               /* Left or right? */
               if (l->t->ci == finger)
                 runner_dosub_subset_density(r, finger, parts, pid, count,
-                                            l->t->cj, -1, 1);
+                                            l->t->cj, 1);
               else
                 runner_dosub_subset_density(r, finger, parts, pid, count,
-                                            l->t->ci, -1, 1);
+                                            l->t->ci, 1);
             }
           }
         }
@@ -2939,19 +2939,19 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
                 ti_gravity_beg_max = 0;
 
   /* Limit irrespective of cell flags? */
-  force |= c->hydro.do_limiter;
+  force = (force || cell_get_flag(c, cell_flag_do_hydro_limiter));
 
   /* Early abort? */
   if (c->hydro.count == 0) {
 
     /* Clear the limiter flags. */
-    c->hydro.do_limiter = 0;
-    c->hydro.do_sub_limiter = 0;
+    cell_clear_flag(
+        c, cell_flag_do_hydro_limiter | cell_flag_do_hydro_sub_limiter);
     return;
   }
 
   /* Loop over the progeny ? */
-  if (c->split && (force || c->hydro.do_sub_limiter)) {
+  if (c->split && (force || cell_get_flag(c, cell_flag_do_hydro_sub_limiter))) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *restrict cp = c->progeny[k];
@@ -3041,8 +3041,8 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
   }
 
   /* Clear the limiter flags. */
-  c->hydro.do_limiter = 0;
-  c->hydro.do_sub_limiter = 0;
+  cell_clear_flag(c,
+                  cell_flag_do_hydro_limiter | cell_flag_do_hydro_sub_limiter);
 
   if (timer) TIMER_TOC(timer_do_limiter);
 }
@@ -3580,19 +3580,19 @@ void *runner_main(void *data) {
 
         case task_type_sub_pair:
           if (t->subtype == task_subtype_density)
-            runner_dosub_pair1_density(r, ci, cj, t->flags, 1);
+            runner_dosub_pair1_density(r, ci, cj, 1);
 #ifdef EXTRA_HYDRO_LOOP
           else if (t->subtype == task_subtype_gradient)
-            runner_dosub_pair1_gradient(r, ci, cj, t->flags, 1);
+            runner_dosub_pair1_gradient(r, ci, cj, 1);
 #endif
           else if (t->subtype == task_subtype_force)
-            runner_dosub_pair2_force(r, ci, cj, t->flags, 1);
+            runner_dosub_pair2_force(r, ci, cj, 1);
           else if (t->subtype == task_subtype_limiter)
-            runner_dosub_pair2_limiter(r, ci, cj, t->flags, 1);
+            runner_dosub_pair2_limiter(r, ci, cj, 1);
           else if (t->subtype == task_subtype_stars_density)
-            runner_dosub_pair_stars_density(r, ci, cj, t->flags, 1);
+            runner_dosub_pair_stars_density(r, ci, cj, 1);
           else if (t->subtype == task_subtype_stars_feedback)
-            runner_dosub_pair_stars_feedback(r, ci, cj, t->flags, 1);
+            runner_dosub_pair_stars_feedback(r, ci, cj, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
           break;

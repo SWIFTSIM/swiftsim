@@ -53,7 +53,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   /* option the mass is not part of the particle data.                      */
   float mj = hydro_get_mass(pj);
   float mi = hydro_get_mass(pi);
-    
+
   /* Get r */
   const float r = sqrtf(r2);
 
