@@ -158,7 +158,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         float mj = hydro_get_mass(pj);
         float mi = hydro_get_mass(pi);
         float wi, wj, dwi_dx, dwj_dx;
-        
+        float rhoj = hydro_get_comoving_density(pj);
+        float rhoi = hydro_get_comoving_density(pi);
+
         /* Get r */
         float r = sqrtf(r2);
         
@@ -167,7 +169,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         float hj_inv = 1.0f / hj;
         const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
         const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
-        const float rho_j_inv = 1.0f / pj->rho;
+        const float rho_j_inv = 1.0f / rhoj;
         
         /* Compute the kernel function for pj */
         const float xj = r * hj_inv;
@@ -178,7 +180,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         float hi_inv = 1.0f / hi;
         const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
         const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
-        const float rho_i_inv = 1.0f / pi->rho;
+        const float rho_i_inv = 1.0f / rhoi;
         
         /* Compute the kernel function for pi */
         const float xi = r * hi_inv;
@@ -255,6 +257,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
         
         /* Get mass */
         float mj = hydro_get_mass(pj);
+        float rhoj = hydro_get_comoving_density(pj);
+        float rhoi = hydro_get_comoving_density(pi);
         float wi, wj, dwi_dx, dwj_dx;
         
         /* Get r */
@@ -265,7 +269,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
         float hj_inv = 1.0f / hj;
         const float hj_inv_dim = pow_dimension(hj_inv);       /* 1/h^d */
         const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
-        const float rho_j_inv = 1.0f / pj->rho;
+        const float rho_j_inv = 1.0f / rhoj;
         
         /* Compute the kernel function for pj */
         const float xj = r * hj_inv;
@@ -276,7 +280,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
         float hi_inv = 1.0f / hi;
         const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
         const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
-        const float rho_i_inv = 1.0f / pi->rho;
+        const float rho_i_inv = 1.0f / rhoi;
         
         /* Compute the kernel function for pi */
         const float xi = r * hi_inv;
