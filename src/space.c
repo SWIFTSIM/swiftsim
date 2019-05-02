@@ -294,6 +294,8 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->mpi.grav.recv_ti = NULL;
     c->mpi.stars.recv = NULL;
     c->mpi.stars.recv_ti = NULL;
+    c->mpi.black_holes.recv = NULL;
+    c->mpi.black_holes.recv_ti = NULL;
     c->mpi.limiter.recv = NULL;
 
     c->mpi.hydro.send_xv = NULL;
@@ -304,6 +306,8 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->mpi.grav.send_ti = NULL;
     c->mpi.stars.send = NULL;
     c->mpi.stars.send_ti = NULL;
+    c->mpi.black_holes.send = NULL;
+    c->mpi.black_holes.send_ti = NULL;
     c->mpi.limiter.send = NULL;
 #endif
   }
@@ -605,6 +609,7 @@ void space_regrid(struct space *s, int verbose) {
           c->hydro.ti_old_part = ti_current;
           c->grav.ti_old_part = ti_current;
           c->stars.ti_old_part = ti_current;
+          c->black_holes.ti_old_part = ti_current;
           c->grav.ti_old_multipole = ti_current;
 #ifdef WITH_MPI
           c->mpi.tag = -1;
@@ -617,6 +622,8 @@ void space_regrid(struct space *s, int verbose) {
           c->mpi.grav.recv_ti = NULL;
           c->mpi.stars.recv = NULL;
           c->mpi.stars.recv_ti = NULL;
+          c->mpi.black_holes.recv = NULL;
+          c->mpi.black_holes.recv_ti = NULL;
           c->mpi.limiter.recv = NULL;
 
           c->mpi.hydro.send_xv = NULL;
@@ -627,6 +634,8 @@ void space_regrid(struct space *s, int verbose) {
           c->mpi.grav.send_ti = NULL;
           c->mpi.stars.send = NULL;
           c->mpi.stars.send_ti = NULL;
+          c->mpi.black_holes.send = NULL;
+          c->mpi.black_holes.send_ti = NULL;
           c->mpi.limiter.send = NULL;
 #endif  // WITH_MPI
           if (s->with_self_gravity) c->grav.multipole = &s->multipoles_top[cid];
@@ -3722,6 +3731,7 @@ void space_recycle(struct space *s, struct cell *c) {
   /* Clear the cell. */
   if (lock_destroy(&c->lock) != 0 || lock_destroy(&c->grav.plock) != 0 ||
       lock_destroy(&c->mlock) != 0 || lock_destroy(&c->stars.lock) != 0 ||
+      lock_destroy(&c->black_holes.lock) != 0 ||
       lock_destroy(&c->stars.star_formation_lock))
     error("Failed to destroy spinlocks.");
 
@@ -3772,6 +3782,7 @@ void space_recycle_list(struct space *s, struct cell *cell_list_begin,
     /* Clear the cell. */
     if (lock_destroy(&c->lock) != 0 || lock_destroy(&c->grav.plock) != 0 ||
         lock_destroy(&c->mlock) != 0 || lock_destroy(&c->stars.lock) != 0 ||
+        lock_destroy(&c->black_holes.lock) != 0 ||
         lock_destroy(&c->stars.star_formation_lock))
       error("Failed to destroy spinlocks.");
 
@@ -3872,6 +3883,7 @@ void space_getcells(struct space *s, int nr_cells, struct cell **cells) {
         lock_init(&cells[j]->grav.plock) != 0 ||
         lock_init(&cells[j]->grav.mlock) != 0 ||
         lock_init(&cells[j]->stars.lock) != 0 ||
+        lock_init(&cells[j]->black_holes.lock) != 0 ||
         lock_init(&cells[j]->stars.star_formation_lock) != 0)
       error("Failed to initialize cell spinlocks.");
   }

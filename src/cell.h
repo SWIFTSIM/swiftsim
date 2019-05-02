@@ -172,6 +172,26 @@ struct pcell {
 
   } stars;
 
+  /*! Black hole variables */
+  struct {
+
+    /*! Number of #spart in this cell. */
+    int count;
+
+    /*! Maximal smoothing length. */
+    double h_max;
+
+    /*! Minimal integer end-of-timestep in this cell for black hole tasks */
+    integertime_t ti_end_min;
+
+    /*! Maximal integer end-of-timestep in this cell for black hole tasks */
+    integertime_t ti_end_max;
+
+    /*! Integer time of the last drift of the #spart in this cell */
+    integertime_t ti_old_part;
+
+  } black_holes;
+
   /*! Maximal depth in that part of the tree */
   int maxdepth;
 
@@ -729,6 +749,21 @@ struct cell {
       struct link *send_ti;
 
     } stars;
+
+    struct {
+      /* Task receiving bpart data. */
+      struct task *recv;
+
+      /* Task receiving data (time-step). */
+      struct task *recv_ti;
+
+      /* Linked list for sending bpart data. */
+      struct link *send;
+
+      /* Linked list for sending data (time-step). */
+      struct link *send_ti;
+
+    } black_holes;
 
     struct {
       /* Task receiving limiter data. */
