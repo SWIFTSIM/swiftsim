@@ -372,6 +372,7 @@ void space_regrid(struct space *s, int verbose) {
 
   const size_t nr_parts = s->nr_parts;
   const size_t nr_sparts = s->nr_sparts;
+  const size_t nr_bparts = s->nr_bparts;
   const ticks tic = getticks();
   const integertime_t ti_current = (s->e != NULL) ? s->e->ti_current : 0;
 
@@ -391,6 +392,9 @@ void space_regrid(struct space *s, int verbose) {
         if (c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
+        if (c->black_holes.h_max > h_max) {
+          h_max = c->black_holes.h_max;
+        }
       }
 
       /* Can we instead use all the top-level cells? */
@@ -403,6 +407,9 @@ void space_regrid(struct space *s, int verbose) {
         if (c->nodeID == engine_rank && c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
+        if (c->nodeID == engine_rank && c->black_holes.h_max > h_max) {
+          h_max = c->black_holes.h_max;
+        }
       }
 
       /* Last option: run through the particles */
@@ -412,6 +419,9 @@ void space_regrid(struct space *s, int verbose) {
       }
       for (size_t k = 0; k < nr_sparts; k++) {
         if (s->sparts[k].h > h_max) h_max = s->sparts[k].h;
+      }
+      for (size_t k = 0; k < nr_bparts; k++) {
+        if (s->bparts[k].h > h_max) h_max = s->bparts[k].h;
       }
     }
   }
@@ -3379,6 +3389,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         /* Update the cell-wide properties */
         h_max = max(h_max, cp->hydro.h_max);
         stars_h_max = max(stars_h_max, cp->stars.h_max);
+        black_holes_h_max = max(black_holes_h_max, cp->black_holes.h_max);
         ti_hydro_end_min = min(ti_hydro_end_min, cp->hydro.ti_end_min);
         ti_hydro_end_max = max(ti_hydro_end_max, cp->hydro.ti_end_max);
         ti_hydro_beg_max = max(ti_hydro_beg_max, cp->hydro.ti_beg_max);
