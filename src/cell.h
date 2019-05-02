@@ -1138,7 +1138,8 @@ __attribute__((always_inline)) INLINE static int cell_can_split_pair_hydro_task(
   /* into account any part motion (i.e. dx_max == 0 here) */
   return c->split &&
          (space_stretch * kernel_gamma * c->hydro.h_max < 0.5f * c->dmin) &&
-         (space_stretch * kernel_gamma * c->stars.h_max < 0.5f * c->dmin);
+         (space_stretch * kernel_gamma * c->stars.h_max < 0.5f * c->dmin) &&
+         (space_stretch * kernel_gamma * c->black_holes.h_max < 0.5f * c->dmin);
 }
 
 /**
@@ -1157,7 +1158,8 @@ __attribute__((always_inline)) INLINE static int cell_can_split_self_hydro_task(
   /* tasks will be created. So no need to check for h_max */
   return c->split &&
          (space_stretch * kernel_gamma * c->hydro.h_max < 0.5f * c->dmin) &&
-         (space_stretch * kernel_gamma * c->stars.h_max < 0.5f * c->dmin);
+         (space_stretch * kernel_gamma * c->stars.h_max < 0.5f * c->dmin) &&
+         (space_stretch * kernel_gamma * c->black_holes.h_max < 0.5f * c->dmin);
 }
 
 /**
@@ -1207,6 +1209,7 @@ cell_need_rebuild_for_hydro_pair(const struct cell *ci, const struct cell *cj) {
   }
   return 0;
 }
+
 /**
  * @brief Have star particles in a pair of cells moved too much and require a
  * rebuild?
