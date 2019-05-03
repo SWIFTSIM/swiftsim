@@ -1344,7 +1344,7 @@ case "$with_subgrid" in
 	with_subgrid_pressure_floor=GEAR
 	with_subgrid_stars=GEAR
 	with_subgrid_star_formation=GEAR
-	with_subgrid_feedback=none
+	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
 	enable_fof=no
    ;;
@@ -1801,6 +1801,9 @@ fi
 case "$with_feedback" in
    EAGLE)
       AC_DEFINE([FEEDBACK_EAGLE], [1], [EAGLE stellar feedback and evolution model])
+   ;;
+   GEAR)
+      AC_DEFINE([FEEDBACK_GEAR], [1], [GEAR stellar feedback and evolution model])
    ;;
    none)
       AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
