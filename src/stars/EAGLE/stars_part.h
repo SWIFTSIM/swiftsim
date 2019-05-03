@@ -121,11 +121,11 @@ struct spart {
   /*! List of interacting particles in the density SELF and PAIR */
   long long ids_ngbs_density[MAX_NUM_OF_NEIGHBOURS_STARS];
 
-  /*! Number of interactions in the force SELF and PAIR */
-  int num_ngb_force;
+  /*! Number of interactions in the feedback SELF and PAIR */
+  int num_ngb_feedback;
 
-  /*! List of interacting particles in the force SELF and PAIR */
-  long long ids_ngbs_force[MAX_NUM_OF_NEIGHBOURS_STARS];
+  /*! List of interacting particles in the feedback SELF and PAIR */
+  long long ids_ngbs_feedback[MAX_NUM_OF_NEIGHBOURS_STARS];
 #endif
 
 } SWIFT_STRUCT_ALIGN;
@@ -152,9 +152,6 @@ struct stars_props {
 
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
-
-  /*! Value to set birth time of stars read from ICs */
-  float spart_first_init_birth_time;
 };
 
 #endif /* SWIFT_EAGLE_STAR_PART_H */

@@ -90,6 +90,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const struct spart *restrict si,
                                   struct part *restrict pj,
                                   struct xpart *restrict xpj,
+				  const struct feedback_props* fp,
                                   const struct cosmology *restrict cosmo,
                                   const integertime_t ti_current) {
 

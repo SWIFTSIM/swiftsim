@@ -182,9 +182,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     const struct chemistry_global_data* data, struct spart* restrict sp) {
 
-  error(
-      "MATTHIEU: Loic this is a new function. I don't know whether you"
-      " want something here.");
+  // TODO
 }
 
 #endif /* SWIFT_CHEMISTRY_GEAR_H */
