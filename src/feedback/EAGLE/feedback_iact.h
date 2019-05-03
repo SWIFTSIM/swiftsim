@@ -87,9 +87,11 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const float hi, const float hj,
-                                  const struct spart *si, struct part *pj,
-                                  struct xpart *xpj,
-                                  const struct cosmology *cosmo,
+                                  const struct spart *restrict si,
+                                  struct part *restrict pj,
+                                  struct xpart *restrict xpj,
+				  const struct feedback_props* fp,
+                                  const struct cosmology *restrict cosmo,
                                   const integertime_t ti_current) {
 
 #ifdef SWIFT_DEBUG_CHECKS
