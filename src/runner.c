@@ -3104,6 +3104,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &parts[k];
       struct xpart *restrict xp = &xparts[k];
 
+      feedback_update_part(p, xp, e->cosmology);
+
       /* If particle needs updating */
       if (part_is_active(p, e)) {
 
