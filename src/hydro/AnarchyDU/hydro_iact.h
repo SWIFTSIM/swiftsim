@@ -321,14 +321,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float mj = pj->mass;
   const float mi = pi->mass;
 
-  const float miui = mi * pi->u;
-  const float mjuj = mj * pj->u;
-
   const float rhoi = pi->rho;
   const float rhoj = pj->rho;
 
-  const float pressurei = pi->pressure;
-  const float pressurej = pj->pressure;
+  const float pressurei = pi->force.pressure;
+  const float pressurej = pj->force.pressure;
 
   /* Get the kernel for hi. */
   const float hi_inv = 1.0f / hi;
@@ -448,13 +445,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Recover some data */
   // const float mi = pi->mass;
   const float mj = pj->mass;
-  const float mi = pi->mass;
 
   const float rhoi = pi->rho;
   const float rhoj = pj->rho;
 
-  const float pressurei = pi->pressure;
-  const float pressurej = pj->pressure;
+  const float pressurei = pi->force.pressure;
+  const float pressurej = pj->force.pressure;
 
   /* Get the kernel for hi. */
   const float hi_inv = 1.0f / hi;

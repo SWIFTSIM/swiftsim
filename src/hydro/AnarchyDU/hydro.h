@@ -646,12 +646,9 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   /* Re-set problematic values */
   p->rho = p->mass * kernel_root * h_inv_dim;
   p->viscosity.v_sig = 0.f;
-  p->pressure_bar =
-      p->mass * p->u * hydro_gamma_minus_one * kernel_root * h_inv_dim;
   p->density.wcount = kernel_root * h_inv_dim;
   p->density.rho_dh = 0.f;
   p->density.wcount_dh = 0.f;
-  p->density.pressure_bar_dh = 0.f;
 
   p->density.rot_v[0] = 0.f;
   p->density.rot_v[1] = 0.f;
