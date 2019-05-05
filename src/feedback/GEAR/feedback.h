@@ -129,7 +129,6 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {
 
-  sp->feedback_data.explosion_time = -1;
   feedback_init_spart(sp);
 }
 
@@ -174,14 +173,13 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
-  /* Does the star need to explode? */
-  if (sp->feedback_data.explosion_time > 0)
-    return;
 
-  if (sp->mass < feedback_props->mass_ejected)
+  // TODO
+  float mass_ejected = 0.f;
+  if (sp->mass < mass_ejected)
     error("Stars cannot have negative mass. (%g < %g)",
-	  sp->mass, feedback_props->mass_ejected);
-  sp->mass -= feedback_props->mass_ejected;
+	  sp->mass, mass_ejected);
+  sp->mass -= mass_ejected;
 
 }
 

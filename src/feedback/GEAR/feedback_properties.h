@@ -32,8 +32,6 @@ struct feedback_props {
   /*! Thermal time */
   float thermal_time;
 
-  /*! Mass ejected per supernovae */
-  float mass_ejected;
 };
 
 
@@ -63,12 +61,6 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   fp->thermal_time =
     parser_get_param_float(params, "GEARFeedback:ThermalTime_Myr");
   fp->thermal_time *= phys_const->const_year * 1e6;
-
-  /* Mass ejection */
-  double mass_ejected =
-    parser_get_param_float(params, "GEARFeedback:MassEjected_Msun");
-  mass_ejected *= phys_const->const_solar_mass;
-  fp->mass_ejected = mass_ejected;
 
   /* Print a final message. */
   message("initialized stellar feedback");
