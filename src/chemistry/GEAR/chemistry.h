@@ -47,7 +47,8 @@
 __attribute__((always_inline)) INLINE static float
 chemistry_metal_mass_fraction(const struct part* restrict p,
                               const struct xpart* restrict xp) {
-  return p->chemistry_data.Z;
+  // TODO
+  return 0;
 }
 
 /**
@@ -96,7 +97,7 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
 
   struct chemistry_part_data* cpd = &p->chemistry_data;
 
-  for (int i = 0; i < chemistry_element_count; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     cpd->smoothed_metal_mass_fraction[i] = 0.f;
   }
 }
@@ -125,7 +126,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   struct chemistry_part_data* cpd = &p->chemistry_data;
 
-  for (int i = 0; i < chemistry_element_count; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     /* Final operation on the density (add self-contribution). */
     cpd->smoothed_metal_mass_fraction[i] +=
         m * cpd->metal_mass_fraction[i] * kernel_root;
@@ -168,7 +169,6 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     const struct chemistry_global_data* data, struct part* restrict p,
     struct xpart* restrict xp) {
 
-  p->chemistry_data.Z = data->initial_metallicity;
   chemistry_init_part(p, data);
 }
 

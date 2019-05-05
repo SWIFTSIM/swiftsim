@@ -1690,7 +1690,8 @@ esac
 #  chemistry function
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
-      [chemistry function @<:@none, GEAR, EAGLE default: none@:>@]
+      [chemistry function @<:@none, GEAR_*, EAGLE default: none@:>@
+      For GEAR, you need to provide the number of element (e.g. GEAR_10)]
    )],
    [with_chemistry="$withval"],
    [with_chemistry="none"]
@@ -1708,8 +1709,10 @@ case "$with_chemistry" in
    none)
       AC_DEFINE([CHEMISTRY_NONE], [1], [No chemistry function])
    ;;
-   GEAR)
+   GEAR_*)
       AC_DEFINE([CHEMISTRY_GEAR], [1], [Chemistry taken from the GEAR model])
+      number_element=${with_chemistry:5}
+      AC_DEFINE_UNQUOTED([CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow]
    ;;
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
