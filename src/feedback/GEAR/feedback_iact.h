@@ -103,15 +103,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   kernel_deval(xi, &wi, &wi_dx);
   wi *= hi_inv_dim;
 
-  /* Does the star need to explode? */
-  if (si->feedback_data.explosion_time > 0 && si->feedback_data.explosion_time != ti_current)
-    return;
-
-  si->feedback_data.explosion_time = ti_current;
-  message("exploding");
-
   /* Mass received */
-  const double m_ej = fp->mass_ejected;
+  // TODO
+  const double m_ej = 0;
   // TODO compute inverse before feedback loop
   const double weight = mj * wi / si->feedback_data.enrichment_weight;
   const double dm = m_ej * weight;

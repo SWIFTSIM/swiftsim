@@ -64,10 +64,6 @@ struct feedback_spart_data {
 
     } to_distribute;
   };
-
-    /* Does this star already exploded */
-  integertime_t explosion_time;
-
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_GEAR_H */
