@@ -75,8 +75,7 @@
 #elif defined(ANARCHY_DU_SPH)
 #include "./hydro/AnarchyDU/hydro.h"
 #include "./hydro/AnarchyDU/hydro_iact.h"
-#define SPH_IMPLEMENTATION \
-  "ANARCHY (Density-Energy) SPH (Borrow+ in prep)"
+#define SPH_IMPLEMENTATION "ANARCHY (Density-Energy) SPH (Borrow+ in prep)"
 #elif defined(ANARCHY_PU_SPH)
 #include "./hydro/AnarchyPU/hydro.h"
 #include "./hydro/AnarchyPU/hydro_iact.h"

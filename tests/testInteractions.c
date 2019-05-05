@@ -154,7 +154,7 @@ void dump_indv_particle_fields(char *fileName, struct part *p) {
           p->force.v_sig, p->entropy_dt, 0.f
 #elif defined(DEFAULT_SPH)
           p->force.v_sig, 0.f, p->force.u_dt
-#elif defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) || \
+#elif defined(MINIMAL_SPH) || defined(HOPKINS_PU_SPH) ||           \
     defined(HOPKINS_PU_SPH_MONAGHAN) || defined(ANARCHY_PU_SPH) || \
     defined(ANARCHY_DU_SPH)
           p->force.v_sig, 0.f, p->u_dt
