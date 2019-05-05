@@ -46,7 +46,7 @@
 #define hydro_props_default_H_ionization_temperature 1e4
 #define hydro_props_default_viscosity_alpha 0.8f
 
-#ifdef ANARCHY_PU_SPH
+#if defined(ANARCHY_PU_SPH) or defined(ANARCHY_DU_SPH)
 /* This nasty #ifdef is only temporary until we separate the viscosity
  * and hydro components. If it is not removed by July 2019, shout at JB. */
 #undef hydro_props_default_viscosity_alpha
