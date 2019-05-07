@@ -410,9 +410,11 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
 
   /* Compute the sound speed */
   const float soundspeed = hydro_get_comoving_soundspeed(p);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Update variables. */
   p->force.soundspeed = soundspeed;
+  p->force.pressure = pressure;
 }
 
 /**
@@ -437,10 +439,7 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
   const float dt_cfl = 2.f * kernel_gamma * CFL_condition * cosmo->a * p->h /
                        (cosmo->a_factor_sound_speed * p->viscosity.v_sig);
 
-  const float dt_u_change =
-      (p->u_dt != 0.0f) ? fabsf(const_max_u_change * p->u / p->u_dt) : FLT_MAX;
-
-  return fminf(dt_cfl, dt_u_change);
+  return dt_cfl;
 }
 
 /**
@@ -803,8 +802,10 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   p->u = xp->u_full;
 
   /* Compute the sound speed */
+  const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);
   const float soundspeed = hydro_get_comoving_soundspeed(p);
 
+  p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
 }
 
@@ -857,8 +858,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   /* Predict density and weighted pressure */
   const float w2 = -hydro_dimension * w1;
   if (fabsf(w2) < 0.2f) {
-    const float expf_approx =
-        approx_expf(w2); /* 4th order expansion of exp(w) */
+    const float expf_approx = approx_expf(w2); /* 4th order expansion of exp(w) */
     p->rho *= expf_approx;
   } else {
     const float expf_exact = expf(w2);
@@ -866,8 +866,10 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   }
 
   /* Compute the new sound speed */
+  const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);
   const float soundspeed = hydro_get_comoving_soundspeed(p);
 
+  p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
 }
 
@@ -958,16 +960,13 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
   xp->u_full = p->u;
 
   /* Apply the minimal energy limit */
-  const float min_energy =
+  const float min_comoving_energy =
       hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
-  if (xp->u_full < min_energy) {
-    xp->u_full = min_energy;
-    p->u = min_energy;
+  if (xp->u_full < min_comoving_energy) {
+    xp->u_full = min_comoving_energy;
+    p->u = min_comoving_energy;
     p->u_dt = 0.f;
   }
-
-  /* Note that unlike Minimal the pressure and sound speed cannot be calculated
-   * here because they are smoothed properties in this scheme. */
 
   /* Set the initial value of the artificial viscosity based on the non-variable
      schemes for safety */
@@ -978,6 +977,13 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   /* Set the initial values for the thermal diffusion */
   p->diffusion.alpha = hydro_props->diffusion.alpha;
+
+  const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);
+  const float soundspeed = gas_soundspeed_from_internal_energy(p->rho, p->u);
+
+  p->force.pressure = pressure;
+  p->force.soundspeed = soundspeed;
+
 }
 
 /**
