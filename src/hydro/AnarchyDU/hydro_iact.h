@@ -356,7 +356,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
-  const float v_sig = 0.5f * (pi->viscosity.v_sig + pj->viscosity.v_sig);
+  const float v_sig = pi->force.soundspeed + pj->force.soundspeed -
+                      const_viscosity_beta * mu_ij;
 
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
@@ -481,7 +482,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Compute sound speeds and signal velocity */
-  const float v_sig = 0.5f * (pi->viscosity.v_sig + pj->viscosity.v_sig);
+  const float v_sig = pi->force.soundspeed + pj->force.soundspeed -
+                      const_viscosity_beta * mu_ij;
 
   /* Balsara term */
   const float balsara_i = pi->force.balsara;
