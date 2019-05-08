@@ -637,11 +637,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* Check against absolute minimum */
   const float min_u =
-<<<<<<< HEAD
       hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
-=======
-      hydro_props->minimal_internal_energy / cosmo->a_factor_sound_speed;
->>>>>>> 1edf96eaa93d232d8710f00d53ce0d418d926933
 
   p->u = max(p->u, floor_u);
   p->u = max(p->u, min_u);
