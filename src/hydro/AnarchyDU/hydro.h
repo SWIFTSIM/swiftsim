@@ -841,7 +841,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
       gas_internal_energy_from_entropy(p->rho, floor_A);
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_sound_speed;
+  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   p->u = max(p->u, floor_u);
   p->u = max(p->u, min_u);
@@ -925,7 +925,7 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
       gas_internal_energy_from_entropy(p->rho, floor_A);
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_sound_speed;
+  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   /* Take highest of both limits */
   const float energy_min = max(min_u, floor_u);
