@@ -23,8 +23,8 @@
 /**
  * @file AnarchyDU/hydro_part.h
  * @brief Density-Energy conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
- *        Price 2008 thermal diffusion (particle definition) 
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
+ *        Price 2008 thermal diffusion (particle definition)
  */
 
 #include "chemistry_struct.h"

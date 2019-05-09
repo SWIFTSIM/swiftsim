@@ -23,7 +23,7 @@
 /**
  * @file AnarchyDU/hydro_io.h
  * @brief Density-Energy conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
  *        Price 2008 thermal diffusion (i/o routines)
  */
 

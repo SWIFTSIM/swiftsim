@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Coypright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk)
- *               
+ *
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -24,7 +24,7 @@
 /**
  * @file Minimal/hydro_defaults.h
  * @brief Minimal conservative implementation of SPH . (default parameters)
- *        
+ *
  *        This file defines a number of things that are used in
  *        hydro_properties.c as defaults for run-time parameters
  *        as well as a number of compile-time parameters.
@@ -43,18 +43,17 @@
  * to hydro_props_default_viscosity_alpha_max in variable schemes. */
 #define hydro_props_default_viscosity_alpha_feedback_reset 0.8f
 
-
 /* Viscosity paramaters -- Defaults; can be changed at run-time */
 
 /* The "initial" hydro viscosity, or the fixed value for non-variable
  * schemes. This usually takes the value 0.8. */
 #define hydro_props_default_viscosity_alpha 0.8f
 
-/* Minimal value for the viscosity alpha in variable schemes. In 
+/* Minimal value for the viscosity alpha in variable schemes. In
  * non-variable schemes this must be defined but is not used. */
 #define hydro_props_default_viscosity_alpha_min 0.8f
 
-/* Maximal value for the viscosity alpha in variable schemes. In 
+/* Maximal value for the viscosity alpha in variable schemes. In
  * non-variable schemes this must be defined but is not used. */
 #define hydro_props_default_viscosity_alpha_max 0.8f
 
@@ -62,7 +61,6 @@
  * non-variable schemes this must be defined but is not used. This also
  * sets the decay length for the diffusion. */
 #define hydro_props_default_viscosity_length 0.25f
-
 
 /* Diffusion parameters -- Defaults; can be changed at run-time */
 
@@ -77,11 +75,11 @@
  * the contact discontinuity problem. */
 #define hydro_props_default_diffusion_beta 0.0f
 
-/* Maximal value for the diffusion alpha in variable schemes. In 
+/* Maximal value for the diffusion alpha in variable schemes. In
  * non-variable schemes this must be defined but is not used. */
 #define hydro_props_default_diffusion_alpha_max 0.0f
 
-/* Minimal value for the diffusion alpha in variable schemes. In 
+/* Minimal value for the diffusion alpha in variable schemes. In
  * non-variable schemes this must be defined but is not used. */
 #define hydro_props_default_diffusion_alpha_min 0.0f
 

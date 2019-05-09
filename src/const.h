@@ -20,7 +20,6 @@
 #ifndef SWIFT_CONST_H
 #define SWIFT_CONST_H
 
-
 /* Time integration constants. */
 #define const_max_u_change 0.1f
 

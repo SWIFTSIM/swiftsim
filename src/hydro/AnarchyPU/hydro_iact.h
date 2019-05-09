@@ -23,7 +23,7 @@
 /**
  * @file AnarchyPU/hydro_iact.h
  * @brief P-U conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
  *        Price 2008 thermal diffusion) (Neighbour loop equations).
  *
  * See AnarchyPU/hydro.h for references.

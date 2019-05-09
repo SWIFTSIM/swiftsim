@@ -45,7 +45,6 @@
 #define hydro_props_default_min_temp 0.f
 #define hydro_props_default_H_ionization_temperature 1e4
 
-
 /**
  * @brief Initialize the global properties of the hydro scheme.
  *

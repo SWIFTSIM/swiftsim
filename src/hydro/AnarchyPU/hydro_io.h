@@ -22,7 +22,7 @@
 /**
  * @file AnarchyPU/hydro_io.h
  * @brief P-U conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
  *        Price 2008 thermal diffusion) (i/o routines)
  *
  * See AnarchyPU/hydro.h for references.

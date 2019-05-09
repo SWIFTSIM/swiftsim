@@ -23,7 +23,7 @@
 /**
  * @file AnarchyDU/hydro.h
  * @brief Density-Energy conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
  *        Price 2008 thermal diffusion  (Non-neighbour loop
  *        equations)
  */
@@ -831,11 +831,11 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* Check against entropy floor */
   const float floor_A = entropy_floor(p, cosmo, floor_props);
-  const float floor_u =
-      gas_internal_energy_from_entropy(p->rho, floor_A);
+  const float floor_u = gas_internal_energy_from_entropy(p->rho, floor_A);
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
+  const float min_u =
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   p->u = max(p->u, floor_u);
   p->u = max(p->u, min_u);
@@ -852,7 +852,8 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   /* Predict density and weighted pressure */
   const float w2 = -hydro_dimension * w1;
   if (fabsf(w2) < 0.2f) {
-    const float expf_approx = approx_expf(w2); /* 4th order expansion of exp(w) */
+    const float expf_approx =
+        approx_expf(w2); /* 4th order expansion of exp(w) */
     p->rho *= expf_approx;
   } else {
     const float expf_exact = expf(w2);
@@ -915,11 +916,11 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
 
   /* Check against entropy floor */
   const float floor_A = entropy_floor(p, cosmo, floor_props);
-  const float floor_u =
-      gas_internal_energy_from_entropy(p->rho, floor_A);
+  const float floor_u = gas_internal_energy_from_entropy(p->rho, floor_A);
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
+  const float min_u =
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   /* Take highest of both limits */
   const float energy_min = max(min_u, floor_u);
@@ -977,7 +978,6 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
-
 }
 
 /**
