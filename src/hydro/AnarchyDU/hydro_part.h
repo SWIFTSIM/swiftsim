@@ -27,7 +27,9 @@
  *        Price 2008 thermal diffusion (particle definition) 
  */
 
-
+#include "chemistry_struct.h"
+#include "cooling_struct.h"
+#include "star_formation_struct.h"
 #include "tracers_struct.h"
 
 /**
