@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk) &
- *                    Josh Borrow (joshua.borrow@durham.ac.uk)
+ * Coypright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk) &
+ *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,11 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+
 #ifndef SWIFT_ANARCHY_DU_HYDRO_DEBUG_H
 #define SWIFT_ANARCHY_DU_HYDRO_DEBUG_H
+
 /**
- * @file PressureEnergy/hydro_debug.h
- * @brief P-U conservative implementation of SPH (Debugging routines)
+ * @file AnarchyDU/hydro_debug.h
+ * @brief Density-Energy conservative implementation of SPH,
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        Price 2008 thermal diffusion (Debugging routines)
  */
 
 __attribute__((always_inline)) INLINE static void hydro_debug_particle(

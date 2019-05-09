@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk) &
- *                    Josh Borrow (joshua.borrow@durham.ac.uk)
+ * Coypright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk) &
+ *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -22,18 +22,10 @@
 
 /**
  * @file AnarchyDU/hydro.h
- * @brief P-U conservative implementation of SPH (Non-neighbour loop
- * equations)
- *
- * The thermal variable is the internal energy (u). A simple constant
- * viscosity term with a Balsara switch is implemented.
- *
- * No thermal conduction term is implemented.
- *
- * This implementation corresponds to the one presented in the SWIFT
- * documentation and in Hopkins, "A general class of Lagrangian smoothed
- * particle hydrodynamics methods and implications for fluid mixing problems",
- * MNRAS, 2013.
+ * @brief Density-Energy conservative implementation of SPH,
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        Price 2008 thermal diffusion  (Non-neighbour loop
+ *        equations)
  */
 
 #include "adiabatic_index.h"

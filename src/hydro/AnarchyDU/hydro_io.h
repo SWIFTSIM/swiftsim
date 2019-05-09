@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk) &
- *                    Josh Borrow (joshua.borrow@durham.ac.uk)
+ * Coypright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk) &
+ *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -19,16 +19,12 @@
  ******************************************************************************/
 #ifndef SWIFT_ANARCHY_DU_HYDRO_IO_H
 #define SWIFT_ANARCHY_DU_HYDRO_IO_H
+
 /**
- * @file PressureEnergy/hydro_io.h
- * @brief P-U implementation of SPH (i/o routines)
- *
- * The thermal variable is the internal energy (u). A simple constant
- * viscosity term with a Balsara switch is implemented.
- *
- * No thermal conduction term is implemented.
- *
- * See PressureEnergy/hydro.h for references.
+ * @file AnarchyDU/hydro_io.h
+ * @brief Density-Energy conservative implementation of SPH,
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        Price 2008 thermal diffusion (i/o routines)
  */
 
 #include "adiabatic_index.h"
