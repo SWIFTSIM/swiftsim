@@ -20,15 +20,12 @@
 #ifndef SWIFT_ANARCHY_PU_HYDRO_IO_H
 #define SWIFT_ANARCHY_PU_HYDRO_IO_H
 /**
- * @file PressureEnergy/hydro_io.h
- * @brief P-U implementation of SPH (i/o routines)
+ * @file AnarchyPU/hydro_io.h
+ * @brief P-U conservative implementation of SPH,
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        Price 2008 thermal diffusion) (i/o routines)
  *
- * The thermal variable is the internal energy (u). A simple constant
- * viscosity term with a Balsara switch is implemented.
- *
- * No thermal conduction term is implemented.
- *
- * See PressureEnergy/hydro.h for references.
+ * See AnarchyPU/hydro.h for references.
  */
 
 #include "adiabatic_index.h"

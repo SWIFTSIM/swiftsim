@@ -21,14 +21,11 @@
 #define SWIFT_ANARCHY_PU_HYDRO_H
 
 /**
- * @file PressureEnergy/hydro.h
- * @brief P-U conservative implementation of SPH (Non-neighbour loop
- * equations)
- *
- * The thermal variable is the internal energy (u). A simple constant
- * viscosity term with a Balsara switch is implemented.
- *
- * No thermal conduction term is implemented.
+ * @file AnarchyPU/hydro.h
+ * @brief P-U conservative implementation of SPH,
+ *        with added ANARCHY physics (Cullen & Denhen 2011 AV, 
+ *        Price 2008 thermal diffusion (Non-neighbour loop
+ *        equations)
  *
  * This implementation corresponds to the one presented in the SWIFT
  * documentation and in Hopkins, "A general class of Lagrangian smoothed
