@@ -21,7 +21,7 @@
 #define SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_H
 
 /**
- * @file PressureEnergy/hydro.h
+ * @file PressureEnergyMorrisMonaghanAV/hydro.h
  * @brief P-U conservative implementation of SPH (Non-neighbour loop
  * equations)
  *

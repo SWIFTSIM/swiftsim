@@ -20,7 +20,7 @@
 #ifndef SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_IO_H
 #define SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_IO_H
 /**
- * @file PressureEnergy/hydro_io.h
+ * @file PressureEnergyMorrisMonaghanAV/hydro_io.h
  * @brief P-U implementation of SPH (i/o routines)
  *
  * The thermal variable is the internal energy (u). A simple variable
