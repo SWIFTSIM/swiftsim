@@ -68,7 +68,7 @@
 
 /* The "initial" diffusion, or the fixed value for non-variable
  * schemes. This usually takes the value 0.0. */
-#define hydro_props_default_diffusion_alpha 0.0f
+#define hydro_props_default_diffusion_alpha 1.0f
 
 /* Beta coefficient for the diffusion. This controls how fast the
  * diffusion coefficient peaks, and how high it can get. Chosen to be

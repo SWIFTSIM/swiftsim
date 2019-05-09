@@ -243,7 +243,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Thermal conductivity */
   v_sig_u = sqrtf(2.f * hydro_gamma_minus_one *
                   fabs(rhoi * pi->u - rhoj * pj->u) / (rhoi + rhoj));
-  tc = const_conductivity_alpha * v_sig_u / (rhoi + rhoj);
+  tc = p->alpha_diff * v_sig_u / (rhoi + rhoj);
   tc *= (wi_dr + wj_dr);
 
   /* Get the common factor out. */
@@ -353,7 +353,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Thermal conductivity */
   v_sig_u = sqrtf(2.f * hydro_gamma_minus_one *
                   fabs(rhoi * pi->u - rhoj * pj->u) / (rhoi + rhoj));
-  tc = const_conductivity_alpha * v_sig_u / (rhoi + rhoj);
+  tc = p->alpha_diff * v_sig_u / (rhoi + rhoj);
   tc *= (wi_dr + wj_dr);
 
   /* Get the common factor out. */

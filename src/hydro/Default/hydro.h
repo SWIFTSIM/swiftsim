@@ -556,6 +556,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Set the AV property */
   p->alpha = hydro_props->viscosity.alpha;
 
+  /* Set the diffusion parameter */
+  p->alpha_diff = hydro_props->diffusion.alpha;
+
   /* Viscosity parameter decay time */
   /* const float tau = h / (2.f * const_viscosity_length * p->force.soundspeed);
    */
