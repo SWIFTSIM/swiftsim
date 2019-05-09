@@ -31,6 +31,9 @@ struct feedback_part_data {
 
   /*! specific energy received from supernovae */
   float delta_u;
+
+  /*! Momemtum received from a supernovae */
+  float delta_p[3];
 };
 
 /**

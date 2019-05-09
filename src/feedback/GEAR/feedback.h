@@ -39,9 +39,9 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
     struct part *restrict p, struct xpart *restrict xp, const struct cosmology *restrict cosmo) {
 
   /* Update mass */
-  const float mass = hydro_get_mass(p);
+  const float new_mass = hydro_get_mass(p) + xp->feedback_data.delta_mass;
 
-  hydro_set_mass(p, mass + xp->feedback_data.delta_mass);
+  hydro_set_mass(p, new_mass);
 
   xp->feedback_data.delta_mass = 0;
 
@@ -54,13 +54,24 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
   xp->feedback_data.delta_u = 0.;
 
+  /* Update the velocities */
+  for(int i=0; i < 3; i++) {
+    const float dp = xp->feedback_data.delta_p[i] / new_mass;
+
+    xp->v_full[i] += dp;
+    p->v[i] += dp;
+
+    xp->feedback_data.delta_p[i] = 0;
+  }
+  
+
   /* // TODO activate particle */
 
 
 }
 
 /**
- * @brief Should we do feedback for this star?
+ * @Brief Should we do feedback for this star?
  *
  * @param sp The star to consider.
  */
