@@ -121,22 +121,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   xpj->feedback_data.delta_mass = dm;
   xpj->feedback_data.delta_u = du;
 
-  /* Compute the norm of the speed. */
-  float vi2 = 0.;
-  float vj2 = 0.;
+  /* Compute momentum received. */
   for(int i = 0; i < 3; i++) {
-    vi2 += si->v[i] * si->v[i];
-    vj2 += pj->v[i] * pj->v[i];
-  }
-
-  /* Update velocity in order to conserve momentum */
-  // TODO Update value in feedback_update_part
-  float fac = (mj + weight * m_ej * vi2 / vj2) / new_mass;
-  fac = sqrt(fac);
-  for(int i = 0; i < 3; i++) {
-    float dv = (fac - 1.) * pj->v[i];
-    xpj->v_full[i] += dv;
-    pj->v[i] += dv;
+    xpj->feedback_data.delta_p += dm * (si->v[i] - xpj->v[j]);
   }
 
 }
