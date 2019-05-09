@@ -44,34 +44,7 @@
 #define hydro_props_default_init_temp 0.f
 #define hydro_props_default_min_temp 0.f
 #define hydro_props_default_H_ionization_temperature 1e4
-#define hydro_props_default_viscosity_alpha 0.8f
 
-#if defined(ANARCHY_PU_SPH) || defined(ANARCHY_DU_SPH)
-/* This nasty #ifdef is only temporary until we separate the viscosity
- * and hydro components. If it is not removed by July 2019, shout at JB. */
-#undef hydro_props_default_viscosity_alpha
-#define hydro_props_default_viscosity_alpha \
-  0.1f /* Use a very low initial AV paramater for hydrodynamics tests */
-#define hydro_props_default_viscosity_alpha_min \
-  0.0f /* values NOT the same as Schaller+ 2015 */
-#define hydro_props_default_viscosity_alpha_max \
-  2.0f /* values taken from Schaller+ 2015 */
-#define hydro_props_default_viscosity_length \
-  0.25f /* values taken from Schaller+ 2015 */
-#else
-#define hydro_props_default_viscosity_alpha_min \
-  0.1f /* values taken from (price,2004), not used in legacy gadget mode */
-#define hydro_props_default_viscosity_alpha_max \
-  2.0f /* values taken from (price,2004), not used in legacy gadget mode */
-#define hydro_props_default_viscosity_length \
-  0.1f /* Values taken from (Price,2004), not used in legacy gadget mode */
-#endif /* ANARCHY_PU_SPH */
-
-/* Following values taken directly from the ANARCHY paper (Schaller+ 2015) */
-#define hydro_props_default_diffusion_alpha 0.0f
-#define hydro_props_default_diffusion_beta 0.01f
-#define hydro_props_default_diffusion_alpha_max 1.0f
-#define hydro_props_default_diffusion_alpha_min 0.0f
 
 /**
  * @brief Initialize the global properties of the hydro scheme.
