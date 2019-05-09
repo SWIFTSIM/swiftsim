@@ -44,6 +44,8 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
+#include "./hydro_defaults.h"
+
 /**
  * @brief Returns the comoving internal energy of a particle at the last
  * time the particle was kicked.

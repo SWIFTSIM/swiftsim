@@ -39,6 +39,8 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
+#include "./hydro_defaults.h"
+
 #include <float.h>
 
 /**

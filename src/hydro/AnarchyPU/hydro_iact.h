@@ -32,6 +32,8 @@
 #include "adiabatic_index.h"
 #include "minmax.h"
 
+#include "./hydro_defaults.h"
+
 /**
  * @brief Density interaction between two part*icles.
  *

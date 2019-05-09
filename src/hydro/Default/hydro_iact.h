@@ -22,6 +22,8 @@
 
 #include "adiabatic_index.h"
 
+#include "./hydro_defaults.h"
+
 /**
  * @brief SPH interaction functions following the Gadget-2 version of SPH.
  *

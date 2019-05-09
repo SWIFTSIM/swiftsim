@@ -38,6 +38,8 @@
 #include "io_properties.h"
 #include "kernel_hydro.h"
 
+#include "./hydro_defaults.h"
+
 /**
  * @brief Specifies which particle fields to read from a dataset
  *

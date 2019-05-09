@@ -46,6 +46,8 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
+#include "./hydro_defaults.h"
+
 /*
  * Note: Define PLANETARY_SPH_NO_BALSARA to disable the Balsara (1995) switch
  * for the artificial viscosity and use the vanilla Monaghan (1992) instead.
