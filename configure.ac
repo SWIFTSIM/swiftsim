@@ -1861,7 +1861,8 @@ esac
 #  Pressure floor
 AC_ARG_WITH([pressure-floor], 
     [AS_HELP_STRING([--with-pressure-floor=<floor>],
-       [pressure floor @<:@none, GEAR, default: none@:>@] 
+       [pressure floor @<:@none, GEAR, default: none@:>@
+       The hydro model needs to be compatible.]
     )],
     [with_pressure_floor="$withval"],
     [with_pressure_floor="none"]

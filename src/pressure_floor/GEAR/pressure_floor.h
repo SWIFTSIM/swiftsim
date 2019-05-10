@@ -46,28 +46,50 @@ struct pressure_floor_properties {
 };
 
 /**
- * @brief Compute the pressure floor of a given #part.
+ * @brief Compute the physical pressure floor of a given #part.
  *
  * Note that the particle is not updated!!
  *
  * @param p The #part.
- * @param cosmo The cosmological model.
- * @param props The properties of the pressure floor.
+ * @param cosmo The #cosmology.
+ * @param pressure The pressure without any pressure floor.
  */
-static INLINE float pressure_floor(
+static INLINE float pressure_floor_get_physical_pressure(
     const struct part *p, const struct cosmology *cosmo,
-    const struct pressure_floor_properties *props) {
+    const float pressure) {
 
   /* Physical density in internal units */
   const float rho = hydro_get_physical_density(p, cosmo);
 
   /* Compute pressure floor */
-  float pressure = 4.0 * M_1_PI * p->h * p->h * rho * props->n_jeans_2_3;
+  float floor = 4.0 * M_1_PI * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
   // TODO add sigma (will be done once the SF is merged)
-  pressure *= rho * hydro_one_over_gamma;
+  floor *= rho * hydro_one_over_gamma;
+
+  return fmax(pressure, floor);
+}
+
+/**
+ * @brief Compute the comoving pressure floor of a given #part.
+ *
+ * Note that the particle is not updated!!
+ *
+ * @param p The #part.
+ * @param pressure The pressure without any pressure floor.
+ */
+static INLINE float pressure_floor_get_comoving_pressure(
+    const struct part *p, const float pressure) {
+
+  /* Physical density in internal units */
+  const float rho = hydro_get_comoving_density(p);
+
+  /* Compute pressure floor */
+  float floor = 4.0 * M_1_PI * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
+  // TODO add sigma (will be done once the SF is merged)
+  floor *= rho * hydro_one_over_gamma;
 
 
-  return pressure;
+  return fmax(pressure, floor);
 }
 
 /**
@@ -118,7 +140,7 @@ static INLINE void pressure_floor_print(
  * @brief Writes the current model of pressure floor to the file
  * @param h_grp The HDF5 group in which to write
  */
-INLINE static void pressure_floor_write_flavour(hid_t h_grp) {
+INLINE static void pressure_floor_print_snapshot(hid_t h_grp) {
 
   io_write_attribute_s(h_grp, "Pressure floor", "GEAR");
 }
