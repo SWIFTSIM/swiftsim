@@ -41,6 +41,7 @@
 #include "hydro_space.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
+#include "pressure_floor.h"
 
 /**
  * @brief Returns the comoving internal energy of a particle at the last
@@ -107,7 +108,8 @@ hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
     const struct part *restrict p) {
 
-  return gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  return pressure_floor_get_comoving_pressure(p, pressure);
 }
 
 /**
@@ -121,7 +123,7 @@ __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
 
   const float pressure = gas_pressure_from_entropy(p->rho * cosmo->a3_inv, p->entropy);
 
-  return pressure_floor_get_pressure(eos->pressure_floor);
+  return pressure_floor_get_physical_pressure(p, cosmo, pressure);
 }
 
 /**
