@@ -99,3 +99,6 @@ GrackleCooling:
 
 GearChemistry:
   InitialMetallicity: 0.01295
+
+GEARPressureFloor:
+  Jeans_factor: 10.       # Ratio between the jeans mass and the particle mass
