@@ -58,61 +58,54 @@
 
 
 /**
- * @brief Copy the particle data into a temporary buffer ready for i/o.
- *
- * @param temp The buffer to be filled. Must be allocated and aligned properly.
- * @param e The #engine.
- * @param props_ids The #io_props corresponding to the particles' ids.
- * @param props_offset The #io_props corresponding to the particles' offset.
- *
- * @param N The number of particles to copy
+ * @brief Mapper function to copy #part or #gpart fields into a buffer.
  */
-void logger_io_copy_temp_buffer(void* temp, const struct engine* e,
-                         struct io_props props_ids,
-		         struct io_props props_offset, size_t N) {
+void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data) {
 
-  const size_t typeSize_ids = io_sizeof_type(props_ids.type);
-  const size_t typeSize_offset = io_sizeof_type(props_offset.type);
-  const size_t copySize_ids = typeSize_ids * props_ids.dimension;
-  const size_t copySize_offset = typeSize_offset * props_offset.dimension;
+  
+  const struct io_props *props = (const struct io_props*)(extra_data);
+  const struct io_props props1 = props[0];
+  const struct io_props props2 = props[1];
 
-  /* Copy particle data to temporary buffer */
-  /* Prepare some parameters */
-  char* temp_c_ids = (char*)temp;
-  props_ids.start_temp_c = temp_c_ids;
+  const size_t typeSize1 = io_sizeof_type(props1.type);
+  const size_t copySize1 = typeSize1 * props1.dimension;
+  const size_t typeSize2 = io_sizeof_type(props2.type);
+  const size_t copySize2 = typeSize2 * props2.dimension;
+  const size_t copySize = copySize1 + copySize2;
 
-  /* Shift data after the ids */
-  char* temp_c_offset = temp_c_ids + typeSize_ids;
-  props_offset.start_temp_c = temp_c_offset;
+  /* How far are we with this chunk? */
+  char* restrict temp_c = (char*)temp;
+  const ptrdiff_t delta = (temp_c - props1.start_temp_c) / copySize;
 
-  /* Copy the whole thing into a buffer */
-  threadpool_map((struct threadpool*)&e->threadpool, io_copy_mapper, temp_c_ids,
-		 N, copySize_ids, 0, (void*)&props_ids);
-
-  threadpool_map((struct threadpool*)&e->threadpool, io_copy_mapper, temp_c_offset,
-		 N, copySize_offset, 0, (void*)&props_offset);
+  for (int k = 0; k < N; k++) {
+    memcpy(&temp_c[k * copySize], props1.field + (delta + k) * props1.partSize,
+           copySize1);
+    memcpy(&temp_c[k * copySize + copySize1], props2.field + (delta + k) * props2.partSize,
+           copySize2);
+  }
 }
-
 /**
  * @brief Writes the data array in the index file.
  *
  * @param e The #engine we are writing from.
  * @param f The file to use.
- * @param props_ids The #io_props containing the ids.
- * @param props_offset The #io_props containing the offset.
+ * @param props The #io_props array.
+ * @param n_props The number of element in @props.
  * @param N The number of particles to write.
  */
 void writeIndexArray(const struct engine* e, FILE *f,
-		     const struct io_props props_ids,
-		     const struct io_props props_offset, size_t N) {
+		     struct io_props *props, size_t n_props, size_t N) {
 
-  const size_t typeSize = io_sizeof_type(props_ids.type) +
-    io_sizeof_type(props_offset.type);
+  if (n_props != 2)
+    error("Not implemented: The index file can only write two props.");
+  
+  const size_t typeSize = io_sizeof_type(props[0].type) +
+    io_sizeof_type(props[1].type);
 
-  if (props_ids.dimension != 1 || props_offset.dimension != 1)
+  if (props[0].dimension != 1 || props[1].dimension != 1)
     error("Not implemented: cannot use multidimensional data");
 
-  const size_t num_elements = N * props_ids.dimension;
+  const size_t num_elements = N * props[0].dimension;
 
   /* Allocate temporary buffer */
   void* temp = NULL;
@@ -121,7 +114,13 @@ void writeIndexArray(const struct engine* e, FILE *f,
     error("Unable to allocate temporary i/o buffer");
 
   /* Copy the particle data to the temporary buffer */
-  logger_io_copy_temp_buffer(temp, e, props_ids, props_offset, N);
+  /* Set initial buffer position */
+  props[0].start_temp_c = temp;
+  props[0].start_temp_c = temp;
+
+  /* Copy the whole thing into a buffer */
+  threadpool_map((struct threadpool*)&e->threadpool, logger_io_copy_mapper, temp,
+		 N, typeSize, 0, props);
 
   /* Write data to file */
   fwrite(temp, typeSize, num_elements, f);
@@ -188,7 +187,10 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
     size_t N = 0;
 
-    struct io_props list[2];
+    /* Number of properties (the code cannot deal with more than two props
+       per particle type) */
+    const size_t n_props = 2;
+    struct io_props list[n_props];
 
     /* Don't do anything if no particle of this kind */
     if (N_total[ptype] == 0) continue;
@@ -214,7 +216,7 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
     }
 
     /* Write ids */
-    writeIndexArray(e, f, list[0], list[1], N);
+    writeIndexArray(e, f, list, n_props, N);
 
   }
 

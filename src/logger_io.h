@@ -74,7 +74,7 @@ __attribute__((always_inline)) INLINE static void hydro_write_index(
     struct io_props *list) {
 
   /* List what we want to write */
-  list[0] = io_make_input_field("ParticleIDs", ULONGLONG, 1, COMPULSORY,
+  list[0] = io_make_output_field("ParticleIDs", ULONGLONG, 1,
                                 UNIT_CONV_NO_UNITS, parts, id);
   list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
 				 xparts, logger_data.last_offset);
