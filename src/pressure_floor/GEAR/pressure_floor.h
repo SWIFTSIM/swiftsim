@@ -145,32 +145,4 @@ INLINE static void pressure_floor_print_snapshot(hid_t h_grp) {
   io_write_attribute_s(h_grp, "Pressure floor", "GEAR");
 }
 #endif
-
-/**
- * @brief Write an pressure floor struct to the given FILE as a stream of bytes.
- *
- * @param props the struct
- * @param stream the file stream
- */
-static INLINE void pressure_floor_struct_dump(
-    const struct pressure_floor_properties *props, FILE *stream) {
-
-  restart_write_blocks((void *)props, sizeof(struct pressure_floor_properties),
-                       1, stream, "pressure floor", "pressure floor properties");
-}
-
-/**
- * @brief Restore a pressure floor struct from the given FILE as a stream of
- * bytes.
- *
- * @param props the struct
- * @param stream the file stream
- */
-static INLINE void pressure_floor_struct_restore(
-    struct pressure_floor_properties *props, FILE *stream) {
-
-  restart_read_blocks((void *)props, sizeof(struct pressure_floor_properties), 1,
-                      stream, NULL, "pressure floor properties");
-}
-
 #endif /* SWIFT_PRESSURE_FLOOR_GEAR_H */
