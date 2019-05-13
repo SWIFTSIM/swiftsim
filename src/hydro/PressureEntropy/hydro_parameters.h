@@ -186,4 +186,5 @@ static INLINE void diffusion_print(
 static INLINE void diffusion_print_snapshot(
     hid_t h_grpsph, const struct diffusion_global_data* diffusion) {}
 #endif
+
 #endif /* SWIFT_PRESSURE_ENTROPY_HYDRO_PARAMETERS_H */

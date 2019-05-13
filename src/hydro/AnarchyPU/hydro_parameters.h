@@ -65,12 +65,10 @@
  * schemes. This usually takes the value 0.8. */
 #define hydro_props_default_viscosity_alpha 0.1f
 
-/* Minimal value for the viscosity alpha in variable schemes. In
- * non-variable schemes this must be defined but is not used. */
+/* Minimal value for the viscosity alpha in variable schemes. */
 #define hydro_props_default_viscosity_alpha_min 0.0f
 
-/* Maximal value for the viscosity alpha in variable schemes. In
- * non-variable schemes this must be defined but is not used. */
+/* Maximal value for the viscosity alpha in variable schemes. */
 #define hydro_props_default_viscosity_alpha_max 2.0f
 
 /* Decay length for the viscosity scheme. This is scheme dependent. In
@@ -91,12 +89,10 @@
  * the contact discontinuity problem. */
 #define hydro_props_default_diffusion_beta 0.01f
 
-/* Maximal value for the diffusion alpha in variable schemes. In
- * non-variable schemes this must be defined but is not used. */
+/* Maximal value for the diffusion alpha in variable schemes. */
 #define hydro_props_default_diffusion_alpha_max 1.0f
 
-/* Minimal value for the diffusion alpha in variable schemes. In
- * non-variable schemes this must be defined but is not used. */
+/* Minimal value for the diffusion alpha in variable schemes. */
 #define hydro_props_default_diffusion_alpha_min 0.0f
 
 /* Structs that store the relevant variables */
