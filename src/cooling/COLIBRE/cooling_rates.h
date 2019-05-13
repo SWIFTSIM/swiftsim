@@ -236,6 +236,8 @@ eagle_helium_reionization_extraheat(
  * @param cooling #cooling_function_data structure.
  *
  * @return log_10 of the temperature.
+ *
+ * TO DO: outside table ranges, it uses at the moment the minimum, maximu value
  */
 __attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
     const double log_10_u_cgs, const float redshift, int n_H_index, float d_n_H,
@@ -271,6 +273,53 @@ __attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
 
   return log_10_T;
 }
+
+/**
+ * @brief Computes the log_10 of the internal energy corresponding to a given
+ * temperature, hydrogen number density, metallicity and redshift
+ *
+ * @param log_10_T Log base 10 of temperature in K
+ * @param redshift Current redshift.
+ * @param n_H_index Index along the Hydrogen density dimension.
+ * @param d_n_H Offset between Hydrogen density and table[n_H_index].
+ * @param met_index Index along the metallicity dimension.
+ * @param d_met Offset between metallicity and table[met_index].
+ * @param red_index Index along the redshift dimension.
+ * @param d_red Offset between redshift and table[red_index].
+ * @param cooling #cooling_function_data structure.
+ *
+ * @return log_10 of the internal energy in cgs
+ *
+ * TO DO: outside table ranges, it uses at the moment the minimum, maximu value
+ */
+
+__attribute__((always_inline)) INLINE double colibre_convert_temp_to_u(
+    const double log_10_T, const float redshift, int n_H_index, float d_n_H,
+    int met_index, float d_met, int red_index, float d_red,
+    const struct cooling_function_data *restrict cooling) {
+
+  /* Get index of u along the internal energy axis */
+  int T_index;
+  float d_T;
+
+  get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log_10_T,
+               &T_index, &d_T);
+
+  /* Interpolate internal energy table to return internal energy for current
+   * temperature (use 3D interpolation for high redshift table,
+   * otherwise 4D) */
+  float log_10_U;
+
+  /* Internal energy from temperature*/
+  log_10_U = interpolation_4d(
+      cooling->table.U_from_T, red_index, T_index, met_index, n_H_index, d_red,
+      d_T, d_met, d_n_H, colibre_cooling_N_redshifts,
+      colibre_cooling_N_temperature, colibre_cooling_N_metallicity,
+      colibre_cooling_N_density);
+
+  return log_10_U;
+}
+
 
 /**
  * @brief Computes the net cooling rate (cooling - heating) for a given element
