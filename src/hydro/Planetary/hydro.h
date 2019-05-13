@@ -46,7 +46,7 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
-#include "./hydro_defaults.h"
+#include "./hydro_parameters.h"
 
 /*
  * Note: Define PLANETARY_SPH_NO_BALSARA to disable the Balsara (1995) switch

@@ -37,7 +37,7 @@
 #include "const.h"
 #include "minmax.h"
 
-#include "./hydro_defaults.h"
+#include "./hydro_parameters.h"
 
 /**
  * @brief Density interaction between two particles.

@@ -18,8 +18,8 @@
  *
  ******************************************************************************/
 
-#ifndef SWIFT_PRESSURE_ENTROPY_HYDRO_PARAMETERS_H
-#define SWIFT_PRESSURE_ENTROPY_HYDRO_PARAMETERS_H
+#ifndef SWIFT_PRESSURE_ENERGY_HYDRO_PARAMETERS_H
+#define SWIFT_PRESSURE_ENERGY_HYDRO_PARAMETERS_H
 
 /* Configuration file */
 #include "../../../config.h"
@@ -36,7 +36,7 @@
 
 /**
  * @file PressureEnergy/hydro_parameters.h
- * @brief P-A implementation of SPH. (default parameters)
+ * @brief P-U implementation of SPH. (default parameters)
  *
  *        This file defines a number of things that are used in
  *        hydro_properties.c as defaults for run-time parameters
@@ -186,4 +186,5 @@ static INLINE void diffusion_print(
 static INLINE void diffusion_print_snapshot(
     hid_t h_grpsph, const struct diffusion_global_data* diffusion) {}
 #endif
-#endif /* SWIFT_PRESSURE_ENTROPY_HYDRO_PARAMETERS_H */
+
+#endif /* SWIFT_PRESSURE_ENERGY_HYDRO_PARAMETERS_H */
