@@ -56,11 +56,20 @@ totalmem = 0
 process_use = ""
 peak = 0.0
 
-#  memuse_log_entry struct as dumped. Note trailing string rounded up to
-#  8 byte boundary.
-struct_fmt = "@iiiQPQ40s"
-struct_len = struct.calcsize(struct_fmt)
-struct_unpack = struct.Struct(struct_fmt).unpack_from
+#  A dumped int.
+struct_intfmt = "@i"
+struct_intlen = struct.calcsize(struct_intfmt)
+struct_intunpack = struct.Struct(struct_intfmt).unpack_from
+
+#  memuse indlabel struct as dumped.
+struct_indlabfmt = "@i32s"
+struct_indlablen = struct.calcsize(struct_indlabfmt)
+struct_indlabunpack = struct.Struct(struct_indlabfmt).unpack_from
+
+#  memuse_log_entry struct as dumped. Note trailing string not included.
+struct_logfmt = "@iiiQPQi"
+struct_loglen = struct.calcsize(struct_logfmt)
+struct_logunpack = struct.Struct(struct_logfmt).unpack_from
 
 for filename in args.memuse_report:
     sys.stderr.write("## Ingesting: " + filename + "\n")
@@ -74,16 +83,24 @@ for filename in args.memuse_report:
         line = infile.readline()
         line = infile.readline()
 
+        #  Next section contains the labels. Extract and index values.
+        data = infile.read(struct_intlen)
+        label_count = struct_intunpack(data)[0]
+        print label_count
+
+        headlabels = {}
+        for i in range(label_count):
+            data = infile.read(struct_indlablen)
+            indlab_entry = struct_indlabunpack(data)
+            headlabels[indlab_entry[0]] = indlab_entry[1].rstrip(b'\0')
+
         #  Rest of file is binary encoded dump. Read that in struct by struct.
         while True:
-            data = infile.read(struct_len)
+            data = infile.read(struct_loglen)
             if not data:
                 break
-            log_entry = struct_unpack(data)
-            rank, step, allocated, size, adr, tic, label = struct_unpack(data)
-
-            #  Remove trailing NULLs.
-            label = label.rstrip(b'\0')
+            rank, step, allocated, size, adr, tic, labelind = struct_logunpack(data)
+            label = headlabels[labelind]
 
             #  Skip blacklisted allocations, these can swamp the signal...
             if args.blacklist != None:
