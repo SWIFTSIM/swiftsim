@@ -237,9 +237,9 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
   /* Write number of particles */
   fwrite(N_total, sizeof(long long), swift_type_count, f);
 
-  /* Write if the particles are sorted */
-  const int sorted = 0;
-  fwrite(&sorted, sizeof(int), 1, f);
+  /* Write if the file is sorted */
+  const char sorted = 0;
+  fwrite(&sorted, sizeof(char), 1, f);
 
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
