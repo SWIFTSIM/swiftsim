@@ -180,8 +180,8 @@ static INLINE void viscosity_init(struct swift_params* params,
 static INLINE void viscosity_init_no_hydro(
     struct viscosity_global_data* viscosity) {
   viscosity->alpha = hydro_props_default_viscosity_alpha;
-  viscosity->alpha_max = hydro_props_default_diffusion_alpha_max;
-  viscosity->alpha_min = hydro_props_default_diffusion_alpha_min;
+  viscosity->alpha_max = hydro_props_default_viscosity_alpha_max;
+  viscosity->alpha_min = hydro_props_default_viscosity_alpha_min;
   viscosity->length = hydro_props_default_viscosity_length;
 }
 

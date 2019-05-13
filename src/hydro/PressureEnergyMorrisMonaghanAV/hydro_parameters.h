@@ -21,6 +21,19 @@
 #ifndef SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_PARAMETERS_H
 #define SWIFT_PRESSURE_ENERGY_MORRIS_HYDRO_PARAMETERS_H
 
+/* Configuration file */
+#include "../../../config.h"
+
+/* Global headers */
+#if defined(HAVE_HDF5)
+#include <hdf5.h>
+#endif
+
+/* Local headers */
+#include "common_io.h"
+#include "error.h"
+#include "inline.h"
+
 /**
  * @file PressureEnergyMorrisMonaghanAV/hydro_parameters.h
  * @brief P-U implementation of SPH. (default parameters)
@@ -131,8 +144,8 @@ static INLINE void viscosity_init(struct swift_params* params,
 static INLINE void viscosity_init_no_hydro(
     struct viscosity_global_data* viscosity) {
   viscosity->alpha = hydro_props_default_viscosity_alpha;
-  viscosity->alpha_max = hydro_props_default_diffusion_alpha_max;
-  viscosity->alpha_min = hydro_props_default_diffusion_alpha_min;
+  viscosity->alpha_max = hydro_props_default_viscosity_alpha_max;
+  viscosity->alpha_min = hydro_props_default_viscosity_alpha_min;
   viscosity->length = hydro_props_default_viscosity_length;
 }
 
