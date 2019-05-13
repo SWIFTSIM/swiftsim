@@ -320,6 +320,52 @@ __attribute__((always_inline)) INLINE double colibre_convert_temp_to_u(
   return log_10_U;
 }
 
+/**
+ * @brief Computes the electron density for a given element
+ * abundance ratio, internal energy, redshift, and density. 
+ *
+ * @param log_u_cgs Log base 10 of internal energy in cgs [erg g-1]
+ * @param redshift Current redshift
+ * @param n_H_cgs Hydrogen number density in cgs
+ * @param ZZsol Metallicity relative to the solar value from the tables
+ * @param abundance_ratio Abundance ratio for each element x relative to solar
+ * @param n_H_index Index along the Hydrogen number density dimension
+ * @param d_n_H Offset between Hydrogen density and table[n_H_index]
+ * @param met_index Index along the metallicity dimension
+ * @param d_met Offset between metallicity and table[met_index]
+ * @param red_index Index along redshift dimension
+ * @param d_red Offset between redshift and table[red_index]
+ * @param cooling #cooling_function_data structure
+ *
+ * @retura linear electron density in cm-3 (NOT the electron fraction)
+ */
+
+INLINE double colibre_electron_density(
+    double log_u_cgs, double redshift, double n_H_cgs, float ZZsol,
+    const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
+    float d_n_H, int met_index, float d_met, int red_index, float d_red,
+    const struct cooling_function_data *restrict cooling) {
+
+  /* Get index of u along the internal energy axis */
+  int U_index;
+  float d_U;
+
+  get_index_1d(cooling->Therm, colibre_cooling_N_internalenergy, log_u_cgs,
+               &U_index, &d_U);
+
+  /* n_e / n_H */
+  double electron_fraction = interpolation4d_plus_summation(
+      cooling->table.Uelectron_fraction, abundance_ratio, element_H,
+      colibre_cooling_N_electrontypes - 4, red_index, U_index, met_index,
+      n_H_index, d_red, d_U, d_met, d_n_H, colibre_cooling_N_redshifts,
+      colibre_cooling_N_internalenergy, colibre_cooling_N_metallicity,
+      colibre_cooling_N_density, colibre_cooling_N_electrontypes);
+
+  double ne = electron_fraction * n_H_cgs;
+
+  return ne;
+
+}
 
 /**
  * @brief Computes the net cooling rate (cooling - heating) for a given element

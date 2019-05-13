@@ -25,6 +25,7 @@ SUBDIRS += examples/Cooling/CoolingRates
 endif
 if HAVECOLIBRECOOLING
 SUBDIRS += examples/Cooling/CoolingRatesCOLIBRE
+SUBDIRS += examples/Cooling/CoolingEvolution
 endif
 
 # Non-standard files that should be part of the distribution.

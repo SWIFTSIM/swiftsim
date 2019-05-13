@@ -1,0 +1,42 @@
+# Define the system of units to use internally. 
+InternalUnitSystem:
+  UnitMass_in_cgs:     1.989e43      # 10^10 M_sun in grams
+  UnitLength_in_cgs:   3.085678e24   # Mpc in centimeters
+  UnitVelocity_in_cgs: 1e5           # km/s in centimeters per second
+  UnitCurrent_in_cgs:  1             # Amperes
+  UnitTemp_in_cgs:     1             # Kelvin
+
+# Cosmological parameters
+Cosmology:
+  h:              0.6777        # Reduced Hubble constant
+  a_begin:        0.04          # Initial scale-factor of the simulation
+  a_end:          1.0           # Final scale factor of the simulation
+  Omega_m:        0.307         # Matter density parameter
+  Omega_lambda:   0.693         # Dark-energy density parameter
+  Omega_b:        0.0455        # Baryon density parameter
+
+SPH:
+  resolution_eta:      1.234
+  CFL_condition:       0.1
+  minimal_temperature: 10.
+  
+COLIBREChemistry:
+  init_abundance_metal:     0.0133714
+  init_abundance_Hydrogen:  0.73738788833
+  init_abundance_Helium:    0.24924186942
+  init_abundance_Carbon:    0.0023647215
+  init_abundance_Nitrogen:  0.0006928991
+  init_abundance_Oxygen:    0.00573271036
+  init_abundance_Neon:      0.00125649278
+  init_abundance_Magnesium: 0.00070797838
+  init_abundance_Silicon:   0.00066495154
+  init_abundance_Iron:      0.00129199252
+
+COLIBRECooling:
+  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_04_02/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  H_reion_z:               11.5
+  H_reion_eV_p_H:          2.0
+  He_reion_z_centre:       3.5
+  He_reion_z_sigma:        0.5
+  He_reion_eV_p_H:         2.0
+
