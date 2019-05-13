@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
 import argparse
+import struct
 import sys
 
 #  Command-line arguments.
@@ -40,6 +41,13 @@ parser.add_argument(
     default=None,
     action='append'
 )
+parser.add_argument(
+    "-s",
+    "--summary-only",
+    dest="summary",
+    help="only output the summary only",
+    action='store_true'
+)
 args = parser.parse_args()
 
 memuse = OrderedDict()
@@ -48,58 +56,75 @@ totalmem = 0
 process_use = ""
 peak = 0.0
 
+#  memuse_log_entry struct as dumped. Note trailing string rounded up to
+#  8 byte boundary.
+struct_fmt = "@iiiQPQ40s"
+struct_len = struct.calcsize(struct_fmt)
+struct_unpack = struct.Struct(struct_fmt).unpack_from
+
 for filename in args.memuse_report:
-    sys.stderr.write("## Processing: " + filename + "\n")
+    sys.stderr.write("## Ingesting: " + filename + "\n")
     with open(filename) as infile:
-        print '# {:<18s} {:>30s} {:>9s} {:>9s} {:s}'.format("tic", "label", "allocated", "step", "MB")
-        for line in infile:
-            if line[0] == "#":
-                if "# Current use:" in line:
-                    process_use = line[14:-1]
+        if not args.summary:
+            print '# {:<18s} {:>30s} {:>9s} {:>9s} {:s}'.format("tic", "label", "allocated", "step", "MB")
+
+        #  First three lines are commented summary and meta data.
+        line = infile.readline()
+        process_use = line[14:-1]
+        line = infile.readline()
+        line = infile.readline()
+
+        #  Rest of file is binary encoded dump. Read that in struct by struct.
+        while True:
+            data = infile.read(struct_len)
+            if not data:
+                break
+            log_entry = struct_unpack(data)
+            rank, step, allocated, size, adr, tic, label = struct_unpack(data)
+
+            #  Remove trailing NULLs.
+            label = label.rstrip(b'\0')
+
+            #  Skip blacklisted allocations, these can swamp the signal...
+            if args.blacklist != None:
+                skip = False
+                for item in args.blacklist:
+                    if item in label:
+                        skip = True
+                        break
+                if skip:
+                    continue
+
+
+            if args.summary:
+                doprint = False
             else:
-                tic, adr, rank, step, allocated, label, size = line.split()
-
-                #  Skip blacklisted allocations, these can swamp the signal...
-                if args.blacklist != None:
-                    skip = False
-                    for item in args.blacklist:
-                        if item in label:
-                            skip = True
-                            break
-                    if skip:
-                        continue
-
-                rank = int(rank)
-                step = int(step)
-                allocated = int(allocated)
-                size = int(size)
-
                 doprint = True
-                if allocated == 1:
-                    #  Allocation.
-                    totalmem = totalmem + size
-                    if not adr in memuse:
-                        memuse[adr] = [size]
-                        labels[adr] = label
-                    else:
-                        memuse[adr].append(size)
+            if allocated == 1:
+                #  Allocation.
+                totalmem = totalmem + size
+                if not adr in memuse:
+                    memuse[adr] = [size]
+                    labels[adr] = label
                 else:
-                    #  Free, locate allocation.
-                    if adr in memuse:
-                        allocs = memuse[adr]
-                        totalmem = totalmem - allocs[0]
-                        if len(allocs) > 1:
-                            memuse[adr] = allocs[1:]
-                        else:
-                            del memuse[adr]
+                    memuse[adr].append(size)
+            else:
+                #  Free, locate allocation.
+                if adr in memuse:
+                    allocs = memuse[adr]
+                    totalmem = totalmem - allocs[0]
+                    if len(allocs) > 1:
+                        memuse[adr] = allocs[1:]
                     else:
-                        #  Unmatched free, complain and skip.
-                        #print "### unmatched free: ", label, adr
-                        doprint = False
-                if doprint:
-                    if totalmem > peak:
-                        peak = totalmem
-                    print '{:<20s} {:>30s} {:9d} {:9d} {:.3f}'.format(tic, label, allocated, step, totalmem/(1048576.0))
+                        del memuse[adr]
+                else:
+                    #  Unmatched free, complain and skip.
+                    #print "### unmatched free: ", label, adr
+                    doprint = False
+            if doprint:
+                if totalmem > peak:
+                    peak = totalmem
+                print '{:<20d} {:>30s} {:9d} {:9d} {:.3f}'.format(tic, label, allocated, step, totalmem/(1048576.0))
     sys.stderr.write("## Finished ingestion of: " + filename + "\n")
 
 totals = {}

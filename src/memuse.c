@@ -47,7 +47,7 @@ extern int engine_rank;
 extern int engine_current_step;
 
 /* Entry for logger of memory allocations and deallocations in a step. */
-#define MEMUSE_MAXLAB 64
+#define MEMUSE_MAXLAB 32
 struct memuse_log_entry {
 
   /* Rank in action. */
@@ -84,8 +84,8 @@ static void memuse_log_reallocate(size_t ind) {
   if (ind == 0) {
 
     /* Need to perform initialization. Be generous. */
-    if ((memuse_log = (struct memuse_log_entry *)malloc(
-             sizeof(struct memuse_log_entry) * MEMUSE_INITLOG)) == NULL)
+    if ((memuse_log = (struct memuse_log_entry *)calloc(
+         sizeof(struct memuse_log_entry), MEMUSE_INITLOG)) == NULL)
       error("Failed to allocate memuse log.");
 
     /* Last action. */
@@ -93,8 +93,8 @@ static void memuse_log_reallocate(size_t ind) {
 
   } else {
     struct memuse_log_entry *new_log;
-    if ((new_log = (struct memuse_log_entry *)malloc(
-             sizeof(struct memuse_log_entry) * memuse_log_size * 2)) == NULL)
+    if ((new_log = (struct memuse_log_entry *)calloc(
+         sizeof(struct memuse_log_entry), memuse_log_size * 2)) == NULL)
       error("Failed to re-allocate memuse log.");
 
     /* Wait for all writes to the old buffer to complete. */
@@ -164,11 +164,8 @@ void memuse_log_dump(const char *filename) {
   fprintf(fd, "# cpufreq: %lld\n", clocks_get_cpufreq());
   fprintf(fd, "# dtic adr rank step allocated label size\n");
 
-  for (size_t k = 0; k < memuse_log_count; k++) {
-    fprintf(fd, "%lld %p %d %d %d %s %zd\n", memuse_log[k].dtic,
-            memuse_log[k].ptr, memuse_log[k].rank, memuse_log[k].step,
-            memuse_log[k].allocated, memuse_log[k].label, memuse_log[k].size);
-  }
+  /* And dump the logs. */
+  fwrite(memuse_log, sizeof(struct memuse_log_entry), memuse_log_count, fd);
 
   /* Clear the log. */
   memuse_log_count = 0;
