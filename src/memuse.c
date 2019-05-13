@@ -71,19 +71,8 @@ struct memuse_log_entry {
   /* Index of label associated with the memory. */
   int index;
 
-  /* Labels of memory. */
+  /* Label associated with the memory. */
   char label[MEMUSE_MAXLAB + 1];
-};
-
-/* As above, except we use a label index to avoid writing the same labels. */
-struct memuse_log_entry_dump {
-  int rank;
-  int step;
-  int allocated;
-  size_t size;
-  void *ptr;
-  ticks dtic;
-  int labelindex;
 };
 
 /* The log of allocations and frees. */
@@ -99,7 +88,7 @@ static void memuse_log_reallocate(size_t ind) {
 
     /* Need to perform initialization. Be generous. */
     if ((memuse_log = (struct memuse_log_entry *)calloc(
-         sizeof(struct memuse_log_entry), MEMUSE_INITLOG)) == NULL)
+             sizeof(struct memuse_log_entry), MEMUSE_INITLOG)) == NULL)
       error("Failed to allocate memuse log.");
 
     /* Last action. */
@@ -108,7 +97,7 @@ static void memuse_log_reallocate(size_t ind) {
   } else {
     struct memuse_log_entry *new_log;
     if ((new_log = (struct memuse_log_entry *)calloc(
-         sizeof(struct memuse_log_entry), memuse_log_size * 2)) == NULL)
+             sizeof(struct memuse_log_entry), memuse_log_size * 2)) == NULL)
       error("Failed to re-allocate memuse log.");
 
     /* Wait for all writes to the old buffer to complete. */
@@ -187,38 +176,37 @@ void memuse_log_dump(const char *filename) {
   int labels_size = 50;
   int labels_count = 0;
   labels = (struct indlabel *)calloc(sizeof(struct indlabel), labels_size);
-  if (labels == NULL)
-      error("Failed to allocate space for memuse labels");
+  if (labels == NULL) error("Failed to allocate space for memuse labels");
 
   for (size_t k = 0; k < memuse_log_count; k++) {
-      char *label = memuse_log[k].label;
-      int index = -1;
+    char *label = memuse_log[k].label;
+    int index = -1;
 
-      /* Fingers crossed the number of labels is small. */
-      for (int j = 0; j < labels_count; j++) {
-          if ( strcmp(labels[j].label, label) == 0) {
-              index = j;
-              break;
-          }
+    /* Fingers crossed the number of labels is small. */
+    for (int j = 0; j < labels_count; j++) {
+      if (strcmp(labels[j].label, label) == 0) {
+        index = j;
+        break;
       }
-      if (index == -1) {
+    }
+    if (index == -1) {
 
-          /* Allocate a new label. */
-          index = labels_count;
-          labels_count++;
-          if (labels_count >= labels_size) {
-              labels_size += 50;
-              labels = (struct indlabel *)realloc(labels,
-                                                  sizeof(struct indlabel) * labels_size);
-              if (labels == NULL)
-                  error("Failed to reallocate space for memuse labels");
-          }
+      /* Allocate a new label. */
+      index = labels_count;
+      labels_count++;
+      if (labels_count >= labels_size) {
+        labels_size += 50;
+        labels = (struct indlabel *)realloc(
+            labels, sizeof(struct indlabel) * labels_size);
+        if (labels == NULL)
+          error("Failed to reallocate space for memuse labels");
       }
+    }
 
-      /* Keep a copy for referencing and dumping and set the index. */
-      labels[index].index = index;
-      strcpy(labels[index].label, label);
-      memuse_log[k].index = index;
+    /* Keep a copy for referencing and dumping and set the index. */
+    labels[index].index = index;
+    strcpy(labels[index].label, label);
+    memuse_log[k].index = index;
   }
 
   /* And dump labels. */
