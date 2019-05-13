@@ -94,7 +94,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 gravity/Potential/gravity_debug.h gravity/Potential/gravity_part.h  \
 		 equation_of_state.h \
 		 equation_of_state/ideal_gas/equation_of_state.h equation_of_state/isothermal/equation_of_state.h \
-	 	 hydro.h hydro_io.h \
+	 	 hydro.h hydro_io.h hydro_parameters.h \
 		 hydro/Minimal/hydro.h hydro/Minimal/hydro_iact.h hydro/Minimal/hydro_io.h \
                  hydro/Minimal/hydro_debug.h hydro/Minimal/hydro_part.h \
 				 hydro/Minimal/hydro_defaults.h \
@@ -118,7 +118,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 				 hydro/AnarchyPU/hydro_defaults.h \
 		 hydro/AnarchyDU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
                  hydro/AnarchyDU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
-				 hydro/AnarchyDU/hydro_defaults.h \
+				 hydro/AnarchyDU/hydro_parameters.h \
 		 hydro/GizmoMFV/hydro.h hydro/GizmoMFV/hydro_iact.h \
                  hydro/GizmoMFV/hydro_io.h hydro/GizmoMFV/hydro_debug.h \
                  hydro/GizmoMFV/hydro_part.h \
