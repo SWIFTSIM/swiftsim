@@ -385,7 +385,7 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
  */
 __attribute__((always_inline)) INLINE static void hydro_set_viscosity_alpha(
     struct part *restrict p, float alpha) {
-  p->viscosity.alpha = alpha;
+  p->alpha = alpha;
 }
 
 /**
