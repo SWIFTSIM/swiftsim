@@ -59,14 +59,17 @@
 
 /**
  * @brief Mapper function to copy #part or #gpart fields into a buffer.
+ * WARNING Assumes two io_props in extra_data.
  */
 void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data) {
 
-  
+
+  /* Get the io_props */
   const struct io_props *props = (const struct io_props*)(extra_data);
   const struct io_props props1 = props[0];
   const struct io_props props2 = props[1];
 
+  /* Get the sizes */
   const size_t typeSize1 = io_sizeof_type(props1.type);
   const size_t copySize1 = typeSize1 * props1.dimension;
   const size_t typeSize2 = io_sizeof_type(props2.type);
@@ -77,6 +80,7 @@ void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data
   char* restrict temp_c = (char*)temp;
   const ptrdiff_t delta = (temp_c - props1.start_temp_c) / copySize;
 
+  /* Copy the memory to the buffer */
   for (int k = 0; k < N; k++) {
     memcpy(&temp_c[k * copySize], props1.field + (delta + k) * props1.partSize,
            copySize1);
@@ -96,6 +100,7 @@ void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data
 void writeIndexArray(const struct engine* e, FILE *f,
 		     struct io_props *props, size_t n_props, size_t N) {
 
+  /* Check that the assumptions are corrects */
   if (n_props != 2)
     error("Not implemented: The index file can only write two props.");
   
@@ -105,7 +110,7 @@ void writeIndexArray(const struct engine* e, FILE *f,
   if (props[0].dimension != 1 || props[1].dimension != 1)
     error("Not implemented: cannot use multidimensional data");
 
-  const size_t num_elements = N * props[0].dimension;
+  const size_t num_elements = N;
 
   /* Allocate temporary buffer */
   void* temp = NULL;
@@ -116,7 +121,7 @@ void writeIndexArray(const struct engine* e, FILE *f,
   /* Copy the particle data to the temporary buffer */
   /* Set initial buffer position */
   props[0].start_temp_c = temp;
-  props[0].start_temp_c = temp;
+  props[1].start_temp_c = temp;
 
   /* Copy the whole thing into a buffer */
   threadpool_map((struct threadpool*)&e->threadpool, logger_io_copy_mapper, temp,
@@ -138,6 +143,9 @@ void writeIndexArray(const struct engine* e, FILE *f,
  * Creates an output file and writes the offset and id of particles
  * contained in the engine. If such a file already exists, it is erased and
  * replaced by the new one.
+ *
+ * An index file is constructed by writing first a few variables (e.g. time, number of particles,
+ * if the file is sorted, ...) and then an array of index and offset for each particle type.
  *
  * Calls #error() if an error occurs.
  *
@@ -182,6 +190,10 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
 
   /* Write number of particles */
   fwrite(N_total, sizeof(long long), swift_type_count, f);
+
+  /* Write if the particles are sorted */
+  const int sorted = 0;
+  fwrite(&sorted, sizeof(int), 1, f);
 
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
