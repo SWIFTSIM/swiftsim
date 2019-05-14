@@ -68,9 +68,6 @@ struct memuse_log_entry {
   /* Relative time of this action. */
   ticks dtic;
 
-  /* Index of label associated with the memory. */
-  int index;
-
   /* Label associated with the memory. */
   char label[MEMUSE_MAXLAB + 1];
 };
@@ -162,62 +159,46 @@ void memuse_log_dump(const char *filename) {
   if ((fd = fopen(filename, "w")) == NULL)
     error("Failed to create memuse log file '%s'.", filename);
 
-  /* Write a header. */
-  fprintf(fd, "# Current use: %s\n", memuse_process(1));
-  fprintf(fd, "# cpufreq: %lld\n", clocks_get_cpufreq());
-  fprintf(fd, "# dtic adr rank step allocated label size\n");
+  /* Numpy npy format... */
+  const char *magic = "\x93NUMPY";
+  char major_ver = 1;
+  char minor_ver = 0;
+  char header[258];
+  unsigned short header_length =
+      sprintf(header, "{"
+              "'descr': [('rank','<i4'), ('step', '<i4'), ('allocated','<i4'), "
+              "('size', '<i8'), ('ptr', '<i8'), ('dtic', '<i8'),"
+              "('label', '|S%d')], 'fortran_order': False, 'shape': (%zd,)}",
+              MEMUSE_MAXLAB + 1, memuse_log_count);
 
-  /* And dump the logs. First we collate the labels to avoid repetition. */
-  struct indlabel {
-    int index;
-    char label[MEMUSE_MAXLAB + 1];
-  };
-  struct indlabel *labels = NULL;
-  int labels_size = 50;
-  int labels_count = 0;
-  labels = (struct indlabel *)calloc(sizeof(struct indlabel), labels_size);
-  if (labels == NULL) error("Failed to allocate space for memuse labels");
+  /* Blank remaining chars. */
+  for (int k = header_length; k < 258; k++) header[k] = ' ';
 
-  for (size_t k = 0; k < memuse_log_count; k++) {
-    char *label = memuse_log[k].label;
-    int index = -1;
-
-    /* Fingers crossed the number of labels is small. */
-    for (int j = 0; j < labels_count; j++) {
-      if (strcmp(labels[j].label, label) == 0) {
-        index = j;
-        break;
-      }
-    }
-    if (index == -1) {
-
-      /* Allocate a new label. */
-      index = labels_count;
-      labels_count++;
-      if (labels_count >= labels_size) {
-        labels_size += 50;
-        labels = (struct indlabel *)realloc(
-            labels, sizeof(struct indlabel) * labels_size);
-        if (labels == NULL)
-          error("Failed to reallocate space for memuse labels");
-      }
-    }
-
-    /* Keep a copy for referencing and dumping and set the index. */
-    labels[index].index = index;
-    strcpy(labels[index].label, label);
-    memuse_log[k].index = index;
+  /* magic + 4 + header_length must be multiple of 64 (or 16, depends on docs). */
+  int mlen = strlen(magic) + 4 + header_length;
+  if ((mlen % 64) > 0) {
+      mlen = ((mlen/64) + 1) * 64;
+      header_length = mlen - strlen(magic) - 4;
   }
+  header[header_length] = '\0';
+  header[header_length-1] = '\n';
 
-  /* And dump labels. */
-  fwrite(&labels_count, sizeof(int), 1, fd);
-  fwrite(labels, sizeof(struct indlabel), labels_count, fd);
+  /* And write the header. */
+  fwrite(magic, sizeof(char), strlen(magic), fd);
+  fwrite(&major_ver, sizeof(char), 1, fd);
+  fwrite(&minor_ver, sizeof(char), 1, fd);
+  fwrite(&header_length, sizeof(unsigned short), 1, fd);
+  fwrite(header, sizeof(char), header_length, fd);
 
-  /* Now we write the logs. Do it one by one as we want to not dump the
-   * trailing label. */
-  size_t offset = offsetof(struct memuse_log_entry, label);
+  /* And dump the data. Note we don't write structs as they have padding. */
   for (size_t k = 0; k < memuse_log_count; k++) {
-    fwrite(&memuse_log[k], offset, 1, fd);
+      fwrite(&memuse_log[k].rank, sizeof(int), 1, fd);
+      fwrite(&memuse_log[k].step, sizeof(int), 1, fd);
+      fwrite(&memuse_log[k].allocated, sizeof(int), 1, fd);
+      fwrite(&memuse_log[k].size, sizeof(size_t), 1, fd);
+      fwrite(&memuse_log[k].ptr, sizeof(void *), 1, fd);
+      fwrite(&memuse_log[k].dtic, sizeof(ticks), 1, fd);
+      fwrite(&memuse_log[k].label, MEMUSE_MAXLAB + 1, 1, fd);
   }
 
   /* Clear the log. */
