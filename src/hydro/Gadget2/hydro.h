@@ -392,7 +392,7 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
   const float rho_inv = 1.f / p->rho;
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -595,7 +595,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   const float abs_div_physical_v = fabsf(div_physical_v);
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -669,7 +669,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   p->entropy = xp->entropy_full;
 
   /* Re-compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -734,7 +734,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     p->rho *= expf(w2);
 
   /* Re-compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -844,7 +844,7 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
   }
 
   /* Compute the pressure */
-  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = hydro_get_comoving_pressure(p);
 
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
