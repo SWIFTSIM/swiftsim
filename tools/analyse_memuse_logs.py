@@ -86,7 +86,6 @@ for filename in args.memuse_report:
         #  Next section contains the labels. Extract and index values.
         data = infile.read(struct_intlen)
         label_count = struct_intunpack(data)[0]
-        print label_count
 
         headlabels = {}
         for i in range(label_count):
