@@ -166,8 +166,8 @@ void memuse_log_dump(const char *filename) {
   char header[258];
   unsigned short header_length =
       sprintf(header, "{"
-              "'descr': [('rank','<i4'), ('step', '<i4'), ('allocated','<i4'), "
-              "('size', '<i8'), ('ptr', '<i8'), ('dtic', '<i8'),"
+              "'descr': [('rank','<i2'), ('step', '<i4'), ('allocated','<i1'), "
+              "('size', '<u8'), ('ptr', '<u8'), ('dtic', '<u8'),"
               "('label', '|S%d')], 'fortran_order': False, 'shape': (%zd,)}",
               MEMUSE_MAXLAB + 1, memuse_log_count);
 
@@ -192,9 +192,11 @@ void memuse_log_dump(const char *filename) {
 
   /* And dump the data. Note we don't write structs as they have padding. */
   for (size_t k = 0; k < memuse_log_count; k++) {
-      fwrite(&memuse_log[k].rank, sizeof(int), 1, fd);
+      unsigned short int urank = (unsigned short int) memuse_log[k].rank;
+      fwrite(&urank, sizeof(unsigned short int), 1, fd);
       fwrite(&memuse_log[k].step, sizeof(int), 1, fd);
-      fwrite(&memuse_log[k].allocated, sizeof(int), 1, fd);
+      unsigned char uallocated = (unsigned char) memuse_log[k].allocated;
+      fwrite(&uallocated, sizeof(unsigned char), 1, fd);
       fwrite(&memuse_log[k].size, sizeof(size_t), 1, fd);
       fwrite(&memuse_log[k].ptr, sizeof(void *), 1, fd);
       fwrite(&memuse_log[k].dtic, sizeof(ticks), 1, fd);
