@@ -395,7 +395,7 @@ __attribute__((always_inline)) INLINE static void hydro_set_viscosity_alpha(
  * @param p the particle of interest
  */
 __attribute__((always_inline)) INLINE static void
-hydro_set_viscosity_alpha_max_feedback(struct part *restrict p, float alpha) {
+hydro_set_viscosity_alpha_max_feedback(struct part *restrict p) {
   hydro_set_viscosity_alpha(p,
                             hydro_props_default_viscosity_alpha_feedback_reset);
 }
