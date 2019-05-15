@@ -48,7 +48,7 @@
 
 /*! Viscosity parameters -- FIXED -- MUST BE DEFINED AT COMPILE-TIME */
 
-/*! Cosmology default beta=3.0. 
+/*! Cosmology default beta=3.0.
  * Alpha can be set in the parameter file.
  * Beta is defined as in e.g. Price (2010) Eqn (103) */
 #define const_viscosity_beta 3.0f

@@ -389,6 +389,18 @@ __attribute__((always_inline)) INLINE static void hydro_set_viscosity_alpha(
 }
 
 /**
+ * @brief Update the value of the viscosity alpha to the
+ *        feedback reset value for the scheme.
+ *
+ * @param p the particle of interest
+ */
+__attribute__((always_inline)) INLINE static void
+hydro_set_viscosity_alpha_max_feedback(struct part *restrict p, float alpha) {
+  hydro_set_viscosity_alpha(p,
+                            hydro_props_default_viscosity_alpha_feedback_reset);
+}
+
+/**
  * @brief Computes the hydro time-step of a given particle
  *
  * @param p Pointer to the particle data

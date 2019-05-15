@@ -195,6 +195,17 @@ __attribute__((always_inline)) INLINE static void hydro_set_viscosity_alpha(
 }
 
 /**
+ * @brief Update the value of the viscosity alpha to the
+ *        feedback reset value for the scheme.
+ *
+ * @param p the particle of interest
+ */
+__attribute__((always_inline)) INLINE static void
+hydro_set_viscosity_alpha_max_feedback(struct part *restrict p, float alpha) {
+  /* This scheme has fixed alpha */
+}
+
+/**
  * @brief Returns the comoving entropy of a particle drifted to the
  * current time.
  *
