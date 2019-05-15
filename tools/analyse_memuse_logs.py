@@ -51,58 +51,61 @@ peak = 0.0
 
 for filename in args.memuse_report:
     sys.stderr.write("## Processing: " + filename + "\n")
-    data = np.load(filename)
-    print '# {:<18s} {:>30s} {:>9s} {:>9s} {:s}'.format("tic", "label", "allocated", "step", "MB")
-    for line in data:
-        rank = line[0]
-        step = line[1]
-        allocated = line[2]
-        size = line[3]
-        adr = line[4]
-        tic = line[5]
-        label = line[6]
-        #tic, adr, rank, step, allocated, label, size = line.split()
+    with open(filename) as infile:
+        header = np.load(infile)
+        process_use = header[0][0][14:].split('\n')[0]
+        usedlabels = np.load(infile)
+        logdata = np.load(infile)
+        print '# {:<18s} {:>30s} {:>9s} {:>9s} {:s}'.format("tic", "label", "allocated", "step", "MB")
+        for line in logdata:
+            rank = line[0]
+            step = line[1]
+            allocated = line[2]
+            size = line[3]
+            adr = line[4]
+            tic = line[5]
+            label = usedlabels[line[6]][1]
 
-        #  Skip blacklisted allocations, these can swamp the signal...
-        if args.blacklist != None:
-            skip = False
-            for item in args.blacklist:
-                if item in label:
-                    skip = True
-                    break
-            if skip:
-                continue
+            #  Skip blacklisted allocations, these can swamp the signal...
+            if args.blacklist != None:
+                skip = False
+                for item in args.blacklist:
+                    if item in label:
+                        skip = True
+                        break
+                if skip:
+                    continue
 
-        rank = int(rank)
-        step = int(step)
-        allocated = int(allocated)
-        size = int(size)
+            rank = int(rank)
+            step = int(step)
+            allocated = int(allocated)
+            size = int(size)
 
-        doprint = True
-        if allocated == 1:
-            #  Allocation.
-            totalmem = totalmem + size
-            if not adr in memuse:
-                memuse[adr] = [size]
-                labels[adr] = label
-            else:
-                memuse[adr].append(size)
-        else:
-            #  Free, locate allocation.
-            if adr in memuse:
-                allocs = memuse[adr]
-                totalmem = totalmem - allocs[0]
-                if len(allocs) > 1:
-                    memuse[adr] = allocs[1:]
+            doprint = True
+            if allocated == 1:
+                #  Allocation.
+                totalmem = totalmem + size
+                if not adr in memuse:
+                    memuse[adr] = [size]
+                    labels[adr] = label
                 else:
-                    del memuse[adr]
+                    memuse[adr].append(size)
             else:
-                #  Unmatched free, complain and skip.
-                #print "### unmatched free: ", label, adr
-                doprint = False
-        if doprint:
-            if totalmem > peak:
-                peak = totalmem
+                #  Free, locate allocation.
+                if adr in memuse:
+                    allocs = memuse[adr]
+                    totalmem = totalmem - allocs[0]
+                    if len(allocs) > 1:
+                        memuse[adr] = allocs[1:]
+                    else:
+                        del memuse[adr]
+                else:
+                    #  Unmatched free, complain and skip.
+                    #print "### unmatched free: ", label, adr
+                    doprint = False
+            if doprint:
+                if totalmem > peak:
+                    peak = totalmem
                 print '{:<20d} {:>30s} {:9d} {:9d} {:.3f}'.format(tic, label, allocated, step, totalmem/(1048576.0))
     sys.stderr.write("## Finished ingestion of: " + filename + "\n")
 

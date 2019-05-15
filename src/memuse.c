@@ -68,6 +68,9 @@ struct memuse_log_entry {
   /* Relative time of this action. */
   ticks dtic;
 
+  /* Index of label associated with the memory. */
+  short int index;
+
   /* Label associated with the memory. */
   char label[MEMUSE_MAXLAB + 1];
 };
@@ -145,11 +148,60 @@ void memuse_log_allocation(const char *label, void *ptr, int allocated,
 }
 
 /**
+ * @brief add a header to a NPY file formatted as required by the standard.
+ * 
+ * @param fd file stream to add header to.
+ * @param header the NPY descr header string, must be large enough to allow
+ *               padding with an additional 63 characters. Will be modified.
+ * @param length the current length of the header string.
+ * @param size the actual size of the header string.
+ */
+static void memuse_addnpy_header(FILE *fd, char *header, int length,
+                                 int size) {
+
+  /* NUMPY npy format magic... */
+  const char *magic = "\x93NUMPY";
+  char major_ver = 1;
+  char minor_ver = 0;
+
+  /* Blank all remaining chars. */
+  for (int k = length; k < size; k++) header[k] = ' ';
+
+  /* magic + 4 + length must be a multiple of 64 (or 16, depends on docs). */
+  int mlen = strlen(magic) + 4 + length;
+  if ((mlen % 64) > 0) {
+    mlen = ((mlen / 64) + 1) * 64;
+    length = mlen - strlen(magic) - 4;
+  }
+  header[length] = '\0';
+  header[length - 1] = '\n';
+
+  /* And write the header. */
+  fwrite(magic, sizeof(char), strlen(magic), fd);
+  fwrite(&major_ver, sizeof(char), 1, fd);
+  fwrite(&minor_ver, sizeof(char), 1, fd);
+  fwrite(&length, sizeof(unsigned short), 1, fd);
+  fwrite(header, sizeof(char), length, fd);
+}
+
+/**
  * @brief dump the log to a file and reset, if anything to dump.
+ *        The dump is three NUMPY npy arrays. The first contains
+ *        a description of the memory in use and the CPU frequency.
+ *        The second contains the memory labels (indexed) and the
+ *        second the logs with indices replacing the labels.
+ * 
+ *        These can be read into python:
+ *           import numpy
+ *           fd = open(<filename>, "rb")
+ *           desc = numpy.load(fd)
+ *           labels = numpy.load(fd)
+ *           logs = numpy.load(fd)
  *
  * @param filename name of file for log dump.
  */
 void memuse_log_dump(const char *filename) {
+
 
   /* Skip if nothing allocated this step. */
   if (memuse_log_count == 0) return;
@@ -159,48 +211,102 @@ void memuse_log_dump(const char *filename) {
   if ((fd = fopen(filename, "w")) == NULL)
     error("Failed to create memuse log file '%s'.", filename);
 
-  /* Numpy npy format... */
-  const char *magic = "\x93NUMPY";
-  char major_ver = 1;
-  char minor_ver = 0;
+
+  /* Generate two lines with the current usage and CPU frequency. */
+  char line1[128];
+  sprintf(line1, "# Current use: %s\n", memuse_process(1));
+  char line2[128];
+  sprintf(line2, "# cpufreq: %lld\n", clocks_get_cpufreq());
+
+  /* We add this metadata as a first array in NPY format. */
   char header[258];
-  unsigned short header_length =
-      sprintf(header, "{"
-              "'descr': [('rank','<i2'), ('step', '<i4'), ('allocated','<i1'), "
-              "('size', '<u8'), ('ptr', '<u8'), ('dtic', '<u8'),"
-              "('label', '|S%d')], 'fortran_order': False, 'shape': (%zd,)}",
-              MEMUSE_MAXLAB + 1, memuse_log_count);
+  unsigned short header_length = 
+      sprintf( header, "{'descr': [('metadata', '|S128')], "
+               "'fortran_order': False, 'shape': (2,)}");
+  memuse_addnpy_header(fd, header, header_length, 258);
+  fwrite(line1, sizeof(char), 128, fd);
+  fwrite(line2, sizeof(char), 128, fd);
 
-  /* Blank remaining chars. */
-  for (int k = header_length; k < 258; k++) header[k] = ' ';
+  /* Gather all the labels and add these first. We replace these in the main
+   * dump with indices into this list. This saves a lot of repeated
+   * strings. */
+  struct indlabel {
+    short int index;
+    char label[MEMUSE_MAXLAB + 1];
+  };
+  struct indlabel *labels = NULL;
+  int labels_size = 50;
+  int labels_count = 0;
+  labels = (struct indlabel *)calloc(sizeof(struct indlabel), labels_size);
+  if (labels == NULL) error("Failed to allocate space for memuse labels");
 
-  /* magic + 4 + header_length must be multiple of 64 (or 16, depends on docs). */
-  int mlen = strlen(magic) + 4 + header_length;
-  if ((mlen % 64) > 0) {
-      mlen = ((mlen/64) + 1) * 64;
-      header_length = mlen - strlen(magic) - 4;
-  }
-  header[header_length] = '\0';
-  header[header_length-1] = '\n';
-
-  /* And write the header. */
-  fwrite(magic, sizeof(char), strlen(magic), fd);
-  fwrite(&major_ver, sizeof(char), 1, fd);
-  fwrite(&minor_ver, sizeof(char), 1, fd);
-  fwrite(&header_length, sizeof(unsigned short), 1, fd);
-  fwrite(header, sizeof(char), header_length, fd);
-
-  /* And dump the data. Note we don't write structs as they have padding. */
   for (size_t k = 0; k < memuse_log_count; k++) {
-      unsigned short int urank = (unsigned short int) memuse_log[k].rank;
-      fwrite(&urank, sizeof(unsigned short int), 1, fd);
-      fwrite(&memuse_log[k].step, sizeof(int), 1, fd);
-      unsigned char uallocated = (unsigned char) memuse_log[k].allocated;
-      fwrite(&uallocated, sizeof(unsigned char), 1, fd);
-      fwrite(&memuse_log[k].size, sizeof(size_t), 1, fd);
-      fwrite(&memuse_log[k].ptr, sizeof(void *), 1, fd);
-      fwrite(&memuse_log[k].dtic, sizeof(ticks), 1, fd);
-      fwrite(&memuse_log[k].label, MEMUSE_MAXLAB + 1, 1, fd);
+    char *label = memuse_log[k].label;
+    int index = -1;
+
+    /* Fingers crossed the number of labels is small otherwise this is a slow
+     * search. */
+    for (int j = 0; j < labels_count; j++) {
+      if (strcmp(labels[j].label, label) == 0) {
+        index = j;
+        break;
+      }
+    }
+
+    if (index == -1) {
+      /* Allocate a new label. */
+      index = labels_count;
+      labels_count++;
+      if (labels_count >= labels_size) {
+        labels_size += 50;
+        labels = (struct indlabel *)realloc(
+            labels, sizeof(struct indlabel) * labels_size);
+        if (labels == NULL)
+          error("Failed to reallocate space for memuse labels");
+      }
+    }
+
+    /* Keep a copy for referencing and dumping also set the index. */
+    labels[index].index = index;
+    strcpy(labels[index].label, label);
+    memuse_log[k].index = index;
+  }
+
+  /* Now we add the npy array to store these. */
+  header_length = sprintf( header, "{'descr': [('index', '<i2'), "
+                           "('label', '|S%d')], 'fortran_order': False, "
+                           "'shape': (%d,)}", MEMUSE_MAXLAB + 1,
+                           labels_count);
+  memuse_addnpy_header(fd, header, header_length, 258);
+
+  /* And dump the labels. */
+  for (int k = 0; k < labels_count; k++) {
+    fwrite(&labels[k].index, sizeof(short int), 1, fd);
+    fwrite(&labels[k].label, MEMUSE_MAXLAB + 1, 1, fd);
+  }
+
+  /* Finished with these. */
+  free(labels);
+
+  /* Now dump the logs with indexed labels. */
+  header_length =
+      sprintf(header, "{'descr': [('rank','<i2'), ('step', '<i4'), "
+              "('allocated','<i1'), ('size', '<u8'), ('ptr', '<u8'), "
+              "('dtic', '<u8'), ('index', '<i2')], 'fortran_order': False,"
+              " 'shape': (%zd,)}", memuse_log_count);
+  memuse_addnpy_header(fd, header, header_length, 258);
+
+  /* And dump the data. */
+  for (size_t k = 0; k < memuse_log_count; k++) {
+    unsigned short int urank = (unsigned short int)memuse_log[k].rank;
+    fwrite(&urank, sizeof(unsigned short int), 1, fd);
+    fwrite(&memuse_log[k].step, sizeof(int), 1, fd);
+    unsigned char uallocated = (unsigned char)memuse_log[k].allocated;
+    fwrite(&uallocated, sizeof(unsigned char), 1, fd);
+    fwrite(&memuse_log[k].size, sizeof(size_t), 1, fd);
+    fwrite(&memuse_log[k].ptr, sizeof(void *), 1, fd);
+    fwrite(&memuse_log[k].dtic, sizeof(ticks), 1, fd);
+    fwrite(&memuse_log[k].index, sizeof(short int), 1, fd);
   }
 
   /* Clear the log. */
