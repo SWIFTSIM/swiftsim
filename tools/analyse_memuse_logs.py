@@ -41,13 +41,35 @@ parser.add_argument(
     default=None,
     action='append'
 )
+
+parser.add_argument(
+    "-o",
+    "--outfile",
+    dest="outfile",
+    help="output file, if not set writes to standard output",
+    default=None,
+    action='store'
+)
+
+parser.add_argument(
+    "-s",
+    "--summary-only",
+    dest="summary",
+    help="only output the summary only",
+    action='store_true'
+)
 args = parser.parse_args()
 
-memuse = OrderedDict()
+memuse = {}
 labels = {}
 totalmem = 0
 process_use = ""
 peak = 0.0
+
+if args.outfile != None:
+    outfile = open(args.outfile, "w")
+else:
+    outfile = sys.stdout
 
 for filename in args.memuse_report:
     sys.stderr.write("## Processing: " + filename + "\n")
@@ -56,7 +78,8 @@ for filename in args.memuse_report:
         process_use = header['metadata'][0][14:].split('\n')[0]
         usedlabels = np.load(infile)
         logdata = np.load(infile)
-        print '# {:<18s} {:>30s} {:>9s} {:>9s} {:s}'.format("tic", "label", "allocated", "step", "MB")
+        if not args.summary:
+            outfile.write('# {:<18s} {:>30s} {:>9s} {:>9s} {:s}\n'.format("tic", "label", "allocated", "step", "MB"))
         for line in np.nditer(logdata):
             step = int(line['step'])
             allocated = int(line['allocated'])
@@ -79,28 +102,22 @@ for filename in args.memuse_report:
             if allocated == 1:
                 #  Allocation.
                 totalmem = totalmem + size
-                if not adr in memuse:
-                    memuse[adr] = [size]
-                    labels[adr] = label
-                else:
-                    memuse[adr].append(size)
+                memuse[adr] = size
+                labels[adr] = label
             else:
                 #  Free, locate allocation.
-                if not adr in memuse:
+                if adr in memuse:
+                    totalmem = totalmem - memuse[adr]
+                    del memuse[adr]
+                else:
                     #  Unmatched free, complain and skip.
                     #print "### unmatched free: ", label, adr
                     doprint = False
-                else:
-                    allocs = memuse[adr]
-                    totalmem = totalmem - allocs[0]
-                    if len(allocs) > 1:
-                        memuse[adr] = allocs[1:]
-                    else:
-                        del memuse[adr]
             if doprint:
                 if totalmem > peak:
                     peak = totalmem
-                print '{:<20d} {:>30s} {:9d} {:9d} {:.3f}'.format(tic, label, allocated, step, totalmem/(1048576.0))
+                if not args.summary:
+                    outfile.write('{:<20d} {:>30s} {:9d} {:9d} {:.3f}\n'.format(tic, label, allocated, step, totalmem/(1048576.0)))
     sys.stderr.write("## Finished ingestion of: " + filename + "\n")
 
 totals = {}
@@ -109,24 +126,26 @@ for adr in labels:
     #  If any remaining allocations.
     if adr in memuse:
         if labels[adr] in totals:
-            totals[labels[adr]] = totals[labels[adr]] + memuse[adr][0]
+            totals[labels[adr]] = totals[labels[adr]] + memuse[adr]
             numactive[labels[adr]] = numactive[labels[adr]] + 1
         else:
-            totals[labels[adr]] = memuse[adr][0]
+            totals[labels[adr]] = memuse[adr]
             numactive[labels[adr]] = 1
 
-print "# Memory use by label:"
-print "## ", '{:<30s} {:>16s} {:>16s}'.format("label", "MB", "numactive")
-print "## "
+outfile.write("# Memory use by label:\n")
+outfile.write("## {:<30s} {:>16s} {:>16s}\n".format("label", "MB", "numactive"))
+outfile.write("## \n")
 total = 0.0
 for label in sorted(totals):
     mem = totals[label]/(1048576.0)
     total = total + mem
-    print "## ", '{:<30s} {:16.3f} {:16d}'.format(label, mem, numactive[label])
-print "## "
-print "# Total memory still in use : ", '{:.3f}'.format(total), " (MB)"
-print "# Peak memory usage         : ", '{:.3f}'.format(peak/1048576.0), " (MB)"
+    outfile.write("## {:<30s} {:16.3f} {:16d}\n".format(label, mem, numactive[label]))
+outfile.write("## \n")
+outfile.write("# Total memory still in use : " + '{:.3f}'.format(total) + " (MB)\n")
+outfile.write("# Peak memory usage         : " + '{:.3f}'.format(peak/1048576.0) + " (MB)\n")
 if process_use != "":
-    print "#"
-    print "# Memory use by process (all/system):", process_use
+    outfile.write("#\n")
+    outfile.write("# Memory use by process (all/system): " + process_use + "\n")
+outfile.close()
+
 sys.exit(0)
