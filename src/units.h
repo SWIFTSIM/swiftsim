@@ -117,6 +117,9 @@ double units_get_base_unit(const struct unit_system*, enum base_units);
 const char* units_get_base_unit_internal_symbol(enum base_units);
 const char* units_get_base_unit_cgs_symbol(enum base_units);
 
+void units_get_base_unit_exponants_array(float baseUnitsExp[5],
+                                         enum unit_conversion_factor unit);
+
 /* Cosmology factors */
 float units_general_h_factor(const struct unit_system* us,
                              const float baseUnitsExponants[5]);
