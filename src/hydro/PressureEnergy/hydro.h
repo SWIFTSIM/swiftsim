@@ -46,6 +46,7 @@
 #include "hydro_space.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
+#include "pressure_floor.h"
 
 #include <float.h>
 
@@ -124,7 +125,7 @@ hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
     const struct part *restrict p) {
 
-  return p->pressure_bar;
+  return pressure_floor_get_comoving_pressure(p, p->pressure_bar);
 }
 
 /**
@@ -139,7 +140,7 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
 
-  return cosmo->a_factor_pressure * p->pressure_bar;
+  return pressure_floor_get_physical_pressure(p, cosmo, cosmo->a_factor_pressure * p->pressure_bar);
 }
 
 /**
@@ -219,7 +220,8 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
 
   /* Compute the sound speed -- see theory section for justification */
   /* IDEAL GAS ONLY -- P-U does not work with generic EoS. */
-  const float square_rooted = sqrtf(hydro_gamma * p->pressure_bar / p->rho);
+  const float pressure = pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+  const float square_rooted = sqrtf(hydro_gamma * pressure / p->rho);
 
   return square_rooted;
 }
@@ -441,8 +443,8 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
   const float dt_cfl = 2.f * kernel_gamma * CFL_condition * cosmo->a * p->h /
                        (cosmo->a_factor_sound_speed * p->force.v_sig);
 
-  const float dt_u_change =
-      (p->u_dt != 0.0f) ? fabsf(const_max_u_change * p->u / p->u_dt) : FLT_MAX;
+  const float dt_u_change = FLT_MAX;
+  //(p->u_dt != 0.0f) ? fabsf(const_max_u_change * p->u / p->u_dt) : FLT_MAX;
 
   return fminf(dt_cfl, dt_u_change);
 }

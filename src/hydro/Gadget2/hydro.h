@@ -825,7 +825,7 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   /* Compute the pressure */
   float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
-  pressure  = pressure_floor_get_comoving_pressure(p, pressure);
+  pressure = pressure_floor_get_comoving_pressure(p, pressure);
 
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);

@@ -43,6 +43,7 @@
 #include "hydro_space.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
+#include "pressure_floor.h"
 
 /**
  * @brief Returns the comoving internal energy of a particle at the last
