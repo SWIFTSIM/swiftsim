@@ -142,7 +142,8 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
 
-  return pressure_floor_get_physical_pressure(p, cosmo, cosmo->a_factor_pressure * p->pressure_bar);
+  return pressure_floor_get_physical_pressure(
+      p, cosmo, cosmo->a_factor_pressure * p->pressure_bar);
 }
 
 /**
@@ -222,7 +223,8 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
 
   /* Compute the sound speed -- see theory section for justification */
   /* IDEAL GAS ONLY -- P-U does not work with generic EoS. */
-  const float pressure = pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+  const float pressure =
+      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
   const float square_rooted = sqrtf(hydro_gamma * pressure / p->rho);
 
   return square_rooted;

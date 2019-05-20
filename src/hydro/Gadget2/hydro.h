@@ -123,7 +123,8 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
 
-  const float pressure = gas_pressure_from_entropy(p->rho * cosmo->a3_inv, p->entropy);
+  const float pressure =
+      gas_pressure_from_entropy(p->rho * cosmo->a3_inv, p->entropy);
 
   return pressure_floor_get_physical_pressure(p, cosmo, pressure);
 }

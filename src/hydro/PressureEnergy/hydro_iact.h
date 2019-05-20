@@ -260,8 +260,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
 
   /* Get required pressures */
-  const float pressure_with_floor_i = pressure_floor_get_comoving_pressure(pi, pi->pressure_bar);
-  const float pressure_with_floor_j = pressure_floor_get_comoving_pressure(pj, pj->pressure_bar);
+  const float pressure_with_floor_i =
+      pressure_floor_get_comoving_pressure(pi, pi->pressure_bar);
+  const float pressure_with_floor_j =
+      pressure_floor_get_comoving_pressure(pj, pj->pressure_bar);
 
   const float pressure2_i = pi->pressure_bar * pi->pressure_bar;
   const float pressure2_j = pj->pressure_bar * pj->pressure_bar;
@@ -286,12 +288,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   pj->a_hydro[2] += mi * acc * dx[2];
 
   /* Get the time derivative for u. */
-  const float sph_du_term_i = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pj->u * pi->u * (pressure_with_floor_i * f_ij / pressure2_i) *
-                              wi_dr * dvdr * r_inv;
-  const float sph_du_term_j = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pi->u * pj->u * (pressure_with_floor_j * f_ji / pressure2_j) *
-                              wj_dr * dvdr * r_inv;
+  const float sph_du_term_i =
+      hydro_gamma_minus_one * hydro_gamma_minus_one * pj->u * pi->u *
+      (pressure_with_floor_i * f_ij / pressure2_i) * wi_dr * dvdr * r_inv;
+  const float sph_du_term_j =
+      hydro_gamma_minus_one * hydro_gamma_minus_one * pi->u * pj->u *
+      (pressure_with_floor_j * f_ji / pressure2_j) * wj_dr * dvdr * r_inv;
 
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
@@ -395,8 +397,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
 
   /* Get required pressures */
-  const float pressure_with_floor_i = pressure_floor_get_comoving_pressure(pi, pi->pressure_bar);
-  const float pressure_with_floor_j = pressure_floor_get_comoving_pressure(pj, pj->pressure_bar);
+  const float pressure_with_floor_i =
+      pressure_floor_get_comoving_pressure(pi, pi->pressure_bar);
+  const float pressure_with_floor_j =
+      pressure_floor_get_comoving_pressure(pj, pj->pressure_bar);
 
   const float pressure2_i = pi->pressure_bar * pi->pressure_bar;
   const float pressure2_j = pj->pressure_bar * pj->pressure_bar;
@@ -417,9 +421,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->a_hydro[2] -= mj * acc * dx[2];
 
   /* Get the time derivative for u. */
-  const float sph_du_term_i = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pj->u * pi->u * (pressure_with_floor_i * f_ij / pressure2_i) *
-                              wi_dr * dvdr * r_inv;
+  const float sph_du_term_i =
+      hydro_gamma_minus_one * hydro_gamma_minus_one * pj->u * pi->u *
+      (pressure_with_floor_i * f_ij / pressure2_i) * wi_dr * dvdr * r_inv;
 
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;

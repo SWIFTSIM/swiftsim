@@ -749,8 +749,8 @@ int main(int argc, char *argv[]) {
 
     /* Initialise the pressure floor */
     if (with_hydro)
-      pressure_floor_init(&pressure_floor_props, &prog_const, &us, &hydro_properties,
-			  params);
+      pressure_floor_init(&pressure_floor_props, &prog_const, &us,
+                          &hydro_properties, params);
     else
       bzero(&pressure_floor_props, sizeof(struct pressure_floor_properties));
 
