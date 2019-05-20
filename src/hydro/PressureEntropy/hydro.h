@@ -569,7 +569,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   const float abs_div_v = fabsf(p->density.div_v);
 
   /* Compute the pressure */
-  float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
+  const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
 
   /* Compute the sound speed from the pressure*/
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
@@ -642,7 +642,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   p->entropy = xp->entropy_full;
 
   /* Re-compute the pressure */
-  float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
+  const float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
 
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -708,7 +708,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   }
 
   /* Compute the pressure */
-  float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
+  const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
   
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
@@ -800,7 +800,7 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
   p->entropy_one_over_gamma = pow_one_over_gamma(p->entropy);
 
   /* Compute the pressure */
-  float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
+  const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
   
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
