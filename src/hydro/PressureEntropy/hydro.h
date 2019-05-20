@@ -709,7 +709,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* Compute the pressure */
   const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  
+
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
 
@@ -801,7 +801,7 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   /* Compute the pressure */
   const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  
+
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
 

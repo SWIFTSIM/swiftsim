@@ -47,8 +47,7 @@ struct pressure_floor_properties {};
  * @param pressure The pressure without any pressure floor.
  */
 static INLINE float pressure_floor_get_physical_pressure(
-    const struct part *p, const struct cosmology *cosmo,
-    const float pressure) {
+    const struct part *p, const struct cosmology *cosmo, const float pressure) {
   return pressure;
 }
 
@@ -60,8 +59,8 @@ static INLINE float pressure_floor_get_physical_pressure(
  * @param p The #part.
  * @param pressure The pressure without any pressure floor.
  */
-static INLINE float pressure_floor_get_comoving_pressure(
-    const struct part *p, const float pressure) {
+static INLINE float pressure_floor_get_comoving_pressure(const struct part *p,
+                                                         const float pressure) {
   return pressure;
 }
 
@@ -79,10 +78,10 @@ static INLINE float pressure_floor_get_comoving_pressure(
  * @param props The pressure floor properties to fill.
  */
 static INLINE void pressure_floor_init(struct pressure_floor_properties *props,
-                                      const struct phys_const *phys_const,
-                                      const struct unit_system *us,
-                                      const struct hydro_props *hydro_props,
-                                      struct swift_params *params) {}
+                                       const struct phys_const *phys_const,
+                                       const struct unit_system *us,
+                                       const struct hydro_props *hydro_props,
+                                       struct swift_params *params) {}
 
 /**
  * @brief Print the properties of the pressure floor to stdout.
