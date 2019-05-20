@@ -15,7 +15,7 @@ This additional pressure can be seen as the pressure due to unresolved hydrodyna
     P_\textrm{Jeans} = \frac{\rho}{\gamma} \left( \frac{4}{\pi} G h^2 \rho N_\textrm{Jeans}^{2/3} - \sigma^2 \right)
 
 where :math:`\rho` is the density, :math:`\gamma` the adiabatic index, :math:`G` is the gravitational constant,
-:math:`h` the smoothing length, :math:`N_\textrm{Jeans}` is the number of particle required in order to resolved a clump and
+:math:`h` the smoothing length, :math:`N_\textrm{Jeans}` is the number of particle required in order to resolve a clump and
 :math:`\sigma` the velocity dispersion.
 
 
