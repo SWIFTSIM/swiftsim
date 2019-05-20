@@ -108,9 +108,7 @@ hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
     const struct part *restrict p) {
 
-  const float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  return pressure_floor_get_comoving_pressure(p, pressure);
-
+  return gas_pressure_from_entropy(p->rho_bar, p->entropy);
 }
 
 /**
@@ -121,8 +119,7 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
 
-  const float pressure = gas_pressure_from_entropy(p->rho_bar * cosmo->a3_inv, p->entropy);
-  return pressure_floor_get_physical_pressure(p, cosmo, pressure);
+  return gas_pressure_from_entropy(p->rho_bar * cosmo->a3_inv, p->entropy);
 }
 
 /**
@@ -549,7 +546,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Compute the pressure */
   float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  pressure = pressure_floor_get_comoving_pressure(p, pressure);
 
   /* Compute the sound speed from the pressure*/
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
@@ -623,7 +619,6 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
 
   /* Re-compute the pressure */
   float pressure = gas_pressure_from_entropy(p->rho, p->entropy);
-  pressure = pressure_floor_get_comoving_pressure(p, pressure);
 
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho, pressure);
@@ -690,7 +685,6 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* Compute the pressure */
   float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  pressure = pressure_floor_get_comoving_pressure(p, pressure);
   
   /* Compute the new sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
@@ -783,7 +777,6 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
 
   /* Compute the pressure */
   float pressure = gas_pressure_from_entropy(p->rho_bar, p->entropy);
-  pressure = pressure_floor_get_comoving_pressure(p, pressure);
   
   /* Compute the sound speed */
   const float soundspeed = gas_soundspeed_from_pressure(p->rho_bar, pressure);
