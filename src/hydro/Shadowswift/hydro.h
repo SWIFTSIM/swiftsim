@@ -29,6 +29,7 @@
 #include "hydro_properties.h"
 #include "hydro_space.h"
 #include "voronoi_algorithm.h"
+#include "pressure_floor.h"
 
 /**
  * @brief Computes the hydro time-step of a given particle

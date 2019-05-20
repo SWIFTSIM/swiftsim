@@ -50,7 +50,7 @@ static INLINE float pressure_floor_get_comoving_pressure(
 
 /* Check if pressure floor is implemented in hydro */
 #ifndef PRESSURE_FLOOR_NONE
-#ifdef GADGET2_SPH
+#if defined(GADGET2_SPH) || defined(HOPKINS_PU_SPH)
 /* Implemented */
 #else
 #error Pressure floor not implemented with this hydro scheme

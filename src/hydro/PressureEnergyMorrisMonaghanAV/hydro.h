@@ -47,6 +47,7 @@
 #include "hydro_space.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
+#include "pressure_floor.h"
 
 #include "./hydro_parameters.h"
 

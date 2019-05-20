@@ -31,6 +31,7 @@
 #include "hydro_unphysical.h"
 #include "hydro_velocities.h"
 #include "minmax.h"
+#include "pressure_floor.h"
 #include "riemann.h"
 
 #include <float.h>
