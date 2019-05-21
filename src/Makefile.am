@@ -168,6 +168,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 stars/Default/stars_debug.h stars/Default/stars_part.h  \
 		 stars/EAGLE/stars.h stars/EAGLE/stars_iact.h stars/EAGLE/stars_io.h \
 		 stars/EAGLE/stars_debug.h stars/EAGLE/stars_part.h \
+		 stars/GEAR/stars.h stars/GEAR/stars_iact.h stars/GEAR/stars_io.h \
+		 stars/GEAR/stars_debug.h stars/GEAR/stars_part.h \
 	         potential/none/potential.h potential/point_mass/potential.h \
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
                  potential/sine_wave/potential.h \
@@ -215,6 +217,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/EAGLE/feedback.h feedback/EAGLE/feedback_struct.h feedback/EAGLE/feedback_iact.h \
                  feedback/EAGLE/feedback_properties.h feedback/EAGLE/imf.h feedback/EAGLE/interpolate.h \
                  feedback/EAGLE/yield_tables.h \
+		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution_io.h \
+		 feedback/GEAR/stellar_evolution.h feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
+		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \
