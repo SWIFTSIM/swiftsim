@@ -221,6 +221,37 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
     error("unable to open file %s\n", cooling->cooling_table_path);
 
   /* Allocate and read arrays to store cooling tables. */
+
+  /* Mean particle mass (temperature) */
+  if (posix_memalign(
+          (void **)&cooling->table.Tmu, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              sizeof(float)) != 0)
+    error("Failed to allocate Tmu array\n");
+
+  dataset = H5Dopen(tempfile_id, "/Tdep/MeanParticleMass", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Tmu);
+  if (status < 0) error("error reading Tmu\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing mean particle mass dataset");
+
+  /* Mean particle mass (internal energy) */
+  if (posix_memalign(
+          (void **)&cooling->table.Umu, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density *
+              sizeof(float)) != 0)
+    error("Failed to allocate Umu array\n");
+
+  dataset = H5Dopen(tempfile_id, "/Udep/MeanParticleMass", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Umu);
+  if (status < 0) error("error reading Umu\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing mean particle mass dataset");
+
   /* Cooling (temperature) */
   if (posix_memalign(
           (void **)&cooling->table.Tcooling, SWIFT_STRUCT_ALIGNMENT,

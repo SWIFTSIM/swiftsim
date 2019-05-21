@@ -28,12 +28,162 @@
 #if defined(COOLING_COLIBRE) && defined(GADGET2_SPH)
 #include "cooling/COLIBRE/cooling_rates.h"
 #include "cooling/COLIBRE/cooling_tables.h"
+#include "cooling/COLIBRE/cooling.c"
 
-//#define ISOCHORIC 0
-//#define ISOBARIC 1
-//#define ISOCHORIC_EXTRATERM 2
+enum {ISOCHORIC, ISOBARIC, ISOBARIC_DENSVAR};
 
-enum {ISOCHORIC, ISOBARIC, ISOCHORIC_EXTRATERM};
+INLINE double bisection_iter_isobaric(
+    const double u_ini_cgs, const double n_H_cgs, const double redshift,
+    int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
+    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs, float ZZsol,
+    const struct cooling_function_data *restrict cooling,
+    const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
+    long long ID) {
+
+  /* Bracketing */
+  double u_lower_cgs = u_ini_cgs;
+  double u_upper_cgs = u_ini_cgs;
+
+  int icoolcase = 0;
+
+  /*************************************/
+  /* Let's get a first guess           */
+  /*************************************/
+
+  double LambdaNet_cgs =
+      Lambda_He_reion_cgs +
+      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, ZZsol,
+                           abundance_ratio, n_H_index, d_n_H, met_index, d_met,
+                           red_index, d_red, cooling, icoolcase, icoolcase,
+                           icoolcase, icoolcase);
+
+  LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+
+  /*************************************/
+  /* Let's try to bracket the solution */
+  /*************************************/
+
+  if (LambdaNet_cgs < 0) {
+
+    /* we're cooling! */
+    u_lower_cgs /= bracket_factor;
+    u_upper_cgs *= bracket_factor;
+
+    /* Compute a new rate */
+    LambdaNet_cgs =
+        Lambda_He_reion_cgs +
+        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
+    LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+
+    int i = 0;
+    while (u_lower_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs >
+               0 &&
+           i < bisection_max_iterations) {
+
+      u_lower_cgs /= bracket_factor;
+      u_upper_cgs /= bracket_factor;
+
+      /* Compute a new rate */
+      LambdaNet_cgs =
+          Lambda_He_reion_cgs +
+          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
+                               abundance_ratio, n_H_index, d_n_H, met_index,
+                               d_met, red_index, d_red, cooling, icoolcase,
+                               icoolcase, icoolcase, icoolcase);
+      LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+      i++;
+    }
+    if (i >= bisection_max_iterations) {
+      error(
+          "particle %llu exceeded max iterations searching for bounds when "
+          "cooling",
+          ID);
+    }
+  } else {
+
+    /* we are heating! */
+    u_lower_cgs /= bracket_factor;
+    u_upper_cgs *= bracket_factor;
+
+    /* Compute a new rate */
+    LambdaNet_cgs =
+        Lambda_He_reion_cgs +
+        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
+    LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+
+    int i = 0;
+    while (u_upper_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs <
+               0 &&
+           i < bisection_max_iterations) {
+
+      u_lower_cgs *= bracket_factor;
+      u_upper_cgs *= bracket_factor;
+
+      /* Compute a new rate */
+      LambdaNet_cgs =
+          Lambda_He_reion_cgs +
+          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
+                               abundance_ratio, n_H_index, d_n_H, met_index,
+                               d_met, red_index, d_red, cooling, icoolcase,
+                               icoolcase, icoolcase, icoolcase);
+      LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+      i++;
+    }
+
+    if (i >= bisection_max_iterations) {
+      error(
+          "particle %llu exceeded max iterations searching for bounds when "
+          "heating",
+          ID);
+    }
+  }
+
+  /********************************************/
+  /* We now have an upper and lower bound.    */
+  /* Let's iterate by reducing the bracketing */
+  /********************************************/
+  /* bisection iteration */
+  int i = 0;
+  double u_next_cgs;
+
+  do {
+
+    /* New guess */
+    u_next_cgs = 0.5 * (u_lower_cgs + u_upper_cgs);
+
+    /* New rate */
+    LambdaNet_cgs =
+        Lambda_He_reion_cgs +
+        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs, ZZsol,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
+    LambdaNet_cgs = 3./5. * LambdaNet_cgs;
+
+    /* Where do we go next? */
+    if (u_next_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs > 0.0) {
+      u_upper_cgs = u_next_cgs;
+    } else {
+      u_lower_cgs = u_next_cgs;
+    }
+
+    i++;
+  } while (fabs(u_upper_cgs - u_lower_cgs) / u_next_cgs > bisection_tolerance &&
+           i < bisection_max_iterations);
+
+  if (i >= bisection_max_iterations)
+    error("Particle id %llu failed to converge", ID);
+
+  return u_upper_cgs;
+}
+
+
 
 
 /**
@@ -71,168 +221,247 @@ void set_quantities(struct part *restrict p, struct xpart *restrict xp,
   }
 }
 
-/* 
- * icase = 0 ... isochoric 
- * icase = 1 ... isobaric
- * icase = 2 ... isochoric + extra dN/dt term
- */
 
 
-INLINE double dTdt(int icase, double hstep_old, double temp,  double redshift, double n_H, float ZZsol, 
+INLINE double dTdt_cooling(float XH, int icase, double log10_T,  double redshift, double n_H, float ZZsol,
             const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
-            float d_n_H, int met_index, float d_met, int red_index, float d_red, 
+            float d_n_H, int met_index, float d_met, int red_index, float d_red,
             const struct cooling_function_data *restrict cooling) {
-
+  
+  double s_iso, mu, ntotal, lambda_net, dQ, dTdt;
   const double const_boltzmann_k_cgs = 1.38064852e-16;
-
-  float log10_U = colibre_convert_temp_to_u (temp, redshift, n_H_index, d_n_H,
-                                  met_index, d_met, red_index, d_red, cooling);
-
-  double dT, ne, ntotal, lambda_net;
-
-  double s_iso;
+  const double m_u = 1.66054e-24;
 
 
-  if ((icase == ISOCHORIC) || (icase == ISOCHORIC_EXTRATERM)) {
+  if (icase == ISOCHORIC) {
      s_iso = 0.;
-  } else if (icase == ISOBARIC) {
-     s_iso = 1.; 
-  } else { 
-     printf("UNKNOWN CASE"); return -1; 
-  } 
-
-  ne = colibre_electron_density(log10_U, redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-        d_n_H, met_index, d_met, red_index, d_red, cooling);
-
-  // calculate total number of particles per ccm
-  // only atoms and electrons at the moment
-  ntotal = 0.;
-  for (int ii = 0 ; ii < chemistry_element_count; ii++) {
-        ntotal += abundance_ratio[ii];
+  } else if ( (icase == ISOBARIC) || (icase == ISOBARIC_DENSVAR) ) {
+     s_iso = 1.;
+  } else {
+     printf("UNKNOWN CASE\n"); return +1.;
   }
-  ntotal = ne + n_H * ntotal;
 
-  // calculate standard net cooling
-  lambda_net = colibre_cooling_rate(
-      log10_U, redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-      d_n_H, met_index, d_met, red_index, d_red, cooling, 0, 0, 0, 0);
-
-  dT = ne * n_H * lambda_net / ( (3./2. + s_iso) * ntotal * const_boltzmann_k_cgs);
-
- 
-  if (icase == ISOCHORIC_EXTRATERM) {
-    
-    double substep = hstep_old;
-
-    double Told = pow(10., temp);
-
-    if (Told + substep * dT < 10.) printf("temp = %.4f, hstep_old = %.4e, Told = %.4e, Tnew = %.4e\n", temp, hstep_old, Told, Told + substep * dT);
-
-    double Tnew = max(Told + substep * dT, 10.);
-
-    double log10_U_new = colibre_convert_temp_to_u ( log10(Tnew), redshift, n_H_index, d_n_H,
-                                 met_index, d_met, red_index, d_red, cooling);
-    double ne_new = colibre_electron_density(log10_U_new, redshift, n_H, ZZsol, abundance_ratio, n_H_index,
+  mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H, ZZsol, n_H_index,
        d_n_H, met_index, d_met, red_index, d_red, cooling);
 
-    double ntotal_new = ntotal - ne + ne_new;
+  // also takes molecules into account
+  ntotal = n_H / (XH * mu);
 
-    printf("dT = %.4e, extra term = %.4e\n", dT, Told / ntotal * (ntotal_new - ntotal) / substep);
-    dT = dT - Told / ntotal *  (ntotal_new - ntotal) / substep;
-    printf("ntotal = %.4e, ntotal_new = %.4e, hstep_old = %.4e\n", ntotal, ntotal_new, substep);
- 
-   // dT = dT - pow(10., temp) / ntotal * (ntotal_new - ntotal) / hstep_old;
+  // calculate standard net cooling
+  lambda_net = colibre_cooling_rate_temperature(
+      log10_T, redshift, n_H, ZZsol, abundance_ratio, n_H_index,
+      d_n_H, met_index, d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+
+  dQ = n_H * n_H * lambda_net / (ntotal * mu * m_u);
+  dTdt = m_u * mu / ((3./2. + s_iso) * const_boltzmann_k_cgs) * dQ;
+
+  return dTdt;
+}
+
+INLINE void temperature_evolution_implicit(int icase, float inn_h, double redshift, int red_index, float d_red, 
+                                  double XH, float logZZsol, int met_index, float d_met, 
+				  const float abundance_ratio[colibre_cooling_N_elementtypes],
+                                  const struct cooling_function_data *restrict cooling) {
+
+  double temperature_start = 1.e9;
+  double u_new_cgs;
+  double logustart;
+  int T_index, n_H_index, U_index;
+  float d_T, d_n_H, d_U;
+  const double Lambda_He_reion_cgs = 0.;
+  const double dt_cgs = 1.e12;
+  const long pid = 0;
+  double ratefact_cgs, mu, pres_start;
+  const double const_boltzmann_k_cgs = 1.38064852e-16;
+  double ZZsol = pow(10., logZZsol);
+
+
+  FILE *ofile;
+
+  if (icase == ISOCHORIC) {
+           char isochoric_outputfile[35];
+           sprintf(isochoric_outputfile, "implicit_isochoric_lognH%.2f.dat", log10(inn_h));
+           ofile = fopen(isochoric_outputfile, "w");
+  } else if (icase == ISOBARIC) {
+           char isobaric_outputfile[35];
+           sprintf(isobaric_outputfile , "implicit_isobaric_lognH%.2f.dat", log10(inn_h));
+           ofile = fopen(isobaric_outputfile, "w");
+  } else if (icase == ISOBARIC_DENSVAR) {
+           char isobaric_outputfile_densvar[35];
+           sprintf(isobaric_outputfile_densvar , "implicit_isobaric_lognH%.2f_densvar.dat", log10(inn_h));
+           ofile = fopen(isobaric_outputfile_densvar, "w");
+  }
+  if (ofile == NULL) {
+           error("Error opening output file, icase = %i\n", icase);
   }
 
-  return dT;
-}
+  get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10(temperature_start),
+               &T_index, &d_T);
 
-INLINE double make_rkstep(int icase, double hstep, double temp,  double redshift, double n_H, float ZZsol, 
-            const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
-            float d_n_H, int met_index, float d_met, int red_index, float d_red, 
-            const struct cooling_function_data *restrict cooling, double *hstep_out) {
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(inn_h), &n_H_index,
+               &d_n_H);
 
-      double a21 = 1./5.;
-      double a31 = 3./40., a32 = 9./40.;
-      double a41 = 44./45., a42 = -56./15., a43 = 32./9.;
-      double a51 = 19372./6561., a52 = -25360./2187., a53 = 64448./6561., a54 = -212./729.;
-      double a61 = 9017./3168., a62 = -355./33., a63 = 46732./5247., a64 = 49./176., a65 = -5103./18656.;
-
-      double b1 = 35./384., b2 = 0., b3 = 500./1113., b4 = 125./192., b5 = -2187./6784., b6 = 11./84.;
-      double b1s = 5179./57600., b2s = 0., b3s = 7571./16695., b4s = 393./640., b5s = - 92097./339200., b6s = 187./2100.;
-
-      double rtol = 1.e-3, S = 0.95;
-
-      int count = 0;
-
-      double hstep_old, hstep_new;
+  ratefact_cgs = inn_h * (XH * cooling->inv_proton_mass_cgs);
 
 
-      hstep_new = hstep;
-      do {
-          hstep_old = hstep_new;
-          printf("hstep_old = %.4e\n", hstep_old);
-          // 6-th order Runge-Kutta
-          double tempk1 = temp;
-	  printf("T(k1) = %.4f\n", tempk1);
-          double k1 = hstep_old * dTdt(icase, hstep_old, tempk1,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          double tempk2 = log10(max(pow(10., temp) + a21 * k1, 10.));
-	  printf("T(k2) = %.4f\n", tempk2);
-          double k2 = hstep_old * dTdt(icase, hstep_old, tempk2,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          double tempk3 = log10(max(pow(10., temp) + a31 * k1 + a32 * k2, 10.));
-	  printf("T(k3) = %.4f\n", tempk3);
-          double k3 = hstep_old * dTdt(icase, hstep_old, tempk3,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          double tempk4 = log10(max(pow(10., temp) + a41 * k1 + a42 * k2 + a43 * k3, 10.));
-	  printf("T(k4) = %.4f\n", tempk4);
-          double k4 = hstep_old * dTdt(icase, hstep_old, tempk4,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          double tempk5 = log10(max(pow(10., temp) + a51 * k1 + a52 * k2 + a53 * k3 + a54 * k4, 10.));
-	  printf("T(k5) = %.4f\n", tempk5);
-          double k5 = hstep_old * dTdt(icase, hstep_old, tempk5,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          double tempk6 = log10(max(pow(10., temp) + a61 * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5, 10.));
-	  printf("T(k6) = %.4f\n", tempk6);
-          double k6 = hstep_old * dTdt(icase, hstep_old, tempk6,
-            redshift, n_H, ZZsol, abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, cooling);
-    
-          // lin
-          double temperature_new   = pow(10., temp) + b1 *k1 + b2 *k2 + b3 *k3 + b4 *k4 + b5 *k5 + b6 *k6;
-          double temperature_news  = pow(10., temp) + b1s*k1 + b2s*k2 + b3s*k3 + b4s*k4 + b5s*k5 + b6s*k6;
-      
-          printf("temperature_new = %.4e, temperature_news = %.4e\n", temperature_new, temperature_news);
+  /* Temperature from internal energy */
+  logustart = interpolation_4d(
+                      cooling->table.U_from_T, red_index, T_index, met_index, n_H_index, d_red,
+                      d_T, d_met, d_n_H, colibre_cooling_N_redshifts,
+                      colibre_cooling_N_temperature, colibre_cooling_N_metallicity,
+                      colibre_cooling_N_density);
 
-          double error = abs(temperature_new - temperature_news);
-          double scale = max(temperature_new, pow(10., temp)) * rtol;
+  if (icase == ISOBARIC_DENSVAR) {
+    mu = colibre_meanparticlemass_temperature(log10(temperature_start), redshift, inn_h, ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+
+    pres_start = inn_h * const_boltzmann_k_cgs * temperature_start / ( XH * mu );
+  }
+
    
-          printf("error = %.4e, scale = %.4e\n", error, scale);
+  double n_H = inn_h;
+  double u_0_cgs = pow(10.,logustart);
+  double log10_T = log10(temperature_start);
+  double log10_Tnew;
+  double time = 0.;
+  double dTdt;
 
-          if (error <= scale) { 
-            *hstep_out = hstep_old;
-            return temperature_new; 
-          } else {
-            hstep_new = S * hstep_old * pow(1. / error, 1./5.); 
-          }
-      count += 1;
-    } while (count < 1000.);
+  do {
 
-    printf("RK does not converge: temp = %.4f", temp);
-    return -1.;
+     get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10_T,
+               &T_index, &d_T);
+
+     // Density varies
+     if (icase == ISOBARIC_DENSVAR) {
+         get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                &d_n_H);
+         mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H, ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+         n_H = pres_start * XH * mu / ( const_boltzmann_k_cgs * pow(10., log10_T) );
+         get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                &d_n_H);
+         mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H, ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+         n_H = pres_start * XH * mu / ( const_boltzmann_k_cgs * pow(10., log10_T) );
+         get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                &d_n_H);
+         ratefact_cgs = n_H * (XH * cooling->inv_proton_mass_cgs);
+     }
+
+     if (icase == ISOCHORIC) {
+          u_new_cgs = bisection_iter(u_0_cgs, n_H, redshift, n_H_index, d_n_H,
+                               met_index, d_met, red_index, d_red,
+                               Lambda_He_reion_cgs, ratefact_cgs, logZZsol,
+                               cooling, abundance_ratio, dt_cgs, pid);
+     } else { 
+          u_new_cgs = bisection_iter_isobaric(u_0_cgs, n_H, redshift, n_H_index, d_n_H,
+                               met_index, d_met, red_index, d_red,
+                               Lambda_He_reion_cgs, ratefact_cgs, logZZsol,
+                               cooling, abundance_ratio, dt_cgs, pid);
+     }
+
+     if ( u_new_cgs > u_0_cgs ) break;
+
+     get_index_1d(cooling->Therm, colibre_cooling_N_internalenergy, log10(u_new_cgs),
+                 &U_index, &d_U);
+
+     log10_Tnew = interpolation_4d(
+                      cooling->table.T_from_U, red_index, U_index, met_index, n_H_index, d_red,
+                      d_U, d_met, d_n_H, colibre_cooling_N_redshifts,
+                      colibre_cooling_N_internalenergy, colibre_cooling_N_metallicity,
+                      colibre_cooling_N_density);
+
+     time = time + dt_cgs;
+     dTdt = ( pow(10., log10_Tnew) - pow(10., log10_T) ) / dt_cgs;
+     fprintf(ofile, "%i\t%.4e\t%.4e\t%.4e\t%.4f\t%.4f\n",icase, time, dTdt, dt_cgs, log10_Tnew, log10(n_H));
+     u_0_cgs = u_new_cgs;
+     log10_T = log10_Tnew;
+
+  } while (log10_T > 2.);
+
+
+  fclose(ofile);
+
 }
 
+INLINE void temperature_evolution_explicit(int icase, float inn_h, double redshift, int red_index, float d_red, 
+                                  double XH, float logZZsol, int met_index, float d_met, 
+				  const float abundance_ratio[colibre_cooling_N_elementtypes],
+                                  const struct cooling_function_data *restrict cooling) {
+
+   const double eps = 0.05;
+   const double const_boltzmann_k_cgs = 1.38064852e-16;
+   double temperature_start = 1.e9;
+
+   double time = 0.;
+   double n_H = inn_h;
+   double dTdt;
+   double ZZsol = pow(10., logZZsol);
+   float log10_T = log10(temperature_start);
+   
+   int n_H_index;
+   float d_n_H;
+   double hstep;
+   double pres_start, mu;
+
+   FILE *ofile;
+
+   if (icase == ISOCHORIC) {
+           char isochoric_outputfile[35];
+           sprintf(isochoric_outputfile, "explicit_isochoric_lognH%.2f.dat", log10(inn_h));
+           ofile = fopen(isochoric_outputfile, "w");
+   } else if (icase == ISOBARIC) {
+           char isobaric_outputfile[35];
+           sprintf(isobaric_outputfile , "explicit_isobaric_lognH%.2f.dat", log10(inn_h));
+           ofile = fopen(isobaric_outputfile, "w");
+   } else if (icase == ISOBARIC_DENSVAR) {
+           char isobaric_outputfile_densvar[35];
+           sprintf(isobaric_outputfile_densvar , "explicit_isobaric_lognH%.2f_densvar.dat", log10(inn_h));
+           ofile = fopen(isobaric_outputfile_densvar, "w");
+   }
+   if (ofile == NULL) {
+           error("Error opening output file, icase = %i\n", icase);
+   }
+
+
+   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                &d_n_H);
+
+   mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H,ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+
+   pres_start = n_H * const_boltzmann_k_cgs * temperature_start / ( XH * mu );
+
+
+   do {
+      if (icase == ISOBARIC_DENSVAR) { 
+           mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H,ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+           n_H = pres_start * XH * mu / ( const_boltzmann_k_cgs * pow(10., log10_T) );
+           get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                        &d_n_H);
+           mu = colibre_meanparticlemass_temperature(log10_T, redshift, n_H,ZZsol,
+                        n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+           n_H = pres_start * XH * mu / ( const_boltzmann_k_cgs * pow(10., log10_T) );
+           get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H), &n_H_index,
+                        &d_n_H);
+      }
+
+      dTdt = dTdt_cooling(XH, icase, log10_T, redshift, n_H, ZZsol, abundance_ratio, 
+                          n_H_index, d_n_H, met_index, d_met, red_index, d_red, cooling);
+   
+      if (dTdt > 0.) break;
+
+      hstep = fabs(eps * pow(10., log10_T) / dTdt);
+      log10_T = log10( pow(10., log10_T) + hstep * dTdt );
+      time = time + hstep;
+      fprintf(ofile, "%i\t%.4e\t%.4e\t%.4e\t%.4f\t%.4f\n",icase, time, dTdt, hstep, log10_T, log10(n_H));
+
+   } while (log10_T > 2.);
+
+   fclose(ofile);
+
+}
 
 /**
  * @brief Produces contributions to cooling rates for different
@@ -252,7 +481,6 @@ int main(int argc, char **argv) {
   struct cooling_function_data cooling;
   struct cosmology cosmo;
   const char *parametersFileName = "./cooling_evolution.yml";
-  double hstep_out;
 
   /* Initialize CPU frequency, this also starts time. */
   unsigned long long cpufreq = 0;
@@ -284,7 +512,6 @@ int main(int argc, char **argv) {
           printf("Unknown option character `\\x%x'.\n", optopt);
         error("invalid option(s) to cooling_evolution");
     }
-
   // Read the parameter file
   if (params == NULL) error("Error allocating memory for the parameter file.");
   message("Reading runtime parameters from file '%s'", parametersFileName);
@@ -319,33 +546,10 @@ int main(int argc, char **argv) {
 
   // extract mass fractions, calculate table indices and offsets
   float XH = p.chemistry_data.metal_mass_fraction[chemistry_element_H];
-
-  char isochoric_outputfile[35];
-  sprintf(isochoric_outputfile, "isochoric_lognH%.2f.dat", log_10_nh);
-  char isobaric_outputfile[35];
-  sprintf(isobaric_outputfile, "isobaric_lognH%.2f.dat", log_10_nh);
-  char isochoric_extraterm_outputfile[35];
-  sprintf(isochoric_extraterm_outputfile, "isochoric_extraterm_lognH%.2f.dat", log_10_nh);
-
-  // Calculate contributions from metals to cooling rate
-  // open file
-  FILE *ofile_isochoric = fopen(isochoric_outputfile, "w");
-  if (ofile_isochoric == NULL) {
-    error("Error opening output file!\n");
-  }
-  FILE *ofile_isobaric = fopen(isobaric_outputfile, "w");
-  if (ofile_isobaric == NULL) {
-    error("Error opening output file (heat)!\n");
-  }
-  FILE *ofile_isochoric_extraterm = fopen(isochoric_extraterm_outputfile, "w");
-  if (ofile_isochoric_extraterm == NULL) {
-    error("Error opening output file (net)!\n");
-  }
-
-  FILE *ofile;
+  printf("XH = %.4f\n", XH);
 
   // set hydrogen number density
-  const float nh = exp(M_LN10 * log_10_nh);
+  float nh = exp(M_LN10 * log_10_nh);
 
   /* Initial internal energy */
   double u = 1.0e14;
@@ -360,101 +564,25 @@ int main(int argc, char **argv) {
                 internal_const.const_proton_mass *
                 cooling.number_density_to_cgs;
 
-  float d_red, d_met, d_n_H;
-  int red_index, met_index, n_H_index, icase;
-
-  double temperature;
-  double temperature_new;
-
-  double Tmin = 1.e2;
+  float d_red, d_met;
+  int red_index, met_index;
 
   get_index_1d(cooling.Redshifts, colibre_cooling_N_redshifts, cosmo.z,
                &red_index, &d_red);
   get_index_1d(cooling.Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &met_index, &d_met);
-  get_index_1d(cooling.nH, colibre_cooling_N_density, log10(inn_h), &n_H_index,
-               &d_n_H);
 
+  printf("nH/nH = %.4f\t, logZZsol = %.4f\t, inn_h = %.4e\n", abundance_ratio[0], logZZsol, inn_h);
 
-  for (icase = 0; icase < 3; icase++) {
-
-      if (icase == ISOCHORIC) {
-           ofile = fopen(isochoric_outputfile, "w");
-      } else if (icase == ISOBARIC) {
-           ofile = fopen(isobaric_outputfile, "w");
-      } else if (icase == ISOCHORIC_EXTRATERM) {
-           ofile = fopen(isochoric_extraterm_outputfile, "w");       
-      } 
-      if (ofile == NULL) {
-           error("Error opening output file, icase = %i\n", icase);
-      }
-    
-      // Update the particle with the new values
-      set_quantities(&p, &xp, &us, &cooling, &cosmo, &internal_const, nh,
-                       pow(10.0, 18.0));
-    
-      // New internal energy
-      u = hydro_get_physical_internal_energy(&p, &xp, &cosmo) *
-            cooling.internal_energy_to_cgs;
-    
-      // calculate temperature
-      // lin
-      temperature = pow(10., 
-            colibre_convert_u_to_temp(log10(u), cosmo.z, n_H_index, d_n_H,
-                                      met_index, d_met, red_index, d_red, &cooling)); 
-    
-      // lin
-      temperature_new = temperature;
-      printf("Starting temperature = %.4e\n", temperature);
-    
-      double time = 0.;
-      do {
-        u = pow(10., colibre_convert_temp_to_u (log10(temperature), cosmo.z, n_H_index, d_n_H,
-                                      met_index, d_met, red_index, d_red, &cooling));
-    
-        // Update the particle with the new values
-        set_quantities(&p, &xp, &us, &cooling, &cosmo, &internal_const, nh, u);
-    
-        // New internal energy
-        u = hydro_get_physical_internal_energy(&p, &xp, &cosmo) *
-            cooling.internal_energy_to_cgs;
-    
-        // calculate temperature
-        // log10
-        temperature =
-            colibre_convert_u_to_temp(log10(u), cosmo.z, n_H_index, d_n_H,
-                                      met_index, d_met, red_index, d_red, &cooling);
-    
-        double hstep = 1.e15;
-    
-        do {
-          temperature_new = make_rkstep(icase, hstep, temperature,
-            cosmo.z, nh, pow(10., logZZsol), abundance_ratio, n_H_index,
-            d_n_H, met_index, d_met, red_index, d_red, &cooling, &hstep_out);
-    
-          hstep = hstep / 2.;
-    
-        } while (temperature_new < 0.);
-        printf("Outside of make_rkstep: temperature_new = %.4e\n", temperature_new);
-     
-        time += hstep_out;
-    
-    
-        fprintf(ofile, "%.4e\t%.4e\t%.4f\t%.4f\n", time, hstep_out, temperature, log10(temperature_new) );
-    
-        if (temperature_new >= (1. - 1.e-5) * pow(10., temperature)) break;
-        // lin
-        temperature = temperature_new;
-    
-      } while( temperature_new > Tmin);
-    
-    
-      fclose(ofile);
-
+  for (int icase = 0; icase <= ISOBARIC_DENSVAR; icase++) { 
+      temperature_evolution_explicit(icase, inn_h, cosmo.z, red_index, d_red, XH, logZZsol, met_index, d_met, 
+                                     abundance_ratio, &cooling);
+  }
+  for (int icase = 0; icase <= ISOBARIC_DENSVAR; icase++) { 
+      temperature_evolution_implicit(icase, inn_h, cosmo.z, red_index, d_red, XH, logZZsol, met_index, d_met, 
+                                     abundance_ratio, &cooling);
   }
 
-
-  message("done cooling evolution test");
 
   /* Clean everything */
   cosmology_clean(&cosmo);
@@ -478,3 +606,4 @@ int main(int argc, char **argv) {
   return 0;
 }
 #endif
+

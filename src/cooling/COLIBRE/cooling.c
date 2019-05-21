@@ -108,7 +108,7 @@ void cooling_update(const struct cosmology *cosmo,
  */
 
 // CAREFUL: Has extra argument: ZZsol
-INLINE static double bisection_iter(
+INLINE double bisection_iter(
     const double u_ini_cgs, const double n_H_cgs, const double redshift,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
     float d_red, double Lambda_He_reion_cgs, double ratefact_cgs, float ZZsol,
@@ -132,6 +132,7 @@ INLINE static double bisection_iter(
                            abundance_ratio, n_H_index, d_n_H, met_index, d_met,
                            red_index, d_red, cooling, icoolcase, icoolcase,
                            icoolcase, icoolcase);
+
 
   /*************************************/
   /* Let's try to bracket the solution */
