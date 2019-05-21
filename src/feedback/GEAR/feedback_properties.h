@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ * Coypright (c) 2018 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -21,46 +21,7 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
-
-/**
- * @brief Model for the initial mass function.
- */
-struct initial_mass_function {};
-
-/**
- * @brief Model for the stellar lifetime.
- */
-struct lifetime {};
-
-/**
- * @brief Model for SNIa.
- */
-struct supernovae_ia {};
-
-/**
- * @brief Model for SNII.
- */
-struct supernovae_ii {};
-
-/**
- * @brief The complete stellar model.
- */
-struct stellar_model {
-  // TODO elements
-  
-  /*! The initial mass function */
-  struct initial_mass_function imf;
-
-  /*! The stellar lifetime */
-  struct lifetime lifetime;
-
-  /*! The supernovae type Ia */
-  struct supernovae_ia snia;
-
-  /*! The supernovae type II */
-  struct supernovae_ii snii;
-
-};
+#include "stellar_evolution_struct.h"
 
 /**
  * @brief Properties of the GEAR feedback model.

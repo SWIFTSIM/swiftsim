@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ * Coypright (c) 2018 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -123,7 +123,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* Compute momentum received. */
   for(int i = 0; i < 3; i++) {
-    xpj->feedback_data.delta_p += dm * (si->v[i] - xpj->v[j]);
+    xpj->feedback_data.delta_p[i] += dm * (si->v[i] - xpj->v_full[i]);
   }
 
 }
