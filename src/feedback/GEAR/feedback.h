@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ * Copyright (c) 2018 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -24,6 +24,7 @@
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
+#include "stellar_evolution.h"
 #include "units.h"
 
 #include <strings.h>
@@ -56,10 +57,10 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
   /* Update the velocities */
   for(int i=0; i < 3; i++) {
-    const float dp = xp->feedback_data.delta_p[i] / new_mass;
+    const float dv = xp->feedback_data.delta_p[i] / new_mass;
 
-    xp->v_full[i] += dp;
-    p->v[i] += dp;
+    xp->v_full[i] += dv;
+    p->v[i] += dv;
 
     xp->feedback_data.delta_p[i] = 0;
   }
@@ -178,11 +179,19 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
 #endif
 
+  /* Add missing h factor */
   const float hi_inv = 1.f / sp->h;
   const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
   
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
+
+  /* Compute masses range */
+
+  /* Compute rates */
+
+  /* Compute ejectas */
+  
   /* Decrease star mass by amount of mass distributed to gas neighbours */
 
   // TODO
