@@ -1,0 +1,22 @@
+Plots the temperature evolution under isochoric and isobaric cooling.
+
+The explicit solution integrates Eq. 5 from Gnat and Sternberg (2007) without the dN/dt term.
+The implicit solution uses the bisection method. For isobaric cooling, the cooling rate is decreased
+by a factor of 3/5 as:
+
+dQ = dU + PdV = dU + 2/3 dU = 5/3 dU
+
+The test may be run by:
+./getCoolingTables.sh ---> TO BE DONE, on cosma the link to the tables is in the parameter file
+
+redshift="0.0"
+logdensity="0.00"
+./cooling_evolution -z $redshift -d $logdensity
+python plot_evolution.py $(density)
+
+where redshift is the redshift at which the cooling rates are evaluated and logdensity
+is the base 10 logarithm of the hydrogen number density expressed in
+cgs (i.e. cm^-3). Different metallicities may be specified in
+testCooling.yml
+
+./configure --with-subgrid=COLIBRE
