@@ -225,8 +225,18 @@ const char* units_get_base_unit_cgs_symbol(enum base_units baseUnit) {
   return "";
 }
 
+/**
+ * @brief Return an array of exponents of the base units required to construct a
+ * given unit.
+ *
+ * @param baseUnitsExp (return) The array of base-unit exponents.
+ * @param unit The unit we want the exponents for.
+ */
 void units_get_base_unit_exponants_array(float baseUnitsExp[5],
                                          enum unit_conversion_factor unit) {
+  /* Init everything */
+  for (int k = 0; k < 5; ++k) baseUnitsExp[k] = 0.f;
+
   switch (unit) {
     case UNIT_CONV_NO_UNITS:
       break;
