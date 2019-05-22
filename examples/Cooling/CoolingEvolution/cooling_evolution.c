@@ -269,7 +269,8 @@ INLINE void temperature_evolution_implicit(int icase, float inn_h, double redshi
   int T_index, n_H_index, U_index;
   float d_T, d_n_H, d_U;
   const double Lambda_He_reion_cgs = 0.;
-  const double dt_cgs = 1.e12;
+  double dt_cgs;
+  const double const_dt = 5.e11;
   const long pid = 0;
   double ratefact_cgs, mu, pres_start;
   const double const_boltzmann_k_cgs = 1.38064852e-16;
@@ -347,6 +348,9 @@ INLINE void temperature_evolution_implicit(int icase, float inn_h, double redshi
                 &d_n_H);
          ratefact_cgs = n_H * (XH * cooling->inv_proton_mass_cgs);
      }
+
+
+     dt_cgs = const_dt * pow(n_H, -1./3.); // * pow(pow(10., log10_T), -1./2.);
 
      if (icase == ISOCHORIC) {
           u_new_cgs = bisection_iter(u_0_cgs, n_H, redshift, n_H_index, d_n_H,
