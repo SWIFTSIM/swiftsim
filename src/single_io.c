@@ -338,7 +338,7 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
   io_write_attribute_s(h_data, "Conversion factor to physical CGS units",
                        buffer);
   io_write_attribute_d(
-      h_data, "CGS conversion factor",
+      h_data, "CGS conversion factor (not including cosmological corrections)",
       units_cgs_conversion_factor(snapshot_units, props.units));
 
   /* Free and close everything */
