@@ -335,11 +335,18 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
   io_write_attribute_f(h_data, "U_T exponent", baseUnitsExp[UNIT_TEMPERATURE]);
   io_write_attribute_f(h_data, "h-scale exponent", 0);
   io_write_attribute_f(h_data, "a-scale exponent", a_factor_exp);
-  io_write_attribute_s(h_data, "Conversion factor to physical CGS units",
-                       buffer);
+  io_write_attribute_s(h_data, "Expression for physical CGS units", buffer);
+
+  /* Write the actual number this conversion factor corresponds to */
+  const float factor = units_cgs_conversion_factor(snapshot_units, props.units);
   io_write_attribute_d(
-      h_data, "CGS conversion factor (not including cosmological corrections)",
-      units_cgs_conversion_factor(snapshot_units, props.units));
+      h_data,
+      "Conversion factor to CGS (not including cosmological corrections)",
+      factor);
+  io_write_attribute_d(
+      h_data,
+      "Conversion factor to phyical CGS (including cosmological corrections)",
+      factor * pow(e->cosmology->a, a_factor_exp));
 
   /* Free and close everything */
   swift_free("writebuff", temp);
