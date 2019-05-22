@@ -522,57 +522,62 @@ float units_general_a_factor(const struct unit_system* us,
 void units_general_cgs_conversion_string(char* buffer,
                                          const struct unit_system* us,
                                          const float baseUnitsExponants[5]) {
-  char temp[20];
+  char temp[32];
   const double a_exp = units_general_a_factor(us, baseUnitsExponants);
   const double h_exp = 0.; /* There are no h-factors in SWIFT outputs. */
 
   /* Check whether we are unitless or not */
-  char isAllNonZero = 1;
+  char isAllZero = 1;
   for (int i = 0; i < 5; ++i)
-    if (baseUnitsExponants[i] != 0.) isAllNonZero = 0;
+    if (baseUnitsExponants[i] != 0.) isAllZero = 0;
 
-  if (isAllNonZero) {
+  if (isAllZero) {
     sprintf(buffer, "[ - ] ");
     return;
   }
 
   /* Add a-factor */
-  if (a_exp == 0)
-    sprintf(buffer, " ");
-  else if (a_exp == 1)
+  if (a_exp == 0) {
+    /* Nothing to print */
+  } else if (a_exp == 1) {
     sprintf(buffer, "a ");
-  else if (remainder(a_exp, 1.) == 0)
+  } else if (remainder(a_exp, 1.) == 0) {
     sprintf(buffer, "a^%d ", (int)a_exp);
-  else
+  } else {
     sprintf(buffer, "a^%7.4f ", a_exp);
+  }
 
   /* Add h-factor */
-  if (h_exp == 0)
-    sprintf(temp, " ");
-  else if (h_exp == 1)
+  if (h_exp == 0) {
+    /* Nothing to print */
+  } else if (h_exp == 1) {
     sprintf(temp, "h ");
-  else if (remainder(h_exp, 1.) == 0)
+    strcat(buffer, temp);
+  } else if (remainder(h_exp, 1.) == 0) {
     sprintf(temp, "h^%d ", (int)h_exp);
-  else
+    strcat(buffer, temp);
+  } else {
     sprintf(temp, "h^%7.4f ", h_exp);
-  strcat(buffer, temp);
+    strcat(buffer, temp);
+  }
 
   /* Add conversion units */
   for (int i = 0; i < 5; ++i)
     if (baseUnitsExponants[i] != 0) {
-      if (baseUnitsExponants[i] == 0.)
+      if (baseUnitsExponants[i] == 0.) {
         sprintf(temp, " ");
-      else if (baseUnitsExponants[i] == 1.)
+      } else if (baseUnitsExponants[i] == 1.) {
         sprintf(temp, "%s ",
                 units_get_base_unit_internal_symbol((enum base_units)i));
-      else if (remainder(baseUnitsExponants[i], 1.) == 0)
+      } else if (remainder(baseUnitsExponants[i], 1.) == 0) {
         sprintf(temp, "%s^%d ",
                 units_get_base_unit_internal_symbol((enum base_units)i),
                 (int)baseUnitsExponants[i]);
-      else
+      } else {
         sprintf(temp, "%s^%7.4f ",
                 units_get_base_unit_internal_symbol((enum base_units)i),
                 baseUnitsExponants[i]);
+      }
       strcat(buffer, temp);
     }
 
@@ -581,19 +586,20 @@ void units_general_cgs_conversion_string(char* buffer,
 
   for (int i = 0; i < 5; ++i) {
     if (baseUnitsExponants[i] != 0) {
-      if (baseUnitsExponants[i] == 0.)
+      if (baseUnitsExponants[i] == 0.) {
         continue;
-      else if (baseUnitsExponants[i] == 1.)
+      } else if (baseUnitsExponants[i] == 1.) {
         sprintf(temp, "%s ",
                 units_get_base_unit_cgs_symbol((enum base_units)i));
-      else if (remainder(baseUnitsExponants[i], 1.) == 0)
+      } else if (remainder(baseUnitsExponants[i], 1.) == 0) {
         sprintf(temp, "%s^%d ",
                 units_get_base_unit_cgs_symbol((enum base_units)i),
                 (int)baseUnitsExponants[i]);
-      else
+      } else {
         sprintf(temp, "%s^%7.4f ",
                 units_get_base_unit_cgs_symbol((enum base_units)i),
                 baseUnitsExponants[i]);
+      }
       strcat(buffer, temp);
     }
   }
