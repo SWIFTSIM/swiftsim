@@ -72,21 +72,22 @@ static const double bracket_factor = 1.5; /* sqrt(1.1) */
 void cooling_update(const struct cosmology *cosmo,
                     struct cooling_function_data *cooling, struct space *s) {
 
-  /* Extra energy for reionization? */
-  if (!cooling->H_reion_done) {
+  /* Current redshift */
+  const float redshift = cosmo->z;
 
-    /* Does this timestep straddle Hydrogen reionization? If so, we need to
-     * input extra heat */
-    if (cosmo->z <= cooling->H_reion_z && cosmo->z_old > cooling->H_reion_z) {
+  /* Does this timestep straddle Hydrogen reionization? If so, we need to input
+   * extra heat */
+  if (!cooling->H_reion_done && (redshift < cooling->H_reion_z)) {
 
-      if (s == NULL) error("Trying to do H reionization on an empty space!");
+    if (s == NULL) error("Trying to do H reionization on an empty space!");
 
-      /* Inject energy to all particles */
-      cooling_Hydrogen_reionization(cooling, cosmo, s);
+    /* Inject energy to all particles */
+    //ABLL
+    //This call must be corrected so that it does not crush when variables are initialized
+    //    cooling_Hydrogen_reionization(cooling, cosmo, s);
 
-      /* Flag that reionization happened */
-      cooling->H_reion_done = 1;
-    }
+    /* Flag that reionization happened */
+    cooling->H_reion_done = 1;
   }
 }
 
@@ -98,10 +99,8 @@ void cooling_update(const struct cosmology *cosmo,
  * @param redshift Current redshift.
  * @param n_H_index Particle hydrogen number density index.
  * @param d_n_H Particle hydrogen number density offset.
- * @param met_index Particle metallicity index.
- * @param d_met Particle metallicity offset.
- * @param red_index Redshift index.
- * @param d_red Redshift offset.
+ * @param He_index Particle helium fraction index.
+ * @param d_He Particle helium fraction offset.
  * @param Lambda_He_reion_cgs Cooling rate coming from He reionization.
  * @param ratefact_cgs Multiplication factor to get a cooling rate.
  * @param cooling #cooling_function_data structure.
@@ -109,10 +108,12 @@ void cooling_update(const struct cosmology *cosmo,
  * @param dt_cgs timestep in CGS.
  * @param ID ID of the particle (for debugging).
  */
-static INLINE double bisection_iter(
+
+// CAREFUL: Has extra argument: ZZsol
+INLINE static double bisection_iter(
     const double u_ini_cgs, const double n_H_cgs, const double redshift,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
-    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs,
+    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs, float ZZsol,
     const struct cooling_function_data *restrict cooling,
     const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
     long long ID) {
@@ -121,15 +122,19 @@ static INLINE double bisection_iter(
   double u_lower_cgs = u_ini_cgs;
   double u_upper_cgs = u_ini_cgs;
 
+  int icoolcase = 0;
+
   /*************************************/
   /* Let's get a first guess           */
   /*************************************/
 
   double LambdaNet_cgs =
       Lambda_He_reion_cgs +
-      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
-                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
-                           cooling, 0, 0, 0, 0);
+      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, ZZsol,
+                           abundance_ratio, n_H_index, d_n_H, met_index, d_met,
+                           red_index, d_red, cooling, icoolcase, icoolcase,
+                           icoolcase, icoolcase);
+
 
   /*************************************/
   /* Let's try to bracket the solution */
@@ -144,9 +149,10 @@ static INLINE double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs,
+        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
                              abundance_ratio, n_H_index, d_n_H, met_index,
-                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
 
     int i = 0;
     while (u_lower_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs >
@@ -159,9 +165,10 @@ static INLINE double bisection_iter(
       /* Compute a new rate */
       LambdaNet_cgs =
           Lambda_He_reion_cgs +
-          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs,
+          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
                                abundance_ratio, n_H_index, d_n_H, met_index,
-                               d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+                               d_met, red_index, d_red, cooling, icoolcase,
+                               icoolcase, icoolcase, icoolcase);
       i++;
     }
 
@@ -180,9 +187,10 @@ static INLINE double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs,
+        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
                              abundance_ratio, n_H_index, d_n_H, met_index,
-                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
 
     int i = 0;
     while (u_upper_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs <
@@ -195,9 +203,10 @@ static INLINE double bisection_iter(
       /* Compute a new rate */
       LambdaNet_cgs =
           Lambda_He_reion_cgs +
-          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs,
+          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
                                abundance_ratio, n_H_index, d_n_H, met_index,
-                               d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+                               d_met, red_index, d_red, cooling, icoolcase,
+                               icoolcase, icoolcase, icoolcase);
       i++;
     }
 
@@ -226,9 +235,10 @@ static INLINE double bisection_iter(
     /* New rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs,
+        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs, ZZsol,
                              abundance_ratio, n_H_index, d_n_H, met_index,
-                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+                             d_met, red_index, d_red, cooling, icoolcase,
+                             icoolcase, icoolcase, icoolcase);
 
     /* Where do we go next? */
     if (u_next_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs > 0.0) {
@@ -262,7 +272,9 @@ static INLINE double bisection_iter(
  *
  * f(u_new) = u_new - u_old - dt * du/dt(u_new, X) = 0
  *
- * A bisection scheme is used.
+ * We first try a few Newton-Raphson iteration if it does not converge, we
+ * revert to a bisection scheme.
+ *
  * This is done by first bracketing the solution and then iterating
  * towards the solution by reducing the window down to a certain tolerance.
  * Note there is always at least one solution since
@@ -347,6 +359,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
   float d_red, d_met, d_n_H;
   int red_index, met_index, n_H_index;
 
+  int icoolcase = 0;
+
   get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
                &red_index, &d_red);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
@@ -371,9 +385,10 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* First try an explicit integration (note we ignore the derivative) */
   const double LambdaNet_cgs =
       Lambda_He_reion_cgs +
-      colibre_cooling_rate(log10(u_0_cgs), cosmo->z, n_H_cgs, abundance_ratio,
-                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
-                           cooling, 0, 0, 0, 0);
+      colibre_cooling_rate(log10(u_0_cgs), cosmo->z, n_H_cgs,
+                           pow(10., logZZsol), abundance_ratio, n_H_index,
+                           d_n_H, met_index, d_met, red_index, d_red, cooling,
+                           icoolcase, icoolcase, icoolcase, icoolcase);
 
   /* if cooling rate is small, take the explicit solution */
   if (fabs(ratefact_cgs * LambdaNet_cgs * dt_cgs) <
@@ -383,10 +398,13 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   } else {
 
-    u_final_cgs =
-        bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, met_index,
-                       d_met, red_index, d_red, Lambda_He_reion_cgs,
-                       ratefact_cgs, cooling, abundance_ratio, dt_cgs, p->id);
+    int bisection_flag = 1;
+    if (bisection_flag || !(cooling->newton_flag)) {
+      u_final_cgs = bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H,
+                                   met_index, d_met, red_index, d_red,
+                                   Lambda_He_reion_cgs, ratefact_cgs, logZZsol,
+                                   cooling, abundance_ratio, dt_cgs, p->id);
+    }
   }
 
   /* Expected change in energy over the next kick step
@@ -809,3 +827,4 @@ void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
 
   cooling_restore_tables(cooling, cosmo);
 }
+
