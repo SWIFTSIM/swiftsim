@@ -429,7 +429,7 @@ void prepareArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
   char buffer[FIELD_BUFFER_SIZE];
   units_cgs_conversion_string(buffer, snapshot_units, props.units);
   float baseUnitsExp[5];
-  units_get_base_unit_exponants_array(baseUnitsExp, props.units);
+  units_get_base_unit_exponents_array(baseUnitsExp, props.units);
   const float a_factor_exp = units_a_factor(snapshot_units, props.units);
   io_write_attribute_f(h_data, "U_M exponent", baseUnitsExp[UNIT_MASS]);
   io_write_attribute_f(h_data, "U_L exponent", baseUnitsExp[UNIT_LENGTH]);
