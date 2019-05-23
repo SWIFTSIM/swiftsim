@@ -122,18 +122,15 @@ INLINE static int star_formation_is_star_forming(
   const double temperature = cooling_get_temperature(phys_const, hydro_props,
                                                      us, cosmo, cooling, p, xp);
 
+  /* Check if the temperature criteria is satisfied */
+  if (temperature < starform->temperature_threshold) return 1;
+
   /* Get the EOS temperature from the entropy floor */
   const double temperature_eos =
       entropy_floor_temperature(p, cosmo, entropy_props);
 
-  /* Check if the EOS criteria is satisfied */
-  if (temperature >
-      temperature_eos * starform->ten_to_temperature_margin_threshold_dex) {
-    return 0;
-  }
-
   /* Check if the constant temperature is satisfied */
-  return (temperature < starform->temperature_threshold);
+  return (temperature < temperature_eos * starform->ten_to_temperature_margin_threshold_dex);
 }
 
 /**
