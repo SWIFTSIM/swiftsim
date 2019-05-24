@@ -5154,7 +5154,7 @@ void engine_clean(struct engine *e) {
   free(e->links);
   free(e->cell_loc);
 #if defined(WITH_LOGGER)
-  logger_clean(e->logger);
+  logger_free(e->logger);
   free(e->logger);
 #endif
   scheduler_clean(&e->sched);
