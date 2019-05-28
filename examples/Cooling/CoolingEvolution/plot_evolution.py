@@ -1,6 +1,9 @@
 import sys
 #---------------------------------------------------------------
-lognH = float(sys.argv[1])
+if len(sys.argv) > 1:
+	lognH = float(sys.argv[1])
+else:
+	lognH = -1.
 #---------------------------------------------------------------
 import matplotlib
 import matplotlib.pyplot as plt

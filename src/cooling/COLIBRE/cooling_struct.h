@@ -87,6 +87,7 @@ struct cooling_function_data {
 
   /*! Atomic masses for all included elements */
   float *atomicmass;
+  float *atomicmass_inv;
 
   /*! Mass fractions of all included elements */
   float *LogMassFractions;
@@ -97,6 +98,7 @@ struct cooling_function_data {
 
   /*! Solar metallicity */
   float *Zsol;
+  float *Zsol_inv;
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[colibre_table_path_name_length];
