@@ -103,9 +103,17 @@ void read_cooling_header(struct cooling_function_data *cooling) {
                      colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate atomic masses array\n");
 
+  if (posix_memalign((void **)&cooling->atomicmass_inv, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_elementtypes * sizeof(float)) != 0)
+    error("Failed to allocate inverse atomic masses array\n");
+
   if (posix_memalign((void **)&cooling->Zsol, SWIFT_STRUCT_ALIGNMENT,
                      1 * sizeof(float)) != 0)
     error("Failed to allocate solar metallicity array\n");
+
+  if (posix_memalign((void **)&cooling->Zsol_inv, SWIFT_STRUCT_ALIGNMENT,
+                     1 * sizeof(float)) != 0)
+    error("Failed to allocate inverse solar metallicity array\n");
 
   if (posix_memalign((void **)&cooling->LogMassFractions,
                      SWIFT_STRUCT_ALIGNMENT,
@@ -175,24 +183,30 @@ void read_cooling_header(struct cooling_function_data *cooling) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  cooling->Zsol_inv[0] = 1.f / cooling->Zsol[0];
+
   /* find the metallicity bin that refers to solar metallicity */
-  int i, j, indx1d;
-  float tol = 1.e-3;
-  for (i = 0; i < colibre_cooling_N_metallicity; i++) {
-    if (fabs(cooling->Metallicity[i]) < tol) {
+  const float tol = 1.e-3;
+  for (int i = 0; i < colibre_cooling_N_metallicity; i++) {
+    if (fabsf(cooling->Metallicity[i]) < tol) {
       cooling->indxZsol = i;
     }
   }
 
+  for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
+      cooling->atomicmass_inv[i] = 1.f / cooling->atomicmass[i];
+  }
+
+
   /* set some additional useful abundance arrays */
-  for (i = 0; i < colibre_cooling_N_metallicity; i++) {
-    for (j = 0; j < colibre_cooling_N_elementtypes; j++) {
-      indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
+  for (int i = 0; i < colibre_cooling_N_metallicity; i++) {
+    for (int j = 0; j < colibre_cooling_N_elementtypes; j++) {
+      int indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
                                   colibre_cooling_N_elementtypes);
-      cooling->Abundances[indx1d] = pow(10., cooling->LogAbundances[indx1d]);
-      cooling->Abundances_inv[indx1d] = 1. / cooling->Abundances[indx1d];
+      cooling->Abundances[indx1d] = exp10f(cooling->LogAbundances[indx1d]);
+      cooling->Abundances_inv[indx1d] = 1.f / cooling->Abundances[indx1d];
       cooling->MassFractions[indx1d] =
-          pow(10., cooling->LogMassFractions[indx1d]);
+          exp10f(cooling->LogMassFractions[indx1d]);
     }
   }
 

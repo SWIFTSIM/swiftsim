@@ -32,24 +32,40 @@
 
 __attribute__((always_inline)) INLINE int element_from_table_to_code(int i) {
 
+#ifdef SWIFT_DEBUG_CHECKS
   if ((i >= colibre_cooling_N_elementtypes) || (i < 0))
     error("Outside range of elements in cooling tables");
+#endif
 
-  if (i == element_H) return chemistry_element_H;
-  if (i == element_He) return chemistry_element_He;
-  if (i == element_C) return chemistry_element_C;
-  if (i == element_N) return chemistry_element_N;
-  if (i == element_O) return chemistry_element_O;
-  if (i == element_Ne) return chemistry_element_Ne;
-  if (i == element_Mg) return chemistry_element_Mg;
-  if (i == element_Si) return chemistry_element_Si;
+  switch(i) {
+   case element_H:
+	return chemistry_element_H;
+   case element_He:
+	return chemistry_element_He;
+   case element_C:
+	return chemistry_element_C;
+   case element_N:
+	return chemistry_element_N;
+   case element_O:
+	return chemistry_element_O;
+   case element_Ne:
+	return chemistry_element_Ne;
+   case element_Mg:
+	return chemistry_element_Mg;
+   case element_Si:
+	return chemistry_element_Si;
   /* S and Ca are not tracked individually; their abundance is
    * assumed to be the same as Si (with respect to solar) */
-  if (i == element_S) return chemistry_element_Si;
-  if (i == element_Ca) return chemistry_element_Si;
-  if (i == element_Fe) return chemistry_element_Fe;
+   case element_S:
+	return chemistry_element_Si;
+   case element_Ca:
+	return chemistry_element_Si;
+   case element_Fe:
+	return chemistry_element_Fe;
   /* other elements, if used, scale with metallicity */
-  if (i == element_OA) return -1;
+   case element_OA:
+	return -1;
+  }
 
   return -1;
 }
@@ -80,19 +96,18 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
     const struct part *p, const struct cooling_function_data *cooling,
     float ratio_solar[colibre_cooling_N_elementtypes]) {
 
-  int i, indx1d, indxS, indxCa;
   float totmass = 0., metalmass = 0.;
   int met_index;
   float d_met, logZZsol, ZZsol, Mfrac;
   float log_nx_nH_sol, log_nx_nH_min, log_nx_nH_max, log_nx_nH;
 
   /* from mass fractions to abundances (nx/nH) */
-  for (i = 0; i < colibre_cooling_N_elementtypes; i++) {
+  for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
 
-    indx1d =
+    if ((i != element_S) && (i != element_Ca) && (i != element_OA)) {
+      int indx1d =
         row_major_index_2d(cooling->indxZsol, i, colibre_cooling_N_metallicity,
                            colibre_cooling_N_elementtypes);
-    if ((i != element_S) && (i != element_Ca) && (i != element_OA)) {
       Mfrac = p->chemistry_data
                   .smoothed_metal_mass_fraction[element_from_table_to_code(i)];
       ratio_solar[i] =
@@ -100,40 +115,45 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
           p->chemistry_data
               .smoothed_metal_mass_fraction[element_from_table_to_code(
                   element_H)] *
-          cooling->atomicmass[element_H] / cooling->atomicmass[i] *
+          cooling->atomicmass[element_H] * cooling->atomicmass_inv[i] *
           cooling->Abundances_inv[indx1d];
       totmass += Mfrac;
       if (i > element_He) metalmass += Mfrac;
-    }
-
-    /* S and Ca scale with Si */
-    if (i == element_Si) {
+    } else if (i == element_S) {
+      /* S scales with Si */
       ratio_solar[element_S] =
           ratio_solar[element_Si] * cooling->S_over_Si_ratio_in_solar;
-      ratio_solar[element_Ca] =
-          ratio_solar[element_Si] * cooling->Ca_over_Si_ratio_in_solar;
-
+      int indx1d =
+        row_major_index_2d(cooling->indxZsol, element_Si, colibre_cooling_N_metallicity,
+                           colibre_cooling_N_elementtypes);
       /* mass fraction S */
-      indxS = row_major_index_2d(cooling->indxZsol, element_S,
+      int indxS = row_major_index_2d(cooling->indxZsol, element_S,
                                  colibre_cooling_N_metallicity,
                                  colibre_cooling_N_elementtypes);
       Mfrac = cooling->S_over_Si_ratio_in_solar *
-              cooling->atomicmass[element_S] / cooling->atomicmass[element_Si] *
+              cooling->atomicmass[element_S] * 
+              cooling->atomicmass_inv[element_Si] *
               cooling->Abundances[indxS] * cooling->Abundances_inv[indx1d] *
               p->chemistry_data
                   .smoothed_metal_mass_fraction[element_from_table_to_code(
                       element_Si)];
       totmass += Mfrac;
       metalmass += Mfrac;
-
+    } else if (i == element_Ca) {
+      /* Ca scales with Si */
+      ratio_solar[element_Ca] =
+          ratio_solar[element_Si] * cooling->Ca_over_Si_ratio_in_solar;
+      int indx1d =
+        row_major_index_2d(cooling->indxZsol, element_Si, colibre_cooling_N_metallicity,
+                           colibre_cooling_N_elementtypes);
       /* mass fraction Ca*/
-      indxCa = row_major_index_2d(cooling->indxZsol, element_Ca,
+      int indxCa = row_major_index_2d(cooling->indxZsol, element_Ca,
                                   colibre_cooling_N_metallicity,
                                   colibre_cooling_N_elementtypes);
       Mfrac = cooling->Ca_over_Si_ratio_in_solar *
-              cooling->atomicmass[element_Ca] /
-              cooling->atomicmass[element_Si] * cooling->Abundances[indxCa] *
-              cooling->Abundances_inv[indx1d] *
+              cooling->atomicmass[element_Ca] *
+              cooling->atomicmass_inv[element_Si] *
+              cooling->Abundances[indxCa] * cooling->Abundances_inv[indx1d] *
               p->chemistry_data
                   .smoothed_metal_mass_fraction[element_from_table_to_code(
                       element_Si)];
@@ -142,8 +162,8 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
     }
   }
 
-  ZZsol = metalmass / totmass / cooling->Zsol[0];
-  logZZsol = log10(ZZsol);
+  ZZsol = metalmass / totmass * cooling->Zsol_inv[0];
+  logZZsol = log10f(ZZsol);
   /* All other elements (element_OA): scale with metallicity */
   ratio_solar[element_OA] = ZZsol;
 
@@ -160,7 +180,7 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
   /* i.e. nC / nH = 0.02 * (nC/nH)_sol for the overall metallicity of 0.01, */
   /* the Carbon cooling rate is multiplied by 2 */
 
-  for (i = 0; i < colibre_cooling_N_elementtypes; i++) {
+  for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
     get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                  &met_index, &d_met);
     log_nx_nH_min = cooling->LogAbundances[row_major_index_2d(
@@ -173,8 +193,8 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
         cooling->indxZsol, i, colibre_cooling_N_metallicity,
         colibre_cooling_N_elementtypes)];
     log_nx_nH =
-        (log_nx_nH_min * (1. - d_met) + log_nx_nH_max * d_met) - log_nx_nH_sol;
-    ratio_solar[i] = ratio_solar[i] / pow(10., log_nx_nH);
+        (log_nx_nH_min * (1.f - d_met) + log_nx_nH_max * d_met) - log_nx_nH_sol;
+    ratio_solar[i] *= exp10f(-log_nx_nH);
   }
 
   /* at this point ratio_solar is (nx/nH) / (nx/nH)_table [Z], */
@@ -470,7 +490,6 @@ INLINE double colibre_electron_density_temperature(
  * @param log_u_cgs Log base 10 of internal energy in cgs [erg g-1]
  * @param redshift Current redshift
  * @param n_H_cgs Hydrogen number density in cgs
- * @param ZZsol Metallicity relative to the solar value from the tables
  * @param abundance_ratio Abundance ratio for each element x relative to solar
  * @param n_H_index Index along the Hydrogen number density dimension
  * @param d_n_H Offset between Hydrogen density and table[n_H_index]
@@ -490,15 +509,12 @@ INLINE double colibre_electron_density_temperature(
  */
 
 INLINE double colibre_cooling_rate(
-    double log_u_cgs, double redshift, double n_H_cgs, float ZZsol,
+    double log_u_cgs, double redshift, double n_H_cgs,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
     const struct cooling_function_data *restrict cooling, int onlyicool,
     int onlyiheat, int icool, int iheat) {
 
-  /* Get index of u along the internal energy axis */
-  int U_index;
-  float d_U;
 
   double cooling_rate, heating_rate, Compton_cooling_rate, temp, logtemp;
   double net_cooling_rate, electron_fraction;
@@ -513,69 +529,59 @@ INLINE double colibre_cooling_rate(
   /* CMB temperature at this redshift */
   const double T_CMB = cooling->T_CMB_0 * zp1;
 
-  int i;
-
+  /* set weights for cooling rates */
   if (onlyicool == 0) {
-
-    /* set weights for cooling rates */
-    for (i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
-      if (i < colibre_cooling_N_elementtypes)
+    /* standard case */
+    for (int i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
+      if (i < colibre_cooling_N_elementtypes) {
         weights_cooling[i] = abundance_ratio[i];
-      if (i == cooltype_H2)
-        weights_cooling[i] = 1.; /* use same H2 abundance as in tables */
-      if (i == cooltype_molecules) weights_cooling[i] = 1.;
-      if (i == cooltype_HD)
-        weights_cooling[i] = 1.; /* use same HD abundance as in tables */
-      if (i == cooltype_NetFFH) weights_cooling[i] = 1.;
-      if (i == cooltype_NetFFM) weights_cooling[i] = 1.;
-      if (i == cooltype_eeBrems)
-        weights_cooling[i] = 1.; /* use same electron abundance */
-      if (i == cooltype_Compton)
-        weights_cooling[i] = 0.; /* added analytically */
-      if (i == cooltype_Dust) weights_cooling[i] = 1.;
+      } else if (i == cooltype_Compton) {
+	weights_cooling[i] = 0.f; /* added analytically later, do not use value from table*/
+      } else {
+	weights_cooling[i] = 1.f; /* use same abundances as in the tables */
+      }
     }
   } else {
-    for (i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
-      weights_cooling[i] = 0.;
+    /* only return cooling rate from one cooling channel: icool */
+    for (int i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
+      weights_cooling[i] = 0.f;
     }
     if (icool >= 0) {
       if (icool < colibre_cooling_N_elementtypes) {
         weights_cooling[icool] = abundance_ratio[icool];
       } else if (icool != cooltype_Compton) {
-        weights_cooling[icool] = 1.;
+        weights_cooling[icool] = 1.f;
       }
     }
   }
 
+  /* set weights for heating rates */
   if (onlyiheat == 0) {
-    /* set weights for heating rates */
-    for (i = 0; i < colibre_cooling_N_heattypes - 2; i++) {
-      if (i < colibre_cooling_N_elementtypes)
+    /* standard case */
+    for (int i = 0; i < colibre_cooling_N_heattypes - 2; i++) {
+      if (i < colibre_cooling_N_elementtypes) {
         weights_heating[i] = abundance_ratio[i];
-      if (i == heattype_H2) weights_heating[i] = 1.;
-      if (i == heattype_COdiss) weights_heating[i] = 1.;
-      if (i == heattype_CosmicRay) weights_heating[i] = 1.;
-      if (i == heattype_UTA) weights_heating[i] = 1.;
-      if (i == heattype_line) weights_heating[i] = 1.;
-      if (i == heattype_Hlin) weights_heating[i] = 1.;
-      if (i == heattype_ChaT) weights_heating[i] = 1.;
-      if (i == heattype_HFF) weights_heating[i] = 1.;
-      if (i == heattype_Compton) weights_heating[i] = 1.;
-      if (i == heattype_Dust) weights_heating[i] = 1.;
+      } else {
+        weights_heating[i] = 1.f; /* use same abundances as in the tables */
+      }
     }
   } else {
-    for (i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
-      weights_heating[i] = 0.;
+    /* only return heating rate from one heating channel: iheat */
+    for (int i = 0; i < colibre_cooling_N_heattypes - 2; i++) {
+      weights_heating[i] = 0.f;
     }
     if (iheat >= 0) {
       if (iheat < colibre_cooling_N_elementtypes) {
         weights_heating[iheat] = abundance_ratio[iheat];
       } else {
-        weights_heating[iheat] = 1.;
+        weights_heating[iheat] = 1.f;
       }
     }
   }
 
+  /* Get index of u along the internal energy axis */
+  int U_index;
+  float d_U;
   get_index_1d(cooling->Therm, colibre_cooling_N_internalenergy, log_u_cgs,
                &U_index, &d_U);
 
@@ -610,7 +616,7 @@ INLINE double colibre_cooling_rate(
       colibre_cooling_N_internalenergy, colibre_cooling_N_metallicity,
       colibre_cooling_N_density);
 
-  temp = pow(10., logtemp);
+  temp = exp10(logtemp);
 
   Compton_cooling_rate = 0.;
   if (onlyicool == 0 || (onlyicool == 1 && icool == cooltype_Compton)) {
@@ -634,7 +640,6 @@ INLINE double colibre_cooling_rate(
  * @param log_T_cgs Log base 10 of temperature in K
  * @param redshift Current redshift
  * @param n_H_cgs Hydrogen number density in cgs
- * @param ZZsol Metallicity relative to the solar value from the tables
  * @param abundance_ratio Abundance ratio for each element x relative to solar
  * @param n_H_index Index along the Hydrogen number density dimension
  * @param d_n_H Offset between Hydrogen density and table[n_H_index]
@@ -654,7 +659,7 @@ INLINE double colibre_cooling_rate(
  */
 
 INLINE double colibre_cooling_rate_temperature(
-    double log_T_cgs, double redshift, double n_H_cgs, float ZZsol,
+    double log_T_cgs, double redshift, double n_H_cgs, 
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
     const struct cooling_function_data *restrict cooling, int onlyicool,

@@ -1,9 +1,16 @@
 
 import sys
 #---------------------------------------------------------------
-filename = sys.argv[1]
-z = sys.argv[2]
-d = sys.argv[3]
+if len(sys.argv) > 1:
+	filename = sys.argv[1]
+	z = sys.argv[2]
+	d = sys.argv[3]
+else:
+	filename = 'cooling_output_lognH-1.00.dat'
+	z = 0.
+	d = -1.
+
+outputfile = 'cooling_lognH%.2f_z%.2f.png'%(d, z)
 #---------------------------------------------------------------
 import matplotlib
 import matplotlib.pyplot as plt
@@ -163,6 +170,7 @@ ax.plot(xx, Cool1D_totalmetal, color = 'black', lw = 2, ls = ':', label = 'Total
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles, labels, bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode = 'expand', borderaxespad=0., ncol = 2, fontsize = VERYSMALL_SIZE, handlelength = 4)
 
-fig.savefig('cooling.png', dpi = 100)
+fig.savefig(outputfile, dpi = 100)
+print ('Figure saved as: %s'%(outputfile))
 plt.close('all')
 

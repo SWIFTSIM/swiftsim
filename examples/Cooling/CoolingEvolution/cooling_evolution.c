@@ -32,10 +32,32 @@
 
 enum {ISOCHORIC, ISOBARIC, ISOBARIC_DENSVAR};
 
+/**
+ * @brief Bisection integration scheme; copy of bisection_iter but 
+ * with an additional factor that accounts for isobaric cooling
+ *
+ * @param u_ini_cgs Internal energy at beginning of hydro step in CGS.
+ * @param n_H_cgs Hydrogen number density in CGS.
+ * @param redshift Current redshift.
+ * @param n_H_index Particle hydrogen number density index.
+ * @param d_n_H Particle hydrogen number density offset.
+ * @param met_index Particle metallicity index.
+ * @param d_met Particle metallicity offset.
+ * @param red_index Redshift index.
+ * @param d_red Redshift offset.
+ * @param Lambda_He_reion_cgs Cooling rate coming from He reionization.
+ * @param ratefact_cgs Multiplication factor to get a cooling rate.
+ * @param cooling #cooling_function_data structure.
+ * @param abundance_ratio Array of ratios of metal abundance to solar.
+ * @param dt_cgs timestep in CGS.
+ * @param ID ID of the particle (for debugging).
+ */
+
+
 INLINE double bisection_iter_isobaric(
     const double u_ini_cgs, const double n_H_cgs, const double redshift,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
-    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs, float ZZsol,
+    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs, 
     const struct cooling_function_data *restrict cooling,
     const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
     long long ID) {
@@ -52,7 +74,7 @@ INLINE double bisection_iter_isobaric(
 
   double LambdaNet_cgs =
       Lambda_He_reion_cgs +
-      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, ZZsol,
+      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, 
                            abundance_ratio, n_H_index, d_n_H, met_index, d_met,
                            red_index, d_red, cooling, icoolcase, icoolcase,
                            icoolcase, icoolcase);
@@ -72,7 +94,7 @@ INLINE double bisection_iter_isobaric(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
+        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, 
                              abundance_ratio, n_H_index, d_n_H, met_index,
                              d_met, red_index, d_red, cooling, icoolcase,
                              icoolcase, icoolcase, icoolcase);
@@ -89,7 +111,7 @@ INLINE double bisection_iter_isobaric(
       /* Compute a new rate */
       LambdaNet_cgs =
           Lambda_He_reion_cgs +
-          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, ZZsol,
+          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs, 
                                abundance_ratio, n_H_index, d_n_H, met_index,
                                d_met, red_index, d_red, cooling, icoolcase,
                                icoolcase, icoolcase, icoolcase);
@@ -111,7 +133,7 @@ INLINE double bisection_iter_isobaric(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
+        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs,
                              abundance_ratio, n_H_index, d_n_H, met_index,
                              d_met, red_index, d_red, cooling, icoolcase,
                              icoolcase, icoolcase, icoolcase);
@@ -128,7 +150,7 @@ INLINE double bisection_iter_isobaric(
       /* Compute a new rate */
       LambdaNet_cgs =
           Lambda_He_reion_cgs +
-          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, ZZsol,
+          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs, 
                                abundance_ratio, n_H_index, d_n_H, met_index,
                                d_met, red_index, d_red, cooling, icoolcase,
                                icoolcase, icoolcase, icoolcase);
@@ -160,7 +182,7 @@ INLINE double bisection_iter_isobaric(
     /* New rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs, ZZsol,
+        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs, 
                              abundance_ratio, n_H_index, d_n_H, met_index,
                              d_met, red_index, d_red, cooling, icoolcase,
                              icoolcase, icoolcase, icoolcase);
@@ -249,7 +271,7 @@ INLINE double dTdt_cooling(float XH, int icase, double log10_T,  double redshift
 
   // calculate standard net cooling
   lambda_net = colibre_cooling_rate_temperature(
-      log10_T, redshift, n_H, ZZsol, abundance_ratio, n_H_index,
+      log10_T, redshift, n_H, abundance_ratio, n_H_index,
       d_n_H, met_index, d_met, red_index, d_red, cooling, 0, 0, 0, 0);
 
   dQ = n_H * n_H * lambda_net / (ntotal * mu * m_u);
@@ -263,7 +285,7 @@ INLINE void temperature_evolution_implicit(int icase, float inn_h, double redshi
 				  const float abundance_ratio[colibre_cooling_N_elementtypes],
                                   const struct cooling_function_data *restrict cooling) {
 
-  double temperature_start = 1.e9;
+  double temperature_start = 7.3144472E7;
   double u_new_cgs;
   double logustart;
   int T_index, n_H_index, U_index;
@@ -355,12 +377,12 @@ INLINE void temperature_evolution_implicit(int icase, float inn_h, double redshi
      if (icase == ISOCHORIC) {
           u_new_cgs = bisection_iter(u_0_cgs, n_H, redshift, n_H_index, d_n_H,
                                met_index, d_met, red_index, d_red,
-                               Lambda_He_reion_cgs, ratefact_cgs, logZZsol,
+                               Lambda_He_reion_cgs, ratefact_cgs, 
                                cooling, abundance_ratio, dt_cgs, pid);
      } else { 
           u_new_cgs = bisection_iter_isobaric(u_0_cgs, n_H, redshift, n_H_index, d_n_H,
                                met_index, d_met, red_index, d_red,
-                               Lambda_He_reion_cgs, ratefact_cgs, logZZsol,
+                               Lambda_He_reion_cgs, ratefact_cgs, 
                                cooling, abundance_ratio, dt_cgs, pid);
      }
 
@@ -395,7 +417,7 @@ INLINE void temperature_evolution_explicit(int icase, float inn_h, double redshi
 
    const double eps = 0.05;
    const double const_boltzmann_k_cgs = 1.38064852e-16;
-   double temperature_start = 1.e9;
+   double temperature_start = 7.3144472E7;
 
    double time = 0.;
    double n_H = inn_h;

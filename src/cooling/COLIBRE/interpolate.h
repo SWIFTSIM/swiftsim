@@ -98,11 +98,13 @@ __attribute__((always_inline)) INLINE int row_major_index_5d(
     const int x, const int y, const int z, const int w, const int v,
     const int Nx, const int Ny, const int Nz, const int Nw, const int Nv) {
 
+#ifdef SWIFT_DEBUG_CHECKS
   assert(x < Nx);
   assert(y < Ny);
   assert(z < Nz);
   assert(w < Nw);
   assert(v < Nv);
+#endif
 
   return x * Ny * Nz * Nw * Nv + y * Nz * Nw * Nv + z * Nw * Nv + w * Nv + v;
 }
@@ -142,14 +144,17 @@ __attribute__((always_inline)) INLINE void get_index_1d(
   /* Do not use first or last entry, might be an extra bin with uneven spacing
    */
   const float delta = (size - 3) / (table[size - 2] - table[1]);
-  int istart, iend;
 
   /* Check for an extra entry at the beginning (e.g. metallicity) */
-  istart = 0;
-  iend = size - 1;
-  if (fabs(table[1] - table[0]) > delta + epsilon) istart = 1;
-  if (fabs(table[size - 1] - table[size - 2]) > delta + epsilon)
+  int istart = 0;
+  int iend = size - 1;
+
+  if (fabsf(table[1] - table[0]) > delta + epsilon) {
+     istart = 1;
+  }
+  if (fabsf(table[size - 1] - table[size - 2]) > delta + epsilon) {
     iend = size - 2;
+  }
 
   /*extra array at the beginning */
   if (x < table[istart] + epsilon) {
@@ -439,9 +444,7 @@ __attribute__((always_inline)) INLINE double interpolation4d_plus_summation(
   float result;
   double result_global = 0.;
 
-  int i;
-
-  for (i = istart; i <= iend; i++) {
+  for (int i = istart; i <= iend; i++) {
 
     /* Linear interpolation along each axis. We read the table 2^4=16 times */
     result = tx * ty * tz * tw *
@@ -498,7 +501,7 @@ __attribute__((always_inline)) INLINE double interpolation4d_plus_summation(
               table[row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1, i, Nx,
                                        Ny, Nz, Nw, Nv)];
 
-    result_global += weights[i] * pow(10., result);
+    result_global += weights[i] * exp10f(result);
   }
 
   return result_global;
