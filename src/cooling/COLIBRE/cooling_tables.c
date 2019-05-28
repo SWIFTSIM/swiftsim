@@ -194,15 +194,14 @@ void read_cooling_header(struct cooling_function_data *cooling) {
   }
 
   for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
-      cooling->atomicmass_inv[i] = 1.f / cooling->atomicmass[i];
+    cooling->atomicmass_inv[i] = 1.f / cooling->atomicmass[i];
   }
-
 
   /* set some additional useful abundance arrays */
   for (int i = 0; i < colibre_cooling_N_metallicity; i++) {
     for (int j = 0; j < colibre_cooling_N_elementtypes; j++) {
       int indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
-                                  colibre_cooling_N_elementtypes);
+                                      colibre_cooling_N_elementtypes);
       cooling->Abundances[indx1d] = exp10f(cooling->LogAbundances[indx1d]);
       cooling->Abundances_inv[indx1d] = 1.f / cooling->Abundances[indx1d];
       cooling->MassFractions[indx1d] =
@@ -237,11 +236,11 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   /* Allocate and read arrays to store cooling tables. */
 
   /* Mean particle mass (temperature) */
-  if (posix_memalign(
-          (void **)&cooling->table.Tmu, SWIFT_STRUCT_ALIGNMENT,
-          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
-              colibre_cooling_N_metallicity * colibre_cooling_N_density *
-              sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->table.Tmu, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_temperature *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate Tmu array\n");
 
   dataset = H5Dopen(tempfile_id, "/Tdep/MeanParticleMass", H5P_DEFAULT);
@@ -252,11 +251,11 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   if (status < 0) error("error closing mean particle mass dataset");
 
   /* Mean particle mass (internal energy) */
-  if (posix_memalign(
-          (void **)&cooling->table.Umu, SWIFT_STRUCT_ALIGNMENT,
-          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
-              colibre_cooling_N_metallicity * colibre_cooling_N_density *
-              sizeof(float)) != 0)
+  if (posix_memalign((void **)&cooling->table.Umu, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_internalenergy *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate Umu array\n");
 
   dataset = H5Dopen(tempfile_id, "/Udep/MeanParticleMass", H5P_DEFAULT);

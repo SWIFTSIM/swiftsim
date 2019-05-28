@@ -178,5 +178,4 @@ ax.plot(data_imp_isobaric_vary[:,1], np.power(10., data_imp_isobaric_vary[:,4]),
 
 print ('Saving image as: %s'%(outfilename))
 fig.savefig(outfilename)
-plt.show()
 

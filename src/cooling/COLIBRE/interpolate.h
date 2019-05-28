@@ -150,7 +150,7 @@ __attribute__((always_inline)) INLINE void get_index_1d(
   int iend = size - 1;
 
   if (fabsf(table[1] - table[0]) > delta + epsilon) {
-     istart = 1;
+    istart = 1;
   }
   if (fabsf(table[size - 1] - table[size - 2]) > delta + epsilon) {
     iend = size - 2;

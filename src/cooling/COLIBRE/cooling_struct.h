@@ -28,7 +28,7 @@ struct cooling_tables {
 
   /* array of all mean particle masses mu (temperature) */
   float *Tmu;
- 
+
   /* array of all mean particle masses mu (internal energy) */
   float *Umu;
 

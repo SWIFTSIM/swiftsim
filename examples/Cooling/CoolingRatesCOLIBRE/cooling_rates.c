@@ -219,38 +219,38 @@ int main(int argc, char **argv) {
                                   met_index, d_met, red_index, d_red, &cooling);
 
     // calculate cooling rates
-    lambda_net = colibre_cooling_rate(
-        log10(u), cosmo.z, nh, abundance_ratio, n_H_index,
-        d_n_H, met_index, d_met, red_index, d_red, &cooling, 0, 1, 0, -1);
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, abundance_ratio,
+                                      n_H_index, d_n_H, met_index, d_met,
+                                      red_index, d_red, &cooling, 0, 1, 0, -1);
 
     fprintf(output_file, "%.5e %.5e", exp(M_LN10 * temperature), lambda_net);
     for (int icool = 0; icool < colibre_cooling_N_cooltypes - 2; icool++) {
       lambda_net = colibre_cooling_rate(
-          log10(u), cosmo.z, nh, abundance_ratio, n_H_index,
-          d_n_H, met_index, d_met, red_index, d_red, &cooling, 1, 1, icool, -1);
+          log10(u), cosmo.z, nh, abundance_ratio, n_H_index, d_n_H, met_index,
+          d_met, red_index, d_red, &cooling, 1, 1, icool, -1);
       fprintf(output_file, " %.5e", lambda_net);
     }
     fprintf(output_file, "\n");
 
     // calculate heating rates
-    lambda_net = colibre_cooling_rate(
-        log10(u), cosmo.z, nh, abundance_ratio, n_H_index,
-        d_n_H, met_index, d_met, red_index, d_red, &cooling, 1, 0, -1, 0);
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, abundance_ratio,
+                                      n_H_index, d_n_H, met_index, d_met,
+                                      red_index, d_red, &cooling, 1, 0, -1, 0);
 
     fprintf(output_file_heat, "%.5e %.5e", exp(M_LN10 * temperature),
             lambda_net);
     for (int iheat = 0; iheat < colibre_cooling_N_heattypes - 2; iheat++) {
       lambda_net = colibre_cooling_rate(
-          log10(u), cosmo.z, nh, abundance_ratio, n_H_index,
-          d_n_H, met_index, d_met, red_index, d_red, &cooling, 1, 1, -1, iheat);
+          log10(u), cosmo.z, nh, abundance_ratio, n_H_index, d_n_H, met_index,
+          d_met, red_index, d_red, &cooling, 1, 1, -1, iheat);
       fprintf(output_file_heat, " %.5e", lambda_net);
     }
     fprintf(output_file_heat, "\n");
 
     // calculate standard net cooling
-    lambda_net = colibre_cooling_rate(
-        log10(u), cosmo.z, nh, abundance_ratio, n_H_index,
-        d_n_H, met_index, d_met, red_index, d_red, &cooling, 0, 0, 0, 0);
+    lambda_net = colibre_cooling_rate(log10(u), cosmo.z, nh, abundance_ratio,
+                                      n_H_index, d_n_H, met_index, d_met,
+                                      red_index, d_red, &cooling, 0, 0, 0, 0);
     fprintf(output_file_net, "%.5e %.5e\n", exp(M_LN10 * temperature),
             lambda_net);
   }

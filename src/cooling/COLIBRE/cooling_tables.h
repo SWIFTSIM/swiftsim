@@ -57,38 +57,44 @@
 /*! Number of different elements in the tables */
 #define colibre_cooling_N_elementtypes 12
 
-enum { element_H,
-       element_He,
-       element_C,
-       element_N,
-       element_O,
-       element_Ne,
-       element_Mg,
-       element_Si,
-       element_S,
-       element_Ca,
-       element_Fe,
-       element_OA };
+enum {
+  element_H,
+  element_He,
+  element_C,
+  element_N,
+  element_O,
+  element_Ne,
+  element_Mg,
+  element_Si,
+  element_S,
+  element_Ca,
+  element_Fe,
+  element_OA
+};
 
-enum { cooltype_H2 = 12,
-       cooltype_molecules,
-       cooltype_HD,
-       cooltype_NetFFH,
-       cooltype_NetFFM,
-       cooltype_eeBrems,
-       cooltype_Compton,
-       cooltype_Dust };
+enum {
+  cooltype_H2 = 12,
+  cooltype_molecules,
+  cooltype_HD,
+  cooltype_NetFFH,
+  cooltype_NetFFM,
+  cooltype_eeBrems,
+  cooltype_Compton,
+  cooltype_Dust
+};
 
-enum { heattype_H2 = 12,
-       heattype_COdiss,
-       heattype_CosmicRay,
-       heattype_UTA,
-       heattype_line,
-       heattype_Hlin,
-       heattype_ChaT,
-       heattype_HFF,
-       heattype_Compton,
-       heattype_Dust };
+enum {
+  heattype_H2 = 12,
+  heattype_COdiss,
+  heattype_CosmicRay,
+  heattype_UTA,
+  heattype_line,
+  heattype_Hlin,
+  heattype_ChaT,
+  heattype_HFF,
+  heattype_Compton,
+  heattype_Dust
+};
 
 void get_cooling_redshifts(struct cooling_function_data *cooling);
 void read_cooling_header(struct cooling_function_data *cooling);

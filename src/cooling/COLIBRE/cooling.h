@@ -85,4 +85,3 @@ void cooling_print_backend(const struct cooling_function_data *cooling);
 void cooling_clean(struct cooling_function_data *data);
 
 #endif /* SWIFT_COOLING_COLIBRE_H */
-
