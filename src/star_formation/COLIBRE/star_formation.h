@@ -24,6 +24,7 @@
 #include "cooling.h"
 #include "cosmology.h"
 #include "engine.h"
+#include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "exp10.h"
 #include "hydro.h"
@@ -44,29 +45,18 @@
  */
 struct star_formation {
 
-  /*! Normalization of the KS star formation law (internal units) */
-  double KS_normalization;
-
-  /*! Normalization of the KS star formation law (Msun / kpc^2 / yr) */
-  double KS_normalization_MSUNpYRpKPC2;
-
-  /*! Slope of the KS law */
-  double KS_power_law;
-
-  /*! Slope of the high density KS law */
-  double KS_high_den_power_law;
-
-  /*! KS law High density threshold (internal units) */
-  double KS_high_den_thresh;
-
-  /*! KS high density normalization (internal units) */
-  double KS_high_den_normalization;
-
-  /*! KS high density normalization (H atoms per cm^3)  */
-  double KS_high_den_thresh_HpCM3;
-
   /*! Critical overdensity */
   double min_over_den;
+
+  /*! Star formation efficiency */
+  double sfe;
+
+  /*! free fall time constant sqrt(3 pi/ 32G) (cm^-1.5 g^.5 s^1) */
+  double ff_const;
+
+  /*! star formation efficiency over free fall time constant (cm^1.5 g^-.5 s^-1)
+   */
+  double mdot_const;
 
   /*! Dalla Vecchia & Schaye temperature criteria */
   double temperature_margin_threshold_dex;
@@ -74,136 +64,17 @@ struct star_formation {
   /*! 10^Tdex of Dalla Vecchia & SChaye temperature criteria */
   double ten_to_temperature_margin_threshold_dex;
 
-  /*! gas fraction */
-  double fgas;
+  /*! Absolute temperature criteria */
+  double temperature_threshold;
 
-  /*! Star formation law slope */
-  double SF_power_law;
+  /*! Maximal physical density, particles with a higher density instantaneously
+   * turn into stars */
+  double maximal_density_HpCM3;
 
-  /*! star formation normalization (internal units) */
-  double SF_normalization;
-
-  /*! star formation high density slope */
-  double SF_high_den_power_law;
-
-  /*! Star formation high density normalization (internal units) */
-  double SF_high_den_normalization;
-
-  /*! Density threshold to form stars (internal units) */
-  double density_threshold;
-
-  /*! Density threshold to form stars in user units */
-  double density_threshold_HpCM3;
-
-  /*! Maximum density threshold to form stars (internal units) */
-  double density_threshold_max;
-
-  /*! Maximum density threshold to form stars (H atoms per cm^3) */
-  double density_threshold_max_HpCM3;
-
-  /*! Reference metallicity for metal-dependant threshold */
-  double Z0;
-
-  /*! Inverse of reference metallicity */
-  double Z0_inv;
-
-  /*! critical density Metallicity power law (internal units) */
-  double n_Z0;
-
-  /*! Polytropic index */
-  double EOS_polytropic_index;
-
-  /*! EOS density norm (H atoms per cm^3) */
-  double EOS_density_norm_HpCM3;
-
-  /*! EOS Temperature norm (Kelvin)  */
-  double EOS_temperature_norm_K;
-
-  /*! EOS pressure norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal units)
-   */
-  double EOS_pressure_c;
-
-  /*! EOS Temperarure norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal
-   * units) */
-  double EOS_temperature_c;
-
-  /*! EOS density norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal units)
-   */
-  double EOS_density_c;
-
-  /*! Inverse of EOS density norm (internal units) */
-  double EOS_density_c_inv;
-
-  /*! Max physical density (H atoms per cm^3)*/
-  double max_gas_density_HpCM3;
-
-  /*! Max physical density (internal units) */
-  double max_gas_density;
+  /*! Maximal physical density (internal units), particles with a higher density
+   * instantaneously turn into stars */
+  double maximal_density;
 };
-
-/**
- * @brief Computes the density threshold for star-formation fo a given total
- * metallicity.
- *
- * Follows Schaye (2004) eq. 19 and 24 (see also Schaye et al. 2015, eq. 2).
- *
- * @param Z The metallicity (metal mass fraction).
- * @param starform The properties of the star formation model.
- * @param phys_const The physical constants.
- * @return The physical density threshold for star formation in internal units.
- */
-INLINE static double star_formation_threshold(
-    const double Z, const struct star_formation* starform,
-    const struct phys_const* phys_const) {
-
-  double density_threshold;
-
-  /* Schaye (2004), eq. 19 and 24 */
-  if (Z > 0.) {
-    density_threshold = starform->density_threshold *
-                        powf(Z * starform->Z0_inv, starform->n_Z0);
-    density_threshold = min(density_threshold, starform->density_threshold_max);
-  } else {
-    density_threshold = starform->density_threshold_max;
-  }
-
-  /* Convert to mass density */
-  return density_threshold * phys_const->const_proton_mass;
-}
-
-/**
- * @brief Compute the pressure on the polytropic equation of state for a given
- * Hydrogen number density.
- *
- * Schaye & Dalla Vecchia 2008, eq. 13.
- *
- * @param n_H The Hydrogen number density in internal units.
- * @param starform The properties of the star formation model.
- * @return The pressure on the equation of state in internal units.
- */
-INLINE static double EOS_pressure(const double n_H,
-                                  const struct star_formation* starform) {
-
-  return starform->EOS_pressure_c *
-         pow(n_H * starform->EOS_density_c_inv, starform->EOS_polytropic_index);
-}
-
-/**
- * @brief Compute the temperarue on the polytropic equation of state for a given
- * Hydrogen number density.
- *
- * Schaye & Dalla Vecchia 2008, eq. 13 rewritten for temperature
- *
- * @param n_H The Hydrogen number density in internal units.
- * @param starform The properties of the star formation model.
- * @return The temperature on the equation of state in internal units.
- */
-INLINE static double EOS_temperature(const double n_H,
-                                     const struct star_formation* starform) {
-
-  return starform->EOS_temperature_c *
-         pow(n_H, starform->EOS_polytropic_index - 1.);
-}
 
 /**
  * @brief Calculate if the gas has the potential of becoming
@@ -225,7 +96,8 @@ INLINE static int star_formation_is_star_forming(
     const struct cosmology* cosmo,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
+    const struct cooling_function_data* restrict cooling,
+    const struct entropy_floor_properties* restrict entropy_props) {
 
   /* Minimal density (converted from critical density) for star formation */
   const double rho_crit_times_min_over_den =
@@ -242,36 +114,31 @@ INLINE static int star_formation_is_star_forming(
    * temperature is appropriate */
   if (physical_density < rho_crit_times_min_over_den) return 0;
 
-  /* In this case there are actually multiple possibilities
-   * because we also need to check if the physical density exceeded
-   * the appropriate limit */
-
-  const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
-  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-  const double n_H = physical_density * X_H;
-
-  /* Get the density threshold */
-  const double density_threshold =
-      star_formation_threshold(Z, starform, phys_const);
-
-  /* Check if it exceeded the minimum density */
-  if (n_H < density_threshold) return 0;
+  /* Did we reach the maximal physical density in which we need to be turned
+   * instantaneously into a star?*/
+  if (physical_density > starform->maximal_density) return 1;
 
   /* Calculate the temperature */
   const double temperature = cooling_get_temperature(phys_const, hydro_props,
                                                      us, cosmo, cooling, p, xp);
 
-  /* Temperature on the equation of state */
-  const double temperature_eos = EOS_temperature(n_H, starform);
+  /* Check if the temperature criteria is satisfied */
+  if (temperature < starform->temperature_threshold) return 1;
 
-  /* Check the Scahye & Dalla Vecchia 2012 EOS-based temperature critrion */
+  /* Get the EOS temperature from the entropy floor */
+  const double temperature_eos =
+      entropy_floor_temperature(p, cosmo, entropy_props);
+
+  /* Check if the constant temperature is satisfied */
   return (temperature <
           temperature_eos * starform->ten_to_temperature_margin_threshold_dex);
 }
 
 /**
  * @brief Compute the star-formation rate of a given particle and store
- * it into the #xpart.
+ * it into the #xpart. The star formation is calculated as a simple
+ * Schmidt law with an efficiency per free-fall time that can be specified,
+ * the free-fall time is based on the total SPH density.
  *
  * @param p #part.
  * @param xp the #xpart.
@@ -292,35 +159,16 @@ INLINE static void star_formation_compute_SFR(
     return;
   }
 
-  /* Hydrogen number density of this particle */
+  /* Mass density of this particle */
   const double physical_density = hydro_get_physical_density(p, cosmo);
-  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-  const double n_H = physical_density * X_H / phys_const->const_proton_mass;
 
-  /* Are we above the threshold for automatic star formation? */
-  if (physical_density >
-      starform->max_gas_density * phys_const->const_proton_mass) {
-
+  /* In the case the particle is immediatly converted to a star particle */
+  if (physical_density > starform->maximal_density) {
     xp->sf_data.SFR = hydro_get_mass(p) / dt_star;
-    return;
   }
 
-  /* Pressure on the effective EOS for this particle */
-  const double pressure = EOS_pressure(n_H, starform);
-
-  /* Calculate the specific star formation rate */
-  double SFRpergasmass;
-  if (hydro_get_physical_density(p, cosmo) <
-      starform->KS_high_den_thresh * phys_const->const_proton_mass) {
-
-    SFRpergasmass =
-        starform->SF_normalization * pow(pressure, starform->SF_power_law);
-
-  } else {
-
-    SFRpergasmass = starform->SF_high_den_normalization *
-                    pow(pressure, starform->SF_high_den_power_law);
-  }
+  /* Calculate the SFR per gas mass */
+  double SFRpergasmass = starform->mdot_const * sqrt(physical_density);
 
   /* Store the SFR */
   xp->sf_data.SFR = SFRpergasmass * hydro_get_mass(p);
@@ -396,7 +244,11 @@ INLINE static void star_formation_update_part_not_SFR(
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
-    const struct cosmology* cosmo, const int with_cosmology) {
+    const struct cosmology* cosmo, const int with_cosmology,
+    const struct phys_const* phys_const,
+    const struct hydro_props* restrict hydro_props,
+    const struct unit_system* restrict us,
+    const struct cooling_function_data* restrict cooling) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
@@ -419,6 +271,13 @@ INLINE static void star_formation_copy_properties(
 
   /* Store the birth density in the star particle */
   sp->birth_density = hydro_get_physical_density(p, cosmo);
+
+  /* Store the birth temperature in the star particle */
+  sp->birth_temperature = cooling_get_temperature(phys_const, hydro_props, us,
+                                                  cosmo, cooling, p, xp);
+
+  /* Flag that this particle has not done feedback yet */
+  sp->f_E = -1.f;
 }
 
 /**
@@ -438,157 +297,45 @@ INLINE static void starformation_init_backend(
   /* Get the Gravitational constant */
   const double G_newton = phys_const->const_newton_G;
 
-  /* Initial Hydrogen abundance (mass fraction) */
-  const double X_H = hydro_props->hydrogen_mass_fraction;
+  /* Read the critical density contrast from the parameter file*/
+  starform->min_over_den = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:min_over_density");
 
-  /* Mean molecular weight assuming neutral gas */
-  const double mean_molecular_weight = hydro_props->mu_neutral;
+  /* Get the star formation efficiency */
+  starform->sfe = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:star_formation_efficiency");
 
-  /* Get the surface density unit Msun / pc^2 in internal units */
-  const double Msun_per_pc2 =
-      phys_const->const_solar_mass /
-      (phys_const->const_parsec * phys_const->const_parsec);
+  /* Calculate the ff constant */
+  starform->ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
 
-  /* Get the SF surface density unit Msun / kpc^2 / yr in internal units */
-  const double kpc = 1000. * phys_const->const_parsec;
-  const double Msun_per_kpc2_per_year =
-      phys_const->const_solar_mass / (kpc * kpc) / phys_const->const_year;
+  /* Calculate the constant */
+  starform->mdot_const = starform->sfe / starform->ff_const;
+
+  /* Get the temperature threshold */
+  starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
+      parameter_file, "COLIBREStarFormation:KS_temperature_margin_dex", 10.f);
+
+  /* Write it as a constant temperature multiplication */
+  starform->ten_to_temperature_margin_threshold_dex =
+      exp10(starform->temperature_margin_threshold_dex);
+
+  /* Get the temperature threshold */
+  starform->temperature_threshold = parser_get_opt_param_double(
+      parameter_file, "COLIBREStarFormation:temperature_threshold", FLT_MAX);
+
+  starform->maximal_density_HpCM3 = parser_get_opt_param_double(
+      parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",
+      FLT_MAX);
 
   /* Conversion of number density from cgs */
   const double number_density_from_cgs =
       1. / units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
-  /* Quantities that have to do with the Normal Kennicutt-
-   * Schmidt law will be read in this part of the code*/
-
-  /* Load the equation of state for this model */
-  starform->EOS_polytropic_index = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:EOS_gamma_effective");
-  starform->EOS_temperature_norm_K = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:EOS_temperature_norm_K");
-  starform->EOS_density_norm_HpCM3 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:EOS_density_norm_H_p_cm3");
-  starform->EOS_density_c =
-      starform->EOS_density_norm_HpCM3 * number_density_from_cgs;
-  starform->EOS_density_c_inv = 1. / starform->EOS_density_c;
-
-  /* Calculate the EOS pressure normalization */
-  starform->EOS_pressure_c =
-      starform->EOS_density_c * starform->EOS_temperature_norm_K *
-      phys_const->const_boltzmann_k / mean_molecular_weight / X_H;
-
-  /* Normalisation of the temperature in the EOS calculatio */
-  starform->EOS_temperature_c =
-      starform->EOS_pressure_c / phys_const->const_boltzmann_k;
-  starform->EOS_temperature_c *=
-      pow(starform->EOS_density_c, starform->EOS_polytropic_index);
-
-  /* Read the critical density contrast from the parameter file*/
-  starform->min_over_den = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:KS_min_over_density");
-
-  /* Read the gas fraction from the file */
-  starform->fgas = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:gas_fraction", 1.);
-
-  /* Read the Kennicutt-Schmidt power law exponent */
-  starform->KS_power_law =
-      parser_get_param_double(parameter_file, "COLIBREStarFormation:KS_exponent");
-
-  /* Calculate the power law of the corresponding star formation Schmidt law */
-  starform->SF_power_law = (starform->KS_power_law - 1.) / 2.;
-
-  /* Read the normalization of the KS law in KS law units */
-  starform->KS_normalization_MSUNpYRpKPC2 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:KS_normalisation");
-
-  /* Convert to internal units */
-  starform->KS_normalization =
-      starform->KS_normalization_MSUNpYRpKPC2 * Msun_per_kpc2_per_year;
-
-  /* Calculate the starformation pre-factor (eq. 12 of Schaye & Dalla Vecchia
-   * 2008) */
-  starform->SF_normalization =
-      starform->KS_normalization * pow(Msun_per_pc2, -starform->KS_power_law) *
-      pow(hydro_gamma * starform->fgas / G_newton, starform->SF_power_law);
-
-  /* Read the high density Kennicutt-Schmidt power law exponent */
-  starform->KS_high_den_power_law = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:KS_high_density_exponent");
-
-  /* Calculate the SF high density power law */
-  starform->SF_high_den_power_law = (starform->KS_high_den_power_law - 1.) / 2.;
-
-  /* Read the high density criteria for the KS law in number density per cm^3 */
-  starform->KS_high_den_thresh_HpCM3 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:KS_high_density_threshold_H_p_cm3");
-
-  /* Transform the KS high density criteria to simulation units */
-  starform->KS_high_den_thresh =
-      starform->KS_high_den_thresh_HpCM3 * number_density_from_cgs;
-
-  /* Pressure at the high-density threshold */
-  const double EOS_high_den_pressure =
-      EOS_pressure(starform->KS_high_den_thresh, starform);
-
-  /* Calculate the KS high density normalization
-   * We want the SF law to be continous so the normalisation of the second
-   * power-law is the value of the first power-law at the high-density threshold
-   */
-  starform->KS_high_den_normalization =
-      starform->KS_normalization *
-      pow(Msun_per_pc2,
-          starform->KS_high_den_power_law - starform->KS_power_law) *
-      pow(hydro_gamma * EOS_high_den_pressure * starform->fgas / G_newton,
-          (starform->KS_power_law - starform->KS_high_den_power_law) * 0.5f);
-
-  /* Calculate the SF high density normalization */
-  starform->SF_high_den_normalization =
-      starform->KS_high_den_normalization *
-      pow(Msun_per_pc2, -starform->KS_high_den_power_law) *
-      pow(hydro_gamma * starform->fgas / G_newton,
-          starform->SF_high_den_power_law);
-
-  /* Get the maximum physical density for SF */
-  starform->max_gas_density_HpCM3 = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:KS_max_density_threshold_H_p_cm3",
-      FLT_MAX);
-
-  /* Convert the maximum physical density to internal units */
-  starform->max_gas_density =
-      starform->max_gas_density_HpCM3 * number_density_from_cgs;
-
-  starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:KS_temperature_margin_dex", FLT_MAX);
-
-  starform->ten_to_temperature_margin_threshold_dex =
-      exp10(starform->temperature_margin_threshold_dex);
-
-  /* Read the normalization of the metallicity dependent critical
-   * density*/
-  starform->density_threshold_HpCM3 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:threshold_norm_H_p_cm3");
-
-  /* Convert to internal units */
-  starform->density_threshold =
-      starform->density_threshold_HpCM3 * number_density_from_cgs;
-
-  /* Read the scale metallicity Z0 */
-  starform->Z0 = parser_get_param_double(parameter_file,
-                                         "COLIBREStarFormation:threshold_Z0");
-  starform->Z0_inv = 1. / starform->Z0;
-
-  /* Read the power law of the critical density scaling */
-  starform->n_Z0 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:threshold_slope");
-
-  /* Read the maximum allowed density for star formation */
-  starform->density_threshold_max_HpCM3 = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3");
-
-  /* Convert to internal units */
-  starform->density_threshold_max =
-      starform->density_threshold_max_HpCM3 * number_density_from_cgs;
+  /* Calculate the maximal physical density to a mass density using the mean
+   * molecular weight of primordial gas (mu=1.22)*/
+  starform->maximal_density = starform->maximal_density_HpCM3 *
+                              phys_const->const_proton_mass *
+                              number_density_from_cgs * hydro_props->mu_neutral;
 }
 
 /**
@@ -599,32 +346,80 @@ INLINE static void starformation_init_backend(
 INLINE static void starformation_print_backend(
     const struct star_formation* starform) {
 
-  message("Star formation law is COLIBRE (Schaye & Dalla Vecchia 2008)");
+  /* Print the star formation properties */
+  message("Star formation law is COLIBRE");
   message(
-      "With properties: normalization = %e Msun/kpc^2/yr, slope of the"
-      "Kennicutt-Schmidt law = %e and gas fraction = %e ",
-      starform->KS_normalization_MSUNpYRpKPC2, starform->KS_power_law,
-      starform->fgas);
-  message("At densities of %e H/cm^3 the slope changes to %e.",
-          starform->KS_high_den_thresh_HpCM3, starform->KS_high_den_power_law);
-  message(
-      "The effective equation of state is given by: polytropic "
-      "index = %e , normalization density = %e #/cm^3 and normalization "
-      "temperature = %e K",
-      starform->EOS_polytropic_index, starform->EOS_density_norm_HpCM3,
-      starform->EOS_temperature_norm_K);
-  message("Density threshold follows Schaye (2004)");
-  message(
-      "the normalization of the density threshold is given by"
-      " %e #/cm^3, with metallicity slope of %e, and metallicity normalization"
-      " of %e, the maximum density threshold is given by %e #/cm^3",
-      starform->density_threshold_HpCM3, starform->n_Z0, starform->Z0,
-      starform->density_threshold_max_HpCM3);
-  message("Temperature threshold is given by Dalla Vecchia and Schaye (2012)");
-  message("The temperature threshold offset from the EOS is given by: %e dex",
-          starform->temperature_margin_threshold_dex);
-  message("Running with a maximum gas density given by: %e #/cm^3",
-          starform->max_gas_density_HpCM3);
+      "With properties: Star formation efficiency = %e, temperature "
+      "threshold = %e, minimum over density = %e T dex = %e maximal "
+      "density = %e",
+      starform->sfe, starform->temperature_threshold, starform->min_over_den,
+      starform->temperature_margin_threshold_dex,
+      starform->maximal_density_HpCM3);
 }
+
+/**
+ * @brief Finishes the density calculation.
+ *
+ * Nothing to do here. We do not need to compute any quantity in the hydro
+ * density loop for the COLIBRE star formation model.
+ *
+ * @param p The particle to act upon
+ * @param cd The global star_formation information.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_end_density(
+    struct part* restrict p, const struct star_formation* cd,
+    const struct cosmology* cosmo) {}
+
+/**
+ * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
+ *
+ * Nothing to do here. We do not need to compute any quantity in the hydro
+ * density loop for the COLIBRE star formation model.
+ *
+ * @param p The particle to act upon
+ * @param xp The extended particle data to act upon
+ * @param cd #star_formation containing star_formation informations.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void
+star_formation_part_has_no_neighbours(struct part* restrict p,
+                                      struct xpart* restrict xp,
+                                      const struct star_formation* cd,
+                                      const struct cosmology* cosmo) {}
+
+/**
+ * @brief Sets the star_formation properties of the (x-)particles to a valid
+ * start state.
+ *
+ * Nothing to do here.
+ *
+ * @param phys_const The physical constant in internal units.
+ * @param us The unit system.
+ * @param cosmo The current cosmological model.
+ * @param data The global star_formation information used for this run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+__attribute__((always_inline)) INLINE static void
+star_formation_first_init_part(const struct phys_const* restrict phys_const,
+                               const struct unit_system* restrict us,
+                               const struct cosmology* restrict cosmo,
+                               const struct star_formation* data,
+                               const struct part* restrict p,
+                               struct xpart* restrict xp) {}
+
+/**
+ * @brief Sets the star_formation properties of the (x-)particles to a valid
+ * start state.
+ *
+ * Nothing to do here. We do not need to compute any quantity in the hydro
+ * density loop for the COLIBRE star formation model.
+ *
+ * @param p Pointer to the particle data.
+ * @param data The global star_formation information.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_init_part(
+    struct part* restrict p, const struct star_formation* data) {}
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_H */

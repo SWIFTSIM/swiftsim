@@ -138,14 +138,18 @@ INLINE static void compute_SNII_feedback(
     const float ngb_gas_mass, const struct feedback_props* feedback_props) {
 
   /* Time after birth considered for SNII feedback (internal units) */
-  const float SNII_wind_delay = feedback_props->SNII_wind_delay;
+  const double SNII_wind_delay = feedback_props->SNII_wind_delay;
 
   /* Are we doing feedback this step? */
   if (star_age <= SNII_wind_delay && (star_age + dt) > SNII_wind_delay) {
 
+    if (sp->f_E != -1.f) {
 #ifdef SWIFT_DEBUG_CHECKS
-    if (sp->f_E != -1.f) error("Star has already done feedback!");
+      message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
+              star_age, dt);
 #endif
+      return;
+    }
 
     /* Properties of the model (all in internal units) */
     const double delta_T =
@@ -685,8 +689,8 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
-                               const struct unit_system* us, const float age,
-                               const float dt) {
+                               const struct unit_system* us, const double age,
+                               const double dt) {
 
   TIMER_TIC;
 
@@ -837,15 +841,20 @@ void feedback_props_init(struct feedback_props* fp,
   fp->imf_min_mass_msun =
       parser_get_param_double(params, "EAGLEFeedback:IMF_min_mass_Msun");
 
+  /* Check that it makes sense. */
+  if (fp->imf_max_mass_msun < fp->imf_min_mass_msun) {
+    error("Can't have the max IMF mass smaller than the min IMF mass!");
+  }
+
   fp->log10_imf_max_mass_msun = log10(fp->imf_max_mass_msun);
   fp->log10_imf_min_mass_msun = log10(fp->imf_min_mass_msun);
 
   /* Properties of the SNII energy feedback model ------------------------- */
 
   /* Set the delay time before SNII occur */
-  const float Gyr_in_cgs = 1e9 * 365 * 24 * 3600;
+  const double Gyr_in_cgs = 1.0e9 * 365. * 24. * 3600.;
   fp->SNII_wind_delay =
-      parser_get_param_float(params, "EAGLEFeedback:SNII_wind_delay_Gyr") *
+      parser_get_param_double(params, "EAGLEFeedback:SNII_wind_delay_Gyr") *
       Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* Read the temperature change to use in stochastic heating */
@@ -866,6 +875,11 @@ void feedback_props_init(struct feedback_props* fp,
   const double SNII_max_mass_msun =
       parser_get_param_double(params, "EAGLEFeedback:SNII_max_mass_Msun");
 
+  /* Check that it makes sense. */
+  if (SNII_max_mass_msun < SNII_min_mass_msun) {
+    error("Can't have the max SNII mass smaller than the min SNII mass!");
+  }
+
   fp->log10_SNII_min_mass_msun = log10(SNII_min_mass_msun);
   fp->log10_SNII_max_mass_msun = log10(SNII_max_mass_msun);
 
@@ -882,6 +896,11 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_n");
   fp->n_Z =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_Z");
+
+  /* Check that it makes sense. */
+  if (fp->f_E_max < fp->f_E_min) {
+    error("Can't have the maximal energy fraction smaller than the minimal!");
+  }
 
   /* Properties of the SNII enrichment model -------------------------------- */
 

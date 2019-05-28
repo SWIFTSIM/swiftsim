@@ -558,7 +558,7 @@ INLINE static void starformation_init_backend(
       starform->max_gas_density_HpCM3 * number_density_from_cgs;
 
   starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
-      parameter_file, "EAGLEStarFormation:KS_temperature_margin_dex", FLT_MAX);
+      parameter_file, "EAGLEStarFormation:KS_temperature_margin_dex", 10.f);
 
   starform->ten_to_temperature_margin_threshold_dex =
       exp10(starform->temperature_margin_threshold_dex);

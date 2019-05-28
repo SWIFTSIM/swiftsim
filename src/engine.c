@@ -2116,7 +2116,8 @@ void engine_allocate_foreign_particles(struct engine *e) {
       }
 
       /* For stars, we just use the numbers in the top-level cells */
-      count_sparts_in += e->proxies[k].cells_in[j]->stars.count;
+      count_sparts_in +=
+          e->proxies[k].cells_in[j]->stars.count + space_extra_sparts;
 
       /* For black holes, we just use the numbers in the top-level cells */
       count_bparts_in += e->proxies[k].cells_in[j]->black_holes.count;
@@ -2207,7 +2208,8 @@ void engine_allocate_foreign_particles(struct engine *e) {
 
       /* For stars, we just use the numbers in the top-level cells */
       cell_link_sparts(e->proxies[k].cells_in[j], sparts);
-      sparts = &sparts[e->proxies[k].cells_in[j]->stars.count];
+      sparts =
+          &sparts[e->proxies[k].cells_in[j]->stars.count + space_extra_sparts];
 
       /* For black holes, we just use the numbers in the top-level cells */
       cell_link_bparts(e->proxies[k].cells_in[j], bparts);
@@ -2559,6 +2561,8 @@ void engine_rebuild(struct engine *e, int repartitioned,
     for (int k = 0; k < e->s->nr_local_cells; k++)
       cell_check_foreign_multipole(&e->s->cells_top[e->s->local_cells_top[k]]);
   }
+
+  space_check_sort_flags(e->s);
 #endif
 
   /* Run through the tasks and mark as skip or not. */
@@ -3323,7 +3327,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->subtype == task_subtype_tend_gpart ||
         t->subtype == task_subtype_tend_spart ||
         t->subtype == task_subtype_tend_bpart ||
-        t->subtype == task_subtype_rho || t->subtype == task_subtype_gpart)
+        t->subtype == task_subtype_rho || t->subtype == task_subtype_gpart ||
+        t->subtype == task_subtype_sf_counts)
       t->skip = 1;
   }
 
@@ -3831,6 +3836,7 @@ void engine_step(struct engine *e) {
 #ifdef SWIFT_DEBUG_CHECKS
   /* Make sure all woken-up particles have been processed */
   space_check_limiter(e->s);
+  space_check_sort_flags(e->s);
 #endif
 
   /* Collect information about the next time-step */
@@ -4966,6 +4972,15 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   /* Make the space link back to the engine. */
   s->e = e;
 
+  /* Read the run label */
+  memset(e->run_name, 0, PARSER_MAX_LINE_SIZE);
+  parser_get_opt_param_string(params, "MetaData:run_name", e->run_name,
+                              "Untitled SWIFT simulation");
+  if (strlen(e->run_name) == 0) {
+    error("The run name in the parameter file cannot be an empty string.");
+  }
+  if (e->nodeID == 0) message("Running simulation '%s'.", e->run_name);
+
   /* Setup the timestep if non-cosmological */
   if (!(e->policy & engine_policy_cosmology)) {
     e->time_begin =
@@ -6016,14 +6031,20 @@ void engine_recompute_displacement_constraint(struct engine *e) {
  * @brief Frees up the memory allocated for this #engine
  */
 void engine_clean(struct engine *e) {
+  /* Start by telling the runners to stop. */
+  e->step_props = engine_step_prop_done;
+  swift_barrier_wait(&e->run_barrier);
 
-  for (int i = 0; i < e->nr_threads; ++i) {
+  /* Wait for each runner to come home. */
+  for (int k = 0; k < e->nr_threads; k++) {
+    if (pthread_join(e->runners[k].thread, /*retval=*/NULL) != 0)
+      error("Failed to join runner %i.", k);
 #ifdef WITH_VECTORIZATION
-    cache_clean(&e->runners[i].ci_cache);
-    cache_clean(&e->runners[i].cj_cache);
+    cache_clean(&e->runners[k].ci_cache);
+    cache_clean(&e->runners[k].cj_cache);
 #endif
-    gravity_cache_clean(&e->runners[i].ci_gravity_cache);
-    gravity_cache_clean(&e->runners[i].cj_gravity_cache);
+    gravity_cache_clean(&e->runners[k].ci_gravity_cache);
+    gravity_cache_clean(&e->runners[k].cj_gravity_cache);
   }
   swift_free("runners", e->runners);
   free(e->snapshot_units);

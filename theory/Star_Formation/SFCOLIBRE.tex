@@ -1,0 +1,48 @@
+\section{Star Formation in COLIBRE}
+
+In this section we will shortly explain how the star formation subgrid 
+recipe work in the COLIBRE model. The mass converted to stars in COLIBRE
+is given by:
+\begin{align}
+ \dot{m}_\star = f_\star \frac{m_\text{gas}}{\tau_\text{ff}}.
+\end{align}
+In which $f_\star$ is the star formation efficiency, $m_\text{gas}$ is 
+the gas mass and $\tau_\text{ff}$ is the free fall time, given by:
+\begin{align}
+ \tau_\text{ff} = \sqrt{\frac{3 \pi}{32\rho G}}.
+\end{align}
+In which $G$ is the gravitational constant and $\rho$ is the physical 
+density of the gas particle. No correction is made for the amount of gas 
+in the hot phase. Similar to the EAGLE star formation, the probability of 
+forming a star is given by:
+\begin{align}
+ \text{Prob.} = \text{min} \left( \frac{\dot{m}_\star \Delta t}{m_g}, 1 \right) 
+ = \text{min} \left( \frac{f_\star \Delta t}{\tau_\text{ff}}, 1 \right).
+\end{align}
+To prevent spurious star formation at high redshifts we set a over density
+threshold similar to EAGLE to prevent star formation in underdense regions 
+in the early Universe. This means that the density needs to satisfy:
+\begin{align}
+ \delta > \delta_\text{thres.} = 57.7.
+\end{align}
+Besides this to form stars we also have a temperature threshold. Depending if 
+we run with an EOS or not we have a difference. In the case that we do not 
+have an EOS, we have a regular temperature threshold given by a constant 
+temperature:
+\begin{align}
+ T < T_\text{thres.}.
+\end{align}
+If we run with an EOS this criteria will not work, therefore in this case 
+we use a constant dex offset from the EOS similar to \citet{dallavecchia2012}.
+This means that the criteria is given by:
+\begin{align}
+ \log_{10} T < \log_{10} T_\text{eos} + \Delta_\text{dex}.
+\end{align}
+In the case of high densities we want a high density threshold which directly
+converts the gas particles to stars:
+\begin{align}
+ \rho > \rho_\text{high den. thresh.}.
+\end{align}
+Summarizing this means that hte COLIBRE star formation has the following free
+parameters: $f_\star$, $\delta_\text{thres.}$, $T_\text{thres.}$, 
+$\Delta_\text{dex}$ and $\rho_\text{high den. thresh.}$.

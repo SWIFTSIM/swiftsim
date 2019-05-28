@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Init the project.
-AC_INIT([SWIFT],[0.8.1],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
+AC_INIT([SWIFT],[0.8.2],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
 swift_config_flags="$*"
 
 #  We want to stop when given unrecognised options. No subdirs so this is safe.
@@ -1348,18 +1348,9 @@ case "$with_subgrid" in
 	with_subgrid_tracers=EAGLE
 	with_subgrid_entropy_floor=EAGLE
 	with_subgrid_stars=EAGLE
-	with_subgrid_star_formation=EAGLE
+	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
-   ;;
-   COLIBRE)
-	with_subgrid_cooling=COLIBRE
-	with_subgrid_chemistry=COLIBRE
-	with_subgrid_tracers=EAGLE
-	with_subgrid_entropy_floor=EAGLE
-	with_subgrid_stars=EAGLE
-	with_subgrid_star_formation=EAGLE
-	with_subgrid_feedback=none
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -1390,7 +1381,7 @@ esac
 # Hydro scheme.
 AC_ARG_WITH([hydro],
    [AS_HELP_STRING([--with-hydro=<scheme>],
-      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, anarchy-pu default: gadget2@:>@]
+      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, anarchy-du, anarchy-pu default: gadget2@:>@]
    )],
    [with_hydro="$withval"],
    [with_hydro="gadget2"]
@@ -1426,6 +1417,9 @@ case "$with_hydro" in
    ;;
    planetary)
       AC_DEFINE([PLANETARY_SPH], [1], [Planetary SPH])
+   ;;
+   anarchy-du)
+      AC_DEFINE([ANARCHY_DU_SPH], [1], [ANARCHY (DU) SPH])
    ;;
    anarchy-pu)
       AC_DEFINE([ANARCHY_PU_SPH], [1], [ANARCHY (PU) SPH])
