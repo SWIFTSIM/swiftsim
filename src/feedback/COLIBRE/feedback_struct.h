@@ -46,6 +46,12 @@ struct feedback_spart_data {
      */
     struct {
 
+      /*! Rate at which star can inject momentum from winds (Starburst 99) */
+      float momentum_rate;
+
+      /*! momentum available at the given timestep */
+      float momentum;
+
       /*! Normalisation factor used for the enrichment */
       float enrichment_weight;
 

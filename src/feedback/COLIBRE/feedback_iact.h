@@ -289,7 +289,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     const float rand = random_unit_interval(si->id + pj->id, ti_current,
                                             random_number_stellar_feedback);
     /* Are we lucky? */
-    if (rand < prob) {
+    if (rand < prob) {       
 
       /* Compute new energy of this particle */
       const double u_init = hydro_get_physical_internal_energy(pj, xpj, cosmo);
@@ -300,12 +300,21 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
       hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
 
-      /* message( */
-      /*     "We did some heating! id %llu star id %llu probability %.5e " */
-      /*     "random_num %.5e du %.5e du/ini %.5e", */
-      /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
-    }
+    }    
+
   }
+  
+  /* kick gas particle away from the star using the available momentum in the timestep */
+
+  /*but make sure the right amount of momentum is inyected within the kernel*/
+  const float delta_v = ( si->feedback_data.to_distribute.momentum / 
+			  si->feedback_data.to_collect.ngb_mass );
+
+  /* perform the actual kick */
+  xpj->v_full[0] += delta_v * dx[0]/r;
+  xpj->v_full[1] += delta_v * dx[1]/r;
+  xpj->v_full[2] += delta_v * dx[2]/r;
+  
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_IACT_H */

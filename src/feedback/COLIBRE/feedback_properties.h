@@ -232,6 +232,13 @@ struct feedback_props {
   /*! Slope of the metallicity dependance of the feedback energy fraction model
    */
   double n_Z;
+
+  /* Momentum in cgs per unit solar mass g cm s^-1 Mo^-1 */
+  double p1;
+
+  /* Timescale above which stars not longer inject momentum */
+  double tw;
+
 };
 
 void feedback_props_init(struct feedback_props *fp,
