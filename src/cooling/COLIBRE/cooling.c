@@ -72,20 +72,21 @@ static const double bracket_factor = 1.5; /* sqrt(1.1) */
 void cooling_update(const struct cosmology *cosmo,
                     struct cooling_function_data *cooling, struct space *s) {
 
-  /* Current redshift */
-  const float redshift = cosmo->z;
+  /* Extra energy for reionization? */
+  if (!cooling->H_reion_done) {
 
-  /* Does this timestep straddle Hydrogen reionization? If so, we need to input
-   * extra heat */
-  if (!cooling->H_reion_done && (redshift < cooling->H_reion_z)) {
+    /* Does this timestep straddle Hydrogen reionization? If so, we need to
+     * input extra heat */
+    if (cosmo->z <= cooling->H_reion_z && cosmo->z_old > cooling->H_reion_z) {
 
-    if (s == NULL) error("Trying to do H reionization on an empty space!");
+      if (s == NULL) error("Trying to do H reionization on an empty space!");
 
-    /* Inject energy to all particles */
-    cooling_Hydrogen_reionization(cooling, cosmo, s);
+      /* Inject energy to all particles */
+      cooling_Hydrogen_reionization(cooling, cosmo, s);
 
-    /* Flag that reionization happened */
-    cooling->H_reion_done = 1;
+      /* Flag that reionization happened */
+      cooling->H_reion_done = 1;
+    }
   }
 }
 
@@ -584,6 +585,8 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
   const float extra_heat =
       cooling->H_reion_heat_cgs * cooling->internal_energy_from_cgs;
 
+  message("Applying extra energy for H reionization!");
+  
   /* Loop through particles and set new heat */
   for (size_t i = 0; i < s->nr_parts; i++) {
 
