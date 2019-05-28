@@ -130,7 +130,8 @@ INLINE static int star_formation_is_star_forming(
       entropy_floor_temperature(p, cosmo, entropy_props);
 
   /* Check if the constant temperature is satisfied */
-  return (temperature < temperature_eos * starform->ten_to_temperature_margin_threshold_dex);
+  return (temperature <
+          temperature_eos * starform->ten_to_temperature_margin_threshold_dex);
 }
 
 /**
