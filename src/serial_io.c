@@ -326,7 +326,8 @@ void prepareArray(const struct engine* e, hid_t grp, char* fileName,
   io_write_attribute_s(h_data, "Expression for physical CGS units", buffer);
 
   /* Write the actual number this conversion factor corresponds to */
-  const float factor = units_cgs_conversion_factor(snapshot_units, props.units);
+  const double factor =
+      units_cgs_conversion_factor(snapshot_units, props.units);
   io_write_attribute_d(
       h_data,
       "Conversion factor to CGS (not including cosmological corrections)",
@@ -1189,11 +1190,11 @@ void write_output_serial(struct engine* e, const char* baseName,
               if (swift_memalign("parts_written", (void**)&parts_written,
                                  part_align,
                                  Ngas_written * sizeof(struct part)) != 0)
-                error("Error while allocating temporart memory for parts");
+                error("Error while allocating temporary memory for parts");
               if (swift_memalign("xparts_written", (void**)&xparts_written,
                                  xpart_align,
                                  Ngas_written * sizeof(struct xpart)) != 0)
-                error("Error while allocating temporart memory for xparts");
+                error("Error while allocating temporary memory for xparts");
 
               /* Collect the particles we want to write */
               io_collect_parts_to_write(parts, xparts, parts_written,
