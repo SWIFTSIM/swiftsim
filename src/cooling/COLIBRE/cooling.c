@@ -109,8 +109,7 @@ void cooling_update(const struct cosmology *cosmo,
  * @param dt_cgs timestep in CGS.
  * @param ID ID of the particle (for debugging).
  */
-
-INLINE double bisection_iter(
+static INLINE double bisection_iter(
     const double u_ini_cgs, const double n_H_cgs, const double redshift,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
     float d_red, double Lambda_He_reion_cgs, double ratefact_cgs,
