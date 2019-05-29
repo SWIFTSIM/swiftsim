@@ -682,14 +682,17 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
  * from Starburst 99. Fitting function taken from Agertz et al. (2012) 
  *
  * @param sp spart that we're evolving
+ * @param us unit_system structure for unit conversion
+ * @param props feedback_props structure for getting model parameters
  * @param star_age_Gyr Age of star in Gyr
- * @param cosmo The cosmological model.
+ * @param dt current timestep in internal units
  */
 INLINE static void compute_stellar_momentum(struct spart* sp, 
 					    const struct unit_system* us,
 					    const struct feedback_props* props,
 					    const float star_age_Gyr,
-					    const float dt){
+					    const float dt,
+					    const float ngb_gas_mass){
 
   /* From starburst 99 */ 
   const double p1    = props->p1;    /* g cm s^-1 Mo^-1 */
@@ -731,8 +734,11 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   
   /* get the momentum rate in code units and store it */
   sp->feedback_data.to_distribute.momentum = dp_dt_cgs * dt_cgs / conv_fact;
-
+  sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
+  return;
 }
+
+
 
 /**
  * @brief calculates stellar mass in spart that died over the timestep, calls
@@ -773,7 +779,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
-
+    
   /* Now we start filling the data structure for information to apply to the
    * particles. Do _NOT_ read from the to_collect substructure any more. */
 
@@ -786,11 +792,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   sp->feedback_data.to_distribute.enrichment_weight = enrichment_weight;
 
   /* Compute amount of momentum available for this stars, given its mass and age */
-  compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt);
-
-  printf("[COLIBRE winds] star_age_Gyr = %.3e, momentum_rate = %.3e\n", star_age_Gyr, sp->feedback_data.to_distribute.momentum_rate);
-
-
+  compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt, ngb_gas_mass);
 
 
   /* Compute properties of the stochastic SNII feedback model. */
@@ -1196,28 +1198,3 @@ void feedback_struct_restore(struct feedback_props* feedback, FILE* stream) {
 
   feedback_restore_tables(feedback);
 }
-
-
-/**
- * @brief COLIBRE Stellar winds.
- *
- * @param r  Comoving distance between the two particles.
- * @param dx Comoving vector separating both particles (pi - pj).
- * @param si First sparticle.
- * @param pj Second particle (not updated).
- * @param xpj Extra particle data (not updated).
- * @param cosmo The cosmological model.
- */
-
-void colibre_inject_winds(const float r, const float *dx,
-			  const struct spart *restrict si,
-			  struct part *restrict pj,
-			  struct xpart *restrict xpj,
-			  const struct cosmology *restrict cosmo,
-			  const struct unit_system* us){
-
-  printf("lala");
-
-
-
-}			  

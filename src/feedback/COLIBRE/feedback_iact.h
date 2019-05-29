@@ -93,6 +93,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const struct cosmology *restrict cosmo,
                                   const integertime_t ti_current) {
 
+
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -307,14 +308,19 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* kick gas particle away from the star using the available momentum in the timestep */
 
   /*but make sure the right amount of momentum is inyected within the kernel*/
-  const float delta_v = ( si->feedback_data.to_distribute.momentum / 
-			  si->feedback_data.to_collect.ngb_mass );
 
+  const float delta_v = - si->feedback_data.to_distribute.momentum / si->feedback_data.to_distribute.momentum_weight;
+
+  printf("[COLIBRE]: momentum = %.3e, weight = %.3e, dv = %.3e, mass=%.3e \n",  
+	 si->feedback_data.to_distribute.momentum,
+	 si->feedback_data.to_distribute.momentum_weight, delta_v, current_mass);
+	
   /* perform the actual kick */
   xpj->v_full[0] += delta_v * dx[0]/r;
   xpj->v_full[1] += delta_v * dx[1]/r;
   xpj->v_full[2] += delta_v * dx[2]/r;
   
+
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_IACT_H */

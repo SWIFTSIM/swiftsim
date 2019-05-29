@@ -52,6 +52,9 @@ struct feedback_spart_data {
       /*! momentum available at the given timestep */
       float momentum;
 
+      /*! momentum weigth */
+      float momentum_weight;
+
       /*! Normalisation factor used for the enrichment */
       float enrichment_weight;
 
