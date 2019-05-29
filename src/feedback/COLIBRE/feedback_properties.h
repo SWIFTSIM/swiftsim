@@ -236,8 +236,13 @@ struct feedback_props {
   /* Momentum in cgs per unit solar mass g cm s^-1 Mo^-1 */
   double p1;
 
-  /* Timescale above which stars not longer inject momentum */
+  /* Timescale above which stars no longer inject momentum */
   double tw;
+
+  /* Desired delta_v in km/s of particles suject to the wind. */
+  /* higher values makes less likely to kick particles. */
+  double delta_v;
+
 
 };
 

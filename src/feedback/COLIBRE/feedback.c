@@ -677,6 +677,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 }
 
 
+
 /**
  * @brief Calculates the amount of momentum available for this star
  * from Starburst 99. Fitting function taken from Agertz et al. (2012) 
@@ -696,7 +697,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   /* From starburst 99 */ 
   const double p1    = props->p1;    /* g cm s^-1 Mo^-1 */
-  const double tw    = props->tw;   /* Myr */
+  const double tw    = props->tw;    /* Myr */
+  double delta_v     = props->delta_v;   /* km s^-1 */
   
   const double Myr_in_s     = 60*60*24*365*1e6;
   const double star_age_Myr = star_age_Gyr * 1e3;
@@ -705,14 +707,17 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double dt_Myr       = dt_cgs / Myr_in_s;
 
   if(star_age_Myr > tw){
-    sp->feedback_data.to_distribute.momentum_rate = 0.0;
     sp->feedback_data.to_distribute.momentum = 0.0;
+    sp->feedback_data.to_distribute.momentum_probability = -1;
+    sp->feedback_data.to_distribute.momentum_weight = 0.0;
+    sp->feedback_data.to_distribute.momentum_delta_v = 0.0;
     return;
   }
-
+  
   /* Prevent star particle from injecting momentum for longer than tw */
   float dt_new = dt;
   if(star_age_Myr + dt_Myr > tw){
+    continue;
     dt_new = (tw - star_age_Myr) * Myr_in_s / us->UnitTime_in_cgs;
     dt_cgs = dt_new * us->UnitTime_in_cgs;
   }
@@ -725,16 +730,44 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   const double Myr_in_sec  = (60*60*24*365*1e6);
 
   const double mstr_in_Msun = sp->mass_init * (us->UnitMass_in_cgs / Msun_in_g);
-
+  const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs;
 
   /* put everything in same units */
   const double tw_cgs      = tw * Myr_in_sec; 
   const double p1_cgs      = p1 * mstr_in_Msun; 
-  const double dp_dt_cgs   = p1_cgs/tw_cgs;
+  const double dp_dt_cgs   = p1_cgs / tw_cgs;
+  const double delta_v_cgs = delta_v * 1e5;
   
+
   /* get the momentum rate in code units and store it */
   sp->feedback_data.to_distribute.momentum = dp_dt_cgs * dt_cgs / conv_fact;
   sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
+
+  /* probability of kicking particle with given delta_v in the current timestep */
+  /* Note that this could be prop > 1 if there are no enough particles in the kernel to */
+  /* to distribute the amount of momentum available in the timestep, but this is OK. */
+
+  double prob = 0;
+
+  if(delta_v == 0){
+    prob = 10; /* We are going to kick all particles in the kernel */
+  }
+  else{
+    prob = dp_dt_cgs * dt_cgs / ngb_gas_mass_in_g / delta_v_cgs;
+  }
+
+  if(prob > 1){
+    message("[COLIBRE Winds]: Not enough particles within the kernel to distribute momentum...");
+
+    delta_v = (sp->feedback_data.to_distribute.momentum / 
+	       sp->feedback_data.to_distribute.momentum_weight );
+
+    message("Wind speed set to delta_v = %e", delta_v);
+  }
+
+  sp->feedback_data.to_distribute.momentum_probability = prob;
+  sp->feedback_data.to_distribute.momentum_delta_v = delta_v;
+
   return;
 }
 
@@ -968,6 +1001,8 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:Momentum_per_StellarMass");
   fp->tw =
       parser_get_param_double(params, "COLIBREFeedback:Momentum_time_scale");
+  fp->delta_v =
+      parser_get_param_double(params, "COLIBREFeedback:Momentum_desired_delta_v");
 
 
 

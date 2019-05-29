@@ -113,8 +113,8 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
 
   /* Zero the amount of momentum available */
-  sp->feedback_data.to_distribute.momentum_rate = 0.f;
   sp->feedback_data.to_distribute.momentum = 0.f;
+  sp->feedback_data.to_distribute.momentum_probability = -1.f;
 }
 
 /**

@@ -287,8 +287,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   if (prob > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval(si->id + pj->id, ti_current,
-                                            random_number_stellar_feedback);
+    float rand = random_unit_interval(si->id + pj->id, ti_current,
+				      random_number_stellar_feedback);
     /* Are we lucky? */
     if (rand < prob) {       
 
@@ -304,22 +304,24 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     }    
 
   }
-  
+
   /* kick gas particle away from the star using the available momentum in the timestep */
+  /* using a stochastic implementation. If delta_v is small enough, this translates into */
+  /* kicking all neighboring particles away from the stars */
+  const float delta_v = si->feedback_data.to_distribute.momentum_delta_v;
+  const float momentum_prob = si->feedback_data.to_distribute.momentum_probability;
 
-  /*but make sure the right amount of momentum is inyected within the kernel*/
+  const float momentum_rand = random_unit_interval(si->id + pj->id, 
+						   ti_current, 
+						   random_number_stellar_feedback);
 
-  const float delta_v = - si->feedback_data.to_distribute.momentum / si->feedback_data.to_distribute.momentum_weight;
-
-  printf("[COLIBRE]: momentum = %.3e, weight = %.3e, dv = %.3e, mass=%.3e \n",  
-	 si->feedback_data.to_distribute.momentum,
-	 si->feedback_data.to_distribute.momentum_weight, delta_v, current_mass);
-	
-  /* perform the actual kick */
-  xpj->v_full[0] += delta_v * dx[0]/r;
-  xpj->v_full[1] += delta_v * dx[1]/r;
-  xpj->v_full[2] += delta_v * dx[2]/r;
-  
+  /* if lucky, perform the actual kick  */
+  if (momentum_rand < momentum_prob) {       
+    printf("[COLIBRE KICK]: I was lucky, and kicked with delta_v = %e\n", delta_v);
+    xpj->v_full[0] -= delta_v * dx[0]/r;
+    xpj->v_full[1] -= delta_v * dx[1]/r;
+    xpj->v_full[2] -= delta_v * dx[2]/r;
+  }
 
 }
 
