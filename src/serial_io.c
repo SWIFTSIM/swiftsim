@@ -313,13 +313,29 @@ void prepareArray(const struct engine* e, hid_t grp, char* fileName,
   /* Write unit conversion factors for this data set */
   char buffer[FIELD_BUFFER_SIZE];
   units_cgs_conversion_string(buffer, snapshot_units, props.units);
-  io_write_attribute_d(
-      h_data, "CGS conversion factor",
-      units_cgs_conversion_factor(snapshot_units, props.units));
+  float baseUnitsExp[5];
+  units_get_base_unit_exponents_array(baseUnitsExp, props.units);
+  const float a_factor_exp = units_a_factor(snapshot_units, props.units);
+  io_write_attribute_f(h_data, "U_M exponent", baseUnitsExp[UNIT_MASS]);
+  io_write_attribute_f(h_data, "U_L exponent", baseUnitsExp[UNIT_LENGTH]);
+  io_write_attribute_f(h_data, "U_t exponent", baseUnitsExp[UNIT_TIME]);
+  io_write_attribute_f(h_data, "U_I exponent", baseUnitsExp[UNIT_CURRENT]);
+  io_write_attribute_f(h_data, "U_T exponent", baseUnitsExp[UNIT_TEMPERATURE]);
   io_write_attribute_f(h_data, "h-scale exponent", 0);
-  io_write_attribute_f(h_data, "a-scale exponent",
-                       units_a_factor(snapshot_units, props.units));
-  io_write_attribute_s(h_data, "Conversion factor", buffer);
+  io_write_attribute_f(h_data, "a-scale exponent", a_factor_exp);
+  io_write_attribute_s(h_data, "Expression for physical CGS units", buffer);
+
+  /* Write the actual number this conversion factor corresponds to */
+  const double factor =
+      units_cgs_conversion_factor(snapshot_units, props.units);
+  io_write_attribute_d(
+      h_data,
+      "Conversion factor to CGS (not including cosmological corrections)",
+      factor);
+  io_write_attribute_d(
+      h_data,
+      "Conversion factor to phyical CGS (including cosmological corrections)",
+      factor * pow(e->cosmology->a, a_factor_exp));
 
   /* Close everything */
   H5Pclose(h_prop);
@@ -1174,11 +1190,11 @@ void write_output_serial(struct engine* e, const char* baseName,
               if (swift_memalign("parts_written", (void**)&parts_written,
                                  part_align,
                                  Ngas_written * sizeof(struct part)) != 0)
-                error("Error while allocating temporart memory for parts");
+                error("Error while allocating temporary memory for parts");
               if (swift_memalign("xparts_written", (void**)&xparts_written,
                                  xpart_align,
                                  Ngas_written * sizeof(struct xpart)) != 0)
-                error("Error while allocating temporart memory for xparts");
+                error("Error while allocating temporary memory for xparts");
 
               /* Collect the particles we want to write */
               io_collect_parts_to_write(parts, xparts, parts_written,
