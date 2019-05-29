@@ -21,7 +21,10 @@ ACLOCAL_AMFLAGS = -I m4
 # Show the way...
 SUBDIRS = src argparse examples doc tests tools
 if HAVEEAGLECOOLING
-SUBDIRS += examples/Cooling/CoolingRates
+SUBDIRS += examples/Cooling/CoolingRates 
+endif
+if HAVECOLIBRECOOLING
+SUBDIRS += examples/Cooling/CoolingRatesCOLIBRE
 endif
 
 # Non-standard files that should be part of the distribution.

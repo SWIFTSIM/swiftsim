@@ -1,0 +1,30 @@
+This is a test that produces a plot of the contribution to the cooling
+rate from each of the elements depending on internal energy, density
+and redshift based on the COLIBRE tables. To do so, the function in
+src/cooling/COLIBRE returning the cooling rate is run for multiple
+values of the internal energy. The resulting cooling rates for each cooling 
+channel are written to files and plotted with a python script 
+(plot_result_cooling.py or plot_result_heating.py).
+
+The test may be run by:
+./getCoolingTables.sh ---> TO BE DONE, on cosma the link to the tables is in the parameter file
+
+
+-- for the default values (z = 0, log nH [cm-3] = -1):
+./cooling_rates
+python plot_result_cooling.py
+python plot_result_heating.py
+
+-- for different redshifts and densities:
+redshift="0.0"
+logdensity="0.00"
+./cooling_rates -z $redshift -d $logdensity
+python plot_result_cooling.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
+python plot_result_heating.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
+
+where redshift is the redshift at which the cooling rates are evaluated and logdensity
+is the base 10 logarithm of the hydrogen number density expressed in
+cgs (i.e. cm^-3). Different metallicities may be specified in
+testCooling.yml
+
+./configure --with-subgrid=COLIBRE

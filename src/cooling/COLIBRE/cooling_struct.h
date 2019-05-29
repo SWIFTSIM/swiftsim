@@ -19,27 +19,42 @@
 #ifndef SWIFT_COOLING_STRUCT_COLIBRE_H
 #define SWIFT_COOLING_STRUCT_COLIBRE_H
 
-#define eagle_table_path_name_length 500
+#define colibre_table_path_name_length 500
 
 /**
  * @brief struct containing cooling tables
  */
 struct cooling_tables {
 
-  /* array of heating rates due to metals */
-  float *metal_heating;
+  /* array of all mean particle masses mu (temperature) */
+  float *Tmu;
 
-  /* array of heating rates due to hydrogen and helium */
-  float *H_plus_He_heating;
+  /* array of all mean particle masses mu (internal energy) */
+  float *Umu;
 
-  /* array of electron abundances due to hydrogen and helium */
-  float *H_plus_He_electron_abundance;
+  /* array of all cooling processes (temperature) */
+  float *Tcooling;
 
-  /* array of temperatures */
-  float *temperature;
+  /* array of all cooling processes (internal energy) */
+  float *Ucooling;
 
-  /* array of electron abundances due to metals */
-  float *electron_abundance;
+  /* array of all heating processes (temperature) */
+  float *Theating;
+
+  /* array of all heating processes (internal energy) */
+  float *Uheating;
+
+  /* array of all electron abundances (temperature) */
+  float *Telectron_fraction;
+
+  /* array of all electron abundances (internal energy) */
+  float *Uelectron_fraction;
+
+  /* array to get T from U */
+  float *T_from_U;
+
+  /* array to get U from T */
+  float *U_from_T;
 };
 
 /**
@@ -59,22 +74,36 @@ struct cooling_function_data {
   /*! Temperature bins */
   float *Temp;
 
-  /*! Helium fraction bins */
-  float *HeFrac;
+  /*! Metallicity bins */
+  float *Metallicity;
 
   /*! Internal energy bins */
   float *Therm;
 
-  /*! Mass fractions of elements for solar abundances (from the tables) */
-  float *SolarAbundances;
+  /*! Abundance ratios for each metallicity bin and for each included element */
+  float *LogAbundances;
+  float *Abundances;
+  float *Abundances_inv;
 
-  /*! Inverse of the solar mass fractions */
-  float *SolarAbundances_inv;
+  /*! Atomic masses for all included elements */
+  float *atomicmass;
+  float *atomicmass_inv;
+
+  /*! Mass fractions of all included elements */
+  float *LogMassFractions;
+  float *MassFractions;
+
+  /*! Index for solar metallicity in the metallicity dimension */
+  int indxZsol;
+
+  /*! Solar metallicity */
+  float *Zsol;
+  float *Zsol_inv;
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
-  char cooling_table_path[eagle_table_path_name_length];
+  char cooling_table_path[colibre_table_path_name_length];
 
-  /*! Redshift of H reionization */
+  /*! Redshit of H reionization */
   float H_reion_z;
 
   /*! H reionization energy in CGS units */
@@ -117,15 +146,6 @@ struct cooling_function_data {
 
   /*! Compton rate in cgs units */
   double compton_rate_cgs;
-
-  /*! Index of the current redshift along the redshift index of the tables */
-  int z_index;
-
-  /*! Distance between the current redshift and table[z_index] */
-  float dz;
-
-  /*! Index of the previous tables along the redshift index of the tables */
-  int previous_z_index;
 
   /*! Are we doing Newton-Raphson iterations? */
   int newton_flag;

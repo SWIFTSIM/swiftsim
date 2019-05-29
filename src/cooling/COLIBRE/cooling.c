@@ -48,76 +48,15 @@
 #include "space.h"
 #include "units.h"
 
-/* Maximum number of iterations for newton
- * and bisection integration schemes */
-static const int newton_max_iterations = 15;
+/* Maximum number of iterations for
+ * bisection integration schemes */
 static const int bisection_max_iterations = 150;
 
 /* Tolerances for termination criteria. */
 static const float explicit_tolerance = 0.05;
-static const float newton_tolerance = 1.0e-4;
 static const float bisection_tolerance = 1.0e-6;
 static const float rounding_tolerance = 1.0e-4;
-static const double bracket_factor = 1.5;              /* sqrt(1.1) */
-static const double newton_log_u_guess_cgs = 12.30103; /* log10(2e12) */
-
-/**
- * @brief Find the index of the current redshift along the redshift dimension
- * of the cooling tables.
- *
- * Since the redshift table is not evenly spaced, compare z with each
- * table value in decreasing order starting with the previous redshift index
- *
- * The returned difference is expressed in units of the table separation. This
- * means dx = (x - table[i]) / (table[i+1] - table[i]). It is always between
- * 0 and 1.
- *
- * @param z Redshift we are searching for.
- * @param z_index (return) Index of the redshift in the table.
- * @param dz (return) Difference in redshift between z and table[z_index].
- * @param cooling #cooling_function_data structure containing redshift table.
- */
-__attribute__((always_inline)) INLINE void get_redshift_index(
-    const float z, int *z_index, float *dz,
-    struct cooling_function_data *restrict cooling) {
-
-  /* Before the earliest redshift or before hydrogen reionization, flag for
-   * collisional cooling */
-  if (z > cooling->H_reion_z) {
-    *z_index = eagle_cooling_N_redshifts;
-    *dz = 0.0;
-  }
-
-  /* From reionization use the cooling tables */
-  else if (z > cooling->Redshifts[eagle_cooling_N_redshifts - 1] &&
-           z <= cooling->H_reion_z) {
-    *z_index = eagle_cooling_N_redshifts + 1;
-    *dz = 0.0;
-  }
-
-  /* At the end, just use the last value */
-  else if (z <= cooling->Redshifts[0]) {
-    *z_index = 0;
-    *dz = 0.0;
-  }
-
-  /* Normal case: search... */
-  else {
-
-    /* start at the previous index and search */
-    for (int i = cooling->previous_z_index; i >= 0; i--) {
-      if (z > cooling->Redshifts[i]) {
-
-        *z_index = i;
-        cooling->previous_z_index = i;
-
-        *dz = (z - cooling->Redshifts[i]) /
-              (cooling->Redshifts[i + 1] - cooling->Redshifts[i]);
-        break;
-      }
-    }
-  }
-}
+static const double bracket_factor = 1.5; /* sqrt(1.1) */
 
 /**
  * @brief Common operations performed on the cooling function at a
@@ -133,152 +72,22 @@ __attribute__((always_inline)) INLINE void get_redshift_index(
 void cooling_update(const struct cosmology *cosmo,
                     struct cooling_function_data *cooling, struct space *s) {
 
-  /* Current redshift */
-  const float redshift = cosmo->z;
+  /* Extra energy for reionization? */
+  if (!cooling->H_reion_done) {
 
-  /* What is the current table index along the redshift axis? */
-  int z_index = -1;
-  float dz = 0.f;
-  get_redshift_index(redshift, &z_index, &dz, cooling);
-  cooling->dz = dz;
+    /* Does this timestep straddle Hydrogen reionization? If so, we need to
+     * input extra heat */
+    if (cosmo->z <= cooling->H_reion_z && cosmo->z_old > cooling->H_reion_z) {
 
-  /* Does this timestep straddle Hydrogen reionization? If so, we need to input
-   * extra heat */
-  if (!cooling->H_reion_done && (redshift < cooling->H_reion_z)) {
+      if (s == NULL) error("Trying to do H reionization on an empty space!");
 
-    if (s == NULL) error("Trying to do H reionization on an empty space!");
+      /* Inject energy to all particles */
+      cooling_Hydrogen_reionization(cooling, cosmo, s);
 
-    /* Inject energy to all particles */
-    cooling_Hydrogen_reionization(cooling, cosmo, s);
-
-    /* Flag that reionization happened */
-    cooling->H_reion_done = 1;
-  }
-
-  /* Do we already have the correct tables loaded? */
-  if (cooling->z_index == z_index) return;
-
-  /* Which table should we load ? */
-  if (z_index >= eagle_cooling_N_redshifts) {
-
-    if (z_index == eagle_cooling_N_redshifts + 1) {
-
-      /* Bewtween re-ionization and first table */
-      get_redshift_invariant_table(cooling, /* photodis=*/0);
-
-    } else {
-
-      /* Above re-ionization */
-      get_redshift_invariant_table(cooling, /* photodis=*/1);
+      /* Flag that reionization happened */
+      cooling->H_reion_done = 1;
     }
-
-  } else {
-
-    /* Normal case: two tables bracketing the current z */
-    const int low_z_index = z_index;
-    const int high_z_index = z_index + 1;
-
-    get_cooling_table(cooling, low_z_index, high_z_index);
   }
-
-  /* Store the currently loaded index */
-  cooling->z_index = z_index;
-}
-
-/**
- * @brief Newton Raphson integration scheme to calculate particle cooling over
- * timestep. This replaces bisection scheme used in COLIBRE to minimize the
- * number of array accesses. Integration defaults to bisection scheme (see
- * function bisection_iter) if this function does not converge within a
- * specified number of steps
- *
- * @param logu_init Initial guess for log(internal energy)
- * @param u_ini Internal energy at beginning of hydro step
- * @param n_H_index Particle hydrogen number density index
- * @param d_n_H Particle hydrogen number density offset
- * @param He_index Particle helium fraction index
- * @param d_He Particle helium fraction offset
- * @param He_reion_heat Heating due to helium reionization
- * (only depends on redshift, so passed as parameter)
- * @param p #part structure
- * @param cosmo #cosmology structure
- * @param cooling #cooling_function_data structure
- * @param phys_const #phys_const data structure
- * @param abundance_ratio Array of ratios of metal abundance to solar
- * @param dt timestep
- * @param bisection_flag Flag to identify if scheme failed to converge
- */
-INLINE static float newton_iter(
-    float logu_init, double u_ini, int n_H_index, float d_n_H, int He_index,
-    float d_He, float He_reion_heat, struct part *restrict p,
-    const struct cosmology *restrict cosmo,
-    const struct cooling_function_data *restrict cooling,
-    const struct phys_const *restrict phys_const,
-    const float abundance_ratio[chemistry_element_count + 2], float dt,
-    int *bisection_flag) {
-
-  double logu, logu_old;
-  double dLambdaNet_du = 0.0, LambdaNet;
-
-  /* table bounds */
-  const float log_table_bound_high =
-      (cooling->Therm[eagle_cooling_N_temperature - 1] - 0.05) / M_LOG10E;
-  const float log_table_bound_low = (cooling->Therm[0] + 0.05) / M_LOG10E;
-
-  /* convert Hydrogen mass fraction in Hydrogen number density */
-  const float XH =
-      p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_H];
-  const double n_H =
-      hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
-
-  /* compute ratefact = n_H * n_H / rho; Might lead to round-off error:
-   * replaced by equivalent expression below */
-  const double ratefact_cgs = n_H_cgs * XH * cooling->inv_proton_mass_cgs;
-
-  logu_old = logu_init;
-  logu = logu_old;
-  int i = 0;
-
-  float LambdaNet_old = 0;
-  LambdaNet = 0;
-  do /* iterate to convergence */
-  {
-    logu_old = logu;
-    LambdaNet_old = LambdaNet;
-    LambdaNet = (He_reion_heat / (dt * ratefact_cgs)) +
-                eagle_cooling_rate(logu_old, cosmo->z, n_H_cgs, abundance_ratio,
-                                   n_H_index, d_n_H, He_index, d_He, cooling,
-                                   &dLambdaNet_du);
-
-    /* Newton iteration. For details on how the cooling equation is integrated
-     * see documentation in theory/Cooling/ */
-    logu = logu_old - (1.0 - u_ini * exp(-logu_old) -
-                       LambdaNet * ratefact_cgs * dt * exp(-logu_old)) /
-                          (1.0 - dLambdaNet_du * ratefact_cgs * dt);
-    /* Check if first step passes over equilibrium solution, if it does adjust
-     * next guess */
-    if (i == 1 && LambdaNet_old * LambdaNet < 0) logu = newton_log_u_guess_cgs;
-
-    /* check whether iterations go within about 10% of the table bounds,
-     * if they do default to bisection method */
-    if (logu > log_table_bound_high) {
-      i = newton_max_iterations;
-      break;
-    } else if (logu < log_table_bound_low) {
-      i = newton_max_iterations;
-      break;
-    }
-
-    i++;
-  } while (fabs(logu - logu_old) > newton_tolerance &&
-           i < newton_max_iterations);
-  if (i >= newton_max_iterations) {
-    /* flag to trigger bisection scheme */
-    *bisection_flag = 1;
-  }
-
-  return logu;
 }
 
 /**
@@ -289,8 +98,10 @@ INLINE static float newton_iter(
  * @param redshift Current redshift.
  * @param n_H_index Particle hydrogen number density index.
  * @param d_n_H Particle hydrogen number density offset.
- * @param He_index Particle helium fraction index.
- * @param d_He Particle helium fraction offset.
+ * @param met_index Particle metallicity index.
+ * @param d_met Particle metallicity offset.
+ * @param red_index Redshift index.
+ * @param d_red Redshift offset.
  * @param Lambda_He_reion_cgs Cooling rate coming from He reionization.
  * @param ratefact_cgs Multiplication factor to get a cooling rate.
  * @param cooling #cooling_function_data structure.
@@ -298,12 +109,12 @@ INLINE static float newton_iter(
  * @param dt_cgs timestep in CGS.
  * @param ID ID of the particle (for debugging).
  */
-INLINE static double bisection_iter(
+static INLINE double bisection_iter(
     const double u_ini_cgs, const double n_H_cgs, const double redshift,
-    int n_H_index, float d_n_H, int He_index, float d_He,
-    double Lambda_He_reion_cgs, double ratefact_cgs,
+    int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
+    float d_red, double Lambda_He_reion_cgs, double ratefact_cgs,
     const struct cooling_function_data *restrict cooling,
-    const float abundance_ratio[chemistry_element_count + 2], double dt_cgs,
+    const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
     long long ID) {
 
   /* Bracketing */
@@ -316,9 +127,9 @@ INLINE static double bisection_iter(
 
   double LambdaNet_cgs =
       Lambda_He_reion_cgs +
-      eagle_cooling_rate(log(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
-                         n_H_index, d_n_H, He_index, d_He, cooling,
-                         /*dLambdaNet_du=*/NULL);
+      colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0);
 
   /*************************************/
   /* Let's try to bracket the solution */
@@ -333,9 +144,9 @@ INLINE static double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        eagle_cooling_rate(log(u_lower_cgs), redshift, n_H_cgs, abundance_ratio,
-                           n_H_index, d_n_H, He_index, d_He, cooling,
-                           /*dLambdaNet_du=*/NULL);
+        colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
 
     int i = 0;
     while (u_lower_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs >
@@ -346,11 +157,11 @@ INLINE static double bisection_iter(
       u_upper_cgs /= bracket_factor;
 
       /* Compute a new rate */
-      LambdaNet_cgs = Lambda_He_reion_cgs +
-                      eagle_cooling_rate(log(u_lower_cgs), redshift, n_H_cgs,
-                                         abundance_ratio, n_H_index, d_n_H,
-                                         He_index, d_He, cooling,
-                                         /*dLambdaNet_du=*/NULL);
+      LambdaNet_cgs =
+          Lambda_He_reion_cgs +
+          colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs,
+                               abundance_ratio, n_H_index, d_n_H, met_index,
+                               d_met, red_index, d_red, cooling, 0, 0, 0, 0);
       i++;
     }
 
@@ -369,9 +180,9 @@ INLINE static double bisection_iter(
     /* Compute a new rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        eagle_cooling_rate(log(u_upper_cgs), redshift, n_H_cgs, abundance_ratio,
-                           n_H_index, d_n_H, He_index, d_He, cooling,
-                           /*dLambdaNet_du=*/NULL);
+        colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
 
     int i = 0;
     while (u_upper_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs <
@@ -382,11 +193,11 @@ INLINE static double bisection_iter(
       u_upper_cgs *= bracket_factor;
 
       /* Compute a new rate */
-      LambdaNet_cgs = Lambda_He_reion_cgs +
-                      eagle_cooling_rate(log(u_upper_cgs), redshift, n_H_cgs,
-                                         abundance_ratio, n_H_index, d_n_H,
-                                         He_index, d_He, cooling,
-                                         /*dLambdaNet_du=*/NULL);
+      LambdaNet_cgs =
+          Lambda_He_reion_cgs +
+          colibre_cooling_rate(log10(u_upper_cgs), redshift, n_H_cgs,
+                               abundance_ratio, n_H_index, d_n_H, met_index,
+                               d_met, red_index, d_red, cooling, 0, 0, 0, 0);
       i++;
     }
 
@@ -415,9 +226,9 @@ INLINE static double bisection_iter(
     /* New rate */
     LambdaNet_cgs =
         Lambda_He_reion_cgs +
-        eagle_cooling_rate(log(u_next_cgs), redshift, n_H_cgs, abundance_ratio,
-                           n_H_index, d_n_H, He_index, d_He, cooling,
-                           /*dLambdaNet_du=*/NULL);
+        colibre_cooling_rate(log10(u_next_cgs), redshift, n_H_cgs,
+                             abundance_ratio, n_H_index, d_n_H, met_index,
+                             d_met, red_index, d_red, cooling, 0, 0, 0, 0);
 
     /* Where do we go next? */
     if (u_next_cgs - u_ini_cgs - LambdaNet_cgs * ratefact_cgs * dt_cgs > 0.0) {
@@ -451,9 +262,7 @@ INLINE static double bisection_iter(
  *
  * f(u_new) = u_new - u_old - dt * du/dt(u_new, X) = 0
  *
- * We first try a few Newton-Raphson iteration if it does not converge, we
- * revert to a bisection scheme.
- *
+ * A bisection scheme is used.
  * This is done by first bracketing the solution and then iterating
  * towards the solution by reducing the window down to a certain tolerance.
  * Note there is always at least one solution since
@@ -515,18 +324,12 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * Note that we need to add S and Ca that are in the tables but not tracked
    * by the particles themselves.
    * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe] */
-  float abundance_ratio[chemistry_element_count + 2];
-  abundance_ratio_to_solar(p, cooling, abundance_ratio);
+  float abundance_ratio[chemistry_element_count + 3];
+  float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
 
   /* Get the Hydrogen and Helium mass fractions */
   const float XH =
       p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_H];
-  const float XHe =
-      p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_He];
-
-  /* Get the Helium mass fraction. Note that this is He / (H + He), i.e. a
-   * metal-free Helium mass fraction as per the Wiersma+08 definition */
-  const float HeFrac = XHe / (XH + XHe);
 
   /* convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H =
@@ -537,15 +340,19 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * equivalent expression  below */
   const double ratefact_cgs = n_H_cgs * (XH * cooling->inv_proton_mass_cgs);
 
-  /* compute hydrogen number density and helium fraction table indices and
+  /* compute hydrogen number density, metallicity and redshift indices and
    * offsets (These are fixed for any value of u, so no need to recompute them)
    */
-  int He_index, n_H_index;
-  float d_He, d_n_H;
-  get_index_1d(cooling->HeFrac, eagle_cooling_N_He_frac, HeFrac, &He_index,
-               &d_He);
-  get_index_1d(cooling->nH, eagle_cooling_N_density, log10(n_H_cgs), &n_H_index,
-               &d_n_H);
+
+  float d_red, d_met, d_n_H;
+  int red_index, met_index, n_H_index;
+
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+               &red_index, &d_red);
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &met_index, &d_met);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &n_H_index, &d_n_H);
 
   /* Start by computing the cooling (heating actually) rate from Helium
      re-ionization as this needs to be added on no matter what */
@@ -563,10 +370,10 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* First try an explicit integration (note we ignore the derivative) */
   const double LambdaNet_cgs =
-      Lambda_He_reion_cgs + eagle_cooling_rate(log(u_0_cgs), cosmo->z, n_H_cgs,
-                                               abundance_ratio, n_H_index,
-                                               d_n_H, He_index, d_He, cooling,
-                                               /*dLambdaNet_du=*/NULL);
+      Lambda_He_reion_cgs +
+      colibre_cooling_rate(log10(u_0_cgs), cosmo->z, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0);
 
   /* if cooling rate is small, take the explicit solution */
   if (fabs(ratefact_cgs * LambdaNet_cgs * dt_cgs) <
@@ -576,38 +383,10 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   } else {
 
-    int bisection_flag = 1;
-
-    // MATTHIEU: TO DO restore the Newton-Raphson scheme
-    if (0 && cooling->newton_flag) {
-
-      /* Ok, try a Newton-Raphson scheme instead */
-      double log_u_final_cgs =
-          newton_iter(log(u_0_cgs), u_0_cgs, n_H_index, d_n_H, He_index, d_He,
-                      Lambda_He_reion_cgs, p, cosmo, cooling, phys_const,
-                      abundance_ratio, dt_cgs, &bisection_flag);
-
-      /* Check if newton scheme sent us to a higher energy despite being in
-         a  cooling regime If it did try newton scheme with a better guess.
-         (Guess internal energy near equilibrium solution).  */
-      if (LambdaNet_cgs < 0 && log_u_final_cgs > log(u_0_cgs)) {
-        bisection_flag = 0;
-        log_u_final_cgs =
-            newton_iter(newton_log_u_guess_cgs, u_0_cgs, n_H_index, d_n_H,
-                        He_index, d_He, Lambda_He_reion_cgs, p, cosmo, cooling,
-                        phys_const, abundance_ratio, dt_cgs, &bisection_flag);
-      }
-
-      u_final_cgs = exp(log_u_final_cgs);
-    }
-
-    /* Alright, all else failed, let's bisect */
-    if (bisection_flag || !(cooling->newton_flag)) {
-      u_final_cgs =
-          bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, He_index,
-                         d_He, Lambda_He_reion_cgs, ratefact_cgs, cooling,
-                         abundance_ratio, dt_cgs, p->id);
-    }
+    u_final_cgs =
+        bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, met_index,
+                       d_met, red_index, d_red, Lambda_He_reion_cgs,
+                       ratefact_cgs, cooling, abundance_ratio, dt_cgs, p->id);
   }
 
   /* Expected change in energy over the next kick step
@@ -705,10 +484,6 @@ __attribute__((always_inline)) INLINE void cooling_first_init_part(
 /**
  * @brief Compute the temperature of a #part based on the cooling function.
  *
- * We use the Temperature table of the Wiersma+08 set. This computes the
- * equilibirum temperature of a gas for a given redshift, Hydrogen density,
- * internal energy per unit mass and Helium fraction.
- *
  * The temperature returned is consistent with the cooling rates.
  *
  * @param phys_const #phys_const data structure.
@@ -738,34 +513,35 @@ float cooling_get_temperature(
   const float u = hydro_get_physical_internal_energy(p, xp, cosmo);
   const double u_cgs = u * cooling->internal_energy_to_cgs;
 
-  /* Get the Hydrogen and Helium mass fractions */
+  /* Get the Hydrogen mass fraction */
   const float XH =
       p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_H];
-  const float XHe =
-      p->chemistry_data.smoothed_metal_mass_fraction[chemistry_element_He];
-
-  /* Get the Helium mass fraction. Note that this is He / (H + He), i.e. a
-   * metal-free Helium mass fraction as per the Wiersma+08 definition */
-  const float HeFrac = XHe / (XH + XHe);
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const float rho = hydro_get_physical_density(p, cosmo);
   const double n_H = rho * XH / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
-  /* compute hydrogen number density and helium fraction table indices and
-   * offsets */
-  int He_index, n_H_index;
-  float d_He, d_n_H;
-  get_index_1d(cooling->HeFrac, eagle_cooling_N_He_frac, HeFrac, &He_index,
-               &d_He);
-  get_index_1d(cooling->nH, eagle_cooling_N_density, log10(n_H_cgs), &n_H_index,
-               &d_n_H);
+  const float logZZsol = log10(
+      p->chemistry_data.smoothed_metal_mass_fraction_total / cooling->Zsol[0]);
+
+  /* compute hydrogen number density, metallicity and redshift indices and
+   * offsets  */
+
+  float d_red, d_met, d_n_H;
+  int red_index, met_index, n_H_index;
+
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+               &red_index, &d_red);
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &met_index, &d_met);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &n_H_index, &d_n_H);
 
   /* Compute the log10 of the temperature by interpolating the table */
-  const double log_10_T = eagle_convert_u_to_temp(
-      log10(u_cgs), cosmo->z, /*compute_dT_du=*/0, /*dT_du=*/NULL, n_H_index,
-      He_index, d_n_H, d_He, cooling);
+  const double log_10_T =
+      colibre_convert_u_to_temp(log10(u_cgs), cosmo->z, n_H_index, d_n_H,
+                                met_index, d_met, red_index, d_red, cooling);
 
   /* Undo the log! */
   return exp10(log_10_T);
@@ -800,6 +576,8 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
   /* Energy to inject in internal units */
   const float extra_heat =
       cooling->H_reion_heat_cgs * cooling->internal_energy_from_cgs;
+
+  message("Applying extra energy for H reionization!");
 
   /* Loop through particles and set new heat */
   for (size_t i = 0; i < s->nr_parts; i++) {
@@ -869,16 +647,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
       phys_const->const_electron_volt / phys_const->const_proton_mass *
       units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
-  /* Read in the list of redshifts */
-  get_cooling_redshifts(cooling);
-
-  /* Read in cooling table header */
-  char fname[eagle_table_path_name_length + 12];
-  sprintf(fname, "%sz_0.000.hdf5", cooling->cooling_table_path);
-  read_cooling_header(fname, cooling);
-
-  /* Allocate space for cooling tables */
-  allocate_cooling_tables(cooling);
+  read_cooling_header(cooling);
+  read_cooling_tables(cooling);
 
   /* Compute conversion factors */
   cooling->internal_energy_to_cgs =
@@ -921,16 +691,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->compton_rate_cgs = compton_coefficient_cgs * cooling->T_CMB_0 *
                               cooling->T_CMB_0 * cooling->T_CMB_0 *
                               cooling->T_CMB_0;
-
-  /* Set the redshift indices to invalid values */
-  cooling->z_index = -10;
-
-  /* set previous_z_index and to last value of redshift table*/
-  cooling->previous_z_index = eagle_cooling_N_redshifts - 2;
-
-  /* Check if we are running with the newton scheme */
-  cooling->newton_flag = parser_get_opt_param_int(
-      parameter_file, "COLIBRECooling:newton_integration", 0);
 }
 
 /**
@@ -943,20 +703,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
 void cooling_restore_tables(struct cooling_function_data *cooling,
                             const struct cosmology *cosmo) {
 
-  /* Read redshifts */
-  get_cooling_redshifts(cooling);
+  read_cooling_header(cooling);
+  read_cooling_tables(cooling);
 
-  /* Read cooling header */
-  char fname[eagle_table_path_name_length + 12];
-  sprintf(fname, "%sz_0.000.hdf5", cooling->cooling_table_path);
-  read_cooling_header(fname, cooling);
-
-  /* Allocate memory for the tables */
-  allocate_cooling_tables(cooling);
-
-  /* Force a re-read of the cooling tables */
-  cooling->z_index = -10;
-  cooling->previous_z_index = eagle_cooling_N_redshifts - 2;
   cooling_update(cosmo, cooling, /*space=*/NULL);
 }
 
@@ -983,17 +732,24 @@ void cooling_clean(struct cooling_function_data *cooling) {
   free(cooling->Redshifts);
   free(cooling->nH);
   free(cooling->Temp);
-  free(cooling->HeFrac);
+  free(cooling->Metallicity);
   free(cooling->Therm);
-  free(cooling->SolarAbundances);
-  free(cooling->SolarAbundances_inv);
+  free(cooling->LogAbundances);
+  free(cooling->Abundances);
+  free(cooling->Abundances_inv);
+  free(cooling->atomicmass);
+  free(cooling->LogMassFractions);
+  free(cooling->MassFractions);
 
   /* Free the tables */
-  free(cooling->table.metal_heating);
-  free(cooling->table.electron_abundance);
-  free(cooling->table.temperature);
-  free(cooling->table.H_plus_He_heating);
-  free(cooling->table.H_plus_He_electron_abundance);
+  free(cooling->table.Tcooling);
+  free(cooling->table.Ucooling);
+  free(cooling->table.Theating);
+  free(cooling->table.Uheating);
+  free(cooling->table.Telectron_fraction);
+  free(cooling->table.Uelectron_fraction);
+  free(cooling->table.T_from_U);
+  free(cooling->table.U_from_T);
 }
 
 /**
@@ -1012,14 +768,23 @@ void cooling_struct_dump(const struct cooling_function_data *cooling,
   cooling_copy.Redshifts = NULL;
   cooling_copy.nH = NULL;
   cooling_copy.Temp = NULL;
+  cooling_copy.Metallicity = NULL;
   cooling_copy.Therm = NULL;
-  cooling_copy.SolarAbundances = NULL;
-  cooling_copy.SolarAbundances_inv = NULL;
-  cooling_copy.table.metal_heating = NULL;
-  cooling_copy.table.H_plus_He_heating = NULL;
-  cooling_copy.table.H_plus_He_electron_abundance = NULL;
-  cooling_copy.table.temperature = NULL;
-  cooling_copy.table.electron_abundance = NULL;
+  cooling_copy.LogAbundances = NULL;
+  cooling_copy.Abundances = NULL;
+  cooling_copy.Abundances_inv = NULL;
+  cooling_copy.atomicmass = NULL;
+  cooling_copy.LogMassFractions = NULL;
+  cooling_copy.MassFractions = NULL;
+
+  cooling_copy.table.Tcooling = NULL;
+  cooling_copy.table.Theating = NULL;
+  cooling_copy.table.Telectron_fraction = NULL;
+  cooling_copy.table.Ucooling = NULL;
+  cooling_copy.table.Uheating = NULL;
+  cooling_copy.table.Uelectron_fraction = NULL;
+  cooling_copy.table.T_from_U = NULL;
+  cooling_copy.table.U_from_T = NULL;
 
   restart_write_blocks((void *)&cooling_copy,
                        sizeof(struct cooling_function_data), 1, stream,
