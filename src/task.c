@@ -91,7 +91,8 @@ const char *taskID_names[task_type_count] = {"none",
                                              "stars_sort",
                                              "bh_in",
                                              "bh_out",
-                                             "bh_ghost",
+                                             "bh_density_ghost",
+                                             "bh_swallow_ghost",
                                              "fof_self",
                                              "fof_pair"};
 
@@ -172,7 +173,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
       break;
 
     case task_type_drift_bpart:
-    case task_type_bh_ghost:
+    case task_type_bh_density_ghost:
       return task_action_bpart;
       break;
 
