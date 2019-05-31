@@ -75,11 +75,13 @@
 #include "timestep_limiter.h"
 #include "tracers.h"
 
+/* Unique identifier of loop types */
 #define TASK_LOOP_DENSITY 0
 #define TASK_LOOP_GRADIENT 1
 #define TASK_LOOP_FORCE 2
 #define TASK_LOOP_LIMITER 3
 #define TASK_LOOP_FEEDBACK 4
+#define TASK_LOOP_SWALLOW 5
 
 /* Import the density loop functions. */
 #define FUNCTION density
@@ -131,6 +133,13 @@
 /* Import the black hole density loop functions. */
 #define FUNCTION density
 #define FUNCTION_TASK_LOOP TASK_LOOP_DENSITY
+#include "runner_doiact_black_holes.h"
+#undef FUNCTION_TASK_LOOP
+#undef FUNCTION
+
+/* Import the black hole feedback loop functions. */
+#define FUNCTION swallow
+#define FUNCTION_TASK_LOOP TASK_LOOP_SWALLOW
 #include "runner_doiact_black_holes.h"
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
@@ -4063,6 +4072,8 @@ void *runner_main(void *data) {
             runner_doself_branch_stars_feedback(r, ci);
           else if (t->subtype == task_subtype_bh_density)
             runner_doself_branch_bh_density(r, ci);
+          else if (t->subtype == task_subtype_bh_swallow)
+            runner_doself_branch_bh_swallow(r, ci);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_doself_branch_bh_feedback(r, ci);
           else
@@ -4088,6 +4099,8 @@ void *runner_main(void *data) {
             runner_dopair_branch_stars_feedback(r, ci, cj);
           else if (t->subtype == task_subtype_bh_density)
             runner_dopair_branch_bh_density(r, ci, cj);
+          else if (t->subtype == task_subtype_bh_swallow)
+            runner_dopair_branch_bh_swallow(r, ci, cj);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_dopair_branch_bh_feedback(r, ci, cj);
           else
@@ -4111,6 +4124,8 @@ void *runner_main(void *data) {
             runner_dosub_self_stars_feedback(r, ci, 1);
           else if (t->subtype == task_subtype_bh_density)
             runner_dosub_self_bh_density(r, ci, 1);
+          else if (t->subtype == task_subtype_bh_swallow)
+            runner_dosub_self_bh_swallow(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_self_bh_feedback(r, ci, 1);
           else
@@ -4134,6 +4149,8 @@ void *runner_main(void *data) {
             runner_dosub_pair_stars_feedback(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_density)
             runner_dosub_pair_bh_density(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_bh_swallow)
+            runner_dosub_pair_bh_swallow(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_pair_bh_feedback(r, ci, cj, 1);
           else

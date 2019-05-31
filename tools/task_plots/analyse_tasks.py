@@ -134,6 +134,7 @@ SUBTYPES = [
     "sf_counts"
     "bpart",
     "bh_density",
+    "bh_swallow",
     "bh_feedback",
     "count",
 ]
