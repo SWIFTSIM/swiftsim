@@ -119,6 +119,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
     /* Draw a random number (Note mixing both IDs) */
     const float rand = random_unit_interval(bi->id + pj->id, ti_current,
                                             random_number_BH_swallow);
+
     /* Are we lucky? */
     if (rand < prob) {
 
