@@ -93,6 +93,56 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_density(
 #endif
 }
 
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
+    const float r2, const float *dx, const float hi, const float hj,
+    struct bpart *restrict bi, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct cosmology *cosmo,
+    const integertime_t ti_current) {
+
+  float wi;
+
+  /* Get r and 1/r. */
+  const float r_inv = 1.0f / sqrtf(r2);
+  const float r = r2 * r_inv;
+
+  /* Compute the kernel function */
+  const float hi_inv = 1.0f / hi;
+  const float ui = r * hi_inv;
+  kernel_eval(ui, &wi);
+
+  /* Is the BH hungry? */
+  if (bi->subgrid_mass > bi->mass) {
+
+    /* Probability to swallow this particle */
+    const float prob = (bi->subgrid_mass - bi->mass) * wi / bi->rho_gas;
+
+    /* Draw a random number (Note mixing both IDs) */
+    const float rand = random_unit_interval(bi->id + pj->id, ti_current,
+                                            random_number_BH_swallow);
+    /* Are we lucky? */
+    if (rand < prob) {
+
+      /* This particle is swallowed by the BH with the largest ID of all the
+       * candidates wanting to swallow it */
+      if (pj->swallow_id < bi->id) {
+
+        message(
+            "BH %lld wants to swallow gas particle %lld (old swallow id=%lld)",
+            bi->id, pj->id, pj->swallow_id);
+
+        pj->swallow_id = bi->id;
+
+      } else {
+
+        message(
+            "BH %lld wants to swallow gas particle %lld but cannot (old "
+            "swallow id=%lld)",
+            bi->id, pj->id, pj->swallow_id);
+      }
+    }
+  }
+}
+
 /**
  * @brief Feedback interaction between two particles (non-symmetric).
  *
@@ -137,6 +187,12 @@ runner_iact_nonsym_bh_feedback(const float r2, const float *dx, const float hi,
 
       /* Impose maximal viscosity */
       hydro_set_viscosity_alpha_max_feedback(pj);
+
+      /* message( */
+      /*     "We did some AGN heating! id %llu star id %llu probability %.5e "
+       */
+      /*     "random_num %.5e du %.5e du/ini %.5e", */
+      /*     pj->id, bi->id, prob, rand, delta_u, delta_u / u_init); */
     }
   }
 
