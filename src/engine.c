@@ -3859,6 +3859,7 @@ void engine_step(struct engine *e) {
   /* Make sure all woken-up particles have been processed */
   space_check_limiter(e->s);
   space_check_sort_flags(e->s);
+  space_check_swallow(e->s);
 #endif
 
   /* Collect information about the next time-step */

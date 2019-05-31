@@ -4201,8 +4201,11 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
                              xp->x_diff_sort[2] * xp->x_diff_sort[2];
       dx2_max_sort = max(dx2_max_sort, dx2_sort);
 
-      /* Maximal smoothing length */
+      /* Update the maximal smoothing length in the cell */
       cell_h_max = max(cell_h_max, p->h);
+
+      /* Mark the particle has not being swallowed */
+      p->swallow_id = -1;
 
       /* Get ready for a density calculation */
       if (part_is_active(p, e)) {
