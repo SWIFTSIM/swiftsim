@@ -195,6 +195,18 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       }
 
       else if (t_type == task_type_self &&
+               t_subtype == task_subtype_bh_swallow) {
+        if (ci_active_black_holes) {
+          scheduler_activate(s, t);
+        }
+      }
+
+      else if (t_type == task_type_sub_self &&
+               t_subtype == task_subtype_bh_swallow) {
+        if (ci_active_black_holes) scheduler_activate(s, t);
+      }
+
+      else if (t_type == task_type_self &&
                t_subtype == task_subtype_bh_feedback) {
         if (ci_active_black_holes) {
           scheduler_activate(s, t);
@@ -411,7 +423,29 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
-      /* Black_Holes feedback */
+      /* Black holes swallowing */
+      else if (t_subtype == task_subtype_bh_swallow) {
+
+        /* We only want to activate the task if the cell is active and is
+           going to update some gas on the *local* node */
+        if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
+            (ci_active_black_holes || cj_active_black_holes)) {
+
+          scheduler_activate(s, t);
+
+        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
+                   (cj_active_black_holes)) {
+
+          scheduler_activate(s, t);
+
+        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
+                   (ci_active_black_holes)) {
+
+          scheduler_activate(s, t);
+        }
+      }
+
+      /* Black holes feedback */
       else if (t_subtype == task_subtype_bh_feedback) {
 
         /* We only want to activate the task if the cell is active and is
@@ -878,7 +912,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     }
 
     /* Black hole ghost tasks ? */
-    else if (t_type == task_type_bh_ghost) {
+    else if (t_type == task_type_bh_density_ghost ||
+             t_type == task_type_bh_swallow_ghost) {
       if (cell_is_active_black_holes(t->ci, e)) scheduler_activate(s, t);
     }
 
