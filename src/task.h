@@ -117,6 +117,7 @@ enum task_subtypes {
   task_subtype_sf_counts,
   task_subtype_bpart,
   task_subtype_bh_density,
+  task_subtype_bh_swallow,
   task_subtype_bh_feedback,
   task_subtype_count
 } __attribute__((packed));
