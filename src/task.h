@@ -86,7 +86,8 @@ enum task_types {
   task_type_stars_sort,
   task_type_bh_in,  /* Implicit */
   task_type_bh_out, /* Implicit */
-  task_type_bh_ghost,
+  task_type_bh_density_ghost,
+  task_type_bh_swallow_ghost,
   task_type_fof_self,
   task_type_fof_pair,
   task_type_count

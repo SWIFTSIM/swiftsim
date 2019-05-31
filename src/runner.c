@@ -523,7 +523,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
  * @param c The cell.
  * @param timer Are we timing this ?
  */
-void runner_do_black_holes_ghost(struct runner *r, struct cell *c, int timer) {
+void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
+                                         int timer) {
 
   struct bpart *restrict bparts = c->black_holes.parts;
   const struct engine *e = r->e;
@@ -550,7 +551,7 @@ void runner_do_black_holes_ghost(struct runner *r, struct cell *c, int timer) {
   if (c->split) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
-        runner_do_black_holes_ghost(r, c->progeny[k], 0);
+        runner_do_black_holes_density_ghost(r, c->progeny[k], 0);
 
         /* Update h_max */
         h_max = max(h_max, c->progeny[k]->black_holes.h_max);
@@ -852,7 +853,7 @@ void runner_do_black_holes_ghost(struct runner *r, struct cell *c, int timer) {
 
   /* The ghost may not always be at the top level.
    * Therefore we need to update h_max between the super- and top-levels */
-  if (c->black_holes.ghost) {
+  if (c->black_holes.density_ghost) {
     for (struct cell *tmp = c->parent; tmp != NULL; tmp = tmp->parent) {
       atomic_max_d(&tmp->black_holes.h_max, h_max);
     }
@@ -4187,8 +4188,13 @@ void *runner_main(void *data) {
         case task_type_stars_ghost:
           runner_do_stars_ghost(r, ci, 1);
           break;
-        case task_type_bh_ghost:
-          runner_do_black_holes_ghost(r, ci, 1);
+        case task_type_bh_density_ghost:
+          runner_do_black_holes_density_ghost(r, ci, 1);
+          break;
+        case task_type_bh_swallow_ghost:
+#ifdef SWIFT_DEBUG_CHECKS
+          error("Calling implicit task!");
+#endif
           break;
         case task_type_drift_part:
           runner_do_drift_part(r, ci, 1);

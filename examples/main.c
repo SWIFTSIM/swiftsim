@@ -531,6 +531,7 @@ int main(int argc, char *argv[]) {
   if (with_mpole_reconstruction && nr_nodes > 1)
     error("Cannot reconstruct m-poles every step over MPI (yet).");
   if (with_limiter) error("Can't run with time-step limiter over MPI (yet)");
+  if (with_black_holes) error("Need to implement swallowing over MPI!");
 #endif
 
     /* Temporary early aborts for modes not supported with hand-vec. */

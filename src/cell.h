@@ -657,10 +657,16 @@ struct cell {
     struct task *black_holes_out;
 
     /*! The star ghost task itself */
-    struct task *ghost;
+    struct task *density_ghost;
+
+    /*! The star ghost task itself */
+    struct task *swallow_ghost;
 
     /*! Linked list of the tasks computing this cell's star density. */
     struct link *density;
+
+    /*! Linked list of the tasks computing this cell's star density. */
+    struct link *swallow;
 
     /*! Linked list of the tasks computing this cell's star feedback. */
     struct link *feedback;
