@@ -170,8 +170,11 @@ struct part {
     } force;
   };
 
-  /* Chemistry information */
+  /*! Chemistry information */
   struct chemistry_part_data chemistry_data;
+
+  /*! ID of the black hole swallowing this particle */
+  long long swallow_id;
 
   /*! Time-step length */
   timebin_t time_bin;
