@@ -219,6 +219,7 @@ SUBTYPES = [
     "sf_counts",
     "bpart",
     "bh_density",
+    "bh_swallow",
     "bh_feedback",
     "count",
 ]
@@ -275,6 +276,10 @@ FULLTYPES = [
     "pair/bh_density",
     "sub_self/bh_density",
     "sub_pair/bh_density",
+    "self/bh_swallow",
+    "pair/bh_swallow",
+    "sub_self/bh_swallow",
+    "sub_pair/bh_swallow",
     "self/bh_feedback",
     "pair/bh_feedback",
     "sub_self/bh_feedback",
