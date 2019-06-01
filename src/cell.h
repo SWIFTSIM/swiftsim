@@ -660,15 +660,19 @@ struct cell {
     struct task *density_ghost;
 
     /*! The star ghost task itself */
-    struct task *swallow_ghost;
+    struct task *swallow_ghost[2];
 
-    /*! Linked list of the tasks computing this cell's star density. */
+    /*! Linked list of the tasks computing this cell's BH density. */
     struct link *density;
 
-    /*! Linked list of the tasks computing this cell's star density. */
+    /*! Linked list of the tasks computing this cell's BH swallowing and
+     * merging. */
     struct link *swallow;
 
-    /*! Linked list of the tasks computing this cell's star feedback. */
+    /*! Linked list of the tasks processing the particles to swallow */
+    struct link *do_swallow;
+
+    /*! Linked list of the tasks computing this cell's BH feedback. */
     struct link *feedback;
 
     /*! Max smoothing length in this cell. */

@@ -135,6 +135,7 @@ SUBTYPES = [
     "bpart",
     "bh_density",
     "bh_swallow",
+    "do_swallow",
     "bh_feedback",
     "count",
 ]
