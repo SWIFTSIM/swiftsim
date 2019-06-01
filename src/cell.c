@@ -1887,6 +1887,7 @@ void cell_clean_links(struct cell *c, void *data) {
   c->stars.feedback = NULL;
   c->black_holes.density = NULL;
   c->black_holes.swallow = NULL;
+  c->black_holes.do_swallow = NULL;
   c->black_holes.feedback = NULL;
 }
 
@@ -3904,6 +3905,47 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     /* Nothing more to do here, all drifts activated above */
   }
 
+  /* Un-skip the swallow tasks involved with this cell. */
+  for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next) {
+    struct task *t = l->t;
+    struct cell *ci = t->ci;
+    struct cell *cj = t->cj;
+    const int ci_active = cell_is_active_black_holes(ci, e);
+    const int cj_active = (cj != NULL) ? cell_is_active_black_holes(cj, e) : 0;
+#ifdef WITH_MPI
+    const int ci_nodeID = ci->nodeID;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+#else
+    const int ci_nodeID = nodeID;
+    const int cj_nodeID = nodeID;
+#endif
+
+    if (t->type == task_type_self && ci_active) {
+      scheduler_activate(s, t);
+    }
+
+    else if (t->type == task_type_sub_self && ci_active) {
+      scheduler_activate(s, t);
+    }
+
+    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
+      /* We only want to activate the task if the cell is active and is
+         going to update some gas on the *local* node */
+      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
+          (ci_active || cj_active)) {
+        scheduler_activate(s, t);
+
+      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
+        scheduler_activate(s, t);
+
+      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
+        scheduler_activate(s, t);
+      }
+    }
+
+    /* Nothing more to do here, all drifts activated above */
+  }
+
   /* Un-skip the feedback tasks involved with this cell. */
   for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next) {
     struct task *t = l->t;
@@ -3949,8 +3991,10 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
   if (c->nodeID == nodeID && cell_is_active_black_holes(c, e)) {
     if (c->black_holes.density_ghost != NULL)
       scheduler_activate(s, c->black_holes.density_ghost);
-    if (c->black_holes.swallow_ghost != NULL)
-      scheduler_activate(s, c->black_holes.swallow_ghost);
+    if (c->black_holes.swallow_ghost[0] != NULL)
+      scheduler_activate(s, c->black_holes.swallow_ghost[0]);
+    if (c->black_holes.swallow_ghost[1] != NULL)
+      scheduler_activate(s, c->black_holes.swallow_ghost[1]);
     if (c->black_holes.black_holes_in != NULL)
       scheduler_activate(s, c->black_holes.black_holes_in);
     if (c->black_holes.black_holes_out != NULL)

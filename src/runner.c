@@ -3063,7 +3063,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       else { /* part is inactive */
 
         /* Count the number of inhibited particles */
-        if (part_is_inhibited(p, e)) inhibited++;
+        if (part_is_inhibited(p, e)) {
+          inhibited++;
+          continue;
+        }
 
         const integertime_t ti_end =
             get_integer_time_end(ti_current, p->time_bin);
@@ -3132,7 +3135,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         } else { /* gpart is inactive */
 
           /* Count the number of inhibited particles */
-          if (gpart_is_inhibited(gp, e)) g_inhibited++;
+          if (gpart_is_inhibited(gp, e)) {
+            g_inhibited++;
+            continue;
+          }
 
           const integertime_t ti_end =
               get_integer_time_end(ti_current, gp->time_bin);
@@ -3191,7 +3197,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       } else {
 
         /* Count the number of inhibited particles */
-        if (spart_is_inhibited(sp, e)) ++s_inhibited;
+        if (spart_is_inhibited(sp, e)) {
+          ++s_inhibited;
+          continue;
+        }
 
         const integertime_t ti_end =
             get_integer_time_end(ti_current, sp->time_bin);
@@ -3253,7 +3262,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       } else {
 
         /* Count the number of inhibited particles */
-        if (bpart_is_inhibited(bp, e)) ++b_inhibited;
+        if (bpart_is_inhibited(bp, e)) {
+          ++b_inhibited;
+          continue;
+        }
 
         const integertime_t ti_end =
             get_integer_time_end(ti_current, bp->time_bin);
@@ -3655,6 +3667,90 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
     }
   }
   if (timer) TIMER_TOC(timer_end_grav_force);
+}
+
+void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
+
+  const struct engine *e = r->e;
+  struct space *s = e->s;
+  struct bpart *bparts = s->bparts;
+  const size_t nr_bpart = s->nr_bparts;
+
+  struct part *parts = c->hydro.parts;
+  struct xpart *xparts = c->hydro.xparts;
+
+  /* Early abort? */
+  if (c->hydro.count == 0) {
+    return;
+  }
+
+  /* Loop over all the gas particles in the cell */
+  const size_t nr_parts = c->hydro.count;
+  for (size_t k = 0; k < nr_parts; k++) {
+
+    /* Get a handle on the part. */
+    struct part *const p = &parts[k];
+    struct xpart *const xp = &xparts[k];
+
+    /* Ignore inhibited particles */
+    if (part_is_inhibited(p, e)) continue;
+
+    /* Has this particle been flagged for swallowing? */
+    if (p->swallow_id != -1) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+      if (p->ti_drift != e->ti_current)
+        error("Trying to swallow an un-drifted particle.");
+#endif
+
+      /* ID of the BH swallowing this particle */
+      const long long BH_id = p->swallow_id;
+
+      /* Let's look for the hungry black hole */
+      for (size_t i = 0; i < nr_bpart; ++i) {
+
+        /* Get a handle on the bpart. */
+        struct bpart *bp = &bparts[i];
+
+        if (bp->id == BH_id) {
+
+          message("BH %lld removing particle %lld", bp->id, p->id);
+
+          lock_lock(&s->lock);
+
+          /* Get the current dynamical masses */
+          const float gas_mass = hydro_get_mass(p);
+          const float BH_mass = bp->mass;
+
+          /* Increase the dynamical mass of the BH. */
+          bp->mass += gas_mass;
+          bp->gpart->mass += gas_mass;
+
+          /* Update the BH momentum */
+          const float BH_mom[3] = {
+              BH_mass * bp->v[0] + gas_mass * xp->v_full[0],
+              BH_mass * bp->v[1] + gas_mass * xp->v_full[1],
+              BH_mass * bp->v[2] + gas_mass * xp->v_full[2]};
+
+          bp->v[0] = BH_mom[0] / bp->mass;
+          bp->v[1] = BH_mom[1] / bp->mass;
+          bp->v[2] = BH_mom[2] / bp->mass;
+          bp->gpart->v_full[0] = bp->v[0];
+          bp->gpart->v_full[1] = bp->v[1];
+          bp->gpart->v_full[2] = bp->v[2];
+
+          /* Finally, remove the gas particle from the system */
+          struct gpart *gp = p->gpart;
+          cell_remove_part(e, c, p, xp);
+          cell_remove_gpart(e, c, gp);
+
+          if (lock_unlock(&s->lock) != 0) error("Failed to unlock the space.");
+
+          break;
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -4075,6 +4171,8 @@ void *runner_main(void *data) {
             runner_doself_branch_bh_density(r, ci);
           else if (t->subtype == task_subtype_bh_swallow)
             runner_doself_branch_bh_swallow(r, ci);
+          else if (t->subtype == task_subtype_do_swallow)
+            runner_do_swallow(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_doself_branch_bh_feedback(r, ci);
           else
@@ -4102,7 +4200,10 @@ void *runner_main(void *data) {
             runner_dopair_branch_bh_density(r, ci, cj);
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dopair_branch_bh_swallow(r, ci, cj);
-          else if (t->subtype == task_subtype_bh_feedback)
+          else if (t->subtype == task_subtype_do_swallow) {
+            runner_do_swallow(r, ci, 1);
+            runner_do_swallow(r, cj, 1);
+          } else if (t->subtype == task_subtype_bh_feedback)
             runner_dopair_branch_bh_feedback(r, ci, cj);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
@@ -4127,6 +4228,8 @@ void *runner_main(void *data) {
             runner_dosub_self_bh_density(r, ci, 1);
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dosub_self_bh_swallow(r, ci, 1);
+          else if (t->subtype == task_subtype_do_swallow)
+            runner_do_swallow(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_self_bh_feedback(r, ci, 1);
           else
@@ -4152,7 +4255,10 @@ void *runner_main(void *data) {
             runner_dosub_pair_bh_density(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dosub_pair_bh_swallow(r, ci, cj, 1);
-          else if (t->subtype == task_subtype_bh_feedback)
+          else if (t->subtype == task_subtype_do_swallow) {
+            runner_do_swallow(r, ci, 1);
+            runner_do_swallow(r, cj, 1);
+          } else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_pair_bh_feedback(r, ci, cj, 1);
           else
             error("Unknown/invalid task subtype (%d).", t->subtype);
@@ -4191,7 +4297,8 @@ void *runner_main(void *data) {
         case task_type_bh_density_ghost:
           runner_do_black_holes_density_ghost(r, ci, 1);
           break;
-        case task_type_bh_swallow_ghost:
+        case task_type_bh_swallow_ghost1:
+        case task_type_bh_swallow_ghost2:
 #ifdef SWIFT_DEBUG_CHECKS
           error("Calling implicit task!");
 #endif

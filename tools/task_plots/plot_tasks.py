@@ -220,6 +220,7 @@ SUBTYPES = [
     "bpart",
     "bh_density",
     "bh_swallow",
+    "do_swallow",
     "bh_feedback",
     "count",
 ]
@@ -280,6 +281,10 @@ FULLTYPES = [
     "pair/bh_swallow",
     "sub_self/bh_swallow",
     "sub_pair/bh_swallow",
+    "self/do_swallow",
+    "pair/do_swallow",
+    "sub_self/do_swallow",
+    "sub_pair/do_swallow",
     "self/bh_feedback",
     "pair/bh_feedback",
     "sub_self/bh_feedback",
