@@ -1665,6 +1665,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     /* Self-interaction? */
     else if (t_type == task_type_self && t_subtype == task_subtype_density) {
 
+      const int bcount_i = ci->black_holes.count;
+
       /* Make the self-density tasks depend on the drift only. */
       scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
 
@@ -1689,7 +1691,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       /* The black hole feedback tasks */
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
         t_bh_density = scheduler_addtask(
             sched, task_type_self, task_subtype_bh_density, flags, 0, ci, NULL);
         t_bh_swallow = scheduler_addtask(
@@ -1710,7 +1712,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
       }
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
         engine_addlink(e, &ci->black_holes.swallow, t_bh_swallow);
         engine_addlink(e, &ci->black_holes.do_swallow, t_do_swallow);
@@ -1756,7 +1758,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             ci->hydro.super->stars.stars_out);
       }
 
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
 
         scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
                             t_bh_density);
@@ -1793,6 +1795,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     /* Otherwise, pair interaction? */
     else if (t_type == task_type_pair && t_subtype == task_subtype_density) {
 
+      const int bcount_i = ci->black_holes.count;
+      const int bcount_j = cj->black_holes.count;
+
       /* Make all density tasks depend on the drift */
       if (ci->nodeID == nodeID) {
         scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
@@ -1828,7 +1833,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       /* The black hole feedback tasks */
-      if (with_black_holes) {
+      if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         t_bh_density = scheduler_addtask(
             sched, task_type_pair, task_subtype_bh_density, flags, 0, ci, cj);
         t_bh_swallow = scheduler_addtask(
@@ -1851,7 +1856,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
       }
-      if (with_black_holes) {
+      if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
         engine_addlink(e, &cj->black_holes.density, t_bh_density);
         engine_addlink(e, &ci->black_holes.swallow, t_bh_swallow);
@@ -1929,7 +1934,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               ci->hydro.super->stars.stars_out);
         }
 
-        if (with_black_holes) {
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
                               t_bh_density);
@@ -1994,7 +1999,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->stars.stars_out);
           }
 
-          if (with_black_holes) {
+          if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
             scheduler_addunlock(sched, cj->hydro.super->black_holes.drift,
                                 t_bh_density);
@@ -2043,6 +2048,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_sub_self &&
              t_subtype == task_subtype_density) {
 
+      const int bcount_i = ci->black_holes.count;
+
       /* Make all density tasks depend on the drift and sorts. */
       scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
       scheduler_addunlock(sched, ci->hydro.super->hydro.sorts, t);
@@ -2068,7 +2075,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       /* The black hole feedback tasks */
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
         t_bh_density =
             scheduler_addtask(sched, task_type_sub_self,
                               task_subtype_bh_density, flags, 0, ci, NULL);
@@ -2094,7 +2101,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
       }
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
         engine_addlink(e, &ci->black_holes.swallow, t_bh_swallow);
         engine_addlink(e, &ci->black_holes.do_swallow, t_do_swallow);
@@ -2146,7 +2153,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             ci->hydro.super->stars.stars_out);
       }
 
-      if (with_black_holes) {
+      if (with_black_holes && bcount_i > 0) {
 
         scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
                             t_bh_density);
@@ -2185,6 +2192,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_sub_pair &&
              t_subtype == task_subtype_density) {
 
+      const int bcount_i = ci->black_holes.count;
+      const int bcount_j = cj->black_holes.count;
+
       /* Make all density tasks depend on the drift */
       if (ci->nodeID == nodeID) {
         scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
@@ -2220,7 +2230,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       /* The black hole feedback tasks */
-      if (with_black_holes) {
+      if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         t_bh_density =
             scheduler_addtask(sched, task_type_sub_pair,
                               task_subtype_bh_density, flags, 0, ci, cj);
@@ -2247,7 +2257,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
       }
-      if (with_black_holes) {
+      if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
         engine_addlink(e, &cj->black_holes.density, t_bh_density);
         engine_addlink(e, &ci->black_holes.swallow, t_bh_swallow);
@@ -2324,7 +2334,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               ci->hydro.super->stars.stars_out);
         }
 
-        if (with_black_holes) {
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
                               t_bh_density);
@@ -2391,7 +2401,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->stars.stars_out);
           }
 
-          if (with_black_holes) {
+          if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
             scheduler_addunlock(sched, cj->hydro.super->black_holes.drift,
                                 t_bh_density);
