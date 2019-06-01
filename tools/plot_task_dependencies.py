@@ -146,7 +146,7 @@ def taskIsBlackHoles(name):
     name: str
         Task name
     """
-    if "bh" in name or "bpart" or "swallow" in name:
+    if "bh" in name or "bpart" in name or "swallow" in name:
         return True
     return False
 
