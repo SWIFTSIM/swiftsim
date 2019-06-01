@@ -92,7 +92,8 @@ const char *taskID_names[task_type_count] = {"none",
                                              "bh_in",
                                              "bh_out",
                                              "bh_density_ghost",
-                                             "bh_swallow_ghost",
+                                             "bh_swallow_ghost1",
+                                             "bh_swallow_ghost2",
                                              "fof_self",
                                              "fof_pair"};
 
@@ -103,7 +104,7 @@ const char *subtaskID_names[task_subtype_count] = {
     "tend_gpart",    "tend_spart",     "tend_bpart",    "xv",
     "rho",           "gpart",          "multipole",     "spart",
     "stars_density", "stars_feedback", "sf_count",      "bpart",
-    "bh_density",    "bh_swallow",     "bh_feedback"};
+    "bh_density",    "bh_swallow",     "do_swallow",    "bh_feedback"};
 
 #ifdef WITH_MPI
 /* MPI communicators for the subtypes. */
@@ -198,6 +199,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
         case task_subtype_bh_density:
         case task_subtype_bh_feedback:
         case task_subtype_bh_swallow:
+        case task_subtype_do_swallow:
           return task_action_all;
           break;
 
@@ -720,6 +722,9 @@ void task_get_group_name(int type, int subtype, char *cluster) {
       break;
     case task_subtype_bh_swallow:
       strcpy(cluster, "BHSwallow");
+      break;
+    case task_subtype_do_swallow:
+      strcpy(cluster, "DoSwallow");
       break;
     case task_subtype_bh_feedback:
       strcpy(cluster, "BHFeedback");
