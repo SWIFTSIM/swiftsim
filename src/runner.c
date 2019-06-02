@@ -1110,8 +1110,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             /* Did we get a star? (Or did we run out of spare ones?) */
             if (sp != NULL) {
 
-              /* message("We formed a star id=%lld cellID=%d", sp->id,
-               * c->cellID); */
+              message("We formed a star id=%lld cellID=%d", sp->id, c->cellID);
 
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
@@ -3639,8 +3638,8 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
           /* Check that this gpart has interacted with all the other
            * particles (via direct or multipoles) in the box */
-          if (gp->num_interacted !=
-              e->total_nr_gparts - e->count_inhibited_gparts) {
+          if (0 && gp->num_interacted !=
+                       e->total_nr_gparts - e->count_inhibited_gparts) {
 
             /* Get the ID of the gpart */
             long long my_id = 0;
@@ -3671,7 +3670,7 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
 void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
-  const struct engine *e = r->e;
+  struct engine *e = r->e;
   struct space *s = e->s;
   struct bpart *bparts = s->bparts;
   const size_t nr_bpart = s->nr_bparts;
@@ -3679,78 +3678,94 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
   struct part *parts = c->hydro.parts;
   struct xpart *xparts = c->hydro.xparts;
 
-  /* Early abort? */
-  if (c->hydro.count == 0) {
+  /* Early abort?
+   * (We only want cells for which we drifted the gas as these are
+   * the only ones that could have gas particles that have been flagged
+   * for swallowing) */
+  if (c->hydro.count == 0 || c->hydro.ti_old_part != e->ti_current) {
     return;
   }
 
-  /* Loop over all the gas particles in the cell */
-  const size_t nr_parts = c->hydro.count;
-  for (size_t k = 0; k < nr_parts; k++) {
+  /* Loop over the progeny ? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++) {
+      if (c->progeny[k] != NULL) {
+        struct cell *restrict cp = c->progeny[k];
 
-    /* Get a handle on the part. */
-    struct part *const p = &parts[k];
-    struct xpart *const xp = &xparts[k];
-
-    /* Ignore inhibited particles */
-    if (part_is_inhibited(p, e)) continue;
-
-    /* Has this particle been flagged for swallowing? */
-    if (p->swallow_id != -1) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-      if (p->ti_drift != e->ti_current)
-        error("Trying to swallow an un-drifted particle.");
-#endif
-
-      /* ID of the BH swallowing this particle */
-      const long long BH_id = p->swallow_id;
-
-      /* Let's look for the hungry black hole */
-      for (size_t i = 0; i < nr_bpart; ++i) {
-
-        /* Get a handle on the bpart. */
-        struct bpart *bp = &bparts[i];
-
-        if (bp->id == BH_id) {
-
-          message("BH %lld removing particle %lld", bp->id, p->id);
-
-          lock_lock(&s->lock);
-
-          /* Get the current dynamical masses */
-          const float gas_mass = hydro_get_mass(p);
-          const float BH_mass = bp->mass;
-
-          /* Increase the dynamical mass of the BH. */
-          bp->mass += gas_mass;
-          bp->gpart->mass += gas_mass;
-
-          /* Update the BH momentum */
-          const float BH_mom[3] = {
-              BH_mass * bp->v[0] + gas_mass * xp->v_full[0],
-              BH_mass * bp->v[1] + gas_mass * xp->v_full[1],
-              BH_mass * bp->v[2] + gas_mass * xp->v_full[2]};
-
-          bp->v[0] = BH_mom[0] / bp->mass;
-          bp->v[1] = BH_mom[1] / bp->mass;
-          bp->v[2] = BH_mom[2] / bp->mass;
-          bp->gpart->v_full[0] = bp->v[0];
-          bp->gpart->v_full[1] = bp->v[1];
-          bp->gpart->v_full[2] = bp->v[2];
-
-          /* Finally, remove the gas particle from the system */
-          struct gpart *gp = p->gpart;
-          cell_remove_part(e, c, p, xp);
-          cell_remove_gpart(e, c, gp);
-
-          if (lock_unlock(&s->lock) != 0) error("Failed to unlock the space.");
-
-          break;
-        }
+        runner_do_swallow(r, cp, 0);
       }
     }
-  }
+  } else {
+
+    /* Loop over all the gas particles in the cell */
+    const size_t nr_parts = c->hydro.count;
+    for (size_t k = 0; k < nr_parts; k++) {
+
+      /* Get a handle on the part. */
+      struct part *const p = &parts[k];
+      struct xpart *const xp = &xparts[k];
+
+      /* Ignore inhibited particles */
+      if (part_is_inhibited(p, e)) continue;
+
+      /* Has this particle been flagged for swallowing? */
+      if (p->swallow_id != -1) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+        if (p->ti_drift != e->ti_current)
+          error("Trying to swallow an un-drifted particle.");
+#endif
+
+        /* ID of the BH swallowing this particle */
+        const long long BH_id = p->swallow_id;
+
+        /* Let's look for the hungry black hole */
+        for (size_t i = 0; i < nr_bpart; ++i) {
+
+          /* Get a handle on the bpart. */
+          struct bpart *bp = &bparts[i];
+
+          if (bp->id == BH_id) {
+
+            message("BH %lld removing particle %lld", bp->id, p->id);
+
+            lock_lock(&s->lock);
+
+            /* Get the current dynamical masses */
+            const float gas_mass = hydro_get_mass(p);
+            const float BH_mass = bp->mass;
+
+            /* Increase the dynamical mass of the BH. */
+            bp->mass += gas_mass;
+            bp->gpart->mass += gas_mass;
+
+            /* Update the BH momentum */
+            const float BH_mom[3] = {
+                BH_mass * bp->v[0] + gas_mass * xp->v_full[0],
+                BH_mass * bp->v[1] + gas_mass * xp->v_full[1],
+                BH_mass * bp->v[2] + gas_mass * xp->v_full[2]};
+
+            bp->v[0] = BH_mom[0] / bp->mass;
+            bp->v[1] = BH_mom[1] / bp->mass;
+            bp->v[2] = BH_mom[2] / bp->mass;
+            bp->gpart->v_full[0] = bp->v[0];
+            bp->gpart->v_full[1] = bp->v[1];
+            bp->gpart->v_full[2] = bp->v[2];
+
+            /* Finally, remove the gas particle from the system */
+            struct gpart *gp = p->gpart;
+            cell_remove_part(e, c, p, xp);
+            cell_remove_gpart(e, c, gp);
+
+            if (lock_unlock(&s->lock) != 0)
+              error("Failed to unlock the space.");
+
+            break;
+          }
+        } /* Loop over BHs */
+      }   /* Part was flagged for swallowing */
+    }     /* Loop over the parts */
+  }       /* Cell is not split */
 }
 
 /**
