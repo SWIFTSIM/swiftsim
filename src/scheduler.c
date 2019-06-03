@@ -1687,8 +1687,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
                           spart_mpi_type, t->ci->nodeID, t->flags,
                           subtaskMPI_comms[t->subtype], &t->req);
         } else if (t->subtype == task_subtype_bpart_xv ||
-		   t->subtype == task_subtype_bpart_rho ||
-		   t->subtype == task_subtype_bpart_swallow){
+                   t->subtype == task_subtype_bpart_rho ||
+                   t->subtype == task_subtype_bpart_swallow) {
           err = MPI_Irecv(t->ci->black_holes.parts, t->ci->black_holes.count,
                           bpart_mpi_type, t->ci->nodeID, t->flags,
                           subtaskMPI_comms[t->subtype], &t->req);
@@ -1824,8 +1824,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
                              spart_mpi_type, t->cj->nodeID, t->flags,
                              subtaskMPI_comms[t->subtype], &t->req);
         } else if (t->subtype == task_subtype_bpart_xv ||
-		   t->subtype == task_subtype_bpart_rho ||
-		   t->subtype == task_subtype_bpart_swallow) {
+                   t->subtype == task_subtype_bpart_rho ||
+                   t->subtype == task_subtype_bpart_swallow) {
           if ((t->ci->black_holes.count * sizeof(struct bpart)) >
               s->mpi_message_limit)
             err = MPI_Isend(t->ci->black_holes.parts, t->ci->black_holes.count,

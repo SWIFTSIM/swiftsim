@@ -322,7 +322,9 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
  * @param t_ti The recv_ti_end #task, if it has already been created.
  */
 void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
-                                      struct cell *cj, struct task *t_feedback,
+                                      struct cell *cj, struct task *t_xv,
+                                      struct task *t_rho,
+                                      struct task *t_swallow,
                                       struct task *t_ti) {
 
 #ifdef WITH_MPI
@@ -340,33 +342,50 @@ void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
   /* If so, attach send tasks. */
   if (l != NULL) {
 
-    if (t_feedback == NULL) {
+    if (t_xv == NULL) {
 
       /* Make sure this cell is tagged. */
       cell_ensure_tagged(ci);
 
       /* Create the tasks and their dependencies? */
-      //t_feedback = scheduler_addtask(s, task_type_send, task_subtype_bpart,
-      //                               ci->mpi.tag, 0, ci, cj);
+      t_xv = scheduler_addtask(s, task_type_send, task_subtype_bpart_xv,
+                               ci->mpi.tag, 0, ci, cj);
+
+      t_rho = scheduler_addtask(s, task_type_send, task_subtype_bpart_rho,
+                                ci->mpi.tag, 0, ci, cj);
+
+      t_swallow =
+          scheduler_addtask(s, task_type_send, task_subtype_bpart_swallow,
+                            ci->mpi.tag, 0, ci, cj);
 
       t_ti = scheduler_addtask(s, task_type_send, task_subtype_tend_bpart,
                                ci->mpi.tag, 0, ci, cj);
 
-      /* The send_black_holes task should unlock the super_cell's kick task. */
-      scheduler_addunlock(s, t_feedback,
+      /* The send_black_holes task should unlock the super_cell's BH exit point
+       * task. */
+      scheduler_addunlock(s, t_swallow,
                           ci->hydro.super->black_holes.black_holes_out);
 
+      scheduler_addunlock(s, ci->hydro.super->black_holes.swallow_ghost[1],
+                          t_swallow);
+
       /* Ghost before you send */
-      scheduler_addunlock(s, ci->hydro.super->black_holes.density_ghost,
-                          t_feedback);
+      scheduler_addunlock(s, ci->hydro.super->black_holes.density_ghost, t_xv);
+      scheduler_addunlock(s, t_xv,
+                          ci->hydro.super->black_holes.swallow_ghost[0]);
 
       /* Drift before you send */
-      scheduler_addunlock(s, ci->hydro.super->black_holes.drift, t_feedback);
+      scheduler_addunlock(s, ci->hydro.super->black_holes.swallow_ghost[0],
+                          t_rho);
+      scheduler_addunlock(s, t_rho,
+                          ci->hydro.super->black_holes.swallow_ghost[1]);
 
       scheduler_addunlock(s, ci->super->timestep, t_ti);
     }
 
-    engine_addlink(e, &ci->mpi.send, t_feedback);
+    engine_addlink(e, &ci->mpi.send, t_xv);
+    engine_addlink(e, &ci->mpi.send, t_rho);
+    engine_addlink(e, &ci->mpi.send, t_swallow);
     engine_addlink(e, &ci->mpi.send, t_ti);
   }
 
@@ -374,8 +393,8 @@ void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
   if (ci->split)
     for (int k = 0; k < 8; k++)
       if (ci->progeny[k] != NULL)
-        engine_addtasks_send_black_holes(e, ci->progeny[k], cj, t_feedback,
-                                         t_ti);
+        engine_addtasks_send_black_holes(e, ci->progeny[k], cj, t_xv, t_rho,
+                                         t_swallow, t_ti);
 
 #else
   error("SWIFT was not compiled with MPI support.");
@@ -576,14 +595,15 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
  * @param t_ti The recv_ti_end #task, if it has already been created.
  */
 void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
-                                      struct task *t_feedback,
+                                      struct task *t_xv, struct task *t_rho,
+                                      struct task *t_swallow,
                                       struct task *t_ti) {
 
 #ifdef WITH_MPI
   struct scheduler *s = &e->sched;
 
   /* Have we reached a level where there are any black_holes tasks ? */
-  if (t_feedback == NULL && c->black_holes.density != NULL) {
+  if (t_xv == NULL && c->black_holes.density != NULL) {
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure this cell has a valid tag. */
@@ -591,15 +611,23 @@ void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
 #endif  // SWIFT_DEBUG_CHECKS
 
     /* Create the tasks. */
-    //t_feedback = scheduler_addtask(s, task_type_recv, task_subtype_bpart,
-    //                               c->mpi.tag, 0, c, NULL);
+    t_xv = scheduler_addtask(s, task_type_recv, task_subtype_bpart_xv,
+                             c->mpi.tag, 0, c, NULL);
+
+    t_rho = scheduler_addtask(s, task_type_recv, task_subtype_bpart_rho,
+                              c->mpi.tag, 0, c, NULL);
+
+    t_swallow = scheduler_addtask(s, task_type_recv, task_subtype_bpart_swallow,
+                                  c->mpi.tag, 0, c, NULL);
 
     t_ti = scheduler_addtask(s, task_type_recv, task_subtype_tend_bpart,
                              c->mpi.tag, 0, c, NULL);
   }
 
-  if (t_feedback != NULL) {
-    engine_addlink(e, &c->mpi.recv, t_feedback);
+  if (t_xv != NULL) {
+    engine_addlink(e, &c->mpi.recv, t_xv);
+    engine_addlink(e, &c->mpi.recv, t_rho);
+    engine_addlink(e, &c->mpi.recv, t_swallow);
     engine_addlink(e, &c->mpi.recv, t_ti);
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -607,11 +635,19 @@ void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
 #endif
 
     for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
-      scheduler_addunlock(s, l->t, t_feedback);
+      scheduler_addunlock(s, l->t, t_xv);
     }
 
+    for (struct link *l = c->black_holes.swallow; l != NULL; l = l->next) {
+      scheduler_addunlock(s, t_xv, l->t);
+      scheduler_addunlock(s, l->t, t_rho);
+    }
+    for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next) {
+      scheduler_addunlock(s, t_rho, l->t);
+      scheduler_addunlock(s, l->t, t_swallow);
+    }
     for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next) {
-      scheduler_addunlock(s, t_feedback, l->t);
+      scheduler_addunlock(s, t_swallow, l->t);
       scheduler_addunlock(s, l->t, t_ti);
     }
   }
@@ -620,7 +656,8 @@ void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
   if (c->split)
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL)
-        engine_addtasks_recv_black_holes(e, c->progeny[k], t_feedback, t_ti);
+        engine_addtasks_recv_black_holes(e, c->progeny[k], t_xv, t_rho,
+                                         t_swallow, t_ti);
 
 #else
   error("SWIFT was not compiled with MPI support.");
@@ -2622,8 +2659,8 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
      * connection. */
     if ((e->policy & engine_policy_black_holes) &&
         (type & proxy_cell_type_hydro))
-      engine_addtasks_send_black_holes(e, ci, cj, /*t_feedback=*/NULL,
-                                       /*t_ti=*/NULL);
+      engine_addtasks_send_black_holes(e, ci, cj, /*t_xv=*/NULL, /*t_rho=*/NULL,
+                                       /*t_swallow=*/NULL, /*t_ti=*/NULL);
 
     /* Add the send tasks for the cells in the proxy that have a gravity
      * connection. */
@@ -2661,7 +2698,8 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
      * connection. */
     if ((e->policy & engine_policy_black_holes) &&
         (type & proxy_cell_type_hydro))
-      engine_addtasks_recv_black_holes(e, ci, NULL, NULL);
+      engine_addtasks_recv_black_holes(e, ci, /*t_xv=*/NULL, /*t_rho=*/NULL,
+                                       /*t_swallow=*/NULL, /*t_ti=*/NULL);
 
     /* Add the recv tasks for the cells in the proxy that have a gravity
      * connection. */
