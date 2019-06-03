@@ -55,13 +55,13 @@ struct initial_mass_function {
 struct lifetime {
 
   /*! Coefficients for the log10(m)^2 term */
-  float a_m2[3];
+  float quadratic[3];
 
   /*! Coefficients for the log10(m) term */
-  float b_m[3];
+  float linear[3];
 
   /*! Coefficients for the constant term */
-  float c[3];
+  float constant[3];
 };
 
 /**

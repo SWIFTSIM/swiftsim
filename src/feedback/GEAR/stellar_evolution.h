@@ -39,14 +39,14 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lif
   // TODO units
 
   /* Compute quadratic term */
-  const float a_m2 = (life->a_m2[0] * metallicity + life->a_m2[1]) * metallicity + life->a_m2[2];
+  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
   /* Compute linear term */
-  const float b_m = (life->b_m[0] * metallicity + life->b_m[1]) * metallicity + life->b_m[2];
+  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
   /* Compute constant term */
-  const float c = (life->c[0] * metallicity + life->c[1]) * metallicity + life->c[2];
+  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
   /* Compute lifetime */
-  return (a_m2 * log_mass + b_m) * log_mass + c;
+  return (quadratic * log_mass + linear) * log_mass + constant;
 }
 
 /**
@@ -64,24 +64,32 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
   // TODO units
 
   /* Compute quadratic term */
-  const float a_m2 = (life->a_m2[0] * metallicity + life->a_m2[1]) * metallicity + life->a_m2[2];
+  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
   /* Compute linear term */
-  const float b_m = (life->b_m[0] * metallicity + life->b_m[1]) * metallicity + life->b_m[2];
+  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
   /* Compute constant term */
-  const float c = (life->c[0] * metallicity + life->c[1]) * metallicity + life->c[2];
+  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
   /* Compute the "c" with the time */
-  const float c_t = c - log_time;
+  const float c_t = constant - log_time;
 
   /* Use the quadratic formula to find the mass */
-  if (a_m2 != 0) {
-    return (-b_m - sqrt(b_m * b_m - 4 * a_m2 * c_t)) / (2. * a_m2);
+  if (quadratic != 0) {
+    return (-linear - sqrt(linear * linear - 4 * quadratic * c_t)) / (2. * quadratic);
   }
   else {
-    return - c_t / b_m;
+    return - c_t / linear;
   }
 }
 
+/**
+ * @brief Compute the mass fraction of the initial mass function.
+ *
+ * @param imf The #initial_mass_function.
+ * @param m The mass to evaluate.
+ *
+ * @return The mass fraction.
+ */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
     const struct initial_mass_function *imf, float m) {
 
@@ -101,12 +109,100 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
 	m, imf->mass_max);
 };
 
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_number_integrated_imf(void) {
-  return 0.;
+/**
+ * @brief Compute the fraction of stars (in number) in a given range of mass.
+ *
+ * @param imf The #initial_mass_function.
+ * @param m1 The lowest mass.
+ * @param m2 The largest mass.
+ *
+ * @return The fraction stars in the interval (in number).
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_number(
+    const struct initial_mass_function *imf, float m1, float m2) {
+  error("This has not been tested");
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > imf->mass_max || m1 < imf->mass_min)
+    error("Mass 1 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m1, imf->mass_max);
+
+  if (m2 > imf->mass_max || m2 < imf->mass_min)
+    error("Mass 2 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m2, imf->mass_max);
+  
+  if (m1 > m2)
+    error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
+#endif
+
+  float n = 0.;
+
+  for(int i = 0; i < imf->n_parts; i++) {
+    /* Are we above the lowest mass? */
+    if (m1 > imf->mass_limits[i+1])
+      continue;
+
+    /* Are we after the above the largest mass? */
+    if (m2 < imf->mass_limits[i+1])
+      break;
+
+    /* Get integral limits. */
+    const float mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
+    const float mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
+    const float exp = imf->exp[i];
+
+    /* Compute the contribution of the current part. */
+    n += imf->coef[i] * (pow(mass_max, exp) - pow(mass_min, exp)) / exp;
+  }
+
+  return n;
 };
 
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_mass_integrated_imf(void) {
-  return 0.;
+/**
+ * @brief Compute the fraction of stars (in mass) in a given range of mass.
+ *
+ * @param imf The #initial_mass_function.
+ * @param m1 The lowest mass.
+ * @param m2 The largest mass.
+ *
+ * @return The fraction stars in the interval (in mass).
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_mass(
+    const struct initial_mass_function *imf, float m1, float m2) {
+  error("This has not been tested");
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > imf->mass_max || m1 < imf->mass_min)
+    error("Mass 1 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m1, imf->mass_max);
+
+  if (m2 > imf->mass_max || m2 < imf->mass_min)
+    error("Mass 2 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m2, imf->mass_max);
+  
+  if (m1 > m2)
+    error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
+#endif
+
+  float mass = 0.;
+
+  for(int i = 0; i < imf->n_parts; i++) {
+    /* Are we above the lowest mass? */
+    if (m1 > imf->mass_limits[i+1])
+      continue;
+
+    /* Are we after the above the largest mass? */
+    if (m2 < imf->mass_limits[i+1])
+      break;
+
+    /* Get integral limits. */
+    const float mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
+    const float mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
+    const float exp = imf->exp[i] + 1.;
+
+    /* Compute the contribution of the current part. */
+    mass += imf->coef[i] * (pow(mass_max, exp) - pow(mass_min, exp)) / exp;
+  }
+
+  return mass;
 };
 
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_supernovae_ia_rate(void) {
