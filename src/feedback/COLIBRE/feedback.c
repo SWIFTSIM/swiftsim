@@ -697,6 +697,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   /* From starburst 99 */ 
   const double p1    = props->p1;    /* g cm s^-1 Mo^-1 */
+  const double p2    = props->p2;    /* Metallicity mass faction*/
+  const double p3    = props->p3;    /* exponent of metallicity*/
   const double tw    = props->tw;    /* Myr */
   double delta_v     = props->delta_v;   /* km s^-1 */
   
@@ -731,9 +733,14 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   const double mstr_in_Msun = sp->mass_init * (us->UnitMass_in_cgs / Msun_in_g);
   const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs;
 
+  double zstr = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+
+  if(zstr <= 0.001) zstr = 0.001; /* minimum metallicity in SB99 is 0.001 */
+  if(zstr >= 0.04) zstr = 0.04;   /* maximum metallicity in SB99 is 0.04 */
+
   /* put everything in same units */
   const double tw_cgs      = tw * Myr_in_sec; 
-  const double p1_cgs      = p1 * mstr_in_Msun; 
+  const double p1_cgs      = p1 * mstr_in_Msun * pow( zstr / p2, p3); /*Taken from Agertz et al. 2012 */
   const double dp_dt_cgs   = p1_cgs / tw_cgs;
   const double delta_v_cgs = delta_v * 1e5;
   
@@ -998,6 +1005,10 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:SNII_energy_fraction_n_Z");
   fp->p1 =
       parser_get_param_double(params, "COLIBREFeedback:Momentum_per_StellarMass");
+  fp->p2 =
+      parser_get_param_double(params, "COLIBREFeedback:Momentum_Metallicity_norm");
+  fp->p3 =
+      parser_get_param_double(params, "COLIBREFeedback:Momentum_Metallicity_exponent");
   fp->tw =
       parser_get_param_double(params, "COLIBREFeedback:Momentum_time_scale");
   fp->delta_v =

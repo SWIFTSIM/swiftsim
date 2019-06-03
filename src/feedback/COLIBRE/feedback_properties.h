@@ -236,6 +236,12 @@ struct feedback_props {
   /* Momentum in cgs per unit solar mass g cm s^-1 Mo^-1 */
   double p1;
 
+  /* Metallicity Normalization of the momentum injection.*/
+  double p2;
+
+  /* Exponent of the metalliticy dependence of the momentum injection*/
+  double p3;
+
   /* Timescale above which stars no longer inject momentum */
   double tw;
 
