@@ -717,7 +717,6 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   /* Prevent star particle from injecting momentum for longer than tw */
   float dt_new = dt;
   if(star_age_Myr + dt_Myr > tw){
-    continue;
     dt_new = (tw - star_age_Myr) * Myr_in_s / us->UnitTime_in_cgs;
     dt_cgs = dt_new * us->UnitTime_in_cgs;
   }
