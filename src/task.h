@@ -117,7 +117,6 @@ enum task_subtypes {
   task_subtype_stars_density,
   task_subtype_stars_feedback,
   task_subtype_sf_counts,
-  task_subtype_bpart_xv,
   task_subtype_bpart_rho,
   task_subtype_bpart_swallow,
   task_subtype_bpart_feedback,
