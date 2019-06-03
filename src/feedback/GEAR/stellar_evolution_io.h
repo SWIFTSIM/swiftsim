@@ -22,6 +22,11 @@
 #include "stellar_evolution_struct.h"
 
 
+/**
+ * @brief Compute the coefficients of the initial mass function.
+ *
+ * @param imf The #initial_mass_function.
+ */
 __attribute__((always_inline)) INLINE static void stellar_evolution_compute_initial_mass_function_coefficients(
     struct initial_mass_function *imf) {
   /* Allocate memory */
@@ -54,6 +59,14 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_init
 
 }
 
+/**
+ * @brief Initialize the initial mass function.
+ *
+ * @param imf The #initial_mass_function.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
 __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial_mass_function(
     struct initial_mass_function* imf, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
@@ -85,7 +98,28 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial
 
 }
 
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime(void) {}
+/**
+ * @brief Inititialize the Lifetime.
+ *
+ * @param lt The #lifetime.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime(
+    struct lifetime* lt, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read quadratic terms */
+  parser_get_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
+
+  /* Read linear terms */
+  parser_get_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
+
+  /* Read constant terms */
+  parser_get_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
+  
+}
 
 __attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia(void) {}
 
@@ -112,7 +146,8 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
     us, params);
 
   /* Initialize the lifetime model */
-  stellar_evolution_init_lifetime();
+  stellar_evolution_init_lifetime(&sm->lifetime, phys_const,
+    us, params);
 
   /* Initialize the supernovae Ia model */
   stellar_evolution_init_supernovae_ia();
