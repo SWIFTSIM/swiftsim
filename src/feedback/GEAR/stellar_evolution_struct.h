@@ -39,7 +39,7 @@ struct initial_mass_function {
   float *coef;
 
   /*! Number of parts in the function */
-  float n_parts;
+  int n_parts;
 
   /*! Minimal mass contained in mass_limits, copied for more clarity*/
   float mass_min;

@@ -818,7 +818,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_grackle(
 
   /* molecular network with H, He, D
    From Cloudy table */
-  chemistry->primordial_chemistry = COOLING_GRACKLE_MODE;
+  chemistry->primordial_chemistry = cooling->primordial_chemistry;
   chemistry->metal_cooling = cooling->with_metal_cooling;
   chemistry->UVbackground = cooling->with_uv_background;
   chemistry->grackle_data_file = cooling->cloudy_table;
