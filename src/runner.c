@@ -3705,6 +3705,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       struct part *const p = &parts[k];
       struct xpart *const xp = &xparts[k];
 
+      /* if (p->id == 7296358176571LL) */
+      /* 	message("Found particle %lld on rank %d", */
+      /* 		p->id, engine_rank); */
+
       /* Ignore inhibited particles */
       if (part_is_inhibited(p, e)) continue;
 
@@ -3719,6 +3723,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
         /* ID of the BH swallowing this particle */
         const long long BH_id = p->swallow_id;
 
+        /* Have we found this Bh already? */
+        int found = 0;
+
         /* Let's look for the hungry black hole */
         for (size_t i = 0; i < nr_bpart; ++i) {
 
@@ -3726,8 +3733,6 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
           struct bpart *bp = &bparts[i];
 
           if (bp->id == BH_id) {
-
-            message("BH %lld removing particle %lld", bp->id, p->id);
 
             lock_lock(&s->lock);
 
@@ -3740,10 +3745,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->mass += gas_mass;
 
             /* Update the BH momentum */
-            const float BH_mom[3] = {
-                BH_mass * bp->v[0] + gas_mass * xp->v_full[0],
-                BH_mass * bp->v[1] + gas_mass * xp->v_full[1],
-                BH_mass * bp->v[2] + gas_mass * xp->v_full[2]};
+            const float BH_mom[3] = {BH_mass * bp->v[0] + gas_mass * p->v[0],
+                                     BH_mass * bp->v[1] + gas_mass * p->v[1],
+                                     BH_mass * bp->v[2] + gas_mass * p->v[2]};
 
             bp->v[0] = BH_mom[0] / bp->mass;
             bp->v[1] = BH_mom[1] / bp->mass;
@@ -3752,20 +3756,68 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[1] = bp->v[1];
             bp->gpart->v_full[2] = bp->v[2];
 
-            /* Finally, remove the gas particle from the system */
-            struct gpart *gp = p->gpart;
-            cell_remove_part(e, c, p, xp);
-            cell_remove_gpart(e, c, gp);
+            message("BH %lld swallowing particle %lld", bp->id, p->id);
+
+            /* If the gas particle is local, remove it */
+            if (c->nodeID == e->nodeID) {
+
+              message("BH %lld removing particle %lld", bp->id, p->id);
+
+              /* Finally, remove the gas particle from the system */
+              struct gpart *gp = p->gpart;
+              cell_remove_part(e, c, p, xp);
+              cell_remove_gpart(e, c, gp);
+            }
 
             if (lock_unlock(&s->lock) != 0)
               error("Failed to unlock the space.");
 
+            found = 1;
             break;
           }
-        } /* Loop over BHs */
-      }   /* Part was flagged for swallowing */
-    }     /* Loop over the parts */
-  }       /* Cell is not split */
+        } /* Loop over local BHs */
+
+#ifdef WITH_MPI
+
+        /* We could also be in the case of a local gas particle being
+         * swallowed by a foreign BH. In this case, we won't update the
+         * BH but just remove the particle from the local list. */
+        if (c->nodeID == e->nodeID && !found) {
+
+          /* Let's look for the foreign hungry black hole */
+          for (size_t i = 0; i < s->nr_bparts_foreign; ++i) {
+
+            /* Get a handle on the bpart. */
+            struct bpart *bp = &s->bparts_foreign[i];
+
+            if (bp->id == BH_id) {
+
+              message("BH %lld removing particle %lld (foreign BH case)",
+                      bp->id, p->id);
+
+              /* Finally, remove the gas particle from the system */
+              struct gpart *gp = p->gpart;
+              cell_remove_part(e, c, p, xp);
+              cell_remove_gpart(e, c, gp);
+
+              found = 1;
+              break;
+            }
+
+          } /* Loop over foreign BHs */
+        }   /* Is the cell local? */
+#endif
+
+        /* If we have a local particle, we must have found the BH in one
+         * of our list of black holes. */
+        if (c->nodeID == e->nodeID && !found) {
+          error("Gas particle %lld could not find BH %lld to be swallowed",
+                p->id, p->swallow_id);
+        }
+
+      } /* Part was flagged for swallowing */
+    }   /* Loop over the parts */
+  }     /* Cell is not split */
 }
 
 /**

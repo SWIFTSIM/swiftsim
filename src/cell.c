@@ -2905,20 +2905,16 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
     }
 
     /* Otherwise, activate the drifts. */
-    else {
-      if (cell_is_active_black_holes(ci, e)) {
+    else if (cell_is_active_black_holes(ci, e) ||
+             cell_is_active_black_holes(cj, e)) {
 
-        /* Activate the drifts if the cells are local. */
-        if (ci->nodeID == engine_rank) cell_activate_drift_bpart(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
-      }
+      /* Activate the drifts if the cells are local. */
+      if (ci->nodeID == engine_rank) cell_activate_drift_bpart(ci, s);
+      if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
 
-      if (cell_is_active_black_holes(cj, e)) {
-
-        /* Activate the drifts if the cells are local. */
-        if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_bpart(cj, s);
-      }
+      /* Activate the drifts if the cells are local. */
+      if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
+      if (cj->nodeID == engine_rank) cell_activate_drift_bpart(cj, s);
     }
   } /* Otherwise, pair interation */
 }
