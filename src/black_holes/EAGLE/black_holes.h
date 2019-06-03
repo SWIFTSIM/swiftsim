@@ -74,6 +74,9 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->num_ngb_density = 0;
 #endif
 
+  if (bp->id == 4527799525197LL)
+    message("Black holes %lld is on rank %d", bp->id, engine_rank);
+
   bp->density.wcount = 0.f;
   bp->density.wcount_dh = 0.f;
   bp->rho_gas = 0.f;

@@ -402,30 +402,21 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       }
 
       /* Black_Holes density */
-      else if ((t_subtype == task_subtype_bh_density) &&
+      else if ((t_subtype == task_subtype_bh_density ||
+                t_subtype == task_subtype_bh_swallow ||
+                t_subtype == task_subtype_do_swallow ||
+                t_subtype == task_subtype_bh_feedback) &&
                (ci_active_black_holes || cj_active_black_holes) &&
                (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
 
         scheduler_activate(s, t);
 
         /* Set the correct sorting flags */
-        if (t_type == task_type_pair) {
-
-          /* Do ci */
-          if (ci_active_black_holes) {
-
-            /* Activate the drift tasks. */
-            if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
-            if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
-          }
-
-          /* Do cj */
-          if (cj_active_black_holes) {
-
-            /* Activate the drift tasks. */
-            if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
-            if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
-          }
+        if (t_type == task_type_pair && t_subtype == task_subtype_bh_density) {
+          if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
+          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+          if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+          if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
         }
 
         /* Store current values of dx_max and h_max. */
@@ -435,71 +426,71 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
-      /* Black holes swallowing */
-      else if (t_subtype == task_subtype_bh_swallow) {
+      /* /\* Black holes swallowing *\/ */
+      /* else if (t_subtype == task_subtype_bh_swallow) { */
 
-        /* We only want to activate the task if the cell is active and is
-           going to update some gas on the *local* node */
-        if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-            (ci_active_black_holes || cj_active_black_holes)) {
+      /*   /\* We only want to activate the task if the cell is active and is */
+      /*      going to update some gas on the *local* node *\/ */
+      /*   if ((ci_nodeID == nodeID && cj_nodeID == nodeID) && */
+      /*       (ci_active_black_holes || cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_black_holes)) {
+      /*   } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && */
+      /*              (cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_black_holes)) {
+      /*   } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && */
+      /*              (ci_active_black_holes)) { */
 
-          scheduler_activate(s, t);
-        }
-      }
+      /*     scheduler_activate(s, t); */
+      /*   } */
+      /* } */
 
-      /* Black holes swallowing */
-      else if (t_subtype == task_subtype_do_swallow) {
+      /* /\* Black holes swallowing *\/ */
+      /* else if (t_subtype == task_subtype_do_swallow) { */
 
-        /* We only want to activate the task if the cell is active and is
-           going to update some gas on the *local* node */
-        if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-            (ci_active_black_holes || cj_active_black_holes)) {
+      /*   /\* We only want to activate the task if the cell is active and is */
+      /*      going to update some gas on the *local* node *\/ */
+      /*   if ((ci_nodeID == nodeID && cj_nodeID == nodeID) && */
+      /*       (ci_active_black_holes || cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_black_holes)) {
+      /*   } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && */
+      /*              (cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_black_holes)) {
+      /*   } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && */
+      /*              (ci_active_black_holes)) { */
 
-          scheduler_activate(s, t);
-        }
-      }
+      /*     scheduler_activate(s, t); */
+      /*   } */
+      /* } */
 
-      /* Black holes feedback */
-      else if (t_subtype == task_subtype_bh_feedback) {
+      /* /\* Black holes feedback *\/ */
+      /* else if (t_subtype == task_subtype_bh_feedback) { */
 
-        /* We only want to activate the task if the cell is active and is
-           going to update some gas on the *local* node */
-        if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-            (ci_active_black_holes || cj_active_black_holes)) {
+      /*   /\* We only want to activate the task if the cell is active and is */
+      /*      going to update some gas on the *local* node *\/ */
+      /*   if ((ci_nodeID == nodeID && cj_nodeID == nodeID) && */
+      /*       (ci_active_black_holes || cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_black_holes)) {
+      /*   } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && */
+      /*              (cj_active_black_holes)) { */
 
-          scheduler_activate(s, t);
+      /*     scheduler_activate(s, t); */
 
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_black_holes)) {
+      /*   } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && */
+      /*              (ci_active_black_holes)) { */
 
-          scheduler_activate(s, t);
-        }
-      }
+      /*     scheduler_activate(s, t); */
+      /*   } */
+      /* } */
 
       /* Gravity */
       else if ((t_subtype == task_subtype_grav) &&
