@@ -38,6 +38,9 @@ struct cooling_function_data {
   /* Enable/Disable UV backgroud */
   int with_uv_background;
 
+  /* Chemistry network */
+  int primordial_chemistry;
+
   /* Redshift to use for the UV backgroud (-1 to use cosmological one) */
   double redshift;
 

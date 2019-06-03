@@ -443,3 +443,8 @@ EAGLEAGN:
   max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
   threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
   threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
+
+GEARInitialMassFunction:
+  number_function_part: 4                           # (Optional) Number of part in the IMF
+  exponents: [0.7, -0.8, -1.7, -1.3]                # (Optional) Exponent of the IMF
+  mass_limits: [0.05, 0.08, 0.5, 1.0, 50.]          # (Optional) Mass limits of each part of the IMF
