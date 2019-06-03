@@ -3756,7 +3756,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[1] = bp->v[1];
             bp->gpart->v_full[2] = bp->v[2];
 
-            message("BH %lld swallowing particle %lld", bp->id, p->id);
+            message("BH %lld swallowing particle %lld gas_mass=%e new_mass=%e",
+                    bp->id, p->id, gas_mass, bp->mass);
 
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
@@ -3860,6 +3861,10 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
       time_bin_min = min(time_bin_min, parts[k].time_bin);
       time_bin_max = max(time_bin_max, parts[k].time_bin);
       h_max = max(h_max, parts[k].h);
+
+      if (parts[k].swallow_id != -1)
+        message("Received particle %lld with swallow_id=%lld", parts[k].id,
+                parts[k].swallow_id);
     }
 
     /* Convert into a time */
@@ -4440,6 +4445,9 @@ void *runner_main(void *data) {
           } else if (t->subtype == task_subtype_rho) {
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_gradient) {
+            runner_do_recv_part(r, ci, 0, 1);
+          } else if (t->subtype == task_subtype_part_swallow) {
+            // message("OOOO");
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_limiter) {
             runner_do_recv_part(r, ci, 0, 1);
