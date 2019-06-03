@@ -21,6 +21,77 @@
 
 #include "stellar_evolution_struct.h"
 
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_compute_initial_mass_function_coefficients(
+    struct initial_mass_function *imf) {
+  /* Allocate memory */
+  if ((imf->coef = (float *)malloc(sizeof(float) * imf->n_parts)) ==
+      NULL)
+    error("Failed to allocate the IMF coefficients.");
+
+  /* Suppose that the first coefficients is 1 (will be corrected later) */
+  imf->coef[0] = 1.;
+
+  /* Use the criterion of continuity for the IMF */
+  for(int i = 1; i < imf->n_parts; i++) {
+    float exp = imf->exp[i-1] - imf->exp[i];
+    imf->coef[i] = imf->coef[i-1] * pow(imf->mass_limits[i], exp);
+  }
+
+  /* Use the criterion on the integral = 1 */
+  float integral = 0;
+  for(int i = 0; i < imf->n_parts; i++) {
+    const float exp = imf->exp[i] + 1.;
+    const float m_i = pow(imf->mass_limits[i], exp);
+    const float m_i1 = pow(imf->mass_limits[i+1], exp);
+    integral += imf->coef[i] * (m_i1 - m_i)/ exp;
+  }
+
+  /* Normalize the coefficients (fix initial supposition) */
+  for(int i = 0; i < imf->n_parts; i++) {
+    imf->coef[i] /= integral;
+  }
+
+}
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_initial_mass_function(
+    struct initial_mass_function* imf, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read the number of elements */
+  imf->n_parts = parser_get_param_int(params, "GEARInitialMassFunction:number_function_part");
+
+  /* Read the exponents */
+  if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) ==
+      NULL)
+    error("Failed to allocate the IMF exponents.");
+
+  parser_get_param_float_array(params, "GEARInitialMassFunction:exponents", imf->n_parts, imf->exp);
+
+  /* Read the mass limits */
+  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
+      NULL)
+    error("Failed to allocate the IMF temporary masses.");
+
+  parser_get_param_float_array(params, "GEARInitialMassFunction:mass_limits",
+			       imf->n_parts + 1, imf->mass_limits);
+
+  /* Write the masses in the correct attributes */
+  imf->mass_min = imf->mass_limits[0];
+  imf->mass_max = imf->mass_limits[imf->n_parts];
+
+  /* Compute the coefficients */
+  stellar_evolution_compute_initial_mass_function_coefficients(imf);
+
+}
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime(void) {}
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia(void) {}
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ii(void) {}
+
+
 /**
  * @brief Initialize the global properties of the stellar evolution scheme.
  *
@@ -37,7 +108,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
     const struct cosmology* cosmo) {
 
   /* Initialize the initial mass function */
-  stellar_evolution_init_initial_mass_function(sm->imf, phys_const,
+  stellar_evolution_init_initial_mass_function(&sm->imf, phys_const,
     us, params);
 
   /* Initialize the lifetime model */
@@ -50,75 +121,5 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   stellar_evolution_init_supernovae_ii();
 
 }
-
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime(
-    struct initial_mass_function *imf) {
-  /* Allocate memory */
-  if ((imf->coef = (float *)malloc(sizeof(float) * n)) ==
-      NULL)
-    error("Failed to allocate the IMF coefficients.");
-
-  /* Suppose that the first coefficients is 1 (will be corrected later) */
-  imf->coef[0] = 1.;
-
-  /* Use the criterion of continuity for the IMF */
-  for(int i = 1; i < imf->n_parts - 1; i++) {
-    float exp = imf->exp[i-1] - imf->exp[i];
-    imf->coef[i] = imf->coef[i-1] * pow(imf->mass_limits[i], exp);
-  }
-
-  /* Use the criterion on the integral = 1 */
-  float integral = 0;
-  for(int i = 0; i < imf->n_parts; i++) {
-    const float m_i = pow(imf->mass_limits[i], imf->coef[i] + 1.);
-    const float m_i1 = pow(imf->mass_limits[i+1], imf->coef[i] + 1.);
-    integral += imf->coef[i] * (mi1 - mi)/ (imf->exp[i] + 1.) ;
-  }
-
-  /* Normalize the coefficients (fix initial supposition) */
-  for(int i = 0; i < imf->n_parts - 1; i++) {
-    imf->coef[i] /= integral;
-  }
-
-}
-
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_initial_mass_function(
-    struct initial_mass_function* imf, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
-
-  /* Read the number of elements */
-  imf->n_parts = parser_get_param_int(params, "GEARInitialMassFunction:number_function_part");
-
-  /* Read the exponents */
-  if ((imf->exp = (float *)malloc(sizeof(float) * n)) ==
-      NULL)
-    error("Failed to allocate the IMF exponents.");
-
-  parser_get_param_float_array(params, "GEARInitialMassFunction:exponents", n, imf->exp);
-
-  /* Read the mass limits */
-  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (n + 1))) ==
-      NULL)
-    error("Failed to allocate the IMF temporary masses.");
-
-  parser_get_param_float_array(params, "GEARInitialMassFunction:mass_limits", n + 1, imf->mass_limits);
-
-  /* Write the masses in the correct attributes */
-  imf->mass_min = mass[0];
-  imf->mass_max = mass[n+1];
-
-  /* Compute the coefficients */
-  stellar_evolution_compute_initial_mass_function_coefficients();
-
-  /* Cleanup */
-  free(mass);
-
-}
-
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime() {}
-
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia() {}
-
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ii() {}
 
 #endif // SWIFT_STELLAR_EVOLUTION_IO_GEAR_H

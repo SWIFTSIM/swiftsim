@@ -21,6 +21,7 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
+#include "stellar_evolution_io.h"
 #include "stellar_evolution_struct.h"
 
 /**
@@ -72,10 +73,14 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   fp->thermal_time *= phys_const->const_year * 1e6;
 
   /* filename of the chemistry table */
-  parser_get_param_string(params, "GEARFeedback:", fp->filename);
+  parser_get_param_string(params, "GEARFeedback:ChemistryTable", fp->filename);
 
   /* Read tables */
-  feedback_read_tables(fp, phys_const, us);
+  // feedback_read_tables(fp, phys_const, us);
+
+  /* Initialize the stellar model */
+  stellar_evolution_props_init(&fp->stellar_model, phys_const,
+			       us, params, cosmo);
 
   /* Print a final message. */
   message("initialized stellar feedback");

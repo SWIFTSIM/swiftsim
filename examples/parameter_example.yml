@@ -409,3 +409,7 @@ EAGLEAGN:
   AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
 
+GEARInitialMassFunction:
+  number_function_part: 4                           # (Optional) Number of part in the IMF
+  exponents: [0.7, -0.8, -1.7, -1.3]                # (Optional) Exponent of the IMF
+  mass_limits: [0.05, 0.08, 0.5, 1.0, 50.]          # (Optional) Mass limits of each part of the IMF

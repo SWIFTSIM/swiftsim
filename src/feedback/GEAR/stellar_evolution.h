@@ -34,7 +34,7 @@
  *
  * @return The star's lifetime (in log10).
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lifetime(
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lifetime_from_mass(
     const struct lifetime *life, float log_mass, float metallicity) {
   // TODO units
 
@@ -82,8 +82,23 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
   }
 }
 
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(void) {
-  return 0.;
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
+    const struct initial_mass_function *imf, float m) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m > imf->mass_max || m < imf->mass_min)
+    error("Mass below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m, imf->mass_max);
+#endif
+
+  for(int i = 0; i < imf->n_parts; i++) {
+    if (m <= imf->mass_limits[i+1]) {
+      return imf->coef[i] * pow(m, imf->exp[i]);
+    }
+  }
+
+  error("Failed to find correct function part: %g larger than mass max %g.",
+	m, imf->mass_max);
 };
 
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_integrated_imf(void) {

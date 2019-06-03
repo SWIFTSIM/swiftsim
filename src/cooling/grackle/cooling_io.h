@@ -141,6 +141,18 @@ __attribute__((always_inline)) INLINE static void cooling_read_parameters(
 
   parser_get_param_string(parameter_file, "GrackleCooling:CloudyTable",
                           cooling->cloudy_table);
+
+  cooling->primordial_chemistry =
+    parser_get_opt_param_int(parameter_file, "GrackleCooling:PrimordialChemistry",
+			     COOLING_GRACKLE_MODE);
+
+  if (cooling->primordial_chemistry < 0)
+    error("Primordial chemistry cannot be below 0");
+
+  if (cooling->primordial_chemistry > COOLING_GRACKLE_MODE)
+    error("Cannot run primordial chemistry %i when compiled with %i",
+	  cooling->primordial_chemistry, COOLING_GRACKLE_MODE);
+
   cooling->with_uv_background =
       parser_get_param_int(parameter_file, "GrackleCooling:WithUVbackground");
 
