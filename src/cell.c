@@ -3805,8 +3805,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
 
           /* If the local cell is active, more stuff will be needed. */
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
-                                  ci_nodeID);
+          //scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
+          //                        ci_nodeID);
           cell_activate_drift_bpart(cj, s);
 
           /* If the local cell is active, send its ti_end values. */
@@ -3815,7 +3815,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         }
 
         if (ci_active) {
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
+          //scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
 
           /* If the foreign cell is active, we want its ti_end values. */
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
@@ -3836,8 +3836,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
 
           /* If the local cell is active, more stuff will be needed. */
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
-                                  cj_nodeID);
+          //scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
+          //                        cj_nodeID);
           cell_activate_drift_bpart(ci, s);
 
           /* If the local cell is active, send its ti_end values. */
@@ -3846,7 +3846,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         }
 
         if (cj_active) {
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
+          //scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
 
           /* If the foreign cell is active, we want its ti_end values. */
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);

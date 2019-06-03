@@ -746,8 +746,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
 
             /* If the local cell is active, more stuff will be needed. */
-            scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
-                                    ci_nodeID);
+            //scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
+            //                        ci_nodeID);
             cell_activate_drift_bpart(cj, s);
 
             /* If the local cell is active, send its ti_end values. */
@@ -756,7 +756,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           if (ci_active_black_holes) {
-            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
+            //scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
 
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
@@ -780,8 +780,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
 
             /* If the local cell is active, more stuff will be needed. */
-            scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
-                                    cj_nodeID);
+            //scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
+            //                        cj_nodeID);
             cell_activate_drift_bpart(ci, s);
 
             /* If the local cell is active, send its ti_end values. */
@@ -790,7 +790,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           if (cj_active_black_holes) {
-            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
+            //scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
 
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
