@@ -346,8 +346,8 @@ void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
       cell_ensure_tagged(ci);
 
       /* Create the tasks and their dependencies? */
-      t_feedback = scheduler_addtask(s, task_type_send, task_subtype_bpart,
-                                     ci->mpi.tag, 0, ci, cj);
+      //t_feedback = scheduler_addtask(s, task_type_send, task_subtype_bpart,
+      //                               ci->mpi.tag, 0, ci, cj);
 
       t_ti = scheduler_addtask(s, task_type_send, task_subtype_tend_bpart,
                                ci->mpi.tag, 0, ci, cj);
@@ -591,8 +591,8 @@ void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
 #endif  // SWIFT_DEBUG_CHECKS
 
     /* Create the tasks. */
-    t_feedback = scheduler_addtask(s, task_type_recv, task_subtype_bpart,
-                                   c->mpi.tag, 0, c, NULL);
+    //t_feedback = scheduler_addtask(s, task_type_recv, task_subtype_bpart,
+    //                               c->mpi.tag, 0, c, NULL);
 
     t_ti = scheduler_addtask(s, task_type_recv, task_subtype_tend_bpart,
                              c->mpi.tag, 0, c, NULL);
