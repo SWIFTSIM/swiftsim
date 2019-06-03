@@ -3343,9 +3343,9 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->subtype == task_subtype_bh_feedback ||
         t->subtype == task_subtype_bh_swallow ||
         t->subtype == task_subtype_do_swallow ||
-        t->subtype == task_subtype_bpart_xv ||
         t->subtype == task_subtype_bpart_rho ||
         t->subtype == task_subtype_bpart_swallow ||
+        t->subtype == task_subtype_bpart_feedback ||
         t->subtype == task_subtype_tend_part ||
         t->subtype == task_subtype_tend_gpart ||
         t->subtype == task_subtype_tend_spart ||
