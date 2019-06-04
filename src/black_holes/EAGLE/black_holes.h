@@ -74,8 +74,10 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->num_ngb_density = 0;
 #endif
 
-  if (bp->id == 4527799525197LL)
-    message("Black holes %lld is on rank %d", bp->id, engine_rank);
+  //  if (bp->id == 4527799525197LL)
+  if (bp->id == 984539715331LL)
+    message("Black holes %lld is on rank %d m=%f m=%f", bp->id, engine_rank,
+            bp->subgrid_mass, bp->mass);
 
   bp->density.wcount = 0.f;
   bp->density.wcount_dh = 0.f;
@@ -183,6 +185,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     struct bpart* restrict bp, const struct black_holes_props* props,
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double dt) {
+
+  if (dt == 0.) return;
 
   /* Gather some physical constants (all in internal units) */
   const double G = constants->const_newton_G;
