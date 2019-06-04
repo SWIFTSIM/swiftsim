@@ -176,6 +176,8 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
 
     case task_type_drift_bpart:
     case task_type_bh_density_ghost:
+  case task_type_bh_swallow_ghost1:
+  case task_type_bh_swallow_ghost2:
       return task_action_bpart;
       break;
 
