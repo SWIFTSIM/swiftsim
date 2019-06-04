@@ -82,7 +82,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     const enum task_types t_type = t->type;
     const enum task_subtypes t_subtype = t->subtype;
 
-    scheduler_activate(s, t);
+    //scheduler_activate(s, t);
     
     /* Single-cell task? */
     if (t_type == task_type_self || t_type == task_type_sub_self) {
