@@ -734,14 +734,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         /* Activate the send/recv tasks. */
         if (ci_nodeID != nodeID) {
 
-          // if (cj_active_black_holes) {
+          if (cj_active_black_holes) {
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
             /* If the local cell is active, more stuff will be needed. */
             scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_rho,
-                                    ci_nodeID);
-            scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_swallow,
                                     ci_nodeID);
             scheduler_activate_send(s, cj->mpi.send,
                                     task_subtype_bpart_feedback, ci_nodeID);
@@ -754,8 +752,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           if (ci_active_black_holes) {
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart_rho);
-            scheduler_activate_recv(s, ci->mpi.recv,
-                                    task_subtype_bpart_swallow);
             scheduler_activate_recv(s, ci->mpi.recv,
                                     task_subtype_bpart_feedback);
 
@@ -775,14 +771,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         } else if (cj_nodeID != nodeID) {
 
           /* If the local cell is active, receive data from the foreign cell. */
-          // if (ci_active_black_holes) {
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
+          if (ci_active_black_holes) {
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
 
             /* If the local cell is active, more stuff will be needed. */
             scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_rho,
-                                    cj_nodeID);
-            scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_swallow,
                                     cj_nodeID);
             scheduler_activate_send(s, ci->mpi.send,
                                     task_subtype_bpart_feedback, cj_nodeID);
@@ -796,17 +790,16 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (cj_active_black_holes) {
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart_rho);
             scheduler_activate_recv(s, cj->mpi.recv,
-                                    task_subtype_bpart_swallow);
-            scheduler_activate_recv(s, cj->mpi.recv,
                                     task_subtype_bpart_feedback);
 
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
 
-          /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
-                                  cj_nodeID);
+            /* Is the foreign cell active and will need stuff from us? */
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_xv,
+                                    cj_nodeID);
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
+                                    cj_nodeID);
 
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
