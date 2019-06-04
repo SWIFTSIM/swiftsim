@@ -29,6 +29,7 @@
 /* Includes. */
 #include "cache.h"
 #include "gravity_cache.h"
+#include "task.h"
 
 struct cell;
 struct engine;
@@ -44,6 +45,8 @@ struct runner {
   /*! The actual thread which it is running. */
   pthread_t thread;
 
+  struct task *t;
+  
   /*! The queue to use to get tasks. */
   int cpuid, qid;
 

@@ -127,10 +127,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
        * candidates wanting to swallow it */
       if (pj->swallow_id < bi->id) {
 
+	if(bi->id == 4527799525197LL)
         message(
             "BH %lld wants to swallow gas particle %lld on rank %d (old "
-            "swallow id=%lld)",
-            bi->id, pj->id, engine_rank, pj->swallow_id);
+            "swallow id=%lld time_bin=%d)",
+            bi->id, pj->id, engine_rank, pj->swallow_id, pj->time_bin);
 
         pj->swallow_id = bi->id;
 
