@@ -3715,9 +3715,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
    * (We only want cells for which we drifted the gas as these are
    * the only ones that could have gas particles that have been flagged
    * for swallowing) */
-  //if (c->hydro.count == 0 || c->hydro.ti_old_part != e->ti_current) {
-  //  return;
-  // }
+  if (c->hydro.count == 0 || c->hydro.ti_old_part != e->ti_current) {
+    return;
+  }
 
   /* Loop over the progeny ? */
   if (0 && c->split) {
@@ -3738,9 +3738,12 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       struct part *const p = &parts[k];
       struct xpart *const xp = &xparts[k];
 
-      if (p->id == 7296358176571LL)
-      	message("Found particle %lld on rank %d (swallow id=%lld time_bin=%d, depth=%d)",
-      		p->id, engine_rank, p->swallow_id, p->time_bin, c->depth);
+      // if (p->id == 7296358176571LL)
+
+      //	message("Found particle %lld on rank %d (swallow id=%lld
+      // time_bin=%d, depth=%d)",
+      // 		p->id, engine_rank, p->swallow_id, p->time_bin,
+      // c->depth);
 
       /* Ignore inhibited particles */
       if (c->nodeID == e->nodeID && part_is_inhibited(p, e)) continue;
@@ -3789,16 +3792,19 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[1] = bp->v[1];
             bp->gpart->v_full[2] = bp->v[2];
 
-
-	    if(bp->id == 4527799525197LL)
-	      message("BH %lld swallowing particle %lld gas_mass=%e new_mass=%e node=%d",
-		      bp->id, p->id, gas_mass, bp->mass, c->nodeID);
+            // if(bp->id == 4527799525197LL)
+            if (bp->id == 984539715331LL)
+              message(
+                  "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
+                  "node=%d",
+                  bp->id, p->id, gas_mass, bp->mass, c->nodeID);
 
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
-	      if(bp->id == 4527799525197LL)
-		message("BH %lld removing particle %lld", bp->id, p->id);
+              // if(bp->id == 4527799525197LL)
+              if (bp->id == 984539715331LL)
+                message("BH %lld removing particle %lld", bp->id, p->id);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3806,8 +3812,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               cell_remove_gpart(e, c, gp);
             }
 
-	    p->swallow_id = -p->swallow_id;
-	    
+            p->swallow_id = -p->swallow_id;
+
             if (lock_unlock(&s->lock) != 0)
               error("Failed to unlock the space.");
 
@@ -3831,9 +3837,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
             if (bp->id == BH_id) {
 
-	      if(bp->id == 4527799525197LL)
-		message("BH %lld removing particle %lld (foreign BH case)",
-			bp->id, p->id);
+              // if(bp->id == 4527799525197LL)
+              if (bp->id == 984539715331LL)
+                message("BH %lld removing particle %lld (foreign BH case)",
+                        bp->id, p->id);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3854,7 +3861,6 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
           error("Gas particle %lld could not find BH %lld to be swallowed",
                 p->id, p->swallow_id);
         }
-
       } /* Part was flagged for swallowing */
     }   /* Loop over the parts */
   }     /* Cell is not split */
@@ -3897,16 +3903,18 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
     /* Collect everything... */
     for (size_t k = 0; k < nr_parts; k++) {
 
-      //if (parts[k].swallow_id != -1)
-      if(parts[k].id == 7296358176571LL)
-        message("Received particle %lld with swallow_id=%lld time_bin=%d task=%s/%s", parts[k].id,
-                parts[k].swallow_id, parts[k].time_bin, taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
+      // if (parts[k].swallow_id != -1)
+      if (parts[k].id == 7296358176571LL)
+        message(
+            "Received particle %lld with swallow_id=%lld time_bin=%d "
+            "task=%s/%s",
+            parts[k].id, parts[k].swallow_id, parts[k].time_bin,
+            taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
 
       if (parts[k].time_bin == time_bin_inhibited) continue;
       time_bin_min = min(time_bin_min, parts[k].time_bin);
       time_bin_max = max(time_bin_max, parts[k].time_bin);
       h_max = max(h_max, parts[k].h);
-
     }
 
     /* Convert into a time */
@@ -4237,7 +4245,7 @@ void *runner_main(void *data) {
       }
 
       r->t = t;
-      
+
       /* Get the cells. */
       struct cell *ci = t->ci;
       struct cell *cj = t->cj;
@@ -4416,7 +4424,7 @@ void *runner_main(void *data) {
         case task_type_bh_swallow_ghost1:
         case task_type_bh_swallow_ghost2:
 #ifdef SWIFT_DEBUG_CHECKS
-          //error("Calling implicit task!");
+          // error("Calling implicit task!");
 #endif
           break;
         case task_type_drift_part:
