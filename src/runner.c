@@ -4424,7 +4424,7 @@ void *runner_main(void *data) {
         case task_type_bh_swallow_ghost1:
         case task_type_bh_swallow_ghost2:
 #ifdef SWIFT_DEBUG_CHECKS
-          // error("Calling implicit task!");
+          error("Calling implicit task!");
 #endif
           break;
         case task_type_drift_part:
