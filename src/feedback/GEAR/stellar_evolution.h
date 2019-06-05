@@ -51,12 +51,13 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lif
 
 /**
  * @brief Compute the mass of a star with a given lifetime
+ * Returns -1 if out of range.
  *
  * @param life The #lifetime model.
  * @param log_time The star's lifetime (in log10).
  * @param metallicity The star's metallicity.
  *
- * @return The star's mass (in log10).
+ * @return The star's mass (in log10) or -1.
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mass_from_lifetime(
     const struct lifetime *life, float log_time, float metallicity) {
@@ -75,12 +76,80 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
 
   /* Use the quadratic formula to find the mass */
   if (quadratic != 0) {
-    return (-linear - sqrt(linear * linear - 4 * quadratic * c_t)) / (2. * quadratic);
+    const float delta = linear * linear - 4 * quadratic * c_t;
+
+    /* Avoid complex number should not happen in real simulation */
+    if (delta < 0) {
+      return - linear / (2. * quadratic);
+    }
+    else {
+      return (-linear - sqrt(delta)) / (2. * quadratic);
+    }
   }
   else {
     return - c_t / linear;
   }
 }
+
+/**
+ * @brief Get the IMF exponent in between mass_min and mass_max.
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_exponent(
+    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (mass_max > imf->mass_max)
+    error("Cannot have mass larger than the largest one in the IMF");
+  if (mass_min < imf->mass_min)
+    error("Cannot have mass smaller than the smallest one in the IMF");
+  if (mass_max < mass_min)
+    error("Cannot have mass_min larger than mass_max");
+#endif
+  
+  for(int i = 0; i < imf->n_parts; i++) {
+
+    /* Check if in the correct part of the IMF */
+    if (mass_min < imf->mass_limits[i+1]) {
+
+      /* Check if in only one segment */
+      if (mass_max > imf->mass_limits[i+1]) {
+	error("The code is not implemented to deal with two different IMF part in the supernovae IMF");
+      }
+
+      return imf->exp[i];
+    }
+  }
+
+  error("Masses outside IMF ranges");
+
+  return -1;
+}
+
+/**
+ * @brief Get the IMF coefficient in between mass_min and mass_max.
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_coefficient(
+    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+
+  for(int i = 0; i < imf->n_parts; i++) {
+
+    /* Check if in the correct part of the IMF */
+    if (mass_min < imf->mass_limits[i+1]) {
+
+      /* Check if in only one segment */
+      if (mass_max > imf->mass_limits[i+1]) {
+	error("The code is not implemented to deal with two different exponent for the IMF in supernovae");
+      }
+
+      return imf->coef[i];
+    }
+  }
+  
+  error("Masses outside IMF ranges");
+
+  return -1;
+}
+
 
 /**
  * @brief Compute the mass fraction of the initial mass function.
@@ -120,7 +189,6 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_number(
     const struct initial_mass_function *imf, float m1, float m2) {
-  error("This has not been tested");
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
     error("Mass 1 below or above limits expecting %g < %g < %g.",
@@ -205,12 +273,104 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_mas
   return mass;
 };
 
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_supernovae_ia_rate(void) {
-  return 0.;
+/**
+ * @brief Compute the companion integral (second integral in equation 3.46 in Poirier 2004)
+ *
+ * @param snia The #supernovae_ia model.
+ * @param m1 The lower mass limit.
+ * @param m2 The upper mass limit.
+ * @param companion_type The type of companion (e.g. index of snia->companion).
+ *
+ * @return The fraction of companion.
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_companion_fraction(
+    struct supernovae_ia *snia, float m1, float m2, int companion_type) {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > m2)
+    error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
+#endif
+
+  const float tmp = pow(m2, snia->companion_exponent) - pow(m1, snia->companion_exponent);
+  return snia->companion[companion_type].coef * tmp / snia->companion_exponent;
+  
+}
+
+/**
+ * @brief Compute the number of supernovae Ia per unit of mass (equation 3.46 in Poirier 2004).
+ *
+ * @param snia The #supernovae_ia model.
+ * @param m1 The lower mass limit.
+ * @param m2 The upper mass limit.
+ *
+ * @return The number of supernovae Ia per unit of mass.
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_number_supernovae_ia(
+    struct supernovae_ia *snia, float m1, float m2) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > m2)
+    error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
+#endif
+
+  /* Do we have white dwarf? */
+  if (m1 > snia->mass_max_progenitor) {
+    return 0.;
+  }
+
+  float number_companion = 0.;
+  for(int i = 0; i < NUMBER_TYPE_OF_COMPANION; i++) {
+    /* Check if we are in the possible interval */
+    if (m1 > snia->companion[i].mass_max ||
+	m2 < snia->companion[i].mass_min)
+      continue;
+
+    /* Get mass limits */
+    const float mass_min = max(m1, snia->companion[i].mass_min);
+    const float mass_max = min(m2, snia->companion[i].mass_max);
+
+    /* Compute number of companions */
+    number_companion += stellar_evolution_get_companion_fraction(snia, mass_min, mass_max, i);
+  }
+
+  /* Use only the white dwarf already created */
+  const float mass_min = max(m1, snia->mass_min_progenitor);
+
+  /* Compute number of white dwarf */
+  float number_white_dwarf = pow(snia->mass_max_progenitor, snia->progenitor_exponent);
+  number_white_dwarf -= pow(mass_min, snia->progenitor_exponent);
+  number_white_dwarf *= snia->progenitor_coef_exp;
+  
+  return number_companion * number_white_dwarf;
 };
 
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_supernovae_ii_rate(void) {
-  return 0.;
+/**
+ * @brief Compute the number of supernovae II per unit of mass (equation 3.47 in Poirier 2004).
+ *
+ * @param snii The #supernovae_ii model.
+ * @param m1 The lower mass limit.
+ * @param m2 The upper mass limit.
+ *
+ * @return The number of supernovae II per unit of mass.
+ */
+__attribute__((always_inline)) INLINE static float stellar_evolution_get_number_supernovae_ii(
+    struct supernovae_ii *snii, float m1, float m2) {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > m2)
+    error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
+#endif
+
+  /* Can we explode SNII? */
+  if (m1 > snii->mass_max || m2 < snii->mass_min) {
+    return 0.;
+  }
+
+  const float mass_min = max(m1, snii->mass_min);
+  const float mass_max = min(m2, snii->mass_max);
+
+  const float pow_mass = pow(mass_max, snii->exponent) - pow(mass_min, snii->exponent);
+
+  return snii->coef_exp * pow_mass;
+  
 };
 
 __attribute__((always_inline)) INLINE static float *stellar_evolution_get_supernovae_ia_yields(void) {
