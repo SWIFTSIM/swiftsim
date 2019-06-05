@@ -46,7 +46,7 @@ struct runner {
   pthread_t thread;
 
   struct task *t;
-  
+
   /*! The queue to use to get tasks. */
   int cpuid, qid;
 
