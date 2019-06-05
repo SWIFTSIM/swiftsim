@@ -83,7 +83,7 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
 			       us, params, cosmo);
 
   /* Print a final message. */
-  message("initialized stellar feedback");
+  message("Stellar feedback initialized");
 }
 
 #ifdef HAVE_HDF5
