@@ -20,6 +20,7 @@
 #define SWIFT_STELLAR_EVOLUTION_IO_GEAR_H
 
 #include "stellar_evolution_struct.h"
+#include "stellar_evolution.h"
 
 
 /**
@@ -86,7 +87,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial
       NULL)
     error("Failed to allocate the IMF temporary masses.");
 
-  parser_get_param_float_array(params, "GEARInitialMassFunction:mass_limits",
+  parser_get_param_float_array(params, "GEARInitialMassFunction:mass_limits_msun",
 			       imf->n_parts + 1, imf->mass_limits);
 
   /* Write the masses in the correct attributes */
@@ -121,9 +122,92 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetim
   
 }
 
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia(void) {}
+/**
+ * @brief Initialize the companion structure in the #supernovae_ia.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia_companion(
+    struct supernovae_ia *snia) {
 
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ii(void) {}
+  for(int i = 0; i < NUMBER_TYPE_OF_COMPANION; i++) {
+    /* Compute the integral */
+    float integral = stellar_evolution_get_companion_fraction(
+        snia, snia->companion[i].mass_min, snia->companion[i].mass_max, i);
+
+    /* Update the coefficient for a normalization to 1 of the IMF */
+    snia->companion[i].coef *= snia->companion[i].coef / integral;
+  }
+  
+}
+
+/**
+ * @brief Initialize the #supernovae_ia structure.
+ *
+ * @param snia The #supernovae_ia model.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The simulation parameters.
+ * @param imf The #initial_mass_function model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia(
+    struct supernovae_ia *snia, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params,
+    const struct initial_mass_function *imf) {
+
+  /* Read the exponent of the IMF for companion */
+  snia->companion_exponent = parser_get_param_float(params, "GEARSupernovaeIa:exponent");
+  
+  /* Read the minimal mass for a white dwarf */
+  snia->mass_min_progenitor = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_white_dwarf_progenitor");
+
+  /* Read the maximal mass for a white dwarf */
+  snia->mass_max_progenitor = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_white_dwarf_progenitor");
+
+  /* Get the IMF parameters */
+  snia->progenitor_exponent = stellar_evolution_get_imf_exponent(imf,
+      snia->mass_min_progenitor, snia->mass_max_progenitor);
+  snia->progenitor_coef_exp = stellar_evolution_get_imf_coefficient(imf,
+      snia->mass_min_progenitor, snia->mass_max_progenitor);
+  snia->progenitor_coef_exp /= snia->progenitor_exponent;
+
+  /* Read the maximal mass of a red giant companion */
+  snia->companion[0].mass_max = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_red_giant");
+
+  /* Read the minimal mass of a red giant companion */
+  snia->companion[0].mass_min = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_red_giant");
+
+  /* Read the coefficient of the main sequence companion */
+  snia->companion[0].coef = parser_get_param_float(params, "GEARSupernovaeIa:coef_red_giant");
+
+  /* Read the maximal mass of a main sequence companion */
+  snia->companion[1].mass_max = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_main_sequence");
+
+  /* Read the minimal mass of a main sequence companion */
+  snia->companion[1].mass_min = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_main_sequence");
+
+  /* Read the coefficient of the main sequence companion */
+  snia->companion[1].coef = parser_get_param_float(params, "GEARSupernovaeIa:coef_main_sequence");
+
+  /* Compute the normalization coefficients of the companion IMF */
+  stellar_evolution_init_supernovae_ia_companion(snia);
+  
+}
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ii(
+    struct supernovae_ii *snii, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params,
+    const struct initial_mass_function *imf) {
+
+  /* Read the minimal mass of a supernovae */
+  snii->mass_min = parser_get_param_float(params, "GEARSupernovaeII:min_mass");
+
+  /* Read the maximal mass of a supernovae */
+  snii->mass_max = parser_get_param_float(params, "GEARSupernovaeII:max_mass");
+
+  /* Get the IMF parameters */
+  snii->exponent = stellar_evolution_get_imf_exponent(imf, snii->mass_min, snii->mass_max);
+  snii->coef_exp = stellar_evolution_get_imf_coefficient(imf, snii->mass_min, snii->mass_max);
+  snii->coef_exp /= snii->exponent;
+}
 
 
 /**
@@ -142,18 +226,16 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
     const struct cosmology* cosmo) {
 
   /* Initialize the initial mass function */
-  stellar_evolution_init_initial_mass_function(&sm->imf, phys_const,
-    us, params);
+  stellar_evolution_init_initial_mass_function(&sm->imf, phys_const, us, params);
 
   /* Initialize the lifetime model */
-  stellar_evolution_init_lifetime(&sm->lifetime, phys_const,
-    us, params);
+  stellar_evolution_init_lifetime(&sm->lifetime, phys_const, us, params);
 
   /* Initialize the supernovae Ia model */
-  stellar_evolution_init_supernovae_ia();
+  stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, &sm->imf);
  
   /* Initialize the supernovae II model */
-  stellar_evolution_init_supernovae_ii();
+  stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, &sm->imf);
 
 }
 
