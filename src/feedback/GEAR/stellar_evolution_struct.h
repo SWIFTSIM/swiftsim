@@ -19,6 +19,10 @@
 #ifndef SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H
 #define SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H
 
+/* Number of different type of companion.
+   If changed, the IO needs to be updated.
+ */
+#define NUMBER_TYPE_OF_COMPANION 2
 
 /**
  * @brief Model for the initial mass function.
@@ -71,6 +75,33 @@ struct supernovae_ia {
   /*! Yields TODO more comment */
   struct interpolation *yields;
 
+  /*! Minimal mass of the progenitor */
+  float mass_min_progenitor;
+
+  /*! Maximal mass of the progenitor */
+  float mass_max_progenitor;
+
+  /*! coefficient of the initial mass function for progenitor divided by progenitor_exponent */
+  float progenitor_coef_exp;
+
+  /*! exponent of the initial mass function for progenitor */
+  float progenitor_exponent;
+
+  /*! exponent of the initial mass function for binaries */
+  float companion_exponent;
+
+  struct {
+    /*! Initial mass function's coeffcients */
+    float coef;
+
+    /*! Maximal mass of the companion */
+    float mass_max;
+
+    /*! Minimal mass of the companion */
+    float mass_min;
+  } companion[NUMBER_TYPE_OF_COMPANION];
+
+
 };
 
 /**
@@ -80,6 +111,18 @@ struct supernovae_ii {
 
   /*! Yields TODO more comment */
   struct interpolation *yields;
+
+  /*! Minimal mass for a SNII */
+  float mass_min;
+
+  /*! Maximal mass for a SNII */
+  float mass_max;
+
+  /*! exponent of the IMF */
+  float exponent;
+
+  /*! coefficient of the IMF over the exponent */
+  float coef_exp;
   
 };
 
