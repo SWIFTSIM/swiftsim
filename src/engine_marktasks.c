@@ -737,6 +737,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
           if (cj_active_black_holes) {
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
             /* If the local cell is active, more stuff will be needed. */
@@ -764,6 +765,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Is the foreign cell active and will need stuff from us? */
             scheduler_activate_send(s, cj->mpi.send, task_subtype_xv,
                                     ci_nodeID);
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_rho,
+                                    ci_nodeID);
             scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
                                     ci_nodeID);
 
@@ -777,6 +780,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           /* If the local cell is active, receive data from the foreign cell. */
           if (ci_active_black_holes) {
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
 
             /* If the local cell is active, more stuff will be needed. */
@@ -801,6 +805,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
             /* Is the foreign cell active and will need stuff from us? */
             scheduler_activate_send(s, ci->mpi.send, task_subtype_xv,
+                                    cj_nodeID);
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_rho,
                                     cj_nodeID);
             scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
                                     cj_nodeID);
