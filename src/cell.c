@@ -3835,7 +3835,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
       scheduler_activate(s, t);
 
       /* Activate the drifts */
-      if (t->type == task_type_self && ci_active) {
+      if (t->type == task_type_self) {
         cell_activate_drift_part(ci, s);
         cell_activate_drift_bpart(ci, s);
       }
@@ -3973,7 +3973,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
       scheduler_activate(s, t);
     }
-
+  }
 
   /* Un-skip the swallow tasks involved with this cell. */
   for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next) {
@@ -3993,7 +3993,6 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     /* Only activate tasks that involve a local active cell. */
     if ((ci_active || cj_active) &&
         (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
-
 
       scheduler_activate(s, t);
     }
@@ -4025,12 +4024,15 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID && cell_is_active_black_holes(c, e)) {
 
-    /* for (struct link *l = c->black_holes.swallow; l != NULL; l = l->next) */
-    /*   scheduler_activate(s, l->t); */
-    /* for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next)
+    /* for (struct link *l = c->black_holes.swallow; l != NULL; l = l->next)
      */
     /*   scheduler_activate(s, l->t); */
-    /* for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next) */
+    /* for (struct link *l = c->black_holes.do_swallow; l != NULL; l =
+     * l->next)
+     */
+    /*   scheduler_activate(s, l->t); */
+    /* for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next)
+     */
     /*   scheduler_activate(s, l->t); */
 
     if (c->black_holes.density_ghost != NULL)
@@ -4056,7 +4058,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
  * @brief Set the super-cell pointers for all cells in a hierarchy.
  *
  * @param c The top-level #cell to play with.
- * @param super Pointer to the deepest cell with tasks in this part of the tree.
+ * @param super Pointer to the deepest cell with tasks in this part of the
+ * tree.
  * @param with_hydro Are we running with hydrodynamics on?
  * @param with_grav Are we running with gravity on?
  */
@@ -4081,8 +4084,8 @@ void cell_set_super(struct cell *c, struct cell *super, const int with_hydro,
  * @brief Set the super-cell pointers for all cells in a hierarchy.
  *
  * @param c The top-level #cell to play with.
- * @param super_hydro Pointer to the deepest cell with tasks in this part of the
- * tree.
+ * @param super_hydro Pointer to the deepest cell with tasks in this part of
+ * the tree.
  */
 void cell_set_super_hydro(struct cell *c, struct cell *super_hydro) {
   /* Are we in a cell with some kind of self/pair task ? */
@@ -4893,7 +4896,8 @@ void cell_clear_stars_sort_flags(struct cell *c, const int clear_unused_flags) {
     cell_clear_flag(c, cell_flag_do_stars_sub_sort);
   }
 
-  /* Indicate that the cell is not sorted and cancel the pointer sorting arrays.
+  /* Indicate that the cell is not sorted and cancel the pointer sorting
+   * arrays.
    */
   c->stars.sorted = 0;
   cell_free_stars_sorts(c);
@@ -4927,7 +4931,8 @@ void cell_clear_hydro_sort_flags(struct cell *c, const int clear_unused_flags) {
     cell_clear_flag(c, cell_flag_do_hydro_sub_sort);
   }
 
-  /* Indicate that the cell is not sorted and cancel the pointer sorting arrays.
+  /* Indicate that the cell is not sorted and cancel the pointer sorting
+   * arrays.
    */
   c->hydro.sorted = 0;
   cell_free_hydro_sorts(c);
@@ -5077,9 +5082,9 @@ void cell_recursively_shift_sparts(struct cell *c,
  * @param e The #engine.
  * @param c The leaf-cell in which to add the #spart.
  *
- * @return A pointer to the newly added #spart. The spart has a been zeroed and
- * given a position within the cell as well as set to the minimal active time
- * bin.
+ * @return A pointer to the newly added #spart. The spart has a been zeroed
+ * and given a position within the cell as well as set to the minimal active
+ * time bin.
  */
 struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
   /* Perform some basic consitency checks */
@@ -5159,7 +5164,8 @@ struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
    * current cell*/
   cell_recursively_shift_sparts(top, progeny, /* main_branch=*/1);
 
-  /* Make sure the gravity will be recomputed for this particle in the next step
+  /* Make sure the gravity will be recomputed for this particle in the next
+   * step
    */
   struct cell *top2 = c;
   while (top2->parent != NULL) {
@@ -5199,7 +5205,8 @@ struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
 /**
  * @brief "Remove" a gas particle from the calculation.
  *
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5229,7 +5236,8 @@ void cell_remove_part(const struct engine *e, struct cell *c, struct part *p,
 /**
  * @brief "Remove" a gravity particle from the calculation.
  *
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5248,7 +5256,8 @@ void cell_remove_gpart(const struct engine *e, struct cell *c,
 /**
  * @brief "Remove" a star particle from the calculation.
  *
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5275,7 +5284,8 @@ void cell_remove_spart(const struct engine *e, struct cell *c,
 /**
  * @brief "Remove" a black hole particle from the calculation.
  *
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5307,7 +5317,8 @@ void cell_remove_bpart(const struct engine *e, struct cell *c,
  * Note that the #part is not destroyed. The pointer is still valid
  * after this call and the properties of the #part are not altered
  * apart from the time-bin and #gpart pointer.
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5353,7 +5364,8 @@ struct gpart *cell_convert_part_to_gpart(const struct engine *e, struct cell *c,
  * Note that the #spart is not destroyed. The pointer is still valid
  * after this call and the properties of the #spart are not altered
  * apart from the time-bin and #gpart pointer.
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine running on this node.
  * @param c The #cell from which to remove the particle.
@@ -5398,7 +5410,8 @@ struct gpart *cell_convert_spart_to_gpart(const struct engine *e,
  * Note that the #part is not destroyed. The pointer is still valid
  * after this call and the properties of the #part are not altered
  * apart from the time-bin and #gpart pointer.
- * The particle is inhibited and will officially be removed at the next rebuild.
+ * The particle is inhibited and will officially be removed at the next
+ * rebuild.
  *
  * @param e The #engine.
  * @param c The #cell from which to remove the #part.
@@ -5464,8 +5477,8 @@ struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
 }
 
 /**
- * @brief Re-arrange the #part in a top-level cell such that all the extra ones
- * for on-the-fly creation are located at the end of the array.
+ * @brief Re-arrange the #part in a top-level cell such that all the extra
+ * ones for on-the-fly creation are located at the end of the array.
  *
  * @param c The #cell to sort.
  * @param parts_offset The offset between the first #part in the array and the
@@ -5516,12 +5529,13 @@ void cell_reorder_extra_parts(struct cell *c, const ptrdiff_t parts_offset) {
 }
 
 /**
- * @brief Re-arrange the #spart in a top-level cell such that all the extra ones
- * for on-the-fly creation are located at the end of the array.
+ * @brief Re-arrange the #spart in a top-level cell such that all the extra
+ * ones for on-the-fly creation are located at the end of the array.
  *
  * @param c The #cell to sort.
- * @param sparts_offset The offset between the first #spart in the array and the
- * first #spart in the global array in the space structure (for re-linking).
+ * @param sparts_offset The offset between the first #spart in the array and
+ * the first #spart in the global array in the space structure (for
+ * re-linking).
  */
 void cell_reorder_extra_sparts(struct cell *c, const ptrdiff_t sparts_offset) {
   struct spart *sparts = c->stars.parts;
@@ -5571,8 +5585,8 @@ void cell_reorder_extra_sparts(struct cell *c, const ptrdiff_t sparts_offset) {
 }
 
 /**
- * @brief Re-arrange the #gpart in a top-level cell such that all the extra ones
- * for on-the-fly creation are located at the end of the array.
+ * @brief Re-arrange the #gpart in a top-level cell such that all the extra
+ * ones for on-the-fly creation are located at the end of the array.
  *
  * @param c The #cell to sort.
  * @param parts The global array of #part (for re-linking).
