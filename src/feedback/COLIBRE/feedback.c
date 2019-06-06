@@ -680,13 +680,14 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 
 /**
  * @brief Calculates the amount of momentum available for this star
- * from Starburst 99. Fitting function taken from Agertz et al. (2012) 
+ * from Starburst 99. Fitting function taken from Agertz et al. (2013) 
  *
  * @param sp spart that we're evolving
  * @param us unit_system structure for unit conversion
  * @param props feedback_props structure for getting model parameters
  * @param star_age_Gyr Age of star in Gyr
  * @param dt current timestep in internal units
+ * @param ngb_gas_mass mass within the sph kernel
  */
 INLINE static void compute_stellar_momentum(struct spart* sp, 
 					    const struct unit_system* us,
@@ -730,19 +731,19 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   const double Msun_in_g   = 1.99e33;
   const double Myr_in_sec  = (60*60*24*365*1e6);
 
-  const double mstr_in_Msun = sp->mass_init * (us->UnitMass_in_cgs / Msun_in_g);
-  const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs;
+  const double mstr_in_Msun = sp->mass_init * (us->UnitMass_in_cgs / Msun_in_g); /* Initial stellar mass in Msun */
+  const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs; /* Mass within the SPH kernel */
 
-  double zstr = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+  double zstr = sp->chemistry_data.smoothed_metal_mass_fraction_total; /* Smoothed metal fraction of the stellar particle */
 
   if(zstr <= 0.001) zstr = 0.001; /* minimum metallicity in SB99 is 0.001 */
   if(zstr >= 0.04) zstr = 0.04;   /* maximum metallicity in SB99 is 0.04 */
 
   /* put everything in same units */
-  const double tw_cgs      = tw * Myr_in_sec; 
+  const double tw_cgs      = tw * Myr_in_sec;                         /* Maximum time over which star can inject momentum */
   const double p1_cgs      = p1 * mstr_in_Msun * pow( zstr / p2, p3); /*Taken from Agertz et al. 2012 */
-  const double dp_dt_cgs   = p1_cgs / tw_cgs;
-  const double delta_v_cgs = delta_v * 1e5;
+  const double dp_dt_cgs   = p1_cgs / tw_cgs;                         /* momentum rate in cgs */
+  const double delta_v_cgs = delta_v * 1e5;                           /* velocity kick in cm /s */
   
 
   /* get the momentum rate in code units and store it */
@@ -755,28 +756,35 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   double prob = 0;
 
-  if(delta_v < 0){
-    prob = 1.0; /* We are going to kick all particles in the kernel */
-    delta_v = (sp->feedback_data.to_distribute.momentum / 
-	       sp->feedback_data.to_distribute.momentum_weight );
-  }
-  else{
-    prob = dp_dt_cgs * dt_cgs / ngb_gas_mass_in_g / delta_v_cgs;
-  }
-
-  if( (prob > 1) ){
-    message("[COLIBRE Winds]: Not enough particles within the kernel to distribute momentum...");
+  if(delta_v < 0){   /* We want the code to decide the velocity kick for us */
+    
+    prob = 1.0; /* We kick all particles in the kernel */
     
     delta_v = (sp->feedback_data.to_distribute.momentum / 
-	       sp->feedback_data.to_distribute.momentum_weight );
-    
-    message("Wind speed set to delta_v = %e", delta_v);
+	       sp->feedback_data.to_distribute.momentum_weight ); /* kick velocity needed so that we can inject  */
+								  /* all the momentum inside the kernel */
   }
   
-  sp->feedback_data.to_distribute.momentum_probability = prob;
+  else{     /* user decided velocity kick */
+    
+    prob = dp_dt_cgs * dt_cgs / ngb_gas_mass_in_g / delta_v_cgs; /* The probability of kicking a particle is given */
+                                                                 /* by the kicking velocity chosen in the parameter file */ 
+    
+    
+    if( (prob > 1) ){     /* mass inside the kernel too small makes prob > 1 */
+      
+      message("[COLIBRE Winds]: Not enough particles within the kernel to distribute momentum...");
+    
+      delta_v = (sp->feedback_data.to_distribute.momentum / 
+		 sp->feedback_data.to_distribute.momentum_weight );  /* kick consistent with the mass within the kernel and */
+                                                                     /* amount of momentum available */ 
+      message("Wind speed set to delta_v = %e", delta_v);
+    }
+  }
+  
+  /* Store values for perfoming the actual kick later on */
+  sp->feedback_data.to_distribute.momentum_probability = prob; 
   sp->feedback_data.to_distribute.momentum_delta_v = delta_v;
-
-  printf("DELTAV=%.3e\n", delta_v);
   
   return;
 }

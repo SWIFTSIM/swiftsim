@@ -305,9 +305,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   }
 
-  /* kick gas particle away from the star using the available momentum in the timestep */
-  /* using a stochastic implementation. If delta_v is small enough, this translates into */
-  /* kicking all neighboring particles away from the stars */
+  /* kick gas particle away from the star using the momentum available in the timestep. */
+  /* This is done stochastically. However, if delta_v is small enough (or even negative), */
+  /* this translates into kicking all neighboring particles away from the stars */
   const float delta_v = si->feedback_data.to_distribute.momentum_delta_v;
   const float momentum_prob = si->feedback_data.to_distribute.momentum_probability;
 
@@ -320,7 +320,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     xpj->v_full[0] -= delta_v * dx[0]/r;
     xpj->v_full[1] -= delta_v * dx[1]/r;
     xpj->v_full[2] -= delta_v * dx[2]/r;
-    xpj->tracers_data.momentum_received += delta_v * current_mass;
+    
+    xpj->tracers_data.momentum_received += delta_v * current_mass; /* store how much is received */
   }
 
 }
