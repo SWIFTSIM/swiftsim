@@ -661,7 +661,7 @@ void engine_addtasks_recv_black_holes(struct engine *e, struct cell *c,
     for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_addunlock(s, l->t, t_gas_swallow);
     }
-    
+
     for (struct link *l = c->black_holes.swallow; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
       // scheduler_addunlock(s, l->t, t_swallow);
