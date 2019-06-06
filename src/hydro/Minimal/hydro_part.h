@@ -84,8 +84,6 @@ struct part {
   /*! Particle unique ID. */
   long long id;
 
-  int rank;
-
   /*! Pointer to corresponding gravity part. */
   struct gpart* gpart;
 
@@ -177,6 +175,8 @@ struct part {
 
   /*! ID of the black hole swallowing this particle */
   long long swallow_id;
+
+  int rank;
 
   /*! Time-step length */
   timebin_t time_bin;

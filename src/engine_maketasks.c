@@ -496,7 +496,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     /* Make sure the part have been sent before the BHs compute their densities.
      */
     for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
-      scheduler_addunlock(s, t_xv, l->t);
+      scheduler_addunlock(s, t_rho, l->t);
     }
   }
 
@@ -1730,7 +1730,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     /* Self-interaction? */
     else if (t_type == task_type_self && t_subtype == task_subtype_density) {
 
-      const int bcount_i = ci->black_holes.count;
+      const int bcount_i = 1;  // ci->black_holes.count;
 
       /* Make the self-density tasks depend on the drift only. */
       scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
@@ -1860,8 +1860,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     /* Otherwise, pair interaction? */
     else if (t_type == task_type_pair && t_subtype == task_subtype_density) {
 
-      const int bcount_i = ci->black_holes.count;
-      const int bcount_j = cj->black_holes.count;
+      const int bcount_i = 1;  // ci->black_holes.count;
+      const int bcount_j = 1;  // cj->black_holes.count;
 
       /* Make all density tasks depend on the drift */
       if (ci->nodeID == nodeID) {
@@ -2113,7 +2113,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_sub_self &&
              t_subtype == task_subtype_density) {
 
-      const int bcount_i = ci->black_holes.count;
+      const int bcount_i = 1;  // ci->black_holes.count;
 
       /* Make all density tasks depend on the drift and sorts. */
       scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t);
@@ -2257,8 +2257,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_sub_pair &&
              t_subtype == task_subtype_density) {
 
-      const int bcount_i = ci->black_holes.count;
-      const int bcount_j = cj->black_holes.count;
+      const int bcount_i = 1;  // ci->black_holes.count;
+      const int bcount_j = 1;  // cj->black_holes.count;
 
       /* Make all density tasks depend on the drift */
       if (ci->nodeID == nodeID) {
