@@ -756,24 +756,28 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double prob = 0;
 
   if(delta_v < 0){
-    prob = 10; /* We are going to kick all particles in the kernel */
+    prob = 1.0; /* We are going to kick all particles in the kernel */
+    delta_v = (sp->feedback_data.to_distribute.momentum / 
+	       sp->feedback_data.to_distribute.momentum_weight );
   }
   else{
     prob = dp_dt_cgs * dt_cgs / ngb_gas_mass_in_g / delta_v_cgs;
   }
 
-  if( (prob > 1) & (delta_v > 0) ){
+  if( (prob > 1) ){
     message("[COLIBRE Winds]: Not enough particles within the kernel to distribute momentum...");
-
+    
     delta_v = (sp->feedback_data.to_distribute.momentum / 
 	       sp->feedback_data.to_distribute.momentum_weight );
-
+    
     message("Wind speed set to delta_v = %e", delta_v);
   }
-
+  
   sp->feedback_data.to_distribute.momentum_probability = prob;
   sp->feedback_data.to_distribute.momentum_delta_v = delta_v;
 
+  printf("DELTAV=%.3e\n", delta_v);
+  
   return;
 }
 
