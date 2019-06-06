@@ -82,8 +82,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     const enum task_types t_type = t->type;
     const enum task_subtypes t_subtype = t->subtype;
 
-    //scheduler_activate(s, t);
-    
+    // scheduler_activate(s, t);
+
     /* Single-cell task? */
     if (t_type == task_type_self || t_type == task_type_sub_self) {
 
@@ -736,8 +736,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (ci_nodeID != nodeID) {
 
           if (cj_active_black_holes) {
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
             /* If the local cell is active, more stuff will be needed. */
             scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_rho,
@@ -761,10 +761,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
 
-          /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
-                                  ci_nodeID);
+            /* Is the foreign cell active and will need stuff from us? */
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_xv,
+                                    ci_nodeID);
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
+                                    ci_nodeID);
 
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
