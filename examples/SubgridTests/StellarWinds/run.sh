@@ -26,4 +26,4 @@ then
     ./getSolutions.sh
 fi
 
-./swift --external-gravity --feedback --stars --hydro --threads=4 stellar_evolution.yml  2>&1 | tee output.log
+../../swift --external-gravity --feedback --stars --hydro --threads=4 stellar_winds.yml  2>&1 | tee output.log

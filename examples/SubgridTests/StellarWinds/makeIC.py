@@ -21,17 +21,17 @@ import h5py
 from numpy import *
 
 # Some constants
-solar_mass_cgs = 1.988480e33 
-kpc_in_cm = 3.085678e21
-mp_cgs = 1.67e-24
+solar_mass_cgs  = 1.988480e33 
+kpc_in_cm       = 3.085678e21
+mp_cgs          = 1.67e-24
 boltzmann_k_cgs = 1.38e-16
 
 # Parameters
-gamma = 5./3.      				# Gas adiabatic index
-rho_cgs = mp_cgs        			# Background density
-u0_cgs = 1.2e12					# Desired initial internal energy (1.2e12 ~ 10^4K)
-P_cgs = rho_cgs*u0_cgs*(gamma - 1.)          	# Background pressure
-fileName = "stellar_evolution.hdf5" 
+gamma    = 5./3.      				# Gas adiabatic index
+rho_cgs  = mp_cgs        			# Background density
+u0_cgs   = 1.2e12				# Desired initial internal energy (1.2e12 ~ 10^4K)
+P_cgs    = rho_cgs*u0_cgs*(gamma - 1.)          # Background pressure
+fileName = "ics.hdf5" 
 
 # Units
 unit_l_cgs = 3.085678e21  # kpc
@@ -41,8 +41,8 @@ unit_A_cgs = 1.
 unit_T_cgs = 1.
 unit_t_cgs = unit_l_cgs / unit_v_cgs
 
-boxsize_cgs = 10. * kpc_in_cm
-vol_cgs = boxsize_cgs**3
+boxsize_cgs = 0.5 * kpc_in_cm # 500 pc
+vol_cgs     = boxsize_cgs**3
 
 #---------------------------------------------------
 glass = h5py.File("glassCube_32.hdf5", "r")
@@ -51,32 +51,32 @@ glass = h5py.File("glassCube_32.hdf5", "r")
 pos = glass["/PartType0/Coordinates"][:,:]
 eps = 1e-6
 pos = (pos - pos.min()) / (pos.max() - pos.min() + eps) * boxsize_cgs / unit_l_cgs
-h = glass["/PartType0/SmoothingLength"][:] * boxsize_cgs / unit_l_cgs
+h   = glass["/PartType0/SmoothingLength"][:] * boxsize_cgs / unit_l_cgs
 
 numPart = size(h)
 
 # Generate extra arrays
-v = zeros((numPart, 3))
-ids = linspace(1, numPart, numPart)
+v     = zeros((numPart, 3))
+ids   = linspace(1, numPart, numPart)
 m_cgs = zeros(numPart)
 u_cgs = zeros(numPart)
-m = zeros(numPart)
-u = zeros(numPart)
+m     = zeros(numPart)
+u     = zeros(numPart)
 
 m_cgs[:] = rho_cgs * vol_cgs / numPart    
 u_cgs[:] = P_cgs / (rho_cgs * (gamma - 1))
 
 # Stars
-star_pos = zeros((1, 3))
+star_pos      = zeros((1, 3))
 star_pos[:,:] = 0.5 * boxsize_cgs / unit_l_cgs
 
-star_v = zeros((1, 3))
+star_v      = zeros((1, 3))
 star_v[:,:] = 0.
 
 # increase mass to keep it at center
 star_m_cgs = m_cgs[0]
-star_ids = array([numPart + 1])
-star_h = array([h.max()])
+star_ids   = array([numPart + 1])
+star_h     = array([h.max()])
 
 #--------------------------------------------------
 
@@ -87,9 +87,9 @@ print("density cm^-3 " + str(rho_cgs/mp_cgs))
 print("initial temperature K " + str(u_cgs[0] / boltzmann_k_cgs*((gamma - 1)*rho_cgs)))
 
 # Convert to internal units
-star_m = array([star_m_cgs/unit_m_cgs])
-m[:] = m_cgs/unit_m_cgs
-u[:] = u_cgs*unit_v_cgs**-2
+star_m  = array([star_m_cgs/unit_m_cgs])
+m[:]    = m_cgs/unit_m_cgs
+u[:]    = u_cgs*unit_v_cgs**-2
 boxsize = boxsize_cgs/unit_l_cgs
 #--------------------------------------------------
 
