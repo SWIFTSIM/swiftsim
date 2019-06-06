@@ -21,7 +21,7 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
-#include "stellar_evolution_io.h"
+#include "stellar_evolution.h"
 #include "stellar_evolution_struct.h"
 
 /**
