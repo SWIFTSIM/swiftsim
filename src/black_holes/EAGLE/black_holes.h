@@ -80,7 +80,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
             bp->subgrid_mass, bp->mass);
 
   bp->rank = engine_rank;
-  
+
   bp->density.wcount = 0.f;
   bp->density.wcount_dh = 0.f;
   bp->rho_gas = 0.f;

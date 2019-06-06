@@ -1792,7 +1792,7 @@ void DOPAIR2_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
       cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
     error("Interacting unsorted cells.");
 
-#ifdef SWIFT_DEBUG_CHECKS
+#ifdef SWIFT_DEBUG_CHECKS_2
   /* Pick-out the sorted lists. */
   const struct entry *restrict sort_i = ci->hydro.sort[sid];
   const struct entry *restrict sort_j = cj->hydro.sort[sid];
