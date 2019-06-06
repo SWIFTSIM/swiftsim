@@ -27,6 +27,8 @@ struct tracers_xpart_data {
   /*! Maximum temperature achieved by this particle */
   float maximum_temperature;
 
+  float momentum_received;
+  
   /*! Anonymous union for the cosmological non-cosmological runs distinction */
   union {
 

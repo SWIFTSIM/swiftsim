@@ -313,14 +313,14 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   const float momentum_rand = random_unit_interval(si->id + pj->id, 
 						   ti_current, 
-						   random_number_stellar_feedback);
-
+  						   random_number_stellar_feedback);
+  
   /* if lucky, perform the actual kick  */
-  if (momentum_rand < momentum_prob) {       
-    printf("[COLIBRE KICK]: I was lucky, and kicked with delta_v = %e\n", delta_v);
+  if (momentum_rand < momentum_prob) {
     xpj->v_full[0] -= delta_v * dx[0]/r;
     xpj->v_full[1] -= delta_v * dx[1]/r;
     xpj->v_full[2] -= delta_v * dx[2]/r;
+    xpj->tracers_data.momentum_received += delta_v * current_mass;
   }
 
 }

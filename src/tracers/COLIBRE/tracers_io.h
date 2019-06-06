@@ -70,7 +70,11 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
                                    tracers_data.maximum_temperature_time);
   }
 
-  return 2;
+  list[2] = io_make_output_field("Momentum Received", FLOAT, 1,
+                                 UNIT_CONV_NO_UNITS, xparts,
+                                 tracers_data.momentum_received);  
+
+  return 3;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
@@ -93,6 +97,11 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
                                    tracers_data.maximum_temperature_time);
   }
 
-  return 2;
+  list[2] = io_make_output_field("Momentum Received", FLOAT, 1,
+                                 UNIT_CONV_NO_UNITS, sparts,
+                                 tracers_data.momentum_received);  
+
+  
+  return 3;
 }
 #endif /* SWIFT_TRACERS_COLIBRE_IO_H */
