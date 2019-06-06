@@ -33,6 +33,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+/* Local headers. */
+#include "align.h"
+
 // Type used for chunk bitmasks.
 typedef size_t hashmap_mask_t;
 
@@ -60,7 +63,7 @@ typedef struct _hashmap_element {
 } hashmap_element_t;
 
 /* Make sure a chunk fits in a given size. */
-#define HASHMAP_TARGET_CHUNK_BYTES (4 * 1024)
+#define HASHMAP_TARGET_CHUNK_BYTES (8 * 1024)
 #define HASHMAP_BITS_PER_ELEMENT ((int)sizeof(hashmap_element_t) * 8 + 1)
 #define HASHMAP_ELEMENTS_PER_CHUNK \
   ((HASHMAP_TARGET_CHUNK_BYTES * 8) / HASHMAP_BITS_PER_ELEMENT)
@@ -83,7 +86,7 @@ typedef struct _hashmap_chunk {
     void *next;
   };
   hashmap_element_t data[HASHMAP_ELEMENTS_PER_CHUNK];
-} hashmap_chunk_t;
+} SWIFT_STRUCT_ALIGN hashmap_chunk_t;
 
 /* A hashmap has some maximum size and current size,
  * as well as the data to hold. */
