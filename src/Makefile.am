@@ -217,9 +217,11 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/EAGLE/feedback.h feedback/EAGLE/feedback_struct.h feedback/EAGLE/feedback_iact.h \
                  feedback/EAGLE/feedback_properties.h feedback/EAGLE/imf.h feedback/EAGLE/interpolate.h \
                  feedback/EAGLE/yield_tables.h \
-		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution_io.h \
-		 feedback/GEAR/stellar_evolution.h feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
+		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution.h \
+		 feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
 		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
+                 feedback/GEAR/initial_mass_function.h feedback/GEAR/supernovae_ia.h feedback/GEAR/supernovae_ii.h \
+                 feedback/GEAR/lifetime.h \
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \
