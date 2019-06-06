@@ -3878,7 +3878,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
+          //scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
           /* If the local cell is active, more stuff will be needed. */
           scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_rho,
@@ -3904,8 +3904,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
           /* Is the foreign cell active and will need stuff from us? */
           scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
           scheduler_activate_send(s, cj->mpi.send, task_subtype_rho, ci_nodeID);
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
-                                  ci_nodeID);
+          //scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
+	  //                         ci_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -3918,7 +3918,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         if (ci_active) {
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
+          //scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
 
           /* If the local cell is active, more stuff will be needed. */
           scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_rho,
@@ -3944,8 +3944,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
           /* Is the foreign cell active and will need stuff from us? */
           scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
           scheduler_activate_send(s, ci->mpi.send, task_subtype_rho, cj_nodeID);
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
-                                  cj_nodeID);
+          //scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
+          //                        cj_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
