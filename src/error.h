@@ -122,12 +122,14 @@ extern int engine_rank;
   ({                                                                          \
     printf("[%04i] %s %s: " s "\n", engine_rank, clocks_get_timesincestart(), \
            __FUNCTION__, ##__VA_ARGS__);                                      \
+    fflush(stdout);                                                           \
   })
 #else
 #define message(s, ...)                                                 \
   ({                                                                    \
     printf("%s %s: " s "\n", clocks_get_timesincestart(), __FUNCTION__, \
            ##__VA_ARGS__);                                              \
+    fflush(stdout);                                                     \
   })
 #endif
 

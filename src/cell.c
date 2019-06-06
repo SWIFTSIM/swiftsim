@@ -1383,6 +1383,67 @@ int cell_slocktree(struct cell *c) {
 }
 
 /**
+ * @brief Lock a cell for access to its array of #bpart and hold its parents.
+ *
+ * @param c The #cell.
+ * @return 0 on success, 1 on failure
+ */
+int cell_blocktree(struct cell *c) {
+  TIMER_TIC
+
+  /* First of all, try to lock this cell. */
+  if (c->black_holes.hold || lock_trylock(&c->black_holes.lock) != 0) {
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+
+  /* Did somebody hold this cell in the meantime? */
+  if (c->black_holes.hold) {
+    /* Unlock this cell. */
+    if (lock_unlock(&c->black_holes.lock) != 0) error("Failed to unlock cell.");
+
+    /* Admit defeat. */
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+
+  /* Climb up the tree and lock/hold/unlock. */
+  struct cell *finger;
+  for (finger = c->parent; finger != NULL; finger = finger->parent) {
+    /* Lock this cell. */
+    if (lock_trylock(&finger->black_holes.lock) != 0) break;
+
+    /* Increment the hold. */
+    atomic_inc(&finger->black_holes.hold);
+
+    /* Unlock the cell. */
+    if (lock_unlock(&finger->black_holes.lock) != 0)
+      error("Failed to unlock cell.");
+  }
+
+  /* If we reached the top of the tree, we're done. */
+  if (finger == NULL) {
+    TIMER_TOC(timer_locktree);
+    return 0;
+  }
+
+  /* Otherwise, we hit a snag. */
+  else {
+    /* Undo the holds up to finger. */
+    for (struct cell *finger2 = c->parent; finger2 != finger;
+         finger2 = finger2->parent)
+      atomic_dec(&finger2->black_holes.hold);
+
+    /* Unlock this cell. */
+    if (lock_unlock(&c->black_holes.lock) != 0) error("Failed to unlock cell.");
+
+    /* Admit defeat. */
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+}
+
+/**
  * @brief Unlock a cell's parents for access to #part array.
  *
  * @param c The #cell.
@@ -1450,6 +1511,24 @@ void cell_sunlocktree(struct cell *c) {
   /* Climb up the tree and unhold the parents. */
   for (struct cell *finger = c->parent; finger != NULL; finger = finger->parent)
     atomic_dec(&finger->stars.hold);
+
+  TIMER_TOC(timer_locktree);
+}
+
+/**
+ * @brief Unlock a cell's parents for access to #bpart array.
+ *
+ * @param c The #cell.
+ */
+void cell_bunlocktree(struct cell *c) {
+  TIMER_TIC
+
+  /* First of all, try to unlock this cell. */
+  if (lock_unlock(&c->black_holes.lock) != 0) error("Failed to unlock cell.");
+
+  /* Climb up the tree and unhold the parents. */
+  for (struct cell *finger = c->parent; finger != NULL; finger = finger->parent)
+    atomic_dec(&finger->black_holes.hold);
 
   TIMER_TOC(timer_locktree);
 }
@@ -3725,6 +3804,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
  * @return 1 If the space needs rebuilding. 0 otherwise.
  */
 int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
+
   struct engine *e = s->space->e;
   const int nodeID = e->nodeID;
   int rebuild = 0;
@@ -3748,39 +3828,35 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = nodeID;
 #endif
 
-    /* Activate the drifts */
-    if (t->type == task_type_self && ci_active) {
-      cell_activate_drift_part(ci, s);
-      cell_activate_drift_bpart(ci, s);
-    }
-
     /* Only activate tasks that involve a local active cell. */
     if ((ci_active || cj_active) &&
         (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+
       scheduler_activate(s, t);
 
-      if (t->type == task_type_pair) {
-        /* Do ci */
-        if (ci_active) {
-
-          /* Activate the drift tasks. */
-          if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
-          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
-        }
-
-        /* Do cj */
-        if (cj_active) {
-
-          /* Activate the drift tasks. */
-          if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
-          if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
-        }
+      /* Activate the drifts */
+      if (t->type == task_type_self && ci_active) {
+        cell_activate_drift_part(ci, s);
+        cell_activate_drift_bpart(ci, s);
       }
 
+      /* Activate the drifts */
+      else if (t->type == task_type_pair) {
+
+        /* Activate the drift tasks. */
+        if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
+        if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+
+        if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+        if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
+      }
+
+      /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_self) {
         cell_activate_subcell_black_holes_tasks(ci, NULL, s);
       }
 
+      /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_pair) {
         cell_activate_subcell_black_holes_tasks(ci, cj, s);
       }
@@ -3788,6 +3864,7 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
     /* Only interested in pair interactions as of here. */
     if (t->type == task_type_pair || t->type == task_type_sub_pair) {
+
       /* Check whether there was too much particle motion, i.e. the
          cell neighbour conditions were violated. */
       if (cell_need_rebuild_for_black_holes_pair(ci, cj)) rebuild = 1;
@@ -3796,61 +3873,80 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 #ifdef WITH_MPI
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
-        if (cj_active) {
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
 
-          /* If the local cell is active, more stuff will be needed. */
-          // scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
-          //                        ci_nodeID);
-          cell_activate_drift_bpart(cj, s);
+        // if (cj_active) {
 
-          /* If the local cell is active, send its ti_end values. */
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_bpart,
-                                  ci_nodeID);
-        }
+        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
-        if (ci_active) {
-          // scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
+        /* If the local cell is active, more stuff will be needed. */
+        scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_rho,
+                                ci_nodeID);
+        scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_feedback,
+                                ci_nodeID);
 
-          /* If the foreign cell is active, we want its ti_end values. */
-          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
+        /* Drift before you send */
+        cell_activate_drift_bpart(cj, s);
 
-          /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
+        /* If the local cell is active, send its ti_end values. */
+        scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_bpart,
+                                ci_nodeID);
+        //}
 
-          /* Drift the cell which will be sent; note that not all sent
-             particles will be drifted, only those that are needed. */
-          cell_activate_drift_part(cj, s);
-        }
+        // if (ci_active) {
+        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart_rho);
+        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart_feedback);
+
+        /* If the foreign cell is active, we want its ti_end values. */
+        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
+
+        /* Is the foreign cell active and will need stuff from us? */
+        scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
+        scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
+                                ci_nodeID);
+
+        /* Drift the cell which will be sent; note that not all sent
+           particles will be drifted, only those that are needed. */
+        cell_activate_drift_part(cj, s);
+        //        }
 
       } else if (cj_nodeID != nodeID) {
+
         /* If the local cell is active, receive data from the foreign cell. */
-        if (ci_active) {
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+        ///        if (ci_active) {
+        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
 
-          /* If the local cell is active, more stuff will be needed. */
-          // scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
-          //                        cj_nodeID);
-          cell_activate_drift_bpart(ci, s);
+        /* If the local cell is active, more stuff will be needed. */
+        scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_rho,
+                                cj_nodeID);
+        scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_feedback,
+                                cj_nodeID);
 
-          /* If the local cell is active, send its ti_end values. */
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_bpart,
-                                  cj_nodeID);
-        }
+        /* Drift before you send */
+        cell_activate_drift_bpart(ci, s);
 
-        if (cj_active) {
-          // scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
+        /* If the local cell is active, send its ti_end values. */
+        scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_bpart,
+                                cj_nodeID);
+        //        }
 
-          /* If the foreign cell is active, we want its ti_end values. */
-          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
+        ///        if (cj_active) {
+        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart_rho);
+        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart_feedback);
 
-          /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
+        /* If the foreign cell is active, we want its ti_end values. */
+        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
 
-          /* Drift the cell which will be sent; note that not all sent
-             particles will be drifted, only those that are needed. */
-          cell_activate_drift_part(ci, s);
-        }
+        /* Is the foreign cell active and will need stuff from us? */
+        scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
+        scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
+                                cj_nodeID);
+
+        /* Drift the cell which will be sent; note that not all sent
+           particles will be drifted, only those that are needed. */
+        cell_activate_drift_part(ci, s);
+        //        }
       }
 #endif
     }
@@ -3871,31 +3967,13 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = nodeID;
 #endif
 
-    if (t->type == task_type_self && ci_active) {
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active || cj_active) &&
+        (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+
       scheduler_activate(s, t);
     }
 
-    else if (t->type == task_type_sub_self && ci_active) {
-      scheduler_activate(s, t);
-    }
-
-    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
-      /* We only want to activate the task if the cell is active and is
-         going to update some gas on the *local* node */
-      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-          (ci_active || cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
-        scheduler_activate(s, t);
-      }
-    }
-
-    /* Nothing more to do here, all drifts activated above */
-  }
 
   /* Un-skip the swallow tasks involved with this cell. */
   for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next) {
@@ -3912,30 +3990,13 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = nodeID;
 #endif
 
-    if (t->type == task_type_self && ci_active) {
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active || cj_active) &&
+        (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+
+
       scheduler_activate(s, t);
     }
-
-    else if (t->type == task_type_sub_self && ci_active) {
-      scheduler_activate(s, t);
-    }
-
-    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
-      /* We only want to activate the task if the cell is active and is
-         going to update some gas on the *local* node */
-      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-          (ci_active || cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
-        scheduler_activate(s, t);
-      }
-    }
-
-    /* Nothing more to do here, all drifts activated above */
   }
 
   /* Un-skip the feedback tasks involved with this cell. */
@@ -3953,34 +4014,25 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = nodeID;
 #endif
 
-    if (t->type == task_type_self && ci_active) {
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active || cj_active) &&
+        (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+
       scheduler_activate(s, t);
     }
-
-    else if (t->type == task_type_sub_self && ci_active) {
-      scheduler_activate(s, t);
-    }
-
-    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
-      /* We only want to activate the task if the cell is active and is
-         going to update some gas on the *local* node */
-      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-          (ci_active || cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
-        scheduler_activate(s, t);
-      }
-    }
-
-    /* Nothing more to do here, all drifts activated above */
   }
 
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID && cell_is_active_black_holes(c, e)) {
+
+    /* for (struct link *l = c->black_holes.swallow; l != NULL; l = l->next) */
+    /*   scheduler_activate(s, l->t); */
+    /* for (struct link *l = c->black_holes.do_swallow; l != NULL; l = l->next)
+     */
+    /*   scheduler_activate(s, l->t); */
+    /* for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next) */
+    /*   scheduler_activate(s, l->t); */
+
     if (c->black_holes.density_ghost != NULL)
       scheduler_activate(s, c->black_holes.density_ghost);
     if (c->black_holes.swallow_ghost[0] != NULL)

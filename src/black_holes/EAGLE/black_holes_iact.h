@@ -99,6 +99,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
     struct xpart *restrict xpj, const struct cosmology *cosmo,
     const integertime_t ti_current) {
 
+  return;
+
   float wi;
 
   /* Get r and 1/r. */
@@ -135,13 +137,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
         // if(bi->id == 4527799525197LL)
         // if(bi->id == 984539715331LL)
         message(
-            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d) on rank %d (old "
+            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
+            " on rank %d (old "
             "swallow id=%lld time_bin=%d ti_current=%lld)",
-            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id, pj->time_bin,
-            ti_current);
+            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
+            pj->time_bin, ti_current);
 
-	//printf("%lld\n", pj->id);
-	
+        // printf("%lld\n", pj->id);
+
         pj->swallow_id = bi->id;
 
       } else {

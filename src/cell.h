@@ -818,6 +818,8 @@ int cell_mlocktree(struct cell *c);
 void cell_munlocktree(struct cell *c);
 int cell_slocktree(struct cell *c);
 void cell_sunlocktree(struct cell *c);
+int cell_blocktree(struct cell *c);
+void cell_bunlocktree(struct cell *c);
 int cell_pack(struct cell *c, struct pcell *pc, const int with_gravity);
 int cell_unpack(struct pcell *pc, struct cell *c, struct space *s,
                 const int with_gravity);

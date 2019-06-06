@@ -81,7 +81,7 @@ struct part {
   long long id;
 
   int rank;
-  
+
   /*! Pointer to corresponding gravity part. */
   struct gpart* gpart;
 

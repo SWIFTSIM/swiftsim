@@ -45,7 +45,7 @@ struct bpart {
   float mass;
 
   int rank;
-  
+
   /* Particle cutoff radius. */
   float h;
 

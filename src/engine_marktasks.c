@@ -416,8 +416,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         /* Set the correct sorting flags */
         if (t_type == task_type_pair && t_subtype == task_subtype_bh_density) {
           if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
-          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+
+          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
           if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
         }
 
@@ -743,6 +744,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                     ci_nodeID);
             scheduler_activate_send(s, cj->mpi.send,
                                     task_subtype_bpart_feedback, ci_nodeID);
+
+            /* Drift before you send */
             cell_activate_drift_bpart(cj, s);
 
             /* If the local cell is active, send its ti_end values. */
@@ -1000,6 +1003,8 @@ int engine_marktasks(struct engine *e) {
   struct scheduler *s = &e->sched;
   const ticks tic = getticks();
   int rebuild_space = 0;
+
+  message("MARKTASKS!!");
 
   /* Run through the tasks and mark as skip or not. */
   size_t extra_data[3] = {(size_t)e, (size_t)rebuild_space, (size_t)&e->sched};
