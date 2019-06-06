@@ -466,6 +466,8 @@ __attribute__((always_inline)) INLINE static void hydro_timestep_extra(
 __attribute__((always_inline)) INLINE static void hydro_init_part(
     struct part *restrict p, const struct hydro_space *hs) {
 
+  p->rank = engine_rank;
+
   p->density.wcount = 0.f;
   p->density.wcount_dh = 0.f;
   p->rho = 0.f;

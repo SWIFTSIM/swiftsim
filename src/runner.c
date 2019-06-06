@@ -3715,6 +3715,8 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
 void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
+  return;
+
   struct engine *e = r->e;
   struct space *s = e->s;
   struct bpart *bparts = s->bparts;
@@ -3805,18 +3807,20 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[2] = bp->v[2];
 
             // if(bp->id == 4527799525197LL)
-            if (bp->id == 984539715331LL)
-              message(
-                  "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
-                  "node=%d",
-                  bp->id, p->id, gas_mass, bp->mass, c->nodeID);
+            // if (bp->id == 984539715331LL)
+            message(
+                "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
+                "node=%d BH node=%d part node=%d",
+                bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
+                p->rank);
 
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
               // if(bp->id == 4527799525197LL)
-              if (bp->id == 984539715331LL)
-                message("BH %lld removing particle %lld", bp->id, p->id);
+              // if (bp->id == 984539715331LL)
+              message("BH %lld removing particle %lld BH node=%d part node=%d",
+                      bp->id, p->id, bp->rank, p->rank);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3850,9 +3854,11 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             if (bp->id == BH_id) {
 
               // if(bp->id == 4527799525197LL)
-              if (bp->id == 984539715331LL)
-                message("BH %lld removing particle %lld (foreign BH case)",
-                        bp->id, p->id);
+              // if (bp->id == 984539715331LL)
+              message(
+                  "BH %lld removing particle %lld (foreign BH case) BH node=%d "
+                  "part node=%d",
+                  bp->id, p->id, bp->rank, p->rank);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3915,12 +3921,11 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
     /* Collect everything... */
     for (size_t k = 0; k < nr_parts; k++) {
 
-      // if (parts[k].swallow_id != -1)
-      if (parts[k].id == 7296358176571LL)
+      if (parts[k].swallow_id != -1) /* if (parts[k].id == 7296358176571LL) */
         message(
-            "Received particle %lld with swallow_id=%lld time_bin=%d "
+            "Received particle %lld with swallow_id=%lld node=%d time_bin=%d "
             "task=%s/%s",
-            parts[k].id, parts[k].swallow_id, parts[k].time_bin,
+            parts[k].id, parts[k].swallow_id, parts[k].rank, parts[k].time_bin,
             taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
 
       if (parts[k].time_bin == time_bin_inhibited) continue;

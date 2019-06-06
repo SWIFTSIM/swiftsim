@@ -507,7 +507,7 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
     message("Gas particle %lld is on rank %d", p->id, engine_rank);
 
   p->rank = engine_rank;
-  
+
   p->density.wcount = 0.f;
   p->density.wcount_dh = 0.f;
   p->rho = 0.f;
