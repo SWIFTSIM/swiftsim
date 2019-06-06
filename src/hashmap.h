@@ -118,6 +118,18 @@ typedef void (*hashmap_mapper_t)(hashmap_key_t, hashmap_value_t *, void *);
 void hashmap_init(hashmap_t *m);
 
 /**
+ * @brief Re-size the hashmap.
+ *
+ * Note that the hashmap size does not necessarily correspond to its
+ * capacity, since it will grow if too many collisions occur. As a rule
+ * of thumb, allocate twice as many elements as you think you will need.
+ *
+ * @param size New table size. If zero, the current size will be increase
+ *             by a fixed rate.
+ */
+void hashmap_grow(hashmap_t *m, size_t size);
+
+/**
  * @brief Add a key/value pair to the hashmap, overwriting whatever was
  * previously there.
  */

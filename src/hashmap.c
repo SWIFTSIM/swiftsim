@@ -248,15 +248,15 @@ hashmap_element_t *hashmap_find(hashmap_t *m, hashmap_key_t key, int create_new,
 /**
  * @brief Grows the hashmap and rehashes all the elements
  */
-void hashmap_grow(hashmap_t *m) {
+void hashmap_grow(hashmap_t *m, size_t new_size) {
   /* Hold on to the old data. */
   const size_t old_table_size = m->table_size;
   hashmap_chunk_t **old_chunks = m->chunks;
 
   /* Re-allocate the chunk array. */
-  m->table_size *= HASHMAP_GROWTH_FACTOR;
-  m->nr_chunks = (m->table_size + HASHMAP_ELEMENTS_PER_CHUNK - 1) /
-                 HASHMAP_ELEMENTS_PER_CHUNK;
+  if (new_size == 0) new_size = m->table_size * HASHMAP_GROWTH_FACTOR;
+  m->nr_chunks =
+      (new_size + HASHMAP_ELEMENTS_PER_CHUNK - 1) / HASHMAP_ELEMENTS_PER_CHUNK;
   m->table_size = m->nr_chunks * HASHMAP_ELEMENTS_PER_CHUNK;
 
   if (HASHMAP_DEBUG_OUTPUT) {
@@ -322,7 +322,7 @@ void hashmap_put(hashmap_t *m, hashmap_key_t key, hashmap_value_t value) {
 
   /* Loop around, trying to find our place in the world. */
   while (!element) {
-    hashmap_grow(m);
+    hashmap_grow(m, 0);
     element = hashmap_find(m, key, /*create_new=*/1, /*chain_length=*/NULL,
                            /*created_new_element=*/NULL);
   }
@@ -338,7 +338,7 @@ hashmap_value_t *hashmap_get(hashmap_t *m, hashmap_key_t key) {
       hashmap_find(m, key, /*create_new=*/1, /*chain_length=*/NULL,
                    /*created_new_element=*/NULL);
   while (!element) {
-    hashmap_grow(m);
+    hashmap_grow(m, 0);
     element = hashmap_find(m, key, /*create_new=*/1, /*chain_length=*/NULL,
                            /*created_new_element=*/NULL);
   }
@@ -351,7 +351,7 @@ hashmap_value_t *hashmap_get_new(hashmap_t *m, hashmap_key_t key,
   hashmap_element_t *element = hashmap_find(
       m, key, /*create_new=*/1, /*chain_length=*/NULL, created_new_element);
   while (!element) {
-    hashmap_grow(m);
+    hashmap_grow(m, 0);
     element = hashmap_find(m, key, /*create_new=*/1, /*chain_length=*/NULL,
                            created_new_element);
   }
