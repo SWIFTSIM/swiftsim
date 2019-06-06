@@ -1221,13 +1221,13 @@ void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (do_ci) {
-    //    RUNNER_CHECK_SORT(hydro, part, cj, ci, sid);
-    /// RUNNER_CHECK_SORT(stars, spart, ci, cj, sid);
+    RUNNER_CHECK_SORT(hydro, part, cj, ci, sid);
+    RUNNER_CHECK_SORT(stars, spart, ci, cj, sid);
   }
 
   if (do_cj) {
-    // RUNNER_CHECK_SORT(hydro, part, ci, cj, sid);
-    // RUNNER_CHECK_SORT(stars, spart, cj, ci, sid);
+    RUNNER_CHECK_SORT(hydro, part, ci, cj, sid);
+    RUNNER_CHECK_SORT(stars, spart, cj, ci, sid);
   }
 #endif /* SWIFT_DEBUG_CHECKS */
 
