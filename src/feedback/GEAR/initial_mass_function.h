@@ -117,6 +117,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_number(
     const struct initial_mass_function *imf, float m1, float m2) {
+  error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
     error("Mass 1 below or above limits expecting %g < %g < %g.",
@@ -164,7 +165,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_num
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_mass(
     const struct initial_mass_function *imf, float m1, float m2) {
-  error("This has not been tested");
+  error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
     error("Mass 1 below or above limits expecting %g < %g < %g.",
