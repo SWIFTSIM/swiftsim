@@ -33,22 +33,22 @@
  */
 struct initial_mass_function {
 
-  /*! Mass limits between IMF parts (n_parts + 1 elements) */
+  /*! Mass limits between IMF parts (n_parts + 1 elements). */
   float *mass_limits;
 
-  /*! Exponent of each IMF parts (n_parts elements) */
+  /*! Exponent of each IMF parts (n_parts elements). */
   float *exp;
 
-  /*! Coefficient of each IMF parts (n_parts elements) */
+  /*! Coefficient of each IMF parts (n_parts elements). */
   float *coef;
 
-  /*! Number of parts in the function */
+  /*! Number of parts in the function. */
   int n_parts;
 
-  /*! Minimal mass contained in mass_limits, copied for more clarity*/
+  /*! Minimal mass contained in mass_limits, copied for more clarity. */
   float mass_min;
 
-  /*! Maximal mass contained in mass_limits, copied for more clarity */
+  /*! Maximal mass contained in mass_limits, copied for more clarity. */
   float mass_max;
 
 };
@@ -66,6 +66,9 @@ struct lifetime {
 
   /*! Coefficients for the constant term */
   float constant[3];
+
+  /*! Factor for the mass unit change. */
+  float log_unit_mass;
 };
 
 /**

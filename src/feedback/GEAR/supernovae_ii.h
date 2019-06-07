@@ -71,9 +71,11 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
 
   /* Read the minimal mass of a supernovae */
   snii->mass_min = parser_get_param_float(params, "GEARSupernovaeII:min_mass");
+  snii->mass_min *= phys_const->const_solar_mass;
 
   /* Read the maximal mass of a supernovae */
   snii->mass_max = parser_get_param_float(params, "GEARSupernovaeII:max_mass");
+  snii->mass_max *= phys_const->const_solar_mass;
 
   /* Get the IMF parameters */
   snii->exponent = stellar_evolution_get_imf_exponent(imf, snii->mass_min, snii->mass_max);
