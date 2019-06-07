@@ -66,9 +66,14 @@ enum IO_DATA_TYPE {
 
 hid_t io_hdf5_type(enum IO_DATA_TYPE type);
 
+hsize_t io_get_number_element_in_attribute(hid_t attr);
+hsize_t io_get_number_element_in_dataset(hid_t dataset);
 void io_read_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
                        void* data);
-
+void io_read_array_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
+			     void* data, hsize_t number_element);
+void io_read_array_dataset(hid_t grp, const char* name, enum IO_DATA_TYPE type,
+			   void* data, hsize_t number_element);
 void io_write_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
                         const void* data, int num);
 

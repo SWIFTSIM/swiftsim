@@ -19,6 +19,8 @@
 #ifndef SWIFT_INITIAL_MASS_FUNCTION_GEAR_H
 #define SWIFT_INITIAL_MASS_FUNCTION_GEAR_H
 
+#include "hdf5_functions.h"
+
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
  */
@@ -242,6 +244,112 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_init
 }
 
 /**
+ * @brief Reads the initial mass function parameters from the tables.
+ *
+ * @param imf The #initial_mass_function.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_table(
+    struct initial_mass_function* imf, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  hid_t file_id, group_id;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/IMF", &file_id, &group_id);
+
+  /* Read number of parts */
+  io_read_attribute(group_id, "n", INT, &imf->n_parts);
+
+  /* The tables have a different definition of n */
+  imf->n_parts += 1;
+
+  /* Allocate the memory for the exponents */
+  if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
+    error("Failed to allocate the IMF exponents.");
+
+  /* Read the exponents */
+  io_read_array_attribute(group_id, "as", FLOAT, imf->exp, imf->n_parts);
+
+  /* Allocate the memory for the temporary mass limits */
+  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
+    error("Failed to allocate the IMF masses.");
+
+  /* Read the mass limits */
+  io_read_array_attribute(group_id, "ms", FLOAT, imf->mass_limits, imf->n_parts - 1);
+
+  /* Copy the data (need to shift for mass_min) */
+  for(int i = imf->n_parts - 1; i > 0; i--) {
+    imf->mass_limits[i] = imf->mass_limits[i-1];
+  }
+
+  /* Read the minimal mass limit */
+  io_read_attribute(group_id, "Mmin", FLOAT, &imf->mass_limits[0]);
+  
+  /* Read the maximal mass limit */
+  io_read_attribute(group_id, "Mmax", FLOAT, &imf->mass_limits[imf->n_parts]);
+
+  /* Close everything */
+  h5_close_group(file_id, group_id);
+}
+
+/**
+ * @brief Reads the parameters file and if required overwrites the parameters found in the yields table.
+ *
+ * @param imf The #initial_mass_function.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_params(
+    struct initial_mass_function* imf, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read the number of elements */
+  const int n_parts = parser_get_opt_param_int(params, "GEARInitialMassFunction:number_function_part", imf->n_parts);
+
+  const int n_parts_changed = n_parts != imf->n_parts;
+  imf->n_parts = n_parts;
+
+  /* Reallocate the exponent memory */
+  if (n_parts_changed) {
+    free(imf->exp);
+    if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
+      error("Failed to allocate the IMF exponents.");
+  }
+
+  /* Read the exponents */
+  const char *exponent_name = "GEARInitialMassFunction:exponents";
+  if (n_parts_changed) {
+    parser_get_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
+  }
+  else {
+    parser_get_opt_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
+  }
+
+  /* Reallocate the mass limits memory */
+  if (n_parts_changed) {
+    free(imf->mass_limits);
+    if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
+	NULL)
+      error("Failed to allocate the IMF masses.");
+  }
+
+  /* Read the mass limits */
+  const char *mass_limits_name = "GEARInitialMassFunction:mass_limits_msun";
+  if (n_parts_changed) {
+    parser_get_param_float_array(params, mass_limits_name,
+				 imf->n_parts + 1, imf->mass_limits);
+  }
+  else {
+    parser_get_opt_param_float_array(params, mass_limits_name,
+				     imf->n_parts + 1, imf->mass_limits);
+  }
+}
+
+/**
  * @brief Initialize the initial mass function.
  *
  * @param imf The #initial_mass_function.
@@ -253,23 +361,11 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial
     struct initial_mass_function* imf, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
-  /* Read the number of elements */
-  imf->n_parts = parser_get_param_int(params, "GEARInitialMassFunction:number_function_part");
+  /* Read the parameters from the yields table */
+  stellar_evolution_read_initial_mass_function_from_table(imf, phys_const, us, params);
 
-  /* Read the exponents */
-  if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) ==
-      NULL)
-    error("Failed to allocate the IMF exponents.");
-
-  parser_get_param_float_array(params, "GEARInitialMassFunction:exponents", imf->n_parts, imf->exp);
-
-  /* Read the mass limits */
-  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
-      NULL)
-    error("Failed to allocate the IMF temporary masses.");
-
-  parser_get_param_float_array(params, "GEARInitialMassFunction:mass_limits_msun",
-			       imf->n_parts + 1, imf->mass_limits);
+  /* Overwrites the parameters if found in the params file */
+  stellar_evolution_read_initial_mass_function_from_params(imf, phys_const, us, params);
 
   /* change the mass limits to internal units */
   for(int i = 0; i < imf->n_parts + 1; i++) {
