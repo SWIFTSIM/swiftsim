@@ -56,6 +56,56 @@ __attribute__((always_inline)) INLINE static float *stellar_evolution_get_supern
 
 
 /**
+ * @brief Reads the supernovae II parameters from parameters file.
+ *
+ * @param snii The #supernovae_ii model.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The simulation parameters.
+ * @param imf The #initial_mass_function model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_from_params(
+    struct supernovae_ii *snii, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read the minimal mass of a supernovae */
+  snii->mass_min = parser_get_opt_param_float(params, "GEARSupernovaeII:min_mass", snii->mass_min);
+
+  /* Read the maximal mass of a supernovae */
+  snii->mass_max = parser_get_opt_param_float(params, "GEARSupernovaeII:max_mass", snii->mass_max);
+
+}
+
+/**
+ * @brief Reads the supernovae II parameters from tables.
+ *
+ * @param snii The #supernovae_ii model.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The simulation parameters.
+ * @param imf The #initial_mass_function model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_from_tables(
+    struct supernovae_ii *snii, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  hid_t file_id, group_id;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/SNII", &file_id, &group_id);
+
+  /* Read the minimal mass of a supernovae */
+  io_read_attribute(group_id, "Mmin", FLOAT, &snii->mass_min);
+
+  /* Read the maximal mass of a supernovae */
+  io_read_attribute(group_id, "Mmax", FLOAT, &snii->mass_max);
+
+  /* Cleanup everything */
+  h5_close_group(file_id, group_id);
+}
+
+
+/**
  * @brief Initialize the #supernovae_ii structure.
  *
  * @param snii The #supernovae_ii model.
@@ -69,12 +119,14 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
     const struct unit_system* us, struct swift_params* params,
     const struct initial_mass_function *imf) {
 
-  /* Read the minimal mass of a supernovae */
-  snii->mass_min = parser_get_param_float(params, "GEARSupernovaeII:min_mass");
+  /* Read the parameters from the tables */
+  stellar_evolution_read_supernovae_ii_from_tables(snii, phys_const, us, params);
+  
+  /* Read the parameters from the params file */
+  stellar_evolution_read_supernovae_ii_from_tables(snii, phys_const, us, params);
+  
+  /* Apply the unit changes */
   snii->mass_min *= phys_const->const_solar_mass;
-
-  /* Read the maximal mass of a supernovae */
-  snii->mass_max = parser_get_param_float(params, "GEARSupernovaeII:max_mass");
   snii->mass_max *= phys_const->const_solar_mass;
 
   /* Get the IMF parameters */
