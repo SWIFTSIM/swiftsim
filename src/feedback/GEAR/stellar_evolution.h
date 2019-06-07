@@ -47,14 +47,14 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   /* Initialize the initial mass function */
   stellar_evolution_init_initial_mass_function(&sm->imf, phys_const, us, params);
 
-  /* /\* Initialize the lifetime model *\/ */
-  /* stellar_evolution_init_lifetime(&sm->lifetime, phys_const, us, params); */
+  /* Initialize the lifetime model */
+  stellar_evolution_init_lifetime(&sm->lifetime, phys_const, us, params);
 
-  /* /\* Initialize the supernovae Ia model *\/ */
-  /* stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, &sm->imf); */
+  /* Initialize the supernovae Ia model */
+  stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, &sm->imf);
  
-  /* /\* Initialize the supernovae II model *\/ */
-  /* stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, &sm->imf); */
+  /* Initialize the supernovae II model */
+  stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, &sm->imf);
 
 
 }

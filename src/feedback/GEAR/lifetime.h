@@ -30,7 +30,6 @@
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lifetime_from_mass(
     const struct lifetime *life, float log_mass, float metallicity) {
-  // TODO units
 
   /* Compute quadratic term */
   const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
@@ -39,8 +38,12 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lif
   /* Compute constant term */
   const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
+  /* Apply unit change */
+  const float constant_internal_units = constant + (quadratic * life->log_unit_mass - linear) * life->log_unit_mass;
+  const float linear_internal_units = linear - 2. * quadratic * life->log_unit_mass;
+
   /* Compute lifetime */
-  return (quadratic * log_mass + linear) * log_mass + constant;
+  return (quadratic * log_mass + linear_internal_units) * log_mass + constant_internal_units;
 }
 
 /**
@@ -57,6 +60,8 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
     const struct lifetime *life, float log_time, float metallicity) {
 
   // TODO units
+  // b -> b - 2 a log(Msun)
+  // c -> c + a log(Msun)^2 - b log(Msun) + log(Tyr)
 
   /* Compute quadratic term */
   const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
@@ -65,23 +70,27 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
   /* Compute constant term */
   const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
+  /* Apply unit change */
+  const float constant_internal_units = constant + (quadratic * life->log_unit_mass - linear) * life->log_unit_mass;
+  const float linear_internal_units = linear - 2. * quadratic * life->log_unit_mass;
+
   /* Compute the "c" with the time */
-  const float c_t = constant - log_time;
+  const float c_t = constant_internal_units - log_time;
 
   /* Use the quadratic formula to find the mass */
   if (quadratic != 0) {
-    const float delta = linear * linear - 4 * quadratic * c_t;
+    const float delta = linear_internal_units * linear_internal_units - 4 * quadratic * c_t;
 
     /* Avoid complex number should not happen in real simulation */
     if (delta < 0) {
-      return - linear / (2. * quadratic);
+      return - linear_internal_units / (2. * quadratic);
     }
     else {
-      return (-linear - sqrt(delta)) / (2. * quadratic);
+      return (-linear_internal_units - sqrt(delta)) / (2. * quadratic);
     }
   }
   else {
-    return - c_t / linear;
+    return - c_t / linear_internal_units;
   }
 }
 
@@ -102,11 +111,15 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetim
 
   /* Read linear terms */
   parser_get_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
-  // b -> b - 2 a log(Msun)
 
   /* Read constant terms */
   parser_get_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
-  // c -> c + a log(Msun)^2 - b log(Msun) + log(Tyr)
+
+  /* Change the time unit (mass cannot be done here) */
+  lt->constant[2] += log10(phys_const->const_year);
+
+  /* Compute the variable for the change of mass unit */
+  lt->log_unit_mass = log10(phys_const->const_solar_mass);
   
 }
 #endif // SWIFT_LIFETIME_GEAR_H
