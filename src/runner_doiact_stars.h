@@ -1220,13 +1220,15 @@ void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj) {
     error("Interacting unsorted cells.");
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (do_ci && ci->depth > 0) {
-    RUNNER_CHECK_SORT(hydro, part, cj, ci, sid);
+  if (do_ci) {
+    //MATTHIEU: This test is faulty. To be fixed...
+    //RUNNER_CHECK_SORT(hydro, part, cj, ci, sid);
     RUNNER_CHECK_SORT(stars, spart, ci, cj, sid);
   }
 
-  if (do_cj && cj->depth > 0) {
-    RUNNER_CHECK_SORT(hydro, part, ci, cj, sid);
+  if (do_cj) {
+    //MATTHIEU: This test is faulty. To be fixed...
+    //RUNNER_CHECK_SORT(hydro, part, ci, cj, sid);
     RUNNER_CHECK_SORT(stars, spart, cj, ci, sid);
   }
 #endif /* SWIFT_DEBUG_CHECKS */
