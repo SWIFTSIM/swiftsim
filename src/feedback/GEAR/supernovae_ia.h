@@ -112,6 +112,95 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
 }
 
 /**
+ * @brief Reads the supernovae Ia parameters from the tables.
+ *
+ * @param snia The #supernovae_ia model.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The simulation parameters.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ia_from_tables(
+    struct supernovae_ia *snia, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  hid_t file_id, group_id;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/SNIa", &file_id, &group_id);
+
+  /* Read the exponent of the IMF for companion */
+  io_read_attribute(group_id, "a", FLOAT, &snia->companion_exponent);
+
+  /* Read the minimal mass for a white dwarf progenitor */
+  io_read_attribute(group_id, "Mpl", FLOAT, &snia->mass_min_progenitor);
+
+  /* Read the maximal mass for a white dwarf */
+  io_read_attribute(group_id, "Mpu", FLOAT, &snia->mass_max_progenitor);
+
+  /* Read the maximal mass of a red giant companion */
+  io_read_attribute(group_id, "Mdu1", FLOAT, &snia->companion[0].mass_max);
+
+  /* Read the minimal mass of a red giant companion */
+  io_read_attribute(group_id, "Mdl1", FLOAT, &snia->companion[0].mass_min);
+
+  /* Read the coefficient of the main sequence companion */
+  io_read_attribute(group_id, "bb1", FLOAT, &snia->companion[0].coef);
+
+  /* Read the maximal mass of a main sequence companion */
+  io_read_attribute(group_id, "Mdu2", FLOAT, &snia->companion[1].mass_max);
+
+  /* Read the minimal mass of a main sequence companion */
+  io_read_attribute(group_id, "Mdl2", FLOAT, &snia->companion[1].mass_min);
+
+  /* Read the coefficient of the main sequence companion */
+  io_read_attribute(group_id, "bb2", FLOAT, &snia->companion[1].coef);
+
+  /* Cleanup everything */
+  h5_close_group(file_id, group_id);
+
+}
+
+/**
+ * @brief Reads the supernovae Ia parameters from the parameters file.
+ *
+ * @param snia The #supernovae_ia model.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The simulation parameters.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ia_from_params(
+    struct supernovae_ia *snia, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read the exponent of the IMF for companion */
+  snia->companion_exponent = parser_get_opt_param_float(params, "GEARSupernovaeIa:exponent", snia->companion_exponent);
+  
+  /* Read the minimal mass for a white dwarf */
+  snia->mass_min_progenitor = parser_get_opt_param_float(params, "GEARSupernovaeIa:min_mass_white_dwarf_progenitor", snia->mass_min_progenitor);
+
+  /* Read the maximal mass for a white dwarf */
+  snia->mass_max_progenitor = parser_get_opt_param_float(params, "GEARSupernovaeIa:max_mass_white_dwarf_progenitor", snia->mass_max_progenitor);
+
+  /* Read the maximal mass of a red giant companion */
+  snia->companion[0].mass_max = parser_get_opt_param_float(params, "GEARSupernovaeIa:max_mass_red_giant", snia->companion[0].mass_max);
+
+  /* Read the minimal mass of a red giant companion */
+  snia->companion[0].mass_min = parser_get_opt_param_float(params, "GEARSupernovaeIa:min_mass_red_giant", snia->companion[0].mass_min);
+  
+  /* Read the coefficient of the main sequence companion */
+  snia->companion[0].coef = parser_get_opt_param_float(params, "GEARSupernovaeIa:coef_red_giant", snia->companion[0].coef);
+
+  /* Read the maximal mass of a main sequence companion */
+  snia->companion[1].mass_max = parser_get_opt_param_float(params, "GEARSupernovaeIa:max_mass_main_sequence", snia->companion[1].mass_max);
+
+  /* Read the minimal mass of a main sequence companion */
+  snia->companion[1].mass_min = parser_get_opt_param_float(params, "GEARSupernovaeIa:min_mass_main_sequence", snia->companion[1].mass_min);
+
+  /* Read the coefficient of the main sequence companion */
+  snia->companion[1].coef = parser_get_opt_param_float(params, "GEARSupernovaeIa:coef_main_sequence", snia->companion[1].coef);
+}
+
+/**
  * @brief Initialize the #supernovae_ia structure.
  *
  * @param snia The #supernovae_ia model.
@@ -125,16 +214,21 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
     const struct unit_system* us, struct swift_params* params,
     const struct initial_mass_function *imf) {
 
-  /* Read the exponent of the IMF for companion */
-  snia->companion_exponent = parser_get_param_float(params, "GEARSupernovaeIa:exponent");
+  /* Read the parameters from the tables */
+  stellar_evolution_read_supernovae_ia_from_tables(snia, phys_const, us, params);
   
-  /* Read the minimal mass for a white dwarf */
-  snia->mass_min_progenitor = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_white_dwarf_progenitor");
-  snia->mass_min_progenitor *= phys_const->const_solar_mass;
+  /* Read the parameters from the params file */
+  stellar_evolution_read_supernovae_ia_from_params(snia, phys_const, us, params);
 
-  /* Read the maximal mass for a white dwarf */
-  snia->mass_max_progenitor = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_white_dwarf_progenitor");
+  /* Apply the unit changes */
+  snia->mass_min_progenitor *= phys_const->const_solar_mass;
   snia->mass_max_progenitor *= phys_const->const_solar_mass;
+
+  snia->companion[0].mass_max *= phys_const->const_solar_mass;
+  snia->companion[0].mass_min *= phys_const->const_solar_mass;
+
+  snia->companion[1].mass_max *= phys_const->const_solar_mass;
+  snia->companion[1].mass_min *= phys_const->const_solar_mass;
 
   /* Get the IMF parameters */
   snia->progenitor_exponent = stellar_evolution_get_imf_exponent(imf,
@@ -143,31 +237,8 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
       snia->mass_min_progenitor, snia->mass_max_progenitor);
   snia->progenitor_coef_exp /= snia->progenitor_exponent;
 
-  /* Read the maximal mass of a red giant companion */
-  snia->companion[0].mass_max = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_red_giant");
-  snia->companion[0].mass_max *= phys_const->const_solar_mass;
-
-  /* Read the minimal mass of a red giant companion */
-  snia->companion[0].mass_min = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_red_giant");
-  snia->companion[0].mass_min *= phys_const->const_solar_mass;
-  
-  /* Read the coefficient of the main sequence companion */
-  snia->companion[0].coef = parser_get_param_float(params, "GEARSupernovaeIa:coef_red_giant");
-
-  /* Read the maximal mass of a main sequence companion */
-  snia->companion[1].mass_max = parser_get_param_float(params, "GEARSupernovaeIa:max_mass_main_sequence");
-  snia->companion[1].mass_max *= phys_const->const_solar_mass;
-
-  /* Read the minimal mass of a main sequence companion */
-  snia->companion[1].mass_min = parser_get_param_float(params, "GEARSupernovaeIa:min_mass_main_sequence");
-  snia->companion[1].mass_min *= phys_const->const_solar_mass;
-
-  /* Read the coefficient of the main sequence companion */
-  snia->companion[1].coef = parser_get_param_float(params, "GEARSupernovaeIa:coef_main_sequence");
-
   /* Compute the normalization coefficients of the companion IMF */
   stellar_evolution_init_supernovae_ia_companion(snia);
   
 }
-
 #endif // SWIFT_SUPERNOVAE_IA_GEAR_H

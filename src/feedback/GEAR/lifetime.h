@@ -19,6 +19,8 @@
 #ifndef SWIFT_LIFETIME_GEAR_H
 #define SWIFT_LIFETIME_GEAR_H
 
+#include "hdf5_functions.h"
+
 /**
  * @brief Compute the lifetime of a star.
  *
@@ -59,10 +61,6 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lif
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mass_from_lifetime(
     const struct lifetime *life, float log_time, float metallicity) {
 
-  // TODO units
-  // b -> b - 2 a log(Msun)
-  // c -> c + a log(Msun)^2 - b log(Msun) + log(Tyr)
-
   /* Compute quadratic term */
   const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
   /* Compute linear term */
@@ -94,6 +92,69 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
   }
 }
 
+
+/**
+ * @brief Read lifetime parameters from tables.
+ *
+ * @param lt The #lifetime.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_tables(
+    struct lifetime* lt, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+    hid_t file_id, group_id;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/LiveTimes", &file_id, &group_id);
+
+  /* Allocate the temporary array */
+  float *tmp;
+  if ((tmp = (float *)malloc(sizeof(float) * 9)) == NULL)
+    error("Failed to allocate the temporary array.");
+
+  /* Read the coefficients */
+  io_read_array_dataset(group_id, "coeff_z", FLOAT, tmp, 9);
+  
+  /* Copy the coefficents */
+  const int dim = 3;
+  for(int i = 0; i < dim; i++) {
+    lt->quadratic[i] = tmp[i];
+    lt->linear[i] = tmp[i+dim];
+    lt->constant[i] = tmp[i+2*dim];
+  }
+
+  /* Cleanup everything */
+  free(tmp);
+  h5_close_group(file_id, group_id);
+
+}
+
+/**
+ * @brief Read lifetime parameters from params.
+ *
+ * @param lt The #lifetime.
+ * @param phys_const The #phys_const.
+ * @param us The #unit_system.
+ * @param params The #swift_params.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_params(
+    struct lifetime* lt, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params) {
+
+  /* Read quadratic terms */
+  parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
+
+  /* Read linear terms */
+  parser_get_opt_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
+
+  /* Read constant terms */
+  parser_get_opt_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
+
+}
+
 /**
  * @brief Inititialize the Lifetime.
  *
@@ -106,14 +167,11 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetim
     struct lifetime* lt, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
-  /* Read quadratic terms */
-  parser_get_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
+  /* Read params from yields table */
+  stellar_evolution_read_lifetime_from_tables(lt, phys_const, us, params);
 
-  /* Read linear terms */
-  parser_get_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
-
-  /* Read constant terms */
-  parser_get_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
+  /* overwrite the parameters if found in the params */
+  stellar_evolution_read_lifetime_from_params(lt, phys_const, us, params);
 
   /* Change the time unit (mass cannot be done here) */
   lt->constant[2] += log10(phys_const->const_year);
@@ -122,4 +180,5 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetim
   lt->log_unit_mass = log10(phys_const->const_solar_mass);
   
 }
+
 #endif // SWIFT_LIFETIME_GEAR_H
