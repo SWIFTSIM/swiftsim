@@ -48,7 +48,7 @@ __attribute__((always_inline)) INLINE static float
 chemistry_metal_mass_fraction(const struct part* restrict p,
                               const struct xpart* restrict xp) {
   // TODO
-  return 0;
+  return p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
@@ -170,6 +170,8 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     struct xpart* restrict xp) {
 
   chemistry_init_part(p, data);
+
+  p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1] = data->initial_metallicity;
 }
 
 /**
