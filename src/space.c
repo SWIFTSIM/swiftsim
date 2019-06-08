@@ -5248,6 +5248,14 @@ void space_check_swallow(struct space *s) {
 
   threadpool_map(&s->e->threadpool, space_check_swallow_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), 1000, NULL);
+
+  for (size_t k = 0; k < s->nr_bparts; k++) {
+    if (s->bparts[k].is_swallowing_gas != 0)
+      error(
+          "BH flagged to swallow particle did not eat anything! ID=%lld "
+          "to_swallow=%d",
+          s->bparts[k].id, s->bparts[k].is_swallowing_gas);
+  }
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif

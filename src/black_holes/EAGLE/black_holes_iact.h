@@ -22,6 +22,9 @@
 /* Local includes */
 #include "hydro.h"
 #include "random.h"
+#include "space.h"
+
+extern struct space *s_pointer;
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -99,8 +102,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
     struct xpart *restrict xpj, const struct cosmology *cosmo,
     const integertime_t ti_current) {
 
-  return;
-
   float wi;
 
   /* Get r and 1/r. */
@@ -136,16 +137,36 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
 
         // if(bi->id == 4527799525197LL)
         // if(bi->id == 984539715331LL)
-        message(
-            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
-            " on rank %d (old "
-            "swallow id=%lld time_bin=%d ti_current=%lld)",
-            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
-            pj->time_bin, ti_current);
+        if (bi->id == 8488551516791LL || pj->id == 7433319600771LL ||
+            pj->id == 7310588820937LL || pj->id == 7346334038397LL)
+          message(
+              "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
+              " on rank %d (old "
+              "swallow id=%lld time_bin=%d ti_current=%lld)",
+              bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
+              pj->time_bin, ti_current);
 
-        // printf("%lld\n", pj->id);
+          // printf("%lld\n", pj->id);
+
+#ifdef SWIFT_DEBUG_CHECKS
+        if (pj->swallow_id != -1) {
+          for (size_t i = 0; i < s_pointer->nr_bparts; ++i) {
+            if (s_pointer->bparts[i].id == pj->swallow_id) {
+              s_pointer->bparts[i].is_swallowing_gas--;
+
+              if (pj->swallow_id == 2916244950065LL)
+                message("BH %lld loses a part to swallow!",
+                        s_pointer->bparts[i].id);
+            }
+          }
+        }
+#endif
 
         pj->swallow_id = bi->id;
+
+#ifdef SWIFT_DEBUG_CHECKS
+        atomic_inc(&bi->is_swallowing_gas);
+#endif
 
       } else {
 
