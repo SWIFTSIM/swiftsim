@@ -37,6 +37,8 @@
 /* This object's header. */
 #include "runner.h"
 
+struct space *s_pointer;
+
 /* Local headers. */
 #include "active.h"
 #include "approx_math.h"
@@ -3703,8 +3705,6 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
 void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
-  return;
-
   struct engine *e = r->e;
   struct space *s = e->s;
   struct bpart *bparts = s->bparts;
@@ -3722,7 +3722,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
   }
 
   /* Loop over the progeny ? */
-  if (0 && c->split) {
+  if (c->split) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *restrict cp = c->progeny[k];
@@ -3740,12 +3740,11 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       struct part *const p = &parts[k];
       struct xpart *const xp = &xparts[k];
 
-      // if (p->id == 7296358176571LL)
-
-      //	message("Found particle %lld on rank %d (swallow id=%lld
-      // time_bin=%d, depth=%d)",
-      // 		p->id, engine_rank, p->swallow_id, p->time_bin,
-      // c->depth);
+      if (p->id == 7296358176571LL)
+        message(
+            "Found particle %lld on rank %d (swallow id=%lld "
+            "time_bin=%d, depth=%d)",
+            p->id, engine_rank, p->swallow_id, p->time_bin, c->depth);
 
       /* Ignore inhibited particles */
       if (c->nodeID == e->nodeID && part_is_inhibited(p, e)) continue;
@@ -3794,21 +3793,29 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[1] = bp->v[1];
             bp->gpart->v_full[2] = bp->v[2];
 
+#ifdef SWIFT_DEBUG_CHECKS
+            atomic_dec(&bp->is_swallowing_gas);
+#endif
+
             // if(bp->id == 4527799525197LL)
             // if (bp->id == 984539715331LL)
-            message(
-                "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
-                "node=%d BH node=%d part node=%d",
-                bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
-                p->rank);
+            if (bp->id == 8488551516791LL || p->id == 7433319600771LL ||
+                p->id == 7310588820937LL || p->id == 7346334038397LL)
+              message(
+                  "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
+                  "node=%d BH node=%d part node=%d",
+                  bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
+                  p->rank);
 
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
               // if(bp->id == 4527799525197LL)
               // if (bp->id == 984539715331LL)
-              message("BH %lld removing particle %lld BH node=%d part node=%d",
-                      bp->id, p->id, bp->rank, p->rank);
+              if (bp->id == 8488551516791LL)
+                message(
+                    "BH %lld removing particle %lld BH node=%d part node=%d",
+                    bp->id, p->id, bp->rank, p->rank);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3847,6 +3854,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
                   "BH %lld removing particle %lld (foreign BH case) BH node=%d "
                   "part node=%d",
                   bp->id, p->id, bp->rank, p->rank);
+
+#ifdef SWIFT_DEBUG_CHECKS
+              bp->is_swallowing_gas = 0;
+#endif
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
