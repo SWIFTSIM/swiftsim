@@ -286,25 +286,12 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             /* Only do feedback if stars have a reasonable birth time */
             if (feedback_do_feedback(sp)) {
 
-              const integertime_t ti_step = get_integer_timestep(sp->time_bin);
-              const integertime_t ti_begin =
-                  get_integer_time_begin(e->ti_current - 1, sp->time_bin);
-
-              /* Get particle time-step */
-              double dt;
-              if (with_cosmology) {
-                dt = cosmology_get_delta_time(e->cosmology, ti_begin,
-                                              ti_begin + ti_step);
-              } else {
-                dt = get_timestep(sp->time_bin, e->time_base);
-              }
-
               /* Calculate age of the star at current time */
               double star_age_end_of_step;
               if (with_cosmology) {
                 star_age_end_of_step =
                     cosmology_get_delta_time_from_scale_factors(
-                        cosmo, (double)sp->birth_scale_factor, cosmo->a);
+                        cosmo, sp->birth_scale_factor, (float)cosmo->a);
               } else {
                 star_age_end_of_step = (float)e->time - sp->birth_time;
               }
@@ -313,12 +300,24 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               if (star_age_end_of_step > 0.) {
 
                 /* Age of the star at the start of the step */
-                const double star_age_beg_of_step =
-                    max(star_age_end_of_step - dt, 0.);
+                double star_age_beg_of_step;
+                if (with_cosmology) {
+                  star_age_beg_of_step =
+                      cosmology_get_delta_time_from_scale_factors(
+                          cosmo, sp->birth_scale_factor,
+                          sp->last_enrichment_time);
+                } else {
+                  star_age_beg_of_step =
+                      sp->last_enrichment_time - sp->birth_time;
+                }
+
+                /* Get enrichment time-step */
+                const double dt = star_age_end_of_step - star_age_beg_of_step;
 
                 /* Compute the stellar evolution  */
                 feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                      star_age_beg_of_step, dt);
+                                      star_age_beg_of_step, dt, e->time,
+                                      with_cosmology);
               } else {
 
                 /* Reset the feedback fields of the star particle */
@@ -423,21 +422,10 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
         stars_reset_feedback(sp);
 
+        message("%f %d", sp->birth_time, sp->count_since_last_enrichment);
+
         /* Only do feedback if stars have a reasonable birth time */
         if (feedback_do_feedback(sp)) {
-
-          const integertime_t ti_step = get_integer_timestep(sp->time_bin);
-          const integertime_t ti_begin =
-              get_integer_time_begin(e->ti_current - 1, sp->time_bin);
-
-          /* Get particle time-step */
-          double dt;
-          if (with_cosmology) {
-            dt = cosmology_get_delta_time(e->cosmology, ti_begin,
-                                          ti_begin + ti_step);
-          } else {
-            dt = get_timestep(sp->time_bin, e->time_base);
-          }
 
           /* Calculate age of the star at current time */
           double star_age_end_of_step;
@@ -452,12 +440,22 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           if (star_age_end_of_step > 0.) {
 
             /* Age of the star at the start of the step */
-            const double star_age_beg_of_step =
-                max(star_age_end_of_step - dt, 0.);
+            double star_age_beg_of_step;
+            if (with_cosmology) {
+              star_age_beg_of_step =
+                  cosmology_get_delta_time_from_scale_factors(
+                      cosmo, sp->birth_scale_factor, sp->last_enrichment_time);
+            } else {
+              star_age_beg_of_step = sp->last_enrichment_time - sp->birth_time;
+            }
+
+            /* Get enrichment time-step */
+            const double dt = star_age_end_of_step - star_age_beg_of_step;
 
             /* Compute the stellar evolution  */
             feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                  star_age_beg_of_step, dt);
+                                  star_age_beg_of_step, dt, e->time,
+                                  with_cosmology);
           } else {
 
             /* Reset the feedback fields of the star particle */
@@ -3034,6 +3032,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
                 ti_gravity_beg_max = 0;
   integertime_t ti_stars_end_min = max_nr_timesteps, ti_stars_end_max = 0,
                 ti_stars_beg_max = 0;
+  integertime_t ti_feedback_end_min = max_nr_timesteps, ti_feedback_end_max = 0,
+                ti_feedback_beg_max = 0;
   integertime_t ti_black_holes_end_min = max_nr_timesteps,
                 ti_black_holes_end_max = 0, ti_black_holes_beg_max = 0;
 
@@ -3205,6 +3205,20 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* Get new time-step */
         const integertime_t ti_new_step = get_spart_timestep(sp, e);
 
+        double age_of_star;
+        if (with_cosmology) {
+          age_of_star = cosmology_get_delta_time_from_scale_factors(
+              e->cosmology, (double)sp->birth_scale_factor, e->cosmology->a);
+        } else {
+          age_of_star = (float)e->time - sp->birth_time;
+        }
+
+        const int do_feedback =
+            feedback_will_do_feedback(sp, e->feedback_props, age_of_star);
+
+        message("do_feedback = %d %d %f", do_feedback,
+                sp->count_since_last_enrichment, sp->birth_time);
+
         /* Update particle */
         sp->time_bin = get_time_bin(ti_new_step);
         sp->gpart->time_bin = get_time_bin(ti_new_step);
@@ -3221,6 +3235,17 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* What is the next starting point for this cell ? */
         ti_stars_beg_max = max(ti_current, ti_stars_beg_max);
         ti_gravity_beg_max = max(ti_current, ti_gravity_beg_max);
+
+        if (do_feedback) {
+
+          ti_feedback_end_min =
+              min(ti_current + ti_new_step, ti_feedback_end_min);
+          ti_feedback_end_max =
+              max(ti_current + ti_new_step, ti_feedback_end_max);
+
+          /* What is the next starting point for this cell ? */
+          ti_feedback_beg_max = max(ti_current, ti_feedback_beg_max);
+        }
 
         /* star particle is inactive but not inhibited */
       } else {
@@ -3337,8 +3362,15 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         ti_gravity_beg_max = max(cp->grav.ti_beg_max, ti_gravity_beg_max);
 
         ti_stars_end_min = min(cp->stars.ti_end_min, ti_stars_end_min);
-        ti_stars_end_max = max(cp->grav.ti_end_max, ti_stars_end_max);
-        ti_stars_beg_max = max(cp->grav.ti_beg_max, ti_stars_beg_max);
+        ti_stars_end_max = max(cp->stars.ti_end_max, ti_stars_end_max);
+        ti_stars_beg_max = max(cp->stars.ti_beg_max, ti_stars_beg_max);
+
+        ti_feedback_end_min =
+            min(cp->stars.ti_feedback_end_min, ti_feedback_end_min);
+        ti_feedback_end_max =
+            max(cp->stars.ti_feedback_end_max, ti_feedback_end_max);
+        ti_feedback_beg_max =
+            max(cp->stars.ti_feedback_beg_max, ti_feedback_beg_max);
 
         ti_black_holes_end_min =
             min(cp->black_holes.ti_end_min, ti_black_holes_end_min);
@@ -3370,6 +3402,9 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   c->stars.ti_end_min = ti_stars_end_min;
   c->stars.ti_end_max = ti_stars_end_max;
   c->stars.ti_beg_max = ti_stars_beg_max;
+  c->stars.ti_feedback_end_min = ti_feedback_end_min;
+  c->stars.ti_feedback_end_max = ti_feedback_end_max;
+  c->stars.ti_feedback_beg_max = ti_feedback_beg_max;
   c->black_holes.ti_end_min = ti_black_holes_end_min;
   c->black_holes.ti_end_max = ti_black_holes_end_max;
   c->black_holes.ti_beg_max = ti_black_holes_beg_max;

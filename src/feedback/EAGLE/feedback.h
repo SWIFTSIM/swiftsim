@@ -41,7 +41,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 __attribute__((always_inline)) INLINE static int feedback_do_feedback(
     const struct spart* sp) {
 
-  return (sp->birth_time != -1.);
+  return (sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0);
 }
 
 /**
@@ -56,13 +56,7 @@ __attribute__((always_inline)) INLINE static int feedback_is_active(
     const struct spart* sp, const float time, const struct cosmology* cosmo,
     const int with_cosmology) {
 
-  if (sp->birth_time == -1.) return 0;
-
-  if (with_cosmology) {
-    return ((float)cosmo->a) > sp->birth_scale_factor;
-  } else {
-    return time > sp->birth_time;
-  }
+  return ((sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0));
 }
 
 /**
@@ -157,7 +151,8 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt) {
+    const double star_age_beg_step, const double dt, const double time,
+    const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -170,6 +165,50 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;
+
+  /* Mark this is the last time we did enrichment */
+  if (with_cosmology)
+    sp->last_enrichment_time = cosmo->a;
+  else
+    sp->last_enrichment_time = time;
+}
+
+/**
+ * @brief Will this star particle want to do feedback during the next time-step?
+ *
+ * @param sp The star of interest.
+ * @param feedback_props The properties of the feedback model.
+ * @param age_of_star Age of the star in internal units.
+ */
+__attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const double age_of_star) {
+
+  if (age_of_star < feedback_props->stellar_evolution_age_cut) {
+
+    /* Say we want to do feedback */
+    return 1;
+
+  } else {
+
+    /* Increment counter */
+    sp->count_since_last_enrichment++;
+
+    if ((sp->count_since_last_enrichment %
+         feedback_props->stellar_evolution_sampling_rate) == 0) {
+
+      /* Reset counter */
+      sp->count_since_last_enrichment = 0;
+
+      /* Say we want to do feedback */
+      return 1;
+
+    } else {
+
+      /* Say we don't want to do feedback */
+      return 0;
+    }
+  }
 }
 
 void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream);
