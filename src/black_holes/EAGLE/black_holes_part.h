@@ -119,6 +119,9 @@ struct bpart {
   /* Time of the last kick */
   integertime_t ti_kick;
 
+  /* Is this BH supposed to swallow a gas particle? */
+  int is_swallowing_gas;
+
 #endif
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
