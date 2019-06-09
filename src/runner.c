@@ -291,9 +291,9 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               if (with_cosmology) {
                 star_age_end_of_step =
                     cosmology_get_delta_time_from_scale_factors(
-                        cosmo, sp->birth_scale_factor, (float)cosmo->a);
+                        cosmo, (double)sp->birth_scale_factor, cosmo->a);
               } else {
-                star_age_end_of_step = (float)e->time - sp->birth_time;
+                star_age_end_of_step = e->time - (double)sp->birth_time;
               }
 
               /* Has this star been around for a while ? */
@@ -422,8 +422,6 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
         stars_reset_feedback(sp);
 
-        message("%f %d", sp->birth_time, sp->count_since_last_enrichment);
-
         /* Only do feedback if stars have a reasonable birth time */
         if (feedback_do_feedback(sp)) {
 
@@ -431,9 +429,9 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           double star_age_end_of_step;
           if (with_cosmology) {
             star_age_end_of_step = cosmology_get_delta_time_from_scale_factors(
-                cosmo, sp->birth_scale_factor, (float)cosmo->a);
+                cosmo, (double)sp->birth_scale_factor, cosmo->a);
           } else {
-            star_age_end_of_step = (float)e->time - sp->birth_time;
+            star_age_end_of_step = e->time - (double)sp->birth_time;
           }
 
           /* Has this star been around for a while ? */
@@ -3215,9 +3213,6 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 
         const int do_feedback =
             feedback_will_do_feedback(sp, e->feedback_props, age_of_star);
-
-        message("do_feedback = %d %d %f", do_feedback,
-                sp->count_since_last_enrichment, sp->birth_time);
 
         /* Update particle */
         sp->time_bin = get_time_bin(ti_new_step);

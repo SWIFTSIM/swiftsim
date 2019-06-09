@@ -420,7 +420,7 @@ INLINE static void star_formation_copy_properties(
   /* Flag that this particle has not done feedback yet */
   sp->f_E = -1.f;
   sp->last_enrichment_time = sp->birth_time;
-  sp->count_since_last_enrichment = 0;
+  sp->count_since_last_enrichment = -1;
 }
 
 /**
