@@ -78,6 +78,9 @@ struct spart {
     double birth_scale_factor;
   };
 
+  /*! Scale-factor / time at which this particle last did enrichment */
+  float last_enrichment_time;
+
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
 
@@ -135,6 +138,9 @@ struct stars_props {
 
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
+
+  /*! Value to set birth time of stars read from ICs */
+  float spart_first_init_birth_time;
 };
 
 #endif /* SWIFT_DEFAULT_STAR_PART_H */

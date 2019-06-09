@@ -108,11 +108,27 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
+ * @param time The physical time in internal units.
+ * @param with_cosmology Are we running with cosmology on?
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt) {}
+    const double star_age_beg_step, const double dt, const double time,
+    const int with_cosmology) {}
+
+/**
+ * @brief Will this star particle want to do feedback during the next time-step?
+ *
+ * @param sp The star of interest.
+ * @param feedback_props The properties of the feedback model.
+ * @param age_of_star Age of the star in internal units.
+ */
+__attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const double age_of_star) {
+  return 1;
+}
 
 /**
  * @brief Write a feedback struct to the given FILE as a stream of bytes.
