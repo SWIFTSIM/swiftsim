@@ -25,8 +25,9 @@ TimeIntegration:
 # Parameters governing the snapshots
 Snapshots:
   basename:            stellar_evolution # Common part of the name of output files
-  time_first:          0.       # Time of the first output (in internal units)
-  delta_time:          3.e-5    # Time difference between consecutive outputs without cosmology (internal units)
+  time_first:          0.                # Time of the first output (in internal units)
+  delta_time:          3.e-5             # Time difference between consecutive outputs (internal units)
+  compression:         1
 
 # Parameters governing the conserved quantities statistics
 Statistics:
