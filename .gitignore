@@ -45,6 +45,7 @@ examples/*/stf.*
 examples/*/fof_output*
 examples/*/log*
 examples/*/*/unused_parameters.yml
+examples/*/*/partition_fixed_costs.h
 examples/*/*.mpg
 examples/*/*/gravity_checks_*.dat
 examples/*/*/coolingtables.tar.gz
