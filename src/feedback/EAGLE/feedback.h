@@ -56,7 +56,7 @@ __attribute__((always_inline)) INLINE static int feedback_is_active(
     const struct spart* sp, const float time, const struct cosmology* cosmo,
     const int with_cosmology) {
 
-  return ((sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0));
+  return (sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0);
 }
 
 /**
@@ -185,6 +185,9 @@ __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
     const double age_of_star) {
 
   if (age_of_star < feedback_props->stellar_evolution_age_cut) {
+
+    /* Set the counter to "let's do enrichment" */
+    sp->count_since_last_enrichment = 0;
 
     /* Say we want to do feedback */
     return 1;
