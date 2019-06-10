@@ -3744,7 +3744,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
     }
   } else {
 
-    /* Loop over all the gas particles in the cell 
+    /* Loop over all the gas particles in the cell
      * Note that the cell (and hence the parts) may be local or foreign. */
     const size_t nr_parts = c->hydro.count;
     for (size_t k = 0; k < nr_parts; k++) {
@@ -3764,6 +3764,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
       /* Has this particle been flagged for swallowing? */
       if (p->swallow_id >= 0) {
+
+        message(
+            "Trying to find BH %lld that should swallow particle %lld depth=%d",
+            p->swallow_id, p->id, c->depth);
 
 #ifdef SWIFT_DEBUG_CHECKS
         if (p->ti_drift != e->ti_current)
@@ -3814,11 +3818,11 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             // if (bp->id == 984539715331LL)
             /* if (bp->id == 8488551516791LL || p->id == 7433319600771LL || */
             /*     p->id == 7310588820937LL || p->id == 7346334038397LL) */
-              message(
-                  "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
-                  "node=%d BH node=%d part node=%d",
-                  bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
-                  p->rank);
+            message(
+                "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
+                "node=%d BH node=%d part node=%d",
+                bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
+                p->rank);
 
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
@@ -3826,9 +3830,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               // if(bp->id == 4527799525197LL)
               // if (bp->id == 984539715331LL)
               /* if (bp->id == 8488551516791LL) */
-                message(
-                    "BH %lld removing particle %lld BH node=%d part node=%d",
-                    bp->id, p->id, bp->rank, p->rank);
+              message("BH %lld removing particle %lld BH node=%d part node=%d",
+                      bp->id, p->id, bp->rank, p->rank);
 
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
@@ -3842,7 +3845,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             found = 1;
             break;
           }
-	  
+
         } /* Loop over local BHs */
 
 #ifdef WITH_MPI
@@ -3937,13 +3940,13 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
       time_bin_max = max(time_bin_max, parts[k].time_bin);
       h_max = max(h_max, parts[k].h);
 
-      if (parts[k].swallow_id != -1) /* if (parts[k].id == 7296358176571LL) */
+      if (parts[k].id == 14554LL)
         message(
-		"Received particle %lld with swallow_id=%lld node=%d time_bin=%d "
-		"task=%s/%s",
-		parts[k].id, parts[k].swallow_id, parts[k].rank, parts[k].time_bin,
-		taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
-
+            "Received particle %lld with swallow_id=%lld node=%d time_bin=%d "
+            "task=%s/%s",  // p->x=[%e %e %e]",
+            parts[k].id, parts[k].swallow_id, parts[k].rank, parts[k].time_bin,
+            taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
+      // parts[k].x[0], parts[k].x[1], parts[k].x[2]);
     }
 
     /* Convert into a time */
@@ -3984,6 +3987,32 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
 #else
   error("SWIFT was not compiled with MPI support.");
 #endif
+}
+
+void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->nodeID != r->e->nodeID) error("Running self task on foreign node");
+#endif
+
+  runner_do_swallow(r, c, timer);
+}
+
+void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
+                            int timer) {
+
+  const struct engine *e = r->e;
+  const int nodeID = e->nodeID;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != nodeID && cj->nodeID != nodeID)
+    error("Running pair task on foreign node");
+  if (!cell_is_active_black_holes(ci, e) && !cell_is_active_black_holes(cj, e))
+    error("Running pair task with two inactive cells");
+#endif
+
+  if (cell_is_active_black_holes(cj, e)) runner_do_swallow(r, ci, timer);
+  if (cell_is_active_black_holes(ci, e)) runner_do_swallow(r, cj, timer);
 }
 
 /**
@@ -4325,7 +4354,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_bh_swallow)
             runner_doself_branch_bh_swallow(r, ci);
           else if (t->subtype == task_subtype_do_swallow)
-            runner_do_swallow(r, ci, 1);
+            runner_do_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_doself_branch_bh_feedback(r, ci);
           else
@@ -4354,8 +4383,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dopair_branch_bh_swallow(r, ci, cj);
           else if (t->subtype == task_subtype_do_swallow) {
-            runner_do_swallow(r, ci, 1);
-            runner_do_swallow(r, cj, 1);
+            runner_do_swallow_pair(r, ci, cj, 1);
           } else if (t->subtype == task_subtype_bh_feedback)
             runner_dopair_branch_bh_feedback(r, ci, cj);
           else
@@ -4382,7 +4410,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dosub_self_bh_swallow(r, ci, 1);
           else if (t->subtype == task_subtype_do_swallow)
-            runner_do_swallow(r, ci, 1);
+            runner_do_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_self_bh_feedback(r, ci, 1);
           else
@@ -4409,8 +4437,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_bh_swallow)
             runner_dosub_pair_bh_swallow(r, ci, cj, 1);
           else if (t->subtype == task_subtype_do_swallow) {
-            runner_do_swallow(r, ci, 1);
-            runner_do_swallow(r, cj, 1);
+            runner_do_swallow_pair(r, ci, cj, 1);
           } else if (t->subtype == task_subtype_bh_feedback)
             runner_dosub_pair_bh_feedback(r, ci, cj, 1);
           else
