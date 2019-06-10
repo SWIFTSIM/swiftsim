@@ -124,13 +124,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
     /* 	    bi->rank, pj->rank); */
 
     /* Draw a random number (Note mixing both IDs) */
-    /* const float rand = random_unit_interval(bi->id + pj->id, ti_current, */
-    /*                                         random_number_BH_swallow); */
+    const float rand = random_unit_interval(bi->id + pj->id, ti_current,
+                                            random_number_BH_swallow);
 
-    float rand = 1.f;
-    if (pj->id == 14554LL && ti_current > 0) {
-      rand = 0.f;
-    }
+    /* float rand = 1.f; */
+    /* if (pj->id == 14554LL && ti_current > 8796093022208LL ) { */
+    /*   rand = 0.f; */
+    /* } */
 
     /* Are we lucky? */
     if (rand < prob) {
