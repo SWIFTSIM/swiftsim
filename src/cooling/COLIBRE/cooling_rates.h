@@ -16,11 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-
-/* Config parameters. */
 #ifndef SWIFT_COLIBRE_COOLING_RATES_H
 #define SWIFT_COLIBRE_COOLING_RATES_H
 
+/* Config parameters. */
 #include "../config.h"
 
 /* Local includes. */
@@ -30,7 +29,7 @@
 #include "exp10.h"
 #include "interpolate.h"
 
-__attribute__((always_inline)) INLINE int element_from_table_to_code(int i) {
+__attribute__((always_inline)) INLINE static int element_from_table_to_code(int i) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if ((i >= colibre_cooling_N_elementtypes) || (i < 0))
@@ -92,7 +91,7 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(int i) {
  * @param cooling #cooling_function_data struct.
  * @param ratio_solar (return) Array of ratios to solar abundances.
  */
-__attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
+__attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
     const struct part *p, const struct cooling_function_data *cooling,
     float ratio_solar[colibre_cooling_N_elementtypes]) {
 
@@ -216,7 +215,7 @@ __attribute__((always_inline)) INLINE float abundance_ratio_to_solar(
  * @param cooling The #cooling_function_data used in the run.
  * @return Helium reionization energy in CGS units.
  */
-__attribute__((always_inline)) INLINE double
+__attribute__((always_inline)) INLINE static double
 eagle_helium_reionization_extraheat(
     double z, double delta_z, const struct cooling_function_data *cooling) {
 
@@ -259,7 +258,7 @@ eagle_helium_reionization_extraheat(
  *
  * TO DO: outside table ranges, it uses at the moment the minimum, maximu value
  */
-__attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
+__attribute__((always_inline)) INLINE static double colibre_convert_u_to_temp(
     const double log_10_u_cgs, const float redshift, int n_H_index, float d_n_H,
     int met_index, float d_met, int red_index, float d_red,
     const struct cooling_function_data *restrict cooling) {
@@ -313,7 +312,7 @@ __attribute__((always_inline)) INLINE double colibre_convert_u_to_temp(
  * TO DO: outside table ranges, it uses at the moment the minimum, maximu value
  */
 
-__attribute__((always_inline)) INLINE double colibre_convert_temp_to_u(
+__attribute__((always_inline)) INLINE static double colibre_convert_temp_to_u(
     const double log_10_T, const float redshift, int n_H_index, float d_n_H,
     int met_index, float d_met, int red_index, float d_red,
     const struct cooling_function_data *restrict cooling) {
@@ -360,7 +359,7 @@ __attribute__((always_inline)) INLINE double colibre_convert_temp_to_u(
  * @retura linear electron density in cm-3 (NOT the electron fraction)
  */
 
-INLINE double colibre_meanparticlemass_temperature(
+INLINE static double colibre_meanparticlemass_temperature(
     double log_T_cgs, double redshift, double n_H_cgs, float ZZsol,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
     float d_red, const struct cooling_function_data *restrict cooling) {
@@ -400,7 +399,7 @@ INLINE double colibre_meanparticlemass_temperature(
  * @retura linear electron density in cm-3 (NOT the electron fraction)
  */
 
-INLINE double colibre_electron_density(
+INLINE static double colibre_electron_density(
     double log_u_cgs, double redshift, double n_H_cgs, float ZZsol,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
@@ -446,7 +445,7 @@ INLINE double colibre_electron_density(
  * @retura linear electron density in cm-3 (NOT the electron fraction)
  */
 
-INLINE double colibre_electron_density_temperature(
+INLINE static double colibre_electron_density_temperature(
     double log_T_cgs, double redshift, double n_H_cgs, float ZZsol,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
@@ -500,7 +499,7 @@ INLINE double colibre_electron_density_temperature(
  * These are only used for testing: examples/CoolingRates/CoolingRatesCOLIBRE
  */
 
-INLINE double colibre_cooling_rate(
+INLINE static double colibre_cooling_rate(
     double log_u_cgs, double redshift, double n_H_cgs,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
@@ -650,7 +649,7 @@ INLINE double colibre_cooling_rate(
  * These are only used for testing: examples/CoolingRates/CoolingRatesCOLIBRE
  */
 
-INLINE double colibre_cooling_rate_temperature(
+INLINE static double colibre_cooling_rate_temperature(
     double log_T_cgs, double redshift, double n_H_cgs,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
