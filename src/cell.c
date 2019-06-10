@@ -3870,7 +3870,9 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_black_holes_pair(ci, cj)) rebuild = 1;
       if (cell_need_rebuild_for_black_holes_pair(cj, ci)) rebuild = 1;
 
+      // if (ci_nodeID == nodeID)
       scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost[0]);
+      // if (cj_nodeID == nodeID)
       scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost[0]);
 
 #ifdef WITH_MPI
