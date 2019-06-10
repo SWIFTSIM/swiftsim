@@ -153,6 +153,10 @@ struct space *s_pointer;
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
 
+extern FILE* file_swallow;
+extern FILE* file_remove;
+
+
 /**
  * @brief Intermediate task after the density to check that the smoothing
  * lengths are correct.
@@ -3812,6 +3816,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
                 bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
                 p->rank);
 
+	    fprintf(file_swallow, "%d %lld %lld \n", e->step, bp->id, p->id);
+	    fflush(file_swallow);
+  
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
@@ -3821,6 +3828,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               message("BH %lld removing particle %lld BH node=%d part node=%d",
                       bp->id, p->id, bp->rank, p->rank);
 
+	      fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
+	      fflush(file_remove);
+	      
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
               cell_remove_part(e, c, p, xp);
@@ -3851,6 +3861,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
             if (bp->id == BH_id) {
 
+	      lock_lock(&s->lock);
+	      
               // if(bp->id == 4527799525197LL)
               // if (bp->id == 984539715331LL)
               message(
@@ -3867,6 +3879,12 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               cell_remove_part(e, c, p, xp);
               cell_remove_gpart(e, c, gp);
 
+	      fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
+	      fflush(file_remove);
+	      
+	      if (lock_unlock(&s->lock) != 0)
+		error("Failed to unlock the space.");
+	      
               found = 1;
               break;
             }
@@ -3884,6 +3902,36 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       } /* Part was flagged for swallowing */
     }   /* Loop over the parts */
   }     /* Cell is not split */
+}
+
+void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->nodeID != r->e->nodeID) error("Running self task on foreign node");
+  if (!cell_is_active_black_holes(c, r->e))
+    error("Running self task on inactive cell");
+#endif
+
+  runner_do_swallow(r, c, timer);
+}
+
+void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
+                            int timer) {
+
+  const struct engine *e = r->e;
+  const int nodeID = e->nodeID;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != nodeID && cj->nodeID != nodeID)
+    error("Running pair task on foreign node");
+  if (!cell_is_active_black_holes(ci, e) && !cell_is_active_black_holes(cj, e))
+    error("Running pair task with two inactive cells");
+#endif
+
+  /* Run the swallowing loop only in the cell that is the neighbour of the
+   * active BH */
+  if (cell_is_active_black_holes(cj, e)) runner_do_swallow(r, ci, timer);
+  if (cell_is_active_black_holes(ci, e)) runner_do_swallow(r, cj, timer);
 }
 
 /**
@@ -3928,13 +3976,15 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
       time_bin_max = max(time_bin_max, parts[k].time_bin);
       h_max = max(h_max, parts[k].h);
 
-      if (parts[k].id == 14554LL)
-        message(
-            "Received particle %lld with swallow_id=%lld node=%d time_bin=%d "
-            "task=%s/%s",  // p->x=[%e %e %e]",
-            parts[k].id, parts[k].swallow_id, parts[k].rank, parts[k].time_bin,
-            taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
-      // parts[k].x[0], parts[k].x[1], parts[k].x[2]);
+      /* if (parts[k].id == 14554LL) */
+      /*   message( */
+      /*       "Received particle %lld with swallow_id=%lld node=%d time_bin=%d
+       * " */
+      /*       "task=%s/%s",  // p->x=[%e %e %e]", */
+      /*       parts[k].id, parts[k].swallow_id, parts[k].rank,
+       * parts[k].time_bin, */
+      /*       taskID_names[r->t->type], subtaskID_names[r->t->subtype]); */
+      /* // parts[k].x[0], parts[k].x[1], parts[k].x[2]); */
     }
 
     /* Convert into a time */
@@ -3975,32 +4025,6 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
 #else
   error("SWIFT was not compiled with MPI support.");
 #endif
-}
-
-void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (c->nodeID != r->e->nodeID) error("Running self task on foreign node");
-#endif
-
-  runner_do_swallow(r, c, timer);
-}
-
-void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
-                            int timer) {
-
-  const struct engine *e = r->e;
-  const int nodeID = e->nodeID;
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != nodeID && cj->nodeID != nodeID)
-    error("Running pair task on foreign node");
-  if (!cell_is_active_black_holes(ci, e) && !cell_is_active_black_holes(cj, e))
-    error("Running pair task with two inactive cells");
-#endif
-
-  if (cell_is_active_black_holes(cj, e)) runner_do_swallow(r, ci, timer);
-  if (cell_is_active_black_holes(ci, e)) runner_do_swallow(r, cj, timer);
 }
 
 /**
