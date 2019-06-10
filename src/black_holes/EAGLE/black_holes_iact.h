@@ -116,16 +116,21 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
   /* Is the BH hungry? */
   if (bi->subgrid_mass > bi->mass) {
 
-    /* if(bi->id == 984539715331LL) */
-    /*   message("BH is here 2!!!"); */
-
     /* Probability to swallow this particle */
     const float prob = (bi->subgrid_mass - bi->mass) * wi / bi->rho_gas;
 
+    /* message("BH is here !!! subgrid_mass=%f mass=%f prob=%e id=%lld rank=%d/%d", bi->subgrid_mass, bi->mass, prob, pj->id, */
+    /* 	    bi->rank, pj->rank); */
+          
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval(bi->id + pj->id, ti_current,
-                                            random_number_BH_swallow);
+    /* const float rand = random_unit_interval(bi->id + pj->id, ti_current, */
+    /*                                         random_number_BH_swallow); */
 
+    float rand = 1.f;
+    if(pj->id == 14554LL && ti_current > 0) {
+      rand = 0.f;
+    }
+    
     /* Are we lucky? */
     if (rand < prob) {
 
@@ -137,14 +142,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
 
         // if(bi->id == 4527799525197LL)
         // if(bi->id == 984539715331LL)
-        if (bi->id == 8488551516791LL || pj->id == 7433319600771LL ||
-            pj->id == 7310588820937LL || pj->id == 7346334038397LL)
+        /* if (bi->id == 8488551516791LL || pj->id == 7433319600771LL || */
+        /*     pj->id == 7310588820937LL || pj->id == 7346334038397LL) */
           message(
               "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
               " on rank %d (old "
-              "swallow id=%lld time_bin=%d ti_current=%lld)",
+              "swallow id=%lld time_bin=%d ti_current=%lld r=%e)",
               bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
-              pj->time_bin, ti_current);
+              pj->time_bin, ti_current, sqrt(r2));
 
           // printf("%lld\n", pj->id);
 
@@ -155,9 +160,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
 
               atomic_dec(&s_pointer->bparts[i].is_swallowing_gas);
 
-              if (pj->swallow_id == 2916244950065LL)
-                message("BH %lld loses a part to swallow!",
-                        s_pointer->bparts[i].id);
+              /* if (pj->swallow_id == 2916244950065LL) */
+              /*   message("BH %lld loses a part to swallow!", */
+              /*           s_pointer->bparts[i].id); */
             }
           }
 #ifdef WITH_MPI
