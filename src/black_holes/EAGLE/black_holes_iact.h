@@ -152,13 +152,22 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
         if (pj->swallow_id != -1) {
           for (size_t i = 0; i < s_pointer->nr_bparts; ++i) {
             if (s_pointer->bparts[i].id == pj->swallow_id) {
-              s_pointer->bparts[i].is_swallowing_gas--;
+
+              atomic_dec(&s_pointer->bparts[i].is_swallowing_gas);
 
               if (pj->swallow_id == 2916244950065LL)
                 message("BH %lld loses a part to swallow!",
                         s_pointer->bparts[i].id);
             }
           }
+#ifdef WITH_MPI
+          for (size_t i = 0; i < s_pointer->nr_bparts_foreign; ++i) {
+            if (s_pointer->bparts_foreign[i].id == pj->swallow_id) {
+
+              atomic_dec(&s_pointer->bparts[i].is_swallowing_gas);
+            }
+          }
+#endif
         }
 #endif
 

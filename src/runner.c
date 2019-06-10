@@ -3856,7 +3856,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
                   bp->id, p->id, bp->rank, p->rank);
 
 #ifdef SWIFT_DEBUG_CHECKS
-              bp->is_swallowing_gas = 0;
+              atomic_dec(&bp->is_swallowing_gas);
 #endif
 
               /* Finally, remove the gas particle from the system */
