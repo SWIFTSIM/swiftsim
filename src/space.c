@@ -5249,6 +5249,8 @@ void space_check_swallow(struct space *s) {
   threadpool_map(&s->e->threadpool, space_check_swallow_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), 1000, NULL);
 
+#ifndef WITH_MPI
+
   for (size_t k = 0; k < s->nr_bparts; k++) {
     if (s->bparts[k].is_swallowing_gas != 0)
       error(
@@ -5256,6 +5258,16 @@ void space_check_swallow(struct space *s) {
           "to_swallow=%d",
           s->bparts[k].id, s->bparts[k].is_swallowing_gas);
   }
+    // for (size_t k = 0; k < s->nr_bparts_foreign; k++) {
+    /* if (s->bparts_foreign[k].is_swallowing_gas != 0) */
+    /* error( */
+    /*     "Foreign BH flagged to swallow particle did not eat anything! ID=%lld
+     * " */
+    /*     "to_swallow=%d", */
+    /*     s->bparts_foreign[k].id, s->bparts_foreign[k].is_swallowing_gas); */
+    //}
+#endif
+
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
