@@ -119,18 +119,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
     /* Probability to swallow this particle */
     const float prob = (bi->subgrid_mass - bi->mass) * wi / bi->rho_gas;
 
-    /* message("BH is here !!! subgrid_mass=%f mass=%f prob=%e id=%lld rank=%d/%d", bi->subgrid_mass, bi->mass, prob, pj->id, */
+    /* message("BH is here !!! subgrid_mass=%f mass=%f prob=%e id=%lld
+     * rank=%d/%d", bi->subgrid_mass, bi->mass, prob, pj->id, */
     /* 	    bi->rank, pj->rank); */
-          
+
     /* Draw a random number (Note mixing both IDs) */
     /* const float rand = random_unit_interval(bi->id + pj->id, ti_current, */
     /*                                         random_number_BH_swallow); */
 
     float rand = 1.f;
-    if(pj->id == 14554LL && ti_current > 0) {
+    if (pj->id == 14554LL && ti_current > 0) {
       rand = 0.f;
     }
-    
+
     /* Are we lucky? */
     if (rand < prob) {
 
@@ -144,14 +145,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
         // if(bi->id == 984539715331LL)
         /* if (bi->id == 8488551516791LL || pj->id == 7433319600771LL || */
         /*     pj->id == 7310588820937LL || pj->id == 7346334038397LL) */
-          message(
-              "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
-              " on rank %d (old "
-              "swallow id=%lld time_bin=%d ti_current=%lld r=%e)",
-              bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
-              pj->time_bin, ti_current, sqrt(r2));
+        message(
+            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
+            " on rank %d (old "
+            "swallow id=%lld time_bin=%d ti_current=%lld r=%e, rho=%e)",
+            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
+            pj->time_bin, ti_current, sqrt(r2), bi->rho_gas);
 
-          // printf("%lld\n", pj->id);
+        // printf("%lld\n", pj->id);
 
 #ifdef SWIFT_DEBUG_CHECKS
         if (pj->swallow_id != -1) {
@@ -185,9 +186,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
       } else {
 
         message(
-            "BH %lld wants to swallow gas particle %lld but cannot (old "
-            "swallow id=%lld)",
-            bi->id, pj->id, pj->swallow_id);
+            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
+            " on rank %d BUT CANNOT (old "
+            "swallow id=%lld time_bin=%d ti_current=%lld r=%e, rho=%e)",
+            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
+            pj->time_bin, ti_current, sqrt(r2), bi->rho_gas);
+
+        /* message( */
+        /*     "BH %lld wants to swallow gas particle %lld but cannot (old " */
+        /*     "swallow id=%lld)", */
+        /*     bi->id, pj->id, pj->swallow_id); */
       }
     }
   }
