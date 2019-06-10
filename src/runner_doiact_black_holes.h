@@ -264,9 +264,9 @@ void DOPAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
 
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
-  //message("PAIR");
+  // message("PAIR");
 #endif
-  
+
   if (do_ci_bh && ci->black_holes.count != 0 && cj->hydro.count != 0)
     DO_NONSYM_PAIR1_BH_NAIVE(r, ci, cj);
   if (do_cj_bh && cj->black_holes.count != 0 && ci->hydro.count != 0)
@@ -595,10 +595,9 @@ void DOSELF1_BRANCH_BH(struct runner *r, struct cell *c) {
     error("Cell smaller than smoothing length");
 
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
-  //message("SELF");
+    // message("SELF");
 #endif
 
-  
   DOSELF1_BH(r, c, 1);
 }
 
