@@ -23,8 +23,138 @@
 /* Some standard headers. */
 #include <stdlib.h>
 
-/* Read chemistry */
+/* Read additional aubgrid models */
 #include "chemistry_struct.h"
+#include "feedback_struct.h"
 #include "tracers_struct.h"
+
+/**
+ * @brief Particle fields for the star particles.
+ *
+ * All quantities related to gravity are stored in the associate #gpart.
+ */
+struct spart {
+
+  /*! Particle ID. */
+  long long id;
+
+  /*! Pointer to corresponding gravity part. */
+  struct gpart* gpart;
+
+  /*! Particle position. */
+  double x[3];
+
+  /* Offset between current position and position at last tree rebuild. */
+  float x_diff[3];
+
+  /* Offset between current position and position at last tree rebuild. */
+  float x_diff_sort[3];
+
+  /*! Particle velocity. */
+  float v[3];
+
+  /*! Star mass */
+  float mass;
+
+  /*! Initial star mass */
+  float mass_init;
+
+  /*! Particle smoothing length. */
+  float h;
+
+  struct {
+
+    /* Number of neighbours. */
+    float wcount;
+
+    /* Number of neighbours spatial derivative. */
+    float wcount_dh;
+
+  } density;
+
+  /*! Union for the birth time and birth scale factor */
+  union {
+
+    /*! Birth time */
+    float birth_time;
+
+    /*! Birth scale factor */
+    float birth_scale_factor;
+  };
+
+  /*! Birth density */
+  float birth_density;
+
+  /*! Birth temperature */
+  float birth_temperature;
+
+  /*! Feedback energy fraction */
+  float f_E;
+
+  /*! Feedback structure */
+  struct feedback_spart_data feedback_data;
+
+  /*! Tracer structure */
+  struct tracers_xpart_data tracers_data;
+
+  /*! Chemistry structure */
+  struct chemistry_part_data chemistry_data;
+
+  /*! Particle time bin */
+  timebin_t time_bin;
+
+#ifdef SWIFT_DEBUG_CHECKS
+
+  /* Time of the last drift */
+  integertime_t ti_drift;
+
+  /* Time of the last kick */
+  integertime_t ti_kick;
+
+#endif
+
+#ifdef DEBUG_INTERACTIONS_STARS
+
+  /*! Number of interactions in the density SELF and PAIR */
+  int num_ngb_density;
+
+  /*! List of interacting particles in the density SELF and PAIR */
+  long long ids_ngbs_density[MAX_NUM_OF_NEIGHBOURS_STARS];
+
+  /*! Number of interactions in the force SELF and PAIR */
+  int num_ngb_force;
+
+  /*! List of interacting particles in the force SELF and PAIR */
+  long long ids_ngbs_force[MAX_NUM_OF_NEIGHBOURS_STARS];
+#endif
+
+} SWIFT_STRUCT_ALIGN;
+
+/**
+ * @brief Contains all the constants and parameters of the stars scheme
+ */
+struct stars_props {
+
+  /*! Resolution parameter */
+  float eta_neighbours;
+
+  /*! Target weighted number of neighbours (for info only)*/
+  float target_neighbours;
+
+  /*! Smoothing length tolerance */
+  float h_tolerance;
+
+  /*! Tolerance on neighbour number  (for info only)*/
+  float delta_neighbours;
+
+  /*! Maximal number of iterations to converge h */
+  int max_smoothing_iterations;
+
+  /*! Maximal change of h over one time-step */
+  float log_max_h_change;
+
+  /*! Value to set birth time of stars read from ICs */
+  float spart_first_init_birth_time;
+};
 
 #endif /* SWIFT_COLIBRE_STAR_PART_H */

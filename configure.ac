@@ -1355,11 +1355,11 @@ case "$with_subgrid" in
    COLIBRE)
 	with_subgrid_cooling=COLIBRE
 	with_subgrid_chemistry=COLIBRE
-	with_subgrid_tracers=EAGLE
+	with_subgrid_tracers=COLIBRE
 	with_subgrid_entropy_floor=EAGLE
-	with_subgrid_stars=EAGLE
+	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
-	with_subgrid_feedback=EAGLE
+	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=EAGLE
    ;;
    *)
@@ -1776,7 +1776,7 @@ esac
 # Feedback model
 AC_ARG_WITH([feedback],
    [AS_HELP_STRING([--with-feedback=<model>],
-      [Feedback model to use @<:@none, EAGLE, debug default: none@:>@]
+      [Feedback model to use @<:@none, EAGLE, COLIBRE, debug default: none@:>@]
    )],
    [with_feedback="$withval"],
    [with_feedback="none"]
@@ -1793,6 +1793,9 @@ fi
 case "$with_feedback" in
    EAGLE)
       AC_DEFINE([FEEDBACK_EAGLE], [1], [EAGLE stellar feedback and evolution model])
+   ;;
+   COLIBRE)
+      AC_DEFINE([FEEDBACK_COLIBRE], [1], [COLIBRE stellar feedback and evolution model])
    ;;
    none)
       AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
@@ -1964,6 +1967,8 @@ AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
+# Check if using COLIBRE feedback
+AM_CONDITIONAL([HAVECOLIBREFEEDBACK], [test $with_feedback = "COLIBRE"])
 
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile examples/Cooling/CoolingRatesCOLIBRE/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
