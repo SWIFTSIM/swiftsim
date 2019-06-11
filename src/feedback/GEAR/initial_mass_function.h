@@ -20,6 +20,7 @@
 #define SWIFT_INITIAL_MASS_FUNCTION_GEAR_H
 
 #include "hdf5_functions.h"
+#include "stellar_evolution_struct.h"
 
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
@@ -247,13 +248,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_init
  * @brief Reads the initial mass function parameters from the tables.
  *
  * @param imf The #initial_mass_function.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The #swift_params.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_table(
-    struct initial_mass_function* imf, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct initial_mass_function* imf, struct swift_params* params) {
 
   hid_t file_id, group_id;
 
@@ -299,13 +297,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_initial
  * @brief Reads the parameters file and if required overwrites the parameters found in the yields table.
  *
  * @param imf The #initial_mass_function.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The #swift_params.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_params(
-    struct initial_mass_function* imf, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct initial_mass_function* imf, struct swift_params* params) {
 
   /* Read the number of elements */
   const int n_parts = parser_get_opt_param_int(params, "GEARInitialMassFunction:number_function_part", imf->n_parts);
@@ -362,10 +357,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial
     const struct unit_system* us, struct swift_params* params) {
 
   /* Read the parameters from the yields table */
-  stellar_evolution_read_initial_mass_function_from_table(imf, phys_const, us, params);
+  stellar_evolution_read_initial_mass_function_from_table(imf, params);
 
   /* Overwrites the parameters if found in the params file */
-  stellar_evolution_read_initial_mass_function_from_params(imf, phys_const, us, params);
+  stellar_evolution_read_initial_mass_function_from_params(imf, params);
 
   /* change the mass limits to internal units */
   for(int i = 0; i < imf->n_parts + 1; i++) {
