@@ -73,6 +73,14 @@ if HAVECOLIBRECOOLING
 COLIBRE_COOLING_SOURCES += cooling/COLIBRE/cooling.c cooling/COLIBRE/cooling_tables.c
 endif
 
+# source files for COLIBRE feedback
+COLIBRE_FEEDBACK_SOURCES =
+if HAVECOLIBREFEEDBACK
+COLIBRE_FEEDBACK_SOURCES += feedback/COLIBRE/feedback.c
+endif
+
+
+
 # Common source files
 AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c \
     engine_marktasks.c engine_drift.c serial_io.c timers.c debug.c scheduler.c \
@@ -87,7 +95,7 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c 
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c fof.c \
     hashmap.c \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
-    $(COLIBRE_COOLING_SOURCES)
+    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES)
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
@@ -233,6 +241,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/EAGLE/feedback.h feedback/EAGLE/feedback_struct.h feedback/EAGLE/feedback_iact.h \
                  feedback/EAGLE/feedback_properties.h feedback/EAGLE/imf.h feedback/EAGLE/interpolate.h \
                  feedback/EAGLE/yield_tables.h \
+	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
+                 feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
+                 feedback/COLIBRE/yield_tables.h \
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \

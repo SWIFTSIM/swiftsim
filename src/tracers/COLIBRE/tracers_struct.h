@@ -19,4 +19,25 @@
 #ifndef SWIFT_TRACERS_STRUCT_COLIBRE_H
 #define SWIFT_TRACERS_STRUCT_COLIBRE_H
 
+/**
+ * @brief Properties of the tracers stored in the extended particle data.
+ */
+struct tracers_xpart_data {
+
+  /*! Maximum temperature achieved by this particle */
+  float maximum_temperature;
+
+  float momentum_received;
+
+  /*! Anonymous union for the cosmological non-cosmological runs distinction */
+  union {
+
+    /*! Scale-factor at which the maximal temperature was reached */
+    float maximum_temperature_scale_factor;
+
+    /*! Time at which the maximal temperature was reached */
+    float maximum_temperature_time;
+  };
+};
+
 #endif /* SWIFT_TRACERS_STRUCT_COLIBRE_H */
