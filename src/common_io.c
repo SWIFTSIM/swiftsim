@@ -207,6 +207,7 @@ void io_read_array_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type
   H5Aclose(h_attr);
 }
 
+
 /**
  * @brief Reads the number of elements in a HDF5 dataset.
  *
@@ -254,7 +255,7 @@ hsize_t io_get_number_element_in_dataset(hid_t dataset) {
 void io_read_array_dataset(hid_t grp, const char* name, enum IO_DATA_TYPE type,
 			     void* data, hsize_t number_element) {
 
-  /* Open attribute */
+  /* Open dataset */
   const hid_t h_dataset = H5Dopen(grp, name, H5P_DEFAULT);
   if (h_dataset < 0) error("Error while opening attribute '%s'", name);
 
@@ -267,7 +268,7 @@ void io_read_array_dataset(hid_t grp, const char* name, enum IO_DATA_TYPE type,
 	  count, number_element, name);
   }
 
-  /* Read attribute */
+  /* Read dataset */
   const hid_t h_err = H5Dread(h_dataset, io_hdf5_type(type), H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
   if (h_err < 0) error("Error while reading dataset '%s'", name);
 
