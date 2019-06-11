@@ -19,6 +19,13 @@
 #ifndef SWIFT_SUPERNOVAE_IA_GEAR_H
 #define SWIFT_SUPERNOVAE_IA_GEAR_H
 
+#include "hdf5_functions.h"
+#include "stellar_evolution.h"
+#include "stellar_evolution_struct.h"
+
+/* Forward declaration */
+__attribute__((always_inline)) INLINE static const char* stellar_evolution_get_element_name(
+    const struct stellar_model *sm, int i);
 
 /**
  * @brief Compute the companion integral (second integral in equation 3.46 in Poirier 2004)
@@ -65,7 +72,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_
   }
 
   float number_companion = 0.;
-  for(int i = 0; i < NUMBER_TYPE_OF_COMPANION; i++) {
+  for(int i = 0; i < GEAR_NUMBER_TYPE_OF_COMPANION; i++) {
     /* Check if we are in the possible interval */
     if (m1 > snia->companion[i].mass_max ||
 	m2 < snia->companion[i].mass_min)
@@ -90,8 +97,65 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_
   return number_companion * number_white_dwarf;
 };
 
-__attribute__((always_inline)) INLINE static float *stellar_evolution_get_supernovae_ia_yields(void) {
-  return (float*)NULL;
+/**
+ * @brief Get the SNIa yields.
+ *
+ * @param snia The #supernovae_ia model.
+ */
+__attribute__((always_inline)) INLINE static const float *stellar_evolution_get_supernovae_ia_yields(
+    const struct supernovae_ia *snia) {
+  return snia->yields.data;
+}
+
+/**
+ * @brief Read the SNIa yields from the table.
+ *
+ * @param snia The #supernovae_ia model.
+ * @param params The #swift_params.
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ia_yields(
+    struct supernovae_ia *snia, struct swift_params* params, const struct stellar_model *sm) {
+
+  hid_t file_id, group_id;
+  const int number_labels = CHEMISTRY_ELEMENT_COUNT + 2;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/SNIa/Metals", &file_id, &group_id);
+
+  /* Read the yields */
+  float *yields = (float*) malloc(sizeof(float) * number_labels);
+  io_read_array_attribute(group_id, "data", FLOAT, yields, number_labels);
+
+  /* Read the labels */
+  char labels[(CHEMISTRY_ELEMENT_COUNT + 2) * GEAR_LABELS_SIZE] = "";
+  io_read_string_array_attribute(
+    group_id, "elts", labels, number_labels, GEAR_LABELS_SIZE);
+
+  /* Save the yields */
+  /* Loop over the elements in sm */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    int found = 0;
+    /* Loop over SNIa yields labels */
+    for(int j = 0; j < number_labels; j++) {
+      const char *s1 = labels + j * GEAR_LABELS_SIZE;
+      const char *s2 = stellar_evolution_get_element_name(sm, i);
+      if (strcmp(s1, s2) == 0) {
+	found = 1;
+	snia->yields.data[i] = yields[j];
+	break;
+      }
+    }
+
+    /* Check if found an element */
+    if (!found) {
+      error("Cannot find element %s in SNIa yields", stellar_evolution_get_element_name(sm, i));
+    }
+  }
+
+  /* Cleanup everything */
+  free(yields);
+  h5_close_group(file_id, group_id);  
 };
 
 /**
@@ -100,7 +164,7 @@ __attribute__((always_inline)) INLINE static float *stellar_evolution_get_supern
 __attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia_companion(
     struct supernovae_ia *snia) {
 
-  for(int i = 0; i < NUMBER_TYPE_OF_COMPANION; i++) {
+  for(int i = 0; i < GEAR_NUMBER_TYPE_OF_COMPANION; i++) {
     /* Compute the integral */
     float integral = stellar_evolution_get_companion_fraction(
         snia, snia->companion[i].mass_min, snia->companion[i].mass_max, i);
@@ -111,17 +175,15 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
   
 }
 
+
 /**
  * @brief Reads the supernovae Ia parameters from the tables.
  *
  * @param snia The #supernovae_ia model.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The simulation parameters.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ia_from_tables(
-    struct supernovae_ia *snia, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct supernovae_ia *snia, struct swift_params* params) {
 
   hid_t file_id, group_id;
 
@@ -164,13 +226,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
  * @brief Reads the supernovae Ia parameters from the parameters file.
  *
  * @param snia The #supernovae_ia model.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The simulation parameters.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ia_from_params(
-    struct supernovae_ia *snia, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct supernovae_ia *snia, struct swift_params* params) {
 
   /* Read the exponent of the IMF for companion */
   snia->companion_exponent = parser_get_opt_param_float(params, "GEARSupernovaeIa:exponent", snia->companion_exponent);
@@ -207,18 +266,21 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
  * @param phys_const The #phys_const.
  * @param us The #unit_system.
  * @param params The simulation parameters.
- * @param imf The #initial_mass_function model.
+ * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ia(
     struct supernovae_ia *snia, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params,
-    const struct initial_mass_function *imf) {
+    const struct stellar_model *sm) {
 
   /* Read the parameters from the tables */
-  stellar_evolution_read_supernovae_ia_from_tables(snia, phys_const, us, params);
+  stellar_evolution_read_supernovae_ia_from_tables(snia, params);
   
   /* Read the parameters from the params file */
-  stellar_evolution_read_supernovae_ia_from_params(snia, phys_const, us, params);
+  stellar_evolution_read_supernovae_ia_from_params(snia, params);
+
+  /* Read the yields */
+  stellar_evolution_read_supernovae_ia_yields(snia, params, sm);
 
   /* Apply the unit changes */
   snia->mass_min_progenitor *= phys_const->const_solar_mass;
@@ -230,10 +292,15 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
   snia->companion[1].mass_max *= phys_const->const_solar_mass;
   snia->companion[1].mass_min *= phys_const->const_solar_mass;
 
+  /* Unit changes for yields */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    snia->yields.data[i] *= phys_const->const_solar_mass;
+  }
+
   /* Get the IMF parameters */
-  snia->progenitor_exponent = stellar_evolution_get_imf_exponent(imf,
+  snia->progenitor_exponent = stellar_evolution_get_imf_exponent(&sm->imf,
       snia->mass_min_progenitor, snia->mass_max_progenitor);
-  snia->progenitor_coef_exp = stellar_evolution_get_imf_coefficient(imf,
+  snia->progenitor_coef_exp = stellar_evolution_get_imf_coefficient(&sm->imf,
       snia->mass_min_progenitor, snia->mass_max_progenitor);
   snia->progenitor_coef_exp /= snia->progenitor_exponent;
 

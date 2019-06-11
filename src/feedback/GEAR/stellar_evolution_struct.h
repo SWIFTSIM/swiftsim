@@ -22,7 +22,8 @@
 /* Number of different type of companion.
    If changed, the IO needs to be updated.
  */
-#define NUMBER_TYPE_OF_COMPANION 2
+#define GEAR_NUMBER_TYPE_OF_COMPANION 8
+#define GEAR_LABELS_SIZE 10
 
 /**
  * @brief Model for the initial mass function.
@@ -76,7 +77,12 @@ struct lifetime {
  */
 struct supernovae_ia {
   /*! Yields TODO more comment */
-  struct interpolation *yields;
+  struct {
+
+    /*! Mass of each element ejected by a single supernovae */
+    float data[CHEMISTRY_ELEMENT_COUNT];
+
+  } yields;
 
   /*! Minimal mass of the progenitor */
   float mass_min_progenitor;
@@ -102,7 +108,7 @@ struct supernovae_ia {
 
     /*! Minimal mass of the companion */
     float mass_min;
-  } companion[NUMBER_TYPE_OF_COMPANION];
+  } companion[GEAR_NUMBER_TYPE_OF_COMPANION];
 
 
 };
@@ -113,7 +119,21 @@ struct supernovae_ia {
 struct supernovae_ii {
 
   /*! Yields TODO more comment */
-  struct interpolation *yields;
+  struct {
+
+    /*! Mass of each element ejected by a single supernovae as function of the mass */
+    float *data[CHEMISTRY_ELEMENT_COUNT];
+
+    /*! Number of points in each data set */
+    int number_points;
+
+    /*! Mass ejected by a supernovae */
+    float *mass_ejected;
+
+    /*! Mass ejected of non processed gas */
+    float *mass_ejected_non_process;
+
+  } yields;
 
   /*! Minimal mass for a SNII */
   float mass_min;
@@ -133,7 +153,9 @@ struct supernovae_ii {
  * @brief The complete stellar model.
  */
 struct stellar_model {
-  // TODO elements
+
+  /*! Name of the different elements */
+  char elements_name[CHEMISTRY_ELEMENT_COUNT * GEAR_LABELS_SIZE];
   
   /*! The initial mass function */
   struct initial_mass_function imf;

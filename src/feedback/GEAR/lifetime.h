@@ -20,6 +20,7 @@
 #define SWIFT_LIFETIME_GEAR_H
 
 #include "hdf5_functions.h"
+#include "stellar_evolution_struct.h"
 
 /**
  * @brief Compute the lifetime of a star.
@@ -97,15 +98,12 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
  * @brief Read lifetime parameters from tables.
  *
  * @param lt The #lifetime.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The #swift_params.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_tables(
-    struct lifetime* lt, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct lifetime* lt, struct swift_params* params) {
 
-    hid_t file_id, group_id;
+  hid_t file_id, group_id;
 
   /* Open IMF group */
   h5_open_group(params, "Data/LiveTimes", &file_id, &group_id);
@@ -136,13 +134,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetim
  * @brief Read lifetime parameters from params.
  *
  * @param lt The #lifetime.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The #swift_params.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_params(
-    struct lifetime* lt, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct lifetime* lt, struct swift_params* params) {
 
   /* Read quadratic terms */
   parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
@@ -168,10 +163,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetim
     const struct unit_system* us, struct swift_params* params) {
 
   /* Read params from yields table */
-  stellar_evolution_read_lifetime_from_tables(lt, phys_const, us, params);
+  stellar_evolution_read_lifetime_from_tables(lt, params);
 
   /* overwrite the parameters if found in the params */
-  stellar_evolution_read_lifetime_from_params(lt, phys_const, us, params);
+  stellar_evolution_read_lifetime_from_params(lt, params);
 
   /* Change the time unit (mass cannot be done here) */
   lt->constant[2] += log10(phys_const->const_year);
