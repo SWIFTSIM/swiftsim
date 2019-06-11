@@ -29,7 +29,8 @@
 #include "exp10.h"
 #include "interpolate.h"
 
-__attribute__((always_inline)) INLINE static int element_from_table_to_code(int i) {
+__attribute__((always_inline)) INLINE static int element_from_table_to_code(
+    int i) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if ((i >= colibre_cooling_N_elementtypes) || (i < 0))

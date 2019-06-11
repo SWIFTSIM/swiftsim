@@ -708,7 +708,9 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
-  double delta_v = delta_v_km_p_s / ( units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 1.0e-5);
+  double delta_v =
+      delta_v_km_p_s /
+      (units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 1.0e-5);
 
   /* Unit conversion constant */
   const double Myr_in_s = 1.0e6 * 365 * 24 * 60 * 60.;
@@ -781,7 +783,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
     /* Kick velocity (in code units) needed so that we can inject
      * all the momentum inside the kernel */
-    delta_v = sp->feedback_data.to_distribute.momentum / sp->feedback_data.to_distribute.momentum_weight;
+    delta_v = sp->feedback_data.to_distribute.momentum /
+              sp->feedback_data.to_distribute.momentum_weight;
 
     /* User decided velocity kick */
   } else {
@@ -799,10 +802,11 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
       /* Correct the kick (in code units) to be consistent with the mass within
        * the kernel and amount of momentum available */
       delta_v = (sp->feedback_data.to_distribute.momentum /
-		 sp->feedback_data.to_distribute.momentum_weight);
+                 sp->feedback_data.to_distribute.momentum_weight);
 
       message("Wind speed set to delta_v = %e km/s",
-	      delta_v * units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 1.0e-5);
+              delta_v * units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) *
+                  1.0e-5);
     }
   }
 
