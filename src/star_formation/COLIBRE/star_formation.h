@@ -313,7 +313,7 @@ INLINE static void starformation_init_backend(
 
   /* Get the temperature threshold */
   starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:KS_temperature_margin_dex", 10.f);
+      parameter_file, "COLIBREStarFormation:EOS_temperature_margin_dex", 10.f);
 
   /* Write it as a constant temperature multiplication */
   starform->ten_to_temperature_margin_threshold_dex =
@@ -321,7 +321,7 @@ INLINE static void starformation_init_backend(
 
   /* Get the temperature threshold */
   starform->temperature_threshold = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:temperature_threshold", FLT_MAX);
+      parameter_file, "COLIBREStarFormation:temperature_threshold_K", FLT_MAX);
 
   starform->maximal_density_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",
