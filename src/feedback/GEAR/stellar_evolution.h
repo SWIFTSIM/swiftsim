@@ -19,15 +19,62 @@
 #ifndef SWIFT_STELLAR_EVOLUTION_GEAR_H
 #define SWIFT_STELLAR_EVOLUTION_GEAR_H
 
-#include "stellar_evolution_struct.h"
-#include "lifetime.h"
+#include "hdf5_functions.h"
 #include "initial_mass_function.h"
+#include "lifetime.h"
+#include "stellar_evolution_struct.h"
 #include "supernovae_ia.h"
 #include "supernovae_ii.h"
 
 #include <math.h>
 #include <stddef.h>
 
+
+/**
+ * @brief Get the name of the element i.
+ *
+ * @param sm The #stellar_model.
+ * @param i The element indice.
+ */
+__attribute__((always_inline)) INLINE static const char* stellar_evolution_get_element_name(
+    const struct stellar_model *sm, int i) {
+
+  return sm->elements_name + i * GEAR_LABELS_SIZE;
+}
+
+/**
+ * @brief Read the name of all the elements present in the tables.
+ *
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_elements(
+    struct stellar_model* sm, struct swift_params* params) {
+
+  hid_t file_id, group_id;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data", &file_id, &group_id);
+
+  /* Read the elements */
+  io_read_string_array_attribute(
+    group_id, "elts", sm->elements_name, CHEMISTRY_ELEMENT_COUNT,
+    GEAR_LABELS_SIZE);
+
+  /* Print the name of the elements */
+  char txt[CHEMISTRY_ELEMENT_COUNT * (GEAR_LABELS_SIZE + 2)] = "";
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    if (i != 0) {
+      strcat(txt, ", ");
+    }
+    strcat(txt, stellar_evolution_get_element_name(sm, i));
+  }
+
+  message("Chemistry elements: %s", txt);
+
+  /* Cleanup everything */
+  h5_close_group(file_id, group_id);
+
+}
 
 /**
  * @brief Initialize the global properties of the stellar evolution scheme.
@@ -44,6 +91,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
     const struct unit_system* us, struct swift_params* params,
     const struct cosmology* cosmo) {
 
+  /* Read the list of elements */
+  stellar_evolution_read_elements(sm, params);
+
   /* Initialize the initial mass function */
   stellar_evolution_init_initial_mass_function(&sm->imf, phys_const, us, params);
 
@@ -51,10 +101,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   stellar_evolution_init_lifetime(&sm->lifetime, phys_const, us, params);
 
   /* Initialize the supernovae Ia model */
-  stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, &sm->imf);
+  stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, sm);
  
   /* Initialize the supernovae II model */
-  stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, &sm->imf);
+  stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, sm);
 
 
 }

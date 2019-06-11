@@ -41,10 +41,6 @@ struct feedback_props {
   struct stellar_model stellar_model;
 };
 
-__attribute__((always_inline)) INLINE static void feedback_read_tables(
-    struct feedback_props* fp, const struct phys_const* phys_const,
-    const struct unit_system* us);
-
 /**
  * @brief Initialize the global properties of the feedback scheme.
  *
@@ -82,96 +78,5 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   /* Print a final message. */
   message("Stellar feedback initialized");
 }
-
-#ifdef HAVE_HDF5
-/**
- * @brief Initialize the initial mass function.
- *
- * @param fp The #feedback_props.
- * @param file_id The HDF5 file to use.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
- */
-__attribute__((always_inline)) INLINE static void feedback_initialize_initial_mass_function(
-    struct feedback_props *fp, hid_t file_id,
-    const struct phys_const *phys_const, const struct unit_system *us) {
-}
-
-/**
- * @brief Initialize the stellar lifetime.
- *
- * @param fp The #feedback_props.
- * @param file_id The HDF5 file to use.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
- */
-__attribute__((always_inline)) INLINE static void feedback_initialize_lifetime(
-    struct feedback_props *fp, hid_t file_id,
-    const struct phys_const *phys_const, const struct unit_system *us) {
-}
-
-/**
- * @brief Initialize the SNIa.
- *
- * @param fp The #feedback_props.
- * @param file_id The HDF5 file to use.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
- */
-__attribute__((always_inline)) INLINE static void feedback_initialize_supernovae_ia(
-    struct feedback_props *fp, hid_t file_id,
-    const struct phys_const *phys_const, const struct unit_system *us) {
-}
-
-/**
- * @brief Initialize the SNII.
- *
- * @param fp The #feedback_props.
- * @param file_id The HDF5 file to use.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
- */
-__attribute__((always_inline)) INLINE static void feedback_initialize_supernovae_ii(
-    struct feedback_props *fp, hid_t file_id,
-    const struct phys_const *phys_const, const struct unit_system *us) {
-}
-
-/**
- * @brief Reads the chemistry table
- *
- * @param fp The #feedback_props.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
- */
-__attribute__((always_inline)) INLINE static void feedback_read_tables(
-    struct feedback_props* fp, const struct phys_const* phys_const,
-    const struct unit_system* us) {
-
-  hid_t status;
-
-  /* Open file */
-  hid_t file_id = H5Fopen(fp->filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (file_id < 0) error("Unable to open file %s", fp->filename);
-
-  /* Initialize the IMF */
-  feedback_initialize_initial_mass_function(fp, file_id, phys_const, us);
-
-  /* Initialize the lifetime */
-  feedback_initialize_lifetime(fp, file_id, phys_const, us);
-
-  /* Initialize the SNIa */
-  feedback_initialize_supernovae_ia(fp, file_id, phys_const, us);
-
-  /* Initialize the SNII */
-  feedback_initialize_supernovae_ii(fp, file_id, phys_const, us);
-
-  status = H5Fclose(file_id);
-  if (status < 0) error("error closing file");
-
-}
-#else // HAVE_HDF5
-#error Cannot use GEAR feedback without HDF5
-#endif
-
 
 #endif /* SWIFT_GEAR_FEEDBACK_PROPERTIES_H */

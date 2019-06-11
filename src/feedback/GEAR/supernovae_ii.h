@@ -19,6 +19,8 @@
 #ifndef SWIFT_SUPERNOVAE_II_GEAR_H
 #define SWIFT_SUPERNOVAE_II_GEAR_H
 
+#include "hdf5_functions.h"
+#include "stellar_evolution_struct.h"
 
 /**
  * @brief Compute the number of supernovae II per unit of mass (equation 3.47 in Poirier 2004).
@@ -55,18 +57,102 @@ __attribute__((always_inline)) INLINE static float *stellar_evolution_get_supern
 };
 
 
+
+__attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_yields(
+    struct supernovae_ii *snii, struct swift_params* params, const struct stellar_model *sm) {
+
+  hid_t file_id, group_id;
+
+  hsize_t previous_count = 0;
+
+  /* Open IMF group */
+  h5_open_group(params, "Data/SNII", &file_id, &group_id);
+
+  /* Do all the elements */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+
+    /* Get the element name */
+    const char *name = stellar_evolution_get_element_name(sm, i);
+
+    
+    /* Now let's get the number of elements */
+    /* Open attribute */
+    const hid_t h_dataset = H5Dopen(group_id, name, H5P_DEFAULT);
+    if (h_dataset < 0) error("Error while opening attribute '%s'", name);
+
+    /* Get the number of elements */
+    hsize_t count = io_get_number_element_in_dataset(h_dataset);
+
+    /* Check that all the arrays have the same size */
+    if (i != 0 && count != previous_count) {
+      error("The code is not able to deal with yields arrays of different size");
+    }
+    previous_count = count;
+
+    /* Close the attribute */
+    H5Dclose(h_dataset);
+
+    /* Allocate the memory */
+    float *data = (float*) malloc(sizeof(float) * count);
+    if (data == NULL)
+      error("Failed to allocate the SNII yields for %s.", name);
+
+    /* Read the dataset */
+    io_read_array_dataset(group_id, name, FLOAT,
+			  data, count);
+
+    /* Save the dataset */
+    snii->yields.data[i] = data;
+  }
+
+  /* Read the mass ejected */
+
+  /* Allocate the memory */
+  float *mass_ejected = (float*) malloc(sizeof(float) * previous_count);
+  if (mass_ejected == NULL)
+    error("Failed to allocate the SNII yields for the mass ejected.");
+
+  /* Read the dataset */
+  io_read_array_dataset(group_id, "Ej", FLOAT,
+			mass_ejected, previous_count);
+
+  /* Save the dataset */
+  snii->yields.mass_ejected = mass_ejected;
+
+  message("Ej: %g %g %g", mass_ejected[0], mass_ejected[1], mass_ejected[previous_count-1]);
+
+  /* Read the mass ejected of non processed gas */
+
+  /* Allocate the memory */
+  float *mass_ejected_non_process = (float*) malloc(sizeof(float) * previous_count);
+  if (mass_ejected_non_process == NULL)
+    error("Failed to allocate the SNII yields for the (non processed) mass ejected.");
+
+  /* Read the dataset */
+  io_read_array_dataset(group_id, "Ejnp", FLOAT,
+			mass_ejected_non_process, previous_count);
+
+  /* Save the dataset */
+  snii->yields.mass_ejected_non_process = mass_ejected_non_process;
+
+  message("Ejnp: %g %g %g", mass_ejected_non_process[0], mass_ejected_non_process[1], mass_ejected_non_process[previous_count-1]);
+
+  /* Save the number of element */
+  snii->yields.number_points = previous_count;
+
+  /* Cleanup everything */
+  h5_close_group(file_id, group_id);  
+};
+
+
 /**
  * @brief Reads the supernovae II parameters from parameters file.
  *
  * @param snii The #supernovae_ii model.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The simulation parameters.
- * @param imf The #initial_mass_function model.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_from_params(
-    struct supernovae_ii *snii, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct supernovae_ii *snii, struct swift_params* params) {
 
   /* Read the minimal mass of a supernovae */
   snii->mass_min = parser_get_opt_param_float(params, "GEARSupernovaeII:min_mass", snii->mass_min);
@@ -80,14 +166,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
  * @brief Reads the supernovae II parameters from tables.
  *
  * @param snii The #supernovae_ii model.
- * @param phys_const The #phys_const.
- * @param us The #unit_system.
  * @param params The simulation parameters.
- * @param imf The #initial_mass_function model.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_from_tables(
-    struct supernovae_ii *snii, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct supernovae_ii *snii, struct swift_params* params) {
 
   hid_t file_id, group_id;
 
@@ -112,26 +194,37 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
  * @param phys_const The #phys_const.
  * @param us The #unit_system.
  * @param params The simulation parameters.
- * @param imf The #initial_mass_function model.
+ * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void stellar_evolution_init_supernovae_ii(
     struct supernovae_ii *snii, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params,
-    const struct initial_mass_function *imf) {
+    const struct stellar_model *sm) {
 
   /* Read the parameters from the tables */
-  stellar_evolution_read_supernovae_ii_from_tables(snii, phys_const, us, params);
+  stellar_evolution_read_supernovae_ii_from_tables(snii, params);
   
   /* Read the parameters from the params file */
-  stellar_evolution_read_supernovae_ii_from_tables(snii, phys_const, us, params);
+  stellar_evolution_read_supernovae_ii_from_tables(snii, params);
+
+  /* Read the supernovae yields */
+  stellar_evolution_read_supernovae_ii_yields(snii, params, sm);
   
   /* Apply the unit changes */
   snii->mass_min *= phys_const->const_solar_mass;
   snii->mass_max *= phys_const->const_solar_mass;
 
+  /* Apply the unit changes to the data */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    for(int j = 0; j < snii->yields.number_points; j++) {
+      // TODO multiply by the mass ejected
+      snii->yields.data[i][j] *= phys_const->const_solar_mass;
+    }
+  }
+
   /* Get the IMF parameters */
-  snii->exponent = stellar_evolution_get_imf_exponent(imf, snii->mass_min, snii->mass_max);
-  snii->coef_exp = stellar_evolution_get_imf_coefficient(imf, snii->mass_min, snii->mass_max);
+  snii->exponent = stellar_evolution_get_imf_exponent(&sm->imf, snii->mass_min, snii->mass_max);
+  snii->coef_exp = stellar_evolution_get_imf_coefficient(&sm->imf, snii->mass_min, snii->mass_max);
   snii->coef_exp /= snii->exponent;
 }
 
