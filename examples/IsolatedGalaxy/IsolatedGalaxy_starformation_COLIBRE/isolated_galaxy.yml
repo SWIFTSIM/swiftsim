@@ -85,7 +85,7 @@ HernquistPotential:
 COLIBREStarFormation:
   min_over_density:                 57.7
   star_formation_efficiency:        0.01 
-  temperature_threshold:            1000
+  temperature_threshold_K:          1000
   threshold_max_density_H_p_cm3:    1e5
 
 # Parameters for the EAGLE "equation of state"

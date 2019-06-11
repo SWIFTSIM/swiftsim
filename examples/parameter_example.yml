@@ -401,3 +401,10 @@ EAGLEAGN:
   AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
 
+# COLIBRE star formation model (Following a density Schmidt law)
+COLIBREStarFormation:
+  min_over_density:                 57.7    # Minimum over density above which star formation is allowed
+  star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
+  temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
+  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms pe    r cm^3 (Default set to infinity).
+  EOS_temperature_margin_dex:       0.2     # (Optional) Logarithm base 10 of the maximal temperature difference above the EOS allowed to form stars. Default set to 10 (almost infinity)
