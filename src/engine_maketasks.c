@@ -2044,6 +2044,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
         }
+
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
+          scheduler_addunlock(sched, t_bh_swallow,
+                              ci->hydro.super->black_holes.swallow_ghost[0]);
+        }
       }
 
       if (cj->nodeID == nodeID) {
@@ -2111,6 +2116,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
+        }
+
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
+
+          scheduler_addunlock(sched, t_bh_swallow,
+                              cj->hydro.super->black_holes.swallow_ghost[0]);
         }
       }
     }
@@ -2446,6 +2457,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
         }
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
+
+          scheduler_addunlock(sched, t_bh_swallow,
+                              ci->hydro.super->black_holes.swallow_ghost[0]);
+        }
       }
 
       if (cj->nodeID == nodeID) {
@@ -2513,6 +2529,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
+        }
+
+        if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
+          scheduler_addunlock(sched, t_bh_swallow,
+                              cj->hydro.super->black_holes.swallow_ghost[0]);
         }
       }
     }
