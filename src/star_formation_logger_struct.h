@@ -34,6 +34,8 @@
 #include "./star_formation/EAGLE/star_formation_logger_struct.h"
 #elif defined(STAR_FORMATION_GEAR)
 #include "./star_formation/GEAR/star_formation_logger_struct.h"
+#elif defined(STAR_FORMATION_COLIBRE)
+#include "./star_formation/COLIBRE/star_formation_logger_struct.h"
 #else
 #error "Invalid choice of star formation structure."
 #endif

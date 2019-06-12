@@ -19,4 +19,17 @@
 #ifndef SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H
 #define SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H
 
+<<<<<<< HEAD
+=======
+/**
+ * @brief Star-formation-related properties stored in the extended particle
+ * data.
+ */
+struct star_formation_xpart_data {
+
+  /*! Star formation rate */
+  float SFR;
+};
+
+>>>>>>> master
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */

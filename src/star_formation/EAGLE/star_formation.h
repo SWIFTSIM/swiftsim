@@ -202,7 +202,7 @@ INLINE static double EOS_pressure(const double n_H,
  * @param hydro_props The properties of the hydro scheme.
  * @param us The internal system of units.
  * @param cooling The cooling data struct.
- * @param entropy_floor The entropy floor assumed in this run.
+ * @param entropy_floor_props The entropy floor assumed in this run.
  */
 INLINE static int star_formation_is_star_forming(
     const struct part* restrict p, const struct xpart* restrict xp,
@@ -213,9 +213,10 @@ INLINE static int star_formation_is_star_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor_props) {
 
-  /* Minimal density (converted from critical density) for star formation */
-  const double rho_crit_times_min_over_den =
-      cosmo->critical_density * starform->min_over_den;
+  /* Minimal density (converted from mean baryonic density) for star formation
+   */
+  const double rho_mean_b_times_min_over_den =
+      cosmo->mean_density_Omega_b * starform->min_over_den;
 
   /* Physical density of the particle */
   const double physical_density = hydro_get_physical_density(p, cosmo);
@@ -226,7 +227,7 @@ INLINE static int star_formation_is_star_forming(
    * threshold is reached or if the metallicity dependent
    * threshold is reached, after this we calculate if the
    * temperature is appropriate */
-  if (physical_density < rho_crit_times_min_over_den) return 0;
+  if (physical_density < rho_mean_b_times_min_over_den) return 0;
 
   /* In this case there are actually multiple possibilities
    * because we also need to check if the physical density exceeded
@@ -382,6 +383,10 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param starform the star formation law properties to use.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
+ * @param phys_const the physical constants in internal units.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param us The internal system of units.
+ * @param cooling The cooling data struct.
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -486,7 +491,7 @@ INLINE static void starformation_init_backend(
 
   /* Read the critical density contrast from the parameter file*/
   starform->min_over_den = parser_get_param_double(
-      parameter_file, "EAGLEStarFormation:KS_min_over_density");
+      parameter_file, "EAGLEStarFormation:min_over_density");
 
   /* Read the gas fraction from the file */
   starform->fgas = parser_get_opt_param_double(
@@ -560,7 +565,7 @@ INLINE static void starformation_init_backend(
       starform->max_gas_density_HpCM3 * number_density_from_cgs;
 
   starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
-      parameter_file, "EAGLEStarFormation:KS_temperature_margin_dex", FLT_MAX);
+      parameter_file, "EAGLEStarFormation:EOS_temperature_margin_dex", FLT_MAX);
 
   starform->ten_to_temperature_margin_threshold_dex = exp10(starform->temperature_margin_threshold_dex);
 

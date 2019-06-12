@@ -36,7 +36,6 @@
 #include "part.h"
 #include "physical_constants.h"
 #include "units.h"
-#include "random.h"
 
 /**
  * @brief Return a string containing the name of a given #chemistry_element.
@@ -167,6 +166,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
+
   //struct chemistry_part_data* cpd = &p->chemistry_data;
   // CC: Not sure what to do here, better to add message
    /* error("Needs implementing!");*/

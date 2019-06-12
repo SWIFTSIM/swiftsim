@@ -1,0 +1,3 @@
+Example for testing COLIBRE stellar winds by massive stars (early kinetic feedback). This consists of a uniform box of gas with a star in the center. The amount of momentum injected can be checked by summing the PartType0/Momentum Received variable in the snapshots over all gas particles. 
+
+Use the python script, check_momentum.py to compare the total amount of momentum received by the gas particles in the simulation against the model input. 

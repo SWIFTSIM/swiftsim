@@ -60,6 +60,8 @@
 #include "./hydro/Shadowswift/hydro_debug.h"
 #elif defined(PLANETARY_SPH)
 #include "./hydro/Planetary/hydro_debug.h"
+#elif defined(ANARCHY_DU_SPH)
+#include "./hydro/AnarchyDU/hydro_debug.h"
 #elif defined(ANARCHY_PU_SPH)
 #include "./hydro/AnarchyPU/hydro_debug.h"
 #else
@@ -405,7 +407,7 @@ static void dumpCells_map(struct cell *c, void *data) {
      * These define the edges of the partitions. */
     int ismpiactive = 0;
 #if WITH_MPI
-    ismpiactive = (c->mpi.hydro.send_xv != NULL);
+    ismpiactive = (c->mpi.send != NULL);
     if (mpiactive)
       mpiactive = ismpiactive;
     else

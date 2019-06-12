@@ -29,37 +29,75 @@
 
 #include "cooling_struct.h"
 
-/*! Number of different bins along the redhsift axis of the tables */
-#define eagle_cooling_N_redshifts 49
-
-/*! Number of redshift bins loaded at any given point int time */
-#define eagle_cooling_N_loaded_redshifts 2
-
 /*! Number of different bins along the temperature axis of the tables */
-#define eagle_cooling_N_temperature 176
+#define colibre_cooling_N_temperature 86
+
+/*! Number of different bins along the redshift axis of the tables */
+#define colibre_cooling_N_redshifts 10
 
 /*! Number of different bins along the density axis of the tables */
-#define eagle_cooling_N_density 41
+#define colibre_cooling_N_density 71
 
-/*! Number of different bins along the metal axis of the tables */
-#define eagle_cooling_N_metal 9
+/*! Number of different bins along the metallicity axis of the tables */
+#define colibre_cooling_N_metallicity 11
 
-/*! Number of different bins along the metal axis of the tables */
-#define eagle_cooling_N_He_frac 7
+/*! Number of different bins along the internal energy axis of the tables */
+#define colibre_cooling_N_internalenergy 191
 
-/*! Number of different bins along the abundances axis of the tables */
-#define eagle_cooling_N_abundances 11
+/*! Number of different cooling channels in the tables */
+#define colibre_cooling_N_cooltypes 22
+
+/*! Number of different heating channels in the tables */
+#define colibre_cooling_N_heattypes 24
+
+/*! Number of different electron fractions (each element - other atoms
+ *  + tot prim + tot metal + tot)  in the tables */
+#define colibre_cooling_N_electrontypes 14
+
+/*! Number of different elements in the tables */
+#define colibre_cooling_N_elementtypes 12
+
+enum {
+  element_H,
+  element_He,
+  element_C,
+  element_N,
+  element_O,
+  element_Ne,
+  element_Mg,
+  element_Si,
+  element_S,
+  element_Ca,
+  element_Fe,
+  element_OA
+};
+
+enum {
+  cooltype_H2 = 12,
+  cooltype_molecules,
+  cooltype_HD,
+  cooltype_NetFFH,
+  cooltype_NetFFM,
+  cooltype_eeBrems,
+  cooltype_Compton,
+  cooltype_Dust
+};
+
+enum {
+  heattype_H2 = 12,
+  heattype_COdiss,
+  heattype_CosmicRay,
+  heattype_UTA,
+  heattype_line,
+  heattype_Hlin,
+  heattype_ChaT,
+  heattype_HFF,
+  heattype_Compton,
+  heattype_Dust
+};
 
 void get_cooling_redshifts(struct cooling_function_data *cooling);
-
-void read_cooling_header(const char *fname,
-                         struct cooling_function_data *cooling);
-
-void allocate_cooling_tables(struct cooling_function_data *restrict cooling);
-
-void get_redshift_invariant_table(
-    struct cooling_function_data *restrict cooling, const int photodis);
-void get_cooling_table(struct cooling_function_data *restrict cooling,
-                       const int low_z_index, const int high_z_index);
+void read_cooling_header(struct cooling_function_data *cooling);
+void read_cooling_tables(struct cooling_function_data *cooling);
 
 #endif

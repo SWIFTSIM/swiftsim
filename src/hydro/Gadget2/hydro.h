@@ -42,6 +42,8 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 
+#include "./hydro_parameters.h"
+
 /**
  * @brief Returns the comoving internal energy of a particle at the last
  * time the particle was kicked.
@@ -400,6 +402,28 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
 }
 
 /**
+ * @brief Update the value of the viscosity alpha for the scheme.
+ *
+ * @param p the particle of interest
+ * @param alpha the new value for the viscosity coefficient.
+ */
+__attribute__((always_inline)) INLINE static void hydro_set_viscosity_alpha(
+    struct part *restrict p, float alpha) {
+  /* This scheme has fixed alpha */
+}
+
+/**
+ * @brief Update the value of the viscosity alpha to the
+ *        feedback reset value for the scheme.
+ *
+ * @param p the particle of interest
+ */
+__attribute__((always_inline)) INLINE static void
+hydro_set_viscosity_alpha_max_feedback(struct part *restrict p) {
+  /* This scheme has fixed alpha */
+}
+
+/**
  * @brief Computes the hydro time-step of a given particle
  *
  * @param p Pointer to the particle data
@@ -678,10 +702,13 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   /* Check against entropy floor */
   const float floor_A = entropy_floor(p, cosmo, floor_props);
 
-  /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy;
+  /* Check against absolute minimum; recall that A_physical == A_comoving
+   * by definition so no conversion is necessary */
+  const float min_u_physical = hydro_props->minimal_internal_energy;
+  /* Conversion done in physical space; multiplication by a3_inv is faster
+   * than division by a_factor_internal_energy to do in comoving space */
   const float min_A =
-      gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u);
+      gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u_physical);
 
   p->entropy = max(p->entropy, floor_A);
   p->entropy = max(p->entropy, min_A);
@@ -763,10 +790,13 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   /* Check against entropy floor */
   const float floor_A = entropy_floor(p, cosmo, floor_props);
 
-  /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy;
+  /* Check against absolute minimum; recall that A_physical == A_comoving
+   * by definition so no conversion is necessary */
+  const float min_u_physical = hydro_props->minimal_internal_energy;
+  /* Conversion done in physical space; multiplication by a3_inv is faster
+   * than division by a_factor_internal_energy to do in comoving space */
   const float min_A =
-      gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u);
+      gas_entropy_from_internal_energy(p->rho * cosmo->a3_inv, min_u_physical);
 
   /* Take highest of both limits */
   const float entropy_min = max(min_A, floor_A);

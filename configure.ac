@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Init the project.
-AC_INIT([SWIFT],[0.8.1],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
+AC_INIT([SWIFT],[0.8.2],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
 swift_config_flags="$*"
 
 #  We want to stop when given unrecognised options. No subdirs so this is safe.
@@ -224,6 +224,16 @@ if test "x$enable_debug" = "xyes"; then
       CFLAGS="$CFLAGS -debug inline-debug-info"
    fi
 fi
+
+# Check if stand-alone FoF is on.
+AC_ARG_ENABLE([stand-alone-fof],
+   [AS_HELP_STRING([--enable-stand-alone-fof],
+     [Activate the compilation of the stand-alone friends-of-friends post-processing tool.],
+   )],
+   [enable_standalone_fof="$enableval"],
+   [enable_standalone_fof="no"]
+)
+AM_CONDITIONAL([HAVEFOF],[test $enable_standalone_fof = "yes"])
 
 # Check if task debugging is on.
 AC_ARG_ENABLE([task-debugging],
@@ -1088,7 +1098,7 @@ if test "x$with_velociraptor" != "xno"; then
       [velociraptor],
       [InitVelociraptor],
       [AC_DEFINE([HAVE_VELOCIRAPTOR],1,[The VELOCIraptor library appears to be present.])],
-      [AC_MSG_ERROR(Cannot find VELOCIraptor library at $with_velociraptor)],
+      [AC_MSG_ERROR(Cannot find VELOCIraptor library at $with_velociraptor or incompatible HDF5 library loaded.)],
       [$VELOCIRAPTOR_LIBS $HDF5_LDFLAGS $HDF5_LIBS $GSL_LIBS]
    )
 fi
@@ -1340,7 +1350,17 @@ case "$with_subgrid" in
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
-	with_subgrid_black_holes=none
+	with_subgrid_black_holes=EAGLE
+   ;;
+   COLIBRE)
+	with_subgrid_cooling=COLIBRE
+	with_subgrid_chemistry=COLIBRE
+	with_subgrid_tracers=COLIBRE
+	with_subgrid_entropy_floor=EAGLE
+	with_subgrid_stars=COLIBRE
+	with_subgrid_star_formation=COLIBRE
+	with_subgrid_feedback=COLIBRE
+	with_subgrid_black_holes=EAGLE
    ;;
    COLIBRE)
 	with_subgrid_cooling=COLIBRE
@@ -1381,7 +1401,7 @@ esac
 # Hydro scheme.
 AC_ARG_WITH([hydro],
    [AS_HELP_STRING([--with-hydro=<scheme>],
-      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, anarchy-pu default: gadget2@:>@]
+      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, anarchy-du, anarchy-pu default: gadget2@:>@]
    )],
    [with_hydro="$withval"],
    [with_hydro="gadget2"]
@@ -1417,6 +1437,9 @@ case "$with_hydro" in
    ;;
    planetary)
       AC_DEFINE([PLANETARY_SPH], [1], [Planetary SPH])
+   ;;
+   anarchy-du)
+      AC_DEFINE([ANARCHY_DU_SPH], [1], [ANARCHY (DU) SPH])
    ;;
    anarchy-pu)
       AC_DEFINE([ANARCHY_PU_SPH], [1], [ANARCHY (PU) SPH])
@@ -1763,7 +1786,7 @@ esac
 # Feedback model
 AC_ARG_WITH([feedback],
    [AS_HELP_STRING([--with-feedback=<model>],
-      [Feedback model to use @<:@none, EAGLE, debug default: none@:>@]
+      [Feedback model to use @<:@none, EAGLE, COLIBRE, debug default: none@:>@]
    )],
    [with_feedback="$withval"],
    [with_feedback="none"]
@@ -1780,6 +1803,9 @@ fi
 case "$with_feedback" in
    EAGLE)
       AC_DEFINE([FEEDBACK_EAGLE], [1], [EAGLE stellar feedback and evolution model])
+   ;;
+   COLIBRE)
+      AC_DEFINE([FEEDBACK_COLIBRE], [1], [COLIBRE stellar feedback and evolution model])
    ;;
    none)
       AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
@@ -1811,8 +1837,11 @@ case "$with_black_holes" in
    none)
       AC_DEFINE([BLACK_HOLES_NONE], [1], [No black hole model])
    ;;
+   EAGLE)
+      AC_DEFINE([BLACK_HOLES_EAGLE], [1], [EAGLE black hole model])
+   ;;
    *)
-      AC_MSG_ERROR([Unknown stellar model: $with_black_holes])
+      AC_MSG_ERROR([Unknown black-hole model: $with_black_holes])
    ;;
 esac
 
@@ -1945,11 +1974,16 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 
+# Check if using COLIBRE cooling
+AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
+
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
+# Check if using COLIBRE feedback
+AM_CONDITIONAL([HAVECOLIBREFEEDBACK], [test $with_feedback = "COLIBRE"])
 
 # Handle .in files.
-AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile examples/Cooling/CoolingRatesCOLIBRE/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
 AC_CONFIG_FILES([argparse/Makefile tools/Makefile])
 AC_CONFIG_FILES([tests/testReading.sh], [chmod +x tests/testReading.sh])
 AC_CONFIG_FILES([tests/testActivePair.sh], [chmod +x tests/testActivePair.sh])
@@ -2027,6 +2061,7 @@ AC_MSG_RESULT([
    Star feedback model  : $with_feedback
    Black holes model    : $with_black_holes
 
+   Stand-alone FoF tool:       : $enable_standalone_fof
    Individual timers           : $enable_timers
    Task debugging              : $enable_task_debugging
    Threadpool debugging        : $enable_threadpool_debugging

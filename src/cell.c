@@ -64,6 +64,7 @@
 #include "scheduler.h"
 #include "space.h"
 #include "space_getsid.h"
+#include "star_formation.h"
 #include "stars.h"
 #include "timers.h"
 #include "tools.h"
@@ -260,6 +261,7 @@ int cell_link_sparts(struct cell *c, struct spart *sparts) {
 #endif
 
   c->stars.parts = sparts;
+  c->stars.parts_rebuild = sparts;
 
   /* Fill the progeny recursively, depth-first. */
   if (c->split) {
@@ -326,7 +328,8 @@ int cell_link_foreign_parts(struct cell *c, struct part *parts) {
 #endif
 
   /* Do we have a hydro task at this level? */
-  if (c->mpi.hydro.recv_xv != NULL) {
+  if (cell_get_recv(c, task_subtype_xv) != NULL) {
+
     /* Recursively attach the parts */
     const int counts = cell_link_parts(c, parts);
 #ifdef SWIFT_DEBUG_CHECKS
@@ -372,8 +375,9 @@ int cell_link_foreign_gparts(struct cell *c, struct gpart *gparts) {
     error("Linking foreign particles in a local cell!");
 #endif
 
-  /* Do we have a hydro task at this level? */
-  if (c->mpi.grav.recv != NULL) {
+  /* Do we have a gravity task at this level? */
+  if (cell_get_recv(c, task_subtype_gpart) != NULL) {
+
     /* Recursively attach the gparts */
     const int counts = cell_link_gparts(c, gparts);
 #ifdef SWIFT_DEBUG_CHECKS
@@ -418,7 +422,7 @@ int cell_count_parts_for_tasks(const struct cell *c) {
 #endif
 
   /* Do we have a hydro task at this level? */
-  if (c->mpi.hydro.recv_xv != NULL) {
+  if (cell_get_recv(c, task_subtype_xv) != NULL) {
     return c->hydro.count;
   }
 
@@ -455,8 +459,8 @@ int cell_count_gparts_for_tasks(const struct cell *c) {
     error("Counting foreign particles in a local cell!");
 #endif
 
-  /* Do we have a hydro task at this level? */
-  if (c->mpi.grav.recv != NULL) {
+  /* Do we have a gravity task at this level? */
+  if (cell_get_recv(c, task_subtype_gpart) != NULL) {
     return c->grav.count;
   }
 
@@ -495,12 +499,15 @@ int cell_pack(struct cell *restrict c, struct pcell *restrict pc,
   /* Start by packing the data of the current cell. */
   pc->hydro.h_max = c->hydro.h_max;
   pc->stars.h_max = c->stars.h_max;
+  pc->black_holes.h_max = c->black_holes.h_max;
   pc->hydro.ti_end_min = c->hydro.ti_end_min;
   pc->hydro.ti_end_max = c->hydro.ti_end_max;
   pc->grav.ti_end_min = c->grav.ti_end_min;
   pc->grav.ti_end_max = c->grav.ti_end_max;
   pc->stars.ti_end_min = c->stars.ti_end_min;
   pc->stars.ti_end_max = c->stars.ti_end_max;
+  pc->black_holes.ti_end_min = c->black_holes.ti_end_min;
+  pc->black_holes.ti_end_max = c->black_holes.ti_end_max;
   pc->hydro.ti_old_part = c->hydro.ti_old_part;
   pc->grav.ti_old_part = c->grav.ti_old_part;
   pc->grav.ti_old_multipole = c->grav.ti_old_multipole;
@@ -508,6 +515,7 @@ int cell_pack(struct cell *restrict c, struct pcell *restrict pc,
   pc->hydro.count = c->hydro.count;
   pc->grav.count = c->grav.count;
   pc->stars.count = c->stars.count;
+  pc->black_holes.count = c->black_holes.count;
   pc->maxdepth = c->maxdepth;
 
   /* Copy the Multipole related information */
@@ -600,19 +608,24 @@ int cell_unpack(struct pcell *restrict pc, struct cell *restrict c,
   /* Unpack the current pcell. */
   c->hydro.h_max = pc->hydro.h_max;
   c->stars.h_max = pc->stars.h_max;
+  c->black_holes.h_max = pc->black_holes.h_max;
   c->hydro.ti_end_min = pc->hydro.ti_end_min;
   c->hydro.ti_end_max = pc->hydro.ti_end_max;
   c->grav.ti_end_min = pc->grav.ti_end_min;
   c->grav.ti_end_max = pc->grav.ti_end_max;
   c->stars.ti_end_min = pc->stars.ti_end_min;
   c->stars.ti_end_max = pc->stars.ti_end_max;
+  c->black_holes.ti_end_min = pc->black_holes.ti_end_min;
+  c->black_holes.ti_end_max = pc->black_holes.ti_end_max;
   c->hydro.ti_old_part = pc->hydro.ti_old_part;
   c->grav.ti_old_part = pc->grav.ti_old_part;
   c->grav.ti_old_multipole = pc->grav.ti_old_multipole;
   c->stars.ti_old_part = pc->stars.ti_old_part;
+  c->black_holes.ti_old_part = pc->black_holes.ti_old_part;
   c->hydro.count = pc->hydro.count;
   c->grav.count = pc->grav.count;
   c->stars.count = pc->stars.count;
+  c->black_holes.count = pc->black_holes.count;
   c->maxdepth = pc->maxdepth;
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -662,6 +675,7 @@ int cell_unpack(struct pcell *restrict pc, struct cell *restrict c,
       temp->hydro.dx_max_sort = 0.f;
       temp->stars.dx_max_part = 0.f;
       temp->stars.dx_max_sort = 0.f;
+      temp->black_holes.dx_max_part = 0.f;
       temp->nodeID = c->nodeID;
       temp->parent = c;
       c->progeny[k] = temp;
@@ -1031,6 +1045,92 @@ int cell_unpack_multipoles(struct cell *restrict c,
   for (int k = 0; k < 8; k++)
     if (c->progeny[k] != NULL) {
       count += cell_unpack_multipoles(c->progeny[k], &pcells[count]);
+    }
+
+  /* Return the number of packed values. */
+  return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
+}
+
+/**
+ * @brief Pack the counts for star formation of the given cell and all it's
+ * sub-cells.
+ *
+ * @param c The #cell.
+ * @param pcells (output) The multipole information we pack into
+ *
+ * @return The number of packed cells.
+ */
+int cell_pack_sf_counts(struct cell *restrict c,
+                        struct pcell_sf *restrict pcells) {
+
+#ifdef WITH_MPI
+
+  /* Pack this cell's data. */
+  pcells[0].stars.delta_from_rebuild = c->stars.parts - c->stars.parts_rebuild;
+  pcells[0].stars.count = c->stars.count;
+  pcells[0].stars.dx_max_part = c->stars.dx_max_part;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->stars.parts_rebuild == NULL)
+    error("Star particles array at rebuild is NULL! c->depth=%d", c->depth);
+
+  if (pcells[0].stars.delta_from_rebuild < 0)
+    error("Stars part pointer moved in the wrong direction!");
+
+  if (pcells[0].stars.delta_from_rebuild > 0 && c->depth == 0)
+    error("Shifting the top-level pointer is not allowed!");
+#endif
+
+  /* Fill in the progeny, depth-first recursion. */
+  int count = 1;
+  for (int k = 0; k < 8; k++)
+    if (c->progeny[k] != NULL) {
+      count += cell_pack_sf_counts(c->progeny[k], &pcells[count]);
+    }
+
+  /* Return the number of packed values. */
+  return count;
+
+#else
+  error("SWIFT was not compiled with MPI support.");
+  return 0;
+#endif
+}
+
+/**
+ * @brief Unpack the counts for star formation of a given cell and its
+ * sub-cells.
+ *
+ * @param c The #cell
+ * @param pcells The multipole information to unpack
+ *
+ * @return The number of cells created.
+ */
+int cell_unpack_sf_counts(struct cell *restrict c,
+                          struct pcell_sf *restrict pcells) {
+
+#ifdef WITH_MPI
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->stars.parts_rebuild == NULL)
+    error("Star particles array at rebuild is NULL!");
+#endif
+
+  /* Unpack this cell's data. */
+  c->stars.count = pcells[0].stars.count;
+  c->stars.parts = c->stars.parts_rebuild + pcells[0].stars.delta_from_rebuild;
+  c->stars.dx_max_part = pcells[0].stars.dx_max_part;
+
+  /* Fill in the progeny, depth-first recursion. */
+  int count = 1;
+  for (int k = 0; k < 8; k++)
+    if (c->progeny[k] != NULL) {
+      count += cell_unpack_sf_counts(c->progeny[k], &pcells[count]);
     }
 
   /* Return the number of packed values. */
@@ -1585,6 +1685,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
     c->progeny[k]->stars.count = bucket_count[k];
     c->progeny[k]->stars.count_total = c->progeny[k]->stars.count;
     c->progeny[k]->stars.parts = &c->stars.parts[bucket_offset[k]];
+    c->progeny[k]->stars.parts_rebuild = c->progeny[k]->stars.parts;
   }
 
   /* Now do the same song and dance for the bparts. */
@@ -1784,6 +1885,8 @@ void cell_clean_links(struct cell *c, void *data) {
   c->grav.mm = NULL;
   c->stars.density = NULL;
   c->stars.feedback = NULL;
+  c->black_holes.density = NULL;
+  c->black_holes.feedback = NULL;
 }
 
 /**
@@ -2310,6 +2413,44 @@ void cell_activate_drift_spart(struct cell *c, struct scheduler *s) {
 }
 
 /**
+ * @brief Activate the #bpart drifts on the given cell.
+ */
+void cell_activate_drift_bpart(struct cell *c, struct scheduler *s) {
+
+  /* If this cell is already marked for drift, quit early. */
+  if (cell_get_flag(c, cell_flag_do_bh_drift)) return;
+
+  /* Mark this cell for drifting. */
+  cell_set_flag(c, cell_flag_do_bh_drift);
+
+  /* Set the do_black_holes_sub_drifts all the way up and activate the super
+     drift if this has not yet been done. */
+  if (c == c->hydro.super) {
+#ifdef SWIFT_DEBUG_CHECKS
+    if (c->black_holes.drift == NULL)
+      error("Trying to activate un-existing c->black_holes.drift");
+#endif
+    scheduler_activate(s, c->black_holes.drift);
+  } else {
+    for (struct cell *parent = c->parent;
+         parent != NULL && !cell_get_flag(parent, cell_flag_do_bh_sub_drift);
+         parent = parent->parent) {
+      /* Mark this cell for drifting */
+      cell_set_flag(parent, cell_flag_do_bh_sub_drift);
+
+      if (parent == c->hydro.super) {
+#ifdef SWIFT_DEBUG_CHECKS
+        if (parent->black_holes.drift == NULL)
+          error("Trying to activate un-existing parent->black_holes.drift");
+#endif
+        scheduler_activate(s, parent->black_holes.drift);
+        break;
+      }
+    }
+  }
+}
+
+/**
  * @brief Activate the drifts on the given cell.
  */
 void cell_activate_limiter(struct cell *c, struct scheduler *s) {
@@ -2403,22 +2544,29 @@ void cell_activate_hydro_sorts(struct cell *c, int sid, struct scheduler *s) {
  * @brief Activate the sorts up a cell hierarchy.
  */
 void cell_activate_stars_sorts_up(struct cell *c, struct scheduler *s) {
+
   if (c == c->hydro.super) {
+
 #ifdef SWIFT_DEBUG_CHECKS
     if (c->stars.sorts == NULL)
       error("Trying to activate un-existing c->stars.sorts");
 #endif
     scheduler_activate(s, c->stars.sorts);
     if (c->nodeID == engine_rank) {
-      // MATTHIEU: to do: do we actually need both drifts here?
       cell_activate_drift_spart(c, s);
     }
   } else {
+
+    /* Climb up the tree and set the flags */
     for (struct cell *parent = c->parent;
          parent != NULL && !cell_get_flag(parent, cell_flag_do_stars_sub_sort);
          parent = parent->parent) {
+
       cell_set_flag(parent, cell_flag_do_stars_sub_sort);
+
+      /* Reached the super-level? Activate the task and abort */
       if (parent == c->hydro.super) {
+
 #ifdef SWIFT_DEBUG_CHECKS
         if (parent->stars.sorts == NULL)
           error("Trying to activate un-existing parents->stars.sorts");
@@ -2435,8 +2583,10 @@ void cell_activate_stars_sorts_up(struct cell *c, struct scheduler *s) {
  * @brief Activate the sorts on a given cell, if needed.
  */
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s) {
+
   /* Do we need to re-sort? */
   if (c->stars.dx_max_sort > space_maxreldx * c->dmin) {
+
     /* Climb up the tree to active the sorts in that direction */
     for (struct cell *finger = c; finger != NULL; finger = finger->parent) {
       if (finger->stars.requires_sorts) {
@@ -2508,12 +2658,12 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
 
     /* Get the orientation of the pair. */
     double shift[3];
-    int sid = space_getsid(s->space, &ci, &cj, shift);
+    const int sid = space_getsid(s->space, &ci, &cj, shift);
 
     /* recurse? */
     if (cell_can_recurse_in_pair_hydro_task(ci) &&
         cell_can_recurse_in_pair_hydro_task(cj)) {
-      struct cell_split_pair *csp = &cell_split_pairs[sid];
+      const struct cell_split_pair *csp = &cell_split_pairs[sid];
       for (int k = 0; k < csp->count; k++) {
         const int pid = csp->pairs[k].pid;
         const int pjd = csp->pairs[k].pjd;
@@ -2555,9 +2705,11 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
  * @param ci The first #cell we recurse in.
  * @param cj The second #cell we recurse in.
  * @param s The task #scheduler.
+ * @param with_star_formation Are we running with star formation switched on?
  */
 void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
-                                       struct scheduler *s) {
+                                       struct scheduler *s,
+                                       const int with_star_formation) {
   const struct engine *e = s->space->e;
 
   /* Store the current dx_max and h_max values. */
@@ -2575,9 +2727,13 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 
   /* Self interaction? */
   if (cj == NULL) {
+
+    const int ci_active = cell_is_active_stars(ci, e) ||
+                          (with_star_formation && cell_is_active_hydro(ci, e));
+
     /* Do anything? */
-    if (!cell_is_active_stars(ci, e) || ci->hydro.count == 0 ||
-        ci->stars.count == 0)
+    if (!ci_active || ci->hydro.count == 0 ||
+        (!with_star_formation && ci->stars.count == 0))
       return;
 
     /* Recurse? */
@@ -2585,11 +2741,12 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
       /* Loop over all progenies and pairs of progenies */
       for (int j = 0; j < 8; j++) {
         if (ci->progeny[j] != NULL) {
-          cell_activate_subcell_stars_tasks(ci->progeny[j], NULL, s);
+          cell_activate_subcell_stars_tasks(ci->progeny[j], NULL, s,
+                                            with_star_formation);
           for (int k = j + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
               cell_activate_subcell_stars_tasks(ci->progeny[j], ci->progeny[k],
-                                                s);
+                                                s, with_star_formation);
         }
       }
     } else {
@@ -2601,29 +2758,38 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
 
   /* Otherwise, pair interation */
   else {
-    /* Should we even bother? */
-    if (!cell_is_active_stars(ci, e) && !cell_is_active_stars(cj, e)) return;
 
     /* Get the orientation of the pair. */
     double shift[3];
-    int sid = space_getsid(s->space, &ci, &cj, shift);
+    const int sid = space_getsid(s->space, &ci, &cj, shift);
+
+    const int ci_active = cell_is_active_stars(ci, e) ||
+                          (with_star_formation && cell_is_active_hydro(ci, e));
+    const int cj_active = cell_is_active_stars(cj, e) ||
+                          (with_star_formation && cell_is_active_hydro(cj, e));
+
+    /* Should we even bother? */
+    if (!ci_active && !cj_active) return;
 
     /* recurse? */
     if (cell_can_recurse_in_pair_stars_task(ci, cj) &&
         cell_can_recurse_in_pair_stars_task(cj, ci)) {
-      struct cell_split_pair *csp = &cell_split_pairs[sid];
+
+      const struct cell_split_pair *csp = &cell_split_pairs[sid];
       for (int k = 0; k < csp->count; k++) {
         const int pid = csp->pairs[k].pid;
         const int pjd = csp->pairs[k].pjd;
         if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
           cell_activate_subcell_stars_tasks(ci->progeny[pid], cj->progeny[pjd],
-                                            s);
+                                            s, with_star_formation);
       }
     }
 
     /* Otherwise, activate the sorts and drifts. */
     else {
-      if (cell_is_active_stars(ci, e)) {
+
+      if (ci_active) {
+
         /* We are going to interact this pair, so store some values. */
         atomic_or(&cj->hydro.requires_sorts, 1 << sid);
         atomic_or(&ci->stars.requires_sorts, 1 << sid);
@@ -2640,7 +2806,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
         cell_activate_stars_sorts(ci, sid, s);
       }
 
-      if (cell_is_active_stars(cj, e)) {
+      if (cj_active) {
+
         /* We are going to interact this pair, so store some values. */
         atomic_or(&cj->stars.requires_sorts, 1 << sid);
         atomic_or(&ci->hydro.requires_sorts, 1 << sid);
@@ -2655,6 +2822,100 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
         /* Do we need to sort the cells? */
         cell_activate_hydro_sorts(ci, sid, s);
         cell_activate_stars_sorts(cj, sid, s);
+      }
+    }
+  } /* Otherwise, pair interation */
+}
+
+/**
+ * @brief Traverse a sub-cell task and activate the black_holes drift tasks that
+ * are required by a black_holes task
+ *
+ * @param ci The first #cell we recurse in.
+ * @param cj The second #cell we recurse in.
+ * @param s The task #scheduler.
+ */
+void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
+                                             struct scheduler *s) {
+  const struct engine *e = s->space->e;
+
+  /* Store the current dx_max and h_max values. */
+  ci->black_holes.dx_max_part_old = ci->black_holes.dx_max_part;
+  ci->black_holes.h_max_old = ci->black_holes.h_max;
+  ci->hydro.dx_max_part_old = ci->hydro.dx_max_part;
+  ci->hydro.h_max_old = ci->hydro.h_max;
+
+  if (cj != NULL) {
+    cj->black_holes.dx_max_part_old = cj->black_holes.dx_max_part;
+    cj->black_holes.h_max_old = cj->black_holes.h_max;
+    cj->hydro.dx_max_part_old = cj->hydro.dx_max_part;
+    cj->hydro.h_max_old = cj->hydro.h_max;
+  }
+
+  /* Self interaction? */
+  if (cj == NULL) {
+    /* Do anything? */
+    if (!cell_is_active_black_holes(ci, e) || ci->hydro.count == 0 ||
+        ci->black_holes.count == 0)
+      return;
+
+    /* Recurse? */
+    if (cell_can_recurse_in_self_black_holes_task(ci)) {
+      /* Loop over all progenies and pairs of progenies */
+      for (int j = 0; j < 8; j++) {
+        if (ci->progeny[j] != NULL) {
+          cell_activate_subcell_black_holes_tasks(ci->progeny[j], NULL, s);
+          for (int k = j + 1; k < 8; k++)
+            if (ci->progeny[k] != NULL)
+              cell_activate_subcell_black_holes_tasks(ci->progeny[j],
+                                                      ci->progeny[k], s);
+        }
+      }
+    } else {
+      /* We have reached the bottom of the tree: activate drift */
+      cell_activate_drift_bpart(ci, s);
+      cell_activate_drift_part(ci, s);
+    }
+  }
+
+  /* Otherwise, pair interation */
+  else {
+    /* Should we even bother? */
+    if (!cell_is_active_black_holes(ci, e) &&
+        !cell_is_active_black_holes(cj, e))
+      return;
+
+    /* Get the orientation of the pair. */
+    double shift[3];
+    const int sid = space_getsid(s->space, &ci, &cj, shift);
+
+    /* recurse? */
+    if (cell_can_recurse_in_pair_black_holes_task(ci, cj) &&
+        cell_can_recurse_in_pair_black_holes_task(cj, ci)) {
+      const struct cell_split_pair *csp = &cell_split_pairs[sid];
+      for (int k = 0; k < csp->count; k++) {
+        const int pid = csp->pairs[k].pid;
+        const int pjd = csp->pairs[k].pjd;
+        if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
+          cell_activate_subcell_black_holes_tasks(ci->progeny[pid],
+                                                  cj->progeny[pjd], s);
+      }
+    }
+
+    /* Otherwise, activate the drifts. */
+    else {
+      if (cell_is_active_black_holes(ci, e)) {
+
+        /* Activate the drifts if the cells are local. */
+        if (ci->nodeID == engine_rank) cell_activate_drift_bpart(ci, s);
+        if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+      }
+
+      if (cell_is_active_black_holes(cj, e)) {
+
+        /* Activate the drifts if the cells are local. */
+        if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
+        if (cj->nodeID == engine_rank) cell_activate_drift_bpart(cj, s);
       }
     }
   } /* Otherwise, pair interation */
@@ -2819,6 +3080,11 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
   struct engine *e = s->space->e;
   const int nodeID = e->nodeID;
   const int with_limiter = (e->policy & engine_policy_limiter);
+
+#ifdef WITH_MPI
+  const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_feedback = e->policy & engine_policy_feedback;
+#endif
   int rebuild = 0;
 
   /* Un-skip the density tasks involved with this cell. */
@@ -2867,8 +3133,14 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         cell_activate_hydro_sorts(ci, t->flags, s);
         cell_activate_hydro_sorts(cj, t->flags, s);
       }
+
       /* Store current values of dx_max and h_max. */
-      else if (t->type == task_type_sub_pair || t->type == task_type_sub_self) {
+      else if (t->type == task_type_sub_self) {
+        cell_activate_subcell_hydro_tasks(ci, NULL, s);
+      }
+
+      /* Store current values of dx_max and h_max. */
+      else if (t->type == task_type_sub_pair) {
         cell_activate_subcell_hydro_tasks(ci, cj, s);
       }
     }
@@ -2884,27 +3156,30 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
       if (ci_nodeID != nodeID) {
         /* If the local cell is active, receive data from the foreign cell. */
         if (cj_active) {
-          scheduler_activate(s, ci->mpi.hydro.recv_xv);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
           if (ci_active) {
-            scheduler_activate(s, ci->mpi.hydro.recv_rho);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
 
 #ifdef EXTRA_HYDRO_LOOP
-            scheduler_activate(s, ci->mpi.hydro.recv_gradient);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_gradient);
 #endif
           }
         }
 
         /* If the foreign cell is active, we want its ti_end values. */
         if (ci_active || with_limiter)
-          scheduler_activate(s, ci->mpi.hydro.recv_ti);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_part);
 
-        if (with_limiter) scheduler_activate(s, ci->mpi.limiter.recv);
         if (with_limiter)
-          scheduler_activate_send(s, cj->mpi.limiter.send, ci->nodeID);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_limiter);
+        if (with_limiter)
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_limiter,
+                                  ci->nodeID);
 
         /* Is the foreign cell active and will need stuff from us? */
         if (ci_active) {
-          scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
+
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -2913,42 +3188,62 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
           /* If the local cell is also active, more stuff will be needed. */
           if (cj_active) {
-            scheduler_activate_send(s, cj->mpi.hydro.send_rho, ci_nodeID);
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_rho,
+                                    ci_nodeID);
 
 #ifdef EXTRA_HYDRO_LOOP
-            scheduler_activate_send(s, cj->mpi.hydro.send_gradient, ci_nodeID);
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_gradient,
+                                    ci_nodeID);
 #endif
           }
         }
 
         /* If the local cell is active, send its ti_end values. */
         if (cj_active || with_limiter)
-          scheduler_activate_send(s, cj->mpi.hydro.send_ti, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_part,
+                                  ci_nodeID);
+
+        /* Propagating new star counts? */
+        if (with_star_formation && with_feedback) {
+          if (ci_active && ci->hydro.count > 0) {
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_sf_counts);
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_spart);
+          }
+          if (cj_active && cj->hydro.count > 0) {
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_sf_counts,
+                                    ci_nodeID);
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_spart,
+                                    ci_nodeID);
+          }
+        }
 
       } else if (cj_nodeID != nodeID) {
         /* If the local cell is active, receive data from the foreign cell. */
         if (ci_active) {
-          scheduler_activate(s, cj->mpi.hydro.recv_xv);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
           if (cj_active) {
-            scheduler_activate(s, cj->mpi.hydro.recv_rho);
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
 
 #ifdef EXTRA_HYDRO_LOOP
-            scheduler_activate(s, cj->mpi.hydro.recv_gradient);
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_gradient);
 #endif
           }
         }
 
         /* If the foreign cell is active, we want its ti_end values. */
         if (cj_active || with_limiter)
-          scheduler_activate(s, cj->mpi.hydro.recv_ti);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_part);
 
-        if (with_limiter) scheduler_activate(s, cj->mpi.limiter.recv);
         if (with_limiter)
-          scheduler_activate_send(s, ci->mpi.limiter.send, cj->nodeID);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_limiter);
+        if (with_limiter)
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_limiter,
+                                  cj->nodeID);
 
         /* Is the foreign cell active and will need stuff from us? */
         if (cj_active) {
-          scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
+
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -2957,17 +3252,35 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
           /* If the local cell is also active, more stuff will be needed. */
           if (ci_active) {
-            scheduler_activate_send(s, ci->mpi.hydro.send_rho, cj_nodeID);
+
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_rho,
+                                    cj_nodeID);
 
 #ifdef EXTRA_HYDRO_LOOP
-            scheduler_activate_send(s, ci->mpi.hydro.send_gradient, cj_nodeID);
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_gradient,
+                                    cj_nodeID);
 #endif
           }
         }
 
         /* If the local cell is active, send its ti_end values. */
         if (ci_active || with_limiter)
-          scheduler_activate_send(s, ci->mpi.hydro.send_ti, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_part,
+                                  cj_nodeID);
+
+        /* Propagating new star counts? */
+        if (with_star_formation && with_feedback) {
+          if (cj_active && cj->hydro.count > 0) {
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_sf_counts);
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_spart);
+          }
+          if (ci_active && ci->hydro.count > 0) {
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_sf_counts,
+                                    cj_nodeID);
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_spart,
+                                    cj_nodeID);
+          }
+        }
       }
 #endif
     }
@@ -3057,14 +3370,18 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
         /* If the local cell is active, receive data from the foreign cell. */
-        if (cj_active) scheduler_activate(s, ci->mpi.grav.recv);
+        if (cj_active)
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_gpart);
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (ci_active) scheduler_activate(s, ci->mpi.grav.recv_ti);
+        if (ci_active)
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_gpart);
 
         /* Is the foreign cell active and will need stuff from us? */
         if (ci_active) {
-          scheduler_activate_send(s, cj->mpi.grav.send, ci_nodeID);
+
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_gpart,
+                                  ci_nodeID);
 
           /* Drift the cell which will be sent at the level at which it is
              sent, i.e. drift the cell specified in the send task (l->t)
@@ -3074,18 +3391,23 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
 
         /* If the local cell is active, send its ti_end values. */
         if (cj_active)
-          scheduler_activate_send(s, cj->mpi.grav.send_ti, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_gpart,
+                                  ci_nodeID);
 
       } else if (cj_nodeID != nodeID) {
         /* If the local cell is active, receive data from the foreign cell. */
-        if (ci_active) scheduler_activate(s, cj->mpi.grav.recv);
+        if (ci_active)
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_gpart);
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (cj_active) scheduler_activate(s, cj->mpi.grav.recv_ti);
+        if (cj_active)
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_gpart);
 
         /* Is the foreign cell active and will need stuff from us? */
         if (cj_active) {
-          scheduler_activate_send(s, ci->mpi.grav.send, cj_nodeID);
+
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_gpart,
+                                  cj_nodeID);
 
           /* Drift the cell which will be sent at the level at which it is
              sent, i.e. drift the cell specified in the send task (l->t)
@@ -3095,7 +3417,8 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
 
         /* If the local cell is active, send its ti_end values. */
         if (ci_active)
-          scheduler_activate_send(s, ci->mpi.grav.send_ti, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_gpart,
+                                  cj_nodeID);
       }
 #endif
     }
@@ -3157,16 +3480,23 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
  *
  * @param c the #cell.
  * @param s the #scheduler.
+ * @param with_star_formation Are we running with star formation switched on?
  *
  * @return 1 If the space needs rebuilding. 0 otherwise.
  */
-int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
+int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
+                            const int with_star_formation) {
+
   struct engine *e = s->space->e;
   const int nodeID = e->nodeID;
   int rebuild = 0;
 
-  if (c->stars.drift != NULL && cell_is_active_stars(c, e)) {
-    cell_activate_drift_spart(c, s);
+  if (c->stars.drift != NULL) {
+    if (cell_is_active_stars(c, e) ||
+        (with_star_formation && cell_is_active_hydro(c, e))) {
+
+      cell_activate_drift_spart(c, s);
+    }
   }
 
   /* Un-skip the density tasks involved with this cell. */
@@ -3174,8 +3504,6 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     struct task *t = l->t;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
-    const int ci_active = cell_is_active_stars(ci, e);
-    const int cj_active = (cj != NULL) ? cell_is_active_stars(cj, e) : 0;
 #ifdef WITH_MPI
     const int ci_nodeID = ci->nodeID;
     const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
@@ -3183,6 +3511,13 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     const int ci_nodeID = nodeID;
     const int cj_nodeID = nodeID;
 #endif
+
+    const int ci_active = cell_is_active_stars(ci, e) ||
+                          (with_star_formation && cell_is_active_hydro(ci, e));
+
+    const int cj_active =
+        (cj != NULL) && (cell_is_active_stars(cj, e) ||
+                         (with_star_formation && cell_is_active_hydro(cj, e)));
 
     /* Activate the drifts */
     if (t->type == task_type_self && ci_active) {
@@ -3235,8 +3570,12 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
         }
       }
 
-      else if (t->type == task_type_sub_pair || t->type == task_type_sub_self) {
-        cell_activate_subcell_stars_tasks(ci, cj, s);
+      else if (t->type == task_type_sub_self) {
+        cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation);
+      }
+
+      else if (t->type == task_type_sub_pair) {
+        cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation);
       }
     }
 
@@ -3251,26 +3590,28 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
         if (cj_active) {
-          scheduler_activate(s, ci->mpi.hydro.recv_xv);
-          scheduler_activate(s, ci->mpi.hydro.recv_rho);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
 
           /* If the local cell is active, more stuff will be needed. */
-          scheduler_activate_send(s, cj->mpi.stars.send, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_spart,
+                                  ci_nodeID);
           cell_activate_drift_spart(cj, s);
 
           /* If the local cell is active, send its ti_end values. */
-          scheduler_activate_send(s, cj->mpi.stars.send_ti, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_spart,
+                                  ci_nodeID);
         }
 
         if (ci_active) {
-          scheduler_activate(s, ci->mpi.stars.recv);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_spart);
 
           /* If the foreign cell is active, we want its ti_end values. */
-          scheduler_activate(s, ci->mpi.stars.recv_ti);
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_spart);
 
           /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, cj->mpi.hydro.send_xv, ci_nodeID);
-          scheduler_activate_send(s, cj->mpi.hydro.send_rho, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_rho, ci_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -3280,26 +3621,28 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       } else if (cj_nodeID != nodeID) {
         /* If the local cell is active, receive data from the foreign cell. */
         if (ci_active) {
-          scheduler_activate(s, cj->mpi.hydro.recv_xv);
-          scheduler_activate(s, cj->mpi.hydro.recv_rho);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
 
           /* If the local cell is active, more stuff will be needed. */
-          scheduler_activate_send(s, ci->mpi.stars.send, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_spart,
+                                  cj_nodeID);
           cell_activate_drift_spart(ci, s);
 
           /* If the local cell is active, send its ti_end values. */
-          scheduler_activate_send(s, ci->mpi.stars.send_ti, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_spart,
+                                  cj_nodeID);
         }
 
         if (cj_active) {
-          scheduler_activate(s, cj->mpi.stars.recv);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_spart);
 
           /* If the foreign cell is active, we want its ti_end values. */
-          scheduler_activate(s, cj->mpi.stars.recv_ti);
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_spart);
 
           /* Is the foreign cell active and will need stuff from us? */
-          scheduler_activate_send(s, ci->mpi.hydro.send_xv, cj_nodeID);
-          scheduler_activate_send(s, ci->mpi.hydro.send_rho, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_rho, cj_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -3315,8 +3658,213 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
     struct task *t = l->t;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
-    const int ci_active = cell_is_active_stars(ci, e);
-    const int cj_active = (cj != NULL) ? cell_is_active_stars(cj, e) : 0;
+#ifdef WITH_MPI
+    const int ci_nodeID = ci->nodeID;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+#else
+    const int ci_nodeID = nodeID;
+    const int cj_nodeID = nodeID;
+#endif
+
+    const int ci_active = cell_is_active_stars(ci, e) ||
+                          (with_star_formation && cell_is_active_hydro(ci, e));
+
+    const int cj_active =
+        (cj != NULL) && (cell_is_active_stars(cj, e) ||
+                         (with_star_formation && cell_is_active_hydro(cj, e)));
+
+    if (t->type == task_type_self && ci_active) {
+      scheduler_activate(s, t);
+    }
+
+    else if (t->type == task_type_sub_self && ci_active) {
+      scheduler_activate(s, t);
+    }
+
+    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
+      /* We only want to activate the task if the cell is active and is
+         going to update some gas on the *local* node */
+      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
+          (ci_active || cj_active)) {
+        scheduler_activate(s, t);
+
+      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
+        scheduler_activate(s, t);
+
+      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
+        scheduler_activate(s, t);
+      }
+    }
+
+    /* Nothing more to do here, all drifts and sorts activated above */
+  }
+
+  /* Unskip all the other task types. */
+  if (c->nodeID == nodeID) {
+    if (cell_is_active_stars(c, e) ||
+        (with_star_formation && cell_is_active_hydro(c, e))) {
+
+      if (c->stars.ghost != NULL) scheduler_activate(s, c->stars.ghost);
+      if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
+      if (c->stars.stars_out != NULL) scheduler_activate(s, c->stars.stars_out);
+      if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+      if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+      if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+      if (c->logger != NULL) scheduler_activate(s, c->logger);
+    }
+  }
+
+  return rebuild;
+}
+
+/**
+ * @brief Un-skips all the black hole tasks associated with a given cell and
+ * checks if the space needs to be rebuilt.
+ *
+ * @param c the #cell.
+ * @param s the #scheduler.
+ *
+ * @return 1 If the space needs rebuilding. 0 otherwise.
+ */
+int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
+  struct engine *e = s->space->e;
+  const int nodeID = e->nodeID;
+  int rebuild = 0;
+
+  if (c->black_holes.drift != NULL && cell_is_active_black_holes(c, e)) {
+    cell_activate_drift_bpart(c, s);
+  }
+
+  /* Un-skip the density tasks involved with this cell. */
+  for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
+    struct task *t = l->t;
+    struct cell *ci = t->ci;
+    struct cell *cj = t->cj;
+    const int ci_active = cell_is_active_black_holes(ci, e);
+    const int cj_active = (cj != NULL) ? cell_is_active_black_holes(cj, e) : 0;
+#ifdef WITH_MPI
+    const int ci_nodeID = ci->nodeID;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+#else
+    const int ci_nodeID = nodeID;
+    const int cj_nodeID = nodeID;
+#endif
+
+    /* Activate the drifts */
+    if (t->type == task_type_self && ci_active) {
+      cell_activate_drift_part(ci, s);
+      cell_activate_drift_bpart(ci, s);
+    }
+
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active || cj_active) &&
+        (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+      scheduler_activate(s, t);
+
+      if (t->type == task_type_pair) {
+        /* Do ci */
+        if (ci_active) {
+
+          /* Activate the drift tasks. */
+          if (ci_nodeID == nodeID) cell_activate_drift_bpart(ci, s);
+          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+        }
+
+        /* Do cj */
+        if (cj_active) {
+
+          /* Activate the drift tasks. */
+          if (cj_nodeID == nodeID) cell_activate_drift_bpart(cj, s);
+          if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+        }
+      }
+
+      else if (t->type == task_type_sub_self) {
+        cell_activate_subcell_black_holes_tasks(ci, NULL, s);
+      }
+
+      else if (t->type == task_type_sub_pair) {
+        cell_activate_subcell_black_holes_tasks(ci, cj, s);
+      }
+    }
+
+    /* Only interested in pair interactions as of here. */
+    if (t->type == task_type_pair || t->type == task_type_sub_pair) {
+      /* Check whether there was too much particle motion, i.e. the
+         cell neighbour conditions were violated. */
+      if (cell_need_rebuild_for_black_holes_pair(ci, cj)) rebuild = 1;
+      if (cell_need_rebuild_for_black_holes_pair(cj, ci)) rebuild = 1;
+
+#ifdef WITH_MPI
+      /* Activate the send/recv tasks. */
+      if (ci_nodeID != nodeID) {
+        if (cj_active) {
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+
+          /* If the local cell is active, more stuff will be needed. */
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart,
+                                  ci_nodeID);
+          cell_activate_drift_bpart(cj, s);
+
+          /* If the local cell is active, send its ti_end values. */
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_bpart,
+                                  ci_nodeID);
+        }
+
+        if (ci_active) {
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart);
+
+          /* If the foreign cell is active, we want its ti_end values. */
+          scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
+
+          /* Is the foreign cell active and will need stuff from us? */
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
+
+          /* Drift the cell which will be sent; note that not all sent
+             particles will be drifted, only those that are needed. */
+          cell_activate_drift_part(cj, s);
+        }
+
+      } else if (cj_nodeID != nodeID) {
+        /* If the local cell is active, receive data from the foreign cell. */
+        if (ci_active) {
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+
+          /* If the local cell is active, more stuff will be needed. */
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart,
+                                  cj_nodeID);
+          cell_activate_drift_bpart(ci, s);
+
+          /* If the local cell is active, send its ti_end values. */
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_bpart,
+                                  cj_nodeID);
+        }
+
+        if (cj_active) {
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart);
+
+          /* If the foreign cell is active, we want its ti_end values. */
+          scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
+
+          /* Is the foreign cell active and will need stuff from us? */
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
+
+          /* Drift the cell which will be sent; note that not all sent
+             particles will be drifted, only those that are needed. */
+          cell_activate_drift_part(ci, s);
+        }
+      }
+#endif
+    }
+  }
+
+  /* Un-skip the feedback tasks involved with this cell. */
+  for (struct link *l = c->black_holes.feedback; l != NULL; l = l->next) {
+    struct task *t = l->t;
+    struct cell *ci = t->ci;
+    struct cell *cj = t->cj;
+    const int ci_active = cell_is_active_black_holes(ci, e);
+    const int cj_active = (cj != NULL) ? cell_is_active_black_holes(cj, e) : 0;
 #ifdef WITH_MPI
     const int ci_nodeID = ci->nodeID;
     const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
@@ -3348,14 +3896,17 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s) {
       }
     }
 
-    /* Nothing more to do here, all drifts and sorts activated above */
+    /* Nothing more to do here, all drifts activated above */
   }
 
   /* Unskip all the other task types. */
-  if (c->nodeID == nodeID && cell_is_active_stars(c, e)) {
-    if (c->stars.ghost != NULL) scheduler_activate(s, c->stars.ghost);
-    if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
-    if (c->stars.stars_out != NULL) scheduler_activate(s, c->stars.stars_out);
+  if (c->nodeID == nodeID && cell_is_active_black_holes(c, e)) {
+    if (c->black_holes.ghost != NULL)
+      scheduler_activate(s, c->black_holes.ghost);
+    if (c->black_holes.black_holes_in != NULL)
+      scheduler_activate(s, c->black_holes.black_holes_in);
+    if (c->black_holes.black_holes_out != NULL)
+      scheduler_activate(s, c->black_holes.black_holes_out);
     if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
     if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
     if (c->timestep != NULL) scheduler_activate(s, c->timestep);
@@ -3476,9 +4027,7 @@ void cell_set_super_mapper(void *map_data, int num_elements, void *extra_data) {
  */
 int cell_has_tasks(struct cell *c) {
 #ifdef WITH_MPI
-  if (c->timestep != NULL || c->mpi.hydro.recv_ti != NULL ||
-      c->mpi.grav.recv_ti != NULL || c->mpi.stars.recv_ti != NULL)
-    return 1;
+  if (c->timestep != NULL || c->mpi.recv != NULL) return 1;
 #else
   if (c->timestep != NULL) return 1;
 #endif
@@ -3655,6 +4204,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       if (part_is_active(p, e)) {
         hydro_init_part(p, &e->s->hs);
         chemistry_init_part(p, e->chemistry);
+        star_formation_init_part(p, e->star_formation);
         tracers_after_init(p, xp, e->internal_units, e->physical_constants,
                            with_cosmology, e->cosmology, e->hydro_properties,
                            e->cooling_func, e->time);
@@ -4187,19 +4737,68 @@ void cell_drift_multipole(struct cell *c, const struct engine *e) {
  * @brief Resets all the sorting properties for the stars in a given cell
  * hierarchy.
  *
+ * The clear_unused_flags argument can be used to additionally clean up all
+ * the flags demanding a sort for the given cell. This should be used with
+ * caution as it will prevent the sort tasks from doing anything on that cell
+ * until these flags are reset.
+ *
  * @param c The #cell to clean.
+ * @param clear_unused_flags Do we also clean the flags demanding a sort?
  */
-void cell_clear_stars_sort_flags(struct cell *c) {
-  /* Recurse if possible */
-  if (c->split) {
-    for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL) cell_clear_stars_sort_flags(c->progeny[k]);
+void cell_clear_stars_sort_flags(struct cell *c, const int clear_unused_flags) {
+
+  /* Clear the flags that have not been reset by the sort task? */
+  if (clear_unused_flags) {
+    c->stars.requires_sorts = 0;
+    c->stars.do_sort = 0;
+    cell_clear_flag(c, cell_flag_do_stars_sub_sort);
   }
 
   /* Indicate that the cell is not sorted and cancel the pointer sorting arrays.
    */
   c->stars.sorted = 0;
   cell_free_stars_sorts(c);
+
+  /* Recurse if possible */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL)
+        cell_clear_stars_sort_flags(c->progeny[k], clear_unused_flags);
+  }
+}
+
+/**
+ * @brief Resets all the sorting properties for the hydro in a given cell
+ * hierarchy.
+ *
+ * The clear_unused_flags argument can be used to additionally clean up all
+ * the flags demanding a sort for the given cell. This should be used with
+ * caution as it will prevent the sort tasks from doing anything on that cell
+ * until these flags are reset.
+ *
+ * @param c The #cell to clean.
+ * @param clear_unused_flags Do we also clean the flags demanding a sort?
+ */
+void cell_clear_hydro_sort_flags(struct cell *c, const int clear_unused_flags) {
+
+  /* Clear the flags that have not been reset by the sort task? */
+  if (clear_unused_flags) {
+    c->hydro.do_sort = 0;
+    c->hydro.requires_sorts = 0;
+    cell_clear_flag(c, cell_flag_do_hydro_sub_sort);
+  }
+
+  /* Indicate that the cell is not sorted and cancel the pointer sorting arrays.
+   */
+  c->hydro.sorted = 0;
+  cell_free_hydro_sorts(c);
+
+  /* Recurse if possible */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL)
+        cell_clear_hydro_sort_flags(c->progeny[k], clear_unused_flags);
+  }
 }
 
 /**
@@ -4209,7 +4808,8 @@ void cell_check_timesteps(struct cell *c) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   if (c->hydro.ti_end_min == 0 && c->grav.ti_end_min == 0 &&
-      c->stars.ti_end_min == 0 && c->nr_tasks > 0)
+      c->stars.ti_end_min == 0 && c->black_holes.ti_end_min == 0 &&
+      c->nr_tasks > 0)
     error("Cell without assigned time-step");
 
   if (c->split) {
@@ -4262,6 +4862,36 @@ void cell_check_spart_pos(const struct cell *c,
 
 #else
   error("Calling a degugging function outside debugging mode.");
+#endif
+}
+
+/**
+ * @brief Checks that a cell and all its progenies have cleared their sort
+ * flags.
+ *
+ * Should only be used for debugging purposes.
+ *
+ * @param c The #cell to check.
+ */
+void cell_check_sort_flags(const struct cell *c) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  const int do_hydro_sub_sort = cell_get_flag(c, cell_flag_do_hydro_sub_sort);
+  const int do_stars_sub_sort = cell_get_flag(c, cell_flag_do_stars_sub_sort);
+
+  if (do_hydro_sub_sort)
+    error("cell %d has a hydro sub_sort flag set. Node=%d depth=%d maxdepth=%d",
+          c->cellID, c->nodeID, c->depth, c->maxdepth);
+
+  if (do_stars_sub_sort)
+    error("cell %d has a stars sub_sort flag set. Node=%d depth=%d maxdepth=%d",
+          c->cellID, c->nodeID, c->depth, c->maxdepth);
+
+  if (c->split) {
+    for (int k = 0; k < 8; ++k) {
+      if (c->progeny[k] != NULL) cell_check_sort_flags(c->progeny[k]);
+    }
+  }
 #endif
 }
 
@@ -4653,6 +5283,11 @@ struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
 
   /* Did we run out of free spart slots? */
   if (sp == NULL) return NULL;
+
+  /* Copy over the distance since rebuild */
+  sp->x_diff[0] = xp->x_diff[0];
+  sp->x_diff[1] = xp->x_diff[1];
+  sp->x_diff[2] = xp->x_diff[2];
 
   /* Destroy the gas particle and get it's gpart friend */
   struct gpart *gp = cell_convert_part_to_gpart(e, c, p, xp);

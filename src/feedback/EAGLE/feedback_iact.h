@@ -115,8 +115,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (Omega_frac < 0. || Omega_frac > 1.)
-    error("Invalid fraction of material to dsitribute.");
+  if (Omega_frac < 0. || Omega_frac > 1.00001)
+    error("Invalid fraction of material to distribute. Omega_frac=%e",
+          Omega_frac);
 #endif
 
   /* Update particle mass */
@@ -298,6 +299,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
       hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+
+      /* Impose maximal viscosity */
+      hydro_set_viscosity_alpha_max_feedback(pj);
 
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
