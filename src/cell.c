@@ -590,6 +590,26 @@ int cell_pack_tags(const struct cell *c, int *tags) {
 #endif
 }
 
+void cell_pack_part_swallow(const struct cell *c, long long *swallow_ids) {
+
+  const size_t count = c->hydro.count;
+  const struct part *parts = c->hydro.parts;
+
+  for (size_t i = 0; i < count; ++i) {
+    swallow_ids[i] = parts[i].swallow_id;
+  }
+}
+
+void cell_unpack_part_swallow(struct cell *c, const long long *swallow_ids) {
+
+  const size_t count = c->hydro.count;
+  struct part *parts = c->hydro.parts;
+
+  for (size_t i = 0; i < count; ++i) {
+    parts[i].swallow_id = swallow_ids[i];
+  }
+}
+
 /**
  * @brief Unpack the data of a given cell and its sub-cells.
  *

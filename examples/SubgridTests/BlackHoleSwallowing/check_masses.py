@@ -2,8 +2,8 @@ import h5py as h5
 import numpy as np
 
 
-f = h5.File("bh_swallowing_serial_0002.hdf5", "r")
-f_mpi = h5.File("bh_swallowing_mpi_0002.hdf5", "r")
+f = h5.File("bh_swallowing_serial_0001.hdf5", "r")
+f_mpi = h5.File("bh_swallowing_mpi_0001.hdf5", "r")
 f_ics = h5.File("bh_swallowing.hdf5", "r")
 
 m = np.array(f["/PartType5/Masses"])#[:]
@@ -65,3 +65,6 @@ ids_removed = np.loadtxt("list.txt")
 for i in range(np.size(ids_removed)):
     result = np.where(ids_gas == ids_removed)
     print result
+
+#rho_gas = f["/PartType0/Density"][:]
+#print np.mean(rho_gas), np.std(rho_gas)
