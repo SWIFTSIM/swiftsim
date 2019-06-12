@@ -242,7 +242,9 @@ int main(int argc, char *argv[]) {
                   "time_end parameter to stop.",
                   NULL, 0, 0),
       OPT_STRING('o', "output-params", &output_parameters_filename,
-                 "Generate a parameter file with all the possible output fields to select.", NULL, 0, 0),
+                 "Generate a parameter file with the options for selecting the "
+                 "output fields.",
+                 NULL, 0, 0),
       OPT_STRING('P', "param", &buffer,
                  "Set parameter value, overiding the value read from the "
                  "parameter file. Can be used more than once {sec:par:value}.",
