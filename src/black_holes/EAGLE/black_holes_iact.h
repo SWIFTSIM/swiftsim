@@ -145,15 +145,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
         // if(bi->id == 984539715331LL)
         /* if (bi->id == 8488551516791LL || pj->id == 7433319600771LL || */
         /*     pj->id == 7310588820937LL || pj->id == 7346334038397LL) */
-        if (pj->id == 3126109876519LL)
-          message(
-              "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
-              " on rank %d (old "
-              "swallow id=%lld time_bin=%d ti_current=%lld r=%e, rho=%e)",
-              bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
-              pj->time_bin, ti_current, sqrt(r2), bi->rho_gas);
+        // if (pj->id == 3126109876519LL)
+        message(
+            "BH %lld (rank %d) wants to swallow gas particle %lld (rank %d)"
+            " on rank %d (old "
+            "swallow id=%lld time_bin=%d ti_current=%lld r=%e, rho=%e)",
+            bi->id, bi->rank, pj->id, pj->rank, engine_rank, pj->swallow_id,
+            pj->time_bin, ti_current, sqrt(r2), bi->rho_gas);
 
-          // printf("%lld\n", pj->id);
+        // printf("%lld\n", pj->id);
 
 #ifdef SWIFT_DEBUG_CHECKS
         if (pj->swallow_id != -1) {
