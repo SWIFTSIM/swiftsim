@@ -153,9 +153,8 @@ struct space *s_pointer;
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
 
-extern FILE* file_swallow;
-extern FILE* file_remove;
-
+extern FILE *file_swallow;
+extern FILE *file_remove;
 
 /**
  * @brief Intermediate task after the density to check that the smoothing
@@ -3757,9 +3756,11 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       /* Has this particle been flagged for swallowing? */
       if (p->swallow_id >= 0) {
 
-        message(
-            "Trying to find BH %lld that should swallow particle %lld depth=%d",
-            p->swallow_id, p->id, c->depth);
+        if (p->id == 3126109876519LL)
+          message(
+              "Trying to find BH %lld that should swallow particle %lld "
+              "depth=%d",
+              p->swallow_id, p->id, c->depth);
 
 #ifdef SWIFT_DEBUG_CHECKS
         if (p->ti_drift != e->ti_current)
@@ -3810,27 +3811,30 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             // if (bp->id == 984539715331LL)
             /* if (bp->id == 8488551516791LL || p->id == 7433319600771LL || */
             /*     p->id == 7310588820937LL || p->id == 7346334038397LL) */
-            message(
-                "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
-                "node=%d BH node=%d part node=%d",
-                bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
-                p->rank);
+            if (p->id == 3126109876519LL)
+              message(
+                  "BH %lld swallowing particle %lld gas_mass=%e new_mass=%e "
+                  "node=%d BH node=%d part node=%d",
+                  bp->id, p->id, gas_mass, bp->mass, c->nodeID, bp->rank,
+                  p->rank);
 
-	    fprintf(file_swallow, "%d %lld %lld \n", e->step, bp->id, p->id);
-	    fflush(file_swallow);
-  
+            fprintf(file_swallow, "%d %lld %lld \n", e->step, bp->id, p->id);
+            fflush(file_swallow);
+
             /* If the gas particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
               // if(bp->id == 4527799525197LL)
               // if (bp->id == 984539715331LL)
               /* if (bp->id == 8488551516791LL) */
-              message("BH %lld removing particle %lld BH node=%d part node=%d",
-                      bp->id, p->id, bp->rank, p->rank);
+              if (p->id == 3126109876519LL)
+                message(
+                    "BH %lld removing particle %lld BH node=%d part node=%d",
+                    bp->id, p->id, bp->rank, p->rank);
 
-	      fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
-	      fflush(file_remove);
-	      
+              fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
+              fflush(file_remove);
+
               /* Finally, remove the gas particle from the system */
               struct gpart *gp = p->gpart;
               cell_remove_part(e, c, p, xp);
@@ -3861,14 +3865,16 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
             if (bp->id == BH_id) {
 
-	      lock_lock(&s->lock);
-	      
+              lock_lock(&s->lock);
+
               // if(bp->id == 4527799525197LL)
               // if (bp->id == 984539715331LL)
-              message(
-                  "BH %lld removing particle %lld (foreign BH case) BH node=%d "
-                  "part node=%d",
-                  bp->id, p->id, bp->rank, p->rank);
+              if (p->id == 3126109876519LL)
+                message(
+                    "BH %lld removing particle %lld (foreign BH case) BH "
+                    "node=%d "
+                    "part node=%d",
+                    bp->id, p->id, bp->rank, p->rank);
 
 #ifdef SWIFT_DEBUG_CHECKS
               atomic_dec(&bp->is_swallowing_gas);
@@ -3879,12 +3885,12 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               cell_remove_part(e, c, p, xp);
               cell_remove_gpart(e, c, gp);
 
-	      fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
-	      fflush(file_remove);
-	      
-	      if (lock_unlock(&s->lock) != 0)
-		error("Failed to unlock the space.");
-	      
+              fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
+              fflush(file_remove);
+
+              if (lock_unlock(&s->lock) != 0)
+                error("Failed to unlock the space.");
+
               found = 1;
               break;
             }
@@ -3971,20 +3977,22 @@ void runner_do_recv_part(struct runner *r, struct cell *c, int clear_sorts,
     /* Collect everything... */
     for (size_t k = 0; k < nr_parts; k++) {
 
+      if (parts[k].id == 3126109876519LL) /* if (parts[k].id == 14554LL) */
+        message(
+            "Received particle %lld with swallow_id=%lld node=%d time_bin=%d"
+            "task=%s/%s",  // p->x=[%e %e %e]",
+            parts[k].id, parts[k].swallow_id, parts[k].rank, parts[k].time_bin,
+            taskID_names[r->t->type], subtaskID_names[r->t->subtype]);
+      /* // parts[k].x[0], parts[k].x[1], parts[k].x[2]); */
+
       if (parts[k].time_bin == time_bin_inhibited) continue;
       time_bin_min = min(time_bin_min, parts[k].time_bin);
       time_bin_max = max(time_bin_max, parts[k].time_bin);
       h_max = max(h_max, parts[k].h);
 
-      /* if (parts[k].id == 14554LL) */
-      /*   message( */
-      /*       "Received particle %lld with swallow_id=%lld node=%d time_bin=%d
-       * " */
-      /*       "task=%s/%s",  // p->x=[%e %e %e]", */
-      /*       parts[k].id, parts[k].swallow_id, parts[k].rank,
-       * parts[k].time_bin, */
-      /*       taskID_names[r->t->type], subtaskID_names[r->t->subtype]); */
-      /* // parts[k].x[0], parts[k].x[1], parts[k].x[2]); */
+      /* if(parts[k].id != -1) */
+      /* 	message("Rank=%d cell=%d k=%zd swallow_id=%lld", */
+      /* 		engine_rank, c->cellID, k, parts[k].swallow_id); */
     }
 
     /* Convert into a time */
@@ -4540,6 +4548,8 @@ void *runner_main(void *data) {
             free(t->buff);
           } else if (t->subtype == task_subtype_sf_counts) {
             free(t->buff);
+          } else if (t->subtype == task_subtype_part_swallow) {
+            free(t->buff);
           }
           break;
         case task_type_recv:
@@ -4568,7 +4578,9 @@ void *runner_main(void *data) {
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_part_swallow) {
             // message("OOOO");
-            runner_do_recv_part(r, ci, 0, 1);
+            // runner_do_recv_part(r, ci, 0, 1);
+            cell_unpack_part_swallow(ci, (long long *)t->buff);
+            free(t->buff);
           } else if (t->subtype == task_subtype_limiter) {
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_gpart) {

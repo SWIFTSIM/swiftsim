@@ -823,6 +823,8 @@ void cell_bunlocktree(struct cell *c);
 int cell_pack(struct cell *c, struct pcell *pc, const int with_gravity);
 int cell_unpack(struct pcell *pc, struct cell *c, struct space *s,
                 const int with_gravity);
+void cell_pack_part_swallow(const struct cell *c, long long *swallow_ids);
+void cell_unpack_part_swallow(struct cell *c, const long long *swallow_ids);
 int cell_pack_tags(const struct cell *c, int *tags);
 int cell_unpack_tags(const int *tags, struct cell *c);
 int cell_pack_end_step_hydro(struct cell *c, struct pcell_step_hydro *pcell);

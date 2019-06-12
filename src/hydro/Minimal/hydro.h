@@ -466,6 +466,8 @@ __attribute__((always_inline)) INLINE static void hydro_timestep_extra(
 __attribute__((always_inline)) INLINE static void hydro_init_part(
     struct part *restrict p, const struct hydro_space *hs) {
 
+  if (p->id == 3126109876519LL) message("Part is on rank %d", engine_rank);
+
   p->rank = engine_rank;
 
   p->density.wcount = 0.f;

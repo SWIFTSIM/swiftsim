@@ -66,17 +66,28 @@ u = zeros(numPart)
 m_cgs[:] = rho_cgs * vol_cgs / numPart    
 u_cgs[:] = P_cgs / (rho_cgs * (gamma - 1))
 
-# Bhs
-bh_pos = zeros((1, 3))
-bh_pos[:,:] = 0.5 * boxsize_cgs / unit_l_cgs
+# BHs
+bh_pos = zeros((2, 3))
+bh_pos[0,:] = 0.5 * boxsize_cgs / unit_l_cgs
 
-bh_v = zeros((1, 3))
+#diff = [4.812127e-03, 4.908179e-03, -4.878537e-03] - bh_pos[0,:]
+
+#print diff
+
+bh_pos[1,:] = 0.5 * boxsize_cgs / unit_l_cgs + diff
+
+print bh_pos
+
+# BHs don't move
+bh_v = zeros((2, 3))
 bh_v[:,:] = 0.
 
 # increase mass to keep it at center
-bh_m_cgs = m_cgs[0]
-bh_ids = array([numPart + 1])
-bh_h = array([h.max()])
+bh_m_cgs = ones(2) * m_cgs[0]
+bh_ids = linspace(numPart + 1, numPart + 2, 2, dtype='L')
+bh_h = ones(2) * [h.max()]
+
+print bh_ids
 
 #--------------------------------------------------
 
@@ -100,10 +111,10 @@ file = h5py.File(fileName, 'w')
 # Header
 grp = file.create_group("/Header")
 grp.attrs["BoxSize"] = [boxsize]*3
-grp.attrs["NumPart_Total"] =  [numPart, 0, 0, 0, 0, 1]
+grp.attrs["NumPart_Total"] =  [numPart, 0, 0, 0, 0, 2]
 #grp.attrs["NumPart_Total"] =  [numPart, 0, 0, 0, 0, 0]
 grp.attrs["NumPart_Total_HighWord"] = [0, 0, 0, 0, 0, 0]
-grp.attrs["NumPart_ThisFile"] = [numPart, 0, 0, 0, 0, 1]
+grp.attrs["NumPart_ThisFile"] = [numPart, 0, 0, 0, 0, 2]
 #grp.attrs["NumPart_ThisFile"] = [numPart, 0, 0, 0, 0, 0]
 grp.attrs["Time"] = 0.0
 grp.attrs["NumFilesPerSnapshot"] = 1
@@ -134,10 +145,10 @@ grp.create_dataset('ParticleIDs', data=ids, dtype='L')
 
 # stellar group
 grp = file.create_group("/PartType5")
-grp.create_dataset("Coordinates", (1,1),data=bh_pos, dtype="d")
-grp.create_dataset('Velocities', (1,1),data=bh_v, dtype='f')
-grp.create_dataset('Masses', (1,1),data=bh_m, dtype='f')
-grp.create_dataset('SmoothingLength', (1,1),data=bh_h, dtype='f')
-grp.create_dataset('ParticleIDs', (1,1),data=bh_ids, dtype='L')
+grp.create_dataset("Coordinates", (2,3),data=bh_pos, dtype="d")
+grp.create_dataset('Velocities', (2,3),data=bh_v, dtype='f')
+grp.create_dataset('Masses', (2,1),data=bh_m, dtype='f')
+grp.create_dataset('SmoothingLength', (2,1),data=bh_h, dtype='f')
+grp.create_dataset('ParticleIDs', (2,1),data=bh_ids[::-1], dtype='L')
 
 file.close()
