@@ -178,16 +178,16 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   }
     
     /* I will add a random distribution of metals to the initial set-up until enrichment is ON */
-    float r = (p->x[0]-2282.34) * (p->x[0]-2282.34);
+    /*float r = (p->x[0]-2282.34) * (p->x[0]-2282.34);
     r += (p->x[1]-2282.34) * (p->x[1]-2282.34);
     r += (p->x[2]-2282.34) * (p->x[2]-2282.34);
-    r = sqrt(r) / 20.0;
+    r = sqrt(r) / 20.0;*/
     
     /* Get a unique random number between 0 and 1 stolen from star formation */
-    float random_number = random_unit_interval(p->id, 10, 0);
-    random_number *= 0.1; /*between 0 and 0.1*/
+    /*float random_number = random_unit_interval(p->id, 10, 0);
+    random_number *= 0.1; between 0 and 0.1*/
     
-    if (r <= 0.3 && r > 0.1){
+    /*if (r <= 0.3 && r > 0.1){
         
         float a = pow(10,(-0.2*exp(1.17*0.2))+random_number);
         float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
@@ -263,7 +263,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
         for (int elem = 2; elem < chemistry_element_count; ++elem){
             p->chemistry_data.metal_mass_fraction[elem] *= a;
         }
-    }
+    }*/
     
   chemistry_init_part(p, data);
 }

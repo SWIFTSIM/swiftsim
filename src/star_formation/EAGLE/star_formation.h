@@ -232,13 +232,10 @@ INLINE static int star_formation_is_star_forming(
    * because we also need to check if the physical density exceeded
    * the appropriate limit */
 
-#ifdef CHEMISTRY_COLIBRE
-  const double Z = p->chemistry_data.metal_mass_fraction_total;
-  const double X_H = p->chemistry_data.metal_mass_fraction[0];
-#else
   const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
   const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-#endif
+/*  const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
+  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
   const double n_H = physical_density * X_H;
 
   /* Get the density threshold */
@@ -284,11 +281,10 @@ INLINE static void star_formation_compute_SFR(
 
   /* Hydrogen number density of this particle */
   const double physical_density = hydro_get_physical_density(p, cosmo);
-#ifdef CHEMISTRY_COLIBRE
-  const double X_H = p->chemistry_data.metal_mass_fraction[0];
-#else
+
   const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-#endif
+/*  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
+    
   const double n_H = physical_density * X_H / phys_const->const_proton_mass;
 
   /* Are we above the threshold for automatic star formation? */

@@ -76,6 +76,15 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
         dp->shear_tensor[1][k] = 0.0f;
         dp->shear_tensor[2][k] = 0.0f;
     }
+    
+    struct chemistry_part_data* cpd = &p->chemistry_data;
+    
+    for (int i = 0; i < chemistry_element_count; i++) {
+        cpd->smoothed_metal_mass_fraction[i] = 0.f;
+    }
+    
+    cpd->smoothed_metal_mass_fraction_total = 0.f;
+    cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
 }
 
 /**
@@ -129,7 +138,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient //
-    p->diffusion_data.diffusion_coefficient = rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
+    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
     
     /* Velocity shear tensor goes back to zero for next loop */
     for (k = 0; k < 3; k++){
@@ -141,6 +150,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     /* Getting ready for diffusion rate calculation in <FORCE LOOP> */
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->diffusion_data.diffusion_rate[elem] = 0.0f;
+        p->diffusion_data.dmetal_mass_fraction[elem] = p->chemistry_data.metal_mass_fraction[elem];
     }
 }
 
@@ -157,21 +167,6 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
-    /* Make all the fields default values */
-    struct chemistry_part_data* cpd = &p->chemistry_data;
-    
-    /* Total metal mass fraction */
-    cpd->metal_mass_fraction_total = cpd->metal_mass_fraction_total;
-    
-    /* Iron frac from SNIa */
-    cpd->iron_mass_fraction_from_SNIa =
-    cpd->iron_mass_fraction_from_SNIa;
-    
-    /* Individual metal mass fractions */
-    for (int i = 0; i < chemistry_element_count; i++) {
-        cpd->metal_mass_fraction[i] = cpd->metal_mass_fraction[i];
-    }
-    
   //struct chemistry_part_data* cpd = &p->chemistry_data;
   // CC: Not sure what to do here, better to add message
    /* error("Needs implementing!");*/
@@ -213,7 +208,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     
     /* Get a unique random number between 0 and 1 stolen from star formation */
     float random_number = random_unit_interval(p->id, 10, 0);
-    random_number *= 0.1; /*between 0 and 0.1*/    
+    random_number *= 0.1; /*between 0 and 0.1*/
     
     if (r <= 0.3 && r > 0.1){
         
@@ -409,18 +404,21 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(struct par
         p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
     }
     
-    struct chemistry_part_data* cpd = &p->chemistry_data;
+    /* goes back to zero and recomputes*/
+    p->chemistry_data.metal_mass_fraction_total = 1.0f;
+    p->chemistry_data.metal_mass_fraction_total -= p->chemistry_data.metal_mass_fraction[0]; /*H*/
+    p->chemistry_data.metal_mass_fraction_total -= p->chemistry_data.metal_mass_fraction[1]; /*He*/
     
     for (int i = 0; i < chemistry_element_count; i++) {
         /* Final operation on the density (add self-contribution). */
-        cpd->smoothed_metal_mass_fraction[i] = cpd->metal_mass_fraction[i];
+        p->chemistry_data.smoothed_metal_mass_fraction[i] = p->chemistry_data.metal_mass_fraction[i];
     }
     
     /* Smooth mass fraction of all metals */
-    cpd->smoothed_metal_mass_fraction_total = cpd->metal_mass_fraction_total;
+    p->chemistry_data.smoothed_metal_mass_fraction_total = p->chemistry_data.metal_mass_fraction_total;
     
     /* Smooth iron mass fraction from SNIa */
-    cpd->smoothed_iron_mass_fraction_from_SNIa = cpd->iron_mass_fraction_from_SNIa;
+    p->chemistry_data.smoothed_iron_mass_fraction_from_SNIa = p->chemistry_data.iron_mass_fraction_from_SNIa;
 }
 
 
