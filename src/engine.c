@@ -132,8 +132,8 @@ int engine_rank;
 /** The current step of the engine as a global variable (for messages). */
 int engine_current_step;
 
-FILE* file_swallow = NULL;
-FILE* file_remove = NULL;
+FILE *file_swallow = NULL;
+FILE *file_remove = NULL;
 
 /**
  * @brief Data collected from the cells at the end of a time-step
@@ -5284,7 +5284,7 @@ void engine_config(int restart, int fof, struct engine *e,
 
   fflush(file_swallow);
   fflush(file_remove);
-  
+
   /* Are we doing stuff in parallel? */
   if (nr_nodes > 1) {
 #ifndef WITH_MPI
