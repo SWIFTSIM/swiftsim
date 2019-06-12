@@ -20,10 +20,6 @@
 #define SWIFT_COLIBRE_STARS_H
 
 #include <float.h>
-<<<<<<< HEAD
-#include "minmax.h"
-
-=======
 
 /**
  * @brief Computes the gravity time-step of a given star particle.
@@ -179,6 +175,4 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
   p->num_ngb_force = 0;
 #endif
 }
->>>>>>> master
-
 #endif /* SWIFT_COLIBRE_STARS_H */

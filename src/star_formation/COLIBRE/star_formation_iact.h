@@ -19,8 +19,6 @@
 #ifndef SWIFT_COLIBRE_STAR_FORMATION_IACT_H
 #define SWIFT_COLIBRE_STAR_FORMATION_IACT_H
 
-<<<<<<< HEAD
-=======
 /**
  * @file COLIBRE/star_formation_iact.h
  * @brief Density computation
@@ -69,6 +67,5 @@ runner_iact_nonsym_star_formation(float r2, const float *dx, float hi, float hj,
   /* Nothing to do here. We do not need to compute any quantity in the hydro
      density loop for the COLIBRE star formation model. */
 }
->>>>>>> master
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_IACT_H */

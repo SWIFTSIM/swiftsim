@@ -24,13 +24,9 @@
 #include "cooling.h"
 #include "cosmology.h"
 #include "engine.h"
-<<<<<<< HEAD
-#include "equation_of_state.h"
-=======
 #include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "exp10.h"
->>>>>>> master
 #include "hydro.h"
 #include "parser.h"
 #include "part.h"
@@ -39,8 +35,6 @@
 #include "stars.h"
 #include "units.h"
 
-<<<<<<< HEAD
-=======
 /**
  * @file src/star_formation/COLIBRE/star_formation.h
  * @brief Star formation model used in the COLIBRE model
@@ -428,5 +422,4 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
     struct part* restrict p, const struct star_formation* data) {}
 
->>>>>>> master
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_H */

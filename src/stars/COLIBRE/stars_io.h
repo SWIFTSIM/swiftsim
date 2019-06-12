@@ -23,8 +23,6 @@
 #include "io_properties.h"
 #include "stars_part.h"
 
-<<<<<<< HEAD
-=======
 /**
  * @brief Specifies which s-particle fields to read from a dataset
  *
@@ -211,6 +209,5 @@ INLINE static void stars_props_struct_restore(const struct stars_props *p,
   restart_read_blocks((void *)p, sizeof(struct stars_props), 1, stream, NULL,
                       "stars props");
 }
->>>>>>> master
 
 #endif /* SWIFT_COLIBRE_STAR_IO_H */

@@ -25,10 +25,6 @@
 /* Local includes */
 #include "io_properties.h"
 #include "tracers.h"
-
-<<<<<<< HEAD
-
-=======
 #ifdef HAVE_HDF5
 
 /**
@@ -106,5 +102,5 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
 
   return 3;
 }
->>>>>>> master
+
 #endif /* SWIFT_TRACERS_COLIBRE_IO_H */

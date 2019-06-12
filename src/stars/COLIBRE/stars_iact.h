@@ -19,8 +19,6 @@
 #ifndef SWIFT_COLIBRE_STARS_IACT_H
 #define SWIFT_COLIBRE_STARS_IACT_H
 
-<<<<<<< HEAD
-=======
 #include "random.h"
 
 /**
@@ -92,6 +90,5 @@ runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
   ++si->num_ngb_feedback;
 #endif
 }
->>>>>>> master
 
 #endif /* SWIFT_COLIBRE_STARS_IACT_H */

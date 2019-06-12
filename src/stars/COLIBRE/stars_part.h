@@ -23,12 +23,6 @@
 /* Some standard headers. */
 #include <stdlib.h>
 
-<<<<<<< HEAD
-/* Read chemistry */
-#include "chemistry_struct.h"
-#include "tracers_struct.h"
-
-=======
 /* Read additional aubgrid models */
 #include "chemistry_struct.h"
 #include "feedback_struct.h"
@@ -162,6 +156,5 @@ struct stars_props {
   /*! Value to set birth time of stars read from ICs */
   float spart_first_init_birth_time;
 };
->>>>>>> master
 
 #endif /* SWIFT_COLIBRE_STAR_PART_H */

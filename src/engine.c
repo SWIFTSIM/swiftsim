@@ -6371,16 +6371,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
           sizeof(struct chemistry_global_data));
   chemistry_struct_restore(chemistry, stream);
   e->chemistry = chemistry;
-<<<<<<< HEAD
-    
-=======
 
   struct fof_props *fof_props =
       (struct fof_props *)malloc(sizeof(struct fof_props));
   fof_struct_restore(fof_props, stream);
   e->fof_properties = fof_props;
 
->>>>>>> master
   struct swift_params *parameter_file =
       (struct swift_params *)malloc(sizeof(struct swift_params));
   parser_struct_restore(parameter_file, stream);

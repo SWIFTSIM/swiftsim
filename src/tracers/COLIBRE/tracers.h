@@ -27,8 +27,6 @@
 #include "part.h"
 #include "tracers_struct.h"
 
-<<<<<<< HEAD
-=======
 /**
  * @brief Update the particle tracers just after it has been initialised at the
  * start of a step.
@@ -139,6 +137,5 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.maximum_temperature_time = -1.f;
   xp->tracers_data.momentum_received = 0.f;
 }
->>>>>>> master
 
 #endif /* SWIFT_TRACERS_COLIBRE_H */

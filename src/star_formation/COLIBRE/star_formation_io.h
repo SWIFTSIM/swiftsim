@@ -25,8 +25,6 @@
 /* Local includes */
 #include "io_properties.h"
 
-<<<<<<< HEAD
-=======
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -46,5 +44,4 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
   return 1;
 }
 
->>>>>>> master
 #endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */

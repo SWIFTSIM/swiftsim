@@ -19,8 +19,6 @@
 #ifndef SWIFT_TRACERS_STRUCT_COLIBRE_H
 #define SWIFT_TRACERS_STRUCT_COLIBRE_H
 
-<<<<<<< HEAD
-=======
 /**
  * @brief Properties of the tracers stored in the extended particle data.
  */
@@ -41,6 +39,5 @@ struct tracers_xpart_data {
     float maximum_temperature_time;
   };
 };
->>>>>>> master
 
 #endif /* SWIFT_TRACERS_STRUCT_COLIBRE_H */
