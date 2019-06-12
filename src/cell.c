@@ -607,6 +607,10 @@ void cell_unpack_part_swallow(struct cell *c, const long long *swallow_ids) {
 
   for (size_t i = 0; i < count; ++i) {
     parts[i].swallow_id = swallow_ids[i];
+
+    if (parts[i].id == 7296358176571LL)
+      message("Updating swallow ID of particle %lld to %lld", parts[i].id,
+              parts[i].swallow_id);
   }
 }
 
@@ -5262,6 +5266,9 @@ void cell_remove_part(const struct engine *e, struct cell *c, struct part *p,
 
   /* Un-link the part */
   p->gpart = NULL;
+
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_parts);
 }
 
 /**
@@ -5282,6 +5289,9 @@ void cell_remove_gpart(const struct engine *e, struct cell *c,
 
   /* Mark the particle as inhibited */
   gp->time_bin = time_bin_inhibited;
+
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_gparts);
 }
 
 /**
@@ -5310,6 +5320,9 @@ void cell_remove_spart(const struct engine *e, struct cell *c,
 
   /* Un-link the spart */
   sp->gpart = NULL;
+
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_sparts);
 }
 
 /**
@@ -5339,6 +5352,9 @@ void cell_remove_bpart(const struct engine *e, struct cell *c,
 
   /* Un-link the bpart */
   bp->gpart = NULL;
+
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_bparts);
 }
 
 /**

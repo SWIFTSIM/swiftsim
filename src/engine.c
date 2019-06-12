@@ -2973,7 +2973,6 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
 
   /* Local collectible */
   size_t updated = 0, g_updated = 0, s_updated = 0, b_updated = 0;
-  size_t inhibited = 0, g_inhibited = 0, s_inhibited = 0, b_inhibited = 0;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
@@ -3038,11 +3037,6 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
       s_updated += c->stars.updated;
       b_updated += c->black_holes.updated;
 
-      inhibited += c->hydro.inhibited;
-      g_inhibited += c->grav.inhibited;
-      s_inhibited += c->stars.inhibited;
-      b_inhibited += c->black_holes.inhibited;
-
       /* Check if the cell is inactive and in that case reorder the SFH */
       if (!cell_is_starting_hydro(c, e)) {
         star_formation_logger_log_inactive_cell(&c->stars.sfh);
@@ -3067,11 +3061,6 @@ void engine_collect_end_of_step_mapper(void *map_data, int num_elements,
     data->g_updated += g_updated;
     data->s_updated += s_updated;
     data->b_updated += b_updated;
-
-    data->inhibited += inhibited;
-    data->g_inhibited += g_inhibited;
-    data->s_inhibited += s_inhibited;
-    data->b_inhibited += b_inhibited;
 
     /* Add the SFH information from this engine to the global data */
     star_formation_logger_add(sfh_top, &sfh_updated);
@@ -3129,8 +3118,6 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
   struct space *s = e->s;
   struct end_of_step_data data;
   data.updated = 0, data.g_updated = 0, data.s_updated = 0, data.b_updated = 0;
-  data.inhibited = 0, data.g_inhibited = 0, data.s_inhibited = 0,
-  data.b_inhibited = 0;
   data.ti_hydro_end_min = max_nr_timesteps, data.ti_hydro_end_max = 0,
   data.ti_hydro_beg_max = 0;
   data.ti_gravity_end_min = max_nr_timesteps, data.ti_gravity_end_max = 0,
@@ -3149,11 +3136,12 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
                  s->local_cells_with_tasks_top, s->nr_local_cells_with_tasks,
                  sizeof(int), 0, &data);
 
-  /* Store the local number of inhibited particles */
-  s->nr_inhibited_parts = data.inhibited;
-  s->nr_inhibited_gparts = data.g_inhibited;
-  s->nr_inhibited_sparts = data.s_inhibited;
-  s->nr_inhibited_bparts = data.b_inhibited;
+  /* Get the number of inhibited particles from the space-wide counters
+   * since these have been updated atomically during the time-steps. */
+  data.inhibited = s->nr_inhibited_parts;
+  data.g_inhibited = s->nr_inhibited_gparts;
+  data.s_inhibited = s->nr_inhibited_sparts;
+  data.b_inhibited = s->nr_inhibited_bparts;
 
   /* Store these in the temporary collection group. */
   collectgroup1_init(
@@ -3193,7 +3181,8 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     out_ll[0] = data.updated;
     out_ll[1] = data.g_updated;
     out_ll[2] = data.s_updated;
-    if (MPI_Allreduce(out_ll, in_ll, 3, MPI_LONG_LONG_INT, MPI_SUM,
+    out_ll[3] = data.b_updated;
+    if (MPI_Allreduce(out_ll, in_ll, 4, MPI_LONG_LONG_INT, MPI_SUM,
                       MPI_COMM_WORLD) != MPI_SUCCESS)
       error("Failed to aggregate particle counts.");
     if (in_ll[0] != (long long)e->collect_group1.updated)
@@ -3205,11 +3194,15 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     if (in_ll[2] != (long long)e->collect_group1.s_updated)
       error("Failed to get same s_updated, is %lld, should be %lld", in_ll[2],
             e->collect_group1.s_updated);
+    if (in_ll[3] != (long long)e->collect_group1.b_updated)
+      error("Failed to get same b_updated, is %lld, should be %lld", in_ll[3],
+            e->collect_group1.b_updated);
 
     out_ll[0] = data.inhibited;
     out_ll[1] = data.g_inhibited;
     out_ll[2] = data.s_inhibited;
-    if (MPI_Allreduce(out_ll, in_ll, 3, MPI_LONG_LONG_INT, MPI_SUM,
+    out_ll[3] = data.b_inhibited;
+    if (MPI_Allreduce(out_ll, in_ll, 4, MPI_LONG_LONG_INT, MPI_SUM,
                       MPI_COMM_WORLD) != MPI_SUCCESS)
       error("Failed to aggregate particle counts.");
     if (in_ll[0] != (long long)e->collect_group1.inhibited)
@@ -3221,6 +3214,9 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     if (in_ll[2] != (long long)e->collect_group1.s_inhibited)
       error("Failed to get same s_inhibited, is %lld, should be %lld", in_ll[2],
             e->collect_group1.s_inhibited);
+    if (in_ll[3] != (long long)e->collect_group1.b_inhibited)
+      error("Failed to get same b_inhibited, is %lld, should be %lld", in_ll[3],
+            e->collect_group1.b_inhibited);
 
     int buff = 0;
     if (MPI_Allreduce(&e->forcerebuild, &buff, 1, MPI_INT, MPI_MAX,
