@@ -5401,6 +5401,9 @@ struct gpart *cell_convert_part_to_gpart(const struct engine *e, struct cell *c,
   gp->ti_kick = p->ti_kick;
 #endif
 
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_parts);
+
   return gp;
 }
 
@@ -5446,6 +5449,9 @@ struct gpart *cell_convert_spart_to_gpart(const struct engine *e,
 #ifdef SWIFT_DEBUG_CHECKS
   gp->ti_kick = sp->ti_kick;
 #endif
+
+  /* Update the space-wide counters */
+  atomic_inc(&e->s->nr_inhibited_sparts);
 
   return gp;
 }

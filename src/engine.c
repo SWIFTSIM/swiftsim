@@ -3177,7 +3177,7 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
       error("Failed to get same ti_gravity_end_min, is %lld, should be %lld",
             in_i[1], e->collect_group1.ti_gravity_end_min);
 
-    long long in_ll[3], out_ll[3];
+    long long in_ll[4], out_ll[4];
     out_ll[0] = data.updated;
     out_ll[1] = data.g_updated;
     out_ll[2] = data.s_updated;
