@@ -1085,9 +1085,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
         c->black_holes.density_ghost = scheduler_addtask(
             s, task_type_bh_density_ghost, task_subtype_none, 0, 0, c, NULL);
 
-        c->black_holes.swallow_ghost[1] =
-            scheduler_addtask(s, task_type_bh_swallow_ghost2, task_subtype_none,
-                              0, /* implicit =*/1, c, NULL);
+        c->black_holes.swallow_ghost[1] = scheduler_addtask(
+            s, task_type_bh_swallow_ghost2, task_subtype_none, 0, 0, c, NULL);
 
         scheduler_addunlock(s, c->super->kick2, c->black_holes.black_holes_in);
         scheduler_addunlock(s, c->black_holes.black_holes_out,
