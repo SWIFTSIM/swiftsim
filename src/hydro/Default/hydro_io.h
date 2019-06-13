@@ -204,7 +204,7 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
   /* Viscosity and thermal conduction */
   /* Nothing in this minimal model... */
   io_write_attribute_s(h_grpsph, "Thermal Conductivity Model",
-                       "Simple treatment as in Price (2008)");
+                       "Simple treatment as in Price (2017)");
   io_write_attribute_s(h_grpsph, "Viscosity Model",
                        "Simplified version of Cullen & Denhen (2011)");
 
