@@ -3709,6 +3709,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
   struct space *s = e->s;
   struct bpart *bparts = s->bparts;
   const size_t nr_bpart = s->nr_bparts;
+#ifdef WITH_MPI
+  struct bpart *bparts_foreign = s->bparts_foreign;
+  const size_t nr_bparts_foreign = s->nr_bparts_foreign;
+#endif
 
   struct part *parts = c->hydro.parts;
   struct xpart *xparts = c->hydro.xparts;
@@ -3770,25 +3774,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
              */
             lock_lock(&s->lock);
 
-            /* Get the current dynamical masses */
-            const float gas_mass = hydro_get_mass(p);
-            const float BH_mass = bp->mass;
-
-            /* Increase the dynamical mass of the BH. */
-            bp->mass += gas_mass;
-            bp->gpart->mass += gas_mass;
-
-            /* Update the BH momentum */
-            const float BH_mom[3] = {BH_mass * bp->v[0] + gas_mass * p->v[0],
-                                     BH_mass * bp->v[1] + gas_mass * p->v[1],
-                                     BH_mass * bp->v[2] + gas_mass * p->v[2]};
-
-            bp->v[0] = BH_mom[0] / bp->mass;
-            bp->v[1] = BH_mom[1] / bp->mass;
-            bp->v[2] = BH_mom[2] / bp->mass;
-            bp->gpart->v_full[0] = bp->v[0];
-            bp->gpart->v_full[1] = bp->v[1];
-            bp->gpart->v_full[2] = bp->v[2];
+            /* Swallow the gas particle (i.e. update the BH properties) */
+            black_holes_swallow_part(bp, p, xp, e->cosmology);
 
             /* Release the space as we are done updating the bpart */
             if (lock_unlock(&s->lock) != 0)
@@ -3824,10 +3811,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
         if (c->nodeID == e->nodeID && !found) {
 
           /* Let's look for the foreign hungry black hole */
-          for (size_t i = 0; i < s->nr_bparts_foreign; ++i) {
+          for (size_t i = 0; i < nr_bparts_foreign; ++i) {
 
             /* Get a handle on the bpart. */
-            struct bpart *bp = &s->bparts_foreign[i];
+            struct bpart *bp = &bparts_foreign[i];
 
             if (bp->id == BH_id) {
 
