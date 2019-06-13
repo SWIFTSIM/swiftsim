@@ -502,7 +502,6 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->density.rot_v[2] = 0.f;
 
   p->viscosity.div_v = 0.f;
-  p->diffusion.laplace_u = 0.f;
 }
 
 /**
@@ -626,18 +625,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
-    struct part *p) {
-
-  /* Some smoothing length multiples. */
-  const float h = p->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
-  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
-
-  /* Include the extra factors in the del^2 u */
-
-  p->diffusion.laplace_u *= 2.f * h_inv_dim_plus_one;
-}
+    struct part *p) {}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -672,7 +660,6 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
 
   /* Probably not shocking, so this is safe to do */
   p->viscosity.div_v = 0.f;
-  p->diffusion.laplace_u = 0.f;
 }
 
 /**

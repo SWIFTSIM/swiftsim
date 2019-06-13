@@ -213,20 +213,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   /* Update if we need to */
   pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
   pj->viscosity.v_sig = max(pj->viscosity.v_sig, new_v_sig);
-
-  /* Calculate Del^2 u for the thermal diffusion coefficient. */
-  /* Need to get some kernel values F_ij = wi_dx */
-  float wi, wi_dx, wj, wj_dx;
-
-  const float ui = r / hi;
-  const float uj = r / hj;
-
-  kernel_deval(ui, &wi, &wi_dx);
-  kernel_deval(uj, &wj, &wj_dx);
-
-  const float delta_u_factor = (pi->u - pj->u) * r_inv;
-  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
-  pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
 }
 
 /**
@@ -278,17 +264,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 
   /* Update if we need to */
   pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
-
-  /* Calculate Del^2 u for the thermal diffusion coefficient. */
-  /* Need to get some kernel values F_ij = wi_dx */
-  float wi, wi_dx;
-
-  const float ui = r / hi;
-
-  kernel_deval(ui, &wi, &wi_dx);
-
-  const float delta_u_factor = (pi->u - pj->u) * r_inv;
-  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
 }
 
 /**
@@ -417,8 +392,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   pj->u_dt += du_dt_j * mi;
 
   /* Get the time derivative for h. */
-  pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
-  pj->force.h_dt -= mi * dvdr * r_inv / rhoi * wj_dr;
+  pi->force.h_dt -= mj * dvdr * pi->force.f * r_inv / rhoj * wi_dr;
+  pj->force.h_dt -= mi * dvdr * pj->force.f * r_inv / rhoi * wj_dr;
 }
 
 /**
@@ -539,7 +514,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->u_dt += du_dt_i * mj;
 
   /* Get the time derivative for h. */
-  pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
+  pi->force.h_dt -= mj * dvdr * pi->force.f * r_inv / rhoj * wi_dr;
 }
 
 /**
