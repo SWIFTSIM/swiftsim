@@ -101,7 +101,7 @@ __attribute__((always_inline)) INLINE static void black_holes_predict_extra(
  * @param bp The particle.
  */
 __attribute__((always_inline)) INLINE static void
-black_holes_reset_predicted_values(struct bpart* restrict bp) {}
+black_holes_reset_predicted_values(struct bpart* bp) {}
 
 /**
  * @brief Kick the additional variables
@@ -153,7 +153,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void
-black_holes_bpart_has_no_neighbours(struct bpart* restrict bp,
+black_holes_bpart_has_no_neighbours(struct bpart* bp,
                                     const struct cosmology* cosmo) {
 
   /* Some smoothing length multiples. */
@@ -164,6 +164,44 @@ black_holes_bpart_has_no_neighbours(struct bpart* restrict bp,
   /* Re-set problematic values */
   bp->density.wcount = kernel_root * h_inv_dim;
   bp->density.wcount_dh = 0.f;
+}
+
+/**
+ * @brief Update the properties of a black hole particles by swallowing
+ * a gas particle.
+ *
+ * @param bp The #bpart to update.
+ * @param p The #part that is swallowed.
+ * @param xp The #xpart that is swallowed.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void black_holes_swallow_part(
+    struct bpart* bp, const struct part* p, const struct xpart* xp,
+    const struct cosmology* cosmo) {
+
+  /* Get the current dynamical masses */
+  const float gas_mass = hydro_get_mass(p);
+  const float BH_mass = bp->mass;
+
+  /* Increase the dynamical mass of the BH. */
+  bp->mass += gas_mass;
+  bp->gpart->mass += gas_mass;
+
+  /* Update the BH momentum */
+  const float BH_mom[3] = {BH_mass * bp->v[0] + gas_mass * p->v[0],
+                           BH_mass * bp->v[1] + gas_mass * p->v[1],
+                           BH_mass * bp->v[2] + gas_mass * p->v[2]};
+
+  bp->v[0] = BH_mom[0] / bp->mass;
+  bp->v[1] = BH_mom[1] / bp->mass;
+  bp->v[2] = BH_mom[2] / bp->mass;
+  bp->gpart->v_full[0] = bp->v[0];
+  bp->gpart->v_full[1] = bp->v[1];
+  bp->gpart->v_full[2] = bp->v[2];
+
+  /* This BH lost a neighbour */
+  bp->num_ngbs--;
+  bp->ngb_mass -= gas_mass;
 }
 
 /**
@@ -247,7 +285,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   bp->total_accreted_mass += mass_rate * dt;
   bp->energy_reservoir += luminosity * epsilon_f * dt;
 
-  /* Energy required to have a feedback event */
+  /* Energy required to have a feedback event
+   * Note that we have subtracted the particles we swallowed from the ngb_mass
+   * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
   const double E_feedback_event = num_ngbs_to_heat * delta_u * mean_ngb_mass;
 
