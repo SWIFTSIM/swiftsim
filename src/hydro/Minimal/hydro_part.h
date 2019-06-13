@@ -176,8 +176,6 @@ struct part {
   /*! ID of the black hole swallowing this particle */
   long long swallow_id;
 
-  int rank;
-
   /*! Time-step length */
   timebin_t time_bin;
 

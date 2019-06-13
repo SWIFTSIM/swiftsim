@@ -503,11 +503,6 @@ __attribute__((always_inline)) INLINE static void hydro_remove_part(
 __attribute__((always_inline)) INLINE static void hydro_init_part(
     struct part *restrict p, const struct hydro_space *hs) {
 
-  if (p->id == 7296358176571LL)
-    message("Gas particle %lld is on rank %d", p->id, engine_rank);
-
-  p->rank = engine_rank;
-
   p->density.wcount = 0.f;
   p->density.wcount_dh = 0.f;
   p->rho = 0.f;

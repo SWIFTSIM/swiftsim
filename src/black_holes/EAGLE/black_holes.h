@@ -58,10 +58,6 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->total_accreted_mass = 0.f;
   bp->accretion_rate = 0.f;
   bp->formation_time = -1.f;
-
-#ifdef SWIFT_DEBUG_CHECKS
-  bp->is_swallowing_gas = 0;
-#endif
 }
 
 /**
