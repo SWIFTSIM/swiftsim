@@ -573,7 +573,6 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
   struct bpart *restrict bparts = c->black_holes.parts;
   const struct engine *e = r->e;
-  const int with_cosmology = e->policy & engine_policy_cosmology;
   const struct cosmology *cosmo = e->cosmology;
   const float black_holes_h_max = e->hydro_properties->h_max;
   const float black_holes_h_min = e->hydro_properties->h_min;
@@ -692,25 +691,6 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
           if (((bp->h >= black_holes_h_max) && (f < 0.f)) ||
               ((bp->h <= black_holes_h_min) && (f > 0.f))) {
 
-            /* Get particle time-step */
-            double dt;
-            if (with_cosmology) {
-              const integertime_t ti_step = get_integer_timestep(bp->time_bin);
-              const integertime_t ti_begin =
-                  get_integer_time_begin(e->ti_current - 1, bp->time_bin);
-
-              dt = cosmology_get_delta_time(e->cosmology, ti_begin,
-                                            ti_begin + ti_step);
-            } else {
-              dt = get_timestep(bp->time_bin, e->time_base);
-            }
-
-            /* Compute variables required for the feedback loop */
-            black_holes_prepare_feedback(bp, e->black_holes_properties,
-                                         e->physical_constants, e->cosmology,
-                                         dt);
-
-            /* Reset quantities computed by the feedback loop */
             black_holes_reset_feedback(bp);
 
             /* Ok, we are done with this particle */
@@ -801,28 +781,10 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
         /* We now have a particle whose smoothing length has converged */
 
+        black_holes_reset_feedback(bp);
+
         /* Check if h_max has increased */
         h_max = max(h_max, bp->h);
-
-        /* Get particle time-step */
-        double dt;
-        if (with_cosmology) {
-          const integertime_t ti_step = get_integer_timestep(bp->time_bin);
-          const integertime_t ti_begin =
-              get_integer_time_begin(e->ti_current - 1, bp->time_bin);
-
-          dt = cosmology_get_delta_time(e->cosmology, ti_begin,
-                                        ti_begin + ti_step);
-        } else {
-          dt = get_timestep(bp->time_bin, e->time_base);
-        }
-
-        /* Compute variables required for the feedback loop */
-        black_holes_prepare_feedback(bp, e->black_holes_properties,
-                                     e->physical_constants, e->cosmology, dt);
-
-        /* Reset quantities computed by the feedback loop */
-        black_holes_reset_feedback(bp);
       }
 
       /* We now need to treat the particles whose smoothing length had not
@@ -901,6 +863,65 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
   if (c->black_holes.density_ghost) {
     for (struct cell *tmp = c->parent; tmp != NULL; tmp = tmp->parent) {
       atomic_max_d(&tmp->black_holes.h_max, h_max);
+    }
+  }
+
+  if (timer) TIMER_TOC(timer_do_black_holes_ghost);
+}
+
+/**
+ * @brief Intermediate task after the BHs have done their swallowing step.
+ * This is used to update the BH quantities if necessary.
+ *
+ * @param r The runner thread.
+ * @param c The cell.
+ * @param timer Are we timing this ?
+ */
+void runner_do_black_holes_swallow_ghost(struct runner *r, struct cell *c,
+                                         int timer) {
+
+  struct bpart *restrict bparts = c->black_holes.parts;
+  const int count = c->black_holes.count;
+  const struct engine *e = r->e;
+  const int with_cosmology = e->policy & engine_policy_cosmology;
+
+  TIMER_TIC;
+
+  /* Anything to do here? */
+  if (!cell_is_active_hydro(c, e)) return;
+
+  /* Recurse? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL)
+        runner_do_black_holes_swallow_ghost(r, c->progeny[k], 0);
+  } else {
+
+    /* Loop over the parts in this cell. */
+    for (int i = 0; i < count; i++) {
+
+      /* Get a direct pointer on the part. */
+      struct bpart *bp = &bparts[i];
+
+      if (bpart_is_active(bp, e)) {
+
+        /* Get particle time-step */
+        double dt;
+        if (with_cosmology) {
+          const integertime_t ti_step = get_integer_timestep(bp->time_bin);
+          const integertime_t ti_begin =
+              get_integer_time_begin(e->ti_current - 1, bp->time_bin);
+
+          dt = cosmology_get_delta_time(e->cosmology, ti_begin,
+                                        ti_begin + ti_step);
+        } else {
+          dt = get_timestep(bp->time_bin, e->time_base);
+        }
+
+        /* Compute variables required for the feedback loop */
+        black_holes_prepare_feedback(bp, e->black_holes_properties,
+                                     e->physical_constants, e->cosmology, dt);
+      }
     }
   }
 
@@ -4417,11 +4438,8 @@ void *runner_main(void *data) {
         case task_type_bh_density_ghost:
           runner_do_black_holes_density_ghost(r, ci, 1);
           break;
-        case task_type_bh_swallow_ghost1:
         case task_type_bh_swallow_ghost2:
-#ifdef SWIFT_DEBUG_CHECKS
-          error("Calling implicit task!");
-#endif
+          runner_do_black_holes_swallow_ghost(r, ci, 1);
           break;
         case task_type_drift_part:
           runner_do_drift_part(r, ci, 1);

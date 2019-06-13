@@ -189,7 +189,7 @@ runner_iact_nonsym_bh_feedback(const float r2, const float *dx, const float hi,
       hydro_set_viscosity_alpha_max_feedback(pj);
 
       /* message( */
-      /*     "We did some AGN heating! id %llu star id %llu probability " */
+      /*     "We did some AGN heating! id %llu BH id %llu probability " */
       /*     " %.5e  random_num %.5e du %.5e du/ini %.5e", */
       /*     pj->id, bi->id, prob, rand, delta_u, delta_u / u_init); */
     }
