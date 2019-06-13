@@ -607,10 +607,6 @@ void cell_unpack_part_swallow(struct cell *c, const long long *swallow_ids) {
 
   for (size_t i = 0; i < count; ++i) {
     parts[i].swallow_id = swallow_ids[i];
-
-    if (parts[i].id == 7296358176571LL)
-      message("Updating swallow ID of particle %lld to %lld", parts[i].id,
-              parts[i].swallow_id);
   }
 }
 
