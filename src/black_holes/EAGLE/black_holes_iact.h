@@ -24,8 +24,6 @@
 #include "random.h"
 #include "space.h"
 
-extern struct space *s_pointer;
-
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *

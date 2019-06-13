@@ -37,8 +37,6 @@
 /* This object's header. */
 #include "runner.h"
 
-struct space *s_pointer;
-
 /* Local headers. */
 #include "active.h"
 #include "approx_math.h"
@@ -1157,7 +1155,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             /* Did we get a star? (Or did we run out of spare ones?) */
             if (sp != NULL) {
 
-              message("We formed a star id=%lld cellID=%d", sp->id, c->cellID);
+              /* message("We formed a star id=%lld cellID=%d", sp->id,
+               * c->cellID); */
 
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
@@ -3666,15 +3665,16 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
-        if (e->policy & engine_policy_self_gravity) {
+        if ((e->policy & engine_policy_self_gravity) &&
+            !(e->policy & engine_policy_black_holes)) {
 
           /* Let's add a self interaction to simplify the count */
           gp->num_interacted++;
 
           /* Check that this gpart has interacted with all the other
            * particles (via direct or multipoles) in the box */
-          if (0 && gp->num_interacted !=
-                       e->total_nr_gparts - e->count_inhibited_gparts) {
+          if (gp->num_interacted !=
+              e->total_nr_gparts - e->count_inhibited_gparts) {
 
             /* Get the ID of the gpart */
             long long my_id = 0;
@@ -3872,10 +3872,9 @@ void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
                             int timer) {
 
   const struct engine *e = r->e;
-  const int nodeID = e->nodeID;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != nodeID && cj->nodeID != nodeID)
+  if (ci->nodeID != e->nodeID && cj->nodeID != e->nodeID)
     error("Running pair task on foreign node");
   if (!cell_is_active_black_holes(ci, e) && !cell_is_active_black_holes(cj, e))
     error("Running pair task with two inactive cells");

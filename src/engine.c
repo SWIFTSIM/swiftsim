@@ -97,8 +97,6 @@
 #include "velociraptor_interface.h"
 #include "version.h"
 
-extern struct space *s_pointer;
-
 /* Particle cache size. */
 #define CACHE_SIZE 512
 
@@ -3390,8 +3388,6 @@ void engine_skip_drift(struct engine *e) {
  */
 void engine_launch(struct engine *e) {
   const ticks tic = getticks();
-
-  s_pointer = e->s;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Re-set all the cell task counters to 0 */
