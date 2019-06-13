@@ -493,8 +493,8 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
       scheduler_addunlock(s, t_rho, l->t);
     }
 
-    /* Make sure the part have been sent before the BHs compute their densities.
-     */
+    /* Make sure the part have been received before the BHs compute their
+     * accretion rates (depends on particles' rho). */
     for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }

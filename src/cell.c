@@ -3894,22 +3894,20 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_black_holes_pair(ci, cj)) rebuild = 1;
       if (cell_need_rebuild_for_black_holes_pair(cj, ci)) rebuild = 1;
 
-      // if (ci_nodeID == nodeID)
       scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost[0]);
-      // if (cj_nodeID == nodeID)
       scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost[0]);
 
 #ifdef WITH_MPI
       /* Activate the send/recv tasks. */
       if (ci_nodeID != nodeID) {
 
-        // if (cj_active) {
-
-        scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
+        /* Receive the foreign parts to compute BH accretion rates and do the
+         * swallowing */
         scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
         scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_swallow);
 
-        /* If the local cell is active, more stuff will be needed. */
+        /* Send the local BHs to tag the particles to swallow and to do feedback
+         */
         scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_rho,
                                 ci_nodeID);
         scheduler_activate_send(s, cj->mpi.send, task_subtype_bpart_feedback,
@@ -3918,21 +3916,19 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         /* Drift before you send */
         cell_activate_drift_bpart(cj, s);
 
-        /* If the local cell is active, send its ti_end values. */
+        /* Send the new BH time-steps */
         scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_bpart,
                                 ci_nodeID);
-        //}
 
-        // if (ci_active) {
-
+        /* Receive the foreign BHs to tag particles to swallow and for feedback
+         */
         scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart_rho);
         scheduler_activate_recv(s, ci->mpi.recv, task_subtype_bpart_feedback);
 
-        /* If the foreign cell is active, we want its ti_end values. */
+        /* Receive the foreign BH time-steps */
         scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_bpart);
 
-        /* Is the foreign cell active and will need stuff from us? */
-        scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
+        /* Send the local part information */
         scheduler_activate_send(s, cj->mpi.send, task_subtype_rho, ci_nodeID);
         scheduler_activate_send(s, cj->mpi.send, task_subtype_part_swallow,
                                 ci_nodeID);
@@ -3940,18 +3936,16 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         /* Drift the cell which will be sent; note that not all sent
            particles will be drifted, only those that are needed. */
         cell_activate_drift_part(cj, s);
-        //}
 
       } else if (cj_nodeID != nodeID) {
 
-        /* If the local cell is active, receive data from the foreign cell. */
-        //        if (ci_active) {
-
-        scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
+        /* Receive the foreign parts to compute BH accretion rates and do the
+         * swallowing */
         scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
         scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_swallow);
 
-        /* If the local cell is active, more stuff will be needed. */
+        /* Send the local BHs to tag the particles to swallow and to do feedback
+         */
         scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_rho,
                                 cj_nodeID);
         scheduler_activate_send(s, ci->mpi.send, task_subtype_bpart_feedback,
@@ -3960,20 +3954,19 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         /* Drift before you send */
         cell_activate_drift_bpart(ci, s);
 
-        /* If the local cell is active, send its ti_end values. */
+        /* Send the new BH time-steps */
         scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_bpart,
                                 cj_nodeID);
-        //}
 
-        // if (cj_active) {
+        /* Receive the foreign BHs to tag particles to swallow and for feedback
+         */
         scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart_rho);
         scheduler_activate_recv(s, cj->mpi.recv, task_subtype_bpart_feedback);
 
-        /* If the foreign cell is active, we want its ti_end values. */
+        /* Receive the foreign BH time-steps */
         scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_bpart);
 
-        /* Is the foreign cell active and will need stuff from us? */
-        scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
+        /* Send the local part information */
         scheduler_activate_send(s, ci->mpi.send, task_subtype_rho, cj_nodeID);
         scheduler_activate_send(s, ci->mpi.send, task_subtype_part_swallow,
                                 cj_nodeID);
@@ -3981,7 +3974,6 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
         /* Drift the cell which will be sent; note that not all sent
            particles will be drifted, only those that are needed. */
         cell_activate_drift_part(ci, s);
-        //}
       }
 #endif
     }
