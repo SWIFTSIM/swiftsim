@@ -4256,8 +4256,6 @@ void *runner_main(void *data) {
         if (t == NULL) break;
       }
 
-      r->t = t;
-
       /* Get the cells. */
       struct cell *ci = t->ci;
       struct cell *cj = t->cj;
@@ -4277,9 +4275,11 @@ void *runner_main(void *data) {
       }
 #endif
 
-/* Check that we haven't scheduled an inactive task */
 #ifdef SWIFT_DEBUG_CHECKS
+      /* Check that we haven't scheduled an inactive task */
       t->ti_run = e->ti_current;
+      /* Store the task that will be running (for debugging only) */
+      r->t = t;
 #endif
 
       /* Different types of tasks... */
@@ -4573,6 +4573,9 @@ void *runner_main(void *data) {
         cj->tasks_executed[t->type]++;
         cj->subtasks_executed[t->subtype]++;
       }
+
+      /* This runner is not doing a task anymore */
+      r->t = NULL;
 #endif
 
       /* We're done with this task, see if we get a next one. */

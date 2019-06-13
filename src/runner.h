@@ -45,8 +45,6 @@ struct runner {
   /*! The actual thread which it is running. */
   pthread_t thread;
 
-  struct task *t;
-
   /*! The queue to use to get tasks. */
   int cpuid, qid;
 
@@ -66,6 +64,11 @@ struct runner {
 
   /*! The particle cache of cell cj. */
   struct cache cj_cache;
+#endif
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /*! Pointer to the task this runner is currently performing */
+  const struct task *t;
 #endif
 };
 
