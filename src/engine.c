@@ -132,9 +132,6 @@ int engine_rank;
 /** The current step of the engine as a global variable (for messages). */
 int engine_current_step;
 
-FILE *file_swallow = NULL;
-FILE *file_remove = NULL;
-
 /**
  * @brief Data collected from the cells at the end of a time-step
  */
@@ -5261,25 +5258,6 @@ void engine_config(int restart, int fof, struct engine *e,
     printf("].\n");
 #endif
   }
-
-  char temp_swallow[100];
-  char temp_remove[100];
-#ifdef WITH_MPI
-  sprintf(temp_swallow, "swallow_list_mpi_%d.txt", e->nodeID);
-  sprintf(temp_remove, "remove_list_mpi_%d.txt", e->nodeID);
-#else
-  sprintf(temp_swallow, "swallow_list_serial.txt");
-  sprintf(temp_remove, "remove_list_serial.txt");
-#endif
-
-  file_swallow = fopen(temp_swallow, "w");
-  file_remove = fopen(temp_remove, "w");
-
-  fprintf(file_swallow, "# Step --- BH id --- part id\n");
-  fprintf(file_remove, "# Step --- BH id --- part id\n");
-
-  fflush(file_swallow);
-  fflush(file_remove);
 
   /* Are we doing stuff in parallel? */
   if (nr_nodes > 1) {

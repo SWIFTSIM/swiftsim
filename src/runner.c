@@ -153,9 +153,6 @@ struct space *s_pointer;
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
 
-extern FILE *file_swallow;
-extern FILE *file_remove;
-
 /**
  * @brief Intermediate task after the density to check that the smoothing
  * lengths are correct.
@@ -3769,6 +3766,8 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
           if (bp->id == BH_id) {
 
+            /* Lock the space as we are going to work directly on the bpart list
+             */
             lock_lock(&s->lock);
 
             /* Get the current dynamical masses */
@@ -3791,6 +3790,10 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             bp->gpart->v_full[1] = bp->v[1];
             bp->gpart->v_full[2] = bp->v[2];
 
+            /* Release the space as we are done updating the bpart */
+            if (lock_unlock(&s->lock) != 0)
+              error("Failed to unlock the space.");
+
             message("BH %lld swallowing particle %lld", bp->id, p->id);
 
             /* If the gas particle is local, remove it */
@@ -3806,9 +3809,6 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
             /* In any case, prevent the particle from being re-swallowed */
             p->swallow_id = -2;
-
-            if (lock_unlock(&s->lock) != 0)
-              error("Failed to unlock the space.");
 
             found = 1;
             break;
@@ -3831,8 +3831,6 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
             if (bp->id == BH_id) {
 
-              lock_lock(&s->lock);
-
               message("BH %lld removing particle %lld (foreign BH case)",
                       bp->id, p->id);
 
@@ -3841,16 +3839,9 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
               cell_remove_part(e, c, p, xp);
               cell_remove_gpart(e, c, gp);
 
-              fprintf(file_remove, "%d %lld %lld \n", e->step, bp->id, p->id);
-              fflush(file_remove);
-
-              if (lock_unlock(&s->lock) != 0)
-                error("Failed to unlock the space.");
-
               found = 1;
               break;
             }
-
           } /* Loop over foreign BHs */
         }   /* Is the cell local? */
 #endif
