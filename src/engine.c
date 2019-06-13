@@ -3823,8 +3823,8 @@ void engine_step(struct engine *e) {
   }
 
 #ifdef WITH_MPI
-    /* Repartition the space amongst the nodes? */
-    // engine_repartition_trigger(e);
+  /* Repartition the space amongst the nodes? */
+  engine_repartition_trigger(e);
 #endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
