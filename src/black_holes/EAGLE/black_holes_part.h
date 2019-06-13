@@ -44,8 +44,6 @@ struct bpart {
   /*! Black hole mass */
   float mass;
 
-  int rank;
-
   /* Particle cutoff radius. */
   float h;
 
