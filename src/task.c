@@ -140,6 +140,7 @@ MPI_Comm subtaskMPI_comms[task_subtype_count];
 TASK_CELL_OVERLAP(part, hydro.parts, hydro.count);
 TASK_CELL_OVERLAP(gpart, grav.parts, grav.count);
 TASK_CELL_OVERLAP(spart, stars.parts, stars.count);
+TASK_CELL_OVERLAP(bpart, black_holes.parts, black_holes.count);
 
 /**
  * @brief Returns the #task_actions for a given task.
@@ -176,6 +177,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
 
     case task_type_drift_bpart:
     case task_type_bh_density_ghost:
+    case task_type_bh_swallow_ghost2:
       return task_action_bpart;
       break;
 
@@ -294,11 +296,15 @@ float task_overlap(const struct task *restrict ta,
       (ta_act == task_action_gpart || ta_act == task_action_all);
   const int ta_spart =
       (ta_act == task_action_spart || ta_act == task_action_all);
+  const int ta_bpart =
+      (ta_act == task_action_bpart || ta_act == task_action_all);
   const int tb_part = (tb_act == task_action_part || tb_act == task_action_all);
   const int tb_gpart =
       (tb_act == task_action_gpart || tb_act == task_action_all);
   const int tb_spart =
       (tb_act == task_action_spart || tb_act == task_action_all);
+  const int tb_bpart =
+      (tb_act == task_action_bpart || tb_act == task_action_all);
 
   /* In the case where both tasks act on parts */
   if (ta_part && tb_part) {
@@ -359,6 +365,27 @@ float task_overlap(const struct task *restrict ta,
                                   task_cell_overlap_spart(ta->ci, tb->cj) +
                                   task_cell_overlap_spart(ta->cj, tb->ci) +
                                   task_cell_overlap_spart(ta->cj, tb->cj);
+
+    return ((float)size_intersect) / (size_union - size_intersect);
+  }
+
+  /* In the case where both tasks act on bparts */
+  else if (ta_bpart && tb_bpart) {
+
+    /* Compute the union of the cell data. */
+    size_t size_union = 0;
+    if (ta->ci != NULL) size_union += ta->ci->black_holes.count;
+    if (ta->cj != NULL) size_union += ta->cj->black_holes.count;
+    if (tb->ci != NULL) size_union += tb->ci->black_holes.count;
+    if (tb->cj != NULL) size_union += tb->cj->black_holes.count;
+
+    if (size_union == 0) return 0.f;
+
+    /* Compute the intersection of the cell data. */
+    const size_t size_intersect = task_cell_overlap_bpart(ta->ci, tb->ci) +
+                                  task_cell_overlap_bpart(ta->ci, tb->cj) +
+                                  task_cell_overlap_bpart(ta->cj, tb->ci) +
+                                  task_cell_overlap_bpart(ta->cj, tb->cj);
 
     return ((float)size_intersect) / (size_union - size_intersect);
   }
