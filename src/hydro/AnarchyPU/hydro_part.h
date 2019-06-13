@@ -80,8 +80,6 @@ struct part {
   /*! Particle unique ID. */
   long long id;
 
-  int rank;
-
   /*! Pointer to corresponding gravity part. */
   struct gpart* gpart;
 

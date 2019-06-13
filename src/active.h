@@ -162,7 +162,7 @@ __attribute__((always_inline)) INLINE static int cell_is_all_active_hydro(
         c->hydro.ti_end_max, e->ti_current);
 #endif
 
-  return (c->hydro.ti_end_max == e->ti_current && c->hydro.inhibited == 0);
+  return (c->hydro.ti_end_max == e->ti_current);
 }
 
 /**
@@ -218,7 +218,7 @@ __attribute__((always_inline)) INLINE static int cell_is_all_active_gravity(
         c->grav.ti_end_max, e->ti_current);
 #endif
 
-  return (c->grav.ti_end_max == e->ti_current && c->grav.inhibited == 0);
+  return (c->grav.ti_end_max == e->ti_current);
 }
 
 /**
