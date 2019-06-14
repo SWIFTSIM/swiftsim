@@ -24,7 +24,7 @@ Cosmology:
   Omega_b:        0.0455        # Baryon density parameter
   
 Scheduler:
-  max_top_level_cells:    6
+  max_top_level_cells:    8
   links_per_tasks: 500
   
 # Parameters governing the time integration
