@@ -1316,6 +1316,9 @@ void write_output_serial(struct engine* e, const char* baseName,
               /* No inhibted particles: easy case */
               Nparticles = Nblackholes;
               black_holes_write_particles(bparts, list, &num_fields);
+              num_fields +=
+                  chemistry_write_bparticles(bparts, list + num_fields);
+
               if (with_stf) {
                 num_fields +=
                     velociraptor_write_bparts(bparts, list + num_fields);
@@ -1337,6 +1340,9 @@ void write_output_serial(struct engine* e, const char* baseName,
 
               /* Select the fields to write */
               black_holes_write_particles(bparts_written, list, &num_fields);
+              num_fields +=
+                  chemistry_write_bparticles(bparts, list + num_fields);
+
               if (with_stf) {
                 num_fields += velociraptor_write_bparts(bparts_written,
                                                         list + num_fields);

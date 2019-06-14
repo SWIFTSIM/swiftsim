@@ -1232,6 +1232,7 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
 
       case swift_type_black_hole:
         black_holes_write_particles(bparts, list, &num_fields);
+        num_fields += chemistry_write_bparticles(bparts, list + num_fields);
         if (with_stf) {
           num_fields += velociraptor_write_bparts(bparts, list + num_fields);
         }
@@ -1675,6 +1676,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
           /* No inhibted particles: easy case */
           Nparticles = Nblackholes;
           black_holes_write_particles(bparts, list, &num_fields);
+          num_fields += chemistry_write_bparticles(bparts, list + num_fields);
+
           if (with_stf) {
             num_fields += velociraptor_write_bparts(bparts, list + num_fields);
           }
@@ -1695,6 +1698,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
 
           /* Select the fields to write */
           black_holes_write_particles(bparts_written, list, &num_fields);
+          num_fields += chemistry_write_bparticles(bparts, list + num_fields);
+
           if (with_stf) {
             num_fields +=
                 velociraptor_write_bparts(bparts_written, list + num_fields);
