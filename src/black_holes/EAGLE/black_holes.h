@@ -434,6 +434,9 @@ INLINE static void black_holes_create_from_gas(
   /* Initial seed mass */
   bp->subgrid_mass = props->subgrid_seed_mass;
 
+  /* We haven't accreted anything yet */
+  bp->total_accreted_mass = 0.f;
+
   /* Initial metal masses */
   const float gas_mass = hydro_get_mass(p);
 
