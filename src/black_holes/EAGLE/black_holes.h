@@ -200,6 +200,26 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   bp->gpart->v_full[1] = bp->v[1];
   bp->gpart->v_full[2] = bp->v[2];
 
+  /* Update the BH metal masses */
+  struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
+  const struct chemistry_part_data* p_chem = &p->chemistry_data;
+
+  bp_chem->metal_mass_total += p_chem->metal_mass_fraction_total * gas_mass;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_chem->metal_mass[i] += p_chem->metal_mass_fraction[i] * gas_mass;
+  }
+  bp_chem->mass_from_SNIa += p_chem->mass_from_SNIa;
+  bp_chem->mass_from_SNII += p_chem->mass_from_SNII;
+  bp_chem->mass_from_AGB += p_chem->mass_from_AGB;
+  bp_chem->metal_mass_from_SNIa +=
+      p_chem->metal_mass_fraction_from_SNIa * gas_mass;
+  bp_chem->metal_mass_from_SNII +=
+      p_chem->metal_mass_fraction_from_SNII * gas_mass;
+  bp_chem->metal_mass_from_AGB +=
+      p_chem->metal_mass_fraction_from_AGB * gas_mass;
+  bp_chem->iron_mass_from_SNIa +=
+      p_chem->iron_mass_fraction_from_SNIa * gas_mass;
+
   /* This BH lost a neighbour */
   bp->num_ngbs--;
   bp->ngb_mass -= gas_mass;
