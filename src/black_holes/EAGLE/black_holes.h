@@ -405,13 +405,36 @@ INLINE static void black_holes_create_from_gas(
     const struct part* p) {
 
   /* All the non-basic properties of the black hole have been zeroed
-     in the FOF code. We just update the rest. */
+   * in the FOF code. We update them here.
+   * (i.e. position, velocity, mass, time-step have been set) */
 
   /* Birth time */
   bp->formation_scale_factor = cosmo->a;
 
   /* Initial seed mass */
   bp->subgrid_mass = props->subgrid_seed_mass;
+
+  /* Initial metal masses */
+  const float gas_mass = hydro_get_mass(p);
+
+  struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
+  const struct chemistry_part_data* p_chem = &p->chemistry_data;
+
+  bp_chem->metal_mass_total = p_chem->metal_mass_fraction_total * gas_mass;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_chem->metal_mass[i] = p_chem->metal_mass_fraction[i] * gas_mass;
+  }
+  bp_chem->mass_from_SNIa = p_chem->mass_from_SNIa;
+  bp_chem->mass_from_SNII = p_chem->mass_from_SNII;
+  bp_chem->mass_from_AGB = p_chem->mass_from_AGB;
+  bp_chem->metal_mass_from_SNIa =
+      p_chem->metal_mass_fraction_from_SNIa * gas_mass;
+  bp_chem->metal_mass_from_SNII =
+      p_chem->metal_mass_fraction_from_SNII * gas_mass;
+  bp_chem->metal_mass_from_AGB =
+      p_chem->metal_mass_fraction_from_AGB * gas_mass;
+  bp_chem->iron_mass_from_SNIa =
+      p_chem->iron_mass_fraction_from_SNIa * gas_mass;
 
   /* First initialisation */
   black_holes_init_bpart(bp);

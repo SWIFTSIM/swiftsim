@@ -19,6 +19,8 @@
 #ifndef SWIFT_EAGLE_BLACK_HOLE_PART_H
 #define SWIFT_EAGLE_BLACK_HOLE_PART_H
 
+#include "chemistry_struct.h"
+
 /**
  * @brief Particle fields for the black hole particles.
  *
@@ -108,6 +110,10 @@ struct bpart {
     float AGN_delta_u;
 
   } to_distribute;
+
+  /*! Chemistry information (e.g. metal content at birth, swallowed metal
+   * content, etc.) */
+  struct chemistry_bpart_data chemistry_data;
 
 #ifdef SWIFT_DEBUG_CHECKS
 
