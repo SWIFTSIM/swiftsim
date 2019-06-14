@@ -126,18 +126,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
 
       /* This particle is swallowed by the BH with the largest ID of all the
        * candidates wanting to swallow it */
-      if (pj->swallow_id < bi->id) {
+      if (pj->black_holes_data.swallow_id < bi->id) {
 
         message("BH %lld wants to swallow gas particle %lld", bi->id, pj->id);
 
-        pj->swallow_id = bi->id;
+        pj->black_holes_data.swallow_id = bi->id;
 
       } else {
 
         message(
             "BH %lld wants to swallow gas particle %lld BUT CANNOT (old "
             "swallow id=%lld)",
-            bi->id, pj->id, pj->swallow_id);
+            bi->id, pj->id, pj->black_holes_data.swallow_id);
       }
     }
   }

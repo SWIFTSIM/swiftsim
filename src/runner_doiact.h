@@ -1471,10 +1471,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 
         /* Check that particles have been drifted to the current time */
         if (pi->ti_drift != e->ti_current)
-          error(
-              "Particle pi not drifted to current time pi->id=%lld "
-              "pi->time_bin=%d pi->swallow_id=%lld",
-              pi->id, pi->time_bin, pi->swallow_id);
+          error("Particle pi not drifted to current time");
 
         if (pj->ti_drift != e->ti_current)
           error("Particle pj not drifted to current time");
@@ -1543,16 +1540,10 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 
         /* Check that particles have been drifted to the current time */
         if (pi->ti_drift != e->ti_current)
-          error(
-              "Particle pi not drifted to current time pi->id=%lld "
-              "pi->time_bin=%d pi->swallow_id=%lld",
-              pi->id, pi->time_bin, pi->swallow_id);
+          error("Particle pi not drifted to current time");
 
         if (pj->ti_drift != e->ti_current)
-          error(
-              "Particle pj not drifted to current time pj->id=%lld "
-              "pj->time_bin=%d pj->swallow_id=%lld",
-              pj->id, pj->time_bin, pj->swallow_id);
+          error("Particle pj not drifted to current time");
 #endif
         /* Hit or miss?
            (note that we will do the other condition in the reverse loop) */

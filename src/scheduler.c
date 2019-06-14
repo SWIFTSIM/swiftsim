@@ -1673,10 +1673,13 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
               MPI_BYTE, t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
               &t->req);
         } else if (t->subtype == task_subtype_part_swallow) {
-          t->buff = (long long *)malloc(sizeof(long long) * t->ci->hydro.count);
-          err = MPI_Irecv(t->buff, t->ci->hydro.count, MPI_LONG_LONG,
-                          t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
-                          &t->req);
+          t->buff = (struct black_holes_part_data *)malloc(
+              sizeof(struct black_holes_part_data) * t->ci->hydro.count);
+          err = MPI_Irecv(
+              t->buff,
+              t->ci->hydro.count * sizeof(struct black_holes_part_data),
+              MPI_BYTE, t->ci->nodeID, t->flags, subtaskMPI_comms[t->subtype],
+              &t->req);
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
                    t->subtype == task_subtype_gradient) {
@@ -1799,17 +1802,24 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
                 &t->req);
           }
         } else if (t->subtype == task_subtype_part_swallow) {
-          t->buff = (long long *)malloc(sizeof(long long) * t->ci->hydro.count);
-          cell_pack_part_swallow(t->ci, (long long *)t->buff);
+          t->buff = (struct black_holes_part_data *)malloc(
+              sizeof(struct black_holes_part_data) * t->ci->hydro.count);
+          cell_pack_part_swallow(t->ci,
+                                 (struct black_holes_part_data *)t->buff);
 
-          if (t->ci->hydro.count * sizeof(long long) > s->mpi_message_limit) {
-            err = MPI_Isend(t->buff, t->ci->hydro.count, MPI_LONG_LONG,
-                            t->cj->nodeID, t->flags,
-                            subtaskMPI_comms[t->subtype], &t->req);
+          if (t->ci->hydro.count * sizeof(struct black_holes_part_data) >
+              s->mpi_message_limit) {
+            err = MPI_Isend(
+                t->buff,
+                t->ci->hydro.count * sizeof(struct black_holes_part_data),
+                MPI_BYTE, t->cj->nodeID, t->flags, subtaskMPI_comms[t->subtype],
+                &t->req);
           } else {
-            err = MPI_Issend(t->buff, t->ci->hydro.count, MPI_LONG_LONG,
-                             t->cj->nodeID, t->flags,
-                             subtaskMPI_comms[t->subtype], &t->req);
+            err = MPI_Issend(
+                t->buff,
+                t->ci->hydro.count * sizeof(struct black_holes_part_data),
+                MPI_BYTE, t->cj->nodeID, t->flags, subtaskMPI_comms[t->subtype],
+                &t->req);
           }
 
         } else if (t->subtype == task_subtype_xv ||

@@ -29,7 +29,7 @@
 
 /* Import the right black holes definition */
 #if defined(BLACK_HOLES_NONE)
-#include "./black_holes/none/black_holes_struct.h"
+#include "./black_holes/Default/black_holes_struct.h"
 #elif defined(BLACK_HOLES_EAGLE)
 #include "./black_holes/EAGLE/black_holes_struct.h"
 #else

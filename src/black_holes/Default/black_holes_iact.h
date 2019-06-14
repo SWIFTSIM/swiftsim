@@ -63,6 +63,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_density(
 #endif
 }
 
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_bh_swallow(
+    const float r2, const float *dx, const float hi, const float hj,
+    struct bpart *restrict bi, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct cosmology *cosmo,
+    const integertime_t ti_current) {}
+
 /**
  * @brief Feedback interaction between two particles (non-symmetric).
  *

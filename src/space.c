@@ -4084,6 +4084,9 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
     tracers_first_init_xpart(&p[k], &xp[k], us, phys_const, cosmo, hydro_props,
                              cool_func);
 
+    /* And the black hole markers */
+    black_holes_mark_as_not_swallowed(&p[k].black_holes_data);
+
 #ifdef SWIFT_DEBUG_CHECKS
     /* Check part->gpart->part linkeage. */
     if (p[k].gpart && p[k].gpart->id_or_neg_offset != -(k + delta))
@@ -5227,7 +5230,10 @@ void space_check_swallow_mapper(void *map_data, int nr_parts,
 
     if (parts[k].time_bin == time_bin_inhibited) continue;
 
-    if (parts[k].swallow_id != -1)
+    const long long swallow_id =
+        black_holes_get_swallow_id(&parts[k].black_holes_data);
+
+    if (swallow_id != -1)
       error("Particle has not been swallowed! id=%lld", parts[k].id);
   }
 #else

@@ -26,7 +26,6 @@ struct black_holes_part_data {
 
   /*! ID of the black-hole that will swallow this #part. */
   long long swallow_id;
-  
 };
 
 #endif /* SWIFT_BLACK_HOLES_STRUCT_EAGLE_H */

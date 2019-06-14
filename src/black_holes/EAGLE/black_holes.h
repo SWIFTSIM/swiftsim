@@ -21,6 +21,7 @@
 
 /* Local includes */
 #include "black_holes_properties.h"
+#include "black_holes_struct.h"
 #include "cosmology.h"
 #include "dimension.h"
 #include "kernel_hydro.h"
@@ -202,6 +203,21 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   /* This BH lost a neighbour */
   bp->num_ngbs--;
   bp->ngb_mass -= gas_mass;
+}
+
+__attribute__((always_inline)) INLINE static void
+black_holes_mark_as_not_swallowed(struct black_holes_part_data* p_data) {
+  p_data->swallow_id = -1;
+}
+
+__attribute__((always_inline)) INLINE static void black_holes_mark_as_swallowed(
+    struct black_holes_part_data* p_data) {
+  p_data->swallow_id = -2;
+}
+
+__attribute__((always_inline)) INLINE static long long
+black_holes_get_swallow_id(struct black_holes_part_data* p_data) {
+  return p_data->swallow_id;
 }
 
 /**

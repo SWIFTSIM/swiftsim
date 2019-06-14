@@ -590,23 +590,25 @@ int cell_pack_tags(const struct cell *c, int *tags) {
 #endif
 }
 
-void cell_pack_part_swallow(const struct cell *c, long long *swallow_ids) {
+void cell_pack_part_swallow(const struct cell *c,
+                            struct black_holes_part_data *data) {
 
   const size_t count = c->hydro.count;
   const struct part *parts = c->hydro.parts;
 
   for (size_t i = 0; i < count; ++i) {
-    swallow_ids[i] = parts[i].swallow_id;
+    data[i] = parts[i].black_holes_data;
   }
 }
 
-void cell_unpack_part_swallow(struct cell *c, const long long *swallow_ids) {
+void cell_unpack_part_swallow(struct cell *c,
+                              const struct black_holes_part_data *data) {
 
   const size_t count = c->hydro.count;
   struct part *parts = c->hydro.parts;
 
   for (size_t i = 0; i < count; ++i) {
-    parts[i].swallow_id = swallow_ids[i];
+    parts[i].black_holes_data = data[i];
   }
 }
 
@@ -4363,7 +4365,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       cell_h_max = max(cell_h_max, p->h);
 
       /* Mark the particle has not being swallowed */
-      p->swallow_id = -1;
+      black_holes_mark_as_not_swallowed(&p->black_holes_data);
 
       /* Get ready for a density calculation */
       if (part_is_active(p, e)) {

@@ -23,6 +23,7 @@
 
 /* Local includes */
 #include "black_holes_properties.h"
+#include "black_holes_struct.h"
 #include "dimension.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
@@ -137,6 +138,30 @@ black_holes_bpart_has_no_neighbours(struct bpart* restrict bp,
   /* Re-set problematic values */
   bp->density.wcount = kernel_root * h_inv_dim;
   bp->density.wcount_dh = 0.f;
+}
+
+/**
+ * @brief Update the properties of a black hole particles by swallowing
+ * a gas particle.
+ *
+ * @param bp The #bpart to update.
+ * @param p The #part that is swallowed.
+ * @param xp The #xpart that is swallowed.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void black_holes_swallow_part(
+    struct bpart* bp, const struct part* p, const struct xpart* xp,
+    const struct cosmology* cosmo) {}
+
+__attribute__((always_inline)) INLINE static void
+black_holes_mark_as_not_swallowed(struct black_holes_part_data* p_data) {}
+
+__attribute__((always_inline)) INLINE static void black_holes_mark_as_swallowed(
+    struct black_holes_part_data* p_data) {}
+
+__attribute__((always_inline)) INLINE static long long
+black_holes_get_swallow_id(struct black_holes_part_data* p_data) {
+  return -1;
 }
 
 /**

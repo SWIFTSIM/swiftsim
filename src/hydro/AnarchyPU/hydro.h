@@ -1040,8 +1040,6 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->a_grav[2] = 0.f;
   xp->u_full = p->u;
 
-  p->swallow_id = -1;
-
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
 }

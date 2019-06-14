@@ -3769,8 +3769,12 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
       /* Ignore inhibited particles (they have already been removed!) */
       if (part_is_inhibited(p, e)) continue;
 
+      /* Get the ID of the black holes that will swallow this part */
+      const long long swallow_id =
+          black_holes_get_swallow_id(&p->black_holes_data);
+
       /* Has this particle been flagged for swallowing? */
-      if (p->swallow_id >= 0) {
+      if (swallow_id >= 0) {
 
 #ifdef SWIFT_DEBUG_CHECKS
         if (p->ti_drift != e->ti_current)
@@ -3778,7 +3782,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 #endif
 
         /* ID of the BH swallowing this particle */
-        const long long BH_id = p->swallow_id;
+        const long long BH_id = swallow_id;
 
         /* Have we found this particle's BH already? */
         int found = 0;
@@ -3816,7 +3820,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
             }
 
             /* In any case, prevent the particle from being re-swallowed */
-            p->swallow_id = -2;
+            black_holes_mark_as_swallowed(&p->black_holes_data);
 
             found = 1;
             break;
@@ -3858,7 +3862,7 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
          * of our list of black holes. */
         if (c->nodeID == e->nodeID && !found) {
           error("Gas particle %lld could not find BH %lld to be swallowed",
-                p->id, p->swallow_id);
+                p->id, swallow_id);
         }
       } /* Part was flagged for swallowing */
     }   /* Loop over the parts */
@@ -4515,9 +4519,8 @@ void *runner_main(void *data) {
           } else if (t->subtype == task_subtype_gradient) {
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_part_swallow) {
-            // message("OOOO");
-            // runner_do_recv_part(r, ci, 0, 1);
-            cell_unpack_part_swallow(ci, (long long *)t->buff);
+            cell_unpack_part_swallow(ci,
+                                     (struct black_holes_part_data *)t->buff);
             free(t->buff);
           } else if (t->subtype == task_subtype_limiter) {
             runner_do_recv_part(r, ci, 0, 1);

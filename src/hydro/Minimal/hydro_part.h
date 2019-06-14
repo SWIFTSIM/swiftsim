@@ -32,6 +32,7 @@
  * Physics, 2012, Volume 231, Issue 3, pp. 759-794.
  */
 
+#include "black_holes_struct.h"
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "star_formation_struct.h"
@@ -173,8 +174,8 @@ struct part {
   /*! Chemistry information */
   struct chemistry_part_data chemistry_data;
 
-  /*! ID of the black hole swallowing this particle */
-  long long swallow_id;
+  /*! Black holes information (e.g. swallowing ID) */
+  struct black_holes_part_data black_holes_data;
 
   /*! Time-step length */
   timebin_t time_bin;
