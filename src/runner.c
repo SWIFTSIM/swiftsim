@@ -3724,6 +3724,23 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
   if (timer) TIMER_TOC(timer_end_grav_force);
 }
 
+/**
+ * @brief Process all the gas particles in a cell that have been flagged for
+ * swallowing by a black hole.
+ *
+ * This is done by recursing down to the leaf-level and skipping the sub-cells
+ * that have not been drifted as they would not have any particles with
+ * swallowing flag. We then loop over the particles with a flag and look into
+ * the space-wide list of black holes for the particle with the corresponding
+ * ID. If found, the BH swallows the gas particle and the gas particle is
+ * removed. If the cell is local, we may be looking for a foreign BH, in which
+ * case, we do not update the BH (that will be done on its node) but just remove
+ * the gas particle.
+ *
+ * @param r The thread #runner.
+ * @param c The #cell.
+ * @param timer Are we timing this?
+ */
 void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
 
   struct engine *e = r->e;
@@ -3869,6 +3886,13 @@ void runner_do_swallow(struct runner *r, struct cell *c, int timer) {
   }     /* Cell is not split */
 }
 
+/**
+ * @brief Processing of gas particles to swallow - self task case.
+ *
+ * @param r The thread #runner.
+ * @param c The #cell.
+ * @param timer Are we timing this?
+ */
 void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -3880,6 +3904,13 @@ void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
   runner_do_swallow(r, c, timer);
 }
 
+/**
+ * @brief Processing of gas particles to swallow - pair task case.
+ *
+ * @param r The thread #runner.
+ * @param c The #cell.
+ * @param timer Are we timing this?
+ */
 void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
                             int timer) {
 
