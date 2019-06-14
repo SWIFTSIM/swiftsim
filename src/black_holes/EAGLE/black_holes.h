@@ -205,18 +205,38 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   bp->ngb_mass -= gas_mass;
 }
 
+/**
+ * @brief Update a given #part's BH data field to mark the particle has
+ * not yet been swallowed.
+ *
+ * @param p_data The #part's #black_holes_part_data structure.
+ */
 __attribute__((always_inline)) INLINE static void
 black_holes_mark_as_not_swallowed(struct black_holes_part_data* p_data) {
+
   p_data->swallow_id = -1;
 }
 
+/**
+ * @brief Update a given #part's BH data field to mark the particle has
+ * having been been swallowed.
+ *
+ * @param p_data The #part's #black_holes_part_data structure.
+ */
 __attribute__((always_inline)) INLINE static void black_holes_mark_as_swallowed(
     struct black_holes_part_data* p_data) {
+
   p_data->swallow_id = -2;
 }
 
+/**
+ * @brief Return the ID of the BH that should swallow this #part.
+ *
+ * @param p_data The #part's #black_holes_part_data structure.
+ */
 __attribute__((always_inline)) INLINE static long long
 black_holes_get_swallow_id(struct black_holes_part_data* p_data) {
+
   return p_data->swallow_id;
 }
 
