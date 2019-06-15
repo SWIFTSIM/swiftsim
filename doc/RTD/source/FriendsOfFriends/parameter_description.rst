@@ -11,8 +11,9 @@ to the group finder. Some parameters only make sense in the stand-alone
 version and some only in the on-the-fly version of the module.
 
 The main parameter is the linking length that will be used. The easiest way
-to define it is to set the ratio of the linking length to the mean dark
-matter inter-particle separation. This is done using the parameter
+to define it is to set the ratio of the linking length to the mean *dark
+matter* inter-particle separation (irrespective of whether there are other
+kinds of particles present in the run). This is done using the parameter
 ``linking_length_ratio`` and the typical value for this parameter is
 ``0.2``. Users can optionally overwrite the linking length by imposing an
 absolute value using the parameter ``absolute_linking_length``. This is
