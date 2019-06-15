@@ -57,7 +57,7 @@ Runtime parameters
  /____/ |__/|__/___/_/    /_/
  SPH With Inter-dependent Fine-grained Tasking
 
- Version : 0.8.2
+ Version : 0.8.3
  Website: www.swiftsim.com
  Twitter: @SwiftSimulation
 
@@ -109,8 +109,8 @@ Parameters:
     -n, --steps=<int>                 Execute a fixed number of time steps.
                                       When unset use the time_end parameter
                                       to stop.
-    -o, --output-params=<str>         Generate a default output parameter
-                                      file.
+    -o, --output-params=<str>         Generate a parameter file with the options
+                                      for selecting the output fields.
     -P, --param=<str>                 Set parameter value, overiding the value
                                       read from the parameter file. Can be used
                                       more than once {sec:par:value}.
