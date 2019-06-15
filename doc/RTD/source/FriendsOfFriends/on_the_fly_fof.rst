@@ -28,4 +28,19 @@ hole. In practice this means that the gas particle is removed and a black
 hole particle with the same dynamical mass is inserted at the same position
 in the domain and with the same velocity. Additional properties are copied
 from the gas particle to the black hole particle depending on the specifics
-of the sub-grid model in use.
+of the sub-grid model in use (see :ref:`subgrid`).
+
+Given that the halo mass considered for seeding black holes is usually many
+hundred times the mass of a single particle, it can be advantageous to
+raise the minimal group length required for a halo to appear in the catalog
+of objects. This reduces the number of groups that are kept in memory and
+speeds up the seeding procedure by removing haloes that are obviously too
+small. For instance, in the case of EAGLE-like runs, the dark matter
+particle mass is around :math:`10^7\rm{M}_\odot` and the minimal halo mass
+considered for seeding a black hole is of order
+:math:`10^{10}\rm{M}_\odot`. Groups will hence need to have at least 1000
+particles to pass the first criterion outlined above. In this case, using a
+minimal group length of order 500 is beneficial over the more traditional
+value of 32 as it will reduce the number of haloes to consider by about a
+factor 10 (assuming a normal cosmology) whilst still being far enough from
+the actual user-defined mass limit to be safe.

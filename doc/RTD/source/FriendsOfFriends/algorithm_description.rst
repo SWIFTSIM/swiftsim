@@ -5,3 +5,58 @@
 
 Friends-Of-Friends Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Friends-Of-Friends (FOF) is a common tool used to identify groups of
+particles in a simulation. This can, for instance, be used to identify
+haloes in a cosmological simulation.
+
+In practice, this is done by using a *linking length* ``l`` and
+demanding that any particle that finds another particle within a
+distance ``l`` is linked to it to form a group. A particle is linked
+directly to all the other particles within distance ``l`` (its
+*friends*) and indirectly to all the particles that are linked to its
+friends (its *friends-of-friends*). This creates networks of particles
+linked together that are called *groups*. The size (or length) of
+group is the number of particles in that group. If a particle does not
+find any other particle within ``l`` then it forms its own group of
+size 1. For a given distribution of particles the resulting list of
+groups is unique and unambiguously defined.
+
+Small groups are typically discarded the final catalog only contain
+objects with a length above a minimal threshold, typically of the
+order of ``20`` particles. Smaller groups can often be spurious.
+
+Once the groups have been identified, properties can be computed for
+each of them. The total mass or the centre of mass are typical
+examples. These are then stored in catalogs alongside a unique
+identifier for each group.
+
+SWIFT implements FOF using a Union-Find approach. It also exploits the
+domain decomposition and tree structure that is created for the other
+parts of the code. The tree can be easily used to find neighbours of
+particles within the linking length.
+
+Depending on the application the choice of the linking length and
+minimal group size can vary. For cosmological applications, bound
+structures (dark matter haloes) are traditionally identified using a
+linking length expressed as :math:`0.2` of the mean inter-particle
+separation :math:`d` in the simulation that is given by :math:`d =
+\sqrt[3]{\frac{V}{N}}`, where :math:`N` is the number of particles in
+the simulation and :math:`V` is the simulation (co-moving)
+volume. Usually only dark matter particles are considered for the
+number :math:`N`. Other particle types are just linked but do not
+participate in the calculation of the linking length. Experience shows
+that this produces groups that are similar to the commonly adopted
+(but much more complex) definition of virialised haloes. A minimal
+group length of :math:`32` is often adopted in order to get a robust
+catalog of haloes and compute a good halo mass function.
+
+For non-cosmological applications of the FOF algorithm, the choice of
+the linking length is more difficult and left to the user. The choice
+of the minimal group size to consider is also application dependent.
+
+In SWIFT, FOF is also used to identify haloes in which to seed black
+holes in a cosmological run. When used in this mode, the code does not
+produce any outputs but uses the catalog internally to convert some
+gas particles into black hole particles.
+
