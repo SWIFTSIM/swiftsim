@@ -6,7 +6,7 @@
 On-the-fly Friends-Of-Friends and Black Holes seeding
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The main purpose of the on-the-fly FOF calls is to identify haloes during a
+The main purpose of the on-the-fly is to identify haloes during a
 cosmological simulation in order to seed some of them with black holes
 based on physical considerations.
 

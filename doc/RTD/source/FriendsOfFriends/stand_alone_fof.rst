@@ -13,7 +13,7 @@ will then be generated alongside the regular SWIFT ones.
 
 The executable takes a parameter file as an argument. It will then read
 the snapshot specified in the parameter file and extract all the dark
-matter particles. FOF is then run on these particles and a catalog of
+matter particles by default. FOF is then run on these particles and a catalog of
 groups is written to disk. Additional particle types can be read and
 processed by the stand-alone FOF code by adding any of the following
 runtime parameters to the command line:

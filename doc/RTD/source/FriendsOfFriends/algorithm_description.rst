@@ -13,21 +13,21 @@ haloes in a cosmological simulation.
 In practice, this is done by using a *linking length* ``l`` and
 demanding that any particle that finds another particle within a
 distance ``l`` is linked to it to form a group. A particle is linked
-directly to all the other particles within distance ``l`` (its
-*friends*) and indirectly to all the particles that are linked to its
-friends (its *friends-of-friends*). This creates networks of particles
-linked together that are called *groups*. The size (or length) of
-group is the number of particles in that group. If a particle does not
+directly to all other particles within a distance ``l`` (its
+*friends*) and indirectly to all particles that are linked to its
+friends (its *friends-of-friends*). This creates networks of linked particles
+which are called *groups*. The size (or length) of
+a group is the number of particles in that group. If a particle does not
 find any other particle within ``l`` then it forms its own group of
 size 1. For a given distribution of particles the resulting list of
 groups is unique and unambiguously defined.
 
-Small groups are typically discarded the final catalog only contain
+Small groups are typically discarded, the final catalog only contains
 objects with a length above a minimal threshold, typically of the
 order of ``20`` particles. Smaller groups can often be spurious.
 
 Once the groups have been identified, properties can be computed for
-each of them. The total mass or the centre of mass are typical
+each of them. The total mass or the centre of mass are common
 examples. These are then stored in catalogs alongside a unique
 identifier for each group.
 
@@ -36,11 +36,11 @@ domain decomposition and tree structure that is created for the other
 parts of the code. The tree can be easily used to find neighbours of
 particles within the linking length.
 
-Depending on the application the choice of the linking length and
+Depending on the application, the choice of linking length and
 minimal group size can vary. For cosmological applications, bound
 structures (dark matter haloes) are traditionally identified using a
 linking length expressed as :math:`0.2` of the mean inter-particle
-separation :math:`d` in the simulation that is given by :math:`d =
+separation :math:`d` in the simulation which is given by :math:`d =
 \sqrt[3]{\frac{V}{N}}`, where :math:`N` is the number of particles in
 the simulation and :math:`V` is the simulation (co-moving)
 volume. Usually only dark matter particles are considered for the

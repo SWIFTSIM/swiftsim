@@ -6,7 +6,7 @@
 Friends-Of-Friends (FOF) Halo Finder
 ====================================
 
-This section desrcibes the Friends-Of-Friends group
+This section describes the Friends-Of-Friends group
 finder and related parameters
 
 .. toctree::

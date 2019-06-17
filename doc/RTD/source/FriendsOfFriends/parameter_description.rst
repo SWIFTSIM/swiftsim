@@ -14,7 +14,7 @@ The main parameter is the linking length that will be used. The easiest way
 to define it is to set the ratio of the linking length to the mean *dark
 matter* inter-particle separation (irrespective of whether there are other
 kinds of particles present in the run). This is done using the parameter
-``linking_length_ratio`` and the typical value for this parameter is
+``linking_length_ratio`` and the typical value used is
 ``0.2``. Users can optionally overwrite the linking length by imposing an
 absolute value using the parameter ``absolute_linking_length``. This is
 expressed in internal units. This value will be ignored (and the ratio of
@@ -25,15 +25,15 @@ the catalogs. This is given in terms of number of particles (of all types)
 via the parameter ``min_group_size``. When analysing simulations, to
 identify haloes, the common practice is to set this to ``32`` in order to
 not plague the catalogs with too many small likely unbound structures.
-When using the FOF code on-the-fly for black hole see ding, larger values
+When using the FOF code on-the-fly for black hole seeding, larger values
 are recommended as there is no need to store groups much smaller than the
-minimal halo mass used for seeding (see below).
+minimal halo mass (see below).
 
 ------------------------
 
 In the case of black holes seeding, we run the FOF module on-the-fly during
 a cosmological simulation. The time of the first FOF call is controlled by
-the two following options:
+the following two options:
 
   * Time of the first FOF call (non-cosmological runs): ``time_first``,
   * Scale-factor of the first FOF call (cosmological runs): ``scale_factor_first``.
