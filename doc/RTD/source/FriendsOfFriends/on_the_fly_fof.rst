@@ -3,14 +3,14 @@
 
 .. _fof_on_the_fly_label:
 
-On-the-fly Friends-Of-Friends and Black Holes seeding
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On-the-fly Friends-Of-Friends and Black Hole seeding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The main purpose of the on-the-fly is to identify haloes during a
+The main purpose of the on-the-fly FOF is to identify haloes during a
 cosmological simulation in order to seed some of them with black holes
 based on physical considerations.
 
-**In this mode, no group catalog is written to the disk. The resulting list
+**In this mode, no group catalogue is written to the disk. The resulting list
 of haloes is only used internally by SWIFT.**
 
 Once the haloes have been identified by the FOF code, SWIFT will iterate
@@ -18,7 +18,7 @@ over the list of groups and will check whether each halo obeys the
 following criteria:
 
   * Is above a user-specified mass threshold (typically
-    :math:`10^{10}\rm{M}_\odot` or more).
+    :math:`10^{10}~\rm{M}_\odot` or more).
   * Contains *at least* one gas particle.
   * Does *not* contain any already existing black hole particle.
 
@@ -32,13 +32,13 @@ of the sub-grid model in use (see :ref:`subgrid`).
 
 Given that the halo mass considered for seeding black holes is usually many
 hundred times the mass of a single particle, it can be advantageous to
-raise the minimal group length required for a halo to appear in the catalog
+raise the minimal group length required for a halo to appear in the catalogue
 of objects. This reduces the number of groups that are kept in memory and
 speeds up the seeding procedure by removing haloes that are obviously too
 small. For instance, in the case of EAGLE-like runs, the dark matter
-particle mass is around :math:`10^7\rm{M}_\odot` and the minimal halo mass
+particle mass is around :math:`10^7\rm~{M}_\odot` and the minimal halo mass
 considered for seeding a black hole is of order
-:math:`10^{10}\rm{M}_\odot`. Groups will hence need to have at least 1000
+:math:`10^{10}~\rm{M}_\odot`. Groups will hence need to have at least 1000
 particles to pass the first criterion outlined above. In this case, using a
 minimal group length of order 500 is beneficial over the more traditional
 value of 32 as it will reduce the number of haloes to consider by about a

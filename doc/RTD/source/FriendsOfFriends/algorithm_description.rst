@@ -22,13 +22,13 @@ find any other particle within ``l`` then it forms its own group of
 size 1. For a given distribution of particles the resulting list of
 groups is unique and unambiguously defined.
 
-Small groups are typically discarded, the final catalog only contains
+Small groups are typically discarded, the final catalogue only contains
 objects with a length above a minimal threshold, typically of the
 order of ``20`` particles. Smaller groups can often be spurious.
 
 Once the groups have been identified, properties can be computed for
 each of them. The total mass or the centre of mass are common
-examples. These are then stored in catalogs alongside a unique
+examples. These are then stored in catalogues alongside a unique
 identifier for each group.
 
 SWIFT implements FOF using a Union-Find approach. It also exploits the
@@ -44,12 +44,12 @@ separation :math:`d` in the simulation which is given by :math:`d =
 \sqrt[3]{\frac{V}{N}}`, where :math:`N` is the number of particles in
 the simulation and :math:`V` is the simulation (co-moving)
 volume. Usually only dark matter particles are considered for the
-number :math:`N`. Other particle types are just linked but do not
+number :math:`N`. Other particle types are linked but do not
 participate in the calculation of the linking length. Experience shows
 that this produces groups that are similar to the commonly adopted
 (but much more complex) definition of virialised haloes. A minimal
 group length of :math:`32` is often adopted in order to get a robust
-catalog of haloes and compute a good halo mass function.
+catalogue of haloes and compute a good halo mass function.
 
 For non-cosmological applications of the FOF algorithm, the choice of
 the linking length is more difficult and left to the user. The choice
@@ -57,6 +57,6 @@ of the minimal group size to consider is also application dependent.
 
 In SWIFT, FOF is also used to identify haloes in which to seed black
 holes in a cosmological run. When used in this mode, the code does not
-produce any outputs but uses the catalog internally to convert some
+produce any outputs but uses the catalogue internally to convert some
 gas particles into black hole particles.
 
