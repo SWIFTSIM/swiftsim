@@ -151,6 +151,9 @@ struct part {
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
 
+  /* Additional data used by the star formation */
+  struct star_formation_part_data sf_data;
+
   /* Time-step length */
   timebin_t time_bin;
 
