@@ -38,7 +38,7 @@ __attribute__((always_inline)) INLINE static const char* stellar_evolution_get_e
  * @return The fraction of companion.
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_companion_fraction(
-    struct supernovae_ia *snia, float m1, float m2, int companion_type) {
+    const struct supernovae_ia *snia, float m1, float m2, int companion_type) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > m2)
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
@@ -59,7 +59,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_compani
  * @return The number of supernovae Ia per unit of mass.
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_supernovae_ia(
-    struct supernovae_ia *snia, float m1, float m2) {
+    const struct supernovae_ia *snia, float m1, float m2) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > m2)
@@ -96,16 +96,6 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_
   
   return number_companion * number_white_dwarf;
 };
-
-/**
- * @brief Get the SNIa yields.
- *
- * @param snia The #supernovae_ia model.
- */
-__attribute__((always_inline)) INLINE static const float *stellar_evolution_get_supernovae_ia_yields(
-    const struct supernovae_ia *snia) {
-  return snia->yields.data;
-}
 
 /**
  * @brief Read the SNIa yields from the table.
@@ -220,6 +210,19 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
   /* Cleanup everything */
   h5_close_group(file_id, group_id);
 
+
+  /* Read the white dwarf mass */
+
+
+  /* Open IMF group */
+  h5_open_group(params, "Data", &file_id, &group_id);
+
+  /* Read the white dwarf mass */
+  io_read_attribute(group_id, "MeanWDMass", FLOAT, &snia->mass_white_dwarf);
+
+  /* Cleanup everything */
+  h5_close_group(file_id, group_id);
+
 }
 
 /**
@@ -257,6 +260,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
 
   /* Read the coefficient of the main sequence companion */
   snia->companion[1].coef = parser_get_opt_param_float(params, "GEARSupernovaeIa:coef_main_sequence", snia->companion[1].coef);
+
+  /* Read the mass of a white dwarf */
+  snia->mass_white_dwarf = parser_get_opt_param_float(params, "GEARSupernovaeIa:white_dwarf_mass", snia->mass_white_dwarf);
 }
 
 /**
@@ -291,6 +297,8 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
 
   snia->companion[1].mass_max *= phys_const->const_solar_mass;
   snia->companion[1].mass_min *= phys_const->const_solar_mass;
+
+  snia->mass_white_dwarf *= phys_const->const_solar_mass;
 
   /* Unit changes for yields */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {

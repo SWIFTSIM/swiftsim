@@ -466,7 +466,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
             /* Compute the stellar evolution  */
             feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                  star_age_beg_of_step, dt);
+				  ti_begin, star_age_beg_of_step, dt);
           } else {
 
             /* Reset the feedback fields of the star particle */

@@ -19,6 +19,8 @@
 #ifndef SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H
 #define SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H
 
+#include "interpolation.h"
+
 /* Number of different type of companion.
    If changed, the IO needs to be updated.
  */
@@ -84,6 +86,9 @@ struct supernovae_ia {
 
   } yields;
 
+  /*! White dwarf's mass */
+  float mass_white_dwarf;
+
   /*! Minimal mass of the progenitor */
   float mass_min_progenitor;
 
@@ -119,21 +124,13 @@ struct supernovae_ia {
 struct supernovae_ii {
 
   /*! Yields TODO more comment */
-  struct {
+  struct interpolation_1d yields[CHEMISTRY_ELEMENT_COUNT];
 
-    /*! Mass of each element ejected by a single supernovae as function of the mass */
-    float *data[CHEMISTRY_ELEMENT_COUNT];
+  /*! Mass ejected (processed) */
+  struct interpolation_1d ejected_mass_processed;
 
-    /*! Number of points in each data set */
-    int number_points;
-
-    /*! Mass ejected by a supernovae */
-    float *mass_ejected;
-
-    /*! Mass ejected of non processed gas */
-    float *mass_ejected_non_process;
-
-  } yields;
+  /*! Mass ejected (non processed) */
+  struct interpolation_1d ejected_mass;
 
   /*! Minimal mass for a SNII */
   float mass_min;
