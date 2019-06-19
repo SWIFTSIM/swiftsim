@@ -115,7 +115,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (Omega_frac < 0. || Omega_frac > 1.)
+  if (Omega_frac < 0. || Omega_frac > 1.00001)
     error("Invalid fraction of material to distribute. Omega_frac=%e",
           Omega_frac);
 #endif
@@ -286,8 +286,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   if (prob > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    float rand = random_unit_interval(si->id + pj->id, ti_current,
-                                      random_number_stellar_feedback);
+    const float rand = random_unit_interval(si->id + pj->id, ti_current,
+                                            random_number_stellar_feedback);
     /* Are we lucky? */
     if (rand < prob) {
 
@@ -299,6 +299,14 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
       hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+
+      /* Impose maximal viscosity */
+      hydro_set_viscosity_alpha_max_feedback(pj);
+
+      /* message( */
+      /*     "We did some heating! id %llu star id %llu probability %.5e " */
+      /*     "random_num %.5e du %.5e du/ini %.5e", */
+      /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
     }
   }
 
