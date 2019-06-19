@@ -138,7 +138,7 @@ description_text = ax.text(
 )
 
 time_text = ax.text(
-    0.975,
+    (1 - 0.025 * 0.25),
     0.975,
     time_formatter(metadata[0]),
     **text_args,
@@ -148,7 +148,7 @@ time_text = ax.text(
 )
 
 info_text = ax.text(
-    0.025, 0.975, name, **text_args, va="top", ha="left", transform=ax.transAxes
+    0.025 * 0.25, 0.975, name, **text_args, va="top", ha="left", transform=ax.transAxes
 )
 
 
