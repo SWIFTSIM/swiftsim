@@ -20,6 +20,7 @@
 #define SWIFT_SUPERNOVAE_II_GEAR_H
 
 #include "hdf5_functions.h"
+#include "interpolation.h"
 #include "stellar_evolution_struct.h"
 
 /**
@@ -32,7 +33,7 @@
  * @return The number of supernovae II per unit of mass.
  */
 __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_supernovae_ii(
-    struct supernovae_ii *snii, float m1, float m2) {
+    const struct supernovae_ii *snii, float m1, float m2) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > m2)
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
@@ -52,12 +53,31 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_number_
   
 };
 
-__attribute__((always_inline)) INLINE static float *stellar_evolution_get_supernovae_ii_yields(void) {
-  return (float*)NULL;
+/**
+ * @brief Get the SNII yields.
+ *
+ * @param snii The #supernovae_ii model.
+ * @param m1 The lower mass.
+ * @param m2 The upper mass.
+ * @param yields The elements ejected.
+ * @param mass_ejected The mass of non processsed elements.
+ * @param mass_ejected_processed The mass of processed elements.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_get_supernovae_ii_yields(
+    const struct supernovae_ii *snii, float m1, float m2,
+    float *yields, float *mass_ejected, float *mass_ejected_processed) {
+
+  error("TODO");
 };
 
 
-
+/**
+ * @brief Read the SNII yields from the table.
+ *
+ * @param snii The #supernovae_ii model.
+ * @param params The simulation parameters.
+ * @param sm The #stellar_model.
+ */
 __attribute__((always_inline)) INLINE static void stellar_evolution_read_supernovae_ii_yields(
     struct supernovae_ii *snii, struct swift_params* params, const struct stellar_model *sm) {
 
@@ -101,8 +121,11 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
     io_read_array_dataset(group_id, name, FLOAT,
 			  data, count);
 
-    /* Save the dataset */
-    snii->yields.data[i] = data;
+    /* Initialize the interpolation */
+    interpolate_1d_init(&snii->yields[i], log10(snii->mass_min), log10(snii->mass_max), data, count, /* Integrate? */0);
+
+    /* Cleanup the memory */
+    free(data);
   }
 
   /* Read the mass ejected */
@@ -116,10 +139,8 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
   io_read_array_dataset(group_id, "Ej", FLOAT,
 			mass_ejected, previous_count);
 
-  /* Save the dataset */
-  snii->yields.mass_ejected = mass_ejected;
-
-  message("Ej: %g %g %g", mass_ejected[0], mass_ejected[1], mass_ejected[previous_count-1]);
+  /* Initialize the interpolation */
+  interpolate_1d_init(&snii->ejected_mass_processed, log10(snii->mass_min), log10(snii->mass_max), mass_ejected, previous_count, /* Integrate? */0);
 
   /* Read the mass ejected of non processed gas */
 
@@ -132,13 +153,8 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_superno
   io_read_array_dataset(group_id, "Ejnp", FLOAT,
 			mass_ejected_non_process, previous_count);
 
-  /* Save the dataset */
-  snii->yields.mass_ejected_non_process = mass_ejected_non_process;
-
-  message("Ejnp: %g %g %g", mass_ejected_non_process[0], mass_ejected_non_process[1], mass_ejected_non_process[previous_count-1]);
-
-  /* Save the number of element */
-  snii->yields.number_points = previous_count;
+  /* Initialize the interpolation */
+  interpolate_1d_init(&snii->ejected_mass, log10(snii->mass_min), log10(snii->mass_max), mass_ejected_non_process, previous_count, /* Integrate? */0);
 
   /* Cleanup everything */
   h5_close_group(file_id, group_id);  
@@ -216,10 +232,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_superno
 
   /* Apply the unit changes to the data */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    for(int j = 0; j < snii->yields.number_points; j++) {
-      // TODO multiply by the mass ejected
-      snii->yields.data[i][j] *= phys_const->const_solar_mass;
-    }
+    interpolate_1d_change_units(&snii->yields[i], phys_const->const_solar_mass,
+				phys_const->const_solar_mass);
+    // TODO multiply by the mass ejected
   }
 
   /* Get the IMF parameters */

@@ -459,18 +459,18 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
  * @param xp The #xpart
  * @param rho Particle density
  */
-#define cooling_copy_to_grackle(data, p, xp, rho)                      \
-  cooling_copy_to_grackle1(data, p, xp, rho);                          \
-  cooling_copy_to_grackle2(data, p, xp, rho);                          \
-  cooling_copy_to_grackle3(data, p, xp, rho);                          \
-  data.volumetric_heating_rate = NULL;                                 \
-  data.specific_heating_rate = NULL;                                   \
-  data.RT_heating_rate = NULL;                                         \
-  data.RT_HI_ionization_rate = NULL;                                   \
-  data.RT_HeI_ionization_rate = NULL;                                  \
-  data.RT_HeII_ionization_rate = NULL;                                 \
-  data.RT_H2_dissociation_rate = NULL;                                 \
-  gr_float metal_density = chemistry_metal_mass_fraction(p, xp) * rho; \
+#define cooling_copy_to_grackle(data, p, xp, rho)			\
+  cooling_copy_to_grackle1(data, p, xp, rho);				\
+  cooling_copy_to_grackle2(data, p, xp, rho);				\
+  cooling_copy_to_grackle3(data, p, xp, rho);				\
+  data.volumetric_heating_rate = NULL;					\
+  data.specific_heating_rate = NULL;					\
+  data.RT_heating_rate = NULL;						\
+  data.RT_HI_ionization_rate = NULL;					\
+  data.RT_HeI_ionization_rate = NULL;					\
+  data.RT_HeII_ionization_rate = NULL;					\
+  data.RT_H2_dissociation_rate = NULL;					\
+  gr_float metal_density = chemistry_part_metal_mass_fraction(p, xp) * rho; \
   data.metal_density = &metal_density;
 
 /**

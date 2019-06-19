@@ -159,7 +159,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 /**
  * @brief Evolve the stellar properties of a #spart.
  *
- * This function allows for example to compute the SN rate before sending
+ * This function compute the SN rate and yields before sending
  * this information to a different MPI rank.
  *
  * @param sp The particle to act upon
@@ -173,6 +173,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
+    const integertime_t ti_begin,
     const double star_age_beg_step, const double dt) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -186,21 +187,9 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
 
-  /* Compute masses range */
-
-  /* Compute rates */
-
-  /* Compute ejectas */
-  
-  /* Decrease star mass by amount of mass distributed to gas neighbours */
-
-  // TODO
-  float mass_ejected = 0.f;
-  if (sp->mass < mass_ejected)
-    error("Stars cannot have negative mass. (%g < %g)",
-	  sp->mass, mass_ejected);
-  sp->mass -= mass_ejected;
-
+  /* Compute the stellar evolution */
+  stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
+				 ti_begin, star_age_beg_step, dt);
 }
 
 #endif /* SWIFT_FEEDBACK_GEAR_H */
