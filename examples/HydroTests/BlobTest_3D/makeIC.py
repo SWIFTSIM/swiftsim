@@ -112,6 +112,7 @@ def write_out_ics(
     blob_radius=0.1,
     blob_location_x=0.5,
     inside_density=10,
+    velocity_outside=2.7,  # Actually the mach number
 ):
     x = Writer(
         cgs_unit_system, [side_length * duplications, side_length, side_length] * cm
@@ -126,7 +127,10 @@ def write_out_ics(
         initial_velocity=1.0,
     )
     positions_inside, velocities_inside = generate_blob(
-        num_on_side * inside_density, side_length, blob_location_x, blob_radius
+        int(num_on_side * np.cbrt(inside_density)),
+        side_length,
+        blob_location_x,
+        blob_radius,
     )
 
     coordinates = np.concatenate([positions_inside, positions_outside])
@@ -141,12 +145,15 @@ def write_out_ics(
         np.ones(coordinates.shape[0], dtype=float) * (side_length / num_on_side) * g
     )
 
-    # Set to be 0.1 c_s
+    # Set to be (1 / n) c_s
     x.gas.internal_energy = (
         np.ones(coordinates.shape[0], dtype=float)
-        * (0.1 * x.gas.velocities[-1][0]) ** 2
+        * ((1.0 / velocity_outside) * x.gas.velocities[-1][0]) ** 2
         / (5.0 / 3.0 - 1)
     )
+
+    # Need to correct the particles inside the sphere so that we are in pressure equilibrium everywhere
+    x.gas.internal_energy[: len(positions_inside)] /= inside_density
 
     x.gas.generate_smoothing_lengths(
         boxsize=(duplications / 2) * side_length * cm, dimension=3
@@ -158,5 +165,5 @@ def write_out_ics(
 
 
 if __name__ == "__main__":
-    write_out_ics(filename="blob.hdf5", num_on_side=32)
+    write_out_ics(filename="blob.hdf5", num_on_side=64)
 

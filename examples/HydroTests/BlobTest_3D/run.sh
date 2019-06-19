@@ -9,3 +9,5 @@ fi
 
 # Run SWIFT
 ../../swift --hydro --threads=4 blob.yml
+
+python makeMovie.py

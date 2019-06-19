@@ -38,47 +38,35 @@ def get_image(n):
     filename = f"{snapshot_name}_{n:04d}.hdf5"
 
     data = load(filename)
+    boxsize = data.metadata.boxsize[0].value
+
+    output = np.zeros((resolution, resolution * 4), dtype=float)
 
     x, y, _ = data.gas.coordinates.value.T
 
-    # This is an oblong box but we want the square surrounding the cloud.
+    # This is an oblong box but we can only make squares!
+    for box, box_edges in enumerate([[0.0, 1.1], [0.9, 2.1], [1.9, 3.1], [2.9, 4.0]]):
+        mask = np.logical_and(x >= box_edges[0], x <= box_edges[1])
+        masked_x = x[mask] - np.float64(box)
+        masked_y = y[mask]
 
-    cloud_centre_x = x[data.gas.density.argmax()]
-    boxsize = data.metadata.boxsize[0].value
-    half_boxsize = 0.5 * boxsize
+        hsml = data.gas.smoothing_length.value[mask]
 
-    # Wrap the box if we need to!
-    if cloud_centre_x > 0.74 * data.metadata.boxsize[0].value:
-        # Boost the particles in the bottom half's x value so they wrap
-        mask_lower = x <= half_boxsize
-        x[mask_lower] += boxsize
-        x -= half_boxsize
-        cloud_centre_x -= half_boxsize
-    if cloud_centre_x < 0.26 * data.metadata.boxsize[0].value:
-        mask_upper = x >= half_boxsize
-        x[mask_upper] -= boxsize
-        x += half_boxsize
-        cloud_centre_x += half_boxsize
+        if plot == "density":
+            mass = data.gas.masses.value[mask]
+            image = scatter(x=masked_y, y=masked_x, m=mass, h=hsml, res=resolution)
+        else:
+            quantity = getattr(data.gas, plot).value[mask]
+            # Need to divide out the particle density for non-projected density quantities
+            image = scatter(
+                x=masked_y, y=masked_x, m=quantity, h=hsml, res=resolution
+            ) / scatter(
+                x=masked_y, y=masked_x, m=np.ones_like(quantity), h=hsml, res=resolution
+            )
 
-    dx = cloud_centre_x - 0.5
+        output[:, box * resolution : (box + 1) * resolution] = image
 
-    mask = np.logical_and(x > (cloud_centre_x - 0.5), x <= (cloud_centre_x + 0.5))
-    x = x[mask] - dx  # To ensure this lives in [0, 1]
-    y = y[mask]
-
-    hsml = data.gas.smoothing_length.value[mask]
-
-    if plot == "density":
-        mass = data.gas.masses.value[mask]
-        image = scatter(x=y, y=x, m=mass, h=hsml, res=resolution)
-    else:
-        quantity = getattr(data.gas, plot).value[mask]
-        # Need to divide out the particle density for non-projected density quantities
-        image = scatter(x=y, y=x, m=quantity, h=hsml, res=resolution) / scatter(
-            x=y, y=x, m=np.ones_like(quantity), h=hsml, res=resolution
-        )
-
-    return image, data.metadata
+    return output, data.metadata
 
 
 def get_data_dump(metadata):
@@ -131,7 +119,7 @@ central_region = images[0][
 ]
 norm = LogNorm(vmin=np.min(central_region), vmax=np.max(central_region), clip="black")
 
-fig, ax = plt.subplots(figsize=(8, 8), dpi=resolution // 8)
+fig, ax = plt.subplots(figsize=(8 * 4, 8), dpi=resolution // 8)
 
 fig.subplots_adjust(0, 0, 1, 1)
 ax.axis("off")
