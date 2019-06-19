@@ -45,10 +45,23 @@
  * @param data The global chemistry information.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_metal_mass_fraction(const struct part* restrict p,
-                              const struct xpart* restrict xp) {
+chemistry_part_metal_mass_fraction(const struct part* restrict p,
+				   const struct xpart* restrict xp) {
   // TODO
   return p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+/**
+ * @brief Compute the metal mass fraction
+ *
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param data The global chemistry information.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_spart_metal_mass_fraction(const struct spart* restrict sp) {
+  // TODO
+  return sp->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
