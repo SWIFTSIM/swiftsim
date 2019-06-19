@@ -34,6 +34,7 @@ struct feedback_part_data {
 
   /*! Momemtum received from a supernovae */
   float delta_p[3];
+
 };
 
 /**
@@ -67,6 +68,13 @@ struct feedback_spart_data {
 
     } to_distribute;
   };
+
+  /*! Number of supernovae Ia to explode */
+  int number_snia;
+
+  /*! Number of supernovae II to explode */
+  int number_snii;
+
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_GEAR_H */

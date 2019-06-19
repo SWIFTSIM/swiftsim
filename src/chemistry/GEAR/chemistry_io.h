@@ -28,19 +28,6 @@
 #include "units.h"
 
 /**
- * @brief Return a string containing the name of a given element.
- */
-__attribute__((always_inline)) INLINE static const char*
-chemistry_get_element_name(int elem) {
-
-  static const char* chemistry_element_names[CHEMISTRY_ELEMENT_COUNT] = {
-      "Oxygen",    "Magnesium", "Sulfur", "Iron",    "Zinc",
-      "Strontium", "Yttrium",   "Barium", "Europium"};
-
-  return chemistry_element_names[elem];
-}
-
-/**
  * @brief Specifies which particle fields to read from a dataset
  *
  * @param parts The particle array.
@@ -135,12 +122,6 @@ INLINE static int chemistry_write_bparticles(const struct bpart* bparts,
 INLINE static void chemistry_write_flavour(hid_t h_grp) {
 
   io_write_attribute_s(h_grp, "Chemistry Model", "GEAR");
-  for (int i = 0;
-       i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    char buffer[20];
-    sprintf(buffer, "Element %d", (int)i);
-    io_write_attribute_s(h_grp, buffer, chemistry_get_element_name(i));
-  }
 }
 #endif
 
