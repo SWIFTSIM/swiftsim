@@ -2111,20 +2111,7 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
 
   tic = getticks();
 
-  struct scheduler *sched = &e->sched;
-  struct task *tasks = sched->tasks;
-
-  /* Activate the send and receive tasks for the gparts. */
-  for (int i = 0; i < sched->nr_tasks; i++) {
-
-    struct task *t = &tasks[i];
-
-    if ((t->type == task_type_send && t->subtype == task_subtype_gpart) ||
-        (t->type == task_type_recv && t->subtype == task_subtype_gpart)) {
-      scheduler_activate(sched, t);
-    } else
-      t->skip = 1;
-  }
+  engine_activate_gpart_comms(e);
 
   if (verbose)
     message("MPI send/recv task activation took: %.3f %s.",
