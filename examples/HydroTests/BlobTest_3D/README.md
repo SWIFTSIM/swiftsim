@@ -1,7 +1,7 @@
 Blob Test
 =========
 
-This test is very similar to the one presented in Agertz 2007
+This test is very similar to the one presented in Agertz+ 2007
 (https://ui.adsabs.harvard.edu/abs/2007MNRAS.380..963A/abstract) that tests
 un-seeded fluid mixing.
 
@@ -14,3 +14,8 @@ The expected results are:
 
 + For schemes with surface tension terms, the blob stays together
 + For schemes without surface tension terms, the blob breaks up.
+
+This is at much lower resolution than the original test in Agertz+ 2007.
+To change the resolution, you will need to edit the `makeIC.py` file.
+A similar resolution to the GAD\_10M presented in that paper can be gained
+by using `num_on_side=128`.
