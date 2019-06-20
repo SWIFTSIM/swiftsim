@@ -3908,7 +3908,8 @@ void runner_do_swallow_self(struct runner *r, struct cell *c, int timer) {
  * @brief Processing of gas particles to swallow - pair task case.
  *
  * @param r The thread #runner.
- * @param c The #cell.
+ * @param ci First #cell.
+ * @param cj Second #cell.
  * @param timer Are we timing this?
  */
 void runner_do_swallow_pair(struct runner *r, struct cell *ci, struct cell *cj,
