@@ -2105,17 +2105,10 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
   if (verbose)
     message(
         "Finding local/foreign cell pairs and initialising particle roots "
-        "took: "
-        "%.3f %s.",
+        "took: %.3f %s.",
         clocks_from_ticks(getticks() - tic), clocks_getunit());
 
-  tic = getticks();
-
   engine_activate_gpart_comms(e);
-
-  if (verbose)
-    message("MPI send/recv task activation took: %.3f %s.",
-            clocks_from_ticks(getticks() - tic), clocks_getunit());
 
   ticks local_fof_tic = getticks();
 
