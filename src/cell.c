@@ -4341,7 +4341,13 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
           hydro_remove_part(p, xp);
 
           /* Remove the particle entirely */
+          struct gpart *gp = p->gpart;
           cell_remove_part(e, c, p, xp);
+
+          /* and it's gravity friend */
+          if (gp != NULL) {
+            cell_remove_gpart(e, c, gp);
+          }
 
           continue;
         }
