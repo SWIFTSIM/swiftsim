@@ -5264,7 +5264,8 @@ void cell_remove_part(const struct engine *e, struct cell *c, struct part *p,
   p->gpart = NULL;
 
   /* Update the space-wide counters */
-  atomic_inc(&e->s->nr_inhibited_parts);
+  const size_t one = 1;
+  atomic_add(&e->s->nr_inhibited_parts, one);
 }
 
 /**
@@ -5287,7 +5288,8 @@ void cell_remove_gpart(const struct engine *e, struct cell *c,
   gp->time_bin = time_bin_inhibited;
 
   /* Update the space-wide counters */
-  atomic_inc(&e->s->nr_inhibited_gparts);
+  const size_t one = 1;
+  atomic_add(&e->s->nr_inhibited_gparts, one);
 }
 
 /**
@@ -5318,7 +5320,8 @@ void cell_remove_spart(const struct engine *e, struct cell *c,
   sp->gpart = NULL;
 
   /* Update the space-wide counters */
-  atomic_inc(&e->s->nr_inhibited_sparts);
+  const size_t one = 1;
+  atomic_add(&e->s->nr_inhibited_sparts, one);
 }
 
 /**
@@ -5350,7 +5353,8 @@ void cell_remove_bpart(const struct engine *e, struct cell *c,
   bp->gpart = NULL;
 
   /* Update the space-wide counters */
-  atomic_inc(&e->s->nr_inhibited_bparts);
+  const size_t one = 1;
+  atomic_add(&e->s->nr_inhibited_bparts, one);
 }
 
 /**
