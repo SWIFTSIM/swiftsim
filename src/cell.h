@@ -420,9 +420,6 @@ struct cell {
     /*! Number of #part updated in this cell. */
     int updated;
 
-    /*! Number of #part inhibited in this cell. */
-    int inhibited;
-
     /*! Is the #part data of this cell being used in a sub-cell? */
     int hold;
 
@@ -520,9 +517,6 @@ struct cell {
 
     /*! Number of #gpart updated in this cell. */
     int updated;
-
-    /*! Number of #gpart inhibited in this cell. */
-    int inhibited;
 
     /*! Is the #gpart data of this cell being used in a sub-cell? */
     int phold;
@@ -624,9 +618,6 @@ struct cell {
     /*! Number of #spart updated in this cell. */
     int updated;
 
-    /*! Number of #spart inhibited in this cell. */
-    int inhibited;
-
     /*! Is the #spart data of this cell being used in a sub-cell? */
     int hold;
 
@@ -712,9 +703,6 @@ struct cell {
 
     /*! Number of #bpart updated in this cell. */
     int updated;
-
-    /*! Number of #bpart inhibited in this cell. */
-    int inhibited;
 
     /*! Is the #bpart data of this cell being used in a sub-cell? */
     int hold;

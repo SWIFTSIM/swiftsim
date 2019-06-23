@@ -3354,11 +3354,6 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         s_updated += cp->stars.updated;
         b_updated += cp->black_holes.updated;
 
-        inhibited += cp->hydro.inhibited;
-        g_inhibited += cp->grav.inhibited;
-        s_inhibited += cp->stars.inhibited;
-        b_inhibited += cp->black_holes.inhibited;
-
         ti_hydro_end_min = min(cp->hydro.ti_end_min, ti_hydro_end_min);
         ti_hydro_end_max = max(cp->hydro.ti_end_max, ti_hydro_end_max);
         ti_hydro_beg_max = max(cp->hydro.ti_beg_max, ti_hydro_beg_max);
@@ -3386,11 +3381,6 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   c->grav.updated = g_updated;
   c->stars.updated = s_updated;
   c->black_holes.updated = b_updated;
-
-  c->hydro.inhibited = inhibited;
-  c->grav.inhibited = g_inhibited;
-  c->stars.inhibited = s_inhibited;
-  c->black_holes.inhibited = b_inhibited;
 
   c->hydro.ti_end_min = ti_hydro_end_min;
   c->hydro.ti_end_max = ti_hydro_end_max;

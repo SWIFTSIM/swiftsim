@@ -2715,7 +2715,7 @@ void engine_collect_end_of_step_recurse_hydro(struct cell *c,
 #endif
 
   /* Counters for the different quantities. */
-  size_t updated = 0, inhibited = 0;
+  size_t updated = 0;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
                 ti_hydro_beg_max = 0;
 
@@ -2739,7 +2739,6 @@ void engine_collect_end_of_step_recurse_hydro(struct cell *c,
       ti_hydro_beg_max = max(ti_hydro_beg_max, cp->hydro.ti_beg_max);
 
       updated += cp->hydro.updated;
-      inhibited += cp->hydro.inhibited;
 
       /* Check if the cell is inactive and in that case reorder the SFH */
       if (!cell_is_starting_hydro(cp, e)) {
@@ -2759,7 +2758,7 @@ void engine_collect_end_of_step_recurse_hydro(struct cell *c,
   c->hydro.ti_end_max = ti_hydro_end_max;
   c->hydro.ti_beg_max = ti_hydro_beg_max;
   c->hydro.updated = updated;
-  c->hydro.inhibited = inhibited;
+  // c->hydro.inhibited = inhibited;
 
   /* Store the star formation history in the parent cell */
   star_formation_logger_add(&c->stars.sfh, &sfh_updated);
@@ -2790,7 +2789,7 @@ void engine_collect_end_of_step_recurse_grav(struct cell *c,
 #endif
 
   /* Counters for the different quantities. */
-  size_t updated = 0, inhibited = 0;
+  size_t updated = 0;
   integertime_t ti_grav_end_min = max_nr_timesteps, ti_grav_end_max = 0,
                 ti_grav_beg_max = 0;
 
@@ -2808,7 +2807,6 @@ void engine_collect_end_of_step_recurse_grav(struct cell *c,
       ti_grav_beg_max = max(ti_grav_beg_max, cp->grav.ti_beg_max);
 
       updated += cp->grav.updated;
-      inhibited += cp->grav.inhibited;
 
       /* Collected, so clear for next time. */
       cp->grav.updated = 0;
@@ -2820,7 +2818,6 @@ void engine_collect_end_of_step_recurse_grav(struct cell *c,
   c->grav.ti_end_max = ti_grav_end_max;
   c->grav.ti_beg_max = ti_grav_beg_max;
   c->grav.updated = updated;
-  c->grav.inhibited = inhibited;
 }
 
 /**
@@ -2847,7 +2844,7 @@ void engine_collect_end_of_step_recurse_stars(struct cell *c,
 #endif
 
   /* Counters for the different quantities. */
-  size_t updated = 0, inhibited = 0;
+  size_t updated = 0;
   integertime_t ti_stars_end_min = max_nr_timesteps, ti_stars_end_max = 0,
                 ti_stars_beg_max = 0;
 
@@ -2865,7 +2862,6 @@ void engine_collect_end_of_step_recurse_stars(struct cell *c,
       ti_stars_beg_max = max(ti_stars_beg_max, cp->stars.ti_beg_max);
 
       updated += cp->stars.updated;
-      inhibited += cp->stars.inhibited;
 
       /* Collected, so clear for next time. */
       cp->stars.updated = 0;
@@ -2877,7 +2873,6 @@ void engine_collect_end_of_step_recurse_stars(struct cell *c,
   c->stars.ti_end_max = ti_stars_end_max;
   c->stars.ti_beg_max = ti_stars_beg_max;
   c->stars.updated = updated;
-  c->stars.inhibited = inhibited;
 }
 
 /**
@@ -2904,7 +2899,7 @@ void engine_collect_end_of_step_recurse_black_holes(struct cell *c,
 #endif
 
   /* Counters for the different quantities. */
-  size_t updated = 0, inhibited = 0;
+  size_t updated = 0;
   integertime_t ti_black_holes_end_min = max_nr_timesteps,
                 ti_black_holes_end_max = 0, ti_black_holes_beg_max = 0;
 
@@ -2925,7 +2920,6 @@ void engine_collect_end_of_step_recurse_black_holes(struct cell *c,
           max(ti_black_holes_beg_max, cp->black_holes.ti_beg_max);
 
       updated += cp->black_holes.updated;
-      inhibited += cp->black_holes.inhibited;
 
       /* Collected, so clear for next time. */
       cp->black_holes.updated = 0;
@@ -2937,7 +2931,6 @@ void engine_collect_end_of_step_recurse_black_holes(struct cell *c,
   c->black_holes.ti_end_max = ti_black_holes_end_max;
   c->black_holes.ti_beg_max = ti_black_holes_beg_max;
   c->black_holes.updated = updated;
-  c->black_holes.inhibited = inhibited;
 }
 
 /**
