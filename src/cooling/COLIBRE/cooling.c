@@ -323,7 +323,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Get this particle's abundance ratios compared to solar
    * Note that we need to add S and Ca that are in the tables but not tracked
    * by the particles themselves.
-   * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe] */
+   * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe, OA] */
   float abundance_ratio[chemistry_element_count + 3];
   float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
 

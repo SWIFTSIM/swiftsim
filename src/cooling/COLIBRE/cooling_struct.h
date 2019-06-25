@@ -96,8 +96,10 @@ struct cooling_function_data {
   /*! Index for solar metallicity in the metallicity dimension */
   int indxZsol;
 
-  /*! Solar metallicity */
+  /*! Solar metallicity (metal mass fraction) */
   float *Zsol;
+
+  /*! Inverse of solar metallicity (metal mass fraction) */
   float *Zsol_inv;
 
   /*! Filepath to the directory containing the HDF5 cooling tables */
@@ -109,7 +111,7 @@ struct cooling_function_data {
   /*! H reionization energy in CGS units */
   float H_reion_heat_cgs;
 
-  /*! Have we already done H reioisation? */
+  /*! Have we already done H reionization? */
   int H_reion_done;
 
   /*! Ca over Si abundance divided by the solar ratio for these elements */
@@ -146,9 +148,6 @@ struct cooling_function_data {
 
   /*! Compton rate in cgs units */
   double compton_rate_cgs;
-
-  /*! Are we doing Newton-Raphson iterations? */
-  int newton_flag;
 };
 
 /**
