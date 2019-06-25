@@ -50,7 +50,6 @@
  */
 /* ------------------------ UPDATED ---------------------------- */
 void read_cooling_header(struct cooling_function_data *cooling) {
-/* ------------------------ UPDATED ---------------------------- */
 
 #ifdef HAVE_HDF5
 
@@ -221,7 +220,6 @@ void read_cooling_header(struct cooling_function_data *cooling) {
  **/
 /* ------------------------ UPDATED ---------------------------- */
 void read_cooling_tables(struct cooling_function_data *restrict cooling) {
-/* ------------------------ UPDATED ---------------------------- */
 
 #ifdef HAVE_HDF5
   hid_t dataset;
