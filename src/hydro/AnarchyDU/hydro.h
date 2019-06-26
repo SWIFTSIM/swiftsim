@@ -434,7 +434,7 @@ hydro_diffusive_feedback_reset(struct part *restrict p) {
   hydro_set_viscosity_alpha(p,
                             hydro_props_default_viscosity_alpha_feedback_reset);
 
-  p->alpha_diff = hydro_props_default_diffusion_alpha_feedback_reset;
+  p->diffusion.alpha = hydro_props_default_diffusion_alpha_feedback_reset;
 }
 
 /**
