@@ -221,6 +221,7 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     struct xpart* restrict xp) {
 
   xp->cooling_data.radiated_energy = 0.f;
+  xp->cooling_data.time_last_event = - cooling->thermal_time;
 
 #if COOLING_GRACKLE_MODE >= 1
   gr_float zero = 1.e-20;
@@ -648,11 +649,16 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct hydro_props* hydro_props,
     const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* restrict cooling,
-    struct part* restrict p, struct xpart* restrict xp, double dt,
+    struct part* restrict p, struct xpart* restrict xp, double time, double dt,
     double dt_therm) {
 
   /* Nothing to do here? */
   if (dt == 0.) return;
+
+  /* Is the cooling turn off */
+  if (time - xp->cooling_data.time_last_event < cooling->thermal_time) {
+    return;
+  }
 
   /* Current energy */
   const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
@@ -863,7 +869,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
     error("Grackle with multiple particles not implemented");
 
   /* read parameters */
-  cooling_read_parameters(parameter_file, cooling);
+  cooling_read_parameters(parameter_file, cooling, phys_const);
 
   /* Set up the units system. */
   cooling_init_units(us, cooling);

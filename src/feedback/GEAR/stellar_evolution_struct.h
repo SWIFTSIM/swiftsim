@@ -123,14 +123,14 @@ struct supernovae_ia {
  */
 struct supernovae_ii {
 
-  /*! Yields TODO more comment */
-  struct interpolation_1d yields[CHEMISTRY_ELEMENT_COUNT];
+  /*! Integrated yields TODO more comment: Currently it is the integrated mass fraction */
+  struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
 
-  /*! Mass ejected (processed) */
-  struct interpolation_1d ejected_mass_processed;
+  /*! Integrated mass ejected (processed): Currently it is the mass fraction */
+  struct interpolation_1d integrated_ejected_mass_processed;
 
-  /*! Mass ejected (non processed) */
-  struct interpolation_1d ejected_mass;
+  /*! Integrated mass ejected (non processed): Currently it is the mass fraction */
+  struct interpolation_1d integrated_ejected_mass;
 
   /*! Minimal mass for a SNII */
   float mass_min;

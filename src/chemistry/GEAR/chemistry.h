@@ -162,7 +162,11 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
-  error("Needs implementing!");
+
+  /* Set the smoothed fractions with the non smoothed fractions */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    p->chemistry_data.smoothed_metal_mass_fraction[i] = p->chemistry_data.metal_mass_fraction[i];
+  }
 }
 
 /**

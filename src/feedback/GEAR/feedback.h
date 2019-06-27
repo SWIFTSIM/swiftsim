@@ -37,7 +37,23 @@
  * @param cosmo The #cosmology.
  */
 __attribute__((always_inline)) INLINE static void feedback_update_part(
-    struct part *restrict p, struct xpart *restrict xp, const struct cosmology *restrict cosmo) {
+    struct part *restrict p, struct xpart *restrict xp,
+    const struct engine *restrict e) {
+
+  const struct cosmology *cosmo = e->cosmology;
+
+  /* Did the particle receive a supernovae */
+  if (xp->feedback_data.delta_mass == 0)
+    return;
+
+  /* Turn off the cooling */
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
+  if (with_cosmology) {
+    xp->cooling_data.time_last_event = cosmo->time;
+  }
+  else {
+    xp->cooling_data.time_last_event = e->time;
+  }
 
   /* Update mass */
   const float new_mass = hydro_get_mass(p) + xp->feedback_data.delta_mass;
@@ -127,6 +143,10 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 
   /* Zero the energy to inject */
   sp->feedback_data.to_distribute.energy = 0.f;
+
+  /* Zero the number of supernovae */
+  sp->feedback_data.number_snia = 0;
+  sp->feedback_data.number_snii = 0;
 }
 
 /**
@@ -190,6 +210,45 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute the stellar evolution */
   stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
 				 ti_begin, star_age_beg_step, dt);
+}
+
+
+/**
+ * @brief Write a feedback struct to the given FILE as a stream of bytes.
+ *
+ * @param feedback the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream) {
+
+  /* To make sure everything is restored correctly, we zero all the pointers to
+     tables. If they are not restored correctly, we would crash after restart on
+     the first call to the feedback routines. Helps debugging. */
+  struct feedback_props feedback_copy = *feedback;
+
+  error("TODO");
+
+  restart_write_blocks((void*)&feedback_copy, sizeof(struct feedback_props), 1,
+                       stream, "feedback", "feedback function");
+}
+
+/**
+ * @brief Restore a hydro_props struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Read the structure from the stream and restore the feedback tables by
+ * re-reading them.
+ *
+ * @param feedback the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void feedback_struct_restore(
+    struct feedback_props* feedback, FILE* stream) {
+
+  restart_read_blocks((void*)feedback, sizeof(struct feedback_props), 1, stream,
+                      NULL, "feedback function");
+
+  error("TODO");
 }
 
 #endif /* SWIFT_FEEDBACK_GEAR_H */

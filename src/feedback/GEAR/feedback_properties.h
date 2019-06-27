@@ -31,9 +31,6 @@ struct feedback_props {
   /*! Energy per supernovae */
   float energy_per_supernovae;
 
-  /*! Thermal time */
-  float thermal_time;
-
   /*! filename of the chemistry table */
   char filename[PARSER_MAX_LINE_SIZE];
 
@@ -62,11 +59,6 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   double e_feedback = parser_get_param_double(params, "GEARFeedback:SupernovaeEnergy_erg");
   e_feedback /= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
   fp->energy_per_supernovae = e_feedback;
-
-  /* Thermal time */
-  fp->thermal_time =
-    parser_get_param_float(params, "GEARFeedback:ThermalTime_Myr");
-  fp->thermal_time *= phys_const->const_year * 1e6;
 
   /* filename of the chemistry table */
   parser_get_param_string(params, "GEARFeedback:YieldsTable", fp->filename);

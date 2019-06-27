@@ -327,7 +327,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
                 /* Compute the stellar evolution  */
                 feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                      star_age_beg_of_step, dt);
+                                      ti_begin, star_age_beg_of_step, dt);
               } else {
 
                 /* Reset the feedback fields of the star particle */
@@ -1051,6 +1051,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
       if (part_is_active(p, e)) {
 
         double dt_cool, dt_therm;
+	double time;
         if (with_cosmology) {
           const integertime_t ti_step = get_integer_timestep(p->time_bin);
           const integertime_t ti_begin =
@@ -1061,15 +1062,18 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
           dt_therm = cosmology_get_therm_kick_factor(e->cosmology, ti_begin,
                                                      ti_begin + ti_step);
 
+	  time = cosmo->time;
+
         } else {
           dt_cool = get_timestep(p->time_bin, time_base);
           dt_therm = get_timestep(p->time_bin, time_base);
+	  time = e->time;
         }
 
         /* Let's cool ! */
         cooling_cool_part(constants, us, cosmo, hydro_props,
-                          entropy_floor_props, cooling_func, p, xp, dt_cool,
-                          dt_therm);
+                          entropy_floor_props, cooling_func, p, xp,
+			  time, dt_cool, dt_therm);
       }
     }
   }
@@ -3104,10 +3108,10 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &parts[k];
       struct xpart *restrict xp = &xparts[k];
 
-      feedback_update_part(p, xp, e->cosmology);
-
       /* If particle needs updating */
       if (part_is_active(p, e)) {
+
+	feedback_update_part(p, xp, e);
 
 #ifdef SWIFT_DEBUG_CHECKS
         /* Current end of time-step */
