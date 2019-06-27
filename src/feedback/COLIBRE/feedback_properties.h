@@ -147,6 +147,8 @@ struct feedback_props {
   float SNIa_deltaT_desired;
 
   float SNIa_f_E;
+
+  float SNIa_delay_time;
   
 
   /* ------------- AGB parameters    ---------------- */

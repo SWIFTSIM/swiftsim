@@ -91,6 +91,9 @@ struct spart {
   /*! Feedback energy fraction */
   float f_E;
 
+  /*! SNIa Feedback energy fraction */
+  float SNIa_f_E;
+
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
 

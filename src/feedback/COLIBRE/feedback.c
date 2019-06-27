@@ -234,6 +234,68 @@ INLINE static void compute_SNII_feedback(
 }
 
 /**
+ * @brief Compute the properties of the SNIa stochastic feedback energy
+ * injection.
+ *
+ * @param sp The star particle.
+ * @param star_age Age of star at the beginning of the step in internal units.
+ * @param dt Length of time-step in internal units.
+ * @param ngb_gas_mass Total un-weighted mass in the star's kernel.
+ * @param feedback_props The properties of the feedback model.
+ */
+void compute_SNIa_feedback(
+    struct spart* sp, const double star_age, const double dt,
+    const float ngb_gas_mass, const struct feedback_props* feedback_props) {
+
+  /* Time after birth considered for SNII feedback (internal units) */
+  const double SNIa_delay_time = feedback_props->SNIa_delay_time;
+
+  /* Are we doing feedback this step? */
+  if (star_age > SNIa_delay_time) {
+
+    /* Properties of the model (all in internal units) */
+    const double delta_T =
+        eagle_SNIa_feedback_temperature_change(sp, feedback_props);
+    const double N_SNe = eagle_feedback_number_of_SNIa(sp, feedback_props);
+    const double E_SNe = feedback_props->E_SNIa;
+    const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
+
+    /* Conversion factor from T to internal energy */
+    const double conv_factor = feedback_props->temp_to_u_factor;
+
+    /* Calculate the default heating probability */
+    double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+
+    /* Calculate the change in internal energy of the gas particles that get
+     * heated */
+    double delta_u;
+    if (prob <= 1.) {
+
+      /* Normal case */
+      delta_u = delta_T * conv_factor;
+
+    } else {
+
+      /* Special case: we need to adjust the energy irrespective of the
+         desired deltaT to ensure we inject all the available energy. */
+
+      prob = 1.;
+      delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+    }
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
+      error("f_E is not in the valid range! f_E=%f sp->id=%lld", f_E, sp->id);
+#endif
+
+    /* Store all of this in the star for delivery onto the gas */
+    sp->f_E = SNIa_f_E;
+    sp->feedback_data.to_distribute.SNIa_heating_probability = prob;
+    sp->feedback_data.to_distribute.SNIa_delta_u = delta_u;
+  }
+}
+
+/**
  * @brief Find the bins and offset along the metallicity dimension of the
  * AGB yields table.
  *
@@ -914,6 +976,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Compute properties of the stochastic SNII feedback model. */
   if (feedback_props->with_SNII_feedback) {
     compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
+  }
+  if (feedback_props->with_SNIa_feedback) {
+    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
   }
 
   /* Calculate mass of stars that has died from the star's birth up to the
