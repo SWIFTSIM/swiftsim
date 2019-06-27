@@ -25,7 +25,7 @@
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_exponent(
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_exponent(
     const struct initial_mass_function* imf, float mass_min, float mass_max) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -44,7 +44,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_exp
 
       /* Check if in only one segment */
       if (mass_max > imf->mass_limits[i+1]) {
-	error("The code is not implemented to deal with two different IMF part in the supernovae IMF");
+	error("Cannot get a single exponent for the interval [%g, %g]", mass_min, mass_max);
       }
 
       return imf->exp[i];
@@ -56,10 +56,107 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_exp
   return -1;
 }
 
+/** @brief Print the initial mass function */
+__attribute__((always_inline)) INLINE static void initial_mass_function_print(
+    const struct initial_mass_function* imf) {
+
+  message("Number of parts: %i", imf->n_parts);
+  message("Mass interval: [%g, %g]", imf->mass_min, imf->mass_max);
+  for(int i = 0; i < imf->n_parts; i++) {
+    message("[%g, %g]: %g * m^{%g}", imf->mass_limits[i], imf->mass_limits[i+1],
+	    imf->coef[i], imf->exp[i]);
+  }
+}
+
+/**
+ * @brief Integrate the #interpolation_1d data with the initial mass function.
+ *
+ * The x are supposed to be linear in log.
+ *
+ * @param imf The #initial_mass_function.
+ * @param interp The #interpolation_1d.
+ */
+__attribute__((always_inline)) INLINE static void initial_mass_function_integrate(
+    const struct initial_mass_function* imf, struct interpolation_1d *interp) {
+
+  /* Index in the data */
+  int j = 1;
+  const float mass_min = pow(10, interp->xmin);
+  const float mass_max = pow(10, interp->xmin + (interp->N - 1) * interp->dx);
+
+  float m = mass_min;
+
+  float *tmp = (float *) malloc(sizeof(float) * interp->N);
+
+  /* Set lower limit */
+  tmp[0] = 0;
+  for(int i = 0; i < imf->n_parts; i++) {
+
+    /* Check if already in the correct part */
+    if (mass_min > imf->mass_limits[i+1]) {
+      continue;
+    }
+
+    /* Check if already above the maximal mass */
+    if (mass_max < imf->mass_limits[i]) {
+      break;
+    }
+
+    /* Integrate the data */
+    while (m < imf->mass_limits[i+1] && j < interp->N) {
+
+      /* Compute the masses */
+      const float log_m1 = interp->xmin + (j - 1) * interp->dx;
+      const float m1 = pow(10, log_m1);
+      const float log_m2 = interp->xmin + j * interp->dx;
+      const float m2 = pow(10, log_m2);
+      const float dm = m2 - m1;
+      const float imf_1 = imf->coef[i] * pow(m1, imf->exp[i]);
+
+      /* Get the imf of the upper limit  */
+      float imf_2;
+      if (m2 > imf->mass_limits[i+1]) {
+      	imf_2 = imf->coef[i+1] * pow(m2, imf->exp[i+1]);
+      }
+      else {
+	imf_2 = imf->coef[i] * pow(m2, imf->exp[i]);
+      }
+
+      /* Compute the integral */
+      tmp[j] = tmp[j-1] + 0.5 * (imf_1 * interp->data[j-1] + imf_2 * interp->data[j]) * dm;
+
+      /* Update j and m */
+      j += 1;
+      m = m2;
+    }
+  }
+
+  /* The rest is extrapolated with 0 */
+  for(int k = j; k < interp->N; k++) {
+    tmp[k] = tmp[k-1];
+  }
+
+  /* Copy temporary array */
+  memcpy(interp->data, tmp, interp->N * sizeof(float));
+
+  /* Update the boundary conditions */
+  interp->boundary_condition = boundary_condition_zero_const;
+
+  /* clean everything */
+  free(tmp);
+}
+
+
 /**
  * @brief Get the IMF coefficient in between mass_min and mass_max.
+ *
+ * @param imf The #initial_mass_function.
+ * @param mass_min The minimal mass of the requested interval.
+ * @param mass_max The maximal mass of the requested interval.
+ *
+ * @return The imf's coefficient of the interval.
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_coefficient(
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_coefficient(
     const struct initial_mass_function* imf, float mass_min, float mass_max) {
 
   for(int i = 0; i < imf->n_parts; i++) {
@@ -69,7 +166,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_coe
 
       /* Check if in only one segment */
       if (mass_max > imf->mass_limits[i+1]) {
-	error("The code is not implemented to deal with two different exponent for the IMF in supernovae");
+	error("Cannot get a single coefficient for the interval [%g, %g]", mass_min, mass_max);
       }
 
       return imf->coef[i];
@@ -90,7 +187,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_coe
  *
  * @return The mass fraction.
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_imf(
     const struct initial_mass_function *imf, float m) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -118,7 +215,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf(
  *
  * @return The fraction stars in the interval (in number).
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_number(
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_number(
     const struct initial_mass_function *imf, float m1, float m2) {
   error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
@@ -166,7 +263,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_num
  *
  * @return The fraction stars in the interval (in mass).
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_mass(
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_imf_mass(
     const struct initial_mass_function *imf, float m1, float m2) {
   error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
@@ -212,7 +309,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_imf_mas
  *
  * @param imf The #initial_mass_function.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_compute_initial_mass_function_coefficients(
+__attribute__((always_inline)) INLINE static void initial_mass_function_compute_coefficients(
     struct initial_mass_function *imf) {
 
   /* Allocate memory */
@@ -250,7 +347,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_init
  * @param imf The #initial_mass_function.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_table(
+__attribute__((always_inline)) INLINE static void initial_mass_function_read_from_table(
     struct initial_mass_function* imf, struct swift_params* params) {
 
   hid_t file_id, group_id;
@@ -299,7 +396,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_initial
  * @param imf The #initial_mass_function.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_read_initial_mass_function_from_params(
+__attribute__((always_inline)) INLINE static void initial_mass_function_read_from_params(
     struct initial_mass_function* imf, struct swift_params* params) {
 
   /* Read the number of elements */
@@ -352,15 +449,15 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_initial
  * @param us The #unit_system.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_initial_mass_function(
+__attribute__((always_inline)) INLINE static void initial_mass_function_init(
     struct initial_mass_function* imf, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
   /* Read the parameters from the yields table */
-  stellar_evolution_read_initial_mass_function_from_table(imf, params);
+  initial_mass_function_read_from_table(imf, params);
 
   /* Overwrites the parameters if found in the params file */
-  stellar_evolution_read_initial_mass_function_from_params(imf, params);
+  initial_mass_function_read_from_params(imf, params);
 
   /* change the mass limits to internal units */
   for(int i = 0; i < imf->n_parts + 1; i++) {
@@ -372,7 +469,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_init_initial
   imf->mass_max = imf->mass_limits[imf->n_parts];
 
   /* Compute the coefficients */
-  stellar_evolution_compute_initial_mass_function_coefficients(imf);
+  initial_mass_function_compute_coefficients(imf);
 
 }
 

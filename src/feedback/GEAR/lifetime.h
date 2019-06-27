@@ -31,7 +31,7 @@
  *
  * @return The star's lifetime (in log10).
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lifetime_from_mass(
+__attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_from_mass(
     const struct lifetime *life, float log_mass, float metallicity) {
 
   /* Compute quadratic term */
@@ -59,7 +59,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_lif
  *
  * @return The star's mass (in log10) or -1.
  */
-__attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mass_from_lifetime(
+__attribute__((always_inline)) INLINE static float lifetime_get_log_mass_from_lifetime(
     const struct lifetime *life, float log_time, float metallicity) {
 
   /* Compute quadratic term */
@@ -100,7 +100,7 @@ __attribute__((always_inline)) INLINE static float stellar_evolution_get_log_mas
  * @param lt The #lifetime.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_tables(
+__attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
     struct lifetime* lt, struct swift_params* params) {
 
   hid_t file_id, group_id;
@@ -136,7 +136,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetim
  * @param lt The #lifetime.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetime_from_params(
+__attribute__((always_inline)) INLINE static void lifetime_read_from_params(
     struct lifetime* lt, struct swift_params* params) {
 
   /* Read quadratic terms */
@@ -158,15 +158,15 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_lifetim
  * @param us The #unit_system.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void stellar_evolution_init_lifetime(
+__attribute__((always_inline)) INLINE static void lifetime_init(
     struct lifetime* lt, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
   /* Read params from yields table */
-  stellar_evolution_read_lifetime_from_tables(lt, params);
+  lifetime_read_from_tables(lt, params);
 
   /* overwrite the parameters if found in the params */
-  stellar_evolution_read_lifetime_from_params(lt, params);
+  lifetime_read_from_params(lt, params);
 
   /* Change the time unit (mass cannot be done here) */
   lt->constant[2] += log10(phys_const->const_year);

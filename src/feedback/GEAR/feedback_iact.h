@@ -92,6 +92,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const struct cosmology *restrict cosmo,
                                   const integertime_t ti_current) {
 
+  const int number_supernovae = si->feedback_data.number_snia + si->feedback_data.number_snii;
+  if (number_supernovae == 0)
+    return;
+
   const float mj = hydro_get_mass(pj);
   const float r = sqrtf(r2);
 
@@ -105,7 +109,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* Mass received */
   // TODO
-  const double m_ej = 0;
+  const double m_ej = 1e-4;
   // TODO compute inverse before feedback loop
   const double weight = mj * wi / si->feedback_data.enrichment_weight;
   const double dm = m_ej * weight;
@@ -114,12 +118,12 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Energy received */
   const double e_sn = fp->energy_per_supernovae;
   // TODO compute inverse before feedback loop
-  const int n_sn = 1;
-  const double u_sn = n_sn * e_sn / m_ej;
+  const double u_sn = number_supernovae * e_sn / m_ej;
   const double du = dm * u_sn * weight / new_mass;
 
-  xpj->feedback_data.delta_mass = dm;
-  xpj->feedback_data.delta_u = du;
+
+  xpj->feedback_data.delta_mass += dm;
+  xpj->feedback_data.delta_u += du;
 
   /* Compute momentum received. */
   for(int i = 0; i < 3; i++) {

@@ -71,7 +71,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 9;
+  *num_fields = 8;
 
   /* List what we want to write */
   list[0] =
