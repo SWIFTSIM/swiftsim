@@ -137,7 +137,8 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
  */
 __attribute__((always_inline)) INLINE static void cooling_read_parameters(
     struct swift_params* parameter_file,
-    struct cooling_function_data* cooling) {
+    struct cooling_function_data* cooling,
+    const struct phys_const* phys_const) {
 
   parser_get_param_string(parameter_file, "GrackleCooling:CloudyTable",
                           cooling->cloudy_table);
@@ -176,6 +177,13 @@ __attribute__((always_inline)) INLINE static void cooling_read_parameters(
 
   cooling->convergence_limit = parser_get_opt_param_double(
       parameter_file, "GrackleCooling:ConvergenceLimit", 1e-2);
+
+  /* Thermal time */
+  cooling->thermal_time =
+    parser_get_param_float(parameter_file, "GrackleCooling:ThermalTime_Myr");
+  cooling->thermal_time *= phys_const->const_year * 1e6;
+
+
 }
 
 #endif /* SWIFT_COOLING_GRACKLE_IO_H */
