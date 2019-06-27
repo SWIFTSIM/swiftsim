@@ -19,6 +19,17 @@
 #ifndef SWIFT_GEAR_INTERPOLATION_H
 #define SWIFT_GEAR_INTERPOLATION_H
 
+enum interpolate_boundary_condition {
+  /* No extrapolation => raise errors */
+  boundary_condition_error,
+
+  /* Zero as boundary conditions */
+  boundary_condition_zero,
+
+  /* Zero (left boundary) and constant (right boundary) boundary conditions */
+  boundary_condition_zero_const,
+};
+
 struct interpolation_1d {
   /* Data to interpolate */
   float *data;
@@ -31,74 +42,89 @@ struct interpolation_1d {
 
   /* Number of element in the data */
   int N;
+
+  /* Type of boundary conditions. */
+  enum interpolate_boundary_condition boundary_condition;
 };
 
 /**
  * @brief Initialize the #interpolation_1d.
  *
+ * Assumes x are linear in log.
+ *
  * @params interp The #interpolation_1d.
- * @params xmin Minimal value of x.
- * @params xmax Maximal value of x.
+ * @params xmin Minimal value of x (in log).
+ * @params xmax Maximal value of x (in log).
+ * @params N Requested number of values.
+ * @params log_data_xmin The minimal value of the data (in log).
+ * @params step_size The size of the x steps (in log).
+ * @params N_data The number of element in the data.
  * @params data The data to interpolate (y).
  * @params N The number of element in data.
- * @params integrate Do you want to interpolate the integral?
+ * @params boundary_condition The type of #interpolate_boundary_condition.
  */
 __attribute__((always_inline)) static INLINE void interpolate_1d_init(
     struct interpolation_1d *interp, float xmin, float xmax,
-    const float *data, int N, int integrate) {
+    int N, float log_data_xmin, float step_size, int N_data,
+    const float *data, enum interpolate_boundary_condition boundary_condition) {
 
   /* Save the variables */
   interp->N = N;
   interp->xmin = xmin;
-  interp->dx = (xmax - xmin / N);
+  interp->dx = (xmax - xmin) / N;
+  interp->boundary_condition = boundary_condition;
 
-  /* Copy the data */
+  /* Allocate the memory */
   interp->data = malloc(sizeof(float) * N);
   if (interp->data == NULL)
     error("Failed to allocate memory for the interpolation");
-  memcpy(interp->data, data, sizeof(float) * N);
 
-  /* If we do not need to integrate the data, leave */
-  if (!integrate)
-    return;
+  /* Interpolate the data */
+  for(int i = 0; i < N; i++) {
+    const float log_x = xmin + i * interp->dx;
+    const float x_j = (log_x - log_data_xmin) / step_size;
 
-  /* Integrate the yields with the trapezoid rule */
-  float *tmp = (float*) malloc(sizeof(float) * N);
-  if (tmp == NULL)
-    error("Failed to allocate temporary array");
+    /* Check boundaries */
+    if (x_j < 0) {
+      switch (boundary_condition) {
+        case boundary_condition_error:
+	  error("Cannot extrapolate");
+	  break;
+        case boundary_condition_zero:
+	  interp->data[i] = 0;
+	  break;
+        case boundary_condition_zero_const:
+	  interp->data[i] = 0;
+	  break;
+        default:
+	  error("Interpolation type not implemented");
+      }
+      continue;
+    }
+    else if (x_j >= N_data) {
+      switch (boundary_condition) {
+        case boundary_condition_error:
+	  error("Cannot extrapolate");
+	  break;
+        case boundary_condition_zero:
+	  interp->data[i] = 0;
+	  break;
+        case boundary_condition_zero_const:
+	  interp->data[i] = interp->data[i-1];
+	  break;
+        default:
+	  error("Interpolation type not implemented");
+      }
+      continue;
+    }
 
-  tmp[0] = 0.;
-  for(int i = 1; i < N; i++) {
-    tmp[i] = tmp[i-1] + 0.5 * (interp->data[i] + interp->data[i-1]);
+    /* Interpolate i */
+    const int j = x_j;
+    const float f = x_j - j;
+    interp->data[i] = (1. - f) * data[j] + f * data[j+1];
   }
 
-  /* Copy the data back to the correct array */
-  memcpy(interp->data, tmp, sizeof(float) * N);
-
-  /* Cleanup */
-  free(tmp);
 }
-
-/**
- * @brief Change the units of the #interpolation_1d.
- *
- * @params interp The #interpolation_1d.
- * @params x_units The new units for x in unit of the previous ones.
- * @params y_units The new units for y in unit of the previous ones.
- */
-__attribute__((always_inline)) static INLINE void interpolate_1d_change_units(
-    struct interpolation_1d *interp, float x_units, float y_units) {
-
-  interp->xmin *= x_units;
-  interp->dx *= x_units;
-
-  /* do the data */
-  for(int j = 0; j < interp->N; j++) {
-    interp->data[j] *= y_units;
-  }
-  
-}
-
 
 /**
  * @brief Interpolate the data.
@@ -116,18 +142,61 @@ __attribute__((always_inline)) static INLINE float interpolate_1d(
   const int idx = i;
   const float dx = i - idx;
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (i >= interp->N || i < 0) {
-    error("Cannot extrapolate (i=%g; N=%i).",
-	  i, interp->N);
+  /* Should we extrapolate? */
+  if (i < 0) {
+    switch (interp->boundary_condition) {
+      case boundary_condition_error:
+	error("Cannot extrapolate");
+	break;
+      case boundary_condition_zero:
+      case boundary_condition_zero_const:
+	return 0;
+      default:
+	error("Interpolation type not implemented");
+    }
   }
-#endif
+  else if (i >= interp->N - 1) {
+    switch (interp->boundary_condition) {
+      case boundary_condition_error:
+	error("Cannot extrapolate");
+	break;
+      case boundary_condition_zero:
+	return 0;
+      case boundary_condition_zero_const:
+	return interp->data[interp->N-1];
+      default:
+	error("Interpolation type not implemented");
+    }
+  }
 
   /* interpolate */
   return interp->data[idx] * (1. - dx) +
     interp->data[idx+1] * dx;
   
 }
+
+/**
+ * @brief Print the data.
+ *
+ * @params interp The #interpolation_1d.
+ */
+__attribute__((always_inline)) static INLINE void interpolate_1d_print(
+    const struct interpolation_1d *interp) {
+
+  message("Interpolation between %g and %g", interp->xmin,
+	  interp->xmin + interp->dx * interp->N);
+
+  message("Contains %i values and use the boundary condition %i",
+	  interp->N, interp->boundary_condition);
+
+  /* Print values */
+  for(int i = 0; i < interp->N; i++) {
+    float x = interp->xmin + i * interp->dx;
+    message("%.2g: %g", x, interp->data[i]);
+  }
+}
+
+
 
 /**
  * @brief Cleanup the #interpolation_1d structure.

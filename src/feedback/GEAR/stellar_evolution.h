@@ -55,38 +55,62 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   const float metallicity = chemistry_spart_metal_mass_fraction(sp);
 
   /* Compute masses range */
-  const float log_m_beg_step = stellar_evolution_get_log_mass_from_lifetime(
+  const float log_m_beg_step = lifetime_get_log_mass_from_lifetime(
     &sm->lifetime, log10(star_age_beg_step), metallicity);
-  const float log_m_end_step = stellar_evolution_get_log_mass_from_lifetime(
+  const float log_m_end_step = lifetime_get_log_mass_from_lifetime(
     &sm->lifetime, log10(star_age_beg_step + dt), metallicity);
 
   const float m_beg_step = pow(10, log_m_beg_step);
   const float m_end_step = pow(10, log_m_end_step);
 
-  /* Compute rates */
-  const float number_snia_f = stellar_evolution_get_number_supernovae_ia(
-    &sm->snia, m_beg_step, m_end_step);
-  const float number_snii_f = stellar_evolution_get_number_supernovae_ii(
-    &sm->snii, m_beg_step, m_end_step);
+  /* Check if the star can produce a supernovae */
+  const int can_produce_snia = supernovae_ia_can_explode(&sm->snia, m_beg_step) ||
+    supernovae_ia_can_explode(&sm->snia, m_beg_step);
+  const int can_produce_snii = supernovae_ii_can_explode(&sm->snii, m_beg_step) ||
+    supernovae_ii_can_explode(&sm->snii, m_end_step);
 
-  /* Get the number of SN */
-  const float rand_snia = random_unit_interval(sp->id, ti_begin,
-					       random_number_stellar_feedback);
-  const float rand_snii = random_unit_interval(sp->id, ti_begin,
+  if (can_produce_snia) {
+    /* Compute rates */
+    const float number_snia_f = supernovae_ia_get_number(
+      &sm->snia, m_end_step, m_beg_step);
+
+    /* Get the number of SN */
+    const float rand_snia = random_unit_interval(sp->id, ti_begin,
+						 random_number_stellar_feedback);
+
+    /* Get the fraction part */
+    const float frac_snia = number_snia_f - floor(number_snia_f);
+
+    /* Get the integer number of SN */
+    sp->feedback_data.number_snia = floor(number_snia_f) + (rand_snia < frac_snia)? 1 : 0;
+
+  }
+
+  if (can_produce_snii) {
+    /* Compute rates */
+    const float number_snii_f = supernovae_ii_get_number(
+    &sm->snii, m_end_step, m_beg_step);
+
+    /* Get the number of SN */
+    const float rand_snii = random_unit_interval(sp->id, ti_begin,
 					       random_number_stellar_feedback_2);
 
-  const float frac_snia = number_snia_f - floor(number_snia_f);
-  const float frac_snii = number_snii_f - floor(number_snii_f);
+    /* Get the fraction part */
+    const float frac_snii = number_snii_f - floor(number_snii_f);
+    
+    /* Get the integer number of SN */
+    sp->feedback_data.number_snii = floor(number_snii_f) + (rand_snii < frac_snii)? 1 : 0;
+  }
 
-  sp->feedback_data.number_snia = floor(number_snia_f) + (rand_snia < frac_snia)? 1 : 0;
-  sp->feedback_data.number_snii = floor(number_snii_f) + (rand_snii < frac_snii)? 1 : 0;
-
-  /* Decrease star mass by amount of mass distributed to gas neighbours */
-  float mass_ejected = 0.f;
-  if (sp->mass < mass_ejected)
-    error("Stars cannot have negative mass. (%g < %g)",
-	  sp->mass, mass_ejected);
-  sp->mass -= mass_ejected;
+  if (sp->feedback_data.number_snia != 0 || sp->feedback_data.number_snii != 0) {
+    /* Decrease star mass by amount of mass distributed to gas neighbours */
+    // TODO
+    float mass_ejected = 0.f;
+    if (sp->mass < mass_ejected)
+      error("Stars cannot have negative mass. (%g < %g)",
+	    sp->mass, mass_ejected);
+    sp->mass -= mass_ejected;
+  }
 }
 
 /**
@@ -154,16 +178,16 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   stellar_evolution_read_elements(sm, params);
 
   /* Initialize the initial mass function */
-  stellar_evolution_init_initial_mass_function(&sm->imf, phys_const, us, params);
+  initial_mass_function_init(&sm->imf, phys_const, us, params);
 
   /* Initialize the lifetime model */
-  stellar_evolution_init_lifetime(&sm->lifetime, phys_const, us, params);
+  lifetime_init(&sm->lifetime, phys_const, us, params);
 
   /* Initialize the supernovae Ia model */
-  stellar_evolution_init_supernovae_ia(&sm->snia, phys_const, us, params, sm);
+  supernovae_ia_init(&sm->snia, phys_const, us, params, sm);
  
   /* Initialize the supernovae II model */
-  stellar_evolution_init_supernovae_ii(&sm->snii, phys_const, us, params, sm);
+  supernovae_ii_init(&sm->snii, phys_const, us, params, sm);
 
 
 }
