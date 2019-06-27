@@ -142,6 +142,13 @@ struct feedback_props {
   /*! Energy released by one supernova type II in internal units */
   float E_SNIa;
 
+  /* ----------- SNeIa feedback properties -------------- */
+
+  float SNIa_deltaT_desired;
+
+  float SNIa_f_E;
+  
+
   /* ------------- AGB parameters    ---------------- */
 
   /*! Specific kinetic energy injected from AGB ejectas (in internal units). */
@@ -190,7 +197,7 @@ struct feedback_props {
    */
   float log10_imf_max_mass_msun;
 
-  /* ------------ SNe feedback properties ------------ */
+  /* ------------ SNeII feedback properties ------------ */
 
   /*! Log 10 of the minimal stellar mass considered for SNII feedback (in solar
    * masses) */
@@ -251,6 +258,7 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
+
 };
 
 void feedback_props_init(struct feedback_props *fp,

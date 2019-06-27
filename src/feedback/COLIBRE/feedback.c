@@ -36,16 +36,30 @@ static const double colibre_feedback_momentum_SB99_Z_max = 0.04;
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
- * gas particle affected by SNe feedback.
+ * gas particle affected by SNII feedback.
  *
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_feedback_temperature_change(const struct spart* sp,
+double eagle_SNII_feedback_temperature_change(const struct spart* sp,
                                          const struct feedback_props* props) {
 
   /* In the EAGLE REF model, the change of temperature is constant */
   return props->SNII_deltaT_desired;
+}
+
+/**
+ * @brief Return the change in temperature (in internal units) to apply to a
+ * gas particle affected by SNIa feedback.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+double eagle_SNIa_feedback_temperature_change(const struct spart* sp,
+                                         const struct feedback_props* props) {
+
+  /* In the EAGLE REF model, the change of temperature is constant */
+  return props->SNIa_deltaT_desired;
 }
 
 /**
@@ -88,7 +102,7 @@ double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
 }
 
 /**
- * @brief Computes the fraction of the available super-novae energy to
+ * @brief Computes the fraction of the available super-novae II energy to
  * inject for a given event.
  *
  * Note that the fraction can be > 1.
@@ -98,7 +112,7 @@ double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_feedback_energy_fraction(const struct spart* sp,
+double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
                                       const struct feedback_props* props) {
 
   /* Model parameters */
@@ -124,6 +138,22 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   const double denonimator = 1. + Z_term * n_term;
 
   return f_E_min + (f_E_max - f_E_min) / denonimator;
+}
+
+/**
+ * @brief Computes the fraction of the available super-novae Ia energy to
+ * inject for a given event.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+double eagle_SNIa_feedback_energy_fraction(const struct spart* sp,
+                                      const struct feedback_props* props) {
+
+  /* Model parameters */
+  const double SNIa_f_E = props->SNIa_f_E;
+
+  return SNIa_f_E;
 }
 
 /**
@@ -163,10 +193,10 @@ INLINE static void compute_SNII_feedback(
 
     /* Properties of the model (all in internal units) */
     const double delta_T =
-        eagle_feedback_temperature_change(sp, feedback_props);
+        eagle_SNII_feedback_temperature_change(sp, feedback_props);
     const double N_SNe = eagle_feedback_number_of_SNII(sp, feedback_props);
     const double E_SNe = feedback_props->E_SNII;
-    const double f_E = eagle_feedback_energy_fraction(sp, feedback_props);
+    const double f_E = eagle_SNII_feedback_energy_fraction(sp, feedback_props);
 
     /* Conversion factor from T to internal energy */
     const double conv_factor = feedback_props->temp_to_u_factor;
@@ -1060,6 +1090,11 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:Momentum_time_scale");
   fp->delta_v = parser_get_param_double(
       params, "COLIBREFeedback:Momentum_desired_delta_v");
+
+  /* Properties of the stochastic SNIa model */
+  fp->SNIa_deltaT_desired = parser_get_param_double(params, "COLIBREFeedback:SNIa_delta_T_K");
+
+  fp->SNIa_f_E = parser_get_param_double(params, "COLIBREFeedback:SNIa_energy_fraction");
 
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
