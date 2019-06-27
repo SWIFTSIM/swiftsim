@@ -165,6 +165,7 @@ INLINE static void star_formation_compute_SFR(
   /* In the case the particle is immediatly converted to a star particle */
   if (physical_density > starform->maximal_density) {
     xp->sf_data.SFR = hydro_get_mass(p) / dt_star;
+    return;
   }
 
   /* Calculate the SFR per gas mass */
