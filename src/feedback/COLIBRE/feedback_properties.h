@@ -207,7 +207,7 @@ struct feedback_props {
   double SNII_wind_delay;
 
   /*! Temperature increase induced by SNe feedback */
-  float SNe_deltaT_desired;
+  float SNII_deltaT_desired;
 
   /*! Energy released by one supernova type II in cgs units */
   double E_SNII_cgs;

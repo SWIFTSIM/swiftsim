@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- ******************************************************************************/
+ *****************************************************************************
 
 /* This file's header */
 #include "feedback.h"
@@ -45,7 +45,7 @@ double eagle_feedback_temperature_change(const struct spart* sp,
                                          const struct feedback_props* props) {
 
   /* In the EAGLE REF model, the change of temperature is constant */
-  return props->SNe_deltaT_desired;
+  return props->SNII_deltaT_desired;
 }
 
 /**
@@ -1012,9 +1012,9 @@ void feedback_props_init(struct feedback_props* fp,
       Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* Read the temperature change to use in stochastic heating */
-  fp->SNe_deltaT_desired =
+  fp->SNII_deltaT_desired =
       parser_get_param_float(params, "COLIBREFeedback:SNII_delta_T_K");
-  fp->SNe_deltaT_desired /=
+  fp->SNII_deltaT_desired /=
       units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
 
   /* Energy released by supernova type II */
