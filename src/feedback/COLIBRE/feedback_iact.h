@@ -310,6 +310,40 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     }
   }
 
+  /* Finally, SNIa stochastic feedback */
+
+  /* Get the SNIa feedback properties */
+  const float prob_SNIa = si->feedback_data.to_distribute.SNIa_heating_probability;
+
+  /* Are we doing some SNIa (old boys) feedback? */
+  if (prob_SNIa > 0.f) {
+
+    /* Draw a random number (Note mixing both IDs) */
+    const float rand_SNIa = random_unit_interval(si->id + pj->id, ti_current,
+                                            random_number_stellar_feedback);
+    /* Are we lucky? */
+    if (rand_SNIa < prob_SNIa) {
+
+      /* Compute new energy of this particle */
+      const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
+      const double u_new = u_init_SNIa + delta_u_SNIa;
+
+      /* Inject energy into the particle */
+      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
+      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+
+      /* Impose maximal viscosity */
+      hydro_set_viscosity_alpha_max_feedback(pj);
+
+      /* message( */
+      /*     "We did some heating! id %llu star id %llu probability %.5e " */
+      /*     "random_num %.5e du %.5e du/ini %.5e", */
+      /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
+      message("We did SNIa feedback");
+    }
+  }
+
   /* Kick gas particle away from the star using the momentum available in the
    * timestep.This is done stochastically.
    * However, if delta_v is small enough (or even negative), this translates
