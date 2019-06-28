@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *****************************************************************************
+ *****************************************************************************/
 
 /* This file's header */
 #include "feedback.h"
@@ -245,7 +245,7 @@ INLINE static void compute_SNII_feedback(
  */
 void compute_SNIa_feedback(
     struct spart* sp, const double star_age, const double dt,
-    const float ngb_gas_mass, const struct feedback_props* feedback_props) {
+    const float ngb_gas_mass, const struct feedback_props* feedback_props, const double star_age_Gyr, const double dt_Gyr) {
 
   /* Time after birth considered for SNII feedback (internal units) */
   const double SNIa_delay_time = feedback_props->SNIa_delay_time;
@@ -256,7 +256,7 @@ void compute_SNIa_feedback(
     /* Properties of the model (all in internal units) */
     const double delta_T =
         eagle_SNIa_feedback_temperature_change(sp, feedback_props);
-    const double N_SNe = eagle_feedback_number_of_SNIa(sp, feedback_props);
+    const double N_SNe = eagle_feedback_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, feedback_props);
     const double E_SNe = feedback_props->E_SNIa;
     const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
@@ -289,7 +289,7 @@ void compute_SNIa_feedback(
 #endif
 
     /* Store all of this in the star for delivery onto the gas */
-    sp->f_E = SNIa_f_E;
+    sp->SNIa_f_E = f_E;
     sp->feedback_data.to_distribute.SNIa_heating_probability = prob;
     sp->feedback_data.to_distribute.SNIa_delta_u = delta_u;
   }
@@ -978,7 +978,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
   }
   if (feedback_props->with_SNIa_feedback) {
-    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
+    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props, dt_Gyr, star_age_Gyr);
   }
 
   /* Calculate mass of stars that has died from the star's birth up to the
