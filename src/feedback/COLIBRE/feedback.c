@@ -203,6 +203,7 @@ INLINE static void compute_SNII_feedback(
 
     /* Calculate the default heating probability */
     double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+    message("SNII %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
@@ -245,13 +246,13 @@ INLINE static void compute_SNII_feedback(
  */
 void compute_SNIa_feedback(
     struct spart* sp, const double star_age, const double dt,
-    const float ngb_gas_mass, const struct feedback_props* feedback_props, const double star_age_Gyr, const double dt_Gyr) {
+    const float ngb_gas_mass, const struct feedback_props* feedback_props, const double dt_Gyr, const double star_age_Gyr) {
 
   /* Time after birth considered for SNII feedback (internal units) */
   const double SNIa_delay_time = feedback_props->SNIa_delay_time;
 
   /* Are we doing feedback this step? */
-  if (star_age > SNIa_delay_time) {
+  if (star_age_Gyr > SNIa_delay_time) {
 
     /* Properties of the model (all in internal units) */
     const double delta_T =
@@ -265,6 +266,7 @@ void compute_SNIa_feedback(
 
     /* Calculate the default heating probability */
     double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+    message("SNIa %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
@@ -1160,6 +1162,8 @@ void feedback_props_init(struct feedback_props* fp,
   fp->SNIa_deltaT_desired = parser_get_param_double(params, "COLIBREFeedback:SNIa_delta_T_K");
 
   fp->SNIa_f_E = parser_get_param_double(params, "COLIBREFeedback:SNIa_energy_fraction");
+
+  fp->SNIa_delay_time = parser_get_param_double(params, "COLIBREFeedback:SNIa_delay_time_Gyr");
 
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
