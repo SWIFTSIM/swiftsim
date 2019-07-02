@@ -264,7 +264,7 @@ void compute_SNIa_feedback(
   const double SNIa_delay_time = feedback_props->SNIa_delay_time;
 
   /* Are we doing feedback this step? */
-  if (star_age_Gyr < SNIa_delay_time) return;
+  if ((star_age_Gyr + dt_Gyr) < SNIa_delay_time) return;
 
   /* Find the time that we start integrating, this is only necessary for the first step in the SNIa */
   const double lower_bound_time = max(SNIa_delay_time, star_age_Gyr);
