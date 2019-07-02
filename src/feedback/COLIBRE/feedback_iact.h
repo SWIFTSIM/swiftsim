@@ -325,16 +325,16 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     if (rand_SNIa < prob_SNIa) {
 
       /* Compute new energy of this particle */
-      const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj, cosmo);
-      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
-      const double u_new = u_init_SNIa + delta_u_SNIa;
+      //const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      //const float delta_u_SNIa = 0.f; //si->feedback_data.to_distribute.SNIa_delta_u;
+      //const double u_new = u_init_SNIa + delta_u_SNIa;
 
       /* Inject energy into the particle */
-      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
-      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+      //hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
+      //hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
 
       /* Impose maximal viscosity */
-      hydro_set_viscosity_alpha_max_feedback(pj);
+      //hydro_set_viscosity_alpha_max_feedback(pj);
 
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
