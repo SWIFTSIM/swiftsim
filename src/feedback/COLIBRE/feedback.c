@@ -101,6 +101,18 @@ double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
   return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
 }
 
+double eagle_feedback_number_of_SNIa2(const struct spart* sp, const double t0,
+                                     const double t1,
+                                     const struct feedback_props* props) {
+
+  /* The calculation is written as the integral between t0 and t1 of
+   * eq. 3 of Schaye 2015 paper. */
+  const double nu = props->SNIa_efficiency;
+  const double num_SNIa_per_Msun = nu * (t1 - t0);
+
+  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
+}
+
 /**
  * @brief Computes the fraction of the available super-novae II energy to
  * inject for a given event.
@@ -252,49 +264,51 @@ void compute_SNIa_feedback(
   const double SNIa_delay_time = feedback_props->SNIa_delay_time;
 
   /* Are we doing feedback this step? */
-  if (star_age_Gyr > SNIa_delay_time) {
+  if (star_age_Gyr < SNIa_delay_time) return;
 
-    /* Properties of the model (all in internal units) */
-    const double delta_T =
-        eagle_SNIa_feedback_temperature_change(sp, feedback_props);
-    const double N_SNe = eagle_feedback_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, feedback_props);
-    const double E_SNe = feedback_props->E_SNIa;
-    const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
+  /* Find the time that we start integrating, this is only necessary for the first step in the SNIa */
+  const double lower_bound_time = max(SNIa_delay_time, star_age_Gyr);
 
-    /* Conversion factor from T to internal energy */
-    const double conv_factor = feedback_props->temp_to_u_factor;
+  /* Properties of the model (all in internal units) */
+  const double delta_T =
+      eagle_SNIa_feedback_temperature_change(sp, feedback_props);
+  const double N_SNe = eagle_feedback_number_of_SNIa2(sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  const double E_SNe = feedback_props->E_SNIa;
+  const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
-    /* Calculate the default heating probability */
-    double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
-    message("SNIa %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
+  /* Conversion factor from T to internal energy */
+  const double conv_factor = feedback_props->temp_to_u_factor;
 
-    /* Calculate the change in internal energy of the gas particles that get
-     * heated */
-    double delta_u;
-    if (prob <= 1.) {
+  /* Calculate the default heating probability */
+  double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+  message("SNIa %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
 
-      /* Normal case */
-      delta_u = delta_T * conv_factor;
+  /* Calculate the change in internal energy of the gas particles that get
+   * heated */
+  double delta_u;
+  if (prob <= 1.) {
 
-    } else {
+    /* Normal case */
+    delta_u = delta_T * conv_factor;
 
-      /* Special case: we need to adjust the energy irrespective of the
-         desired deltaT to ensure we inject all the available energy. */
+  } else {
 
-      prob = 1.;
-      delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
-    }
+    /* Special case: we need to adjust the energy irrespective of the
+       desired deltaT to ensure we inject all the available energy. */
+
+    prob = 1.;
+    delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
       error("f_E is not in the valid range! f_E=%f sp->id=%lld", f_E, sp->id);
 #endif
 
-    /* Store all of this in the star for delivery onto the gas */
-    sp->SNIa_f_E = f_E;
-    sp->feedback_data.to_distribute.SNIa_heating_probability = prob;
-    sp->feedback_data.to_distribute.SNIa_delta_u = delta_u;
-  }
+  /* Store all of this in the star for delivery onto the gas */
+  sp->SNIa_f_E = f_E;
+  sp->feedback_data.to_distribute.SNIa_heating_probability = prob;
+  sp->feedback_data.to_distribute.SNIa_delta_u = delta_u;
 }
 
 /**
