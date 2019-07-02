@@ -257,12 +257,12 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* Energy injected
    * (thermal SNIa + kinetic energy of ejecta + kinetic energy of star) */
-  const double injected_energy =
-      si->feedback_data.to_distribute.energy * Omega_frac;
+  //const double injected_energy =
+  //    si->feedback_data.to_distribute.energy * Omega_frac;
 
   /* Apply energy conservation to recover the new thermal energy of the gas */
   const double new_thermal_energy = current_kinetic_energy_gas +
-                                    current_thermal_energy + injected_energy -
+                                    current_thermal_energy + //injected_energy -
                                     new_kinetic_energy_gas;
 
   /* Convert this to a specific thermal energy */
