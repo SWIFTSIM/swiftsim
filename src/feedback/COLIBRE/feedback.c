@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Copyright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ *               2019 Folkert Nobels (nobels@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -272,7 +273,7 @@ void compute_SNIa_feedback(
   /* Properties of the model (all in internal units) */
   const double delta_T =
       eagle_SNIa_feedback_temperature_change(sp, feedback_props);
-  const double N_SNe = eagle_feedback_number_of_SNIa2(sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  const double N_SNe = eagle_feedback_number_of_SNIa(sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
   const double E_SNe = feedback_props->E_SNIa;
   const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
