@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *****************************************************************************/
+ ******************************************************************************/
 
 /* This file's header */
 #include "feedback.h"
@@ -107,8 +107,9 @@ double eagle_feedback_number_of_SNIa2(const struct spart* sp, const double t0,
 
   /* The calculation is written as the integral between t0 and t1 of
    * eq. 3 of Schaye 2015 paper. */
+  const double tau_inv = props->SNIa_timescale_Gyr_inv;
   const double nu = props->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (t1 - t0);
+  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
 
   return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
 }
@@ -215,7 +216,6 @@ INLINE static void compute_SNII_feedback(
 
     /* Calculate the default heating probability */
     double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
-    message("SNII %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
@@ -281,7 +281,6 @@ void compute_SNIa_feedback(
 
   /* Calculate the default heating probability */
   double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
-  message("SNIa %e %e %e %e %e %e", delta_T, N_SNe, E_SNe, f_E, prob, ngb_gas_mass);
 
   /* Calculate the change in internal energy of the gas particles that get
    * heated */
@@ -299,11 +298,6 @@ void compute_SNIa_feedback(
     prob = 1.;
     delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
   }
-
-#ifdef SWIFT_DEBUG_CHECKS
-    if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
-      error("f_E is not in the valid range! f_E=%f sp->id=%lld", f_E, sp->id);
-#endif
 
   /* Store all of this in the star for delivery onto the gas */
   sp->SNIa_f_E = f_E;
@@ -488,10 +482,6 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
       num_SNIa * props->yield_SNIa_IMF_resampled[chemistry_element_Fe] *
       props->solar_mass_to_mass;
 
-  /* Compute the energy to be injected */
-  if (props->with_SNIa_feedback) {
-    sp->feedback_data.to_distribute.energy += num_SNIa * props->E_SNIa;
-  }
 }
 
 /**

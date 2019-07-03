@@ -256,13 +256,13 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const double new_kinetic_energy_gas = 0.5 * cosmo->a2_inv * new_mass * new_v2;
 
   /* Energy injected
-   * (thermal SNIa + kinetic energy of ejecta + kinetic energy of star) */
-  //const double injected_energy =
-  //    si->feedback_data.to_distribute.energy * Omega_frac;
+   * (kinetic energy of ejecta + kinetic energy of star AGB) */
+  const double injected_energy =
+      si->feedback_data.to_distribute.energy * Omega_frac;
 
   /* Apply energy conservation to recover the new thermal energy of the gas */
   const double new_thermal_energy = current_kinetic_energy_gas +
-                                    current_thermal_energy + //injected_energy -
+                                    current_thermal_energy + injected_energy -
                                     new_kinetic_energy_gas;
 
   /* Convert this to a specific thermal energy */
@@ -340,7 +340,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
       /*     "random_num %.5e du %.5e du/ini %.5e", */
       /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
-      message("We did SNIa feedback");
+      message("We did SNIa feedback %llu", ti_current);
     }
   }
 
