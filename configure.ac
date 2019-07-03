@@ -1331,6 +1331,7 @@ with_subgrid_pressure_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
+with_subgrid_SNIa_DTD=none
 
 case "$with_subgrid" in
    yes)
@@ -1347,6 +1348,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=none
 	with_subgrid_black_holes=none
 	enable_fof=no
+  with_subgrid_SNIa_DTD=none
    ;;
    EAGLE)
 	with_subgrid_cooling=EAGLE
@@ -1358,6 +1360,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
 	enable_fof=yes
+  with_subgrid_SNIa_DTD=EAGLE
    ;;
    COLIBRE)
 	with_subgrid_cooling=COLIBRE
@@ -1368,6 +1371,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=EAGLE
+  with_subgrid_SNIa_DTD=power-law
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -2003,6 +2007,50 @@ case "$with_star_formation" in
    ;;
 esac 
 
+# SNIa Delay time distribution (DTD)
+AC_ARG_WITH([SNIa-DTD], 
+    [AS_HELP_STRING([--with-SNIa-DTD=<dtd>],
+       [SNIa DTD @<:@none, EAGLE, exponential, power-law, power-law-beta-one, gaussian, constant, default: none@:>@] 
+    )],
+    [with_SNIa_DTD="$withval"],
+    [with_SNIa_DTD="none"]
+)
+if test "$with_subgrid" != "none"; then
+   if test "$with_SNIa_DTD" != "none"; then
+      AC_MSG_ERROR([Cannot provide with-subgrid and with-SNIa_DTD together])
+   else
+      with_SNIa_DTD="$with_subgrid_SNIa_DTD"
+   fi
+fi
+
+case "$with_SNIa_DTD" in
+   none)
+      AC_DEFINE([SNIA_DTD_NONE], [1], [No SNIa delay time distribution (DTD)])
+   ;;
+   EAGLE)
+      AC_DEFINE([SNIA_DTD_EXP], [1], [Exponential SNIa delay time distribution (DTD)])
+   ;;
+   exponential)
+      AC_DEFINE([SNIA_DTD_EXP], [1], [Exponential SNIa delay time distribution (DTD)])
+   ;;
+   power-law)
+      AC_DEFINE([SNIA_DTD_POWER], [1], [Power law SNIa delay time distribution (DTD)])
+   ;;
+   power-law-beta-one)
+      AC_DEFINE([SNIA_DTD_POWER_BETA1], [1], [Power law SNIa delay time distribution (DTD) with slope -1])
+   ;;
+   gaussian)
+      AC_DEFINE([SNIA_DTD_GAUSSIAN], [1], [Gaussian SNIa delay time distribution (DTD)])
+   ;;
+   constant)
+      AC_DEFINE([SNIA_DTD_CONST], [1], [Constant SNIa delay time distribution (DTD)])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown SNIa DTD function])
+   ;;
+esac
+
+
 #  Gravity multipole order
 AC_ARG_WITH([multipole-order],
    [AS_HELP_STRING([--with-multipole-order=<order>],
@@ -2118,6 +2166,7 @@ AC_MSG_RESULT([
    Star formation model : $with_star_formation
    Star feedback model  : $with_feedback
    Black holes model    : $with_black_holes
+   SNIa DTD model       : $with_SNIa_DTD
 
    Individual timers           : $enable_timers
    Task debugging              : $enable_task_debugging

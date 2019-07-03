@@ -21,6 +21,8 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
+#include "snia_dtd_struct.h"
+#include "snia_dtd.h"
 
 /**
  * @brief Stores AGB and SNII yield tables
@@ -259,6 +261,9 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
+
+  /* SNIa DTD struct with information about the DTD */
+  struct dtd dtd_data;
 };
 
 void feedback_props_init(struct feedback_props *fp,

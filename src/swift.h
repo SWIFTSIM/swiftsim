@@ -87,5 +87,7 @@
 #include "units.h"
 #include "velociraptor_interface.h"
 #include "version.h"
+#include "snia_dtd.h"
+#include "snia_dtd_struct.h"
 
 #endif /* SWIFT_SWIFT_H */

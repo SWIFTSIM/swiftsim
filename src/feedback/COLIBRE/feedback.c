@@ -20,6 +20,8 @@
 
 /* This file's header */
 #include "feedback.h"
+#include "snia_dtd.h"
+#include "snia_dtd_struct.h"
 
 /* Local includes. */
 #include "hydro_properties.h"
@@ -109,6 +111,19 @@ double eagle_feedback_number_of_SNIa2(const struct spart* sp, const double t0,
   /* The calculation is written as the integral between t0 and t1 of
    * eq. 3 of Schaye 2015 paper. */
   const double tau_inv = props->SNIa_timescale_Gyr_inv;
+  const double nu = props->SNIa_efficiency;
+  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
+
+  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
+}
+
+double eagle_feedback_number_of_SNIa3(const struct spart* sp, const double t0,
+                                      const double t1,
+                                      const struct feedback_props* props) {
+
+  /* The calculation is written as the integral between t0 and t1 of
+   * eq. 3 of Schaye 2015 paper. */
+  const double tau_inv = props->SNIa_timescale_Gyr;
   const double nu = props->SNIa_efficiency;
   const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
 
@@ -275,8 +290,9 @@ void compute_SNIa_feedback(struct spart* sp, const double star_age,
   /* Properties of the model (all in internal units) */
   const double delta_T =
       eagle_SNIa_feedback_temperature_change(sp, feedback_props);
-  const double N_SNe = eagle_feedback_number_of_SNIa(
-      sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  const double N_SNe = dtd_number_of_SNIa(sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  //eagle_feedback_number_of_SNIa(
+      //sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
   const double E_SNe = feedback_props->E_SNIa;
   const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
@@ -1205,6 +1221,8 @@ void feedback_props_init(struct feedback_props* fp,
   fp->SNIa_timescale_Gyr =
       parser_get_param_float(params, "COLIBREFeedback:SNIa_timescale_Gyr");
   fp->SNIa_timescale_Gyr_inv = 1.f / fp->SNIa_timescale_Gyr;
+  /* Load the SNIa model */
+  dtd_init(fp, phys_const, us, params);
 
   /* Energy released by supernova type Ia */
   fp->E_SNIa_cgs =
