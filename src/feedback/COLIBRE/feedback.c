@@ -81,56 +81,6 @@ double eagle_feedback_number_of_SNII(const struct spart* sp,
 }
 
 /**
- * @brief Computes the number of supernovae of type Ia exploding for a given
- * star particle between time t and t+dt
- *
- * We follow Foerster et al. 2006, MNRAS, 368
- *
- * @param sp The #spart.
- * @param t0 The initial time (in Gyr).
- * @param t1 The final time (in Gyr).
- * @param props The properties of the stellar model.
- */
-double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
-                                     const double t1,
-                                     const struct feedback_props* props) {
-
-  /* The calculation is written as the integral between t0 and t1 of
-   * eq. 3 of Schaye 2015 paper. */
-  const double tau = props->SNIa_timescale_Gyr_inv;
-  const double nu = props->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau) - exp(-t1 * tau));
-
-  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
-}
-
-double eagle_feedback_number_of_SNIa2(const struct spart* sp, const double t0,
-                                      const double t1,
-                                      const struct feedback_props* props) {
-
-  /* The calculation is written as the integral between t0 and t1 of
-   * eq. 3 of Schaye 2015 paper. */
-  const double tau_inv = props->SNIa_timescale_Gyr_inv;
-  const double nu = props->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
-
-  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
-}
-
-double eagle_feedback_number_of_SNIa3(const struct spart* sp, const double t0,
-                                      const double t1,
-                                      const struct feedback_props* props) {
-
-  /* The calculation is written as the integral between t0 and t1 of
-   * eq. 3 of Schaye 2015 paper. */
-  const double tau_inv = props->SNIa_timescale_Gyr;
-  const double nu = props->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
-
-  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
-}
-
-/**
  * @brief Computes the fraction of the available super-novae II energy to
  * inject for a given event.
  *

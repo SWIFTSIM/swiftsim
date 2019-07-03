@@ -23,6 +23,17 @@
 #include "units.h"
 #include "snia_dtd_struct.h"
 
+/**
+ * @brief Computes the number of supernovae of type Ia exploding for a given
+ * star particle between time t and t+dt
+ *
+ * This model assumes that the SNIa DTD is constant
+ *
+ * @param sp The #spart.
+ * @param t0 The initial time (in Gyr).
+ * @param t1 The final time (in Gyr).
+ * @param props The properties of the stellar model.
+ */
 static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                       const double t1,
                                       const struct feedback_props* fp) {
@@ -36,6 +47,14 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
 
+/**
+ * @brief initialize the DTD
+ *
+ * @param fp the properties of the stellar model.
+ * @param phys_const the constant
+ * @param us the unit system
+ * @param params the input parameters
+ */
 static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
