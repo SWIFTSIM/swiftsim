@@ -258,6 +258,11 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 pressure_floor/GEAR/pressure_floor_iact.h pressure_floor/none/pressure_floor_iact.h \
 		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h \
      feedback/DTD/constant/dtd.h feedback/DTD/constant/dtd_struct.h
+     feedback/DTD/none/dtd.h feedback/DTD/none/dtd_struct.h \
+     feedback/DTD/exponential/dtd.h feedback/DTD/exponential/dtd_struct.h \
+     feedback/DTD/powerlaw/dtd.h feedback/DTD/powerlaw/dtd_struct.h \
+     feedback/DTD/powerlaw1/dtd.h feedback/DTD/powerlaw1/dtd_struct.h \
+     feedback/DTD/gaussian/dtd.h feedback/DTD/gaussian/dtd_struct.h
 
 
 # Sources and flags for regular library
