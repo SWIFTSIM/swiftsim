@@ -1084,9 +1084,9 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  if (fp->with_SNIa_feedback && !fp->with_SNIa_enrichment) {
-    error("Cannot run with SNIa feedback without SNIa enrichment.");
-  }
+  //if (fp->with_SNIa_feedback && !fp->with_SNIa_enrichment) {
+  //  error("Cannot run with SNIa feedback without SNIa enrichment.");
+  //}
 
   /* Properties of the IMF model ------------------------------------------ */
 
