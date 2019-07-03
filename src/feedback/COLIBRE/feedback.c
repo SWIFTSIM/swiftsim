@@ -20,8 +20,6 @@
 
 /* This file's header */
 #include "feedback.h"
-#include "snia_dtd.h"
-#include "snia_dtd_struct.h"
 
 /* Local includes. */
 #include "hydro_properties.h"
@@ -31,6 +29,8 @@
 #include "physical_constants.h"
 #include "timers.h"
 #include "yield_tables.h"
+#include "snia_dtd.h"
+#include "snia_dtd_struct.h"
 
 /* Minimal/maximal value of the metallicity (metal mass fraction)
  * available in the Starburst99 model */
@@ -470,7 +470,7 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
   }
 
   /* Compute the number of SNIa */
-  const float num_SNIa = eagle_feedback_number_of_SNIa(
+  const float num_SNIa = dtd_number_of_SNIa(
       sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
