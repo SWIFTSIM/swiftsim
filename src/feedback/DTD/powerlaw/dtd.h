@@ -40,9 +40,9 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
 /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
-  const double tau_inv = fp->dtd_data.normalization_timescale_Gyr_inv;
-  const double nu = fp->dtd_data.SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
+  const double norm = fp->dtd_data.norm;
+  const double power = fp->dtd_data.power;
+  const double num_SNIa_per_Msun = norm * (pow(t1,1. - power) - pow(t0, 1. - power));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -60,9 +60,17 @@ static inline void dtd_init(struct feedback_props* fp, const struct phys_const* 
 
   fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:normalization_timescale_Gyr");
+  fp->dtd_data.SNIa_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
 
-  fp->dtd_data.normalization_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
+  fp->dtd_data.power = parser_get_param_double(params, "SNIaDTD:power_law_slope");
 
+  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:Normalization_timescale_Gyr");
+
+  fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
+
+  const double below_frac = pow(fp->dtd_data.normalization_timescale_Gyr,1-fp->dtd_data.power) - pow(fp->dtd_data.delay_time_Gyr,1-fp->dtd_data.power);
+ 
+  fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency * below_frac;
+  
 }
 

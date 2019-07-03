@@ -27,7 +27,7 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is constant
+ * We follow Foerster et al. 2006, MNRAS, 368
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).
@@ -35,14 +35,14 @@
  * @param props The properties of the stellar model.
  */
 static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
-                                      const double t1,
-                                      const struct feedback_props* fp) {
+                                     const double t1,
+                                     const struct feedback_props* fp) {
 
-/* The calculation is written as the integral between t0 and t1 of
-   * a constant DTD given by \nu / \tau */
-  const double tau_inv = fp->dtd_data.normalization_timescale_Gyr_inv;
-  const double nu = fp->dtd_data.SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (t1 - t0) * tau_inv;
+  /* The calculation is written as the integral between t0 and t1 of
+   * eq. 3 of Schaye 2015 paper. */
+  const double tau = fp->SNIa_timescale_Gyr_inv;
+  const double nu = fp->SNIa_efficiency;
+  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau) - exp(-t1 * tau));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -60,9 +60,9 @@ static inline void dtd_init(struct feedback_props* fp, const struct phys_const* 
 
   fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:normalization_timescale_Gyr");
+  fp->dtd_data.SNIa_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
 
-  fp->dtd_data.normalization_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
+  fp->dtd_data.SNIa_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
 
 }
 

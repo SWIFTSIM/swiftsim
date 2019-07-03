@@ -159,4 +159,6 @@ COLIBREFeedback:
 
 SNIaDTD:
   SNIa_efficiency_p_Msun: 12.955225
-  SNIa_timescale_Gyr:     13.0
+  SNIa_timescale_Gyr:     2.0
+  normalization_timescale_Gyr: 13.0 
+  

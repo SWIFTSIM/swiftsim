@@ -23,10 +23,10 @@
 struct dtd {
   
   /*! SNIa time scale */
-  double normalization_timescale_Gyr;
+  double SNIa_timescale_Gyr;
 
   /*! Inverse SNIa time scale*/
-  double normalization_timescale_Gyr_inv;
+  double SNIa_timescale_Gyr_inv;
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
