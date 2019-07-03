@@ -17,6 +17,7 @@
  *
  ******************************************************************************/
 
+#include <math.h>
 #include "physical_constants.h"
 #include "feedback_properties.h"
 #include "parser.h"
@@ -40,9 +41,12 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
 /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
-  const double norm = fp->dtd_data.norm;
-  const double power = fp->dtd_data.power;
-  const double num_SNIa_per_Msun = norm * (pow(t1,1. - power) - pow(t0, 1. - power));
+  const double norm = fp->dtd_data.norm_const;
+  const double nu_gauss = fp->dtd_data.SNIa_efficiency_gauss;
+  const double inv_std = fp->dtd_data.std_characteristic_time_Gyr_inv;
+  const double tdif0 = t0 - fp->dtd_data.characteristic_time_Gyr;
+  const double tdif1 = t1 - fp->dtd_data.characteristic_time_Gyr;
+  const double num_SNIa_per_Msun = norm * (t1 - t0) + .5 * nu_gauss * ( erf(tdif1 * inv_std) - erf(tdif0 * inv_std));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -58,19 +62,20 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
-  fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
+  fp->dtd_data.SNIa_efficiency_const = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_const_p_Msun");
 
-  fp->dtd_data.SNIa_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
-
-  fp->dtd_data.power = parser_get_param_double(params, "SNIaDTD:power_law_slope");
+  fp->dtd_data.SNIa_efficiency_gauss = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_gauss_p_Msun");
 
   fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:Normalization_timescale_Gyr");
 
   fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
-  const double below_frac = pow(fp->dtd_data.normalization_timescale_Gyr,1-fp->dtd_data.power) - pow(fp->dtd_data.delay_time_Gyr,1-fp->dtd_data.power);
- 
-  fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / below_frac;
+  fp->dtd_data.characteristic_time_Gyr = parser_get_param_double(params, "SNIaDTD:characteristic_time_Gyr"); 
+
+  fp->dtd_data.std_characteristic_time_Gyr = parser_get_param_double(params, "SNIaDTD:STD_characteristic_time_Gyr");
+
+  fp->dtd_data.std_characteristic_time_Gyr_inv = 1. / fp->dtd_data.std_characteristic_time_Gyr / sqrt(2);
   
+  fp->dtd_data.norm_const = fp->dtd_data.SNIa_efficiency_const/fp->dtd_data.normalization_timescale_Gyr;
 }
 
