@@ -149,7 +149,6 @@ struct feedback_props {
   float SNIa_f_E;
 
   float SNIa_delay_time;
-  
 
   /* ------------- AGB parameters    ---------------- */
 
@@ -260,7 +259,6 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
-
 };
 
 void feedback_props_init(struct feedback_props *fp,
