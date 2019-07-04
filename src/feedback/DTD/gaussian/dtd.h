@@ -62,20 +62,28 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
+  /* Set the SNIa efficiency for the constant part of the DTD */
   fp->dtd_data.SNIa_efficiency_const = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_const_p_Msun");
 
+  /* Set the SNIa efficiency for the Gaussian part of the DTD */
   fp->dtd_data.SNIa_efficiency_gauss = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_gauss_p_Msun");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:Normalization_timescale_Gyr");
+  /* Set the normalization time for the constant part of the DTD */
+  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:normalization_timescale_Gyr");
 
+  /* Set the delay time of the DTD */
   fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
+  /* Set the characteristic time of the Gaussian part of the DTD */
   fp->dtd_data.characteristic_time_Gyr = parser_get_param_double(params, "SNIaDTD:characteristic_time_Gyr"); 
 
+  /* Set the standard deviation of the Gaussian part of the DTD */
   fp->dtd_data.std_characteristic_time_Gyr = parser_get_param_double(params, "SNIaDTD:STD_characteristic_time_Gyr");
 
+  /* Calculate the inverse of the standard deviation of the Gaussian part divided by sqrt 2 */
   fp->dtd_data.std_characteristic_time_Gyr_inv = 1. / fp->dtd_data.std_characteristic_time_Gyr / sqrt(2);
   
+  /* Calculate the norm of the constant part of the DTD */
   fp->dtd_data.norm_const = fp->dtd_data.SNIa_efficiency_const/fp->dtd_data.normalization_timescale_Gyr;
 }
 

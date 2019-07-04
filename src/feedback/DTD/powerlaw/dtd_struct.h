@@ -22,9 +22,6 @@
  */
 struct dtd {
   
-  /*! SNIa time scale */
-  double SNIa_timescale_Gyr;
-
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
 

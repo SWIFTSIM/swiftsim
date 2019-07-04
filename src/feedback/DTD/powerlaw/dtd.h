@@ -58,16 +58,20 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
+  /* Get the SNIa efficiency */
   fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
+  /* Get the power of the power law */
   fp->dtd_data.power = parser_get_param_double(params, "SNIaDTD:power_law_slope");
 
+  /* Get the normalization time over which the DTD is normalized */
   fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:normalization_timescale_Gyr");
 
+  /* Get the delay time */
   fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
+  /* Calculate the normalization of the power-law DTD */
   const double below_frac = pow(fp->dtd_data.normalization_timescale_Gyr,1-fp->dtd_data.power) - pow(fp->dtd_data.delay_time_Gyr,1-fp->dtd_data.power);
- 
   fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / below_frac;
   
 }

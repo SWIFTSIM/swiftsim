@@ -38,7 +38,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                       const double t1,
                                       const struct feedback_props* fp) {
 
-/* The calculation is written as the integral between t0 and t1 of
+  /* The calculation is written as the integral between t0 and t1 of
    * a power law DTD given by ~\nu /t  */
   const double norm = fp->dtd_data.norm;
   const double num_SNIa_per_Msun = norm * log(t1/t0);
@@ -57,16 +57,20 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params) {
 
+  /* Get the SNIa efficiency */
   fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:Normalization_timescale_Gyr");
+  /* Get the SNIa normalization timescale */
+  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:normalization_timescale_Gyr");
 
+  /* Get the delay time of the DTD */
   fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
+  /* If the delay time is zero, exit with an error */
   if (fp->dtd_data.delay_time_Gyr == 0.) error("Delay time cannot be zero");
 
+  /* Calculate the normalization of the power law DTD with beta=1 */
   const double below_frac = log(fp->dtd_data.normalization_timescale_Gyr/fp->dtd_data.delay_time_Gyr);
- 
   fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / below_frac;
   
 }
