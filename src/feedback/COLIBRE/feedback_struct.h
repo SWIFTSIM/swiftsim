@@ -26,6 +26,16 @@
  */
 struct feedback_spart_data {
 
+  /*! Anonymous union for the cosmological non-cosmological runs distinction */
+  union {
+
+    /*! Simulation time at which the last SNIa went off */
+    double last_SNIa_time;
+
+    /*! Simulation scale factor at which the last SNIa went off */
+    double last_SNIa_scale_factor;
+  };
+
   union {
 
     /**

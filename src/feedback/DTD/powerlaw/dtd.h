@@ -60,11 +60,9 @@ static inline void dtd_init(struct feedback_props* fp, const struct phys_const* 
 
   fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
-  fp->dtd_data.SNIa_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
-
   fp->dtd_data.power = parser_get_param_double(params, "SNIaDTD:power_law_slope");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:Normalization_timescale_Gyr");
+  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_double(params, "SNIaDTD:normalization_timescale_Gyr");
 
   fp->dtd_data.delay_time_Gyr = parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
