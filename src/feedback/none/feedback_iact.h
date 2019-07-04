@@ -58,6 +58,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param xp Extra particle data
  * @param cosmo The cosmological model.
  * @param ti_current Current integer time used value for seeding random number
+ * @param time current time
  * generator
  */
 __attribute__((always_inline)) INLINE static void
@@ -67,6 +68,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   struct part *restrict pj,
                                   struct xpart *restrict xp,
                                   const struct cosmology *restrict cosmo,
-                                  const integertime_t ti_current) {}
+                                  const integertime_t ti_current,
+                                  const double time) {}
 
 #endif /* SWIFT_NONE_FEEDBACK_IACT_H */

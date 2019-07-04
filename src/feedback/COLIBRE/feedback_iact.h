@@ -87,11 +87,12 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const float hi, const float hj,
-                                  const struct spart *restrict si,
+                                  struct spart *restrict si,
                                   struct part *restrict pj,
                                   struct xpart *restrict xpj,
                                   const struct cosmology *restrict cosmo,
-                                  const integertime_t ti_current) {
+                                  const integertime_t ti_current,
+                                  const double time) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -326,22 +327,24 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     if (rand_SNIa < prob_SNIa) {
 
       /* Compute new energy of this particle */
-      // const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj,
-      // cosmo); const float delta_u_SNIa = 0.f;
-      // //si->feedback_data.to_distribute.SNIa_delta_u; const double u_new =
-      // u_init_SNIa + delta_u_SNIa;
+      const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj, cosmo); 
+      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u; 
+      const double u_new = u_init_SNIa + 0. * delta_u_SNIa;
 
       /* Inject energy into the particle */
-      // hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
-      // hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
+      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
 
       /* Impose maximal viscosity */
       // hydro_set_viscosity_alpha_max_feedback(pj);
 
-      /* message( */
-      /*     "We did some heating! id %llu star id %llu probability %.5e " */
-      /*     "random_num %.5e du %.5e du/ini %.5e", */
-      /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
+      /* Store the current SNIa time */
+      if (cosmo->critical_density >0.) {
+        si->feedback_data.last_SNIa_scale_factor = cosmo->a;
+      } else {
+        si->feedback_data.last_SNIa_time = time;
+      }
+
       message("We did SNIa feedback %llu", ti_current);
     }
   }

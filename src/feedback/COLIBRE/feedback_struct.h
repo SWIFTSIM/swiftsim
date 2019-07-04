@@ -30,10 +30,10 @@ struct feedback_spart_data {
   union {
 
     /*! Simulation time at which the last SNIa went off */
-    double last_SNIa_time;
+    float last_SNIa_time;
 
     /*! Simulation scale factor at which the last SNIa went off */
-    double last_SNIa_scale_factor;
+    float last_SNIa_scale_factor;
   };
 
   union {
