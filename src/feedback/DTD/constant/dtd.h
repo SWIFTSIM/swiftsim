@@ -17,11 +17,11 @@
  *
  ******************************************************************************/
 
-#include "physical_constants.h"
 #include "feedback_properties.h"
 #include "parser.h"
-#include "units.h"
+#include "physical_constants.h"
 #include "snia_dtd_struct.h"
+#include "units.h"
 
 /**
  * @brief Computes the number of supernovae of type Ia exploding for a given
@@ -35,10 +35,10 @@
  * @param props The properties of the stellar model.
  */
 static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
-                                      const double t1,
-                                      const struct feedback_props* fp) {
+                                        const double t1,
+                                        const struct feedback_props* fp) {
 
-/* The calculation is written as the integral between t0 and t1 of
+  /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
   const double norm = fp->dtd_data.norm;
   const double num_SNIa_per_Msun = norm * (t1 - t0);
@@ -54,14 +54,17 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
  * @param us the unit system
  * @param params the input parameters
  */
-static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+static inline void dtd_init(struct feedback_props* fp,
+                            const struct phys_const* phys_const,
+                            const struct unit_system* us,
+                            struct swift_params* params) {
 
-  fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
+  fp->dtd_data.SNIa_efficiency =
+      parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
-  fp->dtd_data.normalization_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:normalization_timescale_Gyr");
+  fp->dtd_data.normalization_timescale_Gyr =
+      parser_get_param_float(params, "SNIaDTD:normalization_timescale_Gyr");
 
-  fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / fp->dtd_data.SNIa_timescale_Gyr;
-
+  fp->dtd_data.norm =
+      fp->dtd_data.SNIa_efficiency / fp->dtd_data.SNIa_timescale_Gyr;
 }
-

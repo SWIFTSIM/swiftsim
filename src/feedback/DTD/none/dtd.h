@@ -17,11 +17,11 @@
  *
  ******************************************************************************/
 
-#include "physical_constants.h"
 #include "feedback_properties.h"
 #include "parser.h"
-#include "units.h"
+#include "physical_constants.h"
 #include "snia_dtd_struct.h"
+#include "units.h"
 
 /**
  * @brief Computes the number of supernovae of type Ia exploding for a given
@@ -35,8 +35,8 @@
  * @param fp The properties of the stellar model.
  */
 static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
-                                      const double t1,
-                                      const struct feedback_props* fp) {
+                                        const double t1,
+                                        const struct feedback_props* fp) {
 
   return 0.;
 }
@@ -49,6 +49,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
  * @param us the unit system
  * @param params the input parameters
  */
-static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {}
-
+static inline void dtd_init(struct feedback_props* fp,
+                            const struct phys_const* phys_const,
+                            const struct unit_system* us,
+                            struct swift_params* params) {}

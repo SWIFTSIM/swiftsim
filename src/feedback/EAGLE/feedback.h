@@ -24,8 +24,8 @@
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
-#include "units.h"
 #include "snia_dtd.h"
+#include "units.h"
 
 #include <strings.h>
 

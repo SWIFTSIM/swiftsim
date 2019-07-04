@@ -21,7 +21,7 @@
  * @brief SNIa struct for DTD properties
  */
 struct dtd {
-  
+
   /*! Efficiency of the SNIa model constant part */
   double SNIa_efficiency_const;
 

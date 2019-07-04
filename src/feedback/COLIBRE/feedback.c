@@ -27,10 +27,10 @@
 #include "inline.h"
 #include "interpolate.h"
 #include "physical_constants.h"
-#include "timers.h"
-#include "yield_tables.h"
 #include "snia_dtd.h"
 #include "snia_dtd_struct.h"
+#include "timers.h"
+#include "yield_tables.h"
 
 /* Minimal/maximal value of the metallicity (metal mass fraction)
  * available in the Starburst99 model */
@@ -240,9 +240,10 @@ void compute_SNIa_feedback(struct spart* sp, const double star_age,
   /* Properties of the model (all in internal units) */
   const double delta_T =
       eagle_SNIa_feedback_temperature_change(sp, feedback_props);
-  const double N_SNe = dtd_number_of_SNIa(sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
-  //eagle_feedback_number_of_SNIa(
-      //sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  const double N_SNe = dtd_number_of_SNIa(
+      sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+  // eagle_feedback_number_of_SNIa(
+  // sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
   const double E_SNe = feedback_props->E_SNIa;
   const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
@@ -420,8 +421,8 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
   }
 
   /* Compute the number of SNIa */
-  const float num_SNIa = dtd_number_of_SNIa(
-      sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+  const float num_SNIa =
+      dtd_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
   for (int i = 0; i < chemistry_element_count; i++) {

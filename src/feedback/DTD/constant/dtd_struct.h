@@ -21,7 +21,7 @@
  * @brief SNIa struct for DTD properties
  */
 struct dtd {
-  
+
   /*! SNIa time scale */
   double normalization_timescale_Gyr;
 

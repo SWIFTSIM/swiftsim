@@ -17,11 +17,11 @@
  *
  ******************************************************************************/
 
-#include "physical_constants.h"
 #include "feedback_properties.h"
 #include "parser.h"
-#include "units.h"
+#include "physical_constants.h"
 #include "snia_dtd_struct.h"
+#include "units.h"
 
 /**
  * @brief Computes the number of supernovae of type Ia exploding for a given
@@ -35,14 +35,15 @@
  * @param props The properties of the stellar model.
  */
 static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
-                                     const double t1,
-                                     const struct feedback_props* fp) {
+                                        const double t1,
+                                        const struct feedback_props* fp) {
 
   /* The calculation is written as the integral between t0 and t1 of
    * eq. 3 of Schaye 2015 paper. */
   const double tau_inv = fp->dtd_data.SNIa_timescale_Gyr_inv;
   const double nu = fp->dtd_data.SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau_inv) - exp(-t1 * tau_inv));
+  const double num_SNIa_per_Msun =
+      nu * (exp(-t0 * tau_inv) - exp(-t1 * tau_inv));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -55,17 +56,19 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
  * @param us the unit system
  * @param params the input parameters
  */
-static inline void dtd_init(struct feedback_props* fp, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+static inline void dtd_init(struct feedback_props* fp,
+                            const struct phys_const* phys_const,
+                            const struct unit_system* us,
+                            struct swift_params* params) {
 
   /* Get the SNIa efficiency */
-  fp->dtd_data.SNIa_efficiency = parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
+  fp->dtd_data.SNIa_efficiency =
+      parser_get_param_float(params, "SNIaDTD:SNIa_efficiency_p_Msun");
 
   /* Get the exponential delay time for the DTD */
-  fp->dtd_data.SNIa_timescale_Gyr = parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
+  fp->dtd_data.SNIa_timescale_Gyr =
+      parser_get_param_float(params, "SNIaDTD:SNIa_timescale_Gyr");
 
   /* Calculate the inverse of the exponential delay time */
   fp->dtd_data.SNIa_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
-
 }
-

@@ -25,10 +25,10 @@
 #include "imf.h"
 #include "inline.h"
 #include "interpolate.h"
-#include "timers.h"
-#include "yield_tables.h"
 #include "snia_dtd.h"
 #include "snia_dtd_struct.h"
+#include "timers.h"
+#include "yield_tables.h"
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
@@ -344,8 +344,8 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
   }
 
   /* Compute the number of SNIa */
-  const float num_SNIa = dtd_number_of_SNIa(
-      sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+  const float num_SNIa =
+      dtd_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
   for (int i = 0; i < chemistry_element_count; i++) {
