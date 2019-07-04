@@ -40,9 +40,9 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* The calculation is written as the integral between t0 and t1 of
    * eq. 3 of Schaye 2015 paper. */
-  const double tau = fp->SNIa_timescale_Gyr_inv;
-  const double nu = fp->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau) - exp(-t1 * tau));
+  const double tau_inv = fp->dtd_data.SNIa_timescale_Gyr_inv;
+  const double nu = fp->dtd_data.SNIa_efficiency;
+  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau_inv) - exp(-t1 * tau_inv));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
