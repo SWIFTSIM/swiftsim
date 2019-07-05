@@ -31,6 +31,7 @@ import h5py
 import numpy as np
 import glob
 import os.path
+from tqdm import tqdm
 
 # Plot parameters
 params = {'axes.labelsize': 10,
@@ -58,6 +59,7 @@ rc('font',**{'family':'sans-serif','sans-serif':['Times']})
 # Number of snapshots and elements
 newest_snap_name = max(glob.glob('stellar_evolution_*.hdf5'))#, key=os.path.getctime)
 n_snapshots = int(newest_snap_name.replace('stellar_evolution_','').replace('.hdf5','')) + 1
+print(n_snapshots)
 n_elements = 9
 
 # Read the simulation data
@@ -70,9 +72,14 @@ neighbours = sim["/HydroScheme"].attrs["Kernel target N_ngb"]
 eta = sim["/HydroScheme"].attrs["Kernel eta"]
 git = sim["Code"].attrs["Git Revision"]
 stellar_mass = sim["/PartType4/Masses"][0]
-E_SNII_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:SNII_energy_erg"])
-E_SNIa_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:SNIa_energy_erg"])
-ejecta_vel_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:AGB_ejecta_velocity_km_p_s"]) * 1e5
+try: 
+    E_SNII_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:SNII_energy_erg"])
+    E_SNIa_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:SNIa_energy_erg"])
+    ejecta_vel_cgs = double(sim["/Parameters"].attrs["EAGLEFeedback:AGB_ejecta_velocity_km_p_s"]) * 1e5
+except:
+    E_SNII_cgs = double(sim["/Parameters"].attrs["COLIBREFeedback:SNII_energy_erg"])
+    E_SNIa_cgs = double(sim["/Parameters"].attrs["COLIBREFeedback:SNIa_energy_erg"])
+    ejecta_vel_cgs = double(sim["/Parameters"].attrs["COLIBREFeedback:AGB_ejecta_velocity_km_p_s"]) * 1e5
 
 # Units
 unit_length_in_cgs = sim["/Units"].attrs["Unit length in cgs (U_L)"]
@@ -100,24 +107,24 @@ swift_mean_u_start = 0.
 t = zeros(n_snapshots)
 
 # Read data from snapshots
-for i in range(n_snapshots):
-	#print("reading snapshot "+str(i))
-	sim = h5py.File("stellar_evolution_%04d.hdf5"%i, "r")
-	t[i] = sim["/Header"].attrs["Time"][0]
+for i in tqdm(range(n_snapshots)):
+    #print("reading snapshot "+str(i))
+    sim = h5py.File("stellar_evolution_%04d.hdf5"%i, "r")
+    t[i] = sim["/Header"].attrs["Time"][0]
+    
+    masses = sim["/PartType0/Masses"][:]
+    swift_box_gas_mass[i] = np.sum(masses)
 
-	masses = sim["/PartType0/Masses"][:]
-	swift_box_gas_mass[i] = np.sum(masses)
+    Z_star = sim["/PartType4/Metallicity"][0]
+    star_masses = sim["/PartType4/Masses"][:]
+    swift_box_star_mass[i] = np.sum(star_masses)
 
-        Z_star = sim["/PartType4/MetalMassFractions"][0]
-	star_masses = sim["/PartType4/Masses"][:]
-	swift_box_star_mass[i] = np.sum(star_masses)
+    metallicities = sim["/PartType0/Metallicity"][:]
+    swift_box_gas_metal_mass[i] = np.sum(metallicities * masses)
 
-	metallicities = sim["/PartType0/MetalMassFractions"][:]
-	swift_box_gas_metal_mass[i] = np.sum(metallicities * masses)
-
-	element_abundances = sim["/PartType0/ElementMassFractions"][:][:]
-	for j in range(n_elements):
-		swift_element_mass[i,j] = np.sum(element_abundances[:,j] * masses)
+    element_abundances = sim["/PartType0/ElementAbundance"][:][:]
+    for j in range(n_elements):
+        swift_element_mass[i,j] = np.sum(element_abundances[:,j] * masses)
 
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
@@ -129,16 +136,18 @@ for i in range(n_snapshots):
         if i == 0:
                 swift_mean_u_start = np.mean(u)
         
-        sim.close()
+    sim.close()
 
+
+Z_star = 0.0001
 # Read expected yields from EAGLE. Choose which file to use based on metallicity used when
 # running SWIFT (can be specified in yml file)
 filename = "./StellarEvolutionSolution/Z_%.4f/StellarEvolutionTotal.txt"%Z_star
 
 # Read EAGLE test output
 with open(filename) as f:
-	eagle_categories = f.readline()
-	eagle_data = f.readlines()
+    eagle_categories = f.readline()
+    eagle_data = f.readlines()
 
 eagle_data = [x.strip() for x in eagle_data]
 
@@ -153,27 +162,27 @@ eagle_energy_ejecta_cgs = zeros(len(eagle_data))
 # Populate arrays with data from EAGLE test output
 i = 0
 for line in eagle_data:
-	enrich_to_date = line.split(' ')
-	eagle_time_Gyr[i] = float(enrich_to_date[0])
-	eagle_total_mass[i] = float(enrich_to_date[1]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
-	eagle_total_metal_mass[i] = float(enrich_to_date[2]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs 
-	for j in range(n_elements):
-		eagle_total_element_mass[i,j] = float(enrich_to_date[3+j]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
+    enrich_to_date = line.split(' ')
+    eagle_time_Gyr[i] = float(enrich_to_date[0])
+    eagle_total_mass[i] = float(enrich_to_date[1]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
+    eagle_total_metal_mass[i] = float(enrich_to_date[2]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs 
+    for j in range(n_elements):
+        eagle_total_element_mass[i,j] = float(enrich_to_date[3+j]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
         eagle_energy_from_mass_cgs[i] = eagle_total_mass[i] * Msun_in_cgs * swift_mean_u_start * unit_int_energy_in_cgs
         eagle_energy_ejecta_cgs[i] = 0.5 * (eagle_total_mass[i] * Msun_in_cgs) * ejecta_vel_cgs**2 
-	i += 1
+    i += 1
 
 # Read the number of SNIa
 filename = "./StellarEvolutionSolution/Z_%.4f/StellarEvolutionIa.txt"%Z_star
 with open(filename) as f:
-	eagle_categories = f.readline()
-	eagle_data = f.readlines()
+    eagle_categories = f.readline()
+    eagle_data = f.readlines()
 i = 0
 N_SNIa = zeros(len(eagle_data))
 for line in eagle_data:
-	enrich_to_date = line.split(' ')
-        N_SNIa[i] = float(enrich_to_date[-2]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
-        i += 1
+    enrich_to_date = line.split(' ')
+    N_SNIa[i] = float(enrich_to_date[-2]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
+    i += 1
 
 cumulative_N_SNIa = np.cumsum(N_SNIa)
 eagle_energy_SNIa_cgs = cumulative_N_SNIa * E_SNIa_cgs
@@ -216,8 +225,8 @@ colours = ['k','r','g','b','c','y','m','skyblue','plum']
 element_names = ['H','He','C','N','O','Ne','Mg','Si','Fe']
 subplot(223)
 for j in range(n_elements):
-	plot(t[1:] * unit_time_in_cgs / Gyr_in_cgs, (swift_element_mass[1:,j] - swift_element_mass[0,j]) * unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color=colours[j], ms=0.5, label=element_names[j])
-	plot(eagle_time_Gyr[1:],eagle_total_element_mass[:-1,j],linewidth=1,color=colours[j],linestyle='--')
+    plot(t[1:] * unit_time_in_cgs / Gyr_in_cgs, (swift_element_mass[1:,j] - swift_element_mass[0,j]) * unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color=colours[j], ms=0.5, label=element_names[j])
+    plot(eagle_time_Gyr[1:],eagle_total_element_mass[:-1,j],linewidth=1,color=colours[j],linestyle='--')
 xlabel("${\\rm{Time}} (Gyr)$", labelpad=0)
 ylabel("Change in element mass of gas particles (Msun)", labelpad=2)
 xscale("log")
@@ -232,7 +241,7 @@ xlabel("${\\rm{Time}} (Gyr)$", labelpad=0)
 ylabel("Change in total metal mass of gas particles (Msun)", labelpad=2)
 ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
-savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
+savefig("box_evolution_Z_%.4f_constant.png"%(Z_star), dpi=200)
 
 
 

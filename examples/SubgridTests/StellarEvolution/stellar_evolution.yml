@@ -119,7 +119,7 @@ COLIBREFeedback:
   use_SNIa_feedback:                1               # Global switch for SNIa thermal (continuous) feedback.
   use_AGB_enrichment:               0               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              0               # Global switch for enrichement from SNII stars.
-  use_SNIa_enrichment:              0               # Global switch for enrichement from SNIa stars.
+  use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -161,7 +161,7 @@ SNIaDTD:
   SNIa_efficiency_p_Msun: 12.955225
   SNIa_timescale_Gyr:     2.0
   normalization_timescale_Gyr: 13.0 
-  power_law_slope:        1.5
+  power_law_slope:        0.5
   SNIa_delay_time_Gyr:    0.04
   SNIa_efficiency_const_p_Msun: 0.0  
   SNIa_efficiency_gauss_p_Msun: 12.955225
