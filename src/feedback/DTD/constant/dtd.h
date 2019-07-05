@@ -66,5 +66,5 @@ static inline void dtd_init(struct feedback_props* fp,
       parser_get_param_float(params, "SNIaDTD:normalization_timescale_Gyr");
 
   fp->dtd_data.norm =
-      fp->dtd_data.SNIa_efficiency / fp->dtd_data.SNIa_timescale_Gyr;
+      fp->dtd_data.SNIa_efficiency / fp->dtd_data.normalization_timescale_Gyr;
 }
