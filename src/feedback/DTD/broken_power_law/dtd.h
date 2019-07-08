@@ -44,7 +44,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* Check if we are in the long time regime */
   if (t0 > tb) {
-    const double norm = fp->dtd_data.norm_short;
+    const double norm = fp->dtd_data.norm_long;
     const double power = fp->dtd_data.power_long_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
@@ -53,7 +53,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* Check if we are in the short time regime */
   if (t1 < tb) {
-    const double norm = fp->dtd_data.norm_long;
+    const double norm = fp->dtd_data.norm_short;
     const double power = fp->dtd_data.power_short_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
