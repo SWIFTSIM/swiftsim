@@ -40,11 +40,11 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
-  const double norm = fp->dtd_data.norm;
   const double tb = fp->dtd_data.break_time_Gyr;
 
   /* Check if we are in the long time regime */
   if (t0 > tb) {
+    const double norm = fp->dtd_data.norm_short;
     const double power = fp->dtd_data.power_long_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
@@ -53,6 +53,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* Check if we are in the short time regime */
   if (t1 < tb) {
+    const double norm = fp->dtd_data.norm_long;
     const double power = fp->dtd_data.power_short_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
@@ -62,9 +63,11 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
   /* Now we are in the intermediate regime that requires more calculations */
   const double power_short = fp->dtd_data.power_short_time;
   const double power_long = fp->dtd_data.power_long_time;
+  const double norm_short = fp->dtd_data.norm_short;
+  const double norm_long = fp->dtd_data.norm_long;
   
   const double num_SNIa_per_Msun =
-      norm * (pow(tb, 1. - power_short) - pow(t0, 1. - power_short) + pow(tb, 1. - power_long) - pow(t1, 1. - power_long));
+      norm_short * (pow(tb, 1. - power_short) - pow(t0, 1. - power_short)) + norm_long * (pow(tb, 1. - power_long) - pow(t1, 1. - power_long));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -111,5 +114,6 @@ static inline void dtd_init(struct feedback_props* fp,
   const double norm2_inv = 1./(1. - fp->dtd_data.power_long_time) * ( pow(fp->dtd_data.normalization_timescale_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_long_time) - 1.);
 
   /* Store the normalization */
-  fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv);
+  fp->dtd_data.norm_short = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv) * 1./(1. - fp->dtd_data.power_short_time);
+  fp->dtd_data.norm_long = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv) * 1./(1. - fp->dtd_data.power_long_time);
 }

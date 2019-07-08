@@ -40,6 +40,9 @@ struct dtd {
   /*! Delay time */
   double delay_time_Gyr;
 
-  /*! DTD normalization */
-  double norm;
+  /*! DTD normalization short time */
+  double norm_short;
+
+  /*! DTD normalization long time */
+  double norm_long;
 };
