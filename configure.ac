@@ -2010,7 +2010,7 @@ esac
 # SNIa Delay time distribution (DTD)
 AC_ARG_WITH([SNIa-DTD], 
     [AS_HELP_STRING([--with-SNIa-DTD=<dtd>],
-       [SNIa DTD @<:@none, EAGLE, exponential, power-law, power-law-beta-one, gaussian, constant, default: none@:>@] 
+       [SNIa DTD @<:@none, EAGLE, exponential, power-law, power-law-beta-one, gaussian, constant, broken-power-law, default: none@:>@] 
     )],
     [with_SNIa_DTD="$withval"],
     [with_SNIa_DTD="none"]
@@ -2044,6 +2044,9 @@ case "$with_SNIa_DTD" in
    ;;
    constant)
       AC_DEFINE([SNIA_DTD_CONST], [1], [Constant SNIa delay time distribution (DTD)])
+   ;;
+   broken-power-law)
+      AC_DEFINE([SNIA_DTD_BROKEN_POWER_LAW], [1], [Broken power law SNIa delay time distribution (DTD)])
    ;;
    *)
       AC_MSG_ERROR([Unknown SNIa DTD function])

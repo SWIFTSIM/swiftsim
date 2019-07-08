@@ -33,13 +33,15 @@
 #elif defined(SNIA_DTD_EXP)
 #include "./feedback/DTD/exponential/dtd.h"
 #elif defined(SNIA_DTD_POWER)
-#include "./feedback/DTD/powerlaw/dtd.h"
+#include "./feedback/DTD/power_law/dtd.h"
 #elif defined(SNIA_DTD_POWER_BETA1)
-#include "./feedback/DTD/powerlaw1/dtd.h"
+#include "./feedback/DTD/power_law1/dtd.h"
 #elif defined(SNIA_DTD_GAUSSIAN)
 #include "./feedback/DTD/gaussian/dtd.h"
 #elif defined(SNIA_DTD_CONST)
 #include "./feedback/DTD/constant/dtd.h"
+#elif defined(SNIA_DTD_BROKEN_POWER_LAW)
+#include "./feedback/DTD/broken_power_law/dtd.h"
 #else
 #error "Invalid choice of star formation law"
 #endif
