@@ -85,14 +85,11 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * generator
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
-                                  const float hi, const float hj,
-                                  struct spart *restrict si,
-                                  struct part *restrict pj,
-                                  struct xpart *restrict xpj,
-                                  const struct cosmology *restrict cosmo,
-                                  const integertime_t ti_current,
-                                  const double time) {
+runner_iact_nonsym_feedback_apply(
+    const float r2, const float *dx, const float hi, const float hj,
+    struct spart *restrict si, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const integertime_t ti_current, const double time) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -327,8 +324,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     if (rand_SNIa < prob_SNIa) {
 
       /* Compute new energy of this particle */
-      const double u_init_SNIa = hydro_get_physical_internal_energy(pj, xpj, cosmo); 
-      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u; 
+      const double u_init_SNIa =
+          hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
       const double u_new = u_init_SNIa + 0. * delta_u_SNIa;
 
       /* Inject energy into the particle */
@@ -339,7 +337,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       // hydro_set_viscosity_alpha_max_feedback(pj);
 
       /* Store the current SNIa time */
-      if (cosmo->critical_density >0.) {
+      if (cosmo->critical_density > 0.) {
         si->feedback_data.last_SNIa_scale_factor = cosmo->a;
       } else {
         si->feedback_data.last_SNIa_time = time;

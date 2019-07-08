@@ -48,7 +48,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
     const double power = fp->dtd_data.power_long_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
-    return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass; 
+    return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
   }
 
   /* Check if we are in the short time regime */
@@ -57,7 +57,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
     const double power = fp->dtd_data.power_short_time;
     const double num_SNIa_per_Msun =
         norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
-    return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass; 
+    return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
   }
 
   /* Now we are in the intermediate regime that requires more calculations */
@@ -65,9 +65,10 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
   const double power_long = fp->dtd_data.power_long_time;
   const double norm_short = fp->dtd_data.norm_short;
   const double norm_long = fp->dtd_data.norm_long;
-  
+
   const double num_SNIa_per_Msun =
-      norm_short * (pow(tb, 1. - power_short) - pow(t0, 1. - power_short)) + norm_long * (pow(tb, 1. - power_long) - pow(t1, 1. - power_long));
+      norm_short * (pow(tb, 1. - power_short) - pow(t0, 1. - power_short)) +
+      norm_long * (pow(tb, 1. - power_long) - pow(t1, 1. - power_long));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -106,14 +107,25 @@ static inline void dtd_init(struct feedback_props* fp,
       parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
   /* Get the break time */
-  fp->dtd_data.break_time_Gyr = 
+  fp->dtd_data.break_time_Gyr =
       parser_get_param_double(params, "SNIaDTD:break_time_Gyr");
 
   /* Calculate the normalization of the power-law DTD */
-  const double norm1_inv = 1./(1. - fp->dtd_data.power_short_time) * (1. - pow(fp->dtd_data.delay_time_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_short_time));
-  const double norm2_inv = 1./(1. - fp->dtd_data.power_long_time) * ( pow(fp->dtd_data.normalization_timescale_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_long_time) - 1.);
+  const double norm1_inv =
+      1. / (1. - fp->dtd_data.power_short_time) *
+      (1. - pow(fp->dtd_data.delay_time_Gyr / fp->dtd_data.break_time_Gyr,
+                1. - fp->dtd_data.power_short_time));
+  const double norm2_inv = 1. / (1. - fp->dtd_data.power_long_time) *
+                           (pow(fp->dtd_data.normalization_timescale_Gyr /
+                                    fp->dtd_data.break_time_Gyr,
+                                1. - fp->dtd_data.power_long_time) -
+                            1.);
 
   /* Store the normalization */
-  fp->dtd_data.norm_short = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv) * 1./(1. - fp->dtd_data.power_short_time);
-  fp->dtd_data.norm_long = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv) * 1./(1. - fp->dtd_data.power_long_time);
+  fp->dtd_data.norm_short = fp->dtd_data.SNIa_efficiency /
+                            (norm1_inv + norm2_inv) * 1. /
+                            (1. - fp->dtd_data.power_short_time);
+  fp->dtd_data.norm_long = fp->dtd_data.SNIa_efficiency /
+                           (norm1_inv + norm2_inv) * 1. /
+                           (1. - fp->dtd_data.power_long_time);
 }
