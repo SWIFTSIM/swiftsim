@@ -27,7 +27,7 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is constant
+ * This model assumes that the SNIa DTD is constant.
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).

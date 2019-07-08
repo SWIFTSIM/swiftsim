@@ -28,7 +28,10 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is constant
+ * This model assumes that the SNIa DTD is a Gaussian following for 
+ * example Dahlen et al. 2004, ApJ, 613, 189.
+ * There is the option of using a constant besided the Gaussian this is following
+ * the approach adopted by the Fire 2 simulations (Hopkins et al. 2018, 480, 800)
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).

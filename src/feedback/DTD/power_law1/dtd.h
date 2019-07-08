@@ -27,7 +27,11 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is a power law with \beta = 1
+ * This model assumes that the SNIa DTD is a power law with \beta = 1, 
+ * this model is a special case of the power law model because the 
+ * integrals have a different functional form than the general power
+ * law. A lot of observations seem to be close to a power law like this,
+ * see Moaz & Mannucci (2012), PASA, 29, 447 for a review
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).

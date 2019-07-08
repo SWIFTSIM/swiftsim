@@ -27,7 +27,9 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is constant
+ * This model assumes that the SNIa DTD is given by a power law, this is
+ * a common DTD model, Moaz & Mannucci (2012), PASA, 29, 447 gives an 
+ * overview of the different variables found in the literature
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).

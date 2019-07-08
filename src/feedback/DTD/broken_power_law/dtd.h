@@ -27,7 +27,11 @@
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is constant
+ * This model assumes that the SNIa DTD is a broken power law. This shape 
+ * is common in theoretical models of the DTD in the double degenerate (DD) 
+ * scenario, in which the SNIa DTD has a shallow slope below a break time
+ * and a deeper slope after a break time. For a review see Moaz & Mannucci
+ * (2012), PASA, 29, 447
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).
