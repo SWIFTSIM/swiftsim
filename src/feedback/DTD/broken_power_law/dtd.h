@@ -104,7 +104,7 @@ static inline void dtd_init(struct feedback_props* fp,
 
   /* Get the break time */
   fp->dtd_data.break_time_Gyr = 
-      parser_get_param_double(params, "SNIaDTD:break_time");
+      parser_get_param_double(params, "SNIaDTD:break_time_Gyr");
 
   /* Calculate the normalization of the power-law DTD */
   const double norm1_inv = 1./(1. - fp->dtd_data.power_short_time) * (1. - pow(fp->dtd_data.delay_time_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_short_time));
