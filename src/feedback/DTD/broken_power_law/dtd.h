@@ -108,7 +108,7 @@ static inline void dtd_init(struct feedback_props* fp,
 
   /* Calculate the normalization of the power-law DTD */
   const double norm1_inv = 1./(1. - fp->dtd_data.power_short_time) * (1. - pow(fp->dtd_data.delay_time_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_short_time));
-  const double norm2_inv = 1./(1. - fp->dtd_data.power_long_time) * ( pow(fp->dtd_data.normalization_timescale_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_long_time));
+  const double norm2_inv = 1./(1. - fp->dtd_data.power_long_time) * ( pow(fp->dtd_data.normalization_timescale_Gyr/fp->dtd_data.break_time_Gyr, 1. - fp->dtd_data.power_long_time) - 1.);
 
   /* Store the normalization */
   fp->dtd_data.norm = fp->dtd_data.SNIa_efficiency / (norm1_inv + norm2_inv);

@@ -167,5 +167,8 @@ SNIaDTD:
   SNIa_efficiency_gauss_p_Msun: 12.955225
   characteristic_time_Gyr:      4.0
   STD_characteristic_time_Gyr:  1.0
+  power_law_slope_short_time:   0.5
+  power_law_slope_long_time:    1.1
+  break_time_Gyr:               0.5
   
   
