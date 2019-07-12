@@ -205,16 +205,17 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "SmoothingLengths", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, parts, h,
       "Co-moving smoothing lengths (FWHM of the kernel) of the particles");
 
-  list[4] = io_make_output_field_convert_part("InternalEnergy", FLOAT, 1,
-                                              UNIT_CONV_ENERGY_PER_UNIT_MASS,
-                                              parts, xparts, convert_u);
+  list[4] = io_make_output_field_convert_part(
+      "InternalEnergy", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS,
+      3.f * hydro_gamma_minus_one, parts, xparts, convert_u,
+      "Co-moving thermal energies per unit mass of the particles");
 
   list[5] =
       io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
                            parts, id, "Unique IDs of the particles");
 
   list[6] = io_make_output_field("Densities", FLOAT, 1, UNIT_CONV_DENSITY, -3.f,
-                                 parts, rho,
+                                 parts, primitives.rho,
                                  "Co-moving mass densities of the particles");
 
   list[7] = io_make_output_field_convert_part(
@@ -222,15 +223,15 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "Co-moving entropies of the particles");
 
   list[8] = io_make_output_field("Pressure", FLOAT, 1, UNIT_CONV_PRESSURE,
-                                 3.f * hydro_gamma, parts, P,
+                                 3.f * hydro_gamma, parts, primitives.P,
                                  "Co-moving pressures of the particles");
 
   list[9] = io_make_output_field_convert_part(
-      "TotalEnergies", FLOAT, 1, UNIT_CONV_ENERGY, parts, xparts, convert_Etot,
-      "Total (co-moving) energy of the particles");
+      "TotalEnergies", FLOAT, 1, UNIT_CONV_ENERGY, 3.f * hydro_gamma_minus_one,
+      parts, xparts, convert_Etot, "Total (co-moving) energy of the particles");
 
   list[10] = io_make_output_field_convert_part(
-      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, parts, xparts,
+      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, parts, xparts,
       convert_part_potential, "Gravitational potentials of the particles");
 }
 

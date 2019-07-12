@@ -188,7 +188,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
 
   list[7] = io_make_output_field_convert_part(
       "InternalEnergies", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS,
-      3. * hydro_gamma_minus_one, parts, u, convert_part_u,
+      3. * hydro_gamma_minus_one, parts, xparts, convert_u,
       "Co-moving thermal energies per unit mass of the particles");
 
   list[8] = io_make_output_field_convert_part(
@@ -196,11 +196,11 @@ INLINE static void hydro_write_particles(const struct part* parts,
       xparts, convert_P, "Co-moving smoothed pressures of the particles");
 
   list[9] = io_make_output_field(
-      "WeightedDensity", FLOAT, 1, UNIT_CONV_DENSITY, parts, -3.f, rho_bar,
+      "WeightedDensity", FLOAT, 1, UNIT_CONV_DENSITY, -3.f, parts, rho_bar,
       "Co-moving pressure-weighted densities of the particles");
 
   list[10] = io_make_output_field_convert_part(
-      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, parts, xparts,
+      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, parts, xparts,
       convert_part_potential, "Gravitational potentials of the particles");
 }
 

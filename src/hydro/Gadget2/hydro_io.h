@@ -187,7 +187,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
 
   list[7] = io_make_output_field_convert_part(
       "InternalEnergies", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS,
-      3. * hydro_gamma_minus_one, parts, u, convert_part_u,
+      3. * hydro_gamma_minus_one, parts, xparts, convert_part_u,
       "Co-moving thermal energies per unit mass of the particles");
 
   list[8] = io_make_output_field_convert_part(
@@ -195,12 +195,13 @@ INLINE static void hydro_write_particles(const struct part* parts,
       xparts, convert_P, "Co-moving pressures of the particles");
 
   list[9] = io_make_output_field_convert_part(
-      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, parts, xparts,
-      convert_part_potential, "Gravitational potentials of the particles");
+      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, parts, xparts,
+      convert_part_potential,
+      "Co-moving gravitational potential at position of the particles");
 
   /* TODO: Add this to the other schemes too. */
   list[10] = io_make_output_field_convert_part(
-      "GroupIDs", INT, 1, UNIT_CONV_NO_UNITS, parts, xparts,
+      "GroupIDs", INT, 1, UNIT_CONV_NO_UNITS, 0.f, parts, xparts,
       convert_part_group_id,
       "Internal 3D Friends-of-Friends group identifier.");
 
