@@ -403,7 +403,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
       fabsf(fac_mu * r_inv * dvdr_Hubble);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      v_diff * (pi->u - pj->u) * (wi_dr / rho_i + wj_dr / rho_j);
+      v_diff * (pi->u - pj->u) * (wi_dr / rhoi + wj_dr / rhoj);
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -525,7 +525,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
       fabsf(fac_mu * r_inv * dvdr_Hubble);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      v_diff * (pi->u - pj->u) * (wi_dr / rho_i + wj_dr / rho_j);
+      v_diff * (pi->u - pj->u) * (wi_dr / rhoi + wj_dr / rhoj);
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
