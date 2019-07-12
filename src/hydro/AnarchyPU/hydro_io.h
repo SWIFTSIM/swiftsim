@@ -204,7 +204,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
       xparts, convert_S, "Co-moving entropies per unit mass of the particles");
 
   list[9] = io_make_output_field_convert_part(
-      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, parts, xparts,
+      "Potential", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, parts, xparts,
       convert_part_potential, "Gravitational potentials of the particles");
 
   list[10] = io_make_output_field_convert_part(
@@ -212,7 +212,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
       convert_viscosity, "Visosity coefficient (alpha_visc) of the particles");
 
   list[11] = io_make_output_field_convert_part(
-      "Diffusion", FLOAT, 1, UNIT_CONV_NO_UNITS, parts, 0.f, xparts,
+      "Diffusion", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,  xparts,
       convert_diffusion, "Diffusion coefficient (alpha_diff) of the particles");
 }
 
