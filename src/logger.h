@@ -169,16 +169,14 @@ INLINE static void logger_part_data_init(struct logger_part_data *logger) {
 /**
  * @brief Should this particle write its data now ?
  *
- * @param logger_data The #logger_part_data of a particle.
- * @param log The #logger.
- *
- * @return 1 if the particule should be writen, 0 otherwise.
+ * @param xp The #xpart.
+ * @param delta_step Number of step between two outputs.
+ * @return 1 if the #part should write, 0 otherwise.
  */
 __attribute__((always_inline)) INLINE static int logger_should_write(
-    const struct logger_part_data *logger_data,
-    const struct logger_writer *log) {
+    const struct logger_part_data *logger_data, const int delta_step) {
 
-  return (logger_data->steps_since_last_output > log->delta_step);
+  return (logger_data->steps_since_last_output > delta_step);
 }
 
 #endif /* WITH_LOGGER */

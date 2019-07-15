@@ -183,21 +183,36 @@ void writeIndexArray(const struct engine* e, FILE *f,
  */
 void logger_write_index_file(struct logger *log, struct engine* e) {
 
-  const size_t Ngas = e->s->nr_parts;
-  const size_t Nstars = e->s->nr_sparts;
-  const size_t Ntot = e->s->nr_gparts;
-
   struct part* parts = e->s->parts;
   struct xpart* xparts = e->s->xparts;
-  // struct gpart* gparts = e->s->gparts;
-  // struct gpart* dmparts = NULL;
+  struct gpart* gparts = e->s->gparts;
   // struct spart* sparts = e->s->sparts;
   static int outputCount = 0;
 
-  /* Number of unassociated gparts */
-  const size_t Ndm = Ntot > 0 ? Ntot - (Ngas + Nstars) : 0;
+  /* Number of particles currently in the arrays */
+  const size_t Ntot = e->s->nr_gparts;
+  const size_t Ngas = e->s->nr_parts;
+  /* const size_t Nstars = e->s->nr_sparts; */
+  /* const size_t Nblackholes = e->s->nr_bparts; */
 
-  long long N_total[swift_type_count] = {Ngas, Ndm, 0, 0, Nstars, 0};
+  /* Number of particles that we will write */
+  const size_t Ntot_written =
+      e->s->nr_gparts - e->s->nr_inhibited_gparts - e->s->nr_extra_gparts;
+  const size_t Ngas_written =
+      e->s->nr_parts - e->s->nr_inhibited_parts - e->s->nr_extra_parts;
+  const size_t Nstars_written =
+      e->s->nr_sparts - e->s->nr_inhibited_sparts - e->s->nr_extra_sparts;
+  const size_t Nblackholes_written =
+      e->s->nr_bparts - e->s->nr_inhibited_bparts - e->s->nr_extra_bparts;
+  const size_t Nbaryons_written =
+      Ngas_written + Nstars_written + Nblackholes_written;
+  const size_t Ndm_written =
+      Ntot_written > 0 ? Ntot_written - Nbaryons_written : 0;
+
+  /* Format things in a Gadget-friendly array */
+  long long N_total[swift_type_count] = {
+      (long long)Ngas_written,   (long long)Ndm_written,        0, 0,
+      (long long)Nstars_written, (long long)Nblackholes_written};
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
@@ -228,27 +243,82 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
 
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
-    size_t N = 0;
-
-    /* Number of properties (the code cannot deal with more than two props
-       per particle type) */
-    const size_t n_props = 2;
-    struct io_props list[n_props];
 
     /* Don't do anything if no particle of this kind */
     if (N_total[ptype] == 0) continue;
+
+    /* Number of properties (the code cannot deal with more than two props
+       per particle type) */
+    size_t N = 0;
+    int num_fields = 0;
+    struct io_props list[2];
+
+    struct part* parts_written = NULL;
+    struct xpart* xparts_written = NULL;
+    struct gpart* gparts_written = NULL;
+    struct velociraptor_gpart_data* gpart_group_data_written = NULL;
+    struct spart* sparts_written = NULL;
+    struct bpart* bparts_written = NULL;
 
     /* Write particle fields from the particle structure */
     switch (ptype) {
 
       case swift_type_gas:
-	N = Ngas;
-        hydro_write_index(parts, xparts, list);
-        break;
+        if (Ngas == Ngas_written) {
+
+          /* No inhibted particles: easy case */
+          N = Ngas;
+          num_fields += hydro_write_index(parts, xparts, list);
+
+        } else {
+
+          /* Ok, we need to fish out the particles we want */
+          N = Ngas_written;
+
+          /* Allocate temporary arrays */
+          if (swift_memalign("parts_written", (void**)&parts_written,
+                             part_align,
+                             Ngas_written * sizeof(struct part)) != 0)
+            error("Error while allocating temporary memory for parts");
+          if (swift_memalign("xparts_written", (void**)&xparts_written,
+                             xpart_align,
+                             Ngas_written * sizeof(struct xpart)) != 0)
+            error("Error while allocating temporary memory for xparts");
+
+          /* Collect the particles we want to write */
+          io_collect_parts_to_write(parts, xparts, parts_written,
+                                    xparts_written, Ngas, Ngas_written);
+
+          /* Select the fields to write */
+          num_fields += hydro_write_index(parts, xparts, list);
+        } break;
 
       case swift_type_dark_matter:
-        error("TODO");
-        break;
+        if (Ntot == Ndm_written) {
+
+          /* This is a DM-only run without inhibited particles */
+          N = Ntot;
+          num_fields += darkmatter_write_index(gparts, list);
+        } else {
+
+          /* Ok, we need to fish out the particles we want */
+          N = Ndm_written;
+
+          /* Allocate temporary array */
+          if (swift_memalign("gparts_written", (void**)&gparts_written,
+                             gpart_align,
+                             Ndm_written * sizeof(struct gpart)) != 0)
+            error("Error while allocating temporary memory for gparts");
+
+          /* Collect the non-inhibited DM particles from gpart */
+	  const int with_stf = 0;
+          io_collect_gparts_to_write(gparts, e->s->gpart_group_data,
+                                     gparts_written, gpart_group_data_written,
+                                     Ntot, Ndm_written, with_stf);
+
+          /* Select the fields to write */
+          num_fields += darkmatter_write_index(gparts, list);
+	} break;
 
       case swift_type_stars:
         error("TODO");
@@ -258,9 +328,21 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
-    /* Write ids */
-    writeIndexArray(e, f, list, n_props, N);
+    if (num_fields != 2) {
+      error("The code expects only two fields per particle type for the logger");
+    }
 
+    /* Write ids */
+    writeIndexArray(e, f, list, num_fields, N);
+
+    /* Free temporary arrays */
+    if (parts_written) swift_free("parts_written", parts_written);
+    if (xparts_written) swift_free("xparts_written", xparts_written);
+    if (gparts_written) swift_free("gparts_written", gparts_written);
+    if (gpart_group_data_written)
+      swift_free("gpart_group_written", gpart_group_data_written);
+    if (sparts_written) swift_free("sparts_written", sparts_written);
+    if (bparts_written) swift_free("bparts_written", bparts_written);
   }
 
   /* Close file */

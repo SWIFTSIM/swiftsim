@@ -178,7 +178,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
 
   /* some constants. */
   const struct space *s = e->s;
-  const unsigned int mask =
+  const unsigned int mask_hydro =
       logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
       logger_mask_data[logger_a].mask | logger_mask_data[logger_u].mask |
       logger_mask_data[logger_h].mask | logger_mask_data[logger_rho].mask |
@@ -186,16 +186,29 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
 
   /* loop over all parts. */
   for (long long i = 0; i < e->total_nr_parts; i++) {
-    logger_log_part(log, &s->parts[i], mask,
+    logger_log_part(log, &s->parts[i], mask_hydro,
                     &s->xparts[i].logger_data.last_offset);
     s->xparts[i].logger_data.steps_since_last_output = 0;
   }
 
-  /* loop over all gparts. */
-  if (e->total_nr_gparts > 0) error("Not implemented");
+  const unsigned int mask_grav =
+    logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
+    logger_mask_data[logger_a].mask | logger_mask_data[logger_consts].mask;
 
-  /* loop over all sparts. */
+  /* loop over all gparts */
+  for (long long i = 0; i < e->total_nr_gparts; i++) {
+    /* Log only the dark matter */
+    if (s->gparts[i].type != swift_type_dark_matter)
+      continue;
+
+    logger_log_gpart(log, &s->gparts[i], mask_grav,
+		     &s->gparts[i].logger_data.last_offset);
+  }
+
   // TODO
+  if (e->total_nr_sparts > 0) error("Not implemented");
+
+  if (e->total_nr_bparts > 0) error("Not implemented");
 }
 
 /**
@@ -390,18 +403,24 @@ void logger_log_timestamp(struct logger_writer *log, integertime_t timestamp,
 void logger_ensure_size(struct logger_writer *log, size_t total_nr_parts,
                         size_t total_nr_gparts, size_t total_nr_sparts) {
 
-  /* count part memory. */
-  size_t limit = log->max_chunk_size;
+  /* count part memory */
+  size_t limit = 0;
 
-  limit *= total_nr_parts;
+  /* count part memory */
+  limit += total_nr_parts;
 
   /* count gpart memory. */
   if (total_nr_gparts > 0) error("Not implemented");
+  /* count gpart memory */
+  limit += total_nr_gparts;
 
   /* count spart memory. */
   if (total_nr_sparts > 0) error("Not implemented");
 
-  /* ensure enough space in dump. */
+  // TODO improve estimate with the size of each particle
+  limit *= log->max_chunk_size;
+
+  /* ensure enough space in dump */
   dump_ensure(&log->dump, limit, log->buffer_scale * limit);
 }
 

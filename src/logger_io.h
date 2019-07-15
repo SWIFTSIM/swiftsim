@@ -40,11 +40,11 @@ void logger_write_description(struct logger *log, struct engine* e);
  * @param parts The particle array.
  * @param xparts The extra particle array.
  * @param N number of particles.
- * @param f File to use.
+ * @param list (out) The parameters to write.
  *
  * In this version, we only want the ids and the offset.
  */
-__attribute__((always_inline)) INLINE static void hydro_write_index(
+__attribute__((always_inline)) INLINE static int hydro_write_index(
     const struct part* parts, const struct xpart* xparts,
     struct io_props *list) {
 
@@ -53,7 +53,32 @@ __attribute__((always_inline)) INLINE static void hydro_write_index(
                                 UNIT_CONV_NO_UNITS, parts, id);
   list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
 				 xparts, logger_data.last_offset);
+
+  return 2;
 }
+
+
+/**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param gparts The gparticle array.
+ * @param N number of particles.
+ * @param list (out) The parameters to write.
+ *
+ * In this version, we only want the ids and the offset.
+ */
+__attribute__((always_inline)) INLINE static int darkmatter_write_index(
+    const struct gpart* gparts, struct io_props *list) {
+
+  /* List what we want to write */
+  list[0] = io_make_output_field("ParticleIDs", ULONGLONG, 1,
+                                UNIT_CONV_NO_UNITS, gparts, id_or_neg_offset);
+  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
+				 gparts, logger_data.last_offset);
+
+  return 2;
+}
+
 #endif
 
 #endif /* SWIFT_LOGGER_IO_H */
