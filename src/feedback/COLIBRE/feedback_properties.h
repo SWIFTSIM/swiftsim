@@ -21,7 +21,7 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
-#include "snia_dtd_struct.h"
+#include "DTD_struct.h"
 
 /**
  * @brief Stores AGB and SNII yield tables

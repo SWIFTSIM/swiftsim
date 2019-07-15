@@ -27,8 +27,6 @@
 #include "inline.h"
 #include "interpolate.h"
 #include "physical_constants.h"
-#include "snia_dtd.h"
-#include "snia_dtd_struct.h"
 #include "timers.h"
 #include "yield_tables.h"
 

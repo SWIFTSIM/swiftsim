@@ -74,8 +74,6 @@
 #include "scheduler.h"
 #include "serial_io.h"
 #include "single_io.h"
-#include "snia_dtd.h"
-#include "snia_dtd_struct.h"
 #include "space.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
