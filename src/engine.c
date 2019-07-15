@@ -3911,7 +3911,8 @@ void engine_check_for_dumps(struct engine *e) {
     output_none,
     output_snapshot,
     output_statistics,
-    output_stf
+    output_stf,
+    output_index,
   };
 
   /* What kind of output do we want? And at which time ?
@@ -3932,7 +3933,11 @@ void engine_check_for_dumps(struct engine *e) {
   if (e->ti_end_min > e->ti_next_snapshot && e->ti_next_snapshot > 0) {
     if (e->ti_next_snapshot < ti_output) {
       ti_output = e->ti_next_snapshot;
+#ifdef WITH_LOGGER
+      type = output_index;
+#else
       type = output_snapshot;
+#endif
     }
   }
 
@@ -3963,8 +3968,10 @@ void engine_check_for_dumps(struct engine *e) {
       e->time = ti_output * e->time_base + e->time_begin;
     }
 
-    /* Drift everyone */
-    engine_drift_all(e, /*drift_mpole=*/0);
+    /* Drift everyone (but not for the index file) */
+    if (type != output_index) {
+      engine_drift_all(e, /*drift_mpole=*/0);
+    }
 
     /* Write some form of output */
     switch (type) {
