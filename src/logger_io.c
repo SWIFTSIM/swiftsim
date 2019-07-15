@@ -24,11 +24,40 @@
 #if defined(WITH_LOGGER) && defined(HAVE_HDF5) && !defined(WITH_MPI)
 
 /* Some standard headers. */
+#include <hdf5.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "common_io.h"
+
+/* define a few functions for the yaml file */
+#define hid_t FILE *
+#define io_write_attribute_s(file, params, value) {            \
+    fprintf(file, "    %s: %s\n", params, value);              \
+  }
+#define io_write_attribute_d(file, params, value) {            \
+    fprintf(file, "    %s: %g\n", params, value);              \
+  }
+#define io_write_attribute_f(file, params, value) {            \
+    fprintf(file, "    %s: %g\n", params, value);              \
+  }
+#define io_write_attribute_i(file, params, value) {            \
+    fprintf(file, "    %s: %i\n", params, value);              \
+  }
+#define io_write_attribute_l(file, params, value) {            \
+    fprintf(file, "    %s: %li\n", params, value);             \
+  }
+
+#define io_write_attribute(file, params, type, value, dim) {	       \
+    fprintf(file, "    %s: [", params);                                \
+    for(int i = 0; i < dim-1; i++) {				       \
+      fprintf(file, type ", ", value[i]);			       \
+    }								       \
+    fprintf(file, type "]\n", value[dim-1]);			       \
+  }
 
 /* This object's header. */
 #include "logger_io.h"
@@ -55,6 +84,7 @@
 #include "units.h"
 #include "version.h"
 #include "xmf.h"
+
 
 
 /**
@@ -104,11 +134,12 @@ void writeIndexArray(const struct engine* e, FILE *f,
   if (n_props != 2)
     error("Not implemented: The index file can only write two props.");
   
-  const size_t typeSize = io_sizeof_type(props[0].type) +
-    io_sizeof_type(props[1].type);
-
   if (props[0].dimension != 1 || props[1].dimension != 1)
     error("Not implemented: cannot use multidimensional data");
+
+  /* Get a few variables */
+  const size_t typeSize = io_sizeof_type(props[0].type) +
+    io_sizeof_type(props[1].type);
 
   const size_t num_elements = N;
 
@@ -248,17 +279,17 @@ void logger_io_write_unit_system(FILE *file, const struct unit_system* us,
 				 const char* groupName) {
 
   fprintf(file, "%s:\n", groupName);
-
+  
   io_write_attribute_d(file, "Unit mass in cgs (U_M)",
-                       units_get_base_unit(us, UNIT_MASS));
+		    units_get_base_unit(us, UNIT_MASS));
   io_write_attribute_d(file, "Unit length in cgs (U_L)",
-                       units_get_base_unit(us, UNIT_LENGTH));
+		    units_get_base_unit(us, UNIT_LENGTH));
   io_write_attribute_d(file, "Unit time in cgs (U_t)",
-                       units_get_base_unit(us, UNIT_TIME));
+		    units_get_base_unit(us, UNIT_TIME));
   io_write_attribute_d(file, "Unit current in cgs (U_I)",
-                       units_get_base_unit(us, UNIT_CURRENT));
+		    units_get_base_unit(us, UNIT_CURRENT));
   io_write_attribute_d(file, "Unit temperature in cgs (U_T)",
-                       units_get_base_unit(us, UNIT_TEMPERATURE));
+		    units_get_base_unit(us, UNIT_TEMPERATURE));
 
   fprintf(file, "\n");
 }
@@ -280,7 +311,7 @@ void logger_io_write_code_description(FILE *file) {
   io_write_attribute_s(file, "Git Revision", git_revision());
   io_write_attribute_s(file, "Git Date", git_date());
   io_write_attribute_s(file, "Configuration options",
-                       configuration_options());
+                    configuration_options());
   io_write_attribute_s(file, "CFLAGS", compilation_cflags());
   io_write_attribute_s(file, "HDF5 library version", hdf5_version());
   io_write_attribute_s(file, "Thread barriers", thread_barrier_version());
@@ -368,16 +399,15 @@ void logger_hydro_props_print_snapshot(FILE *file, const struct hydro_props *p) 
                        p->hydrogen_mass_fraction);
   io_write_attribute_f(file, "Hydrogen ionization transition temperature",
                        p->hydrogen_ionization_temperature);
-  io_write_attribute_f(file, "Alpha viscosity", p->viscosity.alpha);
-  io_write_attribute_f(file, "Alpha viscosity (max)",
-                       p->viscosity.alpha_max);
-  io_write_attribute_f(file, "Alpha viscosity (min)",
-                       p->viscosity.alpha_min);
-  io_write_attribute_f(file, "Viscosity decay length [internal units]",
-                       p->viscosity.length);
-  io_write_attribute_f(file, "Beta viscosity", const_viscosity_beta);
   io_write_attribute_f(file, "Max v_sig ratio (limiter)",
                        const_limiter_max_v_sig_ratio);
+
+  /* Write out the implementation-dependent viscosity parameters
+   * (see hydro/SCHEME/hydro_parameters.h for this implementation) */
+  viscosity_print_snapshot(file, &(p->viscosity));
+
+  /* Same for the diffusion */
+  diffusion_print_snapshot(file, &(p->diffusion));
 
 }
 
@@ -391,21 +421,21 @@ void logger_gravity_props_print_snapshot(FILE *file,
 
   io_write_attribute_f(file, "Time integration eta", p->eta);
   io_write_attribute_s(file, "Softening style",
-                       kernel_gravity_softening_name);
+                    kernel_gravity_softening_name);
   io_write_attribute_f(
-      file, "Comoving softening length [internal units]",
-      p->epsilon_comoving * kernel_gravity_softening_plummer_equivalent);
+   file, "Comoving softening length [internal units]",
+   p->epsilon_comoving * kernel_gravity_softening_plummer_equivalent);
   io_write_attribute_f(
-      file,
-      "Comoving Softening length (Plummer equivalent)  [internal units]",
-      p->epsilon_comoving);
+   file,
+   "Comoving Softening length (Plummer equivalent)  [internal units]",
+   p->epsilon_comoving);
   io_write_attribute_f(
-      file, "Maximal physical softening length  [internal units]",
-      p->epsilon_max_physical * kernel_gravity_softening_plummer_equivalent);
+   file, "Maximal physical softening length  [internal units]",
+   p->epsilon_max_physical * kernel_gravity_softening_plummer_equivalent);
   io_write_attribute_f(file,
-                       "Maximal physical softening length (Plummer equivalent) "
-                       " [internal units]",
-                       p->epsilon_max_physical);
+                    "Maximal physical softening length (Plummer equivalent) "
+                    " [internal units]",
+                    p->epsilon_max_physical);
   io_write_attribute_f(file, "Opening angle", p->theta_crit);
   io_write_attribute_s(file, "Scheme", GRAVITY_IMPLEMENTATION);
   io_write_attribute_i(file, "MM order", SELF_GRAVITY_MULTIPOLE_ORDER);
@@ -413,9 +443,9 @@ void logger_gravity_props_print_snapshot(FILE *file,
   io_write_attribute_f(file, "Mesh r_cut_max ratio", p->r_cut_max_ratio);
   io_write_attribute_f(file, "Mesh r_cut_min ratio", p->r_cut_min_ratio);
   io_write_attribute_f(file, "Tree update frequency",
-                       p->rebuild_frequency);
+                    p->rebuild_frequency);
   io_write_attribute_s(file, "Mesh truncation function",
-                       kernel_long_gravity_truncation_name);
+                    kernel_long_gravity_truncation_name);
 }
 
 
@@ -431,8 +461,6 @@ void logger_cosmology_write_model(FILE *file, const struct cosmology *c) {
   io_write_attribute_d(file, "time_beg [internal units]", c->time_begin);
   io_write_attribute_d(file, "time_end [internal units]", c->time_end);
   io_write_attribute_d(file, "Universe age [internal units]", c->time);
-  io_write_attribute_d(file, "Lookback time [internal units]",
-                       c->lookback_time);
   io_write_attribute_d(file, "h", c->h);
   io_write_attribute_d(file, "H0 [internal units]", c->H0);
   io_write_attribute_d(file, "H [internal units]", c->H);
@@ -445,10 +473,8 @@ void logger_cosmology_write_model(FILE *file, const struct cosmology *c) {
   io_write_attribute_d(file, "w_0", c->w_0);
   io_write_attribute_d(file, "w_a", c->w_a);
   io_write_attribute_d(file, "w", c->w);
-  io_write_attribute_d(file, "Redshift", c->z);
-  io_write_attribute_d(file, "Scale-factor", c->a);
   io_write_attribute_d(file, "Critical density [internal units]",
-                       c->critical_density);
+		    c->critical_density);
 }
 
 
@@ -494,11 +520,8 @@ void logger_write_description(struct logger *log, struct engine* e) {
   }
 
   /* Convert basic output information to snapshot units */
-  const double factor_time =
-      units_conversion_factor(internal_units, snapshot_units, UNIT_CONV_TIME);
   const double factor_length =
     units_conversion_factor(internal_units, snapshot_units, UNIT_CONV_LENGTH);
-  const double dblTime = e->time * factor_time;
   const double dim[3] = {e->s->dim[0] * factor_length,
                          e->s->dim[1] * factor_length,
                          e->s->dim[2] * factor_length};
@@ -506,11 +529,8 @@ void logger_write_description(struct logger *log, struct engine* e) {
   /* Print the relevant information and print status */
   fprintf(f, "Header:\n");
   io_write_attribute(f, "BoxSize", "%g", dim, 3);
-  io_write_attribute_d(f, "Time", dblTime);
   const int dimension = (int)hydro_dimension;
   io_write_attribute_i(f, "Dimension", dimension);
-  io_write_attribute_d(f, "Redshift", e->cosmology->z);
-  io_write_attribute_d(f, "Scale-factor", e->cosmology->a);
   io_write_attribute_s(f, "Code", "SWIFT");
   time_t tm = time(NULL);
   io_write_attribute_s(f, "Snapshot date", ctime(&tm));
@@ -520,7 +540,7 @@ void logger_write_description(struct logger *log, struct engine* e) {
   unsigned int flagEntropy[swift_type_count] = {0};
   flagEntropy[0] = writeEntropyFlag();
   io_write_attribute(f, "Flag_Entropy_ICs", "%u", flagEntropy,
-                     swift_type_count);
+		  swift_type_count);
 
   fprintf(f, "\n");
 

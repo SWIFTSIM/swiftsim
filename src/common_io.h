@@ -103,7 +103,6 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
                          const struct io_props props, size_t N,
                          const struct unit_system* internal_units,
                          const struct unit_system* snapshot_units);
-void io_copy_mapper(void* restrict temp, int N, void* restrict extra_data);
 
 #endif /* defined HDF5 */
 
