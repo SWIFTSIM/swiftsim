@@ -42,7 +42,7 @@ static const double colibre_feedback_momentum_SB99_Z_max = 0.04;
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_SNII_feedback_temperature_change(
+INLINE static double eagle_SNII_feedback_temperature_change(
     const struct spart* sp, const struct feedback_props* props) {
 
   /* In the EAGLE REF model, the change of temperature is constant */
@@ -56,7 +56,7 @@ double eagle_SNII_feedback_temperature_change(
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_SNIa_feedback_temperature_change(
+INLINE static double eagle_SNIa_feedback_temperature_change(
     const struct spart* sp, const struct feedback_props* props) {
 
   /* In the EAGLE REF model, the change of temperature is constant */
@@ -70,7 +70,7 @@ double eagle_SNIa_feedback_temperature_change(
  * @param sp The #spart.
  * @param props The properties of the stellar model.
  */
-double eagle_feedback_number_of_SNII(const struct spart* sp,
+INLINE static double eagle_feedback_number_of_SNII(const struct spart* sp,
                                      const struct feedback_props* props) {
 
   /* Note: For a Chabrier 2003 IMF and SNII going off between 6 and 100
@@ -89,7 +89,7 @@ double eagle_feedback_number_of_SNII(const struct spart* sp,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
+INLINE static double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
                                            const struct feedback_props* props) {
 
   /* Model parameters */
@@ -124,7 +124,7 @@ double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_SNIa_feedback_energy_fraction(const struct spart* sp,
+INLINE static double eagle_SNIa_feedback_energy_fraction(const struct spart* sp,
                                            const struct feedback_props* props) {
 
   /* Model parameters */
@@ -220,28 +220,16 @@ INLINE static void compute_SNII_feedback(
  * @param ngb_gas_mass Total un-weighted mass in the star's kernel.
  * @param feedback_props The properties of the feedback model.
  */
-void compute_SNIa_feedback(struct spart* sp, const double star_age,
+INLINE static void compute_SNIa_feedback(struct spart* sp, const double star_age,
                            const double dt, const float ngb_gas_mass,
                            const struct feedback_props* feedback_props,
                            const double dt_Gyr, const double star_age_Gyr) {
-
-  /* Time after birth considered for SNII feedback (internal units) */
-  const double SNIa_delay_time = feedback_props->SNIa_delay_time;
-
-  /* Are we doing feedback this step? */
-  if ((star_age_Gyr + dt_Gyr) < SNIa_delay_time) return;
-
-  /* Find the time that we start integrating, this is only necessary for the
-   * first step in the SNIa */
-  const double lower_bound_time = max(SNIa_delay_time, star_age_Gyr);
 
   /* Properties of the model (all in internal units) */
   const double delta_T =
       eagle_SNIa_feedback_temperature_change(sp, feedback_props);
   const double N_SNe = dtd_number_of_SNIa(
-      sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
-  // eagle_feedback_number_of_SNIa(
-  // sp, lower_bound_time, star_age_Gyr + dt_Gyr, feedback_props);
+      sp, star_age_Gyr, star_age_Gyr + dt_Gyr, feedback_props);
   const double E_SNe = feedback_props->E_SNIa;
   const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
@@ -1134,9 +1122,6 @@ void feedback_props_init(struct feedback_props* fp,
   fp->SNIa_f_E =
       parser_get_param_double(params, "COLIBREFeedback:SNIa_energy_fraction");
 
-  fp->SNIa_delay_time =
-      parser_get_param_double(params, "COLIBREFeedback:SNIa_delay_time_Gyr");
-
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
     error("Can't have the maximal energy fraction smaller than the minimal!");
@@ -1160,12 +1145,6 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:SNIa_max_mass_Msun");
   fp->log10_SNIa_max_mass_msun = log10(SNIa_max_mass_msun);
 
-  /* Read SNIa timescale model parameters */
-  fp->SNIa_efficiency =
-      parser_get_param_float(params, "COLIBREFeedback:SNIa_efficiency_p_Msun");
-  fp->SNIa_timescale_Gyr =
-      parser_get_param_float(params, "COLIBREFeedback:SNIa_timescale_Gyr");
-  fp->SNIa_timescale_Gyr_inv = 1.f / fp->SNIa_timescale_Gyr;
   /* Load the SNIa model */
   dtd_init(fp, phys_const, us, params);
 

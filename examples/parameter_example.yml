@@ -416,10 +416,10 @@ EAGLEFeedback:
   SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
   SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
-  SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
-  SNIa_timescale_Gyr:              2.0              # Time-scale of the exponential decay of the SNIa rates in Gyr.
-  SNIa_efficiency_p_Msun:          0.002            # Normalisation of the SNIa rates in inverse solar masses.
-  SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
+  SNIa_max_mass_Msun:               8.0             # Maximal mass considered for SNIa feedback and enrichment in solar masses.
+  SNIa_energy_erg:                  1.0e51          # Energy of one SNIa explosion in ergs.
+  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
+  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
