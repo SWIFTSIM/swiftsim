@@ -492,4 +492,18 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
-  
+
+# The SNIa DTD properties in the COLIBRE feedback
+SNIaDTD:
+  SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  SNIa_timescale_Gyr:           2.0         # Exponential delay time for exponential DTD 
+  normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
+  power_law_slope:              1.1         # Power law slope for the power law DTD 
+  SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
+  SNIa_efficiency_const_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
+  SNIa_efficiency_gauss_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
+  characteristic_time_Gyr:      4.0         # Center of the Gaussian DTD 
+  STD_characteristic_time_Gyr:  2.0         # Standard deviation of the Gaussian DTD part
+  power_law_slope_short_time:   0.5         # Power law slope at short times of broken power law 
+  power_law_slope_long_time:    1.1         # Power law slope at long times of a broken power law 
+  break_time_Gyr:               0.4         # Break time of the broken power law DTD.

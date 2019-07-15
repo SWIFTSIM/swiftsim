@@ -1331,7 +1331,7 @@ with_subgrid_pressure_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
-with_subgrid_SNIa_DTD=none
+with_subgrid_SNIa_DTD=power-law-beta-one
 
 case "$with_subgrid" in
    yes)
@@ -1348,7 +1348,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=none
 	with_subgrid_black_holes=none
 	enable_fof=no
-  with_subgrid_SNIa_DTD=none
+  with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
    EAGLE)
 	with_subgrid_cooling=EAGLE
@@ -1371,7 +1371,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=EAGLE
-  with_subgrid_SNIa_DTD=power-law
+  with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
@@ -2010,13 +2010,13 @@ esac
 # SNIa Delay time distribution (DTD)
 AC_ARG_WITH([SNIa-DTD], 
     [AS_HELP_STRING([--with-SNIa-DTD=<dtd>],
-       [SNIa DTD @<:@none, EAGLE, exponential, power-law, power-law-beta-one, gaussian, constant, broken-power-law, default: none@:>@] 
+       [SNIa DTD @<:@power-law-beta-one, EAGLE, exponential, power-law, gaussian, constant, broken-power-law, default: power-law-beta-one@:>@] 
     )],
     [with_SNIa_DTD="$withval"],
-    [with_SNIa_DTD="none"]
+    [with_SNIa_DTD="power-law-beta-one"]
 )
 if test "$with_subgrid" != "none"; then
-   if test "$with_SNIa_DTD" != "none"; then
+   if test "$with_SNIa_DTD" != "power-law-beta-one"; then
       AC_MSG_ERROR([Cannot provide with-subgrid and with-SNIa_DTD together])
    else
       with_SNIa_DTD="$with_subgrid_SNIa_DTD"
@@ -2024,9 +2024,6 @@ if test "$with_subgrid" != "none"; then
 fi
 
 case "$with_SNIa_DTD" in
-   none)
-      AC_DEFINE([SNIA_DTD_NONE], [1], [No SNIa delay time distribution (DTD)])
-   ;;
    EAGLE)
       AC_DEFINE([SNIA_DTD_EXP], [1], [Exponential SNIa delay time distribution (DTD)])
    ;;

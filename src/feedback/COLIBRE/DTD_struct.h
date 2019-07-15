@@ -43,6 +43,9 @@ struct dtd {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
+  
+  /*! Delay time */
+  double delay_time_Gyr;
 };
 
 #elif defined(SNIA_DTD_POWER)
@@ -135,6 +138,9 @@ struct dtd {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
+  
+  /*! Delay time */
+  double delay_time_Gyr;
 };
 
 #elif defined(SNIA_DTD_BROKEN_POWER_LAW)

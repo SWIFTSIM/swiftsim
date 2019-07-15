@@ -51,12 +51,18 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * eq. 3 of Schaye 2015 paper. */
   const double tau_inv = fp->dtd_data.SNIa_timescale_Gyr_inv;
   const double nu = fp->dtd_data.SNIa_efficiency;
   const double num_SNIa_per_Msun =
-      nu * (exp(-t0 * tau_inv) - exp(-t1 * tau_inv));
+      nu * (exp(-tmin * tau_inv) - exp(-t1 * tau_inv));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -84,6 +90,13 @@ static inline void dtd_init(struct feedback_props* fp,
 
   /* Calculate the inverse of the exponential delay time */
   fp->dtd_data.SNIa_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
+  
+  /* Set the delay time of the DTD */
+  fp->dtd_data.delay_time_Gyr =
+      parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
+
+  /* Properly normalize the exponential DTD */
+  fp->dtd_data.SNIa_efficiency *= exp(-fp->dtd_data.delay_time_Gyr * fp->dtd_data.SNIa_timescale_Gyr_inv);
 }
 
 #elif defined(SNIA_DTD_POWER)
@@ -105,12 +118,18 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
   const double norm = fp->dtd_data.norm;
   const double power = fp->dtd_data.power;
   const double num_SNIa_per_Msun =
-      norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
+      norm * (pow(t1, 1. - power) - pow(tmin, 1. - power));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -172,10 +191,16 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * a power law DTD given by ~\nu /t  */
   const double norm = fp->dtd_data.norm;
-  const double num_SNIa_per_Msun = norm * log(t1 / t0);
+  const double num_SNIa_per_Msun = norm * log(t1 / tmin);
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -236,12 +261,18 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
   const double norm = fp->dtd_data.norm_const;
   const double nu_gauss = fp->dtd_data.SNIa_efficiency_gauss;
   const double inv_std = fp->dtd_data.std_characteristic_time_Gyr_inv;
-  const double tdif0 = t0 - fp->dtd_data.characteristic_time_Gyr;
+  const double tdif0 = tmin - fp->dtd_data.characteristic_time_Gyr;
   const double tdif1 = t1 - fp->dtd_data.characteristic_time_Gyr;
   const double num_SNIa_per_Msun =
       norm * (t1 - t0) +
@@ -314,10 +345,16 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
   const double norm = fp->dtd_data.norm;
-  const double num_SNIa_per_Msun = norm * (t1 - t0);
+  const double num_SNIa_per_Msun = norm * (t1 - tmin);
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -343,6 +380,10 @@ static inline void dtd_init(struct feedback_props* fp,
 
   fp->dtd_data.norm =
       fp->dtd_data.SNIa_efficiency / fp->dtd_data.normalization_timescale_Gyr;
+      
+  /* Set the delay time of the DTD */
+  fp->dtd_data.delay_time_Gyr =
+      parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 }
 
 #elif defined(SNIA_DTD_BROKEN_POWER_LAW)
@@ -366,6 +407,12 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
                                         const double t1,
                                         const struct feedback_props* fp) {
 
+  /* Return zero if below delay time */
+  if (t1 < fp->dtd_data.delay_time_Gyr) return 0;
+
+  /* Start from the correct time */
+  const double tmin = max(t0, fp->dtd_data.delay_time_Gyr);
+
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
   const double tb = fp->dtd_data.break_time_Gyr;
@@ -384,7 +431,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
     const double norm = fp->dtd_data.norm_short;
     const double power = fp->dtd_data.power_short_time;
     const double num_SNIa_per_Msun =
-        norm * (pow(t1, 1. - power) - pow(t0, 1. - power));
+        norm * (pow(t1, 1. - power) - pow(tmin, 1. - power));
     return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
   }
 
@@ -395,7 +442,7 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
   const double norm_long = fp->dtd_data.norm_long;
 
   const double num_SNIa_per_Msun =
-      norm_short * (pow(tb, 1. - power_short) - pow(t0, 1. - power_short)) +
+      norm_short * (pow(tb, 1. - power_short) - pow(tmin, 1. - power_short)) +
       norm_long * (pow(tb, 1. - power_long) - pow(t1, 1. - power_long));
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
