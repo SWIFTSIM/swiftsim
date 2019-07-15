@@ -40,7 +40,7 @@ star forming a list of optional paramters that can be set are given by:
 |                                       | | temerpature than this to be         | | variables sets it   |
 |                                       | | starforming.                        | | equal to infinity   |
 +---------------------------------------+---------------------------------------+-----------------------+
-| | ``EOS_temperature_margin_dex``       | | Off set in dex from the equation of | | Not specifying the  |
+| | ``EOS_temperature_margin_dex``      | | Off set in dex from the equation of | | Not specifying the  |
 |                                       | | state for gas to form stars         | | variable sets it    |
 |                                       |                                       | | equal to 10.        | 
 +---------------------------------------+---------------------------------------+-----------------------+ 
@@ -85,3 +85,126 @@ And code with only a temperature threshold will look like:
 
 In the future new additional star formation criteria will be added to this 
 routine.
+
+
+.. _COLIBRE_delay_time_distributions:
+
+SNIa Delay Time Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the COLIBRE feedback there are several different DTDs implemented:
+
+* The exponential DTD: used in the EAGLE simulations: 
+  :math:`\frac{\nu}{\tau}~ \exp(-\frac{t_{init}}{\tau}) \exp(-\frac{t}{\tau})`
+* A general power law: :math:`\nu ~\text{norm}~ t^{-\beta}`
+* A power law with :math:`\beta=1`, :math:`\nu~ \text{norm}~ t^{-1}` 
+* A constant plus Gaussian DTD, :math:`\frac{\nu_1}{t_{norm}} +
+  \nu_2 ~ \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left(-\frac{(t-t_{center})^2}{sigma^2}\right)`
+* A constant DTD, :math:`\frac{\nu}{t_{norm}}`
+* A broken power law DTD: :math:`\nu~ \text{norm}~ (t/t_b)^{-p}`, in which 
+  :math:`p=p_{short}` for :math:`t<t_b` and :math:`p=p_{long}` for 
+  :math:`t>t_b`.
+
+A summary of the different DTDs is shown below which shows the 
+free parameters in the model. 
+
++-----------------------+------------------------------------------------+
+| Name                  | free parameters                                | 
++-----------------------+------------------------------------------------+
+| | EAGLE or exponential| | SNIa_delay_time_Gyr, SNIa_efficiency_p_Msun, |
+|                       | | SNIa_timescale_Gyr                           |
++-----------------------+------------------------------------------------+
+| | power-law           | | SNIa_delay_time_Gyr, SNIa_efficiency_p_Msun, |
+|                       | | normalization_timescale_Gyr, power_law_slope |
++-----------------------+------------------------------------------------+
+| | power-law-beta-one  | | SNIa_delay_time_Gyr, SNIa_efficiency_p_Msun, |
+|                       | | normalization_timescale_Gyr                  |
++-----------------------+------------------------------------------------+
+| | gaussian            | | SNIa_delay_time_Gyr,                         |
+|                       | | SNIa_efficiency_const_p_Msun,                |
+|                       | | SNIa_efficiency_gauss_p_Msun,                |
+|                       | | normalization_timescale_Gyr,                 |
+|                       | | characteristic_time_Gyr,                     |
+|                       | | STD_characteristic_time_Gyr                  |
++-----------------------+------------------------------------------------+
+| | constant            | | SNIa_delay_time_Gyr, SNIa_efficiency_p_Msun, |
+|                       | | normalization_timescale_Gyr                  |
++-----------------------+------------------------------------------------+
+| | broken-power-law    | | SNIa_delay_time_Gyr, SNIa_efficiency_p_Msun, |
+|                       | | power_law_slope_short_time,                  |
+|                       | | power_law_slope_long_time,                   |
+|                       | | break_time_Gyr, normalization_timescale_Gyr  |
++-----------------------+------------------------------------------------+
+
+Example of how to run the code with the different DTDs:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this part we show how to run with different DTDs in the COLIBRE 
+subgrid model. The code by default runs with a power law with slope 
+:math:`\beta=1`, the parameter file for the DTD in this case looks like:
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_efficiency_p_Msun:       0.001
+      SNIa_delay_time_Gyr:          0.04
+      normalization_timescale_Gyr:  13.6
+
+Running the code with the exponential DTD is also possible as:
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_efficiency_p_Msun:       0.001
+      SNIa_delay_time_Gyr:          0.04
+      SNIa_timescale_Gyr:           2.0
+
+Running the code with the general power law (:math:`\beta \neq 1`):
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_efficiency_p_Msun:       0.001
+      SNIa_delay_time_Gyr:          0.04
+      power_law_slope:              1.1
+      normalization_timescale_Gyr:  13.6
+
+Running the code with the constant + gaussian model:
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_delay_time_Gyr:          0.04
+      normalization_timescale_Gyr:  13.6
+      SNIa_efficiency_const_p_Msun: 0.001
+      SNIa_efficiency_gauss_p_Msun: 0.001
+      characteristic_time_Gyr:      4.0
+      STD_characteristic_time_Gyr:  2.0
+    
+Running the code with the constant model:
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_efficiency_p_Msun:       0.001
+      SNIa_delay_time_Gyr:          0.04
+      normalization_timescale_Gyr:  13.6
+
+Running the code with the broken power law:
+
+.. code:: YAML
+      
+    #DTD parameters
+    SNIaDTD:
+      SNIa_efficiency_p_Msun:       0.001
+      SNIa_delay_time_Gyr:          0.04
+      normalization_timescale_Gyr:  13.6
+      power_law_slope_short_time:   0.5
+      power_law_slope_long_time:    1.1
+      break_time_Gyr:               0.4
+
