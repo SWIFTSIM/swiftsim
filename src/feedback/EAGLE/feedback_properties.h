@@ -21,7 +21,6 @@
 
 #include "chemistry.h"
 #include "hydro_properties.h"
-#include "snia_dtd_struct.h"
 
 /**
  * @brief Stores AGB and SNII yield tables
@@ -233,9 +232,6 @@ struct feedback_props {
   /*! Slope of the metallicity dependance of the feedback energy fraction model
    */
   double n_Z;
-
-  /* SNia DTD */
-  struct dtd dtd_data;
 };
 
 void feedback_props_init(struct feedback_props *fp,
