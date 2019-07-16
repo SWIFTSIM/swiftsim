@@ -10,6 +10,7 @@ then
 fi
 
 # Run SWIFT
-../../swift --hydro --external-gravity  --threads=1 rayleigh_taylor.yml 2>&1 | tee output.log
+rm rayleigh_taylor_*
+../../swift --hydro --external-gravity  --threads=8 rayleigh_taylor.yml 2>&1 | tee output.log
 
-python makeMovie.py
+# python makeMovie.py

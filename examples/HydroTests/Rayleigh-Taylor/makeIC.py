@@ -20,39 +20,52 @@
 import h5py
 import numpy as np
 from scipy.optimize import bisect
+from scipy.integrate import quad
 
-# Generates a swift IC file for the Rayleigh-Taylor vortex in a periodic box
-# following the conditions given in Hopkins 2013
+# Generates a swift IC file for the Rayleigh-Taylor instability in a periodic
+# box following the conditions given in Abel 2010
 
 # Parameters
-N = [50, 100]  # Particles along one edge
-gamma = 5./3.  # Gas adiabatic index
-delta = 0.025  # interface size
-dv = 0.025  # velocity perturbation
-rho1 = 1    # Lower region density
-rho2 = 2    # Upper region density
-P0 = 0      # integration constant of the hydrostatic equation
+N = [100, 200]  # Particles along one edge
+gamma = 7./5.  # Gas adiabatic index
+delta = 0.1  # interface size
+dv = 0.1    # velocity perturbation
+rho1 = 2    # Upper region density
+rho2 = 1    # Lower region density
 g = -0.5    # gravitational acceleration
 box_size = [0.5, 1.]  # size of the box
+
+fixed = [0.1, 0.9]  # y-range of non fixed particles
+perturbation_box = [0.3, 0.7]  # y-range for the velocity perturbation
 fileOutputName = "rayleigh_taylor.hdf5"
+
+
+# ---------------------------------------------------
+
+if (N[0] / box_size[0] != N[1] / box_size[1]):
+    raise Exception("Suppose the same ratio for each directions")
 
 
 def density(y):
     """
     Mass density as function of the position y.
     """
-    tmp = 1 + np.exp(-(y - 0.5 * box_size[1]) / delta)
-    return rho1 + (rho2 - rho1) / tmp
+    tmp = 1 + np.exp(-2.*(y - 0.5 * box_size[1]) / delta)
+    return rho2 + (rho1 - rho2) / tmp
 
 
 def mass(y):
     """
-    Integrated Mass in x and y.
+    Integral of the density
     """
-    tmp = np.log(np.exp(y / delta) + np.exp(box_size[1] * 0.5 / delta))
-    tmp -= 0.5 * box_size[1] / delta
-    m = box_size[0] * (rho1 * y + (rho2 - rho1) * delta * tmp)
-    return m
+    return box_size[0] * quad(density, 0, y)[0]
+
+
+P0 = rho1 / gamma  # integration constant of the hydrostatic equation
+numPart = N[0] * N[1]
+
+m_tot = mass(box_size[1])
+m_part = m_tot / numPart
 
 
 def inv_mass(m):
@@ -73,99 +86,133 @@ def pressure(y):
     Pressure as function of the position y.
     Here we assume hydrostatic equation.
     """
-    tmp = np.log(np.exp(y / delta) + np.exp(box_size[1] * 0.5 / delta))
-    tmp -= 0.5 * box_size[1] / delta
-    tmp *= g * (rho2 - rho1) * delta
-    return P0 - rho1 * g * y + tmp
+    return P0 + g * density(y) * (y - 0.5 * box_size[1])
 
 
-# ---------------------------------------------------
-
-if (box_size[0] / N[0] != box_size[1] / N[1]):
-    raise Exception(
-        "Assuming the same number of particle per unit of distance")
-
-
-# Start by generating grids of particles
-numPart = N[0] * N[1]
-
-m_tot = mass(box_size[1])
-m_part = m_tot / numPart
-
-coords = np.zeros((numPart, 3))
-h = np.ones(numPart) * 1.2348 * box_size[0] / N[0]
-m = np.ones(numPart) * m_part
-u = np.zeros(numPart)
-vel = np.zeros((numPart, 3))
+def smoothing_length(y, m):
+    """
+    Compute the smoothing length
+    """
+    return 1.23 * np.sqrt(m / density(y))
 
 
-# generate grid of particles
-y_prev = 0
-# loop over y
-for j in range(N[1]):
-    m_y = m_part * N[0] + mass(y_prev)
-    if m_y > m_tot:
-        y_j = box_size[1] - 1e-5 * (box_size[1] - y_prev)
-    else:
-        y_j = inv_mass(m_y)
-    y_prev = y_j
+def growth_rate():
+    """
+    Compute the growth rate of the instability.
+    Assumes a wavelength equal to the boxsize.
+    """
+    ymin = 0
+    ymax = box_size[1]
+    A = density(ymax) - density(ymin)
+    A /= density(ymax) + density(ymin)
+    return np.sqrt(A * np.abs(g) * ymax / (2. * np.pi))
 
-    # loop over x
-    for i in range(N[0]):
 
-        index = j * N[0] + i
+def vy(x, y):
+    """
+    Velocity along the direction y
+    """
+    ind = y < perturbation_box[1]
+    ind = np.logical_and(ind, y > perturbation_box[0])
 
-        x = i * box_size[0] / float(N[0])
+    v = np.zeros(len(x))
 
-        coords[index, 0] = x
-        coords[index, 1] = y_j
-        u[index] = pressure(y_j) / (rho1 * (gamma-1.))
+    v[ind] = (1 + np.cos(8 * np.pi * (x[ind] + 0.5 * box_size[0])))
+    v[ind] *= (1 + np.cos(5 * np.pi * (y[ind] - 0.5 * box_size[1])))
+    v[ind] *= 0.25 * dv
+    return v
 
-ids = np.linspace(1, numPart, numPart)
 
-# Velocity perturbation
-ind = coords[:, 1] < 0.7
-ind = np.logical_and(ind, coords[:, 1] > 0.3)
-vel[ind, 1] = (1 + np.cos(8 * np.pi * (coords[index, 0] + 0.5 * box_size[0])))
-vel[ind, 1] += (1 + np.cos(5 * np.pi * (coords[index, 1] - 0.5 * box_size[1])))
-vel[ind, 1] *= dv
+if __name__ == "__main__":
+    # Start by generating grids of particles
 
-# File
-fileOutput = h5py.File(fileOutputName, 'w')
+    coords = np.zeros((numPart, 3))
+    m = np.ones(numPart) * m_part
+    u = np.zeros(numPart)
+    vel = np.zeros((numPart, 3))
+    ids = np.zeros(numPart)
 
-# Header
-grp = fileOutput.create_group("/Header")
-grp.attrs["BoxSize"] = box_size
-grp.attrs["NumPart_Total"] = [numPart, 0, 0, 0, 0, 0]
-grp.attrs["NumPart_Total_HighWord"] = [0, 0, 0, 0, 0, 0]
-grp.attrs["NumPart_ThisFile"] = [numPart, 0, 0, 0, 0, 0]
-grp.attrs["Time"] = 0.0
-grp.attrs["NumFileOutputsPerSnapshot"] = 1
-grp.attrs["MassTable"] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-grp.attrs["Flag_Entropy_ICs"] = [0, 0, 0, 0, 0, 0]
-grp.attrs["Dimension"] = 2
+    # generate grid of particles
+    y_prev = 0
+    uni_id = 1
+    # loop over y
+    for j in range(N[1]):
+        m_y = m_part * N[0] + mass(y_prev)
+        if m_y > m_tot:
+            y_j = box_size[1] - 1e-5 * (box_size[1] - y_prev)
+        else:
+            y_j = inv_mass(m_y)
+        y_prev = y_j
 
-# Units
-grp = fileOutput.create_group("/Units")
-grp.attrs["Unit length in cgs (U_L)"] = 1.
-grp.attrs["Unit mass in cgs (U_M)"] = 1.
-grp.attrs["Unit time in cgs (U_t)"] = 1.
-grp.attrs["Unit current in cgs (U_I)"] = 1.
-grp.attrs["Unit temperature in cgs (U_T)"] = 1.
+        # loop over x
+        for i in range(N[0]):
 
-# Particle group
-grp = fileOutput.create_group("/PartType0")
-ds = grp.create_dataset('Coordinates', (numPart, 3), 'd')
-ds[()] = coords
-ds = grp.create_dataset('Velocities', (numPart, 3), 'f')
-ds[()] = vel
-ds = grp.create_dataset('Masses', (numPart, 1), 'f')
-ds[()] = m.reshape((numPart, 1))
-ds = grp.create_dataset('SmoothingLength', (numPart, 1), 'f')
-ds[()] = h.reshape((numPart, 1))
-ds = grp.create_dataset('InternalEnergy', (numPart, 1), 'f')
-ds[()] = u.reshape((numPart, 1))
-ds = grp.create_dataset('ParticleIDs', (numPart, 1), 'L')
-ds[()] = ids.reshape((numPart, 1))
+            index = j * N[0] + i
 
-fileOutput.close()
+            x = i * box_size[0] / float(N[0])
+
+            coords[index, 0] = x
+            coords[index, 1] = y_j
+            if (y_j < fixed[0] or y_j > fixed[1]):
+                ids[index] = uni_id
+                uni_id += 1
+
+    print("You need to configure with --fix-below-id={}".format(uni_id+1))
+    ids[ids == 0] = np.linspace(uni_id, numPart, numPart-uni_id+1)
+
+    u = pressure(coords[:, 1]) / (density(coords[:, 1]) * (gamma-1.))
+    if (u.min() < 0):
+        raise Exception("P0 too small")
+
+    # smoothing length
+    h = smoothing_length(coords[:, 1], m)
+
+    # density
+    rho = density(coords[:, 1])
+
+    # Velocity perturbation
+    vel[:, 1] = vy(coords[:, 0], coords[:, 1])
+
+    # File
+    fileOutput = h5py.File(fileOutputName, 'w')
+
+    # Header
+    grp = fileOutput.create_group("/Header")
+    grp.attrs["BoxSize"] = box_size
+    grp.attrs["NumPart_Total"] = [numPart, 0, 0, 0, 0, 0]
+    grp.attrs["NumPart_Total_HighWord"] = [0, 0, 0, 0, 0, 0]
+    grp.attrs["NumPart_ThisFile"] = [numPart, 0, 0, 0, 0, 0]
+    grp.attrs["Time"] = 0.0
+    grp.attrs["NumFileOutputsPerSnapshot"] = 1
+    grp.attrs["MassTable"] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    grp.attrs["Flag_Entropy_ICs"] = [0, 0, 0, 0, 0, 0]
+    grp.attrs["Dimension"] = 2
+
+    # Units
+    grp = fileOutput.create_group("/Units")
+    grp.attrs["Unit length in cgs (U_L)"] = 1.
+    grp.attrs["Unit mass in cgs (U_M)"] = 1.
+    grp.attrs["Unit time in cgs (U_t)"] = 1.
+    grp.attrs["Unit current in cgs (U_I)"] = 1.
+    grp.attrs["Unit temperature in cgs (U_T)"] = 1.
+
+    # Particle group
+    grp = fileOutput.create_group("/PartType0")
+    ds = grp.create_dataset('Coordinates', (numPart, 3), 'd')
+    ds[()] = coords
+    ds = grp.create_dataset('Velocities', (numPart, 3), 'f')
+    ds[()] = vel
+    ds = grp.create_dataset('Masses', (numPart, 1), 'f')
+    ds[()] = m.reshape((numPart, 1))
+    ds = grp.create_dataset('SmoothingLength', (numPart, 1), 'f')
+    ds[()] = h.reshape((numPart, 1))
+    ds = grp.create_dataset('InternalEnergy', (numPart, 1), 'f')
+    ds[()] = u.reshape((numPart, 1))
+    ds = grp.create_dataset('ParticleIDs', (numPart, 1), 'L')
+    ds[()] = ids.reshape((numPart, 1))
+    ds = grp.create_dataset('Density', (numPart, 1), 'f')
+    ds[()] = rho.reshape((numPart, 1))
+
+    fileOutput.close()
+
+    print("Time scale: ", 1./growth_rate())
