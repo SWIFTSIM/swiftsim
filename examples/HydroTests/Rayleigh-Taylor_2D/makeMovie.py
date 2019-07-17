@@ -1,6 +1,7 @@
 ###############################################################################
 # This file is part of SWIFT.
-# Copyright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk)
+# Copyright (c) 2019 Loic Hausammann (loic.hausammann@epfl.ch)
+#                    Josh Borrow (joshua.borrow@durham.ac.uk)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published
@@ -17,8 +18,8 @@
 #
 ##############################################################################
 
-from swiftsimio import load, mask
-from swiftsimio.visualisation import project_gas_pixel_grid
+from swiftsimio import load
+from swiftsimio.visualisation import scatter
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 
@@ -29,7 +30,7 @@ try:
     # Try and load this, otherwise we're stuck with serial
     from p_tqdm import p_map
 
-    # map = p_map
+    map = p_map
 except:
     print("Try installing the p_tqdm package to make movie frames in parallel")
     pass
@@ -37,70 +38,62 @@ except:
 reverse_axis = False
 
 
-def project(data, m_res, property):
-    tmp = project_gas_pixel_grid(data, m_res, property)
+def project(data, m_res, property, ylim):
+    x, y, _ = data.gas.coordinates.value.T
 
     if reverse_axis:
-        return tmp
+        x, y = y, x
+
+    mask = np.logical_and(y >= ylim[0], y <= ylim[1])
+
+    x = x[mask]
+    y = y[mask] - np.float64(ylim[0])
+
+    h = data.gas.smoothing_length[mask]
+
+    if property == "density":
+        property = "masses"
+
+    if property is not None:
+        quant = getattr(data.gas, property).value[mask]
     else:
-        return tmp.T
+        quant = np.ones_like(x)
+
+    image = scatter(x=x, y=y, m=quant, h=h, res=m_res)
+
+    if reverse_axis:
+        return image
+    else:
+        return image.T
 
 
 def load_and_make_image(filename, res, property):
     image = np.zeros(res, dtype=np.float32)
-    image_none = np.zeros(res, dtype=np.float32)
     m_res = min(res)
+    border = int(0.2 * m_res)
 
     # first part of the image
-    m = mask(filename)
-    ylim = np.array([0., 2./3.]) * m.metadata.boxsize[1]
-    m.constrain_spatial([None, ylim, None])
+    ylim = np.array([0., 1.])
 
-    # data = load(filename, mask=m)
     data = load(filename)
-    y = data.gas.coordinates.value[:, 1]
-    ind = y > ylim[0]
-    ind = np.logical_and(ind, y < ylim[1])
-    data.gas.particle_ids.values = data.gas.particle_ids[ind]
-    data.gas.density.values = data.gas.density[ind]
-    data.gas.coordinates.values = data.gas.coordinates[ind, :]
-    data.gas.smoothing_length.values = data.gas.smoothing_length[ind]
-    image[:m_res, :m_res] = project(data, m_res, property)
-    tmp = project(data, m_res, None)
-    image_none[:m_res, :m_res] = tmp
+    image[:m_res, :m_res] = project(data, m_res, property, ylim)
+    if property != "density":
+        image[:m_res, :m_res] /= project(data, m_res, None, ylim)
 
     # second part of the image
-    m = mask(filename)
-    ylim = np.array([1./3., 1.]) * m.metadata.boxsize[1]
-    m.constrain_spatial([None, ylim, None])
+    ylim = np.array([0.5, 1.5])
 
-    # data = load(filename, mask=m)
-    data = load(filename)
-    y = data.gas.coordinates.value[:, 1]
-    ind = y > ylim[0]
-    ind = np.logical_and(ind, y < ylim[1])
-    data.gas.particle_ids = data.gas.particle_ids[ind]
-    data.gas.density = data.gas.density[ind]
-    data.gas.coordinates = data.gas.coordinates[ind, :]
-    data.gas.smoothing_length = data.gas.smoothing_length[ind]
-    image[:m_res, :m_res] = project(data, m_res, property)
-    tmp2 = project(data, m_res, None)
-    image_none[:m_res, :m_res] = tmp2
-
+    left = -m_res + border
     if reverse_axis:
-        image[:, -m_res:] = project(data, m_res, property)
-        image_none[:, -m_res:] = project(data, m_res, None)
+        image[:, left:] = project(data, m_res, property, ylim)[:, left:]
+        if property != "density":
+            image[:, left:] /= project(data, m_res, None, ylim)[:, left:]
     else:
-        image[-m_res:, :] = project(data, m_res, property)
-        image_none[-m_res:, :] = project(data, m_res, None)
+        image[left:, :] = project(data, m_res, property, ylim)[left:, :]
+        if property != "density":
+            image[left:, :] /= project(data, m_res, None, ylim)[left:, :]
 
-    if np.sum(image_none == 0):
-        plt.imshow(tmp)
-        plt.figure()
-        plt.imshow(tmp2)
-        plt.colorbar()
-        plt.show()
-    return image / image_none
+    return image
 
 
 def create_movie(filename, start, stop, resolution, property, output_filename):
