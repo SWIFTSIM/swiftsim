@@ -20,23 +20,21 @@
 import h5py
 import numpy as np
 from scipy.optimize import bisect
-from scipy.integrate import quad
 
 # Generates a swift IC file for the Rayleigh-Taylor instability in a periodic
-# box following the conditions given in Abel 2010
+# box following the conditions given in Saitoh and Makino 2013: 1202.4277v3
 
 # Parameters
-N = [100, 200]  # Particles along one edge
+N = [128, 192]  # Particles along one edge
 gamma = 7./5.  # Gas adiabatic index
-delta = 0.1  # interface size
-dv = 0.1    # velocity perturbation
-rho1 = 2    # Upper region density
-rho2 = 1    # Lower region density
+dv = 0.025    # velocity perturbation
+rho_h = 2    # high density region
+rho_l = 1    # Low density region
 g = -0.5    # gravitational acceleration
-box_size = [0.5, 1.]  # size of the box
+box_size = [1., 1.5]  # size of the box
 
-fixed = [0.1, 0.9]  # y-range of non fixed particles
-perturbation_box = [0.3, 0.7]  # y-range for the velocity perturbation
+fixed = [0.1, 1.4]  # y-range of non fixed particles
+perturbation_box = [0.3, 1.2]  # y-range for the velocity perturbation
 fileOutputName = "rayleigh_taylor.hdf5"
 
 
@@ -50,18 +48,43 @@ def density(y):
     """
     Mass density as function of the position y.
     """
-    tmp = 1 + np.exp(-2.*(y - 0.5 * box_size[1]) / delta)
-    return rho2 + (rho1 - rho2) / tmp
+    if isinstance(y, float) or isinstance(y, int):
+        y = np.array(y)
+
+    ind = y < 0.5 * box_size[1]
+    rho = np.zeros(y.shape)
+    tmp = (gamma - 1.) * g / (gamma * P0)
+    alpha = 1. / (gamma - 1.)
+
+    rho[ind] = rho_l * (1 + rho_l * tmp * (y[ind] - 0.5 * box_size[1]))**alpha
+    rho[~ind] = rho_h * (1 + rho_h * tmp * (y[~ind] - 0.5 * box_size[1]))**alpha
+
+    return rho
 
 
 def mass(y):
     """
     Integral of the density
     """
-    return box_size[0] * quad(density, 0, y)[0]
+    if isinstance(y, float) or isinstance(y, int):
+        y = np.array(y)
+
+    ind = y < 0.5 * box_size[1]
+    m = np.zeros(y.shape)
+
+    B = (gamma - 1.) * g / (gamma * P0)
+    alpha = 1. / (gamma - 1.)
+
+    m[ind] = (1 + B * rho_l * (y[ind] - 0.5 * box_size[1]))**(alpha + 1)
+
+    m[~ind] = (1 + B * rho_h * (y[~ind] - 0.5 * box_size[1]))**(alpha + 1)
+
+    m -= (1 - 0.5 * B * box_size[1] * rho_l)**(alpha + 1)
+
+    return box_size[0] * m / (B * (alpha + 1))
 
 
-P0 = rho1 / gamma  # integration constant of the hydrostatic equation
+P0 = rho_h / gamma  # integration constant of the hydrostatic equation
 numPart = N[0] * N[1]
 
 m_tot = mass(box_size[1])
@@ -81,19 +104,27 @@ def inv_mass(m):
     return bisect(f, left, right, args=(m))
 
 
-def pressure(y):
+def entropy(y):
     """
-    Pressure as function of the position y.
-    Here we assume hydrostatic equation.
+    Entropy as function of the position y.
+    Here we assume isoentropic medium.
     """
-    return P0 + g * density(y) * (y - 0.5 * box_size[1])
+    if isinstance(y, float) or isinstance(y, int):
+        y = np.array(y)
+
+    ind = y < 0.5 * box_size[1]
+
+    a = np.zeros(y.shape)
+    a[ind] = P0 * rho_l**(-gamma)
+    a[~ind] = P0 * rho_h**(-gamma)
+    return a
 
 
-def smoothing_length(y, m):
+def smoothing_length(rho, m):
     """
     Compute the smoothing length
     """
-    return 1.23 * np.sqrt(m / density(y))
+    return 1.23 * np.sqrt(m / rho)
 
 
 def growth_rate():
@@ -101,7 +132,7 @@ def growth_rate():
     Compute the growth rate of the instability.
     Assumes a wavelength equal to the boxsize.
     """
-    ymin = 0
+    ymin = 0.
     ymax = box_size[1]
     A = density(ymax) - density(ymin)
     A /= density(ymax) + density(ymin)
@@ -112,14 +143,14 @@ def vy(x, y):
     """
     Velocity along the direction y
     """
-    ind = y < perturbation_box[1]
-    ind = np.logical_and(ind, y > perturbation_box[0])
+    ind = y > perturbation_box[0]
+    ind = np.logical_and(ind, y < perturbation_box[1])
 
     v = np.zeros(len(x))
 
-    v[ind] = (1 + np.cos(8 * np.pi * (x[ind] + 0.5 * box_size[0])))
-    v[ind] *= (1 + np.cos(5 * np.pi * (y[ind] - 0.5 * box_size[1])))
-    v[ind] *= 0.25 * dv
+    v[ind] = 1 + np.cos(4 * np.pi * x[ind])
+    v[ind] *= 1 + np.cos(5 * np.pi * (y[ind] - 0.5 * box_size[1]))
+    v[ind] *= dv
     return v
 
 
@@ -130,16 +161,18 @@ if __name__ == "__main__":
     m = np.ones(numPart) * m_part
     u = np.zeros(numPart)
     vel = np.zeros((numPart, 3))
-    ids = np.zeros(numPart)
+    ids = np.ones(numPart)
 
     # generate grid of particles
     y_prev = 0
     uni_id = 1
+
     # loop over y
+    eps = 1e-3 * box_size[1] / N[1]
     for j in range(N[1]):
         m_y = m_part * N[0] + mass(y_prev)
         if m_y > m_tot:
-            y_j = box_size[1] - 1e-5 * (box_size[1] - y_prev)
+            y_j = box_size[1] - eps * (box_size[1] - y_prev)
         else:
             y_j = inv_mass(m_y)
         y_prev = y_j
@@ -154,21 +187,21 @@ if __name__ == "__main__":
             coords[index, 0] = x
             coords[index, 1] = y_j
             if (y_j < fixed[0] or y_j > fixed[1]):
-                ids[index] = uni_id
+                ids[index] = 0
                 uni_id += 1
 
-    print("You need to configure with --fix-below-id={}".format(uni_id+1))
-    ids[ids == 0] = np.linspace(uni_id, numPart, numPart-uni_id+1)
-
-    u = pressure(coords[:, 1]) / (density(coords[:, 1]) * (gamma-1.))
-    if (u.min() < 0):
-        raise Exception("P0 too small")
-
-    # smoothing length
-    h = smoothing_length(coords[:, 1], m)
+    N = numPart-uni_id+1
+    ids[ids != 0] = np.linspace(1, N+1, N)
 
     # density
     rho = density(coords[:, 1])
+
+    # internal energy
+    a = entropy(coords[:, 1])
+    u = a * rho**(gamma-1) / (gamma - 1.)
+
+    # smoothing length
+    h = smoothing_length(rho, m)
 
     # Velocity perturbation
     vel[:, 1] = vy(coords[:, 0], coords[:, 1])
@@ -185,7 +218,7 @@ if __name__ == "__main__":
     grp.attrs["Time"] = 0.0
     grp.attrs["NumFileOutputsPerSnapshot"] = 1
     grp.attrs["MassTable"] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    grp.attrs["Flag_Entropy_ICs"] = [0, 0, 0, 0, 0, 0]
+    grp.attrs["Flag_Entropy_ICs"] = 0
     grp.attrs["Dimension"] = 2
 
     # Units
