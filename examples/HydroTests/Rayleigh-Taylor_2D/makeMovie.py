@@ -21,6 +21,7 @@
 from swiftsimio import load
 from swiftsimio.visualisation import scatter
 from matplotlib.animation import FuncAnimation
+from matplotlib.colors import LogNorm
 import matplotlib.pyplot as plt
 
 from numpy import max, min
@@ -35,14 +36,34 @@ except:
     print("Try installing the p_tqdm package to make movie frames in parallel")
     pass
 
-reverse_axis = False
+
+info_frames = 40
+text_args = dict(color="black")
+
+
+class Metadata(object):
+    """
+    Copy the useful data in order to decrease the memory usage
+    """
+    def __init__(self, data):
+        metadata = data.metadata
+        self.t = metadata.t
+        try:
+            self.viscosity_info = metadata.viscosity_info
+        except:
+            self.viscosity_info = "No info"
+        try:
+            self.diffusion_info = metadata.diffusion_info
+        except:
+            self.diffusion_info = "No info"
+
+        self.code_info = metadata.code_info
+        self.compiler_info = metadata.compiler_info
+        self.hydro_info = metadata.hydro_info
 
 
 def project(data, m_res, property, ylim):
     x, y, _ = data.gas.coordinates.value.T
-
-    if reverse_axis:
-        x, y = y, x
 
     mask = np.logical_and(y >= ylim[0], y <= ylim[1])
 
@@ -61,10 +82,7 @@ def project(data, m_res, property, ylim):
 
     image = scatter(x=x, y=y, m=quant, h=h, res=m_res)
 
-    if reverse_axis:
-        return image
-    else:
-        return image.T
+    return image.T
 
 
 def load_and_make_image(filename, res, property):
@@ -84,16 +102,16 @@ def load_and_make_image(filename, res, property):
     ylim = np.array([0.5, 1.5])
 
     left = -m_res + border
-    if reverse_axis:
-        image[:, left:] = project(data, m_res, property, ylim)[:, left:]
-        if property != "density":
-            image[:, left:] /= project(data, m_res, None, ylim)[:, left:]
-    else:
-        image[left:, :] = project(data, m_res, property, ylim)[left:, :]
-        if property != "density":
-            image[left:, :] /= project(data, m_res, None, ylim)[left:, :]
+    image[left:, :] = project(data, m_res, property, ylim)[left:, :]
+    if property != "density":
+        image[left:, :] /= project(data, m_res, None, ylim)[left:, :]
 
-    return image
+    metadata = Metadata(data)
+    return image, metadata
+
+
+def time_formatter(metadata):
+    return f"$t = {metadata.t:2.2f}$"
 
 
 def create_movie(filename, start, stop, resolution, property, output_filename):
@@ -105,29 +123,89 @@ def create_movie(filename, start, stop, resolution, property, output_filename):
     {property} and outputting to {output_filename}.
     """
 
+    if property != "density":
+        name = property
+    else:
+        name = "Fluid Density $\\rho$"
+
     def baked_in_load(n):
         f = filename + "_{:04d}.hdf5".format(n)
         return load_and_make_image(f, resolution, property)
 
     # Make frames in parallel (reading also parallel!)
-    frames = map(baked_in_load, list(range(start, stop)))
+    frames, metadata = zip(*map(baked_in_load, list(range(start, stop))))
 
     vmax = max(list(map(max, frames)))
     vmin = min(list(map(min, frames)))
 
-    fig, ax = plt.subplots(figsize=(1, 1))
+    fig, ax = plt.subplots(figsize=(8, 1.5 * 8), dpi=resolution[0] // 8)
     ax.axis("off")
     fig.subplots_adjust(0, 0, 1, 1)
 
-    image = ax.imshow(frames[0], origin="lower", vmax=vmax, vmin=vmin)
+    norm = LogNorm(vmin=vmin, vmax=vmax, clip="black")
+
+    image = ax.imshow(np.zeros_like(frames[0]), origin="lower",
+                      norm=norm)
+
+    description_text = ax.text(
+        0.5, 0.5,
+        get_simulation_information(metadata[0]),
+        va="center", ha="center",
+        **text_args, transform=ax.transAxes,
+    )
+
+    time_text = ax.text(
+        (1 - 0.025 * 0.25), 0.975,
+        time_formatter(metadata[0]),
+        **text_args,
+        va="top", ha="right",
+        transform=ax.transAxes,
+    )
+
+    info_text = ax.text(
+        0.025 * 0.25, 0.975, name, **text_args, va="top", ha="left",
+        transform=ax.transAxes
+    )
 
     def frame(n):
-        image.set_array(frames[n])
+        if n >= 0:
+            image.set_array(frames[n])
+            description_text.set_text("")
+            time_text.set_text(time_formatter(metadata[n]))
 
         return (image,)
 
-    animation = FuncAnimation(fig, frame, range(0, stop-start), interval=40)
-    animation.save(output_filename, dpi=resolution[0])
+    animation = FuncAnimation(fig, frame, range(-info_frames, stop-start),
+                              interval=40)
+    animation.save(output_filename)
+
+
+def get_simulation_information(metadata):
+    """
+    Generates a string from the SWIFT metadata
+    """
+    viscosity = metadata.viscosity_info
+    diffusion = metadata.diffusion_info
+    
+    output = (
+        "$\\bf{Rayleigh-Taylor}$ $\\bf{Instability}$\n\n"
+        "$\\bf{SWIFT}$\n"
+        + metadata.code_info
+        + "\n\n"
+        + "$\\bf{Compiler}$\n"
+        + metadata.compiler_info
+        + "\n\n"
+        + "$\\bf{Hydrodynamics}$\n"
+        + metadata.hydro_info
+        + "\n\n"
+        + "$\\bf{Viscosity}$\n"
+        + viscosity
+        + "\n\n"
+        + "$\\bf{Diffusion}$\n"
+        + diffusion
+    )
+
+    return output
 
 
 if __name__ == "__main__":
@@ -180,10 +258,7 @@ if __name__ == "__main__":
     vars = parser.parse_args()
 
     yres = int(1.5 * vars.resolution)
-    if reverse_axis:
-        vars.resolution = [vars.resolution, yres]
-    else:
-        vars.resolution = [yres, vars.resolution]
+    vars.resolution = [yres, vars.resolution]
 
     create_movie(
         filename=vars.snapshot,
