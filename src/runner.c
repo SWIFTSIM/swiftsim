@@ -3624,6 +3624,8 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
 
           /* Don't move ! */
 	  hydro_reset_acceleration(p);
+	  hydro_prepare_force(p, &c->hydro.xparts[k], cosmo,
+			      e->hydro_properties, 0);
         }
 #endif
       }
