@@ -42,14 +42,17 @@
  * generator.
  * In case new numbers need to be added other possible
  * numbers could be:
- * 5947309451, 6977309513
+ * 57931781LL  
  */
 enum random_number_type {
   random_number_star_formation = 0LL,
   random_number_stellar_feedback = 3947008991LL,
   random_number_stellar_enrichment = 2936881973LL,
   random_number_BH_feedback = 1640531371LL,
-  random_number_BH_swallow = 4947009007LL
+  random_number_BH_swallow = 4947009007LL,
+  random_number_stellar_winds = 5947309451LL,
+  random_number_SNIa_feedback = 6977309513LL,
+  random_number_HII_regions = 8134165677LL
 };
 
 #ifndef __APPLE__

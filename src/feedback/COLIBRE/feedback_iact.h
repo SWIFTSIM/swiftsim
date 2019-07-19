@@ -319,7 +319,7 @@ runner_iact_nonsym_feedback_apply(
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval(
-        si->id + pj->id, ti_current, random_number_stellar_feedback);
+        si->id + pj->id, ti_current, random_number_SNIa_feedback);
     /* Are we lucky? */
     if (rand_SNIa < prob_SNIa) {
 
@@ -327,14 +327,14 @@ runner_iact_nonsym_feedback_apply(
       const double u_init_SNIa =
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
       const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
-      const double u_new = u_init_SNIa + 0. * delta_u_SNIa;
+      const double u_new = u_init_SNIa + delta_u_SNIa;
 
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
       hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
 
       /* Impose maximal viscosity */
-      // hydro_set_viscosity_alpha_max_feedback(pj);
+      hydro_diffusive_feedback_reset(pj);
 
       /* Store the current SNIa time */
       if (cosmo->critical_density > 0.) {
@@ -358,7 +358,7 @@ runner_iact_nonsym_feedback_apply(
 
   /* Draw a random number (Note mixing both IDs) */
   const float momentum_rand = random_unit_interval(
-      si->id + pj->id, ti_current, random_number_stellar_feedback);
+      si->id + pj->id, ti_current, random_number_stellar_winds);
 
   /* if lucky, perform the actual kick  */
   if (momentum_rand < momentum_prob) {
