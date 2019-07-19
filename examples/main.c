@@ -1012,7 +1012,7 @@ int main(int argc, char *argv[]) {
           "the ICs!");
     }
 
-    /* Verify that each particle is in it's proper cell. */
+    /* Verify that each particle is in its proper cell. */
     if (talking && !dry_run) {
       int icount = 0;
       space_map_cells_pre(&s, 0, &map_cellcheck, &icount);
