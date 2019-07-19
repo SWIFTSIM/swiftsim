@@ -1100,10 +1100,6 @@ int main(int argc, char *argv[]) {
   if (s.periodic) gravity_exact_force_ewald_init(e.s->dim[0]);
 #endif
 
-/* Init the runner history. */
-#ifdef HIST
-  for (k = 0; k < runner_hist_N; k++) runner_hist_bins[k] = 0;
-#endif
 
   if (!restart) {
 
@@ -1242,17 +1238,6 @@ int main(int argc, char *argv[]) {
     }
 #endif  // SWIFT_DEBUG_THREADPOOL
   }
-
-/* Print the values of the runner histogram. */
-#ifdef HIST
-  printf("main: runner histogram data:\n");
-  for (k = 0; k < runner_hist_N; k++)
-    printf(" %e %e %e\n",
-           runner_hist_a + k * (runner_hist_b - runner_hist_a) / runner_hist_N,
-           runner_hist_a +
-               (k + 1) * (runner_hist_b - runner_hist_a) / runner_hist_N,
-           (double)runner_hist_bins[k]);
-#endif
 
   /* Write final time information */
   if (myrank == 0) {
