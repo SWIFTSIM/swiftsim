@@ -30,14 +30,14 @@ import numpy as np
 try:
     # Try and load this, otherwise we're stuck with serial
     from p_tqdm import p_map
-
-    map = p_map
 except:
     print("Try installing the p_tqdm package to make movie frames in parallel")
+    p_map = map
     pass
 
 
 info_frames = 40
+generate_png = False
 text_args = dict(color="black")
 
 
@@ -133,10 +133,10 @@ def create_movie(filename, start, stop, resolution, property, output_filename):
         return load_and_make_image(f, resolution, property)
 
     # Make frames in parallel (reading also parallel!)
-    frames, metadata = zip(*map(baked_in_load, list(range(start, stop))))
+    frames, metadata = zip(*p_map(baked_in_load, list(range(start, stop))))
 
-    vmax = max(list(map(max, frames)))
-    vmin = min(list(map(min, frames)))
+    vmax = max(list(p_map(max, frames)))
+    vmin = min(list(p_map(min, frames)))
 
     fig, ax = plt.subplots(figsize=(8, 1.5 * 8), dpi=resolution[0] // 8)
     ax.axis("off")
@@ -162,7 +162,7 @@ def create_movie(filename, start, stop, resolution, property, output_filename):
         transform=ax.transAxes,
     )
 
-    info_text = ax.text(
+    ax.text(
         0.025 * 0.25, 0.975, name, **text_args, va="top", ha="left",
         transform=ax.transAxes
     )
@@ -173,11 +173,21 @@ def create_movie(filename, start, stop, resolution, property, output_filename):
             description_text.set_text("")
             time_text.set_text(time_formatter(metadata[n]))
 
-        return (image,)
+        if generate_png:
+            name = filename + "_{:04d}".format(n+info_frames)
+            fig.savefig(name + ".png")
 
-    animation = FuncAnimation(fig, frame, range(-info_frames, stop-start),
-                              interval=40)
-    animation.save(output_filename)
+        else:
+            return (image,)
+
+    if generate_png:
+        for i in range(-info_frames, stop-start):
+            frame(i)
+    else:
+        animation = FuncAnimation(fig, frame,
+                                  range(-info_frames, stop-start),
+                                  interval=40)
+        animation.save(output_filename)
 
 
 def get_simulation_information(metadata):
@@ -186,7 +196,7 @@ def get_simulation_information(metadata):
     """
     viscosity = metadata.viscosity_info
     diffusion = metadata.diffusion_info
-    
+
     output = (
         "$\\bf{Rayleigh-Taylor}$ $\\bf{Instability}$\n\n"
         "$\\bf{SWIFT}$\n"

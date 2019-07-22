@@ -161,7 +161,7 @@ if __name__ == "__main__":
     m = np.ones(numPart) * m_part
     u = np.zeros(numPart)
     vel = np.zeros((numPart, 3))
-    ids = np.ones(numPart)
+    ids = np.zeros(numPart)
 
     # generate grid of particles
     y_prev = 0
@@ -187,11 +187,12 @@ if __name__ == "__main__":
             coords[index, 0] = x
             coords[index, 1] = y_j
             if (y_j < fixed[0] or y_j > fixed[1]):
-                ids[index] = 0
+                ids[index] = uni_id
                 uni_id += 1
 
-    N = numPart-uni_id+1
-    ids[ids != 0] = np.linspace(1, N+1, N)
+    print("You need to compile the code with "
+          "--enable-boundary-particles=%i" % uni_id)
+    ids[ids == 0] = np.linspace(uni_id, numPart, numPart-uni_id+1)
 
     # density
     rho = density(coords[:, 1])
@@ -247,5 +248,3 @@ if __name__ == "__main__":
     ds[()] = rho.reshape((numPart, 1))
 
     fileOutput.close()
-
-    print("Time scale: ", 1./growth_rate())

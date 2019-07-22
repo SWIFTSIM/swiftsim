@@ -375,14 +375,16 @@ fi
 # Check if we want to use boundary particles.
 AC_ARG_ENABLE([boundary-particles],
    [AS_HELP_STRING([--enable-boundary-particles],
-     [Enable the boundaries particles (id == 0)]
+     [Set all particles with an ID smaller than @<:@N@:>@ as boundary particles.]
    )],
    [boundary_particles="$enableval"],
    [boundary_particles="no"]
 )
-if test "$no_acceleration_below_id" != "no"; then
-   AC_DEFINE_UNQUOTED([SWIFT_NO_GRAVITY_BELOW_ID], [1] ,[Particles with smaller ID than this will have zero gravity forces])
-   AC_DEFINE_UNQUOTED([SWIFT_BOUNDARY_PARTICLES], [1] ,[Particles with ID == 0 are considered as boundaries.])
+if test "$no_gravity_below_id" == "yes"; then
+   AC_MSG_ERROR(Need to specify the ID below which particles get zero forces when using --enable-boundary-particles!)
+elif test "$no_acceleration_below_id" != "no"; then
+   AC_DEFINE_UNQUOTED([SWIFT_NO_GRAVITY_BELOW_ID], [$enableval] ,[Particles with smaller ID than this will have zero gravity forces])
+   AC_DEFINE_UNQUOTED([SWIFT_BOUNDARY_PARTICLES], [$enableval] ,[Particles with ID == 0 are considered as boundaries.])
 fi
 
 # Check whether we have any of the ARM v8.1 tick timers

@@ -3620,7 +3620,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
         const long long id = p->id;
 
         /* Cancel gravity forces of these particles */
-        if (id == 0) {
+        if (id < SWIFT_BOUNDARY_PARTICLES) {
 
           /* Don't move ! */
 	  hydro_reset_acceleration(p);
