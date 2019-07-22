@@ -120,7 +120,7 @@ static INLINE void potential_init_backend(
   /* Change the unit system */
   const double unit_length = units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
   const double unit_time = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
-  const double unit_g = unit_length / unit_time * unit_time;
+  const double unit_g = unit_length / (unit_time * unit_time);
 
   for(int i = 0; i < 3; i++) {
     // Need to divide by G due to gravity_end_force

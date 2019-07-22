@@ -3616,18 +3616,20 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
         hydro_end_force(p, cosmo);
 #ifdef SWIFT_BOUNDARY_PARTICLES
 
-        /* Get the ID of the gpart */
+        /* Get the ID of the part */
         const long long id = p->id;
 
-        /* Cancel gravity forces of these particles */
+        /* Cancel hdyro forces of these particles */
         if (id < SWIFT_BOUNDARY_PARTICLES) {
 
           /* Don't move ! */
 	  hydro_reset_acceleration(p);
 
+#ifdef EXTRA_HYDRO_LOOP
 	  /* Required for GIZMO */
 	  hydro_prepare_force(p, &c->hydro.xparts[k], cosmo,
 			      e->hydro_properties, 0);
+#endif
         }
 #endif
       }
