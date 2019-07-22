@@ -380,9 +380,9 @@ AC_ARG_ENABLE([boundary-particles],
    [boundary_particles="$enableval"],
    [boundary_particles="no"]
 )
-if test "$no_gravity_below_id" == "yes"; then
+if test "$boundary_particles" == "yes"; then
    AC_MSG_ERROR(Need to specify the ID below which particles get zero forces when using --enable-boundary-particles!)
-elif test "$no_acceleration_below_id" != "no"; then
+elif test "$boundary_particles" != "no"; then
    AC_DEFINE_UNQUOTED([SWIFT_NO_GRAVITY_BELOW_ID], [$enableval] ,[Particles with smaller ID than this will have zero gravity forces])
    AC_DEFINE_UNQUOTED([SWIFT_BOUNDARY_PARTICLES], [$enableval] ,[Particles with smaller ID than this will be considered as boundaries.])
 fi
