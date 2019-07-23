@@ -58,6 +58,14 @@ struct chemistry_part_data {
   float Z;
 };
 
+/**
+ * @brief Diffusion arrays used in the COLIBRE model.
+ */
 struct diffusion_part_data {};
+
+/**
+ * @brief Chemical abundances traced by the #bpart in the GEAR model.
+ */
+struct chemistry_bpart_data {};
 
 #endif /* SWIFT_CHEMISTRY_STRUCT_GEAR_H */

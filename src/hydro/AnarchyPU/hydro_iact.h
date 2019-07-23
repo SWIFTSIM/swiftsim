@@ -35,10 +35,10 @@
 #include "./hydro_parameters.h"
 
 /**
- * @brief Density interaction between two part*icles.
+ * @brief Density interaction between two particles.
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -117,10 +117,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 }
 
 /**
- * @brief Density interaction between two part*icles (non-symmetric).
+ * @brief Density interaction between two particles (non-symmetric).
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -304,10 +304,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 }
 
 /**
- * @brief Force interaction between two part*icles.
+ * @brief Force interaction between two particles.
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -414,7 +414,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Diffusion term */
   const float v_diff =
-      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
+      max(pi->force.soundspeed + pj->force.soundspeed + mu_ij, 0.f);
   const float alpha_diff = 0.5f * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
@@ -434,10 +434,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 }
 
 /**
- * @brief Force interaction between two part*icles (non-symmetric).
+ * @brief Force interaction between two particles (non-symmetric).
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -538,7 +538,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Diffusion term */
   const float v_diff =
-      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
+      max(pi->force.soundspeed + pj->force.soundspeed + mu_ij, 0.f);
   const float alpha_diff = 0.5f * (pi->diffusion.alpha + pj->diffusion.alpha);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
@@ -557,8 +557,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 /**
  * @brief Timestep limiter loop
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -577,8 +577,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_limiter(
 /**
  * @brief Timestep limiter loop (non-symmetric version)
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.

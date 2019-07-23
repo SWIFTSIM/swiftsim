@@ -20,7 +20,7 @@
 #define SWIFT_COLIBRE_COOL_TABLES_H
 
 /**
- * @file src/cooling/COLIBRE/cooling.h
+ * @file src/cooling/COLIBRE/cooling_tables.h
  * @brief COLIBRE cooling function
  */
 
@@ -57,7 +57,10 @@
 /*! Number of different elements in the tables */
 #define colibre_cooling_N_elementtypes 12
 
-enum {
+/**
+ * @brief Elements present in the tables
+ */
+enum colibre_cooling_element {
   element_H,
   element_He,
   element_C,
@@ -72,8 +75,11 @@ enum {
   element_OA
 };
 
-enum {
-  cooltype_H2 = 12,
+/**
+ * @brief Cooling channels beyond the metal lines
+ */
+enum colibre_cooling_channels {
+  cooltype_H2 = element_OA + 1,
   cooltype_molecules,
   cooltype_HD,
   cooltype_NetFFH,
@@ -83,8 +89,11 @@ enum {
   cooltype_Dust
 };
 
-enum {
-  heattype_H2 = 12,
+/**
+ * @brief Heating channels beyond the metal lines
+ */
+enum colibre_heating_channels {
+  heattype_H2 = element_OA + 1,
   heattype_COdiss,
   heattype_CosmicRay,
   heattype_UTA,

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * This file is part* of SWIFT.
+ * This file is part of SWIFT.
  * Coypright (c) 2019 Josh Borrow (joshua.borrow@durham.ac.uk) &
  *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
@@ -33,10 +33,10 @@
 #include "./hydro_parameters.h"
 
 /**
- * @brief Density interaction between two part*icles.
+ * @brief Density interaction between two particles.
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -109,10 +109,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 }
 
 /**
- * @brief Density interaction between two part*icles (non-symmetric).
+ * @brief Density interaction between two particles (non-symmetric).
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -292,10 +292,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 }
 
 /**
- * @brief Force interaction between two part*icles.
+ * @brief Force interaction between two particles.
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -397,12 +397,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff =
-      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5f * (pi->diffusion.alpha + pj->diffusion.alpha);
+  const float v_diff =
+      alpha_diff * sqrtf(0.5f * fabsf(pressurei - pressurej) / rho_ij) +
+      fabsf(fac_mu * r_inv * dvdr_Hubble);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_diff * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+      v_diff * (pi->u - pj->u) * (wi_dr / rhoi + wj_dr / rhoj);
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -418,10 +419,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 }
 
 /**
- * @brief Force interaction between two part*icles (non-symmetric).
+ * @brief Force interaction between two particles (non-symmetric).
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -518,12 +519,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  const float v_diff =
-      max(pi->force.soundspeed + pj->force.soundspeed + dvdr_Hubble, 0.f);
   const float alpha_diff = 0.5f * (pi->diffusion.alpha + pj->diffusion.alpha);
+  const float v_diff =
+      alpha_diff * sqrtf(0.5f * fabsf(pressurei - pressurej) / rho_ij) +
+      fabsf(fac_mu * r_inv * dvdr_Hubble);
   /* wi_dx + wj_dx / 2 is F_ij */
   const float diff_du_term =
-      alpha_diff * fac_mu * v_diff * (pi->u - pj->u) * (wi_dr + wj_dr) / rho_ij;
+      v_diff * (pi->u - pj->u) * (wi_dr / rhoi + wj_dr / rhoj);
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -538,8 +540,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 /**
  * @brief Timestep limiter loop
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.
@@ -558,8 +560,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_limiter(
 /**
  * @brief Timestep limiter loop (non-symmetric version)
  *
- * @param r2 Comoving square distance between the two part*icles.
- * @param dx Comoving vector separating both part*icles (pi - pj).
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of part*icle i.
  * @param hj Comoving smoothing-length of part*icle j.
  * @param pi First part*icle.

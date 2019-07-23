@@ -45,4 +45,11 @@ struct chemistry_part_data {};
 
 struct diffusion_part_data {};
 
+/**
+ * @brief Chemistry properties carried by the #bpart.
+ *
+ * Nothing here.
+ */
+struct chemistry_bpart_data {};
+
 #endif /* SWIFT_CHEMISTRY_STRUCT_NONE_H */

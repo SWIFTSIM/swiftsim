@@ -242,7 +242,9 @@ int main(int argc, char *argv[]) {
                   "time_end parameter to stop.",
                   NULL, 0, 0),
       OPT_STRING('o', "output-params", &output_parameters_filename,
-                 "Generate a default output parameter file.", NULL, 0, 0),
+                 "Generate a parameter file with the options for selecting the "
+                 "output fields.",
+                 NULL, 0, 0),
       OPT_STRING('P', "param", &buffer,
                  "Set parameter value, overiding the value read from the "
                  "parameter file. Can be used more than once {sec:par:value}.",
@@ -272,6 +274,13 @@ int main(int argc, char *argv[]) {
                     "\nSee the file examples/parameter_example.yml for an "
                     "example of parameter file.");
   int nargs = argparse_parse(&argparse, argc, (const char **)argv);
+
+  /* Write output parameter file */
+  if (myrank == 0 && output_parameters_filename != NULL) {
+    io_write_output_field_parameter(output_parameters_filename);
+    printf("End of run.\n");
+    return 0;
+  }
 
   /* Need a parameter file. */
   if (nargs != 1) {
@@ -332,13 +341,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  /* Write output parameter file */
-  if (myrank == 0 && output_parameters_filename != NULL) {
-    io_write_output_field_parameter(output_parameters_filename);
-    printf("End of run.\n");
-    return 0;
-  }
-
   if (!with_self_gravity && !with_hydro && !with_external_gravity) {
     if (myrank == 0) {
       argparse_usage(&argparse);
@@ -356,12 +358,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (with_black_holes && !with_external_gravity && !with_self_gravity) {
+  if (with_black_holes && !with_self_gravity) {
     if (myrank == 0) {
       argparse_usage(&argparse);
       printf(
-          "\nError: Cannot process black holes without gravity, -g or -G "
-          "must be chosen.\n");
+          "\nError: Cannot process black holes without self-gravity, -G must "
+          "be chosen.\n");
     }
     return 1;
   }
@@ -797,11 +799,10 @@ int main(int argc, char *argv[]) {
       bzero(&black_holes_properties, sizeof(struct black_holes_props));
 
     /* Initialise the gravity properties */
+    bzero(&gravity_properties, sizeof(struct gravity_props));
     if (with_self_gravity)
-      gravity_props_init(&gravity_properties, params, &cosmo, with_cosmology,
-                         periodic);
-    else
-      bzero(&gravity_properties, sizeof(struct gravity_props));
+      gravity_props_init(&gravity_properties, params, &prog_const, &cosmo,
+                         with_cosmology, periodic);
 
       /* Initialise the cooling function properties */
 #ifdef COOLING_NONE

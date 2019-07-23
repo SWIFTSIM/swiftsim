@@ -20,10 +20,10 @@ AM_CFLAGS = -I$(top_srcdir)/src $(HDF5_CPPFLAGS) $(GSL_INCS) $(FFTW_INCS) $(NUMA
 AM_LDFLAGS = ../src/.libs/libswiftsim.a $(HDF5_LDFLAGS) $(HDF5_LIBS) $(FFTW_LIBS) $(NUMA_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(TBBMALLOC_LIBS) $(GRACKLE_LIBS) $(GSL_LIBS) $(PROFILER_LIBS)
 
 # List of programs and scripts to run in the test suite
-TESTS = testGreetings testMaths testReading.sh testSingle testKernel \
+TESTS = testGreetings testMaths testReading.sh testKernel \
         testActivePair.sh test27cells.sh test27cellsPerturbed.sh  \
-        testParser.sh testSPHStep test125cells.sh test125cellsPerturbed.sh testFFT \
-        testAdiabaticIndex testRandom \
+        testParser.sh test125cells.sh test125cellsPerturbed.sh testFFT \
+        testAdiabaticIndex testRandom testRandomSpacing \
         testMatrixInversion testThreadpool testDump testLogger testInteractions.sh \
         testVoronoi1D testVoronoi2D testVoronoi3D testGravityDerivatives \
 	testPeriodicBC.sh testPeriodicBCPerturbed.sh testPotentialSelf \
@@ -32,10 +32,10 @@ TESTS = testGreetings testMaths testReading.sh testSingle testKernel \
 	test27cellsStars.sh test27cellsStarsPerturbed.sh
 
 # List of test programs to compile
-check_PROGRAMS = testGreetings testReading testSingle testTimeIntegration \
-		 testSPHStep testActivePair test27cells test27cells_subset test125cells testParser \
+check_PROGRAMS = testGreetings testReading testTimeIntegration \
+		 testActivePair test27cells test27cells_subset test125cells testParser \
                  testKernel testFFT testInteractions testMaths testRandom \
-                 testSymmetry testThreadpool \
+                 testSymmetry testThreadpool testRandomSpacing \
                  testAdiabaticIndex testRiemannExact testRiemannTRRS \
                  testRiemannHLLC testMatrixInversion testDump testLogger \
 		 testVoronoi1D testVoronoi2D testVoronoi3D testPeriodicBC \
@@ -53,6 +53,8 @@ testMaths_SOURCES = testMaths.c
 
 testRandom_SOURCES = testRandom.c
 
+testRandomSpacing_SOURCES = testRandomSpacing.c
+
 testReading_SOURCES = testReading.c
 
 testSelectOutput_SOURCES = testSelectOutput.c
@@ -67,10 +69,6 @@ testSymmetry_SOURCES = testSymmetry.c
 testSymmetry_CFLAGS = $(AM_CFLAGS) -fno-builtin-memcmp
 
 testTimeIntegration_SOURCES = testTimeIntegration.c
-
-testSPHStep_SOURCES = testSPHStep.c
-
-testSingle_SOURCES = testSingle.c
 
 testActivePair_SOURCES = testActivePair.c
 

@@ -79,8 +79,11 @@
 #define _TIMER_DOSUB_PAIR_BH(f) PASTE(timer_dosub_pair_bh, f)
 #define TIMER_DOSUB_PAIR_BH _TIMER_DOSUB_PAIR_BH(FUNCTION)
 
-#define _IACT_BH(f) PASTE(runner_iact_nonsym_bh, f)
-#define IACT_BH _IACT_BH(FUNCTION)
+#define _IACT_BH_GAS(f) PASTE(runner_iact_nonsym_bh_gas, f)
+#define IACT_BH_GAS _IACT_BH_GAS(FUNCTION)
+
+#define _IACT_BH_BH(f) PASTE(runner_iact_nonsym_bh_bh, f)
+#define IACT_BH_BH _IACT_BH_BH(FUNCTION)
 
 /**
  * @brief Calculate the number density of #part around the #bpart
@@ -112,19 +115,19 @@ void DOSELF1_BH(struct runner *r, struct cell *c, int timer) {
   struct xpart *restrict xparts = c->hydro.xparts;
 
   /* Loop over the bparts in ci. */
-  for (int sid = 0; sid < bcount; sid++) {
+  for (int bid = 0; bid < bcount; bid++) {
 
     /* Get a hold of the ith bpart in ci. */
-    struct bpart *restrict si = &bparts[sid];
+    struct bpart *restrict bi = &bparts[bid];
 
     /* Skip inactive particles */
-    if (!bpart_is_active(si, e)) continue;
+    if (!bpart_is_active(bi, e)) continue;
 
-    const float hi = si->h;
+    const float hi = bi->h;
     const float hig2 = hi * hi * kernel_gamma2;
-    const float six[3] = {(float)(si->x[0] - c->loc[0]),
-                          (float)(si->x[1] - c->loc[1]),
-                          (float)(si->x[2] - c->loc[2])};
+    const float bix[3] = {(float)(bi->x[0] - c->loc[0]),
+                          (float)(bi->x[1] - c->loc[1]),
+                          (float)(bi->x[2] - c->loc[2])};
 
     /* Loop over the parts in cj. */
     for (int pjd = 0; pjd < count; pjd++) {
@@ -141,20 +144,78 @@ void DOSELF1_BH(struct runner *r, struct cell *c, int timer) {
       const float pjx[3] = {(float)(pj->x[0] - c->loc[0]),
                             (float)(pj->x[1] - c->loc[1]),
                             (float)(pj->x[2] - c->loc[2])};
-      float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
+      float dx[3] = {bix[0] - pjx[0], bix[1] - pjx[1], bix[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
       if (pj->ti_drift != e->ti_current)
         error("Particle pj not drifted to current time");
 #endif
 
       if (r2 < hig2) {
-        IACT_BH(r2, dx, hi, hj, si, pj, xpj, cosmo, ti_current);
+        IACT_BH_GAS(r2, dx, hi, hj, bi, pj, xpj, cosmo, ti_current);
       }
     } /* loop over the parts in ci. */
   }   /* loop over the bparts in ci. */
+
+    /* When doing BH swallowing, we need a quick loop also over the BH
+     * neighbours */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
+
+  /* Loop over the bparts in ci. */
+  for (int bid = 0; bid < bcount; bid++) {
+
+    /* Get a hold of the ith bpart in ci. */
+    struct bpart *restrict bi = &bparts[bid];
+
+    /* Skip inactive particles */
+    if (!bpart_is_active(bi, e)) continue;
+
+    const float hi = bi->h;
+    const float hig2 = hi * hi * kernel_gamma2;
+    const float bix[3] = {(float)(bi->x[0] - c->loc[0]),
+                          (float)(bi->x[1] - c->loc[1]),
+                          (float)(bi->x[2] - c->loc[2])};
+
+    /* Loop over the parts in cj. */
+    for (int bjd = 0; bjd < bcount; bjd++) {
+
+      /* Skip self interaction */
+      if (bid == bjd) continue;
+
+      /* Get a pointer to the jth particle. */
+      struct bpart *restrict bj = &bparts[bjd];
+      const float hj = bj->h;
+
+      /* Early abort? */
+      if (bpart_is_inhibited(bj, e)) continue;
+
+      /* Compute the pairwise distance. */
+      const float bjx[3] = {(float)(bj->x[0] - c->loc[0]),
+                            (float)(bj->x[1] - c->loc[1]),
+                            (float)(bj->x[2] - c->loc[2])};
+      float dx[3] = {bix[0] - bjx[0], bix[1] - bjx[1], bix[2] - bjx[2]};
+      const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
+      if (bj->ti_drift != e->ti_current)
+        error("Particle bj not drifted to current time");
+#endif
+
+      if (r2 < hig2) {
+        IACT_BH_BH(r2, dx, hi, hj, bi, bj, cosmo, e->gravity_properties,
+                   ti_current);
+      }
+    } /* loop over the bparts in ci. */
+  }   /* loop over the bparts in ci. */
+
+#endif /* (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW) */
 
   TIMER_TOC(TIMER_DOSELF_BH);
 }
@@ -172,7 +233,7 @@ void DO_NONSYM_PAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
 #ifdef SWIFT_DEBUG_CHECKS
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
   if (ci->nodeID != engine_rank) error("Should be run on a different node");
-#else
+#elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
   if (cj->nodeID != engine_rank) error("Should be run on a different node");
 #endif
 #endif
@@ -201,19 +262,19 @@ void DO_NONSYM_PAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
   }
 
   /* Loop over the bparts in ci. */
-  for (int sid = 0; sid < bcount_i; sid++) {
+  for (int bid = 0; bid < bcount_i; bid++) {
 
     /* Get a hold of the ith bpart in ci. */
-    struct bpart *restrict si = &bparts_i[sid];
+    struct bpart *restrict bi = &bparts_i[bid];
 
     /* Skip inactive particles */
-    if (!bpart_is_active(si, e)) continue;
+    if (!bpart_is_active(bi, e)) continue;
 
-    const float hi = si->h;
+    const float hi = bi->h;
     const float hig2 = hi * hi * kernel_gamma2;
-    const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
-                          (float)(si->x[1] - (cj->loc[1] + shift[1])),
-                          (float)(si->x[2] - (cj->loc[2] + shift[2]))};
+    const float bix[3] = {(float)(bi->x[0] - (cj->loc[0] + shift[0])),
+                          (float)(bi->x[1] - (cj->loc[1] + shift[1])),
+                          (float)(bi->x[2] - (cj->loc[2] + shift[2]))};
 
     /* Loop over the parts in cj. */
     for (int pjd = 0; pjd < count_j; pjd++) {
@@ -230,20 +291,78 @@ void DO_NONSYM_PAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
       const float pjx[3] = {(float)(pj->x[0] - cj->loc[0]),
                             (float)(pj->x[1] - cj->loc[1]),
                             (float)(pj->x[2] - cj->loc[2])};
-      float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
+      float dx[3] = {bix[0] - pjx[0], bix[1] - pjx[1], bix[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
       if (pj->ti_drift != e->ti_current)
         error("Particle pj not drifted to current time");
 #endif
 
       if (r2 < hig2) {
-        IACT_BH(r2, dx, hi, hj, si, pj, xpj, cosmo, ti_current);
+        IACT_BH_GAS(r2, dx, hi, hj, bi, pj, xpj, cosmo, ti_current);
       }
     } /* loop over the parts in cj. */
-  }   /* loop over the parts in ci. */
+  }   /* loop over the bparts in ci. */
+
+    /* When doing BH swallowing, we need a quick loop also over the BH
+     * neighbours */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
+
+  const int bcount_j = cj->black_holes.count;
+  struct bpart *restrict bparts_j = cj->black_holes.parts;
+
+  /* Loop over the bparts in ci. */
+  for (int bid = 0; bid < bcount_i; bid++) {
+
+    /* Get a hold of the ith bpart in ci. */
+    struct bpart *restrict bi = &bparts_i[bid];
+
+    /* Skip inactive particles */
+    if (!bpart_is_active(bi, e)) continue;
+
+    const float hi = bi->h;
+    const float hig2 = hi * hi * kernel_gamma2;
+    const float bix[3] = {(float)(bi->x[0] - (cj->loc[0] + shift[0])),
+                          (float)(bi->x[1] - (cj->loc[1] + shift[1])),
+                          (float)(bi->x[2] - (cj->loc[2] + shift[2]))};
+
+    /* Loop over the bparts in cj. */
+    for (int bjd = 0; bjd < bcount_j; bjd++) {
+
+      /* Get a pointer to the jth particle. */
+      struct bpart *restrict bj = &bparts_j[bjd];
+      const float hj = bj->h;
+
+      /* Skip inhibited particles. */
+      if (bpart_is_inhibited(bj, e)) continue;
+
+      /* Compute the pairwise distance. */
+      const float bjx[3] = {(float)(bj->x[0] - cj->loc[0]),
+                            (float)(bj->x[1] - cj->loc[1]),
+                            (float)(bj->x[2] - cj->loc[2])};
+      float dx[3] = {bix[0] - bjx[0], bix[1] - bjx[1], bix[2] - bjx[2]};
+      const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
+      if (bj->ti_drift != e->ti_current)
+        error("Particle bj not drifted to current time");
+#endif
+
+      if (r2 < hig2) {
+        IACT_BH_BH(r2, dx, hi, hj, bi, bj, cosmo, e->gravity_properties,
+                   ti_current);
+      }
+    } /* loop over the bparts in cj. */
+  }   /* loop over the bparts in ci. */
+
+#endif /* (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW) */
 }
 
 void DOPAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
@@ -254,11 +373,16 @@ void DOPAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
   const int do_ci_bh = ci->nodeID == r->e->nodeID;
   const int do_cj_bh = cj->nodeID == r->e->nodeID;
-#else
+#elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
   /* here we are updating the hydro -> switch ci, cj */
   const int do_ci_bh = cj->nodeID == r->e->nodeID;
   const int do_cj_bh = ci->nodeID == r->e->nodeID;
+#else
+  /* The swallow task is executed on both sides */
+  const int do_ci_bh = 1;
+  const int do_cj_bh = 1;
 #endif
+
   if (do_ci_bh && ci->black_holes.count != 0 && cj->hydro.count != 0)
     DO_NONSYM_PAIR1_BH_NAIVE(r, ci, cj);
   if (do_cj_bh && cj->black_holes.count != 0 && ci->hydro.count != 0)
@@ -302,19 +426,19 @@ void DOPAIR1_SUBSET_BH_NAIVE(struct runner *r, struct cell *restrict ci,
   if (count_j == 0) return;
 
   /* Loop over the parts_i. */
-  for (int pid = 0; pid < bcount; pid++) {
+  for (int bid = 0; bid < bcount; bid++) {
 
     /* Get a hold of the ith part in ci. */
-    struct bpart *restrict bpi = &bparts_i[ind[pid]];
+    struct bpart *restrict bi = &bparts_i[ind[bid]];
 
-    const double pix = bpi->x[0] - (shift[0]);
-    const double piy = bpi->x[1] - (shift[1]);
-    const double piz = bpi->x[2] - (shift[2]);
-    const float hi = bpi->h;
+    const double bix = bi->x[0] - (shift[0]);
+    const double biy = bi->x[1] - (shift[1]);
+    const double biz = bi->x[2] - (shift[2]);
+    const float hi = bi->h;
     const float hig2 = hi * hi * kernel_gamma2;
 
 #ifdef SWIFT_DEBUG_CHECKS
-    if (!bpart_is_active(bpi, e))
+    if (!bpart_is_active(bi, e))
       error("Trying to correct smoothing length of inactive particle !");
 #endif
 
@@ -334,8 +458,8 @@ void DOPAIR1_SUBSET_BH_NAIVE(struct runner *r, struct cell *restrict ci,
       const float hj = pj->h;
 
       /* Compute the pairwise distance. */
-      float dx[3] = {(float)(pix - pjx), (float)(piy - pjy),
-                     (float)(piz - pjz)};
+      float dx[3] = {(float)(bix - pjx), (float)(biy - pjy),
+                     (float)(biz - pjz)};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -345,7 +469,7 @@ void DOPAIR1_SUBSET_BH_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
       /* Hit or miss? */
       if (r2 < hig2) {
-        IACT_BH(r2, dx, hi, hj, bpi, pj, xpj, cosmo, ti_current);
+        IACT_BH_GAS(r2, dx, hi, hj, bi, pj, xpj, cosmo, ti_current);
       }
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -381,19 +505,18 @@ void DOSELF1_SUBSET_BH(struct runner *r, struct cell *restrict ci,
   if (count_i == 0) return;
 
   /* Loop over the parts in ci. */
-  for (int bpid = 0; bpid < bcount; bpid++) {
+  for (int bid = 0; bid < bcount; bid++) {
 
     /* Get a hold of the ith part in ci. */
-    struct bpart *bpi = &bparts[ind[bpid]];
-    const float bpix[3] = {(float)(bpi->x[0] - ci->loc[0]),
-                           (float)(bpi->x[1] - ci->loc[1]),
-                           (float)(bpi->x[2] - ci->loc[2])};
-    const float hi = bpi->h;
+    struct bpart *bi = &bparts[ind[bid]];
+    const float bix[3] = {(float)(bi->x[0] - ci->loc[0]),
+                          (float)(bi->x[1] - ci->loc[1]),
+                          (float)(bi->x[2] - ci->loc[2])};
+    const float hi = bi->h;
     const float hig2 = hi * hi * kernel_gamma2;
 
 #ifdef SWIFT_DEBUG_CHECKS
-    if (!bpart_is_active(bpi, e))
-      error("Inactive particle in subset function!");
+    if (!bpart_is_active(bi, e)) error("Inactive particle in subset function!");
 #endif
 
     /* Loop over the parts in cj. */
@@ -410,7 +533,7 @@ void DOSELF1_SUBSET_BH(struct runner *r, struct cell *restrict ci,
       const float pjx[3] = {(float)(pj->x[0] - ci->loc[0]),
                             (float)(pj->x[1] - ci->loc[1]),
                             (float)(pj->x[2] - ci->loc[2])};
-      float dx[3] = {bpix[0] - pjx[0], bpix[1] - pjx[1], bpix[2] - pjx[2]};
+      float dx[3] = {bix[0] - pjx[0], bix[1] - pjx[1], bix[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -421,7 +544,7 @@ void DOSELF1_SUBSET_BH(struct runner *r, struct cell *restrict ci,
 
       /* Hit or miss? */
       if (r2 < hig2) {
-        IACT_BH(r2, dx, hi, pj->h, bpi, pj, xpj, cosmo, ti_current);
+        IACT_BH_GAS(r2, dx, hi, pj->h, bi, pj, xpj, cosmo, ti_current);
       }
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -608,11 +731,16 @@ void DOPAIR1_BRANCH_BH(struct runner *r, struct cell *ci, struct cell *cj) {
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
   const int do_ci_bh = ci->nodeID == e->nodeID;
   const int do_cj_bh = cj->nodeID == e->nodeID;
-#else
+#elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
   /* here we are updating the hydro -> switch ci, cj */
   const int do_ci_bh = cj->nodeID == e->nodeID;
   const int do_cj_bh = ci->nodeID == e->nodeID;
+#else
+  /* The swallow task is executed on both sides */
+  const int do_ci_bh = 1;
+  const int do_cj_bh = 1;
 #endif
+
   const int do_ci = (ci->black_holes.count != 0 && cj->hydro.count != 0 &&
                      ci_active && do_ci_bh);
   const int do_cj = (cj->black_holes.count != 0 && ci->hydro.count != 0 &&
@@ -682,11 +810,15 @@ void DOSUB_PAIR1_BH(struct runner *r, struct cell *ci, struct cell *cj,
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
     const int do_ci_bh = ci->nodeID == e->nodeID;
     const int do_cj_bh = cj->nodeID == e->nodeID;
-#else
+#elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
     /* here we are updating the hydro -> switch ci, cj */
     const int do_ci_bh = cj->nodeID == e->nodeID;
     const int do_cj_bh = ci->nodeID == e->nodeID;
+#else
+    const int do_ci_bh = 1;
+    const int do_cj_bh = 1;
 #endif
+
     const int do_ci = ci->black_holes.count != 0 && cj->hydro.count != 0 &&
                       cell_is_active_black_holes(ci, e) && do_ci_bh;
     const int do_cj = cj->black_holes.count != 0 && ci->hydro.count != 0 &&

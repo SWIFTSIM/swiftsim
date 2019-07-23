@@ -438,7 +438,7 @@ in the internal units of time. Users also have to provide the difference in time
 In non-cosmological runs this is also expressed in internal units. For
 cosmological runs, this value is *multiplied* to obtain the
 scale-factor of the next snapshot. This implies that the outputs are
-equally space in :math:`\log(a)` (See :ref:`Output_list_label` to have
+equally spaced in :math:`\log(a)` (See :ref:`Output_list_label` to have
 snapshots not regularly spaced in time).
 
 When running the code with structure finding activated, it is often
@@ -517,6 +517,14 @@ following pages:
 * :ref:`Output_list_label` (to have snapshots not evenly spaced in time),
 * :ref:`Output_selection_label` (to select what particle fields to write).
 
+.. _Parameters_fof:
+
+Friends-Of-Friends (FOF)
+------------------------
+
+The parameters are described separately on the page
+:ref:`Fof_Parameter_Description_label` within the more general
+:ref:`Friends_Of_Friends_label` description.
 
 .. _Parameters_statistics:
 
@@ -549,10 +557,10 @@ other options require the ``enable`` parameter to be set to ``1``.
 * Whether or not to dump a set of restart file on regular exit: ``onexit``
   (default: ``0``),
 * The wall-clock time in hours between two sets of restart files:
-  ``delta_hours`` (default: ``6.0``).
+  ``delta_hours`` (default: ``5.0``).
 
 Note that there is no buffer time added to the ``delta_hours`` value. If the
-system's batch queue run time limit is set to 6 hours, the user must specify a
+system's batch queue run time limit is set to 5 hours, the user must specify a
 smaller value to allow for enough time to safely dump the check-point files.
 
 * The sub-directory in which to store the restart files: ``subdir`` (default:
@@ -568,8 +576,9 @@ been activated, the previous set of restart files will be named
 ``basename_000000.rst.prev``.
 
 SWIFT can also be stopped by creating an empty file called ``stop`` in the
-directory where the code runs. This will make SWIFT dump a fresh set of restart
-file (irrespective of the specified ``delta_time`` between dumps) and exit
+directory where the restart files are written (i.e. the directory speicified by
+the parameter ``subdir``). This will make SWIFT dump a fresh set of restart file
+(irrespective of the specified ``delta_time`` between dumps) and exit
 cleanly. One parameter governs this behaviour:
 
 * Number of steps between two checks for the presence of a ``stop`` file:
@@ -604,7 +613,7 @@ hours after which a shell command will be run, one would use:
     onexit:             0
     subdir:             restart    # Sub-directory of the directory where SWIFT is run
     basename:           swift
-    delta_hours:        6.0
+    delta_hours:        5.0
     stop_steps:         100
     max_run_time:       24.0       # In hours
     resubmit_on_exit:   1
@@ -926,8 +935,8 @@ to control whether they are used or not. If enabled these will be used to
 repartition after the second step, which will generally give as good a
 repartition immediately as you get at the first unforced repartition.
 
-Also once these have been enabled you can change the `trigger:` value to
-numbers greater than 2, and repartitioning will be forced every `trigger`
+Also once these have been enabled you can change the ``trigger`` value to
+numbers greater than 2, and repartitioning will be forced every ``trigger``
 steps. This latter option is probably only useful for developers, but tuning
 the second step to use fixed costs can give some improvements.
 
@@ -936,7 +945,70 @@ the second step to use fixed costs can give some improvements.
 Structure finding (VELOCIraptor)
 --------------------------------
 
+This section describes the behaviour of the on-the-fly structure
+finding using the VELOCIraptor library (see
+:ref:`VELOCIraptor_interface`). The section is named
+``StructureFinding`` and also governs the behaviour of the
+structure finding code when invoked at snapshots dumping time via
+the parameter ``Snapshots:invoke_stf``.
 
+The main parameters are:
+
+ * The VELOCIraptor parameter file to use for the run:
+   ``config_file_name``,
+ * The directory in which the structure catalogs will be written: ``basename``.
+
+Both these parameters must always be specified when running SWIFT with
+on-the-fly calls to the structure finding code. In particular, when
+only running VELOCIraptor when snapshots are written, nothing more is
+necessary and one would use:
+
+.. code:: YAML
+
+  Snapshots:
+    invoke_stf:        1                              # We want VELOCIraptor to be called when snapshots are dumped.
+    # ...
+    # Rest of the snapshots properties
+	  
+  StructureFinding:
+    config_file_name:  my_stf_configuration_file.cfg  # See the VELOCIraptor manual for the content of this file.
+    basename:          ./haloes/                      # Write the catalogs in this sub-directory
+     
+If one additionally want to call VELOCIraptor at times not linked with
+snapshots, the additional parameters need to be supplied.
+
+The time of the first call is controlled by the two following options:
+
+* Time of the first call to VELOCIraptor (non-cosmological runs): ``time_first``,
+* Scale-factor of the first call to VELOCIraptor (cosmological runs): ``scale_factor_first``.
+
+One of those two parameters has to be provided depending on the type of run. In
+the case of non-cosmological runs, the time of the first call is expressed
+in the internal units of time. Users also have to provide the difference in time
+(or scale-factor) between consecutive outputs:
+
+* Time difference between consecutive outputs: ``delta_time``.
+
+In non-cosmological runs this is also expressed in internal units. For
+cosmological runs, this value is *multiplied* to obtain the
+scale-factor of the next call. This implies that the outputs are
+equally spaced in :math:`\log(a)` (See :ref:`Output_list_label` to have
+calls not regularly spaced in time).
+
+Showing all the parameters for a basic cosmologica test-case, one would have:
+
+.. code:: YAML
+
+   StructureFinding:
+    config_file_name:     my_stf_configuration_file.cfg  # See the VELOCIraptor manual for the content of this file.
+    basename:             ./haloes/                      # Write the catalogs in this sub-directory
+    scale_factor_first:   0.1                            # Scale-factor of the first output
+    delta_time:           1.1                            # Delta log-a between outputs
+
+
+------------------------
+
+    
 .. [#f1] The thorough reader (or overly keen SWIFT tester) would find  that the speed of light is :math:`c=1.8026\times10^{12}\,\rm{fur}\,\rm{ftn}^{-1}`, Newton's constant becomes :math:`G_N=4.896735\times10^{-4}~\rm{fur}^3\,\rm{fir}^{-1}\,\rm{ftn}^{-2}` and Planck's constant turns into :math:`h=4.851453\times 10^{-34}~\rm{fur}^2\,\rm{fir}\,\rm{ftn}^{-1}`.
 
 
