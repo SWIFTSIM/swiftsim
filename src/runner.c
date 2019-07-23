@@ -3623,12 +3623,12 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
         if (id < SWIFT_BOUNDARY_PARTICLES) {
 
           /* Don't move ! */
-	  hydro_reset_acceleration(p);
+          hydro_reset_acceleration(p);
 
 #ifdef EXTRA_HYDRO_LOOP
-	  /* Required for GIZMO */
-	  hydro_prepare_force(p, &c->hydro.xparts[k], cosmo,
-			      e->hydro_properties, 0);
+          /* Required for GIZMO */
+          hydro_prepare_force(p, &c->hydro.xparts[k], cosmo,
+                              e->hydro_properties, 0);
 #endif
         }
 #endif

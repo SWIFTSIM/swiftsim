@@ -23,8 +23,8 @@
 #include "../config.h"
 
 /* Some standard headers. */
-#include <math.h>
 #include <float.h>
+#include <math.h>
 
 /* Local includes. */
 #include "error.h"
@@ -91,11 +91,9 @@ external_gravity_get_potential_energy(
     double time, const struct external_potential* potential,
     const struct phys_const* const phys_const, const struct gpart* g) {
 
-  const float gh =
-    g->x[0] * potential->g[0] +
-    g->x[1] * potential->g[1] +
-    g->x[2] * potential->g[2];
-    
+  const float gh = g->x[0] * potential->g[0] + g->x[1] * potential->g[1] +
+                   g->x[2] * potential->g[2];
+
   return g->mass * gh;
 }
 
@@ -114,15 +112,15 @@ static INLINE void potential_init_backend(
     struct external_potential* potential) {
 
   /* Read in the acceleration */
-  parser_get_param_double_array(parameter_file, "ConstantPotential:g_cgs",
-                                3, potential->g);
+  parser_get_param_double_array(parameter_file, "ConstantPotential:g_cgs", 3,
+                                potential->g);
 
   /* Change the unit system */
   const double unit_length = units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
   const double unit_time = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double unit_g = unit_length / (unit_time * unit_time);
 
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     // Need to divide by G due to gravity_end_force
     potential->g[i] /= unit_g * phys_const->const_newton_G;
   }
