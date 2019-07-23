@@ -375,7 +375,7 @@ fi
 # Check if we want to use boundary particles.
 AC_ARG_ENABLE([boundary-particles],
    [AS_HELP_STRING([--enable-boundary-particles],
-     [Set all particles with an ID smaller than @<:@N@:>@ as boundary particles.]
+     [Set all particles with an ID smaller than @<:@N@:>@ as boundary particles (i.e. receive zero gravity + hydro forces).]
    )],
    [boundary_particles="$enableval"],
    [boundary_particles="no"]
