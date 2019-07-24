@@ -71,6 +71,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   float dwi_r = dwi_dx / r;
   float mj_dwi_r = mj * dwi_r;
     
+    
   /* Compute shear tensor */
   for (int k = 0; k < 3; k++){
         di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * dx[k] * mj_dwi_r;
@@ -148,10 +149,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
-    const float a_inv = cosmo->a_inv;
     
     if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
-    
+        
+        const float a = cosmo->a;
         struct chemistry_part_data *chi = &pi->chemistry_data;
         struct chemistry_part_data *chj = &pj->chemistry_data;
         
@@ -196,7 +197,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
         K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
         K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-        K_ij *= a_inv;
+        K_ij *= a;
         float K_ji = K_ij * mi / mj;
         
         /* Manage time interval of particles i & j to be the smallest */
@@ -254,7 +255,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     struct diffusion_part_data *dj = &pj->diffusion_data;
     
     if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
-    
+        
+        const float a = cosmo->a;
         struct chemistry_part_data *chi = &pi->chemistry_data;
         struct chemistry_part_data *chj = &pj->chemistry_data;
         
@@ -297,6 +299,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
         K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
         K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
         K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+        K_ij *= a;
         
         /* Manage time interval of particles i & j to be the smallest */
         double dt;
