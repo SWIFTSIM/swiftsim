@@ -98,7 +98,7 @@
 #define hydro_props_default_diffusion_beta 0.25f
 
 /*! Maximal value for the diffusion alpha in variable schemes. */
-#define hydro_props_default_diffusion_alpha_max 1.0f
+#define hydro_props_default_diffusion_alpha_max 0.1f
 
 /*! Minimal value for the diffusion alpha in variable schemes. */
 #define hydro_props_default_diffusion_alpha_min 0.0f

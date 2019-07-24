@@ -779,6 +779,18 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   new_diffusion_alpha =
       max(new_diffusion_alpha, hydro_props->diffusion.alpha_min);
 
+  /* Now we limit in viscous flows; remove diffusion there. If we
+   * don't do that, then we end up diffusing energy away in supernovae.
+   * This is an EAGLE-specific fix */
+
+  const float viscous_diffusion_limit = hydro_props->diffusion.alpha_max *
+      (1.f - p->viscosity.alpha * p->force.balsara /
+       hydro_props->viscosity.alpha_max);
+
+  new_diffusion_alpha = min(
+       new_diffusion_alpha, viscous_diffusion_limit
+  );
+
   p->diffusion.alpha = new_diffusion_alpha;
 }
 
