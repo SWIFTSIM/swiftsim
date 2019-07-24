@@ -113,9 +113,9 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     /* Velocity shear tensor */
     /* Adding Hubble flow */
     for (k = 0; k < 3; k++){
-        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv * a_inv2 - cosmo->H * hydro_dimension;
-        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv * a_inv2 - cosmo->H * hydro_dimension;
-        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv * a_inv2 - cosmo->H * hydro_dimension;
+        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
+        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
+        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv * a_inv2 + cosmo->H * hydro_dimension;
     }
     
     float shear_tensor_S[3][3];
