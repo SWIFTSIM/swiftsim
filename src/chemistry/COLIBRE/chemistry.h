@@ -106,7 +106,6 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
     float rho = hydro_get_comoving_density(p);
     const float rho_inv = 1.0f / rho; /* 1 / rho */
-    const float a = cosmo->a;
     const float a_inv = cosmo->a_inv;
     const float a_inv2 = a_inv * a_inv;
     

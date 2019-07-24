@@ -152,7 +152,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     
     if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
         
-        const float a = cosmo->a;
         struct chemistry_part_data *chi = &pi->chemistry_data;
         struct chemistry_part_data *chj = &pj->chemistry_data;
         
@@ -256,7 +255,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     
     if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
         
-        const float a = cosmo->a;
         struct chemistry_part_data *chi = &pi->chemistry_data;
         struct chemistry_part_data *chj = &pj->chemistry_data;
         
