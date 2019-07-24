@@ -106,13 +106,15 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
     float rho = hydro_get_comoving_density(p);
     const float rho_inv = 1.0f / rho; /* 1 / rho */
-    /*const float a_inv2 = cosmo->a2_inv;*/
+    const float a = cosmo->a;
+    const float a_inv = cosmo->a_inv;
+    const float a_inv3 = a_inv * a_inv * a_inv;
     
-    /* Velocity shear tensor (check physical coordinates) */
+    /* Velocity shear tensor (in physical coordinates) */
     for (k = 0; k < 3; k++){
-        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv;
-        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv;
-        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv;
+        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv * a_inv3;
+        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv * a_inv3;
+        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv * a_inv3;
     }
     
     float shear_tensor_S[3][3];
@@ -136,8 +138,8 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     }
     NormTensor = sqrt(NormTensor);
     
-    // We can now combine to get the diffusion coefficient //
-    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h;  /* rho * Norm tensor (physical coordinates) * h^2 */
+    // We can now combine to get the diffusion coefficient (in physical coordinates) //
+    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h * a;  /* rho * Norm tensor (physical coordinates) * h^2 */
     
     /* Velocity shear tensor goes back to zero for next loop */
     for (k = 0; k < 3; k++){

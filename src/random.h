@@ -51,7 +51,7 @@ enum random_number_type {
 };
 
 #include <errno.h>
-#include <ieee754.h>
+/*#include <ieee754.h>*/
 #include <limits.h>
 #include <sys/types.h>
 

@@ -148,6 +148,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     
     struct diffusion_part_data *di = &pi->diffusion_data;
     struct diffusion_part_data *dj = &pj->diffusion_data;
+    const float a_inv = cosmo->a_inv;
     
     if (dj->diffusion_coefficient>0 || di->diffusion_coefficient>0){
     
@@ -190,10 +191,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         float mj_dw_r = mj * dw_r;
         
         /* Compute K_ij coefficient (see Correa et al., in prep.) */
+        /* K_ij in physical coordinates */
         float K_ij;
         K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
         K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
         K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
+        K_ij *= a_inv;
         float K_ji = K_ij * mi / mj;
         
         /* Manage time interval of particles i & j to be the smallest */
