@@ -50,6 +50,8 @@ enum random_number_type {
   random_number_BH_swallow = 4947009007LL
 };
 
+#ifndef __APPLE__
+
 #include <errno.h>
 /*#include <ieee754.h>*/
 #include <limits.h>
@@ -109,6 +111,17 @@ INLINE static double inl_erand48(uint16_t xsubi[3]) {
   /* Please note the lower 4 bits of mantissa1 are always 0.  */
   return temp.d - 1.0;
 }
+
+#else
+
+/* In the case of OSX, we default to the platform's
+   default implementation. */
+
+INLINE static int inl_rand_r(uint32_t *seed) { return rand_r(seed); }
+
+INLINE static double inl_erand48(uint16_t xsubi[3]) { return erand48(xsubi); }
+
+#endif
 
 /**
  * @brief Returns a pseudo-random number in the range [0, 1[.
