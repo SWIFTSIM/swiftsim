@@ -227,6 +227,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   const float delta_u_factor = (pi->u - pj->u) * r_inv;
   pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
   pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
+
+  /* Set the maximal alpha from the previous step over the neighbours
+   * (this is used to limit the diffusion in hydro_prepare_force) */
+  const float alpha_i = pi->viscosity.alpha;
+  const float alpha_j = pj->viscosity.alpha;
+  pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
+  pj->force.alpha_visc_max_ngb = max(pj->force.alpha_visc_max_ngb, alpha_i);
 }
 
 /**
@@ -289,6 +296,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 
   const float delta_u_factor = (pi->u - pj->u) * r_inv;
   pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
+
+  /* Set the maximal alpha from the previous step over the neighbours
+   * (this is used to limit the diffusion in hydro_prepare_force) */
+  const float alpha_j = pj->viscosity.alpha;
+  pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
 }
 
 /**
