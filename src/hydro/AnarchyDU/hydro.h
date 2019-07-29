@@ -776,8 +776,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Consistency checks to ensure min < alpha < max */
   new_diffusion_alpha =
-      min(new_diffusion_alpha, hydro_props->diffusion.alpha_max);
-  new_diffusion_alpha =
       max(new_diffusion_alpha, hydro_props->diffusion.alpha_min);
 
   /* Now we limit in viscous flows; remove diffusion there. If we
@@ -786,13 +784,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
    * viscous alpha over our neighbours in an attempt to keep diffusion
    * low near to supernovae sites. */
 
-  const float viscous_diffusion_limit = hydro_props->diffusion.alpha_max *
-      (1.f - p->force.alpha_visc_max_ngb /
-       hydro_props->viscosity.alpha_max);
+  /* This also enforces alpha_diff < alpha_diff_max */
 
-  new_diffusion_alpha = min(
-       new_diffusion_alpha, viscous_diffusion_limit
-  );
+  const float viscous_diffusion_limit = hydro_props->diffusion.alpha_max *
+      (1.f - p->force.alpha_visc_max_ngb / hydro_props->viscosity.alpha_max);
+
+  new_diffusion_alpha = min(new_diffusion_alpha, viscous_diffusion_limit);
 
   p->diffusion.alpha = new_diffusion_alpha;
 }
