@@ -75,6 +75,9 @@ struct feedback_spart_data {
   /*! Number of supernovae II to explode */
   int number_snii;
 
+  /*! Total mass ejected by the supernovae */
+  float mass_ejected;
+
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_GEAR_H */
