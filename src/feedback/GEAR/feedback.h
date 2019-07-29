@@ -40,11 +40,11 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
     struct part *restrict p, struct xpart *restrict xp,
     const struct engine *restrict e) {
 
-  const struct cosmology *cosmo = e->cosmology;
-
   /* Did the particle receive a supernovae */
   if (xp->feedback_data.delta_mass == 0)
     return;
+
+  const struct cosmology *cosmo = e->cosmology;
 
   /* Turn off the cooling */
   const int with_cosmology = (e->policy & engine_policy_cosmology);
@@ -56,11 +56,19 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   }
 
   /* Update mass */
-  const float new_mass = hydro_get_mass(p) + xp->feedback_data.delta_mass;
+  const float old_mass = hydro_get_mass(p);
+  const float new_mass = old_mass + xp->feedback_data.delta_mass;
+
+  if (xp->feedback_data.delta_mass < 0.) {
+    error("Delta mass smaller than 0");
+  }
 
   hydro_set_mass(p, new_mass);
 
   xp->feedback_data.delta_mass = 0;
+
+  /* Update the density */
+  p->rho *= new_mass / old_mass;
 
   /* Update internal energy */
   const float u = hydro_get_physical_internal_energy(p, xp, cosmo);
@@ -71,19 +79,18 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
   xp->feedback_data.delta_u = 0.;
 
-  /* Update the velocities */
-  for(int i=0; i < 3; i++) {
-    const float dv = xp->feedback_data.delta_p[i] / new_mass;
+  /* /\* Update the velocities *\/ */
+  /* for(int i=0; i < 3; i++) { */
+  /*   const float dv = xp->feedback_data.delta_p[i] / new_mass; */
 
-    xp->v_full[i] += dv;
-    p->v[i] += dv;
+  /*   xp->v_full[i] += dv; */
+  /*   p->v[i] += dv; */
 
-    xp->feedback_data.delta_p[i] = 0;
-  }
+  /*   xp->feedback_data.delta_p[i] = 0; */
+  /* } */
   
-
-  /* // TODO activate particle */
-
+  /* wakeup the particle */
+  //p->wakeup = time_bin_awake;
 
 }
 
