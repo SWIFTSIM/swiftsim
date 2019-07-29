@@ -32,18 +32,19 @@ __attribute__((always_inline)) INLINE static const char* stellar_evolution_get_e
  * @brief Check if the given mass is able to produce a SNIa.
  *
  * @param snia The #supernovae_ia model.
- * @param m The mass to check.
+ * @param m_low The lower mass.
+ * @param m_high The higher mass.
  *
  * @return If the mass is in the range of SNIa.
  */
 __attribute__((always_inline)) INLINE static int supernovae_ia_can_explode(
-    const struct supernovae_ia *snia, float m) {
+    const struct supernovae_ia *snia, float m_low, float m_high) {
 
-  if (m > snia->mass_max_progenitor)
+  if (m_low > snia->mass_max_progenitor)
     return 0;
 
   for(int i = 0; i < GEAR_NUMBER_TYPE_OF_COMPANION; i++) {
-    if (m < snia->companion[i].mass_max && m > snia->companion[i].mass_min) {
+    if (m_low < snia->companion[i].mass_max && m_high > snia->companion[i].mass_min) {
       return 1;
     }
   }
@@ -63,6 +64,17 @@ __attribute__((always_inline)) INLINE static const float* supernovae_ia_get_yiel
 
 
 /**
+ * @brief Get the processed mass ejected of a supernovae Ia.
+ *
+ * @param snia The #supernovae_ia model.
+ */
+__attribute__((always_inline)) INLINE static float supernovae_ia_get_ejected_mass_fraction_processed(
+    const struct supernovae_ia *snia) {
+  return snia->mass_white_dwarf;
+}
+
+
+/**
  * @brief Compute the companion integral (second integral in equation 3.46 in Poirier 2004)
  *
  * @param snia The #supernovae_ia model.
@@ -78,6 +90,8 @@ __attribute__((always_inline)) INLINE static float supernovae_ia_get_companion_f
   if (m1 > m2)
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
 #endif
+
+  message("%g %g %g %g", m2, snia->companion_exponent, m1, snia->companion_exponent);
 
   const float tmp = pow(m2, snia->companion_exponent) - pow(m1, snia->companion_exponent);
   return snia->companion[companion_type].coef * tmp / snia->companion_exponent;

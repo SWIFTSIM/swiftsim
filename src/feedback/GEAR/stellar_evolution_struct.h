@@ -24,7 +24,7 @@
 /* Number of different type of companion.
    If changed, the IO needs to be updated.
  */
-#define GEAR_NUMBER_TYPE_OF_COMPANION 8
+#define GEAR_NUMBER_TYPE_OF_COMPANION 2
 #define GEAR_LABELS_SIZE 10
 
 /**

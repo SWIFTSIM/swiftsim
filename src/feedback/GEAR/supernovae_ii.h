@@ -27,17 +27,18 @@
  * @brief Check if the given mass is able to produce a SNII.
  *
  * @param snii The #supernovae_ii model.
- * @param m The mass to check.
+ * @param m_low The lower mass.
+ * @param m_high The higher mass
  *
- * @return If the mass is in the range of SNIa.
+ * @return If the mass is in the range of SNII.
  */
 __attribute__((always_inline)) INLINE static int supernovae_ii_can_explode(
-    const struct supernovae_ii *snii, float m) {
+    const struct supernovae_ii *snii, float m_low, float m_high) {
 
-  if (m < snii->mass_max && m > snii->mass_min)
-    return 1;
+  if (m_high < snii->mass_min || m_low > snii->mass_max)
+    return 0;
 
-  return 0;
+  return 1;
 }
 
 /**
@@ -98,7 +99,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
  *
  * @return mass_ejected_processed The mass of processsed elements.
  */
-__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass(
+__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction(
     const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
   float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass, log_m1);
@@ -117,7 +118,7 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mas
  *
  * @return mass_ejected The mass of non processsed elements.
  */
-__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_processed(
+__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction_processed(
     const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
   float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m1);

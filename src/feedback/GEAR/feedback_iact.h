@@ -108,8 +108,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   wi *= hi_inv_dim;
 
   /* Mass received */
-  // TODO
-  const double m_ej = 1e-4;
+  const double m_ej = si->feedback_data.mass_ejected;
   // TODO compute inverse before feedback loop
   const double weight = mj * wi / si->feedback_data.enrichment_weight;
   const double dm = m_ej * weight;
@@ -120,7 +119,6 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   // TODO compute inverse before feedback loop
   const double u_sn = number_supernovae * e_sn / m_ej;
   const double du = dm * u_sn * weight / new_mass;
-
 
   xpj->feedback_data.delta_mass += dm;
   xpj->feedback_data.delta_u += du;

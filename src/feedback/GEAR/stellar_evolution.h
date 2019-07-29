@@ -64,15 +64,13 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   const float m_end_step = pow(10, log_m_end_step);
 
   /* Check if the star can produce a supernovae */
-  const int can_produce_snia = supernovae_ia_can_explode(&sm->snia, m_beg_step) ||
-    supernovae_ia_can_explode(&sm->snia, m_beg_step);
-  const int can_produce_snii = supernovae_ii_can_explode(&sm->snii, m_beg_step) ||
-    supernovae_ii_can_explode(&sm->snii, m_end_step);
+  const int can_produce_snia = supernovae_ia_can_explode(&sm->snia, m_beg_step, m_end_step);
+  const int can_produce_snii = supernovae_ii_can_explode(&sm->snii, m_beg_step, m_end_step);
 
   if (can_produce_snia) {
     /* Compute rates */
     const float number_snia_f = supernovae_ia_get_number(
-      &sm->snia, m_end_step, m_beg_step);
+      &sm->snia, m_end_step, m_beg_step) * sp->birth.mass;
 
     /* Get the number of SN */
     const float rand_snia = random_unit_interval(sp->id, ti_begin,
@@ -89,7 +87,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   if (can_produce_snii) {
     /* Compute rates */
     const float number_snii_f = supernovae_ii_get_number(
-    &sm->snii, m_end_step, m_beg_step);
+    &sm->snii, m_end_step, m_beg_step) * sp->birth.mass;
 
     /* Get the number of SN */
     const float rand_snii = random_unit_interval(sp->id, ti_begin,
@@ -97,19 +95,29 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
 
     /* Get the fraction part */
     const float frac_snii = number_snii_f - floor(number_snii_f);
-    
+
     /* Get the integer number of SN */
     sp->feedback_data.number_snii = floor(number_snii_f) + (rand_snii < frac_snii)? 1 : 0;
   }
 
+  if (sp->feedback_data.number_snia != 0) {
+    message("Supernovae: %i, %i", sp->feedback_data.number_snia, sp->feedback_data.number_snii);
+  }
+
   if (sp->feedback_data.number_snia != 0 || sp->feedback_data.number_snii != 0) {
     /* Decrease star mass by amount of mass distributed to gas neighbours */
-    // TODO
-    float mass_ejected = 0.f;
-    if (sp->mass < mass_ejected)
+    const float mass_frac_snia = sp->feedback_data.number_snia * supernovae_ia_get_ejected_mass_fraction_processed(&sm->snia);
+    const float mass_frac_snii = sp->feedback_data.number_snii * supernovae_ii_get_ejected_mass_fraction_processed(
+      &sm->snii, log_m_end_step, log_m_beg_step);
+
+    /* Transform from mass fraction to total mass */
+    sp->feedback_data.mass_ejected = mass_frac_snia + mass_frac_snii;
+    sp->feedback_data.mass_ejected *= sp->birth.mass;
+
+    if (sp->mass < sp->feedback_data.mass_ejected)
       error("Stars cannot have negative mass. (%g < %g)",
-	    sp->mass, mass_ejected);
-    sp->mass -= mass_ejected;
+	    sp->mass, sp->feedback_data.mass_ejected);
+    sp->mass -= sp->feedback_data.mass_ejected;
   }
 }
 
