@@ -11,7 +11,7 @@ includes:
 + Pressure-Energy SPH
 + Thermal diffusion following Price (2012)
 + A simplified version of the 'Inviscid SPH' artificial viscosity
-  (Cullen & Denhen 2010).
+  (Cullen & Denhen 2010), with a Balsara switch.
 
 More information will be made available in a forthcoming publication.
 
@@ -68,7 +68,7 @@ This is the new scheme that will be used in EAGLE-XL. This scheme includes:
 + Density-Energy SPH
 + Thermal diffusion following Price (2012)
 + A simplified version of the 'Inviscid SPH' artificial viscosity
-  (Cullen & Dehnen 2010)
+  (Cullen & Denhen 2010), with a Balsara switch
 + A diffusion limiter, used to prevent energy leakage out of EAGLE
   supernovae (Borrow in prep).
 
@@ -86,6 +86,8 @@ flows and works as follows:
 
     new_diffusion_alpha = min(new_diffusion_alpha, viscous_diffusion_limit);
 
+
+The parameters available for this scheme, and their defaults, are:
 
 .. code-block:: yaml
 
