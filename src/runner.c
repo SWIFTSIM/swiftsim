@@ -3614,6 +3614,26 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         hydro_end_force(p, cosmo);
+
+#ifdef SWIFT_BOUNDARY_PARTICLES
+
+        /* Get the ID of the part */
+        const long long id = p->id;
+
+        /* Cancel hdyro forces of these particles */
+        if (id < SWIFT_BOUNDARY_PARTICLES) {
+
+          /* Don't move ! */
+          hydro_reset_acceleration(p);
+
+#if defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
+
+          /* Some values need to be reset in the Gizmo case. */
+          hydro_prepare_force(p, &c->hydro.xparts[k], cosmo,
+                              e->hydro_properties, 0);
+#endif
+        }
+#endif
       }
     }
   }
@@ -3852,10 +3872,10 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
                * by another thread before we do the deed. */
               if (!part_is_inhibited(p, e)) {
 
-                /* Finally, remove the gas particle from the system */
-                struct gpart *gp = p->gpart;
+                /* Finally, remove the gas particle from the system
+                 * Recall that the gpart associated with it is also removed
+                 * at the same time. */
                 cell_remove_part(e, c, p, xp);
-                cell_remove_gpart(e, c, gp);
               }
 
               if (lock_unlock(&e->s->lock) != 0)
@@ -3896,9 +3916,7 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
               if (!part_is_inhibited(p, e)) {
 
                 /* Finally, remove the gas particle from the system */
-                struct gpart *gp = p->gpart;
                 cell_remove_part(e, c, p, xp);
-                cell_remove_gpart(e, c, gp);
               }
 
               if (lock_unlock(&e->s->lock) != 0)
@@ -4072,10 +4090,10 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
               message("BH %lld removing BH particle %lld", bp->id, cell_bp->id);
 
-              /* Finally, remove the gas particle from the system */
-              struct gpart *cell_gp = cell_bp->gpart;
+              /* Finally, remove the gas particle from the system
+               * Recall that the gpart associated with it is also removed
+               * at the same time. */
               cell_remove_bpart(e, c, cell_bp);
-              cell_remove_gpart(e, c, cell_gp);
             }
 
             /* In any case, prevent the particle from being re-swallowed */
@@ -4106,9 +4124,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
                       bp->id, cell_bp->id);
 
               /* Finally, remove the gas particle from the system */
-              struct gpart *cell_gp = cell_bp->gpart;
               cell_remove_bpart(e, c, cell_bp);
-              cell_remove_gpart(e, c, cell_gp);
 
               found = 1;
               break;
@@ -4973,6 +4989,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
  */
 void runner_do_fof_self(struct runner *r, struct cell *c, int timer) {
 
+#ifdef WITH_FOF
+
   TIMER_TIC;
 
   const struct engine *e = r->e;
@@ -4985,6 +5003,10 @@ void runner_do_fof_self(struct runner *r, struct cell *c, int timer) {
   rec_fof_search_self(e->fof_properties, dim, search_r2, periodic, gparts, c);
 
   if (timer) TIMER_TOC(timer_fof_self);
+
+#else
+  error("SWIFT was not compiled with FOF enabled!");
+#endif
 }
 
 /**
@@ -4997,6 +5019,8 @@ void runner_do_fof_self(struct runner *r, struct cell *c, int timer) {
  */
 void runner_do_fof_pair(struct runner *r, struct cell *ci, struct cell *cj,
                         int timer) {
+
+#ifdef WITH_FOF
 
   TIMER_TIC;
 
@@ -5011,4 +5035,7 @@ void runner_do_fof_pair(struct runner *r, struct cell *ci, struct cell *cj,
                       cj);
 
   if (timer) TIMER_TOC(timer_fof_pair);
+#else
+  error("SWIFT was not compiled with FOF enabled!");
+#endif
 }
