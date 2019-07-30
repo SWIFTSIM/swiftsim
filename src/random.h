@@ -20,12 +20,14 @@
 #ifndef SWIFT_RANDOM_H
 #define SWIFT_RANDOM_H
 
-/* COde configuration */
+/* Code configuration */
 #include "../config.h"
 
 /* Standard header */
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
 
 /**
  * @brief The categories of random number generated.
@@ -55,7 +57,6 @@ enum random_number_type {
 #include <errno.h>
 /*#include <ieee754.h>*/
 #include <limits.h>
-#include <sys/types.h>
 
 /* Inline the default RNG functions to avoid costly function calls. These
    functions are minor modifications, but functional equivalents, of their glibc
