@@ -106,12 +106,11 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
     float rho = hydro_get_comoving_density(p);
     const float rho_inv = 1.0f / rho; /* 1 / rho */
-    const float a = cosmo->a;
     const float a_inv = cosmo->a_inv;
     const float a_inv2 = a_inv * a_inv;
     
     /* Velocity shear tensor (in physical coordinates)*/
-    /* Adding Hubble flow ? Not sure here,*/
+    /* Adding Hubble flow ? No*/
     for (k = 0; k < 3; k++){
         p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv * a_inv2;/* + cosmo->H * hydro_dimension;*/
         p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv * a_inv2;/* + cosmo->H * hydro_dimension;*/
@@ -140,7 +139,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     NormTensor = sqrt(NormTensor);
     
     // We can now combine to get the diffusion coefficient (in physical coordinates) //
-    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h * a * a;  /* rho * Norm tensor * h^2 */
+    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h * a_inv;  /* rho a^-3 * Norm tensor (physical already) * a^2 * h^2 */
     
     /* Velocity shear tensor goes back to zero for next loop */
     for (k = 0; k < 3; k++){
@@ -281,6 +280,8 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(struct par
     for (int elem = 0; elem < chemistry_element_count; ++elem){
         p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
     }
+    /* Diffusion coefficient (& rate) goes back to co-moving coordinates */
+    p->diffusion_data.diffusion_coefficient *= cosmo->a * cosmo->a * cosmo->a;
     
     /* goes back to zero and recomputes*/
     p->chemistry_data.metal_mass_fraction_total = 1.0f;
@@ -297,6 +298,27 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(struct par
     
     /* Smooth iron mass fraction from SNIa */
     p->chemistry_data.smoothed_iron_mass_fraction_from_SNIa = p->chemistry_data.iron_mass_fraction_from_SNIa;
+}
+
+/**
+ * @brief Computes the metal diffution time-step.
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param cosmo The current cosmological model.
+ * @param us The internal system of units.
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float metal_diffusion_timestep(
+                                                                    const struct phys_const* restrict phys_const,
+                                                                    const struct cosmology* restrict cosmo,
+                                                                    const struct unit_system* restrict us,
+                                                                    const struct hydro_props* hydro_props, const struct part* restrict p) {
+    
+    float dt_diff = 0.2 * cosmo->a * cosmo->a * p->h * p->h; /*h in physical units*/
+    dt_diff *= p->rho * cosmo->a_inv * cosmo->a_inv * cosmo->a_inv; /*rho in physical units*/
+    dt_diff /= (1.0e-33 + p->diffusion_data.diffusion_coefficient); /*Diff. coeff. in physical units*/
+    dt_diff *= cosmo->a_inv * cosmo->a_inv; /*back to internal units*/
+    return dt_diff;
 }
 
 
