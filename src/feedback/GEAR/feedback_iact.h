@@ -93,8 +93,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const integertime_t ti_current) {
 
   const int number_supernovae = si->feedback_data.number_snia + si->feedback_data.number_snii;
-  if (number_supernovae == 0)
+  /* Do we have supernovae? */
+  if (number_supernovae == 0) {
     return;
+  }
 
   const float mj = hydro_get_mass(pj);
   const float r = sqrtf(r2);
@@ -107,10 +109,14 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   kernel_deval(xi, &wi, &wi_dx);
   wi *= hi_inv_dim;
 
+  /* Compute inverse enrichment weight */
+  const double si_inv_weight = si->feedback_data.enrichment_weight == 0?
+    0. : 1. / si->feedback_data.enrichment_weight;
+
   /* Mass received */
   const double m_ej = si->feedback_data.mass_ejected;
   // TODO compute inverse before feedback loop
-  const double weight = mj * wi / si->feedback_data.enrichment_weight;
+  const double weight = mj * wi * si_inv_weight;
   const double dm = m_ej * weight;
   const double new_mass = mj + dm;
 
@@ -120,6 +126,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const double u_sn = number_supernovae * e_sn / m_ej;
   const double du = dm * u_sn * weight / new_mass;
 
+  
   xpj->feedback_data.delta_mass += dm;
   xpj->feedback_data.delta_u += du;
 
