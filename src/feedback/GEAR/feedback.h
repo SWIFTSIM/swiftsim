@@ -56,38 +56,42 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   }
 
   /* Update mass */
-  const float old_mass = hydro_get_mass(p);
-  const float new_mass = old_mass + xp->feedback_data.delta_mass;
+  const double old_mass = hydro_get_mass(p);
+  const double new_mass = old_mass + xp->feedback_data.delta_mass;
 
   if (xp->feedback_data.delta_mass < 0.) {
     error("Delta mass smaller than 0");
   }
 
-  hydro_set_mass(p, new_mass);
+  if (isfinite(xp->feedback_data.delta_mass) == 0) {
+    error("inf");
+  }
 
+  hydro_set_mass(p, new_mass);
+  
   xp->feedback_data.delta_mass = 0;
 
   /* Update the density */
   p->rho *= new_mass / old_mass;
 
   /* Update internal energy */
-  const float u = hydro_get_physical_internal_energy(p, xp, cosmo);
-  const float u_new = u + xp->feedback_data.delta_u;
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
+  const double u_new = u + xp->feedback_data.delta_u;
 
   hydro_set_physical_internal_energy(p, xp, cosmo, u_new);
   hydro_set_drifted_physical_internal_energy(p, cosmo, u_new);
 
   xp->feedback_data.delta_u = 0.;
 
-  /* /\* Update the velocities *\/ */
-  /* for(int i=0; i < 3; i++) { */
-  /*   const float dv = xp->feedback_data.delta_p[i] / new_mass; */
+  /* Update the velocities */
+  for(int i=0; i < 3; i++) {
+    const double dv = xp->feedback_data.delta_p[i] / new_mass;
 
-  /*   xp->v_full[i] += dv; */
-  /*   p->v[i] += dv; */
+    xp->v_full[i] += dv;
+    p->v[i] += dv;
 
-  /*   xp->feedback_data.delta_p[i] = 0; */
-  /* } */
+    xp->feedback_data.delta_p[i] = 0;
+  }
   
   /* wakeup the particle */
   //p->wakeup = time_bin_awake;
@@ -114,13 +118,13 @@ __attribute__((always_inline)) INLINE static int feedback_do_feedback(
  * @param with_cosmology Are we doing a cosmological run?
  */
 __attribute__((always_inline)) INLINE static int feedback_is_active(
-    const struct spart* sp, const float time, const struct cosmology* cosmo,
+    const struct spart* sp, const double time, const struct cosmology* cosmo,
     const int with_cosmology) {
 
   if (sp->birth_time == -1.) return 0;
 
   if (with_cosmology) {
-    return ((float)cosmo->a) > sp->birth_scale_factor;
+    return ((double)cosmo->a) > sp->birth_scale_factor;
   } else {
     return time > sp->birth_time;
   }
@@ -169,6 +173,8 @@ __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {
 
   feedback_init_spart(sp);
+
+  feedback_reset_feedback(sp, feedback_props);
 }
 
 /**
@@ -207,9 +213,12 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
 #endif
 
+  /* Reset the feedback */
+  feedback_reset_feedback(sp, feedback_props);
+
   /* Add missing h factor */
-  const float hi_inv = 1.f / sp->h;
-  const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+  const double hi_inv = 1.f / sp->h;
+  const double hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
   
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
