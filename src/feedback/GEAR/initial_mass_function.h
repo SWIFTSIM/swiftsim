@@ -25,8 +25,8 @@
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_exponent(
-    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+__attribute__((always_inline)) INLINE static double initial_mass_function_get_exponent(
+    const struct initial_mass_function* imf, double mass_min, double mass_max) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mass_max > imf->mass_max)
@@ -81,12 +81,12 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
 
   /* Index in the data */
   int j = 1;
-  const float mass_min = pow(10, interp->xmin);
-  const float mass_max = pow(10, interp->xmin + (interp->N - 1) * interp->dx);
+  const double mass_min = pow(10, interp->xmin);
+  const double mass_max = pow(10, interp->xmin + (interp->N - 1) * interp->dx);
 
-  float m = mass_min;
+  double m = mass_min;
 
-  float *tmp = (float *) malloc(sizeof(float) * interp->N);
+  double *tmp = (double *) malloc(sizeof(double) * interp->N);
 
   /* Set lower limit */
   tmp[0] = 0;
@@ -106,15 +106,15 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
     while (m < imf->mass_limits[i+1] && j < interp->N) {
 
       /* Compute the masses */
-      const float log_m1 = interp->xmin + (j - 1) * interp->dx;
-      const float m1 = pow(10, log_m1);
-      const float log_m2 = interp->xmin + j * interp->dx;
-      const float m2 = pow(10, log_m2);
-      const float dm = m2 - m1;
-      const float imf_1 = imf->coef[i] * pow(m1, imf->exp[i]);
+      const double log_m1 = interp->xmin + (j - 1) * interp->dx;
+      const double m1 = pow(10, log_m1);
+      const double log_m2 = interp->xmin + j * interp->dx;
+      const double m2 = pow(10, log_m2);
+      const double dm = m2 - m1;
+      const double imf_1 = imf->coef[i] * pow(m1, imf->exp[i]);
 
       /* Get the imf of the upper limit  */
-      float imf_2;
+      double imf_2;
       if (m2 > imf->mass_limits[i+1]) {
       	imf_2 = imf->coef[i+1] * pow(m2, imf->exp[i+1]);
       }
@@ -137,7 +137,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
   }
 
   /* Copy temporary array */
-  memcpy(interp->data, tmp, interp->N * sizeof(float));
+  memcpy(interp->data, tmp, interp->N * sizeof(double));
 
   /* Update the boundary conditions */
   interp->boundary_condition = boundary_condition_zero_const;
@@ -156,8 +156,8 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
  *
  * @return The imf's coefficient of the interval.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_coefficient(
-    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+__attribute__((always_inline)) INLINE static double initial_mass_function_get_coefficient(
+    const struct initial_mass_function* imf, double mass_min, double mass_max) {
 
   for(int i = 0; i < imf->n_parts; i++) {
 
@@ -187,8 +187,8 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_coe
  *
  * @return The mass fraction.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_imf(
-    const struct initial_mass_function *imf, float m) {
+__attribute__((always_inline)) INLINE static double initial_mass_function_get_imf(
+    const struct initial_mass_function *imf, double m) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (m > imf->mass_max || m < imf->mass_min)
@@ -215,8 +215,8 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
  *
  * @return The fraction stars in the interval (in number).
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_number(
-    const struct initial_mass_function *imf, float m1, float m2) {
+__attribute__((always_inline)) INLINE static double initial_mass_function_get_number(
+    const struct initial_mass_function *imf, double m1, double m2) {
   error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
@@ -231,7 +231,7 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_num
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
 #endif
 
-  float n = 0.;
+  double n = 0.;
 
   for(int i = 0; i < imf->n_parts; i++) {
     /* Are we above the lowest mass? */
@@ -243,9 +243,9 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_num
       break;
 
     /* Get integral limits. */
-    const float mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
-    const float mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
-    const float exp = imf->exp[i];
+    const double mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
+    const double mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
+    const double exp = imf->exp[i];
 
     /* Compute the contribution of the current part. */
     n += imf->coef[i] * (pow(mass_max, exp) - pow(mass_min, exp)) / exp;
@@ -263,8 +263,8 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_num
  *
  * @return The fraction stars in the interval (in mass).
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_imf_mass(
-    const struct initial_mass_function *imf, float m1, float m2) {
+__attribute__((always_inline)) INLINE static double initial_mass_function_get_imf_mass(
+    const struct initial_mass_function *imf, double m1, double m2) {
   error("This has not been tested. Need to check the units");
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
@@ -279,7 +279,7 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
 #endif
 
-  float mass = 0.;
+  double mass = 0.;
 
   for(int i = 0; i < imf->n_parts; i++) {
     /* Are we above the lowest mass? */
@@ -291,9 +291,9 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
       break;
 
     /* Get integral limits. */
-    const float mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
-    const float mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
-    const float exp = imf->exp[i] + 1.;
+    const double mass_min = (m1 > imf->mass_limits[i]) ? m1: imf->mass_limits[i];
+    const double mass_max = (m2 < imf->mass_limits[i+1]) ? m2: imf->mass_limits[i+1];
+    const double exp = imf->exp[i] + 1.;
 
     /* Compute the contribution of the current part. */
     mass += imf->coef[i] * (pow(mass_max, exp) - pow(mass_min, exp)) / exp;
@@ -313,7 +313,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_compute_
     struct initial_mass_function *imf) {
 
   /* Allocate memory */
-  if ((imf->coef = (float *) malloc(sizeof(float) * imf->n_parts)) == NULL)
+  if ((imf->coef = (double *) malloc(sizeof(double) * imf->n_parts)) == NULL)
     error("Failed to allocate the IMF coefficients.");
 
   /* Suppose that the first coefficients is 1 (will be corrected later) */
@@ -321,16 +321,16 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_compute_
 
   /* Use the criterion of continuity for the IMF */
   for(int i = 1; i < imf->n_parts; i++) {
-    float exp = imf->exp[i-1] - imf->exp[i];
+    double exp = imf->exp[i-1] - imf->exp[i];
     imf->coef[i] = imf->coef[i-1] * pow(imf->mass_limits[i], exp);
   }
 
   /* Use the criterion on the integral = 1 */
-  float integral = 0;
+  double integral = 0;
   for(int i = 0; i < imf->n_parts; i++) {
-    const float exp = imf->exp[i] + 1.;
-    const float m_i = pow(imf->mass_limits[i], exp);
-    const float m_i1 = pow(imf->mass_limits[i+1], exp);
+    const double exp = imf->exp[i] + 1.;
+    const double m_i = pow(imf->mass_limits[i], exp);
+    const double m_i1 = pow(imf->mass_limits[i+1], exp);
     integral += imf->coef[i] * (m_i1 - m_i)/ exp;
   }
 
@@ -362,18 +362,18 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   imf->n_parts += 1;
 
   /* Allocate the memory for the exponents */
-  if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
+  if ((imf->exp = (double *)malloc(sizeof(double) * imf->n_parts)) == NULL)
     error("Failed to allocate the IMF exponents.");
 
   /* Read the exponents */
-  io_read_array_attribute(group_id, "as", FLOAT, imf->exp, imf->n_parts);
+  io_read_array_attribute(group_id, "as", DOUBLE, imf->exp, imf->n_parts);
 
   /* Allocate the memory for the temporary mass limits */
-  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
+  if ((imf->mass_limits = (double *)malloc(sizeof(double) * (imf->n_parts + 1))) == NULL)
     error("Failed to allocate the IMF masses.");
 
   /* Read the mass limits */
-  io_read_array_attribute(group_id, "ms", FLOAT, imf->mass_limits, imf->n_parts - 1);
+  io_read_array_attribute(group_id, "ms", DOUBLE, imf->mass_limits, imf->n_parts - 1);
 
   /* Copy the data (need to shift for mass_min) */
   for(int i = imf->n_parts - 1; i > 0; i--) {
@@ -381,10 +381,10 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   }
 
   /* Read the minimal mass limit */
-  io_read_attribute(group_id, "Mmin", FLOAT, &imf->mass_limits[0]);
+  io_read_attribute(group_id, "Mmin", DOUBLE, &imf->mass_limits[0]);
   
   /* Read the maximal mass limit */
-  io_read_attribute(group_id, "Mmax", FLOAT, &imf->mass_limits[imf->n_parts]);
+  io_read_attribute(group_id, "Mmax", DOUBLE, &imf->mass_limits[imf->n_parts]);
 
   /* Close everything */
   h5_close_group(file_id, group_id);
@@ -408,23 +408,23 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   /* Reallocate the exponent memory */
   if (n_parts_changed) {
     free(imf->exp);
-    if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
+    if ((imf->exp = (double *)malloc(sizeof(double) * imf->n_parts)) == NULL)
       error("Failed to allocate the IMF exponents.");
   }
 
   /* Read the exponents */
   const char *exponent_name = "GEARInitialMassFunction:exponents";
   if (n_parts_changed) {
-    parser_get_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
+    parser_get_param_double_array(params, exponent_name, imf->n_parts, imf->exp);
   }
   else {
-    parser_get_opt_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
+    parser_get_opt_param_double_array(params, exponent_name, imf->n_parts, imf->exp);
   }
 
   /* Reallocate the mass limits memory */
   if (n_parts_changed) {
     free(imf->mass_limits);
-    if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
+    if ((imf->mass_limits = (double *)malloc(sizeof(double) * (imf->n_parts + 1))) ==
 	NULL)
       error("Failed to allocate the IMF masses.");
   }
@@ -432,11 +432,11 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   /* Read the mass limits */
   const char *mass_limits_name = "GEARInitialMassFunction:mass_limits_msun";
   if (n_parts_changed) {
-    parser_get_param_float_array(params, mass_limits_name,
+    parser_get_param_double_array(params, mass_limits_name,
 				 imf->n_parts + 1, imf->mass_limits);
   }
   else {
-    parser_get_opt_param_float_array(params, mass_limits_name,
+    parser_get_opt_param_double_array(params, mass_limits_name,
 				     imf->n_parts + 1, imf->mass_limits);
   }
 }

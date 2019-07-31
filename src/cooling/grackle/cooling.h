@@ -25,6 +25,7 @@
  */
 
 /* Some standard headers. */
+#include <fenv.h>
 #include <float.h>
 #include <math.h>
 
@@ -933,6 +934,8 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
     const struct phys_const* phys_const, const struct hydro_props* hydro_props,
     struct cooling_function_data* cooling) {
 
+  fedisableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+
   if (GRACKLE_NPART != 1)
     error("Grackle with multiple particles not implemented");
 
@@ -944,6 +947,8 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
 
   /* Set up grackle */
   cooling_init_grackle(cooling);
+
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 }
 
 /**
