@@ -50,20 +50,6 @@ INLINE static double eagle_SNII_feedback_temperature_change(
 }
 
 /**
- * @brief Return the change in temperature (in internal units) to apply to a
- * gas particle affected by SNIa feedback.
- *
- * @param sp The #spart.
- * @param props The properties of the feedback model.
- */
-INLINE static double eagle_SNIa_feedback_temperature_change(
-    const struct spart* sp, const struct feedback_props* props) {
-
-  /* In the EAGLE REF model, the change of temperature is constant */
-  return props->SNIa_deltaT_desired;
-}
-
-/**
  * @brief Computes the number of supernovae of type II exploding for a given
  * star particle.
  *
@@ -115,22 +101,6 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
   const double denonimator = 1. + Z_term * n_term;
 
   return f_E_min + (f_E_max - f_E_min) / denonimator;
-}
-
-/**
- * @brief Computes the fraction of the available super-novae Ia energy to
- * inject for a given event.
- *
- * @param sp The #spart.
- * @param props The properties of the feedback model.
- */
-INLINE static double eagle_SNIa_feedback_energy_fraction(
-    const struct spart* sp, const struct feedback_props* props) {
-
-  /* Model parameters */
-  const double SNIa_f_E = props->SNIa_f_E;
-
-  return SNIa_f_E;
 }
 
 /**
@@ -208,6 +178,36 @@ INLINE static void compute_SNII_feedback(
     sp->feedback_data.to_distribute.SNII_heating_probability = prob;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
   }
+}
+
+/**
+ * @brief Return the change in temperature (in internal units) to apply to a
+ * gas particle affected by SNIa feedback.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+INLINE static double eagle_SNIa_feedback_temperature_change(
+    const struct spart* sp, const struct feedback_props* props) {
+
+  /* In the EAGLE REF model, the change of temperature is constant */
+  return props->SNIa_deltaT_desired;
+}
+
+/**
+ * @brief Computes the fraction of the available super-novae Ia energy to
+ * inject for a given event.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+INLINE static double eagle_SNIa_feedback_energy_fraction(
+    const struct spart* sp, const struct feedback_props* props) {
+
+  /* Model parameters */
+  const double SNIa_f_E = props->SNIa_f_E;
+
+  return SNIa_f_E;
 }
 
 /**
