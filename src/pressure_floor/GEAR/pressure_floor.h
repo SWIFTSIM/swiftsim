@@ -61,7 +61,7 @@ static INLINE float pressure_floor_get_physical_pressure(
 
   /* Compute pressure floor */
   float floor =
-      4.0 * M_1_PI * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
+      4.0 * M_1_PI * pressure_floor_props.G * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
   // TODO add sigma (will be done once the SF is merged)
   floor *= rho * hydro_one_over_gamma;
 
@@ -84,7 +84,7 @@ static INLINE float pressure_floor_get_comoving_pressure(const struct part *p,
 
   /* Compute pressure floor */
   float floor =
-      4.0 * M_1_PI * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
+      4.0 * M_1_PI * pressure_floor_props.G * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
   // TODO add sigma (will be done once the SF is merged)
   floor *= rho * hydro_one_over_gamma;
 

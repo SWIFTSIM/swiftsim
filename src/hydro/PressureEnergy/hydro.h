@@ -127,7 +127,7 @@ hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
     const struct part *restrict p) {
 
-  return pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+  return p->pressure_bar;
 }
 
 /**
@@ -142,8 +142,7 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
 
-  return pressure_floor_get_physical_pressure(
-      p, cosmo, cosmo->a_factor_pressure * p->pressure_bar);
+  return cosmo->a_factor_pressure * p->pressure_bar;
 }
 
 /**
@@ -224,7 +223,7 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
   /* Compute the sound speed -- see theory section for justification */
   /* IDEAL GAS ONLY -- P-U does not work with generic EoS. */
   const float pressure =
-      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+    pressure_floor_get_comoving_pressure(p, p->pressure_bar);
   const float square_rooted = sqrtf(hydro_gamma * pressure / p->rho);
 
   return square_rooted;
@@ -240,7 +239,8 @@ __attribute__((always_inline)) INLINE static float
 hydro_get_physical_soundspeed(const struct part *restrict p,
                               const struct cosmology *cosmo) {
 
-  return cosmo->a_factor_sound_speed * p->force.soundspeed;
+  return pressure_floor_get_physical_pressure(
+    p, cosmo, cosmo->a_factor_sound_speed * p->force.soundspeed);
 }
 
 /**
@@ -644,10 +644,17 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                              hydro_one_over_gamma_minus_one) /
                             (1.f + common_factor * p->density.wcount_dh);
 
+  /* Get the pressures */
+  const float pressure_with_floor =
+      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+  const float pressure2 = p->pressure_bar * p->pressure_bar;
+
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
+  p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
+    pressure_with_floor / pressure2;
 }
 
 /**
@@ -759,6 +766,13 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   const float soundspeed = hydro_get_comoving_soundspeed(p);
 
   p->force.soundspeed = soundspeed;
+
+  /* update the required variables */
+  const float pressure_with_floor =
+      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
+  const float pressure2 = p->pressure_bar * p->pressure_bar;
+  p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
+    pressure_with_floor / pressure2;
 }
 
 /**
