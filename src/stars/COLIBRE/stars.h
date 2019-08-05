@@ -175,4 +175,5 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
   p->num_ngb_force = 0;
 #endif
 }
+
 #endif /* SWIFT_COLIBRE_STARS_H */

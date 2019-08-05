@@ -577,6 +577,8 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
   const float extra_heat =
       cooling->H_reion_heat_cgs * cooling->internal_energy_from_cgs;
 
+  message("Applying extra energy for H reionization!");
+
   /* Loop through particles and set new heat */
   for (size_t i = 0; i < s->nr_parts; i++) {
 

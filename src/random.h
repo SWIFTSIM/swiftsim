@@ -55,7 +55,7 @@ enum random_number_type {
 #ifndef __APPLE__
 
 #include <errno.h>
-/*#include <ieee754.h>*/
+#include <ieee754.h>
 #include <limits.h>
 
 /* Inline the default RNG functions to avoid costly function calls. These

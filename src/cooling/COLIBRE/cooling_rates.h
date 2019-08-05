@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-
 #ifndef SWIFT_COLIBRE_COOLING_RATES_H
 #define SWIFT_COLIBRE_COOLING_RATES_H
 
@@ -300,18 +299,19 @@ eagle_helium_reionization_extraheat(
 __attribute__((always_inline)) INLINE static float colibre_convert_u_to_temp(
     const double log_10_u_cgs, const float redshift, int n_H_index, float d_n_H,
     int met_index, float d_met, int red_index, float d_red,
-
     const struct cooling_function_data *restrict cooling) {
 
   /* Get index of u along the internal energy axis */
   int u_index;
   float d_u;
+
   get_index_1d(cooling->Therm, colibre_cooling_N_internalenergy, log_10_u_cgs,
                &u_index, &d_u);
 
   /* Interpolate temperature table to return temperature for current
    * internal energy */
   float log_10_T;
+
   /* Temperature from internal energy */
   log_10_T = interpolation_4d(
       cooling->table.T_from_U, red_index, u_index, met_index, n_H_index, d_red,

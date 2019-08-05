@@ -1369,16 +1369,6 @@ case "$with_subgrid" in
 	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=EAGLE
    ;;
-   COLIBRE)
-	with_subgrid_cooling=COLIBRE
-	with_subgrid_chemistry=COLIBRE
-	with_subgrid_tracers=EAGLE
-	with_subgrid_entropy_floor=EAGLE
-	with_subgrid_stars=EAGLE
-	with_subgrid_star_formation=EAGLE
-	with_subgrid_feedback=EAGLE
-	with_subgrid_black_holes=none
-   ;;
    *)
       AC_MSG_ERROR([Unknown subgrid choice: $with_subgrid])
    ;;
@@ -2008,9 +1998,6 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
 # Check if using EAGLE cooling
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
-# Check if using COLIBRE cooling
-AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
-
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 
