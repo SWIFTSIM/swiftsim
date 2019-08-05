@@ -35,8 +35,8 @@
 #include "cooling_struct.h"
 #include "cooling_tables.h"
 #include "error.h"
-#include "interpolate.h"
 #include "exp10.h"
+#include "interpolate.h"
 
 /**
  * @brief Names of the elements in the order they are stored in the files

@@ -28,7 +28,6 @@
 #include "interpolate.h"
 #include "minmax.h"
 #include "yield_tables.h"
-#include "exp10.h"
 
 /**
  * @brief the different weightings allowed for the IMF integration

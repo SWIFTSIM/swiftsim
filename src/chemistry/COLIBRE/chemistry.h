@@ -62,28 +62,28 @@ chemistry_get_element_name(enum chemistry_element elem) {
 __attribute__((always_inline)) INLINE static void chemistry_init_part(
     struct part* restrict p, const struct chemistry_global_data* cd) {
 
-    struct diffusion_part_data* dp = &p->diffusion_data;
+  struct diffusion_part_data* dp = &p->diffusion_data;
 
-    dp->diffusion_coefficient = 0.0f;
-    
-    for (int elem = 0; elem < chemistry_element_count; ++elem){
-        dp->diffusion_rate[elem] = 0.0f;
-    }
-    
-    for (int k = 0; k < 3; k++) {
-        dp->shear_tensor[0][k] = 0.0f;
-        dp->shear_tensor[1][k] = 0.0f;
-        dp->shear_tensor[2][k] = 0.0f;
-    }
-    
-    struct chemistry_part_data* cpd = &p->chemistry_data;
-    
-    for (int i = 0; i < chemistry_element_count; i++) {
-        cpd->smoothed_metal_mass_fraction[i] = 0.f;
-    }
-    
-    cpd->smoothed_metal_mass_fraction_total = 0.f;
-    cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
+  dp->diffusion_coefficient = 0.0f;
+
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    dp->diffusion_rate[elem] = 0.0f;
+  }
+
+  for (int k = 0; k < 3; k++) {
+    dp->shear_tensor[0][k] = 0.0f;
+    dp->shear_tensor[1][k] = 0.0f;
+    dp->shear_tensor[2][k] = 0.0f;
+  }
+
+  struct chemistry_part_data* cpd = &p->chemistry_data;
+
+  for (int i = 0; i < chemistry_element_count; i++) {
+    cpd->smoothed_metal_mass_fraction[i] = 0.f;
+  }
+
+  cpd->smoothed_metal_mass_fraction_total = 0.f;
+  cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
 }
 
 /**
@@ -95,64 +95,81 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
  */
 
 __attribute__((always_inline)) INLINE static void chemistry_end_density(
-     struct part* restrict p, const struct chemistry_global_data* cd,
-     const struct cosmology* cosmo) {
+    struct part* restrict p, const struct chemistry_global_data* cd,
+    const struct cosmology* cosmo) {
 
-    int k;
-    /* Some smoothing length multiples. */
-    const float h = p->h;
-    const float h_inv = 1.0f / h;                       /* 1/h */
-    const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
-    const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
-    float rho = hydro_get_comoving_density(p);
-    const float rho_inv = 1.0f / rho; /* 1 / rho */
-    const float a_inv = cosmo->a_inv;
-    const float a_inv2 = a_inv * a_inv;
-    
-    /* Velocity shear tensor (in physical coordinates)*/
-    /* Adding Hubble flow ? No*/
-    for (k = 0; k < 3; k++){
-        p->diffusion_data.shear_tensor[k][0] *= h_inv_dim_plus_one * rho_inv * a_inv2;/* + cosmo->H * hydro_dimension;*/
-        p->diffusion_data.shear_tensor[k][1] *= h_inv_dim_plus_one * rho_inv * a_inv2;/* + cosmo->H * hydro_dimension;*/
-        p->diffusion_data.shear_tensor[k][2] *= h_inv_dim_plus_one * rho_inv * a_inv2;/* + cosmo->H * hydro_dimension;*/
-    }
-    
-    float shear_tensor_S[3][3];
-    /* Norm of shear_tensor */
-    float TShearTensorN = p->diffusion_data.shear_tensor[0][0] + p->diffusion_data.shear_tensor[1][1] + p->diffusion_data.shear_tensor[2][2];
-    TShearTensorN *= (1.0f/3.0f);
-    
-    /* I define a new shear_tensor "shear_tensor_S" */
-    for (k = 0; k < 3; k++){
-        shear_tensor_S[k][0] = 0.5 * (p->diffusion_data.shear_tensor[k][0] + p->diffusion_data.shear_tensor[0][k]);
-        if (k == 0) shear_tensor_S[k][0] -= TShearTensorN;
-        shear_tensor_S[k][1] = 0.5 * (p->diffusion_data.shear_tensor[k][1] + p->diffusion_data.shear_tensor[1][k]);
-        if (k == 1) shear_tensor_S[k][1] -= TShearTensorN;
-        shear_tensor_S[k][2] = 0.5 * (p->diffusion_data.shear_tensor[k][2] + p->diffusion_data.shear_tensor[2][k]);
-        if (k == 2) shear_tensor_S[k][2] -= TShearTensorN;
-    }
-    /* Calculate the trace */
-    float NormTensor = 0.0f;
-    for (k = 0; k < 3; k++){
-        NormTensor += shear_tensor_S[k][0] * shear_tensor_S[k][0] + shear_tensor_S[k][1] * shear_tensor_S[k][1] + shear_tensor_S[k][2] * shear_tensor_S[k][2];
-    }
-    NormTensor = sqrt(NormTensor);
-    
-    // We can now combine to get the diffusion coefficient (in physical coordinates) //
-    p->diffusion_data.diffusion_coefficient = 0.01 * rho * NormTensor * h * h * a_inv;  /* rho a^-3 * Norm tensor (physical already) * a^2 * h^2 */
-    
-    /* Velocity shear tensor goes back to zero for next loop */
-    for (k = 0; k < 3; k++){
-        p->diffusion_data.shear_tensor[k][0] = 0.0f;
-        p->diffusion_data.shear_tensor[k][1] = 0.0f;
-        p->diffusion_data.shear_tensor[k][2] = 0.0f;
-    }
-    
-    /* Getting ready for diffusion rate calculation in <FORCE LOOP> */
-    for (int elem = 0; elem < chemistry_element_count; ++elem){
-        p->diffusion_data.diffusion_rate[elem] = 0.0f;
-        p->diffusion_data.dmetal_mass_fraction[elem] = p->chemistry_data.metal_mass_fraction[elem];
-    }
+  int k;
+  /* Some smoothing length multiples. */
+  const float h = p->h;
+  const float h_inv = 1.0f / h;                       /* 1/h */
+  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
+  float rho = hydro_get_comoving_density(p);
+  const float rho_inv = 1.0f / rho; /* 1 / rho */
+  const float a_inv = cosmo->a_inv;
+  const float a_inv2 = a_inv * a_inv;
+
+  /* Velocity shear tensor (in physical coordinates)*/
+  /* Adding Hubble flow ? No*/
+  for (k = 0; k < 3; k++) {
+    p->diffusion_data.shear_tensor[k][0] *=
+        h_inv_dim_plus_one * rho_inv *
+        a_inv2; /* + cosmo->H * hydro_dimension;*/
+    p->diffusion_data.shear_tensor[k][1] *=
+        h_inv_dim_plus_one * rho_inv *
+        a_inv2; /* + cosmo->H * hydro_dimension;*/
+    p->diffusion_data.shear_tensor[k][2] *=
+        h_inv_dim_plus_one * rho_inv *
+        a_inv2; /* + cosmo->H * hydro_dimension;*/
+  }
+
+  float shear_tensor_S[3][3];
+  /* Norm of shear_tensor */
+  float TShearTensorN = p->diffusion_data.shear_tensor[0][0] +
+                        p->diffusion_data.shear_tensor[1][1] +
+                        p->diffusion_data.shear_tensor[2][2];
+  TShearTensorN *= (1.0f / 3.0f);
+
+  /* I define a new shear_tensor "shear_tensor_S" */
+  for (k = 0; k < 3; k++) {
+    shear_tensor_S[k][0] = 0.5 * (p->diffusion_data.shear_tensor[k][0] +
+                                  p->diffusion_data.shear_tensor[0][k]);
+    if (k == 0) shear_tensor_S[k][0] -= TShearTensorN;
+    shear_tensor_S[k][1] = 0.5 * (p->diffusion_data.shear_tensor[k][1] +
+                                  p->diffusion_data.shear_tensor[1][k]);
+    if (k == 1) shear_tensor_S[k][1] -= TShearTensorN;
+    shear_tensor_S[k][2] = 0.5 * (p->diffusion_data.shear_tensor[k][2] +
+                                  p->diffusion_data.shear_tensor[2][k]);
+    if (k == 2) shear_tensor_S[k][2] -= TShearTensorN;
+  }
+  /* Calculate the trace */
+  float NormTensor = 0.0f;
+  for (k = 0; k < 3; k++) {
+    NormTensor += shear_tensor_S[k][0] * shear_tensor_S[k][0] +
+                  shear_tensor_S[k][1] * shear_tensor_S[k][1] +
+                  shear_tensor_S[k][2] * shear_tensor_S[k][2];
+  }
+  NormTensor = sqrt(NormTensor);
+
+  // We can now combine to get the diffusion coefficient (in physical
+  // coordinates) //
+  p->diffusion_data.diffusion_coefficient =
+      0.01 * rho * NormTensor * h * h *
+      a_inv; /* rho a^-3 * Norm tensor (physical already) * a^2 * h^2 */
+
+  /* Velocity shear tensor goes back to zero for next loop */
+  for (k = 0; k < 3; k++) {
+    p->diffusion_data.shear_tensor[k][0] = 0.0f;
+    p->diffusion_data.shear_tensor[k][1] = 0.0f;
+    p->diffusion_data.shear_tensor[k][2] = 0.0f;
+  }
+
+  /* Getting ready for diffusion rate calculation in <FORCE LOOP> */
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    p->diffusion_data.diffusion_rate[elem] = 0.0f;
+    p->diffusion_data.dmetal_mass_fraction[elem] =
+        p->chemistry_data.metal_mass_fraction[elem];
+  }
 }
 
 /**
@@ -169,9 +186,9 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
 
-  //struct chemistry_part_data* cpd = &p->chemistry_data;
+  // struct chemistry_part_data* cpd = &p->chemistry_data;
   // CC: Not sure what to do here, better to add message
-   /* error("Needs implementing!");*/
+  /* error("Needs implementing!");*/
 }
 
 /**
@@ -197,14 +214,15 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
 
-    for (int elem = 0; elem < chemistry_element_count; ++elem){
-        p->chemistry_data.metal_mass_fraction[elem] = data->initial_metal_mass_fraction[elem];
-        p->diffusion_data.dmetal_mass_fraction[elem] = data->initial_metal_mass_fraction[elem];
+    for (int elem = 0; elem < chemistry_element_count; ++elem) {
+      p->chemistry_data.metal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
+      p->diffusion_data.dmetal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
     }
   }
   chemistry_init_part(p, data);
 }
-
 
 /**
  * @brief Initialises the chemistry properties.
@@ -244,17 +262,17 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
  * @param sp Pointer to the sparticle data.
  */
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
-                                                                             const struct chemistry_global_data* data, struct spart* restrict sp) {
-    
-    /* Initialize mass fractions for total metals and each metal individually */
-    if (data->initial_metal_mass_fraction_total != -1) {
-        sp->chemistry_data.metal_mass_fraction_total =
+    const struct chemistry_global_data* data, struct spart* restrict sp) {
+
+  /* Initialize mass fractions for total metals and each metal individually */
+  if (data->initial_metal_mass_fraction_total != -1) {
+    sp->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
-        
-        for (int elem = 0; elem < chemistry_element_count; ++elem)
-        sp->chemistry_data.metal_mass_fraction[elem] =
-        data->initial_metal_mass_fraction[elem];
-    }
+
+    for (int elem = 0; elem < chemistry_element_count; ++elem)
+      sp->chemistry_data.metal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
+  }
 }
 
 /**
@@ -271,33 +289,41 @@ static INLINE void chemistry_print_backend(
 }
 
 /**
- * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
+ * @brief Updates the metal mass fractions after diffusion at the end of the
+ * <FORCE LOOP>
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {
-    
-    for (int elem = 0; elem < chemistry_element_count; ++elem){
-        p->chemistry_data.metal_mass_fraction[elem] = p->diffusion_data.dmetal_mass_fraction[elem];
-    }
-    /* Diffusion coefficient (& rate) goes back to co-moving coordinates */
-    p->diffusion_data.diffusion_coefficient *= cosmo->a * cosmo->a * cosmo->a;
-    
-    /* goes back to zero and recomputes*/
-    p->chemistry_data.metal_mass_fraction_total = 1.0f;
-    p->chemistry_data.metal_mass_fraction_total -= p->chemistry_data.metal_mass_fraction[0]; /*H*/
-    p->chemistry_data.metal_mass_fraction_total -= p->chemistry_data.metal_mass_fraction[1]; /*He*/
-    
-    for (int i = 0; i < chemistry_element_count; i++) {
-        /* Final operation on the density (add self-contribution). */
-        p->chemistry_data.smoothed_metal_mass_fraction[i] = p->chemistry_data.metal_mass_fraction[i];
-    }
-    
-    /* Smooth mass fraction of all metals */
-    p->chemistry_data.smoothed_metal_mass_fraction_total = p->chemistry_data.metal_mass_fraction_total;
-    
-    /* Smooth iron mass fraction from SNIa */
-    p->chemistry_data.smoothed_iron_mass_fraction_from_SNIa = p->chemistry_data.iron_mass_fraction_from_SNIa;
+__attribute__((always_inline)) INLINE static void chemistry_end_force(
+    struct part* restrict p, const struct cosmology* cosmo) {
+
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    p->chemistry_data.metal_mass_fraction[elem] =
+        p->diffusion_data.dmetal_mass_fraction[elem];
+  }
+  /* Diffusion coefficient (& rate) goes back to co-moving coordinates */
+  p->diffusion_data.diffusion_coefficient *= cosmo->a * cosmo->a * cosmo->a;
+
+  /* goes back to zero and recomputes*/
+  p->chemistry_data.metal_mass_fraction_total = 1.0f;
+  p->chemistry_data.metal_mass_fraction_total -=
+      p->chemistry_data.metal_mass_fraction[0]; /*H*/
+  p->chemistry_data.metal_mass_fraction_total -=
+      p->chemistry_data.metal_mass_fraction[1]; /*He*/
+
+  for (int i = 0; i < chemistry_element_count; i++) {
+    /* Final operation on the density (add self-contribution). */
+    p->chemistry_data.smoothed_metal_mass_fraction[i] =
+        p->chemistry_data.metal_mass_fraction[i];
+  }
+
+  /* Smooth mass fraction of all metals */
+  p->chemistry_data.smoothed_metal_mass_fraction_total =
+      p->chemistry_data.metal_mass_fraction_total;
+
+  /* Smooth iron mass fraction from SNIa */
+  p->chemistry_data.smoothed_iron_mass_fraction_from_SNIa =
+      p->chemistry_data.iron_mass_fraction_from_SNIa;
 }
 
 /**
@@ -309,17 +335,20 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(struct par
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float metal_diffusion_timestep(
-                                                                    const struct phys_const* restrict phys_const,
-                                                                    const struct cosmology* restrict cosmo,
-                                                                    const struct unit_system* restrict us,
-                                                                    const struct hydro_props* hydro_props, const struct part* restrict p) {
-    
-    float dt_diff = 0.2 * cosmo->a * cosmo->a * p->h * p->h; /*h in physical units*/
-    dt_diff *= p->rho * cosmo->a_inv * cosmo->a_inv * cosmo->a_inv; /*rho in physical units*/
-    dt_diff /= (1.0e-33 + p->diffusion_data.diffusion_coefficient); /*Diff. coeff. in physical units*/
-    dt_diff *= cosmo->a_inv * cosmo->a_inv; /*back to internal units*/
-    return dt_diff;
-}
+    const struct phys_const* restrict phys_const,
+    const struct cosmology* restrict cosmo,
+    const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props, const struct part* restrict p) {
 
+  float dt_diff =
+      0.2 * cosmo->a * cosmo->a * p->h * p->h; /*h in physical units*/
+  dt_diff *= p->rho * cosmo->a_inv * cosmo->a_inv *
+             cosmo->a_inv; /*rho in physical units*/
+  dt_diff /=
+      (1.0e-33 + p->diffusion_data
+                     .diffusion_coefficient); /*Diff. coeff. in physical units*/
+  dt_diff *= cosmo->a_inv * cosmo->a_inv;     /*back to internal units*/
+  return dt_diff;
+}
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */

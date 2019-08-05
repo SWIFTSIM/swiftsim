@@ -145,8 +145,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, float time_base, integertime_t t_current,
-    const struct cosmology *cosmo, const int with_cosmology) {}
+    struct part *restrict pj, float a, float H, float time_base,
+    integertime_t t_current, const struct cosmology *cosmo,
+    const int with_cosmology) {}
 
 /**
  * @brief do metal diffusion computation in the <FORCE LOOP>
@@ -162,9 +163,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
  *
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
-   float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-   struct part *restrict pj, float a, float H, float time_base, integertime_t t_current,
-   const struct cosmology *cosmo, const int with_cosmology) {
-}
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H, float time_base,
+    integertime_t t_current, const struct cosmology *cosmo,
+    const int with_cosmology) {}
 
 #endif /* SWIFT_EAGLE_CHEMISTRY_IACT_H */

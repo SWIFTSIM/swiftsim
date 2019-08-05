@@ -103,7 +103,7 @@ void pairs_n2(double *dim, struct part *restrict parts, int N, int periodic) {
       if (r2 < parts[j].h * parts[j].h || r2 < parts[k].h * parts[k].h) {
         runner_iact_density(r2, NULL, parts[j].h, parts[k].h, &parts[j],
                             &parts[k], a, H);
-          
+
         /* if ( parts[j].h / parts[k].h > maxratio )
             {
             maxratio = parts[j].h / parts[k].h;

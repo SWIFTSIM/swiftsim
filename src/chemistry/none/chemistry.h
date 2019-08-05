@@ -133,7 +133,6 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 __attribute__((always_inline)) INLINE static void chemistry_init_part(
     struct part* restrict p, const struct chemistry_global_data* data) {}
 
-
 /**
  * @brief Sets the chemistry properties of the sparticles to a valid start
  * state.
@@ -142,14 +141,15 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
  * @param sp Pointer to the sparticle data.
  */
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
-                                                                             const struct chemistry_global_data* data, struct spart* restrict sp) {}
+    const struct chemistry_global_data* data, struct spart* restrict sp) {}
 
 /**
- * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
+ * @brief Updates the metal mass fractions after diffusion at the end of the
+ * <FORCE LOOP>
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {}
-
+__attribute__((always_inline)) INLINE static void chemistry_end_force(
+    struct part* restrict p, const struct cosmology* cosmo) {}
 
 #endif /* SWIFT_CHEMISTRY_NONE_H */

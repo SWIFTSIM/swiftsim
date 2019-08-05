@@ -23,7 +23,6 @@
 #include "adiabatic_index.h"
 #include "cooling.h"
 #include "cosmology.h"
-#include "exp10.h"
 #include "engine.h"
 #include "entropy_floor.h"
 #include "equation_of_state.h"
@@ -235,8 +234,8 @@ INLINE static int star_formation_is_star_forming(
 
   const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
   const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-/*  const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
-  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
+  /*  const double Z = p->chemistry_data.smoothed_metal_mass_fraction_total;
+    const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
   const double n_H = physical_density * X_H;
 
   /* Get the density threshold */
@@ -284,8 +283,8 @@ INLINE static void star_formation_compute_SFR(
   const double physical_density = hydro_get_physical_density(p, cosmo);
 
   const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];
-/*  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
-    
+  /*  const double X_H = p->chemistry_data.smoothed_metal_mass_fraction[0];*/
+
   const double n_H = physical_density * X_H / phys_const->const_proton_mass;
 
   /* Are we above the threshold for automatic star formation? */
@@ -567,7 +566,8 @@ INLINE static void starformation_init_backend(
   starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
       parameter_file, "EAGLEStarFormation:EOS_temperature_margin_dex", FLT_MAX);
 
-  starform->ten_to_temperature_margin_threshold_dex = exp10(starform->temperature_margin_threshold_dex);
+  starform->ten_to_temperature_margin_threshold_dex =
+      exp10(starform->temperature_margin_threshold_dex);
 
   /* Read the normalization of the metallicity dependent critical
    * density*/

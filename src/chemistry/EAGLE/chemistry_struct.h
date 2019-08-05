@@ -94,7 +94,6 @@ struct chemistry_part_data {
  */
 struct diffusion_part_data {};
 
-
 /**
  * @brief Chemical abundances traced by the #bpart in the EAGLE model.
  */

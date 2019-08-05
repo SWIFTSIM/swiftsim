@@ -196,7 +196,6 @@ struct part {
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
 
-
   /* Diffusion information */
   struct diffusion_part_data diffusion_data;
 

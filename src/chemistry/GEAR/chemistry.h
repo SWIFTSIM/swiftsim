@@ -143,19 +143,18 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
  * @param sp Pointer to the sparticle data.
  */
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
-                                                                             const struct chemistry_global_data* data, struct spart* restrict sp) {
-    
-    /* Initialize mass fractions for total metals and each metal individually */
-    if (data->initial_metal_mass_fraction_total != -1) {
-        sp->chemistry_data.metal_mass_fraction_total =
-        data->initial_metal_mass_fraction_total;
-        
-        for (int elem = 0; elem < chemistry_element_count; ++elem)
-        sp->chemistry_data.metal_mass_fraction[elem] =
-        data->initial_metal_mass_fraction[elem];
-    }
-}
+    const struct chemistry_global_data* data, struct spart* restrict sp) {
 
+  /* Initialize mass fractions for total metals and each metal individually */
+  if (data->initial_metal_mass_fraction_total != -1) {
+    sp->chemistry_data.metal_mass_fraction_total =
+        data->initial_metal_mass_fraction_total;
+
+    for (int elem = 0; elem < chemistry_element_count; ++elem)
+      sp->chemistry_data.metal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
+  }
+}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -195,11 +194,12 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 }
 
 /**
- * @brief Updates the metal mass fractions after diffusion at the end of the <FORCE LOOP>
+ * @brief Updates the metal mass fractions after diffusion at the end of the
+ * <FORCE LOOP>
  *
  * @param p The particle to act upon.
  */
-__attribute__((always_inline)) INLINE static void chemistry_end_force(struct part* restrict p, const struct cosmology* cosmo) {}
-
+__attribute__((always_inline)) INLINE static void chemistry_end_force(
+    struct part* restrict p, const struct cosmology* cosmo) {}
 
 #endif /* SWIFT_CHEMISTRY_GEAR_H */

@@ -64,10 +64,9 @@ INLINE static int chemistry_write_particles(const struct part* parts,
  */
 INLINE static int diffusion_write_particles(const struct part* parts,
                                             struct io_props* list) {
-    
-    return 0;
-}
 
+  return 0;
+}
 
 /**
  * @brief Specifies which sparticle fields to write to a dataset

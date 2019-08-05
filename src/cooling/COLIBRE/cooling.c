@@ -701,7 +701,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
 void cooling_restore_tables(struct cooling_function_data *cooling,
                             const struct cosmology *cosmo) {
 
-
   read_cooling_header(cooling);
   read_cooling_tables(cooling);
 

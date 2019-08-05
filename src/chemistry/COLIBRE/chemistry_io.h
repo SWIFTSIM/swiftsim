@@ -89,10 +89,14 @@ INLINE static int chemistry_write_particles(const struct part* parts,
   list[8] =
       io_make_output_field("IronMassFracFromSNIa", FLOAT, 1, UNIT_CONV_NO_UNITS,
                            parts, chemistry_data.iron_mass_fraction_from_SNIa);
-    
-  list[9] = io_make_output_field("DiffusionCoefficient", FLOAT, 1, UNIT_CONV_DIFF_COEFF, parts, diffusion_data.diffusion_coefficient);
-    
-  list[10] = io_make_output_field("DiffusionRate", FLOAT, chemistry_element_count, UNIT_CONV_DIFF_RATE, parts, diffusion_data.diffusion_rate);
+
+  list[9] = io_make_output_field("DiffusionCoefficient", FLOAT, 1,
+                                 UNIT_CONV_DIFF_COEFF, parts,
+                                 diffusion_data.diffusion_coefficient);
+
+  list[10] = io_make_output_field("DiffusionRate", FLOAT,
+                                  chemistry_element_count, UNIT_CONV_DIFF_RATE,
+                                  parts, diffusion_data.diffusion_rate);
 
   return 11;
 }
@@ -115,7 +119,7 @@ INLINE static int chemistry_write_sparticles(const struct spart* sparts,
   list[1] =
       io_make_output_field("Metallicity", FLOAT, 1, UNIT_CONV_NO_UNITS, sparts,
                            chemistry_data.metal_mass_fraction_total);
-    
+
   list[2] = io_make_output_field("TotalMassFromSNIa", FLOAT, 1, UNIT_CONV_MASS,
                                  sparts, chemistry_data.mass_from_SNIa);
 
