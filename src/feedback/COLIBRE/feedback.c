@@ -254,6 +254,12 @@ INLINE static void compute_SNIa_feedback(struct spart* sp, const double star_age
 
     prob = 1.;
     delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+    if (ngb_gas_mass==0.) {
+      prob = 0.;
+      delta_u = 0.;
+    } else {
+      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E, E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
+    }
   }
 
   /* Store all of this in the star for delivery onto the gas */
