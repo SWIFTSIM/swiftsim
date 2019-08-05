@@ -19,9 +19,9 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 #define SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 
+#include "DTD_struct.h"
 #include "chemistry.h"
 #include "hydro_properties.h"
-#include "DTD_struct.h"
 
 /**
  * @brief Stores AGB and SNII yield tables

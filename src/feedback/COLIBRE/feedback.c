@@ -70,8 +70,8 @@ INLINE static double eagle_SNIa_feedback_temperature_change(
  * @param sp The #spart.
  * @param props The properties of the stellar model.
  */
-INLINE static double eagle_feedback_number_of_SNII(const struct spart* sp,
-                                     const struct feedback_props* props) {
+INLINE static double eagle_feedback_number_of_SNII(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* Note: For a Chabrier 2003 IMF and SNII going off between 6 and 100
    * M_sun, the first term is 0.017362 M_sun^-1 */
@@ -89,8 +89,8 @@ INLINE static double eagle_feedback_number_of_SNII(const struct spart* sp,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-INLINE static double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
-                                           const struct feedback_props* props) {
+INLINE static double eagle_SNII_feedback_energy_fraction(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* Model parameters */
   const double f_E_max = props->f_E_max;
@@ -124,8 +124,8 @@ INLINE static double eagle_SNII_feedback_energy_fraction(const struct spart* sp,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-INLINE static double eagle_SNIa_feedback_energy_fraction(const struct spart* sp,
-                                           const struct feedback_props* props) {
+INLINE static double eagle_SNIa_feedback_energy_fraction(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* Model parameters */
   const double SNIa_f_E = props->SNIa_f_E;
@@ -220,10 +220,10 @@ INLINE static void compute_SNII_feedback(
  * @param ngb_gas_mass Total un-weighted mass in the star's kernel.
  * @param feedback_props The properties of the feedback model.
  */
-INLINE static void compute_SNIa_feedback(struct spart* sp, const double star_age,
-                           const double dt, const float ngb_gas_mass,
-                           const struct feedback_props* feedback_props,
-                           const double dt_Gyr, const double star_age_Gyr) {
+INLINE static void compute_SNIa_feedback(
+    struct spart* sp, const double star_age, const double dt,
+    const float ngb_gas_mass, const struct feedback_props* feedback_props,
+    const double dt_Gyr, const double star_age_Gyr) {
 
   /* Properties of the model (all in internal units) */
   const double delta_T =
@@ -254,11 +254,12 @@ INLINE static void compute_SNIa_feedback(struct spart* sp, const double star_age
 
     prob = 1.;
     delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
-    if (ngb_gas_mass==0.) {
+    if (ngb_gas_mass == 0.) {
       prob = 0.;
       delta_u = 0.;
     } else {
-      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E, E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
+      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E,
+              E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
     }
   }
 

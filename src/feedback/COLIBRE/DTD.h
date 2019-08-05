@@ -27,10 +27,10 @@
 /* Config parameters. */
 #include "../config.h"
 
+#include "DTD_struct.h"
 #include "feedback_properties.h"
 #include "parser.h"
 #include "physical_constants.h"
-#include "DTD_struct.h"
 #include "units.h"
 
 /* Import the right DTD definition */
@@ -90,13 +90,14 @@ static inline void dtd_init(struct feedback_props* fp,
 
   /* Calculate the inverse of the exponential delay time */
   fp->dtd_data.SNIa_timescale_Gyr_inv = 1.f / fp->dtd_data.SNIa_timescale_Gyr;
-  
+
   /* Set the delay time of the DTD */
   fp->dtd_data.delay_time_Gyr =
       parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
 
   /* Properly normalize the exponential DTD */
-  fp->dtd_data.SNIa_efficiency *= exp(-fp->dtd_data.delay_time_Gyr * fp->dtd_data.SNIa_timescale_Gyr_inv);
+  fp->dtd_data.SNIa_efficiency *=
+      exp(-fp->dtd_data.delay_time_Gyr * fp->dtd_data.SNIa_timescale_Gyr_inv);
 }
 
 #elif defined(SNIA_DTD_POWER)
@@ -106,7 +107,7 @@ static inline void dtd_init(struct feedback_props* fp,
  * star particle between time t and t+dt
  *
  * This model assumes that the SNIa DTD is given by a power law, this is
- * a common DTD model, Moaz & Mannucci (2012), PASA, 29, 447 gives an 
+ * a common DTD model, Moaz & Mannucci (2012), PASA, 29, 447 gives an
  * overview of the different variables found in the literature
  *
  * @param sp The #spart.
@@ -176,8 +177,8 @@ static inline void dtd_init(struct feedback_props* fp,
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is a power law with \beta = 1, 
- * this model is a special case of the power law model because the 
+ * This model assumes that the SNIa DTD is a power law with \beta = 1,
+ * this model is a special case of the power law model because the
  * integrals have a different functional form than the general power
  * law. A lot of observations seem to be close to a power law like this,
  * see Moaz & Mannucci (2012), PASA, 29, 447 for a review
@@ -247,10 +248,11 @@ static inline void dtd_init(struct feedback_props* fp,
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is a Gaussian following for 
+ * This model assumes that the SNIa DTD is a Gaussian following for
  * example Dahlen et al. 2004, ApJ, 613, 189.
- * There is the option of using a constant besided the Gaussian this is following
- * the approach adopted by the Fire 2 simulations (Hopkins et al. 2018, 480, 800)
+ * There is the option of using a constant besided the Gaussian this is
+ * following the approach adopted by the Fire 2 simulations (Hopkins et al.
+ * 2018, 480, 800)
  *
  * @param sp The #spart.
  * @param t0 The initial time (in Gyr).
@@ -380,7 +382,7 @@ static inline void dtd_init(struct feedback_props* fp,
 
   fp->dtd_data.norm =
       fp->dtd_data.SNIa_efficiency / fp->dtd_data.normalization_timescale_Gyr;
-      
+
   /* Set the delay time of the DTD */
   fp->dtd_data.delay_time_Gyr =
       parser_get_param_double(params, "SNIaDTD:SNIa_delay_time_Gyr");
@@ -392,8 +394,8 @@ static inline void dtd_init(struct feedback_props* fp,
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
  *
- * This model assumes that the SNIa DTD is a broken power law. This shape 
- * is common in theoretical models of the DTD in the double degenerate (DD) 
+ * This model assumes that the SNIa DTD is a broken power law. This shape
+ * is common in theoretical models of the DTD in the double degenerate (DD)
  * scenario, in which the SNIa DTD has a shallow slope below a break time
  * and a deeper slope after a break time. For a review see Moaz & Mannucci
  * (2012), PASA, 29, 447
@@ -510,4 +512,3 @@ static inline void dtd_init(struct feedback_props* fp,
 #endif
 
 #endif /* SWIFT_DTD_H */
-

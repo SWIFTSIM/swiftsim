@@ -43,7 +43,7 @@ struct dtd {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
-  
+
   /*! Delay time */
   double delay_time_Gyr;
 };
@@ -138,7 +138,7 @@ struct dtd {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
-  
+
   /*! Delay time */
   double delay_time_Gyr;
 };
@@ -180,4 +180,3 @@ struct dtd {
 #endif
 
 #endif /* SWIFT_SNIA_DTD_STRUCT_H */
- 

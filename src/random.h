@@ -42,7 +42,7 @@
  * generator.
  * In case new numbers need to be added other possible
  * numbers could be:
- * 57931781LL  
+ * 57931781LL
  */
 enum random_number_type {
   random_number_star_formation = 0LL,
@@ -179,7 +179,7 @@ INLINE static double random_unit_interval(int64_t id,
  *
  * We generate numbers that are always reproducible for a given pair of particle
  * IDs and simulation time (on the integer time-line). If more than one number
- * per time-step per particle is needed, additional randomness can be obtained 
+ * per time-step per particle is needed, additional randomness can be obtained
  * by using the type argument.
  *
  * @param id_star The ID of the first particle for which to generate a number.
@@ -188,10 +188,16 @@ INLINE static double random_unit_interval(int64_t id,
  * @param type The #random_number_type to generate.
  * @return a random number in the interval [0, 1.[.
  */
-INLINE static double random_unit_interval_two_IDs(int64_t id_star, int64_t id_gas, const integertime_t ti_current, const enum random_number_type type) {
-  
-  /* We need to combine the gas and star IDs such that we do not get correlation for same id_star + id_gas pairs */ 
-  int64_t input_id = (id_star * id_gas * ti_current + id_star * ti_current * ti_current + id_gas * ti_current * ti_current) % INT64_MAX;
+INLINE static double random_unit_interval_two_IDs(
+    int64_t id_star, int64_t id_gas, const integertime_t ti_current,
+    const enum random_number_type type) {
+
+  /* We need to combine the gas and star IDs such that we do not get correlation
+   * for same id_star + id_gas pairs */
+  int64_t input_id =
+      (id_star * id_gas * ti_current + id_star * ti_current * ti_current +
+       id_gas * ti_current * ti_current) %
+      INT64_MAX;
 
   return random_unit_interval(input_id, ti_current, type);
 }

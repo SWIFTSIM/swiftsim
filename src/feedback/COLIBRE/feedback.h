@@ -19,12 +19,12 @@
 #ifndef SWIFT_FEEDBACK_COLIBRE_H
 #define SWIFT_FEEDBACK_COLIBRE_H
 
+#include "DTD.h"
 #include "cosmology.h"
 #include "error.h"
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
-#include "DTD.h"
 #include "units.h"
 
 #include <strings.h>
