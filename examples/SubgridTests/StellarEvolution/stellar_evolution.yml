@@ -153,9 +153,8 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty SNII channel.
-  SNIa_delta_T_K:                   3.16228e7
-  SNIa_energy_fraction:             1.0
-  SNIa_delay_time_Gyr:              0.04
+  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
+  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
 
 SNIaDTD:
   SNIa_efficiency_p_Msun: 12.955225
