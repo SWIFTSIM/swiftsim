@@ -20,6 +20,5 @@
 /* This object's header. */
 #include "pressure_floor.h"
 
-/* Pressure floor for the physics model
- * (temporary ugly solution as a global variable) */
+/* Pressure floor for the physics model. */
 struct pressure_floor_properties pressure_floor_props;
