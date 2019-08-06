@@ -27,13 +27,13 @@
 
 struct feedback_part_data {
   /*! mass received from supernovae */
-  double delta_mass;
+  float delta_mass;
 
   /*! specific energy received from supernovae */
-  double delta_u;
+  float delta_u;
 
   /*! Momemtum received from a supernovae */
-  double delta_p[3];
+  float delta_p[3];
 
 };
 
@@ -43,7 +43,7 @@ struct feedback_part_data {
 struct feedback_spart_data {
 
   /*! Inverse of normalisation factor used for the enrichment. */
-  double enrichment_weight;
+  float enrichment_weight;
 
   union {
 
@@ -61,10 +61,10 @@ struct feedback_spart_data {
     struct {
 
       /*! Mass released. */
-      double mass;
+      float mass;
 
       /*! Energy change due to ejectas. */
-      double energy;
+      float energy;
 
     } to_distribute;
   };
@@ -76,7 +76,7 @@ struct feedback_spart_data {
   int number_snii;
 
   /*! Total mass ejected by the supernovae */
-  double mass_ejected;
+  float mass_ejected;
 
 };
 

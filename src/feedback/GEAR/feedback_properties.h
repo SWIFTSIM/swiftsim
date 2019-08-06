@@ -29,7 +29,7 @@
  */
 struct feedback_props {
   /*! Energy per supernovae */
-  double energy_per_supernovae;
+  float energy_per_supernovae;
 
   /*! filename of the chemistry table */
   char filename[PARSER_MAX_LINE_SIZE];

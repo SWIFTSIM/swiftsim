@@ -33,7 +33,7 @@
  * @return If the mass is in the range of SNII.
  */
 __attribute__((always_inline)) INLINE static int supernovae_ii_can_explode(
-    const struct supernovae_ii *snii, double m_low, double m_high) {
+    const struct supernovae_ii *snii, float m_low, float m_high) {
 
   if (m_high < snii->mass_min || m_low > snii->mass_max)
     return 0;
@@ -50,8 +50,8 @@ __attribute__((always_inline)) INLINE static int supernovae_ii_can_explode(
  *
  * @return The number of supernovae II per unit of mass.
  */
-__attribute__((always_inline)) INLINE static double supernovae_ii_get_number(
-    const struct supernovae_ii *snii, double m1, double m2) {
+__attribute__((always_inline)) INLINE static float supernovae_ii_get_number(
+    const struct supernovae_ii *snii, float m1, float m2) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > m2)
     error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
@@ -62,10 +62,10 @@ __attribute__((always_inline)) INLINE static double supernovae_ii_get_number(
     return 0.;
   }
 
-  const double mass_min = max(m1, snii->mass_min);
-  const double mass_max = min(m2, snii->mass_max);
+  const float mass_min = max(m1, snii->mass_min);
+  const float mass_max = min(m2, snii->mass_max);
 
-  const double pow_mass = pow(mass_max, snii->exponent) - pow(mass_min, snii->exponent);
+  const float pow_mass = pow(mass_max, snii->exponent) - pow(mass_min, snii->exponent);
 
   return snii->coef_exp * pow_mass;
   
@@ -80,11 +80,11 @@ __attribute__((always_inline)) INLINE static double supernovae_ii_get_number(
  * @param yields The elements ejected (needs to be allocated).
  */
 __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
-    const struct supernovae_ii *snii, double log_m1, double log_m2, double *yields) {
+    const struct supernovae_ii *snii, float log_m1, float log_m2, float *yields) {
 
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    double yields_1 = interpolate_1d(&snii->integrated_yields[i], log_m1);
-    double yields_2 = interpolate_1d(&snii->integrated_yields[i], log_m2);
+    float yields_1 = interpolate_1d(&snii->integrated_yields[i], log_m1);
+    float yields_2 = interpolate_1d(&snii->integrated_yields[i], log_m2);
 
     yields[i] = yields_2 - yields_1;
   }
@@ -99,11 +99,11 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
  *
  * @return mass_ejected_processed The mass of processsed elements.
  */
-__attribute__((always_inline)) INLINE static double supernovae_ii_get_ejected_mass_fraction(
-    const struct supernovae_ii *snii, double log_m1, double log_m2) {
+__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction(
+    const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
-  double mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass, log_m1);
-  double mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass, log_m2);
+  float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass, log_m1);
+  float mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass, log_m2);
 
   return mass_ejected_2 - mass_ejected_1;
 
@@ -118,11 +118,11 @@ __attribute__((always_inline)) INLINE static double supernovae_ii_get_ejected_ma
  *
  * @return mass_ejected The mass of non processsed elements.
  */
-__attribute__((always_inline)) INLINE static double supernovae_ii_get_ejected_mass_fraction_processed(
-    const struct supernovae_ii *snii, double log_m1, double log_m2) {
+__attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction_processed(
+    const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
-  double mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m1);
-  double mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m2);
+  float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m1);
+  float mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m2);
 
   return mass_ejected_2 - mass_ejected_1;
 };
@@ -153,26 +153,23 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_read_yields_arra
   *previous_count = count;
 
   /* Read the minimal mass (in log) */
-  double log_mass_min = 0;
-  io_read_attribute(h_dataset, "min", DOUBLE, &log_mass_min);
-
-  /* change units */
-  log_mass_min += log10(phys_const->const_solar_mass);
+  float log_mass_min = 0;
+  io_read_attribute(h_dataset, "min", FLOAT, &log_mass_min);
 
   /* Read the step size (log step) */
-  double step_size = 0;
-  io_read_attribute(h_dataset, "step", DOUBLE, &step_size);
+  float step_size = 0;
+  io_read_attribute(h_dataset, "step", FLOAT, &step_size);
 
   /* Close the attribute */
   H5Dclose(h_dataset);
 
   /* Allocate the memory */
-  double *data = (double*) malloc(sizeof(double) * count);
+  float *data = (float*) malloc(sizeof(float) * count);
   if (data == NULL)
     error("Failed to allocate the SNII yields for %s.", hdf5_dataset_name);
 
   /* Read the dataset */
-  io_read_array_dataset(group_id, hdf5_dataset_name, DOUBLE,
+  io_read_array_dataset(group_id, hdf5_dataset_name, FLOAT,
 			data, count);
   
   /* Initialize the interpolation */
@@ -244,10 +241,10 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_read_from_params
     struct supernovae_ii *snii, struct swift_params* params) {
 
   /* Read the minimal mass of a supernovae */
-  snii->mass_min = parser_get_opt_param_double(params, "GEARSupernovaeII:min_mass", snii->mass_min);
+  snii->mass_min = parser_get_opt_param_float(params, "GEARSupernovaeII:min_mass", snii->mass_min);
 
   /* Read the maximal mass of a supernovae */
-  snii->mass_max = parser_get_opt_param_double(params, "GEARSupernovaeII:max_mass", snii->mass_max);
+  snii->mass_max = parser_get_opt_param_float(params, "GEARSupernovaeII:max_mass", snii->mass_max);
 
 }
 
@@ -266,10 +263,10 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_read_from_tables
   h5_open_group(params, "Data/SNII", &file_id, &group_id);
 
   /* Read the minimal mass of a supernovae */
-  io_read_attribute(group_id, "Mmin", DOUBLE, &snii->mass_min);
+  io_read_attribute(group_id, "Mmin", FLOAT, &snii->mass_min);
 
   /* Read the maximal mass of a supernovae */
-  io_read_attribute(group_id, "Mmax", DOUBLE, &snii->mass_max);
+  io_read_attribute(group_id, "Mmax", FLOAT, &snii->mass_max);
 
   /* Cleanup everything */
   h5_close_group(file_id, group_id);
@@ -296,17 +293,13 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_init(
   /* Read the parameters from the params file */
   supernovae_ii_read_from_tables(snii, params);
 
-  /* Apply the unit changes */
-  snii->mass_min *= phys_const->const_solar_mass;
-  snii->mass_max *= phys_const->const_solar_mass;
-
   /* Read the supernovae yields (and apply the units) */
   supernovae_ii_read_yields(snii, params, phys_const, sm);
   
   /* Get the IMF parameters */
   snii->exponent = initial_mass_function_get_exponent(&sm->imf, snii->mass_min, snii->mass_max);
   snii->coef_exp = initial_mass_function_get_coefficient(&sm->imf, snii->mass_min, snii->mass_max);
-  snii->coef_exp /= snii->exponent;
+  snii->coef_exp /= snii->exponent - 1.;
 }
 
 
