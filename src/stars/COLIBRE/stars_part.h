@@ -88,8 +88,8 @@ struct spart {
   /*! Birth temperature */
   float birth_temperature;
 
-  /*! Feedback energy fraction */
-  float f_E;
+  /*! SNII Feedback energy fraction */
+  float SNII_f_E;
 
   /*! SNIa Feedback energy fraction */
   float SNIa_f_E;
