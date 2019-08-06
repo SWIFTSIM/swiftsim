@@ -125,15 +125,6 @@ struct feedback_props {
 
   /* ------------- SNIa parameters    --------------- */
 
-  /*! Efficiency of the SNIa model */
-  float SNIa_efficiency;
-
-  /*! Time-scale of the SNIa decay function in Giga-years */
-  float SNIa_timescale_Gyr;
-
-  /*! Inverse of time-scale of the SNIa decay function in Giga-years */
-  float SNIa_timescale_Gyr_inv;
-
   /*! Log 10 of the maximal mass used for SNIa feedback (in solar masses) */
   float log10_SNIa_max_mass_msun;
 
@@ -143,16 +134,14 @@ struct feedback_props {
   /*! Energy released by one supernova type II in internal units */
   float E_SNIa;
 
+  /* SNIa DTD struct with information about the DTD */
+  struct SNIa_delay_time_distribution dtd_data;
+
   /* ----------- SNeIa feedback properties -------------- */
 
   float SNIa_deltaT_desired;
 
   float SNIa_f_E;
-
-  float SNIa_delay_time;
-
-  /* SNIa DTD struct with information about the DTD */
-  struct SNIa_delay_time_distribution dtd_data;
 
   /* ------------- AGB parameters    ---------------- */
 
