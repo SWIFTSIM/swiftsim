@@ -169,8 +169,8 @@ struct part {
       /*! Balsara switch */
       float balsara;
 
-      /*! Pressure and weights [x * Pressure / (y^2 m)] */
-      float weights_and_pressure;
+      /*! inverse of the pressure */
+      float pressure_inv;
     } force;
   };
 
