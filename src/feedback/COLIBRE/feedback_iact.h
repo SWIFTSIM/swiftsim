@@ -336,7 +336,8 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      /* Store the current SNIa time */
+      /* Store the current SNIa time, we use the critical density as a switch 
+       * between cosmological and non cosmological. */
       if (cosmo->critical_density > 0.) {
         si->feedback_data.last_SNIa_scale_factor = cosmo->a;
       } else {
@@ -346,7 +347,7 @@ runner_iact_nonsym_feedback_apply(
       message(
           "We did SNIa feedback! Time step: %llu Star ID=%llu gas ID=%llu "
           "Star+gas ID=%llu calculated prob=%e drawn prob=%e",
-          ti_current, si->id, pj->id, si->id + 719LL * pj->id, prob_SNIa,
+          ti_current, si->id, pj->id, si->id + pj->id, prob_SNIa,
           rand_SNIa);
     }
   }
