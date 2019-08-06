@@ -67,7 +67,7 @@ struct SNIa_delay_time_distribution {
   /*! Delay time */
   double delay_time_Gyr;
 
-  /*! DTD normalization */
+  /*! DTD normalization [Msun^-1 Gyr^(power-1)] */
   double norm;
 };
 
@@ -87,7 +87,7 @@ struct SNIa_delay_time_distribution {
   /*! Delay time */
   double delay_time_Gyr;
 
-  /*! DTD normalization */
+  /*! DTD normalization [Msun^-1] */
   double norm;
 };
 
@@ -119,7 +119,7 @@ struct SNIa_delay_time_distribution {
   /*! Delay time */
   double delay_time_Gyr;
 
-  /*! DTD normalization */
+  /*! DTD normalization [Msun^-1 Gyr^-1] */
   double norm_const;
 };
 
@@ -133,7 +133,7 @@ struct SNIa_delay_time_distribution {
   /*! SNIa time scale */
   double normalization_timescale_Gyr;
 
-  /*! normalization of the SNIa constant DTD */
+  /*! normalization of the SNIa constant DTD [Msun^-1 Gyr^-1] */
   double norm;
 
   /*! Efficiency of the SNIa model */
@@ -168,10 +168,10 @@ struct SNIa_delay_time_distribution {
   /*! Delay time */
   double delay_time_Gyr;
 
-  /*! DTD normalization short time */
+  /*! DTD normalization short time [Msun^-1] */
   double norm_short;
 
-  /*! DTD normalization long time */
+  /*! DTD normalization long time [Msun^-1] */
   double norm_long;
 };
 
