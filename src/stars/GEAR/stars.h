@@ -64,8 +64,8 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
     struct spart* sp, const struct stars_props* stars_properties) {
 
   sp->time_bin = 0;
-  sp->birth_density = 0.f;
-  sp->birth_time = 0;
+  sp->birth.density = 0.f;
+  // sp->birth_time = -1.;
 
   stars_init_spart(sp);
 }
