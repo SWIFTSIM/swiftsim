@@ -26,27 +26,23 @@
  * @brief Compute the lifetime of a star.
  *
  * @param life The #lifetime model.
- * @param log_mass The star's mass (in log10).
+ * @param log_mass The star's mass (in log10(solMass)).
  * @param metallicity The star's metallicity.
  *
- * @return The star's lifetime (in log10).
+ * @return The star's lifetime (in log10(yr)).
  */
-__attribute__((always_inline)) INLINE static double lifetime_get_log_lifetime_from_mass(
-    const struct lifetime *life, double log_mass, double metallicity) {
+__attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_from_mass(
+    const struct lifetime *life, float log_mass, float metallicity) {
 
   /* Compute quadratic term */
-  const double quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
+  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
   /* Compute linear term */
-  const double linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
+  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
   /* Compute constant term */
-  const double constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
-
-  /* Apply unit change */
-  const double constant_internal_units = constant + (quadratic * life->log_unit_mass - linear) * life->log_unit_mass;
-  const double linear_internal_units = linear - 2. * quadratic * life->log_unit_mass;
+  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
   /* Compute lifetime */
-  return (quadratic * log_mass + linear_internal_units) * log_mass + constant_internal_units;
+  return (quadratic * log_mass + linear) * log_mass + constant;
 }
 
 /**
@@ -54,42 +50,38 @@ __attribute__((always_inline)) INLINE static double lifetime_get_log_lifetime_fr
  * Returns -1 if out of range.
  *
  * @param life The #lifetime model.
- * @param log_time The star's lifetime (in log10).
+ * @param log_time The star's lifetime (in log10(yr)).
  * @param metallicity The star's metallicity.
  *
- * @return The star's mass (in log10) or -1.
+ * @return The star's mass (in log10(solMass)) or -1.
  */
-__attribute__((always_inline)) INLINE static double lifetime_get_log_mass_from_lifetime(
-    const struct lifetime *life, double log_time, double metallicity) {
+__attribute__((always_inline)) INLINE static float lifetime_get_log_mass_from_lifetime(
+    const struct lifetime *life, float log_time, float metallicity) {
 
   /* Compute quadratic term */
-  const double quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
+  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
   /* Compute linear term */
-  const double linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
+  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
   /* Compute constant term */
-  const double constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
-
-  /* Apply unit change */
-  const double constant_internal_units = constant + (quadratic * life->log_unit_mass - linear) * life->log_unit_mass;
-  const double linear_internal_units = linear - 2. * quadratic * life->log_unit_mass;
+  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
 
   /* Compute the "c" with the time */
-  const double c_t = constant_internal_units - log_time;
+  const float c_t = constant - log_time;
 
   /* Use the quadratic formula to find the mass */
   if (quadratic != 0) {
-    const double delta = linear_internal_units * linear_internal_units - 4 * quadratic * c_t;
+    const float delta = linear * linear - 4 * quadratic * c_t;
 
     /* Avoid complex number should not happen in real simulation */
     if (delta < 0) {
-      return - linear_internal_units / (2. * quadratic);
+      return - linear / (2. * quadratic);
     }
     else {
-      return (-linear_internal_units - sqrt(delta)) / (2. * quadratic);
+      return (-linear - sqrt(delta)) / (2. * quadratic);
     }
   }
   else {
-    return - c_t / linear_internal_units;
+    return - c_t / linear;
   }
 }
 
@@ -109,12 +101,12 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
   h5_open_group(params, "Data/LiveTimes", &file_id, &group_id);
 
   /* Allocate the temporary array */
-  double *tmp;
-  if ((tmp = (double *)malloc(sizeof(double) * 9)) == NULL)
+  float *tmp;
+  if ((tmp = (float *)malloc(sizeof(float) * 9)) == NULL)
     error("Failed to allocate the temporary array.");
 
   /* Read the coefficients */
-  io_read_array_dataset(group_id, "coeff_z", DOUBLE, tmp, 9);
+  io_read_array_dataset(group_id, "coeff_z", FLOAT, tmp, 9);
   
   /* Copy the coefficents */
   const int dim = 3;
@@ -123,6 +115,9 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
     lt->linear[i] = tmp[i+dim];
     lt->constant[i] = tmp[i+2*dim];
   }
+
+  /* Change units from yr into Myr */
+  lt->constant[dim-1] -= 6;
 
   /* Cleanup everything */
   free(tmp);
@@ -140,13 +135,13 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_params(
     struct lifetime* lt, struct swift_params* params) {
 
   /* Read quadratic terms */
-  parser_get_opt_param_double_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
+  parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
 
   /* Read linear terms */
-  parser_get_opt_param_double_array(params, "GEARLifetime:linear", 3, lt->linear);
+  parser_get_opt_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
 
   /* Read constant terms */
-  parser_get_opt_param_double_array(params, "GEARLifetime:constant", 3, lt->constant);
+  parser_get_opt_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
 
 }
 
@@ -167,13 +162,6 @@ __attribute__((always_inline)) INLINE static void lifetime_init(
 
   /* overwrite the parameters if found in the params */
   lifetime_read_from_params(lt, params);
-
-  /* Change the time unit (mass cannot be done here) */
-  lt->constant[2] += log10(phys_const->const_year);
-
-  /* Compute the variable for the change of mass unit */
-  lt->log_unit_mass = log10(phys_const->const_solar_mass);
-  
 }
 
 #endif // SWIFT_LIFETIME_GEAR_H

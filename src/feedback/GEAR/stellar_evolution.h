@@ -37,10 +37,14 @@
  * This function compute the SN rate and yields before sending
  * this information to a different MPI rank.
  *
+ * Here I am using Myr-solar mass units internally in order to
+ * avoid numerical errors.
+ *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
  * @param cosmo The current cosmological model.
  * @param us The unit system.
+ * @param phys_const The physical constants in the internal unit system.
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
@@ -48,78 +52,102 @@
 __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart(
     struct spart* restrict sp, const struct stellar_model* sm,
     const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const,
     const integertime_t ti_begin,
     const double star_age_beg_step, const double dt) {
 
+  /* Convert the inputs */
+  const double conversion_to_myr = phys_const->const_year * 1e6;
+  const double star_age_beg_step_myr = star_age_beg_step / conversion_to_myr;
+  const double dt_myr = dt / conversion_to_myr;
+
   /* Get the metallicity */
-  const double metallicity = chemistry_spart_metal_mass_fraction(sp);
+  const float metallicity = chemistry_spart_metal_mass_fraction(sp);
 
   /* Compute masses range */
-  const double log_m_beg_step = star_age_beg_step == 0.?
+  const float log_m_beg_step = star_age_beg_step == 0.?
     FLT_MAX : lifetime_get_log_mass_from_lifetime(
-    &sm->lifetime, log10(star_age_beg_step), metallicity);
-  const double log_m_end_step = lifetime_get_log_mass_from_lifetime(
-    &sm->lifetime, log10(star_age_beg_step + dt), metallicity);
+    &sm->lifetime, log10(star_age_beg_step_myr), metallicity);
+  const float log_m_end_step = lifetime_get_log_mass_from_lifetime(
+    &sm->lifetime, log10(star_age_beg_step_myr + dt_myr), metallicity);
 
-  const double m_beg_step = star_age_beg_step == 0.?
+  const float m_beg_step = star_age_beg_step == 0.?
     FLT_MAX : pow(10, log_m_beg_step);
-  const double m_end_step = pow(10, log_m_end_step);
+  const float m_end_step = pow(10, log_m_end_step);
 
   /* Check if the star can produce a supernovae */
   const int can_produce_snia = supernovae_ia_can_explode(&sm->snia, m_end_step, m_beg_step);
   const int can_produce_snii = supernovae_ii_can_explode(&sm->snii, m_end_step, m_beg_step);
 
+  /* Is it possible to generate a supernovae? */
+  if (!can_produce_snia && !can_produce_snii)
+    return;
+
+  /* Compute the initial mass */
+  const float m_init = sp->birth.mass / phys_const->const_solar_mass;
+
+  /* Compute number of SNIa */
   if (can_produce_snia) {
     /* Compute rates */
-    const double number_snia_f = supernovae_ia_get_number(
-      &sm->snia, m_end_step, m_beg_step) * sp->birth.mass;
+    const float number_snia_f = supernovae_ia_get_number(
+      &sm->snia, m_end_step, m_beg_step) * m_init;
 
-    /* Get the number of SN */
-    const double rand_snia = random_unit_interval(sp->id, ti_begin,
+    /* Get the random number for the decimal part */
+    const float rand_snia = random_unit_interval(sp->id, ti_begin,
 						 random_number_stellar_feedback);
 
     /* Get the fraction part */
-    const double frac_snia = number_snia_f - floor(number_snia_f);
+    const float frac_snia = number_snia_f - floor(number_snia_f);
 
     /* Get the integer number of SN */
     sp->feedback_data.number_snia = floor(number_snia_f) + ((rand_snia < frac_snia)? 1 : 0);
 
   }
 
+  /* Compute number of SNII */
   if (can_produce_snii) {
     /* Compute rates */
-    const double number_snii_f = supernovae_ii_get_number(
-    &sm->snii, m_end_step, m_beg_step) * sp->birth.mass;
+    const float number_snii_f = supernovae_ii_get_number(
+    &sm->snii, m_end_step, m_beg_step) * m_init;
 
-    /* Get the number of SN */
-    const double rand_snii = random_unit_interval(sp->id, ti_begin,
+    /* Get the random number for the decimal part */
+    const float rand_snii = random_unit_interval(sp->id, ti_begin,
 					       random_number_stellar_feedback_2);
 
     /* Get the fraction part */
-    const double frac_snii = number_snii_f - floor(number_snii_f);
+    const float frac_snii = number_snii_f - floor(number_snii_f);
 
     /* Get the integer number of SN */
     sp->feedback_data.number_snii = floor(number_snii_f) + ((rand_snii < frac_snii)? 1 : 0);
   }
 
-  if (sp->feedback_data.number_snia != 0 || sp->feedback_data.number_snii != 0) {
-    /* Decrease star mass by amount of mass distributed to gas neighbours */
-    const double mass_frac_snia = sp->feedback_data.number_snia * supernovae_ia_get_ejected_mass_fraction_processed(&sm->snia);
-    const double mass_frac_snii = sp->feedback_data.number_snii * supernovae_ii_get_ejected_mass_fraction_processed(
-      &sm->snii, log_m_end_step, log_m_beg_step);
+  /* Does this star produce a supernovae? */
+  if (sp->feedback_data.number_snia == 0 && sp->feedback_data.number_snii == 0)
+    return;
 
-    /* Transform from mass fraction to total mass */
-    sp->feedback_data.mass_ejected = mass_frac_snia + mass_frac_snii;
-    sp->feedback_data.mass_ejected *= sp->birth.mass;
+  message("%i %i", sp->feedback_data.number_snia, sp->feedback_data.number_snii);
 
-    if (sp->mass < sp->feedback_data.mass_ejected) {
-      error("Stars cannot have negative mass. (%g < %g). Initial mass = %g",
-	    sp->mass, sp->feedback_data.mass_ejected, sp->birth.mass);
-    }
+  /* Compute the mass ejected */
+  /* SNIa */
+  const float mass_snia = supernovae_ia_get_ejected_mass_processed(&sm->snia)
+    * sp->feedback_data.number_snia;
 
-    /* Update the mass */
-    sp->mass -= sp->feedback_data.mass_ejected;
+  /* SNII */
+  const float mass_frac_snii = (sp->feedback_data.number_snii == 0) ?
+    0 : supernovae_ii_get_ejected_mass_fraction_processed(&sm->snii, log_m_end_step, log_m_beg_step);
+
+  sp->feedback_data.mass_ejected = mass_snia + mass_frac_snii * m_init;
+
+  /* Transform into internal units */
+  sp->feedback_data.mass_ejected *= phys_const->const_solar_mass;
+
+  if (sp->mass <= sp->feedback_data.mass_ejected) {
+    error("Stars cannot have negative mass. (%g <= %g). Initial mass = %g",
+	  sp->mass, sp->feedback_data.mass_ejected, sp->birth.mass);
   }
+
+  /* Update the mass */
+  sp->mass -= sp->feedback_data.mass_ejected;
 }
 
 /**
