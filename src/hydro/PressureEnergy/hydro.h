@@ -222,9 +222,9 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
 
   /* Compute the sound speed -- see theory section for justification */
   /* IDEAL GAS ONLY -- P-U does not work with generic EoS. */
-  const float pressure =
-    pressure_floor_get_comoving_pressure(p, p->pressure_bar);
-  const float square_rooted = sqrtf(hydro_gamma * pressure / p->rho);
+  const float com_pressure =
+    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+  const float square_rooted = sqrtf(hydro_gamma * com_pressure / p->rho);
 
   return square_rooted;
 }
@@ -239,8 +239,10 @@ __attribute__((always_inline)) INLINE static float
 hydro_get_physical_soundspeed(const struct part *restrict p,
                               const struct cosmology *cosmo) {
 
-  return pressure_floor_get_physical_pressure(
-    p, cosmo, cosmo->a_factor_sound_speed * p->force.soundspeed);
+  const float phys_rho = hydro_get_physical_density(p, cosmo);
+
+  return pressure_floor_get_pressure(
+    p, phys_rho, cosmo->a_factor_sound_speed * p->force.soundspeed);
 }
 
 /**
@@ -645,16 +647,16 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                             (1.f + common_factor * p->density.wcount_dh);
 
   /* Get the pressures */
-  const float pressure_with_floor =
-      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
-  const float pressure2 = p->pressure_bar * p->pressure_bar;
+  const float com_pressure_with_floor =
+    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+  const float com_pressure2 = p->pressure_bar * p->pressure_bar;
 
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
   p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
-    pressure_with_floor / pressure2;
+    com_pressure_with_floor / com_pressure2;
 }
 
 /**
@@ -768,11 +770,11 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->force.soundspeed = soundspeed;
 
   /* update the required variables */
-  const float pressure_with_floor =
-      pressure_floor_get_comoving_pressure(p, p->pressure_bar);
-  const float pressure2 = p->pressure_bar * p->pressure_bar;
+  const float com_pressure_with_floor =
+    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+  const float com_pressure2 = p->pressure_bar * p->pressure_bar;
   p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
-    pressure_with_floor / pressure2;
+    com_pressure_with_floor / com_pressure2;
 }
 
 /**

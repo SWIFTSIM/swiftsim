@@ -37,30 +37,23 @@
  */
 struct pressure_floor_properties {};
 
+
 /**
  * @brief Compute the physical pressure floor of a given #part.
  *
  * Note that the particle is not updated!!
  *
- * @param p The #part.
- * @param cosmo The #cosmology.
- * @param pressure The pressure without any pressure floor.
- */
-static INLINE float pressure_floor_get_physical_pressure(
-    const struct part *p, const struct cosmology *cosmo, const float pressure) {
-  return pressure;
-}
-
-/**
- * @brief Compute the comoving pressure floor of a given #part.
- *
- * Note that the particle is not updated!!
+ * The inputs can be either in physical or comoving coordinates (the output is
+ * in the same coordinates).
  *
  * @param p The #part.
- * @param pressure The pressure without any pressure floor.
+ * @param rho The physical or comoving density.
+ * @param pressure The physical or comoving pressure without any pressure floor.
+ *
+ * @return The physical or comoving pressure with the floor.
  */
-static INLINE float pressure_floor_get_comoving_pressure(const struct part *p,
-                                                         const float pressure) {
+static INLINE float pressure_floor_get_pressure(
+    const struct part *p, const float rho, const float pressure) {
   return pressure;
 }
 

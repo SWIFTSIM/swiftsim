@@ -37,11 +37,11 @@
  */
 struct pressure_floor_properties {
 
-  /*! Jeans factor power 2/3 */
-  float n_jeans_2_3;
+  /*! Jeans factor */
+  float n_jeans;
 
-  /*! Gravitational constant */
-  double G;
+  /*! The constants in internal units (4 G N_jeans^(2/3) / PI) */
+  float constants;
 };
 
 /**
@@ -49,47 +49,26 @@ struct pressure_floor_properties {
  *
  * Note that the particle is not updated!!
  *
+ * The inputs can be either in physical or comoving coordinates (the output is
+ * in the same coordinates).
+ *
  * @param p The #part.
- * @param cosmo The #cosmology.
- * @param pressure The pressure without any pressure floor.
+ * @param rho The physical or comoving density.
+ * @param pressure The physical or comoving pressure without any pressure floor.
+ *
+ * @return The physical or comoving pressure with the floor.
  */
-static INLINE float pressure_floor_get_physical_pressure(
-    const struct part *p, const struct cosmology *cosmo, const float pressure) {
-
-  /* Physical density in internal units */
-  const float rho = hydro_get_physical_density(p, cosmo);
+static INLINE float pressure_floor_get_pressure(
+    const struct part *p, const float rho, const float pressure) {
 
   /* Compute pressure floor */
-  float floor =
-      4.0 * M_1_PI * pressure_floor_props.G * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
+  float floor = p->h * p->h * rho * pressure_floor_props.constants;
   // TODO add sigma (will be done once the SF is merged)
   floor *= rho * hydro_one_over_gamma;
 
   return fmax(pressure, floor);
 }
 
-/**
- * @brief Compute the comoving pressure floor of a given #part.
- *
- * Note that the particle is not updated!!
- *
- * @param p The #part.
- * @param pressure The pressure without any pressure floor.
- */
-static INLINE float pressure_floor_get_comoving_pressure(const struct part *p,
-                                                         const float pressure) {
-
-  /* Physical density in internal units */
-  const float rho = hydro_get_comoving_density(p);
-
-  /* Compute pressure floor */
-  float floor =
-      4.0 * M_1_PI * pressure_floor_props.G * p->h * p->h * rho * pressure_floor_props.n_jeans_2_3;
-  // TODO add sigma (will be done once the SF is merged)
-  floor *= rho * hydro_one_over_gamma;
-
-  return fmax(pressure, floor);
-}
 
 /**
  * @brief Initialise the pressure floor by reading the parameters and converting
@@ -110,14 +89,12 @@ static INLINE void pressure_floor_init(struct pressure_floor_properties *props,
                                        const struct hydro_props *hydro_props,
                                        struct swift_params *params) {
 
-  /* Save the gravitational constant */
-  props->G = phys_const->const_newton_G;
-
-  /* Read the jeans factor */
-  props->n_jeans_2_3 =
-      parser_get_param_float(params, "GEARPressureFloor:Jeans_factor");
-
-  props->n_jeans_2_3 = pow(props->n_jeans_2_3, 2. / 3.);
+  /* Read the Jeans factor */
+  props->n_jeans = parser_get_param_float(params, "GEARPressureFloor:Jeans_factor");
+  
+  /* Compute the constants */
+  props->constants = 4.0 * M_1_PI * phys_const->const_newton_G *
+    pow(props->n_jeans, 2./3.);
 }
 
 /**
@@ -129,7 +106,7 @@ static INLINE void pressure_floor_print(
     const struct pressure_floor_properties *props) {
 
   message("Pressure floor is 'GEAR' with:");
-  message("Jeans factor: %g", pow(props->n_jeans_2_3, 3. / 2.));
+  message("Jeans factor: %g", props->n_jeans);
 }
 
 #ifdef HAVE_HDF5
