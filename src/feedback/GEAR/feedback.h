@@ -56,8 +56,8 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   }
 
   /* Update mass */
-  const double old_mass = hydro_get_mass(p);
-  const double new_mass = old_mass + xp->feedback_data.delta_mass;
+  const float old_mass = hydro_get_mass(p);
+  const float new_mass = old_mass + xp->feedback_data.delta_mass;
 
   if (xp->feedback_data.delta_mass < 0.) {
     error("Delta mass smaller than 0");
@@ -75,8 +75,8 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   p->rho *= new_mass / old_mass;
 
   /* Update internal energy */
-  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
-  const double u_new = u + xp->feedback_data.delta_u;
+  const float u = hydro_get_physical_internal_energy(p, xp, cosmo);
+  const float u_new = u + xp->feedback_data.delta_u;
 
   hydro_set_physical_internal_energy(p, xp, cosmo, u_new);
   hydro_set_drifted_physical_internal_energy(p, cosmo, u_new);
@@ -85,7 +85,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
   /* Update the velocities */
   for(int i=0; i < 3; i++) {
-    const double dv = xp->feedback_data.delta_p[i] / new_mass;
+    const float dv = xp->feedback_data.delta_p[i] / new_mass;
 
     xp->v_full[i] += dv;
     p->v[i] += dv;
@@ -199,6 +199,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param feedback_props The #feedback_props structure.
  * @param cosmo The current cosmological model.
  * @param us The unit system.
+ * @param phys_const The physical constants in the internal unit system.
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
@@ -206,6 +207,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const,
     const integertime_t ti_begin,
     const double star_age_beg_step, const double dt) {
 
@@ -217,15 +219,15 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   feedback_reset_feedback(sp, feedback_props);
 
   /* Add missing h factor */
-  const double hi_inv = 1.f / sp->h;
-  const double hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+  const float hi_inv = 1.f / sp->h;
+  const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
   
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
 
   /* Compute the stellar evolution */
   stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
-				 ti_begin, star_age_beg_step, dt);
+				 phys_const, ti_begin, star_age_beg_step, dt);
 }
 
 

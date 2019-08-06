@@ -37,22 +37,22 @@
 struct initial_mass_function {
 
   /*! Mass limits between IMF parts (n_parts + 1 elements). */
-  double *mass_limits;
+  float *mass_limits;
 
   /*! Exponent of each IMF parts (n_parts elements). */
-  double *exp;
+  float *exp;
 
   /*! Coefficient of each IMF parts (n_parts elements). */
-  double *coef;
+  float *coef;
 
   /*! Number of parts in the function. */
   int n_parts;
 
   /*! Minimal mass contained in mass_limits, copied for more clarity. */
-  double mass_min;
+  float mass_min;
 
   /*! Maximal mass contained in mass_limits, copied for more clarity. */
-  double mass_max;
+  float mass_max;
 
 };
 
@@ -62,16 +62,16 @@ struct initial_mass_function {
 struct lifetime {
 
   /*! Coefficients for the log10(m)^2 term */
-  double quadratic[3];
+  float quadratic[3];
 
   /*! Coefficients for the log10(m) term */
-  double linear[3];
+  float linear[3];
 
   /*! Coefficients for the constant term */
-  double constant[3];
+  float constant[3];
 
   /*! Factor for the mass unit change. */
-  double log_unit_mass;
+  float log_unit_mass;
 };
 
 /**
@@ -82,37 +82,37 @@ struct supernovae_ia {
   struct {
 
     /*! Mass of each element ejected by a single supernovae */
-    double data[CHEMISTRY_ELEMENT_COUNT];
+    float data[CHEMISTRY_ELEMENT_COUNT];
 
   } yields;
 
   /*! White dwarf's mass */
-  double mass_white_dwarf;
+  float mass_white_dwarf;
 
   /*! Minimal mass of the progenitor */
-  double mass_min_progenitor;
+  float mass_min_progenitor;
 
   /*! Maximal mass of the progenitor */
-  double mass_max_progenitor;
+  float mass_max_progenitor;
 
   /*! coefficient of the initial mass function for progenitor divided by progenitor_exponent */
-  double progenitor_coef_exp;
+  float progenitor_coef_exp;
 
   /*! exponent of the initial mass function for progenitor */
-  double progenitor_exponent;
+  float progenitor_exponent;
 
   /*! exponent of the initial mass function for binaries */
-  double companion_exponent;
+  float companion_exponent;
 
   struct {
     /*! Initial mass function's coeffcients */
-    double coef;
+    float coef;
 
     /*! Maximal mass of the companion */
-    double mass_max;
+    float mass_max;
 
     /*! Minimal mass of the companion */
-    double mass_min;
+    float mass_min;
   } companion[GEAR_NUMBER_TYPE_OF_COMPANION];
 
 
@@ -133,16 +133,16 @@ struct supernovae_ii {
   struct interpolation_1d integrated_ejected_mass;
 
   /*! Minimal mass for a SNII */
-  double mass_min;
+  float mass_min;
 
   /*! Maximal mass for a SNII */
-  double mass_max;
+  float mass_max;
 
   /*! exponent of the IMF */
-  double exponent;
+  float exponent;
 
   /*! coefficient of the IMF over the exponent */
-  double coef_exp;
+  float coef_exp;
   
 };
 
