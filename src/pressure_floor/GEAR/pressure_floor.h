@@ -22,9 +22,9 @@
 #include "adiabatic_index.h"
 #include "cosmology.h"
 #include "equation_of_state.h"
-#include "hydro.h"
 #include "hydro_properties.h"
 #include "parser.h"
+#include "part.h"
 #include "units.h"
 
 /**
@@ -58,8 +58,9 @@ struct pressure_floor_properties {
  *
  * @return The physical or comoving pressure with the floor.
  */
-static INLINE float pressure_floor_get_pressure(
-    const struct part *p, const float rho, const float pressure) {
+static INLINE float pressure_floor_get_pressure(const struct part *p,
+                                                const float rho,
+                                                const float pressure) {
 
   /* Compute pressure floor */
   float floor = p->h * p->h * rho * pressure_floor_props.constants;
@@ -68,7 +69,6 @@ static INLINE float pressure_floor_get_pressure(
 
   return fmax(pressure, floor);
 }
-
 
 /**
  * @brief Initialise the pressure floor by reading the parameters and converting
@@ -90,11 +90,12 @@ static INLINE void pressure_floor_init(struct pressure_floor_properties *props,
                                        struct swift_params *params) {
 
   /* Read the Jeans factor */
-  props->n_jeans = parser_get_param_float(params, "GEARPressureFloor:Jeans_factor");
-  
+  props->n_jeans =
+      parser_get_param_float(params, "GEARPressureFloor:Jeans_factor");
+
   /* Compute the constants */
-  props->constants = 4.0 * M_1_PI * phys_const->const_newton_G *
-    pow(props->n_jeans, 2./3.);
+  props->constants =
+      4.0 * M_1_PI * phys_const->const_newton_G * pow(props->n_jeans, 2. / 3.);
 }
 
 /**

@@ -37,7 +37,6 @@
  */
 struct pressure_floor_properties {};
 
-
 /**
  * @brief Compute the physical pressure floor of a given #part.
  *
@@ -52,8 +51,9 @@ struct pressure_floor_properties {};
  *
  * @return The physical or comoving pressure with the floor.
  */
-static INLINE float pressure_floor_get_pressure(
-    const struct part *p, const float rho, const float pressure) {
+static INLINE float pressure_floor_get_pressure(const struct part *p,
+                                                const float rho,
+                                                const float pressure) {
   return pressure;
 }
 

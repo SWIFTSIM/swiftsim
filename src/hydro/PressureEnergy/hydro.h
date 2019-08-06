@@ -223,7 +223,7 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
   /* Compute the sound speed -- see theory section for justification */
   /* IDEAL GAS ONLY -- P-U does not work with generic EoS. */
   const float com_pressure =
-    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+      pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
   const float square_rooted = sqrtf(hydro_gamma * com_pressure / p->rho);
 
   return square_rooted;
@@ -242,7 +242,7 @@ hydro_get_physical_soundspeed(const struct part *restrict p,
   const float phys_rho = hydro_get_physical_density(p, cosmo);
 
   return pressure_floor_get_pressure(
-    p, phys_rho, cosmo->a_factor_sound_speed * p->force.soundspeed);
+      p, phys_rho, cosmo->a_factor_sound_speed * p->force.soundspeed);
 }
 
 /**
@@ -648,15 +648,15 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 
   /* Get the pressures */
   const float com_pressure_with_floor =
-    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+      pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
   const float com_pressure2 = p->pressure_bar * p->pressure_bar;
 
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
-  p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
-    com_pressure_with_floor / com_pressure2;
+  p->force.weights_and_pressure =
+      p->u * hydro_gamma_minus_one * com_pressure_with_floor / com_pressure2;
 }
 
 /**
@@ -771,10 +771,10 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   /* update the required variables */
   const float com_pressure_with_floor =
-    pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
+      pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
   const float com_pressure2 = p->pressure_bar * p->pressure_bar;
-  p->force.weights_and_pressure = p->u * hydro_gamma_minus_one *
-    com_pressure_with_floor / com_pressure2;
+  p->force.weights_and_pressure =
+      p->u * hydro_gamma_minus_one * com_pressure_with_floor / com_pressure2;
 }
 
 /**
