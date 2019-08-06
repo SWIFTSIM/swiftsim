@@ -139,8 +139,10 @@ struct feedback_props {
 
   /* ----------- SNeIa feedback properties -------------- */
 
+  /* Temperature increase induced by SNIe feedback */
   float SNIa_deltaT_desired;
 
+  /* Energy fraction for supernova type Ia feedback */
   float SNIa_f_E;
 
   /* ------------- AGB parameters    ---------------- */
@@ -207,7 +209,7 @@ struct feedback_props {
   /*! Wind delay time for SNII */
   double SNII_wind_delay;
 
-  /*! Temperature increase induced by SNe feedback */
+  /*! Temperature increase induced by SNIIe feedback */
   float SNII_deltaT_desired;
 
   /*! Energy released by one supernova type II in cgs units */
