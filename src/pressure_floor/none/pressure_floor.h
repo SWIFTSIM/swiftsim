@@ -22,7 +22,7 @@
 #include "adiabatic_index.h"
 #include "cosmology.h"
 #include "equation_of_state.h"
-#include "hydro.h"
+#include "part.h"
 #include "hydro_properties.h"
 #include "parser.h"
 #include "units.h"
