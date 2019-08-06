@@ -135,8 +135,6 @@ COLIBREFeedback:
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
   SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
   SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
-  SNIa_timescale_Gyr:              2.0              # Time-scale of the exponential decay of the SNIa rates in Gyr.
-  SNIa_efficiency_p_Msun:          0.6477612 #1.2955225 #6.477612 #12.955225 #0.6477612 #0.002            # Normalisation of the SNIa rates in inverse solar masses.
   SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
@@ -156,18 +154,19 @@ COLIBREFeedback:
   SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
   SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
 
+# COLIBRE feedback SNIa delay time distribution struct
 SNIaDTD:
-  SNIa_efficiency_p_Msun: 12.955225
-  SNIa_timescale_Gyr:     2.0
-  normalization_timescale_Gyr: 13.0 
-  power_law_slope:        0.5
-  SNIa_delay_time_Gyr:    0.04
-  SNIa_efficiency_const_p_Msun: 0.0  
-  SNIa_efficiency_gauss_p_Msun: 12.955225
-  characteristic_time_Gyr:      4.0
-  STD_characteristic_time_Gyr:  1.0
-  power_law_slope_short_time:   0.5
-  power_law_slope_long_time:    1.1
-  break_time_Gyr:               0.5
+  SNIa_efficiency_p_Msun:       12.955225           # the effiency of SNIa, this is set artifical high in this example, a value of 0.6477612 produces 50 events in the life of a star, values of 1.2955225 (100 events), 6.477612 (500) and 12.955225 (1000).
+  SNIa_timescale_Gyr:           2.0                 # Exponential delay time for exponential DTD 
+  normalization_timescale_Gyr:  13.0                # Normalization time for DTDs that cannot be integrated to infinity
+  power_law_slope:              0.5                 # Power law slope for the power law DTD 
+  SNIa_delay_time_Gyr:          0.04                # Delay time before the DTD kicks in.
+  SNIa_efficiency_const_p_Msun: 0.0                 # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
+  SNIa_efficiency_gauss_p_Msun: 12.955225           # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
+  characteristic_time_Gyr:      4.0                 # Center of the Gaussian DTD
+  STD_characteristic_time_Gyr:  1.0                 # Standard deviation of the Gaussian DTD part
+  power_law_slope_short_time:   0.5                 # Power law slope at short times of broken power law 
+  power_law_slope_long_time:    1.1                 # Power law slope at long times of a broken power law
+  break_time_Gyr:               0.5                 # Break time of the broken power law DTD.
   
   
