@@ -33,7 +33,7 @@
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! SNIa time scale */
   double SNIa_timescale_Gyr;
@@ -53,7 +53,7 @@ struct dtd {
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
@@ -76,7 +76,7 @@ struct dtd {
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
@@ -96,7 +96,7 @@ struct dtd {
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! Efficiency of the SNIa model constant part */
   double SNIa_efficiency_const;
@@ -128,7 +128,7 @@ struct dtd {
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! SNIa time scale */
   double normalization_timescale_Gyr;
@@ -148,7 +148,7 @@ struct dtd {
 /**
  * @brief SNIa struct for DTD properties
  */
-struct dtd {
+struct SNIa_delay_time_distribution {
 
   /*! Efficiency of the SNIa model */
   double SNIa_efficiency;
