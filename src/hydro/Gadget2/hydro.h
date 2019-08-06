@@ -397,7 +397,8 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
   comoving_pressure = pressure_floor_get_pressure(p, p->rho, comoving_pressure);
 
   /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, comoving_pressure);
+  const float soundspeed =
+      gas_soundspeed_from_pressure(p->rho, comoving_pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float P_over_rho2 = comoving_pressure * rho_inv * rho_inv;
@@ -601,7 +602,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   comoving_pressure = pressure_floor_get_pressure(p, p->rho, comoving_pressure);
 
   /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, comoving_pressure);
+  const float soundspeed =
+      gas_soundspeed_from_pressure(p->rho, comoving_pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float P_over_rho2 = comoving_pressure * rho_inv * rho_inv;
@@ -676,7 +678,8 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   comoving_pressure = pressure_floor_get_pressure(p, p->rho, comoving_pressure);
 
   /* Compute the new sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, comoving_pressure);
+  const float soundspeed =
+      gas_soundspeed_from_pressure(p->rho, comoving_pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;
@@ -742,7 +745,8 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   comoving_pressure = pressure_floor_get_pressure(p, p->rho, comoving_pressure);
 
   /* Compute the new sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, comoving_pressure);
+  const float soundspeed =
+      gas_soundspeed_from_pressure(p->rho, comoving_pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;
@@ -853,7 +857,8 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
   comoving_pressure = pressure_floor_get_pressure(p, p->rho, comoving_pressure);
 
   /* Compute the sound speed */
-  const float soundspeed = gas_soundspeed_from_pressure(p->rho, comoving_pressure);
+  const float soundspeed =
+      gas_soundspeed_from_pressure(p->rho, comoving_pressure);
 
   /* Divide the pressure by the density squared to get the SPH term */
   const float rho_inv = 1.f / p->rho;

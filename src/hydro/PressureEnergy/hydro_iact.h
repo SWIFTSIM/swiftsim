@@ -260,10 +260,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
 
   /* SPH acceleration term */
-  const float sph_acc_term =
-    pj->u * pi->u * hydro_gamma_minus_one * hydro_gamma_minus_one *
-    ((f_ij * pi->force.pressure_inv) * wi_dr + (f_ji * pj->force.pressure_inv) * wj_dr) *
-    r_inv;
+  const float sph_acc_term = pj->u * pi->u * hydro_gamma_minus_one *
+                             hydro_gamma_minus_one *
+                             ((f_ij * pi->force.pressure_inv) * wi_dr +
+                              (f_ji * pj->force.pressure_inv) * wj_dr) *
+                             r_inv;
 
   /* Assemble the acceleration */
   const float acc = sph_acc_term + visc_acc_term;
@@ -280,12 +281,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Get the time derivative for u. */
 
   const float sph_du_term_i = hydro_gamma_minus_one * hydro_gamma_minus_one *
-    pj->u * pi->u * (f_ij * pi->force.pressure_inv) *
-    wi_dr * dvdr * r_inv;
-	
+                              pj->u * pi->u * (f_ij * pi->force.pressure_inv) *
+                              wi_dr * dvdr * r_inv;
+
   const float sph_du_term_j = hydro_gamma_minus_one * hydro_gamma_minus_one *
-    pi->u * pj->u * (f_ji * pj->force.pressure_inv) *
-    wj_dr * dvdr * r_inv;
+                              pi->u * pj->u * (f_ji * pj->force.pressure_inv) *
+                              wj_dr * dvdr * r_inv;
 
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
@@ -389,10 +390,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
 
   /* SPH acceleration term */
-  const float sph_acc_term =
-    pj->u * pi->u * hydro_gamma_minus_one * hydro_gamma_minus_one *
-    ((f_ij * pi->force.pressure_inv) * wi_dr + (f_ji * pj->force.pressure_inv) * wj_dr) *
-    r_inv;
+  const float sph_acc_term = pj->u * pi->u * hydro_gamma_minus_one *
+                             hydro_gamma_minus_one *
+                             ((f_ij * pi->force.pressure_inv) * wi_dr +
+                              (f_ji * pj->force.pressure_inv) * wj_dr) *
+                             r_inv;
 
   /* Assemble the acceleration */
   const float acc = sph_acc_term + visc_acc_term;
