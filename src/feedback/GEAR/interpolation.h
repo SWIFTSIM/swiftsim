@@ -32,13 +32,13 @@ enum interpolate_boundary_condition {
 
 struct interpolation_1d {
   /* Data to interpolate */
-  double *data;
+  float *data;
 
   /* Minimal x */
-  double xmin;
+  float xmin;
 
   /* Step size between x points */
-  double dx;
+  float dx;
 
   /* Number of element in the data */
   int N;
@@ -64,25 +64,25 @@ struct interpolation_1d {
  * @params boundary_condition The type of #interpolate_boundary_condition.
  */
 __attribute__((always_inline)) static INLINE void interpolate_1d_init(
-    struct interpolation_1d *interp, double xmin, double xmax,
-    int N, double log_data_xmin, double step_size, int N_data,
-    const double *data, enum interpolate_boundary_condition boundary_condition) {
+    struct interpolation_1d *interp, float xmin, float xmax,
+    int N, float log_data_xmin, float step_size, int N_data,
+    const float *data, enum interpolate_boundary_condition boundary_condition) {
 
   /* Save the variables */
   interp->N = N;
   interp->xmin = xmin;
-  interp->dx = (xmax - xmin) / (N - 1);
+  interp->dx = (xmax - xmin) / (N - 1.f);
   interp->boundary_condition = boundary_condition;
 
   /* Allocate the memory */
-  interp->data = malloc(sizeof(double) * N);
+  interp->data = malloc(sizeof(float) * N);
   if (interp->data == NULL)
     error("Failed to allocate memory for the interpolation");
 
   /* Interpolate the data */
   for(int i = 0; i < N; i++) {
-    const double log_x = xmin + i * interp->dx;
-    const double x_j = (log_x - log_data_xmin) / step_size;
+    const float log_x = xmin + i * interp->dx;
+    const float x_j = (log_x - log_data_xmin) / step_size;
 
     /* Check boundaries */
     if (x_j < 0) {
@@ -120,7 +120,7 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_init(
 
     /* Interpolate i */
     const int j = x_j;
-    const double f = x_j - j;
+    const float f = x_j - j;
     interp->data[i] = (1. - f) * data[j] + f * data[j+1];
   }
 
@@ -134,13 +134,13 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_init(
  *
  * @return The interpolated value y.
  */
-__attribute__((always_inline)) static INLINE double interpolate_1d(
-    const struct interpolation_1d *interp, double x) {
+__attribute__((always_inline)) static INLINE float interpolate_1d(
+    const struct interpolation_1d *interp, float x) {
 
   /* Find indice */
-  const double i = (x - interp->xmin) / interp->dx;
+  const float i = (x - interp->xmin) / interp->dx;
   const int idx = i;
-  const double dx = i - idx;
+  const float dx = i - idx;
 
   /* Should we extrapolate? */
   if (i < 0) {
@@ -191,7 +191,7 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_print(
 
   /* Print values */
   for(int i = 0; i < interp->N; i++) {
-    double x = interp->xmin + i * interp->dx;
+    float x = interp->xmin + i * interp->dx;
     message("%.2g: %g", x, interp->data[i]);
   }
 }
