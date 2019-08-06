@@ -271,14 +271,36 @@ static inline double dtd_number_of_SNIa(const struct spart* sp, const double t0,
 
   /* The calculation is written as the integral between t0 and t1 of
    * a constant DTD given by \nu / \tau */
+  
+  /* First calculate the number of SNIa for the constant part of the DTD: */
   const double norm = fp->dtd_data.norm_const;
+  const double num_SNIa_per_Msun_const = norm * (t1 - tmin);
+
+  /* Calculate the number of SNIa for the gaussian part of the DTD: */
   const double nu_gauss = fp->dtd_data.SNIa_efficiency_gauss;
+
+  /* get one over the standard deviation time */
   const double inv_std = fp->dtd_data.std_characteristic_time_Gyr_inv;
+
+  /* Get the difference with the characteristic time of the Gaussian 
+   * for both the minimum and maximum time on this interval: */
   const double tdif0 = tmin - fp->dtd_data.characteristic_time_Gyr;
   const double tdif1 = t1 - fp->dtd_data.characteristic_time_Gyr;
-  const double num_SNIa_per_Msun =
-      norm * (t1 - t0) +
-      .5 * nu_gauss * (erf(tdif1 * inv_std) - erf(tdif0 * inv_std));
+  
+  /* calculate the upper term of the integral (not factor 2) */
+  const double gauss_up = erf(tdif1 * inv_std);
+  
+  /* The lower part */
+  const double gauss_low = erf(tdif0 * inv_std);
+
+  /* Finish the integral */
+  const double integral = .5 * (gauss_up - gauss_low);
+
+  /* The number of SNIa from the Gaussian part */
+  const double num_SNIa_per_Msun_gauss = nu_gauss * integral;
+
+  /* calculate the total Gaussian + constant */
+  const double num_SNIa_per_Msun = num_SNIa_per_Msun_gauss + num_SNIa_per_Msun_const;
 
   return num_SNIa_per_Msun * sp->mass_init * fp->mass_to_solar_mass;
 }
@@ -488,23 +510,36 @@ static inline void dtd_init(struct feedback_props* fp,
       parser_get_param_double(params, "SNIaDTD:break_time_Gyr");
 
   /* Calculate the normalization of the power-law DTD */
-  const double norm1_inv =
-      1. / (1. - fp->dtd_data.power_short_time) *
-      (1. - pow(fp->dtd_data.delay_time_Gyr / fp->dtd_data.break_time_Gyr,
-                1. - fp->dtd_data.power_short_time));
-  const double norm2_inv = 1. / (1. - fp->dtd_data.power_long_time) *
-                           (pow(fp->dtd_data.normalization_timescale_Gyr /
-                                    fp->dtd_data.break_time_Gyr,
-                                1. - fp->dtd_data.power_long_time) -
-                            1.);
+  
+  /* Calculate 1 minus the short time power */
+  const double one_minus_power_short = 1. - fp->dtd_data.power_short_time;
+  /* Calculate one over this number */
+  const double one_minus_power_short_inv = 1./one_minus_power_short;
+
+  /* Get the delay time*/
+  const double t_delay = fp->dtd_data.delay_time_Gyr;
+
+  /* Get the break time */
+  const  double t_break = fp->dtd_data.break_time_Gyr;
+
+  /* Calculate the first norm */
+  const double norm1_inv = one_minus_power_short_inv * (1. - pow(t_delay/t_break, one_minus_power_short));
+
+  /* Calculate 1 minus the long time power */
+  const double one_minus_power_long = 1. - fp->dtd_data.power_short_time;
+  /* Calculate one over this number */
+  const double one_minus_power_long_inv = 1./one_minus_power_short;
+
+  const double t_norm = fp->dtd_data.normalization_timescale_Gyr;
+
+  /* Calculate the second norm */
+  const double norm2_inv = one_minus_power_long_inv * (pow(t_norm/t_break, one_minus_power_long) - 1.);
 
   /* Store the normalization */
   fp->dtd_data.norm_short = fp->dtd_data.SNIa_efficiency /
-                            (norm1_inv + norm2_inv) * 1. /
-                            (1. - fp->dtd_data.power_short_time);
+                            (norm1_inv + norm2_inv) * one_minus_power_short_inv;
   fp->dtd_data.norm_long = fp->dtd_data.SNIa_efficiency /
-                           (norm1_inv + norm2_inv) * 1. /
-                           (1. - fp->dtd_data.power_long_time);
+                           (norm1_inv + norm2_inv) * one_minus_power_long_inv;
 }
 
 #else

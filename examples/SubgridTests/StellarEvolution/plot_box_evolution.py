@@ -59,7 +59,6 @@ rc('font',**{'family':'sans-serif','sans-serif':['Times']})
 # Number of snapshots and elements
 newest_snap_name = max(glob.glob('stellar_evolution_*.hdf5'))#, key=os.path.getctime)
 n_snapshots = int(newest_snap_name.replace('stellar_evolution_','').replace('.hdf5','')) + 1
-print(n_snapshots)
 n_elements = 9
 
 # Read the simulation data
@@ -241,7 +240,7 @@ xlabel("${\\rm{Time}} (Gyr)$", labelpad=0)
 ylabel("Change in total metal mass of gas particles (Msun)", labelpad=2)
 ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
-savefig("box_evolution_Z_%.4f_constant.png"%(Z_star), dpi=200)
+savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
 
 
 
