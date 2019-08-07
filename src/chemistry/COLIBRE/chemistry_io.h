@@ -92,11 +92,11 @@ INLINE static int chemistry_write_particles(const struct part* parts,
 
   list[9] = io_make_output_field("DiffusionCoefficient", FLOAT, 1,
                                  UNIT_CONV_DIFF_COEFF, parts,
-                                 diffusion_data.diffusion_coefficient);
+                                 chemistry_data.diffusion_coefficient);
 
   list[10] = io_make_output_field("DiffusionRate", FLOAT,
                                   chemistry_element_count, UNIT_CONV_DIFF_RATE,
-                                  parts, diffusion_data.diffusion_rate);
+                                  parts, chemistry_data.diffusion_rate);
 
   return 11;
 }

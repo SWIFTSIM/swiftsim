@@ -44,8 +44,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
 
-  struct diffusion_part_data *di = &pi->diffusion_data;
-  struct diffusion_part_data *dj = &pj->diffusion_data;
+  struct chemistry_part_data *di = &pi->chemistry_data;
+  struct chemistry_part_data *dj = &pj->chemistry_data;
 
   float dwi_dx, dwj_dx;
 
@@ -65,10 +65,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   const float uj = r / hj;
   kernel_eval(uj, &dwj_dx);
 
-  float dwj_r = dwj_dx / r;
+  /* Get 1/r */
+  const float r_inv = 1.f / sqrtf(r2);
+  float dwj_r = dwj_dx * r_inv;
   float mi_dwj_r = mi * dwj_r;
 
-  float dwi_r = dwi_dx / r;
+  float dwi_r = dwi_dx * r_inv;
   float mj_dwi_r = mj * dwi_r;
 
   /* Compute shear tensor */
@@ -103,7 +105,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
 
-  struct diffusion_part_data *di = &pi->diffusion_data;
+  struct chemistry_part_data *di = &pi->chemistry_data;
   float dwi_dx;
 
   /* Get the masses. */
@@ -116,8 +118,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
   const float ui = r / hi;
   kernel_eval(ui, &dwi_dx);
 
+  /* Get 1/r */
+  const float r_inv = 1.f / sqrtf(r2);
   /* Compute shear tensor */
-  float dwi_r = dwi_dx / r;
+  float dwi_r = dwi_dx * r_inv;
   float mj_dwi_r = mj * dwi_r;
 
   for (int k = 0; k < 3; k++) {
@@ -146,13 +150,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     integertime_t t_current, const struct cosmology *cosmo,
     const int with_cosmology) {
 
-  struct diffusion_part_data *di = &pi->diffusion_data;
-  struct diffusion_part_data *dj = &pj->diffusion_data;
-
-  if (dj->diffusion_coefficient > 0 || di->diffusion_coefficient > 0) {
-
     struct chemistry_part_data *chi = &pi->chemistry_data;
     struct chemistry_part_data *chj = &pj->chemistry_data;
+    
+  if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
     float mj = hydro_get_mass(pj);
@@ -185,17 +186,20 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
+      
+    /* Get 1/r */
+    const float r_inv = 1.f / sqrtf(r2);
 
     float dw_r = 0.5f *
-                 (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) /
-                 r;
+      (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) * r_inv;
+
     float mj_dw_r = mj * dw_r;
 
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
     /* K_ij in physical coordinates */
     float K_ij;
-    K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
-    K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
+    K_ij = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
+    K_ij /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
     K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
     K_ij *= a;
     float K_ji = K_ij * mi / mj;
@@ -224,16 +228,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
 
     /* Compute contribution to the metal abundance */
     for (int i = 0; i < chemistry_element_count; i++) {
-      di->dmetal_mass_fraction[i] +=
+      chi->dmetal_mass_fraction[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) *
           dt;
-      dj->dmetal_mass_fraction[i] +=
+      chj->dmetal_mass_fraction[i] +=
           K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]) *
           dt;
 
-      di->diffusion_rate[i] +=
+      chi->diffusion_rate[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
-      dj->diffusion_rate[i] +=
+      chj->diffusion_rate[i] +=
           K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]);
     }
   }
@@ -257,13 +261,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     struct part *restrict pj, float a, float H, float time_base,
     integertime_t t_current, const struct cosmology *cosmo,
     const int with_cosmology) {
-  struct diffusion_part_data *di = &pi->diffusion_data;
-  struct diffusion_part_data *dj = &pj->diffusion_data;
-
-  if (dj->diffusion_coefficient > 0 || di->diffusion_coefficient > 0) {
-
+    
     struct chemistry_part_data *chi = &pi->chemistry_data;
     struct chemistry_part_data *chj = &pj->chemistry_data;
+
+  if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
     float mj = hydro_get_mass(pj);
@@ -296,15 +298,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
 
+    /* Get 1/r */
+    const float r_inv = 1.f / sqrtf(r2);
     float dw_r = 0.5f *
-                 (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) /
-                 r;
+      (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) * r_inv;
     float mj_dw_r = mj * dw_r;
 
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
     float K_ij;
-    K_ij = 4.0f * dj->diffusion_coefficient * di->diffusion_coefficient;
-    K_ij /= (dj->diffusion_coefficient + di->diffusion_coefficient);
+    K_ij = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
+    K_ij /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
     K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
     K_ij *= a;
 
@@ -332,10 +335,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
 
     /* Compute contribution to the metal abundance */
     for (int i = 0; i < chemistry_element_count; i++) {
-      di->dmetal_mass_fraction[i] +=
+      chi->dmetal_mass_fraction[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]) *
           dt;
-      di->diffusion_rate[i] +=
+      chi->diffusion_rate[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
     }
   }

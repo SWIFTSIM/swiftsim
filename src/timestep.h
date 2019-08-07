@@ -150,10 +150,10 @@ __attribute__((always_inline)) INLINE static integertime_t get_part_timestep(
   float new_dt = min3(new_dt_hydro, new_dt_cooling, new_dt_grav);
 
   /* CC. Adding time-step size constraint based on diffusion equation */
-  float new_dt_diff =
-      metal_diffusion_timestep(e->physical_constants, e->cosmology,
+  float new_dt_chemistry =
+      chemistry_timestep(e->physical_constants, e->cosmology,
                                e->internal_units, e->hydro_properties, p);
-  new_dt = min(new_dt, new_dt_diff);
+  new_dt = min(new_dt, new_dt_chemistry);
 
   /* Limit change in smoothing length */
   const float dt_h_change =

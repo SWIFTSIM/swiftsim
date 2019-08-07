@@ -45,6 +45,10 @@ struct chemistry_global_data {
 
   /*! Fraction of the particle mass in *all* metals at the start of the run */
   float initial_metal_mass_fraction_total;
+    
+  /*! Diffusion constant to calculate Smagorinsky diffusion coefficient */
+  /* This constant is a free parameter we read in params file */
+  float diffusion_constant;
 };
 
 /**
@@ -88,24 +92,21 @@ struct chemistry_part_data {
 
   /*! Smoothed fraction of total gas mass in Iron coming from SNIa */
   float smoothed_iron_mass_fraction_from_SNIa;
-};
-
-/**
- * @brief Diffusion particle data traced by the #part.
- */
-struct diffusion_part_data {
 
   /*! Fraction of the particle mass in a given element */
   /*! This array is duplicated to be used after the diffusion routine */
   float dmetal_mass_fraction[chemistry_element_count];
 
   /*! Tensor of the velocity shear */
+  /* (Calculated in physical coordinates) */
   float shear_tensor[3][3];
 
   /*! Diffusion coefficient as defined by the Smagorinsky model */
+  /* (Calculated in physical coordinates) */
   float diffusion_coefficient;
 
   /*! Diffusion rate */
+  /* (Calculated in physical coordinates) */
   float diffusion_rate[chemistry_element_count];
 };
 

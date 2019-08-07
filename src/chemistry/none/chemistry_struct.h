@@ -43,8 +43,6 @@ struct chemistry_global_data {};
  */
 struct chemistry_part_data {};
 
-struct diffusion_part_data {};
-
 /**
  * @brief Chemistry properties carried by the #bpart.
  *

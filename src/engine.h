@@ -438,9 +438,6 @@ struct engine {
   /* Properties of the chemistry model */
   const struct chemistry_global_data *chemistry;
 
-  /* Properties of the diffusion model */
-  const struct diffusion_part_data *diffusion;
-
   /*! The FOF properties data. */
   struct fof_props *fof_properties;
 

@@ -176,96 +176,6 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
           data->initial_metal_mass_fraction[elem];
     }
   }
-
-  /* I will add a random distribution of metals to the initial set-up until
-   * enrichment is ON */
-  /*float r = (p->x[0]-2282.34) * (p->x[0]-2282.34);
-  r += (p->x[1]-2282.34) * (p->x[1]-2282.34);
-  r += (p->x[2]-2282.34) * (p->x[2]-2282.34);
-  r = sqrt(r) / 20.0;*/
-
-  /* Get a unique random number between 0 and 1 stolen from star formation */
-  /*float random_number = random_unit_interval(p->id, 10, 0);
-  random_number *= 0.1; between 0 and 0.1*/
-
-  /*if (r <= 0.3 && r > 0.1){
-
-      float a = pow(10,(-0.2*exp(1.17*0.2))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }
-  if (r <= 0.5 && r > 0.3){
-      float a = pow(10,(-0.2*exp(1.17*0.4))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }
-
-  if (r <= 0.7 && r > 0.5){
-      float a = pow(10,(-0.2*exp(1.17*0.6))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }
-
-  if (r <= 0.9 && r > 0.7){
-      float a = pow(10,(-0.2*exp(1.17*0.8))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }
-
-  if (r <= 1.1 && r > 0.9){
-      float a = pow(10,(-0.2*exp(1.17*1.0))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }
-
-  if (r > 1.1){
-      float a = pow(10,(-0.2*exp(1.17*1.5))+random_number);
-      float b = (1.0f - a)/(1.0f-p->chemistry_data.metal_mass_fraction_total)+a;
-      for (int elem = 0; elem < 2; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= b;
-      }
-      p->chemistry_data.metal_mass_fraction_total *= a;
-
-      for (int elem = 2; elem < chemistry_element_count; ++elem){
-          p->chemistry_data.metal_mass_fraction[elem] *= a;
-      }
-  }*/
-
   chemistry_init_part(p, data);
 }
 
@@ -343,23 +253,18 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
     struct part* restrict p, const struct cosmology* cosmo) {}
 
 /**
- * @brief Computes the metal_diffusion time-step.
+ * @brief Computes the chemistry-related time-step constraint.
  *
- * We return FLT_MAX so as to impose no limit on the time-step.
- *
- * @param cooling The #cooling_function_data used in the run.
  * @param phys_const The physical constants in internal units.
  * @param cosmo The current cosmological model.
  * @param us The internal system of units.
  * @param p Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float metal_diffusion_timestep(
-    const struct phys_const* restrict phys_const,
-    const struct cosmology* restrict cosmo,
-    const struct unit_system* restrict us,
-    const struct hydro_props* hydro_props, const struct part* restrict p,
-    const struct xpart* restrict xp) {
-
+__attribute__((always_inline)) INLINE static float chemistry_timestep(
+                                                                      const struct phys_const* restrict phys_const,
+                                                                      const struct cosmology* restrict cosmo,
+                                                                      const struct unit_system* restrict us,
+                                                                      const struct hydro_props* hydro_props, const struct part* restrict p) {
   return FLT_MAX;
 }
 
