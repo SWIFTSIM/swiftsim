@@ -276,7 +276,7 @@ static INLINE void chemistry_print_backend(
 
 /**
  * @brief Updates the metal mass fractions after diffusion at the end of the
- * <FORCE LOOP>
+ * force loop.
  *
  * @param p The particle to act upon.
  */
