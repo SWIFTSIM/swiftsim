@@ -193,9 +193,10 @@ INLINE static double random_unit_interval_two_IDs(
     const enum random_number_type type) {
 
   /* We need to combine the gas and star IDs such that we do not get correlation
-   * for same id_star + id_gas pairs */
+   * for same id_star + id_gas pairs, because of this we combine everything 
+   * nonlinearly */
   int64_t input_id =
-      (id_star * id_gas * ti_current + id_star * ti_current * ti_current +
+      (id_star * id_gas + id_star * ti_current +
        id_gas * ti_current * ti_current) %
       INT64_MAX;
 

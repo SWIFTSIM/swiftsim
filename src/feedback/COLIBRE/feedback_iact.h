@@ -288,7 +288,7 @@ runner_iact_nonsym_feedback_apply(
   if (prob > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval(si->id + pj->id, ti_current,
+    const float rand = random_unit_interval_two_IDs(si->id, pj->id, ti_current,
                                             random_number_stellar_feedback);
     /* Are we lucky? */
     if (rand < prob) {
@@ -356,7 +356,7 @@ runner_iact_nonsym_feedback_apply(
       si->feedback_data.to_distribute.momentum_probability;
 
   /* Draw a random number (Note mixing both IDs) */
-  const float momentum_rand = random_unit_interval(si->id + pj->id, ti_current,
+  const float momentum_rand = random_unit_interval_two_IDs(si->id, pj->id, ti_current,
                                                    random_number_stellar_winds);
 
   /* if lucky, perform the actual kick  */
