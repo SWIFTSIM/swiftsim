@@ -49,13 +49,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
 
   float dwi_dx, dwj_dx;
 
-  /* Get the masses, I use hydro_get function because in --with-hydro=gizmo */
-  /* option the mass is not part of the particle data.                      */
-  float mj = hydro_get_mass(pj);
-  float mi = hydro_get_mass(pi);
+  /* Get the masses */
+  const float mj = hydro_get_mass(pj);
+  const float mi = hydro_get_mass(pi);
 
   /* Get r */
-  const float r = sqrtf(r2);
+  const float r_inv = 1.f / sqrtf(r2);
+  const float r = r2 * r_inv;
 
   /* Compute the kernel function for pi */
   const float ui = r / hi;
@@ -65,15 +65,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
   const float uj = r / hj;
   kernel_eval(uj, &dwj_dx);
 
-  /* Get 1/r */
-  const float r_inv = 1.f / sqrtf(r2);
-  float dwj_r = dwj_dx * r_inv;
-  float mi_dwj_r = mi * dwj_r;
+  const float dwj_r = dwj_dx * r_inv;
+  const float mi_dwj_r = mi * dwj_r;
 
-  float dwi_r = dwi_dx * r_inv;
-  float mj_dwi_r = mj * dwi_r;
+  const float dwi_r = dwi_dx * r_inv;
+  const float mj_dwi_r = mj * dwi_r;
 
-  /* Compute shear tensor */
+  /* Compute velocity shear tensor */
   for (int k = 0; k < 3; k++) {
     di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * dx[k] * mj_dwi_r;
     di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * dx[k] * mj_dwi_r;
@@ -106,24 +104,24 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
     const struct part *restrict pj, float a, float H) {
 
   struct chemistry_part_data *di = &pi->chemistry_data;
-  float dwi_dx;
 
   /* Get the masses. */
-  float mj = hydro_get_mass(pj);
+  const float mj = hydro_get_mass(pj);
+
+  float dwi_dx;
 
   /* Get r */
-  const float r = sqrtf(r2);
+  const float r_inv = 1.f / sqrtf(r2);
+  const float r = r2 * r_inv;
 
   /* Compute the kernel function for pi */
   const float ui = r / hi;
   kernel_eval(ui, &dwi_dx);
 
-  /* Get 1/r */
-  const float r_inv = 1.f / sqrtf(r2);
-  /* Compute shear tensor */
-  float dwi_r = dwi_dx * r_inv;
-  float mj_dwi_r = mj * dwi_r;
+  const float dwi_r = dwi_dx * r_inv;
+  const float mj_dwi_r = mj * dwi_r;
 
+  /* Compute velocity shear tensor */
   for (int k = 0; k < 3; k++) {
     di->shear_tensor[k][0] += (pj->v[0] - pi->v[0]) * dx[k] * mj_dwi_r;
     di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * dx[k] * mj_dwi_r;
@@ -156,18 +154,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
   if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
-    float mj = hydro_get_mass(pj);
-    float mi = hydro_get_mass(pi);
+    const float mj = hydro_get_mass(pj);
+    const float mi = hydro_get_mass(pi);
+    const float rhoj = hydro_get_comoving_density(pj);
+    const float rhoi = hydro_get_comoving_density(pi);
+
     float wi, wj, dwi_dx, dwj_dx;
-    float rhoj = hydro_get_comoving_density(pj);
-    float rhoi = hydro_get_comoving_density(pi);
 
     /* Get r */
-    float r = sqrtf(r2);
+    const float r = sqrtf(r2);
 
     /* part j */
     /* Get the kernel for hj */
-    float hj_inv = 1.0f / hj;
+    const float hj_inv = 1.0f / hj;
     const float hj_inv_dim = pow_dimension(hj_inv);        /* 1/h^d */
     const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
     const float rho_j_inv = 1.0f / rhoj;
@@ -178,7 +177,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
 
     /* part i */
     /* Get the kernel for hi */
-    float hi_inv = 1.0f / hi;
+    const float hi_inv = 1.0f / hi;
     const float hi_inv_dim = pow_dimension(hi_inv);        /* 1/h^d */
     const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
     const float rho_i_inv = 1.0f / rhoi;
@@ -194,16 +193,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
                  (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) *
                  r_inv;
 
-    float mj_dw_r = mj * dw_r;
+    const float mj_dw_r = mj * dw_r;
+    const float mi_dw_r = mi * dw_r;
 
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
     /* K_ij in physical coordinates */
-    float K_ij;
-    K_ij = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
-    K_ij /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
-    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-    K_ij *= a;
-    float K_ji = K_ij * mi / mj;
+    float K;
+    K = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
+    K /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
+    K *= rho_i_inv * rho_j_inv;
+    K *= a;
+
+    const float K_ij = K * mj_dw_r;
+    const float K_ji = K * mi_dw_r;
 
     /* Manage time interval of particles i & j to be the smallest */
     double dt;
@@ -269,17 +271,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
   if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
-    float mj = hydro_get_mass(pj);
-    float rhoj = hydro_get_comoving_density(pj);
-    float rhoi = hydro_get_comoving_density(pi);
+    const float mj = hydro_get_mass(pj);
+    const float rhoj = hydro_get_comoving_density(pj);
+    const float rhoi = hydro_get_comoving_density(pi);
+
     float wi, wj, dwi_dx, dwj_dx;
 
     /* Get r */
-    float r = sqrtf(r2);
+    const float r = sqrtf(r2);
 
     /* part j */
     /* Get the kernel for hj */
-    float hj_inv = 1.0f / hj;
+    const float hj_inv = 1.0f / hj;
     const float hj_inv_dim = pow_dimension(hj_inv);        /* 1/h^d */
     const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
     const float rho_j_inv = 1.0f / rhoj;
@@ -307,11 +310,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     float mj_dw_r = mj * dw_r;
 
     /* Compute K_ij coefficient (see Correa et al., in prep.) */
-    float K_ij;
-    K_ij = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
-    K_ij /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
-    K_ij *= rho_i_inv * rho_j_inv * mj_dw_r;
-    K_ij *= a;
+    float K;
+    K = 4.0f * chj->diffusion_coefficient * chi->diffusion_coefficient;
+    K /= (chj->diffusion_coefficient + chi->diffusion_coefficient);
+    K *= rho_i_inv * rho_j_inv;
+    K *= a;
+
+    const float K_ij = K * mj_dw_r;
 
     /* Manage time interval of particles i & j to be the smallest */
     double dt;
