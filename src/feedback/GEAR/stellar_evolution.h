@@ -32,6 +32,99 @@
 
 
 /**
+ * @brief Compute the integer number of supernovae from the floating number.
+ *
+ * @param sp The particle to act upon
+ * @param number_supernovae_f Floating number of supernovae during this step.
+ * @param ti_begin The #integertime_t at the begining of the step.
+ * @param random_type The categorie of random.
+ *
+ * @return The integer number of supernovae.
+ */
+__attribute__((always_inline)) INLINE static int stellar_evolution_compute_integer_number_supernovae(
+    struct spart* restrict sp, float number_supernovae_f,
+    const integertime_t ti_begin, enum random_number_type random_type) {
+
+  const int number_supernovae_i = floor(number_supernovae_f);
+
+    /* Get the random number for the decimal part */
+    const float rand_sn = random_unit_interval(sp->id, ti_begin,
+						 random_type);
+
+    /* Get the fraction part */
+    const float frac_sn = number_supernovae_f - number_supernovae_i;
+
+    /* Get the integer number of SN */
+    return number_supernovae_i + ((rand_sn < frac_sn)? 1 : 0);
+}
+
+
+/**
+ * @brief Compute the feedback properties.
+ *
+ * @param sp The particle to act upon
+ * @param sm The #stellar_model structure.
+ * @param phys_const The physical constants in the internal unit system.
+ * @param log_m_beg_step Mass of a star ending its life at the begining of the step (log10(solMass))
+ * @param log_m_end_step Mass of a star ending its life at the end of the step (log10(solMass))
+ *
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_compute_feedback_properties(
+    struct spart* restrict sp, const struct stellar_model* sm,
+    const struct phys_const* phys_const,
+    const float log_m_beg_step, const float log_m_end_step,
+    const float m_init) {
+
+  /* Compute the mass ejected */
+  /* SNIa */
+  const float mass_snia = (sp->feedback_data.number_snii == 0) ?
+    0 : (supernovae_ia_get_ejected_mass_processed(&sm->snia)
+	 * sp->feedback_data.number_snia);
+
+  /* SNII */
+  const float mass_frac_snii = (sp->feedback_data.number_snii == 0) ?
+    0 : supernovae_ii_get_ejected_mass_fraction_processed(&sm->snii, log_m_end_step, log_m_beg_step);
+
+  sp->feedback_data.mass_ejected = mass_snia + mass_frac_snii * m_init;
+
+  /* Transform into internal units */
+  sp->feedback_data.mass_ejected *= phys_const->const_solar_mass;
+
+  if (sp->mass <= sp->feedback_data.mass_ejected) {
+    error("Stars cannot have negative mass. (%g <= %g). Initial mass = %g",
+	  sp->mass, sp->feedback_data.mass_ejected, sp->birth.mass);
+  }
+
+  /* Update the mass */
+  sp->mass -= sp->feedback_data.mass_ejected;
+
+  /* Get the SNIa yields */
+  const float *snia_yields = supernovae_ia_get_yields(&sm->snia);
+
+  /* Compute the SNII yields */
+  float snii_yields[CHEMISTRY_ELEMENT_COUNT];
+  supernovae_ii_get_yields(&sm->snii, log_m_end_step, log_m_beg_step, snii_yields);
+
+  /* Compute the mass fraction of non processed elements */
+  const float non_processed = supernovae_ii_get_ejected_mass_fraction(
+    &sm->snii, log_m_end_step, log_m_beg_step);
+
+  /* Set the yields */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    /* Compute the mass fraction of metals */
+    sp->feedback_data.metal_mass_ejected[i] =
+      snii_yields[i] +
+      sp->chemistry_data.metal_mass_fraction[i] * non_processed +
+      snia_yields[i] * sp->feedback_data.number_snia;
+
+    /* Convert it to total mass */
+    sp->feedback_data.metal_mass_ejected[i] *=
+      sp->birth.mass;
+  }
+  
+}
+
+/**
  * @brief Evolve the stellar properties of a #spart.
  *
  * This function compute the SN rate and yields before sending
@@ -41,10 +134,11 @@
  * avoid numerical errors.
  *
  * @param sp The particle to act upon
- * @param feedback_props The #feedback_props structure.
+ * @param sm The #stellar_model structure.
  * @param cosmo The current cosmological model.
  * @param us The unit system.
  * @param phys_const The physical constants in the internal unit system.
+ * @param ti_begin The #integertime_t at the begining of the step.
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
@@ -92,16 +186,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
     const float number_snia_f = supernovae_ia_get_number(
       &sm->snia, m_end_step, m_beg_step) * m_init;
 
-    /* Get the random number for the decimal part */
-    const float rand_snia = random_unit_interval(sp->id, ti_begin,
-						 random_number_stellar_feedback);
-
-    /* Get the fraction part */
-    const float frac_snia = number_snia_f - floor(number_snia_f);
-
-    /* Get the integer number of SN */
-    sp->feedback_data.number_snia = floor(number_snia_f) + ((rand_snia < frac_snia)? 1 : 0);
-
+    /* Get the integer number of supernovae */
+    sp->feedback_data.number_snia = stellar_evolution_compute_integer_number_supernovae(
+      sp, number_snia_f, ti_begin, random_number_stellar_feedback);
   }
 
   /* Compute number of SNII */
@@ -110,15 +197,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
     const float number_snii_f = supernovae_ii_get_number(
     &sm->snii, m_end_step, m_beg_step) * m_init;
 
-    /* Get the random number for the decimal part */
-    const float rand_snii = random_unit_interval(sp->id, ti_begin,
-					       random_number_stellar_feedback_2);
-
-    /* Get the fraction part */
-    const float frac_snii = number_snii_f - floor(number_snii_f);
-
-    /* Get the integer number of SN */
-    sp->feedback_data.number_snii = floor(number_snii_f) + ((rand_snii < frac_snii)? 1 : 0);
+    /* Get the integer number of supernovae */
+    sp->feedback_data.number_snii = stellar_evolution_compute_integer_number_supernovae(
+      sp, number_snii_f, ti_begin, random_number_stellar_feedback_2);
   }
 
   /* Does this star produce a supernovae? */
@@ -127,27 +208,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
 
   message("%i %i", sp->feedback_data.number_snia, sp->feedback_data.number_snii);
 
-  /* Compute the mass ejected */
-  /* SNIa */
-  const float mass_snia = supernovae_ia_get_ejected_mass_processed(&sm->snia)
-    * sp->feedback_data.number_snia;
-
-  /* SNII */
-  const float mass_frac_snii = (sp->feedback_data.number_snii == 0) ?
-    0 : supernovae_ii_get_ejected_mass_fraction_processed(&sm->snii, log_m_end_step, log_m_beg_step);
-
-  sp->feedback_data.mass_ejected = mass_snia + mass_frac_snii * m_init;
-
-  /* Transform into internal units */
-  sp->feedback_data.mass_ejected *= phys_const->const_solar_mass;
-
-  if (sp->mass <= sp->feedback_data.mass_ejected) {
-    error("Stars cannot have negative mass. (%g <= %g). Initial mass = %g",
-	  sp->mass, sp->feedback_data.mass_ejected, sp->birth.mass);
-  }
-
-  /* Update the mass */
-  sp->mass -= sp->feedback_data.mass_ejected;
+  /* Compute the properties of the feedback (e.g. yields) */
+  stellar_evolution_compute_feedback_properties(
+      sp, sm, phys_const, log_m_beg_step, log_m_end_step, m_init);
 }
 
 /**
