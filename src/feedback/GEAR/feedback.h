@@ -40,6 +40,8 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
     struct part *restrict p, struct xpart *restrict xp,
     const struct engine *restrict e) {
 
+  return;
+
   /* Did the particle receive a supernovae */
   if (xp->feedback_data.delta_mass == 0)
     return;
@@ -47,24 +49,14 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   const struct cosmology *cosmo = e->cosmology;
 
   /* Turn off the cooling */
-  const int with_cosmology = (e->policy & engine_policy_cosmology);
-  if (with_cosmology) {
-    xp->cooling_data.time_last_event = cosmo->time;
-  }
-  else {
-    xp->cooling_data.time_last_event = e->time;
-  }
-
+  xp->cooling_data.time_last_event = e->time;
+  
   /* Update mass */
   const float old_mass = hydro_get_mass(p);
   const float new_mass = old_mass + xp->feedback_data.delta_mass;
 
   if (xp->feedback_data.delta_mass < 0.) {
     error("Delta mass smaller than 0");
-  }
-
-  if (isfinite(xp->feedback_data.delta_mass) == 0) {
-    error("inf");
   }
 
   hydro_set_mass(p, new_mass);

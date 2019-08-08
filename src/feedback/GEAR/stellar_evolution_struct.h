@@ -69,9 +69,6 @@ struct lifetime {
 
   /*! Coefficients for the constant term */
   float constant[3];
-
-  /*! Factor for the mass unit change. */
-  float log_unit_mass;
 };
 
 /**

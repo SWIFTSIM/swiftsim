@@ -110,7 +110,7 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mas
 };
 
 /**
- * @brief Get the ejected mass (non processed).
+ * @brief Get the ejected mass (processed).
  *
  * @param snii The #supernovae_ii model.
  * @param log_m1 The lower mass in log.
