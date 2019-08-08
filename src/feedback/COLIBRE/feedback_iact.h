@@ -20,8 +20,8 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
-#include "random.h"
 #include "feedback_logger.h"
+#include "random.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -93,7 +93,8 @@ runner_iact_nonsym_feedback_apply(
     const float r2, const float *dx, const float hi, const float hj,
     struct spart *restrict si, struct part *restrict pj,
     struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const integertime_t ti_current, const double time, const int step, FILE *fp_SNIa) {
+    const integertime_t ti_current, const double time, const int step,
+    FILE *fp_SNIa) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -288,8 +289,8 @@ runner_iact_nonsym_feedback_apply(
   if (prob > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval_two_IDs(si->id, pj->id, ti_current,
-                                            random_number_stellar_feedback);
+    const float rand = random_unit_interval_two_IDs(
+        si->id, pj->id, ti_current, random_number_stellar_feedback);
     /* Are we lucky? */
     if (rand < prob) {
 
@@ -341,7 +342,8 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_SNIa_logger_write_to_log_file(fp_SNIa, time, si, pj, xpj, cosmo, step);
+      feedback_SNIa_logger_write_to_log_file(fp_SNIa, time, si, pj, xpj, cosmo,
+                                             step);
       fflush(fp_SNIa);
     }
   }
@@ -356,8 +358,8 @@ runner_iact_nonsym_feedback_apply(
       si->feedback_data.to_distribute.momentum_probability;
 
   /* Draw a random number (Note mixing both IDs) */
-  const float momentum_rand = random_unit_interval_two_IDs(si->id, pj->id, ti_current,
-                                                   random_number_stellar_winds);
+  const float momentum_rand = random_unit_interval_two_IDs(
+      si->id, pj->id, ti_current, random_number_stellar_winds);
 
   /* if lucky, perform the actual kick  */
   if (momentum_rand < momentum_prob) {

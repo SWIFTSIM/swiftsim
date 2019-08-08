@@ -3989,7 +3989,7 @@ void engine_check_for_dumps(struct engine *e) {
 #endif
         }
 
-          /* Dump... */
+        /* Dump... */
 #ifdef WITH_LOGGER
         /* Write a file containing the offsets in the particle logger. */
         engine_dump_index(e);
@@ -5360,10 +5360,9 @@ void engine_config(int restart, int fof, struct engine *e,
       e->SNIa_logger = fopen("SNIa.txt", mode);
       if (!restart) {
         feedback_SNIa_logger_init_log_file(e->SNIa_logger, e->internal_units,
-                                            e->physical_constants);
+                                           e->physical_constants);
         fflush(e->SNIa_logger);
       }
-
     }
   }
 

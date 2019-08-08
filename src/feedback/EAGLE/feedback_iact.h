@@ -92,7 +92,8 @@ runner_iact_nonsym_feedback_apply(
     const float r2, const float *dx, const float hi, const float hj,
     const struct spart *restrict si, struct part *restrict pj,
     struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const integertime_t ti_current, const double time, const int step, FILE *fp_SNIa) {
+    const integertime_t ti_current, const double time, const int step,
+    FILE *fp_SNIa) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
