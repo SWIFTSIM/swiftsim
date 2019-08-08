@@ -29,7 +29,7 @@
  * @param log_mass The star's mass (in log10(solMass)).
  * @param metallicity The star's metallicity.
  *
- * @return The star's lifetime (in log10(yr)).
+ * @return The star's lifetime (in log10(Myr)).
  */
 __attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_from_mass(
     const struct lifetime *life, float log_mass, float metallicity) {
@@ -50,10 +50,10 @@ __attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_fro
  * Returns -1 if out of range.
  *
  * @param life The #lifetime model.
- * @param log_time The star's lifetime (in log10(yr)).
+ * @param log_time The star's lifetime (in log10(Myr)).
  * @param metallicity The star's metallicity.
  *
- * @return The star's mass (in log10(solMass)) or -1.
+ * @return The star's mass (in log10(solMass))
  */
 __attribute__((always_inline)) INLINE static float lifetime_get_log_mass_from_lifetime(
     const struct lifetime *life, float log_time, float metallicity) {
