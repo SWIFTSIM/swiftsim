@@ -21,6 +21,7 @@
 
 /* Local includes */
 #include "random.h"
+#include "feedback_logger.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -82,6 +83,9 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param xpj Extra particle data
  * @param cosmo The cosmological model.
  * @param ti_current Current integer time used value for seeding random number
+ * @param time current physical time in the simulation
+ * @param step current step counter
+ * @param fp_SNIa SNIa logger file
  * generator
  */
 __attribute__((always_inline)) INLINE static void
@@ -89,7 +93,7 @@ runner_iact_nonsym_feedback_apply(
     const float r2, const float *dx, const float hi, const float hj,
     struct spart *restrict si, struct part *restrict pj,
     struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const integertime_t ti_current, const double time) {
+    const integertime_t ti_current, const double time, const int step, FILE *fp_SNIa) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -336,19 +340,9 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      /* Store the current SNIa time, we use the critical density as a switch 
-       * between cosmological and non cosmological. */
-      if (cosmo->critical_density > 0.) {
-        si->feedback_data.last_SNIa_scale_factor = cosmo->a;
-      } else {
-        si->feedback_data.last_SNIa_time = time;
-      }
-
-      message(
-          "We did SNIa feedback! Time step: %llu Star ID=%llu gas ID=%llu "
-          "Star+gas ID=%llu calculated prob=%e drawn prob=%e",
-          ti_current, si->id, pj->id, si->id + pj->id, prob_SNIa,
-          rand_SNIa);
+      /* Write the event to the SNIa logger file */
+      feedback_SNIa_logger_write_to_log_file(fp_SNIa, time, si, pj, xpj, cosmo, step);
+      fflush(fp_SNIa);
     }
   }
 
