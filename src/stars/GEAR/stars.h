@@ -65,7 +65,7 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
 
   sp->time_bin = 0;
   sp->birth.density = 0.f;
-  // sp->birth_time = -1.;
+  // sp->birth_time = 0.;
 
   stars_init_spart(sp);
 }

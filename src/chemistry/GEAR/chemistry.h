@@ -47,6 +47,9 @@
 __attribute__((always_inline)) INLINE static float
 chemistry_part_metal_mass_fraction(const struct part* restrict p,
 				   const struct xpart* restrict xp) {
+
+  return 0.02;
+
   // TODO
   return p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
@@ -60,8 +63,30 @@ chemistry_part_metal_mass_fraction(const struct part* restrict p,
  */
 __attribute__((always_inline)) INLINE static float
 chemistry_spart_metal_mass_fraction(const struct spart* restrict sp) {
+
+  return 0.02;
+
   // TODO
   return sp->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+/**
+ * @brief Copies the chemistry properties of the gas particle over to the
+ * star particle.
+ *
+ * @param p the gas particles.
+ * @param xp the additional properties of the gas particles.
+ * @param sp the new created star particle with its properties.
+ */
+INLINE static void chemistry_copy_star_formation_properties(
+    const struct part* p, const struct xpart* xp, struct spart* sp) {
+
+  /* Store the chemistry struct in the star particle */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    sp->chemistry_data.metal_mass_fraction[i] = p->chemistry_data.smoothed_metal_mass_fraction[i];
+  }
+  
+
 }
 
 /**
@@ -92,8 +117,8 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
                                           struct chemistry_global_data* data) {
 
   /* read parameters */
-  data->initial_metallicity = parser_get_opt_param_float(
-      parameter_file, "GearChemistry:InitialMetallicity", -1);
+  data->initial_metallicity = parser_get_param_float(
+      parameter_file, "GearChemistry:InitialMetallicity");
 }
 
 /**
@@ -218,7 +243,9 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 
   chemistry_init_part(p, data);
 
-  p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1] = data->initial_metallicity;
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    p->chemistry_data.metal_mass_fraction[i] = data->initial_metallicity;
+  }
 }
 
 /**
@@ -231,7 +258,9 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     const struct chemistry_global_data* data, struct spart* restrict sp) {
 
-  // TODO
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicity;
+  }
 }
 
 #endif /* SWIFT_CHEMISTRY_GEAR_H */

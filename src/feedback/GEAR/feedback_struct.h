@@ -78,6 +78,9 @@ struct feedback_spart_data {
   /*! Total mass ejected by the supernovae */
   float mass_ejected;
 
+  /*! Chemical composition of the mass ejected */
+  float metal_mass_ejected[CHEMISTRY_ELEMENT_COUNT];
+
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_GEAR_H */
