@@ -36,6 +36,9 @@ struct chemistry_part_data {
   /*! Fraction of the particle mass in a given element */
   float metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT];
 
+  /*! Total mass of element in a particle */
+  float metal_mass[CHEMISTRY_ELEMENT_COUNT];
+
   /*! Smoothed fraction of the particle mass in a given element */
   float smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT];
 
