@@ -76,7 +76,6 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->shear_tensor[2][k] = 0.0f;
   }
 
-
   for (int i = 0; i < chemistry_element_count; i++) {
     cpd->smoothed_metal_mass_fraction[i] = 0.f;
   }
@@ -109,17 +108,14 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
   /* (Adding Hubble flow in diagonal terms) */
   for (int k = 0; k < 3; k++) {
     p->chemistry_data.shear_tensor[k][0] *=
-        h_inv_dim_plus_one * rho_inv *
-        cosmo->a2_inv;
-      if (k==0) p->chemistry_data.shear_tensor[k][0] += cosmo->H;
+        h_inv_dim_plus_one * rho_inv * cosmo->a2_inv;
+    if (k == 0) p->chemistry_data.shear_tensor[k][0] += cosmo->H;
     p->chemistry_data.shear_tensor[k][1] *=
-        h_inv_dim_plus_one * rho_inv *
-        cosmo->a2_inv;
-      if (k==1) p->chemistry_data.shear_tensor[k][1] += cosmo->H;
+        h_inv_dim_plus_one * rho_inv * cosmo->a2_inv;
+    if (k == 1) p->chemistry_data.shear_tensor[k][1] += cosmo->H;
     p->chemistry_data.shear_tensor[k][2] *=
-        h_inv_dim_plus_one * rho_inv *
-        cosmo->a2_inv;
-      if (k==2) p->chemistry_data.shear_tensor[k][2] += cosmo->H;
+        h_inv_dim_plus_one * rho_inv * cosmo->a2_inv;
+    if (k == 2) p->chemistry_data.shear_tensor[k][2] += cosmo->H;
   }
 
   float shear_tensor_S[3][3];
@@ -176,8 +172,7 @@ __attribute__((always_inline)) INLINE static void
 chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
-                                 const struct cosmology* cosmo) {
-}
+                                 const struct cosmology* cosmo) {}
 
 /**
  * @brief Sets the chemistry properties of the (x-)particles to a valid start
@@ -240,10 +235,10 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
           parser_get_param_float(parameter_file, buffer);
     }
   }
-    
+
   /* Read diffusion constant */
-    data->diffusion_constant =
-    parser_get_param_float(parameter_file, "COLIBREChemistry:Diffusion_constant");
+  data->diffusion_constant = parser_get_param_float(
+      parameter_file, "COLIBREChemistry:Diffusion_constant");
 }
 
 /**
@@ -332,11 +327,11 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
 
   float dt_diff =
       0.2 * cosmo->a * cosmo->a * p->h * p->h; /*h in physical units*/
-  dt_diff *= p->rho * cosmo->a3_inv; /*rho in physical units*/
+  dt_diff *= p->rho * cosmo->a3_inv;           /*rho in physical units*/
   dt_diff /=
       (FLT_MIN + p->chemistry_data
                      .diffusion_coefficient); /*Diff. coeff. in physical units*/
-  dt_diff *= cosmo->a2_inv;     /*back to internal units*/
+  dt_diff *= cosmo->a2_inv;                   /*back to internal units*/
   return dt_diff;
 }
 

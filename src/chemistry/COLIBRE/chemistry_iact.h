@@ -150,9 +150,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     integertime_t t_current, const struct cosmology *cosmo,
     const int with_cosmology) {
 
-    struct chemistry_part_data *chi = &pi->chemistry_data;
-    struct chemistry_part_data *chj = &pj->chemistry_data;
-    
+  struct chemistry_part_data *chi = &pi->chemistry_data;
+  struct chemistry_part_data *chj = &pj->chemistry_data;
+
   if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
@@ -186,12 +186,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
     kernel_deval(xi, &wi, &dwi_dx);
-      
+
     /* Get 1/r */
     const float r_inv = 1.f / sqrtf(r2);
 
     float dw_r = 0.5f *
-      (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) * r_inv;
+                 (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) *
+                 r_inv;
 
     float mj_dw_r = mj * dw_r;
 
@@ -261,9 +262,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     struct part *restrict pj, float a, float H, float time_base,
     integertime_t t_current, const struct cosmology *cosmo,
     const int with_cosmology) {
-    
-    struct chemistry_part_data *chi = &pi->chemistry_data;
-    struct chemistry_part_data *chj = &pj->chemistry_data;
+
+  struct chemistry_part_data *chi = &pi->chemistry_data;
+  struct chemistry_part_data *chj = &pj->chemistry_data;
 
   if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
@@ -301,7 +302,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     /* Get 1/r */
     const float r_inv = 1.f / sqrtf(r2);
     float dw_r = 0.5f *
-      (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) * r_inv;
+                 (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) *
+                 r_inv;
     float mj_dw_r = mj * dw_r;
 
     /* Compute K_ij coefficient (see Correa et al., in prep.) */

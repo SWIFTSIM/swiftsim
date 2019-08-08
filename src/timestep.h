@@ -151,8 +151,8 @@ __attribute__((always_inline)) INLINE static integertime_t get_part_timestep(
 
   /* CC. Adding time-step size constraint based on diffusion equation */
   float new_dt_chemistry =
-      chemistry_timestep(e->physical_constants, e->cosmology,
-                               e->internal_units, e->hydro_properties, p);
+      chemistry_timestep(e->physical_constants, e->cosmology, e->internal_units,
+                         e->hydro_properties, p);
   new_dt = min(new_dt, new_dt_chemistry);
 
   /* Limit change in smoothing length */

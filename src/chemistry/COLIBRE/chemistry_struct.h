@@ -45,7 +45,7 @@ struct chemistry_global_data {
 
   /*! Fraction of the particle mass in *all* metals at the start of the run */
   float initial_metal_mass_fraction_total;
-    
+
   /*! Diffusion constant to calculate Smagorinsky diffusion coefficient */
   /* This constant is a free parameter we read in params file */
   float diffusion_constant;
