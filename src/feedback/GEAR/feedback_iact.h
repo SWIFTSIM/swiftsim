@@ -135,6 +135,12 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     xpj->feedback_data.delta_p[i] += dm * (si->v[i] - xpj->v_full[i]);
   }
 
+  /* Add the metals */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    pj->chemistry_data.metal_mass[i] +=
+      weight * si->feedback_data.metal_mass_ejected[i];
+  }
+
 }
 
 #endif /* SWIFT_GEAR_FEEDBACK_IACT_H */

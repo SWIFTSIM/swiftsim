@@ -38,20 +38,31 @@
 #include "units.h"
 
 /**
- * @brief Compute the metal mass fraction
+ * @brief Compute the metal mass
  *
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  * @param data The global chemistry information.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_part_metal_mass_fraction(const struct part* restrict p,
-				   const struct xpart* restrict xp) {
+chemistry_part_metal_mass(const struct part* restrict p,
+			  const struct xpart* restrict xp) {
 
-  return 0.02;
+  return p->chemistry_data.metal_mass[CHEMISTRY_ELEMENT_COUNT - 1];
+}
 
-  // TODO
-  return p->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+/**
+ * @brief Compute the smoothed metal mass fraction
+ *
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param data The global chemistry information.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_part_smoothed_metal_mass_fraction(const struct part* restrict p,
+			  const struct xpart* restrict xp) {
+
+  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
@@ -64,9 +75,6 @@ chemistry_part_metal_mass_fraction(const struct part* restrict p,
 __attribute__((always_inline)) INLINE static float
 chemistry_spart_metal_mass_fraction(const struct spart* restrict sp) {
 
-  return 0.02;
-
-  // TODO
   return sp->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
@@ -85,9 +93,8 @@ INLINE static void chemistry_copy_star_formation_properties(
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     sp->chemistry_data.metal_mass_fraction[i] = p->chemistry_data.smoothed_metal_mass_fraction[i];
   }
-  
-
 }
+
 
 /**
  * @brief Prints the properties of the chemistry model to stdout.
@@ -118,7 +125,7 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   /* read parameters */
   data->initial_metallicity = parser_get_param_float(
-      parameter_file, "GearChemistry:InitialMetallicity");
+      parameter_file, "GEARChemistry:InitialMetallicity");
 }
 
 /**
@@ -136,7 +143,11 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   struct chemistry_part_data* cpd = &p->chemistry_data;
 
   for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    /* Reset the smoothed metallicity */
     cpd->smoothed_metal_mass_fraction[i] = 0.f;
+
+    /* Convert the total mass into mass fraction */
+    cpd->metal_mass_fraction[i] = cpd->metal_mass[i] / p->mass;
   }
 }
 
@@ -171,6 +182,9 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
     /* Finish the calculation by inserting the missing h-factors */
     cpd->smoothed_metal_mass_fraction[i] *= factor;
+
+    /* Convert the mass fraction into a total mass */
+    cpd->metal_mass[i] = m * cpd->metal_mass_fraction[i];
   }
 }
 
@@ -200,6 +214,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   /* Set the smoothed fractions with the non smoothed fractions */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] = p->chemistry_data.metal_mass_fraction[i];
+    p->chemistry_data.metal_mass[i] = p->chemistry_data.metal_mass_fraction[i] * p->mass;
   }
 }
 
@@ -241,11 +256,12 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     const struct chemistry_global_data* data, struct part* restrict p,
     struct xpart* restrict xp) {
 
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    p->chemistry_data.metal_mass[i] = data->initial_metallicity * p->mass;
+  }
+
   chemistry_init_part(p, data);
 
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    p->chemistry_data.metal_mass_fraction[i] = data->initial_metallicity;
-  }
 }
 
 /**

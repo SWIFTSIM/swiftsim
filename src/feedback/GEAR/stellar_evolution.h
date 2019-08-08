@@ -45,7 +45,7 @@ __attribute__((always_inline)) INLINE static int stellar_evolution_compute_integ
     struct spart* restrict sp, float number_supernovae_f,
     const integertime_t ti_begin, enum random_number_type random_type) {
 
-  const int number_supernovae_i = floor(number_supernovae_f);
+    const int number_supernovae_i = floor(number_supernovae_f);
 
     /* Get the random number for the decimal part */
     const float rand_sn = random_unit_interval(sp->id, ti_begin,

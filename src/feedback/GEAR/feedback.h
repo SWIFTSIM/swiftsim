@@ -84,7 +84,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
     xp->feedback_data.delta_p[i] = 0;
   }
-  
+
   /* wakeup the particle */
   //p->wakeup = time_bin_awake;
 
