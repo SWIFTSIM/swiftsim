@@ -183,9 +183,6 @@ struct part {
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
 
-  /* Diffusion information */
-  struct diffusion_part_data diffusion_data;
-
   /*! Black holes information (e.g. swallowing ID) */
   struct black_holes_part_data black_holes_data;
 
