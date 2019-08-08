@@ -331,7 +331,7 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
   /*Diff. coeff. in physical units */
   const float coeff = p->chemistry_data.diffusion_coefficient;
 
-  const float dt_diff = 0.2f * h_diff * h_diff * rho_phys / (coeff + FLT_MIN);
+  const float dt_diff = 0.2f * h_phys * h_phys * rho_phys / (coeff + FLT_MIN);
 
   /* Convert back to co-moving coordinates */
   return dt_diff * cosmo->a2_inv;
