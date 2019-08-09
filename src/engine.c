@@ -4794,6 +4794,10 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stats)
     output_list_struct_dump(e->output_list_stats, stream);
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
+
+#ifdef WITH_LOGGER
+  logger_struct_dump(e->logger, stream);
+#endif
 }
 
 /**
@@ -4937,6 +4941,13 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
     output_list_struct_restore(output_list_stf, stream);
     e->output_list_stf = output_list_stf;
   }
+
+#ifdef WITH_LOGGER
+  struct logger *log = 
+    (struct logger *)malloc(sizeof(struct logger));
+  logger_struct_restore(log, stream);
+  e->logger = log;
+#endif
 
 #ifdef EOS_PLANETARY
   eos_init(&eos, e->physical_constants, e->snapshot_units, e->parameter_file);
