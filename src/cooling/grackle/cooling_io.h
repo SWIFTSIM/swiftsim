@@ -169,9 +169,16 @@ __attribute__((always_inline)) INLINE static void cooling_read_parameters(
   cooling->provide_specific_heating_rates = parser_get_opt_param_int(
       parameter_file, "GrackleCooling:ProvideSpecificHeatingRates", 0);
 
+  /* Self shielding */
   cooling->self_shielding_method = parser_get_opt_param_int(
       parameter_file, "GrackleCooling:SelfShieldingMethod", 0);
 
+  if (cooling->self_shielding_method == -1) {
+    cooling->self_shielding_threshold = parser_get_param_float(
+      parameter_file, "GrackleCooling:SelfShieldingThreshold_atom_per_cm3");
+  }
+
+  /* Initial step convergence */
   cooling->max_step = parser_get_opt_param_int(
       parameter_file, "GrackleCooling:MaxSteps", 10000);
 
