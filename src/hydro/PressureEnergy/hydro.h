@@ -649,13 +649,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Get the pressures */
   const float comoving_pressure_with_floor =
       pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
-  const float comoving_pressure2 = p->pressure_bar * p->pressure_bar;
 
   /* Update variables. */
   p->force.f = grad_h_term;
   p->force.soundspeed = soundspeed;
   p->force.balsara = balsara;
-  p->force.pressure_inv = comoving_pressure_with_floor / comoving_pressure2;
+  p->force.pressure_bar_with_floor = comoving_pressure_with_floor;
 }
 
 /**
@@ -771,8 +770,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   /* update the required variables */
   const float comoving_pressure_with_floor =
       pressure_floor_get_pressure(p, p->rho, p->pressure_bar);
-  const float comoving_pressure2 = p->pressure_bar * p->pressure_bar;
-  p->force.pressure_inv = comoving_pressure_with_floor / comoving_pressure2;
+  p->force.pressure_bar_with_floor = comoving_pressure_with_floor;
 }
 
 /**

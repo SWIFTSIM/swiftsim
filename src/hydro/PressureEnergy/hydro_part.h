@@ -169,8 +169,8 @@ struct part {
       /*! Balsara switch */
       float balsara;
 
-      /*! inverse of the pressure */
-      float pressure_inv;
+      /*! Pressure term including the pressure floor */
+      float pressure_bar_with_floor;
     } force;
   };
 
