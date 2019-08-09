@@ -34,6 +34,7 @@
 #include "hydro.h"
 #include "kernel_hydro.h"
 #include "parser.h"
+#include "pressure_floor.h"
 #include "units.h"
 
 #define hydro_props_default_max_iterations 30
