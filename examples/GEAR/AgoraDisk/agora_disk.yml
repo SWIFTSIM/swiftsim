@@ -65,3 +65,20 @@ GrackleCooling:
   OutputMode: 1 # Write in output corresponding primordial chemistry mode
   MaxSteps: 1000
   ConvergenceLimit: 1e-2
+  ThermalTime_Myr: 5
+
+
+GEARStarFormation:
+  star_formation_efficiency: 0.01   # star formation efficiency (c_*)
+  maximal_temperature:  3e4         # Upper limit to the temperature of a star forming particle
+  NJeans: 10.
+
+GEARFeedback:
+  SupernovaeEnergy_erg: 1e51
+  YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
+
+GEARChemistry:
+  InitialMetallicity: 1e-10
+
+Restarts:
+  enable:             0          # (Optional) whether to enable dumping restarts at fixed intervals.
