@@ -34,7 +34,7 @@ from yt.analysis_modules.halo_analysis.api import *
 from yt.data_objects.particle_filters import add_particle_filter
 from scipy.stats import kde
 from subprocess import call
-#mylog.setLevel(1)
+# mylog.setLevel(1)
 
 from yt.utilities.math_utils import get_cyl_r, get_cyl_theta, get_cyl_z
 
@@ -139,8 +139,8 @@ filenames = [[["./agora_disk_IC.hdf5", "./agora_disk_500Myr.hdf5"], # Sim-noSFF
 # filenames = [[[file_location[0]+'GADGET-3/AGORA_ISO_LOW_DRY/snap_iso_dry_000.hdf5', file_location[0]+'GADGET-3/AGORA_ISO_LOW_DRY/snap_iso_dry_010.hdf5']],
 #            [[file_location[1]+'GADGET-3/AGORA_ISO_LOW_SF_SNII_Thermal_Chevalier_SFT10/snap_iso_sf_000.hdf5', file_location[1]+'GADGET-3/AGORA_ISO_LOW_SF_SNII_Thermal_Chevalier_SFT10/snap_iso_sf_010.hdf5']]]
 # codes = ['GEAR']
-# filenames = [[['snapshot_0000', 'snapshot_0500']],
-#            [['snapshot_0000', 'snapshot_0500']]]
+# filenames = [[['snapshot_0000.hdf5', 'snapshot_0500.hdf5']],
+#            [['snapshot_0000.hdf5', 'snapshot_0500']]]
 # codes = ['GIZMO']
 # filenames = [[[file_location[0]+'GIZMO/snapshot_temp_000', file_location[0]+'GIZMO/snapshot_temp_100']],
 #            [[file_location[1]+'GIZMO/snapshot_temp_000', file_location[1]+'GIZMO/snapshot_temp_100']]]
@@ -576,7 +576,7 @@ for time in range(len(times)):
                         PartType_StarBeforeFiltered_to_use = "PartType4"
                         if time != 0:
                             def _FormationTime(field, data):
-                                return pf.arr(data["PartType4", "BirthTime"].d, 'code_time')
+                                return pf.arr(data["PartType4", "BirthTimes"].d, 'code_time')
                             pf.add_field(("PartType4", FormationTimeType_to_use), function=_FormationTime, particle_type=True, take_log=False, units="code_time")
                         
                         MassType_to_use = "Masses"

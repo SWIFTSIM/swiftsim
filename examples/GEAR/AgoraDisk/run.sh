@@ -22,13 +22,19 @@ then
     ../../Cooling/getGrackleCoolingTable.sh 
 fi
 
+if [ ! -e chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5 ]
+then
+    echo "Fetching the chemistry tables..."
+    ../getChemistryTable.sh
+fi
+
 # copy the initial conditions
 cp $sim.hdf5 agora_disk.hdf5
 # Update the particle types
 python3 changeType.py agora_disk.hdf5
 
 # Run SWIFT
-../../swift --cooling --hydro --self-gravity --threads=4 agora_disk.yml 2>&1 | tee output.log
+../../swift --cooling --hydro --self-gravity --star-formation --feedback --stars --threads=8 agora_disk.yml 2>&1 | tee output.log
 
 
 echo "Changing smoothing length to be Gadget compatible"
