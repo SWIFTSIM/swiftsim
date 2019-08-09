@@ -844,7 +844,8 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param cooling The cooling properties to initialize
  */
 __attribute__((always_inline)) INLINE static void cooling_init_units(
-    const struct unit_system* us, struct cooling_function_data* cooling) {
+    const struct unit_system* us, const struct phys_const* phys_const,
+    struct cooling_function_data* cooling) {
 
   /* These are conversions from code units to cgs. */
 
@@ -864,6 +865,13 @@ __attribute__((always_inline)) INLINE static void cooling_init_units(
   cooling->units.time_units = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   cooling->units.velocity_units =
       units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY);
+
+  /* Self shielding */
+  if (cooling->self_shielding_method == -1) {
+    cooling->self_shielding_threshold *=
+      phys_const->const_proton_mass /
+      pow(units_cgs_conversion_factor(us, UNIT_CONV_LENGTH), 3.);
+  }
 }
 
 /**
@@ -933,8 +941,6 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
     const struct phys_const* phys_const,
     struct cooling_function_data* cooling) {
 
-  fedisableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-
   if (GRACKLE_NPART != 1)
     error("Grackle with multiple particles not implemented");
 
@@ -942,12 +948,10 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
   cooling_read_parameters(parameter_file, cooling, phys_const);
 
   /* Set up the units system. */
-  cooling_init_units(us, cooling);
+  cooling_init_units(us, phys_const, cooling);
 
   /* Set up grackle */
   cooling_init_grackle(cooling);
-
-  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 }
 
 /**
