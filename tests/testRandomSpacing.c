@@ -111,12 +111,12 @@ int main(int argc, char* argv[]) {
             expected_result_int[4], expected_result_int[5]);
 
     int std_expected_result[6];
-    std_expected_result[0] = (int)max(sqrt(expected_result[0]), 1);
-    std_expected_result[1] = (int)max(sqrt(expected_result[1]), 1);
-    std_expected_result[2] = (int)max(sqrt(expected_result[2]), 1);
-    std_expected_result[3] = (int)max(sqrt(expected_result[3]), 1);
-    std_expected_result[4] = (int)max(sqrt(expected_result[4]), 1);
-    std_expected_result[5] = (int)max(sqrt(expected_result[5]), 1);
+    std_expected_result[0] = (int)max3(sqrt(expected_result[0]), 1, sqrt(count[0]));
+    std_expected_result[1] = (int)max3(sqrt(expected_result[1]), 1, sqrt(count[1]));
+    std_expected_result[2] = (int)max3(sqrt(expected_result[2]), 1, sqrt(count[2]));
+    std_expected_result[3] = (int)max3(sqrt(expected_result[3]), 1, sqrt(count[3]));
+    std_expected_result[4] = (int)max3(sqrt(expected_result[4]), 1, sqrt(count[4]));
+    std_expected_result[5] = (int)max3(sqrt(expected_result[5]), 1, sqrt(count[5]));
 
     const int numb_sigma = 5;
 
