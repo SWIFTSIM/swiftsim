@@ -328,7 +328,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
   float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
 
   /* Get the Hydrogen and Helium mass fractions */
-  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p);
+  float const *metal_fraction =
+      chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
 
   /* convert Hydrogen mass fraction into Hydrogen number density */
@@ -514,7 +515,8 @@ float cooling_get_temperature(
   const double u_cgs = u * cooling->internal_energy_to_cgs;
 
   /* Get the Hydrogen mass fraction */
-  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p);
+  float const *metal_fraction =
+      chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
@@ -523,7 +525,8 @@ float cooling_get_temperature(
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
   const float logZZsol =
-      log10(chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol[0]);
+      log10(chemistry_get_total_metal_mass_fraction_for_cooling(p) /
+            cooling->Zsol[0]);
 
   /* compute hydrogen number density, metallicity and redshift indices and
    * offsets  */

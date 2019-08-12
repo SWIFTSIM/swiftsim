@@ -621,7 +621,8 @@ INLINE static double eagle_metal_cooling_rate(
     const float log_table_bound_low = (cooling->Therm[0] + 0.05) / M_LOG10E;
 
     /* convert Hydrogen mass fraction in Hydrogen number density */
-    float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p);
+    float const *metal_fraction =
+        chemistry_get_metal_mass_fraction_for_cooling(p);
     const float XH = metal_fraction[chemistry_element_H];
     const double n_H = hydro_get_physical_density(p, cosmo) * XH /
                        phys_const->const_proton_mass;

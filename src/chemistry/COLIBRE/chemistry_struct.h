@@ -50,8 +50,7 @@ struct chemistry_global_data {
   /* This constant is a free parameter we read in params file */
   float diffusion_constant;
 
-  /*! Run-time parameter to get convergence while solving diffusion eq. with
-   * explicit Euler method*/
+  /*! Dimensionless pre-factor used in the diffusion time-step condition */
   float chemistry_time_limiter;
 };
 
