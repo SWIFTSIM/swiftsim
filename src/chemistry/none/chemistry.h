@@ -161,10 +161,12 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float chemistry_timestep(
-    const struct phys_const* restrict phys_const,
-    const struct cosmology* restrict cosmo,
-    const struct unit_system* restrict us,
-    const struct hydro_props* hydro_props, const struct part* restrict p) {
+                                                                      const struct phys_const* restrict phys_const,
+                                                                      const struct cosmology* restrict cosmo,
+                                                                      const struct unit_system* restrict us,
+                                                                      const struct hydro_props* hydro_props,
+                                                                      const struct chemistry_global_data* cd,
+                                                                      const struct part* restrict p) {
   return FLT_MAX;
 }
 #endif /* SWIFT_CHEMISTRY_NONE_H */

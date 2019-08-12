@@ -112,7 +112,8 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   /* Star properties */
 
   /* Smoothed metallicity (metal mass fraction) at birth time of the star */
-  const double Z_smooth = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+  const double Z_smooth = chemistry_get_metal_mass_fraction_total_for_feedback(sp);
+  /*const double Z_smooth = sp->chemistry_data.smoothed_metal_mass_fraction_total;*/
 
   /* Physical density of the gas at the star's birth time */
   const double rho_birth = sp->birth_density;
@@ -749,7 +750,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   /* Star metallicity (metal mass fraction) at birth
    * Note: We use the smoothed metallicity */
-  double Z = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+  double Z = chemistry_get_metal_mass_fraction_total_for_feedback(sp);
+  /*double Z = sp->chemistry_data.smoothed_metal_mass_fraction_total;*/
 
   /* Bring the metallicity in the range covered by the model */
   Z = min(Z, colibre_feedback_momentum_SB99_Z_max);

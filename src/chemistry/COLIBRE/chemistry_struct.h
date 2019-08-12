@@ -49,6 +49,9 @@ struct chemistry_global_data {
   /*! Diffusion constant to calculate Smagorinsky diffusion coefficient */
   /* This constant is a free parameter we read in params file */
   float diffusion_constant;
+    
+  /*! Run-time parameter to get convergence while solving diffusion eq. with explicit Euler method*/
+  float chemistry_time_limiter;
 };
 
 /**
@@ -82,16 +85,6 @@ struct chemistry_part_data {
 
   /*! Fraction of total gas mass in Iron coming from SNIa */
   float iron_mass_fraction_from_SNIa;
-
-  /* I am adding smoothed quantities */
-  /*! Smoothed fraction of the particle mass in a given element */
-  float smoothed_metal_mass_fraction[chemistry_element_count];
-
-  /*! Smoothed fraction of the particle mass in *all* metals */
-  float smoothed_metal_mass_fraction_total;
-
-  /*! Smoothed fraction of total gas mass in Iron coming from SNIa */
-  float smoothed_iron_mass_fraction_from_SNIa;
 
   /*! Fraction of the particle mass in a given element */
   /*! This array is duplicated to be used after the diffusion routine */
