@@ -791,24 +791,33 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       c->kick1 = scheduler_addtask(s, task_type_kick1, task_subtype_none, 0, 0,
                                    c, NULL);
 
-#if defined(WITH_LOGGER)
-      c->logger = scheduler_addtask(s, task_type_logger, task_subtype_none, 0,
-                                    0, c, NULL);
-#endif
-
       c->kick2 = scheduler_addtask(s, task_type_kick2, task_subtype_none, 0, 0,
                                    c, NULL);
+
+#if defined(WITH_LOGGER)
+      /* Add the hydro logger task. */
+      c->logger = scheduler_addtask(s, task_type_logger, task_subtype_none, 0,
+	0, c, NULL);
+
+      /* Add the kick2 dependency */
+      scheduler_addunlock(s, c->kick2, c->logger);
+
+      /* Create a variable in order to avoid to many ifdef */
+      struct task *kick2_or_logger = c->logger;
+#else
+      struct task *kick2_or_logger = c->kick2;
+#endif
 
       /* Add the time-step calculation task and its dependency */
       c->timestep = scheduler_addtask(s, task_type_timestep, task_subtype_none,
                                       0, 0, c, NULL);
 
-      scheduler_addunlock(s, c->kick2, c->timestep);
+      scheduler_addunlock(s, kick2_or_logger, c->timestep);
       scheduler_addunlock(s, c->timestep, c->kick1);
 
       /* Subgrid tasks: star formation */
       if (with_star_formation && c->hydro.count > 0) {
-        scheduler_addunlock(s, c->kick2, c->top->hydro.star_formation);
+        scheduler_addunlock(s, kick2_or_logger, c->top->hydro.star_formation);
         scheduler_addunlock(s, c->top->hydro.star_formation, c->timestep);
       }
 
@@ -822,9 +831,6 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
         scheduler_addunlock(s, c->timestep_limiter, c->kick1);
       }
 
-#if defined(WITH_LOGGER)
-      scheduler_addunlock(s, c->kick1, c->logger);
-#endif
     }
   } else { /* We are above the super-cell so need to go deeper */
 
@@ -989,6 +995,12 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
 
+#ifdef WITH_LOGGER
+  struct task *c_kick2_or_logger = c->logger;
+#else
+  struct task *c_kick2_or_logger = c->kick2;
+#endif
+
   /* Are we in a super-cell ? */
   if (c->hydro.super == c) {
 
@@ -1074,7 +1086,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
         c->stars.ghost = scheduler_addtask(s, task_type_stars_ghost,
                                            task_subtype_none, 0, 0, c, NULL);
 
-        scheduler_addunlock(s, c->super->kick2, c->stars.stars_in);
+        scheduler_addunlock(s, c_kick2_or_logger, c->stars.stars_in);
         scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
 
         if (with_star_formation && c->hydro.count > 0) {
@@ -1103,7 +1115,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c) {
         c->black_holes.swallow_ghost[2] = scheduler_addtask(
             s, task_type_bh_swallow_ghost3, task_subtype_none, 0, 0, c, NULL);
 
-        scheduler_addunlock(s, c->super->kick2, c->black_holes.black_holes_in);
+        scheduler_addunlock(s, c_kick2_or_logger, c->black_holes.black_holes_in);
         scheduler_addunlock(s, c->black_holes.black_holes_out,
                             c->super->timestep);
       }
@@ -1737,6 +1749,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     const long long flags = t->flags;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
+#ifdef WITH_LOGGER
+    struct task *ci_super_kick2_or_logger = ci->super->logger;
+    struct task *cj_super_kick2_or_logger = (cj == NULL)? NULL : cj->super->logger;
+#else
+    struct task *ci_super_kick2_or_logger = ci->super->kick2;
+    struct task *cj_super_kick2_or_logger = (cj == NULL)? NULL : cj->super->kick2;
+#endif
 
     /* Sort tasks depend on the drift of the cell (gas version). */
     if (t_type == task_type_sort && ci->nodeID == nodeID) {
@@ -1884,7 +1903,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_limiter) {
-        scheduler_addunlock(sched, ci->super->kick2, t_limiter);
+        scheduler_addunlock(sched, ci_super_kick2_or_logger, t_limiter);
         scheduler_addunlock(sched, t_limiter, ci->super->timestep);
         scheduler_addunlock(sched, t_limiter, ci->super->timestep_limiter);
       }
@@ -2074,7 +2093,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_limiter) {
-          scheduler_addunlock(sched, ci->super->kick2, t_limiter);
+          scheduler_addunlock(sched, ci_super_kick2_or_logger, t_limiter);
           scheduler_addunlock(sched, t_limiter, ci->super->timestep);
           scheduler_addunlock(sched, t_limiter, ci->super->timestep_limiter);
         }
@@ -2152,7 +2171,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_limiter) {
-            scheduler_addunlock(sched, cj->super->kick2, t_limiter);
+            scheduler_addunlock(sched, cj_super_kick2_or_logger, t_limiter);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep_limiter);
           }
@@ -2320,7 +2339,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_limiter) {
-        scheduler_addunlock(sched, ci->super->kick2, t_limiter);
+        scheduler_addunlock(sched, ci_super_kick2_or_logger, t_limiter);
         scheduler_addunlock(sched, t_limiter, ci->super->timestep);
         scheduler_addunlock(sched, t_limiter, ci->super->timestep_limiter);
       }
@@ -2514,7 +2533,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_limiter) {
-          scheduler_addunlock(sched, ci->super->kick2, t_limiter);
+          scheduler_addunlock(sched, ci_super_kick2_or_logger, t_limiter);
           scheduler_addunlock(sched, t_limiter, ci->super->timestep);
           scheduler_addunlock(sched, t_limiter, ci->super->timestep_limiter);
         }
@@ -2594,7 +2613,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_limiter) {
-            scheduler_addunlock(sched, cj->super->kick2, t_limiter);
+            scheduler_addunlock(sched, cj_super_kick2_or_logger, t_limiter);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep_limiter);
           }
