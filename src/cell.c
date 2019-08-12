@@ -3427,7 +3427,9 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
     if (c->timestep != NULL) scheduler_activate(s, c->timestep);
     if (c->hydro.end_force != NULL) scheduler_activate(s, c->hydro.end_force);
     if (c->hydro.cooling != NULL) scheduler_activate(s, c->hydro.cooling);
+#ifdef WITH_LOGGER
     if (c->logger != NULL) scheduler_activate(s, c->logger);
+#endif
 
     if (c->top->hydro.star_formation != NULL) {
       scheduler_activate(s, c->top->hydro.star_formation);
@@ -3584,7 +3586,9 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
     if (c->grav.mesh != NULL) scheduler_activate(s, c->grav.mesh);
     if (c->grav.long_range != NULL) scheduler_activate(s, c->grav.long_range);
     if (c->grav.end_force != NULL) scheduler_activate(s, c->grav.end_force);
+#ifdef WITH_LOGGER
     if (c->logger != NULL) scheduler_activate(s, c->logger);
+#endif
   }
 
   return rebuild;
@@ -3826,7 +3830,9 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
       if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
       if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
       if (c->timestep != NULL) scheduler_activate(s, c->timestep);
-      if (c->logger != NULL) scheduler_activate(s, c->logger);
+#ifdef WITH_LOGGER
+    if (c->logger != NULL) scheduler_activate(s, c->logger);
+#endif
     }
   }
 
@@ -4104,7 +4110,9 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
     if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
     if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
     if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+#ifdef WITH_LOGGER
     if (c->logger != NULL) scheduler_activate(s, c->logger);
+#endif
   }
 
   return rebuild;
