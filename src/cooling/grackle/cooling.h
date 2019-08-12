@@ -559,6 +559,33 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle(
 }
 
 /**
+ * @brief Apply the self shielding (if needed) by turning on/off the UV background.
+ *
+ * @param cooling The #cooling_function_data used in the run.
+ * @param chemistry The #chemistry_data from grackle.
+ * @param p Pointer to the particle data.
+ *
+ */
+__attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
+    const struct cooling_function_data* restrict cooling,
+    chemistry_data* restrict chemistry,
+    const struct part* restrict p) {
+
+  /* Are we using self shielding or UV background? */
+  if (!cooling->with_uv_background || cooling->self_shielding_method >= 0) {
+    return;
+  }
+
+  /* Are we in a self shielding regime? */
+  if (p->rho > cooling->self_shielding_threshold) {
+    chemistry->UVbackground = 0;
+  }
+  else {
+    chemistry->UVbackground = 1;
+  }
+}
+
+/**
  * @brief Compute the energy of a particle after dt and update the particle
  * chemistry data
  *
@@ -580,6 +607,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
 
   /* set current time */
   code_units units = cooling->units;
+  chemistry_data chemistry_grackle = cooling->chemistry;
 
   /* initialize data */
   grackle_field_data data;
@@ -615,8 +643,10 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
   /* copy to grackle structure */
   cooling_copy_to_grackle(&data, p, xp, density);
 
+  /* Apply the self shielding if requested */
+  cooling_apply_self_shielding(cooling, &chemistry_grackle, p);
+
   /* solve chemistry */
-  chemistry_data chemistry_grackle = cooling->chemistry;
   if (local_solve_chemistry(&chemistry_grackle, &grackle_rates, &units, &data,
                             dt) == 0) {
     error("Error in solve_chemistry.");
@@ -649,6 +679,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
 
   /* initialize data */
   grackle_field_data data;
+  chemistry_data chemistry_grackle = cooling->chemistry;
 
   /* set values */
   /* grid */
@@ -681,9 +712,11 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
   /* copy data from particle to grackle data */
   cooling_copy_to_grackle(&data, p, xp, density);
 
+  /* Apply the self shielding if requested */
+  cooling_apply_self_shielding(cooling, &chemistry_grackle, p);
+
   /* Compute cooling time */
   gr_float cooling_time;
-  chemistry_data chemistry_grackle = cooling->chemistry;
   chemistry_data_storage chemistry_rates = grackle_rates;
   if (local_calculate_cooling_time(&chemistry_grackle, &chemistry_rates, &units,
                                    &data, &cooling_time) == 0) {
