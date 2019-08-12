@@ -327,7 +327,7 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
  * @param sp Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_get_metal_mass_fraction_total_for_feedback(
+chemistry_get_total_metal_mass_fraction_for_feedback(
     const struct spart* restrict sp) {
   return sp->chemistry_data.metal_mass_fraction_total;
 }
@@ -337,7 +337,7 @@ chemistry_get_metal_mass_fraction_total_for_feedback(
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_get_metal_mass_fraction_total(const struct part* restrict p) {
+chemistry_get_total_metal_mass_fraction_for_cooling(const struct part* restrict p) {
   return p->chemistry_data.metal_mass_fraction_total;
 }
 
@@ -346,8 +346,26 @@ chemistry_get_metal_mass_fraction_total(const struct part* restrict p) {
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float const*
-chemistry_get_metal_mass_fraction(const struct part* restrict p) {
+chemistry_get_metal_mass_fraction_for_star_formation(const struct part* restrict p) {
   return p->chemistry_data.metal_mass_fraction;
+}
+
+/**
+ * @brief Returns metal_mass_fraction_total
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_star_formation(const struct part* restrict p) {
+    return p->chemistry_data.metal_mass_fraction_total;
+}
+
+/**
+ * @brief Returns metal_mass_fraction
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) {
+    return p->chemistry_data.metal_mass_fraction;
 }
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */

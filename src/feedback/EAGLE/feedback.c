@@ -106,7 +106,7 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   /* Star properties */
 
   /* Smoothed metallicity (metal mass fraction) at birth time of the star */
-  const double Z_smooth = sp->chemistry_data.smoothed_metal_mass_fraction_total;
+  const double Z_smooth = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Physical density of the gas at the star's birth time */
   const double rho_birth = sp->birth_density;
