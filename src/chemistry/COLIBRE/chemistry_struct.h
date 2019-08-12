@@ -49,8 +49,9 @@ struct chemistry_global_data {
   /*! Diffusion constant to calculate Smagorinsky diffusion coefficient */
   /* This constant is a free parameter we read in params file */
   float diffusion_constant;
-    
-  /*! Run-time parameter to get convergence while solving diffusion eq. with explicit Euler method*/
+
+  /*! Run-time parameter to get convergence while solving diffusion eq. with
+   * explicit Euler method*/
   float chemistry_time_limiter;
 };
 

@@ -231,12 +231,11 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
   /* Read diffusion constant */
   data->diffusion_constant = parser_get_param_float(
       parameter_file, "COLIBREChemistry:Diffusion_constant");
-    
+
   /* Read time-step limiter */
   data->chemistry_time_limiter = parser_get_param_float(
       parameter_file, "COLIBREChemistry:Diffusion_time_limiter");
 }
-
 
 /**
  * @brief Sets the chemistry properties of the sparticles to a valid start
@@ -307,8 +306,7 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
     const struct cosmology* restrict cosmo,
     const struct unit_system* restrict us,
     const struct hydro_props* hydro_props,
-    const struct chemistry_global_data* cd,
-    const struct part* restrict p) {
+    const struct chemistry_global_data* cd, const struct part* restrict p) {
 
   /* h and rho in physical units */
   const float h_phys = cosmo->a * p->h;
@@ -317,7 +315,8 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
   /*Diff. coeff. in physical units */
   const float coeff = p->chemistry_data.diffusion_coefficient;
 
-  const float dt_diff = cd->chemistry_time_limiter * h_phys * h_phys * rho_phys / (coeff + FLT_MIN);
+  const float dt_diff = cd->chemistry_time_limiter * h_phys * h_phys *
+                        rho_phys / (coeff + FLT_MIN);
 
   /* Convert back to co-moving coordinates */
   return dt_diff * cosmo->a2_inv;
@@ -327,25 +326,28 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
  * @brief Returns metal_mass_fraction_total
  * @param sp Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float chemistry_get_metal_mass_fraction_total_for_feedback(const struct spart* restrict sp) {
-    return sp->chemistry_data.metal_mass_fraction_total;
+__attribute__((always_inline)) INLINE static float
+chemistry_get_metal_mass_fraction_total_for_feedback(
+    const struct spart* restrict sp) {
+  return sp->chemistry_data.metal_mass_fraction_total;
 }
 
 /**
  * @brief Returns metal_mass_fraction_total
  * @param p Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float chemistry_get_metal_mass_fraction_total(const struct part* restrict p) {
-    return p->chemistry_data.metal_mass_fraction_total;
+__attribute__((always_inline)) INLINE static float
+chemistry_get_metal_mass_fraction_total(const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction_total;
 }
 
 /**
  * @brief Returns metal_mass_fraction
  * @param p Pointer to the particle data.
  */
-__attribute__((always_inline)) INLINE static float const* chemistry_get_metal_mass_fraction(const struct part* restrict p) {
-    return p->chemistry_data.metal_mass_fraction;
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction(const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction;
 }
-
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */
