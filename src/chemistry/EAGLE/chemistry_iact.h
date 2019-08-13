@@ -130,4 +130,50 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
       mj * chj->iron_mass_fraction_from_SNIa * wi;
 }
 
+/**
+ * @brief do metal diffusion computation in the hydro force loop
+ * (symmetric version)
+ *
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi First particle.
+ * @param pj Second particle.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ * @param time_base The minimal time-step size
+ * @param t_current The current time on the integer time-line.
+ * @param cosmo The current cosmological model.
+ * @param with_cosmology Are we running with cosmology?
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_diffusion(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H, float time_base,
+    integertime_t t_current, const struct cosmology *cosmo,
+    const int with_cosmology) {}
+
+/**
+ * @brief do metal diffusion computation in the hydro force loop
+ * (nonsymmetric version)
+ *
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (pi - pj).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi First particle.
+ * @param pj Second particle.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ * @param time_base The minimal time-step size
+ * @param t_current The current time on the integer time-line.
+ * @param cosmo The current cosmological model.
+ * @param with_cosmology Are we running with cosmology?
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H, float time_base,
+    integertime_t t_current, const struct cosmology *cosmo,
+    const int with_cosmology) {}
+
 #endif /* SWIFT_EAGLE_CHEMISTRY_IACT_H */

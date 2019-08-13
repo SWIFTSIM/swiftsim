@@ -103,8 +103,8 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
     const struct part *p, const struct cooling_function_data *cooling,
     float ratio_solar[colibre_cooling_N_elementtypes]) {
 
-  /* Get the particle's smoothed metal mass fractions (M_x / M) */
-  const float *Z_mass_frac = p->chemistry_data.smoothed_metal_mass_fraction;
+  /* Get the particle's metal mass fractions (M_x / M) */
+  const float *Z_mass_frac = chemistry_get_metal_mass_fraction_for_cooling(p);
 
   /* Convert mass fractions to abundances (nx/nH) and compute metal mass */
   float totmass = 0., metalmass = 0.;

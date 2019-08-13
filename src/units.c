@@ -398,6 +398,16 @@ void units_get_base_unit_exponents_array(float baseUnitsExp[5],
       baseUnitsExp[UNIT_TIME] = -1.f;
       break;
 
+    case UNIT_CONV_DIFF_RATE:
+      baseUnitsExp[UNIT_TIME] = -1.f;
+      break;
+
+    case UNIT_CONV_DIFF_COEFF:
+      baseUnitsExp[UNIT_MASS] = 1.f;
+      baseUnitsExp[UNIT_LENGTH] = -1.f;
+      baseUnitsExp[UNIT_TIME] = -1.f;
+      break;
+
     default:
       error("Invalid choice of pre-defined units");
       break;

@@ -64,24 +64,24 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
 
   struct chemistry_part_data* cpd = &p->chemistry_data;
 
-  for (int i = 0; i < chemistry_element_count; i++) {
-    cpd->smoothed_metal_mass_fraction[i] = 0.f;
+  cpd->diffusion_coefficient = 0.0f;
+
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    cpd->diffusion_rate[elem] = 0.0f;
   }
 
-  cpd->smoothed_metal_mass_fraction_total = 0.f;
-  cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
+  for (int k = 0; k < 3; k++) {
+    cpd->shear_tensor[0][k] = 0.0f;
+    cpd->shear_tensor[1][k] = 0.0f;
+    cpd->shear_tensor[2][k] = 0.0f;
+  }
 }
 
 /**
- * @brief Finishes the smooth metal calculation.
- *
- * Multiplies the smoothed metallicity and number of neighbours by the
- * appropiate constants and add the self-contribution term.
- *
- * This function requires the #hydro_end_density to have been called.
+ * @brief Finishes the calculation of the velocity shear tensor,
+ * and calculates the diffusion coefficient at the end of the density loop.
  *
  * @param p The particle to act upon.
- * @param cd #chemistry_global_data containing chemistry informations.
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_density(
@@ -90,31 +90,66 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   /* Some smoothing length multiples. */
   const float h = p->h;
-  const float h_inv = 1.0f / h; /* 1/h */
+  const float h_inv = 1.0f / h;                       /* 1/h */
+  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
   const float rho = hydro_get_comoving_density(p);
-  const float factor = pow_dimension(h_inv) / rho; /* 1 / (h^d * rho) */
-  const float m = hydro_get_mass(p);
+  const float rho_inv = 1.0f / rho; /* 1 / rho */
 
-  struct chemistry_part_data* cpd = &p->chemistry_data;
-
-  for (int i = 0; i < chemistry_element_count; i++) {
-    /* Final operation on the density (add self-contribution). */
-    cpd->smoothed_metal_mass_fraction[i] +=
-        m * cpd->metal_mass_fraction[i] * kernel_root;
-
-    /* Finish the calculation by inserting the missing h-factors */
-    cpd->smoothed_metal_mass_fraction[i] *= factor;
+  /* Convert Velocity shear tensor to physical coordinates */
+  const float common_factor = h_inv_dim_plus_one * rho_inv * cosmo->a2_inv;
+  for (int k = 0; k < 3; k++) {
+    for (int j = 0; j < 3; j++) {
+      p->chemistry_data.shear_tensor[k][j] *= common_factor;
+    }
   }
 
-  /* Smooth mass fraction of all metals */
-  cpd->smoothed_metal_mass_fraction_total +=
-      m * cpd->metal_mass_fraction_total * kernel_root;
-  cpd->smoothed_metal_mass_fraction_total *= factor;
+  /* Now add Hubble flow to diagonal terms */
+  p->chemistry_data.shear_tensor[0][0] += cosmo->H;
+  p->chemistry_data.shear_tensor[1][1] += cosmo->H;
+  p->chemistry_data.shear_tensor[2][2] += cosmo->H;
 
-  /* Smooth iron mass fraction from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa +=
-      m * cpd->iron_mass_fraction_from_SNIa * kernel_root;
-  cpd->smoothed_iron_mass_fraction_from_SNIa *= factor;
+  /* Calculate the trace of the shear tensor divided by 3 */
+  float TShearTensorN = p->chemistry_data.shear_tensor[0][0] +
+                        p->chemistry_data.shear_tensor[1][1] +
+                        p->chemistry_data.shear_tensor[2][2];
+  TShearTensorN *= (1.0f / 3.0f);
+
+  /* Define a new shear_tensor "shear_tensor_S" */
+  float shear_tensor_S[3][3];
+  for (int k = 0; k < 3; k++) {
+    shear_tensor_S[k][0] = 0.5 * (p->chemistry_data.shear_tensor[k][0] +
+                                  p->chemistry_data.shear_tensor[0][k]);
+    shear_tensor_S[k][1] = 0.5 * (p->chemistry_data.shear_tensor[k][1] +
+                                  p->chemistry_data.shear_tensor[1][k]);
+    shear_tensor_S[k][2] = 0.5 * (p->chemistry_data.shear_tensor[k][2] +
+                                  p->chemistry_data.shear_tensor[2][k]);
+  }
+  shear_tensor_S[0][0] -= TShearTensorN;
+  shear_tensor_S[1][1] -= TShearTensorN;
+  shear_tensor_S[2][2] -= TShearTensorN;
+
+  /* Norm of shear tensor S */
+  float NormTensor2 = 0.0f;
+  for (int k = 0; k < 3; k++) {
+    NormTensor2 += shear_tensor_S[k][0] * shear_tensor_S[k][0] +
+                   shear_tensor_S[k][1] * shear_tensor_S[k][1] +
+                   shear_tensor_S[k][2] * shear_tensor_S[k][2];
+  }
+  const float NormTensor = sqrtf(NormTensor2);
+
+  /* We can now combine to get the diffusion coefficient (in physical
+   * coordinates)
+   * This is rho a^-3 * Norm tensor (physical already) * a^2 * h^2 */
+  p->chemistry_data.diffusion_coefficient =
+      cd->diffusion_constant * rho * NormTensor * h * h * cosmo->a_inv;
+
+  /* Getting ready for diffusion rate calculation in the force loop */
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    p->chemistry_data.diffusion_rate[elem] = 0.0f;
+    p->chemistry_data.dmetal_mass_fraction[elem] =
+        p->chemistry_data.metal_mass_fraction[elem];
+  }
 }
 
 /**
@@ -129,23 +164,7 @@ __attribute__((always_inline)) INLINE static void
 chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
-                                 const struct cosmology* cosmo) {
-
-  /* Just make all the smoothed fields default to the un-smoothed values */
-  struct chemistry_part_data* cpd = &p->chemistry_data;
-
-  /* Total metal mass fraction */
-  cpd->smoothed_metal_mass_fraction_total = cpd->metal_mass_fraction_total;
-
-  /* Iron frac from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa =
-      cpd->iron_mass_fraction_from_SNIa;
-
-  /* Individual metal mass fractions */
-  for (int i = 0; i < chemistry_element_count; i++) {
-    cpd->smoothed_metal_mass_fraction[i] = cpd->metal_mass_fraction[i];
-  }
-}
+                                 const struct cosmology* cosmo) {}
 
 /**
  * @brief Sets the chemistry properties of the (x-)particles to a valid start
@@ -170,32 +189,14 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
 
-    for (int elem = 0; elem < chemistry_element_count; ++elem)
+    for (int elem = 0; elem < chemistry_element_count; ++elem) {
       p->chemistry_data.metal_mass_fraction[elem] =
           data->initial_metal_mass_fraction[elem];
+      p->chemistry_data.dmetal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
+    }
   }
   chemistry_init_part(p, data);
-}
-
-/**
- * @brief Sets the chemistry properties of the sparticles to a valid start
- * state.
- *
- * @param data The global chemistry information.
- * @param sp Pointer to the sparticle data.
- */
-__attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
-    const struct chemistry_global_data* data, struct spart* restrict sp) {
-
-  /* Initialize mass fractions for total metals and each metal individually */
-  if (data->initial_metal_mass_fraction_total != -1) {
-    sp->chemistry_data.metal_mass_fraction_total =
-        data->initial_metal_mass_fraction_total;
-
-    for (int elem = 0; elem < chemistry_element_count; ++elem)
-      sp->chemistry_data.metal_mass_fraction[elem] =
-          data->initial_metal_mass_fraction[elem];
-  }
 }
 
 /**
@@ -226,6 +227,35 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
           parser_get_param_float(parameter_file, buffer);
     }
   }
+
+  /* Read diffusion constant */
+  data->diffusion_constant = parser_get_param_float(
+      parameter_file, "COLIBREChemistry:Diffusion_constant");
+
+  /* Read time-step limiter */
+  data->chemistry_time_limiter = parser_get_param_float(
+      parameter_file, "COLIBREChemistry:Diffusion_time_limiter");
+}
+
+/**
+ * @brief Sets the chemistry properties of the sparticles to a valid start
+ * state.
+ *
+ * @param data The global chemistry information.
+ * @param sp Pointer to the sparticle data.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
+    const struct chemistry_global_data* data, struct spart* restrict sp) {
+
+  /* Initialize mass fractions for total metals and each metal individually */
+  if (data->initial_metal_mass_fraction_total != -1) {
+    sp->chemistry_data.metal_mass_fraction_total =
+        data->initial_metal_mass_fraction_total;
+
+    for (int elem = 0; elem < chemistry_element_count; ++elem)
+      sp->chemistry_data.metal_mass_fraction[elem] =
+          data->initial_metal_mass_fraction[elem];
+  }
 }
 
 /**
@@ -239,6 +269,106 @@ static INLINE void chemistry_print_backend(
 
   message("Chemistry model is 'COLIBRE' tracking %d elements.",
           chemistry_element_count);
+}
+
+/**
+ * @brief Updates the metal mass fractions after diffusion at the end of the
+ * force loop.
+ *
+ * @param p The particle to act upon.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_end_force(
+    struct part* restrict p, const struct cosmology* cosmo) {
+
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    p->chemistry_data.metal_mass_fraction[elem] =
+        p->chemistry_data.dmetal_mass_fraction[elem];
+  }
+
+  /* Compute the new total metal mass fraction */
+  p->chemistry_data.metal_mass_fraction_total = 1.0f;
+  p->chemistry_data.metal_mass_fraction_total -=
+      p->chemistry_data.metal_mass_fraction[chemistry_element_H];
+  p->chemistry_data.metal_mass_fraction_total -=
+      p->chemistry_data.metal_mass_fraction[chemistry_element_He];
+}
+
+/**
+ * @brief Computes the metal diffution time-step.
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param cosmo The current cosmological model.
+ * @param us The internal system of units.
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float chemistry_timestep(
+    const struct phys_const* restrict phys_const,
+    const struct cosmology* restrict cosmo,
+    const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
+    const struct chemistry_global_data* cd, const struct part* restrict p) {
+
+  /* h and rho in physical units */
+  const float h_phys = cosmo->a * p->h;
+  const float rho_phys = p->rho * cosmo->a3_inv;
+
+  /*Diff. coeff. in physical units */
+  const float coeff = p->chemistry_data.diffusion_coefficient;
+
+  const float dt_diff = cd->chemistry_time_limiter * h_phys * h_phys *
+                        rho_phys / (coeff + FLT_MIN);
+
+  /* Convert back to co-moving coordinates */
+  return dt_diff * cosmo->a2_inv;
+}
+
+/**
+ * @brief Returns metal_mass_fraction_total
+ * @param sp Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_feedback(
+    const struct spart* restrict sp) {
+  return sp->chemistry_data.metal_mass_fraction_total;
+}
+
+/**
+ * @brief Returns metal_mass_fraction_total
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_cooling(
+    const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction_total;
+}
+
+/**
+ * @brief Returns metal_mass_fraction
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_star_formation(
+    const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction;
+}
+
+/**
+ * @brief Returns metal_mass_fraction_total
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_star_formation(
+    const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction_total;
+}
+
+/**
+ * @brief Returns metal_mass_fraction
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) {
+  return p->chemistry_data.metal_mass_fraction;
 }
 
 #endif /* SWIFT_CHEMISTRY_COLIBRE_H */

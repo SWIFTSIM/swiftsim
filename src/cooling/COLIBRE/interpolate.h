@@ -30,6 +30,7 @@
 /* Local includes. */
 #include "align.h"
 #include "error.h"
+#include "exp10.h"
 #include "inline.h"
 
 /**

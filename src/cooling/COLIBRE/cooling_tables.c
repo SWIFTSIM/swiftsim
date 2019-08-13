@@ -35,11 +35,13 @@
 #include "cooling_struct.h"
 #include "cooling_tables.h"
 #include "error.h"
+#include "exp10.h"
 #include "interpolate.h"
 
 /**
  * @brief Names of the elements in the order they are stored in the files
  */
+
 /**
  * @brief Reads in COLIBRE cooling table header. Consists of tables
  * of values for temperature, hydrogen number density, metallicity,

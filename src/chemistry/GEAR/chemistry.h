@@ -187,4 +187,20 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
       " want something here.");
 }
 
+/**
+ * @brief Computes the chemistry-related time-step constraint.
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param cosmo The current cosmological model.
+ * @param us The internal system of units.
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float chemistry_timestep(
+    const struct phys_const* restrict phys_const,
+    const struct cosmology* restrict cosmo,
+    const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
+    const struct chemistry_global_data* cd, const struct part* restrict p) {
+  return FLT_MAX;
+}
 #endif /* SWIFT_CHEMISTRY_GEAR_H */

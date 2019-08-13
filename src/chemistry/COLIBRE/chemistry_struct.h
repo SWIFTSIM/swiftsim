@@ -45,6 +45,13 @@ struct chemistry_global_data {
 
   /*! Fraction of the particle mass in *all* metals at the start of the run */
   float initial_metal_mass_fraction_total;
+
+  /*! Diffusion constant to calculate Smagorinsky diffusion coefficient */
+  /* This constant is a free parameter we read in params file */
+  float diffusion_constant;
+
+  /*! Dimensionless pre-factor used in the diffusion time-step condition */
+  float chemistry_time_limiter;
 };
 
 /**
@@ -57,12 +64,6 @@ struct chemistry_part_data {
 
   /*! Fraction of the particle mass in *all* metals */
   float metal_mass_fraction_total;
-
-  /*! Smoothed fraction of the particle mass in a given element */
-  float smoothed_metal_mass_fraction[chemistry_element_count];
-
-  /*! Smoothed fraction of the particle mass in *all* metals */
-  float smoothed_metal_mass_fraction_total;
 
   /*! Mass coming from SNIa */
   float mass_from_SNIa;
@@ -85,8 +86,21 @@ struct chemistry_part_data {
   /*! Fraction of total gas mass in Iron coming from SNIa */
   float iron_mass_fraction_from_SNIa;
 
-  /*! Smoothed fraction of total gas mass in Iron coming from SNIa */
-  float smoothed_iron_mass_fraction_from_SNIa;
+  /*! Fraction of the particle mass in a given element */
+  /*! This array is duplicated to be used after the diffusion routine */
+  float dmetal_mass_fraction[chemistry_element_count];
+
+  /*! Tensor of the velocity shear */
+  /* (Calculated in physical coordinates) */
+  float shear_tensor[3][3];
+
+  /*! Diffusion coefficient as defined by the Smagorinsky model */
+  /* (Calculated in physical coordinates) */
+  float diffusion_coefficient;
+
+  /*! Diffusion rate */
+  /* (Calculated in physical coordinates) */
+  float diffusion_rate[chemistry_element_count];
 };
 
 /**

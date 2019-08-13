@@ -57,11 +57,6 @@ void set_quantities(struct part *restrict p, struct xpart *restrict xp,
                    (hydro_gamma_minus_one);
   p->entropy = pressure * (pow(p->rho, -hydro_gamma));
   xp->entropy_full = p->entropy;
-
-  for (int j = 0; j < chemistry_element_count; j++) {
-    p->chemistry_data.smoothed_metal_mass_fraction[j] =
-        p->chemistry_data.metal_mass_fraction[j];
-  }
 }
 
 /**
