@@ -114,7 +114,7 @@ static INLINE double bisection_iter(
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
     float d_red, double Lambda_He_reion_cgs, double ratefact_cgs,
     const struct cooling_function_data *restrict cooling,
-    const float abundance_ratio[chemistry_element_count + 3], double dt_cgs,
+    const float abundance_ratio[colibre_cooling_N_elementtypes], double dt_cgs,
     long long ID) {
 
   /* Bracketing */
@@ -324,7 +324,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * Note that we need to add S and Ca that are in the tables but not tracked
    * by the particles themselves.
    * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe, OA] */
-  float abundance_ratio[chemistry_element_count + 3];
+  float abundance_ratio[colibre_cooling_N_elementtypes];
   float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
 
   /* Get the Hydrogen and Helium mass fractions */
