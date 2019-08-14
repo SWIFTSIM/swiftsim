@@ -112,10 +112,10 @@ for i in range(n_snapshots):
 	star_masses = sim["/PartType4/Masses"][:]
 	swift_box_star_mass[i] = np.sum(star_masses)
 
-	metallicities = sim["/PartType0/Metallicity"][:]
+	metallicities = sim["/PartType0/Metallicities"][:]
 	swift_box_gas_metal_mass[i] = np.sum(metallicities * masses)
 
-	element_abundances = sim["/PartType0/ElementAbundance"][:][:]
+	element_abundances = sim["/PartType0/ElementMassFractions"][:][:]
 	for j in range(n_elements):
 		swift_element_mass[i,j] = np.sum(element_abundances[:,j] * masses)
 
