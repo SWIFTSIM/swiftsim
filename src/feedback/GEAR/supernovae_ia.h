@@ -346,4 +346,37 @@ __attribute__((always_inline)) INLINE static void supernovae_ia_init(
   supernovae_ia_init_companion(snia);
   
 }
+
+/**
+ * @brief Write a supernovae_ia struct to the given FILE as a stream of bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param snia the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ia_dump(
+    const struct supernovae_ia* snia, FILE* stream, const struct stellar_model *sm) {
+
+  /* Nothing to do here */
+}
+
+
+/**
+ * @brief Restore a supernovae_ia struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param snia the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ia_restore(
+    struct supernovae_ia* snia, FILE* stream, const struct stellar_model *sm) {
+
+  /* Nothing to do here */
+}
+
 #endif // SWIFT_SUPERNOVAE_IA_GEAR_H

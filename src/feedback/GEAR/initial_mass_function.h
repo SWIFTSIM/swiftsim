@@ -371,4 +371,59 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_init(
 
 }
 
+/**
+ * @brief Write a initial_mass_function struct to the given FILE as a stream of bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param imf the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void initial_mass_function_dump(
+    const struct initial_mass_function* imf, FILE* stream, const struct stellar_model *sm) {
+
+  /* Dump the mass limits. */
+  restart_write_blocks((void*)imf->mass_limits, sizeof(float), imf->n_parts + 1,
+                       stream, "imf_mass_limits", "imf_mass_limits");
+
+  /*! Dump the exponents. */
+  restart_write_blocks((void*)imf->exp, sizeof(float), imf->n_parts,
+                       stream, "imf_exponents", "imf_exponents");
+
+  /*! Dump the coefficients. */
+  restart_write_blocks((void*)imf->coef, sizeof(float), imf->n_parts,
+                       stream, "imf_coef", "imf_coef");
+}
+
+
+/**
+ * @brief Restore a initial_mass_function struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param imf the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void initial_mass_function_restore(
+    struct initial_mass_function* imf, FILE* stream, const struct stellar_model *sm) {
+
+  /* Restore the mass limits */
+  imf->mass_limits = (float *)malloc(sizeof(float) * imf->n_parts + 1);
+  restart_read_blocks((void*)imf->mass_limits, sizeof(float), imf->n_parts + 1, stream,
+                      NULL, "imf_mass_limits");
+
+  /* Restore the exponents */
+  imf->exp = (float *)malloc(sizeof(float) * imf->n_parts);
+  restart_read_blocks((void*)imf->exp, sizeof(float), imf->n_parts, stream,
+                      NULL, "imf_exponents");
+
+  /* Restore the coefficients */
+  imf->coef = (float *)malloc(sizeof(float) * imf->n_parts);
+  restart_read_blocks((void*)imf->coef, sizeof(float), imf->n_parts, stream,
+                      NULL, "imf_coef");
+}
+
 #endif // SWIFT_INITIAL_MASS_FUNCTION_GEAR_H

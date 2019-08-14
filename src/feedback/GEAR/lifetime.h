@@ -164,4 +164,36 @@ __attribute__((always_inline)) INLINE static void lifetime_init(
   lifetime_read_from_params(lt, params);
 }
 
+/**
+ * @brief Write a lifetime struct to the given FILE as a stream of bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param lt the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void lifetime_dump(
+    const struct lifetime* lt, FILE* stream, const struct stellar_model *sm) {
+
+  /* Nothing to do here */
+}
+
+
+/**
+ * @brief Restore a lifetime struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param lt the struct
+ * @param stream the file stream
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void lifetime_restore(
+    struct lifetime* lt, FILE* stream, const struct stellar_model *sm) {
+
+  /* Nothing to do here */
+}
+
 #endif // SWIFT_LIFETIME_GEAR_H
