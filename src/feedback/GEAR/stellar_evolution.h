@@ -206,8 +206,6 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   if (sp->feedback_data.number_snia == 0 && sp->feedback_data.number_snii == 0)
     return;
 
-  message("%i %i", sp->feedback_data.number_snia, sp->feedback_data.number_snii);
-
   /* Compute the properties of the feedback (e.g. yields) */
   stellar_evolution_compute_feedback_properties(
       sp, sm, phys_const, log_m_beg_step, log_m_end_step, m_init);
@@ -290,6 +288,57 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   supernovae_ii_init(&sm->snii, phys_const, us, params, sm);
 
 
+}
+
+/**
+ * @brief Write a stellar_evolution struct to the given FILE as a stream of bytes.
+ *
+ * Here we are only writing the arrays, everything has been copied in the feedback.
+ *
+ * @param sm the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_dump(
+    const struct stellar_model* sm, FILE* stream) {
+
+  /* Dump the initial mass function */
+  initial_mass_function_dump(&sm->imf, stream, sm);
+
+  /* Dump the lifetime model */
+  lifetime_dump(&sm->lifetime, stream, sm);
+
+  /* Dump the supernovae Ia model */
+  supernovae_ia_dump(&sm->snia, stream, sm);
+ 
+  /* Dump the supernovae II model */
+  supernovae_ii_dump(&sm->snii, stream, sm);
+
+}
+
+
+/**
+ * @brief Restore a stellar_evolution struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Here we are only writing the arrays, everything has been copied in the feedback.
+ *
+ * @param sm the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_restore(
+    struct stellar_model* sm, FILE* stream) {
+
+  /* Restore the initial mass function */
+  initial_mass_function_restore(&sm->imf, stream, sm);
+
+  /* Restore the lifetime model */
+  lifetime_restore(&sm->lifetime, stream, sm);
+
+  /* Restore the supernovae Ia model */
+  supernovae_ia_restore(&sm->snia, stream, sm);
+ 
+  /* Restore the supernovae II model */
+  supernovae_ii_restore(&sm->snii, stream, sm);
 }
 
 #endif // SWIFT_STELLAR_EVOLUTION_GEAR_H
