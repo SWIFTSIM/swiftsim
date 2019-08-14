@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_STAR_FORMATION_LOGGER_STRUCT_H
-#define SWIFT_EAGLE_STAR_FORMATION_LOGGER_STRUCT_H
+#ifndef SWIFT_COLIBRE_STAR_FORMATION_LOGGER_STRUCT_H
+#define SWIFT_COLIBRE_STAR_FORMATION_LOGGER_STRUCT_H
 
 /* Starformation history struct */
 struct star_formation_history {
@@ -34,4 +34,23 @@ struct star_formation_history {
   float SFRdt_active;
 };
 
-#endif /* SWIFT_EAGLE_STAR_FORMATION_LOGGER_STRUCT_H */
+/**
+ * @brief Starformation history struct for the engine.
+ * Allows to integrate in time some values.
+ * Nothing to do in COLIBRE => copy of star_formation_history
+ */
+struct star_formation_history_accumulator {
+  /*! Total new stellar mass */
+  float new_stellar_mass;
+
+  /*! SFR of all particles */
+  float SFR_inactive;
+
+  /*! SFR of active particles */
+  float SFR_active;
+
+  /*! SFR*dt of active particles */
+  float SFRdt_active;
+};
+
+#endif /* SWIFT_COLIBRE_STAR_FORMATION_LOGGER_STRUCT_H */
