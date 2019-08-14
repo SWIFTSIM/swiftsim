@@ -144,7 +144,7 @@ INLINE static void compute_SNII_feedback(
    * Note that since the ages are calculated using an interpolation table we
    * must allow some tolerance here*/
   if (star_age <= SNII_wind_delay &&
-      (star_age + 1.0001 * dt) > SNII_wind_delay) {
+      (star_age + 1.001 * dt) > SNII_wind_delay) {
 
     /* Make sure a star does not do feedback twice! */
     if (sp->f_E != -1.f) {

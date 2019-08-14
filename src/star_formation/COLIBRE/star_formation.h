@@ -109,8 +109,7 @@ INLINE static int star_formation_is_star_forming(
   /* Deside whether we should form stars or not,
    * first we deterime if we have the correct over density
    * if that is true we calculate if either the maximum density
-   * threshold is reached or if the metallicity dependent
-   * threshold is reached, after this we calculate if the
+   * threshold is reached after this we calculate if the
    * temperature is appropriate */
   if (physical_density < rho_crit_times_min_over_den) return 0;
 

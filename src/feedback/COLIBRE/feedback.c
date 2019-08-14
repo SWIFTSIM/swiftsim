@@ -112,15 +112,14 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   /* Star properties */
 
   /* Metallicity (metal mass fraction) at birth time of the star */
-  const double Z_smooth =
-      chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Physical density of the gas at the star's birth time */
   const double rho_birth = sp->birth_density;
   const double n_birth = rho_birth * props->rho_to_n_cgs;
 
   /* Calculate f_E */
-  const double Z_term = pow(max(Z_smooth, 1e-6) / Z_0, n_Z);
+  const double Z_term = pow(max(Z, 1e-6) / Z_0, n_Z);
   const double n_term = pow(n_birth / n_0, -n_n);
   const double denonimator = 1. + Z_term * n_term;
 
@@ -147,9 +146,13 @@ INLINE static void compute_SNII_feedback(
   /* Time after birth considered for SNII feedback (internal units) */
   const double SNII_wind_delay = feedback_props->SNII_wind_delay;
 
-  /* Are we doing feedback this step? */
-  if (star_age <= SNII_wind_delay && (star_age + dt) > SNII_wind_delay) {
+  /* Are we doing feedback this step?
+   * Note that since the ages are calculated using an interpolation table we
+   * must allow some tolerance here*/
+  if (star_age <= SNII_wind_delay &&
+      (star_age + 1.001 * dt) > SNII_wind_delay) {
 
+    /* Make sure a star does not do feedback twice! */
     if (sp->f_E != -1.f) {
 #ifdef SWIFT_DEBUG_CHECKS
       message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
@@ -336,7 +339,7 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
    * and use updated values for the star's age and timestep in this function */
   if (log10_max_mass > props->log10_SNIa_max_mass_msun) {
 
-    const float Z = sp->chemistry_data.metal_mass_fraction_total;
+    const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
     const float max_mass = exp10f(props->log10_SNIa_max_mass_msun);
     const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
 
@@ -404,6 +407,9 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
 
   int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
 
+  /* Metallicity (metal mass fraction) at birth time of the star */
+  const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+
   /* If mass at beginning of step is less than tabulated lower bound for IMF,
    * limit it.*/
   if (log10_min_mass < props->log10_SNII_min_mass_msun)
@@ -426,9 +432,7 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   int iz_low = 0, iz_high = 0, low_index_3d, high_index_3d, low_index_2d,
       high_index_2d;
   float dz = 0.;
-  determine_bin_yield_SNII(&iz_low, &iz_high, &dz,
-                           log10(sp->chemistry_data.metal_mass_fraction_total),
-                           props);
+  determine_bin_yield_SNII(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
   float metal_mass_released[chemistry_element_count], metal_mass_released_total;
@@ -560,6 +564,9 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 
   int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
 
+  /* Metallicity (metal mass fraction) at birth time of the star */
+  const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+
   /* If mass at end of step is greater than tabulated lower bound for IMF, limit
    * it.*/
   if (log10_max_mass > props->log10_SNII_min_mass_msun)
@@ -577,9 +584,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   int iz_low = 0, iz_high = 0, low_index_3d, high_index_3d, low_index_2d,
       high_index_2d;
   float dz = 0.f;
-  determine_bin_yield_AGB(&iz_low, &iz_high, &dz,
-                          log10(sp->chemistry_data.metal_mass_fraction_total),
-                          props);
+  determine_bin_yield_AGB(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
   float metal_mass_released[chemistry_element_count], metal_mass_released_total;
@@ -853,7 +858,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double star_age_Gyr = age * conversion_factor;
 
   /* Get the metallicity */
-  const float Z = sp->chemistry_data.metal_mass_fraction_total;
+  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
