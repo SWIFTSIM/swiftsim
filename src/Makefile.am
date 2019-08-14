@@ -93,7 +93,7 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c 
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c fof.c \
-    hashmap.c \
+    hashmap.c pressure_floor.c \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
     $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES)
 
@@ -113,28 +113,28 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	 	 hydro.h hydro_io.h hydro_parameters.h \
 		 hydro/Minimal/hydro.h hydro/Minimal/hydro_iact.h hydro/Minimal/hydro_io.h \
                  hydro/Minimal/hydro_debug.h hydro/Minimal/hydro_part.h \
-				 hydro/Minimal/hydro_parameters.h \
+		 hydro/Minimal/hydro_parameters.h \
 		 hydro/Default/hydro.h hydro/Default/hydro_iact.h hydro/Default/hydro_io.h \
                  hydro/Default/hydro_debug.h hydro/Default/hydro_part.h \
-				 hydro/Default/hydro_parameters.h \
+		 hydro/Default/hydro_parameters.h \
 		 hydro/Gadget2/hydro.h hydro/Gadget2/hydro_iact.h hydro/Gadget2/hydro_io.h \
                  hydro/Gadget2/hydro_debug.h hydro/Gadget2/hydro_part.h \
-				 hydro/Gadget2/hydro_parameters.h \
+		 hydro/Gadget2/hydro_parameters.h \
 		 hydro/PressureEntropy/hydro.h hydro/PressureEntropy/hydro_iact.h hydro/PressureEntropy/hydro_io.h \
                  hydro/PressureEntropy/hydro_debug.h hydro/PressureEntropy/hydro_part.h \
-				 hydro/PressureEntropy/hydro_parameters.h \
+		 hydro/PressureEntropy/hydro_parameters.h \
 		 hydro/PressureEnergy/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
                  hydro/PressureEnergy/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
-				 hydro/PressureEnergy/hydro_parameters.h \
+		 hydro/PressureEnergy/hydro_parameters.h \
 		 hydro/PressureEnergyMorrisMonaghanAV/hydro.h hydro/PressureEnergyMorrisMonaghanAV/hydro_iact.h hydro/PressureEnergyMorrisMonaghanAV/hydro_io.h \
                  hydro/PressureEnergyMorrisMonaghanAV/hydro_debug.h hydro/PressureEnergyMorrisMonaghanAV/hydro_part.h \
-				 hydro/PressureEnergyMorrisMonaghanAV/hydro_parameters.h \
+		 hydro/PressureEnergyMorrisMonaghanAV/hydro_parameters.h \
 		 hydro/AnarchyPU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
                  hydro/AnarchyPU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
-				 hydro/AnarchyPU/hydro_parameters.h \
+		 hydro/AnarchyPU/hydro_parameters.h \
 		 hydro/AnarchyDU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
                  hydro/AnarchyDU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
-				 hydro/AnarchyDU/hydro_parameters.h \
+		 hydro/AnarchyDU/hydro_parameters.h \
 		 hydro/GizmoMFV/hydro.h hydro/GizmoMFV/hydro_iact.h \
                  hydro/GizmoMFV/hydro_io.h hydro/GizmoMFV/hydro_debug.h \
                  hydro/GizmoMFV/hydro_part.h \
@@ -146,7 +146,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  hydro/GizmoMFV/hydro_slope_limiters.h \
                  hydro/GizmoMFV/hydro_unphysical.h \
                  hydro/GizmoMFV/hydro_velocities.h \
-				 hydro/GizmoMFV/hydro_parameters.h \
+		 hydro/GizmoMFV/hydro_parameters.h \
 		 hydro/GizmoMFM/hydro.h hydro/GizmoMFM/hydro_iact.h \
                  hydro/GizmoMFM/hydro_io.h hydro/GizmoMFM/hydro_debug.h \
                  hydro/GizmoMFM/hydro_part.h \
@@ -157,7 +157,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  hydro/GizmoMFM/hydro_slope_limiters_face.h \
                  hydro/GizmoMFM/hydro_slope_limiters.h \
                  hydro/GizmoMFM/hydro_unphysical.h \
-				 hydro/GizmoMFM/hydro_parameters.h \
+		 hydro/GizmoMFM/hydro_parameters.h \
                  hydro/Shadowswift/hydro_debug.h \
                  hydro/Shadowswift/hydro_gradients.h hydro/Shadowswift/hydro.h \
                  hydro/Shadowswift/hydro_iact.h \
@@ -207,7 +207,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/const_lambda/cooling_io.h \
                  cooling/grackle/cooling.h cooling/grackle/cooling_struct.h \
                  cooling/grackle/cooling_io.h \
-		 cooling/EAGLE/cooling.h cooling/EAGLE/cooling_struct.h \
+		 cooling/EAGLE/cooling.h cooling/EAGLE/cooling_struct.h cooling/EAGLE/cooling_tables.h \
                  cooling/EAGLE/cooling_io.h cooling/EAGLE/interpolate.h cooling/EAGLE/cooling_rates.h \
 		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
@@ -250,7 +250,10 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  black_holes/Default/black_holes_struct.h \
                  black_holes/EAGLE/black_holes.h black_holes/EAGLE/black_holes_io.h \
 		 black_holes/EAGLE/black_holes_part.h black_holes/EAGLE/black_holes_iact.h \
-                 black_holes/EAGLE/black_holes_properties.h 
+                 black_holes/EAGLE/black_holes_properties.h \
+                 black_holes/EAGLE/black_holes_struct.h \
+                 pressure_floor.h \
+		 pressure_floor/GEAR/pressure_floor.h pressure_floor/none/pressure_floor.h
 
 
 # Sources and flags for regular library
