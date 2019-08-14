@@ -90,7 +90,7 @@ SF_thresh = KS_thresh_norm * (EAGLE_Z / KS_thresh_Z0)**(KS_thresh_slope)
 # Read gas properties
 gas_pos = f["/PartType0/Coordinates"][:, :]
 gas_mass = f["/PartType0/Masses"][:]
-gas_rho = f["/PartType0/Density"][:]
+gas_rho = f["/PartType0/Densities"][:]
 gas_T = f["/PartType0/Temperature"][:]
 gas_SFR = f["/PartType0/SFR"][:]
 gas_XH = f["/PartType0/ElementAbundance"][:, 0]

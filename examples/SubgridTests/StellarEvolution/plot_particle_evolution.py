@@ -102,10 +102,10 @@ z = pos[:,2] - boxSize / 2
 vel = sim["/PartType0/Velocities"][:,:]
 r = sqrt(x**2 + y**2 + z**2)
 v_r = (x * vel[:,0] + y * vel[:,1] + z * vel[:,2]) / r
-u = sim["/PartType0/InternalEnergy"][:]
-S = sim["/PartType0/Entropy"][:]
-P = sim["/PartType0/Pressure"][:]
-rho = sim["/PartType0/Density"][:]
+u = sim["/PartType0/InternalEnergies"][:]
+S = sim["/PartType0/Entropies"][:]
+P = sim["/PartType0/Pressures"][:]
+rho = sim["/PartType0/Densities"][:]
 mass = sim["/PartType0/Masses"][:]
 IDs = sim["/PartType0/ParticleIDs"][:]
 
@@ -135,13 +135,13 @@ for i in range(n_snapshots):
 	vel = sim["/PartType0/Velocities"][:,:]
 	r = sqrt(x**2 + y**2 + z**2)
 	v_r = (x * vel[:,0] + y * vel[:,1] + z * vel[:,2]) / r
-	u = sim["/PartType0/InternalEnergy"][:]
-	S = sim["/PartType0/Entropy"][:]
-	P = sim["/PartType0/Pressure"][:]
-	rho = sim["/PartType0/Density"][:]
+	u = sim["/PartType0/InternalEnergies"][:]
+	S = sim["/PartType0/Entropies"][:]
+	P = sim["/PartType0/Pressures"][:]
+	rho = sim["/PartType0/Densities"][:]
 	mass = sim["/PartType0/Masses"][:]
 	metallicity = sim["/PartType0/Metallicity"][:]
-	internal_energy = sim["/PartType0/InternalEnergy"][:]
+	internal_energy = sim["/PartType0/InternalEnergies"][:]
 	IDs = sim["/PartType0/ParticleIDs"][:]
 
 	# Find which particles we want to plot and store their data

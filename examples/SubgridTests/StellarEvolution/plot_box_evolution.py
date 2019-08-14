@@ -121,7 +121,7 @@ for i in range(n_snapshots):
 
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
-        u = sim["/PartType0/InternalEnergy"][:]
+        u = sim["/PartType0/InternalEnergies"][:]
         swift_internal_energy[i] = np.sum(masses * u)
         swift_kinetic_energy[i] = np.sum(0.5 * masses * v2)
         swift_total_energy[i] = swift_kinetic_energy[i] + swift_internal_energy[i]

@@ -115,7 +115,7 @@ for i in range(n_snapshots):
 	metallicities = sim["/PartType0/Metallicity"][:]
 	box_metal_mass[i] = np.sum(metallicities * masses)
 	
-	internal_energies = sim["/PartType0/InternalEnergy"][:]
+	internal_energies = sim["/PartType0/InternalEnergies"][:]
 	box_energy[i] = np.sum(masses * internal_energies)
 
 # Plot the interesting quantities

@@ -100,7 +100,7 @@ for i in range(n_snapshots):
 	mass_from_SNIa[:,i] = sim["/PartType0/TotalMassFromSNIa"]
 	metal_mass_frac_from_SNIa[:,i] = sim["/PartType0/MetalMassFracFromSNIa"]
 	iron_mass_frac_from_SNIa[:,i] = sim["/PartType0/IronMassFracFromSNIa"]
-	internal_energy[:,i] = sim["/PartType0/InternalEnergy"]
+	internal_energy[:,i] = sim["/PartType0/InternalEnergies"]
 	velocity_parts[:,:,i] = sim["/PartType0/Velocities"]
 	time[i] = sim["/Header"].attrs["Time"][0]
 
