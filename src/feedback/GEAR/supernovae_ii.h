@@ -302,5 +302,69 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_init(
   snii->coef_exp /= snii->exponent - 1.;
 }
 
+/**
+ * @brief Write a supernovae_ii struct to the given FILE as a stream of bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param snii the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ii_dump(
+    const struct supernovae_ii* snii, FILE* stream, const struct stellar_model *sm) {
+
+  /* Dump the yields. */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    const char *name = stellar_evolution_get_element_name(sm, i);
+    restart_write_blocks((void*)snii->integrated_yields[i].data, sizeof(float), snii->integrated_yields[i].N,
+			 stream, name, name);
+  }
+
+  /*! Dump the processed mass. */
+    restart_write_blocks((void*)snii->integrated_ejected_mass_processed.data,
+			 sizeof(float), snii->integrated_ejected_mass_processed.N,
+			 stream, "processed_mass", "processed_mass");
+
+  /*! Dump the non processed mass. */
+  restart_write_blocks((void*)snii->integrated_ejected_mass.data,
+		       sizeof(float), snii->integrated_ejected_mass.N,
+                       stream, "non_processed_mass", "non_processed_mass");
+}
+
+
+/**
+ * @brief Restore a supernovae_ii struct from the given FILE as a stream of
+ * bytes.
+ *
+ * Here we are only writing the arrays, everything else has been copied in the feedback.
+ *
+ * @param snii the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ii_restore(
+    struct supernovae_ii* snii, FILE* stream, const struct stellar_model *sm) {
+
+  /* Restore the yields */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    const char *name = stellar_evolution_get_element_name(sm, i);
+    snii->integrated_yields[i].data = (float *) malloc(
+      sizeof(float) * snii->integrated_yields[i].N);
+
+    restart_read_blocks((void*)snii->integrated_yields[i].data,
+			sizeof(float), snii->integrated_yields[i].N, stream,
+			NULL, name);
+    
+  }
+
+  /* Restore the processed mass */
+    restart_read_blocks((void*)snii->integrated_ejected_mass_processed.data,
+			sizeof(float), snii->integrated_ejected_mass_processed.N, stream,
+			NULL, "processed_mass");
+
+  /* Restore the non processed mass */
+    restart_read_blocks((void*)snii->integrated_ejected_mass.data,
+			sizeof(float), snii->integrated_ejected_mass.N, stream,
+			NULL, "non_processed_mass");
+}
 
 #endif // SWIFT_SUPERNOVAE_II_GEAR_H
