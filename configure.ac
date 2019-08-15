@@ -1410,7 +1410,7 @@ AC_ARG_WITH([gravity],
    [with_gravity="default"]
 )
 
-if test "$with_subgrid" = "EAGLE"; then
+if test "$with_subgrid" = "EAGLE" || test "$with_subgrid" = "COLIBRE"; then
    if test "$with_gravity" = "default"; then
       with_gravity="with-potential"
    fi
