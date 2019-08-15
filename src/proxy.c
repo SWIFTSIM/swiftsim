@@ -397,7 +397,8 @@ void proxy_cells_exchange(struct proxy *proxies, int num_proxies,
                  s->nr_cells, sizeof(struct cell), /*chunk=*/0,
                  /*extra_data=*/NULL);
   int count_out = 0;
-  int *offset = swift_malloc("proxy_cell_offset", s->nr_cells * sizeof(int));
+  int *offset =
+      (int *)swift_malloc("proxy_cell_offset", s->nr_cells * sizeof(int));
   if (offset == NULL) error("Error allocating memory for proxy cell offsets");
 
   for (int k = 0; k < s->nr_cells; k++) {
