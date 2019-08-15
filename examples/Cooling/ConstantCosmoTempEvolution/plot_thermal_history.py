@@ -60,13 +60,13 @@ rho_std = []
 
 ## loop through list
 for snap in snap_list:
-    
+
     # This loads all metadata but explicitly does _not_ read any particle data yet
     data = swiftsimio.load(snap)
 
     # Get the redshift
     z = np.append(z, data.metadata.z)
-        
+
     # Convert gas temperatures and densities to right units
     data.gas.temperatures.convert_to_cgs()
 
@@ -126,15 +126,24 @@ if cooling_model == 'EAGLE':
     z_r_He_sigma = float(params['EAGLECooling:He_reion_z_sigma'])
     He_heat_input = float(params['EAGLECooling:He_reion_eV_p_H'])
 
+if cooling_model == 'COLIBRE':
+    z_r_H = float(params['COLIBRECooling:H_reion_z'])
+    H_heat_input = float(params['COLIBRECooling:H_reion_eV_p_H'])
+    z_r_He_centre = float(params['COLIBRECooling:He_reion_z_centre'])
+    z_r_He_sigma = float(params['COLIBRECooling:He_reion_z_sigma'])
+    He_heat_input = float(params['COLIBRECooling:He_reion_eV_p_H'])
+
 metallicity = "Unknown"
 if chemistry_model == 'EAGLE':
     metallicity = float(params['EAGLEChemistry:init_abundance_metal'])
+if chemistry_model == 'COLIBRE':
+    metallicity = float(params['COLIBREChemistry:init_abundance_metal'])
     
 # Make plot of temperature evolution  --------------------------------
 fig = plt.figure()
 
 # Plot sim properties
-if cooling_model == 'EAGLE':
+if cooling_model == 'EAGLE' or cooling_model == 'COLIBRE':
     plt.plot([z_r_H, z_r_H], [3.4, 4.4], 'k--', alpha=0.5, lw=0.7)
     plt.text(z_r_H + 0.1, 3.55, "H reion.", rotation=90, alpha=0.5, fontsize=7, va="bottom")
     plt.plot([z_r_He_centre, z_r_He_centre], [3.4, 4.4], 'k--', alpha=0.5, lw=0.7)
