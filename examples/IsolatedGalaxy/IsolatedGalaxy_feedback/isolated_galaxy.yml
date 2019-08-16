@@ -24,7 +24,7 @@ TimeIntegration:
 Snapshots:
   basename:   output      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
-  delta_time: 0.001        # Time difference between consecutive outputs (in internal units)
+  delta_time: 0.0001        # Time difference between consecutive outputs (in internal units)
 
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -187,7 +187,7 @@ COLIBREFeedback:
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
-  SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  SNIa_efficiency_p_Msun:       0.0012       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
   SNIa_timescale_Gyr:           2.0         # Exponential delay time for exponential DTD 
   normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
   power_law_slope:              1.1         # Power law slope for the power law DTD 
