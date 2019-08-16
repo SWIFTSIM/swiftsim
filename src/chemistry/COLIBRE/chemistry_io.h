@@ -85,7 +85,7 @@ INLINE static int chemistry_write_particles(const struct part* parts,
       "Masses of gas that have been produced by AGN stars");
 
   list[5] = io_make_output_field("MetalMassFractionsFromAGB", FLOAT, 1,
-                                 UNIT_CONV_NO_UNITS, 0., parts,
+                                 UNIT_CONV_NO_UNITS, 0.f, parts,
                                  chemistry_data.metal_mass_fraction_from_AGB,
                                  "Fractions of the particles' masses that are "
                                  "in metals produced by AGB stars");
@@ -107,15 +107,18 @@ INLINE static int chemistry_write_particles(const struct part* parts,
                                  "Fractions of the particles' masses that are "
                                  "in iron produced by SNIa stars");
 
-  list[9] = io_make_output_field("MetalDiffusionCoefficients", FLOAT, 1,
-                                 UNIT_CONV_DIFF_COEFF, 1.f, parts,
-                                 chemistry_data.diffusion_coefficient,
-                                 "Diffusion coefficient of the particles");
+  list[9] = io_make_output_field(
+      "MetalDiffusionCoefficients", FLOAT, 1, UNIT_CONV_DIFF_COEFF, 0.f, parts,
+      chemistry_data.diffusion_coefficient,
+      "Metal diffusion coefficients of the particles."
+      "Controls the metal diffusion rate, not to be confused "
+      "with the energy diffusion coefficient. Stored in "
+      "physical co-ordinates");
 
   list[10] = io_make_output_field(
       "MetalDiffusionRates", FLOAT, chemistry_element_count,
-      UNIT_CONV_DIFF_RATE, 1.f, parts, chemistry_data.diffusion_rate,
-      "Diffusion rate of each element traced by the particles");
+      UNIT_CONV_DIFF_RATE, 0.f, parts, chemistry_data.diffusion_rate,
+      "Metal diffusion rates for each element in physical co-ordinates");
 
   return 11;
 }
@@ -159,7 +162,7 @@ INLINE static int chemistry_write_sparticles(const struct spart* sparts,
       "Masses of gas that have been produced by AGN stars");
 
   list[5] = io_make_output_field("MetalMassFractionsFromAGB", FLOAT, 1,
-                                 UNIT_CONV_NO_UNITS, 0., sparts,
+                                 UNIT_CONV_NO_UNITS, 0.f, sparts,
                                  chemistry_data.metal_mass_fraction_from_AGB,
                                  "Fractions of the particles' masses that are "
                                  "in metals produced by AGB stars");
@@ -244,6 +247,7 @@ INLINE static int chemistry_write_bparticles(const struct bpart* bparts,
                            bparts, chemistry_data.iron_mass_from_SNIa,
                            "Masses of the BH particles in iron that have been "
                            "produced by SNIa stars");
+
   return 9;
 }
 
