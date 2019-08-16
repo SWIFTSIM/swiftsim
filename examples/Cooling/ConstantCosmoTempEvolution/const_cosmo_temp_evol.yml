@@ -88,8 +88,8 @@ COLIBREChemistry: 	     # Primordial abundances
   init_abundance_Magnesium:  0.
   init_abundance_Silicon:    0.
   init_abundance_Iron:       0.
-  Diffusion_constant:        0.
-  Diffusion_time_limiter:    1000.  # There is no diffusion so keep this large to avoid spuriously small time-step sizes
+  metal_diffusion_constant:         0.   # No diffusion
+  metal_diffusion_timestep_mult:    1e10 # No time-step constraint
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
