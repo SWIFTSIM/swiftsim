@@ -278,22 +278,25 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
     const struct cooling_function_data* cooling) {
 
   message("Cooling function is 'Grackle'.");
-  message("Using Grackle    = %i", cooling->chemistry.use_grackle);
+  message("Using Grackle = %i", cooling->chemistry.use_grackle);
   message("Chemical network = %i", cooling->chemistry.primordial_chemistry);
-  message("CloudyTable      = %s", cooling->cloudy_table);
-  message("Redshift         = %g", cooling->redshift);
-  message("UV background    = %d", cooling->with_uv_background);
-  message("Metal cooling    = %i", cooling->chemistry.metal_cooling);
-  message("Self Shielding   = %i", cooling->self_shielding_method);
-  message("Specific Heating Rates   = %i",
+  message("CloudyTable = %s", cooling->cloudy_table);
+  message("Redshift = %g", cooling->redshift);
+  message("UV background = %d", cooling->with_uv_background);
+  message("Metal cooling = %i", cooling->chemistry.metal_cooling);
+  message("Self Shielding = %i", cooling->self_shielding_method);
+  if (cooling->self_shielding_method == -1) {
+    message("Self Shelding density = %g", cooling->self_shielding_threshold);
+  }
+  message("Specific Heating Rates = %i",
           cooling->provide_specific_heating_rates);
   message("Volumetric Heating Rates = %i",
           cooling->provide_volumetric_heating_rates);
   message("Units:");
-  message("\tComoving     = %i", cooling->units.comoving_coordinates);
-  message("\tLength       = %g", cooling->units.length_units);
-  message("\tDensity      = %g", cooling->units.density_units);
-  message("\tTime         = %g", cooling->units.time_units);
+  message("\tComoving = %i", cooling->units.comoving_coordinates);
+  message("\tLength = %g", cooling->units.length_units);
+  message("\tDensity = %g", cooling->units.density_units);
+  message("\tTime = %g", cooling->units.time_units);
   message("\tScale Factor = %g (units: %g)", cooling->units.a_value,
           cooling->units.a_units);
 }
@@ -569,7 +572,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle(
 __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
     const struct cooling_function_data* restrict cooling,
     chemistry_data* restrict chemistry,
-    const struct part* restrict p) {
+    const struct part* restrict p,
+    const struct cosmology *cosmo) {
 
   /* Are we using self shielding or UV background? */
   if (!cooling->with_uv_background || cooling->self_shielding_method >= 0) {
@@ -577,7 +581,8 @@ __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
   }
 
   /* Are we in a self shielding regime? */
-  if (p->rho > cooling->self_shielding_threshold) {
+  const float rho = hydro_get_physical_density(p, cosmo);
+  if (rho > cooling->self_shielding_threshold) {
     chemistry->UVbackground = 0;
   }
   else {
@@ -644,7 +649,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
   cooling_copy_to_grackle(&data, p, xp, density);
 
   /* Apply the self shielding if requested */
-  cooling_apply_self_shielding(cooling, &chemistry_grackle, p);
+  cooling_apply_self_shielding(cooling, &chemistry_grackle, p, cosmo);
 
   /* solve chemistry */
   if (local_solve_chemistry(&chemistry_grackle, &grackle_rates, &units, &data,
@@ -713,7 +718,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
   cooling_copy_to_grackle(&data, p, xp, density);
 
   /* Apply the self shielding if requested */
-  cooling_apply_self_shielding(cooling, &chemistry_grackle, p);
+  cooling_apply_self_shielding(cooling, &chemistry_grackle, p, cosmo);
 
   /* Compute cooling time */
   gr_float cooling_time;
@@ -902,7 +907,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_units(
   /* Self shielding */
   if (cooling->self_shielding_method == -1) {
     cooling->self_shielding_threshold *=
-      phys_const->const_proton_mass /
+      phys_const->const_proton_mass *
       pow(units_cgs_conversion_factor(us, UNIT_CONV_LENGTH), 3.);
   }
 }

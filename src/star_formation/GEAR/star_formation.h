@@ -59,8 +59,13 @@ INLINE static int star_formation_is_star_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  const float temperature = cooling_get_temperature(phys_const, hydro_props, us,
-                                                    cosmo, cooling, p, xp);
+  /* Check if collapsing particles */
+  if (xp->sf_data.div_v > 0) {
+    return 0;
+  }
+
+  const float temperature =
+      cooling_get_temperature(phys_const, hydro_props, us, cosmo, cooling, p, xp);
 
   const float temperature_max = starform->maximal_temperature;
 
@@ -200,10 +205,6 @@ INLINE static void star_formation_copy_properties(
     sp->birth_time = e->time;
   }
 
-  // TODO copy only metals
-  /* Store the chemistry struct in the star particle */
-  sp->chemistry_data = p->chemistry_data;
-
   /* Store the tracers data */
   sp->tracers_data = xp->tracers_data;
 
@@ -213,6 +214,9 @@ INLINE static void star_formation_copy_properties(
   /* Store the birth temperature*/
   sp->birth.temperature = cooling_get_temperature(phys_const, hydro_props, us,
                                                   cosmo, cooling, p, xp);
+
+  /* Copy the chemistry properties */
+  chemistry_copy_star_formation_properties(p, xp, sp);
 }
 
 /**
