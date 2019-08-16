@@ -230,11 +230,11 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   /* Read diffusion constant */
   data->diffusion_constant = parser_get_param_float(
-      parameter_file, "COLIBREChemistry:Diffusion_constant");
+      parameter_file, "COLIBREChemistry:metal_diffusion_constant");
 
   /* Read time-step limiter */
   data->chemistry_time_limiter = parser_get_param_float(
-      parameter_file, "COLIBREChemistry:Diffusion_time_limiter");
+      parameter_file, "COLIBREChemistry:metal_diffusion_timestep_mult");
 }
 
 /**

@@ -96,7 +96,7 @@ EAGLEChemistry:
   init_abundance_Silicon:   0.0
   init_abundance_Iron:      0.0
 
-# Add COLIBRE chemistry parameters here too
+# Primoridal metallicity also in the COLIBRE model
 COLIBREChemistry:
   init_abundance_metal:     0.0
   init_abundance_Hydrogen:  0.752
@@ -108,6 +108,8 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.0
   init_abundance_Silicon:   0.0
   init_abundance_Iron:      0.0
+  metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
+  metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
 # Cooling with Grackle 3.0
 GrackleCooling:
