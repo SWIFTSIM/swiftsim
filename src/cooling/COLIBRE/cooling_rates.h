@@ -108,28 +108,29 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
 
   /* Convert mass fractions to abundances (nx/nH) and compute metal mass */
   float totmass = 0., metalmass = 0.;
-  for (int i = 0; i < element_OA; i++) {
+  for (enum colibre_cooling_element elem = element_H; elem < element_OA;
+       elem++) {
 
     /* Normal elements: Get the abundance from the particle carried arrays */
-    if ((i != element_S) && (i != element_Ca)) {
+    if ((elem != element_S) && (elem != element_Ca)) {
 
-      const int indx1d = row_major_index_2d(cooling->indxZsol, i,
+      const int indx1d = row_major_index_2d(cooling->indxZsol, elem,
                                             colibre_cooling_N_metallicity,
                                             colibre_cooling_N_elementtypes);
 
-      const float Mfrac = Z_mass_frac[element_from_table_to_code(i)];
+      const float Mfrac = Z_mass_frac[element_from_table_to_code(elem)];
 
       /* ratio_X = ((M_x/M) / (M_H/M)) * (m_H / m_X) * (1 / Z_sun_X) */
-      ratio_solar[i] =
+      ratio_solar[elem] =
           (Mfrac / Z_mass_frac[element_from_table_to_code(element_H)]) *
-          cooling->atomicmass[element_H] * cooling->atomicmass_inv[i] *
+          cooling->atomicmass[element_H] * cooling->atomicmass_inv[elem] *
           cooling->Abundances_inv[indx1d];
 
       totmass += Mfrac;
-      if (i > element_He) metalmass += Mfrac;
+      if (elem > element_He) metalmass += Mfrac;
 
       /* Special case: S scales with Si */
-    } else if (i == element_S) {
+    } else if (elem == element_S) {
 
       ratio_solar[element_S] =
           ratio_solar[element_Si] * cooling->S_over_Si_ratio_in_solar;
@@ -153,7 +154,7 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
       metalmass += Mfrac;
 
       /* Special case: Ca scales with Si */
-    } else if (i == element_Ca) {
+    } else if (elem == element_Ca) {
 
       ratio_solar[element_Ca] =
           ratio_solar[element_Si] * cooling->Ca_over_Si_ratio_in_solar;
