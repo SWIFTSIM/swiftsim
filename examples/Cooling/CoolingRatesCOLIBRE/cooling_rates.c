@@ -190,8 +190,19 @@ int main(int argc, char **argv) {
 
   double lambda_net, temperature;
 
-  get_index_1d(cooling.Redshifts, colibre_cooling_N_redshifts, cosmo.z,
+  if (cosmo.z < cooling.H_reion_z) {
+      get_index_1d(cooling.Redshifts, colibre_cooling_N_redshifts, cosmo.z,
                &red_index, &d_red);
+  } else {
+      red_index = colibre_cooling_N_redshifts - 2;
+      d_red = 1.0;
+  }
+
+
+  message("cooling.Redshifts[red_index] = %.4f", cooling.Redshifts[red_index]);
+  message("red_index = %i", red_index);
+  message("d_red = %.4f", d_red);
+
   get_index_1d(cooling.Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &met_index, &d_met);
   get_index_1d(cooling.nH, colibre_cooling_N_density, log10(inn_h), &n_H_index,
@@ -252,7 +263,6 @@ int main(int argc, char **argv) {
   fclose(output_file);
   fclose(output_file_heat);
   fclose(output_file_net);
-  message("done cooling rates test");
 
   /* Clean everything */
   cosmology_clean(&cosmo);
