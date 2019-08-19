@@ -111,6 +111,14 @@ COLIBREChemistry:
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
+COLIBRECooling:
+  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_most_recent/UV_dust0_CR0_G0_shield0.hdf5 # Location of the cooling tables
+  H_reion_z:               11.5
+  H_reion_eV_p_H:          2.0
+  He_reion_z_centre:       3.5
+  He_reion_z_sigma:        0.5
+  He_reion_eV_p_H:         2.0
+
 # Cooling with Grackle 3.0
 GrackleCooling:
   CloudyTable: CloudyData_UVB=HM2012.h5 # Name of the Cloudy Table (available on the grackle bitbucket repository)
