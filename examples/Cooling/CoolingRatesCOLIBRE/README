@@ -16,11 +16,8 @@ python plot_result_cooling.py
 python plot_result_heating.py
 
 -- for different redshifts and densities:
-redshift="0.0"
-logdensity="0.00"
-./cooling_rates -z $redshift -d $logdensity
-python plot_result_cooling.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
-python plot_result_heating.py cooling_output_lognH$(logdensity).dat $(redshift) $(density)
+set redshift and logdensity in run.sh
+./run.sh
 
 where redshift is the redshift at which the cooling rates are evaluated and logdensity
 is the base 10 logarithm of the hydrogen number density expressed in
