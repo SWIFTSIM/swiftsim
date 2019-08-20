@@ -91,6 +91,9 @@ struct feedback_props {
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
 
+  /*! Are we doing HII regions? */
+  int with_HIIregions;
+
   /* ------------ Yield tables    ----------------- */
 
   /* Yield tables for AGB and SNII  */
@@ -254,6 +257,21 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
+
+  /* ------------ Early feedback properties ------------ */
+  
+  /* Ionization fraction of gas particles tagged as HII regions */
+  float HIIregion_fion;
+
+  /* Temperature of gas particles tagged as HII regions */
+  float HIIregion_temp;
+
+  /* Maximum age in Myr of star particle to build HII region */
+  float HIIregion_maxageMyr;
+
+  /* Time between rebuilding the HII region in Myr */
+  float HIIregion_dtMyr;
+
 };
 
 void feedback_props_init(struct feedback_props *fp,
