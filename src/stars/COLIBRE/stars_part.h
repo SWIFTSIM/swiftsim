@@ -94,6 +94,12 @@ struct spart {
   /*! SNIa Feedback energy fraction */
   float SNIa_f_E;
 
+  /*! last time an HII region was built */
+  float hiiregion_last_rebuild;
+
+  /*! hii mass available for ionization (current) */
+  float hiiregion_mass_to_ionize;
+
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
 

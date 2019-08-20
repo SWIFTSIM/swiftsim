@@ -46,6 +46,12 @@ struct feedback_spart_data {
      */
     struct {
 
+      /*! HII region mass */
+      float HIIregion_mass;
+
+      /*! HII region probability */
+      float HIIregion_probability;
+
       /*! momentum available at the given timestep */
       float momentum;
 
