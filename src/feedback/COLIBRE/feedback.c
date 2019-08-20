@@ -946,7 +946,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double conversion_factor = time_to_cgs / Gyr_in_cgs;
   const double dt_Gyr = dt * conversion_factor;
+  /* const double dt_Myr = dt * conversion_factor * 1e3; */
   const double star_age_Gyr = age * conversion_factor;
+  const double star_age_Myr = age * conversion_factor * 1e3;
 
   /* Get the metallicity */
   const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
@@ -972,6 +974,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                            ngb_gas_mass);
 
+  /* Compute ionizing photons for HII regions */
+  if (feedback_props->with_HIIregions && star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
+    sp->hiiregion_last_rebuild = cosmo->time;
+    sp->hiiregion_mass_to_ionize = 1.;
+  } else if (feedback_props->with_HIIregions) {
+    sp->hiiregion_last_rebuild = -1.;
+  }
+  
   /* Compute properties of the stochastic SNII feedback model. */
   if (feedback_props->with_SNII_feedback) {
     compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
