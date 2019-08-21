@@ -22,7 +22,7 @@ AM_LDFLAGS = ../src/.libs/libswiftsim.a $(HDF5_LDFLAGS) $(HDF5_LIBS) $(FFTW_LIBS
 # List of programs and scripts to run in the test suite
 TESTS = testGreetings testMaths testReading.sh testKernel \
         testActivePair.sh test27cells.sh test27cellsPerturbed.sh  \
-        testParser.sh test125cells.sh test125cellsPerturbed.sh testFFT \
+        testParser.sh testFFT \
         testAdiabaticIndex testRandom testRandomSpacing \
         testMatrixInversion testThreadpool testDump testLogger testInteractions.sh \
         testVoronoi1D testVoronoi2D testVoronoi3D testGravityDerivatives \
