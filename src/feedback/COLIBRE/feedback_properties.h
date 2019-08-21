@@ -259,7 +259,11 @@ struct feedback_props {
   double delta_v;
 
   /* ------------ Early feedback properties ------------ */
-  
+ 
+  /* For testing only! Should be replaced with time-dependent rate
+     Number of H ionizing photons per s per g stellar particle mass */   
+  float HIIregion_const_ionrate;
+ 
   /* Ionization fraction of gas particles tagged as HII regions */
   float HIIregion_fion;
 
@@ -272,6 +276,8 @@ struct feedback_props {
   /* Time between rebuilding the HII region in Myr */
   float HIIregion_dtMyr;
 
+  /* Recombination coefficient in cgs units [cm3 s-1]*/
+  float alpha_caseb_recomb;
 };
 
 void feedback_props_init(struct feedback_props *fp,
