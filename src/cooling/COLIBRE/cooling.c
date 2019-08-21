@@ -348,8 +348,13 @@ void cooling_cool_part(const struct phys_const *phys_const,
   float d_red, d_met, d_n_H;
   int red_index, met_index, n_H_index;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &red_index, &d_red);
+  if (cosmo->z < cooling->H_reion_z) {
+    get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+                 &red_index, &d_red);
+  } else {
+    red_index = colibre_cooling_N_redshifts - 2;
+    d_red = 1.0;
+  }
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &met_index, &d_met);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
@@ -534,8 +539,14 @@ float cooling_get_temperature(
   float d_red, d_met, d_n_H;
   int red_index, met_index, n_H_index;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &red_index, &d_red);
+  if (cosmo->z < cooling->H_reion_z) {
+    get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+                 &red_index, &d_red);
+  } else {
+    red_index = colibre_cooling_N_redshifts - 2;
+    d_red = 1.0;
+  }
+
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &met_index, &d_met);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),

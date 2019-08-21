@@ -3,8 +3,8 @@ import sys
 #---------------------------------------------------------------
 if len(sys.argv) > 1:
 	filename = sys.argv[1]
-	z = sys.argv[2]
-	d = sys.argv[3]
+	z = float(sys.argv[2])
+	d = float(sys.argv[3])
 else:
 	filename = 'cooling_output_lognH-1.00.dat'
 	z = 0.
