@@ -18,6 +18,6 @@ then
     ./getYieldTable.sh
 fi
 
-../../swift --threads=32 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --threads=32 --external-gravity --self-gravity --stars --star-formation --cooling --hydro isolated_galaxy.yml 2>&1 | tee output.log
 
 python3 plotSolution.py 50
