@@ -109,6 +109,56 @@ static INLINE void chemistry_print_backend(
 }
 
 /**
+ * @brief Read the solar abundances and scale with them the initial metallicities.
+ *
+ * @param parameter_file The parsed parameter file.
+ * @param data The properties to initialise.
+ */
+static INLINE void chemistry_scale_initial_metallicities(struct swift_params* parameter_file,
+							 struct chemistry_global_data *data) {
+#ifdef HAVE_HDF5
+
+  /* Get the yields table */
+  char filename[DESCRIPTION_BUFFER_SIZE];
+  parser_get_param_string(parameter_file, "GEARFeedback:YieldsTable", filename);
+
+  /* Open file. */
+  hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file_id < 0) error("unable to open file %s.\n", filename);
+
+  /* Open group. */
+  hid_t group_id = H5Gopen(file_id, "Data", H5P_DEFAULT);
+  if (group_id < 0) error("unable to open group Data.\n");
+
+  /* Read the data */
+  float *sol_ab = (float*) malloc(sizeof(float) * CHEMISTRY_ELEMENT_COUNT);
+  io_read_array_attribute(group_id, "SolarMassAbundances", FLOAT, sol_ab, CHEMISTRY_ELEMENT_COUNT);
+
+  /* Close group */
+  hid_t status = H5Gclose(group_id);
+  if (status < 0) error("error closing group.");
+
+  /* Close file */
+  status = H5Fclose(file_id);
+  if (status < 0) error("error closing file.");
+
+
+  /* Scale the initial metallicities */
+  char txt[DESCRIPTION_BUFFER_SIZE] = "Scaling initial metallicities by:";
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    data->initial_metallicities[i] *= sol_ab[i];
+    char tmp[10];
+    sprintf(tmp, " %.2g", sol_ab[i]);
+    strcat(txt, tmp);
+  }
+
+  message("%s", txt);
+#else
+  error("Cannot scale the solar abundances without HDF5");
+#endif
+}
+
+/**
  * @brief Initialises the chemistry properties.
  *
  * Nothing to do here.
@@ -124,8 +174,23 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
                                           struct chemistry_global_data* data) {
 
   /* read parameters */
-  data->initial_metallicity = parser_get_param_float(
+  const float initial_metallicity = parser_get_param_float(
       parameter_file, "GEARChemistry:InitialMetallicity");
+
+  /* Set the initial metallicities */
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+      data->initial_metallicities[i] = initial_metallicity;
+  }
+
+  /* Check if need to scale the initial metallicity */
+  const int scale_metallicity = parser_get_opt_param_int(
+      parameter_file, "GEARChemistry:ScaleInitialMetallicity", 0);
+
+  /* Scale the metallicities if required */
+  if (scale_metallicity) {
+    chemistry_scale_initial_metallicities(parameter_file, data);
+  }
+  
 }
 
 /**
@@ -257,7 +322,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     struct xpart* restrict xp) {
 
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    p->chemistry_data.metal_mass[i] = data->initial_metallicity * p->mass;
+    p->chemistry_data.metal_mass[i] = data->initial_metallicities[i] * p->mass;
   }
 
   chemistry_init_part(p, data);
@@ -275,7 +340,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     const struct chemistry_global_data* data, struct spart* restrict sp) {
 
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicity;
+    sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicities[i];
   }
 }
 
