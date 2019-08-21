@@ -278,6 +278,9 @@ INLINE static void star_formation_copy_properties(
 
   /* Flag that this particle has not done feedback yet */
   sp->SNII_f_E = -1.f;
+
+  /* Initialize HII region */
+  sp->HIIregion_last_rebuild = -1.f;
 }
 
 /**

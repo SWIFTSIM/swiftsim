@@ -94,7 +94,7 @@ struct spart {
   /*! SNIa Feedback energy fraction */
   float SNIa_f_E;
 
-  /*! last time an HII region was built */
+  /*! last time an HII region was built (age of star in Myr) */
   float HIIregion_last_rebuild;
 
   /*! HII mass available for ionization (current) */

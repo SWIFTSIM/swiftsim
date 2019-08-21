@@ -946,7 +946,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double conversion_factor = time_to_cgs / Gyr_in_cgs;
   const double dt_Gyr = dt * conversion_factor;
-  /* const double dt_Myr = dt * conversion_factor * 1e3; */
+  const double dt_Myr = dt * conversion_factor * 1e3; 
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
 
@@ -977,36 +977,36 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute ionizing photons for HII regions */
   if (feedback_props->with_HIIregions && star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
-    sp->HIIregion_last_rebuild = cosmo->time;
-    /* convert sp->mass_init to g   :  starmass_in_g*/  
-    /* get avg ionization rate      :  feedback_props->HIIregion_const_ionrate */
-    /* get kernel mass              :  gas_kernelmass_in_g */
-    /* get gas density (nH) at star particle position: sp->birth_density */
+    /* only rebuild every HIIregion_dtMyr and at the first timestep the star was formed*/
+    if ( ( ( (sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) >= star_age_Myr ) &&
+           ( (sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) <  star_age_Myr + dt_Myr) ) || 
+             (sp->HIIregion_last_rebuild < 0.)  ){
 
-    /*const double unit_mass_cgs   = units_cgs_conversion_factor(us, UNIT_CONV_MASS); */
-    /* const double gas_kernelmass_in_g =  unit_mass_cgs * ngb_gas_mass; */
-    const double rho_birth = (double) sp->birth_density;
-    const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
-    const double Qbar    = (double) feedback_props->HIIregion_const_ionrate;
-    const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
+        /* log when this HII region was (re)built */
+        sp->HIIregion_last_rebuild = star_age_Myr;
 
-    /* masses in system units */
-    sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) * 
-                                   ( 10.  / n_birth ) * (Qbar / 1.e12) );
+        const double rho_birth = (double) sp->birth_density;
+        const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
+        const double Qbar    = (double) feedback_props->HIIregion_const_ionrate;
+        const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
 
+        /* masses in system units */
+        sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) * 
+                                       ( 10.  / n_birth ) * (Qbar / 1.e12) );
 
-    if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
-      message("sp->mass_init = %.4e\n", sp->mass_init);
-      message("alpha_B = %.4e\n", alpha_B);
-      message("n_birth = %.4e\n", n_birth);
-      message("age = %.4e\n", age);
-      message("time_to_cgs = %.4e\n", time_to_cgs);
-      message("Qbar = %.4e\n", Qbar);
-      message("time term = %.4e\n", (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) );
-      message("sp->HIIregion_mass_to_ionize = %.4e\n", sp->HIIregion_mass_to_ionize);
+        if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
+          message("sp->mass_init = %.4e", sp->mass_init);
+          message("alpha_B = %.4e", alpha_B);
+          message("n_birth = %.4e", n_birth);
+          message("age = %.4e", age);
+          message("time_to_cgs = %.4e", time_to_cgs);
+          message("Qbar = %.4e", Qbar);
+          message("time term = %.4e", (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) );
+          message("sp->HIIregion_mass_to_ionize = %.4e", sp->HIIregion_mass_to_ionize);
 
-      error("Weird values for HII mass. Stopping.\n");
-    }
+          error("Weird values for HII mass. Stopping.");
+        }
+    } 
 
   } else if (feedback_props->with_HIIregions) {
     sp->HIIregion_last_rebuild = -1.;
