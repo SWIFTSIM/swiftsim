@@ -40,8 +40,6 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
     struct part *restrict p, struct xpart *restrict xp,
     const struct engine *restrict e) {
 
-  return;
-
   /* Did the particle receive a supernovae */
   if (xp->feedback_data.delta_mass == 0)
     return;

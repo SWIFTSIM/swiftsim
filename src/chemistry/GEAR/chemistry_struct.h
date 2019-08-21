@@ -25,7 +25,7 @@
 struct chemistry_global_data {
 
   /* Initial metallicity Z */
-  float initial_metallicity;
+  float initial_metallicities[CHEMISTRY_ELEMENT_COUNT];
 };
 
 /**
