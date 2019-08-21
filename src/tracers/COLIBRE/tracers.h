@@ -136,6 +136,7 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.maximum_temperature = -1.f;
   xp->tracers_data.maximum_temperature_time = -1.f;
   xp->tracers_data.momentum_received = 0.f;
+  xp->tracers_data.HIIregion_timer_gas = -1.f;
 }
 
 #endif /* SWIFT_TRACERS_COLIBRE_H */

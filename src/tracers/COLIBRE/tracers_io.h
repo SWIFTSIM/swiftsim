@@ -78,7 +78,12 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.momentum_received,
       "Momentum received from stellar winds in physical coordinates");
 
-  return 3;
+  list[3] = io_make_output_field(
+      "HIIregionsEndTime", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+      tracers_data.HIIregion_timer_gas,
+      "Time until particle is in HII region");
+
+  return 4;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
