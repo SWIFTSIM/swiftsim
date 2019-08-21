@@ -102,4 +102,7 @@ const double const_primordial_He_fraction_cgs = 0.245;
  * [s^-1] */
 const double const_reduced_hubble_cgs = 3.2407792894458e-18;
 
+/*! Case B recombination coefficient for hydrogen at 10^4 K [cm^3 s^-1] */
+const double const_caseb_recomb_cgs = 2.6e-13;
+
 #endif /* SWIFT_PHYSICAL_CONSTANTS_CGS_H */

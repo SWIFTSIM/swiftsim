@@ -958,6 +958,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
 
+
   /* Now we start filling the data structure for information to apply to the
    * particles. Do _NOT_ read from the to_collect substructure any more. */
 
@@ -976,10 +977,39 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute ionizing photons for HII regions */
   if (feedback_props->with_HIIregions && star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
-    sp->hiiregion_last_rebuild = cosmo->time;
-    sp->hiiregion_mass_to_ionize = 1.;
+    sp->HIIregion_last_rebuild = cosmo->time;
+    /* convert sp->mass_init to g   :  starmass_in_g*/  
+    /* get avg ionization rate      :  feedback_props->HIIregion_const_ionrate */
+    /* get kernel mass              :  gas_kernelmass_in_g */
+    /* get gas density (nH) at star particle position: sp->birth_density */
+
+    /*const double unit_mass_cgs   = units_cgs_conversion_factor(us, UNIT_CONV_MASS); */
+    /* const double gas_kernelmass_in_g =  unit_mass_cgs * ngb_gas_mass; */
+    const double rho_birth = (double) sp->birth_density;
+    const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
+    const double Qbar    = (double) feedback_props->HIIregion_const_ionrate;
+    const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
+
+    /* masses in system units */
+    sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) * 
+                                   ( 10.  / n_birth ) * (Qbar / 1.e12) );
+
+
+    if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
+      message("sp->mass_init = %.4e\n", sp->mass_init);
+      message("alpha_B = %.4e\n", alpha_B);
+      message("n_birth = %.4e\n", n_birth);
+      message("age = %.4e\n", age);
+      message("time_to_cgs = %.4e\n", time_to_cgs);
+      message("Qbar = %.4e\n", Qbar);
+      message("time term = %.4e\n", (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) );
+      message("sp->HIIregion_mass_to_ionize = %.4e\n", sp->HIIregion_mass_to_ionize);
+
+      error("Weird values for HII mass. Stopping.\n");
+    }
+
   } else if (feedback_props->with_HIIregions) {
-    sp->hiiregion_last_rebuild = -1.;
+    sp->HIIregion_last_rebuild = -1.;
   }
   
   /* Compute properties of the stochastic SNII feedback model. */
@@ -1216,6 +1246,9 @@ void feedback_props_init(struct feedback_props* fp,
       0.5f * ejecta_velocity * ejecta_velocity;
 
   /* Properties of the HII region model ------------------------------------- */
+  fp->HIIregion_const_ionrate =
+      parser_get_param_float(params, "COLIBREFeedback:HIIregion_const_ionrate");
+ 
   fp->HIIregion_fion =
       parser_get_param_float(params, "COLIBREFeedback:HIIregion_ionization_fraction");
  
@@ -1259,6 +1292,10 @@ void feedback_props_init(struct feedback_props* fp,
   const double X_H = hydro_props->hydrogen_mass_fraction;
   fp->rho_to_n_cgs =
       (X_H / m_p) * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+
+  /* Get recombination coefficient in cgs units */
+  const float dimension_alphaB[5] = {0, 3, -1, 0, 0}; /* [cm^3 s^-1] */
+  fp->alpha_caseb_recomb = phys_const->const_caseb_recomb * units_general_cgs_conversion_factor(us, dimension_alphaB);
 
   /* Initialise the IMF ------------------------------------------------- */
 

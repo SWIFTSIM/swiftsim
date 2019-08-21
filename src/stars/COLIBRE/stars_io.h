@@ -171,17 +171,17 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   if (with_cosmology) {
     list[10] = io_make_output_field(
         "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
-        hiiregion_last_rebuild, "Scale-factors at which the stars last rebuilt "
+        HIIregion_last_rebuild, "Scale-factors at which the stars last rebuilt "
                                 "their HII regions");
   } else {
     list[10] = io_make_output_field("HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_TIME, 0.f,
-                                   sparts, hiiregion_last_rebuild,
+                                   sparts, HIIregion_last_rebuild,
                                    "Times at which the stars last rebuilt "
                                    "their HII regions");
   }
 
   list[11] = io_make_output_field("HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sparts, hiiregion_mass_to_ionize,
+                                 sparts, HIIregion_mass_to_ionize,
                                  "Masses of the HII regions at the current point "
                                  "in time");
 

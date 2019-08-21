@@ -67,8 +67,8 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
   sp->SNII_f_E = -1.f;
   sp->birth_time = stars_properties->spart_first_init_birth_time;
 
-  sp->hiiregion_last_rebuild = -1.f;
-  sp->hiiregion_mass_to_ionize = 0.f;
+  sp->HIIregion_last_rebuild = -1.f;
+  sp->HIIregion_mass_to_ionize = 0.f;
 
   stars_init_spart(sp);
 }
