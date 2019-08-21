@@ -45,9 +45,8 @@ struct feedback_spart_data {
      * @brief Values to be distributed to the gas neighbours.
      */
     struct {
-
-      /*! HII region mass */
-      float HIIregion_mass;
+      /*! HII region timer */
+      float HIIregion_endtime;
 
       /*! HII region probability */
       float HIIregion_probability;

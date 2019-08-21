@@ -926,11 +926,12 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
  * @param us unit_system data structure
  * @param age age of spart at beginning of step
  * @param dt length of current timestep
+ * @param time_beg_of_step time at the beginning of timestep 
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt) {
+                               const double dt, const double time_beg_of_step) {
 
   TIMER_TIC;
 
@@ -943,6 +944,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Convert dt and stellar age from internal units to Gyr. */
   const double Gyr_in_cgs = 1e9 * 365. * 24. * 3600.;
+  const double Myr_in_cgs = 1e6 * 365. * 24. * 3600.;
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double conversion_factor = time_to_cgs / Gyr_in_cgs;
   const double dt_Gyr = dt * conversion_factor;
@@ -1006,10 +1008,22 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
           error("Weird values for HII mass. Stopping.");
         }
-    } 
+
+        sp->feedback_data.to_distribute.HIIregion_probability = sp->HIIregion_mass_to_ionize / ngb_gas_mass;
+
+        /* convert dtMyr to dt (SU) */
+        const float HIIregion_dt =  feedback_props->HIIregion_dtMyr * Myr_in_cgs / time_to_cgs;
+        sp->feedback_data.to_distribute.HIIregion_endtime     = time_beg_of_step + HIIregion_dt;
+
+    } else {
+        sp->feedback_data.to_distribute.HIIregion_probability = -1.;
+        sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
+    }
 
   } else if (feedback_props->with_HIIregions) {
     sp->HIIregion_last_rebuild = -1.;
+    sp->feedback_data.to_distribute.HIIregion_probability = -1.;
+    sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
   }
   
   /* Compute properties of the stochastic SNII feedback model. */
