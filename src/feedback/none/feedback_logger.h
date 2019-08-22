@@ -31,8 +31,8 @@ INLINE static void feedback_SNIa_logger_init_log_file(
     const struct phys_const *phys_const) {}
 
 INLINE static void feedback_SNIa_logger_write_to_log_file(
-    FILE *fp, const double time, struct spart *restrict si, struct part *restrict pj,
-    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const int step) {}
+    FILE *fp, const double time, struct spart *restrict si,
+    struct part *restrict pj, struct xpart *restrict xpj,
+    const struct cosmology *restrict cosmo, const int step) {}
 
 #endif /* SWIFT_NONE_FEEDBACK_LOGGER_H */

@@ -31,7 +31,9 @@ INLINE static void feedback_SNIa_logger_init_log_file(
     const struct phys_const *phys_const) {
 
   /* Calculate the energy unit */
-  const double E_unit =us->UnitMass_in_cgs * us->UnitLength_in_cgs*us->UnitLength_in_cgs / (us->UnitTime_in_cgs *us->UnitTime_in_cgs);
+  const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
+                        us->UnitLength_in_cgs /
+                        (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
 
   /* Write some general text to the logger file */
   fprintf(fp, "# Stochastic SNIa Logger file\n");
@@ -51,22 +53,22 @@ INLINE static void feedback_SNIa_logger_init_log_file(
   fprintf(fp, "# (5) ID gas particle  (no unit)\n");
   fprintf(fp, "# (6) Injected energy of SNIa events\n");
   fprintf(fp, "#     Unit = %e erg\n", E_unit);
-  fprintf(fp, "#     Unit = %e 10^51 erg\n", E_unit/1e51);
+  fprintf(fp, "#     Unit = %e 10^51 erg\n", E_unit / 1e51);
   fprintf(fp, "# (7) Number of SNIa   (number, no unit)\n");
   fprintf(fp, "#\n");
   fprintf(
       fp,
       "# (0)         (1)            (2)          (3)            (4)           "
       " (5)            (6)            (7)\n");
-  fprintf(
-      fp,
-      "#            Time             a            z        ID star part.  ID gas part.   Injected Energy  Number of SNIa\n");
+  fprintf(fp,
+          "#            Time             a            z        ID star part.  "
+          "ID gas part.   Injected Energy  Number of SNIa\n");
 }
 
 INLINE static void feedback_SNIa_logger_write_to_log_file(
-    FILE *fp, const double time, struct spart *restrict si, struct part *restrict pj,
-    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const int step) {
+    FILE *fp, const double time, struct spart *restrict si,
+    struct part *restrict pj, struct xpart *restrict xpj,
+    const struct cosmology *restrict cosmo, const int step) {
 
   /* Get the times */
   const double a = cosmo->a;
@@ -76,9 +78,9 @@ INLINE static void feedback_SNIa_logger_write_to_log_file(
   const double mass_init = si->mass_init;
   const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
   const double deltaE = delta_u * mass_init;
-  
-  fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time, a, z,
-          si->id, pj->id, deltaE, deltaE *1.9884e2);
+
+  fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time, a,
+          z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
