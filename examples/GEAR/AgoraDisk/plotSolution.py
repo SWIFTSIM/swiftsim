@@ -53,7 +53,7 @@ draw_PDF                         = 2###2         # 0/1/2/3     = OFF/ON/ON with 
 draw_pos_vel_PDF                 = 4##4          # 0/1/2/3/4   = OFF/ON/ON with 1D profile/ON also with 1D dispersion profile/ON also with separate 1D vertical dispersion profiles
 draw_star_pos_vel_PDF            = 4##4          # 0/1/2/3/4   = OFF/ON/ON with 1D profile/ON also with 1D dispersion profile/ON also with separate 1D vertical dispersion profiles
 draw_rad_height_PDF              = 2##2          # 0/1/2/3     = OFF/ON/ON with 1D profile/ON with analytic ftn subtracted
-draw_metal_PDF                   = 1##0          # 0/1         = OFF/ON
+draw_metal_PDF                   = 1##1          # 0/1         = OFF/ON
 draw_density_DF                  = 2#2           # 0/1/2       = OFF/ON/ON with difference plot between 1st and 2nd datasets (when 2, dataset_num should be set to 2)
 draw_radius_DF                   = 1#1           # 0/1         = OFF/ON
 draw_star_radius_DF              = 2#2           # 0/1/2       = OFF/ON/ON with SFR profile and K-S plot (when 2, this automatically turns on draw_radius_DF)
@@ -2290,7 +2290,7 @@ for time in range(len(times)):
         if draw_metal_PDF == 1:
                 fig_metal_PDF[time].savefig("metal_PDF_%dMyr" % times[time], bbox_inches='tight', pad_inches=0.03, dpi=300)
         if draw_density_DF >= 1:
-                plt.clf()
+#                 plt.clf()
 #		plt.subplot(111, aspect=1)
                 fig = plt.figure(figsize=(8, 8))
                 gridspec.GridSpec(4, 1)
