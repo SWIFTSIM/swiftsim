@@ -1,1 +1,1 @@
-./config --disable-hand-vec --with-subgrid=COLIBRE --with-ext-potential=hernquist
+./configure --disable-hand-vec --with-subgrid=COLIBRE --with-ext-potential=hernquist
