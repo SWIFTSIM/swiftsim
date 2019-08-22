@@ -27,6 +27,7 @@
 /* Some standard headers. */
 #include <float.h>
 #include <math.h>
+#include <string.h>
 
 /* Local includes. */
 #include "chemistry_struct.h"
