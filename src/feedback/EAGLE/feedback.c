@@ -389,20 +389,20 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
  *
  * @param log10_min_mass log10 mass at the end of step
  * @param log10_max_mass log10 mass at the beginning of step
- * @param stellar_yields array to store calculated yields for passing to
- * integrate_imf
  * @param props properties of the feedback model.
  * @param sp spart we are computing feedback from
  */
-INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
-                               float* stellar_yields,
-                               const struct feedback_props* props,
-                               struct spart* sp) {
+INLINE static void evolve_SNII(
+    float log10_min_mass, float log10_max_mass, const double M_init,
+    const double Z, const float* const abundances,
+    const struct feedback_props* props,
+    struct feedback_spart_data* const feedback_data) {
 
-  int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
-
-  /* Metallicity (metal mass fraction) at birth time of the star */
-  const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  /* Pull out common arrays */
+  const double* const total_yields =
+      props->yield_SNII.total_metals_IMF_resampled;
+  const double* const metal_yields = props->yield_SNII.yield_IMF_resampled;
+  const double* const ejecta = props->yield_SNII.ejecta_IMF_resampled;
 
   /* If mass at beginning of step is less than tabulated lower bound for IMF,
    * limit it.*/
@@ -419,122 +419,126 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   if (log10_min_mass >= log10_max_mass) return;
 
   /* determine which IMF mass bins contribute to the integral */
+  int low_imf_mass_bin_index, high_imf_mass_bin_index;
   determine_imf_bins(log10_min_mass, log10_max_mass, &low_imf_mass_bin_index,
                      &high_imf_mass_bin_index, props);
 
   /* determine which metallicity bin and offset this star belongs to */
-  int iz_low = 0, iz_high = 0, low_index_3d, high_index_3d, low_index_2d,
-      high_index_2d;
-  float dz = 0.;
-  determine_bin_yield_SNII(&iz_low, &iz_high, &dz, log10(Z), props);
+  int index_Z_lo = 0, index_Z_hi = 0;
+  float dZ = 0.;
+  determine_bin_yield_SNII(&index_Z_lo, &index_Z_hi, &dZ, log10(Z), props);
 
-  /* compute metals produced */
-  float metal_mass_released[chemistry_element_count], metal_mass_released_total;
+  /* Allocate temporary array for calculating imf weights */
+  float stellar_yields[eagle_feedback_N_imf_bins];
+
+  /*******************************
+   * Compute metal mass produced *
+   *******************************/
+  float metal_mass_released[chemistry_element_count];
+
+  /* Loop over all the elements */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
-    for (mass_bin_index = low_imf_mass_bin_index;
-         mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-      low_index_3d = row_major_index_3d(
-          iz_low, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
-      high_index_3d = row_major_index_3d(
-          iz_high, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
-      low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
-                                        eagle_feedback_SNII_N_metals,
-                                        eagle_feedback_N_imf_bins);
-      high_index_2d = row_major_index_2d(iz_high, mass_bin_index,
-                                         eagle_feedback_SNII_N_metals,
-                                         eagle_feedback_N_imf_bins);
-      stellar_yields[mass_bin_index] =
-          (1 - dz) *
-              (props->yield_SNII.yield_IMF_resampled[low_index_3d] +
-               sp->chemistry_data.metal_mass_fraction[elem] *
-                   props->yield_SNII.ejecta_IMF_resampled[low_index_2d]) +
-          dz * (props->yield_SNII.yield_IMF_resampled[high_index_3d] +
-                sp->chemistry_data.metal_mass_fraction[elem] *
-                    props->yield_SNII.ejecta_IMF_resampled[high_index_2d]);
-    }
 
+    /* Loop over all the relevent IMF mass bins */
+    for (int mass_bin_index = low_imf_mass_bin_index;
+         mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
+
+      const int lo_index_3d = row_major_index_3d(
+          index_Z_lo, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
+          chemistry_element_count, eagle_feedback_N_imf_bins);
+      const int hi_index_3d = row_major_index_3d(
+          index_Z_hi, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
+          chemistry_element_count, eagle_feedback_N_imf_bins);
+
+      const int lo_index_2d = row_major_index_2d(index_Z_lo, mass_bin_index,
+                                                 eagle_feedback_SNII_N_metals,
+                                                 eagle_feedback_N_imf_bins);
+      const int hi_index_2d = row_major_index_2d(index_Z_hi, mass_bin_index,
+                                                 eagle_feedback_SNII_N_metals,
+                                                 eagle_feedback_N_imf_bins);
+      stellar_yields[mass_bin_index] =
+          (1.f - dZ) * (metal_yields[lo_index_3d] +
+                        abundances[elem] * ejecta[lo_index_2d]) +
+          (0.f + dZ) * (metal_yields[hi_index_3d] +
+                        abundances[elem] * ejecta[hi_index_2d]);
+    }
     metal_mass_released[elem] = integrate_imf(
         log10_min_mass, log10_max_mass, eagle_imf_integration_yield_weight,
         stellar_yields, props);
   }
 
-  /* Compute mass produced */
-  for (mass_bin_index = low_imf_mass_bin_index;
+  /*************************************
+   * Compute total metal mass produced *
+   *************************************/
+  for (int mass_bin_index = low_imf_mass_bin_index;
        mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-    low_index_2d =
-        row_major_index_2d(iz_low, mass_bin_index, eagle_feedback_SNII_N_metals,
-                           eagle_feedback_N_imf_bins);
-    high_index_2d = row_major_index_2d(iz_high, mass_bin_index,
-                                       eagle_feedback_SNII_N_metals,
-                                       eagle_feedback_N_imf_bins);
-    stellar_yields[mass_bin_index] =
-        (1 - dz) * (props->yield_SNII.total_metals_IMF_resampled[low_index_2d] +
-                    sp->chemistry_data.metal_mass_fraction_total *
-                        props->yield_SNII.ejecta_IMF_resampled[low_index_2d]) +
-        dz * (props->yield_SNII.total_metals_IMF_resampled[high_index_2d] +
-              sp->chemistry_data.metal_mass_fraction_total *
-                  props->yield_SNII.ejecta_IMF_resampled[high_index_2d]);
-  }
 
-  metal_mass_released_total =
+    const int lo_index_2d =
+        row_major_index_2d(index_Z_lo, mass_bin_index, eagle_feedback_SNII_N_metals,
+                           eagle_feedback_N_imf_bins);
+    const int hi_index_2d =
+        row_major_index_2d(index_Z_hi, mass_bin_index, eagle_feedback_SNII_N_metals,
+                           eagle_feedback_N_imf_bins);
+
+    stellar_yields[mass_bin_index] =
+        (1.f - dZ) * (total_yields[lo_index_2d] + Z * ejecta[lo_index_2d]) +
+        (0.f + dZ) * (total_yields[hi_index_2d] + Z * ejecta[hi_index_2d]);
+  }
+  float metal_mass_released_total =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
-  /* yield normalization */
-  float mass_ejected, mass_released;
+  /************************************************
+   * Compute the total mass ejected from the star *
+   ************************************************/
+  for (int mass_bin_index = low_imf_mass_bin_index;
+       mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
 
-  /* zero all negative values */
+    const int lo_index_2d =
+        row_major_index_2d(index_Z_lo, mass_bin_index, eagle_feedback_SNII_N_metals,
+                           eagle_feedback_N_imf_bins);
+    const int hi_index_2d =
+        row_major_index_2d(index_Z_hi, mass_bin_index, eagle_feedback_SNII_N_metals,
+                           eagle_feedback_N_imf_bins);
+
+    stellar_yields[mass_bin_index] =
+        (1 - dZ) * ejecta[lo_index_2d] + dZ * ejecta[hi_index_2d];
+  }
+  const float mass_ejected =
+      integrate_imf(log10_min_mass, log10_max_mass,
+                    eagle_imf_integration_yield_weight, stellar_yields, props);
+
+  /* Zero all negative values */
   for (int i = 0; i < chemistry_element_count; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
-
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
-  /* compute the total metal mass ejected from the star*/
-  for (mass_bin_index = low_imf_mass_bin_index;
-       mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-    low_index_2d =
-        row_major_index_2d(iz_low, mass_bin_index, eagle_feedback_SNII_N_metals,
-                           eagle_feedback_N_imf_bins);
-    high_index_2d = row_major_index_2d(iz_high, mass_bin_index,
-                                       eagle_feedback_SNII_N_metals,
-                                       eagle_feedback_N_imf_bins);
-    stellar_yields[mass_bin_index] =
-        (1 - dz) * props->yield_SNII.ejecta_IMF_resampled[low_index_2d] +
-        dz * props->yield_SNII.ejecta_IMF_resampled[high_index_2d];
-  }
-
-  mass_ejected =
-      integrate_imf(log10_min_mass, log10_max_mass,
-                    eagle_imf_integration_yield_weight, stellar_yields, props);
-
   /* compute the total mass released */
-  mass_released = metal_mass_released_total +
-                  metal_mass_released[chemistry_element_H] +
-                  metal_mass_released[chemistry_element_He];
+  const float mass_released = metal_mass_released_total +
+                              metal_mass_released[chemistry_element_H] +
+                              metal_mass_released[chemistry_element_He];
 
-  /* normalize the yields */
-  if (mass_released > 0) {
-    /* Set normalisation factor. Note additional multiplication by the star
-     * initial mass as tables are per initial mass */
-    const float norm_factor = sp->mass_init * mass_ejected / mass_released;
-
-    for (int i = 0; i < chemistry_element_count; i++) {
-      sp->feedback_data.to_distribute.metal_mass[i] +=
-          metal_mass_released[i] * norm_factor;
-    }
-    for (int i = 0; i < chemistry_element_count; i++) {
-      sp->feedback_data.to_distribute.mass_from_SNII +=
-          sp->feedback_data.to_distribute.metal_mass[i];
-    }
-    sp->feedback_data.to_distribute.total_metal_mass +=
-        metal_mass_released_total * norm_factor;
-    sp->feedback_data.to_distribute.metal_mass_from_SNII +=
-        metal_mass_released_total * norm_factor;
-  } else {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (mass_released <= 0) {
     error("wrong normalization!!!! mass_released = %e\n", mass_released);
   }
+#endif
+
+  /* Set normalisation factor. Note additional multiplication by the star
+   * initial mass as tables are per initial mass */
+  const float norm_factor = M_init * mass_ejected / mass_released;
+
+  /* Store what we want to distribute */
+  for (int i = 0; i < chemistry_element_count; i++) {
+    feedback_data->to_distribute.metal_mass[i] +=
+        metal_mass_released[i] * norm_factor;
+    feedback_data->to_distribute.mass_from_SNII +=
+        metal_mass_released[i] * norm_factor;
+  }
+  feedback_data->to_distribute.total_metal_mass +=
+      metal_mass_released_total * norm_factor;
+  feedback_data->to_distribute.metal_mass_from_SNII +=
+      metal_mass_released_total * norm_factor;
 }
 
 /**
@@ -552,14 +556,16 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
  * @param sp spart we are computing feedback for.
  */
 INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
-                              float* stellar_yields,
+                              const double M_init, const double Z,
+                              const float* const abundances,
                               const struct feedback_props* props,
-                              struct spart* sp) {
+                              struct feedback_spart_data* const feedback_data) {
 
-  int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
-
-  /* Metallicity (metal mass fraction) at birth time of the star */
-  const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  /* Pull out common arrays */
+  const double* const total_yields =
+      props->yield_AGB.total_metals_IMF_resampled;
+  const double* const metal_yields = props->yield_AGB.yield_IMF_resampled;
+  const double* const ejecta = props->yield_AGB.ejecta_IMF_resampled;
 
   /* If mass at end of step is greater than tabulated lower bound for IMF, limit
    * it.*/
@@ -571,39 +577,48 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   if (log10_min_mass >= log10_max_mass) return;
 
   /* determine which IMF mass bins contribute to the integral */
+  int low_imf_mass_bin_index, high_imf_mass_bin_index;
   determine_imf_bins(log10_min_mass, log10_max_mass, &low_imf_mass_bin_index,
                      &high_imf_mass_bin_index, props);
 
   /* determine which metallicity bin and offset this star belongs to */
-  int iz_low = 0, iz_high = 0, low_index_3d, high_index_3d, low_index_2d,
-      high_index_2d;
-  float dz = 0.f;
-  determine_bin_yield_AGB(&iz_low, &iz_high, &dz, log10(Z), props);
+  int index_Z_lo = 0, index_Z_hi = 0;
+  float dZ = 0.f;
+  determine_bin_yield_AGB(&index_Z_lo, &index_Z_hi, &dZ, log10(Z), props);
 
-  /* compute metals produced */
-  float metal_mass_released[chemistry_element_count], metal_mass_released_total;
+  /* Allocate temporary array for calculating imf weights */
+  float stellar_yields[eagle_feedback_N_imf_bins];
+
+  /*******************************
+   * Compute metal mass produced *
+   *******************************/
+  float metal_mass_released[chemistry_element_count];
+
+  /* Loop over all the elements */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
-    for (mass_bin_index = low_imf_mass_bin_index;
+
+    /* Loop over all the relevent IMF mass bins */
+    for (int mass_bin_index = low_imf_mass_bin_index;
          mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-      low_index_3d = row_major_index_3d(
-          iz_low, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
+
+      const int lo_index_3d = row_major_index_3d(
+          index_Z_lo, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
           chemistry_element_count, eagle_feedback_N_imf_bins);
-      high_index_3d = row_major_index_3d(
-          iz_high, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
+      const int hi_index_3d = row_major_index_3d(
+          index_Z_hi, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
           chemistry_element_count, eagle_feedback_N_imf_bins);
-      low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
-                                        eagle_feedback_AGB_N_metals,
-                                        eagle_feedback_N_imf_bins);
-      high_index_2d = row_major_index_2d(iz_high, mass_bin_index,
-                                         eagle_feedback_AGB_N_metals,
-                                         eagle_feedback_N_imf_bins);
+
+      const int lo_index_2d =
+          row_major_index_2d(index_Z_lo, mass_bin_index, eagle_feedback_AGB_N_metals,
+                             eagle_feedback_N_imf_bins);
+      const int hi_index_2d =
+          row_major_index_2d(index_Z_hi, mass_bin_index, eagle_feedback_AGB_N_metals,
+                             eagle_feedback_N_imf_bins);
       stellar_yields[mass_bin_index] =
-          (1 - dz) * (props->yield_AGB.yield_IMF_resampled[low_index_3d] +
-                      sp->chemistry_data.metal_mass_fraction[elem] *
-                          props->yield_AGB.ejecta_IMF_resampled[low_index_2d]) +
-          dz * (props->yield_AGB.yield_IMF_resampled[high_index_3d] +
-                sp->chemistry_data.metal_mass_fraction[elem] *
-                    props->yield_AGB.ejecta_IMF_resampled[high_index_2d]);
+          (1.f - dZ) * (metal_yields[lo_index_3d] +
+                        abundances[elem] * ejecta[lo_index_2d]) +
+          (0.f + dZ) * (metal_yields[hi_index_3d] +
+                        abundances[elem] * ejecta[hi_index_2d]);
     }
 
     metal_mass_released[elem] = integrate_imf(
@@ -611,80 +626,79 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
         stellar_yields, props);
   }
 
-  /* Compute mass produced */
-  for (mass_bin_index = low_imf_mass_bin_index;
+  /*************************************
+   * Compute total metal mass produced *
+   *************************************/
+  for (int mass_bin_index = low_imf_mass_bin_index;
        mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-    low_index_2d =
-        row_major_index_2d(iz_low, mass_bin_index, eagle_feedback_AGB_N_metals,
+
+    const int lo_index_2d =
+        row_major_index_2d(index_Z_lo, mass_bin_index, eagle_feedback_AGB_N_metals,
                            eagle_feedback_N_imf_bins);
-    high_index_2d =
-        row_major_index_2d(iz_high, mass_bin_index, eagle_feedback_AGB_N_metals,
+    const int hi_index_2d =
+        row_major_index_2d(index_Z_hi, mass_bin_index, eagle_feedback_AGB_N_metals,
                            eagle_feedback_N_imf_bins);
+
     stellar_yields[mass_bin_index] =
-        (1 - dz) * (props->yield_AGB.total_metals_IMF_resampled[low_index_2d] +
-                    sp->chemistry_data.metal_mass_fraction_total *
-                        props->yield_AGB.ejecta_IMF_resampled[low_index_2d]) +
-        dz * (props->yield_AGB.total_metals_IMF_resampled[high_index_2d] +
-              sp->chemistry_data.metal_mass_fraction_total *
-                  props->yield_AGB.ejecta_IMF_resampled[high_index_2d]);
+        (1.f - dZ) * (total_yields[lo_index_2d] + Z * ejecta[lo_index_2d]) +
+        (0.f + dZ) * (total_yields[hi_index_2d] + Z * ejecta[hi_index_2d]);
   }
 
-  metal_mass_released_total =
+  float metal_mass_released_total =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
-  /* yield normalization */
-  float mass_ejected, mass_released;
+  /************************************************
+   * Compute the total mass ejected from the star *
+   ************************************************/
 
-  /* zero all negative values */
+  for (int mass_bin_index = low_imf_mass_bin_index;
+       mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
+
+    const int lo_index_2d =
+        row_major_index_2d(index_Z_lo, mass_bin_index, eagle_feedback_AGB_N_metals,
+                           eagle_feedback_N_imf_bins);
+    const int hi_index_2d =
+        row_major_index_2d(index_Z_hi, mass_bin_index, eagle_feedback_AGB_N_metals,
+                           eagle_feedback_N_imf_bins);
+
+    stellar_yields[mass_bin_index] =
+        (1.f - dZ) * ejecta[lo_index_2d] + dZ * ejecta[hi_index_2d];
+  }
+  const float mass_ejected =
+      integrate_imf(log10_min_mass, log10_max_mass,
+                    eagle_imf_integration_yield_weight, stellar_yields, props);
+
+  /* Zero all negative values */
   for (int i = 0; i < chemistry_element_count; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
-
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
-  /* compute the total metal mass ejected from the star */
-  for (mass_bin_index = low_imf_mass_bin_index;
-       mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
-    low_index_2d =
-        row_major_index_2d(iz_low, mass_bin_index, eagle_feedback_AGB_N_metals,
-                           eagle_feedback_N_imf_bins);
-    high_index_2d =
-        row_major_index_2d(iz_high, mass_bin_index, eagle_feedback_AGB_N_metals,
-                           eagle_feedback_N_imf_bins);
-    stellar_yields[mass_bin_index] =
-        (1 - dz) * props->yield_AGB.ejecta_IMF_resampled[low_index_2d] +
-        dz * props->yield_AGB.ejecta_IMF_resampled[high_index_2d];
-  }
-
-  mass_ejected =
-      integrate_imf(log10_min_mass, log10_max_mass,
-                    eagle_imf_integration_yield_weight, stellar_yields, props);
-
   /* compute the total mass released */
-  mass_released = metal_mass_released_total +
-                  metal_mass_released[chemistry_element_H] +
-                  metal_mass_released[chemistry_element_He];
+  const float mass_released = metal_mass_released_total +
+                              metal_mass_released[chemistry_element_H] +
+                              metal_mass_released[chemistry_element_He];
 
-  /* normalize the yields */
-  if (mass_released > 0) {
-
-    /* Set normalisation factor. Note additional multiplication by the stellar
-     * initial mass as tables are per initial mass */
-    const float norm_factor = sp->mass_init * mass_ejected / mass_released;
-
-    for (int i = 0; i < chemistry_element_count; i++) {
-      sp->feedback_data.to_distribute.metal_mass[i] +=
-          metal_mass_released[i] * norm_factor;
-      sp->feedback_data.to_distribute.mass_from_AGB +=
-          metal_mass_released[i] * norm_factor;
-    }
-    sp->feedback_data.to_distribute.total_metal_mass +=
-        metal_mass_released_total * norm_factor;
-    sp->feedback_data.to_distribute.metal_mass_from_AGB +=
-        metal_mass_released_total * norm_factor;
-  } else {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (mass_released <= 0) {
     error("wrong normalization!!!! mass_released = %e\n", mass_released);
   }
+#endif
+
+  /* Set normalisation factor. Note additional multiplication by the stellar
+   * initial mass as tables are per initial mass */
+  const float norm_factor = M_init * mass_ejected / mass_released;
+
+  for (int i = 0; i < chemistry_element_count; i++) {
+    feedback_data->to_distribute.metal_mass[i] +=
+        metal_mass_released[i] * norm_factor;
+    feedback_data->to_distribute.mass_from_AGB +=
+        metal_mass_released[i] * norm_factor;
+  }
+  feedback_data->to_distribute.total_metal_mass +=
+      metal_mass_released_total * norm_factor;
+  feedback_data->to_distribute.metal_mass_from_AGB +=
+      metal_mass_released_total * norm_factor;
 }
 
 /**
@@ -709,9 +723,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   if (age < 0.f) error("Negative age for a star.");
 #endif
 
-  /* Allocate temporary array for calculating imf weights */
-  float stellar_yields[eagle_feedback_N_imf_bins];
-
   /* Convert dt and stellar age from internal units to Gyr. */
   const double Gyr_in_cgs = 1e9 * 365. * 24. * 3600.;
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
@@ -719,8 +730,17 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Gyr = dt * conversion_factor;
   const double star_age_Gyr = age * conversion_factor;
 
-  /* Get the metallicity */
-  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  /* Get the birth mass of the star */
+  const double M_init = sp->mass_init;
+
+  /* Get the total metallicity (metal mass fraction) at birth time and impose a
+   * minimum */
+  const double Z =
+      max(chemistry_get_total_metal_mass_fraction_for_feedback(sp), 1e-20);
+
+  /* Get the individual abundances (mass fractions at birth time) */
+  const float* const abundances =
+      chemistry_get_metal_mass_fraction_for_feedback(sp);
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
@@ -773,12 +793,12 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                 feedback_props, sp, star_age_Gyr, dt_Gyr);
   }
   if (feedback_props->with_SNII_enrichment) {
-    evolve_SNII(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-                stellar_yields, feedback_props, sp);
+    evolve_SNII(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun, M_init, Z,
+                abundances, feedback_props, &sp->feedback_data);
   }
   if (feedback_props->with_AGB_enrichment) {
-    evolve_AGB(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-               stellar_yields, feedback_props, sp);
+    evolve_AGB(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun, M_init, Z,
+               abundances, feedback_props, &sp->feedback_data);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS

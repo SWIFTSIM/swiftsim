@@ -272,7 +272,7 @@ INLINE static void init_imf(struct feedback_props *feedback_props) {
  * @return Mass of stars died up to that age in solar masses.
  */
 INLINE static float dying_mass_msun(
-    const float age_Gyr, const float Z,
+    const float age_Gyr, const double Z,
     const struct feedback_props *feedback_props) {
 
   // MATTHIEU check this!!!
