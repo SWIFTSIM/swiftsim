@@ -270,9 +270,10 @@ INLINE static void determine_bin_yields(int* index_Z_low, int* index_Z_high,
  * distribute to the gas.
  */
 INLINE static void evolve_SNIa(
-    const float log10_min_mass, const float log10_max_mass, const double M_init,
-    const double Z, const struct feedback_props* props, double star_age_Gyr,
-    double dt_Gyr, struct feedback_spart_data* const feedback_data) {
+    const double log10_min_mass, const double log10_max_mass,
+    const double M_init, const double Z, const struct feedback_props* props,
+    double star_age_Gyr, double dt_Gyr,
+    struct feedback_spart_data* const feedback_data) {
 
   /* Check if we're outside the mass range for SNIa */
   if (log10_min_mass >= props->log10_SNIa_max_mass_msun) return;
@@ -286,8 +287,8 @@ INLINE static void evolve_SNIa(
    * and use updated values for the star's age and timestep in this function */
   if (log10_max_mass > props->log10_SNIa_max_mass_msun) {
 
-    const float max_mass = exp10f(props->log10_SNIa_max_mass_msun);
-    const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
+    const double max_mass = props->SNIa_max_mass_msun;
+    const double lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
 
     dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
     star_age_Gyr = lifetime_Gyr;
@@ -348,7 +349,7 @@ INLINE static void evolve_SNIa(
  * distribute to the gas.
  */
 INLINE static void evolve_SNII(
-    float log10_min_mass, float log10_max_mass, const double M_init,
+    double log10_min_mass, double log10_max_mass, const double M_init,
     const double Z, const float* const abundances,
     const struct feedback_props* props,
     struct feedback_spart_data* const feedback_data) {
@@ -513,9 +514,9 @@ INLINE static void evolve_SNII(
  * @param feedback_data (return) The #feedback_spart_data to fill with things to
  * distribute to the gas.
  */
-INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
-                              const double M_init, const double Z,
-                              const float* const abundances,
+INLINE static void evolve_AGB(const double log10_min_mass,
+                              double log10_max_mass, const double M_init,
+                              const double Z, const float* const abundances,
                               const struct feedback_props* props,
                               struct feedback_spart_data* const feedback_data) {
 
@@ -725,9 +726,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Calculate mass of stars that has died from the star's birth up to the
    * beginning and end of timestep */
-  const float max_dying_mass_Msun =
+  const double max_dying_mass_Msun =
       dying_mass_msun(star_age_Gyr, Z, feedback_props);
-  const float min_dying_mass_Msun =
+  const double min_dying_mass_Msun =
       dying_mass_msun(star_age_Gyr + dt_Gyr, Z, feedback_props);
 
 #ifdef SWIFT_DEBUG_CHECK
@@ -743,8 +744,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   if (min_dying_mass_Msun == max_dying_mass_Msun) return;
 
   /* Life is better in log */
-  const float log10_max_dying_mass_Msun = log10f(max_dying_mass_Msun);
-  const float log10_min_dying_mass_Msun = log10f(min_dying_mass_Msun);
+  const double log10_max_dying_mass_Msun = log10(max_dying_mass_Msun);
+  const double log10_min_dying_mass_Msun = log10(min_dying_mass_Msun);
 
   /* Compute elements, energy and momentum to distribute from the
    *  three channels SNIa, SNII, AGB */
@@ -907,9 +908,9 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Properties of the SNIa enrichment model -------------------------------- */
 
-  const double SNIa_max_mass_msun =
+  fp->SNIa_max_mass_msun =
       parser_get_param_double(params, "EAGLEFeedback:SNIa_max_mass_Msun");
-  fp->log10_SNIa_max_mass_msun = log10(SNIa_max_mass_msun);
+  fp->log10_SNIa_max_mass_msun = log10(fp->SNIa_max_mass_msun);
 
   /* Read SNIa timescale model parameters */
   fp->SNIa_efficiency =

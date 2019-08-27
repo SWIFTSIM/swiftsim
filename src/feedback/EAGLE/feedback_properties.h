@@ -133,8 +133,11 @@ struct feedback_props {
   /*! Inverse of time-scale of the SNIa decay function in Giga-years */
   float SNIa_timescale_Gyr_inv;
 
+  /*! Maximal mass used for SNIa feedback (in solar masses) */
+  double SNIa_max_mass_msun;
+
   /*! Log 10 of the maximal mass used for SNIa feedback (in solar masses) */
-  float log10_SNIa_max_mass_msun;
+  double log10_SNIa_max_mass_msun;
 
   /*! Energy released by one supernova type II in cgs units */
   double E_SNIa_cgs;
@@ -174,28 +177,28 @@ struct feedback_props {
   float *imf_mass_bin_log10;
 
   /*! Minimal stellar mass considered by the IMF (in solar masses) */
-  float imf_min_mass_msun;
+  double imf_min_mass_msun;
 
   /*! Maximal stellar mass considered by the IMF (in solar masses) */
-  float imf_max_mass_msun;
+  double imf_max_mass_msun;
 
   /*! Log 10 of the minimal stellar mass considered by the IMF (in solar masses)
    */
-  float log10_imf_min_mass_msun;
+  double log10_imf_min_mass_msun;
 
   /*! Log 10 of the maximal stellar mass considered by the IMF (in solar masses)
    */
-  float log10_imf_max_mass_msun;
+  double log10_imf_max_mass_msun;
 
   /* ------------ SNe feedback properties ------------ */
 
   /*! Log 10 of the minimal stellar mass considered for SNII feedback (in solar
    * masses) */
-  float log10_SNII_min_mass_msun;
+  double log10_SNII_min_mass_msun;
 
   /*! Log 10 of the maximal stellar mass considered for SNII feedback (in solar
    * masses) */
-  float log10_SNII_max_mass_msun;
+  double log10_SNII_max_mass_msun;
 
   /*! Number of type II supernovae per solar mass */
   float num_SNII_per_msun;
