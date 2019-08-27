@@ -63,7 +63,7 @@ double eagle_feedback_number_of_SNII(const struct spart* sp,
  *
  * We follow Foerster et al. 2006, MNRAS, 368
  *
- * @param sp The #spart.
+ * @param M_init The inital mass of the star particle in internal units.
  * @param t0 The initial time (in Gyr).
  * @param t1 The final time (in Gyr).
  * @param props The properties of the stellar model.
@@ -201,6 +201,9 @@ INLINE static void compute_SNII_feedback(
  * @brief Find the bins and offset along the metallicity dimension of the
  * yields table.
  *
+ * Note for Matthieu: In the normal EAGLE case, the arrays are of length 3 and
+ * 5 for the AGB and SNII channels respectivly. Can we simplify this?
+ *
  * @param index_Z_low (return) Lower index along the metallicity dimension.
  * @param index_Z_high (return) High index along the metallicity dimension.
  * @param dZ (return) Offset between the metallicity bin and Z.
@@ -258,10 +261,13 @@ INLINE static void determine_bin_yields(int* index_Z_low, int* index_Z_high,
  *
  * @param log10_min_mass log10 mass at the end of step
  * @param log10_max_mass log10 mass at the beginning of step
- * @param props properties of the feedback model
- * @param sp #spart we are computing feedback from
+ * @param M_init The initial mass of the star particle (in internal units).
+ * @param Z The total metallicity of the star (metal mass fraction).
+ * @param props Properties of the feedback model.
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
+ * @param feedback_data (return) The #feedback_spart_data to fill with things to
+ * distribute to the gas.
  */
 INLINE static void evolve_SNIa(
     const float log10_min_mass, const float log10_max_mass, const double M_init,
@@ -331,12 +337,15 @@ INLINE static void evolve_SNIa(
  * IMF weighted by the yields read from tables for each of the quantities of
  * interest.
  *
- * Note for Matthieu: This function is poorly written and needs improving.
- *
  * @param log10_min_mass log10 mass at the end of step
  * @param log10_max_mass log10 mass at the beginning of step
- * @param props properties of the feedback model.
- * @param sp spart we are computing feedback from
+ * @param M_init The initial mass of the star particle (in internal units).
+ * @param Z The total metallicity of the star (metal mass fraction).
+ * @param abundances The individual metal abundances (mass fractions) of the
+ * star.
+ * @param props Properties of the feedback model.
+ * @param feedback_data (return) The #feedback_spart_data to fill with things to
+ * distribute to the gas.
  */
 INLINE static void evolve_SNII(
     float log10_min_mass, float log10_max_mass, const double M_init,
@@ -494,14 +503,15 @@ INLINE static void evolve_SNII(
  * IMF weighted by the yields read from tables for each of the quantities of
  * interest.
  *
- * Note for Matthieu: This function is poorly written and needs improving.
- *
  * @param log10_min_mass log10 mass at the end of step
  * @param log10_max_mass log10 mass at the beginning of step
- * @param stellar_yields array to store calculated yields for passing to
- * integrate_imf
+ * @param M_init The initial mass of the star particle (in internal units).
+ * @param Z The total metallicity of the star (metal mass fraction).
+ * @param abundances The individual metal abundances (mass fractions) of the
+ * star.
  * @param props Properties of the feedback model.
- * @param sp spart we are computing feedback for.
+ * @param feedback_data (return) The #feedback_spart_data to fill with things to
+ * distribute to the gas.
  */
 INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
                               const double M_init, const double Z,
