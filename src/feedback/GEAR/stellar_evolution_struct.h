@@ -120,14 +120,23 @@ struct supernovae_ia {
  */
 struct supernovae_ii {
 
-  /*! Integrated yields TODO more comment: Currently it is the integrated mass fraction */
-  struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
+  union {
+    struct interpolation_1d yields[CHEMISTRY_ELEMENT_COUNT];
+    /*! Integrated yields TODO more comment: Currently it is the integrated mass fraction */
+    struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
+  };
 
-  /*! Integrated mass ejected (processed): Currently it is the mass fraction */
-  struct interpolation_1d integrated_ejected_mass_processed;
+  union {
+    struct interpolation_1d ejected_mass_processed;
+    /*! Integrated mass ejected (processed): Currently it is the mass fraction */
+    struct interpolation_1d integrated_ejected_mass_processed;
+  };
 
-  /*! Integrated mass ejected (non processed): Currently it is the mass fraction */
-  struct interpolation_1d integrated_ejected_mass;
+  union {
+    struct interpolation_1d ejected_mass;
+    /*! Integrated mass ejected (non processed): Currently it is the mass fraction */
+    struct interpolation_1d integrated_ejected_mass;
+  };
 
   /*! Minimal mass for a SNII */
   float mass_min;
@@ -140,7 +149,10 @@ struct supernovae_ii {
 
   /*! coefficient of the IMF over the exponent */
   float coef_exp;
-  
+
+#ifdef SWIFT_DEBUG_CHECKS
+  char use_integrated_yields;
+#endif
 };
 
 /**
@@ -163,6 +175,8 @@ struct stellar_model {
   /*! The supernovae type II */
   struct supernovae_ii snii;
 
+  /*! Use a discret yields approach */
+  char discret_yields;
 };
 
 
