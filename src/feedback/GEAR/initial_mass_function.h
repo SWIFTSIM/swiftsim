@@ -206,6 +206,41 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
 	m, imf->mass_max);
 };
 
+/**
+ * @brief Compute the integral of the mass fraction of the initial mass function.
+ *
+ * @param imf The #initial_mass_function.
+ * @param m1 The lower mass to evaluate.
+ * @param m2 The upper mass to evaluate.
+ *
+ * @return The integral of the mass fraction.
+ */
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_integral_imf(
+    const struct initial_mass_function *imf, const float m1, const float m2) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (m1 > imf->mass_max || m1 < imf->mass_min)
+    error("Mass 1 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m1, imf->mass_max);
+  if (m2 > imf->mass_max || m2 < imf->mass_min)
+    error("Mass 2 below or above limits expecting %g < %g < %g.",
+	  imf->mass_min, m2, imf->mass_max);
+#endif
+
+  for(int i = 0; i < imf->n_parts; i++) {
+    if (m1 <= imf->mass_limits[i+1]) {
+      if (m2 < imf->mass_limits[i] || m2 > imf->mass_limits[i+1]) {
+	error("The code does not support the integration over multiple parts of the IMF");
+      }
+      const float exp = imf->exp[i] + 1.;
+      return imf->coef[i] * (pow(m2, exp) - pow(m1, exp)) / exp;
+    }
+  }
+
+  error("Failed to find correct function part: %g, %g larger than mass max %g.",
+	m1, m2, imf->mass_max);
+};
+
 
 /**
  * @brief Compute the coefficients of the initial mass function.
