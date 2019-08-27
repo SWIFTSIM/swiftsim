@@ -387,12 +387,12 @@ INLINE static void evolve_SNII(
                        eagle_feedback_SNII_N_metals);
 
   /* Allocate temporary array for calculating imf weights */
-  float stellar_yields[eagle_feedback_N_imf_bins];
+  double stellar_yields[eagle_feedback_N_imf_bins];
 
   /*******************************
    * Compute metal mass produced *
    *******************************/
-  float metal_mass_released[chemistry_element_count];
+  double metal_mass_released[chemistry_element_count];
 
   /* Loop over all the elements */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
@@ -442,7 +442,7 @@ INLINE static void evolve_SNII(
         (1.f - dZ) * (total_yields[lo_index_2d] + Z * ejecta[lo_index_2d]) +
         (0.f + dZ) * (total_yields[hi_index_2d] + Z * ejecta[hi_index_2d]);
   }
-  float metal_mass_released_total =
+  double metal_mass_released_total =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
@@ -462,7 +462,7 @@ INLINE static void evolve_SNII(
     stellar_yields[mass_bin_index] =
         (1 - dZ) * ejecta[lo_index_2d] + dZ * ejecta[hi_index_2d];
   }
-  const float mass_ejected =
+  const double mass_ejected =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
@@ -472,9 +472,9 @@ INLINE static void evolve_SNII(
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
   /* compute the total mass released */
-  const float mass_released = metal_mass_released_total +
-                              metal_mass_released[chemistry_element_H] +
-                              metal_mass_released[chemistry_element_He];
+  const double mass_released = metal_mass_released_total +
+                               metal_mass_released[chemistry_element_H] +
+                               metal_mass_released[chemistry_element_He];
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mass_released <= 0) {
@@ -484,7 +484,7 @@ INLINE static void evolve_SNII(
 
   /* Set normalisation factor. Note additional multiplication by the star
    * initial mass as tables are per initial mass */
-  const float norm_factor = M_init * mass_ejected / mass_released;
+  const double norm_factor = M_init * mass_ejected / mass_released;
 
   /* Store what we want to distribute */
   for (int i = 0; i < chemistry_element_count; i++) {
@@ -548,12 +548,12 @@ INLINE static void evolve_AGB(const double log10_min_mass,
                        eagle_feedback_AGB_N_metals);
 
   /* Allocate temporary array for calculating imf weights */
-  float stellar_yields[eagle_feedback_N_imf_bins];
+  double stellar_yields[eagle_feedback_N_imf_bins];
 
   /*******************************
    * Compute metal mass produced *
    *******************************/
-  float metal_mass_released[chemistry_element_count];
+  double metal_mass_released[chemistry_element_count];
 
   /* Loop over all the elements */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
@@ -605,7 +605,7 @@ INLINE static void evolve_AGB(const double log10_min_mass,
         (0.f + dZ) * (total_yields[hi_index_2d] + Z * ejecta[hi_index_2d]);
   }
 
-  float metal_mass_released_total =
+  double metal_mass_released_total =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
@@ -626,7 +626,7 @@ INLINE static void evolve_AGB(const double log10_min_mass,
     stellar_yields[mass_bin_index] =
         (1.f - dZ) * ejecta[lo_index_2d] + dZ * ejecta[hi_index_2d];
   }
-  const float mass_ejected =
+  const double mass_ejected =
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
@@ -636,9 +636,9 @@ INLINE static void evolve_AGB(const double log10_min_mass,
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
   /* compute the total mass released */
-  const float mass_released = metal_mass_released_total +
-                              metal_mass_released[chemistry_element_H] +
-                              metal_mass_released[chemistry_element_He];
+  const double mass_released = metal_mass_released_total +
+                               metal_mass_released[chemistry_element_H] +
+                               metal_mass_released[chemistry_element_He];
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mass_released <= 0) {
@@ -648,7 +648,7 @@ INLINE static void evolve_AGB(const double log10_min_mass,
 
   /* Set normalisation factor. Note additional multiplication by the stellar
    * initial mass as tables are per initial mass */
-  const float norm_factor = M_init * mass_ejected / mass_released;
+  const double norm_factor = M_init * mass_ejected / mass_released;
 
   for (int i = 0; i < chemistry_element_count; i++) {
     feedback_data->to_distribute.metal_mass[i] +=

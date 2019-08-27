@@ -168,13 +168,13 @@ struct feedback_props {
   /* ------------- Parameters for IMF --------------- */
 
   /*! Array to store calculated IMF */
-  float *imf;
+  double *imf;
 
   /*! Arrays to store IMF mass bins */
-  float *imf_mass_bin;
+  double *imf_mass_bin;
 
   /*! Arrays to store IMF mass bins (log10)*/
-  float *imf_mass_bin_log10;
+  double *imf_mass_bin_log10;
 
   /*! Minimal stellar mass considered by the IMF (in solar masses) */
   double imf_min_mass_msun;

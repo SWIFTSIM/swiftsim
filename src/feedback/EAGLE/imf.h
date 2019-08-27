@@ -58,7 +58,7 @@ INLINE static void determine_imf_bins(
 #endif
 
   const int N_bins = eagle_feedback_N_imf_bins;
-  const float *imf_bins_log10 = feedback_props->imf_mass_bin_log10;
+  const double *const imf_bins_log10 = feedback_props->imf_mass_bin_log10;
 
   /* Check whether lower mass is within the IMF mass bin range */
   log10_min_mass = max(log10_min_mass, imf_bins_log10[0]);
@@ -91,19 +91,19 @@ INLINE static void determine_imf_bins(
  * yield-weighted integration.
  * @param feedback_props the #feedback_props data structure
  */
-INLINE static float integrate_imf(const float log10_min_mass,
-                                  const float log10_max_mass,
-                                  const enum eagle_imf_integration_type mode,
-                                  const float *stellar_yields,
-                                  const struct feedback_props *feedback_props) {
+INLINE static double integrate_imf(
+    const double log10_min_mass, const double log10_max_mass,
+    const enum eagle_imf_integration_type mode,
+    const double stellar_yields[eagle_feedback_N_imf_bins],
+    const struct feedback_props *feedback_props) {
 
   /* Pull out some common terms */
-  const float *imf = feedback_props->imf;
-  const float *imf_mass_bin = feedback_props->imf_mass_bin;
-  const float *imf_mass_bin_log10 = feedback_props->imf_mass_bin_log10;
+  const double *imf = feedback_props->imf;
+  const double *imf_mass_bin = feedback_props->imf_mass_bin;
+  const double *imf_mass_bin_log10 = feedback_props->imf_mass_bin_log10;
 
   /* IMF mass bin spacing in log10 space. Assumes uniform spacing. */
-  const float imf_log10_mass_bin_size =
+  const double imf_log10_mass_bin_size =
       imf_mass_bin_log10[1] - imf_mass_bin_log10[0];
 
   /* Determine bins to integrate over based on integration bounds */
@@ -112,7 +112,7 @@ INLINE static float integrate_imf(const float log10_min_mass,
                      feedback_props);
 
   /* Array for the integrand */
-  float integrand[eagle_feedback_N_imf_bins];
+  double integrand[eagle_feedback_N_imf_bins];
 
   /* Add up the contribution from each of the IMF mass bins */
   switch (mode) {
@@ -153,7 +153,7 @@ INLINE static float integrate_imf(const float log10_min_mass,
   }
 
   /* Integrate using trapezoidal rule */
-  float result = 0.f;
+  double result = 0.;
   for (int i = i_min; i < i_max + 1; i++) {
     result += integrand[i];
   }
@@ -163,31 +163,31 @@ INLINE static float integrate_imf(const float log10_min_mass,
   result -= 0.5 * (integrand[i_min] + integrand[i_max]);
 
   /* Correct first bin */
-  const float first_bin_offset =
+  const double first_bin_offset =
       (log10_min_mass - imf_mass_bin_log10[i_min]) / imf_log10_mass_bin_size;
 
-  if (first_bin_offset < 0.5f) {
+  if (first_bin_offset < 0.5) {
     result -= first_bin_offset * integrand[i_min];
   } else {
-    result -= 0.5f * integrand[i_min];
-    result -= (first_bin_offset - 0.5f) * integrand[i_min + 1];
+    result -= 0.5 * integrand[i_min];
+    result -= (first_bin_offset - 0.5) * integrand[i_min + 1];
   }
 
   /* Correct last bin */
-  const float last_bin_offset =
+  const double last_bin_offset =
       (log10_max_mass - imf_mass_bin_log10[i_max - 1]) /
       imf_log10_mass_bin_size;
 
   if (last_bin_offset < 0.5) {
-    result -= 0.5f * integrand[i_max];
-    result -= (0.5f - last_bin_offset) * integrand[i_max - 1];
+    result -= 0.5 * integrand[i_max];
+    result -= (0.5 - last_bin_offset) * integrand[i_max - 1];
   } else {
-    result -= (1.f - last_bin_offset) * integrand[i_max];
+    result -= (1.0 - last_bin_offset) * integrand[i_max];
   }
 
   /* The IMF is tabulated in log10, multiply by log10(mass bin size) to get
    * result of integrating IMF */
-  return result * imf_log10_mass_bin_size * ((float)M_LN10);
+  return result * imf_log10_mass_bin_size * M_LN10;
 }
 
 /**
@@ -207,19 +207,19 @@ INLINE static void init_imf(struct feedback_props *feedback_props) {
   /* Allocate IMF array */
   if (swift_memalign("imf-tables", (void **)&feedback_props->imf,
                      SWIFT_STRUCT_ALIGNMENT,
-                     eagle_feedback_N_imf_bins * sizeof(float)) != 0)
+                     eagle_feedback_N_imf_bins * sizeof(double)) != 0)
     error("Failed to allocate IMF bins table");
 
   /* Allocate array to store IMF mass bins */
   if (swift_memalign("imf-tables", (void **)&feedback_props->imf_mass_bin,
                      SWIFT_STRUCT_ALIGNMENT,
-                     eagle_feedback_N_imf_bins * sizeof(float)) != 0)
+                     eagle_feedback_N_imf_bins * sizeof(double)) != 0)
     error("Failed to allocate IMF bins table");
 
   /* Allocate array to store IMF mass bins in log10 space */
   if (swift_memalign("imf-tables", (void **)&feedback_props->imf_mass_bin_log10,
                      SWIFT_STRUCT_ALIGNMENT,
-                     eagle_feedback_N_imf_bins * sizeof(float)) != 0)
+                     eagle_feedback_N_imf_bins * sizeof(double)) != 0)
     error("Failed to allocate IMF bins table");
 
   /* Set IMF from Chabrier 2003, PASP, 115, 763
