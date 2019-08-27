@@ -199,107 +199,55 @@ INLINE static void compute_SNII_feedback(
 
 /**
  * @brief Find the bins and offset along the metallicity dimension of the
- * AGB yields table.
+ * yields table.
  *
- * @param iz_low (return) Lower index along the metallicity dimension.
- * @param iz_high (return) High index along the metallicity dimension.
- * @param dz (return) Offset between the metallicity bin and Z.
+ * @param index_Z_low (return) Lower index along the metallicity dimension.
+ * @param index_Z_high (return) High index along the metallicity dimension.
+ * @param dZ (return) Offset between the metallicity bin and Z.
  * @param log10_Z log10 of the star metallicity (metal mass fraction).
- * @param props The properties of the feedback model.
+ * @param log_Z_bins bin of log10 of the metallicities in the table for this
+ * enrichment channel.
+ * @param N_bins The number of metallicity bins for this enrichment channel.
  */
-INLINE static void determine_bin_yield_AGB(int* iz_low, int* iz_high, float* dz,
-                                           const float log10_Z,
-                                           const struct feedback_props* props) {
-
-  const double* AGB_Z = props->yield_AGB.metallicity;
-  const int N_bins = eagle_feedback_AGB_N_metals;
+INLINE static void determine_bin_yields(int* index_Z_low, int* index_Z_high,
+                                        float* dZ, const float log10_Z,
+                                        const double* const log_Z_bins,
+                                        const int N_bins) {
 
   if (log10_Z > log10_min_metallicity) {
 
     /* Find metallicity bin which contains the star's metallicity */
-    int j;
-    for (j = 0; j < (N_bins - 1) && log10_Z > AGB_Z[j + 1]; j++)
-      ;
+    int j = 0;
+    while (j < (N_bins - 1) && log10_Z > log_Z_bins[j + 1]) {
+      j++;
+    }
 
     /* Store the indices */
-    *iz_low = j;
-    *iz_high = *iz_low + 1;
+    *index_Z_low = j;
+    *index_Z_high = j + 1;
 
-    *iz_high = min(*iz_high, N_bins - 1);
+    *index_Z_high = min(*index_Z_high, N_bins - 1);
 
-    /* Compute offset */
-    if ((log10_Z >= AGB_Z[0]) && (log10_Z <= AGB_Z[N_bins - 1])) {
-
-      *dz = log10_Z - AGB_Z[*iz_low];
+    /* Compute offset from index_Z_low in the table*/
+    if ((log10_Z >= log_Z_bins[0]) && (log10_Z <= log_Z_bins[N_bins - 1])) {
+      *dZ = log10_Z - log_Z_bins[*index_Z_low];
     } else {
-      *dz = 0.f;
+      *dZ = 0.f;
     }
 
     /* Normalize offset */
-    const float delta_Z = AGB_Z[*iz_high] - AGB_Z[*iz_low];
+    const float delta_Z = log_Z_bins[*index_Z_high] - log_Z_bins[*index_Z_low];
 
-    if (delta_Z > 0.f)
-      *dz /= delta_Z;
-    else
-      *dz = 0.f;
-
-  } else {
-    *iz_low = 0;
-    *iz_high = 0;
-    *dz = 0.f;
-  }
-}
-
-/**
- * @brief Find the bins and offset along the metallicity dimension of the
- * SNII yields table.
- *
- * @param iz_low (return) Lower index along the metallicity dimension.
- * @param iz_high (return) High index along the metallicity dimension.
- * @param dz (return) Offset between the metallicity bin and Z.
- * @param log10_Z log10 of the star metallicity (metal mass fraction).
- * @param props The properties of the feedback model.
- */
-INLINE static void determine_bin_yield_SNII(
-    int* iz_low, int* iz_high, float* dz, const float log10_Z,
-    const struct feedback_props* props) {
-
-  const double* SNII_Z = props->yield_SNII.metallicity;
-  const int N_bins = eagle_feedback_SNII_N_metals;
-
-  if (log10_Z > log10_min_metallicity) {
-
-    /* Find metallicity bin which contains the star's metallicity */
-    int j;
-    for (j = 0; j < (N_bins - 1) && log10_Z > SNII_Z[j + 1]; j++)
-      ;
-
-    /* Store the indices */
-    *iz_low = j;
-    *iz_high = *iz_low + 1;
-
-    *iz_high = min(*iz_high, N_bins - 1);
-
-    /* Compute offset */
-    if ((log10_Z >= SNII_Z[0]) && (log10_Z <= SNII_Z[N_bins - 1])) {
-
-      *dz = log10_Z - SNII_Z[*iz_low];
+    if (delta_Z > 0.f) {
+      *dZ /= delta_Z;
     } else {
-      *dz = 0.f;
+      *dZ = 0.f;
     }
 
-    /* Normalize offset */
-    const float delta_Z = SNII_Z[*iz_high] - SNII_Z[*iz_low];
-
-    if (delta_Z > 0.f)
-      *dz = *dz / delta_Z;
-    else
-      *dz = 0.f;
-
   } else {
-    *iz_low = 0;
-    *iz_high = 0;
-    *dz = 0.f;
+    *index_Z_low = 0;
+    *index_Z_high = 0;
+    *dZ = 0.f;
   }
 }
 
@@ -424,7 +372,9 @@ INLINE static void evolve_SNII(
   /* determine which metallicity bin and offset this star belongs to */
   int index_Z_lo = 0, index_Z_hi = 0;
   float dZ = 0.;
-  determine_bin_yield_SNII(&index_Z_lo, &index_Z_hi, &dZ, log10(Z), props);
+  determine_bin_yields(&index_Z_lo, &index_Z_hi, &dZ, log10(Z),
+                       props->yield_SNII.metallicity,
+                       eagle_feedback_SNII_N_metals);
 
   /* Allocate temporary array for calculating imf weights */
   float stellar_yields[eagle_feedback_N_imf_bins];
@@ -582,7 +532,9 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   /* determine which metallicity bin and offset this star belongs to */
   int index_Z_lo = 0, index_Z_hi = 0;
   float dZ = 0.f;
-  determine_bin_yield_AGB(&index_Z_lo, &index_Z_hi, &dZ, log10(Z), props);
+  determine_bin_yields(&index_Z_lo, &index_Z_hi, &dZ, log10(Z),
+                       props->yield_AGB.metallicity,
+                       eagle_feedback_AGB_N_metals);
 
   /* Allocate temporary array for calculating imf weights */
   float stellar_yields[eagle_feedback_N_imf_bins];
@@ -733,8 +685,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Get the total metallicity (metal mass fraction) at birth time and impose a
    * minimum */
-  const double Z =
-      max(chemistry_get_total_metal_mass_fraction_for_feedback(sp), 1e-20);
+  const double Z = max(chemistry_get_total_metal_mass_fraction_for_feedback(sp),
+                       exp10(log10_min_metallicity));
 
   /* Get the individual abundances (mass fractions at birth time) */
   const float* const abundances =
