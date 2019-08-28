@@ -133,6 +133,7 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
+FILE *SNIa_logger;
 
 /**
  * @brief Data collected from the cells at the end of a time-step
@@ -5118,7 +5119,7 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
-  e->SNIa_logger = NULL;
+  SNIa_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -5357,11 +5358,11 @@ void engine_config(int restart, int fof, struct engine *e,
 
     /* Initialize the SNIa logger if running with feedback */
     if (e->policy & engine_policy_feedback) {
-      e->SNIa_logger = fopen("SNIa.txt", mode);
+      SNIa_logger = fopen("SNIa.txt", mode);
       if (!restart) {
-        feedback_SNIa_logger_init_log_file(e->SNIa_logger, e->internal_units,
+        feedback_SNIa_logger_init_log_file(SNIa_logger, e->internal_units,
                                            e->physical_constants);
-        fflush(e->SNIa_logger);
+        fflush(SNIa_logger);
       }
     }
   }
@@ -6283,7 +6284,7 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      fclose(e->SNIa_logger);
+      fclose(SNIa_logger);
     }
   }
 }

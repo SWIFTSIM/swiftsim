@@ -169,8 +169,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step,
-                                          e->SNIa_logger);
+                                          ti_current, e->time, e->step);
 #endif
       }
     } /* loop over the parts in ci. */
@@ -275,8 +274,7 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step,
-                                          e->SNIa_logger);
+                                          ti_current, e->time, e->step);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -445,8 +443,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step,
-                                            e->SNIa_logger);
+                                            ti_current, e->time, e->step);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -575,8 +572,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi, cosmo,
-                                            ti_current, e->time, e->step,
-                                            e->SNIa_logger);
+                                            ti_current, e->time, e->step);
 #endif
         }
       } /* loop over the parts in ci. */
@@ -700,8 +696,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step,
-                                            e->SNIa_logger);
+                                            ti_current, e->time, e->step);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -761,8 +756,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step,
-                                            e->SNIa_logger);
+                                            ti_current, e->time, e->step);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -859,8 +853,7 @@ void DOPAIR1_SUBSET_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step,
-                                          e->SNIa_logger);
+                                          ti_current, e->time, e->step);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -947,8 +940,7 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                             cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, pj->h, spi, pj, xpj,
-                                          cosmo, ti_current, e->time, e->step,
-                                          e->SNIa_logger);
+                                          cosmo, ti_current, e->time, e->step);
 #endif
       }
     } /* loop over the parts in cj. */

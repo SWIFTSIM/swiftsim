@@ -23,6 +23,9 @@
 #include "feedback_logger.h"
 #include "random.h"
 
+/* Define external variables */
+extern FILE *SNIa_logger;
+
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *
@@ -82,19 +85,16 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param pj Second (gas) particle.
  * @param xpj Extra particle data
  * @param cosmo The cosmological model.
- * @param ti_current Current integer time used value for seeding random number
+ * @param ti_current Current integer time used value for seeding random number generator
  * @param time current physical time in the simulation
  * @param step current step counter
- * @param fp_SNIa SNIa logger file
- * generator
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(
     const float r2, const float *dx, const float hi, const float hj,
     const struct spart *restrict si, struct part *restrict pj,
     struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const integertime_t ti_current, const double time, const int step,
-    FILE *fp_SNIa) {
+    const integertime_t ti_current, const double time, const int step) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -342,9 +342,9 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_SNIa_logger_write_to_log_file(fp_SNIa, time, si, pj, xpj, cosmo,
+      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj, cosmo,
                                              step);
-      fflush(fp_SNIa);
+      fflush(SNIa_logger);
     }
   }
 

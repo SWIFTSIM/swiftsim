@@ -66,7 +66,7 @@ INLINE static void feedback_SNIa_logger_init_log_file(
 }
 
 INLINE static void feedback_SNIa_logger_write_to_log_file(
-    FILE *fp, const double time, struct spart *restrict si,
+    FILE *fp, const double time, const struct spart *restrict si,
     struct part *restrict pj, struct xpart *restrict xpj,
     const struct cosmology *restrict cosmo, const int step) {
 
