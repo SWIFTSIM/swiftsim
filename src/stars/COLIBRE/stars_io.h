@@ -111,7 +111,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 12;
+  *num_fields = 13;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -185,6 +185,9 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  "Masses of the HII regions at the current point "
                                  "in time");
 
+  list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
+                                 sparts, star_timestep,
+                                 "Current timestep of the star particle");
 }
 
 /**

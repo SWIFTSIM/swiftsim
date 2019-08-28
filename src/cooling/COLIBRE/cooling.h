@@ -25,7 +25,7 @@
  */
 
 /* Local includes. */
-#include "cooling_struct.h"
+#include "cooling_tables.h"
 
 struct part;
 struct xpart;
@@ -60,6 +60,14 @@ void cooling_first_init_part(
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *restrict cooling,
     const struct part *restrict p, struct xpart *restrict xp);
+
+float cooling_get_internalenergy_for_temperature(
+    const struct phys_const *restrict phys_const,
+    const struct hydro_props *restrict hydro_props,
+    const struct unit_system *restrict us,
+    const struct cosmology *restrict cosmo,
+    const struct cooling_function_data *restrict cooling,
+    const struct part *restrict p, const struct xpart *restrict xp, float temp);
 
 float cooling_get_temperature(
     const struct phys_const *restrict phys_const,

@@ -977,6 +977,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                            ngb_gas_mass);
 
+  sp->star_timestep = dt;
+
   /* Compute ionizing photons for HII regions */
   if (feedback_props->with_HIIregions && star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
     /* only rebuild every HIIregion_dtMyr and at the first timestep the star was formed*/
@@ -991,9 +993,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
         const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
         const double Qbar    = (double) feedback_props->HIIregion_const_ionrate;
         const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
+        const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;
 
         /* masses in system units */
-        sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) * 
+        sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * t_half) ) * 
                                        ( 10.  / n_birth ) * (Qbar / 1.e12) );
 
         if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
@@ -1003,7 +1006,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
           message("age = %.4e", age);
           message("time_to_cgs = %.4e", time_to_cgs);
           message("Qbar = %.4e", Qbar);
-          message("time term = %.4e", (1. - exp(- alpha_B * n_birth * age * time_to_cgs) ) );
+          message("time term = %.4e", (1. - exp(- alpha_B * n_birth * t_half) ) );
           message("sp->HIIregion_mass_to_ionize = %.4e", sp->HIIregion_mass_to_ionize);
 
           error("Weird values for HII mass. Stopping.");
@@ -1024,6 +1027,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
+    sp->HIIregion_mass_to_ionize = 0.f;
   }
   
   /* Compute properties of the stochastic SNII feedback model. */
