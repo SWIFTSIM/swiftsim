@@ -127,7 +127,10 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
-FILE *SNIa_logger;
+
+#ifdef SWIFT_DEBUG_CHECKS
+FILE *SNIa_logger_debug;
+#endif
 
 /**
  * @brief Link a density/force task to a cell.
@@ -3534,7 +3537,7 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
-  SNIa_logger = NULL;
+  e->SNIa_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -3543,6 +3546,10 @@ void engine_config(int restart, int fof, struct engine *e,
   e->restart_dt = 0;
   e->run_fof = 0;
   engine_rank = nodeID;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  SNIa_logger_debug = NULL;
+#endif 
 
   if (restart && fof) {
     error(
@@ -3778,11 +3785,24 @@ void engine_config(int restart, int fof, struct engine *e,
 
     /* Initialize the SNIa logger if running with feedback */
     if (e->policy & engine_policy_feedback) {
-      SNIa_logger = fopen("SNIa.txt", mode);
+      e->SNIa_logger = fopen("SNIa.txt", "w");
+
+#ifdef SWIFT_DEBUG_CHECKS
+      char savename[50];
+      snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
+      SNIa_logger_debug = fopen(savename, "w");
+#endif
+
       if (!restart) {
-        feedback_SNIa_logger_init_log_file(SNIa_logger, e->internal_units,
+        
+        feedback_logger_SNIa_init_log_file(e->SNIa_logger, e->internal_units, e->physical_constants);
+        fflush(e->SNIa_logger);
+
+#ifdef SWIFT_DEBUG_CHECKS
+        feedback_logger_SNIa_init_log_file_debug(SNIa_logger_debug, e->internal_units,
                                            e->physical_constants);
-        fflush(SNIa_logger);
+        fflush(SNIa_logger_debug);
+#endif
       }
     }
   }
@@ -4710,7 +4730,11 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      fclose(SNIa_logger);
+      fclose(e->SNIa_logger);
+      
+#ifdef SWIFT_DEBUG_CHECKS
+      fclose(SNIa_logger_debug);
+#endif
     }
   }
 }

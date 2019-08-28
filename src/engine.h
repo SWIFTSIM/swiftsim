@@ -340,6 +340,9 @@ struct engine {
   /* File handle for the SFH logger file */
   FILE *sfh_logger;
 
+  /* File handle for the SNIa logger file */
+  FILE *SNIa_logger;
+
   /* The current step number. */
   int step;
 

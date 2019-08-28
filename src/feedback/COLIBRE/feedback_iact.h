@@ -24,7 +24,9 @@
 #include "random.h"
 
 /* Define external variables */
-extern FILE *SNIa_logger;
+#ifdef SWIFT_DEBUG_CHECKS
+extern FILE *SNIa_logger_debug;
+#endif
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -337,9 +339,13 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj,
+      feedback_logger_SNIa_log_event(time, si, pj, xpj, cosmo, step);
+
+#ifdef SWIFT_DEBUG_CHECKS
+      feedback_logger_SNIa_log_event_debug(SNIa_logger_debug, time, si, pj, xpj,
                                              cosmo, step);
-      fflush(SNIa_logger);
+      fflush(SNIa_logger_debug);
+#endif 
     }
   }
 
