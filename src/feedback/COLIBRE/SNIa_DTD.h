@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DTD_H
-#define SWIFT_DTD_H
+#ifndef SWIFT_SNIA_DTD_H
+#define SWIFT_SNIA_DTD_H
 
 /**
  * @file src/snia_dtd.h
@@ -27,7 +27,7 @@
 /* Config parameters. */
 #include "../config.h"
 
-#include "DTD_struct.h"
+#include "SNIa_DTD_struct.h"
 #include "feedback_properties.h"
 #include "parser.h"
 #include "physical_constants.h"
@@ -549,4 +549,4 @@ static inline void dtd_init(struct feedback_props* fp,
 #error "Invalid choice of the SNIa delay time distribution (DTD)"
 #endif
 
-#endif /* SWIFT_DTD_H */
+#endif /* SWIFT_SNIA_DTD_H */

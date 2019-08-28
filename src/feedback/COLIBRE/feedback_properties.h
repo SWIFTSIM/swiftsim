@@ -19,7 +19,7 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 #define SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 
-#include "DTD_struct.h"
+#include "SNIa_DTD_struct.h"
 #include "chemistry.h"
 #include "hydro_properties.h"
 

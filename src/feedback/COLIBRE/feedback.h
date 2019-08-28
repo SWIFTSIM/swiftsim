@@ -19,7 +19,7 @@
 #ifndef SWIFT_FEEDBACK_COLIBRE_H
 #define SWIFT_FEEDBACK_COLIBRE_H
 
-#include "DTD.h"
+#include "SNIa_DTD.h"
 #include "cosmology.h"
 #include "error.h"
 #include "feedback_properties.h"
