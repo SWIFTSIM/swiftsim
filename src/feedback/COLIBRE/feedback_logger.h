@@ -19,6 +19,8 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_H
 
+#include "feedback_logger_struct.h"
+
 /**
  * @brief Initialize the SFH logger file
  *
@@ -105,11 +107,25 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
 }
 
 INLINE static void feedback_logger_SNIa_log_event(
-    const double time, const struct spart *restrict si,
+    struct feedback_history_SNIa *restrict SNIa, const double time, const struct spart *restrict si,
     struct part *restrict pj, struct xpart *restrict xpj,
     const struct cosmology *restrict cosmo, const int step) {
+  
+  /* Get the injected energy */
+  const double mass_init = si->mass_init;
+  const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
+  const double deltaE = delta_u * mass_init;
+  
+  SNIa->SNIa_energy += deltaE;
+  SNIa->N_SNIa += deltaE * 1.9884e2;
+  message("Event!!!! BAM!! E=%e N=%e", SNIa->SNIa_energy, SNIa->N_SNIa);
+}
 
-  message("Event!!!! BAM!!");
+INLINE static void feedback_logger_SNIa_write_to_file(
+    FILE *fp, 
+    struct feedback_history_SNIa *restrict SNIa,
+    const struct cosmology *restrict cosmo, const int step) {
+  
 }
 
 INLINE static void feedback_logger_SNIa_log_event_debug(

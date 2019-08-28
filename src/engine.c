@@ -62,6 +62,7 @@
 #include "error.h"
 #include "feedback.h"
 #include "feedback_logger.h"
+#include "feedback_logger_struct.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -131,6 +132,9 @@ extern int engine_max_sparts_per_ghost;
 #ifdef SWIFT_DEBUG_CHECKS
 FILE *SNIa_logger_debug;
 #endif
+
+/* Declare the structure */
+struct feedback_history_SNIa log_SNIa;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -2188,6 +2192,10 @@ void engine_step(struct engine *e) {
                                               e->sfh, e->step);
 
       fflush(e->sfh_logger);
+    }
+
+    if (e->policy & engine_policy_feedback && e->step %100 == 0) {
+      message("Dividable step!");
     }
 
     if (!e->restarting)

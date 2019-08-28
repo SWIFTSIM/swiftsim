@@ -55,7 +55,8 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     pressure_floor.h pressure_floor_struct.h pressure_floor_iact.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
-    feedback.h feedback_struct.h feedback_properties.h
+    feedback.h feedback_struct.h feedback_properties.h \
+		feedback_logger.h feedback_logger_struct.h
 
 # source files for EAGLE cooling
 EAGLE_COOLING_SOURCES =
@@ -255,6 +256,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
                  feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
                  feedback/COLIBRE/yield_tables.h feedback/COLIBRE/SNIa_DTD.h feedback/COLIBRE/SNIa_DTD_struct.h \
+								 feedback/COLIBRE/feedback_logger.h feedback/COLIBRE/feedback_logger_struct.h \ 
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \
