@@ -40,6 +40,7 @@
 #include "collectgroup.h"
 #include "cooling_struct.h"
 #include "dump.h"
+#include "feedback_logger_struct.h" 
 #include "gravity_properties.h"
 #include "mesh_gravity.h"
 #include "parser.h"
@@ -342,6 +343,9 @@ struct engine {
 
   /* File handle for the SNIa logger file */
   FILE *SNIa_logger;
+
+  /* SNIa logger accumulator */
+  struct feedback_history_accumulator feedback_history;
 
   /* The current step number. */
   int step;

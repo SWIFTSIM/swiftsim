@@ -2195,7 +2195,10 @@ void engine_step(struct engine *e) {
     }
 
     if (e->policy & engine_policy_feedback && e->step %100 == 0) {
-      message("Dividable step!");
+      message("Dividable step!, %e", e->s->dim[1]);
+      const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
+      feedback_logger_SNIa_log_data(e->SNIa_logger, &log_SNIa, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      fflush(e->SNIa_logger);
     }
 
     if (!e->restarting)
@@ -3420,6 +3423,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->chemistry = chemistry;
   e->fof_properties = fof_properties;
   e->parameter_file = params;
+  
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
@@ -3496,6 +3500,11 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   /* Initialize the star formation history structure */
   if (e->policy & engine_policy_star_formation) {
     star_formation_logger_accumulator_init(&e->sfh);
+  }
+
+  /* Initialize the feedback history structure */
+  if (e->policy & engine_policy_feedback) {
+    feedback_logger_SNIa_init(&e->feedback_history, e->time, e->cosmology->a, e->cosmology->z);
   }
 
   engine_init_output_lists(e, params);
