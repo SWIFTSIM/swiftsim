@@ -150,10 +150,16 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
     const float m_beg_step, const float m_end_step,
     const float m_init) {
 
+  const float m_end_step_limit = m_end_step < sm->snii.mass_min ?
+    sm->snii.mass_min : m_end_step;
+
+  const float m_beg_step_limit = m_beg_step > sm->snii.mass_max ?
+    sm->snii.mass_min : m_beg_step;
+
   /* Get the normalization to the average */
   const float normalization = sp->feedback_data.number_snii /
-    (initial_mass_function_get_imf(&sm->imf, m_end_step) -
-     initial_mass_function_get_imf(&sm->imf, m_beg_step));
+    initial_mass_function_get_integral_xi(&sm->imf, m_end_step_limit,
+					  m_beg_step_limit);
 
   /* Compute the mass ejected */
   /* SNIa */
