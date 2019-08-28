@@ -85,7 +85,8 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param pj Second (gas) particle.
  * @param xpj Extra particle data
  * @param cosmo The cosmological model.
- * @param ti_current Current integer time used value for seeding random number generator
+ * @param ti_current Current integer time used value for seeding random number
+ * generator
  * @param time current physical time in the simulation
  * @param step current step counter
  */
@@ -342,8 +343,8 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj, cosmo,
-                                             step);
+      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj,
+                                             cosmo, step);
       fflush(SNIa_logger);
     }
   }
