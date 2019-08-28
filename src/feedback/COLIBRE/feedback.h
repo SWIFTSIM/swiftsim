@@ -26,6 +26,7 @@
 #include "hydro_properties.h"
 #include "part.h"
 #include "units.h"
+#include "cooling.h"
 
 #include <strings.h>
 
@@ -148,6 +149,59 @@ __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
  */
 __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {}
+
+
+
+/**
+ * @brief changes the particle properties of gas particles flagged as HII region
+ *
+ * @param feedback_props feedback_props data structure
+ * @param cosmo #cosmology data structure.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param time Time since Big Bang
+ *
+ */
+
+INLINE static void heating_HII_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct hydro_props *hydro_properties,
+                       const struct cosmology *cosmo,
+                       const struct cooling_function_data *cooling,
+                       const struct feedback_props* feedback_props,
+                       struct part *restrict p, struct xpart *restrict xp,
+                       double time) {
+
+  /* nothing to do, if we don't use HII regions */
+  if (!feedback_props->with_HIIregions) return;
+
+
+  if ( (time <= xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+     /*const float temp = cooling_get_temperature (phys_const, hydro_properties, us, cosmo, cooling, p, xp); */
+
+     const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
+     /* HII region internal energy is the internal energy of a particle at a
+      * temperature of feedback_props->HIIregion_temp */
+     const float u_HII_cgs = cooling_get_internalenergy_for_temperature (phys_const, hydro_properties, us, 
+                                                                       cosmo, cooling, p, xp, 
+                                                                       feedback_props->HIIregion_temp);
+
+     const float u_HII = u_HII_cgs / cooling->internal_energy_to_cgs;
+
+     if (u_old < u_HII) {
+        /* Inject energy into the particle */
+        hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
+        hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
+
+        /* internal energy should stay constant for the timestep */
+        const float cooling_du_dt = 0.;
+        hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+     }
+  }
+
+  return;
+}
+
 
 /**
  * @brief Evolve the stellar properties of a #spart.
