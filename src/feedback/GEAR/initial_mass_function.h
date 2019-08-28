@@ -180,6 +180,44 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_coe
 
 
 /**
+ * @brief Compute the integral of the fraction number of the initial mass function.
+ *
+ * @param imf The #initial_mass_function.
+ * @param m1 The lower mass to evaluate.
+ * @param m2 The upper mass to evaluate.
+ *
+ * @return The number fraction.
+ */
+__attribute__((always_inline)) INLINE static float initial_mass_function_get_integral_xi(
+    const struct initial_mass_function *imf, float m1, float m2) {
+
+  int k = -1;
+  /* Find the correct part */
+  for(int i = 0; i < imf->n_parts; i++) {
+    if (m1 <= imf->mass_limits[i+1]) {
+      k = i;
+      break;
+    }
+  }
+
+  /* Check if found a part */
+  if (k == -1) {
+    error("Failed to find the correct function part: %g %g", m1, m2);
+  }
+
+  /* Check if m2 is inside the part */
+  if (m2 < imf->mass_limits[k] || m2 > imf->mass_limits[k+1]) {
+    error("This function is not able to integrate in two different parts %g %g", m1, m2);
+  }
+
+  /* Compute the integral */
+  const float int_xi1 = pow(m1, imf->exp[k]);
+  const float int_xi2 = pow(m2, imf->exp[k]);
+
+  return imf->coef[k] * (int_xi2 - int_xi1) / imf->exp[k];
+};
+
+/**
  * @brief Compute the mass fraction of the initial mass function.
  *
  * @param imf The #initial_mass_function.
@@ -205,6 +243,7 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
   error("Failed to find correct function part: %g larger than mass max %g.",
 	m, imf->mass_max);
 };
+
 
 /**
  * @brief Compute the integral of the mass fraction of the initial mass function.
