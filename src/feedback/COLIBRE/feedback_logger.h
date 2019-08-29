@@ -42,32 +42,32 @@ INLINE static void feedback_logger_SNIa_init_log_file(
   fprintf(fp, "######################################################\n");
   fprintf(fp, "# The quantities are all given in internal physical units!\n");
   fprintf(fp, "#\n");
-  fprintf(fp, "# (0) Simulation step\n");
-  fprintf(fp, "# (1) Previous simulation step\n");
+  fprintf(fp, "# (0)  Simulation step\n");
+  fprintf(fp, "# (1)  Previous simulation step\n");
   fprintf(fp,
-          "# (2) Time since Big Bang (cosmological run), Time since start of "
+          "# (2)  Time since Big Bang (cosmological run), Time since start of "
           "the simulation (non-cosmological run).\n");
   fprintf(fp,
-          "# (3) Previous time since Big Bang (cosmological run), Time since start of "
+          "# (3)  Previous time since Big Bang (cosmological run), Time since start of "
           "the simulation (non-cosmological run).\n");
-  fprintf(fp, "#     Unit = %e seconds\n", us->UnitTime_in_cgs);
-  fprintf(fp, "#     Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
+  fprintf(fp, "#      Unit = %e seconds\n", us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
           1.f / phys_const->const_year / 1e6);
-  fprintf(fp, "# (4) Scale factor              (no unit)\n");
-  fprintf(fp, "# (5) Previous scale factor     (no unit)\n");
-  fprintf(fp, "# (6) Redshift                  (no unit)\n");
-  fprintf(fp, "# (7) Previous Redshift         (no unit)\n");
-  fprintf(fp, "# (8) Injected energy of SNIa events\n");
-  fprintf(fp, "#     Unit = %e erg\n", E_unit);
-  fprintf(fp, "#     Unit = %e x 10^51 erg\n", E_unit / 1e51);
-  fprintf(fp, "# (9) Number of SNIa   (number, no unit)\n");
+  fprintf(fp, "# (4)  Scale factor              (no unit)\n");
+  fprintf(fp, "# (5)  Previous scale factor     (no unit)\n");
+  fprintf(fp, "# (6)  Redshift                  (no unit)\n");
+  fprintf(fp, "# (7)  Previous redshift         (no unit)\n");
+  fprintf(fp, "# (8)  Injected energy of SNIa events\n");
+  fprintf(fp, "#      Unit = %e erg\n", E_unit);
+  fprintf(fp, "#      Unit = %e x 10^51 erg\n", E_unit / 1e51);
+  fprintf(fp, "# (9)  Number of SNIa   (number, no unit)\n");
   fprintf(fp, "# (10) Number of SNIa per time (binned in time between current time and previous time).\n");
-  fprintf(fp, "#     Unit = %e #/seconds\n", 1./us->UnitTime_in_cgs);
-  fprintf(fp, "#     Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
+  fprintf(fp, "#      Unit = %e #/seconds\n", 1./us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
           phys_const->const_year * 1e6);
   fprintf(fp, "# (11) Number of SNIa per time per volume (binned in time between current time and previous time).\n");
-  fprintf(fp, "#     Unit = %e #/seconds/cm^3\n", 1./us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
-  fprintf(fp, "#     Unit = %e #/yr/Mpc^3\n", phys_const->const_year * pow(phys_const->const_parsec*1e6,3));
+  fprintf(fp, "#      Unit = %e #/seconds/cm^3\n", 1./us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n", phys_const->const_year * pow(phys_const->const_parsec*1e6,3));
   fprintf(fp, "#\n");
   fprintf(
       fp,
