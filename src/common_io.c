@@ -160,19 +160,13 @@ void io_read_attribute_graceful(hid_t grp, const char* name,
     if (h_err < 0) {
     /* Explicitly do nothing unless debugging checks are activated */
 #ifdef SWIFT_DEBUG_CHECKS
-      error(
-          "WARNING: io_read_attribute_graceful_fail was unable to read "
-          "attribute '%s'",
-          name);
+      message("WARNING: unable to read attribute '%s'", name);
 #endif
     }
   } else {
 #ifdef SWIFT_DEBUG_CHECKS
     if (h_attr < 0) {
-      error(
-          "WARNING: io_read_attribute_graceful_fail was unable to open "
-          "attribute '%s'",
-          name);
+      message("WARNING: was unable to open attribute '%s'", name);
     }
 #endif
   }
