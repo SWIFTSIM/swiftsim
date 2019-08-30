@@ -154,7 +154,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
     sm->snii.mass_min : m_end_step;
 
   const float m_beg_step_limit = m_beg_step > sm->snii.mass_max ?
-    sm->snii.mass_min : m_beg_step;
+    sm->snii.mass_max : m_beg_step;
 
   /* Get the normalization to the average */
   const float normalization = sp->feedback_data.number_snii /
