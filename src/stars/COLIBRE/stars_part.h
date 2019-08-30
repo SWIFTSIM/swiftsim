@@ -103,6 +103,9 @@ struct spart {
   /*! HII mass available for ionization (current) */
   float HIIregion_mass_to_ionize;
 
+  /*! mass in kernel when HII region is built (for debugging) */
+  float HIIregion_mass_in_kernel;
+
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
 

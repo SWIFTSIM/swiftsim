@@ -121,6 +121,7 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   /* Reset the HII region probability */
   sp->feedback_data.to_distribute.HIIregion_probability = -1.f;
   sp->feedback_data.to_distribute.HIIregion_endtime = -1.f;
+  sp->feedback_data.to_distribute.HIIregion_starid = -1;
 }
 
 /**
@@ -197,7 +198,11 @@ INLINE static void heating_HII_part(const struct phys_const *phys_const,
         const float cooling_du_dt = 0.;
         hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
      }
+  } else if ( (time > xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+    xp->tracers_data.HIIregion_timer_gas = -1.;
+    xp->tracers_data.HIIregion_starid = -1;
   }
+
 
   return;
 }

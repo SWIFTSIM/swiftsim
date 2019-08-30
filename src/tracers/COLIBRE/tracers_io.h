@@ -83,7 +83,12 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.HIIregion_timer_gas,
       "Time until particle is in HII region");
 
-  return 4;
+  list[4] = io_make_output_field(
+      "HIIregionsStarID", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      tracers_data.HIIregion_starid,
+      "ID of star particle responsible for this HII region");
+
+  return 5;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(

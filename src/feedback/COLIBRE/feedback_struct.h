@@ -48,6 +48,9 @@ struct feedback_spart_data {
       /*! HII region timer */
       float HIIregion_endtime;
 
+      /*! ID of star particle responsible for HII region */
+      long long HIIregion_starid;
+
       /*! HII region probability */
       float HIIregion_probability;
 

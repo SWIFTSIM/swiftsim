@@ -111,7 +111,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 13;
+  *num_fields = 14;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -168,17 +168,9 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                            "Temperatures at the time of birth of the gas "
                            "particles that turned into stars");
 
-  if (with_cosmology) {
-    list[10] = io_make_output_field(
-        "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
-        HIIregion_last_rebuild, "Scale-factors at which the stars last rebuilt "
-                                "their HII regions");
-  } else {
-    list[10] = io_make_output_field("HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_TIME, 0.f,
+  list[10] = io_make_output_field("HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
                                    sparts, HIIregion_last_rebuild,
-                                   "Times at which the stars last rebuilt "
-                                   "their HII regions");
-  }
+                                   "Age of star in Myr when HII region was last rebuilt");
 
   list[11] = io_make_output_field("HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f,
                                  sparts, HIIregion_mass_to_ionize,
@@ -188,6 +180,10 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
                                  sparts, star_timestep,
                                  "Current timestep of the star particle");
+
+  list[13] = io_make_output_field("HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f,
+                                 sparts, HIIregion_mass_in_kernel,
+                                 "Masses in kernels at time of HII region formation");
 }
 
 /**

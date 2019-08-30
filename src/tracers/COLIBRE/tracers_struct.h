@@ -37,6 +37,9 @@ struct tracers_xpart_data {
   /*! HII region timer */
   float HIIregion_timer_gas;
 
+  /*! Id of the star particle responsible for HII region */
+  long long HIIregion_starid;
+
   /*! Anonymous union for the cosmological non-cosmological runs distinction */
   union {
 
