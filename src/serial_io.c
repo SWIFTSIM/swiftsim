@@ -467,6 +467,8 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
  * node.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
  * InternalEnergy field
+ * @param redshift_from_snapshot (output) redshift read from snapshot. If not
+ * present, we do not modify the variable.
  * @param with_hydro Are we reading gas particles ?
  * @param with_gravity Are we reading/creating #gpart arrays ?
  * @param with_stars Are we reading star particles ?

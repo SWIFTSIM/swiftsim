@@ -888,6 +888,23 @@ int main(int argc, char *argv[]) {
                    cosmo.a, nr_threads, dry_run);
 #endif
 #endif
+    /* Check that the cosmology in the parameter file and the snapshot are the
+     * same, to stop people accidentally starting their simulation with
+     * incorrect cosmology. */
+    /* Note that this line means that we don't support starting simulations
+     * with negative redshift */
+    if (with_cosmology && redshift_from_snapshot >= 0.f) {
+      const double redshift_difference = fabs(redshift_from_snapshot - cosmo.z);
+      /* Magic number warning... Check that we are within 0.1% of the initial
+       * redshift*/
+      if (redshift_difference / cosmo.z >= io_redshift_tolerance) {
+        error(
+            "Initial redshift specified in parameter file (%lf) and redshift "
+            "read from initial conditions (%lf) are inconsistent.",
+            cosmo.z, redshift_from_snapshot);
+      }
+    }
+
     if (myrank == 0) {
       clocks_gettime(&toc);
       message("Reading initial conditions took %.3f %s.",
