@@ -389,6 +389,7 @@ runner_iact_nonsym_feedback_apply(
   if (HIIregion_rand < HIIregion_prob) {
    /* gas particle gets flagged as HII region */
     xpj->tracers_data.HIIregion_timer_gas = si->feedback_data.to_distribute.HIIregion_endtime;
+    xpj->tracers_data.HIIregion_starid = si->feedback_data.to_distribute.HIIregion_starid;
 
    /* Impose maximal viscosity */
    /* hydro_diffusive_feedback_reset(pj); */

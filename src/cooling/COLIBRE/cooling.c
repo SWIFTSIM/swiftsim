@@ -168,8 +168,14 @@ static INLINE double bisection_iter(
     if (i >= bisection_max_iterations) {
       error(
           "particle %llu exceeded max iterations searching for bounds when "
-          "cooling",
-          ID);
+          "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = %.4f\n"
+          "n_H_index = %i, d_n_H = %.4f\n"
+          "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial Lambda = %.4e",
+          ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met, red_index, d_red, 
+          colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0)
+          );
     }
   } else {
 
@@ -204,8 +210,13 @@ static INLINE double bisection_iter(
     if (i >= bisection_max_iterations) {
       error(
           "particle %llu exceeded max iterations searching for bounds when "
-          "heating",
-          ID);
+          "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = %.4f\n"
+          "n_H_index = %i, d_n_H = %.4f\n"
+          "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial Lambda = %.4e",
+          ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met, red_index, d_red, 
+          colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0) );
     }
   }
 

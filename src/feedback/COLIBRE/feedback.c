@@ -1012,22 +1012,27 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
           error("Weird values for HII mass. Stopping.");
         }
 
+        sp->HIIregion_mass_in_kernel = ngb_gas_mass;
         sp->feedback_data.to_distribute.HIIregion_probability = sp->HIIregion_mass_to_ionize / ngb_gas_mass;
 
         /* convert dtMyr to dt (SU) */
         const float HIIregion_dt =  feedback_props->HIIregion_dtMyr * Myr_in_cgs / time_to_cgs;
         sp->feedback_data.to_distribute.HIIregion_endtime     = time_beg_of_step + HIIregion_dt;
+        sp->feedback_data.to_distribute.HIIregion_starid     = sp->id;
 
     } else {
         sp->feedback_data.to_distribute.HIIregion_probability = -1.;
         sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
+        sp->feedback_data.to_distribute.HIIregion_starid     = -1;
     }
 
   } else if (feedback_props->with_HIIregions) {
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
+    sp->feedback_data.to_distribute.HIIregion_starid     = -1;
     sp->HIIregion_mass_to_ionize = 0.f;
+    sp->HIIregion_mass_in_kernel = -1.f;
   }
   
   /* Compute properties of the stochastic SNII feedback model. */
