@@ -68,6 +68,8 @@ hid_t io_hdf5_type(enum IO_DATA_TYPE type);
 
 void io_read_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
                        void* data);
+void io_read_attribute_graceful(hid_t grp, const char* name,
+                                enum IO_DATA_TYPE type, void* data);
 
 void io_write_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
                         const void* data, int num);

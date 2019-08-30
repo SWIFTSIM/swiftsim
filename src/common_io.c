@@ -139,6 +139,48 @@ void io_read_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
 }
 
 /**
+ * @brief Reads an attribute from a given HDF5 group.
+ *
+ * @param grp The group from which to read.
+ * @param name The name of the attribute to read.
+ * @param type The #IO_DATA_TYPE of the attribute.
+ * @param data (output) The attribute read from the HDF5 group.
+ *
+ * Exits gracefully (i.e. does not read the attribute at all) if
+ * it is not present, unless debugging checks are activated. If they are,
+ * and the read fails, we print a warning.
+ */
+void io_read_attribute_graceful(hid_t grp, const char* name,
+                                enum IO_DATA_TYPE type, void* data) {
+
+  const hid_t h_attr = H5Aopen(grp, name, H5P_DEFAULT);
+
+  if (h_attr >= 0) {
+    const hid_t h_err = H5Aread(h_attr, io_hdf5_type(type), data);
+    if (h_err < 0) {
+    /* Explicitly do nothing unless debugging checks are activated */
+#ifdef SWIFT_DEBUG_CHECKS
+      error(
+          "WARNING: io_read_attribute_graceful_fail was unable to read "
+          "attribute '%s'",
+          name);
+#endif
+    }
+  } else {
+#ifdef SWIFT_DEBUG_CHECKS
+    if (h_attr < 0) {
+      error(
+          "WARNING: io_read_attribute_graceful_fail was unable to open "
+          "attribute '%s'",
+          name);
+    }
+#endif
+  }
+
+  H5Aclose(h_attr);
+}
+
+/**
  * @brief Write an attribute to a given HDF5 group.
  *
  * @param grp The group in which to write.
