@@ -153,25 +153,37 @@ void io_read_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
 void io_read_attribute_graceful(hid_t grp, const char* name,
                                 enum IO_DATA_TYPE type, void* data) {
 
-  const hid_t h_attr = H5Aopen(grp, name, H5P_DEFAULT);
+  /* First, we need to check if this attribute exists to avoid raising errors
+   * within the HDF5 library if we fail */
+  const htri_t h_exists = H5Aexists(grp, name);
 
-  if (h_attr >= 0) {
-    const hid_t h_err = H5Aread(h_attr, io_hdf5_type(type), data);
-    if (h_err < 0) {
-    /* Explicitly do nothing unless debugging checks are activated */
+  if (h_exists <= 0) {
+  /* Attribute either does not exist (0) or function failed (-ve) */
 #ifdef SWIFT_DEBUG_CHECKS
-      message("WARNING: unable to read attribute '%s'", name);
+    message("WARNING: attribute '%s' does not exist.", name);
 #endif
-    }
   } else {
-#ifdef SWIFT_DEBUG_CHECKS
-    if (h_attr < 0) {
-      message("WARNING: was unable to open attribute '%s'", name);
-    }
-#endif
-  }
+    /* Ok, now we know that it exists we can read it. */
+    const hid_t h_attr = H5Aopen(grp, name, H5P_DEFAULT);
 
-  H5Aclose(h_attr);
+    if (h_attr >= 0) {
+      const hid_t h_err = H5Aread(h_attr, io_hdf5_type(type), data);
+      if (h_err < 0) {
+      /* Explicitly do nothing unless debugging checks are activated */
+#ifdef SWIFT_DEBUG_CHECKS
+        message("WARNING: unable to read attribute '%s'", name);
+#endif
+      }
+    } else {
+#ifdef SWIFT_DEBUG_CHECKS
+      if (h_attr < 0) {
+        message("WARNING: was unable to open attribute '%s'", name);
+      }
+#endif
+    }
+
+    H5Aclose(h_attr);
+  }
 }
 
 /**
