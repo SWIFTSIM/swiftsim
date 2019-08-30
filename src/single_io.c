@@ -381,6 +381,8 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
  * @param Nblackholes (output) The number of #bpart read.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
  * InternalEnergy field
+ * @param redshift_from_snapshot (output) redshift read from snapshot. If not
+ * present, we do not modify the variable.
  * @param with_hydro Are we reading gas particles ?
  * @param with_gravity Are we reading/creating #gpart arrays ?
  * @param with_stars Are we reading star particles ?
@@ -405,10 +407,10 @@ void read_ic_single(const char* fileName,
                     struct part** parts, struct gpart** gparts,
                     struct spart** sparts, struct bpart** bparts, size_t* Ngas,
                     size_t* Ngparts, size_t* Nstars, size_t* Nblackholes,
-                    int* flag_entropy, int with_hydro, int with_gravity,
-                    int with_stars, int with_black_holes, int cleanup_h,
-                    int cleanup_sqrt_a, double h, double a, int n_threads,
-                    int dry_run) {
+                    int* flag_entropy, double* redshift_from_snapshot,
+                    int with_hydro, int with_gravity, int with_stars,
+                    int with_black_holes, int cleanup_h, int cleanup_sqrt_a,
+                    double h, double a, int n_threads, int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
@@ -465,6 +467,7 @@ void read_ic_single(const char* fileName,
   io_read_attribute(h_grp, "NumPart_Total", LONGLONG, numParticles);
   io_read_attribute(h_grp, "NumPart_Total_HighWord", LONGLONG,
                     numParticles_highWord);
+  io_read_attribute_graceful(h_grp, "Redshift", DOUBLE, redshift_from_snapshot);
 
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
     N[ptype] = (numParticles[ptype]) + (numParticles_highWord[ptype] << 32);
