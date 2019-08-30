@@ -154,7 +154,8 @@ void io_read_attribute_graceful(hid_t grp, const char* name,
                                 enum IO_DATA_TYPE type, void* data) {
 
   /* First, we need to check if this attribute exists to avoid raising errors
-   * within the HDF5 library if we fail */
+   * within the HDF5 library if we attempt to access an attribute that does
+   * not exist. */
   const htri_t h_exists = H5Aexists(grp, name);
 
   if (h_exists <= 0) {
