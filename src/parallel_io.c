@@ -684,6 +684,8 @@ void writeArray(struct engine* e, hid_t grp, char* fileName,
  * @param Nblackholes (output) The number of particles read from the file.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
  * InternalEnergy field
+ * @param redshift_from_snapshot (output) redshift read from snapshot. If not
+ * present, we do not modify the variable.
  * @param with_hydro Are we running with hydro ?
  * @param with_gravity Are we running with gravity ?
  * @param with_stars Are we running with stars ?
