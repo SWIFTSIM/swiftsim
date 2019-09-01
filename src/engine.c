@@ -66,6 +66,7 @@
 #include "equation_of_state.h"
 #include "error.h"
 #include "feedback.h"
+#include "feedback_logger.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -132,6 +133,7 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
+FILE *SNIa_logger;
 
 /**
  * @brief Data collected from the cells at the end of a time-step
@@ -5117,6 +5119,7 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
+  SNIa_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -5350,6 +5353,16 @@ void engine_config(int restart, int fof, struct engine *e,
         star_formation_logger_init_log_file(e->sfh_logger, e->internal_units,
                                             e->physical_constants);
         fflush(e->sfh_logger);
+      }
+    }
+
+    /* Initialize the SNIa logger if running with feedback */
+    if (e->policy & engine_policy_feedback) {
+      SNIa_logger = fopen("SNIa.txt", mode);
+      if (!restart) {
+        feedback_SNIa_logger_init_log_file(SNIa_logger, e->internal_units,
+                                           e->physical_constants);
+        fflush(SNIa_logger);
       }
     }
   }
@@ -6269,6 +6282,9 @@ void engine_clean(struct engine *e, const int fof) {
 
     if (e->policy & engine_policy_star_formation) {
       fclose(e->sfh_logger);
+    }
+    if (e->policy & engine_policy_feedback) {
+      fclose(SNIa_logger);
     }
   }
 }

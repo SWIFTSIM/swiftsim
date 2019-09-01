@@ -422,7 +422,7 @@ INLINE static void star_formation_copy_properties(
                                                   cosmo, cooling, p, xp);
 
   /* Flag that this particle has not done feedback yet */
-  sp->f_E = -1.f;
+  sp->SNII_f_E = -1.f;
 }
 
 /**

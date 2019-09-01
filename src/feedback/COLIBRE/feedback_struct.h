@@ -100,6 +100,12 @@ struct feedback_spart_data {
       /*! Change in energy from SNII feedback energy injection */
       float SNII_delta_u;
 
+      /*! Probability to heating neighbouring gas particle for SNIa feedback */
+      float SNIa_heating_probability;
+
+      /*! Change in energy from SNIa feedback energy injection */
+      float SNIa_delta_u;
+
     } to_distribute;
   };
 };

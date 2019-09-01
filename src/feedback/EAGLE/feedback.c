@@ -147,7 +147,7 @@ INLINE static void compute_SNII_feedback(
       (star_age + 1.001 * dt) > SNII_wind_delay) {
 
     /* Make sure a star does not do feedback twice! */
-    if (sp->f_E != -1.f) {
+    if (sp->SNII_f_E != -1.f) {
 #ifdef SWIFT_DEBUG_CHECKS
       message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
               star_age, dt);
@@ -191,7 +191,7 @@ INLINE static void compute_SNII_feedback(
 #endif
 
     /* Store all of this in the star for delivery onto the gas */
-    sp->f_E = f_E;
+    sp->SNII_f_E = f_E;
     sp->feedback_data.to_distribute.SNII_heating_probability = prob;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
   }

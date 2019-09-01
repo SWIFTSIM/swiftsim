@@ -24,7 +24,7 @@ TimeIntegration:
 Snapshots:
   basename:   output      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
-  delta_time: 0.0001        # Time difference between consecutive outputs (in internal units)
+  delta_time: 0.01        # Time difference between consecutive outputs (in internal units)
 
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -33,7 +33,7 @@ Statistics:
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:               lowres8.hdf5 # The file to read
+  file_name:               lowres64.hdf5 # The file to read
   periodic:                0        # Are we running with periodic ICs?
   stars_smoothing_length:  0.5
   
@@ -187,18 +187,11 @@ COLIBREFeedback:
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
-  SNIa_efficiency_p_Msun:       0.0012       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  SNIa_efficiency_p_Msun:       0.002       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
   SNIa_timescale_Gyr:           2.0         # Exponential delay time for exponential DTD 
   normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
-  power_law_slope:              1.1         # Power law slope for the power law DTD 
+  #power_law_slope:              1.1         # Power law slope for the power law DTD 
   SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
-  SNIa_efficiency_const_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
-  SNIa_efficiency_gauss_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
-  characteristic_time_Gyr:      4.0         # Center of the Gaussian DTD 
-  STD_characteristic_time_Gyr:  2.0         # Standard deviation of the Gaussian DTD part
-  power_law_slope_short_time:   0.5         # Power law slope at short times of broken power law 
-  power_law_slope_long_time:    1.1         # Power law slope at long times of a broken power law 
-  break_time_Gyr:               0.4         # Break time of the broken power law DTD.
 
 # Solar abundances
 COLIBREChemistry:
@@ -212,6 +205,8 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
+  metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
+  metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
 # Properties of the stars
 Stars:

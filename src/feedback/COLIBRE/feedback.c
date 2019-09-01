@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Copyright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ *               2019 Folkert Nobels (nobels@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -36,16 +37,16 @@ static const double colibre_feedback_momentum_SB99_Z_max = 0.04;
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
- * gas particle affected by SNe feedback.
+ * gas particle affected by SNII feedback.
  *
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_feedback_temperature_change(const struct spart* sp,
-                                         const struct feedback_props* props) {
+INLINE static double eagle_SNII_feedback_temperature_change(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* In the EAGLE REF model, the change of temperature is constant */
-  return props->SNe_deltaT_desired;
+  return props->SNII_deltaT_desired;
 }
 
 /**
@@ -55,8 +56,8 @@ double eagle_feedback_temperature_change(const struct spart* sp,
  * @param sp The #spart.
  * @param props The properties of the stellar model.
  */
-double eagle_feedback_number_of_SNII(const struct spart* sp,
-                                     const struct feedback_props* props) {
+INLINE static double eagle_feedback_number_of_SNII(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* Note: For a Chabrier 2003 IMF and SNII going off between 6 and 100
    * M_sun, the first term is 0.017362 M_sun^-1 */
@@ -64,31 +65,7 @@ double eagle_feedback_number_of_SNII(const struct spart* sp,
 }
 
 /**
- * @brief Computes the number of supernovae of type Ia exploding for a given
- * star particle between time t and t+dt
- *
- * We follow Foerster et al. 2006, MNRAS, 368
- *
- * @param sp The #spart.
- * @param t0 The initial time (in Gyr).
- * @param t1 The final time (in Gyr).
- * @param props The properties of the stellar model.
- */
-double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
-                                     const double t1,
-                                     const struct feedback_props* props) {
-
-  /* The calculation is written as the integral between t0 and t1 of
-   * eq. 3 of Schaye 2015 paper. */
-  const double tau = props->SNIa_timescale_Gyr_inv;
-  const double nu = props->SNIa_efficiency;
-  const double num_SNIa_per_Msun = nu * (exp(-t0 * tau) - exp(-t1 * tau));
-
-  return num_SNIa_per_Msun * sp->mass_init * props->mass_to_solar_mass;
-}
-
-/**
- * @brief Computes the fraction of the available super-novae energy to
+ * @brief Computes the fraction of the available super-novae II energy to
  * inject for a given event.
  *
  * Note that the fraction can be > 1.
@@ -98,8 +75,8 @@ double eagle_feedback_number_of_SNIa(const struct spart* sp, const double t0,
  * @param sp The #spart.
  * @param props The properties of the feedback model.
  */
-double eagle_feedback_energy_fraction(const struct spart* sp,
-                                      const struct feedback_props* props) {
+INLINE static double eagle_SNII_feedback_energy_fraction(
+    const struct spart* sp, const struct feedback_props* props) {
 
   /* Model parameters */
   const double f_E_max = props->f_E_max;
@@ -153,7 +130,7 @@ INLINE static void compute_SNII_feedback(
       (star_age + 1.001 * dt) > SNII_wind_delay) {
 
     /* Make sure a star does not do feedback twice! */
-    if (sp->f_E != -1.f) {
+    if (sp->SNII_f_E != -1.f) {
 #ifdef SWIFT_DEBUG_CHECKS
       message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
               star_age, dt);
@@ -163,10 +140,10 @@ INLINE static void compute_SNII_feedback(
 
     /* Properties of the model (all in internal units) */
     const double delta_T =
-        eagle_feedback_temperature_change(sp, feedback_props);
+        eagle_SNII_feedback_temperature_change(sp, feedback_props);
     const double N_SNe = eagle_feedback_number_of_SNII(sp, feedback_props);
     const double E_SNe = feedback_props->E_SNII;
-    const double f_E = eagle_feedback_energy_fraction(sp, feedback_props);
+    const double f_E = eagle_SNII_feedback_energy_fraction(sp, feedback_props);
 
     /* Conversion factor from T to internal energy */
     const double conv_factor = feedback_props->temp_to_u_factor;
@@ -197,10 +174,99 @@ INLINE static void compute_SNII_feedback(
 #endif
 
     /* Store all of this in the star for delivery onto the gas */
-    sp->f_E = f_E;
+    sp->SNII_f_E = f_E;
     sp->feedback_data.to_distribute.SNII_heating_probability = prob;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
   }
+}
+
+/**
+ * @brief Return the change in temperature (in internal units) to apply to a
+ * gas particle affected by SNIa feedback.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+INLINE static double eagle_SNIa_feedback_temperature_change(
+    const struct spart* sp, const struct feedback_props* props) {
+
+  /* In the EAGLE REF model, the change of temperature is constant */
+  return props->SNIa_deltaT_desired;
+}
+
+/**
+ * @brief Computes the fraction of the available super-novae Ia energy to
+ * inject for a given event.
+ *
+ * @param sp The #spart.
+ * @param props The properties of the feedback model.
+ */
+INLINE static double eagle_SNIa_feedback_energy_fraction(
+    const struct spart* sp, const struct feedback_props* props) {
+
+  /* Model parameters */
+  const double SNIa_f_E = props->SNIa_f_E;
+
+  return SNIa_f_E;
+}
+
+/**
+ * @brief Compute the properties of the SNIa stochastic feedback energy
+ * injection.
+ *
+ * @param sp The star particle.
+ * @param star_age Age of star at the beginning of the step in internal units.
+ * @param dt Length of time-step in internal units.
+ * @param ngb_gas_mass Total un-weighted mass in the star's kernel.
+ * @param feedback_props The properties of the feedback model.
+ */
+INLINE static void compute_SNIa_feedback(
+    struct spart* sp, const double star_age, const double dt,
+    const float ngb_gas_mass, const struct feedback_props* feedback_props,
+    const double dt_Gyr, const double star_age_Gyr) {
+
+  /* Properties of the model (all in internal units) */
+  const double delta_T =
+      eagle_SNIa_feedback_temperature_change(sp, feedback_props);
+  const double N_SNe = dtd_number_of_SNIa(
+      sp, star_age_Gyr, star_age_Gyr + dt_Gyr, feedback_props);
+  const double E_SNe = feedback_props->E_SNIa;
+  const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
+
+  /* Conversion factor from T to internal energy */
+  const double conv_factor = feedback_props->temp_to_u_factor;
+
+  /* Calculate the default heating probability */
+  double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+
+  /* Calculate the change in internal energy of the gas particles that get
+   * heated */
+  double delta_u;
+  if (prob <= 1.) {
+
+    /* Normal case */
+    delta_u = delta_T * conv_factor;
+
+  } else {
+
+    /* Special case: we need to adjust the energy irrespective of the
+       desired deltaT to ensure we inject all the available energy. */
+
+    prob = 1.;
+    delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+    if (ngb_gas_mass == 0.) {
+      prob = 0.;
+      delta_u = 0.;
+    } else {
+      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E,
+              E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
+    }
+  }
+
+  /* Store all of this in the star for delivery onto the gas */
+  sp->SNIa_f_E = f_E;
+  sp->feedback_data.to_distribute.SNIa_heating_probability = prob;
+  sp->feedback_data.to_distribute.SNIa_delta_u = delta_u;
 }
 
 /**
@@ -348,8 +414,8 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
   }
 
   /* Compute the number of SNIa */
-  const float num_SNIa = eagle_feedback_number_of_SNIa(
-      sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+  const float num_SNIa =
+      dtd_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
   for (int i = 0; i < chemistry_element_count; i++) {
@@ -379,11 +445,6 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
   sp->feedback_data.to_distribute.Fe_mass_from_SNIa +=
       num_SNIa * props->yield_SNIa_IMF_resampled[chemistry_element_Fe] *
       props->solar_mass_to_mass;
-
-  /* Compute the energy to be injected */
-  if (props->with_SNIa_feedback) {
-    sp->feedback_data.to_distribute.energy += num_SNIa * props->E_SNIa;
-  }
 }
 
 /**
@@ -885,6 +946,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   if (feedback_props->with_SNII_feedback) {
     compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props);
   }
+  if (feedback_props->with_SNIa_feedback) {
+    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props, dt_Gyr,
+                          star_age_Gyr);
+  }
 
   /* Calculate mass of stars that has died from the star's birth up to the
    * beginning and end of timestep */
@@ -983,10 +1048,6 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  if (fp->with_SNIa_feedback && !fp->with_SNIa_enrichment) {
-    error("Cannot run with SNIa feedback without SNIa enrichment.");
-  }
-
   /* Properties of the IMF model ------------------------------------------ */
 
   /* Minimal and maximal mass considered */
@@ -1012,9 +1073,9 @@ void feedback_props_init(struct feedback_props* fp,
       Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* Read the temperature change to use in stochastic heating */
-  fp->SNe_deltaT_desired =
+  fp->SNII_deltaT_desired =
       parser_get_param_float(params, "COLIBREFeedback:SNII_delta_T_K");
-  fp->SNe_deltaT_desired /=
+  fp->SNII_deltaT_desired /=
       units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
 
   /* Energy released by supernova type II */
@@ -1061,6 +1122,13 @@ void feedback_props_init(struct feedback_props* fp,
   fp->delta_v = parser_get_param_double(
       params, "COLIBREFeedback:Momentum_desired_delta_v");
 
+  /* Properties of the stochastic SNIa model */
+  fp->SNIa_deltaT_desired =
+      parser_get_param_double(params, "COLIBREFeedback:SNIa_delta_T_K");
+
+  fp->SNIa_f_E =
+      parser_get_param_double(params, "COLIBREFeedback:SNIa_energy_fraction");
+
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
     error("Can't have the maximal energy fraction smaller than the minimal!");
@@ -1084,12 +1152,8 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:SNIa_max_mass_Msun");
   fp->log10_SNIa_max_mass_msun = log10(SNIa_max_mass_msun);
 
-  /* Read SNIa timescale model parameters */
-  fp->SNIa_efficiency =
-      parser_get_param_float(params, "COLIBREFeedback:SNIa_efficiency_p_Msun");
-  fp->SNIa_timescale_Gyr =
-      parser_get_param_float(params, "COLIBREFeedback:SNIa_timescale_Gyr");
-  fp->SNIa_timescale_Gyr_inv = 1.f / fp->SNIa_timescale_Gyr;
+  /* Load the SNIa model */
+  dtd_init(fp, phys_const, us, params);
 
   /* Energy released by supernova type Ia */
   fp->E_SNIa_cgs =

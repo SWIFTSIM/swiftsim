@@ -20,7 +20,11 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
+#include "feedback_logger.h"
 #include "random.h"
+
+/* Define external variables */
+extern FILE *SNIa_logger;
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -83,15 +87,15 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param cosmo The cosmological model.
  * @param ti_current Current integer time used value for seeding random number
  * generator
+ * @param time current physical time in the simulation
+ * @param step current step counter
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
-                                  const float hi, const float hj,
-                                  const struct spart *restrict si,
-                                  struct part *restrict pj,
-                                  struct xpart *restrict xpj,
-                                  const struct cosmology *restrict cosmo,
-                                  const integertime_t ti_current) {
+runner_iact_nonsym_feedback_apply(
+    const float r2, const float *dx, const float hi, const float hj,
+    const struct spart *restrict si, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const integertime_t ti_current, const double time, const int step) {
 
   /* Get r and 1/r. */
   const float r_inv = 1.0f / sqrtf(r2);
@@ -256,7 +260,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const double new_kinetic_energy_gas = 0.5 * cosmo->a2_inv * new_mass * new_v2;
 
   /* Energy injected
-   * (thermal SNIa + kinetic energy of ejecta + kinetic energy of star) */
+   * (kinetic energy of ejecta + kinetic energy of star AGB) */
   const double injected_energy =
       si->feedback_data.to_distribute.energy * Omega_frac;
 
@@ -286,8 +290,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   if (prob > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval(si->id + pj->id, ti_current,
-                                            random_number_stellar_feedback);
+    const float rand = random_unit_interval_two_IDs(
+        si->id, pj->id, ti_current, random_number_stellar_feedback);
     /* Are we lucky? */
     if (rand < prob) {
 
@@ -310,6 +314,41 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     }
   }
 
+  /* Finally, SNIa stochastic feedback */
+
+  /* Get the SNIa feedback properties */
+  const float prob_SNIa =
+      si->feedback_data.to_distribute.SNIa_heating_probability;
+
+  /* Are we doing some SNIa (old boys) feedback? */
+  if (prob_SNIa > 0.f) {
+
+    /* Draw a random number (Note mixing both IDs) */
+    const float rand_SNIa = random_unit_interval_two_IDs(
+        si->id, pj->id, ti_current, random_number_SNIa_feedback);
+    /* Are we lucky? */
+    if (rand_SNIa < prob_SNIa) {
+
+      /* Compute new energy of this particle */
+      const double u_init_SNIa =
+          hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
+      const double u_new = u_init_SNIa + delta_u_SNIa;
+
+      /* Inject energy into the particle */
+      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
+      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+
+      /* Impose maximal viscosity */
+      hydro_diffusive_feedback_reset(pj);
+
+      /* Write the event to the SNIa logger file */
+      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj,
+                                             cosmo, step);
+      fflush(SNIa_logger);
+    }
+  }
+
   /* Kick gas particle away from the star using the momentum available in the
    * timestep.This is done stochastically.
    * However, if delta_v is small enough (or even negative), this translates
@@ -320,8 +359,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       si->feedback_data.to_distribute.momentum_probability;
 
   /* Draw a random number (Note mixing both IDs) */
-  const float momentum_rand = random_unit_interval(
-      si->id + pj->id, ti_current, random_number_stellar_feedback);
+  const float momentum_rand = random_unit_interval_two_IDs(
+      si->id, pj->id, ti_current, random_number_stellar_winds);
 
   /* if lucky, perform the actual kick  */
   if (momentum_rand < momentum_prob) {

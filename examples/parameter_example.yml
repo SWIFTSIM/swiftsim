@@ -416,10 +416,10 @@ EAGLEFeedback:
   SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
   SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
-  SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
-  SNIa_timescale_Gyr:              2.0              # Time-scale of the exponential decay of the SNIa rates in Gyr.
-  SNIa_efficiency_p_Msun:          0.002            # Normalisation of the SNIa rates in inverse solar masses.
-  SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
+  SNIa_max_mass_Msun:               8.0             # Maximal mass considered for SNIa feedback and enrichment in solar masses.
+  SNIa_energy_erg:                  1.0e51          # Energy of one SNIa explosion in ergs.
+  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
+  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
@@ -467,8 +467,8 @@ COLIBREFeedback:
   SNII_wind_delay_Gyr:              0.03            # Time in Gyr between a star's birth and the SNII thermal feedback event.
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
-  SNII_energy_fraction_min:         3.0             # Maximal fraction of energy applied in a SNII feedback event.
-  SNII_energy_fraction_max:         0.3             # Minimal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_min:         0.3             # Maximal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_max:         3.0             # Minimal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
   SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
@@ -492,4 +492,18 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
-  
+
+# The SNIa DTD properties in the COLIBRE feedback
+SNIaDTD:
+  SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  SNIa_timescale_Gyr:           2.0         # Exponential delay time for exponential DTD 
+  normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
+  power_law_slope:              1.1         # Power law slope for the power law DTD 
+  SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
+  SNIa_efficiency_const_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
+  SNIa_efficiency_gauss_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
+  characteristic_time_Gyr:      4.0         # Center of the Gaussian DTD 
+  STD_characteristic_time_Gyr:  2.0         # Standard deviation of the Gaussian DTD part
+  power_law_slope_short_time:   0.5         # Power law slope at short times of broken power law 
+  power_law_slope_long_time:    1.1         # Power law slope at long times of a broken power law 
+  break_time_Gyr:               0.4         # Break time of the broken power law DTD.

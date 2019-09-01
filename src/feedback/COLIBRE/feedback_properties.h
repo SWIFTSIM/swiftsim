@@ -19,6 +19,7 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 #define SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H
 
+#include "SNIa_DTD_struct.h"
 #include "chemistry.h"
 #include "hydro_properties.h"
 
@@ -124,15 +125,6 @@ struct feedback_props {
 
   /* ------------- SNIa parameters    --------------- */
 
-  /*! Efficiency of the SNIa model */
-  float SNIa_efficiency;
-
-  /*! Time-scale of the SNIa decay function in Giga-years */
-  float SNIa_timescale_Gyr;
-
-  /*! Inverse of time-scale of the SNIa decay function in Giga-years */
-  float SNIa_timescale_Gyr_inv;
-
   /*! Log 10 of the maximal mass used for SNIa feedback (in solar masses) */
   float log10_SNIa_max_mass_msun;
 
@@ -141,6 +133,17 @@ struct feedback_props {
 
   /*! Energy released by one supernova type II in internal units */
   float E_SNIa;
+
+  /* SNIa DTD struct with information about the DTD */
+  struct SNIa_delay_time_distribution dtd_data;
+
+  /* ----------- SNeIa feedback properties -------------- */
+
+  /* Temperature increase induced by SNIe feedback */
+  float SNIa_deltaT_desired;
+
+  /* Energy fraction for supernova type Ia feedback */
+  float SNIa_f_E;
 
   /* ------------- AGB parameters    ---------------- */
 
@@ -190,7 +193,7 @@ struct feedback_props {
    */
   float log10_imf_max_mass_msun;
 
-  /* ------------ SNe feedback properties ------------ */
+  /* ------------ SNeII feedback properties ------------ */
 
   /*! Log 10 of the minimal stellar mass considered for SNII feedback (in solar
    * masses) */
@@ -206,8 +209,8 @@ struct feedback_props {
   /*! Wind delay time for SNII */
   double SNII_wind_delay;
 
-  /*! Temperature increase induced by SNe feedback */
-  float SNe_deltaT_desired;
+  /*! Temperature increase induced by SNIIe feedback */
+  float SNII_deltaT_desired;
 
   /*! Energy released by one supernova type II in cgs units */
   double E_SNII_cgs;

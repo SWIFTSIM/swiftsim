@@ -42,14 +42,17 @@
  * generator.
  * In case new numbers need to be added other possible
  * numbers could be:
- * 5947309451, 6977309513
+ * 57931781LL
  */
 enum random_number_type {
   random_number_star_formation = 0LL,
   random_number_stellar_feedback = 3947008991LL,
   random_number_stellar_enrichment = 2936881973LL,
   random_number_BH_feedback = 1640531371LL,
-  random_number_BH_swallow = 4947009007LL
+  random_number_BH_swallow = 4947009007LL,
+  random_number_stellar_winds = 5947309451LL,
+  random_number_SNIa_feedback = 6977309513LL,
+  random_number_HII_regions = 8134165677LL
 };
 
 #ifndef __APPLE__
@@ -169,6 +172,34 @@ INLINE static double random_unit_interval(int64_t id,
 
   /* Generate one final value, this is our output. */
   return inl_erand48(seed48);
+}
+
+/**
+ * @brief Returns a pseudo-random number in the range [0, 1[.
+ *
+ * We generate numbers that are always reproducible for a given pair of particle
+ * IDs and simulation time (on the integer time-line). If more than one number
+ * per time-step per particle is needed, additional randomness can be obtained
+ * by using the type argument.
+ *
+ * @param id_star The ID of the first particle for which to generate a number.
+ * @param id_gas The ID of the second particle for which to generate a number.
+ * @param ti_current The time (on the time-line) for which to generate a number.
+ * @param type The #random_number_type to generate.
+ * @return a random number in the interval [0, 1.[.
+ */
+INLINE static double random_unit_interval_two_IDs(
+    int64_t id_star, int64_t id_gas, const integertime_t ti_current,
+    const enum random_number_type type) {
+
+  /* We need to combine the gas and star IDs such that we do not get correlation
+   * for same id_star + id_gas pairs, because of this we combine everything
+   * nonlinearly */
+  int64_t input_id = (id_star * id_gas + id_star * ti_current +
+                      id_gas * ti_current * ti_current) %
+                     INT64_MAX;
+
+  return random_unit_interval(input_id, ti_current, type);
 }
 
 #endif /* SWIFT_RANDOM_H */
