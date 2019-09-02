@@ -869,51 +869,33 @@ int main(int argc, char *argv[]) {
 
     /* Get ready to read particles of all kinds */
     size_t Ngas = 0, Ngpart = 0, Nspart = 0, Nbpart = 0;
-    double redshift_from_snapshot = -1.f;
     double dim[3] = {0., 0., 0.};
     if (myrank == 0) clocks_gettime(&tic);
 #if defined(HAVE_HDF5)
 #if defined(WITH_MPI)
 #if defined(HAVE_PARALLEL_HDF5)
-    read_ic_parallel(
-        ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas, &Ngpart,
-        &Nspart, &Nbpart, &flag_entropy_ICs, &redshift_from_snapshot,
-        with_hydro, (with_external_gravity || with_self_gravity), with_stars,
-        with_black_holes, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, myrank,
-        nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run, );
+    read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts,
+                     &Ngas, &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
+                     with_hydro, (with_external_gravity || with_self_gravity),
+                     with_stars, with_black_holes, with_cosmology, cleanup_h,
+                     cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
+                     MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run, );
 #else
-    read_ic_serial(
-        ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas, &Ngpart,
-        &Nspart, &Nbpart, &flag_entropy_ICs, &redshift_from_snapshot,
-        with_hydro, (with_external_gravity || with_self_gravity), with_stars,
-        with_black_holes, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, myrank,
-        nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run);
+    read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts,
+                   &Ngas, &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
+                   with_hydro, (with_external_gravity || with_self_gravity),
+                   with_stars, with_black_holes, with_cosmology, cleanup_h,
+                   cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
+                   MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run);
 #endif
 #else
     read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts,
                    &Ngas, &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
-                   &redshift_from_snapshot, with_hydro,
-                   (with_external_gravity || with_self_gravity), with_stars,
-                   with_black_holes, cleanup_h, cleanup_sqrt_a, cosmo.h,
-                   cosmo.a, nr_threads, dry_run);
+                   with_hydro, (with_external_gravity || with_self_gravity),
+                   with_stars, with_black_holes, with_cosmology, cleanup_h,
+                   cleanup_sqrt_a, cosmo.h, cosmo.a, nr_threads, dry_run);
 #endif
 #endif
-    /* Check that the cosmology in the parameter file and the snapshot are the
-     * same, to stop people accidentally starting their simulation with
-     * incorrect cosmology. */
-    /* Note that this line means that we don't support starting simulations
-     * with negative redshift */
-    if (with_cosmology && redshift_from_snapshot >= 0.f) {
-      const double redshift_difference = fabs(redshift_from_snapshot - cosmo.z);
-      /* Magic number warning... Check that we are within 0.1% of the initial
-       * redshift*/
-      if (redshift_difference / cosmo.z >= io_redshift_tolerance) {
-        error(
-            "Initial redshift specified in parameter file (%lf) and redshift "
-            "read from initial conditions (%lf) are inconsistent.",
-            cosmo.z, redshift_from_snapshot);
-      }
-    }
 
     if (myrank == 0) {
       clocks_gettime(&toc);

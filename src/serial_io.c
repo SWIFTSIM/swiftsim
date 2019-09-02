@@ -465,12 +465,11 @@ void writeArray(const struct engine* e, hid_t grp, char* fileName,
  * node.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
  * InternalEnergy field
- * @param redshift_from_snapshot (output) redshift read from snapshot. If not
- * present, we do not modify the variable.
  * @param with_hydro Are we reading gas particles ?
  * @param with_gravity Are we reading/creating #gpart arrays ?
  * @param with_stars Are we reading star particles ?
  * @param with_black_holes Are we reading black hole particles ?
+ * @param with_cosmology Are we running with cosmology ?
  * @param cleanup_h Are we cleaning-up h-factors from the quantities we read?
  * @param cleanup_sqrt_a Are we cleaning-up the sqrt(a) factors in the Gadget
  * IC velocities?
@@ -495,11 +494,11 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
                     double dim[3], struct part** parts, struct gpart** gparts,
                     struct spart** sparts, struct bpart** bparts, size_t* Ngas,
                     size_t* Ngparts, size_t* Nstars, size_t* Nblackholes,
-                    int* flag_entropy, double* redshift_from_snapshot,
-                    int with_hydro, int with_gravity, int with_stars,
-                    int with_black_holes, int cleanup_h, int cleanup_sqrt_a,
-                    double h, double a, int mpi_rank, int mpi_size,
-                    MPI_Comm comm, MPI_Info info, int n_threads, int dry_run) {
+                    int* flag_entropy, int with_hydro, int with_gravity,
+                    int with_stars, int with_black_holes, int with_cosmology,
+                    int cleanup_h, int cleanup_sqrt_a, double h, double a,
+                    int mpi_rank, int mpi_size, MPI_Comm comm, MPI_Info info,
+                    int n_threads, int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
@@ -566,8 +565,13 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
     io_read_attribute(h_grp, "NumPart_Total", LONGLONG, numParticles);
     io_read_attribute(h_grp, "NumPart_Total_HighWord", LONGLONG,
                       numParticles_highWord);
-    io_read_attribute_graceful(h_grp, "Redshift", DOUBLE,
-                               redshift_from_snapshot);
+
+    /* Check that the user is not doing something silly when they e.g. restart
+     * from a snapshot by asserting that the current scale-factor (from
+     * parameter file) and the redshift in the header are consistent */
+    if (with_cosmology) {
+      io_assert_valid_header_cosmology(h_grp, a);
+    }
 
     for (int ptype = 0; ptype < swift_type_count; ++ptype)
       N_total[ptype] =

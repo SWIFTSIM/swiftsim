@@ -429,7 +429,6 @@ int main(int argc, char *argv[]) {
   /* Get ready to read particles of all kinds */
   int flag_entropy_ICs = 0;
   size_t Ngas = 0, Ngpart = 0, Nspart = 0, Nbpart = 0;
-  double redshift_from_snapshot = -1.f;
   double dim[3] = {0., 0., 0.};
   if (myrank == 0) clocks_gettime(&tic);
 #if defined(HAVE_HDF5)
@@ -437,25 +436,24 @@ int main(int argc, char *argv[]) {
 #if defined(HAVE_PARALLEL_HDF5)
   read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts,
                    &Ngas, &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
-                   &redshift_from_snapshot, with_hydro, /*with_grav=*/1,
-                   with_stars, with_black_holes, cleanup_h, cleanup_sqrt_a,
-                   cosmo.h, cosmo.a, myrank, nr_nodes, MPI_COMM_WORLD,
-                   MPI_INFO_NULL, nr_threads,
-                   /*dry_run=*/0);
+                   with_hydro, /*with_grav=*/1, with_stars, with_black_holes,
+                   /*with_cosmology=*/1, cleanup_h, cleanup_sqrt_a, cosmo.h,
+                   cosmo.a, myrank, nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL,
+                   nr_threads, /*dry_run=*/0);
 #else
   read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas,
-                 &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
-                 &redshift_from_snapshot, with_hydro,
-                 /*with_grav=*/1, with_stars, with_black_holes, cleanup_h,
-                 cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
-                 MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, /*dry_run=*/0);
+                 &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs, with_hydro,
+                 /*with_grav=*/1, with_stars, with_black_holes,
+                 /*with_cosmology=*/1, cleanup_h, cleanup_sqrt_a, cosmo.h,
+                 cosmo.a, myrank, nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL,
+                 nr_threads, /*dry_run=*/0);
 #endif
 #else
   read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas,
-                 &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs,
-                 &redshift_from_snapshot, with_hydro,
-                 /*with_grav=*/1, with_stars, with_black_holes, cleanup_h,
-                 cleanup_sqrt_a, cosmo.h, cosmo.a, nr_threads, /*dry_run=*/0);
+                 &Ngpart, &Nspart, &Nbpart, &flag_entropy_ICs, with_hydro,
+                 /*with_grav=*/1, with_stars, with_black_holes,
+                 /*with_cosmology=*/1, cleanup_h, cleanup_sqrt_a, cosmo.h,
+                 cosmo.a, nr_threads, /*dry_run=*/0);
 #endif
 #endif
   if (myrank == 0) {
