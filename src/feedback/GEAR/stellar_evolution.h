@@ -157,9 +157,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
     sm->snii.mass_max : m_beg_step;
 
   /* Get the normalization to the average */
-  const float normalization = sp->feedback_data.number_snii /
-    initial_mass_function_get_integral_xi(&sm->imf, m_end_step_limit,
-					  m_beg_step_limit);
+  const float normalization = sp->feedback_data.number_snii != 0 ?
+    sp->feedback_data.number_snii /
+    initial_mass_function_get_integral_xi(
+      &sm->imf, m_end_step_limit, m_beg_step_limit) : 0.;
 
   /* Compute the mass ejected */
   /* SNIa */
