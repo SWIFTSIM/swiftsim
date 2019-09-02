@@ -2449,7 +2449,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 static void runner_do_unskip_hydro(struct cell *c, struct engine *e) {
 
   /* Early abort (are we below the level where tasks are)? */
-  if (!cell_get_flag(c, cell_flag_has_tasks)) return;
+  if (!cell_get_flag(c, cell_flag_has_tasks) && c->nodeID == e->nodeID) return;
 
   /* Ignore empty cells. */
   if (c->hydro.count == 0) return;
@@ -2483,7 +2483,7 @@ static void runner_do_unskip_stars(struct cell *c, struct engine *e,
                                    const int with_star_formation) {
 
   /* Early abort (are we below the level where tasks are)? */
-  if (!cell_get_flag(c, cell_flag_has_tasks)) return;
+  if (!cell_get_flag(c, cell_flag_has_tasks) && c->nodeID == e->nodeID) return;
 
   const int non_empty =
       c->stars.count > 0 || (with_star_formation && c->hydro.count > 0);
@@ -2522,7 +2522,7 @@ static void runner_do_unskip_stars(struct cell *c, struct engine *e,
 static void runner_do_unskip_black_holes(struct cell *c, struct engine *e) {
 
   /* Early abort (are we below the level where tasks are)? */
-  if (!cell_get_flag(c, cell_flag_has_tasks)) return;
+  if (!cell_get_flag(c, cell_flag_has_tasks) && c->nodeID == e->nodeID) return;
 
   /* Ignore empty cells. */
   if (c->black_holes.count == 0) return;
@@ -2554,7 +2554,7 @@ static void runner_do_unskip_black_holes(struct cell *c, struct engine *e) {
 static void runner_do_unskip_gravity(struct cell *c, struct engine *e) {
 
   /* Early abort (are we below the level where tasks are)? */
-  if (!cell_get_flag(c, cell_flag_has_tasks)) return;
+  if (!cell_get_flag(c, cell_flag_has_tasks) && c->nodeID == e->nodeID) return;
 
   /* Ignore empty cells. */
   if (c->grav.count == 0) return;
