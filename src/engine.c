@@ -3806,25 +3806,27 @@ void engine_config(int restart, int fof, struct engine *e,
     if (e->policy & engine_policy_feedback) {
       e->SNIa_logger = fopen("SNIa.txt", "w");
 
-#ifdef SWIFT_DEBUG_CHECKS
-      char savename[50];
-      snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
-      SNIa_logger_debug = fopen(savename, "w");
-#endif
-
       if (!restart) {
         
         feedback_logger_SNIa_init_log_file(e->SNIa_logger, e->internal_units, e->physical_constants);
         fflush(e->SNIa_logger);
 
-#ifdef SWIFT_DEBUG_CHECKS
-        feedback_logger_SNIa_init_log_file_debug(SNIa_logger_debug, e->internal_units,
-                                           e->physical_constants);
-        fflush(SNIa_logger_debug);
-#endif
       }
     }
   }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (e->policy & engine_policy_feedback) {
+    char savename[50];
+    snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
+    SNIa_logger_debug = fopen(savename, "w");
+    feedback_logger_SNIa_init_log_file_debug(SNIa_logger_debug, e->internal_units,
+                                       e->physical_constants);
+    fflush(SNIa_logger_debug);
+  }
+#endif
+
+
 
   /* Print policy */
   engine_print_policy(e);
