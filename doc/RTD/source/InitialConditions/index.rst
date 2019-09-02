@@ -125,6 +125,12 @@ GADGET-2 based analysis programs:
 + ``Time``, time of the start of the simulation in internal units or expressed
   as a scale-factor for cosmological runs. **SWIFT ignores this and reads it
   from the parameter file**, behaviour that matches the GADGET-2 code.
+  Note that SWIFT writes the current time, not scale-factor, to this variable
+  in snapshots.
++ ``Redshift``, the redshift at the start of the simulation. SWIFT checks this
+  against ``a_begin`` in the parameter file at the start of cosmological runs.
+  Note that we explicitly do **not** compare the ``Time`` variable due to its
+  ambiguous meaning.
 
 
 Particle Data
