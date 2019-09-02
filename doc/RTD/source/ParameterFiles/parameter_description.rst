@@ -266,7 +266,10 @@ These quantities are dimensionless. The first, ``resolution_eta``, specifies
 how smooth the simulation should be, and is used here instead of the number
 of neighbours to smooth over as this also takes into account non-uniform
 particle distributions. A value of 1.2348 gives approximately 48 neighbours
-in 3D with the cubic spline kernel.
+in 3D with the cubic spline kernel. More information on the choices behind
+these parameters can be found in
+`Dehnen & Aly 2012 <https://ui.adsabs.harvard.edu/abs/2012MNRAS.425.1068D/>`_.
+
 
 The second quantity, the CFL condition, specifies how accurate the time
 integration should be and enters as a pre-factor into the hydrodynamics
@@ -277,14 +280,14 @@ The next set of parameters deal with the calculation of the smoothing lengths
 directly and are all optional:
 
 * The (relative) tolerance to converge smoothing lengths within:
-  ``h_tolerance``
-* The maximal smoothing length in internal units: ``h_max``
+  ``h_tolerance`` (Default: 1e-4)
+* The maximal smoothing length in internal units: ``h_max`` (Default: FLT_MAX)
 * The minimal allowed smoothing length in terms of the gravitational
-  softening: ``h_min_ratio``
+  softening: ``h_min_ratio`` (Default: 0.0, i.e. no minimum)
 * The maximal (relative) allowed change in volume over one time-step:
-  ``max_volume_change``
+  ``max_volume_change`` (Default: 1.4)
 * The maximal number of iterations allowed to converge the smoothing
-  lengths: ``max_ghost_iterations``
+  lengths: ``max_ghost_iterations`` (Default: 30)
 
 These parameters all set the accuracy of the smoothing lengths in various
 ways. The first, the relative tolerance for the smoothing length, specifies
@@ -313,17 +316,18 @@ by :math:`\eta`.
 The final set of parameters in this section determine the initial and minimum
 temperatures of the particles.
 
-* The initial temperature of all particles: ``initial_temperature``
-* The minimal temperature of any particle: ``minimal_temperature``
+* The initial temperature of all particles: ``initial_temperature`` (Default:
+  InternalEnergy from the initial conditions)
+* The minimal temperature of any particle: ``minimal_temperature`` (Default: 0)
 * The mass fraction of hydrogen used to set the initial temperature:
-  ``H_mass_fraction``
+  ``H_mass_fraction`` (Default: 0.755)
 * The ionization temperature (from neutral to ionized) for primordial gas,
-  again used in this conversion: ``H_ionization_temperature``
+  again used in this conversion: ``H_ionization_temperature`` (Default: 1e4)
 
-These parameters, if not present, are ignored. The initial temperature is used,
-along with the hydrogen mass fraction and ionization temperature, to set the
-initial internal energy per unit mass (or entropy per unit mass) of the
-particles.
+These parameters, if not present, are set to the default values. The initial
+temperature is used, along with the hydrogen mass fraction and ionization
+temperature, to set the initial internal energy per unit mass (or entropy per
+unit mass) of the particles.
 
 Throughout the run, if the temperature of a particle drops below
 ``minimal_temperature``, the particle has energy added to it such that it
