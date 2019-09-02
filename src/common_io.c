@@ -30,6 +30,7 @@
 /* Local includes. */
 #include "black_holes_io.h"
 #include "chemistry_io.h"
+#include "const.h"
 #include "cooling_io.h"
 #include "error.h"
 #include "fof_io.h"
@@ -184,6 +185,36 @@ void io_read_attribute_graceful(hid_t grp, const char* name,
     }
 
     H5Aclose(h_attr);
+  }
+}
+
+/**
+ * @brief Asserts that the redshift in the initial conditions and the one
+ *        specified by the parameter file match.
+ *
+ * @param h_grp The Header group from the ICs
+ * @param a Current scale factor as specified by parameter file
+ */
+void io_assert_valid_header_cosmology(hid_t h_grp, double a) {
+
+  double redshift_from_snapshot = -1.0;
+  io_read_attribute_graceful(h_grp, "Redshift", DOUBLE,
+                             &redshift_from_snapshot);
+
+  /* If the Header/Redshift value is not present, then we skip this check */
+  if (redshift_from_snapshot == -1.0) {
+    return;
+  }
+
+  const double current_redshift = 1.0 / a - 1.0;
+  const double redshift_fractional_difference =
+      fabs(redshift_from_snapshot - current_redshift) / current_redshift;
+
+  if (redshift_fractional_difference >= io_redshift_tolerance) {
+    error(
+        "Initial redshift specified in parameter file (%lf) and redshift "
+        "read from initial conditions (%lf) are inconsistent.",
+        current_redshift, redshift_from_snapshot);
   }
 }
 
