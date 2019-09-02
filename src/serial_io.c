@@ -497,10 +497,10 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
                     struct spart** sparts, struct bpart** bparts, size_t* Ngas,
                     size_t* Ngparts, size_t* Ngparts_background, size_t* Nstars,
                     size_t* Nblackholes, int* flag_entropy, int with_hydro,
-                    int with_gravity, int with_stars, int with_black_holes, int with_cosmology,
-                    int cleanup_h, int cleanup_sqrt_a, double h, double a,
-                    int mpi_rank, int mpi_size, MPI_Comm comm, MPI_Info info,
-                    int n_threads, int dry_run) {
+                    int with_gravity, int with_stars, int with_black_holes,
+                    int with_cosmology, int cleanup_h, int cleanup_sqrt_a,
+                    double h, double a, int mpi_rank, int mpi_size,
+                    MPI_Comm comm, MPI_Info info, int n_threads, int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
