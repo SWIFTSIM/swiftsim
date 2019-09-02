@@ -1100,6 +1100,9 @@ struct task *scheduler_addtask(struct scheduler *s, enum task_types type,
   t->tic = 0;
   t->toc = 0;
 
+  if (ci != NULL) cell_set_flag(ci, cell_flag_has_tasks);
+  if (cj != NULL) cell_set_flag(cj, cell_flag_has_tasks);
+
   /* Add an index for it. */
   // lock_lock( &s->lock );
   s->tasks_ind[atomic_inc(&s->nr_tasks)] = ind;
