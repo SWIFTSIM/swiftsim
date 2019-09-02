@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
   read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts,
                    &Ngas, &Ngpart, &Ngpart_background, &Nspart, &Nbpart,
                    &flag_entropy_ICs, with_hydro,
-                   /*with_grav=*/1, with_stars, with_black_holes, cleanup_h,
+                   /*with_grav=*/1, with_stars, with_black_holes,/*with_cosmology=*/1, cleanup_h,
                    cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
                    MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads,
                    /*dry_run=*/0);
@@ -441,7 +441,7 @@ int main(int argc, char *argv[]) {
   read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas,
                  &Ngpart, &Ngpart_background, &Nspart, &Nbpart,
                  &flag_entropy_ICs, with_hydro,
-                 /*with_grav=*/1, with_stars, with_black_holes, cleanup_h,
+                 /*with_grav=*/1, with_stars, with_black_holes, /*with_cosmology=*/1,cleanup_h,
                  cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
                  MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, /*dry_run=*/0);
 #endif
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
   read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sparts, &bparts, &Ngas,
                  &Ngpart, &Ngpart_background, &Nspart, &Nbpart,
                  &flag_entropy_ICs, with_hydro,
-                 /*with_grav=*/1, with_stars, with_black_holes, cleanup_h,
+                 /*with_grav=*/1, with_stars, with_black_holes,/*with_cosmology=*/1, cleanup_h,
                  cleanup_sqrt_a, cosmo.h, cosmo.a, nr_threads, /*dry_run=*/0);
 #endif
 #endif
