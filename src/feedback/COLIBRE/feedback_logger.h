@@ -21,6 +21,8 @@
 
 #include "feedback_logger_struct.h"
 
+extern swift_lock_type lock_SNIa;
+
 /**
  * @brief Initialize the SFH logger file
  *
@@ -164,15 +166,19 @@ INLINE static void feedback_logger_SNIa_log_event(
     struct part *restrict pj, struct xpart *restrict xpj,
     const struct cosmology *restrict cosmo, const int step) {
   
-  /* Get the injected energy */
-  const double mass_init = si->mass_init;
-  const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
-  const double deltaE = delta_u * mass_init;
-  
-  SNIa->SNIa_energy += deltaE;
-  SNIa->N_SNIa += deltaE * 1.9884e2;
-  SNIa->heating += 1;
-  message("Event!!!! BAM!! E=%e N=%e", SNIa->SNIa_energy, SNIa->N_SNIa);
+  if (lock_lock(&lock_SNIa) == 0) {
+
+    /* Get the injected energy */
+    const double mass_init = si->mass_init;
+    const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
+    const double deltaE = delta_u * mass_init;
+    
+    SNIa->SNIa_energy += deltaE;
+    SNIa->N_SNIa += deltaE * 1.9884e2;
+    SNIa->heating += 1;
+    message("Event!!!! BAM!! E=%e N=%e", SNIa->SNIa_energy, SNIa->N_SNIa);
+  }
+  if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
 
 INLINE static void feedback_logger_SNIa_write_to_file(
@@ -187,17 +193,21 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
     struct part *restrict pj, struct xpart *restrict xpj,
     const struct cosmology *restrict cosmo, const int step) {
 
-  /* Get the times */
-  const double a = cosmo->a;
-  const double z = cosmo->z;
+  if (lock_lock(&lock_SNIa) == 0) {
 
-  /* Get the injected energy */
-  const double mass_init = si->mass_init;
-  const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
-  const double deltaE = delta_u * mass_init;
+    /* Get the times */
+    const double a = cosmo->a;
+    const double z = cosmo->z;
 
-  fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time, a,
-          z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
+    /* Get the injected energy */
+    const double mass_init = si->mass_init;
+    const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
+    const double deltaE = delta_u * mass_init;
+
+    fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time, a,
+            z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
+  }
+  if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
