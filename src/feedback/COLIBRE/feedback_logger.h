@@ -65,19 +65,20 @@ INLINE static void feedback_logger_SNIa_init_log_file(
   fprintf(fp, "#      Unit = %e #/seconds\n", 1./us->UnitTime_in_cgs);
   fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
           phys_const->const_year * 1e6);
-  fprintf(fp, "# (11) Number of SNIa per time per volume (binned in time between current time and previous time).\n");
+  fprintf(fp, "# (11) Number of SNIa per time per comoving volume (binned in time between current time and previous time).\n");
   fprintf(fp, "#      Unit = %e #/seconds/cm^3\n", 1./us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
   fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n", phys_const->const_year * pow(phys_const->const_parsec*1e6,3));
+  fprintf(fp, "# (12) Number of heating events   (no unit)\n");
   fprintf(fp, "#\n");
   fprintf(
       fp,
       "#  (0)      (1)         (2)              (3)           (4)           "
-      " (5)         (6)          (7)          (8)            (9)         "
-      "   (10)              (11) \n");
+      " (5)         (6)          (7)          (8)         (9)          "
+      "   (10)           (11)         (12) \n");
   fprintf(fp,
       "# step  prev. step      time          prev. time        a         "
-      " prev a          z          prev z    injection E       Numb SNIa   "
-      "   SNIa rate     SNIa rate / volume \n");
+      " prev a          z          prev z    injection E    Numb SNIa    "
+      "   SNIa rate     SNIa rate/V   Number\n");
 }
 
 INLINE static void feedback_logger_SNIa_init_log_file_debug(
@@ -139,10 +140,11 @@ const double time, const double a, const double z, const double volume) {
   const double N_SNIa_p_time = N_SNIa/delta_time; 
   const double E_SNIa = SNIa->SNIa_energy;
   const double N_SNIa_p_time_p_volume = N_SNIa_p_time / volume;
+  const int N_heating_events = SNIa->heating;
 
-  fprintf(fp, "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f %14.7f %16.7f %18.7f %12.7f \n"
+  fprintf(fp, "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  %12.7e  %12.7e %7d \n"
   , step, fha->step_prev, time, fha->time_prev, a,
-  fha->a_prev, z, fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume);
+  fha->a_prev, z, fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume, N_heating_events);
 
   /* Set the times to the new values */
   fha->step_prev = step;
@@ -153,6 +155,7 @@ const double time, const double a, const double z, const double volume) {
   /* Reset the global struct */
   SNIa->N_SNIa = 0.;
   SNIa->SNIa_energy = 0.;
+  SNIa->heating = 0;
 
 }
 
@@ -168,6 +171,7 @@ INLINE static void feedback_logger_SNIa_log_event(
   
   SNIa->SNIa_energy += deltaE;
   SNIa->N_SNIa += deltaE * 1.9884e2;
+  SNIa->heating += 1;
   message("Event!!!! BAM!! E=%e N=%e", SNIa->SNIa_energy, SNIa->N_SNIa);
 }
 

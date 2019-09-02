@@ -135,6 +135,8 @@ FILE *SNIa_logger_debug;
 
 /* Declare the structure */
 struct feedback_history_SNIa log_SNIa;
+/* Declare the corresponding locker*/
+swift_lock_type lock_SNIa;
 
 /**
  * @brief Link a density/force task to a cell.

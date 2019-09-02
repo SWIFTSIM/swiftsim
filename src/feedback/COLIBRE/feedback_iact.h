@@ -29,7 +29,9 @@
 extern FILE *SNIa_logger_debug;
 #endif
 
-struct feedback_history_SNIa log_SNIa;
+extern struct feedback_history_SNIa log_SNIa;
+extern swift_lock_type lock_SNIa;
+
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
