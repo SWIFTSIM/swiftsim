@@ -16,7 +16,7 @@ Gravity:
 # Parameters governing the time integration (Set dt_min and dt_max to the same value for a fixed time-step run.)
 TimeIntegration:
   time_begin:        0.    # The starting time of the simulation (in internal units).
-  time_end:          0.1   # The end time of the simulation (in internal units).
+  time_end:          1.0   # The end time of the simulation (in internal units).
   dt_min:            1e-14  # The minimal time-step size of the simulation (in internal units).
   dt_max:            1e-2  # The maximal time-step size of the simulation (in internal units).
 
@@ -213,7 +213,7 @@ Stars:
   birth_time:  -0.1   # Give the star in the ICs a decent birth time
 
 COLIBRECooling:
-  dir_name:                UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  dir_name:                /data2/nobels/swift-colibre/examples/IsolatedGalaxy/SF_project/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
   H_reion_eV_p_H:          2.0
   He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
