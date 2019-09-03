@@ -183,31 +183,7 @@ data = loadtxt(filename)
 eagle_total_mass_SNIa = data[:,1] * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
 eagle_total_metal_mass_SNIa = data[:,2] * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
 
-# # Read the number of SNIa
-# filename = "./StellarEvolutionSolution/Z_%.4f/StellarEvolutionIa.txt"%Z_star
-# with open(filename) as f:
-# 	eagle_categories = f.readline()
-# 	eagle_data = f.readlines()
-# i = 0
-# N_SNIa = zeros(len(eagle_data))
-# for line in eagle_data:
-# 	enrich_to_date = line.split(' ')
-#         N_SNIa[i] = float(enrich_to_date[-2]) * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
-#         i += 1
 
-# cumulative_N_SNIa = np.cumsum(N_SNIa)
-# eagle_energy_SNIa_cgs = cumulative_N_SNIa * E_SNIa_cgs
-
-# # SNII energy
-# N_SNII = 0.017362 * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
-# eagle_energy_SNII_cgs = np.ones(len(eagle_data)) * N_SNII * E_SNII_cgs
-# eagle_energy_SNII_cgs[eagle_time_Gyr < 0.03] = 0.
-
-# # Total energy
-# eagle_energy_total_cgs = eagle_energy_ejecta_cgs + eagle_energy_from_mass_cgs + eagle_energy_SNIa_cgs
-
-
-        
 # Plot the interesting quantities
 figure()
 
@@ -267,20 +243,3 @@ ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
 savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
 
-
-
-# # Energy plot 
-# figure()
-# plot(t[1:] * unit_time_in_cgs / Gyr_in_cgs, (swift_total_energy[1:] - swift_total_energy[0]) * unit_energy_in_cgs, linewidth=0.5, color='k', label='swift')
-# plot(eagle_time_Gyr[1:], eagle_energy_SNIa_cgs[:-1], linewidth=0.5, color='b', label='eagle SNIa')
-# plot(eagle_time_Gyr[1:], eagle_energy_SNII_cgs[:-1], linewidth=0.5, color='c', label='eagle SNII')
-# plot(eagle_time_Gyr[1:], eagle_energy_ejecta_cgs[:-1], linewidth=0.5, color='y', label='eagle ejecta velocity')
-# plot(eagle_time_Gyr[1:], eagle_energy_from_mass_cgs[:-1], linewidth=0.5, color='g', label='eagle mass energy')
-# plot(eagle_time_Gyr[1:], eagle_energy_total_cgs[:-1], linewidth=0.5, color='r', label='eagle total')
-# plot([0,0], [0,0])
-# xlabel("${\\rm{Time}} (Gyr)$", labelpad=0)
-# ylabel("Change in internal energy of gas particles (erg)", labelpad=2)
-# yscale("log")
-# legend(loc="lower right", ncol=2)
-
-# savefig("Energy.png")
