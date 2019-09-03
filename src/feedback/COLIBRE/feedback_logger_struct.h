@@ -30,7 +30,6 @@ struct feedback_history_SNIa {
 
   /*! Number of heating events */
   int heating;
-
 };
 
 /* Global variable for the SNIa events */
@@ -50,7 +49,6 @@ struct feedback_history_accumulator {
 
   /*! Previous storage scale factor */
   float a_prev;
-
 };
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H */

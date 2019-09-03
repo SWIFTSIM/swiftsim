@@ -21,7 +21,7 @@
 
 /* Local includes */
 #include "feedback_logger.h"
-#include "feedback_logger_struct.h" 
+#include "feedback_logger_struct.h"
 #include "random.h"
 
 /* Define external variables */
@@ -31,7 +31,6 @@ extern FILE *SNIa_logger_debug;
 
 extern struct feedback_history_SNIa log_SNIa;
 extern swift_lock_type lock_SNIa;
-
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -327,7 +326,7 @@ runner_iact_nonsym_feedback_apply(
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval_two_IDs(
         si->id, pj->id, ti_current, random_number_SNIa_feedback);
-    if (si->id == 14389LL & pj->id == 2122LL)
+    if ((si->id == 14389LL) & (pj->id == 2122LL))
       message("Random numbers of lovely pair = %e", rand_SNIa);
     /* Are we lucky? */
     if (rand_SNIa < prob_SNIa) {
@@ -348,13 +347,13 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_logger_SNIa_log_event(&log_SNIa ,time, si, pj, xpj, cosmo, step);
+      feedback_logger_SNIa_log_event(&log_SNIa, time, si, pj, xpj, cosmo, step);
 
 #ifdef SWIFT_DEBUG_CHECKS
       feedback_logger_SNIa_log_event_debug(SNIa_logger_debug, time, si, pj, xpj,
-                                             cosmo, step);
+                                           cosmo, step);
       fflush(SNIa_logger_debug);
-#endif 
+#endif
     }
   }
 

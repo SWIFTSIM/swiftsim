@@ -2176,17 +2176,21 @@ void engine_step(struct engine *e) {
 
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
-  if (e->policy & engine_policy_feedback && e->step %100 == 0) {
+  if (e->policy & engine_policy_feedback && e->step % 100 == 0) {
     int total_events;
     double global_SNIa_info;
     if (lock_lock(&lock_SNIa) == 0) {
-      message("N Heated = %d, node = %d, SNIa energy = %e", log_SNIa.heating, e->nodeID, log_SNIa.SNIa_energy);
-      MPI_Reduce(&log_SNIa.heating, &total_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-      MPI_Reduce(&log_SNIa.SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      if (e->nodeID==0) {
+      message("N Heated = %d, node = %d, SNIa energy = %e", log_SNIa.heating,
+              e->nodeID, log_SNIa.SNIa_energy);
+      MPI_Reduce(&log_SNIa.heating, &total_events, 1, MPI_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD);
+      MPI_Reduce(&log_SNIa.SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE,
+                 MPI_SUM, 0, MPI_COMM_WORLD);
+      if (e->nodeID == 0) {
         log_SNIa.heating = total_events;
         log_SNIa.SNIa_energy = global_SNIa_info;
-        message("node 0 information: %d %e", log_SNIa.heating, log_SNIa.SNIa_energy);
+        message("node 0 information: %d %e", log_SNIa.heating,
+                log_SNIa.SNIa_energy);
       } else {
         feedback_logger_SNIa_clear(&log_SNIa);
       }
@@ -2217,10 +2221,12 @@ void engine_step(struct engine *e) {
       fflush(e->sfh_logger);
     }
 
-    if (e->policy & engine_policy_feedback && e->step %100 == 0) {
+    if (e->policy & engine_policy_feedback && e->step % 100 == 0) {
       message("Dividable step!, %e", e->s->dim[1]);
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
-      feedback_logger_SNIa_log_data(e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      feedback_logger_SNIa_log_data(
+          e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
+          e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
       feedback_logger_SNIa_clear(&log_SNIa);
       fflush(e->SNIa_logger);
     }
@@ -2492,7 +2498,7 @@ void engine_check_for_dumps(struct engine *e) {
 #endif
         }
 
-          /* Dump... */
+        /* Dump... */
 #ifdef WITH_LOGGER
         /* Write a file containing the offsets in the particle logger. */
         engine_dump_index(e);
@@ -3447,7 +3453,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->chemistry = chemistry;
   e->fof_properties = fof_properties;
   e->parameter_file = params;
-  
+
 #ifdef WITH_MPI
   e->cputime_last_step = 0;
   e->last_repartition = 0;
@@ -3528,7 +3534,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
 
   /* Initialize the feedback history structure */
   if (e->policy & engine_policy_feedback) {
-    feedback_logger_SNIa_init(&e->feedback_history, e->time, e->cosmology->a, e->cosmology->z);
+    feedback_logger_SNIa_init(&e->feedback_history, e->time, e->cosmology->a,
+                              e->cosmology->z);
     lock_init(&lock_SNIa);
   }
 
@@ -3591,7 +3598,7 @@ void engine_config(int restart, int fof, struct engine *e,
 
 #ifdef SWIFT_DEBUG_CHECKS
   SNIa_logger_debug = NULL;
-#endif 
+#endif
 
   if (restart && fof) {
     error(
@@ -3830,10 +3837,10 @@ void engine_config(int restart, int fof, struct engine *e,
       e->SNIa_logger = fopen("SNIa.txt", "w");
 
       if (!restart) {
-        
-        feedback_logger_SNIa_init_log_file(e->SNIa_logger, e->internal_units, e->physical_constants);
-        fflush(e->SNIa_logger);
 
+        feedback_logger_SNIa_init_log_file(e->SNIa_logger, e->internal_units,
+                                           e->physical_constants);
+        fflush(e->SNIa_logger);
       }
     }
   }
@@ -3843,13 +3850,11 @@ void engine_config(int restart, int fof, struct engine *e,
     char savename[50];
     snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
     SNIa_logger_debug = fopen(savename, "w");
-    feedback_logger_SNIa_init_log_file_debug(SNIa_logger_debug, e->internal_units,
-                                       e->physical_constants);
+    feedback_logger_SNIa_init_log_file_debug(
+        SNIa_logger_debug, e->internal_units, e->physical_constants);
     fflush(SNIa_logger_debug);
   }
 #endif
-
-
 
   /* Print policy */
   engine_print_policy(e);
@@ -4775,7 +4780,7 @@ void engine_clean(struct engine *e, const int fof) {
     }
     if (e->policy & engine_policy_feedback) {
       fclose(e->SNIa_logger);
-      
+
 #ifdef SWIFT_DEBUG_CHECKS
       fclose(SNIa_logger_debug);
 #endif

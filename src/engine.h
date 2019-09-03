@@ -40,7 +40,7 @@
 #include "collectgroup.h"
 #include "cooling_struct.h"
 #include "dump.h"
-#include "feedback_logger_struct.h" 
+#include "feedback_logger_struct.h"
 #include "gravity_properties.h"
 #include "mesh_gravity.h"
 #include "parser.h"

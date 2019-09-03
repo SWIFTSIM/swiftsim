@@ -51,7 +51,8 @@ INLINE static void feedback_logger_SNIa_init_log_file(
           "# (2)  Time since Big Bang (cosmological run), Time since start of "
           "the simulation (non-cosmological run).\n");
   fprintf(fp,
-          "# (3)  Previous time since Big Bang (cosmological run), Time since start of "
+          "# (3)  Previous time since Big Bang (cosmological run), Time since "
+          "start of "
           "the simulation (non-cosmological run).\n");
   fprintf(fp, "#      Unit = %e seconds\n", us->UnitTime_in_cgs);
   fprintf(fp, "#      Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
@@ -64,13 +65,19 @@ INLINE static void feedback_logger_SNIa_init_log_file(
   fprintf(fp, "#      Unit = %e erg\n", E_unit);
   fprintf(fp, "#      Unit = %e x 10^51 erg\n", E_unit / 1e51);
   fprintf(fp, "# (9)  Number of SNIa   (number, no unit)\n");
-  fprintf(fp, "# (10) Number of SNIa per time (binned in time between current time and previous time).\n");
-  fprintf(fp, "#      Unit = %e #/seconds\n", 1./us->UnitTime_in_cgs);
+  fprintf(fp,
+          "# (10) Number of SNIa per time (binned in time between current time "
+          "and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds\n", 1. / us->UnitTime_in_cgs);
   fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
           phys_const->const_year * 1e6);
-  fprintf(fp, "# (11) Number of SNIa per time per comoving volume (binned in time between current time and previous time).\n");
-  fprintf(fp, "#      Unit = %e #/seconds/cm^3\n", 1./us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
-  fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n", phys_const->const_year * pow(phys_const->const_parsec*1e6,3));
+  fprintf(fp,
+          "# (11) Number of SNIa per time per comoving volume (binned in time "
+          "between current time and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds/cm^3\n",
+          1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n",
+          phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
   fprintf(fp, "# (12) Number of heating events   (no unit)\n");
   fprintf(fp, "#\n");
   fprintf(
@@ -79,9 +86,9 @@ INLINE static void feedback_logger_SNIa_init_log_file(
       " (5)         (6)          (7)          (8)         (9)          "
       "   (10)           (11)         (12) \n");
   fprintf(fp,
-      "# step  prev. step      time          prev. time        a         "
-      " prev a          z          prev z    injection E    Numb SNIa    "
-      "   SNIa rate     SNIa rate/V   Number\n");
+          "# step  prev. step      time          prev. time        a         "
+          " prev a          z          prev z    injection E    Numb SNIa    "
+          "   SNIa rate     SNIa rate/V   Number\n");
 }
 /**
  * @brief Initialize the SFH logger debug file
@@ -137,13 +144,14 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
  * @param a the current scale factor
  * @param z the current redshift
  */
-INLINE static void feedback_logger_SNIa_init(struct feedback_history_accumulator *fha, const double time, const double a, const double z) {
-  
+INLINE static void feedback_logger_SNIa_init(
+    struct feedback_history_accumulator *fha, const double time, const double a,
+    const double z) {
+
   fha->step_prev = 0;
   fha->time_prev = time;
   fha->z_prev = z;
   fha->a_prev = a;
-
 }
 
 /**
@@ -159,11 +167,13 @@ INLINE static void feedback_logger_SNIa_init(struct feedback_history_accumulator
  * @param z the current redshift
  * @param volume the simulation volume
  */
-INLINE static void feedback_logger_SNIa_log_data(const struct feedback_props *restrict feedback_properties, FILE *fp, struct feedback_history_SNIa *restrict SNIa,
-struct feedback_history_accumulator *fha, const int step,
-const double time, const double a, const double z, const double volume) {
+INLINE static void feedback_logger_SNIa_log_data(
+    const struct feedback_props *restrict feedback_properties, FILE *fp,
+    struct feedback_history_SNIa *restrict SNIa,
+    struct feedback_history_accumulator *fha, const int step, const double time,
+    const double a, const double z, const double volume) {
 
-  if (step==0) return;
+  if (step == 0) return;
 
   /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
@@ -173,7 +183,7 @@ const double time, const double a, const double z, const double volume) {
 
   /* Get the Energy of a single SNIa */
   const double E_single_SNIa = feedback_properties->E_SNIa;
- 
+
   /* Calculate the number of SNIas in the simulation */
   const double N_SNIa = E_SNIa / E_single_SNIa;
 
@@ -185,23 +195,25 @@ const double time, const double a, const double z, const double volume) {
   const int N_heating_events = SNIa->heating;
 
   /* Print the data to the file */
-  fprintf(fp, "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  %12.7e  %12.7e %7d \n"
-  , step, fha->step_prev, time, fha->time_prev, a,
-  fha->a_prev, z, fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume, N_heating_events);
+  fprintf(fp,
+          "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
+          "%12.7e  %12.7e %7d \n",
+          step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
+          fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume,
+          N_heating_events);
 
   /* Set the times to the new values */
   fha->step_prev = step;
   fha->time_prev = time;
   fha->a_prev = a;
   fha->z_prev = z;
-
 }
 
 /**
- * @brief log a SNIa event 
+ * @brief log a SNIa event
  *
  * @param SNIa the external variable that stores all the feedback information
- * @param time the current simulation time 
+ * @param time the current simulation time
  * @param si the star particle
  * @param pj the gas particle
  * @param xpj the extra information of the gas particle
@@ -209,17 +221,18 @@ const double time, const double a, const double z, const double volume) {
  * @param step the current simulation step
  */
 INLINE static void feedback_logger_SNIa_log_event(
-    struct feedback_history_SNIa *restrict SNIa, const double time, const struct spart *restrict si,
-    struct part *restrict pj, struct xpart *restrict xpj,
-    const struct cosmology *restrict cosmo, const int step) {
-  
+    struct feedback_history_SNIa *restrict SNIa, const double time,
+    const struct spart *restrict si, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const int step) {
+
   if (lock_lock(&lock_SNIa) == 0) {
 
     /* Get the injected energy */
     const double mass_init = si->mass_init;
     const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
     const double deltaE = delta_u * mass_init;
-    
+
     SNIa->SNIa_energy += deltaE;
     SNIa->N_SNIa += deltaE * 1.9884e2;
     SNIa->heating += 1;
@@ -231,8 +244,8 @@ INLINE static void feedback_logger_SNIa_log_event(
 /**
  * @brief Log the event in case of debugging
  *
- * @param fp the file pointer to write the debugging information to 
- * @param time the current simulation time 
+ * @param fp the file pointer to write the debugging information to
+ * @param time the current simulation time
  * @param si the star particle
  * @param pj the gas particle
  * @param xpj the extra information of the gas particle
@@ -255,8 +268,8 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
     const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
     const double deltaE = delta_u * mass_init;
 
-    fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time, a,
-            z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
+    fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time,
+            a, z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
   }
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
@@ -266,7 +279,8 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
  *
  * @param SNIa the external variable that stores all the feedback information
  */
-INLINE static void feedback_logger_SNIa_clear(struct feedback_history_SNIa *restrict SNIa){
+INLINE static void feedback_logger_SNIa_clear(
+    struct feedback_history_SNIa *restrict SNIa) {
 
   /* Set all the variables to zero */
   if (lock_lock(&lock_SNIa) == 0) {
