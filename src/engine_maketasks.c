@@ -735,6 +735,9 @@ void engine_addtasks_recv_gravity(struct engine *e, struct cell *c,
 #ifdef WITH_MPI
   struct scheduler *s = &e->sched;
 
+  /* Early abort (are we below the level where tasks are)? */
+  if (!cell_get_flag(c, cell_flag_has_tasks)) return;
+
   /* Have we reached a level where there are any gravity tasks ? */
   if (t_grav == NULL && c->grav.grav != NULL) {
 
