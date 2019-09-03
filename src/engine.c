@@ -3528,6 +3528,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   /* Initialize the feedback history structure */
   if (e->policy & engine_policy_feedback) {
     feedback_logger_SNIa_init(&e->feedback_history, e->time, e->cosmology->a, e->cosmology->z);
+    lock_init(&lock_SNIa);
   }
 
   engine_init_output_lists(e, params);
