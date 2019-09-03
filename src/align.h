@@ -58,8 +58,7 @@
 #define swift_align_information(type, array, alignment) \
   array = (type *)__builtin_assume_aligned(array, alignment);
 #else
-#define swift_align_information(type, array, alignment) \
-  (void)array /* Silence LLVM compiler warnings for unused var */;
+#define swift_align_information(type, array, alignment);
 #endif
 
 /**
