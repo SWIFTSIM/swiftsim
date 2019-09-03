@@ -2221,6 +2221,7 @@ void engine_step(struct engine *e) {
       message("Dividable step!, %e", e->s->dim[1]);
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
       feedback_logger_SNIa_log_data(e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      feedback_logger_SNIa_clear(&log_SNIa);
       fflush(e->SNIa_logger);
     }
 

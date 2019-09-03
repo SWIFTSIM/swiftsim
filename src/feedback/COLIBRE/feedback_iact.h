@@ -327,6 +327,8 @@ runner_iact_nonsym_feedback_apply(
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval_two_IDs(
         si->id, pj->id, ti_current, random_number_SNIa_feedback);
+    if (si->id == 14389LL & pj->id == 2122LL)
+      message("Random numbers of lovely pair = %e", rand_SNIa);
     /* Are we lucky? */
     if (rand_SNIa < prob_SNIa) {
 

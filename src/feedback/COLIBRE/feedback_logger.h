@@ -195,11 +195,6 @@ const double time, const double a, const double z, const double volume) {
   fha->a_prev = a;
   fha->z_prev = z;
 
-  /* Reset the global struct for node 0 (other nodes are reset elsewhere)*/
-  SNIa->N_SNIa = 0.;
-  SNIa->SNIa_energy = 0.;
-  SNIa->heating = 0;
-
 }
 
 /**
@@ -233,13 +228,17 @@ INLINE static void feedback_logger_SNIa_log_event(
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
 
-INLINE static void feedback_logger_SNIa_write_to_file(
-    FILE *fp, 
-    struct feedback_history_SNIa *restrict SNIa,
-    const struct cosmology *restrict cosmo, const int step) {
-  
-}
-
+/**
+ * @brief Log the event in case of debugging
+ *
+ * @param fp the file pointer to write the debugging information to 
+ * @param time the current simulation time 
+ * @param si the star particle
+ * @param pj the gas particle
+ * @param xpj the extra information of the gas particle
+ * @param cosmo the cosmology struct
+ * @param step the current simulation step
+ */
 INLINE static void feedback_logger_SNIa_log_event_debug(
     FILE *fp, const double time, const struct spart *restrict si,
     struct part *restrict pj, struct xpart *restrict xpj,
@@ -262,12 +261,20 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
 
+/**
+ * @brief function to reinitialize the SNIa logger.
+ *
+ * @param SNIa the external variable that stores all the feedback information
+ */
 INLINE static void feedback_logger_SNIa_clear(struct feedback_history_SNIa *restrict SNIa){
 
-  SNIa->SNIa_energy = 0;
-  SNIa->N_SNIa = 0;
-  SNIa->heating = 0;
-
+  /* Set all the variables to zero */
+  if (lock_lock(&lock_SNIa) == 0) {
+    SNIa->SNIa_energy = 0;
+    SNIa->N_SNIa = 0;
+    SNIa->heating = 0;
+  }
+  if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
