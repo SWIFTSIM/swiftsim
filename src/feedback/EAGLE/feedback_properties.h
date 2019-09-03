@@ -27,25 +27,28 @@
  */
 struct yield_table {
 
-  /* Yield table mass bins */
+  /*! Yield table mass bins */
   double *mass;
 
-  /* Yield table metallicity bins */
+  /*! Yield table metallicity (metal mass fractions) bins */
   double *metallicity;
 
-  /* Array to store yield table resampled by IMF mass bins */
+  /*! Array to store yield table (individual metals produced by the star)
+     resampled by IMF mass bins */
   double *yield_IMF_resampled;
 
-  /* Array to store yield table being read in */
+  /*! Array to store yield table being read in */
   double *yield;
 
-  /* Array to store table of ejecta resampled by IMF mass bins */
+  /*! Array to store table of ejecta (metals alredy in the stars that are
+    ejected) resampled by IMF mass bins */
   double *ejecta_IMF_resampled;
 
-  /* Array to store table of ejecta being read in */
+  /*! Array to store table of ejecta being read in */
   double *ejecta;
 
-  /* Array to store table of total mass released resampled by IMF mass bins */
+  /*! Array to store table of total mass released ( metals produced by the star)
+    resampled by IMF mass bins */
   double *total_metals_IMF_resampled;
 
   /* Array to store table of total mass released being read in */

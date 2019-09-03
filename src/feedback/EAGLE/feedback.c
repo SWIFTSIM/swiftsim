@@ -355,9 +355,15 @@ INLINE static void evolve_SNII(
     struct feedback_spart_data* const feedback_data) {
 
   /* Pull out common arrays */
+
+  /* Metal mass produced by the star */
   const double* const total_yields =
       props->yield_SNII.total_metals_IMF_resampled;
+
+  /* Individual elements produced by the star */
   const double* const metal_yields = props->yield_SNII.yield_IMF_resampled;
+
+  /* Elements already in the stars that are ejected */
   const double* const ejecta = props->yield_SNII.ejecta_IMF_resampled;
 
   /* If mass at beginning of step is less than tabulated lower bound for IMF,
@@ -521,9 +527,15 @@ INLINE static void evolve_AGB(const double log10_min_mass,
                               struct feedback_spart_data* const feedback_data) {
 
   /* Pull out common arrays */
+
+  /* Metal mass produced by the star */
   const double* const total_yields =
       props->yield_AGB.total_metals_IMF_resampled;
+
+  /* Individual elements produced by the star */
   const double* const metal_yields = props->yield_AGB.yield_IMF_resampled;
+
+  /* Elements already in the stars that are ejected */
   const double* const ejecta = props->yield_AGB.ejecta_IMF_resampled;
 
   /* If mass at end of step is greater than tabulated lower bound for IMF, limit
