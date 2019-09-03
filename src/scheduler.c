@@ -601,7 +601,10 @@ static void scheduler_splittask_hydro(struct task *t, struct scheduler *s) {
           /* Add the self tasks. */
           int first_child = 0;
           while (ci->progeny[first_child] == NULL) first_child++;
+
           t->ci = ci->progeny[first_child];
+          cell_set_flag(t->ci, cell_flag_has_tasks);
+
           for (int k = first_child + 1; k < 8; k++) {
             /* Do we have a non-empty progenitor? */
             if (ci->progeny[k] != NULL &&
@@ -711,8 +714,12 @@ static void scheduler_splittask_hydro(struct task *t, struct scheduler *s) {
           /* Loop over the sub-cell pairs for the current sid and add new tasks
            * for them. */
           struct cell_split_pair *csp = &cell_split_pairs[sid];
+
           t->ci = ci->progeny[csp->pairs[0].pid];
           t->cj = cj->progeny[csp->pairs[0].pjd];
+          cell_set_flag(t->ci, cell_flag_has_tasks);
+          cell_set_flag(t->cj, cell_flag_has_tasks);
+
           t->flags = csp->pairs[0].sid;
           for (int k = 1; k < csp->count; k++) {
             scheduler_splittask_hydro(
@@ -796,7 +803,9 @@ static void scheduler_splittask_gravity(struct task *t, struct scheduler *s) {
           /* Add the self tasks. */
           int first_child = 0;
           while (ci->progeny[first_child] == NULL) first_child++;
+
           t->ci = ci->progeny[first_child];
+          cell_set_flag(t->ci, cell_flag_has_tasks);
 
           for (int k = first_child + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
