@@ -83,7 +83,13 @@ INLINE static void feedback_logger_SNIa_init_log_file(
       " prev a          z          prev z    injection E    Numb SNIa    "
       "   SNIa rate     SNIa rate/V   Number\n");
 }
-
+/**
+ * @brief Initialize the SFH logger debug file
+ *
+ * @param fp the file pointer
+ * @param us The current internal system of units.
+ * @param phys_const Physical constants in internal units
+ */
 INLINE static void feedback_logger_SNIa_init_log_file_debug(
     FILE *fp, const struct unit_system *restrict us,
     const struct phys_const *phys_const) {
@@ -123,6 +129,14 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
           "ID gas part.   Injected Energy  Number of SNIa\n");
 }
 
+/**
+ * @brief Initialize the times of the feedback logger
+ *
+ * @param fha the feedback history accumulator struct
+ * @param time the current simulation time
+ * @param a the current scale factor
+ * @param z the current redshift
+ */
 INLINE static void feedback_logger_SNIa_init(struct feedback_history_accumulator *fha, const double time, const double a, const double z) {
   
   fha->step_prev = 0;
@@ -132,6 +146,19 @@ INLINE static void feedback_logger_SNIa_init(struct feedback_history_accumulator
 
 }
 
+/**
+ * @brief log all the collected data to the logger file
+ *
+ * @param feedback_properties, the feedback structure
+ * @param fp the file pointer to write to.
+ * @param SNIa the external variable that stores all the feedback information
+ * @param fha the feedback history accumulator struct
+ * @param step the current simulation step
+ * @param time the current simulation time
+ * @param a the current scale factor
+ * @param z the current redshift
+ * @param volume the simulation volume
+ */
 INLINE static void feedback_logger_SNIa_log_data(const struct feedback_props *restrict feedback_properties, FILE *fp, struct feedback_history_SNIa *restrict SNIa,
 struct feedback_history_accumulator *fha, const int step,
 const double time, const double a, const double z, const double volume) {

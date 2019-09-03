@@ -330,6 +330,8 @@ runner_iact_nonsym_feedback_apply(
     /* Are we lucky? */
     if (rand_SNIa < prob_SNIa) {
 
+      message("Random number boys: %e", rand_SNIa);
+
       /* Compute new energy of this particle */
       const double u_init_SNIa =
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
