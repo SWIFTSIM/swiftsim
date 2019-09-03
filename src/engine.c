@@ -2174,6 +2174,27 @@ void engine_step(struct engine *e) {
 #endif
   e->tic_step = getticks();
 
+  /* Collect the feedback logger data from all the nodes */
+#ifdef WITH_MPI
+  if (e->policy & engine_policy_feedback && e->step %100 == 0) {
+    int total_events;
+    double global_SNIa_info;
+    if (lock_lock(&lock_SNIa) == 0) {
+      message("N Heated = %d, node = %d, SNIa energy = %e", log_SNIa.heating, e->nodeID, log_SNIa.SNIa_energy);
+      MPI_Reduce(&log_SNIa.heating, &total_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+      MPI_Reduce(&log_SNIa.SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      if (e->nodeID==0) {
+        log_SNIa.heating = total_events;
+        log_SNIa.SNIa_energy = global_SNIa_info;
+        message("node 0 information: %d %e", log_SNIa.heating, log_SNIa.SNIa_energy);
+      } else {
+        feedback_logger_SNIa_clear(&log_SNIa);
+      }
+    }
+    if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
+  }
+#endif /* WITH_MPI */
+
   if (e->nodeID == 0) {
 
     /* Print some information to the screen */
@@ -2199,7 +2220,7 @@ void engine_step(struct engine *e) {
     if (e->policy & engine_policy_feedback && e->step %100 == 0) {
       message("Dividable step!, %e", e->s->dim[1]);
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
-      feedback_logger_SNIa_log_data(e->SNIa_logger, &log_SNIa, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      feedback_logger_SNIa_log_data(e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
       fflush(e->SNIa_logger);
     }
 

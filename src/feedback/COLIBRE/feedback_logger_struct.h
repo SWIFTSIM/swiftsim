@@ -23,7 +23,7 @@
 struct feedback_history_SNIa {
 
   /*! Total new SNIa injected energy */
-  float SNIa_energy;
+  double SNIa_energy;
 
   /*! Number of SNIa */
   float N_SNIa;

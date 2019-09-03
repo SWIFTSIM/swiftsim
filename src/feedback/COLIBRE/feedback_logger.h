@@ -20,6 +20,7 @@
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_H
 
 #include "feedback_logger_struct.h"
+#include "feedback_properties.h"
 
 extern swift_lock_type lock_SNIa;
 
@@ -131,19 +132,32 @@ INLINE static void feedback_logger_SNIa_init(struct feedback_history_accumulator
 
 }
 
-INLINE static void feedback_logger_SNIa_log_data(FILE *fp, struct feedback_history_SNIa *restrict SNIa,
+INLINE static void feedback_logger_SNIa_log_data(const struct feedback_props *restrict feedback_properties, FILE *fp, struct feedback_history_SNIa *restrict SNIa,
 struct feedback_history_accumulator *fha, const int step,
 const double time, const double a, const double z, const double volume) {
 
   if (step==0) return;
 
+  /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
-  const double N_SNIa = SNIa->N_SNIa;
-  const double N_SNIa_p_time = N_SNIa/delta_time; 
+
+  /* Get the total amount of SNIa energy */
   const double E_SNIa = SNIa->SNIa_energy;
+
+  /* Get the Energy of a single SNIa */
+  const double E_single_SNIa = feedback_properties->E_SNIa;
+ 
+  /* Calculate the number of SNIas in the simulation */
+  const double N_SNIa = E_SNIa / E_single_SNIa;
+
+  /* Calculate the number of SNIa per time and per time per volume */
+  const double N_SNIa_p_time = N_SNIa / delta_time;
   const double N_SNIa_p_time_p_volume = N_SNIa_p_time / volume;
+
+  /* Get the number of heating events */
   const int N_heating_events = SNIa->heating;
 
+  /* Print the data to the file */
   fprintf(fp, "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  %12.7e  %12.7e %7d \n"
   , step, fha->step_prev, time, fha->time_prev, a,
   fha->a_prev, z, fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume, N_heating_events);
@@ -154,7 +168,7 @@ const double time, const double a, const double z, const double volume) {
   fha->a_prev = a;
   fha->z_prev = z;
 
-  /* Reset the global struct */
+  /* Reset the global struct for node 0 (other nodes are reset elsewhere)*/
   SNIa->N_SNIa = 0.;
   SNIa->SNIa_energy = 0.;
   SNIa->heating = 0;
@@ -208,6 +222,14 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
             z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
   }
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
+}
+
+INLINE static void feedback_logger_SNIa_clear(struct feedback_history_SNIa *restrict SNIa){
+
+  SNIa->SNIa_energy = 0;
+  SNIa->N_SNIa = 0;
+  SNIa->heating = 0;
+
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
