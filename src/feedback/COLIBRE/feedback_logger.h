@@ -202,6 +202,17 @@ const double time, const double a, const double z, const double volume) {
 
 }
 
+/**
+ * @brief log a SNIa event 
+ *
+ * @param SNIa the external variable that stores all the feedback information
+ * @param time the current simulation time 
+ * @param si the star particle
+ * @param pj the gas particle
+ * @param xpj the extra information of the gas particle
+ * @param cosmo the cosmology struct
+ * @param step the current simulation step
+ */
 INLINE static void feedback_logger_SNIa_log_event(
     struct feedback_history_SNIa *restrict SNIa, const double time, const struct spart *restrict si,
     struct part *restrict pj, struct xpart *restrict xpj,

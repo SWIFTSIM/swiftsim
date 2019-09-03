@@ -330,7 +330,7 @@ runner_iact_nonsym_feedback_apply(
     /* Are we lucky? */
     if (rand_SNIa < prob_SNIa) {
 
-      message("Random number boys: %e", rand_SNIa);
+      message("Random number boys: %e %llu %llu", rand_SNIa, si->id, pj->id);
 
       /* Compute new energy of this particle */
       const double u_init_SNIa =
