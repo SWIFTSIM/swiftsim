@@ -58,7 +58,7 @@
 #define swift_align_information(type, array, alignment) \
   array = (type *)__builtin_assume_aligned(array, alignment);
 #else
-#define swift_align_information(type, array, alignment);
+#define swift_align_information(type, array, alignment) ;
 #endif
 
 /**
