@@ -2489,12 +2489,18 @@ void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s) {
 void cell_recursively_activate_hydro_ghosts(struct cell *c, struct scheduler *s,
                                             const struct engine *e) {
   /* Early abort? */
-  if (!cell_is_active_hydro(c, e)) return;
+  if ((c->hydro.count == 0) || !cell_is_active_hydro(c, e)) return;
 
   /* Is the ghost at this level? */
   if (c->hydro.ghost != NULL) {
     scheduler_activate(s, c->hydro.ghost);
   } else {
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (!c->split)
+      error("Reached the leaf level without finding a hydro ghost!");
+#endif
+
     /* Keep recursing */
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL)
