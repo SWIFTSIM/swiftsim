@@ -1595,20 +1595,44 @@ void scheduler_enqueue_mapper(void *map_data, int num_elements,
   pthread_cond_broadcast(&s->sleep_cond);
 }
 
+void scheduler_init_tasks_mapper(void *map_data, int num_elements,
+                                 void *extra_data) {
+  struct task *tasks = (struct task *)map_data;
+  for (int ind = 0; ind < num_elements; ind++) {
+    tasks[ind].tic = 0;
+    tasks[ind].toc = 0;
+#ifdef SWIFT_DEBUG_TASKS
+    tasks[ind].rid = -1;
+#endif
+  }
+}
+
+void scheduler_init_tasks(struct scheduler *s) {
+
+  if (s->nr_tasks > 1000) {
+    threadpool_map(s->threadpool, scheduler_init_tasks_mapper, s->tasks,
+                   s->nr_tasks, sizeof(struct task), 0, NULL);
+  } else {
+
+    for (int i = 0; i < s->nr_tasks; ++i) {
+      s->tasks[i].tic = 0;
+      s->tasks[i].toc = 0;
+#ifdef SWIFT_DEBUG_TASKS
+      s->tasks[i].rid = -1;
+#endif
+    }
+  }
+}
+
 /**
  * @brief Start the scheduler, i.e. fill the queues with ready tasks.
  *
  * @param s The #scheduler.
  */
 void scheduler_start(struct scheduler *s) {
+
   /* Reset all task timers. */
-  for (int i = 0; i < s->nr_tasks; ++i) {
-    s->tasks[i].tic = 0;
-    s->tasks[i].toc = 0;
-#ifdef SWIFT_DEBUG_TASKS
-    s->tasks[i].rid = -1;
-#endif
-  }
+  scheduler_init_tasks(s);
 
   /* Re-wait the tasks. */
   if (s->active_count > 1000) {
