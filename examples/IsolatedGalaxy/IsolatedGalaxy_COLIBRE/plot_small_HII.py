@@ -84,7 +84,6 @@ for snap in snaplist:
 
                 dens_to_cgs = f['PartType4/BirthDensities'].attrs['Conversion factor to physical CGS (including cosmological corrections)'][0]
                 XH = float( f['Parameters'].attrs['COLIBREChemistry:init_abundance_Hydrogen'] )
-                Qbar = float( f['Parameters'].attrs['COLIBREFeedback:HIIregion_const_ionrate'] )
                 dt_Myr = float (  f['Parameters'].attrs['COLIBREFeedback:HIIregion_rebuild_dt_Myr'] )
                 HIIage_max_Myr = float ( f['Parameters'].attrs['COLIBREFeedback:HIIregion_maxage_Myr'] )
 
@@ -100,11 +99,9 @@ for snap in snaplist:
         if isnap == 0:
                 labstar = 'HII mass stars'
                 labgas = 'HII mass gas'
-                labexp = 'Expected'
         else:
                 labstar = ''
                 labgas = ''
-                labexp = ''
 
 
         indxHIIstar   = np.where( (HIIstart >= 0) & (StarAge_in_Myr <= HIIage_max_Myr) )[0]
@@ -133,19 +130,6 @@ for snap in snaplist:
         nH       = dens * dens_to_cgs / mH * XH
                 
         indxnew = np.where(HIIstart >= 0)[0]
-
-        HIImass_exp = np.zeros_like(HIImass[indxnew])
-
-        for i in range (len(indxnew)):
-                HIImass_exp[i] = 0.84 * mass[indxnew[i]] * (1. - np.exp( - alpha_B * nH[indxnew[i]] * (tHII_Myr[indxnew[i]] + 0.5 * dt_Myr) * Myr) ) * \
-                ( 10. / nH[indxnew[i]] ) * (Qbar / 1.e12)
-                if (HIImass[indxnew[i]] / HIImass_exp[i] < 0.9 or HIImass[indxnew[i]] / HIImass_exp[i] > 1.1):
-                        print ('Problem: snapshot = %i\t HIImass/HIImass_exp = %.4f\t HIImass = %.4e\t HIImass_exp = %.4e\t Age [Myr] = %.4e\t%i\t%i'%(isnap,\
-                                HIImass[indxnew[i]] / HIImass_exp[i], HIImass[indxnew[i]], HIImass_exp[i], \
-                                age_in_s[indxnew[i]] / Myr, \
-                                indxnew[i], StarID[indxnew[i]]))
-                        print ('     More info: Init star mass = %.4e\t nH = %.4e\t HII last rebuild [Myr] = %.4f\t Star age = %.4f'%(mass[indxnew[i]], \
-                               nH[indxnew[i]], tHII_Myr[indxnew[i]] + 0.5 * dt_Myr, age_in_s[indxnew[i]]/Myr))
 
         ax = plt.subplot(gs[2])
         cb1 = mpl.colorbar.ColorbarBase(ax, cmap=cmap2,norm=norm)
