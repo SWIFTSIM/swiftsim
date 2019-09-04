@@ -785,6 +785,55 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 }
 
 /**
+ * @brief Gets interpolated cumulative ionizing photons from table
+ * @param props feedback_props structure for getting model parameters for coefficients
+ * @param t_Myr stellar age in Myr
+ * @param logZ log10 of (stellar) metal mass fraction Z
+ */
+double get_cumulative_ionizing_photons(const struct feedback_props* fp, float t_Myr, float logZ) {
+        float logQcum_loc;
+        float d_age, d_met;
+        int met_index, age_index;
+  
+        if (t_Myr < fp->HII_agebins[0]) return 0.;
+      
+        get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ,
+                   &met_index, &d_met);
+        
+        get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr,
+                   &age_index, &d_age);
+
+        logQcum_loc = interpolation_2d_flat(fp->HII_logQcum, met_index, age_index, 
+                              d_met, d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
+
+        return exp10(logQcum_loc);
+}
+
+/**
+ * @brief Calculates the average ionizing luminosity between t1 and t2 for an initial metallicity of Z
+ *
+ * @param props feedback_props structure for getting model parameters
+ * @param t1 initial time in Myr
+ * @param t2 final time in Myr
+ * @param Z metal mass fraction
+ * @param Qbar photoionizing luminosity of a star with metallicity Z over this period of time (t1 - t2)
+ */
+double compute_average_photoionizing_luminosity(const struct feedback_props* fp, float t1, float t2, float Z){
+ 
+        double Q_t1, Q_t2, Qbar;
+        /* find a way to get that from constants, if possible without passing the whole structure 
+           through everything...*/
+        const double Myr_inv = 3.1688e-14;
+
+        Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
+        Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
+
+        Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+        return Qbar;
+}
+
+
+/**
  * @brief Calculates the amount of momentum available for this star
  * from Starburst 99. Fitting function taken from Agertz et al. (2013)
  *
@@ -987,18 +1036,31 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
              (sp->HIIregion_last_rebuild < 0.)  ){
 
         /* log when this HII region was (re)built */
+        double old_star_age_Myr;
+        if (sp->HIIregion_last_rebuild >= 0.) {
+                old_star_age_Myr = sp->HIIregion_last_rebuild;
+        } else {
+                old_star_age_Myr = 0.;
+        }
+
         sp->HIIregion_last_rebuild = star_age_Myr;
 
         const double rho_birth = (double) sp->birth_density;
         const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
-        const double Qbar    = (double) feedback_props->HIIregion_const_ionrate;
         const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
         const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;
+
+        double Qbar;
+        float t1_Myr = (float) old_star_age_Myr;
+        float t2_Myr = (float) star_age_Myr;
+       
+        Qbar = compute_average_photoionizing_luminosity(feedback_props, t1_Myr, t2_Myr, Z);
 
         /* masses in system units */
         sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * t_half) ) * 
                                        ( 10.  / n_birth ) * (Qbar / 1.e12) );
 
+#ifdef SWIFT_DEBUG_CHECKS
         if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
           message("sp->mass_init = %.4e", sp->mass_init);
           message("alpha_B = %.4e", alpha_B);
@@ -1011,6 +1073,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
           error("Weird values for HII mass. Stopping.");
         }
+#endif
 
         sp->HIIregion_mass_in_kernel = ngb_gas_mass;
         sp->feedback_data.to_distribute.HIIregion_probability = sp->HIIregion_mass_to_ionize / ngb_gas_mass;
@@ -1269,9 +1332,6 @@ void feedback_props_init(struct feedback_props* fp,
       0.5f * ejecta_velocity * ejecta_velocity;
 
   /* Properties of the HII region model ------------------------------------- */
-  fp->HIIregion_const_ionrate =
-      parser_get_param_float(params, "COLIBREFeedback:HIIregion_const_ionrate");
- 
   fp->HIIregion_fion =
       parser_get_param_float(params, "COLIBREFeedback:HIIregion_ionization_fraction");
  
@@ -1287,6 +1347,80 @@ void feedback_props_init(struct feedback_props* fp,
   /* Check that it makes sense. */
   if (fp->HIIregion_fion < 0.5 || fp->HIIregion_fion > 1.0) {
     error("HIIregion_ionization_fraction has to be between 0.5 and 1.0");
+  }
+
+  /* Read the HII table */
+  if (fp->with_HIIregions) {
+
+     /* Read yield table filepath  */
+     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
+                          fp->early_feedback_table_path);
+#ifdef HAVE_HDF5
+     hid_t dataset;
+     herr_t status;
+
+     hid_t tempfile_id =
+         H5Fopen(fp->early_feedback_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
+     if (tempfile_id < 0)
+        error("unable to open file %s\n", fp->early_feedback_table_path);
+
+     /* read sizes of array dimensions */
+     dataset = H5Dopen(tempfile_id, "Header/NMETALLICITIES", H5P_DEFAULT);
+     status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   &fp->HII_nr_metbins);
+     if (status < 0) error("error reading number of metallicities \n");
+     status = H5Dclose(dataset);
+     if (status < 0) error("error closing dataset: number of metallicities \n");
+
+     dataset = H5Dopen(tempfile_id, "Header/NAGES", H5P_DEFAULT);
+     status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   &fp->HII_nr_agebins);
+     if (status < 0) error("error reading number of ages \n");
+     status = H5Dclose(dataset);
+     if (status < 0) error("error closing dataset: number of ages\n");
+
+     /* allocate arrays */
+     if (posix_memalign((void **)&fp->HII_logZbins, SWIFT_STRUCT_ALIGNMENT,
+                     fp->HII_nr_metbins * sizeof(float)) != 0)
+     error("Failed to allocate metallicity bins\n");
+     if (posix_memalign((void **)&fp->HII_agebins, SWIFT_STRUCT_ALIGNMENT,
+                     fp->HII_nr_agebins * sizeof(float)) != 0)
+     error("Failed to allocate age bins\n");
+     if (posix_memalign((void **)&fp->HII_logQcum, SWIFT_STRUCT_ALIGNMENT,
+                         fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
+     error("Failed to allocate Q array\n");          
+
+     /* read in the metallicity bins */
+     dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
+     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   fp->HII_logZbins);
+     if (status < 0) error("error reading metallicity bins\n");
+     status = H5Dclose(dataset);
+     if (status < 0) error("error closing dataset: metallicity bins");
+
+     /* read in the stellar ages bins */
+     dataset = H5Dopen(tempfile_id, "AgeBins", H5P_DEFAULT);
+     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   fp->HII_agebins);
+     if (status < 0) error("error reading age bins\n");
+     status = H5Dclose(dataset);
+     if (status < 0) error("error closing dataset: age bins");
+
+     /* read in cumulative ionizing photons */
+     dataset = H5Dopen(tempfile_id, "logQcumulative", H5P_DEFAULT);
+     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   fp->HII_logQcum);
+     if (status < 0) error("error reading Q\n");
+     status = H5Dclose(dataset);
+     if (status < 0) error("error closing dataset: logQcumulative");
+
+     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins-1]) 
+           error("Stopping for now (%.4f is larger than %.4f)", 
+                        fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins-1]);
+#else
+  error("Need HDF5 to read early feedback tables");
+#endif
+
   }
 
   /* Gather common conversion factors --------------------------------------- */
