@@ -25,7 +25,7 @@ TimeIntegration:
 Snapshots:
   basename:   output      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
-  delta_time: 0.01023     # Time difference between consecutive outputs (in internal units) 0.01023 TU = 10 Myr
+  delta_time: 0.001023     # Time difference between consecutive outputs (in internal units) 0.01023 TU = 10 Myr
 
   
 # Parameters governing the conserved quantities statistics
@@ -125,7 +125,7 @@ COLIBREFeedback:
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-
+  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5
 
 # Hernquist potential parameters
 HernquistPotential:

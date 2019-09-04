@@ -507,6 +507,7 @@ COLIBREFeedback:
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
+  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5 # Location of file for early feedback
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
