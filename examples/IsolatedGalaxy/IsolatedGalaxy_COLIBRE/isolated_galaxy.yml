@@ -120,7 +120,6 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:        0.01            # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
-  HIIregion_const_ionrate:          1.e13           # Number of H ionizing photons per s per g stellar particle mass 
   HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 

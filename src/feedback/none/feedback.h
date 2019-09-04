@@ -96,6 +96,29 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {}
 
 /**
+ * @brief changes the particle properties of gas particles flagged as HII region
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param hydro_properties the hydro_props struct
+ * @param cosmo The current cosmological model.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param feedback_props feedback_props data structure
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param time Time since Big Bang
+ *
+ */
+INLINE static void heating_HII_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct hydro_props *hydro_properties,
+                       const struct cosmology *cosmo,
+                       const struct cooling_function_data *cooling,
+                       const struct feedback_props* feedback_props,
+                       struct part *restrict p, struct xpart *restrict xp,
+                       double time) {}
+
+/**
  * @brief Evolve the stellar properties of a #spart.
  *
  * This function allows for example to compute the SN rate before sending
@@ -108,11 +131,12 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
+ * @param time_beg_of_step Time at the beginning of the time step
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt) {}
+    const double star_age_beg_step, const double dt, const double time_beg_of_step) {}
 
 /**
  * @brief Write a feedback struct to the given FILE as a stream of bytes.
