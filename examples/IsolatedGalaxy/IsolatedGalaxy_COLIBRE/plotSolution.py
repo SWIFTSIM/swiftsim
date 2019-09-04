@@ -82,20 +82,6 @@ time = timeSU * unit_time_in_cgs / year_in_cgs / 1.e6
 # Calculate Gravitational constant in internal units
 G = G_in_cgs * ( unit_length_in_cgs**3 / unit_mass_in_cgs / unit_time_in_cgs**2)**(-1)
 
-# Read parameters of the SF model
-KS_law_slope = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_exponent"])
-KS_law_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_normalisation"])
-KS_thresh_Z0 = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_Z0"])
-KS_thresh_slope = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_slope"])
-KS_thresh_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_norm_H_p_cm3"])
-KS_gas_fraction = float(f["/Parameters"].attrs["EAGLEStarFormation:gas_fraction"])
-KS_thresh_max_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:threshold_max_density_H_p_cm3"])
-KS_high_den_thresh = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_high_density_threshold_H_p_cm3"])
-KS_law_slope_high_den = float(f["/Parameters"].attrs["EAGLEStarFormation:KS_high_density_exponent"])
-EOS_gamma_effective = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_gamma_effective"])                           
-EOS_density_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_density_norm_H_p_cm3"])                           
-EOS_temp_norm = float(f["/Parameters"].attrs["EAGLEStarFormation:EOS_temperature_norm_K"])                           
-
 # Read reference metallicity
 COLIBRE_Z = float(f["/Parameters"].attrs["COLIBREChemistry:init_abundance_metal"])
 
@@ -113,30 +99,22 @@ COLIBREfloor_cool_rho_norm = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Coo
 COLIBREfloor_cool_temperature_norm_K = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_temperature_norm_K"])
 COLIBREfloor_cool_gamma_effective = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_gamma_effective"])
 
-# Properties of the KS law
-KS_law_norm_cgs = KS_law_norm * Msun_in_cgs / ( 1e6 * pc_in_cgs**2 * year_in_cgs )
-gamma = 5./3.
-EOS_press_norm = k_in_cgs * EOS_temp_norm * EOS_density_norm
-
-# Star formation threshold
-SF_thresh = KS_thresh_norm * (COLIBRE_Z / KS_thresh_Z0)**(KS_thresh_slope)
-
 # Read gas properties
 gas_pos = f["/PartType0/Coordinates"][:, :]
 gas_mass = f["/PartType0/Masses"][:]
-gas_rho = f["/PartType0/Density"][:]
-gas_T = f["/PartType0/Temperature"][:]
-gas_SFR = f["/PartType0/SFR"][:]
-gas_XH = f["/PartType0/ElementAbundance"][:, 0]
-gas_Z = f["/PartType0/Metallicity"][:]
-gas_hsml = f["/PartType0/SmoothingLength"][:]
+gas_rho = f["/PartType0/Densities"][:]
+gas_T = f["/PartType0/Temperatures"][:]
+gas_SFR = f["/PartType0/StarFormationRates"][:]
+gas_XH = f["/PartType0/ElementMassFractions"][:, 0]
+gas_Z = f["/PartType0/MetalMassFractions"][:] 
+gas_hsml = f["/PartType0/SmoothingLengths"][:]
 gas_sSFR = gas_SFR / gas_mass
 
 # Read the Star properties
 stars_pos = f["/PartType4/Coordinates"][:, :]
-stars_BirthDensity = f["/PartType4/BirthDensity"][:]
-stars_BirthTime = f["/PartType4/BirthTime"][:]
-stars_XH = f["/PartType4/ElementAbundance"][:,0]
+stars_BirthDensity = f["/PartType4/BirthDensities"][:]
+stars_BirthTime = f["/PartType4/BirthTimes"][:]
+stars_XH = f["/PartType4/ElementMassFractions"][:,0]
 
 # Centre the box
 gas_pos[:, 0] -= centre[0]
@@ -182,8 +160,8 @@ scatter(gas_nH, gas_T, s=0.2)
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Temperature}~T~[{\\rm K}]$", labelpad=2)
 text(1.e1, 4.e4, 't = %.2f Myr'%(time))
-xlim(3e-6, 3e5)
-ylim(1.0, 2e5)
+xlim(3e-8, 3e5)
+ylim(1.0, 2e9)
 savefig("rhoT_%3.3i.png"%(snap), dpi=200)
 
 # Plot the phase space diagram for SF gas
@@ -191,13 +169,11 @@ figure()
 subplot(111, xscale="log", yscale="log")
 plot(eos_cool_rho, eos_cool_T, "k--", lw=0.6)
 plot(eos_Jeans_rho, eos_Jeans_T, "k--", lw=0.6)
-plot([SF_thresh, SF_thresh], [1, 1e10], "k:", lw=0.6)
-text(SF_thresh*0.9, 2e4, "$n_{\\rm H, thresh}=%.3f~{\\rm cm^{-3}}$"%SF_thresh, fontsize=8, rotation=90, ha="right", va="bottom")
 scatter(gas_nH[gas_SFR > 0.0], gas_T[gas_SFR > 0.0], s=0.2)
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Temperature}~T~[{\\rm K}]$", labelpad=2)
-xlim(3e-6, 3e3)
-ylim(500.0, 2e5)
+xlim(3e-8, 3e5)
+ylim(500.0, 2e9)
 savefig("rhoT_SF.png", dpi=200)
 
 ########################################################################3
@@ -236,22 +212,10 @@ xlabel("${\\rm Stellar~birth~density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Probability}$", labelpad=-7)
 savefig("BirthDensity.png", dpi=200)
 
-# Plot of the specific star formation rate in the galaxy
-rhos = 10**np.linspace(-1,np.log10(KS_high_den_thresh),100)
-rhoshigh = 10**np.linspace(np.log10(KS_high_den_thresh),5,100)
-
-P_effective = EOS_press_norm * ( rhos / EOS_density_norm)**(EOS_gamma_effective)
-P_norm_high = EOS_press_norm * (KS_high_den_thresh  / EOS_density_norm)**(EOS_gamma_effective)
-sSFR = KS_law_norm_cgs * (Msun_p_pc2)**(-KS_law_slope) * (gamma/G_in_cgs * KS_gas_fraction *P_effective)**((KS_law_slope-1.)/2.)
-KS_law_norm_high_den_cgs = KS_law_norm_cgs * (Msun_p_pc2)**(-KS_law_slope) * (gamma/G_in_cgs * KS_gas_fraction * P_norm_high)**((KS_law_slope-1.)/2.)
-sSFR_high_den = KS_law_norm_high_den_cgs * ((rhoshigh/KS_high_den_thresh)**EOS_gamma_effective)**((KS_law_slope_high_den-1)/2.)
-
 # density - sSFR plane
 figure()
 subplot(111)
 hist2d(np.log10(gas_nH), np.log10(gas_sSFR), bins=50,range=[[-1.5,5],[-.5,2.5]])
-plot(np.log10(rhos),np.log10(sSFR)+np.log10(year_in_cgs)+9.,'k--',label='sSFR low density COLIBRE')
-plot(np.log10(rhoshigh),np.log10(sSFR_high_den)+np.log10(year_in_cgs)+9.,'k--',label='sSFR high density COLIBRE')
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=2)
 ylabel("${\\rm sSFR}~[{\\rm Gyr^{-1}}]$", labelpad=0)
 xticks([-1, 0, 1, 2, 3, 4], ["$10^{-1}$", "$10^0$", "$10^1$", "$10^2$", "$10^3$", "$10^4$"])
@@ -355,44 +319,9 @@ savefig("Map_SFR.png", dpi=200)
 map_SFR[map_SFR < 1e-6] = 1e-6
 
 # Theoretical threshold (assumes all gas has the same Z)
-KS_n_thresh = KS_thresh_norm * (gas_Z[0] / KS_thresh_Z0) ** KS_thresh_slope
-if np.isfinite(KS_n_thresh) == False:
-    KS_n_thresh = KS_thresh_max_norm
-KS_sigma_thresh = 29.0 * np.sqrt(KS_gas_fraction) * np.sqrt(KS_n_thresh)
-
-# Theoretical KS law
-KS_sigma_mass = np.logspace(-1, 3, 100)
-KS_sigma_SFR = KS_law_norm * KS_sigma_mass ** KS_law_slope
-
-# KS relation
 rcParams.update({"figure.figsize": (3.15, 3.15), "figure.subplot.left": 0.18})
 figure()
 subplot(111, xscale="log", yscale="log")
-plot(KS_sigma_mass, KS_sigma_SFR, "k--", lw=0.6)
-plot([KS_sigma_thresh, KS_sigma_thresh], [1e-8, 1e8], "k--", lw=0.6)
-text(
-    KS_sigma_thresh * 0.95,
-    2.2,
-    "$\\Sigma_{\\rm c} = %.2f~{\\rm M_\\odot\\cdot pc^{-2}}$" % KS_sigma_thresh,
-    va="top",
-    ha="right",
-    rotation=90,
-    fontsize=7,
-)
-text(16, 10 ** (-3.5), "$n_{\\rm H,c} = %.3f~{\\rm cm^{-3}}$" % KS_n_thresh, fontsize=7)
-text(
-    16,
-    2e-6,
-    "${\\rm K\\textendash S~law}$:\n$\\Sigma_{\\rm SFR} = A \\times \\Sigma_g^n$\n$n=%.1f$\n$A=%.3f\\times10^{-4}~{\\rm M_\\odot / yr^{1} / kpc^{2}}$\n$f_{\\rm g} = %.1f$\n$\gamma_{\\rm eos} = %.3f$\n$Z=%1.4f$"
-    % (
-        KS_law_slope,
-        KS_law_norm * 10 ** 4,
-        KS_gas_fraction,
-        EOS_gamma_effective,
-        COLIBRE_Z,
-    ),
-    fontsize=7,
-)
 scatter(map_mass.flatten() / 1e6, map_SFR.flatten(), s=0.4)
 xlim(0.3, 900)
 ylim(3e-7, 3)
