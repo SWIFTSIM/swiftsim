@@ -43,7 +43,6 @@ for isnap in range( len(snaplist) ):
 
                 dens_to_cgs = f['PartType4/BirthDensities'].attrs['Conversion factor to physical CGS (including cosmological corrections)'][0]
                 XH = float( f['Parameters'].attrs['COLIBREChemistry:init_abundance_Hydrogen'] )
-                Qbar = float( f['Parameters'].attrs['COLIBREFeedback:HIIregion_const_ionrate'] )
                 dt_Myr = float (  f['Parameters'].attrs['COLIBREFeedback:HIIregion_rebuild_dt_Myr'] )
                 HIIage_max_Myr = float ( f['Parameters'].attrs['COLIBREFeedback:HIIregion_maxage_Myr'] )
 
