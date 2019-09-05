@@ -14,7 +14,7 @@ TimeIntegration:
   time_begin: 0.    # The starting time of the simulation (in internal units).
   time_end:   0.5  # The end time of the simulation (in internal units).
   dt_min:     1e-10 # The minimal time-step size of the simulation (in internal units).
-  dt_max:     1e-4  # The maximal time-step size of the simulation (in internal units).
+  dt_max:     0.4  # The maximal time-step size of the simulation (in internal units).
   
 # Parameters governing the snapshots
 Snapshots:
@@ -72,7 +72,6 @@ GrackleCooling:
 GEARStarFormation:
   star_formation_efficiency: 0.01   # star formation efficiency (c_*)
   maximal_temperature:  1e10         # Upper limit to the temperature of a star forming particle
-  NJeans: 25.88
 
 GEARPressureFloor:
   Jeans_factor: 10.
@@ -80,10 +79,11 @@ GEARPressureFloor:
 GEARFeedback:
   SupernovaeEnergy_erg: 1.115e51
   YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
+  discret_yields: 1
 
 GEARChemistry:
   InitialMetallicity: 1
   ScaleInitialMetallicity: 1
 
 Restarts:
-  delta_hours:        0.5        # (Optional) decimal hours between dumps of restart files.
+  delta_hours:        0.25        # (Optional) decimal hours between dumps of restart files.
