@@ -209,7 +209,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
-
 /**
  * @brief Unskip all the tasks that act on active cells at this time.
  *
@@ -255,13 +254,48 @@ void engine_unskip(struct engine *e) {
     }
   }
 
+  /* Should we duplicate the list of active cells to better parallelise the
+     unskip over the threads ? */
+  int multiplier = 0;
+  multiplier += (with_hydro > 0);
+  multiplier += (with_self_grav > 0 || with_ext_grav > 0);
+  multiplier += (with_feedback > 0 || with_stars > 0);
+  multiplier += (with_black_holes > 0);
+
+  int *local_active_cells;
+  if (multiplier > 1) {
+
+    /* Make space for copies of the list */
+    local_active_cells = (int *)malloc(multiplier * num_active_cells);
+    if (local_active_cells == NULL)
+      error(
+          "Couldn't allocate memory for duplicated list of local active "
+          "cells.");
+
+    /* Make blind copies of the list */
+    for (int m = 0; m < multiplier; m++) {
+      memcpy(local_active_cells + m * num_active_cells, local_cells,
+             num_active_cells * sizeof(int));
+    }
+  } else {
+    local_active_cells = local_cells;
+  }
+
+  /* We now have a list of local active cells duplicated as many times as
+   * we have broad task types. We can now release all the threads on the list */
+
   /* Activate all the regular tasks */
-  threadpool_map(&e->threadpool, engine_do_unskip_mapper, local_cells,
-                 num_active_cells, sizeof(int), 1, e);
+  threadpool_map(&e->threadpool, engine_do_unskip_mapper, local_active_cells,
+                 num_active_cells * multiplier, sizeof(int), 0, e);
 
 #ifdef WITH_PROFILER
   ProfilerStop();
 #endif  // WITH_PROFILER
+
+  /* Free stuff? */
+  if (multiplier > 1) {
+    free(local_active_cells);
+  }
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
