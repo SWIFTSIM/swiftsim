@@ -242,6 +242,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
   const float r_inv = 1.f / sqrtf(r2);
   const float r = r2 * r_inv;
 
+  /* Initialize local variables */
+  float Bi[3][3];
   float Bj[3][3];
   float vi[3], vj[3];
   for (int k = 0; k < 3; k++) {
