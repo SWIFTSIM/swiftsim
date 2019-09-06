@@ -206,7 +206,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
 
   /* How are we running? */
   const int with_star_formation = e->policy & engine_policy_star_formation;
-  // const int nodeID = e->nodeID;
   struct space *s = e->s;
 
   /* The current chunk of active cells */
@@ -215,50 +214,52 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &s->cells_top[local_cells[ind]];
 
+    /* In what copy of the global list are we?
+     * This gives us the broad type of task we are working on. */
     const ptrdiff_t delta = &local_cells[ind] - list_base;
     const int type = delta / num_active_cells;
 
+#ifdef SWIFT_DEBUG_CHECKS
     if (type >= multiplier) error("Invalid broad task type!");
+    if (c == NULL) error("Got an invalid cell index!");
+#endif
 
-    if (c != NULL) {
-
-      /* What type of task are we unskipping? */
-      switch (task_types[type]) {
-        case task_broad_types_hydro:
+    /* What type of task are we unskipping? */
+    switch (task_types[type]) {
+      case task_broad_types_hydro:
 #ifdef SWIFT_DEBUG_CHECKS
-          if (!(e->policy & engine_policy_hydro))
-            error("Trying to unskip hydro tasks in a non-hydro run!");
+        if (!(e->policy & engine_policy_hydro))
+          error("Trying to unskip hydro tasks in a non-hydro run!");
 #endif
-          engine_do_unskip_hydro(c, e);
-          break;
-        case task_broad_types_gravity:
+        engine_do_unskip_hydro(c, e);
+        break;
+      case task_broad_types_gravity:
 #ifdef SWIFT_DEBUG_CHECKS
-          if (!(e->policy & engine_policy_self_gravity) &&
-              !(e->policy & engine_policy_external_gravity))
-            error("Trying to unskip gravity tasks in a non-gravity run!");
+        if (!(e->policy & engine_policy_self_gravity) &&
+            !(e->policy & engine_policy_external_gravity))
+          error("Trying to unskip gravity tasks in a non-gravity run!");
 #endif
-          engine_do_unskip_gravity(c, e);
-          break;
-        case task_broad_types_stars:
+        engine_do_unskip_gravity(c, e);
+        break;
+      case task_broad_types_stars:
 #ifdef SWIFT_DEBUG_CHECKS
-          if (!(e->policy & engine_policy_stars))
-            error("Trying to unskip star tasks in a non-stars run!");
+        if (!(e->policy & engine_policy_stars))
+          error("Trying to unskip star tasks in a non-stars run!");
 #endif
-          engine_do_unskip_stars(c, e, with_star_formation);
-          break;
-        case task_broad_types_black_holes:
+        engine_do_unskip_stars(c, e, with_star_formation);
+        break;
+      case task_broad_types_black_holes:
 #ifdef SWIFT_DEBUG_CHECKS
-          if (!(e->policy & engine_policy_black_holes))
-            error("Trying to unskip black holes tasks in a non-BH run!");
+        if (!(e->policy & engine_policy_black_holes))
+          error("Trying to unskip black holes tasks in a non-BH run!");
 #endif
-          engine_do_unskip_black_holes(c, e);
-          break;
-        default:
+        engine_do_unskip_black_holes(c, e);
+        break;
+      default:
 #ifdef SWIFT_DEBUG_CHECKS
-          error("Invalid broad task type!");
+        error("Invalid broad task type!");
 #endif
-          continue;
-      }
+        continue;
     }
   }
 }
