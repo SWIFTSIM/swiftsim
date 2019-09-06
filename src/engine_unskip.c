@@ -34,6 +34,12 @@
 #include <gperftools/profiler.h>
 #endif
 
+/**
+ * @brief Broad categories of tasks.
+ *
+ * Each category is unskipped independently
+ * of the others.
+ */
 enum task_broad_types {
   task_broad_types_hydro = 1,
   task_broad_types_gravity,
@@ -42,11 +48,24 @@ enum task_broad_types {
   task_broad_types_count,
 };
 
+/**
+ * @brief Meta-data for the unskipping
+ */
 struct unskip_data {
+
+  /*! The #engine */
   struct engine *e;
+
+  /*! Pointer to the start of the list of cells to unskip */
   int *list_base;
+
+  /*! Number of times the list has been duplicated */
   int multiplier;
+
+  /*! The number of active cells (without dulication) */
   int num_active_cells;
+
+  /*! The #task_broad_types corresponding to each copy of the list */
   enum task_broad_types task_types[task_broad_types_count];
 };
 
@@ -200,19 +219,22 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   struct unskip_data *data = (struct unskip_data *)extra_data;
   const int multiplier = data->multiplier;
   const int num_active_cells = data->num_active_cells;
-  const enum task_broad_types *task_types = data->task_types;
-  int *const list_base = data->list_base;
+  const enum task_broad_types *const task_types = data->task_types;
+  const int *const list_base = data->list_base;
   struct engine *e = data->e;
+  struct cell *const cells_top = e->s->cells_top;
 
-  /* How are we running? */
+  /* What policies are we running? */
   const int with_star_formation = e->policy & engine_policy_star_formation;
-  struct space *s = e->s;
 
   /* The current chunk of active cells */
-  int *const local_cells = (int *)map_data;
+  const int *const local_cells = (int *)map_data;
 
+  /* Loop over this thread's chunk of cells to unskip */
   for (int ind = 0; ind < num_elements; ind++) {
-    struct cell *c = &s->cells_top[local_cells[ind]];
+
+    /* Handle on the cell */
+    struct cell *const c = &cells_top[local_cells[ind]];
 
     /* In what copy of the global list are we?
      * This gives us the broad type of task we are working on. */
@@ -224,7 +246,7 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
     if (c == NULL) error("Got an invalid cell index!");
 #endif
 
-    /* What type of task are we unskipping? */
+    /* What broad type of tasks are we unskipping? */
     switch (task_types[type]) {
       case task_broad_types_hydro:
 #ifdef SWIFT_DEBUG_CHECKS
