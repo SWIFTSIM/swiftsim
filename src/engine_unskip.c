@@ -34,6 +34,22 @@
 #include <gperftools/profiler.h>
 #endif
 
+enum task_broad_types {
+  task_broad_types_hydro = 1,
+  task_broad_types_gravity,
+  task_broad_types_stars,
+  task_broad_types_black_holes,
+  task_broad_types_count,
+};
+
+struct unskip_data {
+  struct engine *e;
+  int *list_base;
+  int multiplier;
+  int num_active_cells;
+  enum task_broad_types task_types[task_broad_types_count];
+};
+
 /**
  * @brief Unskip any hydro tasks associated with active cells.
  *
@@ -175,36 +191,74 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e) {
  *
  * @param map_data An array of #cell%s.
  * @param num_elements Chunk size.
- * @param extra_data Pointer to an #engine.
+ * @param extra_data Pointer to an unskip_data structure.
  */
 void engine_do_unskip_mapper(void *map_data, int num_elements,
                              void *extra_data) {
 
-  struct engine *e = (struct engine *)extra_data;
+  /* Unpack the meta data */
+  struct unskip_data *data = (struct unskip_data *)extra_data;
+  const int multiplier = data->multiplier;
+  const int num_active_cells = data->num_active_cells;
+  const enum task_broad_types *task_types = data->task_types;
+  int *const list_base = data->list_base;
+  struct engine *e = data->e;
+
+  /* How are we running? */
   const int with_star_formation = e->policy & engine_policy_star_formation;
-  const int nodeID = e->nodeID;
+  // const int nodeID = e->nodeID;
   struct space *s = e->s;
-  int *local_cells = (int *)map_data;
+
+  /* The current chunk of active cells */
+  int *const local_cells = (int *)map_data;
 
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &s->cells_top[local_cells[ind]];
+
+    const ptrdiff_t delta = &local_cells[ind] - list_base;
+    const int type = delta / num_active_cells;
+
+    if (type >= multiplier) error("Invalid broad task type!");
+
     if (c != NULL) {
 
-      /* Hydro tasks */
-      if (e->policy & engine_policy_hydro) engine_do_unskip_hydro(c, e);
-
-      /* All gravity tasks */
-      if ((e->policy & engine_policy_self_gravity) ||
-          ((e->policy & engine_policy_external_gravity) && c->nodeID == nodeID))
-        engine_do_unskip_gravity(c, e);
-
-      /* Stars tasks */
-      if (e->policy & engine_policy_stars)
-        engine_do_unskip_stars(c, e, with_star_formation);
-
-      /* Black hole tasks */
-      if (e->policy & engine_policy_black_holes)
-        engine_do_unskip_black_holes(c, e);
+      /* What type of task are we unskipping? */
+      switch (task_types[type]) {
+        case task_broad_types_hydro:
+#ifdef SWIFT_DEBUG_CHECKS
+          if (!(e->policy & engine_policy_hydro))
+            error("Trying to unskip hydro tasks in a non-hydro run!");
+#endif
+          engine_do_unskip_hydro(c, e);
+          break;
+        case task_broad_types_gravity:
+#ifdef SWIFT_DEBUG_CHECKS
+          if (!(e->policy & engine_policy_self_gravity) &&
+              !(e->policy & engine_policy_external_gravity))
+            error("Trying to unskip gravity tasks in a non-gravity run!");
+#endif
+          engine_do_unskip_gravity(c, e);
+          break;
+        case task_broad_types_stars:
+#ifdef SWIFT_DEBUG_CHECKS
+          if (!(e->policy & engine_policy_stars))
+            error("Trying to unskip star tasks in a non-stars run!");
+#endif
+          engine_do_unskip_stars(c, e, with_star_formation);
+          break;
+        case task_broad_types_black_holes:
+#ifdef SWIFT_DEBUG_CHECKS
+          if (!(e->policy & engine_policy_black_holes))
+            error("Trying to unskip black holes tasks in a non-BH run!");
+#endif
+          engine_do_unskip_black_holes(c, e);
+          break;
+        default:
+#ifdef SWIFT_DEBUG_CHECKS
+          error("Invalid broad task type!");
+#endif
+          continue;
+      }
     }
   }
 }
@@ -254,19 +308,35 @@ void engine_unskip(struct engine *e) {
     }
   }
 
+  /* What kind of tasks do we have? */
+  struct unskip_data data;
+  bzero(&data, sizeof(struct unskip_data));
+  int multiplier = 0;
+  if (with_hydro) {
+    data.task_types[multiplier] = task_broad_types_hydro;
+    multiplier++;
+  }
+  if (with_self_grav || with_ext_grav) {
+    data.task_types[multiplier] = task_broad_types_gravity;
+    multiplier++;
+  }
+  if (with_feedback || with_stars) {
+    data.task_types[multiplier] = task_broad_types_stars;
+    multiplier++;
+  }
+  if (with_black_holes) {
+    data.task_types[multiplier] = task_broad_types_black_holes;
+    multiplier++;
+  }
+
   /* Should we duplicate the list of active cells to better parallelise the
      unskip over the threads ? */
-  int multiplier = 0;
-  multiplier += (with_hydro > 0);
-  multiplier += (with_self_grav > 0 || with_ext_grav > 0);
-  multiplier += (with_feedback > 0 || with_stars > 0);
-  multiplier += (with_black_holes > 0);
-
   int *local_active_cells;
   if (multiplier > 1) {
 
     /* Make space for copies of the list */
-    local_active_cells = (int *)malloc(multiplier * num_active_cells);
+    local_active_cells =
+        (int *)malloc(multiplier * num_active_cells * sizeof(int));
     if (local_active_cells == NULL)
       error(
           "Couldn't allocate memory for duplicated list of local active "
@@ -284,9 +354,14 @@ void engine_unskip(struct engine *e) {
   /* We now have a list of local active cells duplicated as many times as
    * we have broad task types. We can now release all the threads on the list */
 
+  data.e = e;
+  data.list_base = local_active_cells;
+  data.num_active_cells = num_active_cells;
+  data.multiplier = multiplier;
+
   /* Activate all the regular tasks */
   threadpool_map(&e->threadpool, engine_do_unskip_mapper, local_active_cells,
-                 num_active_cells * multiplier, sizeof(int), 0, e);
+                 num_active_cells * multiplier, sizeof(int), 0, &data);
 
 #ifdef WITH_PROFILER
   ProfilerStop();
