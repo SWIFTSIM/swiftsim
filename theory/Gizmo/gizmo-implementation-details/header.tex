@@ -1,0 +1,200 @@
+\documentclass[12pt, a4paper, english, singlespacing, parskip]{scrartcl}
+
+%\documentclass[
+%11pt, 				% The default document font size, options: 10pt, 11pt, 12pt
+%oneside, 			% Two side (alternating margins) for binding by default, uncomment to switch to one side
+%chapterinoneline,	% Have the chapter title next to the number in one single line
+%english, 			% ngerman for German
+%singlespacing, 	% Single line spacing, alternatives: onehalfspacing or doublespacing
+%draft, 			% Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
+%nolistspacing, 	% If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
+%liststotoc, 		% Uncomment to add the list of figures/tables/etc to the table of contents
+%toctotoc, 			% Uncomment to add the main table of contents to the table of contents
+%parskip, 			% Uncomment to add space between paragraphs
+%nohyperref, 		% Uncomment to not load the hyperref package
+%headsepline, 		% Uncomment to get a line under the header
+%]{scrartcl or scrreprt or scrbook} % The class file specifying the document structure
+
+\usepackage{lmodern} 		% Diese beiden packages sorgen für echte 
+\usepackage[T1]{fontenc}	% Umlaute.
+
+\usepackage{amssymb, amsmath, color, dsfont, graphicx, float, setspace, tipa}
+\usepackage[utf8]{inputenc} 
+\usepackage[english]{babel}
+\usepackage[pdfpagelabels,pdfstartview = FitH,bookmarksopen = true,bookmarksnumbered = true,linkcolor = black,plainpages = false,hypertexnames = false,citecolor = black, breaklinks]{hyperref}
+\usepackage{url}
+\usepackage{longtable} 		% Tables along multiple pages
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf, format=plain, justification=centering}
+\allowdisplaybreaks 		% allows page breaks in align/equation environment
+
+\usepackage{authblk} 		% titlepage stuff
+\usepackage[titletoc, title]{appendix}
+
+\usepackage{newclude} 		% use \include*{file} instead \include{} to omit pagebreak after include
+
+%bibliography
+\usepackage[backend=bibtex,sorting=nyt,style=authoryear]{biblatex}
+\addbibresource{references.bib}
+\usepackage{csquotes} 		%recommended when using babel and biblatex
+%DONT FORGET TO COMPILE THE BIBLIOGRAPHY WITH BIBTEX WHEN CHANGES ARE MADE.
+
+
+
+
+%--------------------------------------------
+% NEW COMMANDS
+%--------------------------------------------
+
+\newcommand{\corresponds}{\mathrel{\widehat{=}}}		% equals with hat
+
+\newcommand {\arctanh}{\mathrm{arctanh}}				% Atanh
+\newcommand{\arccot}{\mathrm{arccot }}					% Acotanh
+
+\newcommand{\limz}[1]{\lim\limits_{#1 \rightarrow 0}}	% Limes of something towars zero
+
+\newcommand{\bm}{\boldmath}								% Bold font in math
+\newcommand{\dps}{\displaystyle}						
+
+\newcommand{\e}{\mbox{e}}								% e noncursive in math mode
+
+\newcommand{\del}{\partial}								% partial diff operator
+\newcommand{\de}{\mathrm{d}}							% differential d
+\newcommand{\D}{\mathrm{d}}								% differential d
+\newcommand{\GRAD}{\mathrm{grad}\ }						% gradient
+\newcommand{\DIV}{\mathrm{div}\ }						% divergence
+\newcommand{\ROT}{\mathrm{rot}\ }						% rotation
+
+\newcommand{\CONST}{\mathrm{const.\ }}					% constant
+\newcommand{\var}{\mathrm{var}}							% variance
+
+\newcommand{\g}{^\circ}									% degrees
+\newcommand{\degr}{^\circ}								% degrees
+
+\newcommand{\msol}{M_\odot}								% solar mass
+
+
+\newcommand{\x}{\mathbf{x}}								% x vector
+\newcommand{\xdot}{\dot{\mathbf{x}}}					% x dot vector
+\newcommand{\xddot}{\ddot{\mathbf{x}}}					% x doubledot vector
+\newcommand{\R}{\mathbf{r}}								% r vector
+\newcommand{\rdot}{\dot{\mathbf{r}}}					% r dot vector
+\newcommand{\rddot}{\ddot{\mathbf{r}}}					% r doubledot vector
+\newcommand{\vel}{\mathbf{v}}							% v vector
+\newcommand{\V}{\mathbf{v}}								% v vector
+\newcommand{\vdot}{\dot{\mathbf{v}}}					% v dot vector
+\newcommand{\vddot}{\ddot{\mathbf{v}}}					% v doubledot vector
+
+\newcommand{\dete}{\mathrm{d}t}							% dt
+\newcommand{\delte}{\del t}								% partial t
+\newcommand{\dex}{\mathrm{d}x}							% dx
+\newcommand{\delx}{\del x}								% partial x
+\newcommand{\der}{\mathrm{d}r}							% dr
+\newcommand{\delr}{\del r}								% partial r
+
+\newcommand{\deldt}{\frac{\del}{\del t}}				% shortcut partial derivative, in line
+\newcommand{\ddt}{\frac{\de}{\de t}}					% shortcut total derivative, in line
+\newcommand{\DELDT}[1]{\frac{\del  #1}{\del t}}			% shortcut partial derivative, on fraction
+\newcommand{\DDT}[1]{\frac{\de  #1}{\de t}}				% shortcut total derivative, on fraction
+
+\newcommand{\deldx}{\frac{\del}{\del x}}				% shortcut partial derivative, in line
+\newcommand{\ddx}{\frac{\de}{\de x}}					% shortcut total derivative, in line
+\newcommand{\DELDX}[1]{\frac{\del  #1}{\del x}}			% shortcut partial derivative, on fraction
+\newcommand{\DDX}[1]{\frac{\de  #1}{\de x}}				% shortcut total derivative, on fraction
+
+\newcommand{\deldr}{\frac{\del}{\del r}}				% shortcut partial derivative, in line
+\newcommand{\ddr}{\frac{\de}{\de r}}					% shortcut total derivative, in line
+\newcommand{\DELDR}[1]{\frac{\del  #1}{\del r}}			% shortcut partial derivative, on fraction
+\newcommand{\DDR}[1]{\frac{\de  #1}{\de r}}				% shortcut total derivative, on fraction
+
+
+% shortcut for TODO box
+\newcommand{\todo}[1]{\begin{mdframed}[style=todo,frametitle={TODO}] #1 \end{mdframed}}
+
+
+% quickly insert a figure without a caption
+% usage: \quickfig{filename}{label}
+\newcommand{\quickfig}[2]{
+	\begin{figure}[H]
+		\includegraphics[width=\textwidth]{#1}
+		\caption{\label{#2}}
+	\end{figure}
+}
+
+
+% replace \sum with \sum\limits
+\let\oldsum\sum
+\renewcommand{\sum}{\oldsum\limits}
+
+
+
+
+%--------------------------------------------
+%     OPTIONAL
+%--------------------------------------------
+
+
+
+%% Change font
+%\newcommand{\changefont}[3]{
+%\fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
+%\changefont{ppl}{m}{n} nach \begin{document} einsetzen
+
+%% Fig. instead of Figure, Tab. instead of Table
+%\usepackage[footnotesize]{caption2}
+%\addto\captionsngerman{\renewcommand{\figurename}{Fig.}}
+%\renewcommand{\tablename}{Tab.}%
+
+%\pagestyle{headings} % Write headings on each page
+
+%\usepackage{chngcntr} \counterwithout{figure}{section} % Integer only figure numbers, ignoring chapter numbers
+
+
+
+%-----------------------------------------------
+% FORMAT TITLE
+%-----------------------------------------------
+
+
+% Set fonts of document parts
+\setkomafont{title}{\rmfamily\bfseries\boldmath}
+\addtokomafont{section}{\rmfamily\bfseries\boldmath}
+\addtokomafont{subsection}{\rmfamily\bfseries\boldmath}
+\addtokomafont{subsubsection}{\rmfamily\bfseries\boldmath}
+\addtokomafont{disposition}{\rmfamily} % table of contents and stuff
+\setkomafont{descriptionlabel}{\rmfamily\bfseries\boldmath}
+
+
+
+%-----------------------------------------------
+% TEXT IN BOXES
+%-----------------------------------------------
+
+\usepackage[framemethod=TikZ]{mdframed}
+
+%New Colors (needs to be after usepackage mdframed)
+\definecolor{babyblueeyes}{rgb}{0.63, 0.79, 0.95}
+\definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
+\definecolor{caribbeangreen}{rgb}{0.0, 0.8, 0.6}
+\definecolor{bittersweet}{rgb}{1.0, 0.44, 0.37}
+
+\mdfdefinestyle{todo}{%
+	%rightline=true,
+	innerleftmargin=10,
+	innerrightmargin=10,
+	%frametitlerule=true,
+	%frametitlerulecolor=black,
+	frametitlebackgroundcolor=babyblueeyes,
+	frametitlerulewidth=2
+}
+
+
+\mdfdefinestyle{eyecatcher}{%
+	%rightline=true,
+	innerleftmargin=10,
+	innerrightmargin=10,
+	%frametitlerule=true,
+	%frametitlerulecolor=black,
+	frametitlebackgroundcolor=bittersweet,
+	frametitlerulewidth=2
+}
