@@ -926,7 +926,8 @@ void task_dump_all(struct engine *e, int step) {
               e->s_updates, cpufreq);
       int count = 0;
       for (int l = 0; l < e->sched.nr_tasks; l++) {
-        if (!e->sched.tasks[l].implicit && e->sched.tasks[l].tic > e->tic_step) {
+        if (!e->sched.tasks[l].implicit &&
+            e->sched.tasks[l].tic > e->tic_step) {
           fprintf(
               file_thread, " %03i %i %i %i %i %lli %lli %i %i %i %i %lli %i\n",
               engine_rank, e->sched.tasks[l].rid, e->sched.tasks[l].type,
