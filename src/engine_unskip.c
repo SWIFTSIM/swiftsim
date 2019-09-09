@@ -217,7 +217,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
 
   /* Unpack the meta data */
   struct unskip_data *data = (struct unskip_data *)extra_data;
-  const int multiplier = data->multiplier;
   const int num_active_cells = data->num_active_cells;
   const enum task_broad_types *const task_types = data->task_types;
   const int *const list_base = data->list_base;
@@ -242,7 +241,7 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
     const int type = delta / num_active_cells;
 
 #ifdef SWIFT_DEBUG_CHECKS
-    if (type >= multiplier) error("Invalid broad task type!");
+    if (type >= data->multiplier) error("Invalid broad task type!");
     if (c == NULL) error("Got an invalid cell index!");
 #endif
 
@@ -384,7 +383,7 @@ void engine_unskip(struct engine *e) {
 
   /* Activate all the regular tasks */
   threadpool_map(&e->threadpool, engine_do_unskip_mapper, local_active_cells,
-                 num_active_cells * multiplier, sizeof(int), 0, &data);
+                 num_active_cells * multiplier, sizeof(int), 1, &data);
 
 #ifdef WITH_PROFILER
   ProfilerStop();
