@@ -398,20 +398,28 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_dump(
 
   /* Dump the yields. */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    if (snii->integrated_yields[i].data == NULL) {
+      continue;
+    }
+
     const char *name = stellar_evolution_get_element_name(sm, i);
     restart_write_blocks((void*)snii->integrated_yields[i].data, sizeof(float), snii->integrated_yields[i].N,
 			 stream, name, name);
   }
 
   /*! Dump the processed mass. */
-  restart_write_blocks((void*)snii->integrated_ejected_mass_processed.data,
-		       sizeof(float), snii->integrated_ejected_mass_processed.N,
-		       stream, "processed_mass", "processed_mass");
+  if (snii->integrated_ejected_mass_processed.data != NULL) {
+    restart_write_blocks((void*)snii->integrated_ejected_mass_processed.data,
+			 sizeof(float), snii->integrated_ejected_mass_processed.N,
+			 stream, "processed_mass", "processed_mass");
+  }
 
   /*! Dump the non processed mass. */
-  restart_write_blocks((void*)snii->integrated_ejected_mass.data,
-		       sizeof(float), snii->integrated_ejected_mass.N,
-                       stream, "non_processed_mass", "non_processed_mass");
+  if (snii->integrated_ejected_mass.data != NULL) {
+    restart_write_blocks((void*)snii->integrated_ejected_mass.data,
+			 sizeof(float), snii->integrated_ejected_mass.N,
+			 stream, "non_processed_mass", "non_processed_mass");
+  }
 }
 
 
@@ -429,6 +437,10 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_restore(
 
   /* Restore the yields */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    if (snii->integrated_yields[i].data == NULL) {
+      continue;
+    }
+
     const char *name = stellar_evolution_get_element_name(sm, i);
     snii->integrated_yields[i].data = (float *) malloc(
       sizeof(float) * snii->integrated_yields[i].N);
@@ -440,20 +452,25 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_restore(
   }
 
   /* Restore the processed mass */
-  snii->integrated_ejected_mass_processed.data = (float *) malloc(
+  
+  if (snii->integrated_ejected_mass_processed.data != NULL) {
+    snii->integrated_ejected_mass_processed.data = (float *) malloc(
       sizeof(float) * snii->integrated_ejected_mass_processed.N);
 
-  restart_read_blocks((void*)snii->integrated_ejected_mass_processed.data,
-		      sizeof(float), snii->integrated_ejected_mass_processed.N, stream,
-		      NULL, "processed_mass");
+    restart_read_blocks((void*)snii->integrated_ejected_mass_processed.data,
+			sizeof(float), snii->integrated_ejected_mass_processed.N, stream,
+			NULL, "processed_mass");
+  }
 
   /* Restore the non processed mass */
-  snii->integrated_ejected_mass.data = (float *) malloc(
+  if (snii->integrated_ejected_mass.data != NULL) {
+    snii->integrated_ejected_mass.data = (float *) malloc(
       sizeof(float) * snii->integrated_ejected_mass.N);
 
-  restart_read_blocks((void*)snii->integrated_ejected_mass.data,
-		      sizeof(float), snii->integrated_ejected_mass.N, stream,
-		      NULL, "non_processed_mass");
+    restart_read_blocks((void*)snii->integrated_ejected_mass.data,
+			sizeof(float), snii->integrated_ejected_mass.N, stream,
+			NULL, "non_processed_mass");
+  }
 }
 
 #endif // SWIFT_SUPERNOVAE_II_GEAR_H
