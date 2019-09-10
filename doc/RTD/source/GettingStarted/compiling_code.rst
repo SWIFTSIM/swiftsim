@@ -8,7 +8,10 @@ Compiling SWIFT
 Compilers
 ---------
 
-SWIFT has been tested with the Intel, GCC, LLVM (clang).
+SWIFT is a C99 code, and as such requires a C compiler that is able
+to work with code built for that standard.
+
+SWIFT has been tested with the Intel, GCC, LLVM (clang) C compilers.
 
 We suggest:
 
