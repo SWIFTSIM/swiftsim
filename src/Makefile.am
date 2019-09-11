@@ -222,6 +222,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/EAGLE/cooling_io.h cooling/EAGLE/interpolate.h cooling/EAGLE/cooling_rates.h \
 		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
+                 cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
+                 cooling/CHIMES/cooling_io.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \

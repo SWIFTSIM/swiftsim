@@ -1747,6 +1747,9 @@ case "$with_cooling" in
    COLIBRE)
       AC_DEFINE([COOLING_COLIBRE], [1], [Cooling following the COLIBRE model])
    ;;
+   CHIMES)
+      AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
+   ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
    ;;
@@ -2128,6 +2131,8 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
+# Check if using CHIMES cooling
+AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
