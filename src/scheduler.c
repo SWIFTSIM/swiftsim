@@ -1596,40 +1596,11 @@ void scheduler_enqueue_mapper(void *map_data, int num_elements,
 }
 
 /**
- * @brief #threadpool_map function which runs through the task
- *        graph and resets the tasks' tic/toc.
- */
-void scheduler_init_task_timers_mapper(void *map_data, int num_elements,
-                                       void *extra_data) {
-
-  struct scheduler *s = (struct scheduler *)extra_data;
-  const int *tid = (int *)map_data;
-
-  for (int ind = 0; ind < num_elements; ind++) {
-    struct task *t = &s->tasks[tid[ind]];
-
-    t->tic = 0;
-    t->toc = 0;
-#ifdef SWIFT_DEBUG_TASKS
-    t->rid = -1;
-#endif
-  }
-}
-
-/**
  * @brief Start the scheduler, i.e. fill the queues with ready tasks.
  *
  * @param s The #scheduler.
  */
 void scheduler_start(struct scheduler *s) {
-
-  /* Reset all task timers. */
-  if (s->active_count > 1000) {
-    threadpool_map(s->threadpool, scheduler_init_task_timers_mapper,
-                   s->tid_active, s->active_count, sizeof(int), 0, s);
-  } else {
-    scheduler_init_task_timers_mapper(s->tid_active, s->active_count, s);
-  }
 
   /* Re-wait the tasks. */
   if (s->active_count > 1000) {
