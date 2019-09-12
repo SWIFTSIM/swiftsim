@@ -47,6 +47,7 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
+#include "feedback_properties.h"
 
 /* Maximum number of iterations for
  * bisection integration schemes */
@@ -257,6 +258,277 @@ static INLINE double bisection_iter(
 
   return u_upper_cgs;
 }
+
+
+/**
+ * @brief Set the subgrid properties of the gas particle 
+ * 
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param cosmo The current cosmological model.
+ * @param hydro_props the hydro_props struct
+ * @param starform the star formation law properties to initialize
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param fp feedback_props data structure
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+
+void set_subgrid_part(const struct phys_const *phys_const,
+                      const struct unit_system *us,
+                      const struct cosmology *cosmo,
+                      const struct hydro_props *hydro_props,
+                      const struct entropy_floor_properties *floor_props,
+                      const struct cooling_function_data *cooling,
+                      const struct feedback_props* fp,
+                      struct part *restrict p, struct xpart *restrict xp){
+
+
+  /* Limit imposed by the entropy floor */
+  /*const double A_floor = entropy_floor(p, cosmo, floor_props); */
+  const double rho = hydro_get_physical_density(p, cosmo);
+  /*const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);*/
+
+  /* Get the EOS temperature from the entropy floor */
+  const double temperature_eos =
+      entropy_floor_temperature(p, cosmo, floor_props);
+  const double dlogT_EOS = 0.15;
+  const float logT_EOS_max = (float) log10(temperature_eos) + dlogT_EOS;
+
+  const float temp = cooling_get_temperature(phys_const, hydro_props, us,
+                                                  cosmo, cooling, p, xp);
+
+  const float logT = log10(temp);
+
+  /* Get internal energy at the last kick step */
+  const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
+
+  int   ired, imet, iden;
+  float dred, dmet, dden;
+
+  /* Get this particle's abundance ratios compared to solar
+   * Note that we need to add S and Ca that are in the tables but not tracked
+   * by the particles themselves.
+   * The order is [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe, OA] */
+  float abundance_ratio[colibre_cooling_N_elementtypes];
+  float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
+
+  /* Get the Hydrogen and Helium mass fractions */
+  float const *metal_fraction =
+      chemistry_get_metal_mass_fraction_for_cooling(p);
+  const float XH = metal_fraction[chemistry_element_H];
+
+  /* convert Hydrogen mass fraction into Hydrogen number density */
+  const double n_H =
+      hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
+  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+
+
+  if (cosmo->z < cooling->H_reion_z) {
+    get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+                 &ired, &dred);
+  } else {
+    ired = colibre_cooling_N_redshifts - 2;
+    dred = 1.0;
+  }
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &imet, &dmet);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &iden, &dden);
+
+  if (logT < logT_EOS_max) {
+    /* below entropy floor: use subgrid properties */
+    const float pres = gas_pressure_from_internal_energy(rho, u_start);
+    const double pres_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+    const float logP = (float) log10( (double) pres * pres_to_cgs );
+    int iden_eq;
+    float dden_eq;
+    float logT_at_Peq, mu_at_Peq, logn_at_Peq, logHI, logHII, logH2;
+
+    /* check what would be the maximum Peq from the table for given redshift and metalllicity */
+    float logPeq_max = interpolation_3d_no_z( cooling->table.logPeq, 
+                                                     ired, imet, colibre_cooling_N_density-1,
+                                                     dred, dmet, 0.,
+                                                     colibre_cooling_N_redshifts,
+                                                     colibre_cooling_N_metallicity,
+                                                     colibre_cooling_N_density); 
+
+
+
+    if (logP >= logPeq_max) {
+         /* EOS pressure (logP) is larger than maximum Peq (can happen for very steep EOS)
+          * use Teq, mu, and HI fractions from the highest density bin, but calculate n 
+          * from P, T, and mu*/
+
+          logT_at_Peq = interpolation_3d_no_z(cooling->table.logTeq,
+                                               ired, imet, colibre_cooling_N_density-1,
+                                               dred, dmet, 0.,
+                                               colibre_cooling_N_redshifts,
+                                               colibre_cooling_N_metallicity,
+                                               colibre_cooling_N_density);
+
+          mu_at_Peq = interpolation_3d_no_z(cooling->table.meanpartmass_Teq,
+                                               ired, imet, colibre_cooling_N_density-1,
+                                               dred, dmet, 0.,
+                                               colibre_cooling_N_redshifts,
+                                               colibre_cooling_N_metallicity,
+                                               colibre_cooling_N_density);
+
+          /*const float logkB = (float) log10(const_boltzmann_k_cgs); doesn't work*/
+          const float logkB = log10(1.38064852e-16);
+          logn_at_Peq = logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - logkB;
+
+          logHI  = interpolation_4d_no_z_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, colibre_cooling_N_density-1, neutral,
+                                                   dred, dmet, 0., 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+
+          logHII  = interpolation_4d_no_z_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, colibre_cooling_N_density-1, ionized,
+                                                   dred, dmet, 0., 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+
+          logH2  = interpolation_4d_no_z_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, colibre_cooling_N_density-1, molecular,
+                                                   dred, dmet, 0., 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+
+    } else {
+
+          /* need to find thermal equilibrium state with the same pressure *
+           * logPeq is neither equally spaced, nor necessarily increasing monotonically *
+           * simple solution: loop over densities and pick the first one where logP = logPeq *
+           * start with the resolved density index (iden), as the subgrid density will 
+           * always be higher than the resolved density */ 
+      
+          for (int i = iden; i < colibre_cooling_N_density; i++) {
+              float logPeq_interp = interpolation_3d_no_z( cooling->table.logPeq, ired, imet, i,
+                                                           dred, dmet, 0., 
+                                                           colibre_cooling_N_redshifts,
+                                                           colibre_cooling_N_metallicity,
+                                                           colibre_cooling_N_density);
+              if (logPeq_interp > logP) {
+                  float logPeq_prev = interpolation_3d_no_z( cooling->table.logPeq, ired, imet, i-1,
+                                                           dred, dmet, 0.,
+                                                           colibre_cooling_N_redshifts,
+                                                           colibre_cooling_N_metallicity,
+                                                           colibre_cooling_N_density);
+                  logn_at_Peq = (logP - logPeq_prev) / (logPeq_interp - logPeq_prev) * 
+                             (cooling->nH[i] - cooling->nH[i-1]) + cooling->nH[i-1];
+                  iden_eq = i-1;
+                  dden_eq = (logn_at_Peq - cooling->nH[i-1]) / (cooling->nH[i] - cooling->nH[i-1]);
+                  break;
+              }
+          }
+      
+          logHI  = interpolation_4d_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, iden_eq, neutral,
+                                                   dred, dmet, dden_eq, 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+      
+          logHII = interpolation_4d_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, iden_eq, ionized,
+                                                   dred, dmet, dden_eq, 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+      
+          logH2  = interpolation_4d_no_w(cooling->table.logHfracs_Teq,
+                                                   ired, imet, iden_eq, molecular,
+                                                   dred, dmet, dden_eq, 0.,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density, 3);
+      
+          logT_at_Peq = interpolation_3d(cooling->table.logTeq, 
+                                                   ired, imet, iden_eq,
+                                                   dred, dmet, dden_eq,
+                                                   colibre_cooling_N_redshifts,
+                                                   colibre_cooling_N_metallicity,
+                                                   colibre_cooling_N_density);
+      
+    }
+
+    xp->tracers_data.nHI_over_nH  = exp10(logHI);
+    xp->tracers_data.nHII_over_nH = exp10(logHII);
+    xp->tracers_data.nH2_over_nH  = 0.5 * exp10(logH2);
+    xp->tracers_data.subgrid_temp = exp10(logT_at_Peq);
+    /* convert log nH to comoving density in SU */
+    xp->tracers_data.subgrid_dens = exp10(logn_at_Peq) / cooling->number_density_to_cgs / XH * 
+                      phys_const->const_proton_mass / cosmo->a3_inv;
+
+  } else {
+    /* above entropy floor: use table properties */
+    const double crho = hydro_get_comoving_density(p);
+    /* subgrid_dens should be the same as p->rho */
+    xp->tracers_data.subgrid_dens  = crho;
+
+    /* interpolate the tables for H fractions */
+    /* check if in an HII region */ 
+    if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+       xp->tracers_data.subgrid_temp = fp->HIIregion_temp;
+       xp->tracers_data.nHI_over_nH  = 1. - fp->HIIregion_fion;
+       xp->tracers_data.nHII_over_nH = fp->HIIregion_fion;
+       xp->tracers_data.nH2_over_nH  = 0.;
+    } else {
+       xp->tracers_data.subgrid_temp  = temp;
+
+
+       int item;
+       float dtem;
+
+       get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10(temp),
+               &item, &dtem);
+
+       /* necessary to define to use the interpolation routine */
+       const float weights[3] = {1.0, 1.0, 1.0}; 
+       /* "sum" from element 0 to 0 (neutral hydrogen) */
+
+       xp->tracers_data.nHI_over_nH = interpolation4d_plus_summation(cooling->table.logHfracs_all,
+                                                    weights, neutral, neutral, 
+                                                    ired, item, imet, iden, 
+                                                    dred, dtem, dmet, dden,
+                                                    colibre_cooling_N_redshifts, 
+                                                    colibre_cooling_N_temperature,
+                                                    colibre_cooling_N_metallicity, 
+                                                    colibre_cooling_N_density,    
+                                                    3);
+
+       /* "sum" from element 1 to 1 (ionized hydrogen) */
+       xp->tracers_data.nHII_over_nH = interpolation4d_plus_summation(cooling->table.logHfracs_all,
+                                                    weights, ionized, ionized, 
+                                                    ired, item, imet, iden, 
+                                                    dred, dtem, dmet, dden,
+                                                    colibre_cooling_N_redshifts, 
+                                                    colibre_cooling_N_temperature,
+                                                    colibre_cooling_N_metallicity, 
+                                                    colibre_cooling_N_density,    
+                                                    3);
+
+       /* "sum" from element 2 to 2 (molecular hydrogen) */
+       xp->tracers_data.nH2_over_nH  = 0.5 * interpolation4d_plus_summation(cooling->table.logHfracs_all,
+                                                    weights, molecular, molecular, 
+                                                    ired, item, imet, iden, 
+                                                    dred, dtem, dmet, dden,
+                                                    colibre_cooling_N_redshifts, 
+                                                    colibre_cooling_N_temperature,
+                                                    colibre_cooling_N_metallicity, 
+                                                    colibre_cooling_N_density,    
+                                                    3);
+
+    }
+  }
+}
+
 
 /**
  * @brief Apply the cooling function to a particle.

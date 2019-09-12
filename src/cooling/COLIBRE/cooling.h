@@ -32,10 +32,20 @@ struct xpart;
 struct cosmology;
 struct hydro_props;
 struct entropy_floor_properties;
+struct feedback_props;
 struct space;
 
 void cooling_update(const struct cosmology *cosmo,
                     struct cooling_function_data *cooling, struct space *s);
+
+void set_subgrid_part(const struct phys_const *phys_const,
+                      const struct unit_system *us,
+                      const struct cosmology *cosmo,
+                      const struct hydro_props *hydro_props,
+                      const struct entropy_floor_properties *floor_props,
+                      const struct cooling_function_data *cooling,
+                      const struct feedback_props* fp,
+                      struct part *restrict p, struct xpart *restrict xp);
 
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,

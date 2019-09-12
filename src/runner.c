@@ -1083,6 +1083,10 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
         heating_HII_part(constants, us, hydro_props, cosmo, cooling_func, 
                          feedback_props, p, xp, e->time);
 
+        set_subgrid_part(constants, us, cosmo, hydro_props, 
+                          entropy_floor_props, cooling_func, 
+                          feedback_props, p, xp);
+
       }
     }
   }

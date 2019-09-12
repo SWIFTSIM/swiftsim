@@ -55,6 +55,22 @@ struct cooling_tables {
 
   /* array to get U from T */
   float *U_from_T;
+
+  /* array of equilibrium temperatures */
+  float *logTeq;
+
+  /* array of mean particle masses at equilibrium temperatures */
+  float *meanpartmass_Teq;
+
+  /* array of pressures at equilibrium temperatures */
+  float *logPeq;
+
+  /* array of hydrogen fractions at equilibrium temperature */
+  float *logHfracs_Teq;
+
+  /* array of all hydrogen fractions */
+  float *logHfracs_all;
+  
 };
 
 /**
