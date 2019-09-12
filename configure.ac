@@ -1123,6 +1123,33 @@ AC_SUBST([GRACKLE_LIBS])
 AC_SUBST([GRACKLE_INCS])
 AM_CONDITIONAL([HAVEGRACKLE],[test -n "$GRACKLE_LIBS"])
 
+# Check for Sundials (required for the CHIMES library).
+have_sundials="no"
+SUNDIALS_LIBS=""
+SUNDIALS_INCS=""
+AC_ARG_WITH([sundials],
+    [AS_HELP_STRING([--with-sundials=PATH],
+       [root directory where sundials is installed @<:@yes/no@:>@]
+    )],
+    [with_sundials="$withval"],
+    [with_sundials="no"]
+)
+if test "x$with_sundials" != "xno"; then
+   AC_PROG_FC
+   AC_FC_LIBRARY_LDFLAGS
+   if test "x$with_sundials" != "xyes" -a "x$with_sundials" != "x"; then
+      SUNDIALS_LIBS="-L$with_sundials/lib -lsundials_cvode -lsundials_nvecserial"
+      SUNDIALS_INCS="-I$with_sundials/include"
+   else
+      SUNDIALS_LIBS="-lsundials_cvode -lsundials_nvecserial"
+      SUNDIALS_INCS=""
+   fi
+
+   have_sundials="yes"
+fi
+AC_SUBST([SUNDIALS_LIBS])
+AC_SUBST([SUNDIALS_INCS])
+
 # Check for VELOCIraptor.
 have_velociraptor="no"
 AC_ARG_WITH([velociraptor],
@@ -1705,6 +1732,7 @@ case "$with_riemann" in
       AC_MSG_ERROR([Unknown Riemann solver: $with_riemann])
    ;;
 esac
+
 #  Cooling function
 AC_ARG_WITH([cooling],
    [AS_HELP_STRING([--with-cooling=<function>],
@@ -1749,6 +1777,12 @@ case "$with_cooling" in
    ;;
    CHIMES)
       AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
+      AC_MSG_CHECKING([for Sundials libraries])
+      AC_MSG_RESULT($have_sundials)
+      
+      if test "$have_sundials" != "yes"; then 
+         AC_MSG_ERROR([The Sundials library is not present. Sundials is required for the CHIMES module.]) 
+      fi
    ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
