@@ -36,6 +36,8 @@
 #include "hydro.h"
 #include "hydro_properties.h"
 #include "part.h"
+#include "cooling/CHIMES/chimes/chimes_vars.h" 
+#include "cooling/CHIMES/chimes/chimes_proto.h" 
 
 /**
  * @brief Common operations performed on the cooling function at a

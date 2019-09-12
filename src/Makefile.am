@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Add the non-standard paths to the included library headers
-AM_CFLAGS = $(HDF5_CPPFLAGS) $(GSL_INCS) $(FFTW_INCS) $(NUMA_INCS) $(GRACKLE_INCS)
+AM_CFLAGS = $(HDF5_CPPFLAGS) $(GSL_INCS) $(FFTW_INCS) $(NUMA_INCS) $(GRACKLE_INCS) $(SUNDIALS_INCS) 
 
 # Assign a "safe" version number
 AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS) -version-info 0:0:0
@@ -25,7 +25,7 @@ AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS) -version-info 0:0:0
 GIT_CMD = @GIT_CMD@
 
 # Additional dependencies for shared libraries.
-EXTRA_LIBS = $(HDF5_LIBS) $(FFTW_LIBS) $(NUMA_LIBS) $(PROFILER_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(TBBMALLOC_LIBS) $(GRACKLE_LIBS) $(GSL_LIBS)
+EXTRA_LIBS = $(HDF5_LIBS) $(FFTW_LIBS) $(NUMA_LIBS) $(PROFILER_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(TBBMALLOC_LIBS) $(GRACKLE_LIBS) $(GSL_LIBS) $(SUNDIALS_LIBS) 
 
 # MPI libraries.
 MPI_LIBS = $(PARMETIS_LIBS) $(METIS_LIBS) $(MPI_THREAD_LIBS)
@@ -80,6 +80,12 @@ if HAVECOLIBREFEEDBACK
 COLIBRE_FEEDBACK_SOURCES += feedback/COLIBRE/feedback.c
 endif
 
+# source files for CHIMES cooling
+CHIMES_COOLING_SOURCES =
+if HAVECHIMESCOOLING
+CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/interpol.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c 
+endif
+
 
 
 # Common source files
@@ -96,7 +102,8 @@ AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c 
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c fof.c \
     hashmap.c pressure_floor.c \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
-    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES)
+    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
+    $(CHIMES_COOLING_SOURCES) 
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
@@ -215,7 +222,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
                  cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
-                 cooling/CHIMES/cooling_io.h \
+                 cooling/CHIMES/cooling_io.h cooling/CHIMES/chimes/chimes_vars.h \
+                 cooling/CHIMES/chimes/chimes_proto.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \
