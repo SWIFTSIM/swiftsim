@@ -84,7 +84,7 @@ endif
 # source files for CHIMES cooling
 CHIMES_COOLING_SOURCES =
 if HAVECHIMESCOOLING
-CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/interpol.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c 
+CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/interpol.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c 
 endif
 
 
