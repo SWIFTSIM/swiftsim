@@ -469,6 +469,7 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
+  use_HIIregions:                   1               # Global switch for early feedback (HII regions).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -487,6 +488,8 @@ COLIBREFeedback:
   SNIa_timescale_Gyr:              2.0              # Time-scale of the exponential decay of the SNIa rates in Gyr.
   SNIa_efficiency_p_Msun:          0.002            # Normalisation of the SNIa rates in inverse solar masses.
   SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
+  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
+  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
@@ -502,6 +505,11 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
+  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
+  HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
+  HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
+  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5 # Location of file for early feedback
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:

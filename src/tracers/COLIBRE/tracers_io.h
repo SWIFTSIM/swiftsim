@@ -78,7 +78,17 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.momentum_received,
       "Momentum received from stellar winds in physical coordinates");
 
-  return 3;
+  list[3] = io_make_output_field(
+      "HIIregionsEndTime", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+      tracers_data.HIIregion_timer_gas,
+      "Time until particle is in HII region");
+
+  list[4] = io_make_output_field(
+      "HIIregionsStarID", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      tracers_data.HIIregion_starid,
+      "ID of star particle responsible for this HII region");
+
+  return 5;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(

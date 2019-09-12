@@ -45,6 +45,17 @@ struct feedback_spart_data {
      * @brief Values to be distributed to the gas neighbours.
      */
     struct {
+      /*! Age of star particle in Myr when SNII goes off */
+      double SNII_star_age_Myr;
+
+      /*! HII region timer */
+      float HIIregion_endtime;
+
+      /*! ID of star particle responsible for HII region */
+      long long HIIregion_starid;
+
+      /*! HII region probability */
+      float HIIregion_probability;
 
       /*! momentum available at the given timestep */
       float momentum;

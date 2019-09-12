@@ -91,6 +91,9 @@ struct feedback_props {
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
 
+  /*! Are we doing HII regions? */
+  int with_HIIregions;
+
   /* ------------ Yield tables    ----------------- */
 
   /* Yield tables for AGB and SNII  */
@@ -254,7 +257,48 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
+
+  /* ------------ Early feedback properties ------------ */
+ 
+  /* Location of early feedback tables */
+  char early_feedback_table_path[200];
+
+  /* Ionization fraction of gas particles tagged as HII regions */
+  float HIIregion_fion;
+
+  /* Temperature of gas particles tagged as HII regions */
+  float HIIregion_temp;
+
+  /* Maximum age in Myr of star particle to build HII region */
+  float HIIregion_maxageMyr;
+
+  /* Time between rebuilding the HII region in Myr */
+  float HIIregion_dtMyr;
+
+  /* Recombination coefficient in cgs units [cm3 s-1]*/
+  float alpha_caseb_recomb;
+
+  /* Number of age bins */
+  int HII_nr_agebins;
+
+  /* Number of metallicity bins */
+  int HII_nr_metbins;
+
+  /* Metallicity bins (log Z, metal mass fractions) from BPASS */
+  float *HII_logZbins;
+
+  /* Age bins (star age in Myr) */
+  float *HII_agebins;
+
+  /* Cumululative number of ionizing photons per g stellar mass 
+   * dimension [HII_nr_metbins, HII_nr_agebins] */
+  float *HII_logQcum;
 };
+
+double compute_average_photoionizing_luminosity(const struct feedback_props* fp, 
+                                                float t1, float t2, float Z);
+
+double get_cumulative_ionizing_photons(const struct feedback_props* fp, float t_Myr, float logZ);
 
 void feedback_props_init(struct feedback_props *fp,
                          const struct phys_const *phys_const,

@@ -168,8 +168,14 @@ static INLINE double bisection_iter(
     if (i >= bisection_max_iterations) {
       error(
           "particle %llu exceeded max iterations searching for bounds when "
-          "cooling",
-          ID);
+          "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = %.4f\n"
+          "n_H_index = %i, d_n_H = %.4f\n"
+          "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial Lambda = %.4e",
+          ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met, red_index, d_red, 
+          colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0)
+          );
     }
   } else {
 
@@ -204,8 +210,13 @@ static INLINE double bisection_iter(
     if (i >= bisection_max_iterations) {
       error(
           "particle %llu exceeded max iterations searching for bounds when "
-          "heating",
-          ID);
+          "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = %.4f\n"
+          "n_H_index = %i, d_n_H = %.4f\n"
+          "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial Lambda = %.4e",
+          ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met, red_index, d_red, 
+          colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
+                           n_H_index, d_n_H, met_index, d_met, red_index, d_red,
+                           cooling, 0, 0, 0, 0) );
     }
   }
 
@@ -486,6 +497,81 @@ __attribute__((always_inline)) INLINE void cooling_first_init_part(
 
   xp->cooling_data.radiated_energy = 0.f;
 }
+
+
+/**
+ * @brief Compute the internal energy of a #part based on the cooling function
+ * but for a given temperature. This is used e.g. for particles in HII regions
+ * that are set to a constant temperature, but their internal energies should
+ * reflect the particle composition
+ *
+ * @param phys_const #phys_const data structure.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param us The internal system of units.
+ * @param cosmo #cosmology data structure.
+ * @param cooling #cooling_function_data struct.
+ * @param p #part data.
+ * @param xp Pointer to the #xpart data.
+ * @param desired gas temperature 
+ */
+float cooling_get_internalenergy_for_temperature(
+    const struct phys_const *restrict phys_const,
+    const struct hydro_props *restrict hydro_props,
+    const struct unit_system *restrict us,
+    const struct cosmology *restrict cosmo,
+    const struct cooling_function_data *restrict cooling,
+    const struct part *restrict p, const struct xpart *restrict xp, float temp) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (cooling->Redshifts == NULL)
+    error(
+        "Cooling function has not been initialised. Did you forget the "
+        "--temperature runtime flag?");
+#endif
+
+  /* Get the Hydrogen mass fraction */
+  float const *metal_fraction =
+      chemistry_get_metal_mass_fraction_for_cooling(p);
+  const float XH = metal_fraction[chemistry_element_H];
+
+  /* Convert Hydrogen mass fraction into Hydrogen number density */
+  const float rho = hydro_get_physical_density(p, cosmo);
+  const double n_H = rho * XH / phys_const->const_proton_mass;
+  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+
+  const float logZZsol =
+      log10(chemistry_get_total_metal_mass_fraction_for_cooling(p) /
+            cooling->Zsol[0]);
+
+  /* compute hydrogen number density, metallicity and redshift indices and
+   * offsets  */
+
+  float d_red, d_met, d_n_H;
+  int red_index, met_index, n_H_index;
+
+  if (cosmo->z < cooling->H_reion_z) {
+      get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+                   &red_index, &d_red);
+  } else {
+      red_index = colibre_cooling_N_redshifts - 2;
+      d_red = 1.0;
+  }
+
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &met_index, &d_met);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &n_H_index, &d_n_H);
+
+  /* Compute the log10 of the temperature by interpolating the table */
+  const double log_10_U =
+      colibre_convert_temp_to_u(log10(temp), cosmo->z, n_H_index, d_n_H,
+                                met_index, d_met, red_index, d_red, cooling);
+
+  /* Undo the log! */
+  return exp10(log_10_U);
+
+}
+
 
 /**
  * @brief Compute the temperature of a #part based on the cooling function.

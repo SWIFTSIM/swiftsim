@@ -26,13 +26,14 @@
 #include "hydro_properties.h"
 #include "part.h"
 #include "units.h"
+#include "cooling.h"
 
 #include <strings.h>
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt);
+                               const double dt, const double time_beg_of_step);
 
 /**
  * @brief Should we do feedback for this star?
@@ -116,6 +117,11 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   /* Zero the amount of momentum available */
   sp->feedback_data.to_distribute.momentum = 0.f;
   sp->feedback_data.to_distribute.momentum_probability = -1.f;
+
+  /* Reset the HII region probability */
+  sp->feedback_data.to_distribute.HIIregion_probability = -1.f;
+  sp->feedback_data.to_distribute.HIIregion_endtime = -1.f;
+  sp->feedback_data.to_distribute.HIIregion_starid = -1;
 }
 
 /**
@@ -145,6 +151,67 @@ __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
 __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {}
 
+
+
+/**
+ * @brief changes the particle properties of gas particles flagged as HII region
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param hydro_properties the hydro_props struct
+ * @param cosmo The current cosmological model.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param feedback_props feedback_props data structure
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param time Time since Big Bang
+ *
+ */
+
+INLINE static void heating_HII_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct hydro_props *hydro_properties,
+                       const struct cosmology *cosmo,
+                       const struct cooling_function_data *cooling,
+                       const struct feedback_props* feedback_props,
+                       struct part *restrict p, struct xpart *restrict xp,
+                       double time) {
+
+  /* nothing to do, if we don't use HII regions */
+  if (!feedback_props->with_HIIregions) return;
+
+
+  if ( (time <= xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+     /*const float temp = cooling_get_temperature (phys_const, hydro_properties, us, cosmo, cooling, p, xp); */
+
+     const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
+     /* HII region internal energy is the internal energy of a particle at a
+      * temperature of feedback_props->HIIregion_temp */
+     const float u_HII_cgs = cooling_get_internalenergy_for_temperature (phys_const, hydro_properties, us, 
+                                                                       cosmo, cooling, p, xp, 
+                                                                       feedback_props->HIIregion_temp);
+
+     const float u_HII = u_HII_cgs / cooling->internal_energy_to_cgs;
+
+     if (u_old < u_HII) {
+        /* Inject energy into the particle */
+        hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
+        hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
+
+        /* internal energy should stay constant for the timestep */
+        const float cooling_du_dt = 0.;
+        hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+     }
+  } else if ( (time > xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+    xp->tracers_data.HIIregion_timer_gas = -1.;
+    xp->tracers_data.HIIregion_starid = -1;
+  }
+
+
+  return;
+}
+
+
 /**
  * @brief Evolve the stellar properties of a #spart.
  *
@@ -158,11 +225,12 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
+ * @param time_beg_of_step Time at the beginning of the time step
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt) {
+    const double star_age_beg_step, const double dt, const double time_beg_of_step) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -171,7 +239,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
   compute_stellar_evolution(feedback_props, cosmo, sp, us, star_age_beg_step,
-                            dt);
+                            dt, time_beg_of_step);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;
