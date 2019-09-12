@@ -1214,7 +1214,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       cosmo->a2_inv;
 
   /* Star age in Myr to store in case an SNII event occurs */
-  sp->feedback_data.to_distribute.SNII_star_age_Myr = star_age_Myr;
+  sp->feedback_data.to_distribute.SNII_star_age_Myr = (float) star_age_Myr;
 
   TIMER_TOC(timer_do_star_evol);
 }

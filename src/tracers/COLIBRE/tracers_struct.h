@@ -29,6 +29,12 @@ struct tracers_xpart_data {
 
   float momentum_received;
 
+  /* subgrid temperature */
+  float subgrid_temp;
+
+  /* subgrid density */
+  float subgrid_dens;
+
   /*! Hydrogen fractions */
   float nHI_over_nH;
   float nHII_over_nH;

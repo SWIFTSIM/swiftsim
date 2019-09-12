@@ -46,7 +46,7 @@ struct feedback_spart_data {
      */
     struct {
       /*! Age of star particle in Myr when SNII goes off */
-      double SNII_star_age_Myr;
+      float SNII_star_age_Myr;
 
       /*! HII region timer */
       float HIIregion_endtime;
