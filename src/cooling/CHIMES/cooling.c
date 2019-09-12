@@ -44,7 +44,4 @@
 #include "space.h"
 #include "units.h"
 
-/* Structure containing global variables 
- * for the CHIMES module. */
-struct globalVariables ChimesGlobalVars; 
 

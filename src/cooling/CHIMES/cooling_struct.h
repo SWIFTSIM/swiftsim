@@ -21,13 +21,21 @@
 
 /**
  * @file src/cooling/CHIMES/cooling_struct.h
- * @brief Empty infrastructure for CHIMES cooling. 
+ * @brief Infrastructure for CHIMES cooling. 
  */
 
 /**
- * @brief Properties of the cooling function.
+ * @brief Properties of the cooling function. 
+ * This includes the globalVaraibles structure 
+ * that holds the parameters used to control 
+ * the behaviour of the CHIMES module. 
  */
-struct cooling_function_data {};
+struct cooling_function_data {
+
+  /* CHIMES global variables. */ 
+  struct globalVariables ChimesGlobalVars; 
+
+};
 
 /**
  * @brief Properties of the cooling stored in the particle data

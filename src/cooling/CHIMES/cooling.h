@@ -39,11 +39,6 @@
 #include "cooling/CHIMES/chimes/chimes_vars.h" 
 #include "cooling/CHIMES/chimes/chimes_proto.h" 
 
-
-/* Structure containing global variables 
- * for the CHIMES module. */
-extern struct globalVariables ChimesGlobalVars; 
-
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
