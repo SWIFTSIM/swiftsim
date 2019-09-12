@@ -1394,6 +1394,12 @@ void feedback_props_init(struct feedback_props* fp,
   fp->E_SNIa =
       fp->E_SNIa_cgs / units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
 
+  /* Time interval to use to store the SNIa events */
+  fp->delta_time_feedback_logger_Myr = parser_get_param_double(params, "COLIBREFeedback:delta_time_feedback_logger_Myr");
+  fp->delta_time_feedback_logger = fp->delta_time_feedback_logger_Myr * 1e6 * phys_const->const_year;
+  message("%e %e", fp->delta_time_feedback_logger_Myr, fp->delta_time_feedback_logger);
+
+
   /* Properties of the SNIa enrichment model -------------------------------- */
 
   /* Read AGB ejecta velocity */

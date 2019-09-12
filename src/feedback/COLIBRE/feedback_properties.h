@@ -148,6 +148,10 @@ struct feedback_props {
   /* Energy fraction for supernova type Ia feedback */
   float SNIa_f_E;
 
+  /* Feedback logger properties */
+  double delta_time_feedback_logger_Myr;
+  double delta_time_feedback_logger;
+
   /* ------------- AGB parameters    ---------------- */
 
   /*! Specific kinetic energy injected from AGB ejectas (in internal units). */

@@ -76,32 +76,6 @@ get_integer_timestep(timebin_t bin) {
 __attribute__((const)) static INLINE timebin_t
 get_time_bin(integertime_t time_step) {
 
-  static long long int count = 0;
-  static long long int count_weird_up = 0;
-  static long long int count_weird_down = 0;
-
-  const double diff = 0.0001;
-  const double time_normal = time_step;
-  const double time_low = time_normal * (1.f + diff);
-  const double time_up = time_normal * (1.f - diff);
-  integertime_t lowdiv = (integertime_t) (time_low);
-  integertime_t updiv = (integertime_t) (time_up);
-
-  count += 1;
-  timebin_t fiducial = (timebin_t)((8 * sizeof(integertime_t) - 2) -
-                     intrinsics_clzll((unsigned long long)time_step));
-  timebin_t bin_up = (timebin_t)((8 * sizeof(integertime_t) - 2) -
-                     intrinsics_clzll((unsigned long long)updiv));
-  timebin_t bin_low = (timebin_t)((8 * sizeof(integertime_t) - 2) -
-                     intrinsics_clzll((unsigned long long)lowdiv));
-  if ((fiducial != bin_low)){
-    count_weird_down += 1;
-    printf("CASE 1: true=%d up=%d low=%d double true = %e up=%e low=%e total=%lld total_edge=%lld %lld \n", fiducial, bin_up, bin_low, time_normal, time_low, time_up, count, count_weird_up, count_weird_down);
-  }
-  if ((fiducial != bin_up)){
-    count_weird_up += 1;
-    printf("CASE 2: true=%d up=%d low=%d double true = %e up=%e low=%e total=%lld total_edge=%lld %lld \n", fiducial, bin_up, bin_low, time_normal, time_low, time_up, count, count_weird_up, count_weird_down);
-  }
   /* ((int) log_2(time_step)) - 1 */
   return (timebin_t)((8 * sizeof(integertime_t) - 2) -
                      intrinsics_clzll((unsigned long long)time_step));

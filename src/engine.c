@@ -2173,10 +2173,12 @@ void engine_step(struct engine *e) {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   e->tic_step = getticks();
+  static double feedback_logger_time = 0;
+  feedback_logger_time += e->time_step;
 
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
-  if (e->policy & engine_policy_feedback && e->step % 100 == 0) {
+  if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
     int total_events;
     double global_SNIa_info;
     if (lock_lock(&lock_SNIa) == 0) {
@@ -2193,6 +2195,7 @@ void engine_step(struct engine *e) {
                 log_SNIa.SNIa_energy);
       } else {
         feedback_logger_SNIa_clear(&log_SNIa);
+        feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
       }
     }
     if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
@@ -2221,12 +2224,13 @@ void engine_step(struct engine *e) {
       fflush(e->sfh_logger);
     }
 
-    if (e->policy & engine_policy_feedback && e->step % 100 == 0) {
+    if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
       message("Dividable step!, %e", e->s->dim[1]);
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
       feedback_logger_SNIa_log_data(
           e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
           e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
       feedback_logger_SNIa_clear(&log_SNIa);
       fflush(e->SNIa_logger);
     }

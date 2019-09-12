@@ -187,6 +187,7 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
+  delta_time_feedback_logger_Myr:   1.0
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:

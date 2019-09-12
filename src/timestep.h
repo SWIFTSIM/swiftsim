@@ -39,8 +39,17 @@ __attribute__((always_inline)) INLINE static integertime_t
 make_integer_timestep(float new_dt, timebin_t old_bin, integertime_t ti_current,
                       double time_base_inv) {
 
+  /* Counters */
+  static int count = 0;
+  static int count_edge = 0;
+
   /* Convert to integer time */
   integertime_t new_dti = (integertime_t)(new_dt * time_base_inv);
+
+  /* Other ineger times */
+  const double small_frac = 0.0001;
+  integertime_t new_dti_up = (integertime_t)(new_dt * time_base_inv * (1.f + small_frac));
+  integertime_t new_dti_down = (integertime_t)(new_dt * time_base_inv * (1.f - small_frac));
 
   /* Current time-step */
   integertime_t current_dti = get_integer_timestep(old_bin);
@@ -48,11 +57,26 @@ make_integer_timestep(float new_dt, timebin_t old_bin, integertime_t ti_current,
 
   /* Limit timestep increase */
   if (old_bin > 0) new_dti = min(new_dti, 2 * current_dti);
+  if (old_bin > 0) {
+    new_dti_up = min(new_dti_up, 2 * current_dti);
+    new_dti_down = min(new_dti_down, 2 * current_dti);
+  }
+
+  count += 1;
 
   /* Put this timestep on the time line */
   integertime_t dti_timeline = max_nr_timesteps;
   while (new_dti < dti_timeline) dti_timeline /= ((integertime_t)2);
   new_dti = dti_timeline;
+  while (new_dti_up < dti_timeline) dti_timeline /= ((integertime_t)2);
+  new_dti_up = dti_timeline;
+  while (new_dti_down < dti_timeline) dti_timeline /= ((integertime_t)2);
+  new_dti_down = dti_timeline;
+  if ((new_dti != new_dti_up) || (new_dti != new_dti_down)) {
+    count_edge += 1;
+    message("Not all 3 matching %lld %lld %lld %d %d %e", new_dti, new_dti_up, new_dti_down, count, count_edge, (double)count_edge/(double)count);
+
+  }
 
   /* Make sure we are allowed to increase the timestep size */
   if (new_dti > current_dti) {
