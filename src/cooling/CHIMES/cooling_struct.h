@@ -24,6 +24,10 @@
  * @brief Infrastructure for CHIMES cooling. 
  */
 
+/* Local includes. */
+#include "cooling/CHIMES/chimes/chimes_vars.h" 
+#include "cooling/CHIMES/chimes/chimes_proto.h"
+
 /**
  * @brief Properties of the cooling function. 
  * This includes the globalVaraibles structure 
@@ -34,6 +38,14 @@ struct cooling_function_data {
 
   /* CHIMES global variables. */ 
   struct globalVariables ChimesGlobalVars; 
+
+  /* Flags to control UV field and 
+   * shielding options. */ 
+  int UV_field_flag; 
+  int Shielding_flag; 
+
+  /* Temperature of the CMB at present day */
+  double T_CMB_0;
 
 };
 

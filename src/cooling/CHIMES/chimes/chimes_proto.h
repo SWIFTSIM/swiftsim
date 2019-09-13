@@ -3,11 +3,11 @@
 #include <sundials/sundials_dense.h>
 #include <hdf5.h>
 
-#ifndef max
-#define max(a,b) ((a) > (b) ? (a) : (b))
+#ifndef chimes_max
+#define chimes_max(a,b) ((a) > (b) ? (a) : (b))
 #endif
-#ifndef min
-#define min(a,b) ((a) < (b) ? (a) : (b))
+#ifndef chimes_min
+#define chimes_min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 // chimes_cooling.c 

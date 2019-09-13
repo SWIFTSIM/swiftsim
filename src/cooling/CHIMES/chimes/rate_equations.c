@@ -16,7 +16,7 @@ void check_constraint_equations(struct gasVariables *myGasVars, struct globalVar
   int i;
 
   for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++)
-    myGasVars->abundances[i] = max(myGasVars->abundances[i], 0.0); 
+    myGasVars->abundances[i] = chimes_max(myGasVars->abundances[i], 0.0); 
 
   /* Helium */
   if (myGasVars->element_abundances[0] > METALS_MINIMUM_THRESHOLD)
@@ -424,7 +424,7 @@ void check_constraint_equations(struct gasVariables *myGasVars, struct globalVar
 
   x += myGasVars->abundances[myGlobalVars->speciesIndices[H2p]] + myGasVars->abundances[myGlobalVars->speciesIndices[H3p]];
 
-  if (fabs((x - myGasVars->abundances[myGlobalVars->speciesIndices[elec]]) / max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]], 1.0e-100)) > 0.01)
+  if (fabs((x - myGasVars->abundances[myGlobalVars->speciesIndices[elec]]) / chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]], 1.0e-100)) > 0.01)
     myGasVars->abundances[myGlobalVars->speciesIndices[elec]] = x;
 }
 
@@ -457,7 +457,7 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
    * vector y is the internal energy (per unit volume). Use this 
    * to update the temperature, and also the rates that depend on T */
   if (data->myGasVars->ThermEvolOn == 1)
-    data->myGasVars->temperature = max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
+    data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
 
   // Update rates 
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data, data->myGasVars->ThermEvolOn); 
@@ -484,7 +484,7 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
       if (data->myGasVars->temperature > data->myGasVars->TempFloor)
 	NV_Ith_S(ydot, data->network_size) = (realtype) -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data);		/* Note that network_size is the number of chemcial species, hence No. of eqns = network_size + 1 when ThermEvol is on */
       else
-  	NV_Ith_S(ydot, data->network_size) = (realtype) max(-calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data), 0.0);  /* Once T falls below T_floor, set T_dot >= 0 */ 
+  	NV_Ith_S(ydot, data->network_size) = (realtype) chimes_max(-calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data), 0.0);  /* Once T falls below T_floor, set T_dot >= 0 */ 
     }
 
   return 0;

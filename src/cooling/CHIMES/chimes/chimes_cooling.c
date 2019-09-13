@@ -71,7 +71,7 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
 	{
 	  chimes_get_table_index(chimes_table_bins.cool_2d_Temperatures, chimes_table_bins.N_cool_2d_Temperatures, log_T, &T_index, &dT); 
 
-	  log_ne = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]] * myGasVars->nH_tot, 1.0e-100)); 
+	  log_ne = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]] * myGasVars->nH_tot, 1.0e-100)); 
 	  chimes_get_table_index(chimes_table_bins.cool_2d_ElectronDensities, chimes_table_bins.N_cool_2d_ElectronDensities, log_ne, &ne_index, &dne); 
       
 	  for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++) 
@@ -92,9 +92,9 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
 	{
 	  chimes_get_table_index(chimes_table_bins.cool_4d_Temperatures, chimes_table_bins.N_cool_4d_Temperatures, log_T, &T_index, &dT); 
       
-	  log_nHI = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[HI]] * myGasVars->nH_tot, 1.0e-100)); 
-	  log_ne = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]] * myGasVars->nH_tot, 1.0e-100)); 
-	  log_nHII = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]] * myGasVars->nH_tot, 1.0e-100)); 
+	  log_nHI = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HI]] * myGasVars->nH_tot, 1.0e-100)); 
+	  log_ne = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[elec]] * myGasVars->nH_tot, 1.0e-100)); 
+	  log_nHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]] * myGasVars->nH_tot, 1.0e-100)); 
 
 	  chimes_get_table_index(chimes_table_bins.cool_4d_HIDensities, chimes_table_bins.N_cool_4d_HIDensities, log_nHI, &nHI_index, &dnHI); 
 	  chimes_get_table_index(chimes_table_bins.cool_4d_ElectronDensities, chimes_table_bins.N_cool_4d_ElectronDensities, log_ne, &ne_index, &dne); 
@@ -157,7 +157,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
     total_cooling -= 3.2e-11 * chimes_table_cosmic_ray.current_rate[data.thread_index][i] / myGasVars->nH_tot; 
 
   // Correct for secondary cosmic rays 
-  log_xHII = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100));
+  log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100));
   chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII, chimes_table_bins.N_secondary_cosmic_ray_xHII, log_xHII, &xHII_index, &d_xHII); 
   for (i = 0; i < 2; i++) 
     {
@@ -209,9 +209,9 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
 	{
 	  // N_eff units: cm^-2 per km s^-1 
 	  if (myGlobalVars->StaticMolCooling == 1)
-	    log_N_eff = (ChimesFloat) log10(max(1.0e5 * data.CO_column / (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature / (PROTON_MASS * calculate_mean_molecular_weight(myGasVars, myGlobalVars)))), 1.0e-100));	
+	    log_N_eff = (ChimesFloat) log10(chimes_max(1.0e5 * data.CO_column / (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature / (PROTON_MASS * calculate_mean_molecular_weight(myGasVars, myGlobalVars)))), 1.0e-100));	
 	  else
-	    log_N_eff = (ChimesFloat) log10(max(1.0e5 * myGasVars->abundances[myGlobalVars->speciesIndices[CO]] * myGasVars->nH_tot / max(fabs(myGasVars->divVel), 1.0e-100), 1.0e-100)); 
+	    log_N_eff = (ChimesFloat) log10(chimes_max(1.0e5 * myGasVars->abundances[myGlobalVars->speciesIndices[CO]] * myGasVars->nH_tot / chimes_max(fabs(myGasVars->divVel), 1.0e-100), 1.0e-100)); 
 	  
 	  chimes_get_table_index(chimes_table_bins.CO_cool_rot_ColumnDensities, chimes_table_bins.N_CO_cool_rot_ColumnDensities, log_N_eff, &N_CO_rot_index, &dN_CO_rot); 
 	  chimes_get_table_index(chimes_table_bins.CO_cool_vib_ColumnDensities, chimes_table_bins.N_CO_cool_vib_ColumnDensities, log_N_eff, &N_CO_vib_index, &dN_CO_vib); 
@@ -238,9 +238,9 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       if (myGlobalVars->element_included[2] == 1) 
 	{
 	  if (myGlobalVars->StaticMolCooling == 1)
-	    log_N_eff = (ChimesFloat) log10(max(1.0e5 * data.H2O_column / (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature / (PROTON_MASS * calculate_mean_molecular_weight(myGasVars, myGlobalVars)))), 1.0e-100)); 
+	    log_N_eff = (ChimesFloat) log10(chimes_max(1.0e5 * data.H2O_column / (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature / (PROTON_MASS * calculate_mean_molecular_weight(myGasVars, myGlobalVars)))), 1.0e-100)); 
 	  else
-	    log_N_eff = (ChimesFloat) log10(max(1.0e5 * myGasVars->abundances[myGlobalVars->speciesIndices[H2O]] * myGasVars->nH_tot / max(fabs(myGasVars->divVel), 1.0e-100), 1.0e-100)); 
+	    log_N_eff = (ChimesFloat) log10(chimes_max(1.0e5 * myGasVars->abundances[myGlobalVars->speciesIndices[H2O]] * myGasVars->nH_tot / chimes_max(fabs(myGasVars->divVel), 1.0e-100), 1.0e-100)); 
 	  
 	  // rotational cooling 
 	  chimes_get_table_index(chimes_table_bins.H2O_cool_rot_ColumnDensities, chimes_table_bins.N_H2O_cool_rot_ColumnDensities, log_N_eff, &N_H2O_rot_index, &dN_H2O_rot);
@@ -312,7 +312,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
 	  if ((G0 > 0.0) && (x_elec > 0.0)) 
 	    {
 	      // Include a factor phi_pah = 0.5 in the denominator 
-	      log_Psi = (ChimesFloat) log10(max(G0 * pow(myGasVars->temperature, 0.5) / max(myGasVars->nH_tot * x_elec * 0.5, 1.0e-100), 1.0e-100));
+	      log_Psi = (ChimesFloat) log10(chimes_max(G0 * pow(myGasVars->temperature, 0.5) / chimes_max(myGasVars->nH_tot * x_elec * 0.5, 1.0e-100), 1.0e-100));
 
 	      chimes_get_table_index(chimes_table_bins.Psi, chimes_table_bins.N_Psi, log_Psi, &Psi_index, &dPsi); 
 	  
@@ -337,7 +337,7 @@ void do_equilibrium_cooling(struct UserData data)
 
   dt = data.myGasVars->hydro_timestep;
 
-  data.myGasVars->temperature = max(data.myGasVars->temperature, data.myGasVars->TempFloor);
+  data.myGasVars->temperature = chimes_max(data.myGasVars->temperature, data.myGasVars->TempFloor);
 
   set_equilibrium_abundances_from_tables(data);
 
@@ -358,7 +358,7 @@ void do_equilibrium_cooling(struct UserData data)
   if (fabs(LambdaNet * dt) < 0.10 * u_old)
     {
       u = u_old + LambdaNet * dt;
-      data.myGasVars->temperature = max(u / (1.5 * calculate_total_number_density(data.myGasVars->abundances, data.myGasVars->nH_tot, data.myGlobalVars) * BOLTZMANNCGS), data.myGasVars->TempFloor);
+      data.myGasVars->temperature = chimes_max(u / (1.5 * calculate_total_number_density(data.myGasVars->abundances, data.myGasVars->nH_tot, data.myGlobalVars) * BOLTZMANNCGS), data.myGasVars->TempFloor);
       set_equilibrium_abundances_from_tables(data);
 
       // Check that explicit solution is valid
@@ -375,7 +375,7 @@ void do_equilibrium_cooling(struct UserData data)
 	   * solution is no longer valid. Reset and 
 	   * continue with implicit solution. */
 	  u = u_old; 
-	  data.myGasVars->temperature = max(u / (1.5 * calculate_total_number_density(data.myGasVars->abundances, data.myGasVars->nH_tot, data.myGlobalVars) * BOLTZMANNCGS), data.myGasVars->TempFloor);
+	  data.myGasVars->temperature = chimes_max(u / (1.5 * calculate_total_number_density(data.myGasVars->abundances, data.myGasVars->nH_tot, data.myGlobalVars) * BOLTZMANNCGS), data.myGasVars->TempFloor);
 	  set_equilibrium_abundances_from_tables(data);
 	}
     }

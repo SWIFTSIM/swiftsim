@@ -18,7 +18,7 @@ void set_equilibrium_abundances_from_tables(struct UserData data)
 
   chimes_get_table_index(chimes_table_eqm_abundances.Temperatures, chimes_table_eqm_abundances.N_Temperatures, log10(data.myGasVars->temperature), &T_index, &dT); 
   chimes_get_table_index(chimes_table_eqm_abundances.Densities, chimes_table_eqm_abundances.N_Densities, log10(data.myGasVars->nH_tot), &nH_index, &dnH); 
-  chimes_get_table_index(chimes_table_eqm_abundances.Metallicities, chimes_table_eqm_abundances.N_Metallicities, log10(max(data.myGasVars->metallicity, 1.0e-100)), &Z_index, &dZ); 
+  chimes_get_table_index(chimes_table_eqm_abundances.Metallicities, chimes_table_eqm_abundances.N_Metallicities, log10(chimes_max(data.myGasVars->metallicity, 1.0e-100)), &Z_index, &dZ); 
 
   /* Note that the equilibrium tables tabulate
    * ionisation (or molecular) fraction, and 
@@ -79,15 +79,15 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       data.HeI_column = myGasVars->abundances[myGlobalVars->speciesIndices[HeI]] * myGasVars->cell_size * myGasVars->nH_tot;
       data.HeII_column = myGasVars->abundances[myGlobalVars->speciesIndices[HeII]] * myGasVars->cell_size * myGasVars->nH_tot;
       if (myGlobalVars->speciesIndices[CO] > -1) 
-	data.CO_column = max(myGasVars->abundances[myGlobalVars->speciesIndices[CO]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
+	data.CO_column = chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[CO]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
       else 
 	data.CO_column = 0.0; 
       if (myGlobalVars->speciesIndices[H2O] > -1) 
-	data.H2O_column = max(myGasVars->abundances[myGlobalVars->speciesIndices[H2O]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
+	data.H2O_column = chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[H2O]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
       else 
 	data.H2O_column = 0.0; 
       if (myGlobalVars->speciesIndices[OH] > -1) 
-	data.OH_column = max(myGasVars->abundances[myGlobalVars->speciesIndices[OH]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
+	data.OH_column = chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[OH]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
       else 
 	data.OH_column = 0.0; 
       data.extinction = DUSTEFFSIZE * myGasVars->cell_size * myGasVars->nH_tot * myGasVars->metallicity;
@@ -171,7 +171,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       
       if ((new_abundances[indices[i]] > this_absolute_tolerance) || (myGasVars->abundances[indices[i]] > this_absolute_tolerance)) 
 	{
-	  relative_change = fabs(new_abundances[indices[i]] - myGasVars->abundances[indices[i]]) / max(myGasVars->abundances[indices[i]], 1.0e-100); 
+	  relative_change = fabs(new_abundances[indices[i]] - myGasVars->abundances[indices[i]]) / chimes_max(myGasVars->abundances[indices[i]], 1.0e-100); 
 	  if (relative_change > max_relative_change) 
 	    max_relative_change = relative_change; 
 	}
@@ -182,13 +182,13 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       if (data.myGasVars->temperature > data.myGasVars->TempFloor) 
 	cool_rate = calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
       else 
-	cool_rate = min(calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data), 0.0); 
+	cool_rate = chimes_min(calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data), 0.0); 
 
       old_energy = myGasVars->temperature * 1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS;
 
       new_energy = old_energy - (cool_rate * myGasVars->hydro_timestep); 
 
-      relative_change = fabs(new_energy - old_energy) / max(old_energy, 1.0e-100); 
+      relative_change = fabs(new_energy - old_energy) / chimes_max(old_energy, 1.0e-100); 
       if (relative_change > max_relative_change) 
 	max_relative_change = relative_change; 
     } 
@@ -199,7 +199,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
 	myGasVars->abundances[indices[i]] = new_abundances[indices[i]]; 
 
       if (data.myGasVars->ThermEvolOn == 1) 
-	myGasVars->temperature = max(new_energy / (1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS), myGasVars->TempFloor); 
+	myGasVars->temperature = chimes_max(new_energy / (1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS), myGasVars->TempFloor); 
       
       return; 
     }
@@ -305,7 +305,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       check_constraint_equations(myGasVars, myGlobalVars);
 
       if (myGasVars->ThermEvolOn == 1)
-	myGasVars->temperature = max(((ChimesFloat) NV_Ith_S(y, data.network_size)) / (1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS), myGasVars->TempFloor); 
+	myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data.network_size)) / (1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS), myGasVars->TempFloor); 
 
       N_VDestroy_Serial(y);
       if ((myGasVars->ThermEvolOn == 1) || (myGlobalVars->scale_metal_tolerances == 1))

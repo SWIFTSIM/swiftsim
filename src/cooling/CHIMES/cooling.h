@@ -36,8 +36,11 @@
 #include "hydro.h"
 #include "hydro_properties.h"
 #include "part.h"
-#include "cooling/CHIMES/chimes/chimes_vars.h" 
-#include "cooling/CHIMES/chimes/chimes_proto.h" 
+
+void cooling_init_backend(struct swift_params* parameter_file,
+			  const struct unit_system* us,
+			  const struct phys_const* phys_const,
+			  struct cooling_function_data* cooling);  
 
 /**
  * @brief Common operations performed on the cooling function at a
@@ -177,22 +180,6 @@ __attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
     const struct xpart* restrict xp) {
 
   return 0.f;
-}
-
-/**
- * @brief Initialises the cooling properties.
- *
- * Nothing to do here.
- *
- * @param parameter_file The parsed parameter file.
- * @param us The current internal system of units.
- * @param phys_const The physical constants in internal units.
- * @param cooling The cooling properties to initialize
- */
-static INLINE void cooling_init_backend(struct swift_params* parameter_file,
-                                        const struct unit_system* us,
-                                        const struct phys_const* phys_const,
-                                        struct cooling_function_data* cooling) {
 }
 
 /**
