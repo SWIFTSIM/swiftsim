@@ -18,10 +18,13 @@ then
     ./getYieldTable.sh
 fi
 
-../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro ../isolated_galaxy.yml -P InitialConditions:file_name:lowres8.hdf5 -P Gravity:max_physical_baryon_softening:0.4 2>&1 | tee output.log
 
 # Kennicutt-Schmidt law plot
-python3 plotSolution.py
+python3 ../plotKSlaw.py
 
 # Plot that the random star formation matches the expected SFH
-python3 SFH.py
+python3 ../SFH.py
+
+# Plot of the box enrichment
+python3 ../plot_box_evolution.py

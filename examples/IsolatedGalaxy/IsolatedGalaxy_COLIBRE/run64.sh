@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ ! -e COLIBRE_fid.hdf5 ] 
+if [ ! -e lowres64.hdf5 ] 
 then     
     echo "Fetching initial conditions for the isolated galaxy example..."
-    ./getIC.sh
+    ./getIC64.sh
 fi
 
 if [ ! -e coolingtables ] 
@@ -18,6 +18,5 @@ then
     ./getYieldTable.sh
 fi
 
-../../swift --threads=32 --external-gravity --self-gravity --stars --star-formation --cooling --hydro isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro ../isolated_galaxy.yml -P EAGLEEntropyFloor:Jeans_temperature_norm_K:100. -P InitialConditions:file_name:lowres64.hdf5 -P Gravity:max_physical_baryon_softening:0.8 2>&1 | tee output.log
 
-python3 plotSolution.py 50

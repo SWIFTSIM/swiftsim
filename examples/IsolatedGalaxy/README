@@ -1,3 +1,83 @@
 This directory contains a series of examples using an isolated galaxy
 disk embedded in an external Hernquist dark matter halo. These are
-ideal for testing galaxy formation subgrid model implementation.
+ideal for testing galaxy formation subgrid model implementations.
+
+INTRODUCTION
+
+Currently there are several different Isolated galaxy examples, there 
+are 2 basic examples that do not include gas and are called:
+1. IsolatedGalaxy_dmparticles: This example is an isolated galaxy 
+   with star particles and dark matter particles. 
+2. IsolatedGalaxy_potential: This is the same galaxy as in the case 
+   of the IsolatedGalaxy_dmparticles but with a static halo instead 
+   of a dark matter halo consisting of particles.
+
+After comparing the result of IsolatedGalaxy_dmparticles and 
+IsolatedGalaxy_potential we found that both simulations are very 
+similar and only the calculation of the dark matter halo is different,
+this is why we use in the other examples a static dark matter halo,
+because this reduces the computational cost of the simulation 
+without any disadvantage.
+
+In SWIFT it is very easy to use an external potential, this can be 
+done by configuring with an external hernquist potential as:
+./configure --with-ext-potential=hernquist
+
+
+MORE ADVANCED EXAMPLES
+
+More advanced examples include gas and have as the main function 
+to test how the subgrid models are performing in a galaxy.
+
+IsolatedGalaxy_starformation:
+This Isolated galaxy example tests the star formation subgrid model
+of Schaye and Dalla Vecchia et al. (2008) and is able to reproduce
+all their plots. 
+
+IsoaltedGalaxy_feedback:
+This isolated galaxy example has as main purpose to test how feedback
+influenced the galaxy.
+
+In case of all Isolated galaxies with gas, it requires that the 
+user runs with a subgrid model and an external potential, in the 
+case of the EAGLE model this means that the user needs to configure 
+as:
+./configure --with-ext-potential=hernquist --with-subgrid=EAGLE --disable-hand-vec
+
+In the case of the configuring with COLIBRE subgrid model we configure
+as:
+./configure --with-ext-potential=hernquist --with-subgrid=COLIBRE --disable-hand-vec
+
+RUNNING WITH BETTER HYDRODYNAMICS
+
+In most cases we do not want to use the standard hydrodynamics in 
+SWIFT because in SWIFT there are several more advanced hydrodynamics
+schemes, because of this we use the Anarchy-DU scheme in EAGLE and 
+COLIBRE simulations. This means that we need to configure with the 
+correct SPH scheme and a recommended kernal. In the case of 
+Anarchy-DU the recommended kernel is a quintic-spline or quartic-
+spline (and Wendland-C2 for cosmological runs). This means that we 
+should configure SWIFT for EAGLE test cases as:
+./configure --with-ext-potential=hernquist --with-subgrid=EAGLE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quintic-spline
+
+Or with the quartic-spline as:
+./configure --with-ext-potential=hernquist --with-subgrid=EAGLE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quartic-spline
+
+And in the case of COLIBRE we compile as:
+./configure --with-ext-potential=hernquist --with-subgrid=COLIBRE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quintic-spline
+
+Or with the quartic-spline as:
+./configure --with-ext-potential=hernquist --with-subgrid=COLIBRE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quartic-spline
+
+ANALYSIS SCRIPTS
+
+In the Isolated galaxy directory we have several default scripts to 
+analyse the results of isolated galaxies:
+1. plotKSlaw.py: Script to make star formation related plots like 
+   KS-law plots, birth density plots, etc.
+2. SFH.py: Script to make in independent ways a star formation 
+   history plot.
+3. plot_box_evolution.py: Script to make a plot of the metal evolution/
+   enrichment in the simulation.
+4. movieframe.py: Script to make plots of the simulation using the gas
+   density and the temperature, can be used to make a movie.
