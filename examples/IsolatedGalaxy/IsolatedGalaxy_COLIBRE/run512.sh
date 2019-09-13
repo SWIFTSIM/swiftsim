@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ ! -e fid.hdf5 ] 
+if [ ! -e lowres512.hdf5 ] 
 then     
     echo "Fetching initial conditions for the isolated galaxy example..."
-    ./getIC.sh
+    ./getIC512.sh
 fi
 
 if [ ! -e coolingtables ] 
@@ -18,11 +18,5 @@ then
     ./getYieldTable.sh
 fi
 
+../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro ../isolated_galaxy.yml -P EAGLEEntropyFloor:Jeans_temperature_norm_K:100. -P InitialConditions:file_name:lowres512.hdf5 -P Gravity:max_physical_baryon_softening:1.6 2>&1 | tee output.log
 
-../../swift --threads=16 --external-gravity --self-gravity --stars --star-formation --cooling --hydro ../isolated_galaxy.yml 2>&1 | tee output.log
-
-# Kennicutt-Schmidt law plot
-python3 ../plotKSlaw.py 50
-
-# Plot that the random star formation matches the expected SFH
-python3 ../SFH.py

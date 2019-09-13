@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ###############################################################################
 # This file is part of SWIFT.
 # Copyright (c) 2015 Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
@@ -115,7 +116,7 @@ for i in range(n_snapshots):
     star_masses = sim["/PartType4/Masses"][:]
     box_star_mass[i] = np.sum(star_masses)
 
-    metallicities = sim["/PartType0/Metallicities"][:]
+    metallicities = sim["/PartType0/MetalMassFractions"][:]
     box_metal_mass[i] = np.sum(metallicities * masses)
 
     internal_energies = sim["/PartType0/InternalEnergies"][:]
