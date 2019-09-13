@@ -2374,29 +2374,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           for (struct link *l = finger->hydro.density; l != NULL; l = l->next) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-            if (l->t->ti_run < r->e->ti_current) {
-              message(
-                  "Density task should have been run. ti_run=%lld skip=%d "
-                  "type=%s depth=%d/%d active=%d/%d nodeID=%d/%d "
-                  "has_tasks=%d/%d",
-                  l->t->ti_run, l->t->skip, taskID_names[l->t->type],
-                  l->t->ci->depth, l->t->cj->depth,
-                  cell_is_active_hydro(l->t->ci, e),
-                  cell_is_active_hydro(l->t->cj, e), l->t->ci->nodeID,
-                  l->t->cj->nodeID,
-                  cell_get_flag(l->t->ci, cell_flag_has_tasks),
-                  cell_get_flag(l->t->cj, cell_flag_has_tasks));
-              const struct cell *pci = l->t->ci->parent;
-              const struct cell *pcj = l->t->cj->parent;
-              message(
-                  "PARENT depth=%d/%d active=%d/%d nodeID=%d/%d "
-                  "has_tasks=%d/%d",
-                  pci->depth, pcj->depth, cell_is_active_hydro(pci, e),
-                  cell_is_active_hydro(pcj, e), pci->nodeID, pcj->nodeID,
-                  cell_get_flag(pci, cell_flag_has_tasks),
-                  cell_get_flag(pcj, cell_flag_has_tasks));
-              error("OO");
-            }
+            if (l->t->ti_run < r->e->ti_current)
+              error("Density task should have been run.");
 #endif
 
             /* Self-interaction? */
