@@ -42,10 +42,10 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 	    chimes_table_photoion_fuv.current_shield_factor[data.thread_index][i] = (ChimesFloat) exp(-(chimes_table_photoion_fuv.gamma[i] * data.extinction)); 
 
 	  // photoion_euv 
-	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(max(data.HI_column, 1.0e-100)), &NHI_index, &dNHI);
-	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(max(data.HI_column + (3.0 * data.H2_column), 1.0e-100)), &NH_eff_index, &dNH_eff);
-	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(max(data.HeI_column, 1.0e-100)), &NHeI_index, &dNHeI);
-	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(max(data.HeI_column + (0.75 * data.HeII_column), 1.0e-100)), &NHe_eff_index, &dNHe_eff);
+	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(chimes_max(data.HI_column, 1.0e-100)), &NHI_index, &dNHI);
+	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(chimes_max(data.HI_column + (3.0 * data.H2_column), 1.0e-100)), &NH_eff_index, &dNH_eff);
+	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(chimes_max(data.HeI_column, 1.0e-100)), &NHeI_index, &dNHeI);
+	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(chimes_max(data.HeI_column + (0.75 * data.HeII_column), 1.0e-100)), &NHe_eff_index, &dNHe_eff);
 
 	  for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
 	    {
@@ -117,8 +117,8 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 		chimes_table_photodissoc_group2.current_shield_factor[data.thread_index] = (ChimesFloat) exp(-(chimes_table_photodissoc_group2.gamma_coeff[1] * data.extinction) + (chimes_table_photodissoc_group2.gamma_coeff[2] * pow(data.extinction, 2.0))); 
 
 	      // CO_photodissoc 
-	      log_NCO = (ChimesFloat) log10(max(data.CO_column, 1.0e-100)); 
-	      log_NH2 = (ChimesFloat) log10(max(data.H2_column, 1.0e-100)); 
+	      log_NCO = (ChimesFloat) log10(chimes_max(data.CO_column, 1.0e-100)); 
+	      log_NH2 = (ChimesFloat) log10(chimes_max(data.H2_column, 1.0e-100)); 
 	      chimes_get_table_index(chimes_table_bins.COself_column_densities, chimes_table_bins.N_COself_column_densities, log_NCO, &NCO_index, &dNCO); 
 	      chimes_get_table_index(chimes_table_bins.H2CO_column_densities, chimes_table_bins.N_H2CO_column_densities, log_NH2, &NH2_index, &dNH2); 
 	  
@@ -248,7 +248,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 
       // In the following, we protect against division by zero, and 
       // against taking log(0). 
-      log_Psi = (ChimesFloat) log10(max(G0 * exp(-data.extinction * G0_GAMMA) * pow(myGasVars->temperature, 0.5) / max(myGasVars->nH_tot * myGasVars->abundances[myGlobalVars->speciesIndices[elec]], 1.0e-100), 1.0e-100));
+      log_Psi = (ChimesFloat) log10(chimes_max(G0 * exp(-data.extinction * G0_GAMMA) * pow(myGasVars->temperature, 0.5) / chimes_max(myGasVars->nH_tot * myGasVars->abundances[myGlobalVars->speciesIndices[elec]], 1.0e-100), 1.0e-100));
     }
   else 
     log_Psi = chimes_table_bins.Psi[0]; 
@@ -421,7 +421,7 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
 	chimes_table_cosmic_ray.current_rate[data.thread_index][i] = myGasVars->cr_rate * chimes_table_cosmic_ray.rates[i] * myGasVars->abundances[chimes_table_cosmic_ray.reactants[i]]; 
       
       // secondary cosmic ray ionisation 
-      log_xHII = (ChimesFloat) log10(max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100)); 
+      log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100)); 
       chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII, chimes_table_bins.N_secondary_cosmic_ray_xHII, log_xHII, &xHII_index, &d_xHII); 
       for (i = 0; i < 2; i++) 
 	chimes_table_cosmic_ray.current_rate[data.thread_index][chimes_table_cosmic_ray.secondary_base_reaction[i]] *= 1.0 + pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
@@ -445,7 +445,7 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
       // the factor xCO from the reactant, hence the sqrt() when we multiply by the
       // reactant here. 
       for (i = 0; i < chimes_table_CO_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_CO_cosmic_ray.current_rate[data.thread_index][i] = chimes_table_CO_cosmic_ray.current_rate_coefficient[data.thread_index][i] * sqrt(max(myGasVars->abundances[chimes_table_CO_cosmic_ray.reactants[i]], 0.0));
+	chimes_table_CO_cosmic_ray.current_rate[data.thread_index][i] = chimes_table_CO_cosmic_ray.current_rate_coefficient[data.thread_index][i] * sqrt(chimes_max(myGasVars->abundances[chimes_table_CO_cosmic_ray.reactants[i]], 0.0));
     }
 
   if (myGlobalVars->N_spectra > 0) 

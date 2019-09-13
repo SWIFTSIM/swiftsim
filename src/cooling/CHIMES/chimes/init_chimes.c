@@ -5443,72 +5443,72 @@ void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVari
 
   /* Now set the abundances of the initial
    * species.  */
-  myGasVars->abundances[myGlobalVars->speciesIndices[min(HI + init_ion_state, HII)]] = 1.0;
+  myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(HI + init_ion_state, HII)]] = 1.0;
   myGasVars->abundances[myGlobalVars->speciesIndices[elec]] = myGasVars->abundances[myGlobalVars->speciesIndices[HII]];
 
-  myGasVars->abundances[myGlobalVars->speciesIndices[min(HeI + init_ion_state, HeIII)]] = myGasVars->element_abundances[0]; 
+  myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(HeI + init_ion_state, HeIII)]] = myGasVars->element_abundances[0]; 
   for (i = 1; i <= 2; i++)
     myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[HeI + i]] * i;
 
   if (myGlobalVars->element_included[0] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(CI + init_ion_state, CVII)]] = myGasVars->element_abundances[1];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(CI + init_ion_state, CVII)]] = myGasVars->element_abundances[1];
       for (i = 1; i <= 6; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[CI + i]] * i;
     }
 
   if (myGlobalVars->element_included[1] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(NI + init_ion_state, NVIII)]] = myGasVars->element_abundances[2];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(NI + init_ion_state, NVIII)]] = myGasVars->element_abundances[2];
       for (i = 1; i <= 7; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[NI + i]] * i;
     }
 
   if (myGlobalVars->element_included[2] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(OI + init_ion_state, OIX)]] = myGasVars->element_abundances[3];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(OI + init_ion_state, OIX)]] = myGasVars->element_abundances[3];
       for (i = 1; i <= 8; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[OI + i]] * i;
     }
 
   if (myGlobalVars->element_included[3] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(NeI + init_ion_state, NeXI)]] = myGasVars->element_abundances[4];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(NeI + init_ion_state, NeXI)]] = myGasVars->element_abundances[4];
       for (i = 1; i <= 10; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[NeI + i]] * i;
     }
 
   if (myGlobalVars->element_included[4] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(MgI + init_ion_state, MgXIII)]] = myGasVars->element_abundances[5];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(MgI + init_ion_state, MgXIII)]] = myGasVars->element_abundances[5];
       for (i = 1; i <= 12; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[MgI + i]] * i;
     }
 
   if (myGlobalVars->element_included[5] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(SiI + init_ion_state, SiXV)]] = myGasVars->element_abundances[6];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(SiI + init_ion_state, SiXV)]] = myGasVars->element_abundances[6];
       for (i = 1; i <= 14; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[SiI + i]] * i;
     }
 
   if (myGlobalVars->element_included[6] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(SI + init_ion_state, SXVII)]] = myGasVars->element_abundances[7];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(SI + init_ion_state, SXVII)]] = myGasVars->element_abundances[7];
       for (i = 1; i <= 16; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[SI + i]] * i;
     }
 
   if (myGlobalVars->element_included[7] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(CaI + init_ion_state, CaXXI)]] = myGasVars->element_abundances[8];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(CaI + init_ion_state, CaXXI)]] = myGasVars->element_abundances[8];
       for (i = 1; i <= 20; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[CaI + i]] * i;
     }
 
   if (myGlobalVars->element_included[8] == 1)
     {
-      myGasVars->abundances[myGlobalVars->speciesIndices[min(FeI + init_ion_state, FeXXVII)]] = myGasVars->element_abundances[9];
+      myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(FeI + init_ion_state, FeXXVII)]] = myGasVars->element_abundances[9];
       for (i = 1; i <= 26; i++)
 	myGasVars->abundances[myGlobalVars->speciesIndices[elec]] += myGasVars->abundances[myGlobalVars->speciesIndices[FeI + i]] * i;
     }
