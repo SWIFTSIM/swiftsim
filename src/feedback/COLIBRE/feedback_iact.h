@@ -300,9 +300,9 @@ runner_iact_nonsym_feedback_apply(
       const float delta_u = si->feedback_data.to_distribute.SNII_delta_u;
       const double u_new = u_init + delta_u;
 
-#ifdef SWIFT_DEBUG_CHECKS
+//#ifdef SWIFT_DEBUG_CHECKS
       message("SNII event at star age [Myr]  = %.4f", si->feedback_data.to_distribute.SNII_star_age_Myr);
-#endif
+//#endif
 
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);

@@ -335,6 +335,8 @@ COLIBRECooling:
   He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   S_over_Si_in_solar:        1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
+  HIIregion_ionization_fraction:    1.0        # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4       # Temperature of gas particles tagged as HII regions
  
 # Cooling with Grackle 3.0
 GrackleCooling:
@@ -505,8 +507,6 @@ COLIBREFeedback:
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
-  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
-  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5 # Location of file for early feedback

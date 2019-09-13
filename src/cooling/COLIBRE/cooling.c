@@ -47,7 +47,6 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
-#include "feedback_properties.h"
 
 /* Maximum number of iterations for
  * bisection integration schemes */
@@ -216,6 +215,7 @@ static INLINE double bisection_iter(
       message("redshift = %.4f", redshift);
       message("indices nH, met, red = %i, %i, %i", n_H_index, met_index, red_index);
       message("index weights nH, met, red = %.4e, %.4e, %.4e", d_n_H,d_met,d_red);
+      fflush(stdout);
       message("cooling rate = %.4e", colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs, abundance_ratio,
                            n_H_index, d_n_H, met_index, d_met, red_index, d_red,
                            cooling, 0, 0, 0, 0) );
@@ -274,7 +274,6 @@ static INLINE double bisection_iter(
  * @param starform the star formation law properties to initialize
  * @param floor_props Properties of the entropy floor.
  * @param cooling The #cooling_function_data used in the run.
- * @param fp feedback_props data structure
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  */
@@ -285,7 +284,6 @@ void set_subgrid_part(const struct phys_const *phys_const,
                       const struct hydro_props *hydro_props,
                       const struct entropy_floor_properties *floor_props,
                       const struct cooling_function_data *cooling,
-                      const struct feedback_props* fp,
                       struct part *restrict p, struct xpart *restrict xp){
 
 
@@ -479,9 +477,9 @@ void set_subgrid_part(const struct phys_const *phys_const,
     /* interpolate the tables for H fractions */
     /* check if in an HII region */ 
     if (xp->tracers_data.HIIregion_timer_gas > 0.) {
-       xp->tracers_data.subgrid_temp = fp->HIIregion_temp;
-       xp->tracers_data.nHI_over_nH  = 1. - fp->HIIregion_fion;
-       xp->tracers_data.nHII_over_nH = fp->HIIregion_fion;
+       xp->tracers_data.subgrid_temp = cooling->HIIregion_temp;
+       xp->tracers_data.nHI_over_nH  = 1. - cooling->HIIregion_fion;
+       xp->tracers_data.nHII_over_nH = cooling->HIIregion_fion;
        xp->tracers_data.nH2_over_nH  = 0.;
     } else {
        xp->tracers_data.subgrid_temp  = temp;
@@ -565,6 +563,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
  * @param xp Pointer to the extended particle data.
  * @param dt The cooling time-step of this particle.
  * @param dt_therm The hydro time-step of this particle.
+ * @param time Time since Big Bang
  */
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,
@@ -573,7 +572,10 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm) {
+                       const float dt, const float dt_therm, const double time) {
+
+
+
 
   /* No cooling happens over zero time */
   if (dt == 0.) return;
@@ -727,6 +729,38 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+
+  /* check if the particle is in an HII region and if yes, set the parameter accordingly */
+  if ( (time <= xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+     /*const float temp = cooling_get_temperature (phys_const, hydro_properties, us, cosmo, cooling, p, xp); */
+
+     const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
+     /* HII region internal energy is the internal energy of a particle at a
+      * temperature of cooling->HIIregion_temp */
+     const float u_HII_cgs = cooling_get_internalenergy_for_temperature (phys_const, hydro_properties, us,
+                                                                       cosmo, cooling, p, xp,
+                                                                       cooling->HIIregion_temp);
+
+     const float u_HII = u_HII_cgs / cooling->internal_energy_to_cgs;
+
+     if (u_old < u_HII) {
+        /* Inject energy into the particle */
+        hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
+        hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
+
+        /* internal energy should stay constant for the timestep */
+        const float cooling_du_dt_HII = 0.;
+        hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt_HII);
+     }
+  } else if ( (time > xp->tracers_data.HIIregion_timer_gas) && (xp->tracers_data.HIIregion_timer_gas > 0.) ) {
+    xp->tracers_data.HIIregion_timer_gas = -1.;
+    xp->tracers_data.HIIregion_starid = -1;
+  }
+
+  /* set subgrid properties and hydrogen fractions */
+  set_subgrid_part(phys_const, us, cosmo, hydro_properties,
+                   floor_props, cooling, p, xp);
+
 }
 
 /**
@@ -1002,6 +1036,19 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parser_get_param_float(parameter_file, "COLIBRECooling:He_reion_z_sigma");
   cooling->He_reion_heat_cgs =
       parser_get_param_float(parameter_file, "COLIBRECooling:He_reion_eV_p_H");
+
+  /* Properties of the HII region model ------------------------------------- */
+  cooling->HIIregion_fion =
+      parser_get_param_float(parameter_file, "COLIBRECooling:HIIregion_ionization_fraction");
+
+  cooling->HIIregion_temp =
+      parser_get_param_float(parameter_file, "COLIBRECooling:HIIregion_temperature");
+
+  /* Check that it makes sense. */
+  if (cooling->HIIregion_fion < 0.5 || cooling->HIIregion_fion > 1.0) {
+    error("HIIregion_ionization_fraction has to be between 0.5 and 1.0");
+  }
+
 
   /* Optional parameters to correct the abundances */
   cooling->Ca_over_Si_ratio_in_solar = parser_get_opt_param_float(
