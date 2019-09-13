@@ -331,8 +331,8 @@ int main(int argc, char *argv[]) {
   if (dump_cells) {
     if (myrank == 0) {
       error(
-            "complete cell dumps are only created when "
-            "configured with --enable-cell-graph.");
+          "complete cell dumps are only created when "
+          "configured with --enable-cell-graph.");
     }
   }
 #endif
