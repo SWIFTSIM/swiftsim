@@ -374,6 +374,7 @@ INLINE static double bisection_iter(
  * @param xp Pointer to the extended particle data.
  * @param dt The cooling time-step of this particle.
  * @param dt_therm The hydro time-step of this particle.
+ * @param time Time since Big Bang
  */
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,
@@ -382,7 +383,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm) {
+                       const float dt, const float dt_therm, const double time) {
 
   /* No cooling happens over zero time */
   if (dt == 0.) return;

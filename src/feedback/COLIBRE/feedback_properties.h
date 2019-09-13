@@ -263,12 +263,6 @@ struct feedback_props {
   /* Location of early feedback tables */
   char early_feedback_table_path[200];
 
-  /* Ionization fraction of gas particles tagged as HII regions */
-  float HIIregion_fion;
-
-  /* Temperature of gas particles tagged as HII regions */
-  float HIIregion_temp;
-
   /* Maximum age in Myr of star particle to build HII region */
   float HIIregion_maxageMyr;
 

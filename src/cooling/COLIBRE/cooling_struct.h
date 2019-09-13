@@ -121,7 +121,13 @@ struct cooling_function_data {
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[colibre_table_path_name_length];
 
-  /*! Redshit of H reionization */
+  /* Ionization fraction of gas particles tagged as HII regions */
+  float HIIregion_fion;
+
+  /* Temperature of gas particles tagged as HII regions */
+  float HIIregion_temp;
+
+  /*! Redshift of H reionization */
   float H_reion_z;
 
   /*! H reionization energy in CGS units */

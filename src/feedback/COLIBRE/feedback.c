@@ -1385,22 +1385,11 @@ void feedback_props_init(struct feedback_props* fp,
       0.5f * ejecta_velocity * ejecta_velocity;
 
   /* Properties of the HII region model ------------------------------------- */
-  fp->HIIregion_fion =
-      parser_get_param_float(params, "COLIBREFeedback:HIIregion_ionization_fraction");
- 
-  fp->HIIregion_temp =
-      parser_get_param_float(params, "COLIBREFeedback:HIIregion_temperature");
-
   fp->HIIregion_maxageMyr =
       parser_get_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr");
 
   fp->HIIregion_dtMyr =
        parser_get_param_float(params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
-
-  /* Check that it makes sense. */
-  if (fp->HIIregion_fion < 0.5 || fp->HIIregion_fion > 1.0) {
-    error("HIIregion_ionization_fraction has to be between 0.5 and 1.0");
-  }
 
   /* Read the HII table */
   if (fp->with_HIIregions) {
