@@ -25,7 +25,9 @@ During a run, SWIFT will generate a ``cell_hierarchy_*.csv`` file per MPI rank a
 The command ``tools/make_cell_hierarchy.sh cell_hierarchy_0000_*.csv`` merges the files at time step 0 together and generates the file ``cell_hierarchy.html``
 that contains the graph and can be read with your favorite web browser.
 
-With chrome, you cannot access the files directly, you will need to either access them through an existing server (e.g. public http provided by your university)
+With most web browsers, you cannot access the files directly.
+If it is the case, the cells will never appear (but everything else should be fine).
+To solve this problem, you will need to either access them through an existing server (e.g. public http provided by your university)
 or install ``npm`` and then run the following commands
 
 .. code-block:: bash
