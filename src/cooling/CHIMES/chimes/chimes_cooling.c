@@ -63,7 +63,7 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
   chimes_get_table_index(chimes_table_bins.Temperatures, chimes_table_bins.N_Temperatures, log_T, &T_index, &dT);
 
   for (i = 0; i < chimes_table_cooling.N_coolants; i++) 
-    chimes_table_cooling.current_rate[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates[i], T_index, dT)); 
+    data.chimes_current_rates->cooling_rate[i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates[i], T_index, dT)); 
 
   if (chimes_table_cooling.N_coolants_2d > 0) 
     {
@@ -75,14 +75,14 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
 	  chimes_get_table_index(chimes_table_bins.cool_2d_ElectronDensities, chimes_table_bins.N_cool_2d_ElectronDensities, log_ne, &ne_index, &dne); 
       
 	  for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++) 
-	    chimes_table_cooling.current_rate_2d[data.thread_index][i] = pow(10.0, chimes_interpol_2d(chimes_table_cooling.rates_2d[i], T_index, ne_index, dT, dne)); 
+	    data.chimes_current_rates->cooling_rate_2d[i] = pow(10.0, chimes_interpol_2d(chimes_table_cooling.rates_2d[i], T_index, ne_index, dT, dne)); 
 	}
       else 
 	{
 	  chimes_get_table_index(chimes_table_bins.cool_hiT_2d_Temperatures, chimes_table_bins.N_cool_hiT_2d_Temperatures, log_T, &T_index, &dT); 
       
 	  for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++) 
-	    chimes_table_cooling.current_rate_2d[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_2d[i], T_index, dT)); 
+	    data.chimes_current_rates->cooling_rate_2d[i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_2d[i], T_index, dT)); 
 	}
     }  
   
@@ -101,14 +101,14 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
 	  chimes_get_table_index(chimes_table_bins.cool_4d_HIIDensities, chimes_table_bins.N_cool_4d_HIIDensities, log_nHII, &nHII_index, &dnHII); 
 
 	  for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++) 
-	    chimes_table_cooling.current_rate_4d[data.thread_index][i] = pow(10.0, chimes_interpol_4d(chimes_table_cooling.rates_4d[i], T_index, nHI_index, ne_index, nHII_index, dT, dnHI, dne, dnHII)); 
+	    data.chimes_current_rates->cooling_rate_4d[i] = pow(10.0, chimes_interpol_4d(chimes_table_cooling.rates_4d[i], T_index, nHI_index, ne_index, nHII_index, dT, dnHI, dne, dnHII)); 
 	}
       else 
 	{
 	  chimes_get_table_index(chimes_table_bins.cool_hiT_4d_Temperatures, chimes_table_bins.N_cool_hiT_4d_Temperatures, log_T, &T_index, &dT); 
       
 	  for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++) 
-	    chimes_table_cooling.current_rate_4d[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_4d[i], T_index, dT)); 
+	    data.chimes_current_rates->cooling_rate_4d[i] = pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_4d[i], T_index, dT)); 
 	} 
     }
   
@@ -134,27 +134,27 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
   x_elec = myGasVars->abundances[myGlobalVars->speciesIndices[elec]]; 
   
   for (i = 0; i < chimes_table_cooling.N_coolants; i++) 
-    total_cooling += chimes_table_cooling.current_rate[data.thread_index][i] * myGasVars->abundances[chimes_table_cooling.coolants[i]] * x_elec; 
+    total_cooling += data.chimes_current_rates->cooling_rate[i] * myGasVars->abundances[chimes_table_cooling.coolants[i]] * x_elec; 
 
   for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++) 
-    total_cooling += chimes_table_cooling.current_rate_2d[data.thread_index][i] * myGasVars->abundances[chimes_table_cooling.coolants_2d[i]] * x_elec; 
+    total_cooling += data.chimes_current_rates->cooling_rate_2d[i] * myGasVars->abundances[chimes_table_cooling.coolants_2d[i]] * x_elec; 
   
   for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++) 
-    total_cooling += chimes_table_cooling.current_rate_4d[data.thread_index][i] * myGasVars->abundances[chimes_table_cooling.coolants_4d[i]] / myGasVars->nH_tot; 
+    total_cooling += data.chimes_current_rates->cooling_rate_4d[i] * myGasVars->abundances[chimes_table_cooling.coolants_4d[i]] / myGasVars->nH_tot; 
 
   // Photoheating 
   if (myGlobalVars->N_spectra > 0) 
     {
       for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++) 
-	total_cooling -= chimes_table_photoion_fuv.current_heat_rate[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]] / myGasVars->nH_tot; 
+	total_cooling -= data.chimes_current_rates->photoion_fuv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]] / myGasVars->nH_tot; 
 
       for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
-	total_cooling -= chimes_table_photoion_euv.current_heat_rate[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]] / myGasVars->nH_tot; 
+	total_cooling -= data.chimes_current_rates->photoion_euv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]] / myGasVars->nH_tot; 
     }
 
   // Cosmic ray heating 
   for (i = 0; i < chimes_table_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
-    total_cooling -= 3.2e-11 * chimes_table_cosmic_ray.current_rate[data.thread_index][i] / myGasVars->nH_tot; 
+    total_cooling -= 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[i] / myGasVars->nH_tot; 
 
   // Correct for secondary cosmic rays 
   log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100));
@@ -162,7 +162,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
   for (i = 0; i < 2; i++) 
     {
       cr_secondary = pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
-      total_cooling += 3.2e-11 * chimes_table_cosmic_ray.current_rate[data.thread_index][chimes_table_cosmic_ray.secondary_base_reaction[i]] * cr_secondary / (myGasVars->nH_tot * (1.0 + cr_secondary)); 
+      total_cooling += 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[chimes_table_cosmic_ray.secondary_base_reaction[i]] * cr_secondary / (myGasVars->nH_tot * (1.0 + cr_secondary)); 
     }
 
   // Compton cooling from the CMB 
@@ -190,19 +190,19 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       xHI = myGasVars->abundances[myGlobalVars->speciesIndices[HI]]; 
       xH2 = myGasVars->abundances[myGlobalVars->speciesIndices[H2]]; 
       
-      total_cooling += 7.2e-12 * chimes_table_H2_collis_dissoc.current_rate_coefficient[data.thread_index][chimes_table_H2_collis_dissoc.Heating_reaction_index] * xHI * xH2;
-      total_cooling += 7.2e-12 * chimes_table_T_dependent.current_rate_coefficient[data.thread_index][chimes_table_T_dependent.H2_collis_dissoc_heating_reaction_index] * pow(xH2, 2.0); 
+      total_cooling += 7.2e-12 * data.chimes_current_rates->H2_collis_dissoc_rate_coefficient[chimes_table_H2_collis_dissoc.Heating_reaction_index] * xHI * xH2;
+      total_cooling += 7.2e-12 * data.chimes_current_rates->T_dependent_rate_coefficient[chimes_table_T_dependent.H2_collis_dissoc_heating_reaction_index] * pow(xH2, 2.0); 
 
       // Gas-phase H2 formation 
       if (xHI + xH2 == 0) 
 	H2_crit_density = 0.0; 
       else 
-	H2_crit_density = (xHI + xH2) / ((xHI / chimes_table_H2_collis_dissoc.current_crit_H[data.thread_index]) + (xH2 / chimes_table_H2_collis_dissoc.current_crit_H2[data.thread_index])); 
+	H2_crit_density = (xHI + xH2) / ((xHI / data.chimes_current_rates->H2_collis_dissoc_crit_H) + (xH2 / data.chimes_current_rates->H2_collis_dissoc_crit_H2)); 
 
-      total_cooling -= (((2.93e-12 * chimes_table_T_dependent.current_rate[data.thread_index][chimes_table_T_dependent.H2_form_heating_reaction_index]) + (5.65e-12 * chimes_table_constant.current_rate[data.thread_index][chimes_table_constant.H2_form_heating_reaction_index])) * (1.0 / (myGasVars->nH_tot + H2_crit_density))); 
+      total_cooling -= (((2.93e-12 * data.chimes_current_rates->T_dependent_rate[chimes_table_T_dependent.H2_form_heating_reaction_index]) + (5.65e-12 * data.chimes_current_rates->constant_rate[chimes_table_constant.H2_form_heating_reaction_index])) * (1.0 / (myGasVars->nH_tot + H2_crit_density))); 
 
       // Dust-catalysed H2 formation 
-      total_cooling -= 7.16e-12 * (chimes_table_H2_dust_formation.current_rate[data.thread_index] / myGasVars->nH_tot) * (myGasVars->nH_tot / (myGasVars->nH_tot + H2_crit_density)); 
+      total_cooling -= 7.16e-12 * (data.chimes_current_rates->H2_dust_formation_rate / myGasVars->nH_tot) * (myGasVars->nH_tot / (myGasVars->nH_tot + H2_crit_density)); 
 
       // CO cooling 
       if ((myGlobalVars->element_included[0] == 1) && (myGlobalVars->element_included[2] == 1)) 
@@ -295,10 +295,10 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       if (myGlobalVars->N_spectra > 0) 
 	{
 	  // H2 photodissoc heating 
-	  total_cooling -= 6.4e-13 * chimes_table_H2_photodissoc.current_rate[data.thread_index][0] / myGasVars->nH_tot; 
+	  total_cooling -= 6.4e-13 * data.chimes_current_rates->H2_photodissoc_rate[0] / myGasVars->nH_tot; 
 	  
 	  // H2 UV pumping 
-	  total_cooling -= 2.7e-11 * chimes_table_H2_photodissoc.current_rate[data.thread_index][0] * (1.0 / (myGasVars->nH_tot + H2_crit_density)); 
+	  total_cooling -= 2.7e-11 * data.chimes_current_rates->H2_photodissoc_rate[0] * (1.0 / (myGasVars->nH_tot + H2_crit_density)); 
 
 	  // Photoelectric dust heating & grain recombination cooling 
 	  // Note that dust processes are only included when 

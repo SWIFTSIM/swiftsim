@@ -2076,16 +2076,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	    }
 	} 
 
-      chimes_table_H2_photodissoc.current_shield_factor = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_H2_photodissoc.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_H2_photodissoc.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_H2_photodissoc.current_shield_factor[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_H2_photodissoc.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_H2_photodissoc.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	}
-
       array_buffer_int = (int *) malloc(N_reactions_all * sizeof(int));     
       array_buffer_float = (float *) malloc(N_reactions_all * sizeof(float)); 
 
@@ -2351,9 +2341,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
   for (i = 0; i < chimes_table_bins.N_Temperatures; i++) 
     chimes_table_H2_dust_formation.rates[i] = (ChimesFloat *) malloc(chimes_table_bins.N_Dust_Temperatures * sizeof(ChimesFloat)); 
 
-  chimes_table_H2_dust_formation.current_rate_coefficient = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
-  chimes_table_H2_dust_formation.current_rate = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
-
   array_buffer_int = (int *) malloc(3 * sizeof(int));   
   array_buffer_float = (float *) malloc(chimes_table_bins.N_Temperatures * sizeof(float)); 
 
@@ -2436,23 +2423,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
       chimes_table_H2_collis_dissoc.k0[i] = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
       chimes_table_H2_collis_dissoc.kLTE[i] = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
     }
-
-  chimes_table_H2_collis_dissoc.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_H2_collis_dissoc.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_H2_collis_dissoc.current_log_k0 = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_H2_collis_dissoc.current_log_kLTE = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-
-  for (i = 0; i < myGlobalVars->n_threads * sizeof(ChimesFloat); i++) 
-    {
-      chimes_table_H2_collis_dissoc.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_H2_collis_dissoc.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_H2_collis_dissoc.current_log_k0[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_H2_collis_dissoc.current_log_kLTE[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-    }
-
-  chimes_table_H2_collis_dissoc.current_crit_H = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
-  chimes_table_H2_collis_dissoc.current_crit_H2 = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
-  chimes_table_H2_collis_dissoc.current_crit_He = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
 
   chimes_table_H2_collis_dissoc.critical_density_H = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
   chimes_table_H2_collis_dissoc.critical_density_H2 = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
@@ -3512,14 +3482,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
       chimes_table_T_dependent.rates[i] = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
     }
 
-  chimes_table_T_dependent.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_T_dependent.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    {
-      chimes_table_T_dependent.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_T_dependent.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-    }
-
   chimes_table_T_dependent.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
 
   // Copy table data 
@@ -3592,10 +3554,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
       chimes_table_constant.products[i] = (int *) malloc(3 * sizeof(int));
       chimes_table_constant.element_incl[i] = (int *) malloc(9 * sizeof(int));
     }
-
-  chimes_table_constant.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    chimes_table_constant.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
 
   chimes_table_constant.rates = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
   chimes_table_constant.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
@@ -3670,14 +3628,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	chimes_table_recombination_AB.rates[i][j] = (ChimesFloat *) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat)); 
     }
 
-  chimes_table_recombination_AB.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_recombination_AB.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    {
-      chimes_table_recombination_AB.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_recombination_AB.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-    }
-
   chimes_table_recombination_AB.products = (int *) malloc(N_reactions_all * sizeof(int)); 
   chimes_table_recombination_AB.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
 
@@ -3749,14 +3699,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	chimes_table_grain_recombination.rates[i][j] = (ChimesFloat *) malloc(chimes_table_bins.N_Psi * sizeof(ChimesFloat)); 
     }
 
-  chimes_table_grain_recombination.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_grain_recombination.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    {
-      chimes_table_grain_recombination.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_grain_recombination.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-    }
-
   chimes_table_grain_recombination.products = (int *) malloc(N_reactions_all * sizeof(int)); 
 
   // Copy table data 
@@ -3818,10 +3760,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
   chimes_table_cosmic_ray.reactants = (int *) malloc(N_reactions_all * sizeof(int *)); 
   chimes_table_cosmic_ray.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
   chimes_table_cosmic_ray.rates = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-
-  chimes_table_cosmic_ray.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    chimes_table_cosmic_ray.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
 
   // Copy table data 
   incl_index = 0; 
@@ -3890,14 +3828,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 
   chimes_table_CO_cosmic_ray.reactants = (int *) malloc(N_reactions_all * sizeof(int *)); 
 
-  chimes_table_CO_cosmic_ray.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_CO_cosmic_ray.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    {
-      chimes_table_CO_cosmic_ray.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-      chimes_table_CO_cosmic_ray.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-    }
-
   // Copy table data 
   incl_index = 0; 
   for (i = 0; i < chimes_master_CO_cosmic_ray.N_reactions[1]; i++) 
@@ -3951,18 +3881,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	  chimes_table_photoion_fuv.element_incl[i] = (int *) malloc(9 * sizeof(int));
 	  chimes_table_photoion_fuv.sigmaPhot[i] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
 	  chimes_table_photoion_fuv.epsilonPhot[i] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
-	}
-
-      chimes_table_photoion_fuv.current_shield_factor = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_fuv.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_fuv.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_fuv.current_heat_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photoion_fuv.current_shield_factor[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_fuv.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_fuv.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_fuv.current_heat_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
 	}
 
       chimes_table_photoion_fuv.gamma = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
@@ -4051,25 +3969,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 		}
 	    }
 	}
- 
-      chimes_table_photoion_euv.current_shield_factor = (ChimesFloat ***) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat **));
-      chimes_table_photoion_euv.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_euv.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_euv.current_epsilon = (ChimesFloat ***) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat **)); 
-      chimes_table_photoion_euv.current_heat_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photoion_euv.current_shield_factor[i] = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
-	  chimes_table_photoion_euv.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_euv.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_euv.current_epsilon[i] = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
-	  chimes_table_photoion_euv.current_heat_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  for (j = 0; j < N_reactions_all; j++) 
-	    {
-	      chimes_table_photoion_euv.current_shield_factor[i][j] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
-	      chimes_table_photoion_euv.current_epsilon[i][j] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
-	    }
-	}
 
       chimes_table_photoion_euv.E_thresh = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
       chimes_table_photoion_euv.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
@@ -4146,14 +4045,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	  chimes_table_photoion_auger_fuv.sigmaPhot[i] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
 	}
 
-      chimes_table_photoion_auger_fuv.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_auger_fuv.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photoion_auger_fuv.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_auger_fuv.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	}
-
       chimes_table_photoion_auger_fuv.base_reaction = (int *) malloc(N_reactions_all * sizeof(int)); 
       chimes_table_photoion_auger_fuv.number_of_electrons = (int *) malloc(N_reactions_all * sizeof(int)); 
 
@@ -4219,14 +4110,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	  chimes_table_photoion_auger_euv.sigmaPhot[i] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
 	}
 
-      chimes_table_photoion_auger_euv.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photoion_auger_euv.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photoion_auger_euv.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photoion_auger_euv.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	}
-
       chimes_table_photoion_auger_euv.base_reaction = (int *) malloc(N_reactions_all * sizeof(int)); 
       chimes_table_photoion_auger_euv.number_of_electrons = (int *) malloc(N_reactions_all * sizeof(int)); 
 
@@ -4290,16 +4173,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	  chimes_table_photodissoc_group1.element_incl[i] = (int *) malloc(9 * sizeof(int));
 	}
 
-      chimes_table_photodissoc_group1.current_shield_factor = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photodissoc_group1.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photodissoc_group1.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photodissoc_group1.current_shield_factor[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photodissoc_group1.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photodissoc_group1.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	}
-
       chimes_table_photodissoc_group1.gamma = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
       chimes_table_photodissoc_group1.rates = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
       chimes_table_photodissoc_group1.molecular_flag = (int *) malloc(N_reactions_all * sizeof(int)); 
@@ -4354,15 +4227,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	  chimes_table_photodissoc_group2.element_incl[i] = (int *) malloc(9 * sizeof(int));
 	}
 
-      chimes_table_photodissoc_group2.current_shield_factor = (ChimesFloat *) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat)); 
-      chimes_table_photodissoc_group2.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_photodissoc_group2.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_photodissoc_group2.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_photodissoc_group2.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	}
-
       chimes_table_photodissoc_group2.rates = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
       chimes_table_photodissoc_group2.gamma_coeff = (ChimesFloat *) malloc(3 * sizeof(ChimesFloat)); 
 
@@ -4415,16 +4279,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	{
 	  chimes_table_CO_photodissoc.products[i] = (int *) malloc(2 * sizeof(int));
 	  chimes_table_CO_photodissoc.element_incl[i] = (int *) malloc(9 * sizeof(int));
-	}
-
-      chimes_table_CO_photodissoc.current_shield_factor = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_CO_photodissoc.current_rate_coefficient = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      chimes_table_CO_photodissoc.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-      for (i = 0; i < myGlobalVars->n_threads; i++) 
-	{
-	  chimes_table_CO_photodissoc.current_shield_factor[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_CO_photodissoc.current_rate_coefficient[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
-	  chimes_table_CO_photodissoc.current_rate[i] = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
 	}
 
       chimes_table_CO_photodissoc.gamma = (ChimesFloat *) malloc(N_reactions_all * sizeof(ChimesFloat)); 
@@ -4532,16 +4386,6 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 		chimes_table_cooling.rates_4d[i][j][k][l] = (ChimesFloat *) malloc(chimes_table_bins.N_cool_4d_HIIDensities * sizeof(ChimesFloat)); 
 	    }
 	}
-    }
-
-  chimes_table_cooling.current_rate = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_cooling.current_rate_2d = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  chimes_table_cooling.current_rate_4d = (ChimesFloat **) malloc(myGlobalVars->n_threads * sizeof(ChimesFloat *)); 
-  for (i = 0; i < myGlobalVars->n_threads; i++) 
-    {
-      chimes_table_cooling.current_rate[i] = (ChimesFloat *) malloc(chimes_table_cooling.N_coolants * sizeof(ChimesFloat)); 
-      chimes_table_cooling.current_rate_2d[i] = (ChimesFloat *) malloc(chimes_table_cooling.N_coolants_2d * sizeof(ChimesFloat)); 
-      chimes_table_cooling.current_rate_4d[i] = (ChimesFloat *) malloc(chimes_table_cooling.N_coolants_4d * sizeof(ChimesFloat)); 
     }
 
   chimes_table_cooling.photoelectric_heating = (ChimesFloat **) malloc(chimes_table_bins.N_Temperatures * sizeof(ChimesFloat *)); 
@@ -5522,3 +5366,258 @@ void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVari
   // Set constant heating rate to zero. 
   myGasVars->constant_heating_rate = 0.0; 
 }
+
+void determine_current_rates_buffer_size(int *buffer_size, int *buffer_size_2D, struct globalVariables *myGlobalVars) 
+{
+  *buffer_size = 0; 
+  *buffer_size_2D = 0; 
+
+  *buffer_size += chimes_table_T_dependent.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_constant.N_reactions[1]; 
+  *buffer_size += chimes_table_recombination_AB.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_grain_recombination.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_cosmic_ray.N_reactions[1]; 
+  *buffer_size += chimes_table_CO_cosmic_ray.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_H2_collis_dissoc.N_reactions[1] * 4; 
+  *buffer_size += chimes_table_photoion_fuv.N_reactions[1] * 4; 
+  *buffer_size += chimes_table_photoion_euv.N_reactions[1] * 3; 
+  *buffer_size += chimes_table_photoion_euv.N_reactions[1] * myGlobalVars->N_spectra * 2; 
+  *buffer_size += chimes_table_photoion_auger_fuv.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_photoion_auger_euv.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_photodissoc_group1.N_reactions[1] * 3; 
+  *buffer_size += chimes_table_photodissoc_group2.N_reactions[1] * 2; 
+  *buffer_size += chimes_table_H2_photodissoc.N_reactions[1] * 3; 
+  *buffer_size += chimes_table_CO_photodissoc.N_reactions[1] * 3; 
+  *buffer_size += chimes_table_cooling.N_coolants; 
+  *buffer_size += chimes_table_cooling.N_coolants_2d; 
+  *buffer_size += chimes_table_cooling.N_coolants_4d; 
+ 
+  *buffer_size_2D += chimes_table_photoion_euv.N_reactions[1] * 2; 
+
+  return; 
+} 
+
+void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars) 
+{
+  int buffer_size, buffer_size_2d; 
+  int buffer_position, buffer_position_2d; 
+  int N_reactions, i; 
+  
+  determine_current_rates_buffer_size(&buffer_size, &buffer_size_2d, myGlobalVars); 
+  buffer_position = 0; 
+  buffer_position_2d = 0; 
+
+  chimes_current_rates->data_buffer = (ChimesFloat *) malloc(buffer_size * sizeof(ChimesFloat)); 
+  chimes_current_rates->data_buffer_2d = (ChimesFloat **) malloc(buffer_size_2d * sizeof(ChimesFloat *)); 
+
+  // T_dependent 
+  N_reactions = chimes_table_T_dependent.N_reactions[1]; 
+
+  chimes_current_rates->T_dependent_rate_coefficient = chimes_current_rates->data_buffer; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->T_dependent_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // constant 
+  N_reactions = chimes_table_constant.N_reactions[1]; 
+  
+  chimes_current_rates->constant_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // recombination_AB 
+  N_reactions = chimes_table_recombination_AB.N_reactions[1]; 
+  
+  chimes_current_rates->recombination_AB_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->recombination_AB_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // grain_recombination 
+  N_reactions = chimes_table_grain_recombination.N_reactions[1]; 
+
+  chimes_current_rates->grain_recombination_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->grain_recombination_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // cosmic_ray 
+  N_reactions = chimes_table_cosmic_ray.N_reactions[1]; 
+
+  chimes_current_rates->cosmic_ray_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // CO_cosmic_ray 
+  N_reactions = chimes_table_CO_cosmic_ray.N_reactions[1]; 
+
+  chimes_current_rates->CO_cosmic_ray_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->CO_cosmic_ray_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // H2_collis_dissoc 
+  N_reactions = chimes_table_H2_collis_dissoc.N_reactions[1]; 
+  
+  chimes_current_rates->H2_collis_dissoc_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->H2_collis_dissoc_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->H2_collis_dissoc_log_k0 = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->H2_collis_dissoc_log_kLTE = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // photoion_fuv 
+  N_reactions = chimes_table_photoion_fuv.N_reactions[1]; 
+  
+  chimes_current_rates->photoion_fuv_shield_factor = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->photoion_fuv_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->photoion_fuv_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photoion_fuv_heat_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // photoion_euv 
+  N_reactions = chimes_table_photoion_euv.N_reactions[1]; 
+
+  chimes_current_rates->photoion_euv_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photoion_euv_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photoion_euv_heat_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photoion_euv_shield_factor = chimes_current_rates->data_buffer_2d; 
+  buffer_position_2d += N_reactions; 
+
+  chimes_current_rates->photoion_euv_epsilon = chimes_current_rates->data_buffer_2d + buffer_position_2d; 
+  buffer_position_2d += N_reactions; 
+  
+  for (i = 0; i < N_reactions; i++) 
+    {
+      chimes_current_rates->photoion_euv_shield_factor[i] = chimes_current_rates->data_buffer + buffer_position; 
+      buffer_position += myGlobalVars->N_spectra; 
+      
+      chimes_current_rates->photoion_euv_epsilon[i] = chimes_current_rates->data_buffer + buffer_position; 
+      buffer_position += myGlobalVars->N_spectra; 
+    } 
+  
+  // photoion_auger_fuv 
+  N_reactions = chimes_table_photoion_auger_fuv.N_reactions[1]; 
+  
+  chimes_current_rates->photoion_auger_fuv_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->photoion_auger_fuv_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // photoion_auger_euv 
+  N_reactions = chimes_table_photoion_auger_euv.N_reactions[1]; 
+  
+  chimes_current_rates->photoion_auger_euv_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photoion_auger_euv_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // photodissoc_group1 
+  N_reactions = chimes_table_photodissoc_group1.N_reactions[1]; 
+  
+  chimes_current_rates->photodissoc_group1_shield_factor = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photodissoc_group1_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->photodissoc_group1_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // photodissoc_group2 
+  N_reactions = chimes_table_photodissoc_group2.N_reactions[1]; 
+  
+  chimes_current_rates->photodissoc_group2_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  chimes_current_rates->photodissoc_group2_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // H2_photodissoc 
+  N_reactions = chimes_table_H2_photodissoc.N_reactions[1]; 
+  
+  chimes_current_rates->H2_photodissoc_shield_factor = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->H2_photodissoc_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->H2_photodissoc_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // CO photodissoc 
+  N_reactions = chimes_table_CO_photodissoc.N_reactions[1]; 
+  
+  chimes_current_rates->CO_photodissoc_shield_factor = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->CO_photodissoc_rate_coefficient = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  chimes_current_rates->CO_photodissoc_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // Cooling 
+  N_reactions = chimes_table_cooling.N_coolants; 
+  
+  chimes_current_rates->cooling_rate = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  // Cooling 2D 
+  N_reactions = chimes_table_cooling.N_coolants_2d; 
+  
+  chimes_current_rates->cooling_rate_2d = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+  
+  // Cooling 4D 
+  N_reactions = chimes_table_cooling.N_coolants_4d; 
+  
+  chimes_current_rates->cooling_rate_4d = chimes_current_rates->data_buffer + buffer_position; 
+  buffer_position += N_reactions; 
+
+  /* Check that the end position in the 
+   * data buffers matches the expected 
+   * buffer sizes. */ 
+  if (buffer_position != buffer_size) 
+    {
+      printf("CHIMES ERROR: in allocate_current_rates_memory(), buffer_position = %d, buffer_size = %d. \n", buffer_position, buffer_size); 
+      exit(1); 
+    }
+
+  if (buffer_position_2d != buffer_size_2d) 
+    {
+      printf("CHIMES ERROR: in allocate_current_rates_memory(), buffer_position_2d = %d, buffer_size_2d = %d. \n", buffer_position_2d, buffer_size_2d); 
+      exit(1); 
+    }
+
+  return; 
+} 
+
+void free_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars) 
+{
+  free(chimes_current_rates->data_buffer); 
+  free(chimes_current_rates->data_buffer_2d); 
+
+  return; 
+} 

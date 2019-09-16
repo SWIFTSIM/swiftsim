@@ -20,7 +20,7 @@ ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars, struct globalV
 void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
 
 // chimes.c 
-void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, int thread_index);
+void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 void set_equilibrium_abundances_from_tables(struct UserData data);
 
 // init_chimes.c 
@@ -32,6 +32,9 @@ void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVari
 void initialise_main_data(struct globalVariables *myGlobalVars);  
 void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, struct chimes_photoion_fuv_struct *my_photoion_fuv, struct chimes_photoion_euv_struct *my_photoion_euv, struct chimes_photoion_auger_fuv_struct *my_photoion_auger_fuv, struct chimes_photoion_auger_euv_struct *my_photoion_auger_euv, struct chimes_spectra_struct *my_spectra, struct globalVariables *myGlobalVars); 
 int set_species_index_array(struct globalVariables *myGlobalVariables);
+void determine_current_rates_buffer_size(int *buffer_size, int *buffer_size_2D, struct globalVariables *myGlobalVars); 
+void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars); 
+void free_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars); 
 
 // interpol.c 
 void chimes_get_table_index(ChimesFloat *table, int ntable, ChimesFloat x, int *i, ChimesFloat *dx); 
