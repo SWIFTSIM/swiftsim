@@ -19,7 +19,7 @@
 ################################################################################
 import matplotlib
 
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 import h5py as h5
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,7 +37,6 @@ except ImportError:
             print("This script can display progress bars. Try `pip install tqdm`")
             raised_info = True
         return x
-
 
 np.seterr(divide="ignore")
 np.seterr(invalid="ignore")

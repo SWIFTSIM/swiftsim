@@ -1,4 +1,0 @@
-EAGLE subgrid runs:
-./configure --with-ext-potential=hernquist --with-subgrid=EAGLE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quintic-spline
-COLIBRE subgrid runs:
-./configure --with-ext-potential=hernquist --with-subgrid=COLIBRE --disable-hand-vec --with-hydro=anarchy-du --with-kernel=quintic-spline

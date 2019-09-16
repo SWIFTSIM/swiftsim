@@ -403,14 +403,6 @@ EAGLEStarFormation:
   threshold_slope:                   -0.64     # Slope of the metal-dependant star formation threshold
   threshold_max_density_H_p_cm3:     10.0      # Maximal density of the metal-dependant density threshold for star formation in Hydrogen atoms per cm^3.  
   
-# COLIBRE star formation model (Following a density Schmidt law)
-COLIBREStarFormation:
-  min_over_density:                 57.7    # Minimum over density above which star formation is allowed
-  star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
-  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms pe    r cm^3 (Default set to infinity).
-  EOS_temperature_margin_dex:       0.2     # (Optional) Logarithm base 10 of the maximal temperature difference above the EOS allowed to form stars. Default set to 10 (almost infinity)
-
 # Parameters related to feedback models  -----------------------------------------------
 
 # EAGLE feedback model
@@ -428,8 +420,8 @@ EAGLEFeedback:
   SNII_wind_delay_Gyr:              0.03            # Time in Gyr between a star's birth and the SNII thermal feedback event.
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
-  SNII_energy_fraction_min:         0.3             # Maximal fraction of energy applied in a SNII feedback event.
-  SNII_energy_fraction_max:         3.0             # Minimal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_min:         3.0             # Maximal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_max:         0.3             # Minimal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
   SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
@@ -448,7 +440,28 @@ EAGLEFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
- 
+
+# Parameters related to AGN models  -----------------------------------------------
+  
+# EAGLE AGN model
+EAGLEAGN:
+  subgrid_seed_mass_Msun:           1.5e5      # Black hole subgrid mass at creation time in solar masses.
+  max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
+  viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
+  radiative_efficiency:             0.1        # Fraction of the accreted mass that gets radiated.
+  coupling_efficiency:              0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
+  AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
+  AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
+  max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
+  
+# COLIBRE star formation model (Following a density Schmidt law)
+COLIBREStarFormation:
+  min_over_density:                 57.7    # Minimum over density above which star formation is allowed
+  star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
+  temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
+  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms pe    r cm^3 (Default set to infinity).
+  EOS_temperature_margin_dex:       0.2     # (Optional) Logarithm base 10 of the maximal temperature difference above the EOS allowed to form stars. Default set to 10 (almost infinity)
+
 # COLIBRE feedback model
 COLIBREFeedback:
   use_SNII_feedback:                1               # Global switch for SNII thermal (stochastic) feedback.
@@ -470,10 +483,10 @@ COLIBREFeedback:
   SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
   SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
-  SNIa_max_mass_Msun:               8.0             # Maximal mass considered for SNIa feedback and enrichment in solar masses.
-  SNIa_energy_erg:                  1.0e51          # Energy of one SNIa explosion in ergs.
-  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
-  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
+  SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
+  SNIa_timescale_Gyr:              2.0              # Time-scale of the exponential decay of the SNIa rates in Gyr.
+  SNIa_efficiency_p_Msun:          0.002            # Normalisation of the SNIa rates in inverse solar masses.
+  SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
@@ -504,16 +517,3 @@ SNIaDTD:
   power_law_slope_short_time:   0.5         # Power law slope at short times of broken power law 
   power_law_slope_long_time:    1.1         # Power law slope at long times of a broken power law 
   break_time_Gyr:               0.4         # Break time of the broken power law DTD.
-
-# Parameters related to AGN models  -----------------------------------------------
-  
-# EAGLE AGN model
-EAGLEAGN:
-  subgrid_seed_mass_Msun:           1.5e5      # Black hole subgrid mass at creation time in solar masses.
-  max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
-  viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
-  radiative_efficiency:             0.1        # Fraction of the accreted mass that gets radiated.
-  coupling_efficiency:              0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
-  AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
-  AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
-  max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.

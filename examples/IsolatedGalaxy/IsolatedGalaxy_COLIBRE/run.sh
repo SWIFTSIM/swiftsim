@@ -6,17 +6,10 @@ then
     ./getIC.sh
 fi
 
-if [ ! -e coolingtables ] 
-then     
-    echo "Fetching EAGLE cooling tables for the isolated galaxy example..."
-    ./getEagleCoolingTable.sh
-fi
+../../swift --threads=28 --external-gravity --self-gravity --stars --star-formation --cooling --temperature --hydro isolated_galaxy.yml 2>&1 | tee output.log
 
-if [ ! -e yieldtables ] 
-then     
-    echo "Fetching EAGLE stellar yield tables for the isolated galaxy example..."
-    ./getYieldTable.sh
-fi
+# Kennicutt-Schmidt law plot
+#python3 plotSolution.py
 
-../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --star-formation --cooling --hydro ../isolated_galaxy.yml -P EAGLEEntropyFloor:Jeans_temperature_norm_K:100. 2>&1 | tee output.log
-
+# Plot that the random star formation matches the expected SFH
+#python3 SFH.py
