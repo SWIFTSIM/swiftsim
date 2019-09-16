@@ -24,67 +24,7 @@
    and runner_dosub_FUNCTION calling the pairwise interaction function
    runner_iact_FUNCTION. */
 
-#define PASTE(x, y) x##_##y
-
-#define _DOSELF1_BH(f) PASTE(runner_doself_bh, f)
-#define DOSELF1_BH _DOSELF1_BH(FUNCTION)
-
-#define _DO_SYM_PAIR1_BH(f) PASTE(runner_do_sym_pair_bh, f)
-#define DO_SYM_PAIR1_BH _DO_SYM_PAIR1_BH(FUNCTION)
-
-#define _DO_NONSYM_PAIR1_BH_NAIVE(f) PASTE(runner_do_nonsym_pair_bh_naive, f)
-#define DO_NONSYM_PAIR1_BH_NAIVE _DO_NONSYM_PAIR1_BH_NAIVE(FUNCTION)
-
-#define _DOPAIR1_BH_NAIVE(f) PASTE(runner_dopair_bh_naive, f)
-#define DOPAIR1_BH_NAIVE _DOPAIR1_BH_NAIVE(FUNCTION)
-
-#define _DOPAIR1_SUBSET_BH(f) PASTE(runner_dopair_subset_bh, f)
-#define DOPAIR1_SUBSET_BH _DOPAIR1_SUBSET_BH(FUNCTION)
-
-#define _DOPAIR1_SUBSET_BH_NAIVE(f) PASTE(runner_dopair_subset_bh_naive, f)
-#define DOPAIR1_SUBSET_BH_NAIVE _DOPAIR1_SUBSET_BH_NAIVE(FUNCTION)
-
-#define _DOSELF1_SUBSET_BH(f) PASTE(runner_doself_subset_bh, f)
-#define DOSELF1_SUBSET_BH _DOSELF1_SUBSET_BH(FUNCTION)
-
-#define _DOSELF1_SUBSET_BRANCH_BH(f) PASTE(runner_doself_subset_branch_bh, f)
-#define DOSELF1_SUBSET_BRANCH_BH _DOSELF1_SUBSET_BRANCH_BH(FUNCTION)
-
-#define _DOPAIR1_SUBSET_BRANCH_BH(f) PASTE(runner_dopair_subset_branch_bh, f)
-#define DOPAIR1_SUBSET_BRANCH_BH _DOPAIR1_SUBSET_BRANCH_BH(FUNCTION)
-
-#define _DOSUB_SUBSET_BH(f) PASTE(runner_dosub_subset_bh, f)
-#define DOSUB_SUBSET_BH _DOSUB_SUBSET_BH(FUNCTION)
-
-#define _DOSELF1_BRANCH_BH(f) PASTE(runner_doself_branch_bh, f)
-#define DOSELF1_BRANCH_BH _DOSELF1_BRANCH_BH(FUNCTION)
-
-#define _DOPAIR1_BRANCH_BH(f) PASTE(runner_dopair_branch_bh, f)
-#define DOPAIR1_BRANCH_BH _DOPAIR1_BRANCH_BH(FUNCTION)
-
-#define _DOSUB_PAIR1_BH(f) PASTE(runner_dosub_pair_bh, f)
-#define DOSUB_PAIR1_BH _DOSUB_PAIR1_BH(FUNCTION)
-
-#define _DOSUB_SELF1_BH(f) PASTE(runner_dosub_self_bh, f)
-#define DOSUB_SELF1_BH _DOSUB_SELF1_BH(FUNCTION)
-
-#define _TIMER_DOSELF_BH(f) PASTE(timer_doself_bh, f)
-#define TIMER_DOSELF_BH _TIMER_DOSELF_BH(FUNCTION)
-
-#define _TIMER_DOPAIR_BH(f) PASTE(timer_dopair_bh, f)
-#define TIMER_DOPAIR_BH _TIMER_DOPAIR_BH(FUNCTION)
-
-#define _TIMER_DOSUB_SELF_BH(f) PASTE(timer_dosub_self_bh, f)
-#define TIMER_DOSUB_SELF_BH _TIMER_DOSUB_SELF_BH(FUNCTION)
-
-#define _TIMER_DOSUB_PAIR_BH(f) PASTE(timer_dosub_pair_bh, f)
-#define TIMER_DOSUB_PAIR_BH _TIMER_DOSUB_PAIR_BH(FUNCTION)
-
-#define _IACT_BH_GAS(f) PASTE(runner_iact_nonsym_bh_gas, f)
-#define IACT_BH_GAS _IACT_BH_GAS(FUNCTION)
-
-#define _IACT_BH_BH(f) PASTE(runner_iact_nonsym_bh_bh, f)
-#define IACT_BH_BH _IACT_BH_BH(FUNCTION)
+#include "runner_doiact_black_holes.h"
 
 /**
  * @brief Calculate the number density of #part around the #bpart
