@@ -125,6 +125,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * to be modified by the user. These are just 
    * hard-coded for now. */ 
   cooling->ChimesGlobalVars.StaticMolCooling = 0; 
-  cooling->ChimesGlobalVars.InitIonState = 0; 
+  cooling->ChimesGlobalVars.InitIonState = 1; 
   cooling->ChimesGlobalVars.grain_temperature = 10.0; 
+
+  /* Initialise the CHIMES module. */ 
+  message("Initialising CHIMES cooling module."); 
+  init_chimes(&cooling->ChimesGlobalVars); 
+
+
 }
