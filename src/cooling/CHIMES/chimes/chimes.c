@@ -30,7 +30,7 @@ void set_equilibrium_abundances_from_tables(struct UserData data)
   return;
 }
 
-void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, int thread_index)
+void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   realtype reltol, abstol_scalar, t;
   N_Vector abstol_vector, y;
@@ -41,6 +41,9 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
   struct Species_Structure species[myGlobalVars->totalNumberOfSpecies];  
   struct UserData data;
 
+  struct chimes_current_rates_struct chimes_current_rates; 
+  allocate_current_rates_memory(&chimes_current_rates, myGlobalVars); 
+
   check_constraint_equations(myGasVars, myGlobalVars);
   set_species_structures(species, myGasVars, &total_network_size, &nonmolecular_network_size, myGlobalVars);
 
@@ -49,7 +52,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
   data.myGasVars = myGasVars;
   data.myGlobalVars = myGlobalVars;
   data.species = species; 
-  data.thread_index = thread_index; 
+  data.chimes_current_rates = &chimes_current_rates; 
 
   if (myGasVars->temperature <= myGlobalVars->T_mol)
     {
@@ -127,6 +130,8 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       else	  
 	do_equilibrium_cooling(data); 
 
+      free_current_rates_memory(&chimes_current_rates, myGlobalVars); 
+
       return;
     }
 
@@ -201,6 +206,8 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       if (data.myGasVars->ThermEvolOn == 1) 
 	myGasVars->temperature = chimes_max(new_energy / (1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS), myGasVars->TempFloor); 
       
+      free_current_rates_memory(&chimes_current_rates, myGlobalVars); 
+
       return; 
     }
   else 
@@ -311,6 +318,8 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       if ((myGasVars->ThermEvolOn == 1) || (myGlobalVars->scale_metal_tolerances == 1))
 	N_VDestroy_Serial(abstol_vector);
       CVodeFree(&cvode_mem);
+
+      free_current_rates_memory(&chimes_current_rates, myGlobalVars); 
 
       return;
   }

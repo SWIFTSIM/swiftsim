@@ -120,17 +120,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
   cooling->ChimesGlobalVars.cmb_temperature = cooling->T_CMB_0; 
-
-  /* We initialise the CHIMES module in single-threaded 
-   * mode (i.e. n_threads = 1). However, if multiple 
-   * threads try to access the CHIMES module at the 
-   * same time, we will need to make this thread-safe. 
-   * In the first instance, we can just use a mutex to 
-   * ensure that only one thread calls chimes_network() 
-   * at any given time. However, this will likely be 
-   * slow, so in the future we will need to improve how 
-   * CHIMES deals with multiple threads. */
-  cooling->ChimesGlobalVars.n_threads = 1; 
   
   /* The following CHIMES parameters do not need 
    * to be modified by the user. These are just 

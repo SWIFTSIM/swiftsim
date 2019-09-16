@@ -39,7 +39,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 	{
 	  // photoion_fuv 
 	  for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photoion_fuv.current_shield_factor[data.thread_index][i] = (ChimesFloat) exp(-(chimes_table_photoion_fuv.gamma[i] * data.extinction)); 
+	    data.chimes_current_rates->photoion_fuv_shield_factor[i] = (ChimesFloat) exp(-(chimes_table_photoion_fuv.gamma[i] * data.extinction)); 
 
 	  // photoion_euv 
 	  chimes_get_table_index(chimes_table_bins.Column_densities, chimes_table_bins.N_Column_densities, log10(chimes_max(data.HI_column, 1.0e-100)), &NHI_index, &dNHI);
@@ -63,7 +63,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 
 		  S3 = pow(10.0, chimes_interpol_2d(chimes_table_photoion_euv.shieldFactor_2D[i][j][1], NH_eff_index, NHe_eff_index, dNH_eff, dNHe_eff)); 
 		  
-		  chimes_table_photoion_euv.current_shield_factor[data.thread_index][i][j] = S1 + S2 + S3; 
+		  data.chimes_current_rates->photoion_euv_shield_factor[i][j] = S1 + S2 + S3; 
 		}
 	    }
 
@@ -98,23 +98,23 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 		      E3 = pow(10.0, (double) chimes_interpol_2d(chimes_table_photoion_euv.shieldFactor_2D[i][j][3], NH_eff_index, NHe_eff_index, dNH_eff, dNHe_eff)); 
 		      E6 = pow(10.0, (double) chimes_interpol_2d(chimes_table_photoion_euv.shieldFactor_2D[i][j][5], NH_eff_index, NHe_eff_index, dNH_eff, dNHe_eff)); 
 		  
-		      chimes_table_photoion_euv.current_epsilon[data.thread_index][i][j] = (ChimesFloat) ((E1 + E2 + E3) / (E4 + E5 + E6)); 
+		      data.chimes_current_rates->photoion_euv_epsilon[i][j] = (ChimesFloat) ((E1 + E2 + E3) / (E4 + E5 + E6)); 
 		    }
 		}
 	    }
 
 	  // photodissoc_group1 
 	  for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photodissoc_group1.current_shield_factor[data.thread_index][i] = (ChimesFloat) exp(-(chimes_table_photodissoc_group1.gamma[i] * data.extinction)); 
+	    data.chimes_current_rates->photodissoc_group1_shield_factor[i] = (ChimesFloat) exp(-(chimes_table_photodissoc_group1.gamma[i] * data.extinction)); 
 
 	  if (data.mol_flag_index == 1) 
 	    {
 	      // photodissoc_group2 
 	      // All reactions use the same shield_factor 
 	      if (data.extinction > 15) 
-		chimes_table_photodissoc_group2.current_shield_factor[data.thread_index] = (ChimesFloat) exp(-(chimes_table_photodissoc_group2.gamma_coeff[0] * data.extinction)); 
+		data.chimes_current_rates->photodissoc_group2_shield_factor = (ChimesFloat) exp(-(chimes_table_photodissoc_group2.gamma_coeff[0] * data.extinction)); 
 	      else 
-		chimes_table_photodissoc_group2.current_shield_factor[data.thread_index] = (ChimesFloat) exp(-(chimes_table_photodissoc_group2.gamma_coeff[1] * data.extinction) + (chimes_table_photodissoc_group2.gamma_coeff[2] * pow(data.extinction, 2.0))); 
+		data.chimes_current_rates->photodissoc_group2_shield_factor = (ChimesFloat) exp(-(chimes_table_photodissoc_group2.gamma_coeff[1] * data.extinction) + (chimes_table_photodissoc_group2.gamma_coeff[2] * pow(data.extinction, 2.0))); 
 
 	      // CO_photodissoc 
 	      log_NCO = (ChimesFloat) log10(chimes_max(data.CO_column, 1.0e-100)); 
@@ -124,64 +124,64 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 	  
 	      for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++) 
 		{
-		  chimes_table_CO_photodissoc.current_shield_factor[data.thread_index][i] = pow(10.0, chimes_interpol_2d(chimes_table_CO_photodissoc.self_shielding[i], NCO_index, NH2_index, dNCO, dNH2)); 
-		  chimes_table_CO_photodissoc.current_shield_factor[data.thread_index][i] *= exp(- chimes_table_CO_photodissoc.gamma[i] * data.extinction);
+		  data.chimes_current_rates->CO_photodissoc_shield_factor[i] = pow(10.0, chimes_interpol_2d(chimes_table_CO_photodissoc.self_shielding[i], NCO_index, NH2_index, dNCO, dNH2)); 
+		  data.chimes_current_rates->CO_photodissoc_shield_factor[i] *= exp(- chimes_table_CO_photodissoc.gamma[i] * data.extinction);
 		}
 	    }
 	}
       else 
 	{
 	  for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photoion_fuv.current_shield_factor[data.thread_index][i] = 1.0; 
+	    data.chimes_current_rates->photoion_fuv_shield_factor[i] = 1.0; 
 
 	  for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
 	    {
 	      for (j = 0; j < myGlobalVars->N_spectra; j++) 
-		chimes_table_photoion_euv.current_shield_factor[data.thread_index][i][j] = 1.0; 
+		data.chimes_current_rates->photoion_euv_shield_factor[i][j] = 1.0; 
 	    }
 
 	  for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photodissoc_group1.current_shield_factor[data.thread_index][i] = 1.0; 
+	    data.chimes_current_rates->photodissoc_group1_shield_factor[i] = 1.0; 
 
 	  if (data.mol_flag_index == 1) 
 	    {
-	      chimes_table_photodissoc_group2.current_shield_factor[data.thread_index] = 1.0; 
+	      data.chimes_current_rates->photodissoc_group2_shield_factor = 1.0; 
 	      
 	      for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++) 
-		chimes_table_CO_photodissoc.current_shield_factor[data.thread_index][i] = 1.0; 
+		data.chimes_current_rates->CO_photodissoc_shield_factor[i] = 1.0; 
 	    }
 	}
 
       // Zero the rate coefficients 
       for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photoion_fuv.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photoion_fuv_rate_coefficient[i] = 0.0; 
 
       for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photoion_euv.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photoion_euv_rate_coefficient[i] = 0.0; 
 
       if (myGasVars->ThermEvolOn) 
 	{
 	  for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photoion_fuv.current_heat_rate[data.thread_index][i] = 0.0; 
+	    data.chimes_current_rates->photoion_fuv_heat_rate[i] = 0.0; 
 
 	  for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_photoion_euv.current_heat_rate[data.thread_index][i] = 0.0; 
+	    data.chimes_current_rates->photoion_euv_heat_rate[i] = 0.0; 
 	}
 
       for (i = 0; i < chimes_table_photoion_auger_fuv.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photoion_auger_fuv.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photoion_auger_fuv_rate_coefficient[i] = 0.0; 
 
       for (i = 0; i < chimes_table_photoion_auger_euv.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photoion_auger_euv.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photoion_auger_euv_rate_coefficient[i] = 0.0; 
 
       for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photodissoc_group1.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photodissoc_group1_rate_coefficient[i] = 0.0; 
 
       for (i = 0; i < chimes_table_photodissoc_group2.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_photodissoc_group2.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->photodissoc_group2_rate_coefficient[i] = 0.0; 
       
       for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_CO_photodissoc.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	data.chimes_current_rates->CO_photodissoc_rate_coefficient[i] = 0.0; 
 
       // Sum over all spectra 
       for (j = 0; j < myGlobalVars->N_spectra; j++) 
@@ -190,36 +190,36 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 	  G0 = flux * myGasVars->G0_parameter[j]; 
 
 	  for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-	      chimes_table_photoion_fuv.current_rate_coefficient[data.thread_index][i] += flux * chimes_table_photoion_fuv.current_shield_factor[data.thread_index][i] * chimes_table_photoion_fuv.sigmaPhot[i][j]; 
+	      data.chimes_current_rates->photoion_fuv_rate_coefficient[i] += flux * data.chimes_current_rates->photoion_fuv_shield_factor[i] * chimes_table_photoion_fuv.sigmaPhot[i][j]; 
 	    
 	  for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_photoion_euv.current_rate_coefficient[data.thread_index][i] += flux * chimes_table_photoion_euv.current_shield_factor[data.thread_index][i][j] * chimes_table_photoion_euv.sigmaPhot[i][j]; 
+	    data.chimes_current_rates->photoion_euv_rate_coefficient[i] += flux * data.chimes_current_rates->photoion_euv_shield_factor[i][j] * chimes_table_photoion_euv.sigmaPhot[i][j]; 
 
 	  if (myGasVars->ThermEvolOn) 
 	    {
 	      for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-		chimes_table_photoion_fuv.current_heat_rate[data.thread_index][i] += flux * chimes_table_photoion_fuv.current_shield_factor[data.thread_index][i] * chimes_table_photoion_fuv.sigmaPhot[i][j] * chimes_table_photoion_fuv.epsilonPhot[i][j]; 
+		data.chimes_current_rates->photoion_fuv_heat_rate[i] += flux * data.chimes_current_rates->photoion_fuv_shield_factor[i] * chimes_table_photoion_fuv.sigmaPhot[i][j] * chimes_table_photoion_fuv.epsilonPhot[i][j]; 
 
 	      for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++)
-		chimes_table_photoion_euv.current_heat_rate[data.thread_index][i] += flux * chimes_table_photoion_euv.current_shield_factor[data.thread_index][i][j] * chimes_table_photoion_euv.sigmaPhot[i][j] * chimes_table_photoion_euv.current_epsilon[data.thread_index][i][j]; 
+		data.chimes_current_rates->photoion_euv_heat_rate[i] += flux * data.chimes_current_rates->photoion_euv_shield_factor[i][j] * chimes_table_photoion_euv.sigmaPhot[i][j] * data.chimes_current_rates->photoion_euv_epsilon[i][j]; 
 	    }
 
 	  for (i = 0; i < chimes_table_photoion_auger_fuv.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photoion_auger_fuv.current_rate_coefficient[data.thread_index][i] += flux * chimes_table_photoion_fuv.current_shield_factor[data.thread_index][chimes_table_photoion_auger_fuv.base_reaction[i]] * chimes_table_photoion_auger_fuv.sigmaPhot[i][j]; 
+	    data.chimes_current_rates->photoion_auger_fuv_rate_coefficient[i] += flux * data.chimes_current_rates->photoion_fuv_shield_factor[chimes_table_photoion_auger_fuv.base_reaction[i]] * chimes_table_photoion_auger_fuv.sigmaPhot[i][j]; 
 
 	  for (i = 0; i < chimes_table_photoion_auger_euv.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photoion_auger_euv.current_rate_coefficient[data.thread_index][i] += flux * chimes_table_photoion_euv.current_shield_factor[data.thread_index][chimes_table_photoion_auger_euv.base_reaction[i]][j] * chimes_table_photoion_auger_euv.sigmaPhot[i][j]; 
+	    data.chimes_current_rates->photoion_auger_euv_rate_coefficient[i] += flux * data.chimes_current_rates->photoion_euv_shield_factor[chimes_table_photoion_auger_euv.base_reaction[i]][j] * chimes_table_photoion_auger_euv.sigmaPhot[i][j]; 
 
 	  for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++)
-	    chimes_table_photodissoc_group1.current_rate_coefficient[data.thread_index][i] += G0 * chimes_table_photodissoc_group1.current_shield_factor[data.thread_index][i] * chimes_table_photodissoc_group1.rates[i]; 
+	    data.chimes_current_rates->photodissoc_group1_rate_coefficient[i] += G0 * data.chimes_current_rates->photodissoc_group1_shield_factor[i] * chimes_table_photodissoc_group1.rates[i]; 
 
 	  if (data.mol_flag_index == 1) 
 	    {
 	      for (i = 0; i < chimes_table_photodissoc_group2.N_reactions[data.mol_flag_index]; i++)
-		chimes_table_photodissoc_group2.current_rate_coefficient[data.thread_index][i] += G0 * chimes_table_photodissoc_group2.current_shield_factor[data.thread_index] * chimes_table_photodissoc_group2.rates[i]; 
+		data.chimes_current_rates->photodissoc_group2_rate_coefficient[i] += G0 * data.chimes_current_rates->photodissoc_group2_shield_factor * chimes_table_photodissoc_group2.rates[i]; 
 
 	      for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++)
-		chimes_table_CO_photodissoc.current_rate_coefficient[data.thread_index][i] += G0 * chimes_table_CO_photodissoc.current_shield_factor[data.thread_index][i] * chimes_table_CO_photodissoc.rates[i]; 
+		data.chimes_current_rates->CO_photodissoc_rate_coefficient[i] += G0 * data.chimes_current_rates->CO_photodissoc_shield_factor[i] * chimes_table_CO_photodissoc.rates[i]; 
 	    }
 	}
     }
@@ -264,15 +264,15 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
   
       // T_dependent reactions 
       for (i = 0; i < chimes_table_T_dependent.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_T_dependent.current_rate_coefficient[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_T_dependent.rates[i], T_index, dT)); 
+	data.chimes_current_rates->T_dependent_rate_coefficient[i] = pow(10.0, chimes_interpol_1d(chimes_table_T_dependent.rates[i], T_index, dT)); 
 
       // recombination_AB reactions 
       for (i = 0; i < chimes_table_recombination_AB.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_recombination_AB.current_rate_coefficient[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_recombination_AB.rates[i][data.case_AB_index[i]], T_index, dT)); 
+	data.chimes_current_rates->recombination_AB_rate_coefficient[i] = pow(10.0, chimes_interpol_1d(chimes_table_recombination_AB.rates[i][data.case_AB_index[i]], T_index, dT)); 
 
       // grain_recombination reactions 
       for (i = 0; i < chimes_table_grain_recombination.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_grain_recombination.current_rate_coefficient[data.thread_index][i] = pow(10.0, chimes_interpol_2d(chimes_table_grain_recombination.rates[i], T_index, Psi_index, dT, dPsi)); 
+	data.chimes_current_rates->grain_recombination_rate_coefficient[i] = pow(10.0, chimes_interpol_2d(chimes_table_grain_recombination.rates[i], T_index, Psi_index, dT, dPsi)); 
   
       // H2_dust_formation 
       if (data.mol_flag_index == 1) 
@@ -280,7 +280,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 	  log_T_dust = (ChimesFloat) log10(myGlobalVars->grain_temperature); 
 	  chimes_get_table_index(chimes_table_bins.Dust_Temperatures, chimes_table_bins.N_Dust_Temperatures, log_T_dust, &T_dust_index, &dT_dust); 
 
-	  chimes_table_H2_dust_formation.current_rate_coefficient[data.thread_index] = pow(10.0, chimes_interpol_2d(chimes_table_H2_dust_formation.rates, T_index, T_dust_index, dT, dT_dust)); 
+	  data.chimes_current_rates->H2_dust_formation_rate_coefficient = pow(10.0, chimes_interpol_2d(chimes_table_H2_dust_formation.rates, T_index, T_dust_index, dT, dT_dust)); 
 	}
 
       if ((data.mol_flag_index == 1) && (myGlobalVars->N_spectra > 0)) 
@@ -299,24 +299,24 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 	      
 	      for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
 		{
-		  chimes_table_H2_photodissoc.current_shield_factor[data.thread_index][i] = pow(10.0, chimes_interpol_3d(chimes_table_H2_photodissoc.self_shielding[i], T_index, NH2_index, b_index, dT, dNH2, db)); 
-		  chimes_table_H2_photodissoc.current_shield_factor[data.thread_index][i] *= exp(- chimes_table_H2_photodissoc.gamma[i] * data.extinction); 
+		  data.chimes_current_rates->H2_photodissoc_shield_factor[i] = pow(10.0, chimes_interpol_3d(chimes_table_H2_photodissoc.self_shielding[i], T_index, NH2_index, b_index, dT, dNH2, db)); 
+		  data.chimes_current_rates->H2_photodissoc_shield_factor[i] *= exp(- chimes_table_H2_photodissoc.gamma[i] * data.extinction); 
 		}
 	    }
 	  else 
-	    chimes_table_H2_photodissoc.current_shield_factor[data.thread_index][i] = 1.0; 
+	    data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0; 
 	  
 	  
 	  // Zero the rate coefficients 
 	  for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_H2_photodissoc.current_rate_coefficient[data.thread_index][i] = 0.0; 
+	    data.chimes_current_rates->H2_photodissoc_rate_coefficient[i] = 0.0; 
  
 	  // Sum over all spectra 
 	  for (j = 0; j < myGlobalVars->N_spectra; j++) 
 	    {
 	      flux = myGasVars->isotropic_photon_density[j] * LIGHTSPEED; 
 	      for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[1]; i++) 
-		chimes_table_H2_photodissoc.current_rate_coefficient[data.thread_index][i] += flux * myGasVars->H2_dissocJ[j] * chimes_table_H2_photodissoc.rates[i] * chimes_table_H2_photodissoc.current_shield_factor[data.thread_index][i]; 
+		data.chimes_current_rates->H2_photodissoc_rate_coefficient[i] += flux * myGasVars->H2_dissocJ[j] * chimes_table_H2_photodissoc.rates[i] * data.chimes_current_rates->H2_photodissoc_shield_factor[i]; 
 	    }
 	}
     }
@@ -333,31 +333,31 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 	   * only need to be interpolated when 
 	   * mode == 1, i.e. when the initial rate 
 	   * coefficients are set or if ThermEvolOn == 1. */ 
-	  chimes_table_H2_collis_dissoc.current_crit_H[data.thread_index] = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_H, T_index, dT)); 
-	  chimes_table_H2_collis_dissoc.current_crit_H2[data.thread_index] = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_H2, T_index, dT)); 
-	  chimes_table_H2_collis_dissoc.current_crit_He[data.thread_index] = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_He, T_index, dT)); 
+	  data.chimes_current_rates->H2_collis_dissoc_crit_H = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_H, T_index, dT)); 
+	  data.chimes_current_rates->H2_collis_dissoc_crit_H2 = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_H2, T_index, dT)); 
+	  data.chimes_current_rates->H2_collis_dissoc_crit_He = pow(10.0, chimes_interpol_1d(chimes_table_H2_collis_dissoc.critical_density_He, T_index, dT)); 
 
 	  for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
 	    {
-	      chimes_table_H2_collis_dissoc.current_log_k0[data.thread_index][i] = chimes_interpol_1d(chimes_table_H2_collis_dissoc.k0[i], T_index, dT); 
-	      chimes_table_H2_collis_dissoc.current_log_kLTE[data.thread_index][i] = chimes_interpol_1d(chimes_table_H2_collis_dissoc.kLTE[i], T_index, dT); 
+	      data.chimes_current_rates->H2_collis_dissoc_log_k0[i] = chimes_interpol_1d(chimes_table_H2_collis_dissoc.k0[i], T_index, dT); 
+	      data.chimes_current_rates->H2_collis_dissoc_log_kLTE[i] = chimes_interpol_1d(chimes_table_H2_collis_dissoc.kLTE[i], T_index, dT); 
 	    }
 	}
       
       /* The rate coefficient itself also depends 
        * on the abundances of HI, H2 and HeI */ 
-      n_over_cr = myGasVars->abundances[myGlobalVars->speciesIndices[HI]] / chimes_table_H2_collis_dissoc.current_crit_H[data.thread_index]; 
-      n_over_cr += 2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] / chimes_table_H2_collis_dissoc.current_crit_H2[data.thread_index]; 
-      n_over_cr += myGasVars->abundances[myGlobalVars->speciesIndices[HeI]] / chimes_table_H2_collis_dissoc.current_crit_He[data.thread_index]; 
+      n_over_cr = myGasVars->abundances[myGlobalVars->speciesIndices[HI]] / data.chimes_current_rates->H2_collis_dissoc_crit_H; 
+      n_over_cr += 2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] / data.chimes_current_rates->H2_collis_dissoc_crit_H2; 
+      n_over_cr += myGasVars->abundances[myGlobalVars->speciesIndices[HeI]] / data.chimes_current_rates->H2_collis_dissoc_crit_He; 
       n_over_cr *= myGasVars->nH_tot; 
 
       for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_H2_collis_dissoc.current_rate_coefficient[data.thread_index][i] = pow(10.0, (((n_over_cr / (1.0 + n_over_cr)) * chimes_table_H2_collis_dissoc.current_log_kLTE[data.thread_index][i]) + ((1.0 / (1.0 + n_over_cr)) *chimes_table_H2_collis_dissoc.current_log_k0[data.thread_index][i]))); 
+	data.chimes_current_rates->H2_collis_dissoc_rate_coefficient[i] = pow(10.0, (((n_over_cr / (1.0 + n_over_cr)) * data.chimes_current_rates->H2_collis_dissoc_log_kLTE[i]) + ((1.0 / (1.0 + n_over_cr)) * data.chimes_current_rates->H2_collis_dissoc_log_k0[i]))); 
 
 
       // CO_cosmic_ray 
       for (i = 0; i < chimes_table_CO_cosmic_ray.N_reactions[data.mol_flag_index]; i++)
-	chimes_table_CO_cosmic_ray.current_rate_coefficient[data.thread_index][i] = pow(10.0, chimes_interpol_1d(chimes_table_CO_cosmic_ray.rates[i], T_index, dT)) * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] * myGasVars->cr_rate;
+	data.chimes_current_rates->CO_cosmic_ray_rate_coefficient[i] = pow(10.0, chimes_interpol_1d(chimes_table_CO_cosmic_ray.rates[i], T_index, dT)) * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] * myGasVars->cr_rate;
     }
   
   return; 
@@ -375,13 +375,13 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
   // T_dependent reactions 
   for (i = 0; i < chimes_table_T_dependent.N_reactions[data.mol_flag_index]; i++) 
     {
-      chimes_table_T_dependent.current_rate[data.thread_index][i] = chimes_table_T_dependent.current_rate_coefficient[data.thread_index][i]; 
+      data.chimes_current_rates->T_dependent_rate[i] = data.chimes_current_rates->T_dependent_rate_coefficient[i]; 
       for (j = 0; j < 3; j++) 
 	{
 	  if (chimes_table_T_dependent.reactants[i][j] < 0) 
 	    break; 
 	  else 
-	    chimes_table_T_dependent.current_rate[data.thread_index][i] *= myGasVars->nH_tot * myGasVars->abundances[chimes_table_T_dependent.reactants[i][j]]; 
+	    data.chimes_current_rates->T_dependent_rate[i] *= myGasVars->nH_tot * myGasVars->abundances[chimes_table_T_dependent.reactants[i][j]]; 
 	}
       
       /* This group contains 2-body and 3-body reactions, with rate coefficients 
@@ -389,7 +389,7 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
        * of s^-1 (i.e. dx_i/dt), we therefore need one and two factors of nH_tot, 
        * respectively. We therefore multiply by nH_tot for each reactant, and then 
        * divide out one factor of nH_tot at the end. */ 
-      chimes_table_T_dependent.current_rate[data.thread_index][i] /= myGasVars->nH_tot; 
+      data.chimes_current_rates->T_dependent_rate[i] /= myGasVars->nH_tot; 
     }
 
 
@@ -397,34 +397,34 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
   /* All reactions in this group are 2-body, with rate coefficients in cm^3/s, 
    * so current_rate = rate_coefficient * x_0 * x_1 * nH_tot (in s^-1). */
   for (i = 0; i < chimes_table_constant.N_reactions[data.mol_flag_index]; i++) 
-    chimes_table_constant.current_rate[data.thread_index][i] = chimes_table_constant.rates[i] * myGasVars->abundances[chimes_table_constant.reactants[i][0]] * myGasVars->abundances[chimes_table_constant.reactants[i][1]] * myGasVars->nH_tot; 
+    data.chimes_current_rates->constant_rate[i] = chimes_table_constant.rates[i] * myGasVars->abundances[chimes_table_constant.reactants[i][0]] * myGasVars->abundances[chimes_table_constant.reactants[i][1]] * myGasVars->nH_tot; 
 
 
   // recombination_AB reactions 
   /* All reactions in this group are 2-body, with rate coefficients in cm^3/s, 
    * so current_rate = rate_coefficient * x_0 * x_1 * nH_tot (in s^-1). */
   for (i = 0; i < chimes_table_recombination_AB.N_reactions[data.mol_flag_index]; i++) 
-    chimes_table_recombination_AB.current_rate[data.thread_index][i] = chimes_table_recombination_AB.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][0]] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][1]] * myGasVars->nH_tot; 
+    data.chimes_current_rates->recombination_AB_rate[i] = data.chimes_current_rates->recombination_AB_rate_coefficient[i] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][0]] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][1]] * myGasVars->nH_tot; 
 
   // grain_recombination reactions 
   // NOTE: Rate scales with metallicity 
   /* All reactions in this group are 2-body, with rate coefficients in cm^3/s, 
    * so current_rate = rate_coefficient * x_0 * x_1 * nH_tot (in s^-1). */
   for (i = 0; i < chimes_table_grain_recombination.N_reactions[data.mol_flag_index]; i++) 
-    chimes_table_grain_recombination.current_rate[data.thread_index][i] = chimes_table_grain_recombination.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][0]] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][1]] * myGasVars->nH_tot * myGasVars->metallicity; 
+    data.chimes_current_rates->grain_recombination_rate[i] = data.chimes_current_rates->grain_recombination_rate_coefficient[i] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][0]] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][1]] * myGasVars->nH_tot * myGasVars->metallicity; 
 
 
   // cosmic_ray reactions 
   if (myGasVars->cr_rate > 0.0) 
     {
       for (i = 0; i < chimes_table_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_cosmic_ray.current_rate[data.thread_index][i] = myGasVars->cr_rate * chimes_table_cosmic_ray.rates[i] * myGasVars->abundances[chimes_table_cosmic_ray.reactants[i]]; 
+	data.chimes_current_rates->cosmic_ray_rate[i] = myGasVars->cr_rate * chimes_table_cosmic_ray.rates[i] * myGasVars->abundances[chimes_table_cosmic_ray.reactants[i]]; 
       
       // secondary cosmic ray ionisation 
       log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100)); 
       chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII, chimes_table_bins.N_secondary_cosmic_ray_xHII, log_xHII, &xHII_index, &d_xHII); 
       for (i = 0; i < 2; i++) 
-	chimes_table_cosmic_ray.current_rate[data.thread_index][chimes_table_cosmic_ray.secondary_base_reaction[i]] *= 1.0 + pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
+	data.chimes_current_rates->cosmic_ray_rate[chimes_table_cosmic_ray.secondary_base_reaction[i]] *= 1.0 + pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
 
     }
 
@@ -433,11 +433,11 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
     {
       // H2_dust_formation 
       // NOTE: Rate scales with metallicity 
-      chimes_table_H2_dust_formation.current_rate[data.thread_index] = chimes_table_H2_dust_formation.current_rate_coefficient[data.thread_index] * myGasVars->abundances[chimes_table_H2_dust_formation.reactants[0]] * myGasVars->metallicity * myGasVars->nH_tot; 
+      data.chimes_current_rates->H2_dust_formation_rate = data.chimes_current_rates->H2_dust_formation_rate_coefficient * myGasVars->abundances[chimes_table_H2_dust_formation.reactants[0]] * myGasVars->metallicity * myGasVars->nH_tot; 
 
       // H2_collis_dissoc 
       for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_H2_collis_dissoc.current_rate[data.thread_index][i] = chimes_table_H2_collis_dissoc.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_H2_collis_dissoc.reactants[i][0]] * myGasVars->abundances[chimes_table_H2_collis_dissoc.reactants[i][1]] * myGasVars->nH_tot; 
+	data.chimes_current_rates->H2_collis_dissoc_rate[i] = data.chimes_current_rates->H2_collis_dissoc_rate_coefficient[i] * myGasVars->abundances[chimes_table_H2_collis_dissoc.reactants[i][0]] * myGasVars->abundances[chimes_table_H2_collis_dissoc.reactants[i][1]] * myGasVars->nH_tot; 
 
       // CO_cosmic_ray
       // NOTE: the rate_coefficient contains a factor 1/sqrt(xCO). I have taken this
@@ -445,45 +445,45 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
       // the factor xCO from the reactant, hence the sqrt() when we multiply by the
       // reactant here. 
       for (i = 0; i < chimes_table_CO_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_CO_cosmic_ray.current_rate[data.thread_index][i] = chimes_table_CO_cosmic_ray.current_rate_coefficient[data.thread_index][i] * sqrt(chimes_max(myGasVars->abundances[chimes_table_CO_cosmic_ray.reactants[i]], 0.0));
+	data.chimes_current_rates->CO_cosmic_ray_rate[i] = data.chimes_current_rates->CO_cosmic_ray_rate_coefficient[i] * sqrt(chimes_max(myGasVars->abundances[chimes_table_CO_cosmic_ray.reactants[i]], 0.0));
     }
 
   if (myGlobalVars->N_spectra > 0) 
     {
       // photoion_fuv 
       for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_photoion_fuv.current_rate[data.thread_index][i] = chimes_table_photoion_fuv.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]]; 
+	data.chimes_current_rates->photoion_fuv_rate[i] = data.chimes_current_rates->photoion_fuv_rate_coefficient[i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]]; 
 
       // photoion_euv 
       for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_photoion_euv.current_rate[data.thread_index][i] = chimes_table_photoion_euv.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]]; 
+	data.chimes_current_rates->photoion_euv_rate[i] = data.chimes_current_rates->photoion_euv_rate_coefficient[i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]]; 
 
       // photoion_auger_fuv 
       for (i = 0; i < chimes_table_photoion_auger_fuv.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_photoion_auger_fuv.current_rate[data.thread_index][i] = chimes_table_photoion_auger_fuv.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_auger_fuv.reactants[i]]; 
+	data.chimes_current_rates->photoion_auger_fuv_rate[i] = data.chimes_current_rates->photoion_auger_fuv_rate_coefficient[i] * myGasVars->abundances[chimes_table_photoion_auger_fuv.reactants[i]]; 
 
       // photoion_auger_euv 
       for (i = 0; i < chimes_table_photoion_auger_euv.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_photoion_auger_euv.current_rate[data.thread_index][i] = chimes_table_photoion_auger_euv.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photoion_auger_euv.reactants[i]]; 
+	data.chimes_current_rates->photoion_auger_euv_rate[i] = data.chimes_current_rates->photoion_auger_euv_rate_coefficient[i] * myGasVars->abundances[chimes_table_photoion_auger_euv.reactants[i]]; 
 
 
       // photodissoc_group1 
       for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++) 
-	chimes_table_photodissoc_group1.current_rate[data.thread_index][i] = chimes_table_photodissoc_group1.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photodissoc_group1.reactants[i]]; 
+	data.chimes_current_rates->photodissoc_group1_rate[i] = data.chimes_current_rates->photodissoc_group1_rate_coefficient[i] * myGasVars->abundances[chimes_table_photodissoc_group1.reactants[i]]; 
 
       if (data.mol_flag_index == 1) 
 	{
 	  // photodissoc_group2 
 	  for (i = 0; i < chimes_table_photodissoc_group2.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_photodissoc_group2.current_rate[data.thread_index][i] = chimes_table_photodissoc_group2.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_photodissoc_group2.reactants[i]]; 
+	    data.chimes_current_rates->photodissoc_group2_rate[i] = data.chimes_current_rates->photodissoc_group2_rate_coefficient[i] * myGasVars->abundances[chimes_table_photodissoc_group2.reactants[i]]; 
 
 	  // H2_photodissoc 
 	  for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_H2_photodissoc.current_rate[data.thread_index][i] = chimes_table_H2_photodissoc.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_H2_photodissoc.reactants[i]]; 
+	    data.chimes_current_rates->H2_photodissoc_rate[i] = data.chimes_current_rates->H2_photodissoc_rate_coefficient[i] * myGasVars->abundances[chimes_table_H2_photodissoc.reactants[i]]; 
 
 	  // CO photodissoc 
 	  for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++) 
-	    chimes_table_CO_photodissoc.current_rate[data.thread_index][i] = chimes_table_CO_photodissoc.current_rate_coefficient[data.thread_index][i] * myGasVars->abundances[chimes_table_CO_photodissoc.reactants[i]]; 
+	    data.chimes_current_rates->CO_photodissoc_rate[i] = data.chimes_current_rates->CO_photodissoc_rate_coefficient[i] * myGasVars->abundances[chimes_table_CO_photodissoc.reactants[i]]; 
 	}
     }
 
@@ -516,14 +516,14 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
 	  if (chimes_table_T_dependent.reactants[i][j] < 0) 
 	    break; 
 	  else 
-	    mySpecies[chimes_table_T_dependent.reactants[i][j]].destruction_rate += chimes_table_T_dependent.current_rate[data.thread_index][i]; 
+	    mySpecies[chimes_table_T_dependent.reactants[i][j]].destruction_rate += data.chimes_current_rates->T_dependent_rate[i]; 
 	} 
       for (j = 0; j < 3; j++) 
 	{
 	  if (chimes_table_T_dependent.products[i][j] < 0) 
 	    break; 
 	  else 
-	    mySpecies[chimes_table_T_dependent.products[i][j]].creation_rate += chimes_table_T_dependent.current_rate[data.thread_index][i]; 
+	    mySpecies[chimes_table_T_dependent.products[i][j]].creation_rate += data.chimes_current_rates->T_dependent_rate[i]; 
 	} 
     }
 
@@ -533,14 +533,14 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
       /* Only contains 2-body reactions, so 
        * there are always two reactants. */ 
       for (j = 0; j < 2; j++) 
-	mySpecies[chimes_table_constant.reactants[i][j]].destruction_rate += chimes_table_constant.current_rate[data.thread_index][i]; 
+	mySpecies[chimes_table_constant.reactants[i][j]].destruction_rate += data.chimes_current_rates->constant_rate[i]; 
 
       for (j = 0; j < 3; j++) 
 	{
 	  if (chimes_table_constant.products[i][j] < 0) 
 	    break; 
 	  else 
-	    mySpecies[chimes_table_constant.products[i][j]].creation_rate += chimes_table_constant.current_rate[data.thread_index][i]; 
+	    mySpecies[chimes_table_constant.products[i][j]].creation_rate += data.chimes_current_rates->constant_rate[i]; 
 	} 
     }
 
@@ -551,9 +551,9 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
       /* All reactions in this group have two 
        * reactants and one product. */ 
       for (j = 0; j < 2; j++) 
-	mySpecies[chimes_table_recombination_AB.reactants[i][j]].destruction_rate += chimes_table_recombination_AB.current_rate[data.thread_index][i]; 
+	mySpecies[chimes_table_recombination_AB.reactants[i][j]].destruction_rate += data.chimes_current_rates->recombination_AB_rate[i]; 
 
-      mySpecies[chimes_table_recombination_AB.products[i]].creation_rate += chimes_table_recombination_AB.current_rate[data.thread_index][i]; 
+      mySpecies[chimes_table_recombination_AB.products[i]].creation_rate += data.chimes_current_rates->recombination_AB_rate[i]; 
     }
 
 
@@ -563,9 +563,9 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
       /* All reactions in this group have two 
        * reactants and one product. */ 
       for (j = 0; j < 2; j++) 
-	mySpecies[chimes_table_grain_recombination.reactants[i][j]].destruction_rate += chimes_table_grain_recombination.current_rate[data.thread_index][i]; 
+	mySpecies[chimes_table_grain_recombination.reactants[i][j]].destruction_rate += data.chimes_current_rates->grain_recombination_rate[i]; 
 
-      mySpecies[chimes_table_grain_recombination.products[i]].creation_rate += chimes_table_grain_recombination.current_rate[data.thread_index][i]; 
+      mySpecies[chimes_table_grain_recombination.products[i]].creation_rate += data.chimes_current_rates->grain_recombination_rate[i]; 
     }  
 
 
@@ -575,14 +575,14 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
       for (i = 0; i < chimes_table_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
 	{
 	  // All reactions have one reactant
-	  mySpecies[chimes_table_cosmic_ray.reactants[i]].destruction_rate += chimes_table_cosmic_ray.current_rate[data.thread_index][i]; 
+	  mySpecies[chimes_table_cosmic_ray.reactants[i]].destruction_rate += data.chimes_current_rates->cosmic_ray_rate[i]; 
 
 	  for (j = 0; j < 3; j++) 
 	    {
 	      if (chimes_table_cosmic_ray.products[i][j] < 0) 
 		break; 
 	      else 
-		mySpecies[chimes_table_cosmic_ray.products[i][j]].creation_rate += chimes_table_cosmic_ray.current_rate[data.thread_index][i]; 
+		mySpecies[chimes_table_cosmic_ray.products[i][j]].creation_rate += data.chimes_current_rates->cosmic_ray_rate[i]; 
 	    } 
 	}
     }
@@ -592,18 +592,18 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
     {
       // H2_dust_formation 
       for (j = 0; j < 2; j++) 
-	mySpecies[chimes_table_H2_dust_formation.reactants[j]].destruction_rate += chimes_table_H2_dust_formation.current_rate[data.thread_index]; 
+	mySpecies[chimes_table_H2_dust_formation.reactants[j]].destruction_rate += data.chimes_current_rates->H2_dust_formation_rate; 
       
-      mySpecies[chimes_table_H2_dust_formation.products[0]].creation_rate += chimes_table_H2_dust_formation.current_rate[data.thread_index]; 
+      mySpecies[chimes_table_H2_dust_formation.products[0]].creation_rate += data.chimes_current_rates->H2_dust_formation_rate; 
 
       // H2_collis_dissoc 
       for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
 	{
 	  for (j = 0; j < 2; j++) 
-	    mySpecies[chimes_table_H2_collis_dissoc.reactants[i][j]].destruction_rate += chimes_table_H2_collis_dissoc.current_rate[data.thread_index][i]; 
+	    mySpecies[chimes_table_H2_collis_dissoc.reactants[i][j]].destruction_rate += data.chimes_current_rates->H2_collis_dissoc_rate[i]; 
 
 	  for (j = 0; j < 3; j++) 
-	    mySpecies[chimes_table_H2_collis_dissoc.products[i][j]].creation_rate += chimes_table_H2_collis_dissoc.current_rate[data.thread_index][i]; 
+	    mySpecies[chimes_table_H2_collis_dissoc.products[i][j]].creation_rate += data.chimes_current_rates->H2_collis_dissoc_rate[i]; 
 	}
 
       // CO_cosmic_ray reactions 
@@ -612,9 +612,9 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
 	  for (i = 0; i < chimes_table_CO_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
 	    {
 	      // All reactions have one reactant
-	      mySpecies[chimes_table_CO_cosmic_ray.reactants[i]].destruction_rate += chimes_table_CO_cosmic_ray.current_rate[data.thread_index][i]; 
+	      mySpecies[chimes_table_CO_cosmic_ray.reactants[i]].destruction_rate += data.chimes_current_rates->CO_cosmic_ray_rate[i]; 
 	      for (j = 0; j < 2; j++) 
-		mySpecies[chimes_table_CO_cosmic_ray.products[i][j]].creation_rate += chimes_table_CO_cosmic_ray.current_rate[data.thread_index][i];
+		mySpecies[chimes_table_CO_cosmic_ray.products[i][j]].creation_rate += data.chimes_current_rates->CO_cosmic_ray_rate[i];
 	    }
 	}
     }
@@ -624,41 +624,41 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
       // photoion_fuv 
       for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++) 
 	{
-	  mySpecies[chimes_table_photoion_fuv.reactants[i]].destruction_rate += chimes_table_photoion_fuv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_fuv.products[i][0]].creation_rate += chimes_table_photoion_fuv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_fuv.products[i][1]].creation_rate += chimes_table_photoion_fuv.current_rate[data.thread_index][i]; 
+	  mySpecies[chimes_table_photoion_fuv.reactants[i]].destruction_rate += data.chimes_current_rates->photoion_fuv_rate[i]; 
+	  mySpecies[chimes_table_photoion_fuv.products[i][0]].creation_rate += data.chimes_current_rates->photoion_fuv_rate[i]; 
+	  mySpecies[chimes_table_photoion_fuv.products[i][1]].creation_rate += data.chimes_current_rates->photoion_fuv_rate[i]; 
 	}
 
       // photoion_euv 
       for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
 	{
-	  mySpecies[chimes_table_photoion_euv.reactants[i]].destruction_rate += chimes_table_photoion_euv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_euv.products[i][0]].creation_rate += chimes_table_photoion_euv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_euv.products[i][1]].creation_rate += chimes_table_photoion_euv.current_rate[data.thread_index][i]; 
+	  mySpecies[chimes_table_photoion_euv.reactants[i]].destruction_rate += data.chimes_current_rates->photoion_euv_rate[i]; 
+	  mySpecies[chimes_table_photoion_euv.products[i][0]].creation_rate += data.chimes_current_rates->photoion_euv_rate[i]; 
+	  mySpecies[chimes_table_photoion_euv.products[i][1]].creation_rate += data.chimes_current_rates->photoion_euv_rate[i]; 
 	}
 
       // photoion_auger_fuv 
       for (i = 0; i < chimes_table_photoion_auger_fuv.N_reactions[data.mol_flag_index]; i++) 
 	{
-	  mySpecies[chimes_table_photoion_auger_fuv.reactants[i]].destruction_rate += chimes_table_photoion_auger_fuv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_auger_fuv.products[i][0]].creation_rate += chimes_table_photoion_auger_fuv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_auger_fuv.products[i][1]].creation_rate += chimes_table_photoion_auger_fuv.current_rate[data.thread_index][i] * chimes_table_photoion_auger_fuv.number_of_electrons[i]; 
+	  mySpecies[chimes_table_photoion_auger_fuv.reactants[i]].destruction_rate += data.chimes_current_rates->photoion_auger_fuv_rate[i]; 
+	  mySpecies[chimes_table_photoion_auger_fuv.products[i][0]].creation_rate += data.chimes_current_rates->photoion_auger_fuv_rate[i]; 
+	  mySpecies[chimes_table_photoion_auger_fuv.products[i][1]].creation_rate += data.chimes_current_rates->photoion_auger_fuv_rate[i] * chimes_table_photoion_auger_fuv.number_of_electrons[i]; 
 	}
 
       // photoion_auger_euv 
       for (i = 0; i < chimes_table_photoion_auger_euv.N_reactions[data.mol_flag_index]; i++) 
 	{
-	  mySpecies[chimes_table_photoion_auger_euv.reactants[i]].destruction_rate += chimes_table_photoion_auger_euv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_auger_euv.products[i][0]].creation_rate += chimes_table_photoion_auger_euv.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photoion_auger_euv.products[i][1]].creation_rate += chimes_table_photoion_auger_euv.current_rate[data.thread_index][i] * chimes_table_photoion_auger_euv.number_of_electrons[i]; 
+	  mySpecies[chimes_table_photoion_auger_euv.reactants[i]].destruction_rate += data.chimes_current_rates->photoion_auger_euv_rate[i]; 
+	  mySpecies[chimes_table_photoion_auger_euv.products[i][0]].creation_rate += data.chimes_current_rates->photoion_auger_euv_rate[i]; 
+	  mySpecies[chimes_table_photoion_auger_euv.products[i][1]].creation_rate += data.chimes_current_rates->photoion_auger_euv_rate[i] * chimes_table_photoion_auger_euv.number_of_electrons[i]; 
 	}
 
       // photodissoc_group1 
       for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++) 
 	{
-	  mySpecies[chimes_table_photodissoc_group1.reactants[i]].destruction_rate += chimes_table_photodissoc_group1.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photodissoc_group1.products[i][0]].creation_rate += chimes_table_photodissoc_group1.current_rate[data.thread_index][i]; 
-	  mySpecies[chimes_table_photodissoc_group1.products[i][1]].creation_rate += chimes_table_photodissoc_group1.current_rate[data.thread_index][i]; 
+	  mySpecies[chimes_table_photodissoc_group1.reactants[i]].destruction_rate += data.chimes_current_rates->photodissoc_group1_rate[i]; 
+	  mySpecies[chimes_table_photodissoc_group1.products[i][0]].creation_rate += data.chimes_current_rates->photodissoc_group1_rate[i]; 
+	  mySpecies[chimes_table_photodissoc_group1.products[i][1]].creation_rate += data.chimes_current_rates->photodissoc_group1_rate[i]; 
 	}
       
       
@@ -667,25 +667,25 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
 	  // photodissoc_group2 
 	  for (i = 0; i < chimes_table_photodissoc_group2.N_reactions[data.mol_flag_index]; i++) 
 	    {
-	      mySpecies[chimes_table_photodissoc_group2.reactants[i]].destruction_rate += chimes_table_photodissoc_group2.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_photodissoc_group2.products[i][0]].creation_rate += chimes_table_photodissoc_group2.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_photodissoc_group2.products[i][1]].creation_rate += chimes_table_photodissoc_group2.current_rate[data.thread_index][i]; 
+	      mySpecies[chimes_table_photodissoc_group2.reactants[i]].destruction_rate += data.chimes_current_rates->photodissoc_group2_rate[i]; 
+	      mySpecies[chimes_table_photodissoc_group2.products[i][0]].creation_rate += data.chimes_current_rates->photodissoc_group2_rate[i]; 
+	      mySpecies[chimes_table_photodissoc_group2.products[i][1]].creation_rate += data.chimes_current_rates->photodissoc_group2_rate[i]; 
 	    }
 
 	  // H2_photodissoc 
 	  for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
 	    {
-	      mySpecies[chimes_table_H2_photodissoc.reactants[i]].destruction_rate += chimes_table_H2_photodissoc.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_H2_photodissoc.products[i][0]].creation_rate += chimes_table_H2_photodissoc.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_H2_photodissoc.products[i][1]].creation_rate += chimes_table_H2_photodissoc.current_rate[data.thread_index][i]; 
+	      mySpecies[chimes_table_H2_photodissoc.reactants[i]].destruction_rate += data.chimes_current_rates->H2_photodissoc_rate[i]; 
+	      mySpecies[chimes_table_H2_photodissoc.products[i][0]].creation_rate += data.chimes_current_rates->H2_photodissoc_rate[i]; 
+	      mySpecies[chimes_table_H2_photodissoc.products[i][1]].creation_rate += data.chimes_current_rates->H2_photodissoc_rate[i]; 
 	    }
 
 	  // CO_photodissoc 
 	  for (i = 0; i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++) 
 	    {
-	      mySpecies[chimes_table_CO_photodissoc.reactants[i]].destruction_rate += chimes_table_CO_photodissoc.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_CO_photodissoc.products[i][0]].creation_rate += chimes_table_CO_photodissoc.current_rate[data.thread_index][i]; 
-	      mySpecies[chimes_table_CO_photodissoc.products[i][1]].creation_rate += chimes_table_CO_photodissoc.current_rate[data.thread_index][i]; 
+	      mySpecies[chimes_table_CO_photodissoc.reactants[i]].destruction_rate += data.chimes_current_rates->CO_photodissoc_rate[i]; 
+	      mySpecies[chimes_table_CO_photodissoc.products[i][0]].creation_rate += data.chimes_current_rates->CO_photodissoc_rate[i]; 
+	      mySpecies[chimes_table_CO_photodissoc.products[i][1]].creation_rate += data.chimes_current_rates->CO_photodissoc_rate[i]; 
 	    }
 	}
     }

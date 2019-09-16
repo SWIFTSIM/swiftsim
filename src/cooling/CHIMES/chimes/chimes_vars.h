@@ -81,7 +81,6 @@ struct globalVariables
   int speciesIndices[TOTSIZE];
   int totalNumberOfSpecies;
   int scale_metal_tolerances; 
-  int n_threads; 
 }; 
 
 /* The following structure contains
@@ -158,8 +157,6 @@ extern struct chimes_T_dependent_struct
   int H2_collis_dissoc_heating_reaction_index; 
   int H2_form_heating_reaction_index; 
   ChimesFloat **rates; 
-  ChimesFloat **current_rate_coefficient;  // Interpolated from the rates table. 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_T_dependent; 
 
 extern struct chimes_constant_struct 
@@ -171,7 +168,6 @@ extern struct chimes_constant_struct
   int *molecular_flag;
   int H2_form_heating_reaction_index; 
   ChimesFloat *rates; 
-  ChimesFloat **current_rate;  // dx_i/dt  (units: s^-1). 
 } chimes_table_constant; 
 
 extern struct chimes_recombination_AB_struct 
@@ -182,8 +178,6 @@ extern struct chimes_recombination_AB_struct
   int **element_incl; 
   int *molecular_flag; 
   ChimesFloat ***rates; 
-  ChimesFloat **current_rate_coefficient;  // Interpolated from the rates table. 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_recombination_AB; 
 
 extern struct chimes_grain_recombination_struct 
@@ -193,8 +187,6 @@ extern struct chimes_grain_recombination_struct
   int *products; 
   int **element_incl; 
   ChimesFloat ***rates; 
-  ChimesFloat **current_rate_coefficient;  // Interpolated from the rates table. 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_grain_recombination; 
 
 extern struct chimes_cosmic_ray_struct 
@@ -207,7 +199,6 @@ extern struct chimes_cosmic_ray_struct
   int *secondary_base_reaction; 
   ChimesFloat **secondary_ratio; 
   ChimesFloat *rates; 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_cosmic_ray; 
 
 extern struct chimes_CO_cosmic_ray_struct 
@@ -217,8 +208,6 @@ extern struct chimes_CO_cosmic_ray_struct
   int **products; 
   int **element_incl; 
   ChimesFloat **rates; 
-  ChimesFloat **current_rate_coefficient; 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_CO_cosmic_ray; 
 
 extern struct chimes_H2_dust_formation_struct 
@@ -226,8 +215,6 @@ extern struct chimes_H2_dust_formation_struct
   int *reactants; 
   int *products; 
   ChimesFloat **rates; 
-  ChimesFloat *current_rate_coefficient;  // Interpolated from the rates table. 
-  ChimesFloat *current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_H2_dust_formation; 
 
 extern struct chimes_H2_collis_dissoc_struct 
@@ -241,13 +228,6 @@ extern struct chimes_H2_collis_dissoc_struct
   ChimesFloat *critical_density_H; 
   ChimesFloat *critical_density_H2; 
   ChimesFloat *critical_density_He; 
-  ChimesFloat **current_rate_coefficient;  // Interpolated from the rates table. 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
-  ChimesFloat *current_crit_H;             // Interpolated from the critical_density_H table. 
-  ChimesFloat *current_crit_H2;            // Interpolated from the critical_density_H table. 
-  ChimesFloat *current_crit_He;            // Interpolated from the critical_density_H table. 
-  ChimesFloat **current_log_k0;                // Interpolated from the k0 table. 
-  ChimesFloat **current_log_kLTE;                // Interpolated from the k0 table. 
 } chimes_table_H2_collis_dissoc; 
 
 extern struct chimes_photoion_fuv_struct 
@@ -259,10 +239,6 @@ extern struct chimes_photoion_fuv_struct
   ChimesFloat *gamma;   
   ChimesFloat **sigmaPhot;                 // cm^-2 
   ChimesFloat **epsilonPhot;                // erg 
-  ChimesFloat **current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
-  ChimesFloat **current_heat_rate;         // Gamma * epsilon 
 } chimes_table_photoion_fuv; 
 
 extern struct chimes_photoion_euv_struct 
@@ -276,11 +252,6 @@ extern struct chimes_photoion_euv_struct
   ChimesFloat **sigmaPhot;                  // cm^-2 
   ChimesFloat ****shieldFactor_1D; 
   ChimesFloat *****shieldFactor_2D; 
-  ChimesFloat ***current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
-  ChimesFloat ***current_epsilon; 
-  ChimesFloat **current_heat_rate;         // Gamma * epsilon 
 } chimes_table_photoion_euv; 
 
 extern struct chimes_photoion_auger_fuv_struct 
@@ -291,8 +262,6 @@ extern struct chimes_photoion_auger_fuv_struct
   int **element_incl; 
   int *base_reaction; 
   int *number_of_electrons; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
   ChimesFloat **sigmaPhot;                  // cm^-2 
 } chimes_table_photoion_auger_fuv; 
 
@@ -304,8 +273,6 @@ extern struct chimes_photoion_auger_euv_struct
   int **element_incl; 
   int *base_reaction; 
   int *number_of_electrons; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
   ChimesFloat **sigmaPhot;                  // cm^-2 
 } chimes_table_photoion_auger_euv; 
 
@@ -318,9 +285,6 @@ extern struct chimes_photodissoc_group1_struct
   int *molecular_flag; 
   ChimesFloat *gamma;  
   ChimesFloat *rates; 
-  ChimesFloat **current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_photodissoc_group1; 
 
 extern struct chimes_photodissoc_group2_struct 
@@ -331,9 +295,6 @@ extern struct chimes_photodissoc_group2_struct
   int **element_incl; 
   ChimesFloat *gamma_coeff;  
   ChimesFloat *rates; 
-  ChimesFloat *current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_photodissoc_group2; 
 
 extern struct chimes_H2_photodissoc_struct 
@@ -344,9 +305,6 @@ extern struct chimes_H2_photodissoc_struct
   ChimesFloat *gamma;  
   ChimesFloat *rates; 
   ChimesFloat ****self_shielding; 
-  ChimesFloat **current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_H2_photodissoc; 
 
 extern struct chimes_CO_photodissoc_struct 
@@ -358,9 +316,6 @@ extern struct chimes_CO_photodissoc_struct
   ChimesFloat *gamma;  
   ChimesFloat *rates; 
   ChimesFloat ***self_shielding; 
-  ChimesFloat **current_shield_factor; 
-  ChimesFloat **current_rate_coefficient;  // n_phot * c * S_d * sigma (units: s^-1) 
-  ChimesFloat **current_rate;              // dx_i/dt  (units: s^-1). 
 } chimes_table_CO_photodissoc; 
 
 extern struct chimes_spectra_struct 
@@ -382,9 +337,6 @@ extern struct chimes_cooling_struct
   ChimesFloat *****rates_4d; 
   ChimesFloat **rates_hiT_2d; 
   ChimesFloat **rates_hiT_4d; 
-  ChimesFloat **current_rate; 
-  ChimesFloat **current_rate_2d; 
-  ChimesFloat **current_rate_4d; 
   ChimesFloat **photoelectric_heating; 
   ChimesFloat *gas_grain_transfer; 
   ChimesFloat **grain_recombination; 
@@ -432,6 +384,7 @@ struct UserData
   struct gasVariables *myGasVars;
   struct globalVariables *myGlobalVars;
   struct Species_Structure *species;
+  struct chimes_current_rates_struct *chimes_current_rates; 
   void *cvode_mem;
   ChimesFloat HI_column;
   ChimesFloat H2_column;
@@ -444,8 +397,60 @@ struct UserData
   int network_size;
   int mol_flag_index; 
   int case_AB_index[2]; 
-  int thread_index; 
 };
+
+struct chimes_current_rates_struct
+{
+  ChimesFloat *data_buffer; 
+  ChimesFloat **data_buffer_2d; 
+  ChimesFloat *T_dependent_rate_coefficient; 
+  ChimesFloat *T_dependent_rate; 
+  ChimesFloat *constant_rate; 
+  ChimesFloat *recombination_AB_rate_coefficient; 
+  ChimesFloat *recombination_AB_rate; 
+  ChimesFloat *grain_recombination_rate_coefficient; 
+  ChimesFloat *grain_recombination_rate; 
+  ChimesFloat *cosmic_ray_rate; 
+  ChimesFloat *CO_cosmic_ray_rate_coefficient; 
+  ChimesFloat *CO_cosmic_ray_rate; 
+  ChimesFloat H2_dust_formation_rate_coefficient;
+  ChimesFloat H2_dust_formation_rate; 
+  ChimesFloat *H2_collis_dissoc_rate_coefficient; 
+  ChimesFloat *H2_collis_dissoc_rate; 
+  ChimesFloat H2_collis_dissoc_crit_H; 
+  ChimesFloat H2_collis_dissoc_crit_H2; 
+  ChimesFloat H2_collis_dissoc_crit_He; 
+  ChimesFloat *H2_collis_dissoc_log_k0; 
+  ChimesFloat *H2_collis_dissoc_log_kLTE; 
+  ChimesFloat *photoion_fuv_shield_factor; 
+  ChimesFloat *photoion_fuv_rate_coefficient; 
+  ChimesFloat *photoion_fuv_rate; 
+  ChimesFloat *photoion_fuv_heat_rate; 
+  ChimesFloat **photoion_euv_shield_factor; 
+  ChimesFloat *photoion_euv_rate_coefficient; 
+  ChimesFloat *photoion_euv_rate; 
+  ChimesFloat **photoion_euv_epsilon; 
+  ChimesFloat *photoion_euv_heat_rate; 
+  ChimesFloat *photoion_auger_fuv_rate_coefficient; 
+  ChimesFloat *photoion_auger_fuv_rate; 
+  ChimesFloat *photoion_auger_euv_rate_coefficient; 
+  ChimesFloat *photoion_auger_euv_rate; 
+  ChimesFloat *photodissoc_group1_shield_factor; 
+  ChimesFloat *photodissoc_group1_rate_coefficient; 
+  ChimesFloat *photodissoc_group1_rate;
+  ChimesFloat photodissoc_group2_shield_factor; 
+  ChimesFloat *photodissoc_group2_rate_coefficient; 
+  ChimesFloat *photodissoc_group2_rate; 
+  ChimesFloat *H2_photodissoc_shield_factor; 
+  ChimesFloat *H2_photodissoc_rate_coefficient; 
+  ChimesFloat *H2_photodissoc_rate; 
+  ChimesFloat *CO_photodissoc_shield_factor; 
+  ChimesFloat *CO_photodissoc_rate_coefficient; 
+  ChimesFloat *CO_photodissoc_rate; 
+  ChimesFloat *cooling_rate; 
+  ChimesFloat *cooling_rate_2d; 
+  ChimesFloat *cooling_rate_4d; 
+}; 
 
 enum 
   {
