@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RUNNER_DOIACT_GRAV_H
-#define SWIFT_RUNNER_DOIACT_GRAV_H
+#include "../config.h"
 
-/* Includes. */
+/* This object's header. */
+#include "runner_doiact_grav.h"
+
+/* Local includes. */
 #include "active.h"
 #include "cell.h"
 #include "gravity.h"
@@ -39,8 +41,7 @@
  * @param c The #cell we are working on.
  * @param timer Are we timing this ?
  */
-static INLINE void runner_do_grav_down(struct runner *r, struct cell *c,
-                                       int timer) {
+void runner_do_grav_down(struct runner *r, struct cell *c, int timer) {
 
   /* Some constants */
   const struct engine *e = r->e;
@@ -695,9 +696,9 @@ static INLINE void runner_dopair_grav_pm_truncated(
  * @param symmetric Are we updating both cells (1) or just ci (0) ?
  * @param allow_mpole Are we allowing the use of P2M interactions ?
  */
-static INLINE void runner_dopair_grav_pp(struct runner *r, struct cell *ci,
-                                         struct cell *cj, const int symmetric,
-                                         const int allow_mpole) {
+INLINE void runner_dopair_grav_pp(struct runner *r, struct cell *ci,
+                                  struct cell *cj, const int symmetric,
+                                  const int allow_mpole) {
 
   /* Recover some useful constants */
   const struct engine *e = r->e;
@@ -1150,7 +1151,7 @@ static INLINE void runner_doself_grav_pp_truncated(
  * @param r The #runner.
  * @param c The #cell.
  */
-static INLINE void runner_doself_grav_pp(struct runner *r, struct cell *c) {
+INLINE void runner_doself_grav_pp(struct runner *r, struct cell *c) {
 
   /* Recover some useful constants */
   const struct engine *e = r->e;
@@ -1387,10 +1388,9 @@ static INLINE void runner_dopair_grav_mm(struct runner *r,
  * @param ci The first #cell.
  * @param cj The second #cell.
  */
-static INLINE void runner_dopair_grav_mm_progenies(struct runner *r,
-                                                   const long long flags,
-                                                   struct cell *restrict ci,
-                                                   struct cell *restrict cj) {
+void runner_dopair_grav_mm_progenies(struct runner *r, const long long flags,
+                                     struct cell *restrict ci,
+                                     struct cell *restrict cj) {
 
   /* Loop over all pairs of progenies */
   for (int i = 0; i < 8; i++) {
@@ -1509,9 +1509,8 @@ static INLINE void runner_dopair_recursive_grav_pm(struct runner *r,
  * @param cj The other #cell.
  * @param gettimer Are we timing this ?
  */
-static INLINE void runner_dopair_recursive_grav(struct runner *r,
-                                                struct cell *ci,
-                                                struct cell *cj, int gettimer) {
+void runner_dopair_recursive_grav(struct runner *r, struct cell *ci,
+                                  struct cell *cj, int gettimer) {
 
   /* Some constants */
   const struct engine *e = r->e;
@@ -1666,8 +1665,8 @@ static INLINE void runner_dopair_recursive_grav(struct runner *r,
  * @param c The first #cell.
  * @param gettimer Are we timing this ?
  */
-static INLINE void runner_doself_recursive_grav(struct runner *r,
-                                                struct cell *c, int gettimer) {
+void runner_doself_recursive_grav(struct runner *r, struct cell *c,
+                                  int gettimer) {
 
   /* Some constants */
   const struct engine *e = r->e;
@@ -1718,8 +1717,7 @@ static INLINE void runner_doself_recursive_grav(struct runner *r,
  * @param ci The #cell of interest.
  * @param timer Are we timing this ?
  */
-static INLINE void runner_do_grav_long_range(struct runner *r, struct cell *ci,
-                                             int timer) {
+void runner_do_grav_long_range(struct runner *r, struct cell *ci, int timer) {
 
   /* Some constants */
   const struct engine *e = r->e;
@@ -1825,5 +1823,3 @@ static INLINE void runner_do_grav_long_range(struct runner *r, struct cell *ci,
 
   if (timer) TIMER_TOC(timer_dograv_long_range);
 }
-
-#endif /* SWIFT_RUNNER_DOIACT_GRAV_H */

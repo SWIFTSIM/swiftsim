@@ -35,6 +35,9 @@
 #include "scheduler.h"
 #include "timers.h"
 
+/* Import the gravity loop functions. */
+#include "runner_doiact_grav.h"
+
 /* Import the density loop functions. */
 #define FUNCTION density
 #define FUNCTION_TASK_LOOP TASK_LOOP_DENSITY
@@ -64,9 +67,6 @@
 #include "runner_doiact_hydro.h"
 #undef FUNCTION
 #undef FUNCTION_TASK_LOOP
-
-/* Import the gravity loop functions. */
-#include "runner_doiact_grav.c"
 
 /* Import the stars density loop functions. */
 #define FUNCTION density
