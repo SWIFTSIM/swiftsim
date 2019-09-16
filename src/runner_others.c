@@ -48,13 +48,10 @@
 #include "hydro.h"
 #include "logger.h"
 #include "pressure_floor.h"
-#include "scheduler.h"
 #include "space.h"
-#include "space_getsid.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
 #include "stars.h"
-#include "task.h"
 #include "timers.h"
 #include "tracers.h"
 

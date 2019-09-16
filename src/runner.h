@@ -26,13 +26,13 @@
 /* Config parameters. */
 #include "../config.h"
 
-/* Includes. */
+/* Local headers. */
 #include "cache.h"
 #include "gravity_cache.h"
-#include "task.h"
 
 struct cell;
 struct engine;
+struct task;
 
 /* Unique identifier of loop types */
 #define TASK_LOOP_DENSITY 0
