@@ -42,6 +42,8 @@ void cooling_init_backend(struct swift_params* parameter_file,
 			  const struct phys_const* phys_const,
 			  struct cooling_function_data* cooling);  
 
+void cooling_print_backend(const struct cooling_function_data *cooling); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
@@ -180,17 +182,6 @@ __attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
     const struct xpart* restrict xp) {
 
   return 0.f;
-}
-
-/**
- * @brief Prints the properties of the cooling model to stdout.
- *
- * @param cooling The properties of the cooling function.
- */
-static INLINE void cooling_print_backend(
-    const struct cooling_function_data* cooling) {
-
-  message("Cooling function is 'No cooling'.");
 }
 
 /**
