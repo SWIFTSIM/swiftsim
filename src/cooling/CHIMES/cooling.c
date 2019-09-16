@@ -131,6 +131,14 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
+}
 
+/**
+ * @brief Prints the properties of the cooling model to stdout.
+ *
+ * @param cooling #cooling_function_data struct.
+ */
+void cooling_print_backend(const struct cooling_function_data *cooling) {
 
+  message("Cooling function is 'CHIMES'.");
 }
