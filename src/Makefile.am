@@ -91,7 +91,7 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_grav.c \
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
 		 gravity_iact.h kernel_long_gravity.h vector.h cache.h \
-	         runner_doiact_nosort.h runner_doiact_stars.h runner_doiact_black_holes.h runner_doiact_grav.h \
+	         runner_doiact_nosort.h runner_doiact_hydro.h runner_doiact_stars.h runner_doiact_black_holes.h runner_doiact_grav.h \
                  runner_doiact_functions_hydro.h runner_doiact_functions_stars.h runner_doiact_functions_black_holes.h \
 		 units.h intrinsics.h minmax.h \
                  kick.h timestep.h drift.h adiabatic_index.h io_properties.h dimension.h part_type.h periodic.h memswap.h \
