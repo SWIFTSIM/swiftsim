@@ -295,8 +295,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
   /* Get the EOS temperature from the entropy floor */
   const double temperature_eos =
       entropy_floor_temperature(p, cosmo, floor_props);
-  const double dlogT_EOS = 0.15;
-  const float logT_EOS_max = (float) log10(temperature_eos) + dlogT_EOS;
+  const float logT_EOS_max = (float) log10(temperature_eos) + cooling->dlogT_EOS;
 
   const float temp = cooling_get_temperature(phys_const, hydro_props, us,
                                                   cosmo, cooling, p, xp);
@@ -1043,6 +1042,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   cooling->HIIregion_temp =
       parser_get_param_float(parameter_file, "COLIBRECooling:HIIregion_temperature");
+
+  /* Properties for the subgrid properties model */
+  cooling->dlogT_EOS = 
+      parser_get_param_float(parameter_file, "COLIBRECooling:delta_logTEOS_subgrid_properties");
 
   /* Check that it makes sense. */
   if (cooling->HIIregion_fion < 0.5 || cooling->HIIregion_fion > 1.0) {

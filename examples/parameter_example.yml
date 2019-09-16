@@ -337,6 +337,7 @@ COLIBRECooling:
   S_over_Si_in_solar:        1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   HIIregion_ionization_fraction:    1.0        # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4       # Temperature of gas particles tagged as HII regions
+  delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
  
 # Cooling with Grackle 3.0
 GrackleCooling:
