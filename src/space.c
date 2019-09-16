@@ -3949,6 +3949,11 @@ void space_synchronize_part_positions_mapper(void *map_data, int nr_parts,
     const struct part *p = &parts[k];
     const struct xpart *xp = &xparts[k];
 
+    /* Skip unimportant particles */
+    if (p->time_bin == time_bin_not_created ||
+        p->time_bin == time_bin_inhibited)
+      continue;
+
     /* Get its gravity friend */
     struct gpart *gp = p->gpart;
 
@@ -3975,6 +3980,11 @@ void space_synchronize_spart_positions_mapper(void *map_data, int nr_sparts,
     /* Get the particle */
     const struct spart *sp = &sparts[k];
 
+    /* Skip unimportant particles */
+    if (sp->time_bin == time_bin_not_created ||
+        sp->time_bin == time_bin_inhibited)
+      continue;
+
     /* Get its gravity friend */
     struct gpart *gp = sp->gpart;
 
@@ -4000,6 +4010,11 @@ void space_synchronize_bpart_positions_mapper(void *map_data, int nr_bparts,
 
     /* Get the particle */
     const struct bpart *bp = &bparts[k];
+
+    /* Skip unimportant particles */
+    if (bp->time_bin == time_bin_not_created ||
+        bp->time_bin == time_bin_inhibited)
+      continue;
 
     /* Get its gravity friend */
     struct gpart *gp = bp->gpart;
