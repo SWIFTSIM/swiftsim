@@ -12,6 +12,11 @@ import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.patches as patches
 
+###################################
+if not os.path.exists('plots'):
+        os.makedirs('plots')
+###################################
+
 tmin = 0.
 tmax = 100.
 
