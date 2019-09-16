@@ -44,6 +44,13 @@ void cooling_init_backend(struct swift_params* parameter_file,
 
 void cooling_print_backend(const struct cooling_function_data *cooling); 
 
+void cooling_first_init_part(const struct phys_const* restrict phys_const,
+			     const struct unit_system* restrict us,
+			     const struct cosmology* restrict cosmo,
+			     const struct cooling_function_data* data, 
+			     const struct part* restrict p,
+			     struct xpart* restrict xp); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
@@ -106,26 +113,6 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
 
   return FLT_MAX;
 }
-
-/**
- * @brief Sets the cooling properties of the (x-)particles to a valid start
- * state.
- *
- * Nothing to do here.
- *
- * @param phys_const The physical constant in internal units.
- * @param us The unit system.
- * @param cosmo The current cosmological model.
- * @param data The properties of the cooling function.
- * @param p Pointer to the particle data.
- * @param xp Pointer to the extended particle data.
- */
-__attribute__((always_inline)) INLINE static void cooling_first_init_part(
-    const struct phys_const* restrict phys_const,
-    const struct unit_system* restrict us,
-    const struct cosmology* restrict cosmo,
-    const struct cooling_function_data* data, const struct part* restrict p,
-    struct xpart* restrict xp) {}
 
 /**
  * @brief Compute the temperature of a #part based on the cooling function.
