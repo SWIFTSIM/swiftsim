@@ -28,6 +28,9 @@
 #include "cooling/CHIMES/chimes/chimes_vars.h" 
 #include "cooling/CHIMES/chimes/chimes_proto.h"
 
+/* Maximum size of CHIMES abundance arrays. */ 
+#define CHIMES_NETWORK_SIZE 157 
+
 /**
  * @brief Properties of the cooling function. 
  * This includes the globalVaraibles structure 
@@ -47,11 +50,23 @@ struct cooling_function_data {
   /* Temperature of the CMB at present day */
   double T_CMB_0;
 
+  /* Parameters to compute S and Ca 
+   * from Si. */ 
+  float S_over_Si_ratio_in_solar; 
+  float Ca_over_Si_ratio_in_solar; 
+  
+  float Si_solar_mass_fraction; 
+  float S_solar_mass_fraction; 
+  float Ca_solar_mass_fraction; 
+
 };
 
 /**
  * @brief Properties of the cooling stored in the particle data
  */
-struct cooling_xpart_data {};
+struct cooling_xpart_data {
+  /* CHIMES abundance array */ 
+  ChimesFloat chimes_abundances[CHIMES_NETWORK_SIZE]; 
+};
 
 #endif /* SWIFT_COOLING_STRUCT_CHIMES_H */

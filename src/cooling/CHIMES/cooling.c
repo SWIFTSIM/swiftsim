@@ -128,6 +128,19 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->ChimesGlobalVars.InitIonState = 1; 
   cooling->ChimesGlobalVars.grain_temperature = 10.0; 
 
+  /* Optional parameters to define S and Ca 
+   * relative to Si. */ 
+  cooling->S_over_Si_ratio_in_solar = parser_get_opt_param_float(parameter_file, "CHIMESCooling:S_over_Si_in_solar", 1.f); 
+  cooling->Ca_over_Si_ratio_in_solar = parser_get_opt_param_float(parameter_file, "CHIMESCooling:Ca_over_Si_in_solar", 1.f); 
+
+  /* Solar mass fractions of Si, S and Ca are 
+   * hard-coded here, because we might not have 
+   * access to the COLIBRE cooling tables to 
+   * get these. */ 
+  cooling->Si_solar_mass_fraction = 6.64948e-4; 
+  cooling->S_solar_mass_fraction = 3.09171e-4; 
+  cooling->Ca_solar_mass_fraction = 6.41451e-5; 
+
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
@@ -141,4 +154,60 @@ void cooling_init_backend(struct swift_params *parameter_file,
 void cooling_print_backend(const struct cooling_function_data *cooling) {
 
   message("Cooling function is 'CHIMES'.");
+}
+
+/**
+ * @brief Sets the cooling properties of the (x-)particles to a valid start
+ * state.
+ *
+ * For now, we initialise the CHIMES abundance array to be singly ionised. 
+ * This initial state is controlled by the ChimesGlobalVars.InitIonState 
+ * parameter, which we have hard-coded to 1 in cooling_init_backend()). 
+ * In the future, we will need to consider options to either compute the 
+ * initial equilibrium abundances, or read them in from the ICs/snapshot. 
+ *
+ * @param phys_const The physical constant in internal units.
+ * @param us The unit system.
+ * @param cosmo The current cosmological model.
+ * @param data The properties of the cooling function.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+void cooling_first_init_part(const struct phys_const* restrict phys_const,
+			     const struct unit_system* restrict us,
+			     const struct cosmology* restrict cosmo,
+			     const struct cooling_function_data* data, 
+			     const struct part* restrict p,
+			     struct xpart* restrict xp) {
+  struct globalVariables ChimesGlobalVars = data->ChimesGlobalVars; 
+  struct gasVariables ChimesGasVars; 
+  ChimesGasVars.abundances = xp->cooling_data.chimes_abundances; 
+
+  /* Get element mass fractions */ 
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+  float XH = metal_fraction[chemistry_element_H]; 
+  ChimesGasVars.element_abundances[0] = metal_fraction[chemistry_element_He] / (4.0 * XH); 
+  ChimesGasVars.element_abundances[1] = metal_fraction[chemistry_element_C] / (12.0 * XH); 
+  ChimesGasVars.element_abundances[2] = metal_fraction[chemistry_element_N] / (14.0 * XH); 
+  ChimesGasVars.element_abundances[3] = metal_fraction[chemistry_element_O] / (16.0 * XH); 
+  ChimesGasVars.element_abundances[4] = metal_fraction[chemistry_element_Ne] / (20.0 * XH); 
+  ChimesGasVars.element_abundances[5] = metal_fraction[chemistry_element_Mg] / (24.0 * XH); 
+  ChimesGasVars.element_abundances[6] = metal_fraction[chemistry_element_Si] / (28.0 * XH); 
+  ChimesGasVars.element_abundances[9] = metal_fraction[chemistry_element_Fe] / (56.0 * XH); 
+  
+  ChimesGasVars.element_abundances[7] = metal_fraction[chemistry_element_Si] * data->S_over_Si_ratio_in_solar * (data->S_solar_mass_fraction / data->Si_solar_mass_fraction) / (32.0 * XH); 
+  ChimesGasVars.element_abundances[8] = metal_fraction[chemistry_element_Si] * data->Ca_over_Si_ratio_in_solar * (data->Ca_solar_mass_fraction / data->Si_solar_mass_fraction) / (40.0 * XH); 
+#else 
+  /* Without COLIBRE or EAGLE chemistry, 
+   * the metal abundances are unavailable. 
+   * Set to primordial abundances. */ 
+  ChimesGasVars.element_abundances[0] = 0.0833;  // He 
+
+  int i; 
+  for (i = 1; i < 10; i++) 
+    ChimesGasVars.element_abundances[i] = 0.0; 
+#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
 }
