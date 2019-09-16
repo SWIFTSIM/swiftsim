@@ -10,6 +10,11 @@ import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.patches as patches
 
+###################################
+if not os.path.exists('plots'):
+        os.makedirs('plots')
+###################################
+
 sdot = 4
 Myr = 1.e6 * 365.25 * 24. * 3600.
 

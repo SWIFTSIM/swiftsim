@@ -7,11 +7,13 @@ from sphviewer.tools import QuickView
 from matplotlib.colors import LogNorm
 import glob
 import re
+import os
 cmap_gas = mpl.cm.Greys
 cmap_HII = mpl.cm.Reds
 
 ###################################
-filename = 'output_0010.hdf5'
+if not os.path.exists('plots'):
+        os.makedirs('plots')
 ###################################
 
 kpc_in_cm = 3.086e21
