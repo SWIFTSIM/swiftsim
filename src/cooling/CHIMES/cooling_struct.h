@@ -47,6 +47,14 @@ struct cooling_function_data {
   int UV_field_flag; 
   int Shielding_flag; 
 
+  /* Flags to control eqm mode and 
+   * thermal evolution. */ 
+  int ChemistryEqmMode; 
+  int ThermEvolOn; 
+  
+  /* Cosmic ray ionisation rate of HI. */ 
+  double cosmic_ray_rate; 
+
   /* Temperature of the CMB at present day */
   double T_CMB_0;
 
@@ -59,6 +67,8 @@ struct cooling_function_data {
   float S_solar_mass_fraction; 
   float Ca_solar_mass_fraction; 
 
+  /* Solar metallicity */ 
+  float Zsol; 
 };
 
 /**
