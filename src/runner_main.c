@@ -33,6 +33,7 @@
 /* Local headers. */
 #include "engine.h"
 #include "scheduler.h"
+#include "space_getsid.h"
 #include "timers.h"
 
 /* Import the gravity loop functions. */
