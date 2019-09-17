@@ -4793,7 +4793,7 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
        * debugging checks */
       if (part_is_active(p, e)) {
 
-        if (logger_should_write(&xp->logger_data, e->logger->delta_step)) {
+        if (logger_should_write(&xp->logger_data, e->logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_part(e->logger, p,
@@ -4822,22 +4822,22 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
 
       /* Write only the dark matter particles */
       if (gp->type != swift_type_dark_matter)
-	continue;
+        continue;
 
       /* If particle needs to be log */
       /* This is the same function than part_is_active, except for
        * debugging checks */
       if (gpart_is_starting(gp, e)) {
 
-        if (logger_should_write(&gp->logger_data, e->logger->delta_step)) {
+        if (logger_should_write(&gp->logger_data, e->logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_gpart(e->logger, gp,
-			   logger_mask_data[logger_x].mask |
-			   logger_mask_data[logger_v].mask |
-			   logger_mask_data[logger_a].mask |
-			   logger_mask_data[logger_consts].mask,
-			   &gp->logger_data.last_offset);
+                           logger_mask_data[logger_x].mask |
+                           logger_mask_data[logger_v].mask |
+                           logger_mask_data[logger_a].mask |
+                           logger_mask_data[logger_consts].mask,
+                           &gp->logger_data.last_offset);
 
           /* Set counter back to zero */
           gp->logger_data.steps_since_last_output = 0;

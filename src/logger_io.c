@@ -21,7 +21,7 @@
 /* Config parameters. */
 #include "../config.h"
 
-#if defined(WITH_LOGGER) && defined(HAVE_HDF5) && !defined(WITH_MPI)
+#if defined(WITH_LOGGER) && !defined(WITH_MPI)
 
 /* Some standard headers. */
 #include <hdf5.h>
@@ -32,32 +32,6 @@
 #include <string.h>
 
 #include "common_io.h"
-
-/* define a few functions for the yaml file */
-#define hid_t FILE *
-#define io_write_attribute_s(file, params, value) {            \
-    fprintf(file, "    %s: %s\n", params, value);              \
-  }
-#define io_write_attribute_d(file, params, value) {            \
-    fprintf(file, "    %s: %g\n", params, value);              \
-  }
-#define io_write_attribute_f(file, params, value) {            \
-    fprintf(file, "    %s: %g\n", params, value);              \
-  }
-#define io_write_attribute_i(file, params, value) {            \
-    fprintf(file, "    %s: %i\n", params, value);              \
-  }
-#define io_write_attribute_l(file, params, value) {            \
-    fprintf(file, "    %s: %li\n", params, value);             \
-  }
-
-#define io_write_attribute(file, params, type, value, dim) {	       \
-    fprintf(file, "    %s: [", params);                                \
-    for(int i = 0; i < dim-1; i++) {				       \
-      fprintf(file, type ", ", value[i]);			       \
-    }								       \
-    fprintf(file, type "]\n", value[dim-1]);			       \
-  }
 
 /* This object's header. */
 #include "logger_io.h"
@@ -168,7 +142,7 @@ void writeIndexArray(const struct engine* e, FILE *f,
 /**
  * @brief Writes a logger index file
  *
- * @param log The #logger.
+ * @param log The #logger_writer.
  * @param e The engine containing all the system.
  *
  * Creates an output file and writes the offset and id of particles
@@ -181,7 +155,7 @@ void writeIndexArray(const struct engine* e, FILE *f,
  * Calls #error() if an error occurs.
  *
  */
-void logger_write_index_file(struct logger *log, struct engine* e) {
+void logger_write_index_file(struct logger_writer *log, struct engine* e) {
 
   struct part* parts = e->s->parts;
   struct xpart* xparts = e->s->xparts;
@@ -311,7 +285,7 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
             error("Error while allocating temporary memory for gparts");
 
           /* Collect the non-inhibited DM particles from gpart */
-	  const int with_stf = 0;
+          const int with_stf = 0;
           io_collect_gparts_to_write(gparts, e->s->gpart_group_data,
                                      gparts_written, gpart_group_data_written,
                                      Ntot, Ndm_written, with_stf);
@@ -352,242 +326,14 @@ void logger_write_index_file(struct logger *log, struct engine* e) {
 }
 
 /**
- * @brief Writes the current Unit System
- * @param file The (opened) params file in which to write
- * @param us The unit_system to dump
- * @param groupName The name of the section to write to
- */
-void logger_io_write_unit_system(FILE *file, const struct unit_system* us,
-				 const char* groupName) {
-
-  fprintf(file, "%s:\n", groupName);
-  
-  io_write_attribute_d(file, "Unit mass in cgs (U_M)",
-		    units_get_base_unit(us, UNIT_MASS));
-  io_write_attribute_d(file, "Unit length in cgs (U_L)",
-		    units_get_base_unit(us, UNIT_LENGTH));
-  io_write_attribute_d(file, "Unit time in cgs (U_t)",
-		    units_get_base_unit(us, UNIT_TIME));
-  io_write_attribute_d(file, "Unit current in cgs (U_I)",
-		    units_get_base_unit(us, UNIT_CURRENT));
-  io_write_attribute_d(file, "Unit temperature in cgs (U_T)",
-		    units_get_base_unit(us, UNIT_TEMPERATURE));
-
-  fprintf(file, "\n");
-}
-
-
-/**
- * @brief Writes the code version to the file
- * @param file The (opened) params file in which to write
- */
-void logger_io_write_code_description(FILE *file) {
-
-  fprintf(file, "Code:\n");
-
-  io_write_attribute_s(file, "Code", "SWIFT");
-  io_write_attribute_s(file, "Code Version", package_version());
-  io_write_attribute_s(file, "Compiler Name", compiler_name());
-  io_write_attribute_s(file, "Compiler Version", compiler_version());
-  io_write_attribute_s(file, "Git Branch", git_branch());
-  io_write_attribute_s(file, "Git Revision", git_revision());
-  io_write_attribute_s(file, "Git Date", git_date());
-  io_write_attribute_s(file, "Configuration options",
-                    configuration_options());
-  io_write_attribute_s(file, "CFLAGS", compilation_cflags());
-  io_write_attribute_s(file, "HDF5 library version", hdf5_version());
-  io_write_attribute_s(file, "Thread barriers", thread_barrier_version());
-  io_write_attribute_s(file, "Allocators", allocator_version());
-#ifdef HAVE_FFTW
-  io_write_attribute_s(file, "FFTW library version", fftw3_version());
-#endif
-#ifdef HAVE_LIBGSL
-  io_write_attribute_s(file, "GSL library version", libgsl_version());
-#endif
-#ifdef WITH_MPI
-  io_write_attribute_s(file, "MPI library", mpi_version());
-#ifdef HAVE_METIS
-  io_write_attribute_s(file, "METIS library version", metis_version());
-#endif
-#ifdef HAVE_PARMETIS
-  io_write_attribute_s(file, "ParMETIS library version",
-                       parmetis_version());
-#endif
-#else
-  io_write_attribute_s(file, "MPI library", "Non-MPI version of SWIFT");
-#endif
-
-  fprintf(file, "\n");
-}
-
-
-/**
- * @brief Write the #engine policy to the file.
- * @param file File to write to.
- * @param e The #engine to read the policy from.
- */
-void logger_io_write_engine_policy(FILE *file, const struct engine* e) {
-
-  fprintf(file, "Policy:\n");
-
-  for (int i = 1; i < engine_maxpolicy; ++i) {
-    if (e->policy & (1 << i)) {
-      io_write_attribute_i(file, engine_policy_names[i + 1], 1);
-    }
-    else {
-      io_write_attribute_i(file, engine_policy_names[i + 1], 0);
-    }
-  }
-
-  fprintf(file, "\n");
-}
-
-/**
- * @brief Write the #hydro_props to the file.
- * @param file File to write to.
- * @param p The #hydro_props to write.
- */
-void logger_hydro_props_print_snapshot(FILE *file, const struct hydro_props *p) {
-
-  fprintf(file, "HydroScheme:\n");
-
-  eos_print_snapshot(file, &eos);
-
-  io_write_attribute_i(file, "Dimension", (int)hydro_dimension);
-  io_write_attribute_s(file, "Scheme", SPH_IMPLEMENTATION);
-  io_write_attribute_s(file, "Kernel function", kernel_name);
-  io_write_attribute_f(file, "Kernel target N_ngb", p->target_neighbours);
-  io_write_attribute_f(file, "Kernel delta N_ngb", p->delta_neighbours);
-  io_write_attribute_f(file, "Kernel eta", p->eta_neighbours);
-  io_write_attribute_f(file, "Smoothing length tolerance", p->h_tolerance);
-  io_write_attribute_f(file, "Maximal smoothing length [internal units]",
-                       p->h_max);
-  io_write_attribute_f(file, "CFL parameter", p->CFL_condition);
-  io_write_attribute_f(file, "Volume log(max(delta h))",
-                       p->log_max_h_change);
-  io_write_attribute_f(file, "Volume max change time-step",
-                       pow_dimension(expf(p->log_max_h_change)));
-  io_write_attribute_i(file, "Max ghost iterations",
-                       p->max_smoothing_iterations);
-  io_write_attribute_f(file, "Minimal temperature", p->minimal_temperature);
-  io_write_attribute_f(file,
-                       "Minimal energy per unit mass [internal units]",
-                       p->minimal_internal_energy);
-  io_write_attribute_f(file, "Initial temperature", p->initial_temperature);
-  io_write_attribute_f(file,
-                       "Initial energy per unit mass [internal units]",
-                       p->initial_internal_energy);
-  io_write_attribute_f(file, "Hydrogen mass fraction",
-                       p->hydrogen_mass_fraction);
-  io_write_attribute_f(file, "Hydrogen ionization transition temperature",
-                       p->hydrogen_ionization_temperature);
-  io_write_attribute_f(file, "Max v_sig ratio (limiter)",
-                       const_limiter_max_v_sig_ratio);
-
-  /* Write out the implementation-dependent viscosity parameters
-   * (see hydro/SCHEME/hydro_parameters.h for this implementation) */
-  viscosity_print_snapshot(file, &(p->viscosity));
-
-  /* Same for the diffusion */
-  diffusion_print_snapshot(file, &(p->diffusion));
-
-}
-
-/**
- * @brief Write the #gravity_props to the file.
- * @param file File to write to.
- * @param p The #gravity_props to write.
- */
-void logger_gravity_props_print_snapshot(FILE *file,
-                                  const struct gravity_props *p) {
-
-  io_write_attribute_f(file, "Time integration eta", p->eta);
-  io_write_attribute_s(file, "Softening style",
-                    kernel_gravity_softening_name);
-  io_write_attribute_f(
-   file, "Comoving softening length [internal units]",
-   p->epsilon_comoving * kernel_gravity_softening_plummer_equivalent);
-  io_write_attribute_f(
-   file,
-   "Comoving Softening length (Plummer equivalent)  [internal units]",
-   p->epsilon_comoving);
-  io_write_attribute_f(
-   file, "Maximal physical softening length  [internal units]",
-   p->epsilon_max_physical * kernel_gravity_softening_plummer_equivalent);
-  io_write_attribute_f(file,
-                    "Maximal physical softening length (Plummer equivalent) "
-                    " [internal units]",
-                    p->epsilon_max_physical);
-  io_write_attribute_f(file, "Opening angle", p->theta_crit);
-  io_write_attribute_s(file, "Scheme", GRAVITY_IMPLEMENTATION);
-  io_write_attribute_i(file, "MM order", SELF_GRAVITY_MULTIPOLE_ORDER);
-  io_write_attribute_f(file, "Mesh a_smooth", p->a_smooth);
-  io_write_attribute_f(file, "Mesh r_cut_max ratio", p->r_cut_max_ratio);
-  io_write_attribute_f(file, "Mesh r_cut_min ratio", p->r_cut_min_ratio);
-  io_write_attribute_f(file, "Tree update frequency",
-                    p->rebuild_frequency);
-  io_write_attribute_s(file, "Mesh truncation function",
-                    kernel_long_gravity_truncation_name);
-}
-
-
-/**
- * @brief Write the #cosmology to the file.
- * @param file File to write to.
- * @param c The #cosmology to write.
- */
-void logger_cosmology_write_model(FILE *file, const struct cosmology *c) {
-
-  io_write_attribute_d(file, "a_beg", c->a_begin);
-  io_write_attribute_d(file, "a_end", c->a_end);
-  io_write_attribute_d(file, "time_beg [internal units]", c->time_begin);
-  io_write_attribute_d(file, "time_end [internal units]", c->time_end);
-  io_write_attribute_d(file, "Universe age [internal units]", c->time);
-  io_write_attribute_d(file, "h", c->h);
-  io_write_attribute_d(file, "H0 [internal units]", c->H0);
-  io_write_attribute_d(file, "H [internal units]", c->H);
-  io_write_attribute_d(file, "Hubble time [internal units]", c->Hubble_time);
-  io_write_attribute_d(file, "Omega_m", c->Omega_m);
-  io_write_attribute_d(file, "Omega_r", c->Omega_r);
-  io_write_attribute_d(file, "Omega_b", c->Omega_b);
-  io_write_attribute_d(file, "Omega_k", c->Omega_k);
-  io_write_attribute_d(file, "Omega_lambda", c->Omega_lambda);
-  io_write_attribute_d(file, "w_0", c->w_0);
-  io_write_attribute_d(file, "w_a", c->w_a);
-  io_write_attribute_d(file, "w", c->w);
-  io_write_attribute_d(file, "Critical density [internal units]",
-		    c->critical_density);
-}
-
-
-/**
- * @brief Write the contents of the parameter structure to a file
- *
- * @param params Structure that holds the parameters
- * @param file The file.
- * @param write_used Write used fields or unused fields.
- */
-void logger_parser_write_params_to_hdf5(const struct swift_params *params,
-					FILE *file, int write_used) {
-
-  for (int i = 0; i < params->paramCount; i++) {
-    if (write_used && !params->data[i].used)
-      continue;
-    else if (!write_used && params->data[i].used)
-      continue;
-    io_write_attribute_s(file, params->data[i].name, params->data[i].value);
-  }
-}
-
-/**
  * @brief Write the parameters into a yaml file.
  *
  * @params log The #logger.
  * @params e The #engine.
- */
-void logger_write_description(struct logger *log, struct engine* e) {
-  const struct unit_system *internal_units = e->internal_units;
-  const struct unit_system *snapshot_units = e->snapshot_units;
+ */ 
+void logger_write_description(struct logger_writer *log, struct engine* e) {
+  /* const struct unit_system *internal_units = e->internal_units; */
+  /* const struct unit_system *snapshot_units = e->snapshot_units; */
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
@@ -601,102 +347,12 @@ void logger_write_description(struct logger *log, struct engine* e) {
     error("Failed to open file %s", fileName);
   }
 
-  /* Convert basic output information to snapshot units */
-  const double factor_length =
-    units_conversion_factor(internal_units, snapshot_units, UNIT_CONV_LENGTH);
-  const double dim[3] = {e->s->dim[0] * factor_length,
-                         e->s->dim[1] * factor_length,
-                         e->s->dim[2] * factor_length};
+  /* TODO Write stuff */
 
-  /* Print the relevant information and print status */
-  fprintf(f, "Header:\n");
-  io_write_attribute(f, "BoxSize", "%g", dim, 3);
-  const int dimension = (int)hydro_dimension;
-  io_write_attribute_i(f, "Dimension", dimension);
-  io_write_attribute_s(f, "Code", "SWIFT");
-  time_t tm = time(NULL);
-  io_write_attribute_s(f, "Snapshot date", ctime(&tm));
-
-  double MassTable[swift_type_count] = {0};
-  io_write_attribute(f, "MassTable", "%g", MassTable, swift_type_count);
-  unsigned int flagEntropy[swift_type_count] = {0};
-  flagEntropy[0] = writeEntropyFlag();
-  io_write_attribute(f, "Flag_Entropy_ICs", "%u", flagEntropy,
-		  swift_type_count);
-
-  fprintf(f, "\n");
-
-  /* Print the code version */
-  logger_io_write_code_description(f);
-
-  /* Print the run's policy */
-  logger_io_write_engine_policy(f, e);
-
-  /* Print the SPH parameters */
-  if (e->policy & engine_policy_hydro) {
-    logger_hydro_props_print_snapshot(f, e->hydro_properties);
-    hydro_write_flavour(f);
-
-    fprintf(f, "\n");
-  }
-
-  /* Print the subgrid parameters */
-  fprintf(f, "SubgridScheme:\n");
-
-  entropy_floor_write_flavour(f);
-  cooling_write_flavour(f, e->cooling_func);
-  chemistry_write_flavour(f);
-  tracers_write_flavour(f);
-  fprintf(f, "\n");
-
-  /* Print the gravity parameters */
-  if (e->policy & engine_policy_self_gravity) {
-    fprintf(f, "GravityScheme:\n");
-    logger_gravity_props_print_snapshot(f, e->gravity_properties);
-
-    fprintf(f, "\n");
-  }
-
-  /* Print the stellar parameters */
-  if (e->policy & engine_policy_stars) {
-    fprintf(f, "StarsScheme:\n");
-    stars_props_print_snapshot(f, e->stars_properties);
-    fprintf(f, "\n");
-  }
-
-  /* Print the cosmological model  */
-  fprintf(f, "Cosmology:\n");
-  if (e->policy & engine_policy_cosmology) {
-    io_write_attribute_i(f, "Cosmological run", 1);
-  }
-  else {
-    io_write_attribute_i(f, "Cosmological run", 0);
-  }
-  logger_cosmology_write_model(f, e->cosmology);
-  fprintf(f, "\n");
-
-  /* Print the runtime parameters */
-  fprintf(f, "Parameters:\n");
-  logger_parser_write_params_to_hdf5(e->parameter_file, f, 1);
-  fprintf(f, "\n");
-
-  /* Print the runtime unused parameters */
-  fprintf(f, "UnusedParameters:\n");
-  logger_parser_write_params_to_hdf5(e->parameter_file, f, 0);
-  fprintf(f, "\n");
-
-  /* Print the system of Units used in the spashot */
-  // TODO Improve output
-  logger_io_write_unit_system(f, snapshot_units, "Units");
-
-  /* Print the system of Units used internally */
-  logger_io_write_unit_system(f, internal_units, "InternalCodeUnits");
-
-  /* TODO implement cells */
 
   /* Close file */
   fclose(f);
   
 }
 
-#endif /* HAVE_HDF5 */
+#endif /* WITH_LOGGER */

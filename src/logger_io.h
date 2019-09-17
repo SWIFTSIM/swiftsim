@@ -31,8 +31,8 @@
 #include "units.h"
 
 
-void logger_write_index_file(struct logger *log, struct engine* e);
-void logger_write_description(struct logger *log, struct engine* e);
+void logger_write_index_file(struct logger_writer *log, struct engine* e);
+void logger_write_description(struct logger_writer *log, struct engine* e);
 
 /**
  * @brief Specifies which particle fields to write to a dataset
@@ -50,9 +50,9 @@ __attribute__((always_inline)) INLINE static int hydro_write_index(
 
   /* List what we want to write */
   list[0] = io_make_output_field("ParticleIDs", ULONGLONG, 1,
-                                UNIT_CONV_NO_UNITS, parts, id);
-  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
-				 xparts, logger_data.last_offset);
+                                 UNIT_CONV_NO_UNITS, 0.f, parts, id, "Field not used");
+  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS, 0.f,
+                                 xparts, logger_data.last_offset, "Field not used");
 
   return 2;
 }
@@ -72,9 +72,9 @@ __attribute__((always_inline)) INLINE static int darkmatter_write_index(
 
   /* List what we want to write */
   list[0] = io_make_output_field("ParticleIDs", ULONGLONG, 1,
-                                UNIT_CONV_NO_UNITS, gparts, id_or_neg_offset);
-  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS,
-				 gparts, logger_data.last_offset);
+                                 UNIT_CONV_NO_UNITS, 0.f, gparts, id_or_neg_offset, "Field not used");
+  list[1] = io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS, 0.f,
+                                 gparts, logger_data.last_offset, "Field not used");
 
   return 2;
 }
