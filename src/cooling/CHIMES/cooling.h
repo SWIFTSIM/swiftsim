@@ -51,6 +51,17 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     const struct part* restrict p,
 			     struct xpart* restrict xp); 
 
+void chimes_update_gas_vars(const double u_cgs,
+			    const struct phys_const *phys_const,
+			    const struct unit_system *us,
+			    const struct cosmology *cosmo,
+			    const struct hydro_props *hydro_properties,
+			    const struct entropy_floor_properties *floor_props,
+			    const struct cooling_function_data *cooling,
+			    struct part *restrict p, struct xpart *restrict xp,
+			    struct gasVariables *ChimesGasVars, 
+			    const float dt_cgs); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.

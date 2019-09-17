@@ -31,6 +31,7 @@
 #include <time.h>
 
 /* Local includes. */
+#include "adiabatic_index.h" 
 #include "chemistry.h"
 #include "cooling.h"
 #include "cooling_struct.h"
@@ -91,6 +92,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
   else 
     error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
 
+  /* Cosmic ray ionisation rate of HI. */ 
+  cooling->cosmic_ray_rate = parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
+
   /* CHIMES tolerance parameters */ 
   cooling->ChimesGlobalVars.relativeTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:relativeTolerance"); 
   cooling->ChimesGlobalVars.absoluteTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:absoluteTolerance"); 
@@ -124,10 +128,27 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* The following CHIMES parameters do not need 
    * to be modified by the user. These are just 
    * hard-coded for now. */ 
-  cooling->ChimesGlobalVars.StaticMolCooling = 0; 
   cooling->ChimesGlobalVars.InitIonState = 1; 
   cooling->ChimesGlobalVars.grain_temperature = 10.0; 
+  
+  /* Physical velocity divergence isn't easily 
+   * accessible, so just run with static 
+   * molecular cooling for now. */ 
+  cooling->ChimesGlobalVars.StaticMolCooling = 1; 
 
+  /* Equilibrium mode: 
+   * 0 --> Evolve in non-equilibrium. 
+   * 1 --> Evolve with equilibrium abundances. 
+   */
+  cooling->ChemistryEqmMode = parser_get_param_int(parameter_file, "CHIMESCooling:ChemistryEqmMode"); 
+
+  /* Flag switch thermal evolution on/off: 
+   * 0 --> Fixed temperature (but chemical 
+   *       abundances can still be evolved). 
+   * 1 --> Enable thermal evolution. 
+   */ 
+  cooling->ThermEvolOn = parser_get_param_int(parameter_file, "CHIMESCooling:ThermEvolOn"); 
+    
   /* Optional parameters to define S and Ca 
    * relative to Si. */ 
   cooling->S_over_Si_ratio_in_solar = parser_get_opt_param_float(parameter_file, "CHIMESCooling:S_over_Si_in_solar", 1.f); 
@@ -140,6 +161,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->Si_solar_mass_fraction = 6.64948e-4; 
   cooling->S_solar_mass_fraction = 3.09171e-4; 
   cooling->Ca_solar_mass_fraction = 6.41451e-5; 
+
+  /* CHIMES uses a solar metallicity of 0.0129. */ 
+  cooling->Zsol = 0.0129; 
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
@@ -210,4 +234,78 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
 
   initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+}
+
+/**
+ * @brief Update ChimesGasVars structure. 
+ * 
+ * Updates the ChimesGasVars structure with the various 
+ * thermodynamics quantities of the gas particle that 
+ * will be needed for the CHIMES chemistry solver. 
+ *  
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param cosmo The current cosmological model.
+ * @param hydro_properties the hydro_props struct
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param dt The cooling time-step of this particle.
+ * @param dt_therm The hydro time-step of this particle.
+ */
+void chimes_update_gas_vars(const double u_cgs,
+			    const struct phys_const *phys_const,
+			    const struct unit_system *us,
+			    const struct cosmology *cosmo,
+			    const struct hydro_props *hydro_properties,
+			    const struct entropy_floor_properties *floor_props,
+			    const struct cooling_function_data *cooling,
+			    struct part *restrict p, struct xpart *restrict xp,
+			    struct gasVariables *ChimesGasVars, 
+			    const float dt_cgs) {
+  /* Physical constants that we will 
+   * need, in cgs units */ 
+  float dimension_k[5] = {1, 2, -2, 0, -1}; 
+  ChimesFloat boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  ChimesFloat proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
+
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+
+  ChimesGasVars->abundances = xp->cooling_data.chimes_abundances; 
+
+  ChimesFloat mu = calculate_mean_molecular_weight(ChimesGasVars, &ChimesGlobalVars);
+
+  ChimesGasVars->temperature = (ChimesFloat) u_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
+
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+  ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
+#else 
+  /* Without COLIBRE or EAGLE chemistry, 
+   * the metal abundances are unavailable. 
+   * Set to primordial abundances. */ 
+  ChimesFloat XH = 0.75; 
+#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  ChimesFloat nH = (ChimesFloat) hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass; 
+  ChimesGasVars->nH_tot = nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY); 
+
+  ChimesGasVars->TempFloor = (ChimesFloat) hydro_properties->minimal_temperature; 
+  ChimesGasVars->cr_rate = cooling->cosmic_ray_rate; 
+  ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol; 
+  ChimesGasVars->hydro_timestep = (ChimesFloat) dt_cgs; 
+  
+  ChimesGasVars->cell_size = 0; 
+  ChimesGasVars->constant_heating_rate = 0.0; 
+  ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode; 
+  ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
+  ChimesGasVars->divVel = 0.0; 
+
+  /* Doppler broadening parameter, for 
+   * H2 self-shielding, is hard-coded 
+   * to 7.1 km/s for now. This is a 
+   * typical value for GMCs in the 
+   * Milky Way. */ 
+  ChimesGasVars->doppler_broad = 7.1; 
 }
