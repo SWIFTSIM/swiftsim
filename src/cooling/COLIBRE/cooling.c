@@ -349,6 +349,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
         units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
     const float logP = (float)log10((double)pres * pres_to_cgs);
     float logT_at_Peq, mu_at_Peq, logHI, logHII, logH2;
+    float logn_at_Peq = cooling->nH[iden];
 
     /* check what would be the maximum Peq from the table for given redshift and
      * metalllicity */
@@ -406,7 +407,6 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
       int iden_eq = iden;
       float dden_eq = 0.;
-      float logn_at_Peq = cooling->nH[iden];
 
       for (int i = iden; i < colibre_cooling_N_density; i++) {
         float logPeq_interp = interpolation_3d_no_z(
