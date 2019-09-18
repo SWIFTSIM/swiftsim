@@ -45,6 +45,9 @@
 #include "space.h"
 #include "units.h"
 
+/* Tolerances for termination criteria. */
+static const float rounding_tolerance = 1.0e-4;
+
 /**
  * @brief Initialises properties stored in the cooling_function_data struct
  *
@@ -234,6 +237,8 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
 
   initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+
+  xp->cooling_data.radiated_energy = 0.f; 
 }
 
 /**
@@ -267,14 +272,12 @@ void chimes_update_gas_vars(const double u_cgs,
   /* Physical constants that we will 
    * need, in cgs units */ 
   float dimension_k[5] = {1, 2, -2, 0, -1}; 
-  ChimesFloat boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
-  ChimesFloat proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
+  double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
 
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
 
-  ChimesGasVars->abundances = xp->cooling_data.chimes_abundances; 
-
-  ChimesFloat mu = calculate_mean_molecular_weight(ChimesGasVars, &ChimesGlobalVars);
+  double mu = (double) calculate_mean_molecular_weight(ChimesGasVars, &ChimesGlobalVars);
 
   ChimesGasVars->temperature = (ChimesFloat) u_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
 
@@ -308,4 +311,154 @@ void chimes_update_gas_vars(const double u_cgs,
    * typical value for GMCs in the 
    * Milky Way. */ 
   ChimesGasVars->doppler_broad = 7.1; 
+}
+
+/**
+ * @brief Apply the cooling function to a particle.
+ *
+ * We use the CHIMES module to integrate the cooling rate 
+ * and chemical abundances over the time-step. 
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param cosmo The current cosmological model.
+ * @param hydro_properties the hydro_props struct
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ * @param dt The cooling time-step of this particle.
+ * @param dt_therm The hydro time-step of this particle.
+ */
+void cooling_cool_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct cosmology *cosmo,
+                       const struct hydro_props *hydro_properties,
+                       const struct entropy_floor_properties *floor_props,
+                       const struct cooling_function_data *cooling,
+                       struct part *restrict p, struct xpart *restrict xp,
+                       const float dt, const float dt_therm) {
+
+  /* CHIMES structures. */
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+  struct gasVariables ChimesGasVars; 
+
+  ChimesGasVars.abundances = xp->cooling_data.chimes_abundances; 
+
+  /* No cooling happens over zero time */
+  if (dt == 0.) return;
+
+  /* Get internal energy at the last kick step */
+  const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
+
+  /* Get the change in internal energy due to hydro forces */
+  const float hydro_du_dt = hydro_get_physical_internal_energy_dt(p, cosmo);
+
+  /* Get internal energy at the end of the next kick step (assuming dt does not
+   * increase) */
+  double u_0 = (u_start + hydro_du_dt * dt_therm);
+
+  /* Check for minimal energy. Note that, to 
+   * maintain consistency with the temperature 
+   * floor that is imposed within CHIMES, we compute 
+   * the minimal energy from the minimal temperature 
+   * based on the particle's actual mean molecular 
+   * weight mu, rather than an assumed constant mu. 
+ */
+  double mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars);
+  double minimal_internal_energy; 
+  minimal_internal_energy = hydro_properties->minimal_temperature; 
+  minimal_internal_energy *= hydro_one_over_gamma_minus_one; 
+  minimal_internal_energy *= (phys_const->const_boltzmann_k / phys_const->const_proton_mass); 
+  minimal_internal_energy /= mu; 
+
+  u_0 = max(u_0, minimal_internal_energy);
+
+  /* Convert to CGS units */
+  const double u_start_cgs = u_start * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  const double u_0_cgs = u_0 * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+
+  /* Update the ChimesGasVars structure with the 
+   * particle's thermodynamic variables. */ 
+  chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
+
+  /* Call CHIMES to integrate the chemistry 
+   * and cooling over the time-step. */ 
+  chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
+
+  /* Physical constants that we will 
+   * need, in cgs units */ 
+  float dimension_k[5] = {1, 2, -2, 0, -1}; 
+  double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
+
+  /* Compute the internal energy at the end of the 
+   * step using the final temperature from CHIMES. */
+  double u_final_cgs;
+  mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars); 
+  u_final_cgs = (double) ChimesGasVars.temperature; 
+  u_final_cgs *= hydro_one_over_gamma_minus_one; 
+  u_final_cgs *= boltzmann_k_cgs / proton_mass_cgs; 
+  u_final_cgs /= mu; 
+
+  /* Expected change in energy over the next kick step
+     (assuming no change in dt) */
+  const double delta_u_cgs = u_final_cgs - u_start_cgs;
+
+  /* Convert back to internal units */
+  double delta_u = delta_u_cgs / units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+
+  /* We now need to check that we are not going to go below any of the limits */
+
+  /* Limit imposed by the entropy floor */
+  const double A_floor = entropy_floor(p, cosmo, floor_props);
+  const double rho = hydro_get_physical_density(p, cosmo);
+  const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
+
+  /* Recompute new minimal internal energy 
+  * from the new mean molecular weight. */
+  minimal_internal_energy = hydro_properties->minimal_temperature; 
+  minimal_internal_energy *= hydro_one_over_gamma_minus_one; 
+  minimal_internal_energy *= (phys_const->const_boltzmann_k / phys_const->const_proton_mass); 
+  minimal_internal_energy /= mu; 
+
+  /* Largest of both limits */
+  const double u_limit = max(minimal_internal_energy, u_floor);
+
+  /* First, check whether we may end up below the minimal energy after
+   * this step 1/2 kick + another 1/2 kick that could potentially be for
+   * a time-step twice as big. We hence check for 1.5 delta_u. */
+  if (u_start + 1.5 * delta_u < u_limit) {
+    delta_u = (u_limit - u_start) / 1.5;
+  }
+
+  /* Second, check whether the energy used in the prediction could get negative.
+   * We need to check for the 1/2 dt kick followed by a full time-step drift
+   * that could potentially be for a time-step twice as big. We hence check
+   * for 2.5 delta_u but this time against 0 energy not the minimum.
+   * To avoid numerical rounding bringing us below 0., we add a tiny tolerance.
+   */
+  if (u_start + 2.5 * delta_u < 0.) {
+    delta_u = -u_start / (2.5 + rounding_tolerance);
+  }
+
+  /* Turn this into a rate of change (including cosmology term) */
+  const float cooling_du_dt = delta_u / dt_therm;
+
+  /* Update the internal energy time derivative */
+  hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+
+  /* Store the radiated energy */
+  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+}
+
+/**
+ * @brief Returns the total radiated energy by this particle.
+ *
+ * @param xp The extended particle data
+ */
+float cooling_get_radiated_energy(const struct xpart* restrict xp) {
+
+  return xp->cooling_data.radiated_energy; 
 }

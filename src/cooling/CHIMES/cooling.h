@@ -62,6 +62,17 @@ void chimes_update_gas_vars(const double u_cgs,
 			    struct gasVariables *ChimesGasVars, 
 			    const float dt_cgs); 
 
+void cooling_cool_part(const struct phys_const *phys_const,
+                       const struct unit_system *us,
+                       const struct cosmology *cosmo,
+                       const struct hydro_props *hydro_properties,
+                       const struct entropy_floor_properties *floor_props,
+                       const struct cooling_function_data *cooling,
+                       struct part *restrict p, struct xpart *restrict xp,
+                       const float dt, const float dt_therm); 
+
+float cooling_get_radiated_energy(const struct xpart* restrict xp); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
@@ -75,31 +86,6 @@ INLINE static void cooling_update(const struct cosmology* cosmo,
                                   struct space* s) {
   // Add content if required.
 }
-
-/**
- * @brief Apply the cooling function to a particle.
- *
- * For now, we do nothing. This will be filled in later.
- *
- * @param phys_const The physical constants in internal units.
- * @param us The internal system of units.
- * @param cosmo The current cosmological model.
- * @param hydro_props The properties of the hydro scheme.
- * @param cooling The #cooling_function_data used in the run.
- * @param p Pointer to the particle data.
- * @param xp Pointer to the extended particle data.
- * @param dt The time-step of this particle.
- * @param dt_therm The time-step operator used for thermal quantities.
- */
-__attribute__((always_inline)) INLINE static void cooling_cool_part(
-    const struct phys_const* restrict phys_const,
-    const struct unit_system* restrict us,
-    const struct cosmology* restrict cosmo,
-    const struct hydro_props* hydro_props,
-    const struct entropy_floor_properties* floor_props,
-    const struct cooling_function_data* restrict cooling,
-    struct part* restrict p, struct xpart* restrict xp, const float dt,
-    const float dt_therm) {}
 
 /**
  * @brief Computes the cooling time-step.
@@ -169,18 +155,6 @@ INLINE static float cooling_get_temperature(
     return T_transition;
 }
 
-/**
- * @brief Returns the total radiated energy by this particle.
- *
- * Currently, there is no cooling, so return 0.
- *
- * @param xp The extended particle data
- */
-__attribute__((always_inline)) INLINE static float cooling_get_radiated_energy(
-    const struct xpart* restrict xp) {
-
-  return 0.f;
-}
 
 /**
  * @brief Clean-up the memory allocated for the cooling routines
