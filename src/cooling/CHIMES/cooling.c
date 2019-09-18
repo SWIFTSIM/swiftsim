@@ -1,4 +1,4 @@
-/*******************************************************************************
+ /*******************************************************************************
  * This file is part of SWIFT.
  * Copyright (c) 2017 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
@@ -303,10 +303,6 @@ void chimes_update_gas_vars(const double u_cgs,
    * typical value for GMCs in the 
    * Milky Way. */ 
   ChimesGasVars->doppler_broad = 7.1; 
-
-  /* Update element abundances from 
-   * metal mass fractions. */ 
-  chimes_update_element_abundances(cooling, p, xp, ChimesGasVars, 1); 
 }
 
 /** 
@@ -421,6 +417,15 @@ void cooling_cool_part(const struct phys_const *phys_const,
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i]; 
 
+
+  /* Update element abundances from metal mass 
+   * fractions. We need to do this here, and not 
+   * later on in chimes_update_gas_vars(), because 
+   * the element abundances need to be set in 
+   * ChimesGasVars before we can calculate the 
+   * mean molecular weight. */ 
+  chimes_update_element_abundances(cooling, p, xp, &ChimesGasVars, 1); 
+
   /* Get internal energy at the last kick step */
   const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
 
@@ -439,6 +444,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * weight mu, rather than an assumed constant mu. 
  */
   double mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars);
+
   double minimal_internal_energy; 
   minimal_internal_energy = hydro_properties->minimal_temperature; 
   minimal_internal_energy *= hydro_one_over_gamma_minus_one; 
@@ -469,7 +475,9 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Compute the internal energy at the end of the 
    * step using the final temperature from CHIMES. */
   double u_final_cgs;
+
   mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars); 
+
   u_final_cgs = (double) ChimesGasVars.temperature; 
   u_final_cgs *= hydro_one_over_gamma_minus_one; 
   u_final_cgs *= boltzmann_k_cgs / proton_mass_cgs; 

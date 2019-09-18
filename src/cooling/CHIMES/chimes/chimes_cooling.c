@@ -22,7 +22,7 @@ ChimesFloat calculate_mean_molecular_weight(struct gasVariables *myGasVars, stru
   
   for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++)
     denominator += myGasVars->abundances[i];
-  
+
   return (1.0 + myGasVars->element_abundances[0] * 4.0 + myGasVars->element_abundances[1] * 12.0 + myGasVars->element_abundances[2] * 14.0 + myGasVars->element_abundances[3] * 16.0 + myGasVars->element_abundances[4] * 20.0 + myGasVars->element_abundances[5] * 24.0 + myGasVars->element_abundances[6] * 28.0 + myGasVars->element_abundances[7] * 32.0 + myGasVars->element_abundances[8] * 40.0 + myGasVars->element_abundances[9] * 56.0) / denominator;
 }
 
