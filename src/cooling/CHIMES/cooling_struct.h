@@ -77,6 +77,9 @@ struct cooling_function_data {
 struct cooling_xpart_data {
   /* CHIMES abundance array */ 
   ChimesFloat chimes_abundances[CHIMES_NETWORK_SIZE]; 
+
+  /* Cumulative energy radiated by the particle */
+  float radiated_energy;
 };
 
 #endif /* SWIFT_COOLING_STRUCT_CHIMES_H */
