@@ -168,22 +168,25 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                            "Temperatures at the time of birth of the gas "
                            "particles that turned into stars");
 
-  list[10] = io_make_output_field("HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
-                                   sparts, HIIregion_last_rebuild,
-                                   "Age of star in Myr when HII region was last rebuilt");
+  list[10] = io_make_output_field(
+      "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      HIIregion_last_rebuild,
+      "Age of star in Myr when HII region was last rebuilt");
 
-  list[11] = io_make_output_field("HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sparts, HIIregion_mass_to_ionize,
-                                 "Masses of the HII regions at the current point "
-                                 "in time");
+  list[11] = io_make_output_field(
+      "HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_to_ionize,
+      "Masses of the HII regions at the current point "
+      "in time");
 
   list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
-                                 sparts, star_timestep,
-                                 "Current timestep of the star particle");
+                                  sparts, star_timestep,
+                                  "Current timestep of the star particle");
 
-  list[13] = io_make_output_field("HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sparts, HIIregion_mass_in_kernel,
-                                 "Masses in kernels at time of HII region formation");
+  list[13] = io_make_output_field(
+      "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_in_kernel,
+      "Masses in kernels at time of HII region formation");
 }
 
 /**
@@ -232,10 +235,15 @@ INLINE static void stars_props_init(struct stars_props *sp,
   else
     sp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
-  /* Read birth time to set all stars in ICs to (defaults to -1 to indicate star
-   * present in ICs) */
-  sp->spart_first_init_birth_time =
-      parser_get_opt_param_float(params, "Stars:birth_time", -1);
+  /* Do we want to overwrite the stars' birth time? */
+  sp->overwrite_birth_time =
+      parser_get_opt_param_int(params, "Stars:overwrite_birth_time", 0);
+
+  /* Read birth time to set all stars in ICs */
+  if (sp->overwrite_birth_time) {
+    sp->spart_first_init_birth_time =
+        parser_get_param_float(params, "Stars:birth_time");
+  }
 }
 
 /**
@@ -259,6 +267,10 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
 
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
+
+  if (sp->overwrite_birth_time)
+    message("Stars' birth time read from the ICs will be overwritten to %f",
+            sp->spart_first_init_birth_time);
 }
 
 #if defined(HAVE_HDF5)

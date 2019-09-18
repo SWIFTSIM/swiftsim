@@ -26,6 +26,9 @@ endif
 if HAVECOLIBRECOOLING
 SUBDIRS += examples/Cooling/CoolingRatesCOLIBRE
 endif
+if HAVELOGGER
+SUBDIRS += logger
+endif
 
 # Non-standard files that should be part of the distribution.
 EXTRA_DIST = INSTALL.swift .clang-format format.sh

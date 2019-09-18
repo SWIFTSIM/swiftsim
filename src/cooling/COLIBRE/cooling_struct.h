@@ -70,7 +70,6 @@ struct cooling_tables {
 
   /* array of all hydrogen fractions */
   float *logHfracs_all;
-  
 };
 
 /**
@@ -127,7 +126,8 @@ struct cooling_function_data {
   /* Temperature of gas particles tagged as HII regions */
   float HIIregion_temp;
 
-  /* Distance from EOS to use thermal equilibrium temperature for subgrid props */
+  /* Distance from EOS to use thermal equilibrium temperature for subgrid props
+   */
   float dlogT_EOS;
 
   /*! Redshift of H reionization */
