@@ -168,22 +168,25 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                            "Temperatures at the time of birth of the gas "
                            "particles that turned into stars");
 
-  list[10] = io_make_output_field("HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
-                                   sparts, HIIregion_last_rebuild,
-                                   "Age of star in Myr when HII region was last rebuilt");
+  list[10] = io_make_output_field(
+      "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      HIIregion_last_rebuild,
+      "Age of star in Myr when HII region was last rebuilt");
 
-  list[11] = io_make_output_field("HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sparts, HIIregion_mass_to_ionize,
-                                 "Masses of the HII regions at the current point "
-                                 "in time");
+  list[11] = io_make_output_field(
+      "HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_to_ionize,
+      "Masses of the HII regions at the current point "
+      "in time");
 
   list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
-                                 sparts, star_timestep,
-                                 "Current timestep of the star particle");
+                                  sparts, star_timestep,
+                                  "Current timestep of the star particle");
 
-  list[13] = io_make_output_field("HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sparts, HIIregion_mass_in_kernel,
-                                 "Masses in kernels at time of HII region formation");
+  list[13] = io_make_output_field(
+      "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_in_kernel,
+      "Masses in kernels at time of HII region formation");
 }
 
 /**

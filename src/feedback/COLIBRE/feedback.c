@@ -56,7 +56,8 @@ INLINE static double eagle_SNII_feedback_temperature_change(
  * @param sp The #spart.
  * @param props The properties of the stellar model.
  * @param min_dying_mass_Msun stellar mass that dies at the end of this timestep
- * @param max_dying_mass_Msun stellar mass that dies at the beginning of this timestep
+ * @param max_dying_mass_Msun stellar mass that dies at the beginning of this
+ * timestep
  */
 
 INLINE static double colibre_feedback_number_of_SNII(
@@ -66,47 +67,53 @@ INLINE static double colibre_feedback_number_of_SNII(
   /* Calculate how many supernovae have exploded in this timestep */
 
   /* minimum star mass that dies is between SNII min and max mass */
-  if ( min_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun) &&
-       min_dying_mass_Msun >  exp10(fp->log10_SNII_min_mass_msun) ) {
-     /* both minimum and maximum star masses that die are within the SNII bounds*/
-     /* standard case: integrate imf from min_dying_mass_Msun to max_dying_mass_Msun */
-     if (max_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun) )
-        return integrate_imf(log10(min_dying_mass_Msun), log10(max_dying_mass_Msun), 
-               eagle_imf_integration_no_weight, NULL, fp) * sp->mass_init * 
-               fp->mass_to_solar_mass;
-     /* minimum star mass that dies is within SNII bounds but maximum star mass
- *      that dies this timestep is higher then the maximum SNII mass*/
-     /* integrate imf from min_dying_mass_Msun to SNII_max_mass_msun */
-     else
-        return integrate_imf(log10(min_dying_mass_Msun), fp->log10_SNII_max_mass_msun,
-               eagle_imf_integration_no_weight, NULL, fp) * sp->mass_init *
-               fp->mass_to_solar_mass;
-  /* minimum star mass that dies is below the SNII mass range */
+  if (min_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun) &&
+      min_dying_mass_Msun > exp10(fp->log10_SNII_min_mass_msun)) {
+    /* both minimum and maximum star masses that die are within the SNII
+     * bounds*/
+    /* standard case: integrate imf from min_dying_mass_Msun to
+     * max_dying_mass_Msun */
+    if (max_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun))
+      return integrate_imf(log10(min_dying_mass_Msun),
+                           log10(max_dying_mass_Msun),
+                           eagle_imf_integration_no_weight, NULL, fp) *
+             sp->mass_init * fp->mass_to_solar_mass;
+    /* minimum star mass that dies is within SNII bounds but maximum star mass
+     *      that dies this timestep is higher then the maximum SNII mass*/
+    /* integrate imf from min_dying_mass_Msun to SNII_max_mass_msun */
+    else
+      return integrate_imf(log10(min_dying_mass_Msun),
+                           fp->log10_SNII_max_mass_msun,
+                           eagle_imf_integration_no_weight, NULL, fp) *
+             sp->mass_init * fp->mass_to_solar_mass;
+    /* minimum star mass that dies is below the SNII mass range */
   } else if (min_dying_mass_Msun <= exp10(fp->log10_SNII_min_mass_msun)) {
-     /* maximum star mass that dies is within the SNII range */
-     /* integrate imf from SNII_min_mass_msun to max_dying_mass_Msun*/
-     if ( max_dying_mass_Msun >  exp10(fp->log10_SNII_min_mass_msun) &&
-          max_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun) )
-        return integrate_imf(fp->log10_SNII_min_mass_msun, log10(max_dying_mass_Msun), 
-               eagle_imf_integration_no_weight, NULL, fp) * sp->mass_init * 
-               fp->mass_to_solar_mass;
-     /* minimum star mass that dies this timestep is below minimum SNII mass,
-      * maximum star mass that dies this timestep is above the maximum SNII mass*/
-     /* integrate imf over full SNII range, from SNII_min_mass_msun to
-      * SNII_max_mass_msun */
-     else if ( max_dying_mass_Msun > exp10(fp->log10_SNII_min_mass_msun) )
-        return integrate_imf(fp->log10_SNII_min_mass_msun, fp->log10_SNII_max_mass_msun,
-               eagle_imf_integration_no_weight, NULL, fp) * sp->mass_init * 
-               fp->mass_to_solar_mass;
-     /* both minimum and maximum star mass that dies this timestep are below
-      * the SNII mass range; no SNII anymore */
-     else 
-        return 0.0;
-  /* minimum star mass that dies this timestep is higher than the maximum SNII mass;
-   * no SNII yet */
-  } else 
-     return 0.;
-
+    /* maximum star mass that dies is within the SNII range */
+    /* integrate imf from SNII_min_mass_msun to max_dying_mass_Msun*/
+    if (max_dying_mass_Msun > exp10(fp->log10_SNII_min_mass_msun) &&
+        max_dying_mass_Msun <= exp10(fp->log10_SNII_max_mass_msun))
+      return integrate_imf(fp->log10_SNII_min_mass_msun,
+                           log10(max_dying_mass_Msun),
+                           eagle_imf_integration_no_weight, NULL, fp) *
+             sp->mass_init * fp->mass_to_solar_mass;
+    /* minimum star mass that dies this timestep is below minimum SNII mass,
+     * maximum star mass that dies this timestep is above the maximum SNII
+     * mass*/
+    /* integrate imf over full SNII range, from SNII_min_mass_msun to
+     * SNII_max_mass_msun */
+    else if (max_dying_mass_Msun > exp10(fp->log10_SNII_min_mass_msun))
+      return integrate_imf(fp->log10_SNII_min_mass_msun,
+                           fp->log10_SNII_max_mass_msun,
+                           eagle_imf_integration_no_weight, NULL, fp) *
+             sp->mass_init * fp->mass_to_solar_mass;
+    /* both minimum and maximum star mass that dies this timestep are below
+     * the SNII mass range; no SNII anymore */
+    else
+      return 0.0;
+    /* minimum star mass that dies this timestep is higher than the maximum SNII
+     * mass; no SNII yet */
+  } else
+    return 0.;
 }
 
 /**
@@ -178,7 +185,8 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
  * @param age of star particle at the beginning of the timestep
  * @param timestep in Gyr
  * @param min_dying_mass_Msun stellar mass that dies at the end of this timestep
- * @param max_dying_mass_Msun stellar mass that dies at the beginning of this timestep
+ * @param max_dying_mass_Msun stellar mass that dies at the beginning of this
+ * timestep
  */
 INLINE static void compute_SNII_feedback(
     struct spart* sp, const double star_age, const double dt,
@@ -188,34 +196,36 @@ INLINE static void compute_SNII_feedback(
   /* Time after birth considered for SNII feedback (internal units) */
   const double SNII_wind_delay = feedback_props->SNII_wind_delay;
 
-    /* Are we doing feedback this step?
-     * Note that since the ages are calculated using an interpolation table we
-     * must allow some tolerance here*/
-    /* If SNII_wind_delay < 0, then use timed feedback */
-  if (  (star_age <= SNII_wind_delay &&
-        (star_age + 1.001 * dt) > SNII_wind_delay) || SNII_wind_delay < 0.) {
-   
+  /* Are we doing feedback this step?
+   * Note that since the ages are calculated using an interpolation table we
+   * must allow some tolerance here*/
+  /* If SNII_wind_delay < 0, then use timed feedback */
+  if ((star_age <= SNII_wind_delay &&
+       (star_age + 1.001 * dt) > SNII_wind_delay) ||
+      SNII_wind_delay < 0.) {
+
     /* Make sure a star does not do feedback twice in the delay time case */
     if (sp->SNII_f_E != -1.f && SNII_wind_delay >= 0.) {
 #ifdef SWIFT_DEBUG_CHECKS
-          message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
-                  star_age, dt);
+      message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
+              star_age, dt);
 #endif
-          return;
+      return;
     }
 
     /* Properties of the model (all in internal units) */
     const double delta_T =
         eagle_SNII_feedback_temperature_change(sp, feedback_props);
-    const double N_SNe_eagle = eagle_feedback_number_of_SNII(sp, feedback_props);
-    const double N_SNe_colibre = colibre_feedback_number_of_SNII(sp, feedback_props,
-                                 min_dying_mass_Msun, max_dying_mass_Msun);
+    const double N_SNe_eagle =
+        eagle_feedback_number_of_SNII(sp, feedback_props);
+    const double N_SNe_colibre = colibre_feedback_number_of_SNII(
+        sp, feedback_props, min_dying_mass_Msun, max_dying_mass_Msun);
     double N_SNe;
 
     if (SNII_wind_delay > 0.) {
-        N_SNe = N_SNe_eagle;
+      N_SNe = N_SNe_eagle;
     } else {
-        N_SNe = N_SNe_colibre;
+      N_SNe = N_SNe_colibre;
     }
 
     const double E_SNe = feedback_props->E_SNII;
@@ -832,52 +842,55 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 
 /**
  * @brief Gets interpolated cumulative ionizing photons from table
- * @param props feedback_props structure for getting model parameters for coefficients
+ * @param props feedback_props structure for getting model parameters for
+ * coefficients
  * @param t_Myr stellar age in Myr
  * @param logZ log10 of (stellar) metal mass fraction Z
  */
-double get_cumulative_ionizing_photons(const struct feedback_props* fp, float t_Myr, float logZ) {
-        float logQcum_loc;
-        float d_age, d_met;
-        int met_index, age_index;
-  
-        if (t_Myr < fp->HII_agebins[0]) return 0.;
-      
-        get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ,
-                   &met_index, &d_met);
-        
-        get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr,
-                   &age_index, &d_age);
+double get_cumulative_ionizing_photons(const struct feedback_props* fp,
+                                       float t_Myr, float logZ) {
+  float logQcum_loc;
+  float d_age, d_met;
+  int met_index, age_index;
 
-        logQcum_loc = interpolation_2d_flat(fp->HII_logQcum, met_index, age_index, 
-                              d_met, d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
+  if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-        return exp10(logQcum_loc);
+  get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+
+  get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
+
+  logQcum_loc =
+      interpolation_2d_flat(fp->HII_logQcum, met_index, age_index, d_met, d_age,
+                            fp->HII_nr_metbins, fp->HII_nr_agebins);
+
+  return exp10(logQcum_loc);
 }
 
 /**
- * @brief Calculates the average ionizing luminosity between t1 and t2 for an initial metallicity of Z
+ * @brief Calculates the average ionizing luminosity between t1 and t2 for an
+ * initial metallicity of Z
  *
  * @param props feedback_props structure for getting model parameters
  * @param t1 initial time in Myr
  * @param t2 final time in Myr
  * @param Z metal mass fraction
- * @param Qbar photoionizing luminosity of a star with metallicity Z over this period of time (t1 - t2)
+ * @param Qbar photoionizing luminosity of a star with metallicity Z over this
+ * period of time (t1 - t2)
  */
-double compute_average_photoionizing_luminosity(const struct feedback_props* fp, float t1, float t2, float Z){
- 
-        double Q_t1, Q_t2, Qbar;
-        /* find a way to get that from constants, if possible without passing the whole structure 
-           through everything...*/
-        const double Myr_inv = 3.1688e-14;
+double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
+                                                float t1, float t2, float Z) {
 
-        Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
-        Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
+  double Q_t1, Q_t2, Qbar;
+  /* find a way to get that from constants, if possible without passing the
+     whole structure through everything...*/
+  const double Myr_inv = 3.1688e-14;
 
-        Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
-        return Qbar;
+  Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
+  Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
+
+  Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+  return Qbar;
 }
-
 
 /**
  * @brief Calculates the amount of momentum available for this star
@@ -1021,7 +1034,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
  * @param us unit_system data structure
  * @param age age of spart at beginning of step
  * @param dt length of current timestep
- * @param time_beg_of_step time at the beginning of timestep 
+ * @param time_beg_of_step time at the beginning of timestep
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
@@ -1043,7 +1056,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double conversion_factor = time_to_cgs / Gyr_in_cgs;
   const double dt_Gyr = dt * conversion_factor;
-  const double dt_Myr = dt * conversion_factor * 1e3; 
+  const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
 
@@ -1074,71 +1087,83 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   sp->star_timestep = dt;
 
   /* Compute ionizing photons for HII regions */
-  if (feedback_props->with_HIIregions && star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
-    /* only rebuild every HIIregion_dtMyr and at the first timestep the star was formed*/
-    if ( ( ( (sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) >= star_age_Myr ) &&
-           ( (sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) <  star_age_Myr + dt_Myr) ) || 
-             (sp->HIIregion_last_rebuild < 0.)  ){
+  if (feedback_props->with_HIIregions &&
+      star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
+    /* only rebuild every HIIregion_dtMyr and at the first timestep the star was
+     * formed*/
+    if ((((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) >=
+          star_age_Myr) &&
+         ((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) <
+          star_age_Myr + dt_Myr)) ||
+        (sp->HIIregion_last_rebuild < 0.)) {
 
-        /* log when this HII region was (re)built */
-        double old_star_age_Myr;
-        if (sp->HIIregion_last_rebuild >= 0.) {
-                old_star_age_Myr = sp->HIIregion_last_rebuild;
-        } else {
-                old_star_age_Myr = 0.;
-        }
+      /* log when this HII region was (re)built */
+      double old_star_age_Myr;
+      if (sp->HIIregion_last_rebuild >= 0.) {
+        old_star_age_Myr = sp->HIIregion_last_rebuild;
+      } else {
+        old_star_age_Myr = 0.;
+      }
 
-        sp->HIIregion_last_rebuild = star_age_Myr;
+      sp->HIIregion_last_rebuild = star_age_Myr;
 
-        const double rho_birth = (double) sp->birth_density;
-        const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
-        const double alpha_B = (double) feedback_props->alpha_caseb_recomb;
-        const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;
+      const double rho_birth = (double)sp->birth_density;
+      const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
+      const double alpha_B = (double)feedback_props->alpha_caseb_recomb;
+      const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;
 
-        double Qbar;
-        float t1_Myr = (float) old_star_age_Myr;
-        float t2_Myr = (float) star_age_Myr;
-       
-        Qbar = compute_average_photoionizing_luminosity(feedback_props, t1_Myr, t2_Myr, Z);
+      double Qbar;
+      float t1_Myr = (float)old_star_age_Myr;
+      float t2_Myr = (float)star_age_Myr;
 
-        /* masses in system units */
-        sp->HIIregion_mass_to_ionize = (float) ( 0.84 * (double) sp->mass_init * (1. - exp(- alpha_B * n_birth * t_half) ) * 
-                                       ( 10.  / n_birth ) * (Qbar / 1.e12) );
+      Qbar = compute_average_photoionizing_luminosity(feedback_props, t1_Myr,
+                                                      t2_Myr, Z);
+
+      /* masses in system units */
+      sp->HIIregion_mass_to_ionize =
+          (float)(0.84 * (double)sp->mass_init *
+                  (1. - exp(-alpha_B * n_birth * t_half)) * (10. / n_birth) *
+                  (Qbar / 1.e12));
 
 #ifdef SWIFT_DEBUG_CHECKS
-        if (sp->HIIregion_mass_to_ionize > 1.e10 || sp->HIIregion_mass_to_ionize < 0.) {
-          message("sp->mass_init = %.4e", sp->mass_init);
-          message("alpha_B = %.4e", alpha_B);
-          message("n_birth = %.4e", n_birth);
-          message("age = %.4e", age);
-          message("time_to_cgs = %.4e", time_to_cgs);
-          message("Qbar = %.4e", Qbar);
-          message("time term = %.4e", (1. - exp(- alpha_B * n_birth * t_half) ) );
-          message("sp->HIIregion_mass_to_ionize = %.4e", sp->HIIregion_mass_to_ionize);
+      if (sp->HIIregion_mass_to_ionize > 1.e10 ||
+          sp->HIIregion_mass_to_ionize < 0.) {
+        message("sp->mass_init = %.4e", sp->mass_init);
+        message("alpha_B = %.4e", alpha_B);
+        message("n_birth = %.4e", n_birth);
+        message("age = %.4e", age);
+        message("time_to_cgs = %.4e", time_to_cgs);
+        message("Qbar = %.4e", Qbar);
+        message("time term = %.4e", (1. - exp(-alpha_B * n_birth * t_half)));
+        message("sp->HIIregion_mass_to_ionize = %.4e",
+                sp->HIIregion_mass_to_ionize);
 
-          error("Weird values for HII mass. Stopping.");
-        }
+        error("Weird values for HII mass. Stopping.");
+      }
 #endif
 
-        sp->HIIregion_mass_in_kernel = ngb_gas_mass;
-        sp->feedback_data.to_distribute.HIIregion_probability = sp->HIIregion_mass_to_ionize / ngb_gas_mass;
+      sp->HIIregion_mass_in_kernel = ngb_gas_mass;
+      sp->feedback_data.to_distribute.HIIregion_probability =
+          sp->HIIregion_mass_to_ionize / ngb_gas_mass;
 
-        /* convert dtMyr to dt (SU) */
-        const float HIIregion_dt =  feedback_props->HIIregion_dtMyr * Myr_in_cgs / time_to_cgs;
-        sp->feedback_data.to_distribute.HIIregion_endtime     = time_beg_of_step + HIIregion_dt;
-        sp->feedback_data.to_distribute.HIIregion_starid     = sp->id;
+      /* convert dtMyr to dt (SU) */
+      const float HIIregion_dt =
+          feedback_props->HIIregion_dtMyr * Myr_in_cgs / time_to_cgs;
+      sp->feedback_data.to_distribute.HIIregion_endtime =
+          time_beg_of_step + HIIregion_dt;
+      sp->feedback_data.to_distribute.HIIregion_starid = sp->id;
 
     } else {
-        sp->feedback_data.to_distribute.HIIregion_probability = -1.;
-        sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
-        sp->feedback_data.to_distribute.HIIregion_starid     = -1;
+      sp->feedback_data.to_distribute.HIIregion_probability = -1.;
+      sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
+      sp->feedback_data.to_distribute.HIIregion_starid = -1;
     }
 
   } else if (feedback_props->with_HIIregions) {
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
-    sp->feedback_data.to_distribute.HIIregion_endtime     = -1.;
-    sp->feedback_data.to_distribute.HIIregion_starid     = -1;
+    sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
+    sp->feedback_data.to_distribute.HIIregion_starid = -1;
     sp->HIIregion_mass_to_ionize = 0.f;
     sp->HIIregion_mass_in_kernel = -1.f;
   }
@@ -1157,7 +1182,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute properties of the stochastic SNII feedback model. */
   if (feedback_props->with_SNII_feedback) {
-    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props, 
+    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props,
                           min_dying_mass_Msun, max_dying_mass_Msun);
   }
   if (feedback_props->with_SNIa_feedback) {
@@ -1214,7 +1239,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       cosmo->a2_inv;
 
   /* Star age in Myr to store in case an SNII event occurs */
-  sp->feedback_data.to_distribute.SNII_star_age_Myr = (float) star_age_Myr;
+  sp->feedback_data.to_distribute.SNII_star_age_Myr = (float)star_age_Myr;
 
   TIMER_TOC(timer_do_star_evol);
 }
@@ -1253,7 +1278,7 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->with_HIIregions = 
+  fp->with_HIIregions =
       parser_get_param_int(params, "COLIBREFeedback:use_HIIregions");
 
   /* Properties of the IMF model ------------------------------------------ */
@@ -1388,81 +1413,81 @@ void feedback_props_init(struct feedback_props* fp,
   fp->HIIregion_maxageMyr =
       parser_get_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr");
 
-  fp->HIIregion_dtMyr =
-       parser_get_param_float(params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
+  fp->HIIregion_dtMyr = parser_get_param_float(
+      params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
 
   /* Read the HII table */
   if (fp->with_HIIregions) {
 
-     /* Read yield table filepath  */
-     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
-                          fp->early_feedback_table_path);
+    /* Read yield table filepath  */
+    parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
+                            fp->early_feedback_table_path);
 #ifdef HAVE_HDF5
-     hid_t dataset;
-     herr_t status;
+    hid_t dataset;
+    herr_t status;
 
-     hid_t tempfile_id =
-         H5Fopen(fp->early_feedback_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
-     if (tempfile_id < 0)
-        error("unable to open file %s\n", fp->early_feedback_table_path);
+    hid_t tempfile_id =
+        H5Fopen(fp->early_feedback_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
+    if (tempfile_id < 0)
+      error("unable to open file %s\n", fp->early_feedback_table_path);
 
-     /* read sizes of array dimensions */
-     dataset = H5Dopen(tempfile_id, "Header/NMETALLICITIES", H5P_DEFAULT);
-     status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                   &fp->HII_nr_metbins);
-     if (status < 0) error("error reading number of metallicities \n");
-     status = H5Dclose(dataset);
-     if (status < 0) error("error closing dataset: number of metallicities \n");
+    /* read sizes of array dimensions */
+    dataset = H5Dopen(tempfile_id, "Header/NMETALLICITIES", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     &fp->HII_nr_metbins);
+    if (status < 0) error("error reading number of metallicities \n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: number of metallicities \n");
 
-     dataset = H5Dopen(tempfile_id, "Header/NAGES", H5P_DEFAULT);
-     status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                   &fp->HII_nr_agebins);
-     if (status < 0) error("error reading number of ages \n");
-     status = H5Dclose(dataset);
-     if (status < 0) error("error closing dataset: number of ages\n");
+    dataset = H5Dopen(tempfile_id, "Header/NAGES", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     &fp->HII_nr_agebins);
+    if (status < 0) error("error reading number of ages \n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: number of ages\n");
 
-     /* allocate arrays */
-     if (posix_memalign((void **)&fp->HII_logZbins, SWIFT_STRUCT_ALIGNMENT,
-                     fp->HII_nr_metbins * sizeof(float)) != 0)
-     error("Failed to allocate metallicity bins\n");
-     if (posix_memalign((void **)&fp->HII_agebins, SWIFT_STRUCT_ALIGNMENT,
-                     fp->HII_nr_agebins * sizeof(float)) != 0)
-     error("Failed to allocate age bins\n");
-     if (posix_memalign((void **)&fp->HII_logQcum, SWIFT_STRUCT_ALIGNMENT,
-                         fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
-     error("Failed to allocate Q array\n");          
+    /* allocate arrays */
+    if (posix_memalign((void**)&fp->HII_logZbins, SWIFT_STRUCT_ALIGNMENT,
+                       fp->HII_nr_metbins * sizeof(float)) != 0)
+      error("Failed to allocate metallicity bins\n");
+    if (posix_memalign((void**)&fp->HII_agebins, SWIFT_STRUCT_ALIGNMENT,
+                       fp->HII_nr_agebins * sizeof(float)) != 0)
+      error("Failed to allocate age bins\n");
+    if (posix_memalign(
+            (void**)&fp->HII_logQcum, SWIFT_STRUCT_ALIGNMENT,
+            fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
+      error("Failed to allocate Q array\n");
 
-     /* read in the metallicity bins */
-     dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
-     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                   fp->HII_logZbins);
-     if (status < 0) error("error reading metallicity bins\n");
-     status = H5Dclose(dataset);
-     if (status < 0) error("error closing dataset: metallicity bins");
+    /* read in the metallicity bins */
+    dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     fp->HII_logZbins);
+    if (status < 0) error("error reading metallicity bins\n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: metallicity bins");
 
-     /* read in the stellar ages bins */
-     dataset = H5Dopen(tempfile_id, "AgeBins", H5P_DEFAULT);
-     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                   fp->HII_agebins);
-     if (status < 0) error("error reading age bins\n");
-     status = H5Dclose(dataset);
-     if (status < 0) error("error closing dataset: age bins");
+    /* read in the stellar ages bins */
+    dataset = H5Dopen(tempfile_id, "AgeBins", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     fp->HII_agebins);
+    if (status < 0) error("error reading age bins\n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: age bins");
 
-     /* read in cumulative ionizing photons */
-     dataset = H5Dopen(tempfile_id, "logQcumulative", H5P_DEFAULT);
-     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                   fp->HII_logQcum);
-     if (status < 0) error("error reading Q\n");
-     status = H5Dclose(dataset);
-     if (status < 0) error("error closing dataset: logQcumulative");
+    /* read in cumulative ionizing photons */
+    dataset = H5Dopen(tempfile_id, "logQcumulative", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     fp->HII_logQcum);
+    if (status < 0) error("error reading Q\n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: logQcumulative");
 
-     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins-1]) 
-           error("Stopping for now (%.4f is larger than %.4f)", 
-                        fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins-1]);
+    if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+      error("Stopping for now (%.4f is larger than %.4f)",
+            fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 #else
-  error("Need HDF5 to read early feedback tables");
+    error("Need HDF5 to read early feedback tables");
 #endif
-
   }
 
   /* Gather common conversion factors --------------------------------------- */
@@ -1494,7 +1519,9 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Get recombination coefficient in cgs units */
   const float dimension_alphaB[5] = {0, 3, -1, 0, 0}; /* [cm^3 s^-1] */
-  fp->alpha_caseb_recomb = phys_const->const_caseb_recomb * units_general_cgs_conversion_factor(us, dimension_alphaB);
+  fp->alpha_caseb_recomb =
+      phys_const->const_caseb_recomb *
+      units_general_cgs_conversion_factor(us, dimension_alphaB);
 
   /* Initialise the IMF ------------------------------------------------- */
 

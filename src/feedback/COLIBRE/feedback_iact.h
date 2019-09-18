@@ -290,7 +290,8 @@ runner_iact_nonsym_feedback_apply(
       const double u_new = u_init + delta_u;
 
 #ifdef SWIFT_DEBUG_CHECKS
-      message("SNII event at star age [Myr]  = %.4f", si->feedback_data.to_distribute.SNII_star_age_Myr);
+      message("SNII event at star age [Myr]  = %.4f",
+              si->feedback_data.to_distribute.SNII_star_age_Myr);
 #endif
 
       /* Inject energy into the particle */
@@ -351,7 +352,7 @@ runner_iact_nonsym_feedback_apply(
   const float momentum_prob =
       si->feedback_data.to_distribute.momentum_probability;
 
-  const float HIIregion_prob = 
+  const float HIIregion_prob =
       si->feedback_data.to_distribute.HIIregion_probability;
 
   /* Draw a random number (Note mixing both IDs) */
@@ -375,17 +376,19 @@ runner_iact_nonsym_feedback_apply(
   }
 
   /* Draw a random number (Note mixing both IDs) */
-  const float HIIregion_rand = random_unit_interval(
-      si->id + pj->id, ti_current, random_number_HII_regions);
+  const float HIIregion_rand = random_unit_interval(si->id + pj->id, ti_current,
+                                                    random_number_HII_regions);
 
   /* if lucky, particle is now flagged as HII region  */
   if (HIIregion_rand < HIIregion_prob) {
-   /* gas particle gets flagged as HII region */
-    xpj->tracers_data.HIIregion_timer_gas = si->feedback_data.to_distribute.HIIregion_endtime;
-    xpj->tracers_data.HIIregion_starid = si->feedback_data.to_distribute.HIIregion_starid;
+    /* gas particle gets flagged as HII region */
+    xpj->tracers_data.HIIregion_timer_gas =
+        si->feedback_data.to_distribute.HIIregion_endtime;
+    xpj->tracers_data.HIIregion_starid =
+        si->feedback_data.to_distribute.HIIregion_starid;
 
-   /* Impose maximal viscosity */
-   /* hydro_diffusive_feedback_reset(pj); */
+    /* Impose maximal viscosity */
+    /* hydro_diffusive_feedback_reset(pj); */
   }
 }
 

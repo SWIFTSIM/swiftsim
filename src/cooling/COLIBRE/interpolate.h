@@ -308,22 +308,22 @@ __attribute__((always_inline)) INLINE float interpolation_3d_no_z(
   /* understand what is going on. */
   float result = tx * ty * tz *
                  table[row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
-  
+
   /* result += tx * ty * dz *
             table[row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)]; */
-  result += tx * dy * tz * 
+  result += tx * dy * tz *
             table[row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
-  result += dx * ty * tz * 
-            table[row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)]; 
+  result += dx * ty * tz *
+            table[row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
 
   /* result += tx * dy * dz *
             table[row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)]; */
   /* result += dx * ty * dz *
             table[row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)]; */
   result += dx * dy * tz *
-            table[row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)]; 
+            table[row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
 
-  /* result += dx * dy * dz * 
+  /* result += dx * dy * dz *
              table[row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)]; */
 
   return result;
@@ -673,7 +673,6 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_x(
   return result;
 }
 
-
 /**
  * @brief Interpolate a flattened 4D table at a given position but avoid the
  * w-dimension (ie. final dimension).
@@ -717,19 +716,20 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_w(
   float result =
       tx * ty * tz * tw *
       table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
- 
+
   /* result +=
       tx * ty * tz * dw *
-      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];*/
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz,
+     Nw)];*/
   result +=
       tx * ty * dz * tw *
       table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
   result +=
       tx * dy * tz * tw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
-   result += 
-      dx * ty * tz * tw * 
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)]; 
+  result +=
+      dx * ty * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
 
   /* result +=
       tx * ty * dz * dw *
@@ -737,39 +737,40 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_w(
   result +=
       tx * dy * tz * dw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
-  result += 
-      dx * ty * tz * dw * 
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)]; */ 
+  result +=
+      dx * ty * tz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+*/
   result +=
       tx * dy * dz * tw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
   result +=
       dx * ty * dz * tw *
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)]; 
-  result += 
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
       dx * dy * tz * tw *
       table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
 
-  result += 
+  result +=
       dx * dy * dz * tw *
-      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)]; 
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
   /* result +=
      dx * dy * tz * dw *
      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
-  result += 
+  result +=
       dx * ty * dz * dw *
       table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
   result +=
       tx * dy * dz * dw *
-      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)]; 
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
 
-  result += 
-      dx * dy * dz * dw * 
-      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)]; */
+  result +=
+      dx * dy * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+*/
 
   return result;
-} 
-
+}
 
 /**
  * @brief Interpolate a flattened 4D table at a given position but avoid the
@@ -814,19 +815,21 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_z_no_w(
   float result =
       tx * ty * tz * tw *
       table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
- 
+
   /* result +=
       tx * ty * tz * dw *
-      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];*/
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz,
+     Nw)];*/
   /* result +=
       tx * ty * dz * tw *
-      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];*/
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz,
+     Nw)];*/
   result +=
       tx * dy * tz * tw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
-   result += 
-      dx * ty * tz * tw * 
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)]; 
+  result +=
+      dx * ty * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
 
   /* result +=
       tx * ty * dz * dw *
@@ -834,35 +837,39 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_z_no_w(
   result +=
       tx * dy * tz * dw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
-  result += 
-      dx * ty * tz * dw * 
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)]; */ 
+  result +=
+      dx * ty * tz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+*/
   /* result +=
       tx * dy * dz * tw *
       table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
   result +=
       dx * ty * dz * tw *
-      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)]; */
-  result += 
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+*/
+  result +=
       dx * dy * tz * tw *
-      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)]; 
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
 
-  /* result += 
+  /* result +=
       dx * dy * dz * tw *
-      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)]; */
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+   */
   /* result +=
      dx * dy * tz * dw *
      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
-  result += 
+  result +=
       dx * ty * dz * dw *
       table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
   result +=
       tx * dy * dz * dw *
-      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)]; 
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
 
-  result += 
-      dx * dy * dz * dw * 
-      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)]; */
+  result +=
+      dx * dy * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+*/
 
   return result;
 }

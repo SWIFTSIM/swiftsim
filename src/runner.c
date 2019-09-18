@@ -325,11 +325,12 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                 /* Age of the star at the start of the step */
                 const double star_age_beg_of_step =
                     max(star_age_end_of_step - dt, 0.);
-                const double time_beg_of_step = max( e->time - dt, 0.);
+                const double time_beg_of_step = max(e->time - dt, 0.);
 
                 /* Compute the stellar evolution  */
                 feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                      star_age_beg_of_step, dt, time_beg_of_step);
+                                      star_age_beg_of_step, dt,
+                                      time_beg_of_step);
               } else {
 
                 /* Reset the feedback fields of the star particle */
@@ -466,7 +467,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             const double star_age_beg_of_step =
                 max(star_age_end_of_step - dt, 0.);
 
-            const double time_beg_of_step = max( e->time - dt, 0.);
+            const double time_beg_of_step = max(e->time - dt, 0.);
 
             /* Compute the stellar evolution  */
             feedback_evolve_spart(sp, feedback_props, cosmo, us,

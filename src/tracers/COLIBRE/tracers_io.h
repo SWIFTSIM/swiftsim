@@ -78,10 +78,9 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.momentum_received,
       "Momentum received from stellar winds in physical coordinates");
 
-  list[3] = io_make_output_field(
-      "HIIregionsEndTime", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
-      tracers_data.HIIregion_timer_gas,
-      "Time until particle is in HII region");
+  list[3] = io_make_output_field("HIIregionsEndTime", FLOAT, 1, UNIT_CONV_TIME,
+                                 0.f, xparts, tracers_data.HIIregion_timer_gas,
+                                 "Time until particle is in HII region");
 
   list[4] = io_make_output_field(
       "HIIregionsStarID", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
@@ -90,28 +89,23 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
 
   list[5] = io_make_output_field(
       "HydrogenNeutralFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
-      tracers_data.nHI_over_nH,
-      "Fraction of neutral hydrogen atoms, nHI/nH");
+      tracers_data.nHI_over_nH, "Fraction of neutral hydrogen atoms, nHI/nH");
 
   list[6] = io_make_output_field(
       "HydrogenIonizedFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
-      tracers_data.nHII_over_nH,
-      "Fraction of ionized hydrogen atoms, nHII/nH");
+      tracers_data.nHII_over_nH, "Fraction of ionized hydrogen atoms, nHII/nH");
 
   list[7] = io_make_output_field(
       "HydrogenMolecularFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
-      tracers_data.nH2_over_nH,
-      "Fraction of hydrogen molecules, nH2/nH");
+      tracers_data.nH2_over_nH, "Fraction of hydrogen molecules, nH2/nH");
 
-  list[8] = io_make_output_field(
-      "SubgridDensity", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, xparts,
-      tracers_data.subgrid_dens,
-      "Subgrid density");
+  list[8] = io_make_output_field("SubgridDensity", FLOAT, 1, UNIT_CONV_DENSITY,
+                                 0.f, xparts, tracers_data.subgrid_dens,
+                                 "Subgrid density");
 
   list[9] = io_make_output_field(
       "SubgridTemperature", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, xparts,
-      tracers_data.subgrid_temp,
-      "Subgrid temperature");
+      tracers_data.subgrid_temp, "Subgrid temperature");
 
   return 10;
 }
