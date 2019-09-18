@@ -404,6 +404,10 @@ void set_subgrid_part(const struct phys_const *phys_const,
        * as the subgrid density will always be higher than the resolved density
        */
 
+      int iden_eq = iden;
+      float dden_eq = 0.;
+      float logn_at_Peq = cooling->nH[iden];
+
       for (int i = iden; i < colibre_cooling_N_density; i++) {
         float logPeq_interp = interpolation_3d_no_z(
             cooling->table.logPeq, ired, imet, i, dred, dmet, 0.,
