@@ -204,40 +204,21 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     const struct unit_system* restrict us,
 			     const struct cosmology* restrict cosmo,
 			     const struct cooling_function_data* data, 
-			     const struct part* restrict p,
+			     struct part* restrict p,
 			     struct xpart* restrict xp) {
   struct globalVariables ChimesGlobalVars = data->ChimesGlobalVars; 
   struct gasVariables ChimesGasVars; 
   ChimesGasVars.abundances = xp->cooling_data.chimes_abundances; 
 
-  /* Get element mass fractions */ 
-#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
-  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
-  float XH = metal_fraction[chemistry_element_H]; 
-  ChimesGasVars.element_abundances[0] = metal_fraction[chemistry_element_He] / (4.0 * XH); 
-  ChimesGasVars.element_abundances[1] = metal_fraction[chemistry_element_C] / (12.0 * XH); 
-  ChimesGasVars.element_abundances[2] = metal_fraction[chemistry_element_N] / (14.0 * XH); 
-  ChimesGasVars.element_abundances[3] = metal_fraction[chemistry_element_O] / (16.0 * XH); 
-  ChimesGasVars.element_abundances[4] = metal_fraction[chemistry_element_Ne] / (20.0 * XH); 
-  ChimesGasVars.element_abundances[5] = metal_fraction[chemistry_element_Mg] / (24.0 * XH); 
-  ChimesGasVars.element_abundances[6] = metal_fraction[chemistry_element_Si] / (28.0 * XH); 
-  ChimesGasVars.element_abundances[9] = metal_fraction[chemistry_element_Fe] / (56.0 * XH); 
-  
-  ChimesGasVars.element_abundances[7] = metal_fraction[chemistry_element_Si] * data->S_over_Si_ratio_in_solar * (data->S_solar_mass_fraction / data->Si_solar_mass_fraction) / (32.0 * XH); 
-  ChimesGasVars.element_abundances[8] = metal_fraction[chemistry_element_Si] * data->Ca_over_Si_ratio_in_solar * (data->Ca_solar_mass_fraction / data->Si_solar_mass_fraction) / (40.0 * XH); 
-#else 
-  /* Without COLIBRE or EAGLE chemistry, 
-   * the metal abundances are unavailable. 
-   * Set to primordial abundances. */ 
-  ChimesGasVars.element_abundances[0] = 0.0833;  // He 
+  /* Set element abundances from 
+   * metal mass fractions. */ 
+  chimes_update_element_abundances(data, p, xp, &ChimesGasVars, 0); 
 
-  int i; 
-  for (i = 1; i < 10; i++) 
-    ChimesGasVars.element_abundances[i] = 0.0; 
-#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
-
+  /* Set initial values for CHIMES 
+   * abundance array. */ 
   initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
 
+  /* Zero particle's radiated energy. */ 
   xp->cooling_data.radiated_energy = 0.f; 
 }
 
@@ -248,6 +229,7 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
  * thermodynamics quantities of the gas particle that 
  * will be needed for the CHIMES chemistry solver. 
  *  
+ * @param u_cgs The internal energy, in cgs units. 
  * @param phys_const The physical constants in internal units.
  * @param us The internal system of units.
  * @param cosmo The current cosmological model.
@@ -256,8 +238,8 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
+ * @param ChimesGasVars CHIMES gasVariables structure. 
  * @param dt The cooling time-step of this particle.
- * @param dt_therm The hydro time-step of this particle.
  */
 void chimes_update_gas_vars(const double u_cgs,
 			    const struct phys_const *phys_const,
@@ -311,7 +293,77 @@ void chimes_update_gas_vars(const double u_cgs,
    * typical value for GMCs in the 
    * Milky Way. */ 
   ChimesGasVars->doppler_broad = 7.1; 
+
+  /* Update element abundances from 
+   * metal mass fractions. */ 
+  chimes_update_element_abundances(cooling, p, xp, ChimesGasVars, 1); 
 }
+
+/** 
+ * @brief Update CHIMES element abundances. 
+ * 
+ * Updates the element abundances based on the 
+ * particle's current mass fractions. If the 
+ * element abundances have changed since the 
+ * last time this routine was called, for example 
+ * due to enrichment or metal diffusion, then the 
+ * ion and molecule abundances will now be 
+ * inconsistent with their corresponding total 
+ * element abundances. Therefore, if mode == 1, 
+ * we call the check_constraint_equations() 
+ * routine from the CHIMES module, which adds all 
+ * species of each element and compares to the 
+ * total abundance of that element. If they are 
+ * inconsistent, the species abundances are 
+ * adjusted, preserving their relative fractions. 
+ * If a metal is now present that was not present 
+ * before (e.g. if a particle was primordial but 
+ * has recently been enriched), then that metal is 
+ * introduced as fully neutral. 
+ * We do not call check_constraint_equations() if 
+ * mode == 0 (for example, when we initialise the 
+ * abundance arrays for the first time). 
+ * 
+ * @param p Pointer to the particle data.
+ * @param ChimesGasVars CHIMES gasVariables structure. 
+ */ 
+void chimes_update_element_abundances(const struct cooling_function_data *cooling,
+				      struct part *restrict p, 
+				      struct xpart *restrict xp,
+				      struct gasVariables *ChimesGasVars, 
+				      const int mode) {
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+
+  /* Get element mass fractions */ 
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+  float XH = metal_fraction[chemistry_element_H]; 
+  ChimesGasVars->element_abundances[0] = (ChimesFloat) metal_fraction[chemistry_element_He] / (4.0 * XH); 
+  ChimesGasVars->element_abundances[1] = (ChimesFloat) metal_fraction[chemistry_element_C] / (12.0 * XH); 
+  ChimesGasVars->element_abundances[2] = (ChimesFloat) metal_fraction[chemistry_element_N] / (14.0 * XH); 
+  ChimesGasVars->element_abundances[3] = (ChimesFloat) metal_fraction[chemistry_element_O] / (16.0 * XH); 
+  ChimesGasVars->element_abundances[4] = (ChimesFloat) metal_fraction[chemistry_element_Ne] / (20.0 * XH); 
+  ChimesGasVars->element_abundances[5] = (ChimesFloat) metal_fraction[chemistry_element_Mg] / (24.0 * XH); 
+  ChimesGasVars->element_abundances[6] = (ChimesFloat) metal_fraction[chemistry_element_Si] / (28.0 * XH); 
+  ChimesGasVars->element_abundances[9] = (ChimesFloat) metal_fraction[chemistry_element_Fe] / (56.0 * XH); 
+  
+  ChimesGasVars->element_abundances[7] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->S_over_Si_ratio_in_solar * (cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (32.0 * XH); 
+  ChimesGasVars->element_abundances[8] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->Ca_over_Si_ratio_in_solar * (cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (40.0 * XH); 
+#else 
+  /* Without COLIBRE or EAGLE chemistry, 
+   * the metal abundances are unavailable. 
+   * Set to primordial abundances. */ 
+  ChimesGasVars->element_abundances[0] = 0.0833;  // He 
+
+  int i; 
+  for (i = 1; i < 10; i++) 
+    ChimesGasVars->element_abundances[i] = 0.0; 
+#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  if (mode == 1) 
+    check_constraint_equations(ChimesGasVars, &ChimesGlobalVars); 
+
+} 
 
 /**
  * @brief Apply the cooling function to a particle.
