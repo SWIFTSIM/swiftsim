@@ -5262,9 +5262,24 @@ void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globa
   myGasVars->abundances = (ChimesFloat *) malloc(myGlobalVars->totalNumberOfSpecies * sizeof(ChimesFloat));
 
   /* We also allocate memory for radiation fields here. */
-  myGasVars->isotropic_photon_density = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
-  myGasVars->G0_parameter = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
-  myGasVars->H2_dissocJ = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
+  if (myGlobalVars->N_spectra > 0) 
+    {
+      myGasVars->isotropic_photon_density = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
+      myGasVars->G0_parameter = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
+      myGasVars->H2_dissocJ = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
+    }
+}
+
+void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
+{
+  free(myGasVars->abundances); 
+
+  if (myGlobalVars->N_spectra > 0) 
+    {
+      free(myGasVars->isotropic_photon_density); 
+      free(myGasVars->G0_parameter); 
+      free(myGasVars->H2_dissocJ); 
+    }
 }
 
 void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)

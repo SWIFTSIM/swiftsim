@@ -25,6 +25,7 @@ void set_equilibrium_abundances_from_tables(struct UserData data);
 
 // init_chimes.c 
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
+void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
 int compare_element_incl_arrays(int *reaction_array, int *network_array);
 void GetEqAbundancesTables(struct globalVariables *myGlobalVars); 
 void init_chimes(struct globalVariables *myGlobalVars); 

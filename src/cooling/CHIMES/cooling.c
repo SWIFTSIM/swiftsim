@@ -208,7 +208,9 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     struct xpart* restrict xp) {
   struct globalVariables ChimesGlobalVars = data->ChimesGlobalVars; 
   struct gasVariables ChimesGasVars; 
-  ChimesGasVars.abundances = xp->cooling_data.chimes_abundances; 
+
+  /* Allocate memory to arrays within ChimesGasVars. */
+  allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
 
   /* Set element abundances from 
    * metal mass fractions. */ 
@@ -218,8 +220,16 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
    * abundance array. */ 
   initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
 
+  /* Copy abundances over to xp. */ 
+  int i; 
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i]; 
+
   /* Zero particle's radiated energy. */ 
   xp->cooling_data.radiated_energy = 0.f; 
+
+  /* Free CHIMES memory. */ 
+  free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
 }
 
 /**
@@ -391,14 +401,20 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm) {
 
+  /* No cooling happens over zero time */
+  if (dt == 0.) return;
+
   /* CHIMES structures. */
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
   struct gasVariables ChimesGasVars; 
 
-  ChimesGasVars.abundances = xp->cooling_data.chimes_abundances; 
+  /* Allocate memory to arrays within ChimesGasVars. */ 
+  allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
 
-  /* No cooling happens over zero time */
-  if (dt == 0.) return;
+  /* Copy abundances over from xp to ChimesGasVars. */
+  int i; 
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i]; 
 
   /* Get internal energy at the last kick step */
   const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
@@ -503,6 +519,14 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+
+  /* Copy abundances from ChimesGasVars back to xp. */ 
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i]; 
+
+  /* Free CHIMES memory. */ 
+  free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+
 }
 
 /**
