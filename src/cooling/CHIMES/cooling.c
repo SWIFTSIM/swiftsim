@@ -343,6 +343,7 @@ void chimes_update_element_abundances(const struct cooling_function_data *coolin
 				      struct gasVariables *ChimesGasVars, 
 				      const int mode) {
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+  int i; 
 
   /* Get element mass fractions */ 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
@@ -359,13 +360,17 @@ void chimes_update_element_abundances(const struct cooling_function_data *coolin
   
   ChimesGasVars->element_abundances[7] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->S_over_Si_ratio_in_solar * (cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (32.0 * XH); 
   ChimesGasVars->element_abundances[8] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->Ca_over_Si_ratio_in_solar * (cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (40.0 * XH); 
+
+  /* Zero the abundances of any elements 
+   * that are not included in the network. */ 
+  for (i = 0; i < 9; i++) 
+    ChimesGasVars->element_abundances[i + 1] *= (ChimesFloat) ChimesGlobalVars.element_included[i]; 
 #else 
   /* Without COLIBRE or EAGLE chemistry, 
    * the metal abundances are unavailable. 
    * Set to primordial abundances. */ 
   ChimesGasVars->element_abundances[0] = 0.0833;  // He 
 
-  int i; 
   for (i = 1; i < 10; i++) 
     ChimesGasVars->element_abundances[i] = 0.0; 
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
