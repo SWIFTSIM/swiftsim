@@ -343,9 +343,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
     const float pres = gas_pressure_from_internal_energy(rho, u_start);
     const double pres_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
     const float logP = (float) log10( (double) pres * pres_to_cgs );
-    int iden_eq;
-    float dden_eq;
-    float logT_at_Peq, mu_at_Peq, logn_at_Peq, logHI, logHII, logH2;
+    float logT_at_Peq, mu_at_Peq, logHI, logHII, logH2;
 
     /* check what would be the maximum Peq from the table for given redshift and metalllicity */
     float logPeq_max = interpolation_3d_no_z( cooling->table.logPeq, 
@@ -378,7 +376,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
           /*const float logkB = (float) log10(const_boltzmann_k_cgs); doesn't work*/
           const float logkB = log10(1.38064852e-16);
-          logn_at_Peq = logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - logkB;
+          float logn_at_Peq = logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - logkB;
 
           logHI  = interpolation_4d_no_z_no_w(cooling->table.logHfracs_Teq,
                                                    ired, imet, colibre_cooling_N_density-1, neutral,
@@ -408,6 +406,10 @@ void set_subgrid_part(const struct phys_const *phys_const,
            * simple solution: loop over densities and pick the first one where logP = logPeq *
            * start with the resolved density index (iden), as the subgrid density will 
            * always be higher than the resolved density */ 
+
+          int iden_eq = iden;
+          float dden_eq = 0.;
+          float logn_at_Peq = cooling->nH[iden];
       
           for (int i = iden; i < colibre_cooling_N_density; i++) {
               float logPeq_interp = interpolation_3d_no_z( cooling->table.logPeq, ired, imet, i,

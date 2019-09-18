@@ -48,7 +48,7 @@ struct feedback_spart_data {
       /*! Age of star particle in Myr when SNII goes off */
       float SNII_star_age_Myr;
 
-      /*! HII region timer */
+      /*! HII region timer in SU (time since BB for cosmo runs)*/
       float HIIregion_endtime;
 
       /*! ID of star particle responsible for HII region */

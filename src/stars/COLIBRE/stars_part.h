@@ -97,7 +97,7 @@ struct spart {
   /*! last time an HII region was built (age of star in Myr) */
   float HIIregion_last_rebuild;
 
-  /*! current timestep of star particle */
+  /*! current time-step length of star particle */
   float star_timestep;
 
   /*! HII mass available for ionization (current) */

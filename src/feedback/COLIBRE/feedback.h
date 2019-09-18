@@ -122,6 +122,9 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.HIIregion_probability = -1.f;
   sp->feedback_data.to_distribute.HIIregion_endtime = -1.f;
   sp->feedback_data.to_distribute.HIIregion_starid = -1;
+
+  /* Reset the SNII star age */
+  sp->feedback_data.to_distribute.SNII_star_age_Myr = -1.;
 }
 
 /**

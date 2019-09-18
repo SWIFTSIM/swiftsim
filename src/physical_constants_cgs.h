@@ -36,6 +36,11 @@
  * Phys. C, 40, 100001 (2016) and 2017 update.
  * http://pdg.lbl.gov/2017/reviews/rpp2017-rev-phys-constants.pdf
  * http://pdg.lbl.gov/2017/reviews/rpp2017-rev-astrophysical-constants.pdf
+ *
+ * Case B recombination coefficient from Pequignot, Petitjean & Boisson, 
+ * 1991, A&A, 251, 680
+ *
+ *
  */
 
 /*! Newton's gravitation constant [g^-1 cm^3 s^-2] */
