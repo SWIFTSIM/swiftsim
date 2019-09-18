@@ -190,7 +190,7 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i.index", e->logger->base_name,
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i.index", e->logger.logger->base_name,
            outputCount);
 
   /* Open file */
@@ -337,7 +337,7 @@ void logger_write_description(struct logger_writer *log, struct engine* e) {
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->logger->base_name);
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->logger.logger->base_name);
 
   /* Open file */
   FILE *f = NULL;

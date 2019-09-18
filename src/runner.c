@@ -4793,10 +4793,10 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
        * debugging checks */
       if (part_is_active(p, e)) {
 
-        if (logger_should_write(&xp->logger_data, e->logger)) {
+        if (logger_should_write(&xp->logger_data, e->logger.logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
-          logger_log_part(e->logger, p,
+          logger_log_part(e->logger.logger, p,
                           logger_mask_data[logger_x].mask |
                               logger_mask_data[logger_v].mask |
                               logger_mask_data[logger_a].mask |
@@ -4829,10 +4829,10 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
        * debugging checks */
       if (gpart_is_starting(gp, e)) {
 
-        if (logger_should_write(&gp->logger_data, e->logger)) {
+        if (logger_should_write(&gp->logger_data, e->logger.logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
-          logger_log_gpart(e->logger, gp,
+          logger_log_gpart(e->logger.logger, gp,
                            logger_mask_data[logger_x].mask |
                            logger_mask_data[logger_v].mask |
                            logger_mask_data[logger_a].mask |
