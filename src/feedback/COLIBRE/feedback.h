@@ -20,13 +20,13 @@
 #define SWIFT_FEEDBACK_COLIBRE_H
 
 #include "SNIa_DTD.h"
+#include "cooling.h"
 #include "cosmology.h"
 #include "error.h"
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
 #include "units.h"
-#include "cooling.h"
 
 #include <strings.h>
 
@@ -169,7 +169,8 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt, const double time_beg_of_step) {
+    const double star_age_beg_step, const double dt,
+    const double time_beg_of_step) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");

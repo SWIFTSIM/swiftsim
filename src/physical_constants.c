@@ -45,8 +45,9 @@ void phys_const_init(const struct unit_system *us, struct swift_params *params,
   /* Units are declared as {U_M, U_L, U_t, U_I, U_T} */
 
   const float dimension_alphaB[5] = {0, 3, -1, 0, 0}; /* [cm^3 s^-1] */
-  internal_const->const_caseb_recomb = 
-       const_caseb_recomb_cgs / units_general_cgs_conversion_factor(us, dimension_alphaB);
+  internal_const->const_caseb_recomb =
+      const_caseb_recomb_cgs /
+      units_general_cgs_conversion_factor(us, dimension_alphaB);
 
   const float dimension_G[5] = {-1, 3, -2, 0, 0}; /* [g^-1 cm^3 s^-2] */
   internal_const->const_newton_G =

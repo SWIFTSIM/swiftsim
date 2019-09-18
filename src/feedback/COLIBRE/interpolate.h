@@ -20,9 +20,9 @@
 #define SWIFT_COLIBRE_FEEDBACK_INTERPOLATE_H
 
 /* Local includes. */
+#include "align.h"
 #include "error.h"
 #include "inline.h"
-#include "align.h"
 
 /**
  * @brief Finds the index of a value in a table and compute delta to nearest
@@ -46,8 +46,8 @@
  * @param *dx (return) The difference between x and table[i]
  */
 __attribute__((always_inline)) INLINE void get_index_1d(
-    const float *restrict table, const int size, const float x, int *i,
-    float *restrict dx) {
+    const float* restrict table, const int size, const float x, int* i,
+    float* restrict dx) {
 
   /* Small epsilon to avoid rounding issues leading to out-of-bound
    * access when using the indices later to read data from the tables. */
@@ -98,8 +98,10 @@ __attribute__((always_inline)) INLINE void get_index_1d(
  * @param i, j Indices of element of interest
  * @param Nx, Ny Sizes of array dimensions
  */
-__attribute__((always_inline)) INLINE int row_major_index_2d(
-    const int i, const int j, const int Nx, const int Ny) {
+__attribute__((always_inline)) INLINE int row_major_index_2d(const int i,
+                                                             const int j,
+                                                             const int Nx,
+                                                             const int Ny) {
 #ifdef SWIFT_DEBUG_CHECKS
   assert(i < Nx);
   assert(j < Ny);
@@ -143,7 +145,6 @@ __attribute__((always_inline)) static INLINE double interpolate_1d(
   return tx * table[i] + dx * table[i + 1];
 }
 
-
 /**
  * @brief Interpolate a flattened 2D table at a given position.
  *
@@ -158,7 +159,7 @@ __attribute__((always_inline)) static INLINE double interpolate_1d(
  * the grid spacing.
  */
 __attribute__((always_inline)) INLINE float interpolation_2d_flat(
-    const float *table, const int xi, const int yi, const float dx,
+    const float* table, const int xi, const int yi, const float dx,
     const float dy, const int Nx, const int Ny) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -182,8 +183,6 @@ __attribute__((always_inline)) INLINE float interpolation_2d_flat(
 
   return result;
 }
-
-
 
 /**
  * @brief linear interpolation of 2d table at bin i,j with offset dx, dy

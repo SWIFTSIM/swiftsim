@@ -259,7 +259,7 @@ struct feedback_props {
   double delta_v;
 
   /* ------------ Early feedback properties ------------ */
- 
+
   /* Location of early feedback tables */
   char early_feedback_table_path[200];
 
@@ -284,15 +284,16 @@ struct feedback_props {
   /* Age bins (star age in Myr) */
   float *HII_agebins;
 
-  /* Cumululative number of ionizing photons per g stellar mass 
+  /* Cumululative number of ionizing photons per g stellar mass
    * dimension [HII_nr_metbins, HII_nr_agebins] */
   float *HII_logQcum;
 };
 
-double compute_average_photoionizing_luminosity(const struct feedback_props* fp, 
+double compute_average_photoionizing_luminosity(const struct feedback_props *fp,
                                                 float t1, float t2, float Z);
 
-double get_cumulative_ionizing_photons(const struct feedback_props* fp, float t_Myr, float logZ);
+double get_cumulative_ionizing_photons(const struct feedback_props *fp,
+                                       float t_Myr, float logZ);
 
 void feedback_props_init(struct feedback_props *fp,
                          const struct phys_const *phys_const,
