@@ -48,7 +48,7 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     const struct unit_system* restrict us,
 			     const struct cosmology* restrict cosmo,
 			     const struct cooling_function_data* data, 
-			     const struct part* restrict p,
+			     struct part* restrict p,
 			     struct xpart* restrict xp); 
 
 void chimes_update_gas_vars(const double u_cgs,
@@ -61,6 +61,12 @@ void chimes_update_gas_vars(const double u_cgs,
 			    struct part *restrict p, struct xpart *restrict xp,
 			    struct gasVariables *ChimesGasVars, 
 			    const float dt_cgs); 
+
+void chimes_update_element_abundances(const struct cooling_function_data *cooling,
+				      struct part *restrict p, 
+				      struct xpart *restrict xp,
+				      struct gasVariables *ChimesGasVars, 
+				      const int mode);
 
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,
