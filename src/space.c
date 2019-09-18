@@ -3957,6 +3957,10 @@ void space_synchronize_part_positions_mapper(void *map_data, int nr_parts,
     /* Get its gravity friend */
     struct gpart *gp = p->gpart;
 
+#ifdef SWIFT_DEBUG_CHECKS
+    if (gp == NULL) error("Unlinked particle!");
+#endif
+
     /* Synchronize positions, velocities and masses */
     gp->x[0] = p->x[0];
     gp->x[1] = p->x[1];
@@ -3987,6 +3991,10 @@ void space_synchronize_spart_positions_mapper(void *map_data, int nr_sparts,
 
     /* Get its gravity friend */
     struct gpart *gp = sp->gpart;
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (gp == NULL) error("Unlinked particle!");
+#endif
 
     /* Synchronize positions, velocities and masses */
     gp->x[0] = sp->x[0];
@@ -4019,6 +4027,10 @@ void space_synchronize_bpart_positions_mapper(void *map_data, int nr_bparts,
     /* Get its gravity friend */
     struct gpart *gp = bp->gpart;
 
+#ifdef SWIFT_DEBUG_CHECKS
+    if (gp == NULL) error("Unlinked particle!");
+#endif
+
     /* Synchronize positions, velocities and masses */
     gp->x[0] = bp->x[0];
     gp->x[1] = bp->x[1];
@@ -4033,8 +4045,10 @@ void space_synchronize_bpart_positions_mapper(void *map_data, int nr_bparts,
 }
 
 /**
- * @brief Make sure the particles are at the same position and have
- * the same velocity as their #gpart friends.
+ * @brief Make sure the baryon particles are at the same position and
+ * have the same velocity and mass as their #gpart friends.
+ *
+ * We copy the baryon particle properties to the #gpart type-by-type.
  *
  * @param s The #space.
  */
@@ -4048,11 +4062,11 @@ void space_synchronize_particle_positions(struct space *s) {
 
   if (s->nr_gparts > 0 && s->nr_sparts > 0)
     threadpool_map(&s->e->threadpool, space_synchronize_spart_positions_mapper,
-                   s->sparts, s->nr_sparts, sizeof(struct spart), 0, (void *)s);
+                   s->sparts, s->nr_sparts, sizeof(struct spart), 0, NULL);
 
   if (s->nr_gparts > 0 && s->nr_bparts > 0)
     threadpool_map(&s->e->threadpool, space_synchronize_bpart_positions_mapper,
-                   s->bparts, s->nr_bparts, sizeof(struct bpart), 0, (void *)s);
+                   s->bparts, s->nr_bparts, sizeof(struct bpart), 0, NULL);
 
   if (s->e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
