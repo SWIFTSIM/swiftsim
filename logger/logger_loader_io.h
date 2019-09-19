@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 size_t logger_loader_io_get_file_size(int fd);
-void *logger_loader_io_mmap_file(char *filename, size_t *file_size,
+void *logger_loader_io_mmap_file(const char *filename, size_t *file_size,
                                  int read_only);
 void logger_loader_io_munmap_file(void *map, size_t file_size);
 

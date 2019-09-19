@@ -23,18 +23,22 @@
  * @brief Initialize the reader.
  *
  * @param reader The #logger_reader.
- * @param filename The log filename.
+ * @param basename The basename of the logger files.
  * @param verbose The verbose level.
  */
-void logger_reader_init(struct logger_reader *reader, char *filename,
+void logger_reader_init(struct logger_reader *reader, char *basename,
                         int verbose) {
   if (verbose > 1) message("Initializing the reader.");
 
   /* Initialize the reader variables. */
   reader->verbose = verbose;
 
+  /* Generate the logfile filename */
+  char logfile_name[STRING_SIZE];
+  sprintf(logfile_name, "%s.dump", basename);
+
   /* Initialize the log file. */
-  logger_logfile_init_from_file(&reader->log, filename, reader,
+  logger_logfile_init_from_file(&reader->log, logfile_name, reader,
                                 /* only_header */ 0);
 
   if (verbose > 1) message("Initialization done.");

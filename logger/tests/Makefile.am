@@ -20,10 +20,10 @@ AM_CFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/logger $(HDF5_CPPFLAGS) $(GSL_IN
 AM_LDFLAGS = ../../src/.libs/libswiftsim.a ../.libs/liblogger.a $(HDF5_LDFLAGS) $(HDF5_LIBS) $(FFTW_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(TBBMALLOC_LIBS) $(GRACKLE_LIBS) $(GSL_LIBS) $(PROFILER_LIBS)
 
 # List of programs and scripts to run in the test suite
-TESTS = testLogfileHeader testLogfileReader testTimeArray
+TESTS = testLogfileHeader testLogfileReader testTimeArray testSort
 
 # List of test programs to compile
-check_PROGRAMS = testLogfileHeader testLogfileReader testTimeArray
+check_PROGRAMS = testLogfileHeader testLogfileReader testTimeArray testSort
 
 # Rebuild tests when SWIFT is updated.
 $(check_PROGRAMS): ../../src/.libs/libswiftsim.a ../.libs/liblogger.a
@@ -32,6 +32,7 @@ $(check_PROGRAMS): ../../src/.libs/libswiftsim.a ../.libs/liblogger.a
 testLogfileHeader_SOURCES = testLogfileHeader.c
 testLogfileReader_SOURCES = testLogfileReader.c
 testTimeArray_SOURCES = testTimeArray.c
+testSort_SOURCES = testSort.c
 
 # Files necessary for distribution
 EXTRA_DIST = testLogfileHeader.yml testLogfileReader.yml

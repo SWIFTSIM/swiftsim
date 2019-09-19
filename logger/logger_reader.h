@@ -27,7 +27,7 @@
  * files.
  *
  * The <b>parameter file</b> contains all the information related to the code
- * (e.g. boxsize).
+ * (e.g. boxsize, scheme, ...).
  *
  * The <b>index files</b> are not mandatory files that indicates the position of
  * the particles in the log file at a given time step. They are useful to
@@ -47,6 +47,7 @@
 #ifndef LOGGER_LOGGER_READER_H
 #define LOGGER_LOGGER_READER_H
 
+#include "logger_index.h"
 #include "logger_loader_io.h"
 #include "logger_logfile.h"
 #include "logger_particle.h"
@@ -62,8 +63,8 @@
  */
 struct logger_reader {
 
-  /* Time of each index file. #TODO */
-  double *times;
+  /* Information contained in the index file */
+  struct logger_index index;
 
   /* Informations contained in the file header. */
   struct logger_logfile log;
@@ -72,7 +73,7 @@ struct logger_reader {
   int verbose;
 };
 
-void logger_reader_init(struct logger_reader *reader, char *filename,
+void logger_reader_init(struct logger_reader *reader, char *basename,
                         int verbose);
 void logger_reader_free(struct logger_reader *reader);
 size_t reader_read_record(struct logger_reader *reader,
