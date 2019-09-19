@@ -581,7 +581,8 @@ float cooling_get_radiated_energy(const struct xpart* restrict xp) {
  * @param xp Pointer to the extended particle data.
  */ 
 double chimes_mu(const struct cooling_function_data *cooling,
-		 struct part *restrict p, struct xpart *restrict xp) {
+		 const struct part *restrict p, 
+		 const struct xpart *restrict xp) {
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
   double numerator = 1.0; 
 
@@ -634,4 +635,41 @@ double chimes_mu(const struct cooling_function_data *cooling,
   return numerator / denominator; 
 } 
 
+/**
+ * @brief Compute the temperature of a #part based on the cooling function.
+ * 
+ * This uses the mean molecular weight computed from the 
+ * CHIMES abundance array. 
+ *
+ * @param phys_const #phys_const data structure.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param us The internal system of units.
+ * @param cosmo #cosmology data structure.
+ * @param cooling #cooling_function_data struct.
+ * @param p #part data.
+ * @param xp Pointer to the #xpart data.
+ */
+float cooling_get_temperature(const struct phys_const* restrict phys_const,
+			      const struct hydro_props* restrict hydro_props,
+			      const struct unit_system* restrict us,
+			      const struct cosmology* restrict cosmo,
+			      const struct cooling_function_data* restrict cooling,
+			      const struct part* restrict p, 
+			      const struct xpart* restrict xp) {
+  /* Physical constants, in cgs units */ 
+  float dimension_k[5] = {1, 2, -2, 0, -1}; 
+  double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
 
+  /* Mean molecular weight */
+  const double mu = chimes_mu(cooling, p, xp); 
+
+  /* Internal energy, in code units. */
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo); 
+
+  /* Convert to cgs. */ 
+  const double u_cgs = u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+
+  /* Return particle temperature */
+  return (float) hydro_gamma_minus_one * u_cgs * mu * (proton_mass_cgs / boltzmann_k_cgs); 
+}
