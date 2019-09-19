@@ -6,7 +6,7 @@ import h5py
 import sys
 import glob
 import numpy as np
-
+import os
 import matplotlib as mpl
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
