@@ -234,7 +234,7 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
   /* Copy abundances over to xp. */ 
   int i; 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i]; 
+    xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
   /* Zero particle's radiated energy. */ 
   xp->cooling_data.radiated_energy = 0.f; 
@@ -436,7 +436,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Copy abundances over from xp to ChimesGasVars. */
   int i; 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i]; 
+    ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
 
 
   /* Update element abundances from metal mass 
@@ -555,7 +555,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Copy abundances from ChimesGasVars back to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i]; 
+    xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
@@ -630,7 +630,7 @@ double chimes_mu(const struct cooling_function_data *cooling,
   double denominator = 0.0; 
   
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    denominator += (double) xp->cooling_data.chimes_abundances[i]; 
+    denominator += xp->cooling_data.chimes_abundances[i]; 
   
   return numerator / denominator; 
 } 
