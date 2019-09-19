@@ -62,7 +62,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           struct cooling_function_data *cooling) {
 
   char chimes_data_dir[500]; 
-  char chimes_eqm_abundance_table[500]; 
+  char string_buffer[500]; 
 
   /* read the parameters */
   if (sizeof(ChimesFloat) != sizeof(double)) 
@@ -73,12 +73,13 @@ void cooling_init_backend(struct swift_params *parameter_file,
   parser_get_param_string(parameter_file, "CHIMESCooling:data_path", chimes_data_dir); 
   sprintf(cooling->ChimesGlobalVars.MainDataTablePath, "%s/chimes_main_data.hdf5", chimes_data_dir); 
 
-  parser_get_param_string(parameter_file, "CHIMESCooling:EqmAbundanceTable", chimes_eqm_abundance_table); 
-  sprintf(cooling->ChimesGlobalVars.EqAbundanceTablePath, "%s/EqAbundancesTables/%s", chimes_data_dir, chimes_eqm_abundance_table); 
+  parser_get_param_string(parameter_file, "CHIMESCooling:EqmAbundanceTable", string_buffer); 
+  sprintf(cooling->ChimesGlobalVars.EqAbundanceTablePath, "%s/EqAbundancesTables/%s", chimes_data_dir, string_buffer); 
 
   /* Define radiation field and shielding options. */ 
   /* Currently supported options: 
    * UV_field_flag == 0: No UV radiation. 
+   *               == 1: Single, constant user-defined spectrum.
    * 
    * Shielding_flag == 0: No shielding. 
    */ 
@@ -87,6 +88,16 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   if (cooling->UV_field_flag == 0) 
     cooling->ChimesGlobalVars.N_spectra = 0; 
+  else if (cooling->UV_field_flag == 1) 
+    {
+      cooling->ChimesGlobalVars.N_spectra = 1; 
+      cooling->isotropic_photon_density = (ChimesFloat *) malloc(sizeof(ChimesFloat)); 
+      
+      parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable", string_buffer); 
+      sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[0], "%s/%s", chimes_data_dir, string_buffer); 
+
+      cooling->isotropic_photon_density[0] = parser_get_param_double(parameter_file, "CHIMESCooling:isotropic_photon_density"); 
+    }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag); 
 
@@ -296,6 +307,19 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode; 
   ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
   ChimesGasVars->divVel = 0.0; 
+
+  if (cooling->UV_field_flag == 1) 
+    {
+      /* Single, constant radiation field. */ 
+
+      /* Copy over normalisation from cooling data. */ 
+      ChimesGasVars->isotropic_photon_density[0] = cooling->isotropic_photon_density[0]; 
+      
+      /* Copy over spectrum parameters from 
+       * chimes tables. */ 
+      ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
+      ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
+    }
 
   /* Doppler broadening parameter, for 
    * H2 self-shielding, is hard-coded 

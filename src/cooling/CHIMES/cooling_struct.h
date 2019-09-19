@@ -47,6 +47,10 @@ struct cooling_function_data {
   int UV_field_flag; 
   int Shielding_flag; 
 
+  /* Stores normalisation of user-supplied 
+   * radiation fields. */ 
+  ChimesFloat *isotropic_photon_density; 
+
   /* Flags to control eqm mode and 
    * thermal evolution. */ 
   int ChemistryEqmMode; 
