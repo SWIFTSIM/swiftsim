@@ -26,6 +26,7 @@
 
 /* Include local headers */
 #include "logger_loader_io.h"
+#include "radix_sort.h"
 
 /**
  * @brief Read the index file header.
@@ -59,6 +60,27 @@ void logger_index_read_header(struct logger_index *index, const char *filename) 
 }
 
 /**
+ * @brief Get the #index_data of a particle type.
+ *
+ * @param index The #logger_index.
+ * @param type The particle type.
+ */
+struct index_data *logger_index_get_data(struct logger_index *index, int type) {
+  /* Compute the header size */
+  const size_t header = sizeof(double) + 2 * sizeof(long long)
+    + sizeof(char);
+
+  /* Count the offset due to the previous types */
+  size_t count = 0;
+  for(int i = 0; i < type; i++) {
+    count += index->nparts[i];
+  }
+  count *= sizeof(struct index_data);
+
+  return index->log.map + count + header;
+}
+
+/**
  * @brief Map the file and if required sort it.
  *
  * @param index The #logger_index.
@@ -73,7 +95,54 @@ void logger_index_map_file(struct logger_index *index, const char *filename, int
 
   /* Sort the file if required */
   if (sorted && !index->is_sorted) {
-    logger_index_sort_file(index);
+    for(int i = 0; i < swift_type_count; i++) {
+      struct index_data *data = logger_index_get_data(index, i);
+      radix_sort(data, index->nparts[i]);
+    }
   }
 
+}
+
+/**
+ * @brief Cleanup the memory of a logger_index
+ *
+ * @param index The #logger_index.
+ */
+void logger_index_free(struct logger_index *index) {
+  logger_loader_io_munmap_file(index->log.map, index->log.file_size);
+
+  index->log.map = NULL;
+}
+
+/**
+ * @brief Get the offset of a given particle
+ *
+ * @param index The #logger_index.
+ * @param id The ID of the particle.
+ * @param type The type of the particle.
+ *
+ * @return The offset of the particle or 0 if not found.
+ */
+size_t logger_index_get_particle(struct logger_index *index, long long id, int type) {
+  /* Define a few variables */
+  struct index_data *data = logger_index_get_data(index, type);
+  size_t left = 0;
+  size_t right = index->nparts[type] - 1;
+
+  /* Search for the value (binary search) */
+  while (left <= right) {
+    size_t m = (left + right) / 2;
+    if (data[m].id < id) {
+      left = m + 1;
+    }
+    else if (data[m].id > id) {
+      right = m - 1;
+    }
+    else {
+      return data[m].offset;
+    }
+
+  }
+
+  return 0;
 }
