@@ -140,6 +140,46 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
 		data.chimes_current_rates->photoion_euv_shield_factor[i][j] = 1.0; 
 	    }
 
+	  if (myGasVars->ThermEvolOn) 
+	    {
+	      for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
+		{
+		  for (j = 0; j < myGlobalVars->N_spectra; j++) 
+		    {
+
+		      /* self-shielding is switched off, so 
+		       * take epsilon from the zeroth entry 
+		       * of the shieldFactor tables. */
+		      if (chimes_table_photoion_euv.E_thresh[i] < 15.4) 
+			{
+			  E1 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_1D[i][j][1][0]); 
+			  E4 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_1D[i][j][2][0]); 
+			}
+		      else 
+			{
+			  E1 = 0.0; 
+			  E4 = 0.0; 
+			}
+
+		      if (chimes_table_photoion_euv.E_thresh[i] < 54.42) 
+			{
+			  E2 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_2D[i][j][2][0][0]); 
+			  E5 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_2D[i][j][4][0][0]); 
+			}
+		      else 
+			{
+			  E2 = 0.0; 
+			  E5 = 0.0; 
+			}
+
+		      E3 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_2D[i][j][3][0][0]); 
+		      E6 = pow(10.0, (double) chimes_table_photoion_euv.shieldFactor_2D[i][j][5][0][0]); 
+		  
+		      data.chimes_current_rates->photoion_euv_epsilon[i][j] = (ChimesFloat) ((E1 + E2 + E3) / (E4 + E5 + E6)); 
+		    }
+		}
+	    }
+	  
 	  for (i = 0; i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index]; i++)
 	    data.chimes_current_rates->photodissoc_group1_shield_factor[i] = 1.0; 
 
@@ -290,7 +330,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 	   * need to be updated when the temperature evolves. 
 	   * However, the column densities are not updated. */
 	  
-	  if (myGlobalVars->N_spectra > 0) 
+	  if (myGlobalVars->cellSelfShieldingOn > 0) 
 	    {
 	      log_NH2 = (ChimesFloat) log10(data.H2_column); 
 	      log_b = (ChimesFloat) log10(myGasVars->doppler_broad); 
