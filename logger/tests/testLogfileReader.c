@@ -269,10 +269,7 @@ int main(int argc, char *argv[]) {
   logger_init(&log, &params);
 
   /* get dump filename. */
-  char dump_filename[PARSER_MAX_LINE_SIZE];
   message("%s", log.base_name);
-  strcpy(dump_filename, log.base_name);
-  strcat(dump_filename, ".dump");
 
   /* Write file header. */
   logger_write_file_header(&log);
@@ -295,7 +292,7 @@ int main(int argc, char *argv[]) {
   reader.verbose = 1;
 
   /* Read the header. */
-  logger_reader_init(&reader, dump_filename, /* verbose */ 1);
+  logger_reader_init(&reader, log.base_name, /* verbose */ 1);
 
   /*
     Finally check everything.
