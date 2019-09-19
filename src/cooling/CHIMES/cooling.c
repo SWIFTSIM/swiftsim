@@ -278,10 +278,7 @@ void chimes_update_gas_vars(const double u_cgs,
   double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
   double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
 
-  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
-
-  double mu = (double) calculate_mean_molecular_weight(ChimesGasVars, &ChimesGlobalVars);
-
+  double mu = chimes_mu(cooling, p, xp); 
   ChimesGasVars->temperature = (ChimesFloat) u_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
@@ -467,8 +464,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * based on the particle's actual mean molecular 
    * weight mu, rather than an assumed constant mu. 
  */
-  double mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars);
-
+  double mu = chimes_mu(cooling, p, xp); 
   double minimal_internal_energy; 
   minimal_internal_energy = hydro_properties->minimal_temperature; 
   minimal_internal_energy *= hydro_one_over_gamma_minus_one; 
@@ -500,7 +496,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * step using the final temperature from CHIMES. */
   double u_final_cgs;
 
-  mu = (double) calculate_mean_molecular_weight(&ChimesGasVars, &ChimesGlobalVars); 
+  mu = chimes_mu(cooling, p, xp); 
 
   u_final_cgs = (double) ChimesGasVars.temperature; 
   u_final_cgs *= hydro_one_over_gamma_minus_one; 
@@ -575,3 +571,67 @@ float cooling_get_radiated_energy(const struct xpart* restrict xp) {
 
   return xp->cooling_data.radiated_energy; 
 }
+
+/**
+ *
+ * @brief Calculate mean molecular weight from CHIMES abundances. 
+ * 
+ * @param cooling The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */ 
+double chimes_mu(const struct cooling_function_data *cooling,
+		 struct part *restrict p, struct xpart *restrict xp) {
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+  double numerator = 1.0; 
+
+    /* Get element mass fractions */ 
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+  float XH = metal_fraction[chemistry_element_H]; 
+
+  numerator += (double) metal_fraction[chemistry_element_He] / XH; 
+
+  if (ChimesGlobalVars.element_included[0] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_C] / XH;
+
+  if (ChimesGlobalVars.element_included[1] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_N] / XH; 
+
+  if (ChimesGlobalVars.element_included[2] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_O] / XH; 
+
+  if (ChimesGlobalVars.element_included[3] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Ne] / XH; 
+
+  if (ChimesGlobalVars.element_included[4] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Mg] / XH; 
+
+  if (ChimesGlobalVars.element_included[5] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Si] / XH; 
+
+  if (ChimesGlobalVars.element_included[8] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Fe] / XH; 
+
+  if (ChimesGlobalVars.element_included[6] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Si] * cooling->S_over_Si_ratio_in_solar * (cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction) / XH;
+
+  if (ChimesGlobalVars.element_included[7] == 1) 
+    numerator += (double) metal_fraction[chemistry_element_Si] * cooling->Ca_over_Si_ratio_in_solar * (cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction) / XH;  
+#else 
+  /* Without COLIBRE or EAGLE chemistry, 
+   * the metal abundances are unavailable. 
+   * Set to primordial abundances. */ 
+  numerator += 0.0833 * 4.0; 
+#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  int i; 
+  double denominator = 0.0; 
+  
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    denominator += (double) xp->cooling_data.chimes_abundances[i]; 
+  
+  return numerator / denominator; 
+} 
+
+

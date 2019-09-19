@@ -79,6 +79,9 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
 float cooling_get_radiated_energy(const struct xpart* restrict xp); 
 
+double chimes_mu(const struct cooling_function_data *cooling,
+		 struct part *restrict p, struct xpart *restrict xp); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
