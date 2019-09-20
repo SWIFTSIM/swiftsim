@@ -63,20 +63,58 @@
  */
 struct logger_reader {
 
-  /* Information contained in the index file */
-  struct logger_index index;
+  /* Base name of the files */
+  char basename[STRING_SIZE];
+
+  struct {
+    /* Information contained in the index file */
+    struct logger_index index;
+
+    /* Number of index files */
+    int n_files;
+
+    /* Time of each index file */
+    double *times;
+
+    /* Integer time of each index file */
+    integertime_t *int_times;
+  } index;
+
 
   /* Informations contained in the file header. */
   struct logger_logfile log;
+
+  /* Information about the current time */
+  struct {
+    /* Double time */
+    double time;
+
+    /* Integer time */
+    integertime_t int_time;
+
+    /* Offset of the chunk */
+    size_t time_offset;
+  } time;
 
   /* Level of verbosity. */
   int verbose;
 };
 
+void logger_reader_init_index(struct logger_reader *reader);
 void logger_reader_init(struct logger_reader *reader, char *basename,
                         int verbose);
 void logger_reader_free(struct logger_reader *reader);
 size_t reader_read_record(struct logger_reader *reader,
                           struct logger_particle *lp, double *time,
                           int *is_particle, size_t offset);
+
+void logger_reader_set_time(struct logger_reader *reader, double time);
+
+const long long *logger_reader_get_number_particles(struct logger_reader *reader, int *n_type);
+
+void logger_reader_read_from_index(
+    struct logger_reader *reader, double time,
+    enum logger_reader_type inter_type,
+    struct logger_particle *parts, size_t n_tot);
+
 #endif  // LOGGER_LOGGER_READER_H

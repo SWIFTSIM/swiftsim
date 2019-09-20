@@ -26,6 +26,7 @@
 
 /* Include local headers */
 #include "logger_loader_io.h"
+#include "logger_reader.h"
 #include "radix_sort.h"
 
 /**
@@ -37,7 +38,8 @@
 void logger_index_read_header(struct logger_index *index, const char *filename) {
 
   /* Open the file */
-  FILE *fd = fopen(filename, O_RDONLY);
+  message("Reading %s", filename);
+  FILE *fd = fopen(filename, "r");
 
   if (fd == NULL)
     error("Unable to open file %s (%s).", filename, strerror(errno));
@@ -54,11 +56,25 @@ void logger_index_read_header(struct logger_index *index, const char *filename) 
 
   /* Close the file */
   fclose(fd);
-
-  /* Set the mapped file to NULL */
-  index->log.map = NULL;
 }
 
+/**
+ * @brief Write that the file is sorted.
+ *
+ * WARNING The file must be mapped.
+ *
+ * @param index The #logger_index.
+ */
+void logger_index_write_sorted(struct logger_index *index) {
+  /* Get the offset */
+  size_t offset = sizeof(double) + (1 + swift_type_count) * sizeof(long long);
+
+  /* Set the value */
+  char is_sorted = 1;
+
+  /* Write the value */
+  memcpy(index->log.map + offset, &is_sorted, sizeof(char));
+}
 /**
  * @brief Get the #index_data of a particle type.
  *
@@ -67,7 +83,7 @@ void logger_index_read_header(struct logger_index *index, const char *filename) 
  */
 struct index_data *logger_index_get_data(struct logger_index *index, int type) {
   /* Compute the header size */
-  const size_t header = sizeof(double) + 2 * sizeof(long long)
+  const size_t header = sizeof(double) + (1 + swift_type_count) * sizeof(long long)
     + sizeof(char);
 
   /* Count the offset due to the previous types */
@@ -88,19 +104,42 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
  * @param sorted Does the file needs to be sorted?
  */
 void logger_index_map_file(struct logger_index *index, const char *filename, int sorted) {
+  /* Un-map previous file */
+  if (index->log.map != NULL) {
+    logger_index_free(index);
+  }
 
-  /* Map the index file */
-  index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
-                                            /* read_only */ 1);
+  /* Read header */
+  logger_index_read_header(index, filename);
 
-  /* Sort the file if required */
+  /* Check if need to sort the file */
   if (sorted && !index->is_sorted) {
+    if (index->reader->verbose > 0) {
+      message("Sorting the index file.");
+    }
+    /* Map the index file */
+    index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
+                                                /* read_only */ 0);
+    /* Sort the file */
     for(int i = 0; i < swift_type_count; i++) {
       struct index_data *data = logger_index_get_data(index, i);
       radix_sort(data, index->nparts[i]);
     }
+
+    /* Write that the file is sorted */
+    logger_index_write_sorted(index);
+
+    /* Free the index file before opening it again in read only */
+    logger_index_free(index);
+
+    if (index->reader->verbose > 0) {
+      message("Sorting done.");
+    }
   }
 
+  /* Map the index file */
+  index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
+                                            /* read_only */ 1);
 }
 
 /**
@@ -145,4 +184,18 @@ size_t logger_index_get_particle(struct logger_index *index, long long id, int t
   }
 
   return 0;
+}
+
+/**
+ * @brief Initialize the #logger_index.
+ *
+ * @param index The #logger_index.
+ * @param reader The #reader.
+ */
+void logger_index_init(struct logger_index *index, struct logger_reader *reader) {
+  /* Set the mapped file to NULL */
+  index->log.map = NULL;
+
+  /* Set the pointer to the reader */
+  index->reader = reader;
 }

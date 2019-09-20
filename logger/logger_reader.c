@@ -17,7 +17,11 @@
  *
  ******************************************************************************/
 
+/* Include corresponding header */
 #include "logger_reader.h"
+
+/* Include standard library */
+#include <unistd.h>
 
 /**
  * @brief Initialize the reader.
@@ -30,6 +34,14 @@ void logger_reader_init(struct logger_reader *reader, char *basename,
                         int verbose) {
   if (verbose > 1) message("Initializing the reader.");
 
+  /* Set the variable to the default values */
+  reader->time.time = 0.;
+  reader->time.int_time = 0;
+  reader->time.time_offset = 0;
+
+  /* Copy the base name */
+  strcpy(reader->basename, basename);
+
   /* Initialize the reader variables. */
   reader->verbose = verbose;
 
@@ -41,8 +53,57 @@ void logger_reader_init(struct logger_reader *reader, char *basename,
   logger_logfile_init_from_file(&reader->log, logfile_name, reader,
                                 /* only_header */ 0);
 
+  /* Initialize the index files */
+  logger_reader_init_index(reader);
+
   if (verbose > 1) message("Initialization done.");
 }
+
+/**
+ * @brief Initialize the index part of the reader.
+ *
+ * @param reader The #logger_reader.
+ */
+void logger_reader_init_index(struct logger_reader *reader) {
+  /* Initialize the logger_index */
+  logger_index_init(&reader->index.index, reader);
+
+  /* Count the number of files */
+  int count = 0;
+  while (1) {
+    char filename[STRING_SIZE+50];
+    sprintf(filename, "%s_%04i.index", reader->basename, count);
+
+    /* Check if file exists */
+    if (access(filename, F_OK) != -1) {
+      count++;
+    }
+    else {
+      break;
+    }
+  }
+
+  reader->index.n_files = count;
+
+  /* Initialize the arrays */
+  reader->index.times = (double *) malloc(count * sizeof(double));
+  reader->index.int_times = (integertime_t *) malloc(
+    count * sizeof(integertime_t));
+
+  /* Get the information contained in the headers */
+  for(int i = 0; i < reader->index.n_files; i++) {
+    char filename[STRING_SIZE+50];
+    sprintf(filename, "%s_%04i.index", reader->basename, i);
+
+    /* Read the header */
+    logger_index_read_header(&reader->index.index, filename);
+
+    /* Save the required information */
+    reader->index.times[i] = reader->index.index.time;
+    reader->index.int_times[i] = reader->index.index.integer_time;
+  }
+}
+
 
 /**
  * @brief Free the reader.
@@ -52,6 +113,8 @@ void logger_reader_init(struct logger_reader *reader, char *basename,
 void logger_reader_free(struct logger_reader *reader) {
   /* Free the log. */
   logger_logfile_free(&reader->log);
+
+  logger_index_free(&reader->index.index);
 }
 
 /**
@@ -91,4 +154,104 @@ size_t reader_read_record(struct logger_reader *reader,
   }
 
   return offset;
+}
+
+/**
+ * @brief Set the reader to a given time and read the correct index file.
+ *
+ * @param reader The #logger_reader.
+ * @param time The requested time.
+ */
+void logger_reader_set_time(struct logger_reader *reader, double time) {
+  /* Set the time */
+  reader->time.time = time;
+
+  /* Find the correct index */
+  unsigned int left = 0;
+  unsigned int right = reader->index.n_files - 1;
+
+  while(left != right) {
+    /* Do a ceil - division */ 
+    unsigned int m = (left + right + 1) / 2;
+    if (reader->index.times[m] > time) {
+      right = m - 1;
+    }
+    else {
+      left = m;
+    }
+  }
+
+  /* Read the correct file index */
+  char filename[STRING_SIZE + 50];
+  sprintf(filename, "%s_%04u.index", reader->basename, left);
+  logger_index_read_header(&reader->index.index, filename);
+  logger_index_map_file(&reader->index.index, filename, /* sorted */ 1);
+
+  /* Get the offset of the time chunk */
+  size_t ind = time_array_get_index_from_time(&reader->log.times, time);
+  reader->time.int_time = reader->log.times.records[ind].int_time;
+  reader->time.time_offset = reader->log.times.records[ind].offset;
+}
+
+/**
+ * @brief Provides the number of particle (per type) from the index file.
+ *
+ * @param reader The #logger_reader.
+ * @param n_type (output) The number of particle type possible.
+ *
+ * @return For each type possible, the number of particle.
+ */
+const long long *logger_reader_get_number_particles(struct logger_reader *reader, int *n_type) {
+  *n_type = swift_type_count;
+  return reader->index.index.nparts;
+}
+
+
+/**
+ * @brief Read all the particles from the index file.
+ *
+ * @param reader The #logger_reader.
+ * @param time The requested time for the particle.
+ * @param interp_type The type of interpolation.
+ * @param parts The array of particles to use.
+ * @param n_tot The total number of particles
+ */
+void logger_reader_read_from_index(
+  struct logger_reader *reader, double time,
+  enum logger_reader_type interp_type,
+  struct logger_particle *parts, size_t n_tot) {
+
+  /* Shortcut to some structures */
+  struct logger_index *index = &reader->index.index;
+
+  /* Get the correct index file */
+  logger_reader_set_time(reader, time);
+  struct index_data *data = logger_index_get_data(index, 0);
+
+
+  /* Read the particles */
+  for(size_t i = 0; i < n_tot; i++) {
+
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
+
+    while(next_offset < reader->time.time_offset) {
+      prev_offset = next_offset;
+      int test = tools_get_next_record(
+        &reader->log.header, reader->log.log.map, &next_offset, reader->log.log.file_size);
+      if (test == -1) {
+        error("End of file");
+      }
+    }
+
+    /* Read the particle */
+    logger_particle_read(&parts[i], reader, prev_offset, reader->time.time, interp_type);
+
+    if (parts[i].entropy < 0) {
+      message("Here: %g", parts[i].entropy);
+
+    }
+  }
+
 }

@@ -22,6 +22,9 @@
 
 #include "logger_tools.h"
 
+/* predefine the structure */
+struct logger_reader;
+
 /**
  * @brief Data structure contained in the logger files.
  */
@@ -41,6 +44,9 @@ struct index_data {
  * TODO
  */
 struct logger_index {
+  /* Pointer to the reader */
+  struct logger_reader *reader;
+
   /* Time of the index file */
   double time;
 
@@ -66,6 +72,8 @@ struct logger_index {
 };
 
 
+void logger_index_write_sorted(struct logger_index *index);
+void logger_index_init(struct logger_index *index, struct logger_reader *reader);
 void logger_index_read_header(struct logger_index *index, const char *filename);
 void logger_index_map_file(struct logger_index *index, const char *filename, int sorted);
 size_t logger_index_get_particle_offset(struct logger_index *index, long long id, int type);
