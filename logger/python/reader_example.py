@@ -14,7 +14,7 @@ import liblogger as logger
 if len(sys.argv) != 3:
     print("WARNING missing arguments. Will use the default ones")
     basename = "../../examples/HydroTests/SedovBlast_3D/index"
-    time = 0.005
+    time = 0.049
 else:
     basename = sys.argv[-1]
     time = sys.argv[-2]
@@ -23,17 +23,18 @@ else:
 data = logger.loadFromIndex(basename, time)
 
 # Compute distance from center
+plt.show()
 pos = np.array([data["positions_x"], data["positions_y"],
                data["positions_y"]]).transpose()
-center = pos.mean()
+center = pos.mean(axis=0)
 r2 = np.sum((pos - center)**2, axis=1)
 
 # plot entropy vs distance
-print(data["entropies"].min(), data["entropies"].max())
-plt.plot(np.sqrt(r2), data["entropies"], '.')
+plt.plot(np.sqrt(r2), data["densities"], '.')
 
 plt.xlim(0., 0.5)
-plt.ylim(-5, 50)
+plt.ylim(-1, 5)
 plt.xlabel("Radius")
-plt.ylabel("Entropy")
+plt.ylabel("Density")
+
 plt.show()

@@ -40,7 +40,7 @@ void radix_sort(struct index_data *data, size_t N) {
   struct index_data *data_counting = data;
 
   /* Loop over all the bits */
-  const int n_loop = sizeof(long long) / RADIX_NUMBER_BITS;
+  const int n_loop = 8 * sizeof(long long) / RADIX_NUMBER_BITS;
   for(int i = 0; i < n_loop; i++) {
     counting_sort(data_counting, sorted, N, i);
 

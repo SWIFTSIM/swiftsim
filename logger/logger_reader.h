@@ -112,6 +112,8 @@ void logger_reader_set_time(struct logger_reader *reader, double time);
 
 const long long *logger_reader_get_number_particles(struct logger_reader *reader, int *n_type);
 
+void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
+                                          void *extra_data);
 void logger_reader_read_from_index(
     struct logger_reader *reader, double time,
     enum logger_reader_type inter_type,

@@ -91,7 +91,7 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
 
   /* Read the particle. */
   logger_reader_read_from_index(
-    &reader, time, logger_reader_lin, PyArray_DATA(out), n_tot);
+    &reader, time, logger_reader_const, PyArray_DATA(out), n_tot);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;

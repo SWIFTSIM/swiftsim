@@ -22,6 +22,12 @@
 
 /* Include standard library */
 #include <unistd.h>
+#include <sys/sysinfo.h>
+
+/* Include local headers */
+#include "threadpool.h"
+
+#define nr_threads 1 // get_nprocs()
 
 /**
  * @brief Initialize the reader.
@@ -207,6 +213,55 @@ const long long *logger_reader_get_number_particles(struct logger_reader *reader
 }
 
 
+struct extra_data_read {
+  struct logger_reader *reader;
+  struct logger_particle *parts;
+  struct index_data *data;
+  enum logger_reader_type type;
+};
+
+/**
+ * @brief Mapper function of #logger_reader_read_from_index.
+ *
+ * @param map_data The array of #logger_particle.
+ * @param num_elements The number of element to process.
+ * @param extra_data The #read_from_index_mapper.
+ */
+void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
+                                          void *extra_data) {
+
+  struct logger_particle *parts = (struct logger_particle *) map_data;
+  struct extra_data_read *read = (struct extra_data_read *) extra_data;
+  const struct logger_reader *reader = read->reader;
+  struct index_data *data = read->data + (parts - read->parts);
+
+  /* Read the particles */
+  for(int i = 0; i < num_elements; i++) {
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
+
+    message("%zi", next_offset);
+    if (i > 10)
+      error("exit");
+
+    while(next_offset < reader->time.time_offset) {
+      prev_offset = next_offset;
+      int test = tools_get_next_record(
+        &reader->log.header, reader->log.log.map,
+        &next_offset, reader->log.log.file_size);
+
+      if (test == -1) {
+        error("End of file");
+      }
+    }
+
+    /* Read the particle */
+    logger_particle_read(&parts[i], reader, prev_offset,
+                         reader->time.time, read->type);
+  }
+}
+
 /**
  * @brief Read all the particles from the index file.
  *
@@ -221,6 +276,10 @@ void logger_reader_read_from_index(
   enum logger_reader_type interp_type,
   struct logger_particle *parts, size_t n_tot) {
 
+  /* Initialize the thread pool */
+  struct threadpool threadpool;
+  threadpool_init(&threadpool, nr_threads);
+
   /* Shortcut to some structures */
   struct logger_index *index = &reader->index.index;
 
@@ -228,30 +287,16 @@ void logger_reader_read_from_index(
   logger_reader_set_time(reader, time);
   struct index_data *data = logger_index_get_data(index, 0);
 
-
   /* Read the particles */
-  for(size_t i = 0; i < n_tot; i++) {
+  struct extra_data_read read;
+  read.reader = reader;
+  read.parts = parts;
+  read.data = data;
+  read.type = interp_type;
+  threadpool_map(&threadpool, logger_reader_read_from_index_mapper, parts, n_tot,
+                 sizeof(struct logger_particle), 0, &read);
 
-    /* Get the offset */
-    size_t prev_offset = data[i].offset;
-    size_t next_offset = prev_offset;
-
-    while(next_offset < reader->time.time_offset) {
-      prev_offset = next_offset;
-      int test = tools_get_next_record(
-        &reader->log.header, reader->log.log.map, &next_offset, reader->log.log.file_size);
-      if (test == -1) {
-        error("End of file");
-      }
-    }
-
-    /* Read the particle */
-    logger_particle_read(&parts[i], reader, prev_offset, reader->time.time, interp_type);
-
-    if (parts[i].entropy < 0) {
-      message("Here: %g", parts[i].entropy);
-
-    }
-  }
+  /* Cleanup the threadpool */
+  threadpool_clean(&threadpool);
 
 }

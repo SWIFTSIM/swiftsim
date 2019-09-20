@@ -20,7 +20,7 @@
 
 #include "radix_sort.h"
 
-#define N 100
+#define N 100000
 
 /**
  * @brief Initialize the array.
