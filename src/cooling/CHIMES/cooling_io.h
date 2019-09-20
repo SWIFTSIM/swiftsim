@@ -65,7 +65,10 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
   list[0] = io_make_output_field_convert_part(
       "Temperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts, xparts,
       convert_part_T, "Temperature of the particles");
-  return 1;
+
+  list[1] = io_make_output_field("ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f, xparts, cooling_data.chimes_abundances, "CHIMES abundance array. The abundance of species i is defined in terms of its number density relative to hydrogen, i.e. n_i / n_H_tot."); 
+
+  return 2;
 }
 
 #endif /* SWIFT_COOLING_CHIMES_IO_H */
