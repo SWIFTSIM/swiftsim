@@ -1,7 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
- *               2018 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Copyright (c) 2012 Pedro Gonnet (pedro.gonnet@durham.ac.uk)
+ *               2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -20,73 +20,12 @@
 
 /* Before including this file, define FUNCTION, which is the
    name of the interaction function. This creates the interaction functions
-   runner_dopair_FUNCTION, runner_doself_FUNCTION and runner_dosub_FUNCTION
-   calling the pairwise interaction function runner_iact_FUNCTION. */
+   runner_dopair_FUNCTION, runner_dopair_FUNCTION_naive, runner_doself_FUNCTION,
+   and runner_dosub_FUNCTION calling the pairwise interaction function
+   runner_iact_FUNCTION. */
 
-#define PASTE(x, y) x##_##y
+#include "runner_doiact_stars.h"
 
-#define _DOSELF1_STARS(f) PASTE(runner_doself_stars, f)
-#define DOSELF1_STARS _DOSELF1_STARS(FUNCTION)
-
-#define _DO_SYM_PAIR1_STARS(f) PASTE(runner_do_sym_pair_stars, f)
-#define DO_SYM_PAIR1_STARS _DO_SYM_PAIR1_STARS(FUNCTION)
-
-#define _DO_NONSYM_PAIR1_STARS_NAIVE(f) \
-  PASTE(runner_do_nonsym_pair_stars_naive, f)
-#define DO_NONSYM_PAIR1_STARS_NAIVE _DO_NONSYM_PAIR1_STARS_NAIVE(FUNCTION)
-
-#define _DOPAIR1_STARS_NAIVE(f) PASTE(runner_dopair_stars_naive, f)
-#define DOPAIR1_STARS_NAIVE _DOPAIR1_STARS_NAIVE(FUNCTION)
-
-#define _DOPAIR1_SUBSET_STARS(f) PASTE(runner_dopair_subset_stars, f)
-#define DOPAIR1_SUBSET_STARS _DOPAIR1_SUBSET_STARS(FUNCTION)
-
-#define _DOPAIR1_SUBSET_STARS_NAIVE(f) \
-  PASTE(runner_dopair_subset_stars_naive, f)
-#define DOPAIR1_SUBSET_STARS_NAIVE _DOPAIR1_SUBSET_STARS_NAIVE(FUNCTION)
-
-#define _DOSELF1_SUBSET_STARS(f) PASTE(runner_doself_subset_stars, f)
-#define DOSELF1_SUBSET_STARS _DOSELF1_SUBSET_STARS(FUNCTION)
-
-#define _DOSELF1_SUBSET_BRANCH_STARS(f) \
-  PASTE(runner_doself_subset_branch_stars, f)
-#define DOSELF1_SUBSET_BRANCH_STARS _DOSELF1_SUBSET_BRANCH_STARS(FUNCTION)
-
-#define _DOPAIR1_SUBSET_BRANCH_STARS(f) \
-  PASTE(runner_dopair_subset_branch_stars, f)
-#define DOPAIR1_SUBSET_BRANCH_STARS _DOPAIR1_SUBSET_BRANCH_STARS(FUNCTION)
-
-#define _DOSUB_SUBSET_STARS(f) PASTE(runner_dosub_subset_stars, f)
-#define DOSUB_SUBSET_STARS _DOSUB_SUBSET_STARS(FUNCTION)
-
-#define _DOSELF1_BRANCH_STARS(f) PASTE(runner_doself_branch_stars, f)
-#define DOSELF1_BRANCH_STARS _DOSELF1_BRANCH_STARS(FUNCTION)
-
-#define _DOPAIR1_BRANCH_STARS(f) PASTE(runner_dopair_branch_stars, f)
-#define DOPAIR1_BRANCH_STARS _DOPAIR1_BRANCH_STARS(FUNCTION)
-
-#define _DOSUB_PAIR1_STARS(f) PASTE(runner_dosub_pair_stars, f)
-#define DOSUB_PAIR1_STARS _DOSUB_PAIR1_STARS(FUNCTION)
-
-#define _DOSUB_SELF1_STARS(f) PASTE(runner_dosub_self_stars, f)
-#define DOSUB_SELF1_STARS _DOSUB_SELF1_STARS(FUNCTION)
-
-#define _TIMER_DOSELF_STARS(f) PASTE(timer_doself_stars, f)
-#define TIMER_DOSELF_STARS _TIMER_DOSELF_STARS(FUNCTION)
-
-#define _TIMER_DOPAIR_STARS(f) PASTE(timer_dopair_stars, f)
-#define TIMER_DOPAIR_STARS _TIMER_DOPAIR_STARS(FUNCTION)
-
-#define _TIMER_DOSUB_SELF_STARS(f) PASTE(timer_dosub_self_stars, f)
-#define TIMER_DOSUB_SELF_STARS _TIMER_DOSUB_SELF_STARS(FUNCTION)
-
-#define _TIMER_DOSUB_PAIR_STARS(f) PASTE(timer_dosub_pair_stars, f)
-#define TIMER_DOSUB_PAIR_STARS _TIMER_DOSUB_PAIR_STARS(FUNCTION)
-
-#define _IACT_STARS(f) PASTE(runner_iact_nonsym_stars, f)
-#define IACT_STARS _IACT_STARS(FUNCTION)
-
-<<<<<<< HEAD
 /**
  * @brief Calculate the number density of #part around the #spart
  *
@@ -170,7 +109,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step);
+                                          ti_current);
 #endif
       }
     } /* loop over the parts in ci. */
@@ -275,7 +214,7 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step);
+                                          ti_current);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -444,7 +383,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step);
+                                            ti_current);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -573,7 +512,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi, cosmo,
-                                            ti_current, e->time, e->step);
+                                            ti_current);
 #endif
         }
       } /* loop over the parts in ci. */
@@ -697,7 +636,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step);
+                                            ti_current);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -757,7 +696,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
           runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step);
+                                            ti_current);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -854,7 +793,7 @@ void DOPAIR1_SUBSET_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step);
+                                          ti_current);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -941,29 +880,453 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
                                             cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
         runner_iact_nonsym_feedback_apply(r2, dx, hi, pj->h, spi, pj, xpj,
-                                          cosmo, ti_current, e->time, e->step);
+                                          cosmo, ti_current);
 #endif
       }
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
 }
-=======
-void DOSELF1_BRANCH_STARS(struct runner *r, struct cell *c);
-void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj);
 
-void DOSUB_SELF1_STARS(struct runner *r, struct cell *ci, int gettimer);
-void DOSUB_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
-                       int gettimer);
->>>>>>> upstream/master
-
+/**
+ * @brief Determine which version of DOSELF1_SUBSET_STARS needs to be called
+ * depending on the optimisation level.
+ *
+ * @param r The #runner.
+ * @param ci The first #cell.
+ * @param sparts The #spart to interact.
+ * @param ind The list of indices of particles in @c ci to interact with.
+ * @param scount The number of particles in @c ind.
+ */
 void DOSELF1_SUBSET_BRANCH_STARS(struct runner *r, struct cell *restrict ci,
                                  struct spart *restrict sparts,
-                                 int *restrict ind, int scount);
+                                 int *restrict ind, int scount) {
 
+  DOSELF1_SUBSET_STARS(r, ci, sparts, ind, scount);
+}
+
+/**
+ * @brief Determine which version of DOPAIR1_SUBSET_STARS needs to be called
+ * depending on the orientation of the cells or whether DOPAIR1_SUBSET_STARS
+ * needs to be called at all.
+ *
+ * @param r The #runner.
+ * @param ci The first #cell.
+ * @param sparts_i The #spart to interact with @c cj.
+ * @param ind The list of indices of particles in @c ci to interact with.
+ * @param scount The number of particles in @c ind.
+ * @param cj The second #cell.
+ */
 void DOPAIR1_SUBSET_BRANCH_STARS(struct runner *r, struct cell *restrict ci,
                                  struct spart *restrict sparts_i,
                                  int *restrict ind, int scount,
-                                 struct cell *restrict cj);
+                                 struct cell *restrict cj) {
+
+  const struct engine *e = r->e;
+
+  /* Anything to do here? */
+  if (cj->hydro.count == 0) return;
+
+  /* Get the relative distance between the pairs, wrapping. */
+  double shift[3] = {0.0, 0.0, 0.0};
+  for (int k = 0; k < 3; k++) {
+    if (cj->loc[k] - ci->loc[k] < -e->s->dim[k] / 2)
+      shift[k] = e->s->dim[k];
+    else if (cj->loc[k] - ci->loc[k] > e->s->dim[k] / 2)
+      shift[k] = -e->s->dim[k];
+  }
+
+#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
+  DOPAIR1_SUBSET_STARS_NAIVE(r, ci, sparts_i, ind, scount, cj, shift);
+#else
+  /* Get the sorting index. */
+  int sid = 0;
+  for (int k = 0; k < 3; k++)
+    sid = 3 * sid + ((cj->loc[k] - ci->loc[k] + shift[k] < 0)
+                         ? 0
+                         : (cj->loc[k] - ci->loc[k] + shift[k] > 0) ? 2 : 1);
+
+  /* Switch the cells around? */
+  const int flipped = runner_flip[sid];
+  sid = sortlistID[sid];
+
+  /* Has the cell cj been sorted? */
+  if (!(cj->hydro.sorted & (1 << sid)) ||
+      cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
+    error("Interacting unsorted cells.");
+
+  DOPAIR1_SUBSET_STARS(r, ci, sparts_i, ind, scount, cj, sid, flipped, shift);
+#endif
+}
 
 void DOSUB_SUBSET_STARS(struct runner *r, struct cell *ci, struct spart *sparts,
-                        int *ind, int scount, struct cell *cj, int gettimer);
+                        int *ind, int scount, struct cell *cj, int gettimer) {
+
+  const struct engine *e = r->e;
+  struct space *s = e->s;
+
+  /* Should we even bother? */
+  if (!cell_is_active_stars(ci, e) &&
+      (cj == NULL || !cell_is_active_stars(cj, e)))
+    return;
+
+  /* Find out in which sub-cell of ci the parts are. */
+  struct cell *sub = NULL;
+  if (ci->split) {
+    for (int k = 0; k < 8; k++) {
+      if (ci->progeny[k] != NULL) {
+        if (&sparts[ind[0]] >= &ci->progeny[k]->stars.parts[0] &&
+            &sparts[ind[0]] <
+                &ci->progeny[k]->stars.parts[ci->progeny[k]->stars.count]) {
+          sub = ci->progeny[k];
+          break;
+        }
+      }
+    }
+  }
+
+  /* Is this a single cell? */
+  if (cj == NULL) {
+
+    /* Recurse? */
+    if (cell_can_recurse_in_self_stars_task(ci)) {
+
+      /* Loop over all progeny. */
+      DOSUB_SUBSET_STARS(r, sub, sparts, ind, scount, NULL, 0);
+      for (int j = 0; j < 8; j++)
+        if (ci->progeny[j] != sub && ci->progeny[j] != NULL)
+          DOSUB_SUBSET_STARS(r, sub, sparts, ind, scount, ci->progeny[j], 0);
+
+    }
+
+    /* Otherwise, compute self-interaction. */
+    else
+      DOSELF1_SUBSET_BRANCH_STARS(r, ci, sparts, ind, scount);
+  } /* self-interaction. */
+
+  /* Otherwise, it's a pair interaction. */
+  else {
+
+    /* Recurse? */
+    if (cell_can_recurse_in_pair_stars_task(ci, cj) &&
+        cell_can_recurse_in_pair_stars_task(cj, ci)) {
+
+      /* Get the type of pair and flip ci/cj if needed. */
+      double shift[3] = {0.0, 0.0, 0.0};
+      const int sid = space_getsid(s, &ci, &cj, shift);
+
+      struct cell_split_pair *csp = &cell_split_pairs[sid];
+      for (int k = 0; k < csp->count; k++) {
+        const int pid = csp->pairs[k].pid;
+        const int pjd = csp->pairs[k].pjd;
+        if (ci->progeny[pid] == sub && cj->progeny[pjd] != NULL)
+          DOSUB_SUBSET_STARS(r, ci->progeny[pid], sparts, ind, scount,
+                             cj->progeny[pjd], 0);
+        if (ci->progeny[pid] != NULL && cj->progeny[pjd] == sub)
+          DOSUB_SUBSET_STARS(r, cj->progeny[pjd], sparts, ind, scount,
+                             ci->progeny[pid], 0);
+      }
+    }
+
+    /* Otherwise, compute the pair directly. */
+    else if (cell_is_active_stars(ci, e) && cj->hydro.count > 0) {
+
+      /* Do any of the cells need to be drifted first? */
+      if (cell_is_active_stars(ci, e)) {
+        if (!cell_are_spart_drifted(ci, e)) error("Cell should be drifted!");
+        if (!cell_are_part_drifted(cj, e)) error("Cell should be drifted!");
+      }
+
+      DOPAIR1_SUBSET_BRANCH_STARS(r, ci, sparts, ind, scount, cj);
+    }
+
+  } /* otherwise, pair interaction. */
+}
+
+/**
+ * @brief Determine which version of DOSELF1_STARS needs to be called depending
+ * on the optimisation level.
+ *
+ * @param r #runner
+ * @param c #cell c
+ *
+ */
+void DOSELF1_BRANCH_STARS(struct runner *r, struct cell *c) {
+
+  const struct engine *restrict e = r->e;
+
+  /* Anything to do here? */
+  if (c->stars.count == 0) return;
+
+  /* Anything to do here? */
+  if (!cell_is_active_stars(c, e)) return;
+
+  /* Did we mess up the recursion? */
+  if (c->stars.h_max_old * kernel_gamma > c->dmin)
+    error("Cell smaller than smoothing length");
+
+  DOSELF1_STARS(r, c, 1);
+}
+
+#define RUNNER_CHECK_SORT(TYPE, PART, cj, ci, sid)                          \
+  ({                                                                        \
+    const struct sort_entry *restrict sort_j = cj->TYPE.sort[sid];          \
+                                                                            \
+    for (int pjd = 0; pjd < cj->TYPE.count; pjd++) {                        \
+      const struct PART *p = &cj->TYPE.parts[sort_j[pjd].i];                \
+      if (PART##_is_inhibited(p, e)) continue;                              \
+                                                                            \
+      const float d = p->x[0] * runner_shift[sid][0] +                      \
+                      p->x[1] * runner_shift[sid][1] +                      \
+                      p->x[2] * runner_shift[sid][2];                       \
+      if ((fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >               \
+              1.0e-4 * max(fabsf(d), cj->TYPE.dx_max_sort_old) &&           \
+          (fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >               \
+              cj->width[0] * 1.0e-10)                                       \
+        error(                                                              \
+            "particle shift diff exceeds dx_max_sort in cell cj. "          \
+            "cj->nodeID=%d "                                                \
+            "ci->nodeID=%d d=%e sort_j[pjd].d=%e cj->" #TYPE                \
+            ".dx_max_sort=%e "                                              \
+            "cj->" #TYPE                                                    \
+            ".dx_max_sort_old=%e, cellID=%i super->cellID=%i"               \
+            "cj->depth=%d cj->maxdepth=%d",                                 \
+            cj->nodeID, ci->nodeID, d, sort_j[pjd].d, cj->TYPE.dx_max_sort, \
+            cj->TYPE.dx_max_sort_old, cj->cellID, cj->hydro.super->cellID,  \
+            cj->depth, cj->maxdepth);                                       \
+    }                                                                       \
+  })
+
+/**
+ * @brief Determine which version of DOPAIR1_STARS needs to be called depending
+ * on the orientation of the cells or whether DOPAIR1_STARS needs to be called
+ * at all.
+ *
+ * @param r #runner
+ * @param ci #cell ci
+ * @param cj #cell cj
+ *
+ */
+void DOPAIR1_BRANCH_STARS(struct runner *r, struct cell *ci, struct cell *cj) {
+
+  const struct engine *restrict e = r->e;
+
+  /* Get the sort ID. */
+  double shift[3] = {0.0, 0.0, 0.0};
+  const int sid = space_getsid(e->s, &ci, &cj, shift);
+
+  const int ci_active = cell_is_active_stars(ci, e);
+  const int cj_active = cell_is_active_stars(cj, e);
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
+  const int do_ci_stars = ci->nodeID == e->nodeID;
+  const int do_cj_stars = cj->nodeID == e->nodeID;
+#else
+  /* here we are updating the hydro -> switch ci, cj */
+  const int do_ci_stars = cj->nodeID == e->nodeID;
+  const int do_cj_stars = ci->nodeID == e->nodeID;
+#endif
+  const int do_ci = (ci->stars.count != 0 && cj->hydro.count != 0 &&
+                     ci_active && do_ci_stars);
+  const int do_cj = (cj->stars.count != 0 && ci->hydro.count != 0 &&
+                     cj_active && do_cj_stars);
+
+  /* Anything to do here? */
+  if (!do_ci && !do_cj) return;
+
+  /* Check that cells are drifted. */
+  if (do_ci &&
+      (!cell_are_spart_drifted(ci, e) || !cell_are_part_drifted(cj, e)))
+    error("Interacting undrifted cells.");
+
+  /* Have the cells been sorted? */
+  if (do_ci && (!(ci->stars.sorted & (1 << sid)) ||
+                ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin))
+    error("Interacting unsorted cells.");
+
+  if (do_ci && (!(cj->hydro.sorted & (1 << sid)) ||
+                cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
+    error("Interacting unsorted cells.");
+
+  if (do_cj &&
+      (!cell_are_part_drifted(ci, e) || !cell_are_spart_drifted(cj, e)))
+    error("Interacting undrifted cells.");
+
+  /* Have the cells been sorted? */
+  if (do_cj && (!(ci->hydro.sorted & (1 << sid)) ||
+                ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin))
+    error("Interacting unsorted cells.");
+
+  if (do_cj && (!(cj->stars.sorted & (1 << sid)) ||
+                cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin))
+    error("Interacting unsorted cells.");
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (do_ci) {
+    // MATTHIEU: This test is faulty. To be fixed...
+    // RUNNER_CHECK_SORT(hydro, part, cj, ci, sid);
+    RUNNER_CHECK_SORT(stars, spart, ci, cj, sid);
+  }
+
+  if (do_cj) {
+    // MATTHIEU: This test is faulty. To be fixed...
+    // RUNNER_CHECK_SORT(hydro, part, ci, cj, sid);
+    RUNNER_CHECK_SORT(stars, spart, cj, ci, sid);
+  }
+#endif /* SWIFT_DEBUG_CHECKS */
+
+#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
+  DOPAIR1_STARS_NAIVE(r, ci, cj, 1);
+#else
+  DO_SYM_PAIR1_STARS(r, ci, cj, sid, shift);
+#endif
+}
+
+/**
+ * @brief Compute grouped sub-cell interactions for pairs
+ *
+ * @param r The #runner.
+ * @param ci The first #cell.
+ * @param cj The second #cell.
+ * @param gettimer Do we have a timer ?
+ *
+ * @todo Hard-code the sid on the recursive calls to avoid the
+ * redundant computations to find the sid on-the-fly.
+ */
+void DOSUB_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
+                       int gettimer) {
+
+  TIMER_TIC;
+
+  struct space *s = r->e->s;
+  const struct engine *e = r->e;
+
+  /* Should we even bother? */
+  const int should_do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
+                           cell_is_active_stars(ci, e);
+  const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
+                           cell_is_active_stars(cj, e);
+  if (!should_do_ci && !should_do_cj) return;
+
+  /* Get the type of pair and flip ci/cj if needed. */
+  double shift[3];
+  const int sid = space_getsid(s, &ci, &cj, shift);
+
+  /* Recurse? */
+  if (cell_can_recurse_in_pair_stars_task(ci, cj) &&
+      cell_can_recurse_in_pair_stars_task(cj, ci)) {
+    struct cell_split_pair *csp = &cell_split_pairs[sid];
+    for (int k = 0; k < csp->count; k++) {
+      const int pid = csp->pairs[k].pid;
+      const int pjd = csp->pairs[k].pjd;
+      if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
+        DOSUB_PAIR1_STARS(r, ci->progeny[pid], cj->progeny[pjd], 0);
+    }
+  }
+
+  /* Otherwise, compute the pair directly. */
+  else {
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
+    const int do_ci_stars = ci->nodeID == e->nodeID;
+    const int do_cj_stars = cj->nodeID == e->nodeID;
+#else
+    /* here we are updating the hydro -> switch ci, cj */
+    const int do_ci_stars = cj->nodeID == e->nodeID;
+    const int do_cj_stars = ci->nodeID == e->nodeID;
+#endif
+    const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
+                      cell_is_active_stars(ci, e) && do_ci_stars;
+    const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
+                      cell_is_active_stars(cj, e) && do_cj_stars;
+
+    if (do_ci) {
+
+      /* Make sure both cells are drifted to the current timestep. */
+      if (!cell_are_spart_drifted(ci, e))
+        error("Interacting undrifted cells (sparts).");
+
+      if (!cell_are_part_drifted(cj, e))
+        error("Interacting undrifted cells (parts).");
+
+      /* Do any of the cells need to be sorted first? */
+      if (!(ci->stars.sorted & (1 << sid)) ||
+          ci->stars.dx_max_sort_old > ci->dmin * space_maxreldx) {
+        error("Interacting unsorted cell (sparts).");
+      }
+
+      if (!(cj->hydro.sorted & (1 << sid)) ||
+          cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
+        error("Interacting unsorted cell (parts). %i", cj->nodeID);
+    }
+
+    if (do_cj) {
+
+      /* Make sure both cells are drifted to the current timestep. */
+      if (!cell_are_part_drifted(ci, e))
+        error("Interacting undrifted cells (parts).");
+
+      if (!cell_are_spart_drifted(cj, e))
+        error("Interacting undrifted cells (sparts).");
+
+      /* Do any of the cells need to be sorted first? */
+      if (!(ci->hydro.sorted & (1 << sid)) ||
+          ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx) {
+        error("Interacting unsorted cell (parts).");
+      }
+
+      if (!(cj->stars.sorted & (1 << sid)) ||
+          cj->stars.dx_max_sort_old > cj->dmin * space_maxreldx) {
+        error("Interacting unsorted cell (sparts).");
+      }
+    }
+
+    if (do_ci || do_cj) DOPAIR1_BRANCH_STARS(r, ci, cj);
+  }
+
+  TIMER_TOC(TIMER_DOSUB_PAIR_STARS);
+}
+
+/**
+ * @brief Compute grouped sub-cell interactions for self tasks
+ *
+ * @param r The #runner.
+ * @param ci The first #cell.
+ * @param gettimer Do we have a timer ?
+ */
+void DOSUB_SELF1_STARS(struct runner *r, struct cell *ci, int gettimer) {
+
+  TIMER_TIC;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ci->nodeID != engine_rank)
+    error("This function should not be called on foreign cells");
+#endif
+
+  /* Should we even bother? */
+  if (ci->hydro.count == 0 || ci->stars.count == 0 ||
+      !cell_is_active_stars(ci, r->e))
+    return;
+
+  /* Recurse? */
+  if (cell_can_recurse_in_self_stars_task(ci)) {
+
+    /* Loop over all progeny. */
+    for (int k = 0; k < 8; k++)
+      if (ci->progeny[k] != NULL) {
+        DOSUB_SELF1_STARS(r, ci->progeny[k], 0);
+        for (int j = k + 1; j < 8; j++)
+          if (ci->progeny[j] != NULL)
+            DOSUB_PAIR1_STARS(r, ci->progeny[k], ci->progeny[j], 0);
+      }
+  }
+
+  /* Otherwise, compute self-interaction. */
+  else {
+
+    /* Drift the cell to the current timestep if needed. */
+    if (!cell_are_spart_drifted(ci, r->e)) error("Interacting undrifted cell.");
+
+    DOSELF1_BRANCH_STARS(r, ci);
+  }
+
+  TIMER_TOC(TIMER_DOSUB_SELF_STARS);
+}
