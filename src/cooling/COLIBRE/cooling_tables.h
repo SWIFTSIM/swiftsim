@@ -25,9 +25,7 @@
  */
 
 /* Config parameters. */
-#include "../config.h"
-
-#include "cooling_struct.h"
+#include "config.h"
 
 /*! Number of different bins along the temperature axis of the tables */
 #define colibre_cooling_N_temperature 86
@@ -109,6 +107,9 @@ enum colibre_heating_channels {
   heattype_Compton,
   heattype_Dust
 };
+
+/* Pre-declaration */
+struct cooling_function_data;
 
 void get_cooling_redshifts(struct cooling_function_data *cooling);
 void read_cooling_header(struct cooling_function_data *cooling);

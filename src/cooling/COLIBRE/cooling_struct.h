@@ -168,6 +168,9 @@ struct cooling_function_data {
   /*! Inverse of proton mass in cgs (for quick access) */
   double inv_proton_mass_cgs;
 
+  /*! Logarithm base 10 of the Boltzmann constant in CGS (for quick access) */
+  double log10_kB_cgs;
+
   /*! Temperatur of the CMB at present day (for quick access) */
   double T_CMB_0;
 

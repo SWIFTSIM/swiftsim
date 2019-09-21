@@ -25,6 +25,10 @@
 /* Config parameters. */
 #include "../config.h"
 
+/* This file's header */
+#include "cooling_tables.h"
+
+/* Standard includes */
 #include <hdf5.h>
 #include <math.h>
 #include <stdlib.h>
@@ -33,14 +37,9 @@
 /* Local includes. */
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
-#include "cooling_tables.h"
 #include "error.h"
 #include "exp10.h"
 #include "interpolate.h"
-
-/**
- * @brief Names of the elements in the order they are stored in the files
- */
 
 /**
  * @brief Reads in COLIBRE cooling table header. Consists of tables
@@ -50,7 +49,6 @@
  * @param fname Filepath for cooling table from which to read header
  * @param cooling Cooling data structure
  */
-/* ------------------------ UPDATED ---------------------------- */
 void read_cooling_header(struct cooling_function_data *cooling) {
 
 #ifdef HAVE_HDF5
@@ -201,15 +199,22 @@ void read_cooling_header(struct cooling_function_data *cooling) {
     }
   }
 
+#if defined(__ICC)
+#pragma novector
+#endif
   for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
     cooling->atomicmass_inv[i] = 1.f / cooling->atomicmass[i];
   }
 
   /* set some additional useful abundance arrays */
   for (int i = 0; i < colibre_cooling_N_metallicity; i++) {
+
+#if defined(__ICC)
+#pragma novector
+#endif
     for (int j = 0; j < colibre_cooling_N_elementtypes; j++) {
-      int indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
-                                      colibre_cooling_N_elementtypes);
+      const int indx1d = row_major_index_2d(i, j, colibre_cooling_N_metallicity,
+                                            colibre_cooling_N_elementtypes);
       cooling->Abundances[indx1d] = exp10f(cooling->LogAbundances[indx1d]);
       cooling->Abundances_inv[indx1d] = 1.f / cooling->Abundances[indx1d];
       cooling->MassFractions[indx1d] =
@@ -223,11 +228,10 @@ void read_cooling_header(struct cooling_function_data *cooling) {
 }
 
 /**
- *  @brief Allocate space for cooling tables and read them
+ * @brief Allocate space for cooling tables and read them
  *
- *  @param cooling #cooling_function_data structure
- **/
-/* ------------------------ UPDATED ---------------------------- */
+ * @param cooling #cooling_function_data structure
+ */
 void read_cooling_tables(struct cooling_function_data *restrict cooling) {
 
 #ifdef HAVE_HDF5
@@ -456,24 +460,27 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
                          colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate logPeq array\n");
 
-  const float logkB = log10(1.380649e-16);
-  int indx1d;
+  const float log10_kB_cgs = cooling->log10_kB_cgs;
+
+  /* Compute the pressures at thermal eq. */
   for (int ired = 0; ired < colibre_cooling_N_redshifts; ired++) {
     for (int imet = 0; imet < colibre_cooling_N_metallicity; imet++) {
 
-      indx1d = row_major_index_2d(imet, 0, colibre_cooling_N_metallicity,
-                                  colibre_cooling_N_elementtypes);
-      float logXH = cooling->LogMassFractions[indx1d];
+      const int index_XH =
+          row_major_index_2d(imet, 0, colibre_cooling_N_metallicity,
+                             colibre_cooling_N_elementtypes);
+
+      const float log10_XH = cooling->LogMassFractions[index_XH];
 
       for (int iden = 0; iden < colibre_cooling_N_density; iden++) {
 
-        indx1d = row_major_index_3d(
+        const int index_Peq = row_major_index_3d(
             ired, imet, iden, colibre_cooling_N_redshifts,
             colibre_cooling_N_metallicity, colibre_cooling_N_density);
 
-        cooling->table.logPeq[indx1d] =
-            cooling->nH[iden] + cooling->table.logTeq[indx1d] - logXH -
-            log10(cooling->table.meanpartmass_Teq[indx1d]) + logkB;
+        cooling->table.logPeq[index_Peq] =
+            cooling->nH[iden] + cooling->table.logTeq[index_Peq] - log10_XH -
+            log10(cooling->table.meanpartmass_Teq[index_Peq]) + log10_kB_cgs;
       }
     }
   }

@@ -283,7 +283,6 @@ static INLINE double bisection_iter(
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  */
-
 void set_subgrid_part(const struct phys_const *phys_const,
                       const struct unit_system *us,
                       const struct cosmology *cosmo,
@@ -375,8 +374,9 @@ void set_subgrid_part(const struct phys_const *phys_const,
           colibre_cooling_N_density);
 
       /*const float logkB = (float) log10(const_boltzmann_k_cgs); doesn't work*/
-      const float logkB = log10(1.38064852e-16);
-      logn_at_Peq = logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - logkB;
+      const double log10_kB = cooling->log10_kB_cgs;
+      logn_at_Peq =
+          logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - log10_kB;
 
       logHI = interpolation_4d_no_z_no_w(
           cooling->table.logHfracs_Teq, ired, imet,
@@ -1049,9 +1049,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
       phys_const->const_electron_volt / phys_const->const_proton_mass *
       units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
-  read_cooling_header(cooling);
-  read_cooling_tables(cooling);
-
   /* Compute conversion factors */
   cooling->internal_energy_to_cgs =
       units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
@@ -1060,12 +1057,23 @@ void cooling_init_backend(struct swift_params *parameter_file,
       units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
   /* Store some constants in CGS units */
+  const float units_kB[5] = {1, 2, -2, 0, -1};
+  const double kB_cgs = phys_const->const_boltzmann_k *
+                        units_general_cgs_conversion_factor(us, units_kB);
   const double proton_mass_cgs =
       phys_const->const_proton_mass *
       units_cgs_conversion_factor(us, UNIT_CONV_MASS);
+
+  cooling->log10_kB_cgs = log10(kB_cgs);
   cooling->inv_proton_mass_cgs = 1. / proton_mass_cgs;
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Basic cross-check... */
+  if (kB_cgs > 1.381e-16 || kB_cgs < 1.380e-16)
+    error("Boltzmann's constant not initialised properly!");
+#endif
 
   /* Compute the coefficient at the front of the Compton cooling expression */
   const double radiation_constant =
@@ -1093,6 +1101,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->compton_rate_cgs = compton_coefficient_cgs * cooling->T_CMB_0 *
                               cooling->T_CMB_0 * cooling->T_CMB_0 *
                               cooling->T_CMB_0;
+
+  /* Finally, read the tables */
+  read_cooling_header(cooling);
+  read_cooling_tables(cooling);
 }
 
 /**
