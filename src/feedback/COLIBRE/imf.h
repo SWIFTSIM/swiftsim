@@ -276,6 +276,8 @@ INLINE static float dying_mass_msun(
     const struct feedback_props *feedback_props) {
 
   // MATTHIEU check this!!!
+  // Comment from Sylvia: returns a maximum of 100 Msol, even for age_Gyr = 0.
+  // Not sure if this is the desired behaviour
 
   /* Pull out some common terms */
   const double *lifetime_Z = feedback_props->lifetimes.metallicity;

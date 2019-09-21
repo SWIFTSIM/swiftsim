@@ -20,6 +20,7 @@
 #define SWIFT_FEEDBACK_COLIBRE_H
 
 #include "SNIa_DTD.h"
+#include "cooling.h"
 #include "cosmology.h"
 #include "error.h"
 #include "feedback_properties.h"
@@ -32,7 +33,7 @@
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt);
+                               const double dt, const double time_beg_of_step);
 
 /**
  * @brief Should we do feedback for this star?
@@ -116,6 +117,14 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   /* Zero the amount of momentum available */
   sp->feedback_data.to_distribute.momentum = 0.f;
   sp->feedback_data.to_distribute.momentum_probability = -1.f;
+
+  /* Reset the HII region probability */
+  sp->feedback_data.to_distribute.HIIregion_probability = -1.f;
+  sp->feedback_data.to_distribute.HIIregion_endtime = -1.f;
+  sp->feedback_data.to_distribute.HIIregion_starid = -1;
+
+  /* Reset the SNII star age */
+  sp->feedback_data.to_distribute.SNII_star_age_Myr = -1.;
 }
 
 /**
@@ -158,11 +167,13 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
+ * @param time_beg_of_step Time at the beginning of the time step
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt) {
+    const double star_age_beg_step, const double dt,
+    const double time_beg_of_step) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -171,7 +182,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
   compute_stellar_evolution(feedback_props, cosmo, sp, us, star_age_beg_step,
-                            dt);
+                            dt, time_beg_of_step);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;

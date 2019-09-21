@@ -94,6 +94,18 @@ struct spart {
   /*! SNIa Feedback energy fraction */
   float SNIa_f_E;
 
+  /*! last time an HII region was built (age of star in Myr) */
+  float HIIregion_last_rebuild;
+
+  /*! current time-step length of star particle */
+  float star_timestep;
+
+  /*! HII mass available for ionization (current) */
+  float HIIregion_mass_to_ionize;
+
+  /*! mass in kernel when HII region is built (for debugging) */
+  float HIIregion_mass_in_kernel;
+
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
 

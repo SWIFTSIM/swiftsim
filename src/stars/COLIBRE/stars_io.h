@@ -111,7 +111,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 10;
+  *num_fields = 14;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -126,7 +126,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   list[2] = io_make_output_field("Masses", FLOAT, 1, UNIT_CONV_MASS, 0.f,
                                  sparts, mass,
                                  "Masses of the particles at the current point "
-                                 "in time (i.e. after stellar losses");
+                                 "in time (i.e. after stellar losses)");
 
   list[3] = io_make_output_field("ParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS,
                                  0.f, sparts, id, "Unique ID of the particles");
@@ -167,6 +167,26 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                            0.f, sparts, birth_temperature,
                            "Temperatures at the time of birth of the gas "
                            "particles that turned into stars");
+
+  list[10] = io_make_output_field(
+      "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      HIIregion_last_rebuild,
+      "Age of star in Myr when HII region was last rebuilt");
+
+  list[11] = io_make_output_field(
+      "HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_to_ionize,
+      "Masses of the HII regions at the current point "
+      "in time");
+
+  list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
+                                  sparts, star_timestep,
+                                  "Current timestep of the star particle");
+
+  list[13] = io_make_output_field(
+      "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      HIIregion_mass_in_kernel,
+      "Masses in kernels at time of HII region formation");
 }
 
 /**

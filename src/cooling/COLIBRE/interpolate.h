@@ -270,6 +270,67 @@ __attribute__((always_inline)) INLINE float interpolation_3d(
 
 /**
  * @brief Interpolate a flattened 3D table at a given position but avoid the
+ * z-dimension.
+ *
+ * This function uses linear interpolation along each axis.
+ * We look at the zi coordoniate but do not interpolate around it. We just
+ * interpolate the remaining 2 dimensions.
+ * The function also assumes that the table is aligned on
+ * SWIFT_STRUCT_ALIGNMENT.
+ *
+ * @param table The 3D table to interpolate.
+ * @param xi, yi, zi Indices of element of interest.
+ * @param Nx, Ny, Nz Sizes of array dimensions.
+ * @param dx, dy, dz Distance between the point and the index in units of
+ * the grid spacing.
+ */
+__attribute__((always_inline)) INLINE float interpolation_3d_no_z(
+    const float *table, const int xi, const int yi, const int zi,
+    const float dx, const float dy, const float dz, const int Nx, const int Ny,
+    const int Nz) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dx < -0.001f || dx > 1.001f) error("Invalid dx=%e", dx);
+  if (dy < -0.001f || dy > 1.001f) error("Invalid dy=%e", dy);
+  if (dz != 0.f) error("Attempting to interpolate along z!");
+#endif
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f;
+
+  /* Indicate that the whole array is aligned on page boundaries */
+  swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
+
+  /* Linear interpolation along each axis. We read the table 2^2=4 times */
+  /* Note that we intentionally kept the table access along the axis where */
+  /* we do not interpolate as comments in the code to allow readers to */
+  /* understand what is going on. */
+  float result = tx * ty * tz *
+                 table[row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  /* result += tx * ty * dz *
+            table[row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)]; */
+  result += tx * dy * tz *
+            table[row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result += dx * ty * tz *
+            table[row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  /* result += tx * dy * dz *
+            table[row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+  /* result += dx * ty * dz *
+            table[row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)]; */
+  result += dx * dy * tz *
+            table[row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
+
+  /* result += dx * dy * dz *
+             table[row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+
+  return result;
+}
+
+/**
+ * @brief Interpolate a flattened 3D table at a given position but avoid the
  * x-dimension.
  *
  * This function uses linear interpolation along each axis.
@@ -608,6 +669,207 @@ __attribute__((always_inline)) INLINE float interpolation_4d_no_x(
   /*     dx * dy * dz * dw * */
   /*     table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, */
   /* Nw)]; */
+
+  return result;
+}
+
+/**
+ * @brief Interpolate a flattened 4D table at a given position but avoid the
+ * w-dimension (ie. final dimension).
+ *
+ * This function uses linear interpolation along each axis.
+ * We look at the wi coordoniate but do not interpolate around it. We just
+ * interpolate the remaining 3 dimensions.
+ * The function also assumes that the table is aligned on
+ * SWIFT_STRUCT_ALIGNMENT.
+ *
+ * @param table The 4D table to interpolate.
+ * @param xi, yi, zi, wi Indices of element of interest.
+ * @param Nx, Ny, Nz, Nw Sizes of array dimensions.
+ * @param dx, dy, dz, dw Distance between the point and the index in units of
+ * the grid spacing.
+ */
+__attribute__((always_inline)) INLINE float interpolation_4d_no_w(
+    const float *table, const int xi, const int yi, const int zi, const int wi,
+    const float dx, const float dy, const float dz, const float dw,
+    const int Nx, const int Ny, const int Nz, const int Nw) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dx < -0.001f || dx > 1.001f) error("Invalid dx=%e", dx);
+  if (dy < -0.001f || dy > 1.001f) error("Invalid dy=%e", dy);
+  if (dz < -0.001f || dz > 1.001f) error("Invalid dz=%e", dz);
+  if (dw != 0.0f) error("Attempting to interpolate along w!");
+#endif
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f - dz;
+  const float tw = 1.f;
+
+  /* Indicate that the whole array is aligned on boundaries */
+  swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
+
+  /* Linear interpolation along each axis. We read the table 2^3=8 times */
+  /* Note that we intentionally kept the table access along the axis where */
+  /* we do not interpolate as comments in the code to allow readers to */
+  /* understand what is going on. */
+  float result =
+      tx * ty * tz * tw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  /* result +=
+      tx * ty * tz * dw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz,
+     Nw)];*/
+  result +=
+      tx * ty * dz * tw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      tx * dy * tz * tw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  /* result +=
+      tx * ty * dz * dw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      tx * dy * tz * dw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * tz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+*/
+  result +=
+      tx * dy * dz * tw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * dz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * dy * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  result +=
+      dx * dy * dz * tw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  /* result +=
+     dx * dy * tz * dw *
+     table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      tx * dy * dz * dw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+
+  result +=
+      dx * dy * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+*/
+
+  return result;
+}
+
+/**
+ * @brief Interpolate a flattened 4D table at a given position but avoid the
+ * z and w-dimension (ie. the two final dimensions).
+ *
+ * This function uses linear interpolation along each axis.
+ * We look at the wi coordoniate but do not interpolate around it. We just
+ * interpolate the remaining 3 dimensions.
+ * The function also assumes that the table is aligned on
+ * SWIFT_STRUCT_ALIGNMENT.
+ *
+ * @param table The 4D table to interpolate.
+ * @param xi, yi, zi, wi Indices of element of interest.
+ * @param Nx, Ny, Nz, Nw Sizes of array dimensions.
+ * @param dx, dy, dz, dw Distance between the point and the index in units of
+ * the grid spacing.
+ */
+__attribute__((always_inline)) INLINE float interpolation_4d_no_z_no_w(
+    const float *table, const int xi, const int yi, const int zi, const int wi,
+    const float dx, const float dy, const float dz, const float dw,
+    const int Nx, const int Ny, const int Nz, const int Nw) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dx < -0.001f || dx > 1.001f) error("Invalid dx=%e", dx);
+  if (dy < -0.001f || dy > 1.001f) error("Invalid dy=%e", dy);
+  if (dz != 0.0f) error("Attempting to interpolate along z!");
+  if (dw != 0.0f) error("Attempting to interpolate along w!");
+#endif
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f;
+  const float tw = 1.f;
+
+  /* Indicate that the whole array is aligned on boundaries */
+  swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
+
+  /* Linear interpolation along each axis. We read the table 2^3=8 times */
+  /* Note that we intentionally kept the table access along the axis where */
+  /* we do not interpolate as comments in the code to allow readers to */
+  /* understand what is going on. */
+  float result =
+      tx * ty * tz * tw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  /* result +=
+      tx * ty * tz * dw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz,
+     Nw)];*/
+  /* result +=
+      tx * ty * dz * tw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz,
+     Nw)];*/
+  result +=
+      tx * dy * tz * tw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  /* result +=
+      tx * ty * dz * dw *
+      table[row_major_index_4d(xi + 0, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      tx * dy * tz * dw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * tz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+*/
+  /* result +=
+      tx * dy * dz * tw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * dz * tw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+*/
+  result +=
+      dx * dy * tz * tw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 0, Nx, Ny, Nz, Nw)];
+
+  /* result +=
+      dx * dy * dz * tw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 0, Nx, Ny, Nz, Nw)];
+   */
+  /* result +=
+     dx * dy * tz * dw *
+     table[row_major_index_4d(xi + 1, yi + 1, zi + 0, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      dx * ty * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 0, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+  result +=
+      tx * dy * dz * dw *
+      table[row_major_index_4d(xi + 0, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+
+  result +=
+      dx * dy * dz * dw *
+      table[row_major_index_4d(xi + 1, yi + 1, zi + 1, wi + 1, Nx, Ny, Nz, Nw)];
+*/
 
   return result;
 }

@@ -29,6 +29,23 @@ struct tracers_xpart_data {
 
   float momentum_received;
 
+  /* subgrid temperature */
+  float subgrid_temp;
+
+  /* subgrid density */
+  float subgrid_dens;
+
+  /*! Hydrogen fractions */
+  float nHI_over_nH;
+  float nHII_over_nH;
+  float nH2_over_nH;
+
+  /*! HII region timer */
+  float HIIregion_timer_gas;
+
+  /*! Id of the star particle responsible for HII region */
+  long long HIIregion_starid;
+
   /*! Anonymous union for the cosmological non-cosmological runs distinction */
   union {
 

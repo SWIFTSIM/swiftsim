@@ -170,6 +170,13 @@ void read_cooling_header(struct cooling_function_data *cooling) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  dataset = H5Dopen(tempfile_id, "/TotalMassFractions", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->LogMassFractions);
+  if (status < 0) error("error reading total mass fractions\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing cooling dataset");
+
   dataset = H5Dopen(tempfile_id, "/ElementMasses", H5P_DEFAULT);
   status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                    cooling->atomicmass);
@@ -384,6 +391,92 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   if (status < 0) error("error reading T_from_U array\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
+
+  /* Thermal equilibrium temperature */
+  if (posix_memalign((void **)&cooling->table.logTeq, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate logTeq array\n");
+
+  dataset = H5Dopen(tempfile_id, "/ThermEq/Temperature", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.logTeq);
+  if (status < 0) error("error reading Teq array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing logTeq dataset");
+
+  /* Mean particle mass at thermal equilibrium temperature */
+  if (posix_memalign(
+          (void **)&cooling->table.meanpartmass_Teq, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_metallicity *
+              colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate mu array\n");
+
+  dataset = H5Dopen(tempfile_id, "/ThermEq/MeanParticleMass", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.meanpartmass_Teq);
+  if (status < 0) error("error reading mu array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing mu dataset");
+
+  /* Hydrogen fractions at thermal equilibirum temperature */
+  if (posix_memalign(
+          (void **)&cooling->table.logHfracs_Teq, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_metallicity *
+              colibre_cooling_N_density * 3 * sizeof(float)) != 0)
+    error("Failed to allocate hydrogen fractions array\n");
+
+  dataset = H5Dopen(tempfile_id, "/ThermEq/HydrogenFractionsCol", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.logHfracs_Teq);
+  if (status < 0) error("error reading hydrogen fractions array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing hydrogen fractions dataset");
+
+  /* All hydrogen fractions */
+  if (posix_memalign(
+          (void **)&cooling->table.logHfracs_all, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+              colibre_cooling_N_metallicity * colibre_cooling_N_density * 3 *
+              sizeof(float)) != 0)
+    error("Failed to allocate big hydrogen fractions array\n");
+
+  dataset = H5Dopen(tempfile_id, "/Tdep/HydrogenFractionsCol", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.logHfracs_all);
+  if (status < 0) error("error reading big hydrogen fractions array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing big hydrogen fractions dataset");
+
+  /* Pressure at thermal equilibrium temperature */
+  if (posix_memalign((void **)&cooling->table.logPeq, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate logPeq array\n");
+
+  const float logkB = log10(1.380649e-16);
+  int indx1d;
+  for (int ired = 0; ired < colibre_cooling_N_redshifts; ired++) {
+    for (int imet = 0; imet < colibre_cooling_N_metallicity; imet++) {
+
+      indx1d = row_major_index_2d(imet, 0, colibre_cooling_N_metallicity,
+                                  colibre_cooling_N_elementtypes);
+      float logXH = cooling->LogMassFractions[indx1d];
+
+      for (int iden = 0; iden < colibre_cooling_N_density; iden++) {
+
+        indx1d = row_major_index_3d(
+            ired, imet, iden, colibre_cooling_N_redshifts,
+            colibre_cooling_N_metallicity, colibre_cooling_N_density);
+
+        cooling->table.logPeq[indx1d] =
+            cooling->nH[iden] + cooling->table.logTeq[indx1d] - logXH -
+            log10(cooling->table.meanpartmass_Teq[indx1d]) + logkB;
+      }
+    }
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   message("Done reading in general cooling table");

@@ -32,10 +32,19 @@ struct xpart;
 struct cosmology;
 struct hydro_props;
 struct entropy_floor_properties;
+struct feedback_props;
 struct space;
 
 void cooling_update(const struct cosmology *cosmo,
                     struct cooling_function_data *cooling, struct space *s);
+
+void set_subgrid_part(const struct phys_const *phys_const,
+                      const struct unit_system *us,
+                      const struct cosmology *cosmo,
+                      const struct hydro_props *hydro_props,
+                      const struct entropy_floor_properties *floor_props,
+                      const struct cooling_function_data *cooling,
+                      struct part *restrict p, struct xpart *restrict xp);
 
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,
@@ -44,7 +53,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm);
+                       const float dt, const float dt_therm, const double time);
 
 float cooling_timestep(const struct cooling_function_data *restrict cooling,
                        const struct phys_const *restrict phys_const,
@@ -60,6 +69,14 @@ void cooling_first_init_part(
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *restrict cooling,
     const struct part *restrict p, struct xpart *restrict xp);
+
+float cooling_get_internalenergy_for_temperature(
+    const struct phys_const *restrict phys_const,
+    const struct hydro_props *restrict hydro_props,
+    const struct unit_system *restrict us,
+    const struct cosmology *restrict cosmo,
+    const struct cooling_function_data *restrict cooling,
+    const struct part *restrict p, const struct xpart *restrict xp, float temp);
 
 float cooling_get_temperature(
     const struct phys_const *restrict phys_const,

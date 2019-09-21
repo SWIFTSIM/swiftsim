@@ -640,6 +640,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
  * @param hydro_properties the hydro_props struct, used for
  * getting the minimal internal energy allowed in by SWIFT.
  * Read from yml file into engine struct.
+ * @param time Time since Big Bang
  */
 __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct phys_const* restrict phys_const,
@@ -649,7 +650,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* restrict cooling,
     struct part* restrict p, struct xpart* restrict xp, double dt,
-    double dt_therm) {
+    double dt_therm, const double time) {
 
   /* Nothing to do here? */
   if (dt == 0.) return;

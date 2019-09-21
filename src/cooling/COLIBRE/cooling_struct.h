@@ -55,6 +55,21 @@ struct cooling_tables {
 
   /* array to get U from T */
   float *U_from_T;
+
+  /* array of equilibrium temperatures */
+  float *logTeq;
+
+  /* array of mean particle masses at equilibrium temperatures */
+  float *meanpartmass_Teq;
+
+  /* array of pressures at equilibrium temperatures */
+  float *logPeq;
+
+  /* array of hydrogen fractions at equilibrium temperature */
+  float *logHfracs_Teq;
+
+  /* array of all hydrogen fractions */
+  float *logHfracs_all;
 };
 
 /**
@@ -105,7 +120,17 @@ struct cooling_function_data {
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[colibre_table_path_name_length];
 
-  /*! Redshit of H reionization */
+  /* Ionization fraction of gas particles tagged as HII regions */
+  float HIIregion_fion;
+
+  /* Temperature of gas particles tagged as HII regions */
+  float HIIregion_temp;
+
+  /* Distance from EOS to use thermal equilibrium temperature for subgrid props
+   */
+  float dlogT_EOS;
+
+  /*! Redshift of H reionization */
   float H_reion_z;
 
   /*! H reionization energy in CGS units */
