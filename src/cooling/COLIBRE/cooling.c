@@ -291,10 +291,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
                       const struct cooling_function_data *cooling,
                       struct part *restrict p, struct xpart *restrict xp) {
 
-  /* Limit imposed by the entropy floor */
-  /*const double A_floor = entropy_floor(p, cosmo, floor_props); */
   const double rho = hydro_get_physical_density(p, cosmo);
-  /*const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);*/
 
   /* Get the EOS temperature from the entropy floor */
   const double temperature_eos =
@@ -308,9 +305,6 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
   /* Get internal energy at the last kick step */
   const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  int ired, imet, iden;
-  float dred, dmet, dden;
 
   /* Get this particle's abundance ratios compared to solar
    * Note that we need to add S and Ca that are in the tables but not tracked
@@ -329,12 +323,15 @@ void set_subgrid_part(const struct phys_const *phys_const,
       hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
+  /* Get index along the different table axis */
+  int ired, imet, iden;
+  float dred, dmet, dden;
   if (cosmo->z < cooling->H_reion_z) {
     get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
                  &ired, &dred);
   } else {
     ired = colibre_cooling_N_redshifts - 2;
-    dred = 1.0;
+    dred = 1.f;
   }
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
@@ -342,20 +339,23 @@ void set_subgrid_part(const struct phys_const *phys_const,
                &dden);
 
   if (logT < logT_EOS_max) {
+
     /* below entropy floor: use subgrid properties */
     const float pres = gas_pressure_from_internal_energy(rho, u_start);
     const double pres_to_cgs =
         units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
+
     const float logP = (float)log10((double)pres * pres_to_cgs);
-    float logT_at_Peq, mu_at_Peq, logHI, logHII, logH2;
-    float logn_at_Peq = cooling->nH[iden];
 
     /* check what would be the maximum Peq from the table for given redshift and
      * metalllicity */
-    float logPeq_max = interpolation_3d_no_z(
+    const float logPeq_max = interpolation_3d_no_z(
         cooling->table.logPeq, ired, imet, colibre_cooling_N_density - 1, dred,
         dmet, 0., colibre_cooling_N_redshifts, colibre_cooling_N_metallicity,
         colibre_cooling_N_density);
+
+    float logHI, logHII, logH2;
+    float logn_at_Peq = -100.f, logT_at_Peq = -100.f;
 
     if (logP >= logPeq_max) {
       /* EOS pressure (logP) is larger than maximum Peq (can happen for very
@@ -367,7 +367,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
           dred, dmet, 0., colibre_cooling_N_redshifts,
           colibre_cooling_N_metallicity, colibre_cooling_N_density);
 
-      mu_at_Peq = interpolation_3d_no_z(
+      const float mu_at_Peq = interpolation_3d_no_z(
           cooling->table.meanpartmass_Teq, ired, imet,
           colibre_cooling_N_density - 1, dred, dmet, 0.,
           colibre_cooling_N_redshifts, colibre_cooling_N_metallicity,
@@ -375,6 +375,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
       /*const float logkB = (float) log10(const_boltzmann_k_cgs); doesn't work*/
       const double log10_kB = cooling->log10_kB_cgs;
+
       logn_at_Peq =
           logP - logT_at_Peq + log10(XH) + log10(mu_at_Peq) - log10_kB;
 
@@ -405,8 +406,8 @@ void set_subgrid_part(const struct phys_const *phys_const,
        * as the subgrid density will always be higher than the resolved density
        */
 
-      int iden_eq = iden;
-      float dden_eq = 0.;
+      int iden_eq = -1;
+      float dden_eq = -1.f;
 
       for (int i = iden; i < colibre_cooling_N_density; i++) {
         float logPeq_interp = interpolation_3d_no_z(
@@ -414,19 +415,26 @@ void set_subgrid_part(const struct phys_const *phys_const,
             colibre_cooling_N_redshifts, colibre_cooling_N_metallicity,
             colibre_cooling_N_density);
         if (logPeq_interp > logP) {
-          float logPeq_prev = interpolation_3d_no_z(
+          const float logPeq_prev = interpolation_3d_no_z(
               cooling->table.logPeq, ired, imet, i - 1, dred, dmet, 0.,
               colibre_cooling_N_redshifts, colibre_cooling_N_metallicity,
               colibre_cooling_N_density);
+
           logn_at_Peq = (logP - logPeq_prev) / (logPeq_interp - logPeq_prev) *
                             (cooling->nH[i] - cooling->nH[i - 1]) +
                         cooling->nH[i - 1];
+
           iden_eq = i - 1;
           dden_eq = (logn_at_Peq - cooling->nH[i - 1]) /
                     (cooling->nH[i] - cooling->nH[i - 1]);
           break;
         }
       }
+
+#ifdef SWIFT_DEBUG_CHECKS
+      if (iden_eq == -1) error("Did not find the index of subgrid density");
+      if (dden_eq == -1.f) error("Did not find the index of subgrid density");
+#endif
 
       logHI = interpolation_4d_no_w(
           cooling->table.logHfracs_Teq, ired, imet, iden_eq, neutral, dred,
@@ -449,6 +457,11 @@ void set_subgrid_part(const struct phys_const *phys_const,
           colibre_cooling_N_density);
     }
 
+#ifdef SWIFT_DEBUG_CHECKS
+    if (logn_at_Peq == -100.f) error("Did not find a solution!");
+    if (logT_at_Peq == -100.f) error("Did not find a solution!");
+#endif
+
     xp->tracers_data.nHI_over_nH = exp10(logHI);
     xp->tracers_data.nHII_over_nH = exp10(logHII);
     xp->tracers_data.nH2_over_nH = 0.5 * exp10(logH2);
@@ -459,6 +472,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
         phys_const->const_proton_mass / cosmo->a3_inv;
 
   } else {
+
     /* above entropy floor: use table properties */
     const double crho = hydro_get_comoving_density(p);
     /* subgrid_dens should be the same as p->rho */
@@ -482,8 +496,8 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
       /* necessary to define to use the interpolation routine */
       const float weights[3] = {1.0, 1.0, 1.0};
-      /* "sum" from element 0 to 0 (neutral hydrogen) */
 
+      /* "sum" from element 0 to 0 (neutral hydrogen) */
       xp->tracers_data.nHI_over_nH = interpolation4d_plus_summation(
           cooling->table.logHfracs_all, weights, neutral, neutral, ired, item,
           imet, iden, dred, dtem, dmet, dden, colibre_cooling_N_redshifts,
