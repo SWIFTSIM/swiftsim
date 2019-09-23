@@ -245,6 +245,20 @@ size_t time_array_get_index(const struct time_array *t, const size_t offset) {
     }
   }
 
+  /* Avoid the sentinel */
+  if (right == t->size - 1) {
+    right = right - 1;
+  }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (t->records[right].offset > offset ||
+      t->records[right + 1].offset <= offset) {
+    error("Found the wrong element");
+  }
+
+#endif
+
+
   return right;
 }
 
@@ -272,7 +286,7 @@ size_t time_array_get_index_from_time(const struct time_array *t, const double t
   /* Find the time_array with the correct time through a bisection method. */
   while (left <= right) {
     size_t center = (left + right) / 2;
-    const size_t time_center = t->records[center].time;
+    const double time_center = t->records[center].time;
 
     if (time > time_center) {
       left = center + 1;
@@ -282,6 +296,19 @@ size_t time_array_get_index_from_time(const struct time_array *t, const double t
       return center;
     }
   }
+
+  /* Avoid the sentinel */
+  if (right == t->size - 1) {
+    right = right - 1;
+  }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (t->records[right].time > time ||
+      t->records[right + 1].time <= time) {
+    error("Found the wrong element");
+  }
+
+#endif
 
   return right;
 }
@@ -319,7 +346,7 @@ void time_array_print(const struct time_array *t) {
   for (size_t i = 1; i < n; i++) {
     /* Skip the times at the center of the array. */
     if (i < threshold || i > up_threshold)
-      printf(", %lli (%g)", t->records[i].int_time, t->records[i].time);
+      printf(", %zi (%g)", t->records[i].offset, t->records[i].time);
 
     if (i == threshold) printf(", ...");
   }

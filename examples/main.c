@@ -1359,6 +1359,10 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_LOGGER
     logger_log_all(e.logger.logger, &e);
     engine_dump_index(&e);
+
+    /* Write a sentinel timestamp */
+    logger_log_timestamp(e.logger.logger, e.ti_current, e.time,
+                         &e.logger.logger->timestamp_offset);
 #endif
 
 #ifdef HAVE_VELOCIRAPTOR

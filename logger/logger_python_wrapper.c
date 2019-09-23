@@ -231,6 +231,9 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   m = PyModule_Create(&libloggermodule);
   if (m == NULL) return NULL;
 
+  /* Deal with SWIFT clock */
+  clocks_set_cpufreq(0);
+
   import_array();
 
   /* Define the descr of the logger_particle */

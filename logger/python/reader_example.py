@@ -25,16 +25,30 @@ data = logger.loadFromIndex(basename, time)
 # Compute distance from center
 plt.show()
 pos = np.array([data["positions_x"], data["positions_y"],
-               data["positions_y"]]).transpose()
-center = pos.mean(axis=0)
-r2 = np.sum((pos - center)**2, axis=1)
+               data["positions_z"]]).transpose()
 
-# plot entropy vs distance
-plt.plot(np.sqrt(r2), data["densities"], '.')
 
-plt.xlim(0., 0.5)
-plt.ylim(-1, 5)
-plt.xlabel("Radius")
-plt.ylabel("Density")
+def plot3D():
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot(data["positions_x"], data["positions_y"],
+            data["positions_z"], ".")
 
+
+def plot2D():
+    center = np.array([0.5]*3)
+    r2 = np.sum((pos - center)**2, axis=1)
+
+    # plot entropy vs distance
+    plt.plot(np.sqrt(r2), data["entropies"], '.',
+             markersize=0.2)
+
+    plt.xlim(0., 0.5)
+    plt.ylim(-1, 50)
+    plt.xlabel("Radius")
+    plt.ylabel("Entropy")
+
+
+plot2D()
 plt.show()

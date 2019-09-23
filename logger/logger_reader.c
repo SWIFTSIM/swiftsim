@@ -177,7 +177,7 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   unsigned int right = reader->index.n_files - 1;
 
   while(left != right) {
-    /* Do a ceil - division */ 
+    /* Do a ceil - division */
     unsigned int m = (left + right + 1) / 2;
     if (reader->index.times[m] > time) {
       right = m - 1;
@@ -195,6 +195,11 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
 
   /* Get the offset of the time chunk */
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
+
+  /* In order to interpolate, we need to be above and not below the time */
+  ind += 1;
+
+  /* Save the values */
   reader->time.int_time = reader->log.times.records[ind].int_time;
   reader->time.time_offset = reader->log.times.records[ind].offset;
 }
@@ -241,9 +246,11 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
     size_t prev_offset = data[i].offset;
     size_t next_offset = prev_offset;
 
-    message("%zi", next_offset);
-    if (i > 10)
-      error("exit");
+#ifdef SWIFT_DEBUG_CHECKS
+    if (prev_offset >= reader->time.time_offset) {
+      error("An offset is out of range.");
+    }
+#endif
 
     while(next_offset < reader->time.time_offset) {
       prev_offset = next_offset;
@@ -254,6 +261,7 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
       if (test == -1) {
         error("End of file");
       }
+
     }
 
     /* Read the particle */
