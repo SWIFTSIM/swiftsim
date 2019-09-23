@@ -14,7 +14,7 @@ import liblogger as logger
 if len(sys.argv) != 3:
     print("WARNING missing arguments. Will use the default ones")
     basename = "../../examples/HydroTests/SedovBlast_3D/index"
-    time = 0.049
+    time = 0.05
 else:
     basename = sys.argv[-1]
     time = sys.argv[-2]

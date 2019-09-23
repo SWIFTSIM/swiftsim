@@ -196,8 +196,11 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   /* Get the offset of the time chunk */
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
 
-  /* In order to interpolate, we need to be above and not below the time */
-  ind += 1;
+  /* Check if we requested exactly a time step  */
+  if (reader->log.times.records[ind].time != time) {
+    /* In order to interpolate, we need to be above and not below the time */
+    ind += 1;
+  }
 
   /* Save the values */
   reader->time.int_time = reader->log.times.records[ind].int_time;

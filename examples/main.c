@@ -1358,7 +1358,6 @@ int main(int argc, char *argv[]) {
     engine_print_stats(&e);
 #ifdef WITH_LOGGER
     logger_log_all(e.logger.logger, &e);
-    engine_dump_index(&e);
 
     /* Write a sentinel timestamp */
     logger_log_timestamp(e.logger.logger, e.ti_current, e.time,
