@@ -506,14 +506,11 @@ COLIBREFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-  Momentum_per_StellarMass:         1.8e40          # Momentum per unit stellar mass available from Starburst 99 g cm s^-1 Msun^-1
-  Momentum_time_scale:              6.5             # Momentum timescale in Myr
+  Momentum_time_scale:              30.             # Maximum age in Myr of star particle to inject momentum by stellar winds
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
-  Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
-  Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5 # Location of file for early feedback
+  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_binary.hdf5 # Location of file for early feedback
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:

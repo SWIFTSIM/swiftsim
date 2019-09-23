@@ -287,12 +287,23 @@ struct feedback_props {
   /* Cumululative number of ionizing photons per g stellar mass
    * dimension [HII_nr_metbins, HII_nr_agebins] */
   float *HII_logQcum;
+
+  /* Cumulative momentum input per g stellar mass from stellar winds
+   * dimension [HII_nr_metbins, HII_nr_agebins] */
+  float *SW_logPcum;
+
 };
 
 double compute_average_photoionizing_luminosity(const struct feedback_props *fp,
                                                 float t1, float t2, float Z);
 
 double get_cumulative_ionizing_photons(const struct feedback_props *fp,
+                                       float t_Myr, float logZ);
+
+double compute_average_stellarwind_momentum(const struct feedback_props* fp,
+                                                float t1, float t2, float Z);
+
+double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
                                        float t_Myr, float logZ);
 
 void feedback_props_init(struct feedback_props *fp,
