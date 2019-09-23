@@ -43,10 +43,10 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
 
   struct chimes_current_rates_struct chimes_current_rates; 
   allocate_current_rates_memory(&chimes_current_rates, myGlobalVars); 
-
+  
   check_constraint_equations(myGasVars, myGlobalVars);
   set_species_structures(species, myGasVars, &total_network_size, &nonmolecular_network_size, myGlobalVars);
-
+  
   /* Set up structure to pass user
    * data to the solver. */
   data.myGasVars = myGasVars;
@@ -295,7 +295,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
 
       /* Call CVode() to integrate the chemistry. */ 
       CVode(cvode_mem, (realtype) myGasVars->hydro_timestep, y, &t, CV_NORMAL);
-
+      
       /* Write the output abundances to the gas cell 
        * Note that species not included in the reduced
        * network are kept constant in the GasVars struct. */

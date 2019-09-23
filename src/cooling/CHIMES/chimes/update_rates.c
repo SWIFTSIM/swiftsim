@@ -332,8 +332,8 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 	  
 	  if (myGlobalVars->cellSelfShieldingOn > 0) 
 	    {
-	      log_NH2 = (ChimesFloat) log10(data.H2_column); 
-	      log_b = (ChimesFloat) log10(myGasVars->doppler_broad); 
+	      log_NH2 = (ChimesFloat) log10(chimes_max(data.H2_column, 1.0e-100)); 
+	      log_b = (ChimesFloat) log10(chimes_max(myGasVars->doppler_broad, 1.0e-100)); 
 	      chimes_get_table_index(chimes_table_bins.H2self_column_densities, chimes_table_bins.N_H2self_column_densities, log_NH2, &NH2_index, &dNH2); 
 	      chimes_get_table_index(chimes_table_bins.b_turbulence, chimes_table_bins.N_b_turbulence, log_b, &b_index, &db); 
 	      
@@ -343,8 +343,11 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 		  data.chimes_current_rates->H2_photodissoc_shield_factor[i] *= exp(- chimes_table_H2_photodissoc.gamma[i] * data.extinction); 
 		}
 	    }
-	  else 
-	    data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0; 
+	  else
+	    {
+	      for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++)  
+		data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0; 
+	    }
 	  
 	  
 	  // Zero the rate coefficients 
