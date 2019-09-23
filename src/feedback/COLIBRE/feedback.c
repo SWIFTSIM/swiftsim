@@ -30,11 +30,6 @@
 #include "timers.h"
 #include "yield_tables.h"
 
-/* Minimal/maximal value of the metallicity (metal mass fraction)
- * available in the Starburst99 model */
-static const double colibre_feedback_momentum_SB99_Z_min = 0.001;
-static const double colibre_feedback_momentum_SB99_Z_max = 0.04;
-
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
  * gas particle affected by SNII feedback.
@@ -841,6 +836,33 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 }
 
 /**
+ * @brief Gets interpolated cumulative stellar wind momentum input from table
+ * @param props feedback_props structure for getting model parameters for
+ * coefficients
+ * @param t_Myr stellar age in Myr
+ * @param logZ log10 of (stellar) metal mass fraction Z
+ */
+double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
+                                       float t_Myr, float logZ) {
+  float logPcum_loc;
+  float d_age, d_met;
+  int met_index, age_index;
+
+  if (t_Myr < fp->HII_agebins[0]) return 0.;
+
+  get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+
+  get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
+
+  logPcum_loc =
+      interpolation_2d_flat(fp->SW_logPcum, met_index, age_index, d_met, d_age,
+                            fp->HII_nr_metbins, fp->HII_nr_agebins);
+
+  return exp10(logPcum_loc);
+}
+
+
+/**
  * @brief Gets interpolated cumulative ionizing photons from table
  * @param props feedback_props structure for getting model parameters for
  * coefficients
@@ -865,6 +887,33 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 
   return exp10(logQcum_loc);
 }
+
+/**
+ * @brief Calculates the average stellar wind momentum input between t1 and t2 for an
+ * initial metallicity of Z
+ *
+ * @param props feedback_props structure for getting model parameters
+ * @param t1 initial time in Myr
+ * @param t2 final time in Myr
+ * @param Z metal mass fraction
+ * @param Pbar average momentum input of a star with metallicity Z over this
+ * period of time (t1 - t2)
+ */
+double compute_average_stellarwind_momentum(const struct feedback_props* fp,
+                                                float t1, float t2, float Z) {
+
+  double P_t1, P_t2, Pbar;
+  /* find a way to get that from constants, if possible without passing the
+     whole structure through everything...*/
+  const double Myr_inv = 3.1688e-14;
+
+  P_t1 = get_cumulative_stellarwind_momentum(fp, t1, log10(Z));
+  P_t2 = get_cumulative_stellarwind_momentum(fp, t2, log10(Z));
+
+  Pbar = (P_t2 - P_t1) / (t2 - t1) * Myr_inv;
+  return Pbar;
+}
+
 
 /**
  * @brief Calculates the average ionizing luminosity between t1 and t2 for an
@@ -908,12 +957,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const struct feedback_props* props,
                                             const double star_age_Gyr,
                                             const double dt,
-                                            const float ngb_gas_mass) {
+                                            const float ngb_gas_mass){
 
-  /* From starburst 99 */
-  const double p1 = props->p1;            /* g cm s^-1 Mo^-1 */
-  const double p2 = props->p2;            /* Metallicity mass faction*/
-  const double p3 = props->p3;            /* exponent of metallicity*/
   const double tw = props->tw;            /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
@@ -946,9 +991,6 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
     return;
   }
 
-  /* Initial stellar mass in Msun */
-  const double mstr_in_Msun = sp->mass_init * props->mass_to_solar_mass;
-
   /* Mass within the SPH kernel in grams */
   const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs;
 
@@ -956,24 +998,22 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Bring the metallicity in the range covered by the model */
-  Z = min(Z, colibre_feedback_momentum_SB99_Z_max);
-  Z = max(Z, colibre_feedback_momentum_SB99_Z_min);
+  Z = max(Z, exp10(props->HII_logZbins[0]));
+  Z = min(Z, exp10(props->HII_logZbins[props->HII_nr_metbins-1]));
 
-  /* Apply the Agert+13 model (all in CGS) */
-
-  /* Maximum time over which star can inject momentum */
-  const double tw_cgs = tw * Myr_in_s;
-  const double p1_cgs = p1 * mstr_in_Msun * pow(Z / p2, p3);
-
-  /* Momentum rate */
-  const double dp_dt_cgs = p1_cgs / tw_cgs;
+  /* get the average momentum input from stellar winds during this timestep 
+   * from the BPASS tables */
+  const float t1_Myr = (float) star_age_Gyr * 1.e3;
+  const float t2_Myr = t1_Myr + (float) dt_Myr;
+  const double Pbar = compute_average_stellarwind_momentum(props, t1_Myr, t2_Myr, Z);
+  const double P_cgs = Pbar * sp->mass_init * us->UnitMass_in_cgs * dt_cgs;
 
   /* Velocity kick */
   const double delta_v_cgs = delta_v_km_p_s * 1e5;
 
   /* Get the momentum rate in code units and store it */
   sp->feedback_data.to_distribute.momentum =
-      dp_dt_cgs * dt_cgs / props->Momentum_to_cgs;
+      P_cgs / props->Momentum_to_cgs;
   sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
 
   /* Now compute the robability of kicking particle with given delta_v
@@ -1001,7 +1041,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
     /* The probability of kicking a particle is given
      * by the kicking velocity chosen in the parameter file
      * and is normalised by the mass available in the kernel */
-    prob = (dp_dt_cgs * dt_cgs / delta_v_cgs) / ngb_gas_mass_in_g;
+    prob = (P_cgs / delta_v_cgs) / ngb_gas_mass_in_g;
 
     /* Mass inside the kernel too small makes prob > 1 */
     if (prob > 1.) {
@@ -1344,14 +1384,8 @@ void feedback_props_init(struct feedback_props* fp,
                                     "COLIBREFeedback:SNII_energy_fraction_n_n");
   fp->n_Z = parser_get_param_double(params,
                                     "COLIBREFeedback:SNII_energy_fraction_n_Z");
-  fp->p1 = parser_get_param_double(params,
-                                   "COLIBREFeedback:Momentum_per_StellarMass");
-  fp->p2 = parser_get_param_double(params,
-                                   "COLIBREFeedback:Momentum_Metallicity_norm");
-  fp->p3 = parser_get_param_double(
-      params, "COLIBREFeedback:Momentum_Metallicity_exponent");
   fp->tw =
-      parser_get_param_double(params, "COLIBREFeedback:Momentum_time_scale");
+      parser_get_param_double(params, "COLIBREFeedback:stellarwind_maxage_Myr");
   fp->delta_v = parser_get_param_double(
       params, "COLIBREFeedback:Momentum_desired_delta_v");
 
@@ -1457,6 +1491,10 @@ void feedback_props_init(struct feedback_props* fp,
             (void**)&fp->HII_logQcum, SWIFT_STRUCT_ALIGNMENT,
             fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
       error("Failed to allocate Q array\n");
+    if (posix_memalign(
+            (void**)&fp->SW_logPcum, SWIFT_STRUCT_ALIGNMENT,
+            fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
+      error("Failed to allocate P array\n");
 
     /* read in the metallicity bins */
     dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
@@ -1481,6 +1519,14 @@ void feedback_props_init(struct feedback_props* fp,
     if (status < 0) error("error reading Q\n");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: logQcumulative");
+
+    /* read in cumulative momentum input */
+    dataset = H5Dopen(tempfile_id, "logPcumulative", H5P_DEFAULT);
+    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                     fp->SW_logPcum);
+    if (status < 0) error("error reading P\n");
+    status = H5Dclose(dataset);
+    if (status < 0) error("error closing dataset: logPcumulative");
 
     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
       error("Stopping for now (%.4f is larger than %.4f)",
