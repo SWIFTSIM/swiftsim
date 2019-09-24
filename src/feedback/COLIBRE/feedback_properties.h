@@ -91,8 +91,8 @@ struct feedback_props {
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
 
-  /*! Are we doing HII regions? */
-  int with_HIIregions;
+  /*! Are we doing HII regions and-or stellar winds? */
+  int with_earlyfeedback;
 
   /* ------------ Yield tables    ----------------- */
 
