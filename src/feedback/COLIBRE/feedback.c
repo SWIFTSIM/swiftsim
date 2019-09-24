@@ -959,7 +959,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const double dt,
                                             const float ngb_gas_mass){
 
-  const double tw = props->tw;            /* Myr */
+  const double tw = (double) props->tw;            /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
@@ -1131,7 +1131,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   sp->star_timestep = dt;
 
   /* Compute ionizing photons for HII regions */
-  if (feedback_props->with_earlyfeedback &&
+  if (feedback_props->HIIregion_maxageMyr > 0. &&
       star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
     /* only rebuild every HIIregion_dtMyr and at the first timestep the star was
      * formed*/
@@ -1203,7 +1203,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       sp->feedback_data.to_distribute.HIIregion_starid = -1;
     }
 
-  } else if (feedback_props->with_earlyfeedback) {
+  } else if (feedback_props->HIIregion_maxageMyr > 0.) {
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
@@ -1322,8 +1322,17 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->with_earlyfeedback =
-      parser_get_param_int(params, "COLIBREFeedback:use_earlyfeedback");
+  fp->HIIregion_maxageMyr =
+         parser_get_opt_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
+
+  fp->tw =
+      parser_get_opt_param_float(params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
+
+  if (fp->HIIregion_maxageMyr == 0.f && fp->tw == 0.f) {
+     fp->with_earlyfeedback = 0;
+  } else {
+     fp->with_earlyfeedback = 1;
+  }
 
   /* Properties of the IMF model ------------------------------------------ */
 
@@ -1388,10 +1397,19 @@ void feedback_props_init(struct feedback_props* fp,
                                     "COLIBREFeedback:SNII_energy_fraction_n_n");
   fp->n_Z = parser_get_param_double(params,
                                     "COLIBREFeedback:SNII_energy_fraction_n_Z");
-  fp->tw =
-      parser_get_param_double(params, "COLIBREFeedback:stellarwind_maxage_Myr");
-  fp->delta_v = parser_get_param_double(
-      params, "COLIBREFeedback:Momentum_desired_delta_v");
+
+  /* Parameter only necessary if running with stellar winds */
+  if (fp->tw != 0.f) {
+     fp->delta_v = parser_get_param_double(
+         params, "COLIBREFeedback:Momentum_desired_delta_v"); 
+  } else {
+     fp->delta_v = 0.f;
+  }
+  /* Parameter only necessary if running with HII regions */
+  if (fp->HIIregion_maxageMyr > 0.f) {
+     fp->HIIregion_dtMyr = parser_get_param_float(
+            params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
+  }
 
   /* Properties of the stochastic SNIa model */
   fp->SNIa_deltaT_desired =
@@ -1453,11 +1471,6 @@ void feedback_props_init(struct feedback_props* fp,
 
   if (fp->with_earlyfeedback) {
 #ifdef HAVE_HDF5
-    fp->HIIregion_maxageMyr =
-         parser_get_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr");
-
-    fp->HIIregion_dtMyr = parser_get_param_float(
-      params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
 
     /* Read yield table filepath  */
     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
