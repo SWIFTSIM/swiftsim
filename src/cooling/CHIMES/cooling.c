@@ -65,9 +65,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   char string_buffer[500]; 
 
   /* read the parameters */
-  if (sizeof(ChimesFloat) != sizeof(double)) 
-    error("CHIMES ERROR: When we parse the CHIMES parameters, we assume that the ChimesFloat type has been set to double. However, sizeof(ChimesFloat) = %lu bytes, while sizeof(double) = %lu bytes.\n", sizeof(ChimesFloat), sizeof(double)); 
-
 
   /* Set paths to CHIMES data files. */ 
   parser_get_param_string(parameter_file, "CHIMESCooling:data_path", chimes_data_dir); 
@@ -96,7 +93,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable", string_buffer); 
       sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[0], "%s/%s", chimes_data_dir, string_buffer); 
 
-      cooling->isotropic_photon_density[0] = parser_get_param_double(parameter_file, "CHIMESCooling:isotropic_photon_density"); 
+      cooling->isotropic_photon_density[0] = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:isotropic_photon_density"); 
     }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag); 
@@ -121,17 +118,17 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->ChimesGlobalVars.InitIonState = parser_get_opt_param_int(parameter_file, "CHIMESCooling:InitIonState", 1); 
 
   /* Cosmic ray ionisation rate of HI. */ 
-  cooling->cosmic_ray_rate = parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
+  cooling->cosmic_ray_rate = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
 
   /* CHIMES tolerance parameters */ 
-  cooling->ChimesGlobalVars.relativeTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:relativeTolerance"); 
-  cooling->ChimesGlobalVars.absoluteTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:absoluteTolerance"); 
-  cooling->ChimesGlobalVars.thermalAbsoluteTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:thermalAbsoluteTolerance"); 
-  cooling->ChimesGlobalVars.explicitTolerance = parser_get_param_double(parameter_file, "CHIMESCooling:explicitTolerance"); 
-  cooling->ChimesGlobalVars.scale_metal_tolerances = parser_get_param_double(parameter_file, "CHIMESCooling:scale_metal_tolerances"); 
+  cooling->ChimesGlobalVars.relativeTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:relativeTolerance"); 
+  cooling->ChimesGlobalVars.absoluteTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:absoluteTolerance"); 
+  cooling->ChimesGlobalVars.thermalAbsoluteTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:thermalAbsoluteTolerance"); 
+  cooling->ChimesGlobalVars.explicitTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:explicitTolerance"); 
+  cooling->ChimesGlobalVars.scale_metal_tolerances = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:scale_metal_tolerances"); 
 
   /* Maximum temperature for the molecular network */ 
-  cooling->ChimesGlobalVars.T_mol = parser_get_param_double(parameter_file, "CHIMESCooling:T_mol"); 
+  cooling->ChimesGlobalVars.T_mol = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:T_mol"); 
 
   /* Determine which metal elements to include 
    * in the CHIMES network. Note that H and He 
@@ -151,7 +148,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * will need to be updated for the current redshift. */ 
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
-  cooling->ChimesGlobalVars.cmb_temperature = cooling->T_CMB_0; 
+  cooling->ChimesGlobalVars.cmb_temperature = (ChimesFloat) cooling->T_CMB_0; 
 
   /* Equilibrium mode: 
    * 0 --> Evolve in non-equilibrium. 
