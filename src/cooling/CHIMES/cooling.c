@@ -78,7 +78,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * UV_field_flag == 0: No UV radiation. 
    *               == 1: Single, constant user-defined spectrum.
    * 
-   * Shielding_flag == 0: No shielding. 
+   * Shielding_flag == 0: No shielding.
+   *                == 1: Jeans shielding length. 
    */ 
   cooling->UV_field_flag = parser_get_param_int(parameter_file, "CHIMESCooling:UV_field_flag"); 
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
@@ -100,6 +101,17 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   if (cooling->Shielding_flag == 0) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 0; 
+  else if (cooling->Shielding_flag == 1) 
+    {
+      cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
+
+      /* Factor to re-scale shielding length. */ 
+      cooling->shielding_length_factor = parser_get_opt_param_double(parameter_file, "CHIMESCooling:shielding_length_factor", 1.0); 
+
+      /* Maximum shielding length (in code units). 
+       * If negative, do not impose a maximum. */ 
+      cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
+    }
   else 
     error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
 
@@ -390,6 +402,8 @@ void chimes_update_gas_vars(const double u_cgs,
    * need, in cgs units */ 
   float dimension_k[5] = {1, 2, -2, 0, -1}; 
   double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  float dimension_G[5] = {-1, 3, -2, 0, 0}; 
+  double newton_G_cgs = phys_const->const_newton_G * units_general_cgs_conversion_factor(us, dimension_G); 
   double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
 
   double mu = chimes_mu(cooling, p, xp); 
@@ -412,8 +426,7 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate; 
   ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol; 
   ChimesGasVars->hydro_timestep = (ChimesFloat) dt_cgs; 
-  
-  ChimesGasVars->cell_size = 0; 
+
   ChimesGasVars->constant_heating_rate = 0.0; 
   ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode; 
   ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
@@ -430,6 +443,22 @@ void chimes_update_gas_vars(const double u_cgs,
        * chimes tables. */ 
       ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
       ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
+    }
+
+  if (cooling->Shielding_flag == 0) 
+    ChimesGasVars->cell_size = 0; 
+  else if (cooling->Shielding_flag == 1) 
+    {
+      /* Jeans length */ 
+      ChimesGasVars->cell_size = sqrt(M_PI * hydro_gamma * boltzmann_k_cgs * ChimesGasVars->temperature / (mu * newton_G_cgs * (proton_mass_cgs * ChimesGasVars->nH_tot / XH) * proton_mass_cgs)); 
+      ChimesGasVars->cell_size *= cooling->shielding_length_factor; 
+
+      if (cooling->max_shielding_length > 0.0) 
+	{
+	  double max_shielding_length_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
+	  if (ChimesGasVars->cell_size > max_shielding_length_cgs) 
+	    ChimesGasVars->cell_size = max_shielding_length_cgs; 
+	}
     }
 
   /* Doppler broadening parameter, for 
