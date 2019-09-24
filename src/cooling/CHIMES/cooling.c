@@ -106,6 +106,20 @@ void cooling_init_backend(struct swift_params *parameter_file,
   else 
     error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
 
+  /* Flag to determine how to set initial 
+   * CHIMES abundances: 
+   * 0 -- Read abundance array from ICs. 
+   * 1 -- Set each element to one ionisation 
+   *      state, determined by the InitIonState 
+   *      parameter. 
+   * 2 -- Compute initial equilibrium abundances. 
+   */ 
+  cooling->init_abundance_mode = parser_get_param_int(parameter_file, "CHIMESCooling:init_abundance_mode"); 
+  if (!((cooling->init_abundance_mode == 0) || (cooling->init_abundance_mode == 1) || (cooling->init_abundance_mode == 2)))
+    error("CHIMESCooling: init_abundance_mode %d not recognised.", cooling->init_abundance_mode); 
+
+  cooling->ChimesGlobalVars.InitIonState = parser_get_opt_param_int(parameter_file, "CHIMESCooling:InitIonState", 1); 
+
   /* Cosmic ray ionisation rate of HI. */ 
   cooling->cosmic_ray_rate = parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
 
@@ -138,17 +152,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
   cooling->ChimesGlobalVars.cmb_temperature = cooling->T_CMB_0; 
-  
-  /* The following CHIMES parameters do not need 
-   * to be modified by the user. These are just 
-   * hard-coded for now. */ 
-  cooling->ChimesGlobalVars.InitIonState = 1; 
-  cooling->ChimesGlobalVars.grain_temperature = 10.0; 
-  
-  /* Physical velocity divergence isn't easily 
-   * accessible, so just run with static 
-   * molecular cooling for now. */ 
-  cooling->ChimesGlobalVars.StaticMolCooling = 1; 
 
   /* Equilibrium mode: 
    * 0 --> Evolve in non-equilibrium. 
@@ -162,6 +165,16 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * 1 --> Enable thermal evolution. 
    */ 
   cooling->ThermEvolOn = parser_get_param_int(parameter_file, "CHIMESCooling:ThermEvolOn"); 
+  
+  /* The following CHIMES parameters do not need 
+   * to be modified by the user. These are just 
+   * hard-coded for now. */ 
+  cooling->ChimesGlobalVars.grain_temperature = 10.0; 
+  
+  /* Physical velocity divergence isn't easily 
+   * accessible, so just run with static 
+   * molecular cooling for now. */ 
+  cooling->ChimesGlobalVars.StaticMolCooling = 1; 
     
   /* Optional parameters to define S and Ca 
    * relative to Si. */ 
@@ -198,11 +211,11 @@ void cooling_print_backend(const struct cooling_function_data *cooling) {
  * @brief Sets the cooling properties of the (x-)particles to a valid start
  * state.
  *
- * For now, we initialise the CHIMES abundance array to be singly ionised. 
- * This initial state is controlled by the ChimesGlobalVars.InitIonState 
- * parameter, which we have hard-coded to 1 in cooling_init_backend()). 
- * In the future, we will need to consider options to either compute the 
- * initial equilibrium abundances, or read them in from the ICs/snapshot. 
+ * This is controlled by the cooling->init_abundance_mode as follows: 
+ * 0 -- Read abundance array from ICs. 
+ * 1 -- Set each element to one ionisation state, determined by the 
+ *      ChimesGlobalVars.InitIonState parameter. 
+ * 2 -- Compute initial equilibrium abundances. 
  *
  * @param phys_const The physical constant in internal units.
  * @param us The unit system.
@@ -219,6 +232,7 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     struct xpart* restrict xp) {
   struct globalVariables ChimesGlobalVars = data->ChimesGlobalVars; 
   struct gasVariables ChimesGasVars; 
+  int i; 
 
   /* Allocate memory to arrays within ChimesGasVars. */
   allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
@@ -227,17 +241,120 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
    * metal mass fractions. */ 
   chimes_update_element_abundances(data, p, xp, &ChimesGasVars, 0); 
 
-  /* Set initial values for CHIMES 
-   * abundance array. */ 
-  initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
-
-  /* Copy abundances over to xp. */ 
-  int i; 
-  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
+  /* Zero the set_init_eqm_flag. */
+  xp->cooling_data.set_init_eqm_flag = 0; 
 
   /* Zero particle's radiated energy. */ 
   xp->cooling_data.radiated_energy = 0.f; 
+
+  if (data->init_abundance_mode == 0) 
+    {
+      /* Check that the abundance array has 
+       * been correctly read in from ICs. If 
+       * not, all values will be zero. */ 
+      ChimesFloat abundance_sum = 0.0; 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	abundance_sum += xp->cooling_data.chimes_abundances[i]; 
+      
+      if (abundance_sum < 1.0e-30) 
+	error("CHIMES ERROR: init_abundance_mode == 0, but the CHIMES abundance array has not been read in from ICs."); 
+    }
+  else if (data->init_abundance_mode == 1) 
+    {
+      /* Set initial values for CHIMES 
+       * abundance array. */ 
+      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+    }
+  else if (data->init_abundance_mode == 2) 
+    {
+      /* Set abundance array to an initial guess. */ 
+      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+
+      /* We cannot evolve to equilibrium here, because 
+       * the initial gas densities are not calculated 
+       * until after the various first_init_part() 
+       * routines, so p->rho = 0 here. Instead, set a 
+       * flag in xp so that, when we next call the 
+       * cooling_cool_part() routine, it will first 
+       * set up the equilibrium abundances. */ 
+      xp->cooling_data.set_init_eqm_flag = 1; 
+    } 
+  else 
+    error("CHIMESCooling: init_abundance_mode %d not recognised.", data->init_abundance_mode); 
+
+  if (data->init_abundance_mode > 0) 
+    {
+      /* Copy abundances over to xp. */ 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
+    }
+
+  /* Free CHIMES memory. */ 
+  free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+}
+
+/**
+ * @brief Set initial abundances to equilibrium. 
+ * 
+ * Evolve the chemical abundances to equilibrium. 
+ *   
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param cosmo The current cosmological model.
+ * @param hydro_properties the hydro_props struct
+ * @param floor_props Properties of the entropy floor.
+ * @param data The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
+			 const struct unit_system* restrict us,
+			 const struct cosmology* restrict cosmo,
+			 const struct hydro_props *hydro_properties,
+			 const struct entropy_floor_properties *floor_props,
+			 const struct cooling_function_data* data, 
+			 struct part* restrict p,
+			 struct xpart* restrict xp) {
+  struct globalVariables ChimesGlobalVars = data->ChimesGlobalVars; 
+  struct gasVariables ChimesGasVars; 
+  int i; 
+
+  /* Allocate memory to arrays within ChimesGasVars. */ 
+  allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+
+  /* Copy abundances over from xp to ChimesGasVars. */
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
+  chimes_update_element_abundances(data, p, xp, &ChimesGasVars, 1); 
+      
+  /* Get the particle's internal energy */ 
+  double u_0 = hydro_get_physical_internal_energy(p, xp, cosmo); 
+  double u_0_cgs = u_0 * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+
+  /* To compute chemical equilibrium, we will 
+   * integrate the chemistry ten times for 
+   * 1 Gyr per iteration. Multiple iterations 
+   * are required so that the shielding column 
+   * densities can be updated between each 
+   * iteration. */ 
+  double dt_cgs = 3.15576e16; 
+  int n_iterations = 10; 
+  
+  /* Update ChimesGasVars with the particle's 
+   * thermodynamic variables. */ 
+  chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties, floor_props, data, p, xp, &ChimesGasVars, dt_cgs); 
+  
+  /* Set temperature evolution off, so that we
+   * compute equilibrium at fixed temperature. */ 
+  ChimesGasVars.ThermEvolOn = 0; 
+  
+  /* Integrate to chemical equilibrium. */
+  for (i = 0; i < n_iterations; i++) 
+    chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
+
+  /* Copy abundances over to xp. */ 
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
@@ -423,6 +540,19 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm) {
 
+  if (xp->cooling_data.set_init_eqm_flag) 
+    {
+      /* First time we call cooling_cool_part() on a 
+       * particle, if this flag is set to one then 
+       * we need to set its CHIMES abundances to 
+       * equilibrium. Note that we do this before 
+       * checking for dt == 0, so that the eqm 
+       * will be set during the call within 
+       * engine_init_particles(). */ 
+      chimes_set_init_eqm(phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp); 
+      xp->cooling_data.set_init_eqm_flag = 0; 
+    }
+
   /* No cooling happens over zero time */
   if (dt == 0.) return;
 
@@ -437,7 +567,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
   int i; 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
-
 
   /* Update element abundances from metal mass 
    * fractions. We need to do this here, and not 
@@ -559,7 +688,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
-
 }
 
 /**
