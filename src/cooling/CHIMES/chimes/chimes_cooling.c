@@ -316,13 +316,13 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
 
 	      chimes_get_table_index(chimes_table_bins.Psi, chimes_table_bins.N_Psi, log_Psi, &Psi_index, &dPsi); 
 	  
-	      total_cooling -= pow(10.0, chimes_interpol_2d(chimes_table_cooling.photoelectric_heating, T_index, Psi_index, dT, dPsi)) * G0 * myGasVars->metallicity / myGasVars->nH_tot; 
-	      total_cooling += pow(10.0, chimes_interpol_2d(chimes_table_cooling.grain_recombination, T_index, Psi_index, dT, dPsi)) * myGasVars->metallicity * myGasVars->abundances[myGlobalVars->speciesIndices[elec]]; 
+	      total_cooling -= pow(10.0, chimes_interpol_2d(chimes_table_cooling.photoelectric_heating, T_index, Psi_index, dT, dPsi)) * G0 * myGasVars->dust_ratio / myGasVars->nH_tot; 
+	      total_cooling += pow(10.0, chimes_interpol_2d(chimes_table_cooling.grain_recombination, T_index, Psi_index, dT, dPsi)) * myGasVars->dust_ratio * myGasVars->abundances[myGlobalVars->speciesIndices[elec]]; 
 	    }
 	}
 
       // Gas-grain energy transfer 
-      total_cooling += pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer, T_index, dT)) * myGasVars->metallicity * (myGasVars->temperature - myGlobalVars->grain_temperature); 
+      total_cooling += pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer, T_index, dT)) * myGasVars->dust_ratio * (myGasVars->temperature - myGlobalVars->grain_temperature); 
     }
 
    

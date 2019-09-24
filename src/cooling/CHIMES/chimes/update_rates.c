@@ -450,11 +450,11 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
     data.chimes_current_rates->recombination_AB_rate[i] = data.chimes_current_rates->recombination_AB_rate_coefficient[i] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][0]] * myGasVars->abundances[chimes_table_recombination_AB.reactants[i][1]] * myGasVars->nH_tot; 
 
   // grain_recombination reactions 
-  // NOTE: Rate scales with metallicity 
+  // NOTE: Rate scales with dust_ratio 
   /* All reactions in this group are 2-body, with rate coefficients in cm^3/s, 
    * so current_rate = rate_coefficient * x_0 * x_1 * nH_tot (in s^-1). */
   for (i = 0; i < chimes_table_grain_recombination.N_reactions[data.mol_flag_index]; i++) 
-    data.chimes_current_rates->grain_recombination_rate[i] = data.chimes_current_rates->grain_recombination_rate_coefficient[i] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][0]] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][1]] * myGasVars->nH_tot * myGasVars->metallicity; 
+    data.chimes_current_rates->grain_recombination_rate[i] = data.chimes_current_rates->grain_recombination_rate_coefficient[i] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][0]] * myGasVars->abundances[chimes_table_grain_recombination.reactants[i][1]] * myGasVars->nH_tot * myGasVars->dust_ratio; 
 
 
   // cosmic_ray reactions 
@@ -475,8 +475,8 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
   if (data.mol_flag_index) 
     {
       // H2_dust_formation 
-      // NOTE: Rate scales with metallicity 
-      data.chimes_current_rates->H2_dust_formation_rate = data.chimes_current_rates->H2_dust_formation_rate_coefficient * myGasVars->abundances[chimes_table_H2_dust_formation.reactants[0]] * myGasVars->metallicity * myGasVars->nH_tot; 
+      // NOTE: Rate scales with dust_ratio 
+      data.chimes_current_rates->H2_dust_formation_rate = data.chimes_current_rates->H2_dust_formation_rate_coefficient * myGasVars->abundances[chimes_table_H2_dust_formation.reactants[0]] * myGasVars->dust_ratio * myGasVars->nH_tot; 
 
       // H2_collis_dissoc 
       for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
