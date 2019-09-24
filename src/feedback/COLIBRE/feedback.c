@@ -1121,13 +1121,17 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute amount of momentum available for this stars, given its mass and age
    */
-  compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
-                           ngb_gas_mass);
+
+  if (feedback_props->with_earlyfeedback) {
+      compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
+                              ngb_gas_mass);
+  }
+
 
   sp->star_timestep = dt;
 
   /* Compute ionizing photons for HII regions */
-  if (feedback_props->with_HIIregions &&
+  if (feedback_props->with_earlyfeedback &&
       star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
     /* only rebuild every HIIregion_dtMyr and at the first timestep the star was
      * formed*/
@@ -1199,7 +1203,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       sp->feedback_data.to_distribute.HIIregion_starid = -1;
     }
 
-  } else if (feedback_props->with_HIIregions) {
+  } else if (feedback_props->with_earlyfeedback) {
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
@@ -1318,8 +1322,8 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->with_HIIregions =
-      parser_get_param_int(params, "COLIBREFeedback:use_HIIregions");
+  fp->with_earlyfeedback =
+      parser_get_param_int(params, "COLIBREFeedback:use_earlyfeedback");
 
   /* Properties of the IMF model ------------------------------------------ */
 
@@ -1444,19 +1448,20 @@ void feedback_props_init(struct feedback_props* fp,
       0.5f * ejecta_velocity * ejecta_velocity;
 
   /* Properties of the HII region model ------------------------------------- */
-  fp->HIIregion_maxageMyr =
-      parser_get_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr");
-
-  fp->HIIregion_dtMyr = parser_get_param_float(
-      params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
-
   /* Read the HII table */
-  if (fp->with_HIIregions) {
+   
+
+  if (fp->with_earlyfeedback) {
+#ifdef HAVE_HDF5
+    fp->HIIregion_maxageMyr =
+         parser_get_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr");
+
+    fp->HIIregion_dtMyr = parser_get_param_float(
+      params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
 
     /* Read yield table filepath  */
     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
                             fp->early_feedback_table_path);
-#ifdef HAVE_HDF5
     hid_t dataset;
     herr_t status;
 
@@ -1534,6 +1539,10 @@ void feedback_props_init(struct feedback_props* fp,
 #else
     error("Need HDF5 to read early feedback tables");
 #endif
+  } else {
+    /* Initialize to zero if run without early feedback */
+    fp->HIIregion_maxageMyr = 0.;
+    fp->HIIregion_dtMyr = 0.;
   }
 
   /* Gather common conversion factors --------------------------------------- */
