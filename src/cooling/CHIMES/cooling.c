@@ -89,12 +89,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
   else if (cooling->UV_field_flag == 1) 
     {
       cooling->ChimesGlobalVars.N_spectra = 1; 
-      cooling->isotropic_photon_density = (ChimesFloat *) malloc(sizeof(ChimesFloat)); 
+      cooling->radiation_field_normalisation_factor = (ChimesFloat) parser_get_opt_param_double(parameter_file, "CHIMESCooling:radiation_field_normalisation_factor", 1.0); 
       
       parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable", string_buffer); 
       sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[0], "%s/%s", chimes_data_dir, string_buffer); 
-
-      cooling->isotropic_photon_density[0] = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:isotropic_photon_density"); 
     }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag); 
@@ -437,13 +435,12 @@ void chimes_update_gas_vars(const double u_cgs,
     {
       /* Single, constant radiation field. */ 
 
-      /* Copy over normalisation from cooling data. */ 
-      ChimesGasVars->isotropic_photon_density[0] = cooling->isotropic_photon_density[0]; 
-      
       /* Copy over spectrum parameters from 
        * chimes tables. */ 
       ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
       ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
+      ChimesGasVars->isotropic_photon_density[0] = chimes_table_spectra.isotropic_photon_density[0]; 
+      ChimesGasVars->isotropic_photon_density[0] *= cooling->radiation_field_normalisation_factor; 
     }
 
   if (cooling->Shielding_flag == 0) 

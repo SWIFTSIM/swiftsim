@@ -4825,6 +4825,7 @@ void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, 
   for (i = 0; i < my_photoion_auger_euv->N_reactions[1]; i++) 
     my_photoion_auger_euv->sigmaPhot[i] = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
 
+  my_spectra->isotropic_photon_density = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat));
   my_spectra->G0_parameter = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
   my_spectra->H2_dissocJ = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
 
@@ -4963,15 +4964,23 @@ void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, 
 	my_photoion_auger_euv->sigmaPhot[j][i] = (ChimesFloat) array_buffer_float[j]; 
 
       free(array_buffer_float); 
-
-      /* We read in the G0_parameter and 
-       * H2_dissocJ and store them in the 
-       * my_spectra structure. We can then 
-       * either copy these over to myGasVars 
+      
+      /* We read in the isotropic_photon_density, 
+       * G0_parameter and H2_dissocJ and store 
+       * them in the my_spectra structure. We can 
+       * then either copy these over to myGasVars 
        * to use the parameters from the tables, 
        * or we can set our own parameters in 
        * myGasVars, as required. */ 
       array_buffer_float = (float *) malloc(sizeof(float)); 
+
+      dataset = H5Dopen1(file_id, "isotropic_photon_density"); 
+      H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+      H5Dclose(dataset); 
+
+      my_spectra->isotropic_photon_density[i] = (ChimesFloat) array_buffer_float[0];
+
+
       dataset = H5Dopen1(file_id, "G0_parameter"); 
       H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
       H5Dclose(dataset); 

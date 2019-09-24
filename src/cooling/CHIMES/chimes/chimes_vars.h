@@ -321,6 +321,7 @@ extern struct chimes_CO_photodissoc_struct
 
 extern struct chimes_spectra_struct 
 { 
+  ChimesFloat *isotropic_photon_density;
   ChimesFloat *G0_parameter; 
   ChimesFloat *H2_dissocJ; 
 } chimes_table_spectra; 
