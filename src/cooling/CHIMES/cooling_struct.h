@@ -51,6 +51,15 @@ struct cooling_function_data {
    * radiation fields. */ 
   ChimesFloat *isotropic_photon_density; 
 
+  /* Factor to re-scale shielding 
+   * length. */ 
+  double shielding_length_factor; 
+
+  /* Maximum shielding length, in code, 
+   * units. If negative, do not impose 
+   * a maximum. */ 
+  double max_shielding_length; 
+
   /* Flags to control eqm mode and 
    * thermal evolution. */ 
   int ChemistryEqmMode; 
