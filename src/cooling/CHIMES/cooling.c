@@ -77,9 +77,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Currently supported options: 
    * UV_field_flag == 0: No UV radiation. 
    *               == 1: Single, constant user-defined spectrum.
+   *               == 2: COLIBRE UVB+ISRF (and scale cr_rate and f_dust).
    * 
    * Shielding_flag == 0: No shielding.
    *                == 1: Jeans shielding length. 
+   *                == 2: COLIBRE shielding length. 
    */ 
   cooling->UV_field_flag = parser_get_param_int(parameter_file, "CHIMESCooling:UV_field_flag"); 
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
@@ -94,14 +96,31 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable", string_buffer); 
       sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[0], "%s/%s", chimes_data_dir, string_buffer); 
     }
+  else if (cooling->UV_field_flag == 2) 
+    {
+      cooling->ChimesGlobalVars.N_spectra = 2; 
+      
+      parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable_UVB", string_buffer); 
+      sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[0], "%s/%s", chimes_data_dir, string_buffer); 
+      
+      parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable_ISRF", string_buffer); 
+      sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[1], "%s/%s", chimes_data_dir, string_buffer); 
+    }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag); 
 
   if (cooling->Shielding_flag == 0) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 0; 
-  else if (cooling->Shielding_flag == 1) 
+  else if ((cooling->Shielding_flag == 1) || (cooling->Shielding_flag == 2))
+    cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
+  else 
+    error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
+
+  if ((cooling->Shielding_flag > 0) || (cooling->UV_field_flag == 2)) 
     {
-      cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
+      /* These parameters are needed if shielding 
+       * is switched on, and also by the COLIBRE 
+       * radiation field. */ 
 
       /* Factor to re-scale shielding length. */ 
       cooling->shielding_length_factor = parser_get_opt_param_double(parameter_file, "CHIMESCooling:shielding_length_factor", 1.0); 
@@ -110,8 +129,13 @@ void cooling_init_backend(struct swift_params *parameter_file,
        * If negative, do not impose a maximum. */ 
       cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
     }
-  else 
-    error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
+
+  /* Parameters used for the COLIBRE ISRF and 
+   * shielding length. These have just been 
+   * hard-coded for now - the values are taken
+   * from Ploeckinger et al. (in prep). */ 
+  cooling->N_H0 = 3.65e20; 
+  cooling->scale_MW_ISRF = 0.1; 
 
   /* Flag to determine how to set initial 
    * CHIMES abundances: 
@@ -431,6 +455,28 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
   ChimesGasVars->divVel = 0.0; 
 
+  /* The following is used by both the COLIBRE 
+   * ISRF and the COLIBRE shielding length. 
+   * Taken from Ploeckinger et al. (in prep). */ 
+  double N_ref, N_ref_prime, N_J; 
+  double log_T_min = 3.0;  // K 
+  double log_T_max = 5.0;  // K 
+  double nH_min = 1.0e-8;  // cgs 
+  double N_max = 1.0e24;   // cgs 
+  if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2)) 
+    {
+      double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
+      double N_min = l_max_cgs * nH_min; 
+
+      N_J = ChimesGasVars->nH_tot * sqrt(hydro_gamma * boltzmann_k_cgs * ChimesGasVars->temperature / (mu * newton_G_cgs * (proton_mass_cgs * ChimesGasVars->nH_tot / XH) * proton_mass_cgs)); 
+      
+      if (l_max_cgs > 0.0) 
+	N_ref_prime = chimes_min(N_J, l_max_cgs * ChimesGasVars->nH_tot); 
+
+      N_ref_prime = chimes_min(N_ref_prime, N_max);       
+      N_ref = pow(10.0, log10(N_ref_prime) - ((log10(N_ref_prime) - log10(N_min)) / (1.0 + exp(-5.0 * (log10(ChimesGasVars->temperature) - ((log_T_min + log_T_max) / 2.0))))));
+    }
+
   if (cooling->UV_field_flag == 1) 
     {
       /* Single, constant radiation field. */ 
@@ -441,6 +487,24 @@ void chimes_update_gas_vars(const double u_cgs,
       ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
       ChimesGasVars->isotropic_photon_density[0] = chimes_table_spectra.isotropic_photon_density[0]; 
       ChimesGasVars->isotropic_photon_density[0] *= cooling->radiation_field_normalisation_factor; 
+    }
+  else if (cooling->UV_field_flag == 2) 
+    {
+      /* COLIBRE radiation field */ 
+
+      /* Extra-galactic UVB */ 
+      ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
+      ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
+      ChimesGasVars->isotropic_photon_density[0] = chimes_table_spectra.isotropic_photon_density[0]; 
+
+      /* ISRF */ 
+      ChimesGasVars->G0_parameter[1] = chimes_table_spectra.G0_parameter[1]; 
+      ChimesGasVars->H2_dissocJ[1] = chimes_table_spectra.H2_dissocJ[1]; 
+      ChimesGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * cooling->scale_MW_ISRF * pow(N_ref / cooling->N_H0, 1.4); 
+      
+      /* Scale cr_rate and dust_ratio by N_ref */ 
+      ChimesGasVars->cr_rate *= pow(N_ref / cooling->N_H0, 1.4); 
+      ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4); 
     }
 
   if (cooling->Shielding_flag == 0) 
@@ -458,6 +522,8 @@ void chimes_update_gas_vars(const double u_cgs,
 	    ChimesGasVars->cell_size = max_shielding_length_cgs; 
 	}
     }
+  else if (cooling->Shielding_flag == 2) 
+    ChimesGasVars->cell_size = cooling->shielding_length_factor * N_ref / ChimesGasVars->nH_tot; 
 
   /* Doppler broadening parameter, for 
    * H2 self-shielding, is hard-coded 
