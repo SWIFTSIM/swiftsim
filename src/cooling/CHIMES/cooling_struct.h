@@ -47,9 +47,10 @@ struct cooling_function_data {
   int UV_field_flag; 
   int Shielding_flag; 
 
-  /* Stores normalisation of user-supplied 
-   * radiation fields. */ 
-  ChimesFloat *isotropic_photon_density; 
+  /* User parameter to scale the 
+   * normalisation of the radiation 
+   * field by a constant factor. */ 
+  ChimesFloat radiation_field_normalisation_factor; 
 
   /* Factor to re-scale shielding 
    * length. */ 
