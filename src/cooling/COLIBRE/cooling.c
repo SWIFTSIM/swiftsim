@@ -404,10 +404,14 @@ void set_subgrid_part(const struct phys_const *phys_const,
        * monotonically * simple solution: loop over densities and pick the first
        * one where logP = logPeq * start with the resolved density index (iden),
        * as the subgrid density will always be higher than the resolved density
+       *
+       * In cases where the solution cannot be found (e.g. the equilibrium
+       * temperature solution intersects the entropy floor), we revert to the
+       * normal (non-sugrid) density.
        */
 
-      int iden_eq = -1;
-      float dden_eq = -1.f;
+      int iden_eq = iden;
+      float dden_eq = dden;
 
       for (int i = iden; i < colibre_cooling_N_density; i++) {
         float logPeq_interp = interpolation_3d_no_z(
@@ -430,11 +434,6 @@ void set_subgrid_part(const struct phys_const *phys_const,
           break;
         }
       }
-
-#ifdef SWIFT_DEBUG_CHECKS
-      if (iden_eq == -1) error("Did not find the index of subgrid density");
-      if (dden_eq == -1.f) error("Did not find the index of subgrid density");
-#endif
 
       logHI = interpolation_4d_no_w(
           cooling->table.logHfracs_Teq, ired, imet, iden_eq, neutral, dred,
