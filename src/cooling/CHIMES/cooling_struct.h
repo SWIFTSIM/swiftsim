@@ -55,6 +55,10 @@ struct cooling_function_data {
    * thermal evolution. */ 
   int ChemistryEqmMode; 
   int ThermEvolOn; 
+
+  /* Flag to determine how we set
+   * the initial CHIMES abundances. */
+  int init_abundance_mode; 
   
   /* Cosmic ray ionisation rate of HI. */ 
   double cosmic_ray_rate; 
@@ -81,6 +85,11 @@ struct cooling_function_data {
 struct cooling_xpart_data {
   /* CHIMES abundance array */ 
   double chimes_abundances[CHIMES_NETWORK_SIZE]; 
+
+  /* Flag to determine whether we 
+   * we need to set the initial 
+   * eqm for this particle. */ 
+  int set_init_eqm_flag; 
 
   /* Cumulative energy radiated by the particle */
   float radiated_energy;

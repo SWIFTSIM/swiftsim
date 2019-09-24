@@ -51,6 +51,15 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 			     struct part* restrict p,
 			     struct xpart* restrict xp); 
 
+void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
+			 const struct unit_system* restrict us,
+			 const struct cosmology* restrict cosmo,
+			 const struct hydro_props *hydro_properties,
+			 const struct entropy_floor_properties *floor_props,
+			 const struct cooling_function_data* data, 
+			 struct part* restrict p,
+			 struct xpart* restrict xp); 
+
 void chimes_update_gas_vars(const double u_cgs,
 			    const struct phys_const *phys_const,
 			    const struct unit_system *us,
