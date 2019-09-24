@@ -502,9 +502,13 @@ void chimes_update_gas_vars(const double u_cgs,
       ChimesGasVars->H2_dissocJ[1] = chimes_table_spectra.H2_dissocJ[1]; 
       ChimesGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * cooling->scale_MW_ISRF * pow(N_ref / cooling->N_H0, 1.4); 
       
-      /* Scale cr_rate and dust_ratio by N_ref */ 
+      /* Scale cr_rate by N_ref */ 
       ChimesGasVars->cr_rate *= pow(N_ref / cooling->N_H0, 1.4); 
-      ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4); 
+
+      /* Scale dust_ratio by N_ref, but 
+       * only if N_ref < N_H0 */ 
+      if (N_ref < cooling->N_H0) 
+	ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4); 
     }
 
   if (cooling->Shielding_flag == 0) 
