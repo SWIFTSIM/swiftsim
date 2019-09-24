@@ -425,6 +425,7 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->TempFloor = (ChimesFloat) hydro_properties->minimal_temperature; 
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate; 
   ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol; 
+  ChimesGasVars->dust_ratio = ChimesGasVars->metallicity; 
   ChimesGasVars->hydro_timestep = (ChimesFloat) dt_cgs; 
 
   ChimesGasVars->constant_heating_rate = 0.0; 

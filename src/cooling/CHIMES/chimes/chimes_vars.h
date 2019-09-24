@@ -49,6 +49,7 @@ struct gasVariables
 				   * band 12.24 eV to 13.51 eV (all in cgs units). */
   ChimesFloat cr_rate;
   ChimesFloat metallicity;             /* Z / Z_sol */
+  ChimesFloat dust_ratio;              /* Relative to Milky Way */
   ChimesFloat cell_size;               /* cm; use kernel smoothing length in SPH */
   ChimesFloat hydro_timestep;          /* s */
   int ForceEqOn;

@@ -93,7 +93,7 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
 	data.OH_column = chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[OH]], 0.0) * myGasVars->cell_size * myGasVars->nH_tot;
       else 
 	data.OH_column = 0.0; 
-      data.extinction = DUSTEFFSIZE * myGasVars->cell_size * myGasVars->nH_tot * myGasVars->metallicity;
+      data.extinction = DUSTEFFSIZE * myGasVars->cell_size * myGasVars->nH_tot * myGasVars->dust_ratio;
     }
   else
     {
