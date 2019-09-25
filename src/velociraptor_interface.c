@@ -22,6 +22,10 @@
 
 /* Some standard headers. */
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /* This object's header. */
 #include "velociraptor_interface.h"
@@ -561,13 +565,28 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   /* Append base name with the current output number */
   char outputFileName[PARSER_MAX_LINE_SIZE + 128];
 
+  /* Generate directory name for this output and ensure it exists, if necessary */
+  char outputDirName[PARSER_MAX_LINE_SIZE + 128] = "";
+  if(strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE + 128) > 0) {
+    snprintf(outputDirName, PARSER_MAX_LINE_SIZE + 128,
+             "%s_%04i/", e->stf_subdir_per_output,
+             e->snapshot_output_count);
+#ifdef WITH_MPI
+    if(engine_rank==0)mkdir(outputDirName, 02755);
+    MPI_Barrier(MPI_COMM_WORLD);
+#else
+    mkdir(outputDirName, 02755);
+#endif
+  }
+
   /* What should the filename be? */
   if (linked_with_snap) {
     snprintf(outputFileName, PARSER_MAX_LINE_SIZE + 128,
-             "stf_%s_%04i.VELOCIraptor", e->snapshot_base_name,
-             e->snapshot_output_count);
+             "%sstf_%s_%04i.VELOCIraptor", outputDirName,
+             e->snapshot_base_name, e->snapshot_output_count);
   } else {
-    snprintf(outputFileName, PARSER_MAX_LINE_SIZE + 128, "%s_%04i.VELOCIraptor",
+    snprintf(outputFileName, PARSER_MAX_LINE_SIZE + 128, 
+             "%s%s_%04i.VELOCIraptor", outputDirName,
              e->stf_base_name, e->stf_output_count);
   }
 

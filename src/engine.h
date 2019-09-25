@@ -115,6 +115,7 @@ enum engine_step_properties {
 #define engine_max_sparts_per_ghost_default 1000
 #define engine_star_resort_task_depth_default 2
 #define engine_tasks_per_cell_margin 1.2
+#define engine_default_stf_subdir_per_output ""
 
 /**
  * @brief The rank of the engine as a global variable (for messages).
@@ -307,6 +308,7 @@ struct engine {
 
   char stf_config_file_name[PARSER_MAX_LINE_SIZE];
   char stf_base_name[PARSER_MAX_LINE_SIZE];
+  char stf_subdir_per_output[PARSER_MAX_LINE_SIZE];
   int stf_output_count;
 
   /* FoF black holes seeding information */
