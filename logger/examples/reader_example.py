@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Read a logger file by using an index.
+Read a logger file by using an index file.
 Example: ./reader_example.py ../../examples/SedovBlast_3D/index 0.1
 """
 import sys
@@ -23,7 +23,6 @@ else:
 data = logger.loadFromIndex(basename, time)
 
 pos = data["positions"]
-print(pos.shape)
 
 
 def plot3D():

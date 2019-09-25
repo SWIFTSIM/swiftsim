@@ -27,7 +27,7 @@
 /* Include local headers */
 #include "threadpool.h"
 
-#define nr_threads 1 // get_nprocs()
+#define nr_threads get_nprocs()
 
 /**
  * @brief Initialize the reader.
