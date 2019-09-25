@@ -696,7 +696,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * If rapid_cooling_threshold < 0, always use the slow-cooling 
    * regime. */ 
   float cooling_du_dt; 
-  if ((cooling->rapid_cooling_threshold >= 0.0) && (fabs(delta_u) / max(u_start, u_floor) > cooling->rapid_cooling_threshold)) 
+  if ((cooling->rapid_cooling_threshold >= 0.0) && (fabs(delta_u) / max(u_start, u_floor) >= cooling->rapid_cooling_threshold)) 
     {
       /* Rapid-cooling regime. Update internal energy 
        * to u_final and set du/dt = 0. */ 
