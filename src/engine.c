@@ -3159,20 +3159,29 @@ void engine_dump_snapshot(struct engine *e) {
   engine_collect_stars_counter(e);
 #endif
 
+  /* Determine snapshot location */
+  char snapshotBase[2*PARSER_MAX_LINE_SIZE+128];
+  if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
+    snprintf(snapshotBase, 2*PARSER_MAX_LINE_SIZE+128, "%s/%s", 
+             e->snapshot_directory, e->snapshot_base_name);
+  } else {
+    snprintf(snapshotBase, 2*PARSER_MAX_LINE_SIZE+128, "%s", e->snapshot_base_name);    
+  }
+
 /* Dump... */
 #if defined(HAVE_HDF5)
 #if defined(WITH_MPI)
 #if defined(HAVE_PARALLEL_HDF5)
-  write_output_parallel(e, e->snapshot_base_name, e->internal_units,
+  write_output_parallel(e, snapshotBase, e->internal_units,
                         e->snapshot_units, e->nodeID, e->nr_nodes,
                         MPI_COMM_WORLD, MPI_INFO_NULL);
 #else
-  write_output_serial(e, e->snapshot_base_name, e->internal_units,
+  write_output_serial(e, snapshotBase, e->internal_units,
                       e->snapshot_units, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
                       MPI_INFO_NULL);
 #endif
 #else
-  write_output_single(e, e->snapshot_base_name, e->internal_units,
+  write_output_single(e, snapshotBase, e->internal_units,
                       e->snapshot_units);
 #endif
 #endif
@@ -3361,6 +3370,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
       parser_get_opt_param_double(params, "Snapshots:delta_time", -1.);
   e->ti_next_snapshot = 0;
   parser_get_param_string(params, "Snapshots:basename", e->snapshot_base_name);
+  parser_get_opt_param_string(params, "Snapshots:directory", 
+                              e->snapshot_directory, engine_default_snapshot_directory);
   e->snapshot_compression =
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
   e->snapshot_int_time_label_on =

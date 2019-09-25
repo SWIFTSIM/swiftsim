@@ -562,15 +562,25 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
         "VELOCIraptor conf: MPI rank %d sending %zu gparts to VELOCIraptor.",
         engine_rank, nr_gparts);
 
-  /* Append base name with the current output number */
-  char outputFileName[PARSER_MAX_LINE_SIZE + 128];
-
-  /* Generate directory name for this output and ensure it exists, if necessary */
-  char outputDirName[PARSER_MAX_LINE_SIZE + 128] = "";
-  if(strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE + 128) > 0) {
-    snprintf(outputDirName, PARSER_MAX_LINE_SIZE + 128,
+  /* Generate directory name for this output - start with snapshot directory, if specified */
+  char outputDirName[2*(PARSER_MAX_LINE_SIZE+128)] = "";
+  if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
+    snprintf(outputDirName, 2*(PARSER_MAX_LINE_SIZE+128), "%s/", e->snapshot_directory);
+#ifdef WITH_MPI
+    if(engine_rank==0)mkdir(outputDirName, 02755);
+    MPI_Barrier(MPI_COMM_WORLD);
+#else
+    mkdir(outputDirName, 02755);
+#endif
+  }
+  
+  /* Then append output-specific subdirectory if necessary */
+  if(strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE) > 0) {
+    char subDirName[PARSER_MAX_LINE_SIZE + 128];
+    snprintf(subDirName, PARSER_MAX_LINE_SIZE + 128,
              "%s_%04i/", e->stf_subdir_per_output,
              e->snapshot_output_count);
+    strncat(outputDirName, subDirName, PARSER_MAX_LINE_SIZE + 128);
 #ifdef WITH_MPI
     if(engine_rank==0)mkdir(outputDirName, 02755);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -580,12 +590,13 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   }
 
   /* What should the filename be? */
+  char outputFileName[3*(PARSER_MAX_LINE_SIZE + 128)];
   if (linked_with_snap) {
-    snprintf(outputFileName, PARSER_MAX_LINE_SIZE + 128,
+    snprintf(outputFileName, 3*(PARSER_MAX_LINE_SIZE + 128),
              "%sstf_%s_%04i.VELOCIraptor", outputDirName,
              e->snapshot_base_name, e->snapshot_output_count);
   } else {
-    snprintf(outputFileName, PARSER_MAX_LINE_SIZE + 128, 
+    snprintf(outputFileName, 3*(PARSER_MAX_LINE_SIZE + 128), 
              "%s%s_%04i.VELOCIraptor", outputDirName,
              e->stf_base_name, e->stf_output_count);
   }
