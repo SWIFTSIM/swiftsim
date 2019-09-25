@@ -29,8 +29,8 @@
 void radix_sort(struct index_data *data, size_t N) {
 
   /* Allocate temporary memory */
-  struct index_data *sorted = (struct index_data *)
-    malloc(N * sizeof(struct index_data));
+  struct index_data *sorted =
+      (struct index_data *)malloc(N * sizeof(struct index_data));
 
   if (sorted == NULL) {
     error("Failed to allocate temporary array for radix sort");
@@ -41,7 +41,7 @@ void radix_sort(struct index_data *data, size_t N) {
 
   /* Loop over all the bits */
   const int n_loop = 8 * sizeof(long long) / RADIX_NUMBER_BITS;
-  for(int i = 0; i < n_loop; i++) {
+  for (int i = 0; i < n_loop; i++) {
     counting_sort(data_counting, sorted, N, i);
 
     /* Swap the pointers */
@@ -49,13 +49,11 @@ void radix_sort(struct index_data *data, size_t N) {
 
     sorted = data_counting;
     data_counting = tmp;
-
   }
 
   /* Copy the data back to the correct array */
   if (data_counting != data) {
-    memcpy(data, data_counting,
-           N * sizeof(struct index_data));
+    memcpy(data, data_counting, N * sizeof(struct index_data));
   }
 }
 
@@ -67,7 +65,8 @@ void radix_sort(struct index_data *data, size_t N) {
  * @param N The number of element in data.
  * @param i The index of the radix loop.
  */
-void counting_sort(struct index_data *data, struct index_data *output, size_t N, int i) {
+void counting_sort(struct index_data *data, struct index_data *output, size_t N,
+                   int i) {
   const int n_buckets = 1 << RADIX_NUMBER_BITS;
 
   /* Initialize the bucket counter */
@@ -75,18 +74,18 @@ void counting_sort(struct index_data *data, struct index_data *output, size_t N,
   bzero(counter, n_buckets * sizeof(long long));
 
   /* Count the number of element in each bucket */
-  for(size_t j = 0; j < N; j++) {
+  for (size_t j = 0; j < N; j++) {
     const int k = radix_sort_get_bucket(&data[j], i);
     counter[k]++;
   }
 
   /* Accumulate the counter */
-  for(int j = 1; j < n_buckets; j++) {
-    counter[j] += counter[j-1];
+  for (int j = 1; j < n_buckets; j++) {
+    counter[j] += counter[j - 1];
   }
 
   /* Now sort */
-  for(size_t j1 = N; j1 > 0; j1--) {
+  for (size_t j1 = N; j1 > 0; j1--) {
     const size_t j = j1 - 1;
 
     /* Get position in the sorted array */

@@ -36,7 +36,6 @@ struct index_data {
   size_t offset;
 };
 
-
 /**
  * @brief Structure dealing with the index files.
  *
@@ -68,17 +67,18 @@ struct logger_index {
     size_t file_size;
 
   } log;
-
 };
 
-
 void logger_index_write_sorted(struct logger_index *index);
-void logger_index_init(struct logger_index *index, struct logger_reader *reader);
+void logger_index_init(struct logger_index *index,
+                       struct logger_reader *reader);
 void logger_index_read_header(struct logger_index *index, const char *filename);
-void logger_index_map_file(struct logger_index *index, const char *filename, int sorted);
-size_t logger_index_get_particle_offset(struct logger_index *index, long long id, int type);
+void logger_index_map_file(struct logger_index *index, const char *filename,
+                           int sorted);
+size_t logger_index_get_particle_offset(struct logger_index *index,
+                                        long long id, int type);
 void logger_index_free(struct logger_index *index);
 void logger_index_sort_file(struct logger_index *index);
 struct index_data *logger_index_get_data(struct logger_index *index, int type);
 
-#endif // LOGGER_LOGGER_INDEX_H
+#endif  // LOGGER_LOGGER_INDEX_H

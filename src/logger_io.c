@@ -59,17 +59,15 @@
 #include "version.h"
 #include "xmf.h"
 
-
-
 /**
  * @brief Mapper function to copy #part or #gpart fields into a buffer.
  * WARNING Assumes two io_props in extra_data.
  */
-void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data) {
-
+void logger_io_copy_mapper(void* restrict temp, int N,
+                           void* restrict extra_data) {
 
   /* Get the io_props */
-  const struct io_props *props = (const struct io_props*)(extra_data);
+  const struct io_props* props = (const struct io_props*)(extra_data);
   const struct io_props props1 = props[0];
   const struct io_props props2 = props[1];
 
@@ -88,8 +86,8 @@ void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data
   for (int k = 0; k < N; k++) {
     memcpy(&temp_c[k * copySize], props1.field + (delta + k) * props1.partSize,
            copySize1);
-    memcpy(&temp_c[k * copySize + copySize1], props2.field + (delta + k) * props2.partSize,
-           copySize2);
+    memcpy(&temp_c[k * copySize + copySize1],
+           props2.field + (delta + k) * props2.partSize, copySize2);
   }
 }
 /**
@@ -101,19 +99,19 @@ void logger_io_copy_mapper(void* restrict temp, int N, void* restrict extra_data
  * @param n_props The number of element in @props.
  * @param N The number of particles to write.
  */
-void writeIndexArray(const struct engine* e, FILE *f,
-		     struct io_props *props, size_t n_props, size_t N) {
+void writeIndexArray(const struct engine* e, FILE* f, struct io_props* props,
+                     size_t n_props, size_t N) {
 
   /* Check that the assumptions are corrects */
   if (n_props != 2)
     error("Not implemented: The index file can only write two props.");
-  
+
   if (props[0].dimension != 1 || props[1].dimension != 1)
     error("Not implemented: cannot use multidimensional data");
 
   /* Get a few variables */
-  const size_t typeSize = io_sizeof_type(props[0].type) +
-    io_sizeof_type(props[1].type);
+  const size_t typeSize =
+      io_sizeof_type(props[0].type) + io_sizeof_type(props[1].type);
 
   const size_t num_elements = N;
 
@@ -129,8 +127,8 @@ void writeIndexArray(const struct engine* e, FILE *f,
   props[1].start_temp_c = temp;
 
   /* Copy the whole thing into a buffer */
-  threadpool_map((struct threadpool*)&e->threadpool, logger_io_copy_mapper, temp,
-		 N, typeSize, 0, props);
+  threadpool_map((struct threadpool*)&e->threadpool, logger_io_copy_mapper,
+                 temp, N, typeSize, 0, props);
 
   /* Write data to file */
   fwrite(temp, typeSize, num_elements, f);
@@ -149,13 +147,14 @@ void writeIndexArray(const struct engine* e, FILE *f,
  * contained in the engine. If such a file already exists, it is erased and
  * replaced by the new one.
  *
- * An index file is constructed by writing first a few variables (e.g. time, number of particles,
- * if the file is sorted, ...) and then an array of index and offset for each particle type.
+ * An index file is constructed by writing first a few variables (e.g. time,
+ * number of particles, if the file is sorted, ...) and then an array of index
+ * and offset for each particle type.
  *
  * Calls #error() if an error occurs.
  *
  */
-void logger_write_index_file(struct logger_writer *log, struct engine* e) {
+void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 
   struct part* parts = e->s->parts;
   struct xpart* xparts = e->s->xparts;
@@ -190,18 +189,17 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i.index", e->logger.logger->base_name,
-           outputCount);
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i.index",
+           e->logger.logger->base_name, outputCount);
 
   /* Open file */
-  FILE *f = NULL;
+  FILE* f = NULL;
   f = fopen(fileName, "wb");
 
   if (f == NULL) {
     error("Failed to open file %s", fileName);
   }
 
-    
   /* Write double time */
   fwrite(&e->time, sizeof(double), 1, f);
 
@@ -265,7 +263,8 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
 
           /* Select the fields to write */
           num_fields += hydro_write_index(parts, xparts, list);
-        } break;
+        }
+        break;
 
       case swift_type_dark_matter:
         if (Ntot == Ndm_written) {
@@ -292,7 +291,8 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
 
           /* Select the fields to write */
           num_fields += darkmatter_write_index(gparts, list);
-	} break;
+        }
+        break;
 
       case swift_type_stars:
         error("TODO");
@@ -303,7 +303,8 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
     }
 
     if (num_fields != 2) {
-      error("The code expects only two fields per particle type for the logger");
+      error(
+          "The code expects only two fields per particle type for the logger");
     }
 
     /* Write ids */
@@ -330,17 +331,18 @@ void logger_write_index_file(struct logger_writer *log, struct engine* e) {
  *
  * @params log The #logger.
  * @params e The #engine.
- */ 
-void logger_write_description(struct logger_writer *log, struct engine* e) {
+ */
+void logger_write_description(struct logger_writer* log, struct engine* e) {
   /* const struct unit_system *internal_units = e->internal_units; */
   /* const struct unit_system *snapshot_units = e->snapshot_units; */
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->logger.logger->base_name);
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml",
+           e->logger.logger->base_name);
 
   /* Open file */
-  FILE *f = NULL;
+  FILE* f = NULL;
   f = fopen(fileName, "wb");
 
   if (f == NULL) {
@@ -349,10 +351,8 @@ void logger_write_description(struct logger_writer *log, struct engine* e) {
 
   /* TODO Write stuff */
 
-
   /* Close file */
   fclose(f);
-  
 }
 
 #endif /* WITH_LOGGER */

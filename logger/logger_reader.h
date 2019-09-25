@@ -80,7 +80,6 @@ struct logger_reader {
     integertime_t *int_times;
   } index;
 
-
   /* Informations contained in the file header. */
   struct logger_logfile log;
 
@@ -110,13 +109,13 @@ size_t reader_read_record(struct logger_reader *reader,
 
 void logger_reader_set_time(struct logger_reader *reader, double time);
 
-const long long *logger_reader_get_number_particles(struct logger_reader *reader, int *n_type);
+const long long *logger_reader_get_number_particles(
+    struct logger_reader *reader, int *n_type);
 
 void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
                                           void *extra_data);
-void logger_reader_read_from_index(
-    struct logger_reader *reader, double time,
-    enum logger_reader_type inter_type,
-    struct logger_particle *parts, size_t n_tot);
+void logger_reader_read_from_index(struct logger_reader *reader, double time,
+                                   enum logger_reader_type inter_type,
+                                   struct logger_particle *parts, size_t n_tot);
 
 #endif  // LOGGER_LOGGER_READER_H

@@ -27,12 +27,12 @@
  */
 void init_array(struct index_data *data) {
   /* Assign the ids */
-  for(int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     data[i].id = i;
   }
 
   /* randomize the array */
-  for(int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     /* Select an index randomly */
     int j = rand() % N;
 
@@ -43,13 +43,12 @@ void init_array(struct index_data *data) {
   }
 }
 
-
 /**
  * @brief Ensure that the array is sorted
  */
 void check_sort(struct index_data *data) {
-  for(int i = 1; i < N; i++) {
-    if (data[i].id < data[i-1].id) {
+  for (int i = 1; i < N; i++) {
+    if (data[i].id < data[i - 1].id) {
       error("The array is not sorted");
     }
   }
@@ -59,7 +58,7 @@ void check_sort(struct index_data *data) {
  * @brief print the array
  */
 void print_array(struct index_data *data) {
-  for(int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     printf("%lli \t %zi\n", data[i].id, data[i].offset);
   }
 }
@@ -67,8 +66,8 @@ void print_array(struct index_data *data) {
 int main(int argc, char *argv[]) {
 
   /* Create the array */
-  struct index_data *data = (struct index_data *) malloc(
-    N * sizeof(struct index_data));
+  struct index_data *data =
+      (struct index_data *)malloc(N * sizeof(struct index_data));
 
   if (data == NULL) {
     error("Failed to allocate the memory");

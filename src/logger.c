@@ -187,8 +187,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
   /* loop over all parts. */
   for (long long i = 0; i < e->total_nr_parts; i++) {
     /* Write only the particles that have not been written */
-    if (s->xparts[i].logger_data.steps_since_last_output == 0)
-      continue;
+    if (s->xparts[i].logger_data.steps_since_last_output == 0) continue;
 
     logger_log_part(log, &s->parts[i], mask_hydro,
                     &s->xparts[i].logger_data.last_offset);
@@ -196,8 +195,8 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
   }
 
   const unsigned int mask_grav =
-    logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
-    logger_mask_data[logger_a].mask | logger_mask_data[logger_consts].mask;
+      logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
+      logger_mask_data[logger_a].mask | logger_mask_data[logger_consts].mask;
 
   /* loop over all gparts */
   for (long long i = 0; i < e->total_nr_gparts; i++) {
@@ -207,7 +206,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
       continue;
 
     logger_log_gpart(log, &s->gparts[i], mask_grav,
-		     &s->gparts[i].logger_data.last_offset);
+                     &s->gparts[i].logger_data.last_offset);
     s->gparts[i].logger_data.steps_since_last_output = 0;
   }
 

@@ -258,7 +258,6 @@ size_t time_array_get_index(const struct time_array *t, const size_t offset) {
 
 #endif
 
-
   return right;
 }
 
@@ -270,7 +269,8 @@ size_t time_array_get_index(const struct time_array *t, const size_t offset) {
  *
  * @return The index of the last time record.
  */
-size_t time_array_get_index_from_time(const struct time_array *t, const double time) {
+size_t time_array_get_index_from_time(const struct time_array *t,
+                                      const double time) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (!t) error("NULL pointer.");
@@ -303,8 +303,7 @@ size_t time_array_get_index_from_time(const struct time_array *t, const double t
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (t->records[right].time > time ||
-      t->records[right + 1].time <= time) {
+  if (t->records[right].time > time || t->records[right + 1].time <= time) {
     error("Found the wrong element");
   }
 

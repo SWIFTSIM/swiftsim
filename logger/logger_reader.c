@@ -21,8 +21,8 @@
 #include "logger_reader.h"
 
 /* Include standard library */
-#include <unistd.h>
 #include <sys/sysinfo.h>
+#include <unistd.h>
 
 /* Include local headers */
 #include "threadpool.h"
@@ -77,14 +77,13 @@ void logger_reader_init_index(struct logger_reader *reader) {
   /* Count the number of files */
   int count = 0;
   while (1) {
-    char filename[STRING_SIZE+50];
+    char filename[STRING_SIZE + 50];
     sprintf(filename, "%s_%04i.index", reader->basename, count);
 
     /* Check if file exists */
     if (access(filename, F_OK) != -1) {
       count++;
-    }
-    else {
+    } else {
       break;
     }
   }
@@ -92,13 +91,13 @@ void logger_reader_init_index(struct logger_reader *reader) {
   reader->index.n_files = count;
 
   /* Initialize the arrays */
-  reader->index.times = (double *) malloc(count * sizeof(double));
-  reader->index.int_times = (integertime_t *) malloc(
-    count * sizeof(integertime_t));
+  reader->index.times = (double *)malloc(count * sizeof(double));
+  reader->index.int_times =
+      (integertime_t *)malloc(count * sizeof(integertime_t));
 
   /* Get the information contained in the headers */
-  for(int i = 0; i < reader->index.n_files; i++) {
-    char filename[STRING_SIZE+50];
+  for (int i = 0; i < reader->index.n_files; i++) {
+    char filename[STRING_SIZE + 50];
     sprintf(filename, "%s_%04i.index", reader->basename, i);
 
     /* Read the header */
@@ -109,7 +108,6 @@ void logger_reader_init_index(struct logger_reader *reader) {
     reader->index.int_times[i] = reader->index.index.integer_time;
   }
 }
-
 
 /**
  * @brief Free the reader.
@@ -176,13 +174,12 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   unsigned int left = 0;
   unsigned int right = reader->index.n_files - 1;
 
-  while(left != right) {
+  while (left != right) {
     /* Do a ceil - division */
     unsigned int m = (left + right + 1) / 2;
     if (reader->index.times[m] > time) {
       right = m - 1;
-    }
-    else {
+    } else {
       left = m;
     }
   }
@@ -215,11 +212,11 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
  *
  * @return For each type possible, the number of particle.
  */
-const long long *logger_reader_get_number_particles(struct logger_reader *reader, int *n_type) {
+const long long *logger_reader_get_number_particles(
+    struct logger_reader *reader, int *n_type) {
   *n_type = swift_type_count;
   return reader->index.index.nparts;
 }
-
 
 struct extra_data_read {
   struct logger_reader *reader;
@@ -238,13 +235,13 @@ struct extra_data_read {
 void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
                                           void *extra_data) {
 
-  struct logger_particle *parts = (struct logger_particle *) map_data;
-  struct extra_data_read *read = (struct extra_data_read *) extra_data;
+  struct logger_particle *parts = (struct logger_particle *)map_data;
+  struct extra_data_read *read = (struct extra_data_read *)extra_data;
   const struct logger_reader *reader = read->reader;
   struct index_data *data = read->data + (parts - read->parts);
 
   /* Read the particles */
-  for(int i = 0; i < num_elements; i++) {
+  for (int i = 0; i < num_elements; i++) {
     /* Get the offset */
     size_t prev_offset = data[i].offset;
     size_t next_offset = prev_offset;
@@ -255,21 +252,19 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
     }
 #endif
 
-    while(next_offset < reader->time.time_offset) {
+    while (next_offset < reader->time.time_offset) {
       prev_offset = next_offset;
-      int test = tools_get_next_record(
-        &reader->log.header, reader->log.log.map,
-        &next_offset, reader->log.log.file_size);
+      int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
+                                       &next_offset, reader->log.log.file_size);
 
       if (test == -1) {
         error("End of file");
       }
-
     }
 
     /* Read the particle */
-    logger_particle_read(&parts[i], reader, prev_offset,
-                         reader->time.time, read->type);
+    logger_particle_read(&parts[i], reader, prev_offset, reader->time.time,
+                         read->type);
   }
 }
 
@@ -282,10 +277,10 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
  * @param parts The array of particles to use.
  * @param n_tot The total number of particles
  */
-void logger_reader_read_from_index(
-  struct logger_reader *reader, double time,
-  enum logger_reader_type interp_type,
-  struct logger_particle *parts, size_t n_tot) {
+void logger_reader_read_from_index(struct logger_reader *reader, double time,
+                                   enum logger_reader_type interp_type,
+                                   struct logger_particle *parts,
+                                   size_t n_tot) {
 
   /* Initialize the thread pool */
   struct threadpool threadpool;
@@ -304,10 +299,9 @@ void logger_reader_read_from_index(
   read.parts = parts;
   read.data = data;
   read.type = interp_type;
-  threadpool_map(&threadpool, logger_reader_read_from_index_mapper, parts, n_tot,
-                 sizeof(struct logger_particle), 0, &read);
+  threadpool_map(&threadpool, logger_reader_read_from_index_mapper, parts,
+                 n_tot, sizeof(struct logger_particle), 0, &read);
 
   /* Cleanup the threadpool */
   threadpool_clean(&threadpool);
-
 }

@@ -31,8 +31,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  PyObject_HEAD
-  struct logger_particle part;
+  PyObject_HEAD struct logger_particle part;
 } PyLoggerParticle;
 
 static PyTypeObject PyLoggerParticle_Type;
@@ -60,9 +59,7 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
   int verbose = 2;
 
   /* parse arguments. */
-  if (!PyArg_ParseTuple(args, "sd|i", &basename, &time,
-                        &verbose))
-    return NULL;
+  if (!PyArg_ParseTuple(args, "sd|i", &basename, &time, &verbose)) return NULL;
 
   /* initialize the reader. */
   struct logger_reader reader;
@@ -78,20 +75,22 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
 
   /* Get the number of particles */
   int n_type = 0;
-  const long long *n_parts = logger_reader_get_number_particles(&reader, &n_type);
-  for(int i = 0; i < n_type; i++) {
+  const long long *n_parts =
+      logger_reader_get_number_particles(&reader, &n_type);
+  for (int i = 0; i < n_type; i++) {
     n_tot += n_parts[i];
   }
 
   /* Allocate the output memory */
-  PyArrayObject *out = (PyArrayObject *) PyArray_SimpleNewFromDescr(1, &n_tot, logger_particle_descr);
+  PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
+      1, &n_tot, logger_particle_descr);
 
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
-  logger_reader_read_from_index(
-    &reader, time, logger_reader_const, PyArray_DATA(out), n_tot);
+  logger_reader_read_from_index(&reader, time, logger_reader_const,
+                                PyArray_DATA(out), n_tot);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;
@@ -99,7 +98,7 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
   /* Free the memory. */
   logger_reader_free(&reader);
 
-  return (PyObject *) out;
+  return (PyObject *)out;
 }
 
 /**
@@ -151,32 +150,33 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
-#define CREATE_FIELD(fields, name, field_name, type)                    \
-  ({                                                                    \
-    PyObject *tuple = PyTuple_New(2);                                   \
-    PyTuple_SetItem(tuple, 0, (PyObject *) PyArray_DescrFromType(type)); \
-    PyTuple_SetItem(                                                    \
-      tuple, 1, PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
+#define CREATE_FIELD(fields, name, field_name, type)                      \
+  ({                                                                      \
+    PyObject *tuple = PyTuple_New(2);                                     \
+    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));   \
+    PyTuple_SetItem(                                                      \
+        tuple, 1,                                                         \
+        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
   })
 
-#define CREATE_FIELD_3D(fields, name, field_name, type)                 \
-  ({                                                                    \
-    /* Create the 3D descriptor */                                      \
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                \
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                 \
-    vec->subarray->base = PyArray_DescrFromType(type);                  \
-    vec->subarray->shape = PyTuple_New(1);                              \
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(3));     \
-                                                                        \
-    /* Create the field */                                              \
-    PyObject *tuple = PyTuple_New(2);                                   \
-    PyTuple_SetItem(tuple, 0, (PyObject *) vec);                        \
-    PyTuple_SetItem(                                                    \
-      tuple, 1, PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
+#define CREATE_FIELD_3D(fields, name, field_name, type)                   \
+  ({                                                                      \
+    /* Create the 3D descriptor */                                        \
+    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                  \
+    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                   \
+    vec->subarray->base = PyArray_DescrFromType(type);                    \
+    vec->subarray->shape = PyTuple_New(1);                                \
+    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(3));       \
+                                                                          \
+    /* Create the field */                                                \
+    PyObject *tuple = PyTuple_New(2);                                     \
+    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                           \
+    PyTuple_SetItem(                                                      \
+        tuple, 1,                                                         \
+        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
   })
-
 
 void pylogger_particle_define_descr(void) {
   /* Generate list of field names */
@@ -219,7 +219,12 @@ void pylogger_particle_define_descr(void) {
   // Size of an element
   logger_particle_descr->elsize = sizeof(struct logger_particle);
   // alignment (doc magic)
-  logger_particle_descr->alignment = offsetof(struct {char c; struct logger_particle v;}, v);
+  logger_particle_descr->alignment = offsetof(
+      struct {
+        char c;
+        struct logger_particle v;
+      },
+      v);
   // no subarray
   logger_particle_descr->subarray = NULL;
   // functions

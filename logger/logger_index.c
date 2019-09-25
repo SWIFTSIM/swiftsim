@@ -35,7 +35,8 @@
  * @param index The #logger_index.
  * @param filename The filename of the index file.
  */
-void logger_index_read_header(struct logger_index *index, const char *filename) {
+void logger_index_read_header(struct logger_index *index,
+                              const char *filename) {
 
   /* Open the file */
   message("Reading %s", filename);
@@ -83,12 +84,13 @@ void logger_index_write_sorted(struct logger_index *index) {
  */
 struct index_data *logger_index_get_data(struct logger_index *index, int type) {
   /* Compute the header size */
-  const size_t header = sizeof(double) + (1 + swift_type_count) * sizeof(long long)
-    + sizeof(char);
+  const size_t header = sizeof(double) +
+                        (1 + swift_type_count) * sizeof(long long) +
+                        sizeof(char);
 
   /* Count the offset due to the previous types */
   size_t count = 0;
-  for(int i = 0; i < type; i++) {
+  for (int i = 0; i < type; i++) {
     count += index->nparts[i];
   }
   count *= sizeof(struct index_data);
@@ -103,7 +105,8 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
  * @param filename The index filename.
  * @param sorted Does the file needs to be sorted?
  */
-void logger_index_map_file(struct logger_index *index, const char *filename, int sorted) {
+void logger_index_map_file(struct logger_index *index, const char *filename,
+                           int sorted) {
   /* Un-map previous file */
   if (index->log.map != NULL) {
     logger_index_free(index);
@@ -121,7 +124,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename, int
     index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
                                                 /* read_only */ 0);
     /* Sort the file */
-    for(int i = 0; i < swift_type_count; i++) {
+    for (int i = 0; i < swift_type_count; i++) {
       struct index_data *data = logger_index_get_data(index, i);
       radix_sort(data, index->nparts[i]);
     }
@@ -139,7 +142,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename, int
 
   /* Map the index file */
   index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
-                                            /* read_only */ 1);
+                                              /* read_only */ 1);
 }
 
 /**
@@ -162,7 +165,8 @@ void logger_index_free(struct logger_index *index) {
  *
  * @return The offset of the particle or 0 if not found.
  */
-size_t logger_index_get_particle(struct logger_index *index, long long id, int type) {
+size_t logger_index_get_particle(struct logger_index *index, long long id,
+                                 int type) {
   /* Define a few variables */
   struct index_data *data = logger_index_get_data(index, type);
   size_t left = 0;
@@ -173,14 +177,11 @@ size_t logger_index_get_particle(struct logger_index *index, long long id, int t
     size_t m = (left + right) / 2;
     if (data[m].id < id) {
       left = m + 1;
-    }
-    else if (data[m].id > id) {
+    } else if (data[m].id > id) {
       right = m - 1;
-    }
-    else {
+    } else {
       return data[m].offset;
     }
-
   }
 
   return 0;
@@ -192,7 +193,8 @@ size_t logger_index_get_particle(struct logger_index *index, long long id, int t
  * @param index The #logger_index.
  * @param reader The #reader.
  */
-void logger_index_init(struct logger_index *index, struct logger_reader *reader) {
+void logger_index_init(struct logger_index *index,
+                       struct logger_reader *reader) {
   /* Set the mapped file to NULL */
   index->log.map = NULL;
 
