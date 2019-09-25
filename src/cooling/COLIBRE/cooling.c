@@ -55,7 +55,6 @@ static const int bisection_max_iterations = 150;
 /* Tolerances for termination criteria. */
 static const float explicit_tolerance = 0.05;
 static const float bisection_tolerance = 1.0e-6;
-static const float rounding_tolerance = 1.0e-4;
 static const double bracket_factor = 1.5; /* sqrt(1.1) */
 
 /**
@@ -589,7 +588,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
   u_0 = max(u_0, hydro_properties->minimal_internal_energy);
 
   /* Convert to CGS units */
-  const double u_start_cgs = u_start * cooling->internal_energy_to_cgs;
   const double u_0_cgs = u_0 * cooling->internal_energy_to_cgs;
   const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
@@ -672,51 +670,58 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        ratefact_cgs, cooling, abundance_ratio, dt_cgs, p->id);
   }
 
-  /* Expected change in energy over the next kick step
-     (assuming no change in dt) */
-  const double delta_u_cgs = u_final_cgs - u_start_cgs;
-
   /* Convert back to internal units */
-  double delta_u = delta_u_cgs * cooling->internal_energy_from_cgs;
+  double u_final = u_final_cgs * cooling->internal_energy_from_cgs;
 
   /* We now need to check that we are not going to go below any of the limits */
 
-  /* Limit imposed by the entropy floor */
-  const double A_floor = entropy_floor(p, cosmo, floor_props);
-  const double rho = hydro_get_physical_density(p, cosmo);
-  const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
-
   /* Absolute minimum */
   const double u_minimal = hydro_properties->minimal_internal_energy;
+  u_final = max(u_final, u_minimal);
 
-  /* Largest of both limits */
-  const double u_limit = max(u_minimal, u_floor);
+  /* Limit imposed by the entropy floor */
+  const double A_floor = entropy_floor(p, cosmo, floor_props);
+  const double rho_physical = hydro_get_physical_density(p, cosmo);
+  const double u_floor =
+      gas_internal_energy_from_entropy(rho_physical, A_floor);
+  u_final = max(u_final, u_floor);
 
-  /* First, check whether we may end up below the minimal energy after
-   * this step 1/2 kick + another 1/2 kick that could potentially be for
-   * a time-step twice as big. We hence check for 1.5 delta_u. */
-  if (u_start + 1.5 * delta_u < u_limit) {
-    delta_u = (u_limit - u_start) / 1.5;
-  }
+  /* Expected change in energy over the next kick step
+     (assuming no change in dt) */
+  const double delta_u = u_final - max(u_start, u_floor);
 
-  /* Second, check whether the energy used in the prediction could get negative.
-   * We need to check for the 1/2 dt kick followed by a full time-step drift
-   * that could potentially be for a time-step twice as big. We hence check
-   * for 2.5 delta_u but this time against 0 energy not the minimum.
-   * To avoid numerical rounding bringing us below 0., we add a tiny tolerance.
-   */
-  if (u_start + 2.5 * delta_u < 0.) {
-    delta_u = -u_start / (2.5 + rounding_tolerance);
-  }
-
-  /* Turn this into a rate of change (including cosmology term) */
-  const float cooling_du_dt = delta_u / dt_therm;
-
-  /* Update the internal energy time derivative */
-  hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
-
-  /* Store the radiated energy */
-  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+  /* Determine if we are in the slow- or rapid-cooling regime, 
+   * by comparing dt / t_cool to the rapid_cooling_threshold. 
+   * Note that dt / t_cool = fabs(delta_u) / u_start. 
+   * If rapid_cooling_threshold < 0, always use the slow-cooling 
+   * regime. */ 
+  float cooling_du_dt; 
+  if ((cooling->rapid_cooling_threshold >= 0.0) && (fabs(delta_u) / max(u_start, u_floor) > cooling->rapid_cooling_threshold)) 
+    {
+      /* Rapid-cooling regime. Update internal energy 
+       * to u_final and set du/dt = 0. */ 
+      cooling_du_dt = 0.0; 
+	  
+      /* Update the particle's u and du/dt */ 
+      hydro_set_physical_internal_energy(p, xp, cosmo, u_final); 
+      hydro_set_drifted_physical_internal_energy(p, cosmo, u_final);
+      hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+	  
+      /* Store the radiated energy */
+      xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - max(u_start, u_floor));
+    }
+  else 
+    {
+      /* Slow-cooling regime. Update du/dt so that 
+       * we can subsequently drift internal energy. */ 
+      cooling_du_dt = delta_u / dt_therm;
+	  
+      /* Update the internal energy time derivative */
+      hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+	  
+      /* Store the radiated energy */
+      xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+    }
 
   /* check if the particle is in an HII region and if yes, set the parameter
    * accordingly */
@@ -1114,6 +1119,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->compton_rate_cgs = compton_coefficient_cgs * cooling->T_CMB_0 *
                               cooling->T_CMB_0 * cooling->T_CMB_0 *
                               cooling->T_CMB_0;
+
+  /* Optional threshold in dt / t_cool above which we 
+   * are in the rapid cooling regime. If negative, 
+   * we never use this scheme (i.e. always drift 
+   * the internal energies). */ 
+  cooling->rapid_cooling_threshold = parser_get_opt_param_double(parameter_file, "COLIBRECooling:rapid_cooling_threshold", -1.f); 
 
   /* Finally, read the tables */
   read_cooling_header(cooling);
