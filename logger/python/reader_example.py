@@ -22,10 +22,8 @@ else:
 # read dump
 data = logger.loadFromIndex(basename, time)
 
-# Compute distance from center
-plt.show()
-pos = np.array([data["positions_x"], data["positions_y"],
-               data["positions_z"]]).transpose()
+pos = data["positions"]
+print(pos.shape)
 
 
 def plot3D():

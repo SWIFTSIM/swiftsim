@@ -151,52 +151,57 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
-#define CREATE_FIELD(fields, name, field_name, type, offset)            \
+#define CREATE_FIELD(fields, name, field_name, type)                    \
   ({                                                                    \
     PyObject *tuple = PyTuple_New(2);                                   \
     PyTuple_SetItem(tuple, 0, (PyObject *) PyArray_DescrFromType(type)); \
     PyTuple_SetItem(                                                    \
-      tuple, 1, PyLong_FromSize_t(offset + offsetof(struct logger_particle, field_name))); \
+      tuple, 1, PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
     PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
   })
 
+#define CREATE_FIELD_3D(fields, name, field_name, type)                 \
+  ({                                                                    \
+    /* Create the 3D descriptor */                                      \
+    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                \
+    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                 \
+    vec->subarray->base = PyArray_DescrFromType(type);                  \
+    vec->subarray->shape = PyTuple_New(1);                              \
+    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(3));     \
+                                                                        \
+    /* Create the field */                                              \
+    PyObject *tuple = PyTuple_New(2);                                   \
+    PyTuple_SetItem(tuple, 0, (PyObject *) vec);                        \
+    PyTuple_SetItem(                                                    \
+      tuple, 1, PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
+  })
+
+
 void pylogger_particle_define_descr(void) {
   /* Generate list of field names */
-  PyObject *names = PyTuple_New(15);
-  PyTuple_SetItem(names, 0, PyUnicode_FromString("positions_x"));
-  PyTuple_SetItem(names, 1, PyUnicode_FromString("positions_y"));
-  PyTuple_SetItem(names, 2, PyUnicode_FromString("positions_z"));
-  PyTuple_SetItem(names, 3, PyUnicode_FromString("velocities_x"));
-  PyTuple_SetItem(names, 4, PyUnicode_FromString("velocities_y"));
-  PyTuple_SetItem(names, 5, PyUnicode_FromString("velocities_z"));
-  PyTuple_SetItem(names, 6, PyUnicode_FromString("accelerations_x"));
-  PyTuple_SetItem(names, 7, PyUnicode_FromString("accelerations_y"));
-  PyTuple_SetItem(names, 8, PyUnicode_FromString("accelerations_z"));
-  PyTuple_SetItem(names, 9, PyUnicode_FromString("entropies"));
-  PyTuple_SetItem(names, 10, PyUnicode_FromString("smoothing_lengths"));
-  PyTuple_SetItem(names, 11, PyUnicode_FromString("densities"));
-  PyTuple_SetItem(names, 12, PyUnicode_FromString("masses"));
-  PyTuple_SetItem(names, 13, PyUnicode_FromString("ids"));
-  PyTuple_SetItem(names, 14, PyUnicode_FromString("times"));
+  PyObject *names = PyTuple_New(9);
+  PyTuple_SetItem(names, 0, PyUnicode_FromString("positions"));
+  PyTuple_SetItem(names, 1, PyUnicode_FromString("velocities"));
+  PyTuple_SetItem(names, 2, PyUnicode_FromString("accelerations"));
+  PyTuple_SetItem(names, 3, PyUnicode_FromString("entropies"));
+  PyTuple_SetItem(names, 4, PyUnicode_FromString("smoothing_lengths"));
+  PyTuple_SetItem(names, 5, PyUnicode_FromString("densities"));
+  PyTuple_SetItem(names, 6, PyUnicode_FromString("masses"));
+  PyTuple_SetItem(names, 7, PyUnicode_FromString("ids"));
+  PyTuple_SetItem(names, 8, PyUnicode_FromString("times"));
 
   /* Generate list of fields */
   PyObject *fields = PyDict_New();
-  /* Create entropy field */
-  CREATE_FIELD(fields, "positions_x", pos, NPY_FLOAT64, 0);
-  CREATE_FIELD(fields, "positions_y", pos, NPY_FLOAT64, sizeof(double));
-  CREATE_FIELD(fields, "positions_z", pos, NPY_FLOAT64, 2 * sizeof(double));
-  CREATE_FIELD(fields, "velocities_x", vel, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "velocities_y", vel, NPY_FLOAT32, sizeof(float));
-  CREATE_FIELD(fields, "velocities_z", vel, NPY_FLOAT32, 2 * sizeof(float));
-  CREATE_FIELD(fields, "accelerations_x", acc, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "accelerations_y", acc, NPY_FLOAT32, sizeof(float));
-  CREATE_FIELD(fields, "accelerations_z", acc, NPY_FLOAT32, 2 * sizeof(float));
-  CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "smoothing_lenghts", h, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "densities", density, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32, 0);
-  CREATE_FIELD(fields, "ids", id, NPY_ULONGLONG, 0);
-  CREATE_FIELD(fields, "times", id, NPY_DOUBLE, 0);
+  CREATE_FIELD_3D(fields, "positions", pos, NPY_DOUBLE);
+  CREATE_FIELD(fields, "velocities", vel, NPY_FLOAT32);
+  CREATE_FIELD(fields, "accelerations", acc, NPY_FLOAT32);
+  CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32);
+  CREATE_FIELD(fields, "smoothing_lenghts", h, NPY_FLOAT32);
+  CREATE_FIELD(fields, "densities", density, NPY_FLOAT32);
+  CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32);
+  CREATE_FIELD(fields, "ids", id, NPY_ULONGLONG);
+  CREATE_FIELD(fields, "times", id, NPY_DOUBLE);
 
   /* Generate descriptor */
   logger_particle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
