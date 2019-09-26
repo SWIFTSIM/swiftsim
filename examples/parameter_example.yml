@@ -340,6 +340,7 @@ COLIBRECooling:
   HIIregion_ionization_fraction:    1.0        # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4       # Temperature of gas particles tagged as HII regions
   delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  rapid_cooling_threshold:          1.0        # Switch to rapid cooling regime for dt / t_cool above this threshold.
  
 # Cooling with Grackle 3.0
 GrackleCooling:
