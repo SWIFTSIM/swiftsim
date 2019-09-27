@@ -100,6 +100,13 @@ float cooling_get_temperature(const struct phys_const* restrict phys_const,
 			      const struct part* restrict p, 
 			      const struct xpart* restrict xp);
 
+double calculate_colibre_N_ref(const struct phys_const *phys_const,
+			       const struct unit_system *us,
+			       const struct cosmology *cosmo,
+			       const struct cooling_function_data *cooling,
+			       struct part *restrict p, struct xpart* restrict xp, 
+			       const double mu); 
+
 /**
  * @brief Common operations performed on the cooling function at a
  * given time-step or redshift.
