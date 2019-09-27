@@ -71,7 +71,10 @@ void chimes_update_gas_vars(const double u_cgs,
 			    struct gasVariables *ChimesGasVars, 
 			    const float dt_cgs); 
 
-void chimes_update_element_abundances(const struct cooling_function_data *cooling,
+void chimes_update_element_abundances(const struct phys_const *phys_const,
+				      const struct unit_system *us,
+				      const struct cosmology *cosmo,
+				      const struct cooling_function_data *cooling,
 				      struct part *restrict p, 
 				      struct xpart *restrict xp,
 				      struct gasVariables *ChimesGasVars, 
