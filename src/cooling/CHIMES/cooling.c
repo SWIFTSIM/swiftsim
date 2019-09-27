@@ -86,6 +86,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->UV_field_flag = parser_get_param_int(parameter_file, "CHIMESCooling:UV_field_flag"); 
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
 
+  cooling->ChimesGlobalVars.update_colibre_ISRF = 0; 
+
   if (cooling->UV_field_flag == 0) 
     cooling->ChimesGlobalVars.N_spectra = 0; 
   else if (cooling->UV_field_flag == 1) 
@@ -136,6 +138,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
       cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
       cooling->ChimesGlobalVars.max_shielding_length_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
     }
+  else 
+    cooling->ChimesGlobalVars.max_shielding_length_cgs = -1.0; 
 
   /* Parameters used for the COLIBRE ISRF and 
    * shielding length. These have just been 
