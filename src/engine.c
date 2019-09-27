@@ -3163,17 +3163,17 @@ void engine_dump_snapshot(struct engine *e) {
 
   /* Determine snapshot location */
   char snapshotBase[FILENAME_BUFFER_SIZE];
-  if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
+  if(strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
     if(snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s/%s", 
-                e->snapshot_directory, e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
+                e->snapshot_subdir, e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
       error("FILENAME_BUFFER_SIZE is too small for snapshot path and file name");
     }
     /* Try to ensure the directory exists */
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(e->snapshot_directory, 0777);
+    if(engine_rank==0)mkdir(e->snapshot_subdir, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
-    mkdir(e->snapshot_directory, 0777);
+    mkdir(e->snapshot_subdir, 0777);
 #endif
   } else {
     if(snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s",
@@ -3385,8 +3385,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
       parser_get_opt_param_double(params, "Snapshots:delta_time", -1.);
   e->ti_next_snapshot = 0;
   parser_get_param_string(params, "Snapshots:basename", e->snapshot_base_name);
-  parser_get_opt_param_string(params, "Snapshots:directory", 
-                              e->snapshot_directory, engine_default_snapshot_directory);
+  parser_get_opt_param_string(params, "Snapshots:subdir", 
+                              e->snapshot_subdir, engine_default_snapshot_subdir);
   e->snapshot_compression =
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
   e->snapshot_int_time_label_on =

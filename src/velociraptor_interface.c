@@ -564,8 +564,8 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
 
   /* Generate directory name for this output - start with snapshot directory, if specified */
   char outputDirName[FILENAME_BUFFER_SIZE] = "";
-  if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
-    if(snprintf(outputDirName, FILENAME_BUFFER_SIZE, "%s/", e->snapshot_directory) >= FILENAME_BUFFER_SIZE){
+  if(strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
+    if(snprintf(outputDirName, FILENAME_BUFFER_SIZE, "%s/", e->snapshot_subdir) >= FILENAME_BUFFER_SIZE){
       error("FILENAME_BUFFER_SIZE is to small for snapshot directory name!");
     }
 #ifdef WITH_MPI

@@ -116,7 +116,7 @@ enum engine_step_properties {
 #define engine_star_resort_task_depth_default 2
 #define engine_tasks_per_cell_margin 1.2
 #define engine_default_stf_subdir_per_output ""
-#define engine_default_snapshot_directory ""
+#define engine_default_snapshot_subdir ""
 
 /**
  * @brief The rank of the engine as a global variable (for messages).
@@ -290,7 +290,7 @@ struct engine {
   integertime_t ti_next_snapshot;
 
   char snapshot_base_name[PARSER_MAX_LINE_SIZE];
-  char snapshot_directory[PARSER_MAX_LINE_SIZE];
+  char snapshot_subdir[PARSER_MAX_LINE_SIZE];
   int snapshot_compression;
   int snapshot_int_time_label_on;
   int snapshot_invoke_stf;
