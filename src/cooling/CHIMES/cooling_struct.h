@@ -105,6 +105,10 @@ struct cooling_function_data {
   double f_dust0_Si; 
   double f_dust0_Ca; 
   double f_dust0_Fe; 
+
+  /* delta log U above the EOS below which 
+   * we evolve the chemistry in eqm. */ 
+  float delta_logUEOS_apply_eqm; 
 };
 
 /**

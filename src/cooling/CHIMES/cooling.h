@@ -31,11 +31,13 @@
 
 /* Local includes. */
 #include "cooling_struct.h"
-#include "cosmology.h"
-#include "entropy_floor.h"
-#include "hydro.h"
-#include "hydro_properties.h"
-#include "part.h"
+
+struct part;
+struct xpart;
+struct cosmology;
+struct hydro_props;
+struct entropy_floor_properties;
+struct space;
 
 void cooling_init_backend(struct swift_params* parameter_file,
 			  const struct unit_system* us,
