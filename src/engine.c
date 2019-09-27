@@ -3170,10 +3170,10 @@ void engine_dump_snapshot(struct engine *e) {
     }
     /* Try to ensure the directory exists */
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(e->snapshot_directory, 02755);
+    if(engine_rank==0)mkdir(e->snapshot_directory, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
-    mkdir(e->snapshot_directory, 02755);
+    mkdir(e->snapshot_directory, 0777);
 #endif
   } else {
     if(snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s",

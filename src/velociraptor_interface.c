@@ -569,10 +569,10 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
       error("FILENAME_BUFFER_SIZE is to small for snapshot directory name!");
     }
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(outputDirName, 02755);
+    if(engine_rank==0)mkdir(outputDirName, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
-    mkdir(outputDirName, 02755);
+    mkdir(outputDirName, 0777);
 #endif
   }
   
@@ -585,10 +585,10 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
       error("FILENAME_BUFFER_SIZE is to small for Velociraptor directory name!");      
     }
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(outputDirName, 02755);
+    if(engine_rank==0)mkdir(subDirName, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
-    mkdir(outputDirName, 02755);
+    mkdir(subDirName, 0777);
 #endif
   }
 
