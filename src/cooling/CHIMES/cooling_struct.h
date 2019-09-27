@@ -92,6 +92,19 @@ struct cooling_function_data {
 
   /* Solar metallicity */ 
   float Zsol; 
+
+  /* Flag to implement dust depletion 
+   * as in COLIBRE. */ 
+  int colibre_metal_depletion; 
+
+  /* Dust depletion factors in the solar neighbourhood. 
+   * Taken from Ploeckinger et al. (in prep). */ 
+  double f_dust0_C; 
+  double f_dust0_O; 
+  double f_dust0_Mg; 
+  double f_dust0_Si; 
+  double f_dust0_Ca; 
+  double f_dust0_Fe; 
 };
 
 /**

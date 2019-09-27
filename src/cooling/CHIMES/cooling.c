@@ -223,6 +223,20 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* CHIMES uses a solar metallicity of 0.0129. */ 
   cooling->Zsol = 0.0129; 
 
+  /* Parameter that controls whether to reduce 
+   * gas-phase metal abundances due to 
+   * dust depletion. */ 
+  cooling->colibre_metal_depletion = parser_get_param_int(parameter_file, "CHIMESCooling:colibre_metal_depletion"); 
+
+  /* Dust depletion factors in the solar neighbourhood. 
+   * Taken from Ploeckinger et al. (in prep). */ 
+  cooling->f_dust0_C = 0.34385; 
+  cooling->f_dust0_O = 0.31766; 
+  cooling->f_dust0_Mg = 0.94338; 
+  cooling->f_dust0_Si = 0.94492; 
+  cooling->f_dust0_Ca = 0.9999; 
+  cooling->f_dust0_Fe = 0.99363; 
+
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
@@ -270,7 +284,7 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
 
   /* Set element abundances from 
    * metal mass fractions. */ 
-  chimes_update_element_abundances(data, p, xp, &ChimesGasVars, 0); 
+  chimes_update_element_abundances(phys_const, us, cosmo, data, p, xp, &ChimesGasVars, 0); 
 
   /* Zero the set_init_eqm_flag. */
   xp->cooling_data.set_init_eqm_flag = 0; 
@@ -356,7 +370,7 @@ void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
   /* Copy abundances over from xp to ChimesGasVars. */
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
-  chimes_update_element_abundances(data, p, xp, &ChimesGasVars, 1); 
+  chimes_update_element_abundances(phys_const, us, cosmo, data, p, xp, &ChimesGasVars, 1); 
       
   /* Get the particle's internal energy */ 
   double u_0 = hydro_get_physical_internal_energy(p, xp, cosmo); 
@@ -547,10 +561,19 @@ void chimes_update_gas_vars(const double u_cgs,
  * mode == 0 (for example, when we initialise the 
  * abundance arrays for the first time). 
  * 
- * @param p Pointer to the particle data.
+ * @param phys_const #phys_const data structure.
+ * @param us The internal system of units.
+ * @param cosmo #cosmology data structure.
+ * @param cooling #cooling_function_data struct.
+ * @param p #part data.
+ * @param xp Pointer to the #xpart data.
  * @param ChimesGasVars CHIMES gasVariables structure. 
+ * @param mode Set to zero if particle not fully initialised.
  */ 
-void chimes_update_element_abundances(const struct cooling_function_data *cooling,
+void chimes_update_element_abundances(const struct phys_const *phys_const,
+				      const struct unit_system *us,
+				      const struct cosmology *cosmo,
+				      const struct cooling_function_data *cooling,
 				      struct part *restrict p, 
 				      struct xpart *restrict xp,
 				      struct gasVariables *ChimesGasVars, 
@@ -573,6 +596,33 @@ void chimes_update_element_abundances(const struct cooling_function_data *coolin
   
   ChimesGasVars->element_abundances[7] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->S_over_Si_ratio_in_solar * (cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (32.0 * XH); 
   ChimesGasVars->element_abundances[8] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->Ca_over_Si_ratio_in_solar * (cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (40.0 * XH); 
+
+  double mu; 
+  if (mode == 0) 
+    {
+      /* When chimes_update_element_abundances() 
+       * is called on a particle that is being 
+       * initialised for the first time, the 
+       * chimes_abundance array has not yet been
+       * initialised. We therefore set mu = 1. */ 
+      mu = 1.0; 
+    }
+  else 
+    mu = chimes_mu(cooling, p, xp); 
+
+  double N_ref = calculate_colibre_N_ref(phys_const, us, cosmo, cooling, p, xp, mu); 
+  double factor = min(pow(N_ref / cooling->N_H0, 1.4), 1.0); 
+  if (cooling->colibre_metal_depletion == 1) 
+    {
+      /* Reduce gas-phase metal abundances 
+       * due to dust depletion. */ 
+      ChimesGasVars->element_abundances[1] *= (1.0 - (cooling->f_dust0_C * factor)); 
+      ChimesGasVars->element_abundances[3] *= (1.0 - (cooling->f_dust0_O * factor)); 
+      ChimesGasVars->element_abundances[5] *= (1.0 - (cooling->f_dust0_Mg * factor)); 
+      ChimesGasVars->element_abundances[6] *= (1.0 - (cooling->f_dust0_Si * factor)); 
+      ChimesGasVars->element_abundances[8] *= (1.0 - (cooling->f_dust0_Ca * factor)); 
+      ChimesGasVars->element_abundances[9] *= (1.0 - (cooling->f_dust0_Fe * factor)); 
+    }      
   
   /* Zero the abundances of any elements 
    * that are not included in the network. */ 
@@ -653,7 +703,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * the element abundances need to be set in 
    * ChimesGasVars before we can calculate the 
    * mean molecular weight. */ 
-  chimes_update_element_abundances(cooling, p, xp, &ChimesGasVars, 1); 
+  chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp, &ChimesGasVars, 1); 
 
   /* Get internal energy at the last kick step */
   const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
