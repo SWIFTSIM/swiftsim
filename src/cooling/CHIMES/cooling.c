@@ -470,12 +470,21 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->divVel = 0.0; 
 
   /* N_ref is used by both the COLIBRE ISRF
-   * and the COLIBRE shielding length. Taken
-   * from Ploeckinger et al. (in prep). */ 
+   * and the COLIBRE shielding length, and to 
+   * scale metal depletion. Taken from 
+   * Ploeckinger et al. (in prep). */ 
   double N_ref; 
-  if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2)) 
+  if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2) || (cooling->colibre_metal_depletion)) 
     N_ref = calculate_colibre_N_ref(phys_const, us, cosmo, cooling, p, xp, mu); 
 
+  if (cooling->colibre_metal_depletion == 1) 
+    {
+      /* Scale dust_ratio by N_ref, but 
+       * only if N_ref < N_H0 */ 
+      if (N_ref < cooling->N_H0) 
+	ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4); 
+    }
+      
   if (cooling->UV_field_flag == 1) 
     {
       /* Single, constant radiation field. */ 
@@ -503,11 +512,6 @@ void chimes_update_gas_vars(const double u_cgs,
       
       /* Scale cr_rate by N_ref */ 
       ChimesGasVars->cr_rate *= pow(N_ref / cooling->N_H0, 1.4); 
-
-      /* Scale dust_ratio by N_ref, but 
-       * only if N_ref < N_H0 */ 
-      if (N_ref < cooling->N_H0) 
-	ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4); 
     }
 
   if (cooling->Shielding_flag == 0) 
