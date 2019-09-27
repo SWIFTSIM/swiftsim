@@ -237,6 +237,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->f_dust0_Ca = 0.9999; 
   cooling->f_dust0_Fe = 0.99363; 
 
+  /* delta log U above the EOS below which 
+   * we evolve the chemistry in eqm. */ 
+  cooling->delta_logUEOS_apply_eqm = parser_get_param_float(parameter_file, "CHIMESCooling:delta_logUEOS_apply_eqm"); 
+
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
@@ -443,7 +447,49 @@ void chimes_update_gas_vars(const double u_cgs,
   double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS); 
 
   double mu = chimes_mu(cooling, p, xp); 
-  ChimesGasVars->temperature = (ChimesFloat) u_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
+  
+  /* Limit imposed by the entropy floor */
+  const double A_floor = entropy_floor(p, cosmo, floor_props);
+  const double rho = hydro_get_physical_density(p, cosmo);
+  const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
+
+  double u_actual, T_floor; 
+  
+  if (u_cgs < u_floor) 
+    {
+      /* Particle is below the entropy floor. 
+       * Set internal energy to the floor. 
+       * Chemistry will be evolved in equilibrium. */  
+      u_actual = u_floor; 
+      ChimesGasVars->ForceEqOn = 1; 
+      T_floor = u_floor * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
+    }
+  else if (u_cgs < pow(10.0, cooling->delta_logUEOS_apply_eqm) * u_floor) 
+    {
+      /* Particle is above the entropy floor, but 
+       * close enough that we will need to evolve 
+       * the chemistry in equilibrium. */ 
+      u_actual = u_cgs; 
+      ChimesGasVars->ForceEqOn = 1; 
+      T_floor = u_floor * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
+    }
+  else 
+    {
+      /* Particle is well above the entropy floor. 
+       * Evolve chemistry as usual, according to the 
+       * user-provided parameter. */ 
+      u_actual = u_cgs; 
+      ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode; 
+
+      /* Set T_floor to minimal_temperature, not the 
+       * entropy floor. When evolving chemistry in 
+       * non-eq, a high T_floor can slow down the 
+       * integration. Safer to evolve without and 
+       * then re-impose entropy floor afterwards. */
+      T_floor = hydro_properties->minimal_temperature; 
+    }
+
+  ChimesGasVars->temperature = (ChimesFloat) u_actual * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
   float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
@@ -458,14 +504,13 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesFloat nH = (ChimesFloat) hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass; 
   ChimesGasVars->nH_tot = nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY); 
 
-  ChimesGasVars->TempFloor = (ChimesFloat) hydro_properties->minimal_temperature; 
+  ChimesGasVars->TempFloor = (ChimesFloat) T_floor;
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate; 
   ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol; 
   ChimesGasVars->dust_ratio = ChimesGasVars->metallicity; 
   ChimesGasVars->hydro_timestep = (ChimesFloat) dt_cgs; 
 
   ChimesGasVars->constant_heating_rate = 0.0; 
-  ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode; 
   ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
   ChimesGasVars->divVel = 0.0; 
 
