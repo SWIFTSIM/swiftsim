@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -3160,13 +3162,26 @@ void engine_dump_snapshot(struct engine *e) {
 #endif
 
   /* Determine snapshot location */
-  char snapshotBase[2*PARSER_MAX_LINE_SIZE+128];
+  char snapshotBase[FILENAME_BUFFER_SIZE];
   if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
-    snprintf(snapshotBase, 2*PARSER_MAX_LINE_SIZE+128, "%s/%s", 
-             e->snapshot_directory, e->snapshot_base_name);
+    if(snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s/%s", 
+                e->snapshot_directory, e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is too small for snapshot path and file name");
+    }
+    /* Try to ensure the directory exists */
+#ifdef WITH_MPI
+    if(engine_rank==0)mkdir(e->snapshot_directory, 02755);
+    MPI_Barrier(MPI_COMM_WORLD);
+#else
+    mkdir(e->snapshot_directory, 02755);
+#endif
   } else {
-    snprintf(snapshotBase, 2*PARSER_MAX_LINE_SIZE+128, "%s", e->snapshot_base_name);    
+    if(snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s",
+                e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is too small for snapshot file name");      
+    }
   }
+  printf("%d: output file = %s\n", e->nodeID, snapshotBase);
 
 /* Dump... */
 #if defined(HAVE_HDF5)

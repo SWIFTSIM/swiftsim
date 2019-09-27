@@ -563,9 +563,11 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
         engine_rank, nr_gparts);
 
   /* Generate directory name for this output - start with snapshot directory, if specified */
-  char outputDirName[2*(PARSER_MAX_LINE_SIZE+128)] = "";
+  char outputDirName[FILENAME_BUFFER_SIZE] = "";
   if(strnlen(e->snapshot_directory, PARSER_MAX_LINE_SIZE) > 0) {
-    snprintf(outputDirName, 2*(PARSER_MAX_LINE_SIZE+128), "%s/", e->snapshot_directory);
+    if(snprintf(outputDirName, FILENAME_BUFFER_SIZE, "%s/", e->snapshot_directory) >= FILENAME_BUFFER_SIZE){
+      error("FILENAME_BUFFER_SIZE is to small for snapshot directory name!");
+    }
 #ifdef WITH_MPI
     if(engine_rank==0)mkdir(outputDirName, 02755);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -574,13 +576,14 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
 #endif
   }
   
-  /* Then append output-specific subdirectory if necessary */
+  /* Then create output-specific subdirectory if necessary */
+  char subDirName[FILENAME_BUFFER_SIZE] = "";
   if(strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE) > 0) {
-    char subDirName[PARSER_MAX_LINE_SIZE + 128];
-    snprintf(subDirName, PARSER_MAX_LINE_SIZE + 128,
-             "%s_%04i/", e->stf_subdir_per_output,
-             e->snapshot_output_count);
-    strncat(outputDirName, subDirName, PARSER_MAX_LINE_SIZE + 128);
+    if(snprintf(subDirName, FILENAME_BUFFER_SIZE, "%s%s_%04i/", 
+                outputDirName, e->stf_subdir_per_output,
+                e->snapshot_output_count) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is to small for Velociraptor directory name!");      
+    }
 #ifdef WITH_MPI
     if(engine_rank==0)mkdir(outputDirName, 02755);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -590,15 +593,19 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   }
 
   /* What should the filename be? */
-  char outputFileName[3*(PARSER_MAX_LINE_SIZE + 128)];
+  char outputFileName[FILENAME_BUFFER_SIZE];
   if (linked_with_snap) {
-    snprintf(outputFileName, 3*(PARSER_MAX_LINE_SIZE + 128),
-             "%sstf_%s_%04i.VELOCIraptor", outputDirName,
-             e->snapshot_base_name, e->snapshot_output_count);
+    if(snprintf(outputFileName, FILENAME_BUFFER_SIZE,
+                "%sstf_%s_%04i.VELOCIraptor", subDirName,
+                e->snapshot_base_name, e->snapshot_output_count) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is too small for snapshot-linked Velociraptor file name!");
+    }
   } else {
-    snprintf(outputFileName, 3*(PARSER_MAX_LINE_SIZE + 128), 
-             "%s%s_%04i.VELOCIraptor", outputDirName,
-             e->stf_base_name, e->stf_output_count);
+    if(snprintf(outputFileName, FILENAME_BUFFER_SIZE, 
+                "%s%s_%04i.VELOCIraptor", subDirName,
+                e->stf_base_name, e->stf_output_count) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is too small for Velociraptor file name!");      
+    }
   }
 
   /* What is the snapshot number? */
