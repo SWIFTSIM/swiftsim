@@ -452,12 +452,25 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	  i++;
 	}
     }
-	
+  
   /* If Thermal Evolution is switched on, the final element in the
    * vector y is the internal energy (per unit volume). Use this 
    * to update the temperature, and also the rates that depend on T */
   if (data->myGasVars->ThermEvolOn == 1)
     data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
+
+  ChimesFloat N_ref, mu, XH; 
+  ChimesFloat scale_MW_ISRF = 0.1; 
+  ChimesFloat N_H0 = 3.65e20; 
+  if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
+    {
+      mu = calculate_mean_molecular_weight(data->myGasVars, data->myGlobalVars); 
+      XH = 1.0 / (1.0 + (4.0 * data->myGasVars->element_abundances[0])); 
+      N_ref = chimes_calculate_Nref(data->myGasVars->temperature, data->myGasVars->nH_tot, mu, XH, data->myGlobalVars); 
+      data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
+
+      set_initial_rate_coefficients(data->myGasVars, data->myGlobalVars, *data); 
+    }
 
   // Update rates 
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data, data->myGasVars->ThermEvolOn); 
@@ -488,4 +501,28 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     }
 
   return 0;
+}
+
+ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars) 
+{
+  /* Parameters that define N_ref. 
+   * Taken from Ploeckinger et al. (in prep). */
+  double log_T_min = 3.0;  // K 
+  double log_T_max = 5.0;  // K 
+  double nH_min = 1.0e-8;  // cgs 
+  double N_max = 1.0e24;   // cgs 
+
+  double N_min = myGlobalVars->max_shielding_length_cgs * nH_min;
+
+  /* Jeans column density */ 
+  double N_J = nH_cgs * sqrt((5.0 / 3.0) * BOLTZMANNCGS * temperature / (mu * 6.67408e-8 * (PROTON_MASS * nH_cgs / XH) * PROTON_MASS)); 
+
+  double N_ref_prime = chimes_min(N_J, N_max); 
+      
+  if (myGlobalVars->max_shielding_length_cgs > 0.0) 
+    N_ref_prime = chimes_min(N_ref_prime, myGlobalVars->max_shielding_length_cgs * nH_cgs); 
+
+  double N_ref = pow(10.0, log10(N_ref_prime) - ((log10(N_ref_prime) - log10(N_min)) / (1.0 + exp(-5.0 * (log10(temperature) - ((log_T_min + log_T_max) / 2.0))))));
+  
+  return N_ref; 
 }

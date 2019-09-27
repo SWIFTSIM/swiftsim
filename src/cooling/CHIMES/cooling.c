@@ -105,6 +105,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
       
       parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable_ISRF", string_buffer); 
       sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[1], "%s/%s", chimes_data_dir, string_buffer); 
+
+      /* Flag to update ISRF within the rate 
+       * equations in CHIMES, using the COLIBRE 
+       * ISRF. This can only be used with 
+       * UV_field_flag == 2. */ 
+      cooling->ChimesGlobalVars.update_colibre_ISRF = parser_get_param_int(parameter_file, "CHIMESCooling:update_colibre_ISRF"); 
     }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag); 
@@ -128,6 +134,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
       /* Maximum shielding length (in code units). 
        * If negative, do not impose a maximum. */ 
       cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
+      cooling->ChimesGlobalVars.max_shielding_length_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
     }
 
   /* Parameters used for the COLIBRE ISRF and 
