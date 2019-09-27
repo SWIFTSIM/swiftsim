@@ -455,27 +455,12 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->ThermEvolOn = cooling->ThermEvolOn; 
   ChimesGasVars->divVel = 0.0; 
 
-  /* The following is used by both the COLIBRE 
-   * ISRF and the COLIBRE shielding length. 
-   * Taken from Ploeckinger et al. (in prep). */ 
-  double N_ref, N_ref_prime, N_J; 
-  double log_T_min = 3.0;  // K 
-  double log_T_max = 5.0;  // K 
-  double nH_min = 1.0e-8;  // cgs 
-  double N_max = 1.0e24;   // cgs 
+  /* N_ref is used by both the COLIBRE ISRF
+   * and the COLIBRE shielding length. Taken
+   * from Ploeckinger et al. (in prep). */ 
+  double N_ref; 
   if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2)) 
-    {
-      double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
-      double N_min = l_max_cgs * nH_min; 
-
-      N_J = ChimesGasVars->nH_tot * sqrt(hydro_gamma * boltzmann_k_cgs * ChimesGasVars->temperature / (mu * newton_G_cgs * (proton_mass_cgs * ChimesGasVars->nH_tot / XH) * proton_mass_cgs)); 
-      
-      if (l_max_cgs > 0.0) 
-	N_ref_prime = chimes_min(N_J, l_max_cgs * ChimesGasVars->nH_tot); 
-
-      N_ref_prime = chimes_min(N_ref_prime, N_max);       
-      N_ref = pow(10.0, log10(N_ref_prime) - ((log10(N_ref_prime) - log10(N_min)) / (1.0 + exp(-5.0 * (log10(ChimesGasVars->temperature) - ((log_T_min + log_T_max) / 2.0))))));
-    }
+    N_ref = calculate_colibre_N_ref(phys_const, us, cosmo, cooling, p, xp, mu); 
 
   if (cooling->UV_field_flag == 1) 
     {
@@ -588,7 +573,7 @@ void chimes_update_element_abundances(const struct cooling_function_data *coolin
   
   ChimesGasVars->element_abundances[7] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->S_over_Si_ratio_in_solar * (cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (32.0 * XH); 
   ChimesGasVars->element_abundances[8] = (ChimesFloat) metal_fraction[chemistry_element_Si] * cooling->Ca_over_Si_ratio_in_solar * (cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction) / (40.0 * XH); 
-
+  
   /* Zero the abundances of any elements 
    * that are not included in the network. */ 
   for (i = 0; i < 9; i++) 
@@ -894,4 +879,78 @@ float cooling_get_temperature(const struct phys_const* restrict phys_const,
 
   /* Return particle temperature */
   return (float) hydro_gamma_minus_one * u_cgs * mu * (proton_mass_cgs / boltzmann_k_cgs); 
+}
+
+/**
+ * @brief Calculate the N_ref column density. 
+ * 
+ * This routine returns the column density N_ref 
+ * as defined in Ploeckinger et al. (in prep), 
+ * which is used to scale the ISRF, cosmic rays, 
+ * dust depletion and shielding column density 
+ * in COLIBRE. 
+ *
+ * @param phys_const #phys_const data structure.
+ * @param us The internal system of units.
+ * @param cosmo #cosmology data structure.
+ * @param cooling #cooling_function_data struct.
+ * @param p #part data.
+ * @param xp Pointer to the #xpart data.
+ * @param mu Mean molecular weight. 
+ */
+double calculate_colibre_N_ref(const struct phys_const *phys_const,
+			       const struct unit_system *us,
+			       const struct cosmology *cosmo,
+			       const struct cooling_function_data *cooling,
+			       struct part *restrict p, struct xpart* restrict xp, 
+			       const double mu) {
+  /* Physical constants that we will 
+   * need, in cgs units */ 
+  float dimension_k[5] = {1, 2, -2, 0, -1}; 
+  double boltzmann_k_cgs = phys_const->const_boltzmann_k * units_general_cgs_conversion_factor(us, dimension_k); 
+  float dimension_G[5] = {-1, 3, -2, 0, 0}; 
+  double newton_G_cgs = phys_const->const_newton_G * units_general_cgs_conversion_factor(us, dimension_G); 
+  double proton_mass_cgs = phys_const->const_proton_mass * units_cgs_conversion_factor(us, UNIT_CONV_MASS);
+
+  /* Parameters that define N_ref. 
+   * Taken from Ploeckinger et al. (in prep). */ 
+  double log_T_min = 3.0;  // K 
+  double log_T_max = 5.0;  // K 
+  double nH_min = 1.0e-8;  // cgs 
+  double N_max = 1.0e24;   // cgs 
+  double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
+  double N_min = l_max_cgs * nH_min; 
+
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+  float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+  ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
+#else 
+  /* Without COLIBRE or EAGLE chemistry, 
+   * the metal abundances are unavailable. 
+   * Set to primordial abundances. */ 
+  ChimesFloat XH = 0.75; 
+#endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  /* Density*/ 
+  const double nH = hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass; 
+  const double nH_cgs = nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY); 
+
+  /* Internal energy */
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo); 
+  const double u_cgs = u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+
+  /* Temperature */ 
+  const double temperature = u_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
+
+  /* Jeans column density */ 
+  double N_J = nH_cgs * sqrt(hydro_gamma * boltzmann_k_cgs * temperature / (mu *newton_G_cgs * (proton_mass_cgs * nH_cgs / XH) * proton_mass_cgs)); 
+
+  double N_ref_prime = chimes_min(N_J, N_max); 
+      
+  if (l_max_cgs > 0.0) 
+    N_ref_prime = chimes_min(N_ref_prime, l_max_cgs * nH_cgs); 
+
+  double N_ref = pow(10.0, log10(N_ref_prime) - ((log10(N_ref_prime) - log10(N_min)) / (1.0 + exp(-5.0 * (log10(temperature) - ((log_T_min + log_T_max) / 2.0))))));
+  
+  return N_ref; 
 }
