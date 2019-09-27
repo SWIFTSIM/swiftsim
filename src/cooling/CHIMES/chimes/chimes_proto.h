@@ -47,6 +47,7 @@ ChimesFloat chimes_interpol_4d(ChimesFloat ****table, int i, int j, int k, int l
 // rate_equations.c 
 void check_constraint_equations(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars); 
 
 // update_rates.c 
 void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
