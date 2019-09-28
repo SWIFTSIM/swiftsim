@@ -600,8 +600,14 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
 
   /* Compute the "grad h" term */
   const float rho_inv = 1.f / p->rho;
+  float rho_dh = p->density.rho_dh;
+  /* Ignore changing-kernel effects when h ~= h_max */
+  if (p->h > 0.9999f * hydro_props->h_max) {
+    rho_dh = 0.f;
+  }
+
   const float grad_h_term =
-      1.f / (1.f + hydro_dimension_inv * p->h * p->density.rho_dh * rho_inv);
+      1.f / (1.f + hydro_dimension_inv * p->h * rho_dh * rho_inv);
 
   /* Update variables. */
   p->force.f = grad_h_term;
