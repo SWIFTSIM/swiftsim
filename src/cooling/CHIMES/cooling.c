@@ -1024,12 +1024,12 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
 
   /* Parameters that define N_ref. 
    * Taken from Ploeckinger et al. (in prep). */ 
-  double log_T_min = 3.0;  // K 
-  double log_T_max = 5.0;  // K 
-  double nH_min = 1.0e-8;  // cgs 
-  double N_max = 1.0e24;   // cgs 
-  double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
-  double N_min = l_max_cgs * nH_min; 
+  const double log_T_min = 3.0;        // K 
+  const double log_T_max = 5.0;        // K 
+  const double nH_min = 1.0e-8;        // cgs 
+  const double N_max = 1.0e24;         // cgs 
+  const double N_min = 3.08567758e15;  // cgs 
+  const double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);  
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
   float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
