@@ -172,7 +172,7 @@ INLINE static void feedback_logger_init(
  */
 INLINE static void feedback_logger_SNIa_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
-    const struct feedback_history_SNIa *restrict SNIa,
+    struct feedback_history_SNIa *restrict SNIa,
     const struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z, const double volume) {
 
@@ -244,9 +244,8 @@ INLINE static void feedback_logger_SNIa_log_event(
     const double deltaE = delta_u * mass_init;
 
     SNIa->SNIa_energy += deltaE;
-    SNIa->N_SNIa += deltaE * 1.9884e2;
     SNIa->heating += 1;
-    message("Event!!!! BAM!! E=%e N=%e", SNIa->SNIa_energy, SNIa->N_SNIa);
+    message("Event!!!! BAM!! E=%e", SNIa->SNIa_energy);
   }
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
@@ -382,7 +381,7 @@ INLINE static void feedback_logger_SNII_init_log_file(
  */
 INLINE static void feedback_logger_SNII_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
-    const struct feedback_history_SNII *restrict SNII
+    struct feedback_history_SNII *restrict SNII,
     const struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z, const double volume) {
 
@@ -401,7 +400,7 @@ INLINE static void feedback_logger_SNII_log_data(
   const double N_SNII = E_SNII / E_single_SNII;
 
   /* Calculate the number of SNIa per time and per time per volume */
-  const double N_SNII_p_time = N_SNIa / delta_time;
+  const double N_SNII_p_time = N_SNII / delta_time;
   const double N_SNII_p_time_p_volume = N_SNII_p_time / volume;
 
   /* Get the number of heating events */
@@ -427,8 +426,8 @@ INLINE static void feedback_logger_SNII_clear(
 
   /* Set all the variables to zero */
   if (lock_lock(&lock_SNII) == 0) {
-    SNIa->SNIa_energy = 0;
-    SNIa->heating = 0;
+    SNII->SNII_energy = 0;
+    SNII->heating = 0;
   }
   if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 }
@@ -444,7 +443,7 @@ INLINE static void feedback_logger_SNII_clear(
  * @param cosmo the cosmology struct
  * @param step the current simulation step
  */
-INLINE static void feedback_logger_SNIa_log_event(
+INLINE static void feedback_logger_SNII_log_event(
     struct feedback_history_SNII *restrict SNII, const double time,
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
@@ -459,7 +458,7 @@ INLINE static void feedback_logger_SNIa_log_event(
 
     SNII->SNII_energy += deltaE;
     SNII->heating += 1;
-    message("Event!!!! BAM!! E=%e N=%e", SNII->SNII_energy, SNII->N_SNII);
+    message("Event!!!! BAM!! E=%e", SNII->SNII_energy);
   }
   if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 }
@@ -555,8 +554,8 @@ INLINE static void feedback_logger_r_processes_log_data(
  *
  * @param SNII the external variable that stores all the feedback information
  */
-INLINE static void feedback_logger_SNII_clear(
-    struct feedback_history_SNII *restrict SNII) {}
+INLINE static void feedback_logger_r_processes_clear(
+    struct feedback_history_r_processes *restrict r_process) {}
 
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */

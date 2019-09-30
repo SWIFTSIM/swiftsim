@@ -2240,12 +2240,12 @@ void engine_step(struct engine *e) {
 
       /* Log the SNII data */
       feedback_logger_SNII_log_data(
-          e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
+          e->feedback_props, e->SNII_logger, &log_SNII, &e->feedback_history,
           e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
 
       /* Log the r-processes data */
       feedback_logger_r_processes_log_data(
-          e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
+          e->feedback_props, e->r_processes_logger, &log_r_processes, &e->feedback_history,
           e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
 
       /* Clear the different feedback loggers (SNIa, SNII and r-processes)*/
