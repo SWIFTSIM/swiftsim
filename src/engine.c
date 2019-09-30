@@ -133,10 +133,15 @@ extern int engine_max_sparts_per_ghost;
 FILE *SNIa_logger_debug;
 #endif
 
-/* Declare the structure */
+/* Declare the feedback structures */
 struct feedback_history_SNIa log_SNIa;
+struct feedback_history_SNII log_SNII;
+struct feedback_history_r_processes;
+
 /* Declare the corresponding locker*/
 swift_lock_type lock_SNIa;
+swift_lock_type lock_SNII;
+swift_lock_type lock_r_processes;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -2225,14 +2230,39 @@ void engine_step(struct engine *e) {
     }
 
     if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
-      message("Dividable step!, %e", e->s->dim[1]);
+      /* Calculte the box volume for the feedback loggers */
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
+
+      /* Log the SNIa data */
       feedback_logger_SNIa_log_data(
           e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
           e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
-      feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
+
+      /* Log the SNII data */
+      feedback_logger_SNII_log_data(
+          e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
+          e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+
+      /* Log the r-processes data */
+      feedback_logger_r_processes_log_data(
+          e->feedback_props, e->SNIa_logger, &log_SNIa, &e->feedback_history,
+          e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+
+      /* Clear the different feedback loggers (SNIa, SNII and r-processes)*/
       feedback_logger_SNIa_clear(&log_SNIa);
       fflush(e->SNIa_logger);
+
+      feedback_logger_SNII_clear(&log_SNII);
+      fflush(e->SNII_logger);
+
+      feedback_logger_r_processes_clear(&log_r_processes);
+      fflush(e->r_processes_logger);
+
+      /* Update the times in the gneral logger struct */
+      feedback_logger_update_times(&e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z);
+
+      /* Subtract the interval time from the feedback logger write time */
+      feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
     }
 
     if (!e->restarting)
@@ -3538,9 +3568,11 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
 
   /* Initialize the feedback history structure */
   if (e->policy & engine_policy_feedback) {
-    feedback_logger_SNIa_init(&e->feedback_history, e->time, e->cosmology->a,
+    feedback_logger_init(&e->feedback_history, e->time, e->cosmology->a,
                               e->cosmology->z);
     lock_init(&lock_SNIa);
+    lock_init(&lock_SNII);
+    lock_init(&lock_r_processes);
   }
 
   engine_init_output_lists(e, params);
@@ -3591,6 +3623,8 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
   e->SNIa_logger = NULL;
+  e->SNII_logger = NULL;
+  e->r_processes_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -3836,15 +3870,33 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
 
-    /* Initialize the SNIa logger if running with feedback */
+    /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
+      /* Open the SNIa logger */
       e->SNIa_logger = fopen("SNIa.txt", "w");
+
+      /* Open the SNII logger */
+      e->SNII_logger = fopen("SNII.txt", "w");
+
+      /* Open the r-processes logger */
+      e->r_processes_logger = fopen("r_processes.txt", "w");
 
       if (!restart) {
 
+        /* Initialize the SNIa logger */
         feedback_logger_SNIa_init_log_file(e->SNIa_logger, e->internal_units,
                                            e->physical_constants);
         fflush(e->SNIa_logger);
+
+        /* Initialize the SNII logger */
+        feedback_logger_SNIa_init_log_file(e->SNII_logger, e->internal_units,
+                                           e->physical_constants);
+        fflush(e->SNII_logger);
+
+        /* Initialize the r-processes logger */
+        feedback_logger_r_processes_init_log_file(e->r_processes_logger, e->internal_units,
+                                           e->physical_constants);
+        fflush(e->r_processes_logger);
       }
     }
   }
@@ -4784,6 +4836,8 @@ void engine_clean(struct engine *e, const int fof) {
     }
     if (e->policy & engine_policy_feedback) {
       fclose(e->SNIa_logger);
+      fclose(e->SNII_logger);
+      fclose(e->r_processes_logger);
 
 #ifdef SWIFT_DEBUG_CHECKS
       fclose(SNIa_logger_debug);

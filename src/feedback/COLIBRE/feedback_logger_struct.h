@@ -19,21 +19,47 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H
 
-/* feedback history struct */
+/* feedback history struct for SNIa */
 struct feedback_history_SNIa {
 
   /*! Total new SNIa injected energy */
   double SNIa_energy;
 
-  /*! Number of SNIa */
-  float N_SNIa;
+  /*! Number of heating events */
+  int heating;
+};
+
+/* feedback history struct for SNII */
+struct feedback_history_SNII {
+
+  /*! Total new SNIa injected energy */
+  double SNII_energy;
+
+  /*! Total new SNIas in the simulation */
+  double N_SNII;
 
   /*! Number of heating events */
   int heating;
 };
 
+/* feedback history struct for r-processes */
+struct feedback_history_r_processes {
+
+  /*! Total new r-processes mass in the simulation */
+  double enrichement_mass;
+
+  /*! Number of r-processes in the simulation */
+  int N_r_processes;
+};
+
 /* Global variable for the SNIa events */
 extern struct feedback_history_SNIa log_SNIa;
+
+/* Global variable for the SNII events */
+extern struct feedback_history_SNII log_SNII;
+
+/* Global variable for the r-processes */
+extern struct feedback_history_r_processes log_r_processes; 
 
 /* feedback history struct accumulator */
 struct feedback_history_accumulator {

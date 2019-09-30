@@ -344,6 +344,12 @@ struct engine {
   /* File handle for the SNIa logger file */
   FILE *SNIa_logger;
 
+  /* File handle for the SNII logger file */
+  FILE *SNII_logger;
+
+  /* File handle for the r-processes logger file */
+  FILE r_processes_logger;
+
   /* SNIa logger accumulator */
   struct feedback_history_accumulator feedback_history;
 

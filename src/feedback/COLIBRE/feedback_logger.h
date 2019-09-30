@@ -23,9 +23,11 @@
 #include "feedback_properties.h"
 
 extern swift_lock_type lock_SNIa;
+extern swift_lock_type lock_SNII;
+extern swift_lock_type lock_r_processes;
 
 /**
- * @brief Initialize the SFH logger file
+ * @brief Initialize the SNIa logger file
  *
  * @param fp the file pointer
  * @param us The current internal system of units.
@@ -41,7 +43,7 @@ INLINE static void feedback_logger_SNIa_init_log_file(
                         (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
 
   /* Write some general text to the logger file */
-  fprintf(fp, "# Stochastic SNIa Logger file\n");
+  fprintf(fp, "# Stochastic SNIa logger file\n");
   fprintf(fp, "######################################################\n");
   fprintf(fp, "# The quantities are all given in internal physical units!\n");
   fprintf(fp, "#\n");
@@ -90,8 +92,9 @@ INLINE static void feedback_logger_SNIa_init_log_file(
           " prev a          z          prev z    injection E    Numb SNIa    "
           "   SNIa rate     SNIa rate/V   Number\n");
 }
+
 /**
- * @brief Initialize the SFH logger debug file
+ * @brief Initialize the SNIa logger debug file
  *
  * @param fp the file pointer
  * @param us The current internal system of units.
@@ -144,7 +147,7 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
  * @param a the current scale factor
  * @param z the current redshift
  */
-INLINE static void feedback_logger_SNIa_init(
+INLINE static void feedback_logger_init(
     struct feedback_history_accumulator *fha, const double time, const double a,
     const double z) {
 
@@ -169,8 +172,8 @@ INLINE static void feedback_logger_SNIa_init(
  */
 INLINE static void feedback_logger_SNIa_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
-    struct feedback_history_SNIa *restrict SNIa,
-    struct feedback_history_accumulator *fha, const int step, const double time,
+    const struct feedback_history_SNIa *restrict SNIa,
+    const struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z, const double volume) {
 
   if (step == 0) return;
@@ -202,12 +205,19 @@ INLINE static void feedback_logger_SNIa_log_data(
           fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume,
           N_heating_events);
 
+}
+
+INLINE static void feedback_logger_update_times(struct feedback_history_accumulator *fha, const int step, const double time,
+    const double a, const double z) {
+
   /* Set the times to the new values */
   fha->step_prev = step;
   fha->time_prev = time;
   fha->a_prev = a;
   fha->z_prev = z;
+
 }
+
 
 /**
  * @brief log a SNIa event
@@ -222,14 +232,14 @@ INLINE static void feedback_logger_SNIa_log_data(
  */
 INLINE static void feedback_logger_SNIa_log_event(
     struct feedback_history_SNIa *restrict SNIa, const double time,
-    const struct spart *restrict si, struct part *restrict pj,
-    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const struct spart *restrict si, const struct part *restrict pj,
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
     const int step) {
 
   if (lock_lock(&lock_SNIa) == 0) {
 
     /* Get the injected energy */
-    const double mass_init = si->mass_init;
+    const double mass_init = pj->mass; // I first had this but this doesn't seem right: const double mass_init = si->mass_init;
     const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
     const double deltaE = delta_u * mass_init;
 
@@ -285,10 +295,268 @@ INLINE static void feedback_logger_SNIa_clear(
   /* Set all the variables to zero */
   if (lock_lock(&lock_SNIa) == 0) {
     SNIa->SNIa_energy = 0;
-    SNIa->N_SNIa = 0;
     SNIa->heating = 0;
   }
   if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
 }
+
+/**
+ * @brief Initialize the SNII logger file
+ *
+ * @param fp the file pointer
+ * @param us The current internal system of units.
+ * @param phys_const Physical constants in internal units
+ */
+INLINE static void feedback_logger_SNII_init_log_file(
+    FILE *fp, const struct unit_system *restrict us,
+    const struct phys_const *phys_const) {
+
+  /* Calculate the energy unit */
+  const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
+                        us->UnitLength_in_cgs /
+                        (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
+
+  /* Write some general text to the logger file */
+  fprintf(fp, "# Stochastic SNII logger file\n");
+  fprintf(fp, "######################################################\n");
+  fprintf(fp, "# The quantities are all given in internal physical units!\n");
+  fprintf(fp, "#\n");
+  fprintf(fp, "# (0)  Simulation step\n");
+  fprintf(fp, "# (1)  Previous simulation step\n");
+  fprintf(fp,
+          "# (2)  Time since Big Bang (cosmological run), Time since start of "
+          "the simulation (non-cosmological run).\n");
+  fprintf(fp,
+          "# (3)  Previous time since Big Bang (cosmological run), Time since "
+          "start of "
+          "the simulation (non-cosmological run).\n");
+  fprintf(fp, "#      Unit = %e seconds\n", us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
+          1.f / phys_const->const_year / 1e6);
+  fprintf(fp, "# (4)  Scale factor              (no unit)\n");
+  fprintf(fp, "# (5)  Previous scale factor     (no unit)\n");
+  fprintf(fp, "# (6)  Redshift                  (no unit)\n");
+  fprintf(fp, "# (7)  Previous redshift         (no unit)\n");
+  fprintf(fp, "# (8)  Injected energy of SNIa events\n");
+  fprintf(fp, "#      Unit = %e erg\n", E_unit);
+  fprintf(fp, "#      Unit = %e x 10^51 erg\n", E_unit / 1e51);
+  fprintf(fp, "# (9)  Number of SNIa   (number, no unit)\n");
+  fprintf(fp,
+          "# (10) Number of SNIa per time (binned in time between current time "
+          "and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds\n", 1. / us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
+          phys_const->const_year * 1e6);
+  fprintf(fp,
+          "# (11) Number of SNIa per time per comoving volume (binned in time "
+          "between current time and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds/cm^3\n",
+          1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n",
+          phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
+  fprintf(fp, "# (12) Number of heating events   (no unit)\n");
+  fprintf(fp, "#\n");
+  fprintf(
+      fp,
+      "#  (0)      (1)         (2)              (3)           (4)           "
+      " (5)         (6)          (7)          (8)         (9)          "
+      "   (10)           (11)         (12) \n");
+  fprintf(fp,
+          "# step  prev. step      time          prev. time        a         "
+          " prev a          z          prev z    injection E    Numb SNII    "
+          "   SNII rate     SNII rate/V   Number\n");
+}
+
+/**
+ * @brief log all the collected data to the SNII logger file
+ *
+ * @param feedback_properties, the feedback structure
+ * @param fp the file pointer to write to.
+ * @param SNII the external variable that stores all the feedback information
+ * @param fha the feedback history accumulator struct
+ * @param step the current simulation step
+ * @param time the current simulation time
+ * @param a the current scale factor
+ * @param z the current redshift
+ * @param volume the simulation volume
+ */
+INLINE static void feedback_logger_SNII_log_data(
+    const struct feedback_props *restrict feedback_properties, FILE *fp,
+    const struct feedback_history_SNII *restrict SNII
+    const struct feedback_history_accumulator *fha, const int step, const double time,
+    const double a, const double z, const double volume) {
+
+  if (step == 0) return;
+
+  /* Calculate Delta time */
+  const double delta_time = time - fha->time_prev;
+
+  /* Get the total amount of SNIa energy */
+  const double E_SNII = SNII->SNII_energy;
+
+  /* Get the Energy of a single SNIa */
+  const double E_single_SNII = feedback_properties->E_SNII;
+
+  /* Calculate the number of SNIas in the simulation */
+  const double N_SNII = E_SNII / E_single_SNII;
+
+  /* Calculate the number of SNIa per time and per time per volume */
+  const double N_SNII_p_time = N_SNIa / delta_time;
+  const double N_SNII_p_time_p_volume = N_SNII_p_time / volume;
+
+  /* Get the number of heating events */
+  const int N_heating_events = SNII->heating;
+
+  /* Print the data to the file */
+  fprintf(fp,
+          "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
+          "%12.7e  %12.7e %7d \n",
+          step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
+          fha->z_prev, E_SNII, N_SNII, N_SNII_p_time, N_SNII_p_time_p_volume,
+          N_heating_events);
+
+}
+
+/**
+ * @brief function to reinitialize the SNII logger.
+ *
+ * @param SNII the external variable that stores all the feedback information
+ */
+INLINE static void feedback_logger_SNII_clear(
+    struct feedback_history_SNII *restrict SNII) {
+
+  /* Set all the variables to zero */
+  if (lock_lock(&lock_SNII) == 0) {
+    SNIa->SNIa_energy = 0;
+    SNIa->heating = 0;
+  }
+  if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
+}
+
+/**
+ * @brief log a SNII event
+ *
+ * @param SNII the external variable that stores all the feedback information
+ * @param time the current simulation time
+ * @param si the star particle
+ * @param pj the gas particle
+ * @param xpj the extra information of the gas particle
+ * @param cosmo the cosmology struct
+ * @param step the current simulation step
+ */
+INLINE static void feedback_logger_SNIa_log_event(
+    struct feedback_history_SNII *restrict SNII, const double time,
+    const struct spart *restrict si, const struct part *restrict pj,
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const int step) {
+
+  if (lock_lock(&lock_SNII) == 0) {
+
+    /* Get the injected energy */
+    const double mass_init = pj->mass; // I first had this but this doesn't seem right: const double mass_init = si->mass_init;
+    const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
+    const double deltaE = delta_u * mass_init;
+
+    SNII->SNII_energy += deltaE;
+    SNII->heating += 1;
+    message("Event!!!! BAM!! E=%e N=%e", SNII->SNII_energy, SNII->N_SNII);
+  }
+  if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
+}
+
+/**
+ * @brief Initialize the r-processes logger file
+ *
+ * @param fp the file pointer
+ * @param us The current internal system of units.
+ * @param phys_const Physical constants in internal units
+ */
+INLINE static void feedback_logger_r_processes_init_log_file(
+    FILE *fp, const struct unit_system *restrict us,
+    const struct phys_const *phys_const) {
+
+  /* Calculate the energy unit */
+  const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
+                        us->UnitLength_in_cgs /
+                        (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
+
+  /* Write some general text to the logger file */
+  fprintf(fp, "# Stochastic r-processes logger file\n");
+  fprintf(fp, "######################################################\n");
+  fprintf(fp, "# The quantities are all given in internal physical units!\n");
+  fprintf(fp, "#\n");
+  fprintf(fp, "# (0)  Simulation step\n");
+  fprintf(fp, "# (1)  Previous simulation step\n");
+  fprintf(fp,
+          "# (2)  Time since Big Bang (cosmological run), Time since start of "
+          "the simulation (non-cosmological run).\n");
+  fprintf(fp,
+          "# (3)  Previous time since Big Bang (cosmological run), Time since "
+          "start of "
+          "the simulation (non-cosmological run).\n");
+  fprintf(fp, "#      Unit = %e seconds\n", us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
+          1.f / phys_const->const_year / 1e6);
+  fprintf(fp, "# (4)  Scale factor              (no unit)\n");
+  fprintf(fp, "# (5)  Previous scale factor     (no unit)\n");
+  fprintf(fp, "# (6)  Redshift                  (no unit)\n");
+  fprintf(fp, "# (7)  Previous redshift         (no unit)\n");
+  fprintf(fp, "# (8)  Injected energy of SNIa events\n");
+  fprintf(fp, "#      Unit = %e erg\n", E_unit);
+  fprintf(fp, "#      Unit = %e x 10^51 erg\n", E_unit / 1e51);
+  fprintf(fp, "# (9)  Number of SNIa   (number, no unit)\n");
+  fprintf(fp,
+          "# (10) Number of SNIa per time (binned in time between current time "
+          "and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds\n", 1. / us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
+          phys_const->const_year * 1e6);
+  fprintf(fp,
+          "# (11) Number of SNIa per time per comoving volume (binned in time "
+          "between current time and previous time).\n");
+  fprintf(fp, "#      Unit = %e #/seconds/cm^3\n",
+          1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n",
+          phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
+  fprintf(fp, "# (12) Number of heating events   (no unit)\n");
+  fprintf(fp, "#\n");
+  fprintf(
+      fp,
+      "#  (0)      (1)         (2)              (3)           (4)           "
+      " (5)         (6)          (7)          (8)         (9)          "
+      "   (10)           (11)         (12) \n");
+  fprintf(fp,
+          "# step  prev. step      time          prev. time        a         "
+          " prev a          z          prev z    injection E    Numb SNIa    "
+          "   SNIa rate     SNIa rate/V   Number\n");
+}
+
+/**
+ * @brief log all the collected data to the r-processes logger file
+ *
+ * @param feedback_properties, the feedback structure
+ * @param fp the file pointer to write to.
+ * @param r_process the external variable that stores all the feedback information
+ * @param fha the feedback history accumulator struct
+ * @param step the current simulation step
+ * @param time the current simulation time
+ * @param a the current scale factor
+ * @param z the current redshift
+ * @param volume the simulation volume
+ */
+INLINE static void feedback_logger_r_processes_log_data(
+    const struct feedback_props *restrict feedback_properties, FILE *fp,
+    struct feedback_history_r_processes *restrict r_process,
+    struct feedback_history_accumulator *fha, const int step, const double time,
+    const double a, const double z, const double volume) {}
+
+/**
+ * @brief function to reinitialize the SNII logger.
+ *
+ * @param SNII the external variable that stores all the feedback information
+ */
+INLINE static void feedback_logger_SNII_clear(
+    struct feedback_history_SNII *restrict SNII) {}
+
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
