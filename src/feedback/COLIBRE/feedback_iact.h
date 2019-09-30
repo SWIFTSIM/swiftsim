@@ -32,6 +32,12 @@ extern FILE *SNIa_logger_debug;
 extern struct feedback_history_SNIa log_SNIa;
 extern swift_lock_type lock_SNIa;
 
+extern struct feedback_history_SNII log_SNII;
+extern swift_lock_type lock_SNII;
+
+extern struct feedback_history_r_processes log_r_processes;
+extern swift_lock_type lock_r_processes;
+
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *
@@ -307,7 +313,7 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      feedback_logger_SNII_log_event(&log_SNII, time, si, pj, xpj, cosmo, step);
+      feedback_logger_SNII_log_event(&log_SNII, time, si, pj, xpj, cosmo, step, si->SNII_f_E);
 
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */

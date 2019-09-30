@@ -397,7 +397,7 @@ INLINE static void feedback_logger_SNII_log_data(
   const double E_single_SNII = feedback_properties->E_SNII;
 
   /* Calculate the number of SNIas in the simulation */
-  const double N_SNII = E_SNII / E_single_SNII;
+  const double N_SNII = SNII->N_SNII / E_single_SNII;
 
   /* Calculate the number of SNIa per time and per time per volume */
   const double N_SNII_p_time = N_SNII / delta_time;
@@ -447,7 +447,7 @@ INLINE static void feedback_logger_SNII_log_event(
     struct feedback_history_SNII *restrict SNII, const double time,
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const int step) {
+    const int step, const float f_E) {
 
   if (lock_lock(&lock_SNII) == 0) {
 
@@ -456,9 +456,12 @@ INLINE static void feedback_logger_SNII_log_event(
     const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
     const double deltaE = delta_u * mass_init;
 
+    /* Update the total SNII energy */
     SNII->SNII_energy += deltaE;
     SNII->heating += 1;
-    message("Event!!!! BAM!! E=%e", SNII->SNII_energy);
+
+    /* For the number of SNIIs first divide by the energy fraction, rest is done while writing the data */
+    SNII->N_SNII += deltaE/f_E;
   }
   if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 }
