@@ -426,8 +426,9 @@ INLINE static void feedback_logger_SNII_clear(
 
   /* Set all the variables to zero */
   if (lock_lock(&lock_SNII) == 0) {
-    SNII->SNII_energy = 0;
+    SNII->SNII_energy = 0.f;
     SNII->heating = 0;
+    SNII->N_SNII = 0.f;
   }
   if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 }
