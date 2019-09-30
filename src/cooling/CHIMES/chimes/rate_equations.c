@@ -507,12 +507,11 @@ ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, C
 {
   /* Parameters that define N_ref. 
    * Taken from Ploeckinger et al. (in prep). */
-  double log_T_min = 3.0;  // K 
-  double log_T_max = 5.0;  // K 
-  double nH_min = 1.0e-8;  // cgs 
-  double N_max = 1.0e24;   // cgs 
-
-  double N_min = myGlobalVars->max_shielding_length_cgs * nH_min;
+  const double log_T_min = 3.0;       // K 
+  const double log_T_max = 5.0;       // K 
+  const double nH_min = 1.0e-8;       // cgs 
+  const double N_max = 1.0e24;        // cgs 
+  const double N_min = 3.08567758e15; // cgs 
 
   /* Jeans column density */ 
   double N_J = nH_cgs * sqrt((5.0 / 3.0) * BOLTZMANNCGS * temperature / (mu * 6.67408e-8 * (PROTON_MASS * nH_cgs / XH) * PROTON_MASS)); 
