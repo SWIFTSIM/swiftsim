@@ -340,13 +340,6 @@ INLINE static void compute_SNIa_feedback(
 
     prob = 1.;
     delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
-    if (ngb_gas_mass == 0.) {
-      prob = 0.;
-      delta_u = 0.;
-    } else {
-      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E,
-              E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
-    }
   }
 
   /* Store all of this in the star for delivery onto the gas */
@@ -1065,6 +1058,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
+
+  /* Check if there are neighbours, otherwise exit */
+  if (ngb_gas_mass == 0.f) return;
+
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
 
