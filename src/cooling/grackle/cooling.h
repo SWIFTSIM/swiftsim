@@ -631,8 +631,8 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
 
   /* general particle data */
   gr_float density = hydro_get_physical_density(p, cosmo);
-  const float energy_before = hydro_get_physical_internal_energy(p, xp, cosmo);
-  gr_float energy = energy_before;
+  gr_float energy = hydro_get_physical_internal_energy(p, xp, cosmo) +
+    dt * hydro_get_physical_internal_energy_dt(p, cosmo);
 
   /* initialize density */
   data.density = &density;
@@ -679,6 +679,8 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
     const struct cooling_function_data* restrict cooling,
     const struct part* restrict p, struct xpart* restrict xp) {
 
+  error("TODO: use energy after adiabatic cooling");
+
   /* set current time */
   code_units units = cooling->units;
 
@@ -698,10 +700,8 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
   data.grid_end = grid_end;
 
   /* general particle data */
-  const gr_float energy_before =
-      hydro_get_physical_internal_energy(p, xp, cosmo);
   gr_float density = hydro_get_physical_density(p, cosmo);
-  gr_float energy = energy_before;
+  gr_float energy = hydro_get_physical_internal_energy(p, xp, cosmo);
 
   /* initialize density */
   data.density = &density;
@@ -766,38 +766,23 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     return;
   }
 
+  /* Get the change in internal energy due to hydro forces */
+  const float hydro_du_dt = hydro_get_physical_internal_energy_dt(p, cosmo);
+
   /* Current energy */
   const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  /* Current du_dt in physical coordinates (internal units) */
-  const float hydro_du_dt = hydro_get_physical_internal_energy_dt(p, cosmo);
 
   /* Calculate energy after dt */
   gr_float u_new =
       cooling_new_energy(phys_const, us, cosmo, cooling, p, xp, dt);
 
-  float delta_u = u_new - u_old + hydro_du_dt * dt_therm;
-
   /* We now need to check that we are not going to go below any of the limits */
+  const double u_minimal = hydro_props->minimal_internal_energy;
+  u_new = max(u_new, u_minimal);
 
-  /* First, check whether we may end up below the minimal energy after
-   * this step 1/2 kick + another 1/2 kick that could potentially be for
-   * a time-step twice as big. We hence check for 1.5 delta_u. */
-  if (u_old + 1.5 * delta_u < hydro_props->minimal_internal_energy) {
-    delta_u = (hydro_props->minimal_internal_energy - u_old) / 1.5;
-  }
-
-  /* Second, check whether the energy used in the prediction could get negative.
-   * We need to check for the 1/2 dt kick followed by a full time-step drift
-   * that could potentially be for a time-step twice as big. We hence check
-   * for 2.5 delta_u but this time against 0 energy not the minimum.
-   * To avoid numerical rounding bringing us below 0., we add a tiny tolerance.
-   */
-  const float rounding_tolerance = 1.0e-4;
-
-  if (u_old + 2.5 * delta_u < 0.) {
-    delta_u = -u_old / (2.5 + rounding_tolerance);
-  }
+  /* Expected change in energy over the next kick step
+     (assuming no change in dt) */
+  const double delta_u = u_new - u_old;
 
   /* Turn this into a rate of change (including cosmology term) */
   const float cooling_du_dt = delta_u / dt_therm;
@@ -806,7 +791,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
 
   /* Store the radiated energy */
-  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (cooling_du_dt - hydro_du_dt) * dt;
 }
 
 /**
