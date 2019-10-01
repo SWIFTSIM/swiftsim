@@ -89,7 +89,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm); 
+                       const float dt, const float dt_therm, const double time); 
 
 float cooling_get_radiated_energy(const struct xpart* restrict xp); 
 
