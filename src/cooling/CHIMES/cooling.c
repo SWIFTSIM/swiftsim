@@ -179,6 +179,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Cosmic ray ionisation rate of HI. */ 
   cooling->cosmic_ray_rate = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
+  cooling->ChimesGlobalVars.colibre_cr_rate_0 = cooling->cosmic_ray_rate; 
 
   /* CHIMES tolerance parameters */ 
   cooling->ChimesGlobalVars.relativeTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:relativeTolerance"); 

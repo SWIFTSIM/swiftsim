@@ -470,7 +470,10 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
       N_ref = chimes_calculate_Nref(data->myGasVars->temperature, data->myGasVars->nH_tot, mu, XH, data->myGlobalVars); 
 
       if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
-	data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
+	{
+	  data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
+	  data->myGasVars->cr_rate = data->myGlobalVars->colibre_cr_rate_0 * pow(N_ref / N_H0, 1.4); 
+	}
 
       if (data->myGlobalVars->update_colibre_shielding == 1) 
 	{

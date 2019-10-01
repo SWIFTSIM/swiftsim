@@ -86,6 +86,7 @@ struct globalVariables
   int update_colibre_shielding; 
   ChimesFloat max_shielding_length_cgs; 
   ChimesFloat shielding_length_factor; 
+  ChimesFloat colibre_cr_rate_0; 
 }; 
 
 /* The following structure contains
