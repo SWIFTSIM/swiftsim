@@ -1124,7 +1124,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * are in the rapid cooling regime. If negative, 
    * we never use this scheme (i.e. always drift 
    * the internal energies). */ 
-  cooling->rapid_cooling_threshold = parser_get_opt_param_double(parameter_file, "COLIBRECooling:rapid_cooling_threshold", -1.f); 
+  cooling->rapid_cooling_threshold = parser_get_opt_param_double(parameter_file, "COLIBRECooling:rapid_cooling_threshold", 1.f); 
 
   /* Finally, read the tables */
   read_cooling_header(cooling);
