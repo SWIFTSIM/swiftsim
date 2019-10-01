@@ -83,7 +83,9 @@ struct globalVariables
   int totalNumberOfSpecies;
   int scale_metal_tolerances; 
   int update_colibre_ISRF; 
+  int update_colibre_shielding; 
   ChimesFloat max_shielding_length_cgs; 
+  ChimesFloat shielding_length_factor; 
 }; 
 
 /* The following structure contains

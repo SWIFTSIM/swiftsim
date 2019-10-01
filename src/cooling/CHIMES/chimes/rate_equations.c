@@ -462,12 +462,40 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   ChimesFloat N_ref, mu, XH; 
   ChimesFloat scale_MW_ISRF = 0.1; 
   ChimesFloat N_H0 = 3.65e20; 
-  if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
+  
+  if ((data->myGlobalVars->update_colibre_ISRF == 1) || (data->myGlobalVars->update_colibre_shielding == 1))
     {
       mu = calculate_mean_molecular_weight(data->myGasVars, data->myGlobalVars); 
       XH = 1.0 / (1.0 + (4.0 * data->myGasVars->element_abundances[0])); 
       N_ref = chimes_calculate_Nref(data->myGasVars->temperature, data->myGasVars->nH_tot, mu, XH, data->myGlobalVars); 
-      data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
+
+      if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
+	data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
+
+      if (data->myGlobalVars->update_colibre_shielding == 1) 
+	{
+	  /* Update shielding length */ 
+	  data->myGasVars->cell_size = data->myGlobalVars->shielding_length_factor * N_ref / data->myGasVars->nH_tot; 
+	  
+	  /* Update column densities */ 
+	  data->HI_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[HI]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  data->H2_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[H2]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  data->HeI_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[HeI]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  data->HeII_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[HeII]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  if (data->myGlobalVars->speciesIndices[CO] > -1) 
+	    data->CO_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[CO]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  else 
+	    data->CO_column = 0.0; 
+	  if (data->myGlobalVars->speciesIndices[H2O] > -1) 
+	    data->H2O_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[H2O]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  else 
+	    data->H2O_column = 0.0; 
+	  if (data->myGlobalVars->speciesIndices[OH] > -1) 
+	    data->OH_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[OH]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
+	  else 
+	    data->OH_column = 0.0; 
+	  data->extinction = DUSTEFFSIZE * data->myGasVars->cell_size * data->myGasVars->nH_tot * data->myGasVars->dust_ratio;
+	}
 
       set_initial_rate_coefficients(data->myGasVars, data->myGlobalVars, *data); 
     }
@@ -509,7 +537,6 @@ ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, C
    * Taken from Ploeckinger et al. (in prep). */
   const double log_T_min = 3.0;       // K 
   const double log_T_max = 5.0;       // K 
-  const double nH_min = 1.0e-8;       // cgs 
   const double N_max = 1.0e24;        // cgs 
   const double N_min = 3.08567758e15; // cgs 
 
