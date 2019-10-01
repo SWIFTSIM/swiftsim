@@ -429,7 +429,8 @@ void set_subgrid_part(const struct phys_const *phys_const,
                         cooling->nH[i - 1];
 
           /* Get the interpolated values for iden_eq and dden_eq */
-          get_index_1d(cooling->nH, colibre_cooling_N_density, logn_at_Peq, &iden_eq, &dden_eq);
+          get_index_1d(cooling->nH, colibre_cooling_N_density, logn_at_Peq,
+                       &iden_eq, &dden_eq);
 
           break;
         }
