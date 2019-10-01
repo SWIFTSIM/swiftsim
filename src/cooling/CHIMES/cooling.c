@@ -87,6 +87,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
 
   cooling->ChimesGlobalVars.update_colibre_ISRF = 0; 
+  cooling->ChimesGlobalVars.update_colibre_shielding = 0; 
 
   if (cooling->UV_field_flag == 0) 
     cooling->ChimesGlobalVars.N_spectra = 0; 
@@ -119,8 +120,18 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   if (cooling->Shielding_flag == 0) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 0; 
-  else if ((cooling->Shielding_flag == 1) || (cooling->Shielding_flag == 2))
+  else if (cooling->Shielding_flag == 1) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
+  else if (cooling->Shielding_flag == 2) 
+    {
+      cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
+
+      /* Flag to update shielding within the rate 
+       * equations in CHIMES, using the COLIBRE 
+       * shielding length. This can only be used 
+       * with Shielding_flag == 2. */ 
+      cooling->ChimesGlobalVars.update_colibre_shielding = parser_get_param_int(parameter_file, "CHIMESCooling:update_colibre_shielding"); 
+    }
   else 
     error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
 
@@ -132,14 +143,18 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
       /* Factor to re-scale shielding length. */ 
       cooling->shielding_length_factor = parser_get_opt_param_double(parameter_file, "CHIMESCooling:shielding_length_factor", 1.0); 
+      cooling->ChimesGlobalVars.shielding_length_factor = (ChimesFloat) cooling->shielding_length_factor; 
 
       /* Maximum shielding length (in code units). 
        * If negative, do not impose a maximum. */ 
       cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
-      cooling->ChimesGlobalVars.max_shielding_length_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
+      cooling->ChimesGlobalVars.max_shielding_length_cgs = (ChimesFloat) cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
     }
   else 
-    cooling->ChimesGlobalVars.max_shielding_length_cgs = -1.0; 
+    {
+      cooling->ChimesGlobalVars.shielding_length_factor = 1.0; 
+      cooling->ChimesGlobalVars.max_shielding_length_cgs = -1.0; 
+    }
 
   /* Parameters used for the COLIBRE ISRF and 
    * shielding length. These have just been 
@@ -1026,7 +1041,6 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
    * Taken from Ploeckinger et al. (in prep). */ 
   const double log_T_min = 3.0;        // K 
   const double log_T_max = 5.0;        // K 
-  const double nH_min = 1.0e-8;        // cgs 
   const double N_max = 1.0e24;         // cgs 
   const double N_min = 3.08567758e15;  // cgs 
   const double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);  
