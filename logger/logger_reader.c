@@ -356,7 +356,7 @@ void logger_reader_get_next_particle(
     struct logger_particle *prev, struct logger_particle *next,
     size_t time_offset) {
 
-  void *map = &reader->log.log.map;
+  void *map = reader->log.log.map;
   size_t prev_offset = prev->offset;
   size_t next_offset = 0;
 
@@ -370,15 +370,20 @@ void logger_reader_get_next_particle(
       break;
     }
 
+    /* Are we at the end of the file? */
+    if (next_offset == prev_offset) {
+      error("End of file");
+    }
+
     /* Update the previous offset */
     prev_offset = next_offset;
   }
 
   /* Read the previous offset if required */
   if (prev_offset != prev->offset) {
-    logger_particle_read(next, reader, prev_offset, /* Time */ 0, logger_reader_const);
+    logger_particle_read(prev, reader, prev_offset, /* Time */ 0, logger_reader_const);
   }
 
   /* Read the next particle */
-  logger_particle_read(next, reader, next_offset, /* Time */ 0, logger_reader_const);
+  logger_particle_read(next, reader, next_offset, /* Time */ 0, logger_reader_lin);
 }
