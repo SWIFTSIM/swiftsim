@@ -1184,7 +1184,7 @@ Showing all the parameters for a basic cosmologica test-case, one would have:
 
    StructureFinding:
     config_file_name:     my_stf_configuration_file.cfg  # See the VELOCIraptor manual for the content of this file.
-    basename:             ./haloes/                      # Write the catalogs in this sub-directory
+    basename:             haloes                         # Base name for VELOCIraptor output files
     subdir_per_output:    stf                            # Make a stf_XXXX subdirectory for each output
     scale_factor_first:   0.1                            # Scale-factor of the first output
     delta_time:           1.1                            # Delta log-a between outputs
