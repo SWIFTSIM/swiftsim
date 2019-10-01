@@ -263,7 +263,7 @@ runner_iact_nonsym_feedback_apply(
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (new_thermal_energy < 0.99 * current_thermal_energy)
-    error("Enrichment is cooling the gas");
+    error("Enrichment is cooling the gas part=%llu spart=%llu",pj->id, si->id);
 #endif
 
   /* Do the energy injection. */
@@ -376,7 +376,7 @@ runner_iact_nonsym_feedback_apply(
   }
 
   /* Draw a random number (Note mixing both IDs) */
-  const float HIIregion_rand = random_unit_interval(si->id + pj->id, ti_current,
+  const float HIIregion_rand = random_unit_interval_two_IDs(si->id, pj->id, ti_current,
                                                     random_number_HII_regions);
 
   /* if lucky, particle is now flagged as HII region  */
