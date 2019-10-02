@@ -271,6 +271,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * the internal energies). */
   cooling->rapid_cooling_threshold = parser_get_param_double(parameter_file, "CHIMESCooling:rapid_cooling_threshold");
 
+  /* Properties of the HII region model */ 
+  cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
+
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
@@ -819,6 +822,20 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * particle's thermodynamic variables. */ 
   chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
 
+  /* check if the particle is in an HII region. If it is, we 
+   * immediately heat it up to 1e4 K (if required), and it 
+   * will subsequently be evolved with equilibrium cooling. */ 
+  if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
+      (xp->tracers_data.HIIregion_timer_gas > 0.)) {
+    ChimesGasVars.temperature = chimes_max(ChimesGasVars.temperature, (ChimesFloat) cooling->HIIregion_temp); 
+    ChimesGasVars.TempFloor = chimes_max(ChimesGasVars.TempFloor, (ChimesFloat) cooling->HIIregion_temp); 
+    ChimesGasVars.ForceEqOn = 1; 
+  } else if ((time > xp->tracers_data.HIIregion_timer_gas) &&
+             (xp->tracers_data.HIIregion_timer_gas > 0.)) {
+    xp->tracers_data.HIIregion_timer_gas = -1.;
+    xp->tracers_data.HIIregion_starid = -1;
+  }
+  
   /* Call CHIMES to integrate the chemistry 
    * and cooling over the time-step. */ 
   chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
