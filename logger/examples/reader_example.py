@@ -10,18 +10,21 @@ sys.path.append("../.libs/")
 
 import liblogger as logger
 
-# Get filenames
-if len(sys.argv) != 3:
-    print("WARNING missing arguments. Will use the default ones")
-    basename = "../../examples/HydroTests/SedovBlast_3D/index"
-    time = 0.05
+if len(sys.argv) >= 2:
+    basename = sys.argv[1]
 else:
-    basename = sys.argv[-1]
-    time = sys.argv[-2]
+    print("No basename supplied (first argument), using default.")
+if len(sys.argv) >= 3:
+    time = sys.argv[2]
+else:
+    print("No time supplied (second argument), using default.")
+if len(sys.argv) > 3:
+    print("Ignoring excess arguments '%s'." % sys.argv[3:])
+print("basename: %s" % basename)
+print("time: %g" % time)
 
 # read dump
 data = logger.loadFromIndex(basename, time)
-exit(1)
 
 pos = data["positions"]
 
