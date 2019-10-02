@@ -121,6 +121,9 @@ struct cooling_function_data {
 
   /* Temperature of gas particles tagged as HII regions */ 
   float HIIregion_temp; 
+  
+  /* Ionisation state of HII regions. */ 
+  int HIIregion_ion_state; 
 };
 
 /**

@@ -276,6 +276,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Properties of the HII region model */ 
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
+  cooling->HIIregion_ion_state = parser_get_param_int(parameter_file, "CHIMESCooling:HIIregion_ion_state"); 
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
@@ -830,11 +831,13 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* check if the particle is in an HII region. If it is, we 
    * immediately heat it up to 1e4 K (if required), and it 
    * will subsequently be evolved with equilibrium cooling. */ 
+  int HII_flag = 0; 
   if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
       (xp->tracers_data.HIIregion_timer_gas > 0.)) {
     ChimesGasVars.temperature = chimes_max(ChimesGasVars.temperature, (ChimesFloat) cooling->HIIregion_temp); 
     ChimesGasVars.TempFloor = chimes_max(ChimesGasVars.TempFloor, (ChimesFloat) cooling->HIIregion_temp); 
     ChimesGasVars.ForceEqOn = 1; 
+    HII_flag = 1; 
   } else if ((time > xp->tracers_data.HIIregion_timer_gas) &&
              (xp->tracers_data.HIIregion_timer_gas > 0.)) {
     xp->tracers_data.HIIregion_timer_gas = -1.;
@@ -919,6 +922,15 @@ void cooling_cool_part(const struct phys_const *phys_const,
     /* Store the radiated energy */
     xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
   }
+
+  if (HII_flag == 1) 
+    {
+      /* If particle is in an HII region, manually 
+       * set it to be ionised, according to the 
+       * HIIregion_ion_state parameter. */ 
+      ChimesGasVars.InitIonState = cooling->HIIregion_ion_state; 
+      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+    }
   
   /* Copy abundances from ChimesGasVars back to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
