@@ -109,6 +109,9 @@ struct cooling_function_data {
   /* delta log U above the EOS below which 
    * we evolve the chemistry in eqm. */ 
   float delta_logUEOS_apply_eqm; 
+
+  /* Threshold to switch between rapid and slow cooling regimes. */
+  double rapid_cooling_threshold; 
 };
 
 /**
