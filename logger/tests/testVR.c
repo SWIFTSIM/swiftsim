@@ -62,11 +62,11 @@ int main(int argc, char *argv[]) {
                      /* Verbose */ 0);
 
   /* Read the time limits */
-  double begin = logger_reader_get_time_begin(&reader);
-  double end = logger_reader_get_time_end(&reader);
+  double begin = logger_reader_get_time_begin(&reader) + 1e-4;
+  double end = logger_reader_get_time_end(&reader) - 1e-4;
 
   /* Set the time */
-  message("Time begin: %f end: %f\n", begin, end);
+  message("Time begin: %f end: %f", begin, end);
   logger_reader_set_time(&reader, begin);
 
   /* Get the number of particles */
@@ -76,7 +76,6 @@ int main(int argc, char *argv[]) {
       logger_reader_get_number_particles(&reader, &n_type);
   for (int i = 0; i < n_type; i++) {
     n_tot += n_parts[i];
-    printf("%lld particles out of %lld...\n", n_parts[i], n_tot);
   }
 
   /* Allocate the particles memory */
@@ -93,13 +92,13 @@ int main(int argc, char *argv[]) {
 
     /* Get the offset of the given time */
     size_t o = logger_reader_get_offset_from_time(&reader, t);
-    message("time: %f offset: %ld\n", t, o);
+    message("time: %f offset: %ld", t, o);
 
     /* Read the next particle */
     struct logger_particle n;
     logger_reader_get_next_particle(&reader, &p, &n, o);
 
-    message("Particle %zi: %f %f %f %f\n", id, p.pos[0], p.pos[1], p.pos[2],
+    message("Particle %zi: %f %f %f %f", id, p.pos[0], p.pos[1], p.pos[2],
             p.time);
 
     /* Now you can interpolate */

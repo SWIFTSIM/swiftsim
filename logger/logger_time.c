@@ -224,7 +224,9 @@ size_t time_array_get_index(const struct time_array *t, const size_t offset) {
   if (!t) error("NULL pointer.");
 
   if (offset < t->records[0].offset || offset > t->records[t->size - 1].offset)
-    error("Offset outside of range.");
+    error("Offset outside of range. %zi > %zi > %zi",
+          t->records[t->size - 1].offset, offset,
+          t->records[0].offset);
 #endif
 
   /* right will contain the index at the end of the loop */

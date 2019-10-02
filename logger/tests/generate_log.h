@@ -21,6 +21,7 @@
 #include "../../config.h"
 
 /* Local headers */
+#include "engine.h"
 #include "hydro.h"
 #include "logger.h"
 
@@ -29,6 +30,7 @@
  */
 #define period_rho 2
 #define period_h 4
+#define const_time_base 1e-4
 
 /**
  * @brief Generate the data of a bunch of particles.
@@ -48,6 +50,7 @@ void generate_particles(struct part *parts, struct xpart *xparts,
     /* Initialize particle. */
     hydro_first_init_part(&parts[i], &xparts[i]);
     hydro_init_part(&parts[i], &hs);
+    logger_part_data_init(&xparts[i].logger_data);
 
     for (int j = 0; j < 3; j++) {
       parts[i].x[j] = i;
@@ -70,8 +73,7 @@ integertime_t get_integer_time(int step) { return step; }
 
 /** Provides a double time given the step number. */
 double get_double_time(int step) {
-  const double time_base = 1e-4;
-  return step * time_base;
+  return step * const_time_base;
 }
 
 /**
@@ -81,17 +83,26 @@ double get_double_time(int step) {
  * evolve the particles.
  *
  * @param log The #logger_writer.
- * @param parts The list of particles.
- * @param xparts The list of x-particles.
- * @param nparts The number of particles.
+ * @param e The #engine.
  */
-void write_particles(struct logger_writer *log, struct part *parts,
-                     struct xpart *xparts, size_t nparts) {
+void write_particles(struct logger_writer *log,
+                     struct engine *e) {
+
+  size_t nparts = e->total_nr_parts;
+  struct part *parts = e->s->parts;
+  struct xpart *xparts = e->s->xparts;
 
   const int number_steps = 100;
+  const int number_index = 5;
 
   /* Loop over all the steps. */
   for (int i = 0; i < number_steps; i++) {
+    /* Dump an index file if required */
+    if (i % (number_steps / number_index) == number_index - 1) {
+      e->time = get_double_time(i);
+      e->ti_current = get_integer_time(i);
+      engine_dump_index(e);
+    }
     integertime_t ti_int = get_integer_time(i);
     double ti_double = get_double_time(i);
 
@@ -125,8 +136,6 @@ void write_particles(struct logger_writer *log, struct part *parts,
 
       logger_log_part(log, &parts[j], mask, &xparts[j].logger_data.last_offset);
     }
-
-    // TODO write index files.
   }
 
   /* Mark the current time step in the particle logger file. */
@@ -144,11 +153,60 @@ void generate_log(struct swift_params *params, struct part *parts,
   struct logger_writer log;
   logger_init(&log, params);
 
+  /* initialize the engine */
+  struct engine e;
+  e.total_nr_parts = nparts;
+  e.total_nr_gparts = 0;
+  e.total_nr_sparts = 0;
+  e.total_nr_bparts = 0;
+  e.verbose = 1;
+  e.policy = 0;
+  e.ti_current = 0;
+  e.time = 0;
+  e.time_base = const_time_base;
+  e.time_begin = 0;
+  e.logger.logger = &log;
+  threadpool_init(&e.threadpool, 1);
+  struct space s;
+  e.s = &s;
+  s.xparts = xparts;
+  s.parts = parts;
+  s.gparts = NULL;
+  s.nr_parts = nparts;
+  s.nr_gparts = 0;
+  s.nr_sparts = 0;
+  s.nr_bparts = 0;
+  s.nr_inhibited_parts = 0;
+  s.nr_inhibited_gparts = 0;
+  s.nr_inhibited_sparts = 0;
+  s.nr_inhibited_bparts = 0;
+  s.nr_extra_gparts = 0;
+  s.nr_extra_parts = 0;
+  s.nr_extra_sparts = 0;
+  s.nr_extra_bparts = 0;
+
   /* Write file header */
   logger_write_file_header(&log);
 
+  /* Mark the current time step in the particle logger file. */
+  logger_log_timestamp(&log, e.ti_current, e.time, &log.timestamp_offset);
+  /* Make sure that we have enough space in the particle logger file
+   * to store the particles in current time step. */
+  logger_ensure_size(&log, nparts, /* number gpart */ 0, 0);
+
+  /* Log all the particles before starting */
+  logger_log_all(&log, &e);
+  engine_dump_index(&e);
+
   /* Write particles */
-  write_particles(&log, parts, xparts, nparts);
+  write_particles(&log, &e);
+
+  /* Write all the particles at the end */
+  logger_log_all(e.logger.logger, &e);
+
+  /* Write a sentinel timestamp */
+  logger_log_timestamp(e.logger.logger, e.ti_current, e.time,
+                       &e.logger.logger->timestamp_offset);
 
   /* Cleanup the memory */
   logger_free(&log);
