@@ -590,6 +590,9 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
 #else
     mkdir(subDirName, 0777);
 #endif
+  } else {
+    /* Not making separate directories so subDirName=outputDirName */
+    strncpy(subDirName, outputDirName, FILENAME_BUFFER_SIZE);
   }
 
   /* What should the filename be? */
