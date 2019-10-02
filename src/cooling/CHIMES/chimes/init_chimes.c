@@ -5296,8 +5296,8 @@ void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVari
   int i, init_ion_state;
   /* mode determines in what state
    * we initially set the gas. */
-  if (myGlobalVars->InitIonState >= 0 && myGlobalVars->InitIonState <= 26)
-    init_ion_state = myGlobalVars->InitIonState;
+  if (myGasVars->InitIonState >= 0 && myGasVars->InitIonState <= 26)
+    init_ion_state = myGasVars->InitIonState;
   else
     {
       printf("WARNING: initialise_gas_abundances() mode not recognised. Assuming fully neutral\n");

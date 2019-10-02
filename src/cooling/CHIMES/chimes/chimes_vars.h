@@ -54,6 +54,7 @@ struct gasVariables
   ChimesFloat hydro_timestep;          /* s */
   int ForceEqOn;
   int ThermEvolOn;
+  int InitIonState;
   ChimesFloat constant_heating_rate;   /* erg s^-1 cm^-3 */
   ChimesFloat *abundances;             /* The size of this array will be set by init_chimes() */
 };
@@ -71,7 +72,6 @@ struct globalVariables
   int N_spectra;          /* The number of UV spectra. */ 
   int StaticMolCooling;
   ChimesFloat T_mol;
-  int InitIonState;
   ChimesFloat grain_temperature;
   ChimesFloat cmb_temperature;
   ChimesFloat relativeTolerance;

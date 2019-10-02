@@ -74,6 +74,12 @@ struct cooling_function_data {
   /* Flag to determine how we set
    * the initial CHIMES abundances. */
   int init_abundance_mode; 
+
+  /* For init_abundance_mode == 1, all
+   * elements are initially set to one 
+   * ionisation state, determined by 
+   * the InitIonState parameter. */ 
+  int InitIonState; 
   
   /* Cosmic ray ionisation rate of HI. */ 
   double cosmic_ray_rate; 

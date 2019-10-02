@@ -172,7 +172,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
   if (!((cooling->init_abundance_mode == 0) || (cooling->init_abundance_mode == 1) || (cooling->init_abundance_mode == 2)))
     error("CHIMESCooling: init_abundance_mode %d not recognised.", cooling->init_abundance_mode); 
 
-  cooling->ChimesGlobalVars.InitIonState = parser_get_opt_param_int(parameter_file, "CHIMESCooling:InitIonState", 1); 
+  if (cooling->init_abundance_mode == 1) 
+    cooling->InitIonState = parser_get_param_int(parameter_file, "CHIMESCooling:InitIonState"); 
+  else 
+    cooling->InitIonState = 1; 
 
   /* Cosmic ray ionisation rate of HI. */ 
   cooling->cosmic_ray_rate = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
@@ -616,6 +619,8 @@ void chimes_update_gas_vars(const double u_cgs,
    * typical value for GMCs in the 
    * Milky Way. */ 
   ChimesGasVars->doppler_broad = 7.1; 
+
+  ChimesGasVars->InitIonState = cooling->InitIonState; 
 }
 
 /** 
