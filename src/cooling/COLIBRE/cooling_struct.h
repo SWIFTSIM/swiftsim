@@ -178,7 +178,7 @@ struct cooling_function_data {
   double compton_rate_cgs;
 
   /*! Threshold to switch between rapid and slow cooling regimes. */
-  double rapid_cooling_threshold; 
+  double rapid_cooling_threshold;
 };
 
 /**

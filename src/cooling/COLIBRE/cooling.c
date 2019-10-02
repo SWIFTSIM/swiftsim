@@ -690,38 +690,38 @@ void cooling_cool_part(const struct phys_const *phys_const,
      (assuming no change in dt) */
   const double delta_u = u_final - max(u_start, u_floor);
 
-  /* Determine if we are in the slow- or rapid-cooling regime, 
-   * by comparing dt / t_cool to the rapid_cooling_threshold. 
-   * Note that dt / t_cool = fabs(delta_u) / u_start. 
-   * If rapid_cooling_threshold < 0, always use the slow-cooling 
-   * regime. */ 
-  float cooling_du_dt; 
-  if ((cooling->rapid_cooling_threshold >= 0.0) && (fabs(delta_u) / max(u_start, u_floor) >= cooling->rapid_cooling_threshold)) 
-    {
-      /* Rapid-cooling regime. Update internal energy 
-       * to u_final and set du/dt = 0. */ 
-      cooling_du_dt = 0.0; 
-	  
-      /* Update the particle's u and du/dt */ 
-      hydro_set_physical_internal_energy(p, xp, cosmo, u_final); 
-      hydro_set_drifted_physical_internal_energy(p, cosmo, u_final);
-      hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
-	  
-      /* Store the radiated energy */
-      xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - max(u_start, u_floor));
-    }
-  else 
-    {
-      /* Slow-cooling regime. Update du/dt so that 
-       * we can subsequently drift internal energy. */ 
-      cooling_du_dt = delta_u / dt_therm;
-	  
-      /* Update the internal energy time derivative */
-      hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
-	  
-      /* Store the radiated energy */
-      xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
-    }
+  /* Determine if we are in the slow- or rapid-cooling regime,
+   * by comparing dt / t_cool to the rapid_cooling_threshold.
+   * Note that dt / t_cool = fabs(delta_u) / u_start.
+   * If rapid_cooling_threshold < 0, always use the slow-cooling
+   * regime. */
+  float cooling_du_dt;
+  if ((cooling->rapid_cooling_threshold >= 0.0) &&
+      (fabs(delta_u) / max(u_start, u_floor) >=
+       cooling->rapid_cooling_threshold)) {
+    /* Rapid-cooling regime. Update internal energy
+     * to u_final and set du/dt = 0. */
+    cooling_du_dt = 0.0;
+
+    /* Update the particle's u and du/dt */
+    hydro_set_physical_internal_energy(p, xp, cosmo, u_final);
+    hydro_set_drifted_physical_internal_energy(p, cosmo, u_final);
+    hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+
+    /* Store the radiated energy */
+    xp->cooling_data.radiated_energy -=
+        hydro_get_mass(p) * (u_final - max(u_start, u_floor));
+  } else {
+    /* Slow-cooling regime. Update du/dt so that
+     * we can subsequently drift internal energy. */
+    cooling_du_dt = delta_u / dt_therm;
+
+    /* Update the internal energy time derivative */
+    hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+
+    /* Store the radiated energy */
+    xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+  }
 
   /* check if the particle is in an HII region and if yes, set the parameter
    * accordingly */
@@ -1120,11 +1120,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
                               cooling->T_CMB_0 * cooling->T_CMB_0 *
                               cooling->T_CMB_0;
 
-  /* Optional threshold in dt / t_cool above which we 
-   * are in the rapid cooling regime. If negative, 
-   * we never use this scheme (i.e. always drift 
-   * the internal energies). */ 
-  cooling->rapid_cooling_threshold = parser_get_opt_param_double(parameter_file, "COLIBRECooling:rapid_cooling_threshold", 1.f); 
+  /* Optional threshold in dt / t_cool above which we
+   * are in the rapid cooling regime. If negative,
+   * we never use this scheme (i.e. always drift
+   * the internal energies). */
+  cooling->rapid_cooling_threshold = parser_get_opt_param_double(
+      parameter_file, "COLIBRECooling:rapid_cooling_threshold", 1.f);
 
   /* Finally, read the tables */
   read_cooling_header(cooling);
