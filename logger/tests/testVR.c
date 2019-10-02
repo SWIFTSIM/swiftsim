@@ -32,7 +32,7 @@
 #define number_steps 10.
 #define number_parts 100
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   /* Create required structures. */
   struct swift_params params;
   char filename[200] = "testVR.yml";
@@ -55,59 +55,59 @@ int main(int argc, char* argv[]) {
   generate_log(&params, parts, xparts, number_parts);
 
   /* Initialize the reader */
-	struct logger_reader reader;
+  struct logger_reader reader;
   char basename[200];
   parser_get_param_string(&params, "Logger:basename", basename);
-	logger_reader_init(&reader, basename,
+  logger_reader_init(&reader, basename,
                      /* Verbose */ 0);
 
   /* Read the time limits */
-	double begin = logger_reader_get_time_begin(&reader);
-	double end   = logger_reader_get_time_end(&reader);
+  double begin = logger_reader_get_time_begin(&reader);
+  double end = logger_reader_get_time_end(&reader);
 
   /* Set the time */
-	message("Time begin: %f end: %f\n", begin, end);
-	logger_reader_set_time(&reader, begin);
+  message("Time begin: %f end: %f\n", begin, end);
+  logger_reader_set_time(&reader, begin);
 
-	/* Get the number of particles */
-	int n_type      = 0;
-	long long n_tot = 0;
-	const long long* n_parts
-	    = logger_reader_get_number_particles(&reader, &n_type);
-	for(int i = 0; i < n_type; i++) {
-		n_tot += n_parts[i];
-		printf("%lld particles out of %lld...\n", n_parts[i], n_tot);
-	}
+  /* Get the number of particles */
+  int n_type = 0;
+  long long n_tot = 0;
+  const long long *n_parts =
+      logger_reader_get_number_particles(&reader, &n_type);
+  for (int i = 0; i < n_type; i++) {
+    n_tot += n_parts[i];
+    printf("%lld particles out of %lld...\n", n_parts[i], n_tot);
+  }
 
   /* Allocate the particles memory */
-	struct logger_particle* particles
-	    = malloc(n_tot * sizeof(struct logger_particle));
+  struct logger_particle *particles =
+      malloc(n_tot * sizeof(struct logger_particle));
 
-	logger_reader_read_from_index(&reader, begin, logger_reader_const,
-	                              particles, n_tot);
+  logger_reader_read_from_index(&reader, begin, logger_reader_const, particles,
+                                n_tot);
 
   /* Loop over time for a single particle */
   size_t id = 0;
-	struct logger_particle p = particles[id];
-	for(double t = begin; t < end; t += (end-begin) / number_steps) {
+  struct logger_particle p = particles[id];
+  for (double t = begin; t < end; t += (end - begin) / number_steps) {
 
     /* Get the offset of the given time */
     size_t o = logger_reader_get_offset_from_time(&reader, t);
-		message("time: %f offset: %ld\n", t, o);
+    message("time: %f offset: %ld\n", t, o);
 
     /* Read the next particle */
-		struct logger_particle n;
-		logger_reader_get_next_particle(&reader, &p, &n, o);
+    struct logger_particle n;
+    logger_reader_get_next_particle(&reader, &p, &n, o);
 
-		message("Particle %zi: %f %f %f %f\n", id, p.pos[0], p.pos[1], p.pos[2],
+    message("Particle %zi: %f %f %f %f\n", id, p.pos[0], p.pos[1], p.pos[2],
             p.time);
 
     /* Now you can interpolate */
     logger_particle_interpolate(&p, &n, t);
-	}
+  }
 
   /* Cleanup the memory */
-	free(particles);
-	logger_reader_free(&reader);
-	return 0;
+  free(particles);
+  logger_reader_free(&reader);
+  return 0;
 }

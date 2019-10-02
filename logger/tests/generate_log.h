@@ -37,7 +37,8 @@
  * @param xparts The list of extra particles.
  * @param nparts The number of particles.
  */
-void generate_particles(struct part *parts, struct xpart *xparts, size_t nparts) {
+void generate_particles(struct part *parts, struct xpart *xparts,
+                        size_t nparts) {
   struct hydro_space hs;
 
   for (size_t i = 0; i < nparts; i++) {
@@ -62,7 +63,6 @@ void generate_particles(struct part *parts, struct xpart *xparts, size_t nparts)
     /* Add time bin in order to skip particles. */
     parts[i].time_bin = (i % 10) + 1;
   }
-
 }
 
 /** Provides a integer time given the step number.*/

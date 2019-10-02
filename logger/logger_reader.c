@@ -326,7 +326,7 @@ double logger_reader_get_time_begin(struct logger_reader *reader) {
  */
 double logger_reader_get_time_end(struct logger_reader *reader) {
   const size_t ind = reader->log.times.size;
-  return reader->log.times.records[ind-1].time;
+  return reader->log.times.records[ind - 1].time;
 }
 
 /**
@@ -347,14 +347,15 @@ size_t logger_reader_get_offset_from_time(struct logger_reader *reader,
  * @brief Get the two particle records around the requested time.
  *
  * @param reader The #logger_reader.
- * @param prev (in) A record before the requested time. (out) The last record before the time.
+ * @param prev (in) A record before the requested time. (out) The last record
+ * before the time.
  * @param next (out) The first record after the requested time.
  * @param time_offset The offset of the requested time.
  */
-void logger_reader_get_next_particle(
-    struct logger_reader *reader,
-    struct logger_particle *prev, struct logger_particle *next,
-    size_t time_offset) {
+void logger_reader_get_next_particle(struct logger_reader *reader,
+                                     struct logger_particle *prev,
+                                     struct logger_particle *next,
+                                     size_t time_offset) {
 
   void *map = reader->log.log.map;
   size_t prev_offset = prev->offset;
@@ -362,7 +363,8 @@ void logger_reader_get_next_particle(
 
   while (1) {
     /* Read the offset to the next particle */
-    logger_loader_io_read_mask(&reader->log.header, map + prev_offset, /* mask */NULL, &next_offset);
+    logger_loader_io_read_mask(&reader->log.header, map + prev_offset,
+                               /* mask */ NULL, &next_offset);
     next_offset += prev_offset;
 
     /* Have we found the next particle? */
@@ -381,9 +383,11 @@ void logger_reader_get_next_particle(
 
   /* Read the previous offset if required */
   if (prev_offset != prev->offset) {
-    logger_particle_read(prev, reader, prev_offset, /* Time */ 0, logger_reader_const);
+    logger_particle_read(prev, reader, prev_offset, /* Time */ 0,
+                         logger_reader_const);
   }
 
   /* Read the next particle */
-  logger_particle_read(next, reader, next_offset, /* Time */ 0, logger_reader_const);
+  logger_particle_read(next, reader, next_offset, /* Time */ 0,
+                       logger_reader_const);
 }
