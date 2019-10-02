@@ -366,7 +366,7 @@ void logger_reader_get_next_particle(
     next_offset += prev_offset;
 
     /* Have we found the next particle? */
-    if (next->offset > time_offset) {
+    if (next_offset > time_offset) {
       break;
     }
 
@@ -385,5 +385,5 @@ void logger_reader_get_next_particle(
   }
 
   /* Read the next particle */
-  logger_particle_read(next, reader, next_offset, /* Time */ 0, logger_reader_lin);
+  logger_particle_read(next, reader, next_offset, /* Time */ 0, logger_reader_const);
 }
