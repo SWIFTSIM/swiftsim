@@ -73,7 +73,7 @@ struct logger_index {
     /* File size. */
     size_t file_size;
 
-  } log;
+  } index;
 };
 
 void logger_index_write_sorted(struct logger_index *index);

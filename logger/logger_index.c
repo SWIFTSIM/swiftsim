@@ -74,7 +74,7 @@ void logger_index_write_sorted(struct logger_index *index) {
   char is_sorted = 1;
 
   /* Write the value */
-  memcpy(index->log.map + offset, &is_sorted, sizeof(char));
+  memcpy(index->index.map + offset, &is_sorted, sizeof(char));
 }
 /**
  * @brief Get the #index_data of a particle type.
@@ -95,7 +95,7 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
   }
   count *= sizeof(struct index_data);
 
-  return index->log.map + count + header;
+  return index->index.map + count + header;
 }
 
 /**
@@ -108,7 +108,7 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
 void logger_index_map_file(struct logger_index *index, const char *filename,
                            int sorted) {
   /* Un-map previous file */
-  if (index->log.map != NULL) {
+  if (index->index.map != NULL) {
     logger_index_free(index);
   }
 
@@ -121,7 +121,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
       message("Sorting the index file.");
     }
     /* Map the index file */
-    index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
+    index->index.map = logger_loader_io_mmap_file(filename, &index->index.file_size,
                                                 /* read_only */ 0);
     /* Sort the file */
     for (int i = 0; i < swift_type_count; i++) {
@@ -141,7 +141,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
   }
 
   /* Map the index file */
-  index->log.map = logger_loader_io_mmap_file(filename, &index->log.file_size,
+  index->index.map = logger_loader_io_mmap_file(filename, &index->index.file_size,
                                               /* read_only */ 1);
 }
 
@@ -151,9 +151,9 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
  * @param index The #logger_index.
  */
 void logger_index_free(struct logger_index *index) {
-  logger_loader_io_munmap_file(index->log.map, index->log.file_size);
+  logger_loader_io_munmap_file(index->index.map, index->index.file_size);
 
-  index->log.map = NULL;
+  index->index.map = NULL;
 }
 
 /**
@@ -196,7 +196,7 @@ size_t logger_index_get_particle(struct logger_index *index, long long id,
 void logger_index_init(struct logger_index *index,
                        struct logger_reader *reader) {
   /* Set the mapped file to NULL */
-  index->log.map = NULL;
+  index->index.map = NULL;
 
   /* Set the pointer to the reader */
   index->reader = reader;

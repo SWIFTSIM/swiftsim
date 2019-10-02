@@ -17,116 +17,17 @@
  *
  ******************************************************************************/
 
+/* Local header */
 #include "logger_header.h"
 #include "logger_loader_io.h"
 #include "logger_particle.h"
 #include "logger_reader.h"
 #include "swift.h"
 
+/* Tests header */
+#include "generate_log.h"
+
 #define number_parts 100
-/* Not all the fields are written at every step.
- * Here we define how often a few fields are written.
- */
-#define period_rho 2
-#define period_h 4
-
-/**
- * @brief Initialize the particles.
- *
- * @param p The array of #part.
- * @param xp The array of #xpart.
- */
-void init_particles(struct part *p, struct xpart *xp) {
-  struct hydro_space hs;
-
-  for (int i = 0; i < number_parts; i++) {
-    /* Set internal energy. */
-    hydro_set_init_internal_energy(&p[i], 100);
-
-    /* Initialize particle. */
-    hydro_first_init_part(&p[i], &xp[i]);
-    hydro_init_part(&p[i], &hs);
-
-    for (int j = 0; j < 3; j++) {
-      p[i].x[j] = i;
-      p[i].v[j] = (j == 0) ? -1 : 0;
-      p[i].a_hydro[j] = (j == 1) ? 1e-2 : 0;
-    }
-    p[i].h = 15;
-    p[i].rho = 50;
-    p[i].id = i;
-    hydro_set_mass(&p[i], 1.5);
-    xp[i].logger_data.last_offset = 0;
-
-    /* Add time bin in order to skip particles. */
-    p[i].time_bin = (i % 10) + 1;
-  }
-}
-
-/** Provides a integer time given the step number.*/
-integertime_t get_integer_time(int step) { return step; }
-
-/** Provides a double time given the step number. */
-double get_double_time(int step) {
-  const double time_base = 1e-4;
-  return step * time_base;
-}
-
-/**
- * @brief Write a few particles during multiple time steps.
- *
- * As only the logger is tested, there is no need to really
- * evolve the particles.
- */
-void write_particles(struct logger_writer *log, struct part *parts,
-                     struct xpart *xparts) {
-
-  const int number_steps = 100;
-
-  /* Loop over all the steps. */
-  for (int i = 0; i < number_steps; i++) {
-    integertime_t ti_int = get_integer_time(i);
-    double ti_double = get_double_time(i);
-
-    /* Mark the current time step in the particle logger file. */
-    logger_log_timestamp(log, ti_int, ti_double, &log->timestamp_offset);
-    /* Make sure that we have enough space in the particle logger file
-     * to store the particles in current time step. */
-    logger_ensure_size(log, number_parts, /* number gpart */ 0, 0);
-
-    /* Loop over all the particles. */
-    for (int j = 0; j < number_parts; j++) {
-
-      /* Skip some particles. */
-      if (i % parts[j].time_bin != 0) continue;
-
-      /* Write a time information to check that the correct particle is read. */
-      parts[j].x[0] = i;
-
-      /* Write this particle. */
-      unsigned int mask =
-          logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
-          logger_mask_data[logger_a].mask | logger_mask_data[logger_u].mask |
-          logger_mask_data[logger_consts].mask;
-
-      int number_particle_step = i / parts[j].time_bin;
-
-      if (number_particle_step % period_h == 0)
-        mask |= logger_mask_data[logger_h].mask;
-      if (number_particle_step % period_rho == 0)
-        mask |= logger_mask_data[logger_rho].mask;
-
-      logger_log_part(log, &parts[j], mask, &xparts[j].logger_data.last_offset);
-    }
-
-    // TODO write index files.
-  }
-
-  /* Mark the current time step in the particle logger file. */
-  integertime_t ti_int = get_integer_time(number_steps);
-  double ti_double = get_double_time(number_steps);
-  logger_log_timestamp(log, ti_int, ti_double, &log->timestamp_offset);
-}
 
 /** Count the number of active particles. */
 int get_number_active_particles(int step, struct part *p) {
@@ -136,6 +37,7 @@ int get_number_active_particles(int step, struct part *p) {
   }
   return count;
 }
+
 /**
  * @brief Check that the reader contains the correct data
  *
@@ -194,6 +96,8 @@ void check_data(struct logger_reader *reader, struct part *parts,
           assert(step == lp.pos[i]);
         else
           assert(p->x[i] == lp.pos[i]);
+        message("%i: %g %g", i, p->v[i], lp.vel[i]);
+        message("%g %g %g", p->v[0], p->v[1], p->v[2]);
         assert(p->v[i] == lp.vel[i]);
         assert(p->a_hydro[i] == lp.acc[i]);
       }
@@ -245,7 +149,6 @@ int main(int argc, char *argv[]) {
   message("Generating the dump.");
 
   /* Create required structures. */
-  struct logger_writer log;
   struct swift_params params;
   char filename[200] = "testLogfileReader.yml";
 
@@ -263,22 +166,9 @@ int main(int argc, char *argv[]) {
       NULL)
     error("Failed to allocate xparticles array.");
 
-  init_particles(parts, xparts);
+  /* Write a 'simulation' */
+  generate_log(&params, parts, xparts, number_parts);
 
-  /* Initialize the logger. */
-  logger_init(&log, &params);
-
-  /* get dump filename. */
-  message("%s", log.base_name);
-
-  /* Write file header. */
-  logger_write_file_header(&log);
-
-  /* Write particles. */
-  write_particles(&log, parts, xparts);
-
-  /* clean memory */
-  logger_free(&log);
   /*
     Then read the file.
   */
@@ -292,7 +182,9 @@ int main(int argc, char *argv[]) {
   reader.verbose = 1;
 
   /* Read the header. */
-  logger_reader_init(&reader, log.base_name, /* verbose */ 1);
+  char basename[200];
+  parser_get_param_string(&params, "Logger:basename", basename);
+  logger_reader_init(&reader, basename, /* verbose */ 1);
 
   /*
     Finally check everything.
