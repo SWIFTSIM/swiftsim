@@ -1,0 +1,16 @@
+Run a uniform, periodic box with COLIBRE cooling and chemistry. 
+
+The default example sets up the box with an initial temperature of 1e7 K and a density of 0.01 hydrogen atoms per cm^3, although this can be changed by editing the makeIC.py script. 
+
+At the moment, this example only works on cosma. This will change as soon as the cooling tables from Ploeckinger et al. are made public.
+
+Recommended config option:
+./configure --with-cooling=COLIBRE --with-chemistry=COLIBRE --with-tracers=COLIBRE --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec 
+
+Plotting routines: 
+
+plotEnergy.py: Plots the following quantities versus time: 
+               - Total internal energy in the box, taken from energy.txt (red curve). 
+	       - Total internal energy in the box, summed over all particles in the snapshots (red diamonds). 
+	       - Total radiated energy, taken from energy.txt (green curve). 
+	       - Sum of the total internal and radiated energies, from energy.txt (blue curve). This should be constant if energy is correctly conserved. 
