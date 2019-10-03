@@ -93,6 +93,9 @@ struct logger_reader {
 
     /* Offset of the chunk */
     size_t time_offset;
+
+    /* Index of the element in the time array */
+    size_t index;
   } time;
 
   /* Level of verbosity. */
@@ -100,7 +103,7 @@ struct logger_reader {
 };
 
 void logger_reader_init_index(struct logger_reader *reader);
-void logger_reader_init(struct logger_reader *reader, char *basename,
+void logger_reader_init(struct logger_reader *reader, const char *basename,
                         int verbose);
 void logger_reader_free(struct logger_reader *reader);
 size_t reader_read_record(struct logger_reader *reader,
@@ -111,7 +114,7 @@ void logger_reader_set_time(struct logger_reader *reader, double time);
 
 double logger_reader_get_time_begin(struct logger_reader *reader);
 double logger_reader_get_time_end(struct logger_reader *reader);
-size_t logger_reader_get_offset_from_time(struct logger_reader *reader,
+size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
                                           double time);
 void logger_reader_get_next_particle(struct logger_reader *reader,
                                      struct logger_particle *prev,

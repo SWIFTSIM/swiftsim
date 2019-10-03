@@ -264,7 +264,7 @@ size_t time_array_get_index(const struct time_array *t, const size_t offset) {
 }
 
 /**
- * @brief Find the index of the last time record written before a given offset.
+ * @brief Find the index of the last time record written before a given time.
  *
  * @param t #time_array to access.
  * @param time The time requested.
@@ -335,7 +335,11 @@ void time_array_free(struct time_array *t) {
  * @param t #time_array to print
  */
 void time_array_print(const struct time_array *t) {
-  const size_t threshold = 4;
+#ifdef SWIFT_DEBUG_CHECKS
+  const size_t threshold = 1000;
+#else
+  const size_t threshold = 5;
+#endif
 
   size_t n = t->size;
   size_t up_threshold = n - threshold;

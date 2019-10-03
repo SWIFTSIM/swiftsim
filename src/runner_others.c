@@ -602,7 +602,7 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
     /* If particle needs to be log */
     /* This is the same function than part_is_active, except for
      * debugging checks */
-    if (gpart_is_starting(gp, e)) {
+    if (gpart_is_active(gp, e)) {
 
       if (logger_should_write(&gp->logger_data, e->logger.logger)) {
         /* Write particle */

@@ -218,7 +218,7 @@ void logger_particle_interpolate(struct logger_particle *part_curr,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the particle order. */
-  if (part_next->time <= part_curr->time)
+  if (part_next->time < part_curr->time)
     error("Wrong particle order (next before current): %g, %g", part_next->time,
           part_curr->time);
   if ((time < part_curr->time) || (part_next->time < time))

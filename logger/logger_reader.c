@@ -36,7 +36,7 @@
  * @param basename The basename of the logger files.
  * @param verbose The verbose level.
  */
-void logger_reader_init(struct logger_reader *reader, char *basename,
+void logger_reader_init(struct logger_reader *reader, const char *basename,
                         int verbose) {
   if (verbose > 1) message("Initializing the reader.");
 
@@ -200,6 +200,7 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   }
 
   /* Save the values */
+  reader->time.index = ind;
   reader->time.int_time = reader->log.times.records[ind].int_time;
   reader->time.time_offset = reader->log.times.records[ind].offset;
 }
@@ -247,7 +248,11 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
     size_t next_offset = prev_offset;
 
 #ifdef SWIFT_DEBUG_CHECKS
-    if (prev_offset >= reader->time.time_offset) {
+    /* check with the offset of the next time stamp.
+     * (the sentinel protects against overflow)
+     */
+    const size_t ind = reader->time.index + 1;
+    if (prev_offset >= reader->log.times.records[ind].offset) {
       error("An offset is out of range.");
     }
 #endif
@@ -337,10 +342,10 @@ double logger_reader_get_time_end(struct logger_reader *reader) {
  *
  * @return The offset of the timestamp.
  */
-size_t logger_reader_get_offset_from_time(struct logger_reader *reader,
+size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
                                           double time) {
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
-  return reader->log.times.records[ind].offset;
+  return reader->log.times.records[ind+1].offset;
 }
 
 /**
@@ -365,16 +370,18 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
     /* Read the offset to the next particle */
     logger_loader_io_read_mask(&reader->log.header, map + prev_offset,
                                /* mask */ NULL, &next_offset);
+
+    /* Are we at the end of the file? */
+    if (next_offset == 0) {
+      time_array_print(&reader->log.times);
+      error("End of file for offset %zi", prev_offset);
+    }
+
     next_offset += prev_offset;
 
     /* Have we found the next particle? */
     if (next_offset > time_offset) {
       break;
-    }
-
-    /* Are we at the end of the file? */
-    if (next_offset == prev_offset) {
-      error("End of file");
     }
 
     /* Update the previous offset */
@@ -390,4 +397,6 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   /* Read the next particle */
   logger_particle_read(next, reader, next_offset, /* Time */ 0,
                        logger_reader_const);
+
+  message("%zi %zi %zi", prev_offset, time_offset, next_offset);
 }

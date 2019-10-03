@@ -10,12 +10,14 @@ sys.path.append("../.libs/")
 
 import liblogger as logger
 
+basename = "../../examples/HydroTests/SedovBlast_3D/index"
+time = 0.45
 if len(sys.argv) >= 2:
     basename = sys.argv[1]
 else:
     print("No basename supplied (first argument), using default.")
 if len(sys.argv) >= 3:
-    time = sys.argv[2]
+    time = float(sys.argv[2])
 else:
     print("No time supplied (second argument), using default.")
 if len(sys.argv) > 3:

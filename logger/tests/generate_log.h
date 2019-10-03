@@ -61,7 +61,6 @@ void generate_particles(struct part *parts, struct xpart *xparts,
     parts[i].rho = 50;
     parts[i].id = i;
     hydro_set_mass(&parts[i], 1.5);
-    xparts[i].logger_data.last_offset = 0;
 
     /* Add time bin in order to skip particles. */
     parts[i].time_bin = (i % 10) + 1;
@@ -97,10 +96,10 @@ void write_particles(struct logger_writer *log,
 
   /* Loop over all the steps. */
   for (int i = 0; i < number_steps; i++) {
+    e->time = get_double_time(i);
+    e->ti_current = get_integer_time(i);
     /* Dump an index file if required */
     if (i % (number_steps / number_index) == number_index - 1) {
-      e->time = get_double_time(i);
-      e->ti_current = get_integer_time(i);
       engine_dump_index(e);
     }
     integertime_t ti_int = get_integer_time(i);
@@ -117,6 +116,12 @@ void write_particles(struct logger_writer *log,
 
       /* Skip some particles. */
       if (i % parts[j].time_bin != 0) continue;
+      if (!logger_should_write(&xparts[j].logger_data, log)) {
+        xparts[j].logger_data.steps_since_last_output += 1;
+        continue;
+      }
+
+      xparts[j].logger_data.steps_since_last_output = 0;
 
       /* Write a time information to check that the correct particle is read. */
       parts[j].x[0] = i;
@@ -137,11 +142,6 @@ void write_particles(struct logger_writer *log,
       logger_log_part(log, &parts[j], mask, &xparts[j].logger_data.last_offset);
     }
   }
-
-  /* Mark the current time step in the particle logger file. */
-  integertime_t ti_int = get_integer_time(number_steps);
-  double ti_double = get_double_time(number_steps);
-  logger_log_timestamp(log, ti_int, ti_double, &log->timestamp_offset);
 }
 
 void generate_log(struct swift_params *params, struct part *parts,

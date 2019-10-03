@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
                      /* Verbose */ 0);
 
   /* Read the time limits */
-  double begin = logger_reader_get_time_begin(&reader) + 1e-4;
-  double end = logger_reader_get_time_end(&reader) - 1e-4;
+  double begin = logger_reader_get_time_begin(&reader);
+  double end = logger_reader_get_time_end(&reader);
 
   /* Set the time */
   message("Time begin: %f end: %f", begin, end);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
   for (double t = begin; t < end; t += (end - begin) / number_steps) {
 
     /* Get the offset of the given time */
-    size_t o = logger_reader_get_offset_from_time(&reader, t);
+    size_t o = logger_reader_get_next_offset_from_time(&reader, t);
     message("time: %f offset: %ld", t, o);
 
     /* Read the next particle */
