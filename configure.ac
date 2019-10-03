@@ -51,6 +51,13 @@ AM_CONFIG_HEADER(config.h)
 
 # Find and test the compiler.
 AX_CHECK_ENABLE_DEBUG
+
+# Need a C++ compiler which we will use to compile our C code.
+# If/when we only want to use C++ all the compiler checks and flags
+# will need reworking, as well as all code files will need renaming.
+AC_PROG_CXX
+CC="$CXX"
+CFLAGS="$CXXFLAGS $CFLAGS"
 AC_PROG_CC
 AM_PROG_CC_C_O
 
@@ -127,7 +134,7 @@ if test "$enable_ipo" = "yes"; then
    fi
 fi
 
-# Check for MPI. Need to do this before characterising the compiler (C99 mode),
+# Check for MPI. Need to do this before characterising the compiler (C++11 mode),
 # as this changes the compiler.
 # We should consider using AX_PROG_CC_MPI to replace AC_PROG_CC when compiling
 # whole applications. There are issues with mixing compilers when using this
@@ -207,8 +214,8 @@ AC_ARG_VAR(MPIRUN, Path to the mpirun command if non-standard)
 # Add libtool support (now that CC is defined).
 LT_INIT
 
-# Need C99 and inline support.
-AC_PROG_CC_C99
+# Need C++11 and inline support.
+AX_CXX_COMPILE_STDCXX_11([ext],[mandatory])
 AC_C_INLINE
 
 # If debugging try to show inlined functions.

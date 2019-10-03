@@ -115,12 +115,7 @@
 #define vec_gather(base, offsets) _mm512_i32gather_ps(offsets.m, base, 1)
 
 /* Initialises a vector struct with a default value. */
-#define FILL_VEC(a)                                                     \
-  {                                                                     \
-    .f[0] = a, .f[1] = a, .f[2] = a, .f[3] = a, .f[4] = a, .f[5] = a,   \
-    .f[6] = a, .f[7] = a, .f[8] = a, .f[9] = a, .f[10] = a, .f[11] = a, \
-    .f[12] = a, .f[13] = a, .f[14] = a, .f[15] = a                      \
-  }
+#define FILL_VEC(a) {{a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a}}
 
 /* Performs a horizontal add on the vector and adds the result to a float. */
 #ifdef __ICC
@@ -204,11 +199,7 @@
 #define vec_dbl_fmax(a, b) _mm256_max_pd(a, b)
 
 /* Initialises a vector struct with a default value. */
-#define FILL_VEC(a)                                                   \
-  {                                                                   \
-    .f[0] = a, .f[1] = a, .f[2] = a, .f[3] = a, .f[4] = a, .f[5] = a, \
-    .f[6] = a, .f[7] = a                                              \
-  }
+#define FILL_VEC(a) {{a, a, a, a, a, a, a, a}}
 
 /* Performs a horizontal add on the vector and adds the result to a float. */
 #define VEC_HADD(a, b)            \
@@ -376,8 +367,7 @@
 #define vec_dbl_fmax(a, b) _mm_max_pd(a, b)
 
 /* Initialises a vector struct with a default value. */
-#define FILL_VEC(a) \
-  { .f[0] = a, .f[1] = a, .f[2] = a, .f[3] = a }
+#define FILL_VEC(a) {{a, a, a, a}}
 
 /* Performs a horizontal add on the vector and adds the result to a float. */
 #define VEC_HADD(a, b)         \
@@ -407,10 +397,10 @@
 
 /* Define the composite types for element access. */
 typedef union {
+  float f[VEC_SIZE];
   VEC_FLOAT v;
   VEC_DBL vd;
   VEC_INT m;
-  float f[VEC_SIZE];
   double d[VEC_SIZE / 2];
   int i[VEC_SIZE];
 } vector;

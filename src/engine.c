@@ -318,74 +318,49 @@ struct redist_mapper_data {
   void *base;
 };
 
-/* Generic function for accumulating counts for TYPE parts. Note
- * we use a local counts array to avoid the atomic_add in the parts
- * loop. */
-#define ENGINE_REDISTRIBUTE_DEST_MAPPER(TYPE)                              \
-  engine_redistribute_dest_mapper_##TYPE(void *map_data, int num_elements, \
-                                         void *extra_data) {               \
-    struct TYPE *parts = (struct TYPE *)map_data;                          \
-    struct redist_mapper_data *mydata =                                    \
-        (struct redist_mapper_data *)extra_data;                           \
-    struct space *s = mydata->s;                                           \
-    int *dest =                                                            \
-        mydata->dest + (ptrdiff_t)(parts - (struct TYPE *)mydata->base);   \
-    int *lcounts = NULL;                                                   \
-    if ((lcounts = (int *)calloc(                                          \
-             sizeof(int), mydata->nr_nodes * mydata->nr_nodes)) == NULL)   \
-      error("Failed to allocate counts thread-specific buffer");           \
-    for (int k = 0; k < num_elements; k++) {                               \
-      for (int j = 0; j < 3; j++) {                                        \
-        if (parts[k].x[j] < 0.0)                                           \
-          parts[k].x[j] += s->dim[j];                                      \
-        else if (parts[k].x[j] >= s->dim[j])                               \
-          parts[k].x[j] -= s->dim[j];                                      \
-      }                                                                    \
-      const int cid = cell_getid(s->cdim, parts[k].x[0] * s->iwidth[0],    \
-                                 parts[k].x[1] * s->iwidth[1],             \
-                                 parts[k].x[2] * s->iwidth[2]);            \
-      dest[k] = s->cells_top[cid].nodeID;                                  \
-      size_t ind = mydata->nodeID * mydata->nr_nodes + dest[k];            \
-      lcounts[ind] += 1;                                                   \
-    }                                                                      \
-    for (int k = 0; k < (mydata->nr_nodes * mydata->nr_nodes); k++)        \
-      atomic_add(&mydata->counts[k], lcounts[k]);                          \
-    free(lcounts);                                                         \
+
+/**
+ * @brief function for accumulating MPI rank destination counts for the given
+ *        type of particles.
+ *
+ * Note we use a local counts array to avoid the atomic_add in the parts
+ * loop.
+ * @param map_data address of TYPE parts to process.
+ * @param num_elements the number nodes to process.
+ * @param extra_data additional data defining the context (a
+ *                   redist_mapper_data).
+ */
+template<typename TYPE>
+void engine_redistribute_dest_mapper(void *map_data, int num_elements,
+                                     void *extra_data) {
+  TYPE *parts = (TYPE *)map_data;
+  struct redist_mapper_data *mydata = (struct redist_mapper_data *)extra_data;
+  struct space *s = mydata->s;
+  int *dest = mydata->dest + (ptrdiff_t)(parts - (TYPE *)mydata->base);
+  int *lcounts =
+    (int *)calloc(sizeof(int), mydata->nr_nodes * mydata->nr_nodes);
+  if (lcounts == NULL)
+    error("Failed to allocate counts thread-specific buffer");
+  for (int k = 0; k < num_elements; k++) {
+    for (int j = 0; j < 3; j++) {
+      if (parts[k].x[j] < 0.0)
+        parts[k].x[j] += s->dim[j];
+      else if (parts[k].x[j] >= s->dim[j])
+        parts[k].x[j] -= s->dim[j];
+    }
+    const int cid = cell_getid(s->cdim, parts[k].x[0] * s->iwidth[0],
+                               parts[k].x[1] * s->iwidth[1],
+                               parts[k].x[2] * s->iwidth[2]);
+    dest[k] = s->cells_top[cid].nodeID;
+    size_t ind = mydata->nodeID * mydata->nr_nodes + dest[k];
+    lcounts[ind] += 1;
   }
+  for (int k = 0; k < (mydata->nr_nodes * mydata->nr_nodes); k++)
+    atomic_add(&mydata->counts[k], lcounts[k]);
+  free(lcounts);
+}
 
-/**
- * @brief Accumulate the counts of particles per cell.
- * Threadpool helper for accumulating the counts of particles per cell.
- *
- * part version.
- */
-static void ENGINE_REDISTRIBUTE_DEST_MAPPER(part);
-
-/**
- * @brief Accumulate the counts of star particles per cell.
- * Threadpool helper for accumulating the counts of particles per cell.
- *
- * spart version.
- */
-static void ENGINE_REDISTRIBUTE_DEST_MAPPER(spart);
-
-/**
- * @brief Accumulate the counts of gravity particles per cell.
- * Threadpool helper for accumulating the counts of particles per cell.
- *
- * gpart version.
- */
-static void ENGINE_REDISTRIBUTE_DEST_MAPPER(gpart);
-
-/**
- * @brief Accumulate the counts of black holes particles per cell.
- * Threadpool helper for accumulating the counts of particles per cell.
- *
- * bpart version.
- */
-static void ENGINE_REDISTRIBUTE_DEST_MAPPER(bpart);
-
-#endif /* redist_mapper_data */
+#endif /* redist_mapper */
 
 #ifdef WITH_MPI /* savelink_mapper_data */
 
@@ -395,6 +370,7 @@ struct savelink_mapper_data {
   int *counts;
   void *parts;
   int nodeID;
+  const char *desc;
 };
 
 /**
@@ -404,66 +380,40 @@ struct savelink_mapper_data {
  * This is possible as parts without gravity partners have a positive id.
  * These offsets are used to restore the pointers on the receiving node.
  *
- * CHECKS should be eliminated as dead code when optimizing.
+ * @param map_data address of nodes to process.
+ * @param num_elements the number nodes to process.
+ * @param extra_data additional data defining the context (a
+ *                   savelink_mapper_data).
  */
-#define ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(TYPE, CHECKS)                      \
-  engine_redistribute_savelink_mapper_##TYPE(void *map_data, int num_elements, \
-                                             void *extra_data) {               \
-    int *nodes = (int *)map_data;                                              \
-    struct savelink_mapper_data *mydata =                                      \
-        (struct savelink_mapper_data *)extra_data;                             \
-    int nodeID = mydata->nodeID;                                               \
-    int nr_nodes = mydata->nr_nodes;                                           \
-    int *counts = mydata->counts;                                              \
-    struct TYPE *parts = (struct TYPE *)mydata->parts;                         \
-                                                                               \
-    for (int j = 0; j < num_elements; j++) {                                   \
-      int node = nodes[j];                                                     \
-      int count = 0;                                                           \
-      size_t offset = 0;                                                       \
-      for (int i = 0; i < node; i++) offset += counts[nodeID * nr_nodes + i];  \
-                                                                               \
-      for (int k = 0; k < counts[nodeID * nr_nodes + node]; k++) {             \
-        if (parts[k + offset].gpart != NULL) {                                 \
-          if (CHECKS)                                                          \
-            if (parts[k + offset].gpart->id_or_neg_offset > 0)                 \
-              error("Trying to link a partnerless " #TYPE "!");                \
-          parts[k + offset].gpart->id_or_neg_offset = -count;                  \
-          count++;                                                             \
-        }                                                                      \
-      }                                                                        \
-    }                                                                          \
+template<typename TYPE>
+void engine_redistribute_savelink_mapper(void *map_data, int num_elements,
+                                         void *extra_data) {
+  int *nodes = (int *)map_data;
+  struct savelink_mapper_data *mydata =
+    (struct savelink_mapper_data *)extra_data;
+  int nodeID = mydata->nodeID;
+  int nr_nodes = mydata->nr_nodes;
+  int *counts = mydata->counts;
+  TYPE *parts = (TYPE *)mydata->parts;
+
+  for (int j = 0; j < num_elements; j++) {
+    int node = nodes[j];
+    int count = 0;
+    size_t offset = 0;
+    for (int i = 0; i < node; i++) offset += counts[nodeID * nr_nodes + i];
+    for (int k = 0; k < counts[nodeID * nr_nodes + node]; k++) {
+      if (parts[k + offset].gpart != NULL) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+        if (parts[k].gpart->id_or_neg_offset > 0)
+          error("Trying to link a partnerless %s!", mydata->desc);
+#endif
+        parts[k + offset].gpart->id_or_neg_offset = -count;
+        count++;
+      }
+    }
   }
-
-/**
- * @brief Save position of part-gpart links.
- * Threadpool helper for accumulating the counts of particles per cell.
- */
-#ifdef SWIFT_DEBUG_CHECKS
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(part, 1);
-#else
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(part, 0);
-#endif
-
-/**
- * @brief Save position of spart-gpart links.
- * Threadpool helper for accumulating the counts of particles per cell.
- */
-#ifdef SWIFT_DEBUG_CHECKS
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(spart, 1);
-#else
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(spart, 0);
-#endif
-
-/**
- * @brief Save position of bpart-gpart links.
- * Threadpool helper for accumulating the counts of particles per cell.
- */
-#ifdef SWIFT_DEBUG_CHECKS
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(bpart, 1);
-#else
-static void ENGINE_REDISTRIBUTE_SAVELINK_MAPPER(bpart, 0);
-#endif
+}
 
 #endif /* savelink_mapper_data */
 
@@ -729,7 +679,7 @@ void engine_redistribute(struct engine *e) {
   redist_data.dest = dest;
   redist_data.base = (void *)parts;
 
-  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper_part, parts,
+  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper<struct part>, parts,
                  nr_parts, sizeof(struct part), 0, &redist_data);
 
   /* Sort the particles according to their cell index. */
@@ -776,7 +726,8 @@ void engine_redistribute(struct engine *e) {
     savelink_data.counts = counts;
     savelink_data.parts = (void *)parts;
     savelink_data.nodeID = nodeID;
-    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper_part,
+    savelink_data.desc = "part";
+    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper<struct part>,
                    nodes, nr_nodes, sizeof(int), 0, &savelink_data);
   }
   swift_free("dest", dest);
@@ -794,7 +745,7 @@ void engine_redistribute(struct engine *e) {
   redist_data.dest = s_dest;
   redist_data.base = (void *)sparts;
 
-  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper_spart, sparts,
+  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper<struct spart>, sparts,
                  nr_sparts, sizeof(struct spart), 0, &redist_data);
 
   /* Sort the particles according to their cell index. */
@@ -840,7 +791,8 @@ void engine_redistribute(struct engine *e) {
     savelink_data.counts = s_counts;
     savelink_data.parts = (void *)sparts;
     savelink_data.nodeID = nodeID;
-    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper_spart,
+    savelink_data.desc = "spart";
+    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper<struct spart>,
                    nodes, nr_nodes, sizeof(int), 0, &savelink_data);
   }
   swift_free("s_dest", s_dest);
@@ -858,7 +810,7 @@ void engine_redistribute(struct engine *e) {
   redist_data.dest = b_dest;
   redist_data.base = (void *)bparts;
 
-  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper_bpart, bparts,
+  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper<struct bpart>, bparts,
                  nr_bparts, sizeof(struct bpart), 0, &redist_data);
 
   /* Sort the particles according to their cell index. */
@@ -904,7 +856,8 @@ void engine_redistribute(struct engine *e) {
     savelink_data.counts = b_counts;
     savelink_data.parts = (void *)bparts;
     savelink_data.nodeID = nodeID;
-    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper_bpart,
+    savelink_data.desc = "bpart";
+    threadpool_map(&e->threadpool, engine_redistribute_savelink_mapper<struct bpart>,
                    nodes, nr_nodes, sizeof(int), 0, &savelink_data);
   }
   swift_free("b_dest", b_dest);
@@ -922,7 +875,7 @@ void engine_redistribute(struct engine *e) {
   redist_data.dest = g_dest;
   redist_data.base = (void *)gparts;
 
-  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper_gpart, gparts,
+  threadpool_map(&e->threadpool, engine_redistribute_dest_mapper<struct gpart>, gparts,
                  nr_gparts, sizeof(struct gpart), 0, &redist_data);
 
   /* Sort the gparticles according to their cell index. */

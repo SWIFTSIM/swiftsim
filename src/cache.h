@@ -201,9 +201,9 @@ __attribute__((always_inline)) INLINE int cache_read_particles(
   const struct part *restrict parts = ci->hydro.parts;
   const double loc[3] = {ci->loc[0], ci->loc[1], ci->loc[2]};
   const double max_dx = ci->hydro.dx_max_part;
-  const float pos_padded[3] = {-(2. * ci->width[0] + max_dx),
-                               -(2. * ci->width[1] + max_dx),
-                               -(2. * ci->width[2] + max_dx)};
+  const float pos_padded[3] = {(float)-(2. * ci->width[0] + max_dx),
+                               (float)-(2. * ci->width[1] + max_dx),
+                               (float)-(2. * ci->width[2] + max_dx)};
   const float h_padded = ci->hydro.h_max / 4.;
 
   /* Shift the particles positions to a local frame so single precision can be
@@ -281,9 +281,9 @@ __attribute__((always_inline)) INLINE int cache_read_particles_subset_self(
   const struct part *restrict parts = ci->hydro.parts;
   const double loc[3] = {ci->loc[0], ci->loc[1], ci->loc[2]};
   const double max_dx = ci->hydro.dx_max_part;
-  const float pos_padded[3] = {-(2. * ci->width[0] + max_dx),
-                               -(2. * ci->width[1] + max_dx),
-                               -(2. * ci->width[2] + max_dx)};
+  const float pos_padded[3] = {(float)-(2. * ci->width[0] + max_dx),
+                               (float)-(2. * ci->width[1] + max_dx),
+                               (float)-(2. * ci->width[2] + max_dx)};
 
   /* Shift the particles positions to a local frame so single precision can be
    * used instead of double precision. */
@@ -375,9 +375,9 @@ __attribute__((always_inline)) INLINE void cache_read_particles_subset_pair(
     }
 
     const double max_dx = ci->hydro.dx_max_part;
-    const float pos_padded[3] = {-(2. * ci->width[0] + max_dx),
-                                 -(2. * ci->width[1] + max_dx),
-                                 -(2. * ci->width[2] + max_dx)};
+    const float pos_padded[3] = {(float)-(2. * ci->width[0] + max_dx),
+                                 (float)-(2. * ci->width[1] + max_dx),
+                                 (float)-(2. * ci->width[2] + max_dx)};
 
     /* Shift the particles positions to a local frame so single precision can be
      * used instead of double precision. */
@@ -433,9 +433,9 @@ __attribute__((always_inline)) INLINE void cache_read_particles_subset_pair(
 
     const int ci_cache_count = ci->hydro.count - *first_pi;
     const double max_dx = ci->hydro.dx_max_part;
-    const float pos_padded[3] = {-(2. * ci->width[0] + max_dx),
-                                 -(2. * ci->width[1] + max_dx),
-                                 -(2. * ci->width[2] + max_dx)};
+    const float pos_padded[3] = {(float)-(2. * ci->width[0] + max_dx),
+                                 (float)-(2. * ci->width[1] + max_dx),
+                                 (float)-(2. * ci->width[2] + max_dx)};
 
     /* Shift the particles positions to a local frame so single precision can be
      * used instead of double precision. */
@@ -522,9 +522,9 @@ __attribute__((always_inline)) INLINE int cache_read_force_particles(
   const struct part *restrict parts = ci->hydro.parts;
   const double loc[3] = {ci->loc[0], ci->loc[1], ci->loc[2]};
   const double max_dx = ci->hydro.dx_max_part;
-  const float pos_padded[3] = {-(2. * ci->width[0] + max_dx),
-                               -(2. * ci->width[1] + max_dx),
-                               -(2. * ci->width[2] + max_dx)};
+  const float pos_padded[3] = {(float)-(2. * ci->width[0] + max_dx),
+                               (float)-(2. * ci->width[1] + max_dx),
+                               (float)-(2. * ci->width[2] + max_dx)};
   const float h_padded = ci->hydro.h_max / 4.;
 
   /* Shift the particles positions to a local frame so single precision can be
