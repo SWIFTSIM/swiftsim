@@ -16,5 +16,8 @@ fi
 # Run SWIFT
 ../../swift --hydro --cooling --threads=16 coolingBox.yml
 
-# Check energy conservation and cooling rate
+# Check energy conservation 
 python plotEnergy.py
+
+# Plot temperature evolution 
+python plotTemperature.py 

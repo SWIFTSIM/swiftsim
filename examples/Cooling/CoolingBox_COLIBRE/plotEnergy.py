@@ -101,4 +101,4 @@ plt.legend(loc="right", fontsize=8, frameon=False,
 plt.xlabel("${\\rm{Time~[Myr]}}$", labelpad = 0)
 plt.ylabel("${\\rm{Energy~[erg]}}$", labelpad = 0)
 
-plt.savefig("energy.png", dpi=200)
+plt.savefig("energy_evolution.png", dpi=200)

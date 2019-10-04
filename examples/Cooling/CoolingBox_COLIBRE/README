@@ -14,3 +14,5 @@ plotEnergy.py: Plots the following quantities versus time:
 	       - Total internal energy in the box, summed over all particles in the snapshots (red diamonds). 
 	       - Total radiated energy, taken from energy.txt (green curve). 
 	       - Sum of the total internal and radiated energies, from energy.txt (blue curve). This should be constant if energy is correctly conserved. 
+
+plotTemperature.py: Plots the temperature evolution from the simulation (red diamonds) compared to that from integrating the cooling tables directly (red curve). 
