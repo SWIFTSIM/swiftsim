@@ -17,7 +17,7 @@ params = {
     'text.usetex': True,
     'figure.figsize': (5, 5),
     'figure.subplot.left': 0.1,
-    'figure.subplot.right': 0.99,
+    'figure.subplot.right': 0.96,
     'figure.subplot.bottom': 0.1,
     'figure.subplot.top': 0.96,
     'figure.subplot.wspace': 0.15,
@@ -122,40 +122,37 @@ def temperature_evolution_from_table(cool_table_path, Z_over_Zsol, nH, T_init, X
     u_0 = rho_cgs * (10.0 ** interpol_3d(U_from_T[redshift_index, :, :, :], T_index, Z_index, nH_index, dT, dZ, dnH)) 
     
     # du_dt in erg cm^3 s^-1
-
-    # At start of time-step 
+    # at start of time-step 
     du_dt_0 = 10.0 ** interpol_3d(heat_rate_prim, T_index, Z_index, nH_index, dT, dZ, dnH) 
     du_dt_0 += 10.0 ** interpol_3d(heat_rate_metals, T_index, Z_index, nH_index, dT, dZ, dnH) 
     du_dt_0 -= 10.0 ** interpol_3d(cool_rate_prim, T_index, Z_index, nH_index, dT, dZ, dnH) 
     du_dt_0 -= 10.0 ** interpol_3d(cool_rate_metals, T_index, Z_index, nH_index, dT, dZ, dnH) 
 
-    # At end of time-step
+    # Determine whether cooling or heating 
     if du_dt_0 < 0: 
         # Cooling 
         T_index_1 = T_index 
-    else: 
-        # Heating 
-        T_index_1 = T_index + 1 
-
-    du_dt_1 = 10.0 ** interpol_2d(heat_rate_prim[T_index_1, :, :], Z_index, nH_index, dZ, dnH) 
-    du_dt_1 += 10.0 ** interpol_2d(heat_rate_metals[T_index_1, :, :], Z_index, nH_index, dZ, dnH) 
-    du_dt_1 -= 10.0 ** interpol_2d(cool_rate_prim[T_index_1, :, :], Z_index, nH_index, dZ, dnH) 
-    du_dt_1 -= 10.0 ** interpol_2d(cool_rate_metals[T_index_1, :, :], Z_index, nH_index, dZ, dnH) 
-
-    # Take the average 
-    du_dt = (du_dt_0 + du_dt_1) / 2.0 
-
-    # Convert to erg cm^-3 s^-1
-    du_dt *= nH ** 2.0 
-
-    if du_dt_0 < 0.0: 
-        # Cooling 
         u_1 =  rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index, :, :], Z_index, nH_index, dZ, dnH)) 
         temperature_array.append(10.0 ** T_bins[T_index])
     else: 
         # Heating 
+        T_index_1 = T_index + 1 
         u_1 = rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) 
         temperature_array.append(10.0 ** T_bins[T_index + 1])
+
+    # Average rates at start and end of time-step 
+    log_du_dt_heat_prim = (interpol_3d(heat_rate_prim, T_index, Z_index, nH_index, dT, dZ, dnH) + interpol_2d(heat_rate_prim[T_index_1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+    log_du_dt_heat_metals = (interpol_3d(heat_rate_metals, T_index, Z_index, nH_index, dT, dZ, dnH) + interpol_2d(heat_rate_metals[T_index_1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+    log_du_dt_cool_prim = (interpol_3d(cool_rate_prim, T_index, Z_index, nH_index, dT, dZ, dnH) + interpol_2d(cool_rate_prim[T_index_1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+    log_du_dt_cool_metals = (interpol_3d(cool_rate_metals, T_index, Z_index, nH_index, dT, dZ, dnH) + interpol_2d(cool_rate_metals[T_index_1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+
+    du_dt = 10.0 ** log_du_dt_heat_prim 
+    du_dt += 10.0 ** log_du_dt_heat_metals 
+    du_dt -= 10.0 ** log_du_dt_cool_prim 
+    du_dt -= 10.0 ** log_du_dt_cool_metals 
+
+    # Convert to erg cm^-3 s^-1
+    du_dt *= nH ** 2.0 
 
     # Calculate time to cool to 
     # next temperature bin. 
@@ -177,20 +174,16 @@ def temperature_evolution_from_table(cool_table_path, Z_over_Zsol, nH, T_init, X
             u_0 = rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index, :, :], Z_index, nH_index, dZ, dnH)) 
             u_1 = rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index - 1, :, :], Z_index, nH_index, dZ, dnH)) 
 
-            # du_dt at the start of the step 
-            du_dt_0 = 10.0 ** interpol_2d(heat_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 += 10.0 ** interpol_2d(heat_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 -= 10.0 ** interpol_2d(cool_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 -= 10.0 ** interpol_2d(cool_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) 
+            # Average rates at start and end of time-step 
+            log_du_dt_heat_prim = (interpol_2d(heat_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(heat_rate_prim[T_index - 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+            log_du_dt_heat_metals = (interpol_2d(heat_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(heat_rate_metals[T_index - 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+            log_du_dt_cool_prim = (interpol_2d(cool_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(cool_rate_prim[T_index - 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0
+            log_du_dt_cool_metals = (interpol_2d(cool_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(cool_rate_metals[T_index - 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
 
-            # du_dt at the end of the step 
-            du_dt_1 = 10.0 ** interpol_2d(heat_rate_prim[T_index - 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 += 10.0 ** interpol_2d(heat_rate_metals[T_index - 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 -= 10.0 ** interpol_2d(cool_rate_prim[T_index - 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 -= 10.0 ** interpol_2d(cool_rate_metals[T_index - 1, :, :], Z_index, nH_index, dZ, dnH) 
-            
-            # Take the average 
-            du_dt = (du_dt_0 + du_dt_1) / 2.0 
+            du_dt = 10.0 ** log_du_dt_heat_prim 
+            du_dt += 10.0 ** log_du_dt_heat_metals 
+            du_dt -= 10.0 ** log_du_dt_cool_prim 
+            du_dt -= 10.0 ** log_du_dt_cool_metals 
 
             # Convert to erg cm^-3 s^-1
             du_dt *= nH ** 2.0 
@@ -214,20 +207,16 @@ def temperature_evolution_from_table(cool_table_path, Z_over_Zsol, nH, T_init, X
             u_0 = rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index, :, :], Z_index, nH_index, dZ, dnH)) 
             u_1 = rho_cgs * (10.0 ** interpol_2d(U_from_T[redshift_index, T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) 
 
-            # du_dt at the start of the step 
-            du_dt_0 = 10.0 ** interpol_2d(heat_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 += 10.0 ** interpol_2d(heat_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 -= 10.0 ** interpol_2d(cool_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_0 -= 10.0 ** interpol_2d(cool_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) 
+            # Average rates at start and end of time-step 
+            log_du_dt_heat_prim = (interpol_2d(heat_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(heat_rate_prim[T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+            log_du_dt_heat_metals = (interpol_2d(heat_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(heat_rate_metals[T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
+            log_du_dt_cool_prim = (interpol_2d(cool_rate_prim[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(cool_rate_prim[T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0
+            log_du_dt_cool_metals = (interpol_2d(cool_rate_metals[T_index, :, :], Z_index, nH_index, dZ, dnH) + interpol_2d(cool_rate_metals[T_index + 1, :, :], Z_index, nH_index, dZ, dnH)) / 2.0 
 
-            # du_dt at the end of the step 
-            du_dt_1 = 10.0 ** interpol_2d(heat_rate_prim[T_index + 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 += 10.0 ** interpol_2d(heat_rate_metals[T_index + 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 -= 10.0 ** interpol_2d(cool_rate_prim[T_index + 1, :, :], Z_index, nH_index, dZ, dnH) 
-            du_dt_1 -= 10.0 ** interpol_2d(cool_rate_metals[T_index + 1, :, :], Z_index, nH_index, dZ, dnH) 
-
-            # Take the average 
-            du_dt = (du_dt_0 + du_dt_1) / 2.0 
+            du_dt = 10.0 ** log_du_dt_heat_prim 
+            du_dt += 10.0 ** log_du_dt_heat_metals 
+            du_dt -= 10.0 ** log_du_dt_cool_prim 
+            du_dt -= 10.0 ** log_du_dt_cool_metals 
             
             # Convert to erg cm^-3 s^-1
             du_dt *= nH ** 2.0 
