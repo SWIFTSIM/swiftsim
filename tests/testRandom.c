@@ -87,7 +87,7 @@ double pearsonfunc(double mean1, double mean2, double total12, double var1,
 int main(int argc, char* argv[]) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FPEs */
@@ -106,9 +106,9 @@ int main(int argc, char* argv[]) {
   /* Try a few different values for the ID */
   for (int i = 0; i < 10; ++i) {
 
-    const long long id = rand() * (1LL << 31) + rand();
+    const int64_t id = rand() * (1LL << 31) + rand();
     const integertime_t increment = (1LL << time_bin);
-    const long long idoffset = id + 2;
+    const int64_t idoffset = id + 2;
 
     message("Testing id=%lld time_bin=%d", id, time_bin);
 

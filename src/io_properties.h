@@ -49,7 +49,7 @@ typedef void (*conversion_func_part_double)(const struct engine*,
                                             const struct xpart*, double*);
 typedef void (*conversion_func_part_long_long)(const struct engine*,
                                                const struct part*,
-                                               const struct xpart*, long long*);
+                                               const struct xpart*, int64_t*);
 typedef void (*conversion_func_gpart_float)(const struct engine*,
                                             const struct gpart*, float*);
 typedef void (*conversion_func_gpart_int)(const struct engine*,
@@ -58,7 +58,7 @@ typedef void (*conversion_func_gpart_double)(const struct engine*,
                                              const struct gpart*, double*);
 typedef void (*conversion_func_gpart_long_long)(const struct engine*,
                                                 const struct gpart*,
-                                                long long*);
+                                                int64_t*);
 typedef void (*conversion_func_spart_float)(const struct engine*,
                                             const struct spart*, float*);
 typedef void (*conversion_func_spart_int)(const struct engine*,
@@ -67,7 +67,7 @@ typedef void (*conversion_func_spart_double)(const struct engine*,
                                              const struct spart*, double*);
 typedef void (*conversion_func_spart_long_long)(const struct engine*,
                                                 const struct spart*,
-                                                long long*);
+                                                int64_t*);
 typedef void (*conversion_func_bpart_float)(const struct engine*,
                                             const struct bpart*, float*);
 typedef void (*conversion_func_bpart_int)(const struct engine*,
@@ -76,7 +76,7 @@ typedef void (*conversion_func_bpart_double)(const struct engine*,
                                              const struct bpart*, double*);
 typedef void (*conversion_func_bpart_long_long)(const struct engine*,
                                                 const struct bpart*,
-                                                long long*);
+                                                int64_t*);
 
 /**
  * @brief The properties of a given dataset for i/o
@@ -112,7 +112,7 @@ struct io_props {
   int* start_temp_i;
   float* start_temp_f;
   double* start_temp_d;
-  long long* start_temp_l;
+  int64_t* start_temp_l;
 
   /* Pointer to the engine */
   const struct engine* e;

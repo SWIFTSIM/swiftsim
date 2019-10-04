@@ -44,8 +44,8 @@ void clocks_gettime(struct clocks_time *time);
 double clocks_diff(struct clocks_time *start, struct clocks_time *end);
 const char *clocks_getunit(void);
 
-void clocks_set_cpufreq(unsigned long long freq);
-unsigned long long clocks_get_cpufreq(void);
+void clocks_set_cpufreq(uint64_t freq);
+uint64_t clocks_get_cpufreq(void);
 double clocks_from_ticks(ticks tics);
 ticks clocks_to_ticks(double interval);
 double clocks_diff_ticks(ticks tic, ticks toc);

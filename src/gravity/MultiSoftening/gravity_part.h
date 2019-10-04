@@ -26,7 +26,7 @@ struct gpart {
 
   /*! Particle ID. If negative, it is the negative offset of the #part with
      which this gpart is linked. */
-  long long id_or_neg_offset;
+  int64_t id_or_neg_offset;
 
   /*! Particle position. */
   double x[3];
@@ -55,7 +55,7 @@ struct gpart {
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Numer of gparts this gpart interacted with */
-  long long num_interacted;
+  int64_t num_interacted;
 
   /* Time of the last drift */
   integertime_t ti_drift;

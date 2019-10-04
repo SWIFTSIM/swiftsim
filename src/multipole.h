@@ -95,7 +95,7 @@ struct grav_tensor {
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Total number of gpart this field tensor interacted with */
-  long long num_interacted;
+  int64_t num_interacted;
 
   /* Last time this tensor was zeroed */
   integertime_t ti_init;
@@ -171,7 +171,7 @@ struct multipole {
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Total number of gpart in this multipole */
-  long long num_gpart;
+  int64_t num_gpart;
 
 #endif
 };

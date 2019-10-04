@@ -67,7 +67,7 @@ struct voronoi_cell {
      counterclockwise of the edge w.r.t. a vector pointing from the vertex along
      the edge. After cell finalization, it contains a neighbour for every face,
      in the same order as the face_areas and face_midpoints arrays. */
-  unsigned long long ngbs[VORONOI3D_MAXNUMEDGE];
+  uint64_t ngbs[VORONOI3D_MAXNUMEDGE];
 
   /* Number of faces of the cell. */
   unsigned char nface;

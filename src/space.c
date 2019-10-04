@@ -5335,7 +5335,7 @@ void space_check_part_swallow_mapper(void *map_data, int nr_parts,
 
     if (parts[k].time_bin == time_bin_inhibited) continue;
 
-    const long long swallow_id =
+    const int64_t swallow_id =
         black_holes_get_part_swallow_id(&parts[k].black_holes_data);
 
     if (swallow_id != -1)
@@ -5360,7 +5360,7 @@ void space_check_bpart_swallow_mapper(void *map_data, int nr_bparts,
 
     if (bparts[k].time_bin == time_bin_inhibited) continue;
 
-    const long long swallow_id =
+    const int64_t swallow_id =
         black_holes_get_bpart_swallow_id(&bparts[k].merger_data);
 
     if (swallow_id != -1)

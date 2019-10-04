@@ -924,7 +924,7 @@ void test(double x, double y, double tol, double min, const char* name) {
 int main(int argc, char* argv[]) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
   /* Relative tolerance */

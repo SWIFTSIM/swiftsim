@@ -40,7 +40,7 @@
 #define SLEEPTIME 250000000
 
 /* The CPU frequency used to convert ticks to seconds. */
-static unsigned long long clocks_cpufreq = 0;
+static uint64_t clocks_cpufreq = 0;
 
 /* Ticks when the CPU frequency was initialised, this marks the start of
  * time. */
@@ -101,7 +101,7 @@ double clocks_diff(struct clocks_time *start, struct clocks_time *end) {
  *
  * @param freq the CPU frequency in Hz or 0 to estimate one.
  */
-void clocks_set_cpufreq(unsigned long long freq) {
+void clocks_set_cpufreq(uint64_t freq) {
   if (freq > 0) {
     clocks_cpufreq = freq;
   } else {
@@ -115,7 +115,7 @@ void clocks_set_cpufreq(unsigned long long freq) {
  *
  * @result the CPU frequency.
  */
-unsigned long long clocks_get_cpufreq(void) {
+uint64_t clocks_get_cpufreq(void) {
 
   if (clocks_cpufreq > 0) return clocks_cpufreq;
 
@@ -156,7 +156,7 @@ static void clocks_estimate_cpufreq(void) {
   double realsleep = clocks_diff(&time1, &time2);
 
   clocks_cpufreq =
-      (signed long long)(double)(toc - tic) * 1.0 / realsleep * 1000.0;
+    (int64_t)(double)(toc - tic) * 1.0 / realsleep * 1000.0;
   clocks_units_index = 0;
   clocks_units_scale = 1000.0;
 #endif
@@ -167,7 +167,7 @@ static void clocks_estimate_cpufreq(void) {
     FILE *file =
         fopen("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r");
     if (file != NULL) {
-      unsigned long long maxfreq;
+      uint64_t maxfreq;
       if (fscanf(file, "%llu", &maxfreq) == 1) {
         clocks_cpufreq = maxfreq * 1000;
         clocks_units_index = 0;
@@ -180,7 +180,7 @@ static void clocks_estimate_cpufreq(void) {
 
   /* If all fails just report ticks for a notional 2.6GHz machine. */
   if (clocks_cpufreq == 0) {
-    unsigned long long maxfreq = 2600000;
+    uint64_t maxfreq = 2600000;
     clocks_cpufreq = maxfreq * 1000;
     clocks_units_index = 1;
     clocks_units_scale = 1000.0;

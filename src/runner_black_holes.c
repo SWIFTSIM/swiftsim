@@ -95,7 +95,7 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
       if (part_is_inhibited(p, e)) continue;
 
       /* Get the ID of the black holes that will swallow this part */
-      const long long swallow_id =
+      const int64_t swallow_id =
           black_holes_get_part_swallow_id(&p->black_holes_data);
 
       /* Has this particle been flagged for swallowing? */
@@ -107,7 +107,7 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
 #endif
 
         /* ID of the BH swallowing this particle */
-        const long long BH_id = swallow_id;
+        const int64_t BH_id = swallow_id;
 
         /* Have we found this particle's BH already? */
         int found = 0;
@@ -316,7 +316,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
       if (bpart_is_inhibited(cell_bp, e)) continue;
 
       /* Get the ID of the black holes that will swallow this part */
-      const long long swallow_id =
+      const int64_t swallow_id =
           black_holes_get_bpart_swallow_id(&cell_bp->merger_data);
 
       /* message("OO id=%lld swallow_id = %lld", cell_bp->id, */
@@ -331,7 +331,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 #endif
 
         /* ID of the BH swallowing this particle */
-        const long long BH_id = swallow_id;
+        const int64_t BH_id = swallow_id;
 
         /* Have we found this particle's BH already? */
         int found = 0;

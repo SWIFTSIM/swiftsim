@@ -49,7 +49,7 @@ typedef size_t hashmap_mask_t;
 // Type used for the hashmap values (must have a valid '==' operation).
 #ifndef hashmap_value_t
 typedef struct _hashmap_struct {
-  long long value_st;
+  int64_t value_st;
   float value_flt;
   double value_dbl;
 } hashmap_struct_t;

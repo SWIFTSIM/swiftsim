@@ -139,7 +139,7 @@ void pairs_n2(double *dim, struct part *restrict parts, int N, int periodic) {
   fflush(stdout);
 }
 
-void pairs_single_density(double *dim, long long int pid,
+void pairs_single_density(double *dim, int64_t pid,
                           struct part *restrict parts, int N, int periodic) {
   int i, k;
   double r2, dx[3];
@@ -700,7 +700,7 @@ void self_all_stars_density(struct runner *r, struct cell *ci) {
 /**
  * @brief Compute the force on a single particle brute-force.
  */
-void engine_single_density(double *dim, long long int pid,
+void engine_single_density(double *dim, int64_t pid,
                            struct part *restrict parts, int N, int periodic,
                            const struct cosmology *cosmo) {
   double r2, dx[3];
@@ -744,7 +744,7 @@ void engine_single_density(double *dim, long long int pid,
   fflush(stdout);
 }
 
-void engine_single_force(double *dim, long long int pid,
+void engine_single_force(double *dim, int64_t pid,
                          struct part *restrict parts, int N, int periodic) {
   int i, k;
   double r2, dx[3];

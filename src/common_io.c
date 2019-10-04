@@ -475,10 +475,10 @@ void io_write_engine_policy(hid_t h_file, const struct engine* e) {
   H5Gclose(h_grp);
 }
 
-static long long cell_count_non_inhibited_gas(const struct cell* c) {
+static int64_t cell_count_non_inhibited_gas(const struct cell* c) {
   const int total_count = c->hydro.count;
   struct part* parts = c->hydro.parts;
-  long long count = 0;
+  int64_t count = 0;
   for (int i = 0; i < total_count; ++i) {
     if ((parts[i].time_bin != time_bin_inhibited) &&
         (parts[i].time_bin != time_bin_not_created)) {
@@ -488,10 +488,10 @@ static long long cell_count_non_inhibited_gas(const struct cell* c) {
   return count;
 }
 
-static long long cell_count_non_inhibited_dark_matter(const struct cell* c) {
+static int64_t cell_count_non_inhibited_dark_matter(const struct cell* c) {
   const int total_count = c->grav.count;
   struct gpart* gparts = c->grav.parts;
-  long long count = 0;
+  int64_t count = 0;
   for (int i = 0; i < total_count; ++i) {
     if ((gparts[i].time_bin != time_bin_inhibited) &&
         (gparts[i].time_bin != time_bin_not_created) &&
@@ -502,11 +502,11 @@ static long long cell_count_non_inhibited_dark_matter(const struct cell* c) {
   return count;
 }
 
-static long long cell_count_non_inhibited_background_dark_matter(
+static int64_t cell_count_non_inhibited_background_dark_matter(
     const struct cell* c) {
   const int total_count = c->grav.count;
   struct gpart* gparts = c->grav.parts;
-  long long count = 0;
+  int64_t count = 0;
   for (int i = 0; i < total_count; ++i) {
     if ((gparts[i].time_bin != time_bin_inhibited) &&
         (gparts[i].time_bin != time_bin_not_created) &&
@@ -517,10 +517,10 @@ static long long cell_count_non_inhibited_background_dark_matter(
   return count;
 }
 
-static long long cell_count_non_inhibited_stars(const struct cell* c) {
+static int64_t cell_count_non_inhibited_stars(const struct cell* c) {
   const int total_count = c->stars.count;
   struct spart* sparts = c->stars.parts;
-  long long count = 0;
+  int64_t count = 0;
   for (int i = 0; i < total_count; ++i) {
     if ((sparts[i].time_bin != time_bin_inhibited) &&
         (sparts[i].time_bin != time_bin_not_created)) {
@@ -530,10 +530,10 @@ static long long cell_count_non_inhibited_stars(const struct cell* c) {
   return count;
 }
 
-static long long cell_count_non_inhibited_black_holes(const struct cell* c) {
+static int64_t cell_count_non_inhibited_black_holes(const struct cell* c) {
   const int total_count = c->black_holes.count;
   struct bpart* bparts = c->black_holes.parts;
-  long long count = 0;
+  int64_t count = 0;
   for (int i = 0; i < total_count; ++i) {
     if ((bparts[i].time_bin != time_bin_inhibited) &&
         (bparts[i].time_bin != time_bin_not_created)) {
@@ -546,8 +546,8 @@ static long long cell_count_non_inhibited_black_holes(const struct cell* c) {
 void io_write_cell_offsets(hid_t h_grp, const int cdim[3],
                            const struct cell* cells_top, const int nr_cells,
                            const double width[3], const int nodeID,
-                           const long long global_counts[swift_type_count],
-                           const long long global_offsets[swift_type_count],
+                           const int64_t global_counts[swift_type_count],
+                           const int64_t global_offsets[swift_type_count],
                            const struct unit_system* internal_units,
                            const struct unit_system* snapshot_units) {
 
@@ -558,24 +558,24 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3],
   centres = (double*)malloc(3 * nr_cells * sizeof(double));
 
   /* Count of particles in each cell */
-  long long *count_part = NULL, *count_gpart = NULL,
+  int64_t *count_part = NULL, *count_gpart = NULL,
             *count_background_gpart = NULL, *count_spart = NULL,
             *count_bpart = NULL;
-  count_part = (long long*)malloc(nr_cells * sizeof(long long));
-  count_gpart = (long long*)malloc(nr_cells * sizeof(long long));
-  count_background_gpart = (long long*)malloc(nr_cells * sizeof(long long));
-  count_spart = (long long*)malloc(nr_cells * sizeof(long long));
-  count_bpart = (long long*)malloc(nr_cells * sizeof(long long));
+  count_part = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  count_gpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  count_background_gpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  count_spart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  count_bpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
 
   /* Global offsets of particles in each cell */
-  long long *offset_part = NULL, *offset_gpart = NULL,
+  int64_t *offset_part = NULL, *offset_gpart = NULL,
             *offset_background_gpart = NULL, *offset_spart = NULL,
             *offset_bpart = NULL;
-  offset_part = (long long*)malloc(nr_cells * sizeof(long long));
-  offset_gpart = (long long*)malloc(nr_cells * sizeof(long long));
-  offset_background_gpart = (long long*)malloc(nr_cells * sizeof(long long));
-  offset_spart = (long long*)malloc(nr_cells * sizeof(long long));
-  offset_bpart = (long long*)malloc(nr_cells * sizeof(long long));
+  offset_part = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  offset_gpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  offset_background_gpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  offset_spart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
+  offset_bpart = (int64_t*)malloc(nr_cells * sizeof(int64_t));
 
   /* Offsets of the 0^th element */
   offset_part[0] = 0;
@@ -585,11 +585,11 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3],
   offset_bpart[0] = 0;
 
   /* Collect the cell information of *local* cells */
-  long long local_offset_part = 0;
-  long long local_offset_gpart = 0;
-  long long local_offset_background_gpart = 0;
-  long long local_offset_spart = 0;
-  long long local_offset_bpart = 0;
+  int64_t local_offset_part = 0;
+  int64_t local_offset_gpart = 0;
+  int64_t local_offset_background_gpart = 0;
+  int64_t local_offset_spart = 0;
+  int64_t local_offset_bpart = 0;
   for (int i = 0; i < nr_cells; ++i) {
 
     if (cells_top[i].nodeID == nodeID) {
@@ -1026,9 +1026,9 @@ size_t io_sizeof_type(enum IO_DATA_TYPE type) {
     case ULONG:
       return sizeof(unsigned long);
     case LONGLONG:
-      return sizeof(long long);
+      return sizeof(int64_t);
     case ULONGLONG:
-      return sizeof(unsigned long long);
+      return sizeof(uint64_t);
     case FLOAT:
       return sizeof(float);
     case DOUBLE:
@@ -1140,7 +1140,7 @@ void io_convert_part_l_mapper(void* restrict temp, int N,
   const size_t dim = props.dimension;
 
   /* How far are we with this chunk? */
-  long long* restrict temp_l = (long long*)temp;
+  int64_t* restrict temp_l = (int64_t*)temp;
   const ptrdiff_t delta = (temp_l - props.start_temp_l) / dim;
 
   for (int i = 0; i < N; i++)
@@ -1221,7 +1221,7 @@ void io_convert_gpart_l_mapper(void* restrict temp, int N,
   const size_t dim = props.dimension;
 
   /* How far are we with this chunk? */
-  long long* restrict temp_l = (long long*)temp;
+  int64_t* restrict temp_l = (int64_t*)temp;
   const ptrdiff_t delta = (temp_l - props.start_temp_l) / dim;
 
   for (int i = 0; i < N; i++)
@@ -1301,7 +1301,7 @@ void io_convert_spart_l_mapper(void* restrict temp, int N,
   const size_t dim = props.dimension;
 
   /* How far are we with this chunk? */
-  long long* restrict temp_l = (long long*)temp;
+  int64_t* restrict temp_l = (int64_t*)temp;
   const ptrdiff_t delta = (temp_l - props.start_temp_l) / dim;
 
   for (int i = 0; i < N; i++)
@@ -1381,7 +1381,7 @@ void io_convert_bpart_l_mapper(void* restrict temp, int N,
   const size_t dim = props.dimension;
 
   /* How far are we with this chunk? */
-  long long* restrict temp_l = (long long*)temp;
+  int64_t* restrict temp_l = (int64_t*)temp;
   const ptrdiff_t delta = (temp_l - props.start_temp_l) / dim;
 
   for (int i = 0; i < N; i++)
@@ -1460,8 +1460,8 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
     } else if (props.convert_part_l != NULL) {
 
       /* Prepare some parameters */
-      long long* temp_l = (long long*)temp;
-      props.start_temp_l = (long long*)temp;
+      int64_t* temp_l = (int64_t*)temp;
+      props.start_temp_l = (int64_t*)temp;
       props.e = e;
 
       /* Copy the whole thing into a buffer */
@@ -1508,8 +1508,8 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
     } else if (props.convert_gpart_l != NULL) {
 
       /* Prepare some parameters */
-      long long* temp_l = (long long*)temp;
-      props.start_temp_l = (long long*)temp;
+      int64_t* temp_l = (int64_t*)temp;
+      props.start_temp_l = (int64_t*)temp;
       props.e = e;
 
       /* Copy the whole thing into a buffer */
@@ -1556,8 +1556,8 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
     } else if (props.convert_spart_l != NULL) {
 
       /* Prepare some parameters */
-      long long* temp_l = (long long*)temp;
-      props.start_temp_l = (long long*)temp;
+      int64_t* temp_l = (int64_t*)temp;
+      props.start_temp_l = (int64_t*)temp;
       props.e = e;
 
       /* Copy the whole thing into a buffer */
@@ -1604,8 +1604,8 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
     } else if (props.convert_bpart_l != NULL) {
 
       /* Prepare some parameters */
-      long long* temp_l = (long long*)temp;
-      props.start_temp_l = (long long*)temp;
+      int64_t* temp_l = (int64_t*)temp;
+      props.start_temp_l = (int64_t*)temp;
       props.e = e;
 
       /* Copy the whole thing into a buffer */
@@ -1760,7 +1760,7 @@ void io_duplicate_hydro_gparts_mapper(void* restrict data, int Ngas,
     gparts[i + Ndm].type = swift_type_gas;
 
     /* Link the particles */
-    gparts[i + Ndm].id_or_neg_offset = -(long long)(offset + i);
+    gparts[i + Ndm].id_or_neg_offset = -(int64_t)(offset + i);
     parts[i].gpart = &gparts[i + Ndm];
   }
 }
@@ -1816,7 +1816,7 @@ void io_duplicate_stars_gparts_mapper(void* restrict data, int Nstars,
     gparts[i + Ndm].type = swift_type_stars;
 
     /* Link the particles */
-    gparts[i + Ndm].id_or_neg_offset = -(long long)(offset + i);
+    gparts[i + Ndm].id_or_neg_offset = -(int64_t)(offset + i);
     sparts[i].gpart = &gparts[i + Ndm];
   }
 }
@@ -1875,7 +1875,7 @@ void io_duplicate_black_holes_gparts_mapper(void* restrict data,
     gparts[i + Ndm].type = swift_type_black_hole;
 
     /* Link the particles */
-    gparts[i + Ndm].id_or_neg_offset = -(long long)(offset + i);
+    gparts[i + Ndm].id_or_neg_offset = -(int64_t)(offset + i);
     bparts[i].gpart = &gparts[i + Ndm];
   }
 }
@@ -2111,7 +2111,7 @@ void io_collect_gparts_background_to_write(
  * @param N_total The total number of each particle type.
  */
 void io_check_output_fields(const struct swift_params* params,
-                            const long long N_total[swift_type_count]) {
+                            const int64_t N_total[swift_type_count]) {
 
   /* Loop over all particle types to check the fields */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {

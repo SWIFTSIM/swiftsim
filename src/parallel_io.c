@@ -85,7 +85,7 @@
  * @param a The current value of the scale-factor.
  */
 void readArray_chunk(hid_t h_data, hid_t h_plist_id,
-                     const struct io_props props, size_t N, long long offset,
+                     const struct io_props props, size_t N, int64_t offset,
                      const struct unit_system* internal_units,
                      const struct unit_system* ic_units, int cleanup_h,
                      int cleanup_sqrt_a, double h, double a) {
@@ -239,8 +239,8 @@ void readArray_chunk(hid_t h_data, hid_t h_plist_id,
  * @param h The value of the reduced Hubble constant to use for cleaning.
  * @param a The current value of the scale-factor.
  */
-void readArray(hid_t grp, struct io_props props, size_t N, long long N_total,
-               int mpi_rank, long long offset,
+void readArray(hid_t grp, struct io_props props, size_t N, int64_t N_total,
+               int mpi_rank, int64_t offset,
                const struct unit_system* internal_units,
                const struct unit_system* ic_units, int cleanup_h,
                int cleanup_sqrt_a, double h, double a) {
@@ -377,7 +377,7 @@ void readArray(hid_t grp, struct io_props props, size_t N, long long N_total,
  */
 void prepareArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
                   char* partTypeGroupName, struct io_props props,
-                  long long N_total, const struct unit_system* snapshot_units) {
+                  int64_t N_total, const struct unit_system* snapshot_units) {
 
   /* Create data space */
   const hid_t h_space = H5Screate(H5S_SIMPLE);
@@ -402,7 +402,7 @@ void prepareArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
   }
 
   /* Make sure the chunks are not larger than the dataset */
-  if ((long long)chunk_shape[0] > N_total) chunk_shape[0] = N_total;
+  if ((int64_t)chunk_shape[0] > N_total) chunk_shape[0] = N_total;
 
   /* Change shape of data space */
   hid_t h_err = H5Sset_extent_simple(h_space, rank, shape, NULL);
@@ -484,7 +484,7 @@ void prepareArray(struct engine* e, hid_t grp, char* fileName, FILE* xmfFile,
  * @param snapshot_units The #unit_system used in the snapshots.
  */
 void writeArray_chunk(struct engine* e, hid_t h_data,
-                      const struct io_props props, size_t N, long long offset,
+                      const struct io_props props, size_t N, int64_t offset,
                       const struct unit_system* internal_units,
                       const struct unit_system* snapshot_units) {
 
@@ -611,7 +611,7 @@ void writeArray_chunk(struct engine* e, hid_t h_data,
  */
 void writeArray(struct engine* e, hid_t grp, char* fileName,
                 char* partTypeGroupName, struct io_props props, size_t N,
-                long long N_total, int mpi_rank, long long offset,
+                int64_t N_total, int mpi_rank, int64_t offset,
                 const struct unit_system* internal_units,
                 const struct unit_system* snapshot_units) {
 
@@ -723,11 +723,11 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
-  long long numParticles[swift_type_count] = {0};
-  long long numParticles_highWord[swift_type_count] = {0};
+  int64_t numParticles[swift_type_count] = {0};
+  int64_t numParticles_highWord[swift_type_count] = {0};
   size_t N[swift_type_count] = {0};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
+  int64_t N_total[swift_type_count] = {0};
+  int64_t offset[swift_type_count] = {0};
   int dimension = 3; /* Assume 3D if nothing is specified */
   size_t Ndm = 0;
   size_t Ndm_background = 0;
@@ -1038,7 +1038,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
  * @param internal_units The #unit_system used internally.
  * @param snapshot_units The #unit_system used in the snapshots.
  */
-void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
+void prepare_file(struct engine* e, const char* baseName, int64_t N_total[6],
                   const struct unit_system* internal_units,
                   const struct unit_system* snapshot_units) {
 
@@ -1413,8 +1413,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
   size_t N[swift_type_count] = {Ngas_written,   Ndm_written,
                                 Ndm_background, 0,
                                 Nstars_written, Nblackholes_written};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
+  int64_t N_total[swift_type_count] = {0};
+  int64_t offset[swift_type_count] = {0};
   MPI_Exscan(&N, &offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
     N_total[ptype] = offset[ptype] + N[ptype];

@@ -386,7 +386,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
 #ifdef SWIFT_BOUNDARY_PARTICLES
 
         /* Get the ID of the part */
-        const long long id = p->id;
+        const int64_t id = p->id;
 
         /* Cancel hdyro forces of these particles */
         if (id < SWIFT_BOUNDARY_PARTICLES) {
@@ -469,7 +469,7 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 #ifdef SWIFT_NO_GRAVITY_BELOW_ID
 
         /* Get the ID of the gpart */
-        long long id = 0;
+        int64_t id = 0;
         if (gp->type == swift_type_gas)
           id = e->s->parts[-gp->id_or_neg_offset].id;
         else if (gp->type == swift_type_stars)
@@ -502,7 +502,7 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
               e->total_nr_gparts - e->count_inhibited_gparts) {
 
             /* Get the ID of the gpart */
-            long long my_id = 0;
+            int64_t my_id = 0;
             if (gp->type == swift_type_gas)
               my_id = e->s->parts[-gp->id_or_neg_offset].id;
             else if (gp->type == swift_type_stars)

@@ -27,19 +27,19 @@
 INLINE static void convert_part_group_id(const struct engine* e,
                                          const struct part* p,
                                          const struct xpart* xp,
-                                         long long* ret) {
+                                         int64_t* ret) {
   ret[0] = p->gpart->fof_data.group_id;
 }
 
 INLINE static void convert_spart_group_id(const struct engine* e,
                                           const struct spart* sp,
-                                          long long* ret) {
+                                          int64_t* ret) {
   ret[0] = sp->gpart->fof_data.group_id;
 }
 
 INLINE static void convert_bpart_group_id(const struct engine* e,
                                           const struct bpart* bp,
-                                          long long* ret) {
+                                          int64_t* ret) {
   ret[0] = bp->gpart->fof_data.group_id;
 }
 

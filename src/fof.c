@@ -185,7 +185,7 @@ void fof_create_mpi_types() {
  * simulation.
  * @param props The properties of the FOF structure.
  */
-void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
+void fof_allocate(const struct space *s, const int64_t total_nr_DM_particles,
                   struct fof_props *props) {
 
   /* Calculate the particle linking length based upon the mean inter-particle
@@ -1336,7 +1336,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   /* Allocate and initialise the densest particle array. */
   if (swift_memalign("max_part_density_index",
                      (void **)&props->max_part_density_index, 32,
-                     num_groups_local * sizeof(long long)) != 0)
+                     num_groups_local * sizeof(int64_t)) != 0)
     error(
         "Failed to allocate list of max group density indices for FOF search.");
 
@@ -1345,7 +1345,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
     error("Failed to allocate list of max group densities for FOF search.");
 
   /* Direct pointers to the arrays */
-  long long *max_part_density_index = props->max_part_density_index;
+  int64_t *max_part_density_index = props->max_part_density_index;
   float *max_part_density = props->max_part_density;
 
   /* No densest particle found so far */
@@ -1607,8 +1607,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
       if (num_groups_local + extra_seed_count >= density_index_size) {
         const size_t new_size = 2 * density_index_size;
 
-        max_part_density_index = (long long *)realloc(
-            max_part_density_index, new_size * sizeof(long long));
+        max_part_density_index = (int64_t *)realloc(
+            max_part_density_index, new_size * sizeof(int64_t));
 
         message(
             "Re-allocating max_part_density_index from %zu to %zu elements.",
@@ -1639,7 +1639,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   /* Allocate and initialise the densest particle array. */
   if (swift_memalign("max_part_density_index",
                      (void **)&props->max_part_density_index, 32,
-                     num_groups_local * sizeof(long long)) != 0)
+                     num_groups_local * sizeof(int64_t)) != 0)
     error(
         "Failed to allocate list of max group density indices for FOF search.");
 
@@ -1648,7 +1648,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
     error("Failed to allocate list of max group densities for FOF search.");
 
   /* Direct pointers to the arrays */
-  long long *max_part_density_index = props->max_part_density_index;
+  int64_t *max_part_density_index = props->max_part_density_index;
   float *max_part_density = props->max_part_density;
 
   /* No densest particle found so far */
@@ -1823,7 +1823,7 @@ void fof_seed_black_holes(const struct fof_props *props,
                           const struct cosmology *cosmo, struct space *s,
                           int num_groups, struct group_length *group_sizes) {
 
-  const long long *max_part_density_index = props->max_part_density_index;
+  const int64_t *max_part_density_index = props->max_part_density_index;
 
   /* Count the number of black holes to seed */
   int num_seed_black_holes = 0;
@@ -1867,7 +1867,7 @@ void fof_seed_black_holes(const struct fof_props *props,
   /* Loop over the local groups */
   for (int i = 0; i < num_groups + props->extra_bh_seed_count; i++) {
 
-    const long long part_index = max_part_density_index[i];
+    const int64_t part_index = max_part_density_index[i];
 
     /* Should we seed? */
     if (part_index >= 0) {
@@ -1938,7 +1938,7 @@ void fof_dump_group_data(const struct fof_props *props,
   struct part *parts = s->parts;
   size_t *group_size = props->group_size;
   double *group_mass = props->group_mass;
-  const long long *max_part_density_index = props->max_part_density_index;
+  const int64_t *max_part_density_index = props->max_part_density_index;
   const float *max_part_density = props->max_part_density;
 
   fprintf(file, "# %8s %12s %12s %12s %18s %18s %12s\n", "Group ID",
@@ -1951,7 +1951,7 @@ void fof_dump_group_data(const struct fof_props *props,
   for (int i = 0; i < num_groups; i++) {
 
     const size_t group_offset = group_sizes[i].index;
-    const long long part_id = max_part_density_index[i] >= 0
+    const int64_t part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
 #ifdef WITH_MPI
@@ -1969,7 +1969,7 @@ void fof_dump_group_data(const struct fof_props *props,
 
   /* Dump the extra black hole seeds. */
   for (int i = num_groups; i < num_groups + props->extra_bh_seed_count; i++) {
-    const long long part_id = max_part_density_index[i] >= 0
+    const int64_t part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
     fprintf(file, "  %8zu %12zu %12e %12e %18lld %18lld\n", 0UL, 0UL, 0., 0.,
@@ -2423,8 +2423,8 @@ void fof_search_tree(struct fof_props *props,
   node_offset = 0;
 
   /* Determine number of gparts on lower numbered MPI ranks */
-  long long nr_gparts_cumulative;
-  long long nr_gparts_local = s->nr_gparts;
+  int64_t nr_gparts_cumulative;
+  int64_t nr_gparts_local = s->nr_gparts;
   MPI_Scan(&nr_gparts_local, &nr_gparts_cumulative, 1, MPI_LONG_LONG, MPI_SUM,
            MPI_COMM_WORLD);
   node_offset = nr_gparts_cumulative - nr_gparts_local;
@@ -2532,8 +2532,8 @@ void fof_search_tree(struct fof_props *props,
 
   /* Find number of groups on lower numbered MPI ranks */
 #ifdef WITH_MPI
-  long long nglocal = num_groups_local;
-  long long ngsum;
+  int64_t nglocal = num_groups_local;
+  int64_t ngsum;
   MPI_Scan(&nglocal, &ngsum, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
   const size_t num_groups_prev = (size_t)(ngsum - nglocal);
 #endif /* WITH_MPI */

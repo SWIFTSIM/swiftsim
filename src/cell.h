@@ -732,7 +732,7 @@ struct cell {
     };
 
     /*! Bit mask of the proxies this cell is registered with. */
-    unsigned long long int sendto;
+    uint64_t sendto;
 
     /*! Pointer to this cell's packed representation. */
     struct pcell *pcell;

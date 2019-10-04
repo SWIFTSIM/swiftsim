@@ -74,13 +74,13 @@ __attribute__((always_inline, const)) INLINE static int intrinsics_clz(
  * version in cases where the compiler intrinsic is not available.
  */
 __attribute__((always_inline, const)) INLINE static int intrinsics_clzll(
-    unsigned long long x) {
+    uint64_t x) {
 
 #ifdef __GNUC__
   /* Use GCC intrinsics if possible */
   return __builtin_clzll(x);
 #else
-#error "Missing definition of clz for long long on this platform."
+#error "Missing definition of clz for int64_t on this platform."
 #endif
 }
 
@@ -113,13 +113,13 @@ __attribute__((always_inline, const)) INLINE static int intrinsics_popcount(
  * Hacker's Delight) if the compiler intrinsics are not available.
  */
 __attribute__((always_inline, const)) INLINE static int intrinsics_popcountll(
-    unsigned long long x) {
+    uint64_t x) {
 
 #ifdef __GNUC__
   /* Use GCC intrinsics if possible */
   return __builtin_popcountll(x);
 #else
-#error "Missing definition of popcount for long long on this platform."
+#error "Missing definition of popcount for int64_t on this platform."
 #endif
 }
 

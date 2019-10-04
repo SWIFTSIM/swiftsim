@@ -109,9 +109,9 @@ void engine_fof(struct engine *e, const int dump_results,
   ticks tic = getticks();
 
   /* Compute number of DM particles */
-  const long long total_nr_baryons =
+  const int64_t total_nr_baryons =
       e->total_nr_parts + e->total_nr_sparts + e->total_nr_bparts;
-  const long long total_nr_dmparts =
+  const int64_t total_nr_dmparts =
       e->total_nr_gparts - e->total_nr_DM_background_gparts - total_nr_baryons;
 
   /* Initialise FOF parameters and allocate FOF arrays. */

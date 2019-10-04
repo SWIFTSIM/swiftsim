@@ -175,7 +175,7 @@ struct task {
   struct task **unlock_tasks;
 
   /*! Flags used to carry additional information (e.g. sort directions) */
-  long long flags;
+  int64_t flags;
 
 #ifdef WITH_MPI
 

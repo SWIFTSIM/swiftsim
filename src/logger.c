@@ -75,8 +75,8 @@ const struct mask_data logger_mask_data[logger_count_mask] = {
     {sizeof(float), 1 << logger_h, "smoothing length"},
     /* Particle's density. */
     {sizeof(float), 1 << logger_rho, "density"},
-    /* Particle's constants: mass (float) and ID (long long). */
-    {sizeof(float) + sizeof(long long), 1 << logger_consts, "consts"},
+    /* Particle's constants: mass (float) and ID (int64_t). */
+    {sizeof(float) + sizeof(int64_t), 1 << logger_consts, "consts"},
     /* Simulation time stamp: integertime and double time (e.g. scale
        factor or time). */
     {sizeof(integertime_t) + sizeof(double), 1 << logger_timestamp,
@@ -147,7 +147,7 @@ int logger_compute_chunk_size(unsigned int mask) {
     if (mask != logger_mask_data[logger_timestamp].mask)
       error("Timestamps should not include any other data.");
 
-    /* A timestamp consists of an unsigned long long int. */
+    /* A timestamp consists of an unsigned int64_t int. */
     size += logger_mask_data[logger_timestamp].size;
 
   } else {
@@ -185,7 +185,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
       logger_mask_data[logger_consts].mask;
 
   /* loop over all parts. */
-  for (long long i = 0; i < e->total_nr_parts; i++) {
+  for (int64_t i = 0; i < e->total_nr_parts; i++) {
     logger_log_part(log, &s->parts[i], mask,
                     &s->xparts[i].logger_data.last_offset);
     s->xparts[i].logger_data.steps_since_last_output = 0;
@@ -267,8 +267,8 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
     // TODO make it dependent of logger_mask_data
     memcpy(buff, &p->mass, sizeof(float));
     buff += sizeof(float);
-    memcpy(buff, &p->id, sizeof(long long));
-    buff += sizeof(long long);
+    memcpy(buff, &p->id, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
 #endif
@@ -331,8 +331,8 @@ void logger_log_gpart(struct logger_writer *log, const struct gpart *p,
     // TODO make it dependent of logger_mask_data.
     memcpy(buff, &p->mass, sizeof(float));
     buff += sizeof(float);
-    memcpy(buff, &p->id_or_neg_offset, sizeof(long long));
-    buff += sizeof(long long);
+    memcpy(buff, &p->id_or_neg_offset, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
   /* Update the log message offset. */
@@ -599,8 +599,8 @@ int logger_read_part(struct part *p, size_t *offset, const char *buff) {
     // TODO make it dependent of logger_mask_data.
     memcpy(&p->mass, buff, sizeof(float));
     buff += sizeof(float);
-    memcpy(&p->id, buff, sizeof(long long));
-    buff += sizeof(long long);
+    memcpy(&p->id, buff, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
 #endif
@@ -661,8 +661,8 @@ int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff) {
     // TODO make it dependent of logger_mask_data
     memcpy(&p->mass, buff, sizeof(float));
     buff += sizeof(float);
-    memcpy(&p->id_or_neg_offset, buff, sizeof(long long));
-    buff += sizeof(long long);
+    memcpy(&p->id_or_neg_offset, buff, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
   /* Finally, return the mask of the values we just read. */
@@ -679,7 +679,7 @@ int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff) {
  *
  * @return The mask containing the values read.
  */
-int logger_read_timestamp(unsigned long long int *t, double *time,
+int logger_read_timestamp(uint64_t int *t, double *time,
                           size_t *offset, const char *buff) {
 
   /* Jump to the offset. */
@@ -700,8 +700,8 @@ int logger_read_timestamp(unsigned long long int *t, double *time,
 
   /* Copy the timestamp value from the buffer. */
   // TODO make it dependent of logger_mask_data.
-  memcpy(t, buff, sizeof(unsigned long long int));
-  buff += sizeof(unsigned long long int);
+  memcpy(t, buff, sizeof(uint64_t));
+  buff += sizeof(uint64_t);
 
   /* Copy the timestamp value from the buffer. */
   memcpy(time, buff, sizeof(double));

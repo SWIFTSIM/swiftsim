@@ -55,7 +55,7 @@ typedef void (*finalise_func)(struct cell *, const struct cosmology *);
  * cell.
  */
 struct cell *make_cell(size_t n, double *offset, double size, double h,
-                       double density, long long *partId, double pert,
+                       double density, int64_t *partId, double pert,
                        double h_pert, double fraction_active) {
   const size_t count = n * n * n;
   const double volume = size * size * size;
@@ -343,7 +343,7 @@ void test_pair_interactions(struct runner *runner, struct cell **ci,
  */
 void test_all_pair_interactions(
     struct runner *runner, double *offset2, size_t particles, double size,
-    double h, double rho, long long *partId, double perturbation, double h_pert,
+    double h, double rho, int64_t *partId, double perturbation, double h_pert,
     char *swiftOutputFileName, char *bruteForceOutputFileName,
     interaction_func serial_interaction, interaction_func vec_interaction,
     init_func init, finalise_func finalise) {
@@ -500,13 +500,13 @@ int main(int argc, char *argv[]) {
   struct hydro_props hydro_props;
   struct runner *runner;
   char c;
-  static long long partId = 0;
+  static int64_t partId = 0;
   char outputFileNameExtension[100] = "";
   char swiftOutputFileName[200] = "";
   char bruteForceOutputFileName[200] = "";
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */

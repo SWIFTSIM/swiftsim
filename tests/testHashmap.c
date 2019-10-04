@@ -30,7 +30,7 @@
 int main(int argc, char *argv[]) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FPEs */
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   message("Populating hash table...");
   for (hashmap_key_t key = 0; key < NUM_KEYS; key++) {
     hashmap_value_t value;
-    value.value_st = (long long)key;
+    value.value_st = (int64_t)key;
     hashmap_put(&m, key, value);
   }
 
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
   for (hashmap_key_t key = 0; key < NUM_KEYS; key++) {
     hashmap_value_t value = *hashmap_lookup(&m, key);
 
-    if (value.value_st != (long long)key)
+    if (value.value_st != (int64_t)key)
       error("Incorrect value (%lld) found for key: %lld", value.value_st,
-            (long long)key);
+            (int64_t)key);
     // else message("Retrieved element, Key: %zu Value: %zu", key, value);
   }
 

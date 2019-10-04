@@ -49,7 +49,7 @@ struct voronoi_cell {
   };
 
   /* The ids of the neighbouring cells. */
-  unsigned long long ngbs[VORONOI2D_MAXNUMVERT];
+  uint64_t ngbs[VORONOI2D_MAXNUMVERT];
 
   /* The lengths of the faces. */
   float face_lengths[VORONOI2D_MAXNUMVERT];

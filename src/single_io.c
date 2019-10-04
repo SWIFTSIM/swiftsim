@@ -415,8 +415,8 @@ void read_ic_single(const char* fileName,
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
   /* GADGET has 6 particle types. We only keep the type 0 & 1 for now...*/
-  long long numParticles[swift_type_count] = {0};
-  long long numParticles_highWord[swift_type_count] = {0};
+  int64_t numParticles[swift_type_count] = {0};
+  int64_t numParticles_highWord[swift_type_count] = {0};
   size_t N[swift_type_count] = {0};
   int dimension = 3; /* Assume 3D if nothing is specified */
   size_t Ndm = 0;
@@ -772,10 +772,10 @@ void write_output_single(struct engine* e, const char* baseName,
       Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background : 0;
 
   /* Format things in a Gadget-friendly array */
-  long long N_total[swift_type_count] = {
-      (long long)Ngas_written,   (long long)Ndm_written,
-      (long long)Ndm_background, 0,
-      (long long)Nstars_written, (long long)Nblackholes_written};
+  int64_t N_total[swift_type_count] = {
+      (int64_t)Ngas_written,   (int64_t)Ndm_written,
+      (int64_t)Ndm_background, 0,
+      (int64_t)Nstars_written, (int64_t)Nblackholes_written};
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
@@ -929,7 +929,7 @@ void write_output_single(struct engine* e, const char* baseName,
   io_write_unit_system(h_file, internal_units, "InternalCodeUnits");
 
   /* Now write the top-level cell structure */
-  long long global_offsets[swift_type_count] = {0};
+  int64_t global_offsets[swift_type_count] = {0};
   h_grp = H5Gcreate(h_file, "/Cells", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   if (h_grp < 0) error("Error while creating cells group");
 

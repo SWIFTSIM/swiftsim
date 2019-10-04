@@ -126,7 +126,7 @@ void set_energy_state(struct part *part, enum pressure_field press, float size,
 
 struct solution_part {
 
-  long long id;
+  int64_t id;
   double x[3];
   float v[3];
   float a_hydro[3];
@@ -259,7 +259,7 @@ void reset_particles(struct cell *c, struct hydro_space *hs,
  * @param press The type of pressure field.
  */
 struct cell *make_cell(size_t n, const double offset[3], double size, double h,
-                       double density, long long *partId, double pert,
+                       double density, int64_t *partId, double pert,
                        enum velocity_field vel, enum pressure_field press) {
 
   const size_t count = n * n * n;
@@ -490,7 +490,7 @@ int main(int argc, char *argv[]) {
   enum pressure_field press = pressure_const;
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */
@@ -625,7 +625,7 @@ int main(int argc, char *argv[]) {
   struct cell *inner_cells[27];
   struct cell *main_cell;
   int count = 0;
-  static long long partId = 0;
+  static int64_t partId = 0;
   for (int i = 0; i < 5; ++i) {
     for (int j = 0; j < 5; ++j) {
       for (int k = 0; k < 5; ++k) {

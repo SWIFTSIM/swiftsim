@@ -31,7 +31,7 @@
 struct swift_vel_part {
 
   /*! Particle ID. */
-  long long id;
+  int64_t id;
 
   /*! Particle position. */
   double x[3];

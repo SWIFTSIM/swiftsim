@@ -875,7 +875,7 @@ void engine_exchange_top_multipoles(struct engine *e) {
     mpi_error(err, "Failed to all-reduce the top-level multipoles.");
 
 #ifdef SWIFT_DEBUG_CHECKS
-  long long counter = 0;
+  int64_t counter = 0;
 
   /* Let's check that what we received makes sense */
   for (int i = 0; i < e->s->nr_cells; ++i) {
@@ -1485,11 +1485,11 @@ void engine_rebuild(struct engine *e, int repartitioned,
   const ticks tic2 = getticks();
 
   /* Update the global counters of particles */
-  long long num_particles[4] = {
-      (long long)(e->s->nr_parts - e->s->nr_extra_parts),
-      (long long)(e->s->nr_gparts - e->s->nr_extra_gparts),
-      (long long)(e->s->nr_sparts - e->s->nr_extra_sparts),
-      (long long)(e->s->nr_bparts - e->s->nr_extra_bparts)};
+  int64_t num_particles[4] = {
+      (int64_t)(e->s->nr_parts - e->s->nr_extra_parts),
+      (int64_t)(e->s->nr_gparts - e->s->nr_extra_gparts),
+      (int64_t)(e->s->nr_sparts - e->s->nr_extra_sparts),
+      (int64_t)(e->s->nr_bparts - e->s->nr_extra_bparts)};
 #ifdef WITH_MPI
   MPI_Allreduce(MPI_IN_PLACE, num_particles, 4, MPI_LONG_LONG, MPI_SUM,
                 MPI_COMM_WORLD);
@@ -1538,7 +1538,7 @@ void engine_rebuild(struct engine *e, int repartitioned,
 
   /* Let's check that what we received makes sense */
   if (e->policy & engine_policy_self_gravity) {
-    long long counter = 0;
+    int64_t counter = 0;
 
     for (int i = 0; i < e->s->nr_cells; ++i) {
       const struct gravity_tensors *m = &e->s->multipoles_top[i];
@@ -1979,7 +1979,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we have the correct total mass in the top-level multipoles */
-  long long num_gpart_mpole = 0;
+  int64_t num_gpart_mpole = 0;
   if (e->policy & engine_policy_self_gravity) {
     for (int i = 0; i < e->s->nr_cells; ++i)
       num_gpart_mpole += e->s->cells_top[i].grav.multipole->m_pole.num_gpart;
@@ -2046,7 +2046,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     /* Sorting should put the same positions next to each other... */
     int failed = 0;
     double *prev_x = s->parts[0].x;
-    long long *prev_id = &s->parts[0].id;
+    int64_t *prev_id = &s->parts[0].id;
     for (size_t k = 1; k < s->nr_parts; k++) {
 
       /* Ignore fake buffer particles for on-the-fly creation */
@@ -2294,7 +2294,7 @@ void engine_step(struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we have the correct total mass in the top-level multipoles */
-  long long num_gpart_mpole = 0;
+  int64_t num_gpart_mpole = 0;
   if (e->policy & engine_policy_self_gravity) {
     for (int i = 0; i < e->s->nr_cells; ++i)
       num_gpart_mpole += e->s->cells_top[i].grav.multipole->m_pole.num_gpart;
@@ -2861,11 +2861,11 @@ void engine_makeproxies(struct engine *e) {
                   e->nr_proxies += 1;
 
                   /* Check the maximal proxy limit */
-                  if ((size_t)proxy_id > 8 * sizeof(long long))
+                  if ((size_t)proxy_id > 8 * sizeof(int64_t))
                     error(
                         "Created more than %zd proxies. cell.mpi.sendto will "
                         "overflow.",
-                        8 * sizeof(long long));
+                        8 * sizeof(int64_t));
                 }
 
                 /* Add the cell to the proxy */
@@ -2895,11 +2895,11 @@ void engine_makeproxies(struct engine *e) {
                   e->nr_proxies += 1;
 
                   /* Check the maximal proxy limit */
-                  if ((size_t)proxy_id > 8 * sizeof(long long))
+                  if ((size_t)proxy_id > 8 * sizeof(int64_t))
                     error(
                         "Created more than %zd proxies. cell.mpi.sendto will "
                         "overflow.",
-                        8 * sizeof(long long));
+                        8 * sizeof(int64_t));
                 }
 
                 /* Add the cell to the proxy */
@@ -3097,10 +3097,10 @@ void engine_collect_stars_counter(struct engine *e) {
   /* Update counters */
   struct spart *local_sparts = e->s->sparts;
   for (size_t i = 0; i < e->s->nr_sparts; i++) {
-    const long long id_i = local_sparts[i].id;
+    const int64_t id_i = local_sparts[i].id;
 
     for (int j = 0; j < total; j++) {
-      const long long id_j = sparts[j].id;
+      const int64_t id_j = sparts[j].id;
 
       if (id_j == id_i) {
         if (j >= displs[engine_rank] &&
@@ -3317,8 +3317,8 @@ void engine_unpin(void) {
  * @param fof_properties The #fof_props.
  */
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 long long Ngas, long long Ngparts, long long Nstars,
-                 long long Nblackholes, long long Nbackground_gparts,
+                 int64_t Ngas, int64_t Ngparts, int64_t Nstars,
+                 int64_t Nblackholes, int64_t Nbackground_gparts,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,
@@ -4575,9 +4575,9 @@ void engine_recompute_displacement_constraint(struct engine *e) {
 #endif
 
   /* Get the counts of each particle types */
-  const long long total_nr_baryons =
+  const int64_t total_nr_baryons =
       e->total_nr_parts + e->total_nr_sparts + e->total_nr_bparts;
-  const long long total_nr_dm_gparts =
+  const int64_t total_nr_dm_gparts =
       e->total_nr_gparts - e->total_nr_DM_background_gparts - total_nr_baryons;
   float count_parts[swift_type_count] = {
       (float)e->total_nr_parts,

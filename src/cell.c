@@ -2296,7 +2296,7 @@ void cell_check_foreign_multipole(const struct cell *c) {
 
   if (c->split) {
     double M_000 = 0.;
-    long long num_gpart = 0;
+    int64_t num_gpart = 0;
 
     for (int k = 0; k < 8; k++) {
       const struct cell *cp = c->progeny[k];

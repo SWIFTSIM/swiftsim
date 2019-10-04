@@ -229,13 +229,13 @@ struct engine {
   integertime_t ti_beg_max;
 
   /* Number of particles updated in the previous step */
-  long long updates, g_updates, s_updates, b_updates;
+  int64_t updates, g_updates, s_updates, b_updates;
 
   /* Number of updates since the last rebuild */
-  long long updates_since_rebuild;
-  long long g_updates_since_rebuild;
-  long long s_updates_since_rebuild;
-  long long b_updates_since_rebuild;
+  int64_t updates_since_rebuild;
+  int64_t g_updates_since_rebuild;
+  int64_t s_updates_since_rebuild;
+  int64_t b_updates_since_rebuild;
 
   /* Star formation logger information */
   struct star_formation_history_accumulator sfh;
@@ -244,30 +244,30 @@ struct engine {
   int step_props;
 
   /* Total numbers of particles in the system. */
-  long long total_nr_parts;
-  long long total_nr_gparts;
-  long long total_nr_sparts;
-  long long total_nr_bparts;
-  long long total_nr_DM_background_gparts;
+  int64_t total_nr_parts;
+  int64_t total_nr_gparts;
+  int64_t total_nr_sparts;
+  int64_t total_nr_bparts;
+  int64_t total_nr_DM_background_gparts;
 
   /* Total numbers of cells (top-level and sub-cells) in the system. */
-  long long total_nr_cells;
+  int64_t total_nr_cells;
 
   /* Total numbers of tasks in the system. */
-  long long total_nr_tasks;
+  int64_t total_nr_tasks;
 
   /* The total number of inhibited particles in the system. */
-  long long nr_inhibited_parts;
-  long long nr_inhibited_gparts;
-  long long nr_inhibited_sparts;
-  long long nr_inhibited_bparts;
+  int64_t nr_inhibited_parts;
+  int64_t nr_inhibited_gparts;
+  int64_t nr_inhibited_sparts;
+  int64_t nr_inhibited_bparts;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Total number of particles removed from the system since the last rebuild */
-  long long count_inhibited_parts;
-  long long count_inhibited_gparts;
-  long long count_inhibited_sparts;
-  long long count_inhibited_bparts;
+  int64_t count_inhibited_parts;
+  int64_t count_inhibited_gparts;
+  int64_t count_inhibited_sparts;
+  int64_t count_inhibited_bparts;
 #endif
 
   /* Total mass in the simulation */
@@ -498,8 +498,8 @@ void engine_collect_end_of_step(struct engine *e, int apply);
 void engine_dump_snapshot(struct engine *e);
 void engine_init_output_lists(struct engine *e, struct swift_params *params);
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 long long Ngas, long long Ngparts, long long Nstars,
-                 long long Nblackholes, long long Nbackground_gparts,
+                 int64_t Ngas, int64_t Ngparts, int64_t Nstars,
+                 int64_t Nblackholes, int64_t Nbackground_gparts,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,

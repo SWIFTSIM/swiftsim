@@ -87,8 +87,8 @@ void io_write_engine_policy(hid_t h_file, const struct engine* e);
 void io_write_cell_offsets(hid_t h_grp, const int cdim[3],
                            const struct cell* cells_top, const int nr_cells,
                            const double width[3], const int nodeID,
-                           const long long global_counts[swift_type_count],
-                           const long long global_offsets[swift_type_count],
+                           const int64_t global_counts[swift_type_count],
+                           const int64_t global_offsets[swift_type_count],
                            const struct unit_system* internal_units,
                            const struct unit_system* snapshot_units);
 
@@ -153,7 +153,7 @@ void io_duplicate_black_holes_gparts(struct threadpool* tp,
                                      size_t Ndm);
 
 void io_check_output_fields(const struct swift_params* params,
-                            const long long N_total[3]);
+                            const int64_t N_total[3]);
 
 void io_write_output_field_parameter(const char* filename);
 

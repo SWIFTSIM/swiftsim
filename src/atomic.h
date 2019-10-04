@@ -103,11 +103,11 @@ __attribute__((always_inline)) INLINE static void atomic_min(
 __attribute__((always_inline)) INLINE static void atomic_min_d(
     volatile double *const address, const double y) {
 
-  long long *const long_long_ptr = (long long *)address;
+  int64_t *const long_long_ptr = (int64_t *)address;
 
   typedef union {
     double as_double;
-    long long as_long_long;
+    int64_t as_long_long;
   } cast_type;
 
   cast_type test_val, old_val, new_val;
@@ -166,11 +166,11 @@ __attribute__((always_inline)) INLINE static void atomic_max_f(
 __attribute__((always_inline)) INLINE static void atomic_max_d(
     volatile double *const address, const double y) {
 
-  long long *const long_long_ptr = (long long *)address;
+  int64_t *const long_long_ptr = (int64_t *)address;
 
   typedef union {
     double as_double;
-    long long as_long_long;
+    int64_t as_long_long;
   } cast_type;
 
   cast_type test_val, old_val, new_val;
@@ -229,11 +229,11 @@ __attribute__((always_inline)) INLINE static void atomic_add_f(
 __attribute__((always_inline)) INLINE static void atomic_add_d(
     volatile double *const address, const double y) {
 
-  long long *const long_long_ptr = (long long *)address;
+  int64_t *const long_long_ptr = (int64_t *)address;
 
   typedef union {
     double as_double;
-    long long as_long_long;
+    int64_t as_long_long;
   } cast_type;
 
   cast_type test_val, old_val, new_val;

@@ -208,7 +208,7 @@ INLINE static double bisection_iter(
     const double ratefact_cgs,
     const struct cooling_function_data *restrict cooling,
     const float abundance_ratio[eagle_cooling_N_abundances],
-    const double dt_cgs, const long long ID) {
+    const double dt_cgs, const int64_t ID) {
 
   /* Bracketing */
   double u_lower_cgs = u_ini_cgs;

@@ -36,10 +36,10 @@ struct engine;
 struct collectgroup1 {
 
   /* Number of particles updated */
-  long long updated, g_updated, s_updated, b_updated;
+  int64_t updated, g_updated, s_updated, b_updated;
 
   /* Number of particles inhibited */
-  long long inhibited, g_inhibited, s_inhibited, b_inhibited;
+  int64_t inhibited, g_inhibited, s_inhibited, b_inhibited;
 
   /* SFH logger */
   struct star_formation_history sfh;
@@ -55,8 +55,8 @@ struct collectgroup1 {
   int forcerebuild;
 
   /* Totals of cells and tasks. */
-  long long total_nr_cells;
-  long long total_nr_tasks;
+  int64_t total_nr_cells;
+  int64_t total_nr_tasks;
 
   /* Maximum value of actual tasks per cell across all ranks. */
   float tasks_per_cell_max;
@@ -74,7 +74,7 @@ void collectgroup1_init(
     integertime_t ti_stars_end_max, integertime_t ti_stars_beg_max,
     integertime_t ti_black_holes_end_min, integertime_t ti_black_holes_end_max,
     integertime_t ti_black_holes_beg_max, int forcerebuild,
-    long long total_nr_cells, long long total_nr_tasks, float tasks_per_cell,
+    int64_t total_nr_cells, int64_t total_nr_tasks, float tasks_per_cell,
     const struct star_formation_history sfh);
 void collectgroup1_reduce(struct collectgroup1 *grp1);
 

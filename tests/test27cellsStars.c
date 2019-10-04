@@ -65,7 +65,7 @@
  * @param h_pert The perturbation to apply to the smoothing length.
  */
 struct cell *make_cell(size_t n, size_t n_stars, double *offset, double size,
-                       double h, long long *partId, long long *spartId,
+                       double h, int64_t *partId, int64_t *spartId,
                        double pert, double h_pert) {
   const size_t count = n * n * n;
   const size_t scount = n_stars * n_stars * n_stars;
@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
   char outputFileName[200] = "";
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */
@@ -410,8 +410,8 @@ int main(int argc, char *argv[]) {
   /* Construct some cells */
   struct cell *cells[27];
   struct cell *main_cell;
-  static long long partId = 0;
-  long long spartId = particles * particles * particles * 27;
+  static int64_t partId = 0;
+  int64_t spartId = particles * particles * particles * 27;
 
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {

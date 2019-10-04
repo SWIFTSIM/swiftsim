@@ -55,7 +55,7 @@ struct xpart {
 struct part {
 
   /* Particle ID. */
-  long long id;
+  int64_t id;
 
   /* Associated gravitas. */
   struct gpart *gpart;

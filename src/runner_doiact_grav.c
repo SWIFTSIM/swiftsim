@@ -1387,7 +1387,7 @@ static INLINE void runner_dopair_grav_mm(struct runner *r,
  * @param ci The first #cell.
  * @param cj The second #cell.
  */
-void runner_dopair_grav_mm_progenies(struct runner *r, const long long flags,
+void runner_dopair_grav_mm_progenies(struct runner *r, const int64_t flags,
                                      struct cell *restrict ci,
                                      struct cell *restrict cj) {
 

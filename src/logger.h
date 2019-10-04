@@ -153,7 +153,7 @@ void logger_write_file_header(struct logger_writer *log);
 
 int logger_read_part(struct part *p, size_t *offset, const char *buff);
 int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff);
-int logger_read_timestamp(unsigned long long int *t, double *time,
+int logger_read_timestamp(uint64_t int *t, double *time,
                           size_t *offset, const char *buff);
 
 /**

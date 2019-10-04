@@ -514,14 +514,14 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     if (MPI_Allreduce(out_i, in_i, 2, MPI_LONG_LONG_INT, MPI_MIN,
                       MPI_COMM_WORLD) != MPI_SUCCESS)
       error("Failed to aggregate ti_end_min.");
-    if (in_i[0] != (long long)e->collect_group1.ti_hydro_end_min)
+    if (in_i[0] != (int64_t)e->collect_group1.ti_hydro_end_min)
       error("Failed to get same ti_hydro_end_min, is %lld, should be %lld",
             in_i[0], e->collect_group1.ti_hydro_end_min);
-    if (in_i[1] != (long long)e->collect_group1.ti_gravity_end_min)
+    if (in_i[1] != (int64_t)e->collect_group1.ti_gravity_end_min)
       error("Failed to get same ti_gravity_end_min, is %lld, should be %lld",
             in_i[1], e->collect_group1.ti_gravity_end_min);
 
-    long long in_ll[4], out_ll[4];
+    int64_t in_ll[4], out_ll[4];
     out_ll[0] = data.updated;
     out_ll[1] = data.g_updated;
     out_ll[2] = data.s_updated;
@@ -529,16 +529,16 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     if (MPI_Allreduce(out_ll, in_ll, 4, MPI_LONG_LONG_INT, MPI_SUM,
                       MPI_COMM_WORLD) != MPI_SUCCESS)
       error("Failed to aggregate particle counts.");
-    if (in_ll[0] != (long long)e->collect_group1.updated)
+    if (in_ll[0] != (int64_t)e->collect_group1.updated)
       error("Failed to get same updated, is %lld, should be %lld", in_ll[0],
             e->collect_group1.updated);
-    if (in_ll[1] != (long long)e->collect_group1.g_updated)
+    if (in_ll[1] != (int64_t)e->collect_group1.g_updated)
       error("Failed to get same g_updated, is %lld, should be %lld", in_ll[1],
             e->collect_group1.g_updated);
-    if (in_ll[2] != (long long)e->collect_group1.s_updated)
+    if (in_ll[2] != (int64_t)e->collect_group1.s_updated)
       error("Failed to get same s_updated, is %lld, should be %lld", in_ll[2],
             e->collect_group1.s_updated);
-    if (in_ll[3] != (long long)e->collect_group1.b_updated)
+    if (in_ll[3] != (int64_t)e->collect_group1.b_updated)
       error("Failed to get same b_updated, is %lld, should be %lld", in_ll[3],
             e->collect_group1.b_updated);
 
@@ -549,16 +549,16 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
     if (MPI_Allreduce(out_ll, in_ll, 4, MPI_LONG_LONG_INT, MPI_SUM,
                       MPI_COMM_WORLD) != MPI_SUCCESS)
       error("Failed to aggregate particle counts.");
-    if (in_ll[0] != (long long)e->collect_group1.inhibited)
+    if (in_ll[0] != (int64_t)e->collect_group1.inhibited)
       error("Failed to get same inhibited, is %lld, should be %lld", in_ll[0],
             e->collect_group1.inhibited);
-    if (in_ll[1] != (long long)e->collect_group1.g_inhibited)
+    if (in_ll[1] != (int64_t)e->collect_group1.g_inhibited)
       error("Failed to get same g_inhibited, is %lld, should be %lld", in_ll[1],
             e->collect_group1.g_inhibited);
-    if (in_ll[2] != (long long)e->collect_group1.s_inhibited)
+    if (in_ll[2] != (int64_t)e->collect_group1.s_inhibited)
       error("Failed to get same s_inhibited, is %lld, should be %lld", in_ll[2],
             e->collect_group1.s_inhibited);
-    if (in_ll[3] != (long long)e->collect_group1.b_inhibited)
+    if (in_ll[3] != (int64_t)e->collect_group1.b_inhibited)
       error("Failed to get same b_inhibited, is %lld, should be %lld", in_ll[3],
             e->collect_group1.b_inhibited);
 

@@ -168,7 +168,7 @@ struct groupinfo {
   int index;
 
   /*! Group number of the #gpart. */
-  long long groupID;
+  int64_t groupID;
 };
 
 int InitVelociraptor(char *config_name, struct unitinfo unit_info,

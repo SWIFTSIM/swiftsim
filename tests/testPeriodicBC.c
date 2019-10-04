@@ -74,7 +74,7 @@ enum velocity_types {
  * @param vel The type of velocity field (0, random, divergent, rotating)
  */
 struct cell *make_cell(size_t n, double *offset, double size, double h,
-                       double density, long long *partId, double pert,
+                       double density, int64_t *partId, double pert,
                        enum velocity_types vel) {
   const size_t count = n * n * n;
   const double volume = size * size * size;
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
   enum velocity_types vel = velocity_zero;
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */
@@ -500,7 +500,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct some cells */
   struct cell *cells[dim * dim * dim];
-  static long long partId = 0;
+  static int64_t partId = 0;
   for (int i = 0; i < dim; ++i) {
     for (int j = 0; j < dim; ++j) {
       for (int k = 0; k < dim; ++k) {

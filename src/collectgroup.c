@@ -36,8 +36,8 @@
 
 /* Local collections for MPI reduces. */
 struct mpicollectgroup1 {
-  long long updated, g_updated, s_updated, b_updated;
-  long long inhibited, g_inhibited, s_inhibited, b_inhibited;
+  int64_t updated, g_updated, s_updated, b_updated;
+  int64_t inhibited, g_inhibited, s_inhibited, b_inhibited;
   integertime_t ti_hydro_end_min;
   integertime_t ti_gravity_end_min;
   integertime_t ti_stars_end_min;
@@ -51,8 +51,8 @@ struct mpicollectgroup1 {
   integertime_t ti_stars_beg_max;
   integertime_t ti_black_holes_beg_max;
   int forcerebuild;
-  long long total_nr_cells;
-  long long total_nr_tasks;
+  int64_t total_nr_cells;
+  int64_t total_nr_tasks;
   float tasks_per_cell_max;
   struct star_formation_history sfh;
 };
@@ -184,7 +184,7 @@ void collectgroup1_init(
     integertime_t ti_stars_end_max, integertime_t ti_stars_beg_max,
     integertime_t ti_black_holes_end_min, integertime_t ti_black_holes_end_max,
     integertime_t ti_black_holes_beg_max, int forcerebuild,
-    long long total_nr_cells, long long total_nr_tasks, float tasks_per_cell,
+    int64_t total_nr_cells, int64_t total_nr_tasks, float tasks_per_cell,
     const struct star_formation_history sfh) {
 
   grp1->updated = updated;

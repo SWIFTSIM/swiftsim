@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   for (size_t n = 0; n < Ngas; ++n) {
 
     /* Check that indices are in a reasonable range */
-    unsigned long long index = parts[n].id;
+    uint64_t index = parts[n].id;
     assert(index < Ngas);
 
     /* Check masses */

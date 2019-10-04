@@ -28,9 +28,9 @@
 #include "space.h"
 
 void printParticle(const struct part *parts, const struct xpart *xparts,
-                   long long int id, size_t N);
+                   int64_t int id, size_t N);
 void printgParticle(const struct gpart *gparts, const struct part *parts,
-                    long long int id, size_t N);
+                    int64_t int id, size_t N);
 void printParticle_single(const struct part *p, const struct xpart *xp);
 void printgParticle_single(struct gpart *gp);
 

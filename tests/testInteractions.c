@@ -55,7 +55,7 @@
  * @param partId The running counter of IDs.
  */
 struct part *make_particles(size_t count, double *offset, double spacing,
-                            double h, long long *partId) {
+                            double h, int64_t *partId) {
 
   struct part *particles;
   if (posix_memalign((void **)&particles, part_align,
@@ -736,7 +736,7 @@ int main(int argc, char *argv[]) {
   count = count - (count % VEC_SIZE) + 1;
 
   /* Build the infrastructure */
-  static long long partId = 0;
+  static int64_t partId = 0;
   struct part test_particle;
   struct part *particles = make_particles(count, offset, spacing, h, &partId);
 

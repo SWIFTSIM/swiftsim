@@ -100,7 +100,7 @@ struct fof_props {
   double *group_mass;
 
   /*! Index of the part with the maximal density of each group. */
-  long long *max_part_density_index;
+  int64_t *max_part_density_index;
 
   /*! Maximal density of all parts of each group. */
   float *max_part_density;
@@ -138,7 +138,7 @@ struct fof_final_index {
 struct fof_final_mass {
   size_t global_root;
   double group_mass;
-  long long max_part_density_index;
+  int64_t max_part_density_index;
   float max_part_density;
 } SWIFT_STRUCT_ALIGN;
 
@@ -162,7 +162,7 @@ void fof_init(struct fof_props *props, struct swift_params *params,
               const struct phys_const *phys_const,
               const struct unit_system *us);
 void fof_create_mpi_types(void);
-void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
+void fof_allocate(const struct space *s, const int64_t total_nr_DM_particles,
                   struct fof_props *props);
 void fof_search_tree(struct fof_props *props,
                      const struct black_holes_props *bh_props,

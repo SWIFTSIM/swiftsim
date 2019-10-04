@@ -86,7 +86,7 @@ void voronoi_get_box_centroid(float *box_centroid) {
  * @return Surface area of the face, or 0 if the given ID does not correspond to
  * a known face of the simulation box.
  */
-float voronoi_get_box_face(unsigned long long id, float *face_midpoint) {
+float voronoi_get_box_face(uint64_t id, float *face_midpoint) {
 
   if (id == VORONOI3D_BOX_FRONT) {
     face_midpoint[0] = 0.5f * VORONOI3D_BOX_SIDE_X + VORONOI3D_BOX_ANCHOR_X;

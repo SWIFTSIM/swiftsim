@@ -93,7 +93,7 @@ enum velocity_types {
  * @param h_pert The perturbation to apply to the smoothing length.
  */
 struct cell *make_cell(size_t n, double *offset, double size, double h,
-                       double density, long long *partId, double pert,
+                       double density, int64_t *partId, double pert,
                        enum velocity_types vel, double h_pert) {
   const size_t count = n * n * n;
   const double volume = size * size * size;
@@ -380,7 +380,7 @@ int main(int argc, char *argv[]) {
   enum velocity_types vel = velocity_zero;
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */
@@ -494,7 +494,7 @@ int main(int argc, char *argv[]) {
   /* Construct some cells */
   struct cell *cells[27];
   struct cell *main_cell;
-  static long long partId = 0;
+  static int64_t partId = 0;
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       for (int k = 0; k < 3; ++k) {

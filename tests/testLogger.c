@@ -187,7 +187,7 @@ void test_log_timestamps(struct logger_writer *log) {
   struct dump *d = &log->dump;
 
   /* The timestamp to log. */
-  unsigned long long int t = 10;
+  uint64_t int t = 10;
   double time = 0.1;
 
   /* Start with an offset at the end of the dump. */

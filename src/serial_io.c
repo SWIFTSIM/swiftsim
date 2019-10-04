@@ -82,7 +82,7 @@
  * the part array will be written once the structures have been stabilized.
  */
 void readArray(hid_t grp, const struct io_props props, size_t N,
-               long long N_total, long long offset,
+               int64_t N_total, int64_t offset,
                const struct unit_system* internal_units,
                const struct unit_system* ic_units, int cleanup_h,
                int cleanup_sqrt_a, double h, double a) {
@@ -240,7 +240,7 @@ void readArray(hid_t grp, const struct io_props props, size_t N,
 
 void prepareArray(const struct engine* e, hid_t grp, char* fileName,
                   FILE* xmfFile, char* partTypeGroupName,
-                  const struct io_props props, unsigned long long N_total,
+                  const struct io_props props, uint64_t N_total,
                   const struct unit_system* internal_units,
                   const struct unit_system* snapshot_units) {
 
@@ -374,8 +374,8 @@ void prepareArray(const struct engine* e, hid_t grp, char* fileName,
  */
 void writeArray(const struct engine* e, hid_t grp, char* fileName,
                 FILE* xmfFile, char* partTypeGroupName,
-                const struct io_props props, size_t N, long long N_total,
-                int mpi_rank, long long offset,
+                const struct io_props props, size_t N, int64_t N_total,
+                int mpi_rank, int64_t offset,
                 const struct unit_system* internal_units,
                 const struct unit_system* snapshot_units) {
 
@@ -506,11 +506,11 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
   /* GADGET has 6 particle types. We only keep the type 0 & 1 for now*/
-  long long numParticles[swift_type_count] = {0};
-  long long numParticles_highWord[swift_type_count] = {0};
+  int64_t numParticles[swift_type_count] = {0};
+  int64_t numParticles_highWord[swift_type_count] = {0};
   size_t N[swift_type_count] = {0};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
+  int64_t N_total[swift_type_count] = {0};
+  int64_t offset[swift_type_count] = {0};
   int dimension = 3; /* Assume 3D if nothing is specified */
   size_t Ndm = 0;
   size_t Ndm_background = 0;
@@ -926,8 +926,8 @@ void write_output_serial(struct engine* e, const char* baseName,
   size_t N[swift_type_count] = {Ngas_written,   Ndm_written,
                                 Ndm_background, 0,
                                 Nstars_written, Nblackholes_written};
-  long long N_total[swift_type_count] = {0};
-  long long offset[swift_type_count] = {0};
+  int64_t N_total[swift_type_count] = {0};
+  int64_t offset[swift_type_count] = {0};
   MPI_Exscan(&N, &offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
     N_total[ptype] = offset[ptype] + N[ptype];

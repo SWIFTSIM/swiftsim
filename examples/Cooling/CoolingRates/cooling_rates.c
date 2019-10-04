@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
   const char *parametersFileName = "./cooling_rates.yml";
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FP-exceptions */
@@ -320,7 +320,7 @@ int main(int argc, char **argv) {
 int main(int argc, char **argv) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
   message("This test is only defined for the EAGLE cooling model.");

@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
   char *output_parameters_filename = NULL;
   char *cpufreqarg = NULL;
   char *param_filename = NULL;
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   struct cmdparams cmdps;
   cmdps.nparam = 0;
   cmdps.param[0] = NULL;
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  /* The CPU frequency is a long long, so we need to parse that ourselves. */
+  /* The CPU frequency is a int64_t, so we need to parse that ourselves. */
   if (cpufreqarg != NULL) {
     if (sscanf(cpufreqarg, "%llu", &cpufreq) != 1) {
       if (myrank == 0)
@@ -467,10 +467,10 @@ int main(int argc, char *argv[]) {
 #endif
 
   /* Get the total number of particles across all nodes. */
-  long long N_total[swift_type_count + 1] = {0};
-  long long Nbaryons = Ngas + Nspart + Nbpart;
+  int64_t N_total[swift_type_count + 1] = {0};
+  int64_t Nbaryons = Ngas + Nspart + Nbpart;
 #if defined(WITH_MPI)
-  long long N_long[swift_type_count + 1] = {0};
+  int64_t N_long[swift_type_count + 1] = {0};
   N_long[swift_type_gas] = Ngas;
   N_long[swift_type_dark_matter] = Ngpart - Ngpart_background - Nbaryons;
   N_long[swift_type_dark_matter_background] = Ngpart_background;
@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
 
   /* Get some info to the user. */
   if (myrank == 0) {
-    const long long N_DM = N_total[swift_type_dark_matter] +
+    const int64_t N_DM = N_total[swift_type_dark_matter] +
                            N_total[swift_type_dark_matter_background];
     message(
         "Running FOF on %lld gas particles, %lld stars particles %lld black "

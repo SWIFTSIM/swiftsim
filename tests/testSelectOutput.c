@@ -80,7 +80,7 @@ void select_output_engine_clean(struct engine *e) {
 int main(int argc, char *argv[]) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
   char *base_name = "testSelectOutput";
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
 
   /* check output selection */
   message("Checking output parameters.");
-  long long N_total[swift_type_count] = {Ngas, Ngpart, 0, 0, Nspart, 0};
+  int64_t N_total[swift_type_count] = {Ngas, Ngpart, 0, 0, Nspart, 0};
   io_check_output_fields(&param_file, N_total);
 
   /* write output file */

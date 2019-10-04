@@ -58,7 +58,7 @@ black_holes_mark_part_as_swallowed(struct black_holes_part_data* p_data) {
  *
  * @param p_data The #part's #black_holes_part_data structure.
  */
-__attribute__((always_inline)) INLINE static long long
+__attribute__((always_inline)) INLINE static int64_t
 black_holes_get_part_swallow_id(struct black_holes_part_data* p_data) {
 
   /* Return a non-existing ID */
@@ -94,7 +94,7 @@ black_holes_mark_bpart_as_merged(struct black_holes_bpart_data* p_data) {
  *
  * @param p_data The #bpart's #black_holes_bpart_data structure.
  */
-__attribute__((always_inline)) INLINE static long long
+__attribute__((always_inline)) INLINE static int64_t
 black_holes_get_bpart_swallow_id(struct black_holes_bpart_data* p_data) {
 
   /* Return a non-existing ID */

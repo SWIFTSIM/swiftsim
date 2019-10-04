@@ -36,7 +36,7 @@
 int main(int argc, char* argv[]) {
 
   /* Initialize CPU frequency, this also starts time. */
-  unsigned long long cpufreq = 0;
+  uint64_t cpufreq = 0;
   clocks_set_cpufreq(cpufreq);
 
 /* Choke on FPEs */
@@ -54,12 +54,12 @@ int main(int argc, char* argv[]) {
 
   const double boundary[6] = {1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10};
   int count[6] = {0};
-  unsigned long long int total = 0;
+  uint64_t total = 0;
 
   /* Try a few different values for the ID */
   for (int i = 0; i < 10; ++i) {
 
-    const long long id = rand() * (1LL << 31) + rand();
+    const int64_t id = rand() * (1LL << 31) + rand();
     const integertime_t increment = (1LL << time_bin);
 
     message("Testing id=%lld time_bin=%d", id, time_bin);

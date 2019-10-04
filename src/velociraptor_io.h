@@ -25,7 +25,7 @@
 INLINE static void velociraptor_convert_part_groupID(const struct engine* e,
                                                      const struct part* p,
                                                      const struct xpart* xp,
-                                                     long long* ret) {
+                                                     int64_t* ret) {
   if (p->gpart == NULL)
     ret[0] = 0.f;
   else {
@@ -36,7 +36,7 @@ INLINE static void velociraptor_convert_part_groupID(const struct engine* e,
 
 INLINE static void velociraptor_convert_spart_groupID(const struct engine* e,
                                                       const struct spart* sp,
-                                                      long long* ret) {
+                                                      int64_t* ret) {
   if (sp->gpart == NULL)
     ret[0] = 0.f;
   else {
@@ -47,7 +47,7 @@ INLINE static void velociraptor_convert_spart_groupID(const struct engine* e,
 
 INLINE static void velociraptor_convert_bpart_groupID(const struct engine* e,
                                                       const struct bpart* bp,
-                                                      long long* ret) {
+                                                      int64_t* ret) {
   if (bp->gpart == NULL)
     ret[0] = 0.f;
   else {

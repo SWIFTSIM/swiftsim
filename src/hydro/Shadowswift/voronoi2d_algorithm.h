@@ -102,7 +102,7 @@ __attribute__((always_inline)) INLINE void voronoi_cell_init(
  * @param id ID of the interacting neighbour.
  */
 __attribute__((always_inline)) INLINE void voronoi_cell_interact(
-    struct voronoi_cell *cell, const float *dx, unsigned long long id) {
+    struct voronoi_cell *cell, const float *dx, uint64_t id) {
 
   /* variables used for geometrical tests */
   float half_dx[2];
@@ -119,7 +119,7 @@ __attribute__((always_inline)) INLINE void voronoi_cell_interact(
   /* new number of vertices and new vertex coordinates */
   int nvert;
   float vertices[VORONOI2D_MAXNUMVERT][2];
-  unsigned long long ngbs[VORONOI2D_MAXNUMVERT];
+  uint64_t ngbs[VORONOI2D_MAXNUMVERT];
 
   /* The process of cutting the current cell with the midline of the generator
      and the given relative neighbour position proceeds in two steps:
@@ -479,7 +479,7 @@ __attribute__((always_inline)) INLINE float voronoi_cell_finalize(
  * @return 0 if the given neighbour is not a neighbour, surface area otherwise.
  */
 __attribute__((always_inline)) INLINE float voronoi_get_face(
-    const struct voronoi_cell *cell, unsigned long long ngb, float *midpoint) {
+    const struct voronoi_cell *cell, uint64_t ngb, float *midpoint) {
 
   /* look up the neighbour */
   int i = 0;

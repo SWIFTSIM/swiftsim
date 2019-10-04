@@ -781,7 +781,7 @@ __attribute__((always_inline)) INLINE int voronoi_intersect_find_closest_vertex(
  * @param ngb ID of the intersecting neighbour (pj->id in runner_iact_density).
  */
 __attribute__((always_inline)) INLINE void voronoi_intersect(
-    struct voronoi_cell *c, const float *odx, unsigned long long ngb) {
+    struct voronoi_cell *c, const float *odx, uint64_t ngb) {
 
   /* vector pointing from pi to the midpoint of the line segment between pi and
      pj. This corresponds to -0.5*odx */
@@ -2014,7 +2014,7 @@ __attribute__((always_inline)) INLINE void voronoi_calculate_faces(
   float midpoint[3];
   float u[3], v[3], w[3];
   float loc_area;
-  unsigned long long newngbs[VORONOI3D_MAXNUMEDGE];
+  uint64_t newngbs[VORONOI3D_MAXNUMEDGE];
 
   cell->nface = 0;
   for (i = 0; i < cell->nvert; ++i) {
@@ -2133,7 +2133,7 @@ __attribute__((always_inline)) INLINE void voronoi_cell_init(
  * @param id ID of the interacting neighbour.
  */
 __attribute__((always_inline)) INLINE void voronoi_cell_interact(
-    struct voronoi_cell *cell, const float *dx, unsigned long long id) {
+    struct voronoi_cell *cell, const float *dx, uint64_t id) {
 
   voronoi_intersect(cell, dx, id);
 }
@@ -2180,7 +2180,7 @@ __attribute__((always_inline)) INLINE float voronoi_cell_finalize(
  * the face otherwise.
  */
 __attribute__((always_inline)) INLINE float voronoi_get_face(
-    const struct voronoi_cell *cell, unsigned long long ngb, float *midpoint) {
+    const struct voronoi_cell *cell, uint64_t ngb, float *midpoint) {
 
   int i = 0;
   while (i < cell->nface && cell->ngbs[i] != ngb) {

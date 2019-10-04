@@ -33,10 +33,10 @@ struct voronoi_cell {
   double xR;
 
   /* The particle ID of the left neighbour. */
-  unsigned long long idL;
+  uint64_t idL;
 
   /* The particle ID of the right neighbour. */
-  unsigned long long idR;
+  uint64_t idR;
 
   /* The "volume" of the 1D cell. */
   float volume;

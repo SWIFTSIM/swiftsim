@@ -1794,7 +1794,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     struct task *t = &((struct task *)map_data)[ind];
     const enum task_types t_type = t->type;
     const enum task_subtypes t_subtype = t->subtype;
-    const long long flags = t->flags;
+    const int64_t flags = t->flags;
     struct cell *const ci = t->ci;
     struct cell *const cj = t->cj;
 

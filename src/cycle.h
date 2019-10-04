@@ -142,7 +142,7 @@ static __inline double elapsed(ticks t1, ticks t0) /* time in nanoseconds */
      (defined(__IBM_GCC_ASM) &&                                             \
       (defined(__powerpc__) || defined(__ppc__)))) &&                       \
     !defined(HAVE_TICK_COUNTER)
-typedef unsigned long long ticks;
+typedef uint64_t ticks;
 
 static __inline__ ticks getticks(void) {
   unsigned int tbl, tbu0, tbu1;
@@ -153,7 +153,7 @@ static __inline__ ticks getticks(void) {
     __asm__ __volatile__("mftbu %0" : "=r"(tbu1));
   } while (tbu0 != tbu1);
 
-  return (((unsigned long long)tbu0) << 32) | tbl;
+  return (((uint64_t)tbu0) << 32) | tbl;
 }
 
 INLINE_ELAPSED(__inline__)
@@ -178,7 +178,7 @@ INLINE_ELAPSED(__inline__)
  */
 #if (defined(__GNUC__) || defined(__ICC)) && defined(__i386__) && \
     !defined(HAVE_TICK_COUNTER)
-typedef unsigned long long ticks;
+typedef uint64_t ticks;
 
 static __inline__ ticks getticks(void) {
   ticks ret;
@@ -225,7 +225,7 @@ static __inline double elapsed(ticks t1, ticks t0) {
  */
 #if (defined(__GNUC__) || defined(__ICC) || defined(__SUNPRO_C)) && \
     defined(__x86_64__) && !defined(HAVE_TICK_COUNTER)
-typedef unsigned long long ticks;
+typedef uint64_t ticks;
 
 static __inline__ ticks getticks(void) {
   unsigned a, d;
@@ -243,7 +243,7 @@ INLINE_ELAPSED(__inline__)
    NOTE: this code will fail to link unless you use the -Masmkeyword compiler
    option (grrr). */
 #if defined(__PGI) && defined(__x86_64__) && !defined(HAVE_TICK_COUNTER)
-typedef unsigned long long ticks;
+typedef uint64_t ticks;
 static ticks getticks(void) {
   asm(" rdtsc; shl    $0x20,%rdx; mov    %eax,%eax; or     %rdx,%rax;    ");
 }
@@ -371,7 +371,7 @@ INLINE_ELAPSED(inline)
 /*----------------------------------------------------------------*/
 /* S390, courtesy of James Treacy */
 #if defined(__GNUC__) && defined(__s390__) && !defined(HAVE_TICK_COUNTER)
-typedef unsigned long long ticks;
+typedef uint64_t ticks;
 
 static __inline__ ticks getticks(void) {
   ticks cycles;
@@ -459,7 +459,7 @@ static inline double elapsed(ticks t1, ticks t0) {
 #include <intrinsics.h>
 #endif
 
-typedef long long ticks;
+typedef int64_t ticks;
 
 #define getticks _rtc
 

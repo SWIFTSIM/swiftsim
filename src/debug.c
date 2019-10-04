@@ -91,7 +91,7 @@
  * (Should be used for debugging only as it runs in O(N).)
  */
 void printParticle(const struct part *parts, const struct xpart *xparts,
-                   long long int id, size_t N) {
+                   int64_t int id, size_t N) {
 
   int found = 0;
 
@@ -120,7 +120,7 @@ void printParticle(const struct part *parts, const struct xpart *xparts,
  * (Should be used for debugging only as it runs in O(N).)
  */
 void printgParticle(const struct gpart *gparts, const struct part *parts,
-                    long long int id, size_t N) {
+                    int64_t int id, size_t N) {
 
   int found = 0;
 

@@ -29,7 +29,7 @@
 #include <math.h>
 #include <stdint.h>
 
-typedef long long integertime_t;
+typedef int64_t integertime_t;
 typedef int8_t timebin_t;
 
 /*! The number of time bins */
@@ -65,7 +65,7 @@ get_integer_timestep(timebin_t bin) {
 /**
  * @brief Returns the time bin corresponding to a given time_step size.
  *
- * Assumes that integertime_t maps to an unsigned long long.
+ * Assumes that integertime_t maps to an unsigned int64_t.
  * Given our definitions, this is log_2 of the time_step rounded down minus one.
  *
  * We use a fast (but exact for any non-zero value) logarithm in base 2
@@ -77,7 +77,7 @@ get_time_bin(integertime_t time_step) {
 
   /* ((int) log_2(time_step)) - 1 */
   return (timebin_t)((8 * sizeof(integertime_t) - 2) -
-                     intrinsics_clzll((unsigned long long)time_step));
+                     intrinsics_clzll((uint64_t)time_step));
 }
 
 /**

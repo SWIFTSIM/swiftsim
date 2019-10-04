@@ -73,7 +73,7 @@ __attribute__((always_inline)) INLINE void voronoi_cell_init(
  * @param id ID of the interacting neighbour.
  */
 __attribute__((always_inline)) INLINE void voronoi_cell_interact(
-    struct voronoi_cell *cell, const float *dx, unsigned long long id) {
+    struct voronoi_cell *cell, const float *dx, uint64_t id) {
 
   /* Check for stupidity */
   if (dx[0] == 0.0f) {
@@ -149,7 +149,7 @@ __attribute__((always_inline)) INLINE float voronoi_cell_finalize(
  * otherwise.
  */
 __attribute__((always_inline)) INLINE float voronoi_get_face(
-    const struct voronoi_cell *cell, unsigned long long ngb, float *midpoint) {
+    const struct voronoi_cell *cell, uint64_t ngb, float *midpoint) {
 
   if (ngb != cell->idL && ngb != cell->idR) {
     /* this is perfectly possible: we interact with all particles within the

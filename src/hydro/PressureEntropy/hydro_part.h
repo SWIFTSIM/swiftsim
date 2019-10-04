@@ -69,7 +69,7 @@ struct xpart {
 struct part {
 
   /*! Particle ID. */
-  long long id;
+  int64_t id;
 
   /*! Pointer to corresponding gravity part. */
   struct gpart* gpart;
