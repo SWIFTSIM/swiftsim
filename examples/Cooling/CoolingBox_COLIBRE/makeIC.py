@@ -45,12 +45,8 @@ UnitDensity_in_cgs = UnitMass_in_cgs / (UnitLength_in_cgs ** 3.0)
 UnitTime_in_cgs = UnitLength_in_cgs / UnitVelocity_in_cgs 
 
 # Physical constants 
-m_h_cgs = 1.67e-24
-k_b_cgs = 1.38e-16
-
-# defines some constants
-# need to be changed in plotTemperature.py too
-h_frac = 0.76
+m_h_cgs = 1.672621898e-24
+k_b_cgs = 1.38064852e-16
 
 # Read id, position and h from glass
 glass = h5py.File("glassCube_32.hdf5", "r")
@@ -80,7 +76,7 @@ if (T > 1.0e4):
 else: 
     mu = mu_neutral 
 
-internalEnergy = k_b_cgs * T * mu / ((gamma - 1.) * m_h_cgs)
+internalEnergy = k_b_cgs * T / ((gamma - 1.) * mu * m_h_cgs)
 internalEnergy /= UnitVelocity_in_cgs ** 2.0 
 
 # File
