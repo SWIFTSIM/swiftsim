@@ -26,17 +26,16 @@
 #include "inline.h"
 
 /**
- * @brief Limits the value of x to be between a and b
+ * @brief Limits the value of x to be between 0 and b
  *
  * Only wraps once. If x > 2b, the returned value will be larger than b.
  * Similarly for x < -b.
  */
-#define box_wrap(x, a, b)                                \
+#define box_wrap(x, b)                                   \
   ({                                                     \
     const __typeof__(x) _x = (x);                        \
-    const __typeof__(a) _a = (a);                        \
     const __typeof__(b) _b = (b);                        \
-    _x < _a ? (_x + _b) : ((_x >= _b) ? (_x - _b) : _x); \
+    _x < 0. ? (_x + _b) : ((_x >= _b) ? (_x - _b) : _x); \
   })
 
 /**

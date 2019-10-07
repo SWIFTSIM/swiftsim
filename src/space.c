@@ -2119,9 +2119,9 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    const double pos_x = box_wrap(old_pos_x, dim_x);
+    const double pos_y = box_wrap(old_pos_y, dim_y);
+    const double pos_z = box_wrap(old_pos_z, dim_z);
 
     /* Get its cell index */
     const int index =
@@ -2237,9 +2237,9 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    const double pos_x = box_wrap(old_pos_x, dim_x);
+    const double pos_y = box_wrap(old_pos_y, dim_y);
+    const double pos_z = box_wrap(old_pos_z, dim_z);
 
     /* Get its cell index */
     const int index =
@@ -2361,9 +2361,9 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    const double pos_x = box_wrap(old_pos_x, dim_x);
+    const double pos_y = box_wrap(old_pos_y, dim_y);
+    const double pos_z = box_wrap(old_pos_z, dim_z);
 
     /* Get its cell index */
     const int index =
@@ -2481,9 +2481,9 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    const double pos_x = box_wrap(old_pos_x, dim_x);
+    const double pos_y = box_wrap(old_pos_y, dim_y);
+    const double pos_z = box_wrap(old_pos_z, dim_z);
 
     /* Get its cell index */
     const int index =
@@ -5131,15 +5131,15 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
 
       /* Box-wrap the whole thing to be safe */
       if (periodic) {
-        gp_dm->x[0] = box_wrap(gp_dm->x[0], 0., dim[0]);
-        gp_dm->x[1] = box_wrap(gp_dm->x[1], 0., dim[1]);
-        gp_dm->x[2] = box_wrap(gp_dm->x[2], 0., dim[2]);
-        gp_gas->x[0] = box_wrap(gp_gas->x[0], 0., dim[0]);
-        gp_gas->x[1] = box_wrap(gp_gas->x[1], 0., dim[1]);
-        gp_gas->x[2] = box_wrap(gp_gas->x[2], 0., dim[2]);
-        p->x[0] = box_wrap(p->x[0], 0., dim[0]);
-        p->x[1] = box_wrap(p->x[1], 0., dim[1]);
-        p->x[2] = box_wrap(p->x[2], 0., dim[2]);
+        gp_dm->x[0] = box_wrap(gp_dm->x[0], dim[0]);
+        gp_dm->x[1] = box_wrap(gp_dm->x[1], dim[1]);
+        gp_dm->x[2] = box_wrap(gp_dm->x[2], dim[2]);
+        gp_gas->x[0] = box_wrap(gp_gas->x[0], dim[0]);
+        gp_gas->x[1] = box_wrap(gp_gas->x[1], dim[1]);
+        gp_gas->x[2] = box_wrap(gp_gas->x[2], dim[2]);
+        p->x[0] = box_wrap(p->x[0], dim[0]);
+        p->x[1] = box_wrap(p->x[1], dim[1]);
+        p->x[2] = box_wrap(p->x[2], dim[2]);
       }
 
       /* Also copy the velocities */

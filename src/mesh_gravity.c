@@ -141,9 +141,9 @@ INLINE static void gpart_to_mesh_CIC(const struct gpart* gp, double* rho, int N,
                                      double fac, const double dim[3]) {
 
   /* Box wrap the multipole's position */
-  const double pos_x = box_wrap(gp->x[0], 0., dim[0]);
-  const double pos_y = box_wrap(gp->x[1], 0., dim[1]);
-  const double pos_z = box_wrap(gp->x[2], 0., dim[2]);
+  const double pos_x = box_wrap(gp->x[0], dim[0]);
+  const double pos_y = box_wrap(gp->x[1], dim[1]);
+  const double pos_z = box_wrap(gp->x[2], dim[2]);
 
   /* Workout the CIC coefficients */
   int i = (int)(fac * pos_x);
@@ -257,9 +257,9 @@ void mesh_to_gparts_CIC(struct gpart* gp, const double* pot, int N, double fac,
                         const double dim[3]) {
 
   /* Box wrap the gpart's position */
-  const double pos_x = box_wrap(gp->x[0], 0., dim[0]);
-  const double pos_y = box_wrap(gp->x[1], 0., dim[1]);
-  const double pos_z = box_wrap(gp->x[2], 0., dim[2]);
+  const double pos_x = box_wrap(gp->x[0], dim[0]);
+  const double pos_y = box_wrap(gp->x[1], dim[1]);
+  const double pos_z = box_wrap(gp->x[2], dim[2]);
 
   int i = (int)(fac * pos_x);
   if (i >= N) i = N - 1;

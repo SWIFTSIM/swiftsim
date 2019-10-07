@@ -55,9 +55,9 @@ INLINE static void convert_bpart_pos(const struct engine* e,
                                      const struct bpart* bp, double* ret) {
 
   if (e->s->periodic) {
-    ret[0] = box_wrap(bp->x[0], 0.0, e->s->dim[0]);
-    ret[1] = box_wrap(bp->x[1], 0.0, e->s->dim[1]);
-    ret[2] = box_wrap(bp->x[2], 0.0, e->s->dim[2]);
+    ret[0] = box_wrap(bp->x[0], e->s->dim[0]);
+    ret[1] = box_wrap(bp->x[1], e->s->dim[1]);
+    ret[2] = box_wrap(bp->x[2], e->s->dim[2]);
   } else {
     ret[0] = bp->x[0];
     ret[1] = bp->x[1];
