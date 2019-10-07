@@ -31,7 +31,7 @@ struct logger_reader;
  */
 struct index_data {
   /* Id of the particle. */
-  long long id;
+  int64_t id;
 
   /* Offset of the particle in the file. */
   uint64_t offset;
@@ -58,10 +58,10 @@ struct logger_index {
   double time;
 
   /* Integer time of the index file */
-  long long integer_time;
+  integertime_t integer_time;
 
   /* Number of particles in the file */
-  long long nparts[swift_type_count];
+  uint64_t nparts[swift_type_count];
 
   /* Is the file sorted ? */
   char is_sorted;

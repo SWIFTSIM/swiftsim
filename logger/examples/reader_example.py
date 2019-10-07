@@ -11,7 +11,7 @@ sys.path.append("../.libs/")
 import liblogger as logger
 
 basename = "../../examples/HydroTests/SedovBlast_3D/index"
-time = 0.45
+time = 0.05
 if len(sys.argv) >= 2:
     basename = sys.argv[1]
 else:
@@ -52,5 +52,5 @@ def plot2D():
     plt.ylabel("Entropy")
 
 
-plot3D()
+plot2D()
 plt.show()

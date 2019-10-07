@@ -29,6 +29,18 @@
 #include "logger_reader.h"
 #include "radix_sort.h"
 
+const int logger_index_time_offset = 0;
+const int logger_index_time_size = sizeof(double);
+const int logger_index_integer_time_offset = logger_index_time_offset + logger_index_time_size;
+const int logger_index_integer_time_size = sizeof(integertime_t);
+const int logger_index_npart_offset = logger_index_integer_time_offset + logger_index_integer_time_size;
+const int logger_index_npart_size = sizeof(uint64_t) *  swift_type_count;
+const int logger_index_is_sorted_offset = logger_index_npart_offset + logger_index_npart_size;
+const int logger_index_is_sorted_size = sizeof(char);
+const int logger_index_data_offset = sizeof(double) + (1 + swift_type_count) * sizeof(uint64_t)
+  + sizeof(char);
+const int logger_index_data_size = sizeof(struct index_data);
+
 /**
  * @brief Read the index file header.
  *
@@ -40,23 +52,28 @@ void logger_index_read_header(struct logger_index *index,
 
   /* Open the file */
   message("Reading %s", filename);
-  FILE *fd = fopen(filename, "r");
-
-  if (fd == NULL)
-    error("Unable to open file %s (%s).", filename, strerror(errno));
+  logger_index_map_file(index, filename, 0);
 
   /* Read times */
-  fread(&index->time, sizeof(double), 1, fd);
-  fread(&index->integer_time, sizeof(long long), 1, fd);
+  memcpy(&index->time, index->index.map + logger_index_time_offset,
+         logger_index_time_size);
+  memcpy(&index->time, index->index.map + logger_index_integer_time_offset,
+         logger_index_integer_time_size);
 
   /* Read the number of particles */
-  fread(index->nparts, sizeof(long long), swift_type_count, fd);
+  memcpy(index->nparts, index->index.map + logger_index_npart_offset,
+         logger_index_npart_size);
+
+  for(int i = 0; i < swift_type_count; i++) {
+    message("%lu", index->nparts[i]);
+  }
 
   /* Read if the file is sorted */
-  fread(&index->is_sorted, sizeof(char), 1, fd);
+  memcpy(&index->is_sorted, index->index.map + logger_index_is_sorted_offset,
+         logger_index_is_sorted_size);
 
   /* Close the file */
-  fclose(fd);
+  logger_index_free(index);
 }
 
 /**
@@ -67,15 +84,14 @@ void logger_index_read_header(struct logger_index *index,
  * @param index The #logger_index.
  */
 void logger_index_write_sorted(struct logger_index *index) {
-  /* Get the offset */
-  size_t offset = sizeof(double) + (1 + swift_type_count) * sizeof(long long);
-
   /* Set the value */
   char is_sorted = 1;
 
   /* Write the value */
-  memcpy(index->index.map + offset, &is_sorted, sizeof(char));
+  memcpy(index->index.map + logger_index_is_sorted_offset, &is_sorted,
+         logger_index_is_sorted_size);
 }
+
 /**
  * @brief Get the #index_data of a particle type.
  *
@@ -83,11 +99,6 @@ void logger_index_write_sorted(struct logger_index *index) {
  * @param type The particle type.
  */
 struct index_data *logger_index_get_data(struct logger_index *index, int type) {
-  /* Compute the header size */
-  const size_t header = sizeof(double) +
-                        (1 + swift_type_count) * sizeof(long long) +
-                        sizeof(char);
-
   /* Count the offset due to the previous types */
   size_t count = 0;
   for (int i = 0; i < type; i++) {
@@ -95,7 +106,7 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
   }
   count *= sizeof(struct index_data);
 
-  return index->index.map + count + header;
+  return index->index.map + count + logger_index_data_offset;
 }
 
 /**
@@ -109,11 +120,8 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
                            int sorted) {
   /* Un-map previous file */
   if (index->index.map != NULL) {
-    logger_index_free(index);
+    error("Trying to remap.");
   }
-
-  /* Read header */
-  logger_index_read_header(index, filename);
 
   /* Check if need to sort the file */
   if (sorted && !index->is_sorted) {
@@ -151,6 +159,9 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
  * @param index The #logger_index.
  */
 void logger_index_free(struct logger_index *index) {
+  if (index->index.map == NULL) {
+    error("Trying to unmap an unexisting map");
+  }
   logger_loader_io_munmap_file(&index->index);
 }
 

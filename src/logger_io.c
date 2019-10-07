@@ -183,9 +183,9 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
       Ntot_written > 0 ? Ntot_written - Nbaryons_written : 0;
 
   /* Format things in a Gadget-friendly array */
-  long long N_total[swift_type_count] = {
-      (long long)Ngas_written,   (long long)Ndm_written,        0, 0,
-      (long long)Nstars_written, (long long)Nblackholes_written};
+  uint64_t N_total[swift_type_count] = {
+      (uint64_t)Ngas_written,   (uint64_t)Ndm_written,        0, 0,
+      (uint64_t)Nstars_written, (uint64_t)Nblackholes_written};
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
@@ -207,7 +207,7 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   fwrite(&e->ti_current, sizeof(integertime_t), 1, f);
 
   /* Write number of particles */
-  fwrite(N_total, sizeof(long long), swift_type_count, f);
+  fwrite(N_total, sizeof(uint64_t), swift_type_count, f);
 
   /* Write if the file is sorted */
   const char sorted = 0;

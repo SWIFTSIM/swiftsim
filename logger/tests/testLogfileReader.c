@@ -58,7 +58,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
   double time = get_double_time(0);
   int is_particle = 0;
   int step = 0;
-  int init_log_all_done = 0;
+  int init_log_all_done = -1;
 
   /* Number of particle found during this time step. */
   int count = 0;
@@ -69,7 +69,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
   /* Loop over each record. */
   for (size_t offset = reader_read_record(reader, &lp, &time, &is_particle,
                                           logfile->header.offset_first_record);
-       offset < logfile->log.file_size;
+       offset < logfile->log.mmap_size;
        offset = reader_read_record(reader, &lp, &time, &is_particle, offset)) {
 
     /* Do the particle case */
@@ -94,7 +94,6 @@ void check_data(struct logger_reader *reader, struct part *parts,
       for (int i = 0; i < 3; i++) {
         /* in the first index, we are storing the step information. */
         if (i == 0) {
-          message("%i, %g", step, lp.pos[i]);
           assert(step == lp.pos[i]);
         }
         else
@@ -129,18 +128,17 @@ void check_data(struct logger_reader *reader, struct part *parts,
             "step %i: %i != %i",
             step, count, get_number_active_particles(step, parts));
 
-      if (init_log_all_done) {
+      if (init_log_all_done > 0) {
         step += 1;
       }
 
-      init_log_all_done = 1;
+      init_log_all_done += 1;
 
       /* Reset some variables. */
       previous_id = id_flag;
       count = 0;
 
       /* Check the record's data. */
-      message("%g %g", time, get_double_time(step));
       assert(time == get_double_time(step));
     }
   }

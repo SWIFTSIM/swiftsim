@@ -53,7 +53,7 @@ void generate_particles(struct part *parts, struct xpart *xparts,
     logger_part_data_init(&xparts[i].logger_data);
 
     for (int j = 0; j < 3; j++) {
-      parts[i].x[j] = i;
+      parts[i].x[j] = 0;
       parts[i].v[j] = (j == 0) ? -1 : 0;
       parts[i].a_hydro[j] = (j == 1) ? 1e-2 : 0;
     }
@@ -116,12 +116,6 @@ void write_particles(struct logger_writer *log,
 
       /* Skip some particles. */
       if (i % parts[j].time_bin != 0) continue;
-      if (!logger_should_write(&xparts[j].logger_data, log)) {
-        xparts[j].logger_data.steps_since_last_output += 1;
-        continue;
-      }
-
-      xparts[j].logger_data.steps_since_last_output = 0;
 
       /* Write a time information to check that the correct particle is read. */
       parts[j].x[0] = i;

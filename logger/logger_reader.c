@@ -184,9 +184,16 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
     }
   }
 
-  /* Read the correct file index */
+  /* Generate the filename */
   char filename[STRING_SIZE + 50];
   sprintf(filename, "%s_%04u.index", reader->basename, left);
+
+  /* Check if the file is already mapped */
+  if (reader->index.index.index.map != NULL) {
+    logger_index_free(&reader->index.index);
+  }
+
+  /* Read the file */
   logger_index_read_header(&reader->index.index, filename);
   logger_index_map_file(&reader->index.index, filename, /* sorted */ 1);
 
@@ -213,7 +220,7 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
  *
  * @return For each type possible, the number of particle.
  */
-const long long *logger_reader_get_number_particles(
+const uint64_t *logger_reader_get_number_particles(
     struct logger_reader *reader, int *n_type) {
   *n_type = swift_type_count;
   return reader->index.index.nparts;

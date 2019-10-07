@@ -120,7 +120,7 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
                                      struct logger_particle *prev,
                                      struct logger_particle *next, size_t time);
 
-const long long *logger_reader_get_number_particles(
+const uint64_t *logger_reader_get_number_particles(
     struct logger_reader *reader, int *n_type);
 
 void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
