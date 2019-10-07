@@ -658,9 +658,9 @@ __attribute__((always_inline)) INLINE void cache_read_two_partial_cells_sorted(
 
   int ci_cache_count = ci->hydro.count - first_pi_align;
   const double max_dx = max(ci->hydro.dx_max_part, cj->hydro.dx_max_part);
-  const float pos_padded_i[3] = {-(2. * ci->width[0] + max_dx),
-                                 -(2. * ci->width[1] + max_dx),
-                                 -(2. * ci->width[2] + max_dx)};
+  const float pos_padded_i[3] = {(float)-(2. * ci->width[0] + max_dx),
+                                 (float)-(2. * ci->width[1] + max_dx),
+                                 (float)-(2. * ci->width[2] + max_dx)};
   const float h_padded_i = ci->hydro.h_max / 4.;
 
   /* Shift the particles positions to a local frame (ci frame) so single
@@ -762,9 +762,9 @@ __attribute__((always_inline)) INLINE void cache_read_two_partial_cells_sorted(
   swift_declare_aligned_ptr(float, vyj, cj_cache->vy, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, vzj, cj_cache->vz, SWIFT_CACHE_ALIGNMENT);
 
-  const float pos_padded_j[3] = {-(2. * cj->width[0] + max_dx),
-                                 -(2. * cj->width[1] + max_dx),
-                                 -(2. * cj->width[2] + max_dx)};
+  const float pos_padded_j[3] = {(float)-(2. * cj->width[0] + max_dx),
+                                 (float)-(2. * cj->width[1] + max_dx),
+                                 (float)-(2. * cj->width[2] + max_dx)};
   const float h_padded_j = cj->hydro.h_max / 4.;
 
   for (int i = 0; i <= last_pj_align; i++) {
@@ -919,9 +919,9 @@ cache_read_two_partial_cells_sorted_force(
 
   int ci_cache_count = ci->hydro.count - first_pi_align;
   const double max_dx = max(ci->hydro.dx_max_part, cj->hydro.dx_max_part);
-  const float pos_padded_i[3] = {-(2. * ci->width[0] + max_dx),
-                                 -(2. * ci->width[1] + max_dx),
-                                 -(2. * ci->width[2] + max_dx)};
+  const float pos_padded_i[3] = {(float)-(2. * ci->width[0] + max_dx),
+                                 (float)-(2. * ci->width[1] + max_dx),
+                                 (float)-(2. * ci->width[2] + max_dx)};
   const float h_padded_i = ci->hydro.h_max / 4.;
 
   /* Shift the particles positions to a local frame (ci frame) so single
@@ -1006,9 +1006,9 @@ cache_read_two_partial_cells_sorted_force(
   swift_declare_aligned_ptr(float, soundspeedj, cj_cache->soundspeed,
                             SWIFT_CACHE_ALIGNMENT);
 
-  const float pos_padded_j[3] = {-(2. * cj->width[0] + max_dx),
-                                 -(2. * cj->width[1] + max_dx),
-                                 -(2. * cj->width[2] + max_dx)};
+  const float pos_padded_j[3] = {(float)-(2. * cj->width[0] + max_dx),
+                                 (float)-(2. * cj->width[1] + max_dx),
+                                 (float)-(2. * cj->width[2] + max_dx)};
   const float h_padded_j = cj->hydro.h_max / 4.;
 
   for (int i = 0; i <= last_pj_align; i++) {

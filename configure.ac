@@ -149,7 +149,10 @@ AC_ARG_ENABLE([mpi],
 )
 good_mpi="yes"
 if test "$enable_mpi" = "yes"; then
-    AX_MPI([CC="$MPICC" AC_DEFINE(HAVE_MPI, 1, [Define if you have the MPI library.]) ])
+    # Want to compile using C++, so hack that...
+    AC_LANG(C++)
+    AX_MPI([CC="$MPICXX" AC_DEFINE(HAVE_MPI, 1, [Define if you have the MPI library.]) ])
+    AC_LANG(C)
     MPI_LIBRARY="Unknown MPI"
 
     # Various MPI implementations require additional libraries when also using
