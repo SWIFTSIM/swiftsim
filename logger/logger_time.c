@@ -166,7 +166,7 @@ void time_array_populate(struct time_array *t, struct logger_logfile *log) {
   double time = 0;
 
   /* get file size. */
-  size_t file_size = log->log.file_size;
+  size_t file_size = log->log.mmap_size;
 
   /* get first time stamp. */
   size_t offset = time_offset_first_record(&log->header);
@@ -178,7 +178,7 @@ void time_array_populate(struct time_array *t, struct logger_logfile *log) {
 
     /* get next record. */
     int test = tools_get_next_record(&log->header, log->log.map, &offset,
-                                     log->log.file_size);
+                                     log->log.mmap_size);
     if (test == -1) break;
   }
 }

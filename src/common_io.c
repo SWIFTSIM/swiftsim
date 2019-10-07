@@ -79,6 +79,8 @@ hid_t io_hdf5_type(enum IO_DATA_TYPE type) {
       return H5T_NATIVE_INT;
     case UINT:
       return H5T_NATIVE_UINT;
+    case UINT64:
+      return H5T_NATIVE_UINT64;
     case LONG:
       return H5T_NATIVE_LONG;
     case ULONG:
@@ -1021,6 +1023,8 @@ size_t io_sizeof_type(enum IO_DATA_TYPE type) {
       return sizeof(int);
     case UINT:
       return sizeof(unsigned int);
+    case UINT64:
+      return sizeof(uint64_t);
     case LONG:
       return sizeof(long);
     case ULONG:

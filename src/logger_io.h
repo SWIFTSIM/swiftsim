@@ -51,7 +51,7 @@ __attribute__((always_inline)) INLINE static int hydro_write_index(
       io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
                            parts, id, "Field not used");
   list[1] =
-      io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
                            logger_data.last_offset, "Field not used");
 
   return 2;
@@ -73,7 +73,7 @@ __attribute__((always_inline)) INLINE static int darkmatter_write_index(
       io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
                            gparts, id_or_neg_offset, "Field not used");
   list[1] =
-      io_make_output_field("Offset", SIZE_T, 1, UNIT_CONV_NO_UNITS, 0.f, gparts,
+      io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, gparts,
                            logger_data.last_offset, "Field not used");
 
   return 2;

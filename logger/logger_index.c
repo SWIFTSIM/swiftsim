@@ -121,9 +121,8 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
       message("Sorting the index file.");
     }
     /* Map the index file */
-    index->index.map =
-        logger_loader_io_mmap_file(filename, &index->index.file_size,
-                                   /* read_only */ 0);
+    logger_loader_io_mmap_file(&index->index, filename,
+                               /* read_only */ 0);
     /* Sort the file */
     for (int i = 0; i < swift_type_count; i++) {
       struct index_data *data = logger_index_get_data(index, i);
@@ -142,9 +141,8 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
   }
 
   /* Map the index file */
-  index->index.map =
-      logger_loader_io_mmap_file(filename, &index->index.file_size,
-                                 /* read_only */ 1);
+  logger_loader_io_mmap_file(&index->index, filename,
+                             /* read_only */ 1);
 }
 
 /**
@@ -153,9 +151,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
  * @param index The #logger_index.
  */
 void logger_index_free(struct logger_index *index) {
-  logger_loader_io_munmap_file(index->index.map, index->index.file_size);
-
-  index->index.map = NULL;
+  logger_loader_io_munmap_file(&index->index);
 }
 
 /**

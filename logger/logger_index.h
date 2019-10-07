@@ -20,6 +20,7 @@
 #ifndef LOGGER_LOGGER_INDEX_H
 #define LOGGER_LOGGER_INDEX_H
 
+#include "logger_loader_io.h"
 #include "logger_tools.h"
 
 /* predefine the structure */
@@ -33,7 +34,7 @@ struct index_data {
   long long id;
 
   /* Offset of the particle in the file. */
-  size_t offset;
+  uint64_t offset;
 };
 
 /**
@@ -65,15 +66,8 @@ struct logger_index {
   /* Is the file sorted ? */
   char is_sorted;
 
-  /* The index file's variables. */
-  struct {
-    /* Mapped data. */
-    void *map;
-
-    /* File size. */
-    size_t file_size;
-
-  } index;
+  /* The mapped file */
+  struct mapped_file index;
 };
 
 void logger_index_write_sorted(struct logger_index *index);

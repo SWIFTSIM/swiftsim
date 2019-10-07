@@ -138,7 +138,7 @@ struct logger_part_data {
   int steps_since_last_output;
 
   /* offset of last particle log entry. */
-  size_t last_offset;
+  uint64_t last_offset;
 };
 
 /* Function prototypes. */

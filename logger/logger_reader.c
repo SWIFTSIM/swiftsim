@@ -260,7 +260,7 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
     while (next_offset < reader->time.time_offset) {
       prev_offset = next_offset;
       int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
-                                       &next_offset, reader->log.log.file_size);
+                                       &next_offset, reader->log.log.mmap_size);
 
       if (test == -1) {
         error("End of file");

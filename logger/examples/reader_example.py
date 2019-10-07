@@ -35,8 +35,7 @@ def plot3D():
     from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    ax.plot(data["positions_x"], data["positions_y"],
-            data["positions_z"], ".")
+    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".")
 
 
 def plot2D():
@@ -53,5 +52,5 @@ def plot2D():
     plt.ylabel("Entropy")
 
 
-plot2D()
+plot3D()
 plt.show()

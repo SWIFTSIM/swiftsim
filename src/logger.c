@@ -101,7 +101,7 @@ char *logger_write_chunk_header(char *buff, const unsigned int *mask,
   buff += logger_mask_size;
 
   /* write offset. */
-  size_t diff_offset = offset_new - *offset;
+  uint64_t diff_offset = offset_new - *offset;
   memcpy(buff, &diff_offset, logger_offset_size);
   buff += logger_offset_size;
 
@@ -414,8 +414,6 @@ void logger_ensure_size(struct logger_writer *log, size_t total_nr_parts,
   /* count part memory */
   limit += total_nr_parts;
 
-  /* count gpart memory. */
-  if (total_nr_gparts > 0) error("Not implemented");
   /* count gpart memory */
   limit += total_nr_gparts;
 
@@ -484,7 +482,7 @@ void logger_write_file_header(struct logger_writer *log) {
   /* get required variables. */
   struct dump *dump = &log->dump;
 
-  size_t file_offset = dump->file_offset;
+  uint64_t file_offset = dump->file_offset;
 
   if (file_offset != 0)
     error(
