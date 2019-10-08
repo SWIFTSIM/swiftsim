@@ -64,10 +64,6 @@ void logger_index_read_header(struct logger_index *index,
   memcpy(index->nparts, index->index.map + logger_index_npart_offset,
          logger_index_npart_size);
 
-  for(int i = 0; i < swift_type_count; i++) {
-    message("%lu", index->nparts[i]);
-  }
-
   /* Read if the file is sorted */
   memcpy(&index->is_sorted, index->index.map + logger_index_is_sorted_offset,
          logger_index_is_sorted_size);
@@ -163,6 +159,8 @@ void logger_index_free(struct logger_index *index) {
     error("Trying to unmap an unexisting map");
   }
   logger_loader_io_munmap_file(&index->index);
+
+  index->time = -1;
 }
 
 /**
@@ -209,4 +207,7 @@ void logger_index_init(struct logger_index *index,
 
   /* Set the pointer to the reader */
   index->reader = reader;
+
+  /* Set the time to its default value */
+  index->time = -1;
 }

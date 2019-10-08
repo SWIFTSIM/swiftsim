@@ -41,7 +41,7 @@ void logger_reader_init(struct logger_reader *reader, const char *basename,
   if (verbose > 1) message("Initializing the reader.");
 
   /* Set the variable to the default values */
-  reader->time.time = 0.;
+  reader->time.time = -1.;
   reader->time.int_time = 0;
   reader->time.time_offset = 0;
 
@@ -118,7 +118,9 @@ void logger_reader_free(struct logger_reader *reader) {
   /* Free the log. */
   logger_logfile_free(&reader->log);
 
-  logger_index_free(&reader->index.index);
+  if (reader->time.time != -1.) {
+    logger_index_free(&reader->index.index);
+  }
 }
 
 /**

@@ -55,3 +55,12 @@ InitialConditions:
   periodic:                    1
   cleanup_h_factors:           1    
   cleanup_velocity_factors:    1  
+
+# Parameters governing the logger snapshot system
+Logger:
+  delta_step:           100     # Update the particle log every this many updates
+  basename:             index  # Common part of the filenames
+  initial_buffer_size:  0.01      # (Optional) Buffer size in GB
+  buffer_scale:	        10     # (Optional) When buffer size is too small, update it with required memory times buffer_scale
+  time_first_index:     0.02    # Time of the first output (in internal units)
+  delta_time_index:     1.02  # Time difference between consecutive outputs (in internal units)

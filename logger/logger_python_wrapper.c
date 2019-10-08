@@ -79,6 +79,7 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
       logger_reader_get_number_particles(&reader, &n_type);
   for (int i = 0; i < n_type; i++) {
     n_tot += n_parts[i];
+
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -101,6 +102,48 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
 
   /* Free the memory. */
   logger_reader_free(&reader);
+
+  return (PyObject *)out;
+}
+
+
+/**
+ * @brief Read the minimal and maximal time.
+ *
+ * <b>basename</b> Base name of the logger files.
+ *
+ * <b>verbose</b> Verbose level.
+ *
+ * <b>returns</b> tuple containing min and max time.
+ */
+static PyObject *getTimeLimits(__attribute__((unused)) PyObject *self,
+                               PyObject *args) {
+
+  /* declare variables. */
+  char *basename = NULL;
+
+  int verbose = 2;
+
+  /* parse arguments. */
+  if (!PyArg_ParseTuple(args, "s|i", &basename, &verbose)) return NULL;
+
+  /* initialize the reader. */
+  struct logger_reader reader;
+  logger_reader_init(&reader, basename, verbose);
+
+  if (verbose > 1) message("Reading particles.");
+
+  /* Get the time limits */
+  double time_min = logger_reader_get_time_begin(&reader);
+  double time_max = logger_reader_get_time_end(&reader);
+
+  /* Free the memory. */
+  logger_reader_free(&reader);
+
+  /* Create the output */
+  PyObject *out = PyTuple_New(2);
+  PyTuple_SetItem(out, 0, PyFloat_FromDouble(time_min));
+  PyTuple_SetItem(out, 1, PyFloat_FromDouble(time_max));
 
   return (PyObject *)out;
 }
@@ -135,9 +178,39 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
 
 static PyMethodDef libloggerMethods[] = {
     {"loadFromIndex", loadFromIndex, METH_VARARGS,
-     "Load snapshot directly from the offset in an index file."},
+     "Load a snapshot directly from the logger using the index files.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "basename: str\n"
+     "  The basename of the index files.\n\n"
+     "time: double\n"
+     "  The (double) time of the snapshot.\n\n"
+     "verbose: int, optional\n"
+     "  The verbose level of the loader.\n\n"
+     "Returns\n"
+     "-------\n\n"
+     "snapshot: dict\n"
+     "  The full output generated for the whole file.\n"},
     {"reverseOffset", pyReverseOffset, METH_VARARGS,
-     "Reverse the offset (from pointing backward to forward)."},
+     "Reverse the offset (from pointing backward to forward).\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "filename: str\n"
+     "  The filename of the log file.\n\n"
+     "verbose: int, optional\n"
+     "  The verbose level of the loader.\n"},
+    {"getTimeLimits", getTimeLimits, METH_VARARGS,
+     "Read the time limits of the simulation.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "basename: str\n"
+     "  The basename of the index files.\n\n"
+     "verbose: int, optional\n"
+     "  The verbose level of the loader.\n\n"
+     "Returns\n"
+     "-------\n\n"
+     "times: tuple\n"
+     "  time min, time max\n"},
 
     {NULL, NULL, 0, NULL} /* Sentinel */
 };

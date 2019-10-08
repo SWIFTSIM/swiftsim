@@ -26,6 +26,8 @@ print("basename: %s" % basename)
 print("time: %g" % time)
 
 # read dump
+
+t = logger.getTimeLimits(basename)
 data = logger.loadFromIndex(basename, time)
 
 pos = data["positions"]
