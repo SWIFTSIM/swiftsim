@@ -39,47 +39,6 @@
 #include "units.h"
 
 /**
- * @brief Compute the metal mass
- *
- * @param p Pointer to the particle data.
- * @param xp Pointer to the extended particle data.
- * @param data The global chemistry information.
- */
-__attribute__((always_inline)) INLINE static float
-chemistry_part_metal_mass(const struct part* restrict p,
-			  const struct xpart* restrict xp) {
-
-  return p->chemistry_data.metal_mass[CHEMISTRY_ELEMENT_COUNT - 1];
-}
-
-/**
- * @brief Compute the smoothed metal mass fraction
- *
- * @param p Pointer to the particle data.
- * @param xp Pointer to the extended particle data.
- * @param data The global chemistry information.
- */
-__attribute__((always_inline)) INLINE static float
-chemistry_part_smoothed_metal_mass_fraction(const struct part* restrict p,
-			  const struct xpart* restrict xp) {
-
-  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
-}
-
-/**
- * @brief Compute the metal mass fraction
- *
- * @param p Pointer to the particle data.
- * @param xp Pointer to the extended particle data.
- * @param data The global chemistry information.
- */
-__attribute__((always_inline)) INLINE static float
-chemistry_spart_metal_mass_fraction(const struct spart* restrict sp) {
-
-  return sp->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
-}
-
-/**
  * @brief Copies the chemistry properties of the gas particle over to the
  * star particle.
  *
@@ -344,5 +303,86 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicities[i];
   }
 }
+
+/**
+ * @brief Returns the total metallicity (metal mass fraction) of the
+ * star particle to be used in feedback/enrichment related routines.
+ *
+ * @param sp Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_feedback(
+    const struct spart* restrict sp) {
+
+  return sp->chemistry_data.metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+/**
+ * @brief Returns the abundances (metal mass fraction) of the
+ * star particle to be used in feedback/enrichment related routines.
+ *
+ * @param sp Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_feedback(
+                                               const struct spart* restrict sp) {
+
+  return sp->chemistry_data.metal_mass_fraction;
+}
+
+
+/**
+ * @brief Returns the total metallicity (metal mass fraction) of the
+ * gas particle to be used in cooling related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_cooling(
+                                                    const struct part* restrict p) {
+
+  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+
+/**
+ * @brief Returns the abundance array (metal mass fractions) of the
+ * gas particle to be used in cooling related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) {
+
+  return p->chemistry_data.smoothed_metal_mass_fraction;
+}
+
+/**
+ * @brief Returns the total metallicity (metal mass fraction) of the
+ * gas particle to be used in star formation related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_fraction_for_star_formation(
+                                                           const struct part* restrict p) {
+
+  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+
+/**
+ * @brief Returns the abundance array (metal mass fractions) of the
+ * gas particle to be used in star formation related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float const*
+chemistry_get_metal_mass_fraction_for_star_formation(
+                                                     const struct part* restrict p) {
+
+  return p->chemistry_data.smoothed_metal_mass_fraction;
+}
+
 
 #endif /* SWIFT_CHEMISTRY_GEAR_H */

@@ -122,7 +122,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_cont
       /* Supernovae II yields */
       snii_yields[i] +
       /* Gas contained in stars initial metallicity */
-      sp->chemistry_data.metal_mass_fraction[i] * non_processed;
+      chemistry_get_metal_mass_fraction_for_feedback(sp)[i] * non_processed;
 
     /* Convert it to total mass */
     sp->feedback_data.metal_mass_ejected[i] *=
@@ -206,7 +206,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
       /* Supernovae II yields */
       normalization * snii_yields[i] +
       /* Gas contained in stars initial metallicity */
-      sp->chemistry_data.metal_mass_fraction[i] * non_processed;
+      chemistry_get_metal_mass_fraction_for_feedback(sp)[i] * non_processed;
 
     /* Convert it to total mass */
     sp->feedback_data.metal_mass_ejected[i] *=
@@ -247,7 +247,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   const double dt_myr = dt / conversion_to_myr;
 
   /* Get the metallicity */
-  const float metallicity = chemistry_spart_metal_mass_fraction(sp);
+  const float metallicity = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Compute masses range */
   const float log_m_beg_step = star_age_beg_step == 0.?
@@ -341,6 +341,12 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_element
   io_read_string_array_attribute(
     group_id, "elts", sm->elements_name, CHEMISTRY_ELEMENT_COUNT,
     GEAR_LABELS_SIZE);
+
+  /* Check that we received correctly the metals */
+  if (strcmp(stellar_evolution_get_element_name(sm, CHEMISTRY_ELEMENT_COUNT - 1), "Metals") != 0) {
+    error("The chemistry table should contain the metals in the last column (found %s)",
+          stellar_evolution_get_element_name(sm, CHEMISTRY_ELEMENT_COUNT - 1));
+  }
 
   /* Print the name of the elements */
   char txt[CHEMISTRY_ELEMENT_COUNT * (GEAR_LABELS_SIZE + 2)] = "";
