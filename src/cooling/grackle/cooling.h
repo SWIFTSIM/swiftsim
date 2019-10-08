@@ -536,7 +536,7 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle(
   data->RT_H2_dissociation_rate = NULL;
 
   gr_float *metal_density = (gr_float*) malloc(sizeof(gr_float));
-  *metal_density = chemistry_part_smoothed_metal_mass_fraction(p, xp) * rho;
+  *metal_density = chemistry_get_total_metal_mass_fraction_for_cooling(p) * rho;
   data->metal_density = metal_density;
 }
 
