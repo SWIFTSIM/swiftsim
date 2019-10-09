@@ -881,7 +881,12 @@ double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
   Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
   Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
 
-  Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+  if (t2 > 0.f) {
+    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+  } else {
+    Qbar = 0.f;
+  }
+
   return Qbar;
 }
 
