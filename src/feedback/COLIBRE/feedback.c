@@ -843,7 +843,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
  * @param logZ log10 of (stellar) metal mass fraction Z
  */
 double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
-                                       float t_Myr, float logZ) {
+                                           float t_Myr, float logZ) {
   float logPcum_loc;
   float d_age, d_met;
   int met_index, age_index;
@@ -860,7 +860,6 @@ double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
 
   return exp10(logPcum_loc);
 }
-
 
 /**
  * @brief Gets interpolated cumulative ionizing photons from table
@@ -889,8 +888,8 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 }
 
 /**
- * @brief Calculates the average stellar wind momentum input between t1 and t2 for an
- * initial metallicity of Z
+ * @brief Calculates the average stellar wind momentum input between t1 and t2
+ * for an initial metallicity of Z
  *
  * @param props feedback_props structure for getting model parameters
  * @param t1 initial time in Myr
@@ -900,7 +899,7 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
  * period of time (t1 - t2)
  */
 double compute_average_stellarwind_momentum(const struct feedback_props* fp,
-                                                float t1, float t2, float Z) {
+                                            float t1, float t2, float Z) {
 
   double P_t1, P_t2, Pbar;
   /* find a way to get that from constants, if possible without passing the
@@ -913,7 +912,6 @@ double compute_average_stellarwind_momentum(const struct feedback_props* fp,
   Pbar = (P_t2 - P_t1) / (t2 - t1) * Myr_inv;
   return Pbar;
 }
-
 
 /**
  * @brief Calculates the average ionizing luminosity between t1 and t2 for an
@@ -938,9 +936,9 @@ double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
   Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
 
   if (t2 > 0.f) {
-      Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
   } else {
-      Qbar = 0.f;
+    Qbar = 0.f;
   }
 
   return Qbar;
@@ -962,9 +960,9 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const struct feedback_props* props,
                                             const double star_age_Gyr,
                                             const double dt,
-                                            const float ngb_gas_mass){
+                                            const float ngb_gas_mass) {
 
-  const double tw = (double) props->tw;            /* Myr */
+  const double tw = (double)props->tw;    /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
@@ -1004,21 +1002,21 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   /* Bring the metallicity in the range covered by the model */
   Z = max(Z, exp10(props->HII_logZbins[0]));
-  Z = min(Z, exp10(props->HII_logZbins[props->HII_nr_metbins-1]));
+  Z = min(Z, exp10(props->HII_logZbins[props->HII_nr_metbins - 1]));
 
-  /* get the average momentum input from stellar winds during this timestep 
+  /* get the average momentum input from stellar winds during this timestep
    * from the BPASS tables */
-  const float t1_Myr = (float) star_age_Gyr * 1.e3;
-  const float t2_Myr = t1_Myr + (float) dt_Myr;
-  const double Pbar = compute_average_stellarwind_momentum(props, t1_Myr, t2_Myr, Z);
+  const float t1_Myr = (float)star_age_Gyr * 1.e3;
+  const float t2_Myr = t1_Myr + (float)dt_Myr;
+  const double Pbar =
+      compute_average_stellarwind_momentum(props, t1_Myr, t2_Myr, Z);
   const double P_cgs = Pbar * sp->mass_init * us->UnitMass_in_cgs * dt_cgs;
 
   /* Velocity kick */
   const double delta_v_cgs = delta_v_km_p_s * 1e5;
 
   /* Get the momentum rate in code units and store it */
-  sp->feedback_data.to_distribute.momentum =
-      P_cgs / props->Momentum_to_cgs;
+  sp->feedback_data.to_distribute.momentum = P_cgs / props->Momentum_to_cgs;
   sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
 
   /* Now compute the robability of kicking particle with given delta_v
@@ -1128,10 +1126,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
    */
 
   if (feedback_props->with_earlyfeedback) {
-      compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
-                              ngb_gas_mass);
+    compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
+                             ngb_gas_mass);
   }
-
 
   sp->star_timestep = dt;
 
@@ -1327,16 +1324,16 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->HIIregion_maxageMyr =
-         parser_get_opt_param_float(params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
+  fp->HIIregion_maxageMyr = parser_get_opt_param_float(
+      params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
 
-  fp->tw =
-      parser_get_opt_param_float(params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
+  fp->tw = parser_get_opt_param_float(
+      params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
 
   if (fp->HIIregion_maxageMyr == 0.f && fp->tw == 0.f) {
-     fp->with_earlyfeedback = 0;
+    fp->with_earlyfeedback = 0;
   } else {
-     fp->with_earlyfeedback = 1;
+    fp->with_earlyfeedback = 1;
   }
 
   /* Properties of the IMF model ------------------------------------------ */
@@ -1405,15 +1402,15 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Parameter only necessary if running with stellar winds */
   if (fp->tw != 0.f) {
-     fp->delta_v = parser_get_param_double(
-         params, "COLIBREFeedback:Momentum_desired_delta_v"); 
+    fp->delta_v = parser_get_param_double(
+        params, "COLIBREFeedback:Momentum_desired_delta_v");
   } else {
-     fp->delta_v = 0.f;
+    fp->delta_v = 0.f;
   }
   /* Parameter only necessary if running with HII regions */
   if (fp->HIIregion_maxageMyr > 0.f) {
-     fp->HIIregion_dtMyr = parser_get_param_float(
-            params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
+    fp->HIIregion_dtMyr = parser_get_param_float(
+        params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
   }
 
   /* Properties of the stochastic SNIa model */
@@ -1472,7 +1469,6 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Properties of the HII region model ------------------------------------- */
   /* Read the HII table */
-   
 
   if (fp->with_earlyfeedback) {
 #ifdef HAVE_HDF5

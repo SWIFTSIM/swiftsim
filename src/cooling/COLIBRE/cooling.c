@@ -119,8 +119,8 @@ static INLINE double bisection_iter(
     long long ID, const double u_min_cgs) {
 
   /* Bracketing */
-  double u_lower_cgs = max( u_ini_cgs, u_min_cgs );
-  double u_upper_cgs = max( u_ini_cgs, u_min_cgs );
+  double u_lower_cgs = max(u_ini_cgs, u_min_cgs);
+  double u_upper_cgs = max(u_ini_cgs, u_min_cgs);
 
   /*************************************/
   /* Let's get a first guess           */
@@ -139,8 +139,8 @@ static INLINE double bisection_iter(
   if (LambdaNet_cgs < 0) {
 
     /* we're cooling! */
-    u_lower_cgs = max (u_lower_cgs / bracket_factor , u_min_cgs );
-    u_upper_cgs = max (u_upper_cgs * bracket_factor , u_min_cgs );
+    u_lower_cgs = max(u_lower_cgs / bracket_factor, u_min_cgs);
+    u_upper_cgs = max(u_upper_cgs * bracket_factor, u_min_cgs);
 
     /* Compute a new rate */
     LambdaNet_cgs =
@@ -154,8 +154,8 @@ static INLINE double bisection_iter(
                0 &&
            i < bisection_max_iterations) {
 
-      u_lower_cgs = max (u_lower_cgs / bracket_factor, u_min_cgs );
-      u_upper_cgs = max (u_upper_cgs / bracket_factor, u_min_cgs );
+      u_lower_cgs = max(u_lower_cgs / bracket_factor, u_min_cgs);
+      u_upper_cgs = max(u_upper_cgs / bracket_factor, u_min_cgs);
 
       /* Compute a new rate */
       LambdaNet_cgs =
@@ -183,8 +183,8 @@ static INLINE double bisection_iter(
   } else {
 
     /* we are heating! */
-    u_lower_cgs = max (u_lower_cgs / bracket_factor, u_min_cgs);
-    u_upper_cgs = max (u_upper_cgs * bracket_factor, u_min_cgs);
+    u_lower_cgs = max(u_lower_cgs / bracket_factor, u_min_cgs);
+    u_upper_cgs = max(u_upper_cgs * bracket_factor, u_min_cgs);
 
     /* Compute a new rate */
     LambdaNet_cgs =
@@ -198,8 +198,8 @@ static INLINE double bisection_iter(
                0 &&
            i < bisection_max_iterations) {
 
-      u_lower_cgs = max (u_lower_cgs * bracket_factor, u_min_cgs);
-      u_upper_cgs = max (u_upper_cgs * bracket_factor, u_min_cgs);
+      u_lower_cgs = max(u_lower_cgs * bracket_factor, u_min_cgs);
+      u_upper_cgs = max(u_upper_cgs * bracket_factor, u_min_cgs);
 
       /* Compute a new rate */
       LambdaNet_cgs =
@@ -671,8 +671,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
         bisection_iter(u_0_cgs, n_H_cgs, cosmo->z, n_H_index, d_n_H, met_index,
                        d_met, red_index, d_red, Lambda_He_reion_cgs,
                        ratefact_cgs, cooling, abundance_ratio, dt_cgs, p->id,
-                       hydro_properties->minimal_internal_energy * 
-                       cooling->internal_energy_to_cgs);
+                       hydro_properties->minimal_internal_energy *
+                           cooling->internal_energy_to_cgs);
   }
 
   /* Expected change in energy over the next kick step
