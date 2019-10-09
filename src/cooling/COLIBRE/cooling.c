@@ -710,7 +710,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
     /* Store the radiated energy */
     xp->cooling_data.radiated_energy -=
-        hydro_get_mass(p) * (u_final - max(u_start, u_floor));
+        hydro_get_mass(p) * (u_final - u_0);
   } else {
     /* Slow-cooling regime. Update du/dt so that
      * we can subsequently drift internal energy. */
@@ -720,7 +720,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
     hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
 
     /* Store the radiated energy */
-    xp->cooling_data.radiated_energy -= hydro_get_mass(p) * cooling_du_dt * dt;
+    xp->cooling_data.radiated_energy -= hydro_get_mass(p) * dt * ((u_final - u_0) / dt_therm);
   }
 
   /* check if the particle is in an HII region and if yes, set the parameter
