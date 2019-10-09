@@ -1060,7 +1060,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
 
   /* Check if there are neighbours, otherwise exit */
-  if (ngb_gas_mass == 0.f) { 
+  if (ngb_gas_mass == 0.f) {
     feedback_reset_feedback(sp, feedback_props);
     return;
   }
