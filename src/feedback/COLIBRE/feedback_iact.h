@@ -265,18 +265,17 @@ runner_iact_nonsym_feedback_apply(
   const double injected_energy =
       si->feedback_data.to_distribute.energy * Omega_frac;
 
-  /* Apply energy conservation to recover the new thermal energy of the gas */
+  /* Apply energy conservation to recover the new thermal energy of the gas
+   * Note: in some specific cases the new_thermal_energy could be lower
+   * than the current_thermal_energy, this is mainly the case if the change
+   * in mass is relatively small and the velocity vectors between both the
+   * gas particle and the star particle have a small angle. */
   const double new_thermal_energy = current_kinetic_energy_gas +
                                     current_thermal_energy + injected_energy -
                                     new_kinetic_energy_gas;
 
   /* Convert this to a specific thermal energy */
   const double u_new_enrich = new_thermal_energy * new_mass_inv;
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (new_thermal_energy < 0.99 * current_thermal_energy)
-    error("Enrichment is cooling the gas");
-#endif
 
   /* Do the energy injection. */
   hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_enrich);
@@ -398,8 +397,8 @@ runner_iact_nonsym_feedback_apply(
   }
 
   /* Draw a random number (Note mixing both IDs) */
-  const float HIIregion_rand = random_unit_interval(si->id + pj->id, ti_current,
-                                                    random_number_HII_regions);
+  const float HIIregion_rand = random_unit_interval_two_IDs(
+      si->id, pj->id, ti_current, random_number_HII_regions);
 
   /* if lucky, particle is now flagged as HII region  */
   if (HIIregion_rand < HIIregion_prob) {

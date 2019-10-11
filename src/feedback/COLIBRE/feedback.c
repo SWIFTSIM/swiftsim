@@ -340,13 +340,6 @@ INLINE static void compute_SNIa_feedback(
 
     prob = 1.;
     delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
-    if (ngb_gas_mass == 0.) {
-      prob = 0.;
-      delta_u = 0.;
-    } else {
-      message("WOW the probability is so high! %e %e %e %e %e %e %llu", f_E,
-              E_SNe, N_SNe, conv_factor, delta_T, ngb_gas_mass, sp->id);
-    }
   }
 
   /* Store all of this in the star for delivery onto the gas */
@@ -888,7 +881,12 @@ double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
   Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
   Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
 
-  Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+  if (t2 > 0.f) {
+    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+  } else {
+    Qbar = 0.f;
+  }
+
   return Qbar;
 }
 
@@ -1065,6 +1063,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
+
+  /* Check if there are neighbours, otherwise exit */
+  if (ngb_gas_mass == 0.f) {
+    feedback_reset_feedback(sp, feedback_props);
+    return;
+  }
+
+  /* Update the enrichment weights */
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
 
@@ -1075,8 +1081,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   feedback_reset_feedback(sp, feedback_props);
 
   /* Update the weights used for distribution */
-  const float enrichment_weight =
-      (enrichment_weight_inv != 0.f) ? 1.f / enrichment_weight_inv : 0.f;
+  const float enrichment_weight = 1.f / enrichment_weight_inv;
   sp->feedback_data.to_distribute.enrichment_weight = enrichment_weight;
 
   /* Compute amount of momentum available for this stars, given its mass and age
