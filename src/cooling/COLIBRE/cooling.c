@@ -296,7 +296,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
   /* Get the EOS temperature from the entropy floor */
   const double temperature_eos =
-      entropy_floor_temperature(p, cosmo, floor_props);
+      max(entropy_floor_temperature(p, cosmo, floor_props), FLT_MIN);
   const float logT_EOS_max = (float)log10(temperature_eos) + cooling->dlogT_EOS;
 
   const float temp = cooling_get_temperature(phys_const, hydro_props, us, cosmo,

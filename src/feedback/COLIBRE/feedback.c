@@ -837,21 +837,20 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
  */
 double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
                                            float t_Myr, float logZ) {
-  float logPcum_loc;
   float d_age, d_met;
   int met_index, age_index;
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
 
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
-  logPcum_loc =
-      interpolation_2d_flat(fp->SW_logPcum, met_index, age_index, d_met, d_age,
+  const float log10_Pcum_loc =
+      interpolation_2d_flat(fp->SW_log10_Pcum, met_index, age_index, d_met, d_age,
                             fp->HII_nr_metbins, fp->HII_nr_agebins);
 
-  return exp10(logPcum_loc);
+  return exp10(log10_Pcum_loc);
 }
 
 /**
@@ -869,12 +868,12 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_logZbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
 
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
   logQcum_loc =
-      interpolation_2d_flat(fp->HII_logQcum, met_index, age_index, d_met, d_age,
+      interpolation_2d_flat(fp->HII_log10_Qcum, met_index, age_index, d_met, d_age,
                             fp->HII_nr_metbins, fp->HII_nr_agebins);
 
   return exp10(logQcum_loc);
@@ -955,7 +954,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const double dt,
                                             const float ngb_gas_mass) {
 
-  const double tw = (double)props->tw;    /* Myr */
+  const double tw = (double)props->SW_maxageMyr;    /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
@@ -994,8 +993,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Bring the metallicity in the range covered by the model */
-  Z = max(Z, exp10(props->HII_logZbins[0]));
-  Z = min(Z, exp10(props->HII_logZbins[props->HII_nr_metbins - 1]));
+  Z = max(Z, exp10(props->HII_log10_Zbins[0]));
+  Z = min(Z, exp10(props->HII_log10_Zbins[props->HII_nr_metbins - 1]));
 
   /* get the average momentum input from stellar winds during this timestep
    * from the BPASS tables */
@@ -1327,10 +1326,10 @@ void feedback_props_init(struct feedback_props* fp,
   fp->HIIregion_maxageMyr = parser_get_opt_param_float(
       params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
 
-  fp->tw = parser_get_opt_param_float(
+  fp->SW_maxageMyr = parser_get_opt_param_float(
       params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
 
-  if (fp->HIIregion_maxageMyr == 0.f && fp->tw == 0.f) {
+  if (fp->HIIregion_maxageMyr == 0.f && fp->SW_maxageMyr == 0.f) {
     fp->with_early_feedback = 0;
   } else {
     fp->with_early_feedback = 1;
@@ -1401,7 +1400,7 @@ void feedback_props_init(struct feedback_props* fp,
                                     "COLIBREFeedback:SNII_energy_fraction_n_Z");
 
   /* Parameter only necessary if running with stellar winds */
-  if (fp->tw != 0.f) {
+  if (fp->SW_maxageMyr != 0.f) {
     fp->delta_v = parser_get_param_double(
         params, "COLIBREFeedback:Momentum_desired_delta_v");
   } else {
@@ -1500,25 +1499,25 @@ void feedback_props_init(struct feedback_props* fp,
     if (status < 0) error("error closing dataset: number of ages\n");
 
     /* allocate arrays */
-    if (posix_memalign((void**)&fp->HII_logZbins, SWIFT_STRUCT_ALIGNMENT,
+    if (posix_memalign((void**)&fp->HII_log10_Zbins, SWIFT_STRUCT_ALIGNMENT,
                        fp->HII_nr_metbins * sizeof(float)) != 0)
       error("Failed to allocate metallicity bins\n");
     if (posix_memalign((void**)&fp->HII_agebins, SWIFT_STRUCT_ALIGNMENT,
                        fp->HII_nr_agebins * sizeof(float)) != 0)
       error("Failed to allocate age bins\n");
     if (posix_memalign(
-            (void**)&fp->HII_logQcum, SWIFT_STRUCT_ALIGNMENT,
+            (void**)&fp->HII_log10_Qcum, SWIFT_STRUCT_ALIGNMENT,
             fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
       error("Failed to allocate Q array\n");
     if (posix_memalign(
-            (void**)&fp->SW_logPcum, SWIFT_STRUCT_ALIGNMENT,
+            (void**)&fp->SW_log10_Pcum, SWIFT_STRUCT_ALIGNMENT,
             fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
       error("Failed to allocate P array\n");
 
     /* read in the metallicity bins */
     dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->HII_logZbins);
+                     fp->HII_log10_Zbins);
     if (status < 0) error("error reading metallicity bins\n");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: metallicity bins");
@@ -1534,7 +1533,7 @@ void feedback_props_init(struct feedback_props* fp,
     /* read in cumulative ionizing photons */
     dataset = H5Dopen(tempfile_id, "logQcumulative", H5P_DEFAULT);
     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->HII_logQcum);
+                     fp->HII_log10_Qcum);
     if (status < 0) error("error reading Q\n");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: logQcumulative");
@@ -1542,14 +1541,19 @@ void feedback_props_init(struct feedback_props* fp,
     /* read in cumulative momentum input */
     dataset = H5Dopen(tempfile_id, "logPcumulative", H5P_DEFAULT);
     status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->SW_logPcum);
+                     fp->SW_log10_Pcum);
     if (status < 0) error("error reading P\n");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: logPcumulative");
 
     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
-      error("Stopping for now (%.4f is larger than %.4f)",
+      error("HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f Myr)",
             fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+
+    if (fp->SW_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+      error("stellarwind_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f Myr)", 
+            fp->SW_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+
 #else
     error("Need HDF5 to read early feedback tables");
 #endif

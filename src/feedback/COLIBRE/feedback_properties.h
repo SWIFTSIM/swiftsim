@@ -243,7 +243,7 @@ struct feedback_props {
   double n_Z;
 
   /* Timescale above which stars no longer inject momentum in Myr */
-  float tw;
+  float SW_maxageMyr;
 
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
@@ -270,18 +270,18 @@ struct feedback_props {
   int HII_nr_metbins;
 
   /* Metallicity bins (log Z, metal mass fractions) from BPASS */
-  float *HII_logZbins;
+  float *HII_log10_Zbins;
 
   /* Age bins (star age in Myr) */
   float *HII_agebins;
 
   /* Cumululative number of ionizing photons per g stellar mass
    * dimension [HII_nr_metbins, HII_nr_agebins] */
-  float *HII_logQcum;
+  float *HII_log10_Qcum;
 
   /* Cumulative momentum input per g stellar mass from stellar winds
    * dimension [HII_nr_metbins, HII_nr_agebins] */
-  float *SW_logPcum;
+  float *SW_log10_Pcum;
 };
 
 void feedback_props_init(struct feedback_props *fp,
