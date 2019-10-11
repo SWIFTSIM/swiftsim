@@ -288,7 +288,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 
       // In the following, we protect against division by zero, and 
       // against taking log(0). 
-      log_Psi = (ChimesFloat) log10(chimes_max(G0 * exp(-data.extinction * G0_GAMMA) * pow(myGasVars->temperature, 0.5) / chimes_max(myGasVars->nH_tot * myGasVars->abundances[myGlobalVars->speciesIndices[elec]], 1.0e-100), 1.0e-100));
+      log_Psi = (ChimesFloat) log10(chimes_max(G0 * exp(-data.extinction * G0_GAMMA) * pow(myGasVars->temperature, 0.5) / chimes_max(myGasVars->nH_tot * myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]], 1.0e-100), 1.0e-100));
     }
   else 
     log_Psi = chimes_table_bins.Psi[0]; 
@@ -343,12 +343,11 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 		  data.chimes_current_rates->H2_photodissoc_shield_factor[i] *= exp(- chimes_table_H2_photodissoc.gamma[i] * data.extinction); 
 		}
 	    }
-	  else
+	  else 
 	    {
-	      for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++)  
+	      for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
 		data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0; 
 	    }
-	  
 	  
 	  // Zero the rate coefficients 
 	  for (i = 0; i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index]; i++) 
@@ -389,9 +388,9 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
       
       /* The rate coefficient itself also depends 
        * on the abundances of HI, H2 and HeI */ 
-      n_over_cr = myGasVars->abundances[myGlobalVars->speciesIndices[HI]] / data.chimes_current_rates->H2_collis_dissoc_crit_H; 
-      n_over_cr += 2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] / data.chimes_current_rates->H2_collis_dissoc_crit_H2; 
-      n_over_cr += myGasVars->abundances[myGlobalVars->speciesIndices[HeI]] / data.chimes_current_rates->H2_collis_dissoc_crit_He; 
+      n_over_cr = myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] / data.chimes_current_rates->H2_collis_dissoc_crit_H; 
+      n_over_cr += 2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] / data.chimes_current_rates->H2_collis_dissoc_crit_H2; 
+      n_over_cr += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI]] / data.chimes_current_rates->H2_collis_dissoc_crit_He; 
       n_over_cr *= myGasVars->nH_tot; 
 
       for (i = 0; i < chimes_table_H2_collis_dissoc.N_reactions[data.mol_flag_index]; i++) 
@@ -400,7 +399,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
 
       // CO_cosmic_ray 
       for (i = 0; i < chimes_table_CO_cosmic_ray.N_reactions[data.mol_flag_index]; i++)
-	data.chimes_current_rates->CO_cosmic_ray_rate_coefficient[i] = pow(10.0, chimes_interpol_1d(chimes_table_CO_cosmic_ray.rates[i], T_index, dT)) * myGasVars->abundances[myGlobalVars->speciesIndices[H2]] * myGasVars->cr_rate;
+	data.chimes_current_rates->CO_cosmic_ray_rate_coefficient[i] = pow(10.0, chimes_interpol_1d(chimes_table_CO_cosmic_ray.rates[i], T_index, dT)) * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] * myGasVars->cr_rate;
     }
   
   return; 
@@ -464,7 +463,7 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
 	data.chimes_current_rates->cosmic_ray_rate[i] = myGasVars->cr_rate * chimes_table_cosmic_ray.rates[i] * myGasVars->abundances[chimes_table_cosmic_ray.reactants[i]]; 
       
       // secondary cosmic ray ionisation 
-      log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[HII]], 1.0e-100)); 
+      log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]], 1.0e-100)); 
       chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII, chimes_table_bins.N_secondary_cosmic_ray_xHII, log_xHII, &xHII_index, &d_xHII); 
       for (i = 0; i < 2; i++) 
 	data.chimes_current_rates->cosmic_ray_rate[chimes_table_cosmic_ray.secondary_base_reaction[i]] *= 1.0 + pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
@@ -762,13 +761,13 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
     inclSpeciesFlag_CO = 0;
  	
   /* Determine which species are included */ 
-  for (i = myGlobalVars->speciesIndices[elec]; i <= myGlobalVars->speciesIndices[Hm]; i++)
+  for (i = myGlobalVars->speciesIndices[sp_elec]; i <= myGlobalVars->speciesIndices[sp_Hm]; i++)
     {
       mySpecies[i].include_species = 1;
       mySpecies[i].element_abundance = 1.0;
     }
 
-  for (i = myGlobalVars->speciesIndices[HeI]; i <= myGlobalVars->speciesIndices[HeIII]; i++)
+  for (i = myGlobalVars->speciesIndices[sp_HeI]; i <= myGlobalVars->speciesIndices[sp_HeIII]; i++)
     {
       mySpecies[i].include_species = inclSpeciesFlags[0];
       mySpecies[i].element_abundance = myGasVars->element_abundances[0];
@@ -776,7 +775,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[0] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[CI]; i <= myGlobalVars->speciesIndices[Cm]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_CI]; i <= myGlobalVars->speciesIndices[sp_Cm]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[1];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[1];
@@ -785,7 +784,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[1] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[NI]; i <= myGlobalVars->speciesIndices[NVIII]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_NI]; i <= myGlobalVars->speciesIndices[sp_NVIII]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[2];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[2];
@@ -794,7 +793,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[2] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[OI]; i <= myGlobalVars->speciesIndices[Om]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_OI]; i <= myGlobalVars->speciesIndices[sp_Om]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[3];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[3];
@@ -803,7 +802,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[3] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[NeI]; i <= myGlobalVars->speciesIndices[NeXI]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_NeI]; i <= myGlobalVars->speciesIndices[sp_NeXI]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[4];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[4];
@@ -812,7 +811,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[4] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[MgI]; i <= myGlobalVars->speciesIndices[MgXIII]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_MgI]; i <= myGlobalVars->speciesIndices[sp_MgXIII]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[5];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[5];
@@ -821,7 +820,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[5] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[SiI]; i <= myGlobalVars->speciesIndices[SiXV]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_SiI]; i <= myGlobalVars->speciesIndices[sp_SiXV]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[6];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[6];
@@ -830,7 +829,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[6] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[SI]; i <= myGlobalVars->speciesIndices[SXVII]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_SI]; i <= myGlobalVars->speciesIndices[sp_SXVII]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[7];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[7];
@@ -839,7 +838,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[7] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[CaI]; i <= myGlobalVars->speciesIndices[CaXXI]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_CaI]; i <= myGlobalVars->speciesIndices[sp_CaXXI]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[8];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[8];
@@ -848,68 +847,68 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 
   if (myGlobalVars->element_included[8] == 1)
     {
-      for (i = myGlobalVars->speciesIndices[FeI]; i <= myGlobalVars->speciesIndices[FeXXVII]; i++)
+      for (i = myGlobalVars->speciesIndices[sp_FeI]; i <= myGlobalVars->speciesIndices[sp_FeXXVII]; i++)
 	{
 	  mySpecies[i].include_species = inclSpeciesFlags[9];
 	  mySpecies[i].element_abundance = myGasVars->element_abundances[9];
 	}
     }
 
-  mySpecies[myGlobalVars->speciesIndices[H2]].include_species = 1;
-  mySpecies[myGlobalVars->speciesIndices[H2p]].include_species = 1;
-  mySpecies[myGlobalVars->speciesIndices[H3p]].include_species = 1;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2]].include_species = 1;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2p]].include_species = 1;
+  mySpecies[myGlobalVars->speciesIndices[sp_H3p]].include_species = 1;
 
-  mySpecies[myGlobalVars->speciesIndices[H2]].element_abundance = 1.0;
-  mySpecies[myGlobalVars->speciesIndices[H2p]].element_abundance = 1.0;
-  mySpecies[myGlobalVars->speciesIndices[H3p]].element_abundance = 1.0;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2]].element_abundance = 1.0;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2p]].element_abundance = 1.0;
+  mySpecies[myGlobalVars->speciesIndices[sp_H3p]].element_abundance = 1.0;
 
   if (myGlobalVars->element_included[2] == 1)
     {
-      mySpecies[myGlobalVars->speciesIndices[OH]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[H2O]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[O2]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[OHp]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[H2Op]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[H3Op]].include_species = inclSpeciesFlags[3];
-      mySpecies[myGlobalVars->speciesIndices[O2p]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_OH]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H2O]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_O2]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_OHp]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H2Op]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H3Op]].include_species = inclSpeciesFlags[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_O2p]].include_species = inclSpeciesFlags[3];
 
-      mySpecies[myGlobalVars->speciesIndices[OH]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[H2O]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[O2]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[OHp]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[H2Op]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[H3Op]].element_abundance = myGasVars->element_abundances[3];
-      mySpecies[myGlobalVars->speciesIndices[O2p]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_OH]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H2O]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_O2]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_OHp]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H2Op]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_H3Op]].element_abundance = myGasVars->element_abundances[3];
+      mySpecies[myGlobalVars->speciesIndices[sp_O2p]].element_abundance = myGasVars->element_abundances[3];
     }
 
   if (myGlobalVars->element_included[0] == 1)
     {
-      mySpecies[myGlobalVars->speciesIndices[C2]].include_species = inclSpeciesFlags[1];
-      mySpecies[myGlobalVars->speciesIndices[CH]].include_species = inclSpeciesFlags[1];
-      mySpecies[myGlobalVars->speciesIndices[CH2]].include_species = inclSpeciesFlags[1];
-      mySpecies[myGlobalVars->speciesIndices[CH3p]].include_species = inclSpeciesFlags[1];
-      mySpecies[myGlobalVars->speciesIndices[CHp]].include_species = inclSpeciesFlags[1];
-      mySpecies[myGlobalVars->speciesIndices[CH2p]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_C2]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH2]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH3p]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CHp]].include_species = inclSpeciesFlags[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH2p]].include_species = inclSpeciesFlags[1];
 
-      mySpecies[myGlobalVars->speciesIndices[C2]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CH]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CH2]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CH3p]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CHp]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CH2p]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_C2]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH2]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH3p]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CHp]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CH2p]].element_abundance = myGasVars->element_abundances[1];
     }
 
   if (myGlobalVars->element_included[0] == 1 && myGlobalVars->element_included[2] == 1)
     {
-      mySpecies[myGlobalVars->speciesIndices[HCOp]].include_species = inclSpeciesFlag_CO;
-      mySpecies[myGlobalVars->speciesIndices[CO]].include_species = inclSpeciesFlag_CO;
-      mySpecies[myGlobalVars->speciesIndices[COp]].include_species = inclSpeciesFlag_CO;
-      mySpecies[myGlobalVars->speciesIndices[HOCp]].include_species = inclSpeciesFlag_CO;
+      mySpecies[myGlobalVars->speciesIndices[sp_HCOp]].include_species = inclSpeciesFlag_CO;
+      mySpecies[myGlobalVars->speciesIndices[sp_CO]].include_species = inclSpeciesFlag_CO;
+      mySpecies[myGlobalVars->speciesIndices[sp_COp]].include_species = inclSpeciesFlag_CO;
+      mySpecies[myGlobalVars->speciesIndices[sp_HOCp]].include_species = inclSpeciesFlag_CO;
 
-      mySpecies[myGlobalVars->speciesIndices[HCOp]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[CO]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[COp]].element_abundance = myGasVars->element_abundances[1];
-      mySpecies[myGlobalVars->speciesIndices[HOCp]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_HCOp]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_CO]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_COp]].element_abundance = myGasVars->element_abundances[1];
+      mySpecies[myGlobalVars->speciesIndices[sp_HOCp]].element_abundance = myGasVars->element_abundances[1];
     }
 
   /* Now loop through this array and determine the total
@@ -924,7 +923,7 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
   /* Now subtract from this the number of 
    * molecules included in the network. */
   *nonmolecular_network = *total_network;
-  for (i = H2; i <= O2p; i++)
+  for (i = sp_H2; i <= sp_O2p; i++)
     {
       if (myGlobalVars->speciesIndices[i] > -1)
 	{

@@ -58,8 +58,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct phys_const *phys_const,
                           struct cooling_function_data *cooling) {
 
-  char chimes_data_dir[500]; 
-  char string_buffer[500]; 
+  char chimes_data_dir[256]; 
+  char string_buffer[196]; 
 
   /* read the parameters */
 
@@ -555,7 +555,7 @@ void chimes_update_gas_vars(const double u_cgs,
    * and the COLIBRE shielding length, and to 
    * scale metal depletion. Taken from 
    * Ploeckinger et al. (in prep). */ 
-  double N_ref; 
+  double N_ref = 0.0; 
   if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2) || (cooling->colibre_metal_depletion)) 
     N_ref = calculate_colibre_N_ref(phys_const, us, cosmo, cooling, p, xp, mu); 
 
