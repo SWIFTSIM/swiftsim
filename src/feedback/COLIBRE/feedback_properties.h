@@ -92,7 +92,7 @@ struct feedback_props {
   int with_SNIa_feedback;
 
   /*! Are we doing HII regions and-or stellar winds? */
-  int with_earlyfeedback;
+  int with_early_feedback;
 
   /* ------------ Yield tables    ----------------- */
 
@@ -242,7 +242,7 @@ struct feedback_props {
    */
   double n_Z;
 
-  /* Timescale above which stars no longer inject momentum */
+  /* Timescale above which stars no longer inject momentum in Myr */
   float tw;
 
   /* Desired delta_v in km/s of particles suject to the wind. */
@@ -283,18 +283,6 @@ struct feedback_props {
    * dimension [HII_nr_metbins, HII_nr_agebins] */
   float *SW_logPcum;
 };
-
-double compute_average_photoionizing_luminosity(const struct feedback_props *fp,
-                                                float t1, float t2, float Z);
-
-double get_cumulative_ionizing_photons(const struct feedback_props *fp,
-                                       float t_Myr, float logZ);
-
-double compute_average_stellarwind_momentum(const struct feedback_props *fp,
-                                            float t1, float t2, float Z);
-
-double get_cumulative_stellarwind_momentum(const struct feedback_props *fp,
-                                           float t_Myr, float logZ);
 
 void feedback_props_init(struct feedback_props *fp,
                          const struct phys_const *phys_const,

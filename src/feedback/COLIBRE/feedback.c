@@ -1125,7 +1125,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Compute amount of momentum available for this stars, given its mass and age
    */
 
-  if (feedback_props->with_earlyfeedback) {
+  if (feedback_props->with_early_feedback) {
     compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                              ngb_gas_mass);
   }
@@ -1331,9 +1331,9 @@ void feedback_props_init(struct feedback_props* fp,
       params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
 
   if (fp->HIIregion_maxageMyr == 0.f && fp->tw == 0.f) {
-    fp->with_earlyfeedback = 0;
+    fp->with_early_feedback = 0;
   } else {
-    fp->with_earlyfeedback = 1;
+    fp->with_early_feedback = 1;
   }
 
   /* Properties of the IMF model ------------------------------------------ */
@@ -1470,7 +1470,7 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of the HII region model ------------------------------------- */
   /* Read the HII table */
 
-  if (fp->with_earlyfeedback) {
+  if (fp->with_early_feedback) {
 #ifdef HAVE_HDF5
 
     /* Read yield table filepath  */
