@@ -893,15 +893,11 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 double compute_average_stellarwind_momentum(const struct feedback_props* fp,
                                             float t1, float t2, float Z) {
 
-  double P_t1, P_t2, Pbar;
-  /* find a way to get that from constants, if possible without passing the
-     whole structure through everything...*/
-  const double Myr_inv = 3.1688e-14;
+  const float  log10_Z = log10(Z);
+  const double P_t1 = get_cumulative_stellarwind_momentum(fp, t1, log10_Z);
+  const double P_t2 = get_cumulative_stellarwind_momentum(fp, t2, log10_Z);
 
-  P_t1 = get_cumulative_stellarwind_momentum(fp, t1, log10(Z));
-  P_t2 = get_cumulative_stellarwind_momentum(fp, t2, log10(Z));
-
-  Pbar = (P_t2 - P_t1) / (t2 - t1) * Myr_inv;
+  const double Pbar = ( (P_t2 - P_t1) / (t2 - t1) )* fp->sec_to_Myr;
   return Pbar;
 }
 
@@ -919,16 +915,12 @@ double compute_average_stellarwind_momentum(const struct feedback_props* fp,
 double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
                                                 float t1, float t2, float Z) {
 
-  double Q_t1, Q_t2, Qbar;
-  /* find a way to get that from constants, if possible without passing the
-     whole structure through everything...*/
-  const double Myr_inv = 3.1688e-14;
-
-  Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
-  Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
+  double Qbar;
+  const double Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
+  const double Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
 
   if (t2 > 0.f) {
-    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * Myr_inv;
+    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * fp->sec_to_Myr;
   } else {
     Qbar = 0.f;
   }
@@ -954,7 +946,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const double dt,
                                             const float ngb_gas_mass) {
 
-  const double tw = (double)props->SW_maxageMyr;    /* Myr */
+  const double tw = props->SW_maxageMyr;    /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
@@ -993,8 +985,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Bring the metallicity in the range covered by the model */
-  Z = max(Z, exp10(props->HII_log10_Zbins[0]));
-  Z = min(Z, exp10(props->HII_log10_Zbins[props->HII_nr_metbins - 1]));
+  Z = max(Z, props->Zmin_early_fb);
+  Z = min(Z, props->Zmax_early_fb);
 
   /* get the average momentum input from stellar winds during this timestep
    * from the BPASS tables */
@@ -1326,7 +1318,7 @@ void feedback_props_init(struct feedback_props* fp,
   fp->HIIregion_maxageMyr = parser_get_opt_param_float(
       params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
 
-  fp->SW_maxageMyr = parser_get_opt_param_float(
+  fp->SW_maxageMyr = parser_get_opt_param_double(
       params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
 
   if (fp->HIIregion_maxageMyr == 0.f && fp->SW_maxageMyr == 0.f) {
@@ -1334,6 +1326,7 @@ void feedback_props_init(struct feedback_props* fp,
   } else {
     fp->with_early_feedback = 1;
   }
+
 
   /* Properties of the IMF model ------------------------------------------ */
 
@@ -1546,6 +1539,11 @@ void feedback_props_init(struct feedback_props* fp,
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: logPcumulative");
 
+    /* set the minimum and maximum metallicities */
+    fp->Zmin_early_fb = exp10(fp->HII_log10_Zbins[0]);
+    fp->Zmax_early_fb = exp10(fp->HII_log10_Zbins[fp->HII_nr_metbins - 1]);
+
+    /* check that we won't exceed the maximum stellar age in the table */
     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
       error("HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f Myr)",
             fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
@@ -1595,6 +1593,9 @@ void feedback_props_init(struct feedback_props* fp,
   fp->alpha_caseb_recomb =
       phys_const->const_caseb_recomb *
       units_general_cgs_conversion_factor(us, dimension_alphaB);
+
+  fp->Myr_to_sec = 1.e6 * phys_const->const_year * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+  fp->sec_to_Myr = 1./ fp->Myr_to_sec;
 
   /* Initialise the IMF ------------------------------------------------- */
 

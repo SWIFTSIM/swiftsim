@@ -168,8 +168,14 @@ struct feedback_props {
   /*! Conversion factor from temperature to internal energy */
   float temp_to_u_factor;
 
-  /*! Conversion factor from Myr to sec */
+  /*! Conversion factor for momentum to cgs */
   double Momentum_to_cgs;
+
+  /*! Conversion factor from Myr to sec */
+  double Myr_to_sec;
+
+  /*! Conversion factor from sec to Myr */
+  double sec_to_Myr;
 
   /* ------------- Parameters for IMF --------------- */
 
@@ -243,7 +249,7 @@ struct feedback_props {
   double n_Z;
 
   /* Timescale above which stars no longer inject momentum in Myr */
-  float SW_maxageMyr;
+  double SW_maxageMyr;
 
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
@@ -282,6 +288,13 @@ struct feedback_props {
   /* Cumulative momentum input per g stellar mass from stellar winds
    * dimension [HII_nr_metbins, HII_nr_agebins] */
   float *SW_log10_Pcum;
+
+  /* Minimum metallicity in the early feedback tables */
+  double Zmin_early_fb;
+
+  /* Maximum metallicity in the early feedback tables */
+  double Zmax_early_fb;
+
 };
 
 void feedback_props_init(struct feedback_props *fp,
