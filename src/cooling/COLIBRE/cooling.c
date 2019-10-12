@@ -31,6 +31,7 @@
 #include <time.h>
 
 /* Local includes. */
+#include "adiabatic_index.h"
 #include "chemistry.h"
 #include "cooling.h"
 #include "cooling_rates.h"
@@ -117,8 +118,8 @@ static INLINE double bisection_iter(
     long long ID) {
 
   /* Bracketing */
-  double u_lower_cgs = u_ini_cgs;
-  double u_upper_cgs = u_ini_cgs;
+  double u_lower_cgs = max(u_ini_cgs, cooling->umin_cgs);
+  double u_upper_cgs = max(u_ini_cgs, cooling->umin_cgs);
 
   /*************************************/
   /* Let's get a first guess           */
@@ -137,8 +138,8 @@ static INLINE double bisection_iter(
   if (LambdaNet_cgs < 0) {
 
     /* we're cooling! */
-    u_lower_cgs /= bracket_factor;
-    u_upper_cgs *= bracket_factor;
+    u_lower_cgs = max(u_lower_cgs / bracket_factor, cooling->umin_cgs);
+    u_upper_cgs = max(u_upper_cgs * bracket_factor, cooling->umin_cgs);
 
     /* Compute a new rate */
     LambdaNet_cgs =
@@ -152,8 +153,8 @@ static INLINE double bisection_iter(
                0 &&
            i < bisection_max_iterations) {
 
-      u_lower_cgs /= bracket_factor;
-      u_upper_cgs /= bracket_factor;
+      u_lower_cgs = max(u_lower_cgs / bracket_factor, cooling->umin_cgs);
+      u_upper_cgs = max(u_upper_cgs / bracket_factor, cooling->umin_cgs);
 
       /* Compute a new rate */
       LambdaNet_cgs =
@@ -294,7 +295,7 @@ void set_subgrid_part(const struct phys_const *phys_const,
 
   /* Get the EOS temperature from the entropy floor */
   const double temperature_eos =
-      entropy_floor_temperature(p, cosmo, floor_props);
+      max(entropy_floor_temperature(p, cosmo, floor_props), FLT_MIN);
   const float logT_EOS_max = (float)log10(temperature_eos) + cooling->dlogT_EOS;
 
   const float temp = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
@@ -427,9 +428,10 @@ void set_subgrid_part(const struct phys_const *phys_const,
                             (cooling->nH[i] - cooling->nH[i - 1]) +
                         cooling->nH[i - 1];
 
-          iden_eq = i - 1;
-          dden_eq = (logn_at_Peq - cooling->nH[i - 1]) /
-                    (cooling->nH[i] - cooling->nH[i - 1]);
+          /* Get the interpolated values for iden_eq and dden_eq */
+          get_index_1d(cooling->nH, colibre_cooling_N_density, logn_at_Peq,
+                       &iden_eq, &dden_eq);
+
           break;
         }
       }
@@ -1008,16 +1010,17 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
+                          const struct hydro_props *hydro_props,
                           struct cooling_function_data *cooling) {
 
   /* read some parameters */
 
+  parser_get_param_string(parameter_file, "COLIBRECooling:dir_name",
+                          cooling->cooling_table_path);
+
   /* Despite the names, the values of H_reion_heat_cgs and He_reion_heat_cgs
    * that are read in are actually in units of electron volts per proton mass.
    * We later convert to units just below */
-
-  parser_get_param_string(parameter_file, "COLIBRECooling:dir_name",
-                          cooling->cooling_table_path);
 
   cooling->H_reion_done = 0;
   cooling->H_reion_z =
@@ -1086,6 +1089,17 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->inv_proton_mass_cgs = 1. / proton_mass_cgs;
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+  /* Get the minimal temperature allowed */
+  cooling->Tmin = hydro_props->minimal_temperature;
+  if (cooling->Tmin < 10.)
+    error("COLIBRE cooling cannot handle a minimal temperature below 10 K");
+
+  /* Recover the minimal energy allowed (in internal units) */
+  const double u_min = hydro_props->minimal_internal_energy;
+
+  /* Convert to CGS units */
+  cooling->umin_cgs = u_min * cooling->internal_energy_to_cgs;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Basic cross-check... */
