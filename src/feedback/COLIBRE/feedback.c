@@ -1542,6 +1542,10 @@ void feedback_props_init(struct feedback_props* fp,
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset: logPcumulative");
 
+    /* Close the file */
+    status = H5Fclose(tempfile_id);
+    if (status < 0) error("error closing file");
+
     /* set the minimum and maximum metallicities */
     fp->Zmin_early_fb = exp10(fp->HII_log10_Zbins[0]);
     fp->Zmax_early_fb = exp10(fp->HII_log10_Zbins[fp->HII_nr_metbins - 1]);
