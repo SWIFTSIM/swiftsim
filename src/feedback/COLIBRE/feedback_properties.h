@@ -294,7 +294,6 @@ struct feedback_props {
 
   /* Maximum metallicity in the early feedback tables */
   double Zmax_early_fb;
-
 };
 
 void feedback_props_init(struct feedback_props *fp,

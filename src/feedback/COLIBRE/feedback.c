@@ -842,13 +842,14 @@ double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index,
+               &d_met);
 
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
   const float log10_Pcum_loc =
-      interpolation_2d_flat(fp->SW_log10_Pcum, met_index, age_index, d_met, d_age,
-                            fp->HII_nr_metbins, fp->HII_nr_agebins);
+      interpolation_2d_flat(fp->SW_log10_Pcum, met_index, age_index, d_met,
+                            d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
 
   return exp10(log10_Pcum_loc);
 }
@@ -868,13 +869,14 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index, &d_met);
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index,
+               &d_met);
 
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
   logQcum_loc =
-      interpolation_2d_flat(fp->HII_log10_Qcum, met_index, age_index, d_met, d_age,
-                            fp->HII_nr_metbins, fp->HII_nr_agebins);
+      interpolation_2d_flat(fp->HII_log10_Qcum, met_index, age_index, d_met,
+                            d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
 
   return exp10(logQcum_loc);
 }
@@ -893,11 +895,11 @@ double get_cumulative_ionizing_photons(const struct feedback_props* fp,
 double compute_average_stellarwind_momentum(const struct feedback_props* fp,
                                             float t1, float t2, float Z) {
 
-  const float  log10_Z = log10(Z);
+  const float log10_Z = log10(Z);
   const double P_t1 = get_cumulative_stellarwind_momentum(fp, t1, log10_Z);
   const double P_t2 = get_cumulative_stellarwind_momentum(fp, t2, log10_Z);
 
-  const double Pbar = ( (P_t2 - P_t1) / (t2 - t1) )* fp->sec_to_Myr;
+  const double Pbar = ((P_t2 - P_t1) / (t2 - t1)) * fp->sec_to_Myr;
   return Pbar;
 }
 
@@ -946,7 +948,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const double dt,
                                             const float ngb_gas_mass) {
 
-  const double tw = props->SW_maxageMyr;    /* Myr */
+  const double tw = props->SW_maxageMyr;  /* Myr */
   double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
@@ -1327,7 +1329,6 @@ void feedback_props_init(struct feedback_props* fp,
     fp->with_early_feedback = 1;
   }
 
-
   /* Properties of the IMF model ------------------------------------------ */
 
   /* Minimal and maximal mass considered */
@@ -1545,12 +1546,16 @@ void feedback_props_init(struct feedback_props* fp,
 
     /* check that we won't exceed the maximum stellar age in the table */
     if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
-      error("HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f Myr)",
-            fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+      error(
+          "HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f "
+          "Myr)",
+          fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 
     if (fp->SW_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
-      error("stellarwind_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f Myr)", 
-            fp->SW_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+      error(
+          "stellarwind_maxage_Myr (%.2f Myr) exceeds maximum age in table "
+          "(%.2f Myr)",
+          fp->SW_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 
 #else
     error("Need HDF5 to read early feedback tables");
@@ -1594,8 +1599,9 @@ void feedback_props_init(struct feedback_props* fp,
       phys_const->const_caseb_recomb *
       units_general_cgs_conversion_factor(us, dimension_alphaB);
 
-  fp->Myr_to_sec = 1.e6 * phys_const->const_year * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
-  fp->sec_to_Myr = 1./ fp->Myr_to_sec;
+  fp->Myr_to_sec = 1.e6 * phys_const->const_year *
+                   units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+  fp->sec_to_Myr = 1. / fp->Myr_to_sec;
 
   /* Initialise the IMF ------------------------------------------------- */
 

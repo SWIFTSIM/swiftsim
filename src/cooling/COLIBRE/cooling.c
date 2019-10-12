@@ -1084,19 +1084,25 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
 
-  /* Question: Is it okay to read in the parameter SPH:minimal_temperature and 
-   * COLIBREChemistry:init_abundance_Hydrogen again here? It seems much easier than
-   * trying to pass them into this routine */
+  /* Question: Is it okay to read in the parameter SPH:minimal_temperature and
+   * COLIBREChemistry:init_abundance_Hydrogen again here? It seems much easier
+   * than trying to pass them into this routine */
   /* Get the minimal temperature allowed */
-  cooling->Tmin = parser_get_param_double(parameter_file, "SPH:minimal_temperature");
-  /* Is this always in K? Can the system unit for temperature ever be anything else? */
-  if (cooling->Tmin < 10.) error("COLIBRE cooling requires a minimal temperature of 10 K");
+  cooling->Tmin =
+      parser_get_param_double(parameter_file, "SPH:minimal_temperature");
+  /* Is this always in K? Can the system unit for temperature ever be anything
+   * else? */
+  if (cooling->Tmin < 10.)
+    error("COLIBRE cooling requires a minimal temperature of 10 K");
 
   /* Convert to minimal energy allowed (in cgs) */
-  const double Hfrac = parser_get_param_double(parameter_file, "COLIBREChemistry:init_abundance_Hydrogen");
-  /* Mean molecular weight calculated as done in SPH routine to get minimal energy */
-  const double mu    = 4. / (1. + 3. * Hfrac);
-  cooling->umin_cgs = hydro_one_over_gamma_minus_one * cooling->Tmin * kB_cgs / (proton_mass_cgs * mu);
+  const double Hfrac = parser_get_param_double(
+      parameter_file, "COLIBREChemistry:init_abundance_Hydrogen");
+  /* Mean molecular weight calculated as done in SPH routine to get minimal
+   * energy */
+  const double mu = 4. / (1. + 3. * Hfrac);
+  cooling->umin_cgs = hydro_one_over_gamma_minus_one * cooling->Tmin * kB_cgs /
+                      (proton_mass_cgs * mu);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Basic cross-check... */
