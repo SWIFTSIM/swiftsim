@@ -123,7 +123,7 @@ COLIBREFeedback:
   HIIregion_maxage_Myr:             0.             # (Optional) Maximum age in Myr of star particle to build HII region. Set to 0 to disable HII regions.
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
+  earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
 
 # Hernquist potential parameters
 HernquistPotential:
