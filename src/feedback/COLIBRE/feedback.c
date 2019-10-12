@@ -830,23 +830,27 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 
 /**
  * @brief Gets interpolated cumulative stellar wind momentum input from table
+ *
  * @param props feedback_props structure for getting model parameters for
  * coefficients
  * @param t_Myr stellar age in Myr
  * @param logZ log10 of (stellar) metal mass fraction Z
  */
 double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
-                                           float t_Myr, float logZ) {
+                                           float t_Myr, float log10_Z) {
   float d_age, d_met;
   int met_index, age_index;
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index,
+  /* Get index alongside the metallicity dimension */
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, log10_Z, &met_index,
                &d_met);
 
+  /* Get index alongside the age dimension */
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
+  /* Interpolate! */
   const float log10_Pcum_loc =
       interpolation_2d_flat(fp->SW_log10_Pcum, met_index, age_index, d_met,
                             d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
@@ -862,23 +866,25 @@ double get_cumulative_stellarwind_momentum(const struct feedback_props* fp,
  * @param logZ log10 of (stellar) metal mass fraction Z
  */
 double get_cumulative_ionizing_photons(const struct feedback_props* fp,
-                                       float t_Myr, float logZ) {
-  float logQcum_loc;
+                                       float t_Myr, float log10_Z) {
   float d_age, d_met;
   int met_index, age_index;
 
   if (t_Myr < fp->HII_agebins[0]) return 0.;
 
-  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, logZ, &met_index,
+  /* Get index alongside the metallicity dimension */
+  get_index_1d(fp->HII_log10_Zbins, fp->HII_nr_metbins, log10_Z, &met_index,
                &d_met);
 
+  /* Get index alongside the age dimension */
   get_index_1d(fp->HII_agebins, fp->HII_nr_agebins, t_Myr, &age_index, &d_age);
 
-  logQcum_loc =
+  /* Interpolate! */
+  const float log10_Qcum_loc =
       interpolation_2d_flat(fp->HII_log10_Qcum, met_index, age_index, d_met,
                             d_age, fp->HII_nr_metbins, fp->HII_nr_agebins);
 
-  return exp10(logQcum_loc);
+  return exp10(log10_Qcum_loc);
 }
 
 /**
@@ -899,8 +905,7 @@ double compute_average_stellarwind_momentum(const struct feedback_props* fp,
   const double P_t1 = get_cumulative_stellarwind_momentum(fp, t1, log10_Z);
   const double P_t2 = get_cumulative_stellarwind_momentum(fp, t2, log10_Z);
 
-  const double Pbar = ((P_t2 - P_t1) / (t2 - t1)) * fp->sec_to_Myr;
-  return Pbar;
+  return ((P_t2 - P_t1) / (t2 - t1)) * fp->sec_to_Myr;
 }
 
 /**
@@ -917,17 +922,14 @@ double compute_average_stellarwind_momentum(const struct feedback_props* fp,
 double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
                                                 float t1, float t2, float Z) {
 
-  double Qbar;
-  const double Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10(Z));
-  const double Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10(Z));
+  /* No luminosity at t=0 */
+  if (t2 <= 0.f) return 0.f;
 
-  if (t2 > 0.f) {
-    Qbar = (Q_t2 - Q_t1) / (t2 - t1) * fp->sec_to_Myr;
-  } else {
-    Qbar = 0.f;
-  }
+  const float log10_Z = log10(Z);
+  const double Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10_Z);
+  const double Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10_Z);
 
-  return Qbar;
+  return ((Q_t2 - Q_t1) / (t2 - t1)) * fp->sec_to_Myr;
 }
 
 /**
@@ -948,8 +950,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
                                             const double dt,
                                             const float ngb_gas_mass) {
 
-  const double tw = props->SW_maxageMyr;  /* Myr */
-  double delta_v_km_p_s = props->delta_v; /* km s^-1 */
+  const double tw = props->SW_max_age_Myr;      /* Myr */
+  const double delta_v_km_p_s = props->delta_v; /* km s^-1 */
 
   /* delta_v in code units */
   double delta_v =
@@ -1080,8 +1082,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   float stellar_yields[eagle_feedback_N_imf_bins];
 
   /* Convert dt and stellar age from internal units to Gyr. */
-  const double Gyr_in_cgs = 1e9 * 365. * 24. * 3600.;
-  const double Myr_in_cgs = 1e6 * 365. * 24. * 3600.;
+  const double Gyr_in_cgs = 1e9 * 365.25 * 24. * 3600.;
+  const double Myr_in_cgs = 1e6 * 365.25 * 24. * 3600.;
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
   const double conversion_factor = time_to_cgs / Gyr_in_cgs;
   const double dt_Gyr = dt * conversion_factor;
@@ -1126,13 +1128,13 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   sp->star_timestep = dt;
 
   /* Compute ionizing photons for HII regions */
-  if (feedback_props->HIIregion_maxageMyr > 0. &&
-      star_age_Myr <= feedback_props->HIIregion_maxageMyr) {
+  if (feedback_props->HIIregion_max_age_Myr > 0. &&
+      star_age_Myr <= feedback_props->HIIregion_max_age_Myr) {
     /* only rebuild every HIIregion_dtMyr and at the first timestep the star was
      * formed*/
-    if ((((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) >=
+    if ((((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dt_Myr) >=
           star_age_Myr) &&
-         ((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dtMyr) <
+         ((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dt_Myr) <
           star_age_Myr + dt_Myr)) ||
         (sp->HIIregion_last_rebuild < 0.)) {
 
@@ -1187,7 +1189,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
       /* convert dtMyr to dt (SU) */
       const float HIIregion_dt =
-          feedback_props->HIIregion_dtMyr * Myr_in_cgs / time_to_cgs;
+          feedback_props->HIIregion_dt_Myr * Myr_in_cgs / time_to_cgs;
       sp->feedback_data.to_distribute.HIIregion_endtime =
           time_beg_of_step + HIIregion_dt;
       sp->feedback_data.to_distribute.HIIregion_starid = sp->id;
@@ -1198,7 +1200,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       sp->feedback_data.to_distribute.HIIregion_starid = -1;
     }
 
-  } else if (feedback_props->HIIregion_maxageMyr > 0.) {
+  } else if (feedback_props->HIIregion_max_age_Myr > 0.) {
     sp->HIIregion_last_rebuild = -1.;
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
@@ -1317,13 +1319,13 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->HIIregion_maxageMyr = parser_get_opt_param_float(
+  fp->HIIregion_max_age_Myr = parser_get_opt_param_float(
       params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
 
-  fp->SW_maxageMyr = parser_get_opt_param_double(
+  fp->SW_max_age_Myr = parser_get_opt_param_double(
       params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
 
-  if (fp->HIIregion_maxageMyr == 0.f && fp->SW_maxageMyr == 0.f) {
+  if (fp->HIIregion_max_age_Myr == 0.f && fp->SW_max_age_Myr == 0.f) {
     fp->with_early_feedback = 0;
   } else {
     fp->with_early_feedback = 1;
@@ -1348,7 +1350,7 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of the SNII energy feedback model ------------------------- */
 
   /* Set the delay time before SNII occur */
-  const double Gyr_in_cgs = 1.0e9 * 365. * 24. * 3600.;
+  const double Gyr_in_cgs = 1.0e9 * 365.25 * 24. * 3600.;
   fp->SNII_wind_delay =
       parser_get_param_double(params, "COLIBREFeedback:SNII_wind_delay_Gyr") *
       Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
@@ -1394,15 +1396,15 @@ void feedback_props_init(struct feedback_props* fp,
                                     "COLIBREFeedback:SNII_energy_fraction_n_Z");
 
   /* Parameter only necessary if running with stellar winds */
-  if (fp->SW_maxageMyr != 0.f) {
+  if (fp->SW_max_age_Myr != 0.f) {
     fp->delta_v = parser_get_param_double(
         params, "COLIBREFeedback:Momentum_desired_delta_v");
   } else {
     fp->delta_v = 0.f;
   }
   /* Parameter only necessary if running with HII regions */
-  if (fp->HIIregion_maxageMyr > 0.f) {
-    fp->HIIregion_dtMyr = parser_get_param_float(
+  if (fp->HIIregion_max_age_Myr > 0.f) {
+    fp->HIIregion_dt_Myr = parser_get_param_float(
         params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
   }
 
@@ -1545,25 +1547,25 @@ void feedback_props_init(struct feedback_props* fp,
     fp->Zmax_early_fb = exp10(fp->HII_log10_Zbins[fp->HII_nr_metbins - 1]);
 
     /* check that we won't exceed the maximum stellar age in the table */
-    if (fp->HIIregion_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+    if (fp->HIIregion_max_age_Myr > fp->HII_agebins[fp->HII_nr_agebins - 1])
       error(
           "HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f "
           "Myr)",
-          fp->HIIregion_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+          fp->HIIregion_max_age_Myr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 
-    if (fp->SW_maxageMyr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+    if (fp->SW_max_age_Myr > fp->HII_agebins[fp->HII_nr_agebins - 1])
       error(
           "stellarwind_maxage_Myr (%.2f Myr) exceeds maximum age in table "
           "(%.2f Myr)",
-          fp->SW_maxageMyr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+          fp->SW_max_age_Myr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 
 #else
     error("Need HDF5 to read early feedback tables");
 #endif
   } else {
     /* Initialize to zero if run without early feedback */
-    fp->HIIregion_maxageMyr = 0.;
-    fp->HIIregion_dtMyr = 0.;
+    fp->HIIregion_max_age_Myr = 0.;
+    fp->HIIregion_dt_Myr = 0.;
   }
 
   /* Gather common conversion factors --------------------------------------- */

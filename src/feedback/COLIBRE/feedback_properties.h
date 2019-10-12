@@ -249,7 +249,7 @@ struct feedback_props {
   double n_Z;
 
   /* Timescale above which stars no longer inject momentum in Myr */
-  double SW_maxageMyr;
+  double SW_max_age_Myr;
 
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
@@ -261,10 +261,10 @@ struct feedback_props {
   char early_feedback_table_path[200];
 
   /* Maximum age in Myr of star particle to build HII region */
-  float HIIregion_maxageMyr;
+  float HIIregion_max_age_Myr;
 
   /* Time between rebuilding the HII region in Myr */
-  float HIIregion_dtMyr;
+  float HIIregion_dt_Myr;
 
   /* Recombination coefficient in cgs units [cm3 s-1]*/
   float alpha_caseb_recomb;
