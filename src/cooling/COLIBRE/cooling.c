@@ -1005,16 +1005,17 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
+                          const struct hydro_props *hydro_props,
                           struct cooling_function_data *cooling) {
 
   /* read some parameters */
 
+  parser_get_param_string(parameter_file, "COLIBRECooling:dir_name",
+                          cooling->cooling_table_path);
+
   /* Despite the names, the values of H_reion_heat_cgs and He_reion_heat_cgs
    * that are read in are actually in units of electron volts per proton mass.
    * We later convert to units just below */
-
-  parser_get_param_string(parameter_file, "COLIBRECooling:dir_name",
-                          cooling->cooling_table_path);
 
   cooling->H_reion_done = 0;
   cooling->H_reion_z =
@@ -1084,25 +1085,16 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
 
-  /* Question: Is it okay to read in the parameter SPH:minimal_temperature and
-   * COLIBREChemistry:init_abundance_Hydrogen again here? It seems much easier
-   * than trying to pass them into this routine */
   /* Get the minimal temperature allowed */
-  cooling->Tmin =
-      parser_get_param_double(parameter_file, "SPH:minimal_temperature");
-  /* Is this always in K? Can the system unit for temperature ever be anything
-   * else? */
+  cooling->Tmin = hydro_props->minimal_temperature;
   if (cooling->Tmin < 10.)
-    error("COLIBRE cooling requires a minimal temperature of 10 K");
+    error("COLIBRE cooling cannot handle a minimal temperature below 10 K");
 
-  /* Convert to minimal energy allowed (in cgs) */
-  const double Hfrac = parser_get_param_double(
-      parameter_file, "COLIBREChemistry:init_abundance_Hydrogen");
-  /* Mean molecular weight calculated as done in SPH routine to get minimal
-   * energy */
-  const double mu = 4. / (1. + 3. * Hfrac);
-  cooling->umin_cgs = hydro_one_over_gamma_minus_one * cooling->Tmin * kB_cgs /
-                      (proton_mass_cgs * mu);
+  /* Recover the minimal energy allowed (in internal units) */
+  const double u_min = hydro_props->minimal_internal_energy;
+
+  /* Convert to CGS units */
+  cooling->umin_cgs = u_min * cooling->internal_energy_to_cgs;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Basic cross-check... */
