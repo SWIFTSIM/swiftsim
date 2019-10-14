@@ -613,60 +613,59 @@ INLINE static void feedback_logger_log_data(
 
     }
 
+INLINE static void feedback_logger_init_log_file(FILE *fp_SNII, FILE *fp_SNIa, FILE *fp_r_processes, const struct unit_system *restrict us, const struct phys_const *phys_const) {
+  
+  /* Initialize the SNII logger */
+  feedback_logger_SNIa_init_log_file(fp_SNII, us, phys_const);
+  fflush(fp_SNII); 
+
+  /* Initialize the SNIa logger */
+  feedback_logger_SNIa_init_log_file(fp_SNIa, us, phys_const);
+  fflush(fp_SNIa); 
+
+  /* Initialize the r_processes logger */
+  feedback_logger_r_processes_init_log_file(fp_r_processes, us, phys_const);
+  fflush(fp_SNIa); 
+}
+
 #ifdef WITH_MPI
 INLINE static double feedback_logger_MPI(int nodeID, struct feedback_history_SNII *restrict SNII, struct feedback_history_SNIa *restrict SNIa, struct feedback_history_r_processes *restrict r_processes, double logger_time, double delta_logger_time) {
   
-  /* Send around the SNII information */
-  int total_SNII_events;
-  double global_SNII_info[2];
-  double send_SNII[2] = {SNII->SNII_energy, SNII->N_SNII};
-  
-  /* Do the MPI reduce communication for the SNII logger */
-  MPI_Reduce(&send_SNII, &global_SNII_info, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&SNII->heating, &total_SNII_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  /* Send all the information, first make an array for all the int variables */
+  int logger_ints_received[3];
+  int logger_ints_send[3] = {SNII->heating, SNIa->heating, r_processes->events};
 
-  /* Clear or store depending if we are node 0 or not */
-  if (nodeID==0) {
-    SNII->heating = total_SNII_events;
-    SNII->SNII_energy = global_SNII_info[0];
-    SNII->N_SNII = global_SNII_info[1];
-  } else {
+  /* make an array of all the double variables */
+  double logger_doubles_received[4];
+  double logger_doubles_send[4] = {SNII->SNII_energy, SNII->N_SNII, SNIa->SNIa_energy, r_processes->enrichment_mass};
+
+  /* Do the MPI Reduce on the int array and the double array */
+  MPI_Reduce(&logger_ints_send, &logger_ints_received, 3, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&logger_doubles_send, &logger_doubles_received, 4, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  /* Clear the variables or store them depending if we are node 0 or not */
+  if (nodeID != 0) {
     feedback_logger_SNII_clear(SNII);
-  }
-
-  /* Send around the r-processes information */
-  int total_r_processes_events;
-  double total_r_processes_mass;
-  
-  /* Do the MPI reduce communication for the r-processes logger */
-  MPI_Reduce(&r_processes->enrichement_mass, &total_r_processes_mass, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&r_processes->events, &total_r_processes_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-  /* Clear or store depending if we are node 0 or not */
-  if (nodeID==0) {
-    r_processes->events = total_r_processes_events;
-    r_processes->enrichement_mass = total_r_processes_mass;
-  } else {
-    feedback_logger_r_processes_clear(r_processes);
-  }
-  
-  /* Send around the SNIa information */
-  int total_SNIa_events;
-  double global_SNIa_info;
-
-  /* Send around the SNIa information */
-  MPI_Reduce(&SNIa->heating, &total_SNIa_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&SNIa->SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-
-  /* Clear or store depending if we are node 0 or not */
-  if (nodeID==0) {
-    SNIa->heating = total_SNIa_events;
-    SNIa->SNIa_energy = global_SNIa_info;
-    return logger_time;
-  } else {
     feedback_logger_SNIa_clear(SNIa);
+    feedback_logger_r_processes_clear(r_processes);
     return logger_time - delta_logger_time;
   }
+
+  /* Get the values for the SNII */
+  SNII->heating = logger_ints_received[0];
+  SNII->SNII_energy = logger_doubles_received[0];
+  SNII->N_SNII = logger_doubles_received[1];
+
+  /* Get the values for the SNIa */
+  SNIa->heating = logger_ints_received[1];
+  SNIa->SNIa_energy = logger_doubles_received[2];
+
+  /* Get the values for the r-processes */
+  r_processes->events = logger_ints_received[2];
+  r_processes->enrichments_mass = logger_doubles_received[3];
+
+  /* Return the received time if we are node 0 */
+  return logger_time;
 }
 #endif
 
