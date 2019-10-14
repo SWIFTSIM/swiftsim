@@ -849,6 +849,15 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * and cooling over the time-step. */ 
   chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
 
+  if (HII_flag == 1) 
+    {
+      /* If particle is in an HII region, manually 
+       * set it to be ionised, according to the 
+       * HIIregion_ion_state parameter. */ 
+      ChimesGasVars.InitIonState = cooling->HIIregion_ion_state; 
+      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+    }
+
   /* Physical constants that we will 
    * need, in cgs units */ 
   float dimension_k[5] = {1, 2, -2, 0, -1}; 
@@ -921,15 +930,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0); 
-
-  if (HII_flag == 1) 
-    {
-      /* If particle is in an HII region, manually 
-       * set it to be ionised, according to the 
-       * HIIregion_ion_state parameter. */ 
-      ChimesGasVars.InitIonState = cooling->HIIregion_ion_state; 
-      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
-    }
   
   /* Copy abundances from ChimesGasVars back to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
