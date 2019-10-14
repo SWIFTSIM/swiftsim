@@ -690,6 +690,15 @@ INLINE static void feedback_logger_log_data(
   feedback_logger_update_times(fha, step, time, a, z);
 }
 
+/**
+ * @brief Initialize all the feedback log file 
+ *
+ * @param fp_SNII the SNII file pointer
+ * @param fp_SNIa the SNIa file pointer
+ * @param fp_r_processes the r_processes file pointer
+ * @param us the used unit system
+ * @param phys_const the physical constant struct
+ */
 INLINE static void feedback_logger_init_log_file(
     FILE *fp_SNII, FILE *fp_SNIa, FILE *fp_r_processes,
     const struct unit_system *restrict us,
@@ -709,6 +718,17 @@ INLINE static void feedback_logger_init_log_file(
 }
 
 #ifdef WITH_MPI
+/**
+ * @brief Do the MPI communication between all the nodes regarding the feedback logger
+ *
+ * @param nodeID the nodeID
+ * @param SNII the SNII feedback structure
+ * @param SNIa the SNIa feedback structure
+ * @param r_processes the r-processes feedback structure
+ * @param logger_time the current time
+ * @param delta_logger_time the delta time stepping of the feedback logger
+ * @return the new time variable used to log the feedback data
+ */
 INLINE static double feedback_logger_MPI(
     int nodeID, struct feedback_history_SNII *restrict SNII,
     struct feedback_history_SNIa *restrict SNIa,
@@ -717,11 +737,11 @@ INLINE static double feedback_logger_MPI(
 
   /* Send all the information, first make an array for all the int variables */
   int logger_ints_received[3];
-  int logger_ints_send[3] = {SNII->heating, SNIa->heating, r_processes->events};
+  const int logger_ints_send[3] = {SNII->heating, SNIa->heating, r_processes->events};
 
   /* make an array of all the double variables */
   double logger_doubles_received[4];
-  double logger_doubles_send[4] = {SNII->SNII_energy, SNII->N_SNII,
+  const double logger_doubles_send[4] = {SNII->SNII_energy, SNII->N_SNII,
                                    SNIa->SNIa_energy,
                                    r_processes->enrichment_mass};
 
@@ -750,7 +770,7 @@ INLINE static double feedback_logger_MPI(
 
   /* Get the values for the r-processes */
   r_processes->events = logger_ints_received[2];
-  r_processes->enrichments_mass = logger_doubles_received[3];
+  r_processes->enrichment_mass = logger_doubles_received[3];
 
   /* Return the received time if we are node 0 */
   return logger_time;
