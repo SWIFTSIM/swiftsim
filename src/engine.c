@@ -3837,9 +3837,8 @@ void engine_config(int restart, int fof, struct engine *e,
       e->r_processes_logger = fopen("r_processes.txt", "w");
 
       if (!restart) {
-        
         /* Initialize the feedback loggers */
-        feedback_logger_init_log_file(e->SNII_logger, e->SNII_logger, e->r_processes_logger, e->internal_units, e->physical_constants);
+        feedback_logger_init_log_file(e->SNII_logger, e->SNIa_logger, e->r_processes_logger, e->internal_units, e->physical_constants);
       }
     }
   }

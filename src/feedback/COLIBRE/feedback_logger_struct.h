@@ -46,13 +46,10 @@ struct feedback_history_SNII {
 struct feedback_history_r_processes {
 
   /*! Total new r-processes mass in the simulation */
-  double enrichement_mass;
+  double enrichment_mass;
 
   /*! Number of r-processes events */
   int events;
-
-  /*! Number of r-processes in the simulation */
-  double N_r_processes;
 };
 
 /* Global variable for the SNIa events */

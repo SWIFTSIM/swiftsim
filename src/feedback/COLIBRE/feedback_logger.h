@@ -401,13 +401,13 @@ INLINE static void feedback_logger_SNII_log_data(
   /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
 
-  /* Get the total amount of SNIa energy */
+  /* Get the total amount of SNII energy */
   const double E_SNII = SNII->SNII_energy;
 
-  /* Get the Energy of a single SNIa */
+  /* Get the Energy of a single SNII */
   const double E_single_SNII = feedback_properties->E_SNII;
 
-  /* Calculate the number of SNIas in the simulation */
+  /* Calculate the number of SNIIs in the simulation */
   const double N_SNII = SNII->N_SNII / E_single_SNII;
 
   /* Calculate the number of SNIa per time and per time per volume */
@@ -489,11 +489,6 @@ INLINE static void feedback_logger_r_processes_init_log_file(
     FILE *fp, const struct unit_system *restrict us,
     const struct phys_const *phys_const) {
 
-  /* Calculate the energy unit */
-  const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
-                        us->UnitLength_in_cgs /
-                        (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
-
   /* Write some general text to the logger file */
   fprintf(fp, "# Stochastic r-processes logger file\n");
   fprintf(fp, "######################################################\n");
@@ -515,34 +510,40 @@ INLINE static void feedback_logger_r_processes_init_log_file(
   fprintf(fp, "# (5)  Previous scale factor     (no unit)\n");
   fprintf(fp, "# (6)  Redshift                  (no unit)\n");
   fprintf(fp, "# (7)  Previous redshift         (no unit)\n");
-  fprintf(fp, "# (8)  Injected energy of SNIa events\n");
-  fprintf(fp, "#      Unit = %e erg\n", E_unit);
-  fprintf(fp, "#      Unit = %e x 10^51 erg\n", E_unit / 1e51);
-  fprintf(fp, "# (9)  Number of SNIa   (number, no unit)\n");
-  fprintf(fp,
-          "# (10) Number of SNIa per time (binned in time between current time "
+  fprintf(fp, "# (8)  Injected mass of r-processes\n");
+  fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
+  fprintf(fp, "#      Unit = %e solar mass\n", 1./phys_const->const_solar_mass);
+  fprintf(fp, "# (9)  Injected mass of r-processes per time \n");
+  fprintf(fp, "#      Unit = %e g/s\n", us->UnitMass_in_cgs/us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e solar mass/yr\n", 1./phys_const->const_solar_mass * phys_const->const_year);
+  fprintf(fp, "# (10) Injected mass of r-processes per time per volume\n");
+  fprintf(fp, "#      Unit = %e g/s/cm^3\n", us->UnitMass_in_cgs/us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e solar mass/yr/Mpc^3\n", 1./phys_const->const_solar_mass * phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
+  fprintf(fp, "# (11) Number of r-processes (binned in time between current time and previous time)\n");
+  fprintf(fp, "#      Unit = no unit\n");
+  fprintf(fp, 
+          "# (12) Number of r-processes per time (binned in time between current time "
           "and previous time).\n");
   fprintf(fp, "#      Unit = %e #/seconds\n", 1. / us->UnitTime_in_cgs);
   fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
           phys_const->const_year * 1e6);
   fprintf(fp,
-          "# (11) Number of SNIa per time per comoving volume (binned in time "
+          "# (13) Number of r-processes per time per comoving volume (binned in time "
           "between current time and previous time).\n");
   fprintf(fp, "#      Unit = %e #/seconds/cm^3\n",
           1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
   fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n",
           phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
-  fprintf(fp, "# (12) Number of heating events   (no unit)\n");
   fprintf(fp, "#\n");
   fprintf(
       fp,
       "#  (0)      (1)         (2)              (3)           (4)           "
       " (5)         (6)          (7)          (8)         (9)          "
-      "   (10)           (11)         (12) \n");
+      "   (10)           (11)        (12)         (13)\n");
   fprintf(fp,
           "# step  prev. step      time          prev. time        a         "
-          " prev a          z          prev z    injection E    Numb SNIa    "
-          "   SNIa rate     SNIa rate/V   Number\n");
+          " prev a          z          prev z     Inj. mass     Inj. mass rate"
+          "  Inj.mass rate/V   N        N rate       N rate/V \n");
 }
 
 /**
@@ -562,15 +563,73 @@ INLINE static void feedback_logger_r_processes_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
     struct feedback_history_r_processes *restrict r_process,
     struct feedback_history_accumulator *fha, const int step, const double time,
-    const double a, const double z, const double volume) {}
+    const double a, const double z, const double volume) {
+
+  if (step == 0) return;
+
+  /* Calculate Delta time */
+  const double delta_time = time - fha->time_prev;
+
+  const int N_r_processes = r_process->events;
+
+  const double N_r_processes_p_time = (double)N_r_processes / delta_time;
+  
+  const double N_r_processes_p_time_p_volume = N_r_processes_p_time / volume;
+
+  const double delta_mass = r_process->enrichment_mass;
+
+  const double delta_mass_p_time = delta_mass / delta_time;
+
+  const double delta_mass_p_time_p_volume = delta_mass_p_time / volume;
+
+  /* Print the data to the file */
+  fprintf(fp,
+          "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
+          "%12.7e %7d      %12.7e %12.7e \n",
+          step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
+          fha->z_prev, delta_mass, delta_mass_p_time, 
+          delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time, 
+          N_r_processes_p_time_p_volume);
+}
 
 /**
- * @brief function to reinitialize the SNII logger.
+ * @brief function to reinitialize the r_processes logger.
  *
  * @param SNII the external variable that stores all the feedback information
  */
 INLINE static void feedback_logger_r_processes_clear(
-    struct feedback_history_r_processes *restrict r_process) {}
+    struct feedback_history_r_processes *restrict r_process) {
+
+  /* Set the enrichment mass to zero */
+  r_process->enrichment_mass = 0.;
+
+  /* Set the number of events to zero */
+  r_process->events = 0;
+}
+
+/**
+ * @brief log a r-process event
+ *
+ * @param r_processes the external variable that stores all the feedback information
+ * @param time the current simulation time
+ * @param si the star particle
+ * @param pj the gas particle
+ * @param xpj the extra information of the gas particle
+ * @param cosmo the cosmology struct
+ * @param delta_mass the new r-processes mass in Europium
+ */
+INLINE static void feedback_logger_r_processes_log_event(
+    struct feedback_history_r_processes *restrict r_processes, const double time,
+    const struct spart *restrict si, const struct part *restrict pj,
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const double delta_mass) {
+
+  if (lock_lock(&lock_r_processes) == 0) {
+    r_processes->enrichment_mass += delta_mass;
+    r_processes->events += 1;
+  }
+  if (lock_unlock(&lock_r_processes) != 0) error("Failed to unlock the lock");
+}
 
 /**
  * @brief log all the collected data to the logger file
