@@ -2187,61 +2187,6 @@ void engine_step(struct engine *e) {
     
     /* Send around the feedback logger information */
     feedback_logger_time = feedback_logger_MPI(e->nodeID, &log_SNII, &log_SNIa, &log_r_processes, feedback_logger_time, e->feedback_props->delta_time_feedback_logger);
-    
-    /*
-    int total_SNII_events;
-    double global_SNII_info[2];
-    if (lock_lock(&lock_SNII) == 0) {
-      double send_SNII = [log_SNII.SNII_energy, log_SNII.N_SNII];
-      MPI_Reduce(&send_SNII, &global_SNII_info, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      MPI_Reduce(&log_SNII.heating, &total_SNII_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-      if (e->nodeID == 0) {
-        log_SNII.heating = total_SNII_events;
-        log_SNII.SNII_energy = global_SNII_info[0];
-        log_SNII.N_SNII = global_SNII_info[1];
-      } else {
-        feedback_logger_SNII_clear(&log_SNIa);
-      }
-    } 
-    if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
-
-    int total_r_processes_events;
-    double global_r_processes_info[2];
-    if (lock_lock(&lock_r_processes) == 0) {
-      double send_r_processes = [log_r_processes.enrichement_mass, log_r_processes.N_r_processes];
-      MPI_Reduce(&send_r_processes, &global_r_processes_info, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      MPI_Reduce(&log_r_processes.events, &total_r_processes_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-      if (e->nodeID == 0) {
-        log_r_processes.events = total_r_processes_events;
-        log_r_processes.enrichement_mass = global_r_processes_info[0];
-        log_r_processes.N_r_processes = global_r_processes_info[1];
-      } else {
-        feedback_logger_r_processes_clear(&log_SNIa);
-      }
-    } 
-    if (lock_unlock(&lock_r_processes) != 0) error("Failed to unlock the lock");
-
-    int total_SNIa_events;
-    double global_SNIa_info;
-    if (lock_lock(&lock_SNIa) == 0) {
-      message("N Heated = %d, node = %d, SNIa energy = %e", log_SNIa.heating,
-              e->nodeID, log_SNIa.SNIa_energy);
-      MPI_Reduce(&log_SNIa.heating, &total_SNIa_events, 1, MPI_INT, MPI_SUM, 0,
-                 MPI_COMM_WORLD);
-      MPI_Reduce(&log_SNIa.SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE,
-                 MPI_SUM, 0, MPI_COMM_WORLD);
-      if (e->nodeID == 0) {
-        log_SNIa.heating = total_SNIa_events;
-        log_SNIa.SNIa_energy = global_SNIa_info;
-        message("node 0 information: %d %e", log_SNIa.heating,
-                log_SNIa.SNIa_energy);
-      } else {
-        feedback_logger_SNIa_clear(&log_SNIa);
-        feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
-      }
-    }
-    if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
-    */
   }
 #endif /* WITH_MPI */
 
