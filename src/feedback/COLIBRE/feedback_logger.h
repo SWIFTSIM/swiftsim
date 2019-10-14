@@ -187,8 +187,6 @@ INLINE static void feedback_logger_SNIa_log_data(
     const struct feedback_history_accumulator *fha, const int step,
     const double time, const double a, const double z, const double volume) {
 
-  if (step == 0) return;
-
   /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
 
@@ -396,8 +394,6 @@ INLINE static void feedback_logger_SNII_log_data(
     const struct feedback_history_accumulator *fha, const int step,
     const double time, const double a, const double z, const double volume) {
 
-  if (step == 0) return;
-
   /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
 
@@ -578,8 +574,6 @@ INLINE static void feedback_logger_r_processes_log_data(
     struct feedback_history_r_processes *restrict r_process,
     struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z, const double volume) {
-
-  if (step == 0) return;
 
   /* Calculate Delta time */
   const double delta_time = time - fha->time_prev;
