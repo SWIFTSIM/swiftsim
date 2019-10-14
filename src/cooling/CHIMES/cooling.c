@@ -896,6 +896,21 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   u_final = max(u_final, u_floor); 
 
+  if ((u_final == u_floor) && (ChimesGasVars.ForceEqOn == 0)) 
+    {
+      /* The particle has reached the entropy 
+       * floor, but it was evolved with non-
+       * eqm chemistry (meaning that it started 
+       * from a long way above the EOS). We 
+       * now need to re-set its abundance array 
+       * to be in chemical equilibrium. */ 
+      const double u_floor_cgs = u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+      chimes_update_gas_vars(u_floor_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
+      ChimesGasVars.ForceEqOn = 1; 
+      ChimesGasVars.ThermEvolOn = 0; 
+      chimes_network(&ChimesGasVars, &ChimesGlobalVars);
+    }
+
   /* Expected change in energy over the next kick step
      (assuming no change in dt) */
   const double delta_u = u_final - max(u_start, u_floor);
