@@ -136,7 +136,7 @@ FILE *SNIa_logger_debug;
 /* Declare the feedback structures */
 struct feedback_history_SNIa log_SNIa;
 struct feedback_history_SNII log_SNII;
-struct feedback_history_r_processes;
+struct feedback_history_r_processes log_r_processes;
 
 /* Declare the corresponding locker*/
 swift_lock_type lock_SNIa;
