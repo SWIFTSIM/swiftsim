@@ -167,7 +167,7 @@ INLINE static void feedback_logger_init(
   lock_init(&lock_SNII);
   lock_init(&lock_r_processes);
 }
-    
+
 /**
  * @brief log all the collected data to the logger file
  *
@@ -184,8 +184,8 @@ INLINE static void feedback_logger_init(
 INLINE static void feedback_logger_SNIa_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
     struct feedback_history_SNIa *restrict SNIa,
-    const struct feedback_history_accumulator *fha, const int step, const double time,
-    const double a, const double z, const double volume) {
+    const struct feedback_history_accumulator *fha, const int step,
+    const double time, const double a, const double z, const double volume) {
 
   if (step == 0) return;
 
@@ -215,10 +215,10 @@ INLINE static void feedback_logger_SNIa_log_data(
           step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
           fha->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume,
           N_heating_events);
-
 }
 
-INLINE static void feedback_logger_update_times(struct feedback_history_accumulator *fha, const int step, const double time,
+INLINE static void feedback_logger_update_times(
+    struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z) {
 
   /* Set the times to the new values */
@@ -226,9 +226,7 @@ INLINE static void feedback_logger_update_times(struct feedback_history_accumula
   fha->time_prev = time;
   fha->a_prev = a;
   fha->z_prev = z;
-
 }
-
 
 /**
  * @brief log a SNIa event
@@ -250,7 +248,9 @@ INLINE static void feedback_logger_SNIa_log_event(
   if (lock_lock(&lock_SNIa) == 0) {
 
     /* Get the injected energy */
-    const double mass_init = pj->mass; // I first had this but this doesn't seem right: const double mass_init = si->mass_init;
+    const double mass_init =
+        pj->mass;  // I first had this but this doesn't seem right: const double
+                   // mass_init = si->mass_init;
     const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
     const double deltaE = delta_u * mass_init;
 
@@ -393,8 +393,8 @@ INLINE static void feedback_logger_SNII_init_log_file(
 INLINE static void feedback_logger_SNII_log_data(
     const struct feedback_props *restrict feedback_properties, FILE *fp,
     struct feedback_history_SNII *restrict SNII,
-    const struct feedback_history_accumulator *fha, const int step, const double time,
-    const double a, const double z, const double volume) {
+    const struct feedback_history_accumulator *fha, const int step,
+    const double time, const double a, const double z, const double volume) {
 
   if (step == 0) return;
 
@@ -424,7 +424,6 @@ INLINE static void feedback_logger_SNII_log_data(
           step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
           fha->z_prev, E_SNII, N_SNII, N_SNII_p_time, N_SNII_p_time_p_volume,
           N_heating_events);
-
 }
 
 /**
@@ -464,7 +463,9 @@ INLINE static void feedback_logger_SNII_log_event(
   if (lock_lock(&lock_SNII) == 0) {
 
     /* Get the injected energy */
-    const double mass_init = pj->mass; // I first had this but this doesn't seem right: const double mass_init = si->mass_init;
+    const double mass_init =
+        pj->mass;  // I first had this but this doesn't seem right: const double
+                   // mass_init = si->mass_init;
     const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
     const double deltaE = delta_u * mass_init;
 
@@ -472,8 +473,9 @@ INLINE static void feedback_logger_SNII_log_event(
     SNII->SNII_energy += deltaE;
     SNII->heating += 1;
 
-    /* For the number of SNIIs first divide by the energy fraction, rest is done while writing the data */
-    SNII->N_SNII += deltaE/f_E;
+    /* For the number of SNIIs first divide by the energy fraction, rest is done
+     * while writing the data */
+    SNII->N_SNII += deltaE / f_E;
   }
   if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 }
@@ -512,23 +514,34 @@ INLINE static void feedback_logger_r_processes_init_log_file(
   fprintf(fp, "# (7)  Previous redshift         (no unit)\n");
   fprintf(fp, "# (8)  Injected mass of r-processes\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
-  fprintf(fp, "#      Unit = %e solar mass\n", 1./phys_const->const_solar_mass);
+  fprintf(fp, "#      Unit = %e solar mass\n",
+          1. / phys_const->const_solar_mass);
   fprintf(fp, "# (9)  Injected mass of r-processes per time \n");
-  fprintf(fp, "#      Unit = %e g/s\n", us->UnitMass_in_cgs/us->UnitTime_in_cgs);
-  fprintf(fp, "#      Unit = %e solar mass/yr\n", 1./phys_const->const_solar_mass * phys_const->const_year);
+  fprintf(fp, "#      Unit = %e g/s\n",
+          us->UnitMass_in_cgs / us->UnitTime_in_cgs);
+  fprintf(fp, "#      Unit = %e solar mass/yr\n",
+          1. / phys_const->const_solar_mass * phys_const->const_year);
   fprintf(fp, "# (10) Injected mass of r-processes per time per volume\n");
-  fprintf(fp, "#      Unit = %e g/s/cm^3\n", us->UnitMass_in_cgs/us->UnitTime_in_cgs/pow(us->UnitLength_in_cgs, 3));
-  fprintf(fp, "#      Unit = %e solar mass/yr/Mpc^3\n", 1./phys_const->const_solar_mass * phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
-  fprintf(fp, "# (11) Number of r-processes (binned in time between current time and previous time)\n");
+  fprintf(fp, "#      Unit = %e g/s/cm^3\n",
+          us->UnitMass_in_cgs / us->UnitTime_in_cgs /
+              pow(us->UnitLength_in_cgs, 3));
+  fprintf(fp, "#      Unit = %e solar mass/yr/Mpc^3\n",
+          1. / phys_const->const_solar_mass * phys_const->const_year *
+              pow(phys_const->const_parsec * 1e6, 3));
+  fprintf(fp,
+          "# (11) Number of r-processes (binned in time between current time "
+          "and previous time)\n");
   fprintf(fp, "#      Unit = no unit\n");
-  fprintf(fp, 
-          "# (12) Number of r-processes per time (binned in time between current time "
+  fprintf(fp,
+          "# (12) Number of r-processes per time (binned in time between "
+          "current time "
           "and previous time).\n");
   fprintf(fp, "#      Unit = %e #/seconds\n", 1. / us->UnitTime_in_cgs);
   fprintf(fp, "#      Unit = %e #/yr or %e #/Myr\n", phys_const->const_year,
           phys_const->const_year * 1e6);
   fprintf(fp,
-          "# (13) Number of r-processes per time per comoving volume (binned in time "
+          "# (13) Number of r-processes per time per comoving volume (binned "
+          "in time "
           "between current time and previous time).\n");
   fprintf(fp, "#      Unit = %e #/seconds/cm^3\n",
           1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
@@ -551,7 +564,8 @@ INLINE static void feedback_logger_r_processes_init_log_file(
  *
  * @param feedback_properties, the feedback structure
  * @param fp the file pointer to write to.
- * @param r_process the external variable that stores all the feedback information
+ * @param r_process the external variable that stores all the feedback
+ * information
  * @param fha the feedback history accumulator struct
  * @param step the current simulation step
  * @param time the current simulation time
@@ -573,7 +587,7 @@ INLINE static void feedback_logger_r_processes_log_data(
   const int N_r_processes = r_process->events;
 
   const double N_r_processes_p_time = (double)N_r_processes / delta_time;
-  
+
   const double N_r_processes_p_time_p_volume = N_r_processes_p_time / volume;
 
   const double delta_mass = r_process->enrichment_mass;
@@ -587,8 +601,8 @@ INLINE static void feedback_logger_r_processes_log_data(
           "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
           "%12.7e %7d      %12.7e %12.7e \n",
           step, fha->step_prev, time, fha->time_prev, a, fha->a_prev, z,
-          fha->z_prev, delta_mass, delta_mass_p_time, 
-          delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time, 
+          fha->z_prev, delta_mass, delta_mass_p_time,
+          delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
           N_r_processes_p_time_p_volume);
 }
 
@@ -610,7 +624,8 @@ INLINE static void feedback_logger_r_processes_clear(
 /**
  * @brief log a r-process event
  *
- * @param r_processes the external variable that stores all the feedback information
+ * @param r_processes the external variable that stores all the feedback
+ * information
  * @param time the current simulation time
  * @param si the star particle
  * @param pj the gas particle
@@ -619,10 +634,10 @@ INLINE static void feedback_logger_r_processes_clear(
  * @param delta_mass the new r-processes mass in Europium
  */
 INLINE static void feedback_logger_r_processes_log_event(
-    struct feedback_history_r_processes *restrict r_processes, const double time,
-    const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const double delta_mass) {
+    struct feedback_history_r_processes *restrict r_processes,
+    const double time, const struct spart *restrict si,
+    const struct part *restrict pj, const struct xpart *restrict xpj,
+    const struct cosmology *restrict cosmo, const double delta_mass) {
 
   if (lock_lock(&lock_r_processes) == 0) {
     r_processes->enrichment_mass += delta_mass;
@@ -651,56 +666,70 @@ INLINE static void feedback_logger_log_data(
     struct feedback_history_r_processes *restrict r_processes,
     struct feedback_history_accumulator *fha, const int step, const double time,
     const double a, const double z, const double volume) {
-    
-    /* Log the SNIa data */
-    feedback_logger_SNIa_log_data(feedback_properties, fp_SNIa, SNIa, fha, step, time, a, z, volume);
-    feedback_logger_SNIa_clear(SNIa);
-    fflush(fp_SNIa);
 
-    /* Log the SNII data */
-    feedback_logger_SNII_log_data(feedback_properties, fp_SNII, SNII, fha, step, time, a, z, volume);
-    feedback_logger_SNII_clear(SNII);
-    fflush(fp_SNII);
+  /* Log the SNIa data */
+  feedback_logger_SNIa_log_data(feedback_properties, fp_SNIa, SNIa, fha, step,
+                                time, a, z, volume);
+  feedback_logger_SNIa_clear(SNIa);
+  fflush(fp_SNIa);
 
-    /* Log the r_processes data */
-    feedback_logger_r_processes_log_data(feedback_properties, fp_r_processes, r_processes, fha, step, time, a, z, volume);
-    feedback_logger_r_processes_clear(r_processes);
-    fflush(fp_r_processes);
-  
-    /* Update the times in the gneral logger struct */ 
-    feedback_logger_update_times(fha, step, time, a, z);
+  /* Log the SNII data */
+  feedback_logger_SNII_log_data(feedback_properties, fp_SNII, SNII, fha, step,
+                                time, a, z, volume);
+  feedback_logger_SNII_clear(SNII);
+  fflush(fp_SNII);
 
-    }
+  /* Log the r_processes data */
+  feedback_logger_r_processes_log_data(feedback_properties, fp_r_processes,
+                                       r_processes, fha, step, time, a, z,
+                                       volume);
+  feedback_logger_r_processes_clear(r_processes);
+  fflush(fp_r_processes);
 
-INLINE static void feedback_logger_init_log_file(FILE *fp_SNII, FILE *fp_SNIa, FILE *fp_r_processes, const struct unit_system *restrict us, const struct phys_const *phys_const) {
-  
+  /* Update the times in the gneral logger struct */
+  feedback_logger_update_times(fha, step, time, a, z);
+}
+
+INLINE static void feedback_logger_init_log_file(
+    FILE *fp_SNII, FILE *fp_SNIa, FILE *fp_r_processes,
+    const struct unit_system *restrict us,
+    const struct phys_const *phys_const) {
+
   /* Initialize the SNII logger */
   feedback_logger_SNIa_init_log_file(fp_SNII, us, phys_const);
-  fflush(fp_SNII); 
+  fflush(fp_SNII);
 
   /* Initialize the SNIa logger */
   feedback_logger_SNIa_init_log_file(fp_SNIa, us, phys_const);
-  fflush(fp_SNIa); 
+  fflush(fp_SNIa);
 
   /* Initialize the r_processes logger */
   feedback_logger_r_processes_init_log_file(fp_r_processes, us, phys_const);
-  fflush(fp_SNIa); 
+  fflush(fp_SNIa);
 }
 
 #ifdef WITH_MPI
-INLINE static double feedback_logger_MPI(int nodeID, struct feedback_history_SNII *restrict SNII, struct feedback_history_SNIa *restrict SNIa, struct feedback_history_r_processes *restrict r_processes, double logger_time, double delta_logger_time) {
-  
+INLINE static double feedback_logger_MPI(
+    int nodeID, struct feedback_history_SNII *restrict SNII,
+    struct feedback_history_SNIa *restrict SNIa,
+    struct feedback_history_r_processes *restrict r_processes,
+    double logger_time, double delta_logger_time) {
+
   /* Send all the information, first make an array for all the int variables */
   int logger_ints_received[3];
   int logger_ints_send[3] = {SNII->heating, SNIa->heating, r_processes->events};
 
   /* make an array of all the double variables */
   double logger_doubles_received[4];
-  double logger_doubles_send[4] = {SNII->SNII_energy, SNII->N_SNII, SNIa->SNIa_energy, r_processes->enrichment_mass};
+  double logger_doubles_send[4] = {SNII->SNII_energy, SNII->N_SNII,
+                                   SNIa->SNIa_energy,
+                                   r_processes->enrichment_mass};
 
   /* Do the MPI Reduce on the int array and the double array */
-  MPI_Reduce(&logger_ints_send, &logger_ints_received, 3, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&logger_doubles_send, &logger_doubles_received, 4, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&logger_ints_send, &logger_ints_received, 3, MPI_INT, MPI_SUM, 0,
+             MPI_COMM_WORLD);
+  MPI_Reduce(&logger_doubles_send, &logger_doubles_received, 4, MPI_DOUBLE,
+             MPI_SUM, 0, MPI_COMM_WORLD);
 
   /* Clear the variables or store them depending if we are node 0 or not */
   if (nodeID != 0) {

@@ -312,7 +312,8 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      feedback_logger_SNII_log_event(&log_SNII, time, si, pj, xpj, cosmo, step, si->SNII_f_E);
+      feedback_logger_SNII_log_event(&log_SNII, time, si, pj, xpj, cosmo, step,
+                                     si->SNII_f_E);
 
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */

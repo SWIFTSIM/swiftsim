@@ -59,7 +59,7 @@ extern struct feedback_history_SNIa log_SNIa;
 extern struct feedback_history_SNII log_SNII;
 
 /* Global variable for the r-processes */
-extern struct feedback_history_r_processes log_r_processes; 
+extern struct feedback_history_r_processes log_r_processes;
 
 /* feedback history struct accumulator */
 struct feedback_history_accumulator {
