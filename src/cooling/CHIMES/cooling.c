@@ -56,6 +56,7 @@
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
+                          const struct hydro_props *hydro_props,
                           struct cooling_function_data *cooling) {
 
   char chimes_data_dir[256]; 
