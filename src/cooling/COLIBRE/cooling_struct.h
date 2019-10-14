@@ -182,6 +182,9 @@ struct cooling_function_data {
 
   /*! Minimal internal energy in cgs allowed for the gas particles */
   double umin_cgs;
+
+  /*! Threshold to switch between rapid and slow cooling regimes. */
+  double rapid_cooling_threshold;
 };
 
 /**
