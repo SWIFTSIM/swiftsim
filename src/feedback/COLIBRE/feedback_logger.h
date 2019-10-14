@@ -19,6 +19,11 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_H
 
+/* MPI headers. */
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
 #include "feedback_logger_struct.h"
 #include "feedback_properties.h"
 
@@ -607,5 +612,62 @@ INLINE static void feedback_logger_log_data(
     feedback_logger_update_times(fha, step, time, a, z);
 
     }
+
+#ifdef WITH_MPI
+INLINE static double feedback_logger_MPI(int nodeID, struct feedback_history_SNII *restrict SNII, struct feedback_history_SNIa *restrict SNIa, struct feedback_history_r_processes *restrict r_processes, double logger_time, double delta_logger_time) {
+  
+  /* Send around the SNII information */
+  int total_SNII_events;
+  double global_SNII_info[2];
+  double send_SNII = [SNII->SNII_energy, SNII->N_SNII];
+  
+  /* Do the MPI reduce communication for the SNII logger */
+  MPI_Reduce(&send_SNII, &global_SNII_info, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&SNII->heating, &total_SNII_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  /* Clear or store depending if we are node 0 or not */
+  if (nodeID==0) {
+    SNII->heating = total_SNII_events;
+    SNII->SNII_energy = global_SNII_info[0];
+    SNII->N_SNII = global_SNII_info[1];
+  } else {
+    feedback_logger_SNII_clear(SNII);
+  }
+
+  /* Send around the r-processes information */
+  int total_r_processes_events;
+  double total_r_processes_mass;
+  
+  /* Do the MPI reduce communication for the r-processes logger */
+  MPI_Reduce(&r_processes->enrichement_mass, &total_r_processes_mass, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&r_processes->events, &total_r_processes_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  /* Clear or store depending if we are node 0 or not */
+  if (nodeID==0) {
+    r_processes->events = total_r_processes_events;
+    r_processes->enrichement_mass = total_r_processes_mass;
+  } else {
+    feedback_logger_r_processes_clear(r_processes);
+  }
+  
+  /* Send around the SNIa information */
+  int total_SNIa_events;
+  double global_SNIa_info;
+
+  /* Send around the SNIa information */
+  MPI_Reduce(&SNIa->heating, &total_SNIa_events, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&SNIa->SNIa_energy, &global_SNIa_info, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  /* Clear or store depending if we are node 0 or not */
+  if (nodeID==0) {
+    SNIa->heating = total_SNIa_events;
+    SNIa->SNIa_energy = global_SNIa_info;
+    return logger_time;
+  } else {
+    feedback_logger_SNIa_clear(SNIa);
+    return logger_time - delta_logger_time;
+  }
+}
+#endif
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */

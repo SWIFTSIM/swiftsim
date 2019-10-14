@@ -2184,8 +2184,11 @@ void engine_step(struct engine *e) {
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
   if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
-  
-    /* Send around the SNII information */
+    
+    /* Send around the feedback logger information */
+    feedback_logger_time = feedback_logger_MPI(e->nodeID, &log_SNII, &log_SNIa, &log_r_processes, feedback_logger_time, e->feedback_props->delta_time_feedback_logger);
+    
+    /*
     int total_SNII_events;
     double global_SNII_info[2];
     if (lock_lock(&lock_SNII) == 0) {
@@ -2202,7 +2205,6 @@ void engine_step(struct engine *e) {
     } 
     if (lock_unlock(&lock_SNII) != 0) error("Failed to unlock the lock");
 
-    /* Send around the r-processes information */
     int total_r_processes_events;
     double global_r_processes_info[2];
     if (lock_lock(&lock_r_processes) == 0) {
@@ -2219,7 +2221,6 @@ void engine_step(struct engine *e) {
     } 
     if (lock_unlock(&lock_r_processes) != 0) error("Failed to unlock the lock");
 
-    /* Send around the SNIa information */
     int total_SNIa_events;
     double global_SNIa_info;
     if (lock_lock(&lock_SNIa) == 0) {
@@ -2240,6 +2241,7 @@ void engine_step(struct engine *e) {
       }
     }
     if (lock_unlock(&lock_SNIa) != 0) error("Failed to unlock the lock");
+    */
   }
 #endif /* WITH_MPI */
 
