@@ -28,7 +28,6 @@
 
 #include <math.h>
 #include <stdint.h>
-#include <stdio.h>
 
 typedef long long integertime_t;
 typedef int8_t timebin_t;

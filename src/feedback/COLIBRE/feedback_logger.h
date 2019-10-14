@@ -151,12 +151,18 @@ INLINE static void feedback_logger_init(
     struct feedback_history_accumulator *fha, const double time, const double a,
     const double z) {
 
+  /* Initialize the start times of the simulation */
   fha->step_prev = 0;
   fha->time_prev = time;
   fha->z_prev = z;
   fha->a_prev = a;
-}
 
+  /* Initialize the feedback history logger locks */
+  lock_init(&lock_SNIa);
+  lock_init(&lock_SNII);
+  lock_init(&lock_r_processes);
+}
+    
 /**
  * @brief log all the collected data to the logger file
  *
@@ -561,5 +567,45 @@ INLINE static void feedback_logger_r_processes_log_data(
 INLINE static void feedback_logger_r_processes_clear(
     struct feedback_history_r_processes *restrict r_process) {}
 
+/**
+ * @brief log all the collected data to the logger file
+ *
+ * @param feedback_properties, the feedback structure
+ * @param fp the file pointer to write to.
+ * @param SNIa the external variable that stores all the feedback information
+ * @param fha the feedback history accumulator struct
+ * @param step the current simulation step
+ * @param time the current simulation time
+ * @param a the current scale factor
+ * @param z the current redshift
+ * @param volume the simulation volume
+ */
+INLINE static void feedback_logger_log_data(
+    const struct feedback_props *restrict feedback_properties, FILE *fp_SNII,
+    struct feedback_history_SNII *restrict SNII, FILE *fp_SNIa,
+    struct feedback_history_SNIa *restrict SNIa, FILE *fp_r_processes,
+    struct feedback_history_r_processes *restrict r_processes,
+    struct feedback_history_accumulator *fha, const int step, const double time,
+    const double a, const double z, const double volume) {
+    
+    /* Log the SNIa data */
+    feedback_logger_SNIa_log_data(feedback_properties, fp_SNIa, SNIa, fha, step, time, a, z, volume);
+    feedback_logger_SNIa_clear(SNIa);
+    fflush(fp_SNIa);
+
+    /* Log the SNII data */
+    feedback_logger_SNII_log_data(feedback_properties, fp_SNII, SNII, fha, step, time, a, z, volume);
+    feedback_logger_SNII_clear(SNII);
+    fflush(fp_SNII);
+
+    /* Log the r_processes data */
+    feedback_logger_r_processes_log_data(feedback_properties, fp_r_processes, r_processes, fha, step, time, a, z, volume);
+    feedback_logger_r_processes_clear(r_processes);
+    fflush(fp_r_processes);
+  
+    /* Update the times in the gneral logger struct */ 
+    feedback_logger_update_times(fha, step, time, a, z);
+
+    }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
