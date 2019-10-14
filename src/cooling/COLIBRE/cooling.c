@@ -162,6 +162,12 @@ static INLINE double bisection_iter(
           colibre_cooling_rate(log10(u_lower_cgs), redshift, n_H_cgs,
                                abundance_ratio, n_H_index, d_n_H, met_index,
                                d_met, red_index, d_red, cooling, 0, 0, 0, 0);
+
+      /* If the energy is below or equal the minimum energy and we are still
+       * cooling, return the minimum energy */
+      if ((u_lower_cgs <= cooling->umin_cgs) && (LambdaNet_cgs < 0.))
+        return cooling->umin_cgs;
+
       i++;
     }
 
