@@ -619,7 +619,7 @@ INLINE static double feedback_logger_MPI(int nodeID, struct feedback_history_SNI
   /* Send around the SNII information */
   int total_SNII_events;
   double global_SNII_info[2];
-  double send_SNII = [SNII->SNII_energy, SNII->N_SNII];
+  double send_SNII[2] = {SNII->SNII_energy, SNII->N_SNII};
   
   /* Do the MPI reduce communication for the SNII logger */
   MPI_Reduce(&send_SNII, &global_SNII_info, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
