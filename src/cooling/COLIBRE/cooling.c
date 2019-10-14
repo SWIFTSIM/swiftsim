@@ -700,64 +700,65 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Determine if we are in the slow- or rapid-cooling regime,
    * by comparing dt / t_cool to the rapid_cooling_threshold.
-   * Note that dt / t_cool = fabs(delta_u) / u_start.
-   * If rapid_cooling_threshold < 0, always use the slow-cooling
+   *
+   * Note that dt / t_cool = fabs(delta_u) / u_start. */
+  const double dt_over_t_cool = fabs(delta_u) / max(u_start, u_floor);
+
+  /* If rapid_cooling_threshold < 0, always use the slow-cooling
    * regime. */
-  float cooling_du_dt;
   if ((cooling->rapid_cooling_threshold >= 0.0) &&
-      (fabs(delta_u) / max(u_start, u_floor) >=
-       cooling->rapid_cooling_threshold)) {
-    /* Rapid-cooling regime. Update internal energy
-     * to u_final and set du/dt = 0. */
-    cooling_du_dt = 0.0;
+      (dt_over_t_cool >= cooling->rapid_cooling_threshold)) {
+
+    /* Rapid-cooling regime. */
 
     /* Update the particle's u and du/dt */
     hydro_set_physical_internal_energy(p, xp, cosmo, u_final);
     hydro_set_drifted_physical_internal_energy(p, cosmo, u_final);
-    hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+    hydro_set_physical_internal_energy_dt(p, cosmo, 0.);
 
-    /* Store the radiated energy */
-    xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0);
   } else {
-    /* Slow-cooling regime. Update du/dt so that
-     * we can subsequently drift internal energy. */
-    cooling_du_dt = delta_u / dt_therm;
+
+    /* Slow-cooling regime. */
+
+    /* Update du/dt so that we can subsequently drift internal energy. */
+    const float cooling_du_dt = delta_u / dt_therm;
 
     /* Update the internal energy time derivative */
     hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
-
-    /* Store the radiated energy */
-    xp->cooling_data.radiated_energy -=
-        hydro_get_mass(p) * dt * ((u_final - u_0) / dt_therm);
   }
 
-  /* check if the particle is in an HII region and if yes, set the parameter
+  /* Store the radiated energy */
+  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0);
+
+  /* Check if the particle is in an HII region and if yes, set the parameter
    * accordingly */
   if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
       (xp->tracers_data.HIIregion_timer_gas > 0.)) {
-    /*const float temp = cooling_get_temperature (phys_const, hydro_properties,
-     * us, cosmo, cooling, p, xp); */
 
     const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
+
     /* HII region internal energy is the internal energy of a particle at a
      * temperature of cooling->HIIregion_temp */
     const float u_HII_cgs = cooling_get_internalenergy_for_temperature(
         phys_const, hydro_properties, us, cosmo, cooling, p, xp,
         cooling->HIIregion_temp);
 
-    const float u_HII = u_HII_cgs / cooling->internal_energy_to_cgs;
+    const float u_HII = u_HII_cgs * cooling->internal_energy_from_cgs;
 
+    /* The enrgy is below the HII target energy */
     if (u_old < u_HII) {
+
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
       hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
 
-      /* internal energy should stay constant for the timestep */
-      const float cooling_du_dt_HII = 0.;
-      hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt_HII);
+      /* Internal energy should stay constant for the timestep */
+      hydro_set_physical_internal_energy_dt(p, cosmo, 0.f);
     }
   } else if ((time > xp->tracers_data.HIIregion_timer_gas) &&
              (xp->tracers_data.HIIregion_timer_gas > 0.)) {
+
+    /* Reset the flags */
     xp->tracers_data.HIIregion_timer_gas = -1.;
     xp->tracers_data.HIIregion_starid = -1;
   }
