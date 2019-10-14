@@ -277,7 +277,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Properties of the HII region model */ 
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
-  cooling->HIIregion_ion_state = parser_get_param_int(parameter_file, "CHIMESCooling:HIIregion_ion_state"); 
+  cooling->HIIregion_ion_state = 1; 
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
