@@ -2183,10 +2183,13 @@ void engine_step(struct engine *e) {
 
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
-  if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
-    
+  if (e->policy & engine_policy_feedback &&
+      feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
+
     /* Send around the feedback logger information */
-    feedback_logger_time = feedback_logger_MPI(e->nodeID, &log_SNII, &log_SNIa, &log_r_processes, feedback_logger_time, e->feedback_props->delta_time_feedback_logger);
+    feedback_logger_time = feedback_logger_MPI(
+        e->nodeID, &log_SNII, &log_SNIa, &log_r_processes, feedback_logger_time,
+        e->feedback_props->delta_time_feedback_logger);
   }
 #endif /* WITH_MPI */
 
@@ -2212,12 +2215,17 @@ void engine_step(struct engine *e) {
       fflush(e->sfh_logger);
     }
 
-    if (e->policy & engine_policy_feedback && feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
+    if (e->policy & engine_policy_feedback &&
+        feedback_logger_time > e->feedback_props->delta_time_feedback_logger) {
       /* Calculte the box volume for the feedback loggers */
       const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
-      
+
       /* Log data */
-      feedback_logger_log_data(e->feedback_props, e->SNII_logger, &log_SNII, e->SNIa_logger, &log_SNIa, e->r_processes_logger, &log_r_processes, &e->feedback_history, e->step, e->time, e->cosmology->a, e->cosmology->z, box_volume);
+      feedback_logger_log_data(e->feedback_props, e->SNII_logger, &log_SNII,
+                               e->SNIa_logger, &log_SNIa, e->r_processes_logger,
+                               &log_r_processes, &e->feedback_history, e->step,
+                               e->time, e->cosmology->a, e->cosmology->z,
+                               box_volume);
 
       /* Subtract the interval time from the feedback logger write time */
       feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
@@ -3527,7 +3535,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   /* Initialize the feedback history structure */
   if (e->policy & engine_policy_feedback) {
     feedback_logger_init(&e->feedback_history, e->time, e->cosmology->a,
-                              e->cosmology->z);
+                         e->cosmology->z);
   }
 
   engine_init_output_lists(e, params);
@@ -3834,7 +3842,9 @@ void engine_config(int restart, int fof, struct engine *e,
 
       if (!restart) {
         /* Initialize the feedback loggers */
-        feedback_logger_init_log_file(e->SNII_logger, e->SNIa_logger, e->r_processes_logger, e->internal_units, e->physical_constants);
+        feedback_logger_init_log_file(e->SNII_logger, e->SNIa_logger,
+                                      e->r_processes_logger, e->internal_units,
+                                      e->physical_constants);
       }
     }
   }
