@@ -3827,13 +3827,9 @@ void engine_config(int restart, int fof, struct engine *e,
 
     /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
-      /* Open the SNIa logger */
+      /* Open the feedback loggers */
       e->SNIa_logger = fopen("SNIa.txt", "w");
-
-      /* Open the SNII logger */
       e->SNII_logger = fopen("SNII.txt", "w");
-
-      /* Open the r-processes logger */
       e->r_processes_logger = fopen("r_processes.txt", "w");
 
       if (!restart) {
