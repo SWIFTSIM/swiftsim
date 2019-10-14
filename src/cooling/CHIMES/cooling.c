@@ -412,7 +412,6 @@ void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
   /* Copy abundances over from xp to ChimesGasVars. */
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
-  chimes_update_element_abundances(phys_const, us, cosmo, data, p, xp, &ChimesGasVars, 1); 
       
   /* Get the particle's internal energy */ 
   double u_0 = hydro_get_physical_internal_energy(p, xp, cosmo); 
@@ -427,17 +426,24 @@ void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
   double dt_cgs = 3.15576e16; 
   int n_iterations = 10; 
   
-  /* Update ChimesGasVars with the particle's 
-   * thermodynamic variables. */ 
-  chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties, floor_props, data, p, xp, &ChimesGasVars, dt_cgs); 
-  
-  /* Set temperature evolution off, so that we
-   * compute equilibrium at fixed temperature. */ 
-  ChimesGasVars.ThermEvolOn = 0; 
-  
-  /* Integrate to chemical equilibrium. */
   for (i = 0; i < n_iterations; i++) 
-    chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
+    {
+      /* Update element abundances. This 
+       * accounts for the dust depletion 
+       * factors. */ 
+      chimes_update_element_abundances(phys_const, us, cosmo, data, p, xp, &ChimesGasVars, 1); 
+
+      /* Update ChimesGasVars with the particle's 
+       * thermodynamic variables. */ 
+      chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties, floor_props, data, p, xp, &ChimesGasVars, dt_cgs); 
+  
+      /* Set temperature evolution off, so that we
+       * compute equilibrium at fixed temperature. */ 
+      ChimesGasVars.ThermEvolOn = 0; 
+
+      /* Integrate to chemical equilibrium. */
+      chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
+    }
 
   /* Copy abundances over to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
