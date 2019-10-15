@@ -32,6 +32,9 @@ enum chemistry_element {
   chemistry_element_Mg,
   chemistry_element_Si,
   chemistry_element_Fe,
+  chemistry_element_Gra,
+  chemistry_element_Sil,
+  chemistry_element_Ide,
   chemistry_element_count
 };
 

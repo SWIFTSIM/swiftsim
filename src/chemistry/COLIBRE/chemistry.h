@@ -45,7 +45,8 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron"};
+      "Neon",     "Magnesium", "Silicon", "Iron", "Graphite",
+      "Silicate", "CarbideOxide"};
 
   return chemistry_element_names[elem];
 }
