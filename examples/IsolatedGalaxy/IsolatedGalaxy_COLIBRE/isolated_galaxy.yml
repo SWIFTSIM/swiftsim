@@ -69,6 +69,9 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
+  init_abundance_Graphite:  0.0  # Inital fraction of particle mass in Graphite grains
+  init_abundance_Silicate:   0.0  # Inital fraction of particle mass in Silicate grains
+  init_abundance_CarbideOxide:      0.0  # Inital fraction of particle mass in Oxide or Carbide grains
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 

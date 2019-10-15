@@ -32,10 +32,10 @@ static const float log10_min_metallicity = -20;
 #define eagle_feedback_N_imf_bins 200
 
 /*! Number of elements considered for the SNIa yields */
-#define eagle_feedback_SNIa_N_elements 42
+#define eagle_feedback_SNIa_N_elements 45
 
 /*! Number of elements considered for the SNII yields */
-#define eagle_feedback_SNII_N_elements 11
+#define eagle_feedback_SNII_N_elements 14
 
 /*! Number of mass bins considered for the SNII yields */
 #define eagle_feedback_SNII_N_masses 11
@@ -44,7 +44,7 @@ static const float log10_min_metallicity = -20;
 #define eagle_feedback_SNII_N_metals 5
 
 /*! Number of elements considered for the AGB yields */
-#define eagle_feedback_AGB_N_elements 11
+#define eagle_feedback_AGB_N_elements 14
 
 /*! Number of mass bins considered for the AGB yields */
 #define eagle_feedback_AGB_N_masses 23
@@ -95,10 +95,11 @@ INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
   herr_t status;
 
   /* Open SNIa tables for reading */
-  sprintf(fname, "%s/SNIa.hdf5", feedback_props->yield_table_path);
+  message("opening!");
+  sprintf(fname, "%s/SNIa_wdust.hdf5", feedback_props->yield_table_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) error("unable to open file %s\n", fname);
-
+  message("opened!");
   /* read element name array */
   datatype = H5Tcopy(H5T_C_S1);
   H5Tset_size(datatype, H5T_VARIABLE);
@@ -131,7 +132,7 @@ INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
   if (status < 0) error("error closing SNIa file");
 
   /* Open SNII tables for reading */
-  sprintf(fname, "%s/SNII.hdf5", feedback_props->yield_table_path);
+  sprintf(fname, "%s/SNII_wdust.hdf5", feedback_props->yield_table_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) error("unable to open file %s\n", fname);
 
@@ -237,7 +238,7 @@ INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
   if (status < 0) error("error closing file");
 
   /* Read AGB tables */
-  sprintf(fname, "%s/AGB.hdf5", feedback_props->yield_table_path);
+  sprintf(fname, "%s/AGB_wdust.hdf5", feedback_props->yield_table_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) error("unable to open file %s\n", fname);
 

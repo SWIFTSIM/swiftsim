@@ -266,6 +266,11 @@ INLINE static void star_formation_copy_properties(
   /* Store the chemistry struct in the star particle */
   sp->chemistry_data = p->chemistry_data;
 
+  /* dust grains destroyed at star formation (astration) */
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Gra] = 0.;
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil] = 0.;
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Ide] = 0.;
+
   /* Store the tracers data */
   sp->tracers_data = xp->tracers_data;
 
