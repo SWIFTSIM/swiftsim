@@ -74,6 +74,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
   struct spart *restrict sparts = c->stars.parts;
   const struct engine *e = r->e;
   const struct unit_system *us = e->internal_units;
+  const struct phys_const *phys_const = e->physical_constants;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const struct cosmology *cosmo = e->cosmology;
   const struct feedback_props *feedback_props = e->feedback_props;
@@ -237,8 +238,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                     max(star_age_end_of_step - dt, 0.);
 
                 /* Compute the stellar evolution  */
-                feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                      star_age_beg_of_step, dt);
+                feedback_evolve_spart(sp, feedback_props, cosmo, us, phys_const,
+                                      ti_begin, star_age_beg_of_step, dt);
               } else {
 
                 /* Reset the feedback fields of the star particle */
@@ -377,8 +378,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                 max(star_age_end_of_step - dt, 0.);
 
             /* Compute the stellar evolution  */
-            feedback_evolve_spart(sp, feedback_props, cosmo, us,
-                                  star_age_beg_of_step, dt);
+            feedback_evolve_spart(sp, feedback_props, cosmo, us, phys_const,
+                                  ti_begin, star_age_beg_of_step, dt);
           } else {
 
             /* Reset the feedback fields of the star particle */
