@@ -984,8 +984,7 @@ __attribute__((always_inline)) INLINE static void cooling_init_backend(
  * @param cooling the cooling data structure.
  */
 static INLINE void cooling_clean(struct cooling_function_data* cooling) {
-
-  // MATTHIEU: To do: free stuff here
+  _free_chemistry_data(&cooling->chemistry, &grackle_rates);
 }
 
 /**
