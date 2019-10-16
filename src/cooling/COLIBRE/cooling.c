@@ -480,7 +480,8 @@ void set_subgrid_part(const struct phys_const *phys_const,
   } else {
 
     /* above entropy floor: use table properties */
-    const double density = hydro_get_physical_density(p,cosmo);;
+    const double density = hydro_get_physical_density(p, cosmo);
+
     /* subgrid_dens should be the same as the physical density */
     xp->tracers_data.subgrid_dens = density;
 

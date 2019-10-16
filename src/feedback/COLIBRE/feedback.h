@@ -188,7 +188,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   sp->mass -= sp->feedback_data.to_distribute.mass;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if(sp->mass < 0.)
+  if (sp->mass < 0.)
     error("Stellar mass got negative! Check the yield and DTD normalisation!");
 #endif
 }
