@@ -1,0 +1,65 @@
+# Define the system of units to use internally. 
+InternalUnitSystem:
+  UnitMass_in_cgs:     1.9891E43      # 10^10 solar masses 
+  UnitLength_in_cgs:   3.08567758E21  # 1 kpc
+  UnitVelocity_in_cgs: 1.0e5          # Kilometers per second
+  UnitCurrent_in_cgs:  1              # Amperes
+  UnitTemp_in_cgs:     1              # Kelvin
+
+# Parameters governing the time integration
+TimeIntegration:
+  time_begin: 0.      # The starting time of the simulation (in internal units).
+  time_end:   0.5115  # The end time of the simulation (in internal units).
+  dt_min:     1e-9    # The minimal time-step size of the simulation (in internal units).
+  dt_max:     1e-2    # The maximal time-step size of the simulation (in internal units).
+
+# Parameters governing the snapshots
+Snapshots:
+  basename:            output     # Common part of the name of output files
+  time_first:          0.         # Time of the first output (in internal units)
+  delta_time:          0.005115   # Time difference between consecutive outputs (in internal units)
+
+# Parameters governing the conserved quantities statistics
+Statistics:
+  delta_time:          1.023e-4    # Time between statistics output
+
+# Parameters for the hydrodynamics scheme
+SPH:
+  resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
+  CFL_condition:         0.1      # Courant-Friedrich-Levy condition for time integration.
+  minimal_temperature:   10.      # Kelvin
+  h_min_ratio:           0.1      # Minimal smoothing in units of softening.
+  h_max:                 10.
+  
+# Parameters related to the initial conditions
+InitialConditions:
+  file_name:  ./coolingBox.hdf5     # The file to read
+  periodic:   1
+
+# Standard COLIBRE cooling options
+COLIBRECooling:
+  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_most_recent/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
+  H_reion_eV_p_H:          2.0
+  He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
+  He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
+  He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
+  HIIregion_ionization_fraction:    1.0      # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4     # Temperature of gas particles tagged as HII regions
+  delta_logTEOS_subgrid_properties: 0.2      # delta log T above the EOS below which the subgrid properties use Teq assumption
+  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
+
+# Solar abundances
+COLIBREChemistry:
+  init_abundance_metal:     0.0133714      # Inital fraction of particle mass in *all* metals 
+  init_abundance_Hydrogen:  0.73738788833  # Inital fraction of particle mass in Hydrogen
+  init_abundance_Helium:    0.24924186942  # Inital fraction of particle mass in Helium
+  init_abundance_Carbon:    0.0023647215   # Inital fraction of particle mass in Carbon
+  init_abundance_Nitrogen:  0.0006928991   # Inital fraction of particle mass in Nitrogen
+  init_abundance_Oxygen:    0.00573271036  # Inital fraction of particle mass in Oxygen
+  init_abundance_Neon:      0.00125649278  # Inital fraction of particle mass in Neon
+  init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
+  init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
+  init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
+  metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
+  metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
