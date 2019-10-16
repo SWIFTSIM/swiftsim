@@ -5,26 +5,27 @@ from pylab import *
 from scipy import stats
 import h5py as h5
 
+
 def get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z):
-	with h5.File(COLIBRECooling_dir_name, "r") as f:
-		RedshiftBins       = f['TableBins/RedshiftBins'].value
-		MetallicityBins    = f['TableBins/MetallicityBins'].value
-		TemperatureBins    = f['TableBins/TemperatureBins'].value
-		DensityBins        = f['TableBins/DensityBins'].value
-		InternalEnergyBins = f['TableBins/InternalEnergyBins'].value
+    with h5.File(COLIBRECooling_dir_name, "r") as f:
+        RedshiftBins = f["TableBins/RedshiftBins"].value
+        MetallicityBins = f["TableBins/MetallicityBins"].value
+        TemperatureBins = f["TableBins/TemperatureBins"].value
+        DensityBins = f["TableBins/DensityBins"].value
+        InternalEnergyBins = f["TableBins/InternalEnergyBins"].value
 
-		ThermEq = f['ThermEq/Temperature'].value
-		Zsol    = f['SolarMetallicity'].value
+        ThermEq = f["ThermEq/Temperature"].value
+        Zsol = f["SolarMetallicity"].value
 
-		metallicity = np.log10(COLIBRE_Z / Zsol)
+        metallicity = np.log10(COLIBRE_Z / Zsol)
 
-		idx_red = (np.abs(RedshiftBins- redshift)).argmin()
-		idx_met = (np.abs(MetallicityBins- metallicity)).argmin()
+        idx_red = (np.abs(RedshiftBins - redshift)).argmin()
+        idx_met = (np.abs(MetallicityBins - metallicity)).argmin()
 
-		Teq = ThermEq[idx_red, idx_met, :]
-		neq = DensityBins
+        Teq = ThermEq[idx_red, idx_met, :]
+        neq = DensityBins
 
-	return neq, Teq
+    return neq, Teq
 
 
 # Plot parameters
@@ -51,7 +52,7 @@ rcParams.update(params)
 rc("font", **{"family": "sans-serif", "sans-serif": ["Times"]})
 
 snap = int(sys.argv[1])
-filename = "output_%.4d.hdf5"%snap
+filename = "output_%.4d.hdf5" % snap
 
 f = h5.File(filename, "r")
 
@@ -62,13 +63,13 @@ year_in_cgs = 3600.0 * 24 * 365.0
 Msun_in_cgs = 1.98848e33
 G_in_cgs = 6.67259e-8
 pc_in_cgs = 3.08567758e18
-Msun_p_pc2 = Msun_in_cgs / pc_in_cgs**2
+Msun_p_pc2 = Msun_in_cgs / pc_in_cgs ** 2
 
 # Geometry info
 boxsize = f["/Header"].attrs["BoxSize"]
 centre = boxsize / 2.0
 
-# Redshift 
+# Redshift
 redshift = float(f["/Header"].attrs["Redshift"])
 timeSU = float(f["/Header"].attrs["Time"])
 
@@ -77,10 +78,12 @@ unit_length_in_cgs = f["/Units"].attrs["Unit length in cgs (U_L)"]
 unit_mass_in_cgs = f["/Units"].attrs["Unit mass in cgs (U_M)"]
 unit_time_in_cgs = f["/Units"].attrs["Unit time in cgs (U_t)"]
 
-time = timeSU * unit_time_in_cgs / year_in_cgs / 1.e6
+time = timeSU * unit_time_in_cgs / year_in_cgs / 1.0e6
 
 # Calculate Gravitational constant in internal units
-G = G_in_cgs * ( unit_length_in_cgs**3 / unit_mass_in_cgs / unit_time_in_cgs**2)**(-1)
+G = G_in_cgs * (unit_length_in_cgs ** 3 / unit_mass_in_cgs / unit_time_in_cgs ** 2) ** (
+    -1
+)
 
 # Read reference metallicity
 COLIBRE_Z = float(f["/Parameters"].attrs["COLIBREChemistry:init_abundance_metal"])
@@ -89,15 +92,27 @@ COLIBRE_Z = float(f["/Parameters"].attrs["COLIBREChemistry:init_abundance_metal"
 COLIBRECooling_dir_name = f["/Parameters"].attrs["COLIBRECooling:dir_name"]
 COLIBRECooling_dir_name
 
-neq, Teq = get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z) 
+neq, Teq = get_equilibrium_temperature(COLIBRECooling_dir_name, redshift, COLIBRE_Z)
 
 # Read parameters of the entropy floor
-COLIBREfloor_Jeans_rho_norm = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_density_threshold_H_p_cm3"])
-COLIBREfloor_Jeans_temperature_norm_K = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_temperature_norm_K"])
-COLIBREfloor_Jeans_gamma_effective = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_gamma_effective"])
-COLIBREfloor_cool_rho_norm = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_density_threshold_H_p_cm3"])
-COLIBREfloor_cool_temperature_norm_K = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_temperature_norm_K"])
-COLIBREfloor_cool_gamma_effective = float(f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_gamma_effective"])
+COLIBREfloor_Jeans_rho_norm = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_density_threshold_H_p_cm3"]
+)
+COLIBREfloor_Jeans_temperature_norm_K = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_temperature_norm_K"]
+)
+COLIBREfloor_Jeans_gamma_effective = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Jeans_gamma_effective"]
+)
+COLIBREfloor_cool_rho_norm = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_density_threshold_H_p_cm3"]
+)
+COLIBREfloor_cool_temperature_norm_K = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_temperature_norm_K"]
+)
+COLIBREfloor_cool_gamma_effective = float(
+    f["/Parameters"].attrs["EAGLEEntropyFloor:Cool_gamma_effective"]
+)
 
 # Read gas properties
 gas_pos = f["/PartType0/Coordinates"][:, :]
@@ -106,7 +121,7 @@ gas_rho = f["/PartType0/Densities"][:]
 gas_T = f["/PartType0/Temperatures"][:]
 gas_SFR = f["/PartType0/StarFormationRates"][:]
 gas_XH = f["/PartType0/ElementMassFractions"][:, 0]
-gas_Z = f["/PartType0/MetalMassFractions"][:] 
+gas_Z = f["/PartType0/MetalMassFractions"][:]
 gas_hsml = f["/PartType0/SmoothingLengths"][:]
 gas_sSFR = gas_SFR / gas_mass
 
@@ -114,16 +129,16 @@ gas_sSFR = gas_SFR / gas_mass
 stars_pos = f["/PartType4/Coordinates"][:, :]
 stars_BirthDensity = f["/PartType4/BirthDensities"][:]
 stars_BirthTime = f["/PartType4/BirthTimes"][:]
-stars_XH = f["/PartType4/ElementMassFractions"][:,0]
+stars_XH = f["/PartType4/ElementMassFractions"][:, 0]
 
 # Centre the box
 gas_pos[:, 0] -= centre[0]
 gas_pos[:, 1] -= centre[1]
 gas_pos[:, 2] -= centre[2]
 
-stars_pos[:,0] -= centre[0]
-stars_pos[:,1] -= centre[1]
-stars_pos[:,2] -= centre[2]
+stars_pos[:, 0] -= centre[0]
+stars_pos[:, 1] -= centre[1]
+stars_pos[:, 2] -= centre[2]
 
 # Turn the mass into better units
 gas_mass *= unit_mass_in_cgs / Msun_in_cgs
@@ -144,9 +159,13 @@ stars_BirthDensity *= stars_XH
 
 # Equations of state
 eos_cool_rho = np.logspace(-5, 5, 1000)
-eos_cool_T = COLIBREfloor_cool_temperature_norm_K * (eos_cool_rho / COLIBREfloor_cool_rho_norm) ** ( COLIBREfloor_cool_gamma_effective - 1.0 )
+eos_cool_T = COLIBREfloor_cool_temperature_norm_K * (
+    eos_cool_rho / COLIBREfloor_cool_rho_norm
+) ** (COLIBREfloor_cool_gamma_effective - 1.0)
 eos_Jeans_rho = np.logspace(-1, 5, 1000)
-eos_Jeans_T = COLIBREfloor_Jeans_temperature_norm_K * (eos_Jeans_rho / COLIBREfloor_Jeans_rho_norm) ** (COLIBREfloor_Jeans_gamma_effective - 1.0 ) 
+eos_Jeans_T = COLIBREfloor_Jeans_temperature_norm_K * (
+    eos_Jeans_rho / COLIBREfloor_Jeans_rho_norm
+) ** (COLIBREfloor_Jeans_gamma_effective - 1.0)
 
 ########################################################################3
 
@@ -155,14 +174,14 @@ figure()
 subplot(111, xscale="log", yscale="log")
 plot(eos_cool_rho, eos_cool_T, "k--", lw=0.6)
 plot(eos_Jeans_rho, eos_Jeans_T, "k--", lw=0.6)
-plot(np.power(10., neq), np.power(10., Teq), "k-", lw = 0.6)
+plot(np.power(10.0, neq), np.power(10.0, Teq), "k-", lw=0.6)
 scatter(gas_nH, gas_T, s=0.2)
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Temperature}~T~[{\\rm K}]$", labelpad=2)
-text(1.e1, 4.e4, 't = %.2f Myr'%(time))
+text(1.0e1, 4.0e4, "t = %.2f Myr" % (time))
 xlim(3e-8, 3e5)
 ylim(1.0, 2e9)
-savefig("rhoT_%3.3i.png"%(snap), dpi=200)
+savefig("rhoT_%3.3i.png" % (snap), dpi=200)
 
 # Plot the phase space diagram for SF gas
 figure()
@@ -200,14 +219,14 @@ star_mask = (
     & (stars_pos[:, 2] > -1.0)
 )
 
-stars_BirthDensity = stars_BirthDensity[star_mask] 
-#stars_BirthFlag = stars_BirthFlag[star_mask]
+stars_BirthDensity = stars_BirthDensity[star_mask]
+# stars_BirthFlag = stars_BirthFlag[star_mask]
 stars_BirthTime = stars_BirthTime[star_mask]
 
 # Histogram of the birth density
 figure()
 subplot(111, xscale="linear", yscale="linear")
-hist(np.log10(stars_BirthDensity),density=True,bins=20,range=[-2,5])
+hist(np.log10(stars_BirthDensity), density=True, bins=20, range=[-2, 5])
 xlabel("${\\rm Stellar~birth~density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=0)
 ylabel("${\\rm Probability}$", labelpad=-7)
 savefig("BirthDensity.png", dpi=200)
@@ -215,10 +234,12 @@ savefig("BirthDensity.png", dpi=200)
 # density - sSFR plane
 figure()
 subplot(111)
-hist2d(np.log10(gas_nH), np.log10(gas_sSFR), bins=50,range=[[-1.5,5],[-.5,2.5]])
+hist2d(np.log10(gas_nH), np.log10(gas_sSFR), bins=50, range=[[-1.5, 5], [-0.5, 2.5]])
 xlabel("${\\rm Density}~n_{\\rm H}~[{\\rm cm^{-3}}]$", labelpad=2)
 ylabel("${\\rm sSFR}~[{\\rm Gyr^{-1}}]$", labelpad=0)
-xticks([-1, 0, 1, 2, 3, 4], ["$10^{-1}$", "$10^0$", "$10^1$", "$10^2$", "$10^3$", "$10^4$"])
+xticks(
+    [-1, 0, 1, 2, 3, 4], ["$10^{-1}$", "$10^0$", "$10^1$", "$10^2$", "$10^3$", "$10^4$"]
+)
 yticks([0, 1, 2], ["$10^0$", "$10^1$", "$10^2$"])
 xlim(-1.4, 4.9)
 ylim(-0.5, 2.2)

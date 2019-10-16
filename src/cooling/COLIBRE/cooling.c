@@ -480,9 +480,9 @@ void set_subgrid_part(const struct phys_const *phys_const,
   } else {
 
     /* above entropy floor: use table properties */
-    const double crho = hydro_get_comoving_density(p);
-    /* subgrid_dens should be the same as p->rho */
-    xp->tracers_data.subgrid_dens = crho;
+    const double density = hydro_get_physical_density(p,cosmo);;
+    /* subgrid_dens should be the same as the physical density */
+    xp->tracers_data.subgrid_dens = density;
 
     /* interpolate the tables for H fractions */
     /* check if in an HII region */
