@@ -59,8 +59,8 @@ EAGLEEntropyFloor:
 # Metallicites read in for the gas and star
 EAGLEChemistry:              
   init_abundance_metal:      0.01
-  init_abundance_Hydrogen:   0.752
-  init_abundance_Helium:     0.248
+  init_abundance_Hydrogen:   0.74448#0.752
+  init_abundance_Helium:     0.24552#0.248
   init_abundance_Carbon:     0.0
   init_abundance_Nitrogen:   0.0
   init_abundance_Oxygen:     0.0
