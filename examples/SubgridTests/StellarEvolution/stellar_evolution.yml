@@ -139,6 +139,9 @@ COLIBREChemistry:
   init_abundance_Magnesium:  0.0
   init_abundance_Silicon:    0.0
   init_abundance_Iron:       0.0
+  metal_diffusion_constant:         0.   # No diffusion
+  metal_diffusion_timestep_mult:    100. # No diffusion
+
 
 # COLIBRE feedback model
 COLIBREFeedback:
