@@ -588,6 +588,9 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       /* If particle needs updating */
       if (part_is_active(p, e)) {
 
+        /* Update the particle after the feedback */
+        feedback_update_part(p, xp, e);
+
 #ifdef SWIFT_DEBUG_CHECKS
         /* Current end of time-step */
         const integertime_t ti_end =
