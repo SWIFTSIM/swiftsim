@@ -1231,6 +1231,15 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+    /* Dump MPI requests if collected. */
+#if defined(SWIFT_MPIUSE_REPORTS) && defined(WITH_MPI)
+  {
+    char dumpfile[40];
+    snprintf(dumpfile, 40, "mpiuse_report-rank%d-step%d.dat", engine_rank, 0);
+    mpiuse_log_dump(dumpfile, clocks_start_ticks);
+  }
+#endif
+
   /* Main simulation loop */
   /* ==================== */
   int force_stop = 0, resubmit = 0;
@@ -1298,6 +1307,16 @@ int main(int argc, char *argv[]) {
       memuse_log_dump(dumpfile);
     }
 #endif
+
+      /* Dump MPI requests if collected. */
+#if defined(SWIFT_MPIUSE_REPORTS) && defined(WITH_MPI)
+    {
+      char dumpfile[40];
+      snprintf(dumpfile, 40, "mpiuse_report-rank%d-step%d.dat", engine_rank,
+               j + 1);
+      mpiuse_log_dump(dumpfile, e.tic_step);
+    }
+#endif  // WITH_MPI
 
 #ifdef SWIFT_DEBUG_THREADPOOL
     /* Dump the task data using the given frequency. */
@@ -1375,11 +1394,6 @@ int main(int argc, char *argv[]) {
 #endif
   }
 
-#ifdef WITH_MPI
-  if ((res = MPI_Finalize()) != MPI_SUCCESS)
-    error("call to MPI_Finalize failed with error %i.", res);
-#endif
-
   /* Remove the stop file if used. Do this anyway, we could have missed the
    * stop file if normal exit happened first. */
   if (myrank == 0) force_stop = restart_stop_now(restart_dir, 1);
@@ -1400,6 +1414,11 @@ int main(int argc, char *argv[]) {
   if (with_cooling || with_temperature) cooling_clean(&cooling_func);
   engine_clean(&e, /*fof=*/0);
   free(params);
+
+#ifdef WITH_MPI
+  if ((res = MPI_Finalize()) != MPI_SUCCESS)
+    error("call to MPI_Finalize failed with error %i.", res);
+#endif
 
   /* Say goodbye. */
   if (myrank == 0) message("done. Bye.");
