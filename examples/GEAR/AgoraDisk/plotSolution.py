@@ -110,9 +110,9 @@ marker_names             = ['s', 'o', 'p', 'v', '^', '<', '>', 'h', '*']
 #             [file_location[1]+'GIZMO/snapshot_temp_000', file_location[1]+'GIZMO/snapshot_temp_100']]]
 codes = ['SWIFT', 'GEAR']
 filenames = [[["./agora_disk_IC.hdf5", "./agora_disk_500Myr.hdf5"], # Sim-noSFF
-              ["./snapshot_0000.hdf5", "./snapshot_0500.hdf5"]],
+              ["./snapshot_0000.hdf5", "./snapshot_0050.hdf5"]],
              [["./agora_disk_IC.hdf5", "./agora_disk_500Myr.hdf5"], # Sim-SFF (with star formation and feedback)
-              ["./snapshot_0000.hdf5", "./snapshot_0500.hdf5"]]] # I did not check the order, they can be switched
+              ["./snapshot_0000.hdf5", "./snapshot_0050.hdf5"]]] # I did not check the order, they can be switched
 
 # codes = ["SWIFT"]
 # filenames = [[["./agora_disk_0000.hdf5", "./agora_disk_0050.hdf5"]],
@@ -439,7 +439,7 @@ for time in range(len(times)):
                                         yield line
         if draw_PDF >= 1:
                 fig_PDF              += [plt.figure(figsize=(50, 80))]
-                grid_PDF             += [AxesGrid(fig_PDF[time], (0.01,0.01,0.99,0.99), nrows_ncols = (3, int(math.ceil(len(codes)/3.0))), axes_pad = 0.05, add_all = True, share_all = True,
+                grid_PDF             += [AxesGrid(fig_PDF[time], (0.01,0.01,0.99,0.99), nrows_ncols = (2, int(math.ceil(len(codes)/2.0))), axes_pad = 0.05, add_all = True, share_all = True,
                                                   label_mode = "1", cbar_mode = "single", cbar_location = "right", cbar_size = "2%", cbar_pad = 0.05, aspect = False)]
         if draw_pos_vel_PDF >= 1:
                 fig_pos_vel_PDF      += [plt.figure(figsize=(50, 80))]
@@ -469,7 +469,7 @@ for time in range(len(times)):
                 rad_height_profiles.append([])
         if draw_metal_PDF == 1:
                 fig_metal_PDF        += [plt.figure(figsize=(50, 80))]
-                grid_metal_PDF       += [AxesGrid(fig_metal_PDF[time], (0.01,0.01,0.99,0.99), nrows_ncols = (3, int(math.ceil(len(codes)/3.0))), axes_pad = 0.05, add_all = True, share_all = True,
+                grid_metal_PDF       += [AxesGrid(fig_metal_PDF[time], (0.01,0.01,0.99,0.99), nrows_ncols = (2, int(math.ceil(len(codes)/2.0))), axes_pad = 0.05, add_all = True, share_all = True,
                                                   label_mode = "1", cbar_mode = "single", cbar_location = "right", cbar_size = "2%", cbar_pad = 0.05, aspect = False)]
         if draw_density_DF >= 1:
                 density_DF_xs.append([])
@@ -578,7 +578,7 @@ for time in range(len(times)):
                             def _FormationTime(field, data):
                                 return pf.arr(data["PartType4", "BirthTimes"].d, 'code_time')
                             pf.add_field(("PartType4", FormationTimeType_to_use), function=_FormationTime, particle_type=True, take_log=False, units="code_time")
-                        
+
                         MassType_to_use = "Masses"
                 elif codes[code] == "GEAR":
                         PartType_Gas_to_use = "PartType0"

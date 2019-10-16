@@ -86,4 +86,4 @@ GEARChemistry:
   ScaleInitialMetallicity: 1
 
 Restarts:
-  delta_hours:        0.25        # (Optional) decimal hours between dumps of restart files.
+  delta_hours:        0.01        # (Optional) decimal hours between dumps of restart files.
