@@ -93,15 +93,15 @@ for snap in snaplist:
                 lognH = np.log10(XH * dens * dens_to_cgs / mH)
                 logT  = np.log10(temp)
 
-                dens_subgrid = f['PartType0/SubgridDensity'][:]
-                temp_subgrid = f['PartType0/SubgridTemperature'][:]
+                dens_subgrid = f['PartType0/SubgridPhysicalDensities'][:]
+                temp_subgrid = f['PartType0/SubgridTemperatures'][:]
 
                 lognH_sub = np.log10(XH * dens_subgrid * dens_to_cgs / mH)
                 logT_sub  = np.log10(temp_subgrid)
 
-                HIfrac  = f['PartType0/HydrogenNeutralFraction'][:]
-                HIIfrac = f['PartType0/HydrogenIonizedFraction'][:]
-                H2frac  = f['PartType0/HydrogenMolecularFraction'][:]
+                HIfrac  = f['PartType0/HydrogenNeutralFractions'][:]
+                HIIfrac = f['PartType0/HydrogenIonizedFractions'][:]
+                H2frac  = f['PartType0/HydrogenMolecularFractions'][:]
 
                 logHI  = np.log10(HIfrac)
                 logHII = np.log10(HIIfrac)

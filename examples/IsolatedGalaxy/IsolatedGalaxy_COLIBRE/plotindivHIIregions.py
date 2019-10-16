@@ -44,7 +44,7 @@ for isnap in range( len(snaplist) ):
                 pos_stars_SU  = f['PartType4/Coordinates'][:]
                 pos_conv = f['PartType0/Coordinates'].attrs['Conversion factor to physical CGS (including cosmological corrections)'] 
 
-                Gas_StarID = f['PartType0/HIIregionsStarID'][:]
+                Gas_StarID = f['PartType0/HIIregionsStarIDs'][:]
 
                 dens_to_cgs = f['PartType4/BirthDensities'].attrs['Conversion factor to physical CGS (including cosmological corrections)'][0]
                 XH = float( f['Parameters'].attrs['COLIBREChemistry:init_abundance_Hydrogen'] )
