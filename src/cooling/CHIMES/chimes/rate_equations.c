@@ -526,9 +526,9 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   if (data->myGasVars->ThermEvolOn == 1)
     {
       if (data->myGasVars->temperature > data->myGasVars->TempFloor)
-	NV_Ith_S(ydot, data->network_size) = (realtype) -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data);		/* Note that network_size is the number of chemcial species, hence No. of eqns = network_size + 1 when ThermEvol is on */
+	NV_Ith_S(ydot, data->network_size) = (realtype) -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data, 0);		/* Note that network_size is the number of chemcial species, hence No. of eqns = network_size + 1 when ThermEvol is on */
       else
-  	NV_Ith_S(ydot, data->network_size) = (realtype) chimes_max(-calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data), 0.0);  /* Once T falls below T_floor, set T_dot >= 0 */ 
+  	NV_Ith_S(ydot, data->network_size) = (realtype) chimes_max(-calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data, 0), 0.0);  /* Once T falls below T_floor, set T_dot >= 0 */ 
     }
 
   return 0;

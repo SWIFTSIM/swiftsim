@@ -12,7 +12,7 @@
 
 // chimes_cooling.c 
 ChimesFloat calculate_mean_molecular_weight(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
-ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
+ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data, int mode); 
 ChimesFloat calculate_total_number_density(ChimesFloat *my_abundances, ChimesFloat nH, struct globalVariables *myGlobalVars); 
 ChimesFloat compton_cooling(ChimesFloat T, ChimesFloat Tcmb, ChimesFloat xe, ChimesFloat nH); 
 void do_equilibrium_cooling(struct UserData data); 

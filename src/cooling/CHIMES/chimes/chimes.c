@@ -186,9 +186,9 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
   if (data.myGasVars->ThermEvolOn == 1) 
     {
       if (data.myGasVars->temperature > data.myGasVars->TempFloor) 
-	cool_rate = calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+	cool_rate = calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
       else 
-	cool_rate = chimes_min(calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data), 0.0); 
+	cool_rate = chimes_min(calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0), 0.0); 
 
       old_energy = myGasVars->temperature * 1.5 * calculate_total_number_density(myGasVars->abundances, myGasVars->nH_tot, myGlobalVars) * BOLTZMANNCGS;
 

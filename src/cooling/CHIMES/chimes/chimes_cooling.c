@@ -115,7 +115,7 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
   return; 
 }
 
-ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data) 
+ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data, int mode) 
 {
   int i, xHII_index, Psi_index, T_index, T_mol_index, N_CO_rot_index, N_CO_vib_index; 
   int N_H2O_rot_index, N_H2O_vib_index, T_H2O_index; 
@@ -128,6 +128,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
   ChimesFloat H2O_rot_L0, H2O_rot_Llte, H2O_rot_nhalf, H2O_rot_a, H2O_vib_L0, H2O_vib_Llte; 
   ChimesFloat cr_secondary; 
   ChimesFloat total_cooling = 0.0; 
+  ChimesFloat total_heating = 0.0; 
   
   update_cooling_rates(myGasVars, myGlobalVars, data); 
   
@@ -146,15 +147,15 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
   if (myGlobalVars->N_spectra > 0) 
     {
       for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++) 
-	total_cooling -= data.chimes_current_rates->photoion_fuv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]] / myGasVars->nH_tot; 
+	total_heating += data.chimes_current_rates->photoion_fuv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_fuv.reactants[i]] / myGasVars->nH_tot; 
 
       for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++) 
-	total_cooling -= data.chimes_current_rates->photoion_euv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]] / myGasVars->nH_tot; 
+	total_heating += data.chimes_current_rates->photoion_euv_heat_rate[i] * myGasVars->abundances[chimes_table_photoion_euv.reactants[i]] / myGasVars->nH_tot; 
     }
 
   // Cosmic ray heating 
   for (i = 0; i < chimes_table_cosmic_ray.N_reactions[data.mol_flag_index]; i++) 
-    total_cooling -= 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[i] / myGasVars->nH_tot; 
+    total_heating += 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[i] / myGasVars->nH_tot; 
 
   // Correct for secondary cosmic rays 
   log_xHII = (ChimesFloat) log10(chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]], 1.0e-100));
@@ -162,7 +163,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
   for (i = 0; i < 2; i++) 
     {
       cr_secondary = pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i], xHII_index, d_xHII)); 
-      total_cooling += 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[chimes_table_cosmic_ray.secondary_base_reaction[i]] * cr_secondary / (myGasVars->nH_tot * (1.0 + cr_secondary)); 
+      total_heating -= 3.2e-11 * data.chimes_current_rates->cosmic_ray_rate[chimes_table_cosmic_ray.secondary_base_reaction[i]] * cr_secondary / (myGasVars->nH_tot * (1.0 + cr_secondary)); 
     }
 
   // Compton cooling from the CMB 
@@ -199,10 +200,10 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       else 
 	H2_crit_density = (xHI + xH2) / ((xHI / data.chimes_current_rates->H2_collis_dissoc_crit_H) + (xH2 / data.chimes_current_rates->H2_collis_dissoc_crit_H2)); 
 
-      total_cooling -= (((2.93e-12 * data.chimes_current_rates->T_dependent_rate[chimes_table_T_dependent.H2_form_heating_reaction_index]) + (5.65e-12 * data.chimes_current_rates->constant_rate[chimes_table_constant.H2_form_heating_reaction_index])) * (1.0 / (myGasVars->nH_tot + H2_crit_density))); 
+      total_heating += (((2.93e-12 * data.chimes_current_rates->T_dependent_rate[chimes_table_T_dependent.H2_form_heating_reaction_index]) + (5.65e-12 * data.chimes_current_rates->constant_rate[chimes_table_constant.H2_form_heating_reaction_index])) * (1.0 / (myGasVars->nH_tot + H2_crit_density))); 
 
       // Dust-catalysed H2 formation 
-      total_cooling -= 7.16e-12 * (data.chimes_current_rates->H2_dust_formation_rate / myGasVars->nH_tot) * (myGasVars->nH_tot / (myGasVars->nH_tot + H2_crit_density)); 
+      total_heating += 7.16e-12 * (data.chimes_current_rates->H2_dust_formation_rate / myGasVars->nH_tot) * (myGasVars->nH_tot / (myGasVars->nH_tot + H2_crit_density)); 
 
       // CO cooling 
       if ((myGlobalVars->element_included[0] == 1) && (myGlobalVars->element_included[2] == 1)) 
@@ -295,10 +296,10 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       if (myGlobalVars->N_spectra > 0) 
 	{
 	  // H2 photodissoc heating 
-	  total_cooling -= 6.4e-13 * data.chimes_current_rates->H2_photodissoc_rate[0] / myGasVars->nH_tot; 
+	  total_heating += 6.4e-13 * data.chimes_current_rates->H2_photodissoc_rate[0] / myGasVars->nH_tot; 
 	  
 	  // H2 UV pumping 
-	  total_cooling -= 2.7e-11 * data.chimes_current_rates->H2_photodissoc_rate[0] * (1.0 / (myGasVars->nH_tot + H2_crit_density)); 
+	  total_heating += 2.7e-11 * data.chimes_current_rates->H2_photodissoc_rate[0] * (1.0 / (myGasVars->nH_tot + H2_crit_density)); 
 
 	  // Photoelectric dust heating & grain recombination cooling 
 	  // Note that dust processes are only included when 
@@ -316,7 +317,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
 
 	      chimes_get_table_index(chimes_table_bins.Psi, chimes_table_bins.N_Psi, log_Psi, &Psi_index, &dPsi); 
 	  
-	      total_cooling -= pow(10.0, chimes_interpol_2d(chimes_table_cooling.photoelectric_heating, T_index, Psi_index, dT, dPsi)) * G0 * myGasVars->dust_ratio / myGasVars->nH_tot; 
+	      total_heating += pow(10.0, chimes_interpol_2d(chimes_table_cooling.photoelectric_heating, T_index, Psi_index, dT, dPsi)) * G0 * myGasVars->dust_ratio / myGasVars->nH_tot; 
 	      total_cooling += pow(10.0, chimes_interpol_2d(chimes_table_cooling.grain_recombination, T_index, Psi_index, dT, dPsi)) * myGasVars->dust_ratio * myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]]; 
 	    }
 	}
@@ -325,9 +326,22 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       total_cooling += pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer, T_index, dT)) * myGasVars->dust_ratio * (myGasVars->temperature - myGlobalVars->grain_temperature); 
     }
 
-   
-  // Return cooling rate in erg/cm3/s (heating is negative). 
-  return (total_cooling * pow(myGasVars->nH_tot, 2.0)) - myGasVars->constant_heating_rate; 
+  // Convert units to erg/cm3/s 
+  total_cooling *= pow(myGasVars->nH_tot, 2.0); 
+  total_heating *= pow(myGasVars->nH_tot, 2.0); 
+  total_heating += myGasVars->constant_heating_rate; 
+
+  if (mode == 0) 
+    return total_cooling - total_heating; 
+  else if (mode == 1) 
+    return total_cooling; 
+  else if (mode == 2) 
+    return total_heating; 
+  else 
+    {
+      printf("CHIMES error: calculate_total_cooling_rate() called with mode == %d. Allowed modes: 0 (net cooling), 1 (cooling only), 2 (heating only).\n", mode); 
+      exit(EXIT_FAILURE); 
+    }
 }
 
 void do_equilibrium_cooling(struct UserData data)
@@ -344,7 +358,7 @@ void do_equilibrium_cooling(struct UserData data)
   update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
   update_rates(data.myGasVars, data.myGlobalVars, data);
 
-  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
   if (data.myGasVars->temperature <= data.myGasVars->TempFloor && LambdaNet <= 0.0)
     return; 
@@ -365,7 +379,7 @@ void do_equilibrium_cooling(struct UserData data)
       update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
       update_rates(data.myGasVars, data.myGlobalVars, data);
       
-      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
       if (fabs(LambdaNet * dt) < 0.10 * u_old && fabs(LambdaNet * dt) < 0.10 * u)
 	return;
@@ -395,7 +409,7 @@ void do_equilibrium_cooling(struct UserData data)
       update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
       update_rates(data.myGasVars, data.myGlobalVars, data);
       
-      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
       while (u_upper - u_old - LambdaNet * dt < 0.0 && i < maxIter)
 	{
@@ -408,7 +422,7 @@ void do_equilibrium_cooling(struct UserData data)
 	  update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
 	  update_rates(data.myGasVars, data.myGlobalVars, data);
 	  
-	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
 	  i++;
 	}
@@ -431,7 +445,7 @@ void do_equilibrium_cooling(struct UserData data)
 	  update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
 	  update_rates(data.myGasVars, data.myGlobalVars, data);
 	  
-	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 	}
       else
 	{
@@ -440,7 +454,7 @@ void do_equilibrium_cooling(struct UserData data)
 	  update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
 	  update_rates(data.myGasVars, data.myGlobalVars, data);
 	  
-	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+	  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 	  
 	  while (u_lower - u_old - LambdaNet * dt > 0.0 && i < maxIter)
 	    {
@@ -457,7 +471,7 @@ void do_equilibrium_cooling(struct UserData data)
 		  update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
 		  update_rates(data.myGasVars, data.myGlobalVars, data);
 	  
-		  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+		  LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 		  break;
 		}
 
@@ -466,7 +480,7 @@ void do_equilibrium_cooling(struct UserData data)
 	      update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
 	      update_rates(data.myGasVars, data.myGlobalVars, data);
 	      
-	      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+	      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
 	      i++;
 	    }
@@ -490,7 +504,7 @@ void do_equilibrium_cooling(struct UserData data)
       update_rate_coefficients(data.myGasVars, data.myGlobalVars, data, data.myGasVars->ThermEvolOn);
       update_rates(data.myGasVars, data.myGlobalVars, data);
 	      
-      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data); 
+      LambdaNet = -calculate_total_cooling_rate(data.myGasVars, data.myGlobalVars, data, 0); 
 
       if (u - u_old - LambdaNet * dt > 0.0)
 	u_upper = u;
