@@ -2173,8 +2173,7 @@ void engine_step(struct engine *e) {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   e->tic_step = getticks();
-  static double feedback_logger_time = 0;
-  feedback_logger_time += e->time_step;
+  feedback_logger_time_step(e);
 
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
@@ -2212,14 +2211,8 @@ void engine_step(struct engine *e) {
     }
 
     if (e->policy & engine_policy_feedback) {
-      /* Calculte the box volume for the feedback loggers */
-      const double box_volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
-
       /* Log data */
       feedback_logger_log_data(e);
-
-      /* Subtract the interval time from the feedback logger write time */
-      feedback_logger_time -= e->feedback_props->delta_time_feedback_logger;
     }
 
     if (!e->restarting)
@@ -4784,9 +4777,7 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      fclose(e->SNIa_logger);
-      fclose(e->SNII_logger);
-      fclose(e->r_processes_logger);
+      feedback_logger_close(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
       fclose(SNIa_logger_debug);
