@@ -30,6 +30,7 @@
 #include "black_holes.h"
 #include "cell.h"
 #include "engine.h"
+#include "feedback.h"
 #include "kick.h"
 #include "timers.h"
 #include "timestep.h"
