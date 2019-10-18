@@ -26,6 +26,7 @@
 
 #include "feedback_logger_struct.h"
 #include "feedback_properties.h"
+#include "engine.h"
 
 extern swift_lock_type lock_SNIa;
 extern swift_lock_type lock_SNII;
@@ -724,10 +725,9 @@ INLINE static void feedback_logger_init_log_file(
  * @return the new time variable used to log the feedback data
  */
 INLINE static double feedback_logger_MPI(
-    int nodeID, struct feedback_history_SNII *restrict SNII,
-    struct feedback_history_SNIa *restrict SNIa,
-    struct feedback_history_r_processes *restrict r_processes,
-    double logger_time, double delta_logger_time) {
+    const struct engine e) {
+
+  const int nodeID = e->nodeID;
 
   /* Send all the information, first make an array for all the int variables */
   int logger_ints_received[3];
