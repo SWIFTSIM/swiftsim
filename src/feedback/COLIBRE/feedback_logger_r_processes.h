@@ -119,4 +119,11 @@ INLINE static void feedback_logger_r_processes_init(const struct engine *restric
  
 }
 
+INLINE static void feedback_logger_r_processes_time_step(const struct engine *restrict e) {
+  
+  feedback_logger_core_time_step(e, &log_r_processes.core);
+}
+
+INLINE static void feedback_logger_r_processes_log_data(const struct engine *restrict e) {}
+
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H */

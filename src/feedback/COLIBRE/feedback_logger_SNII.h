@@ -111,4 +111,61 @@ INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
  
 }
 
+INLINE static void feedback_logger_SNII_time_step(const struct engine *restrict e) {
+  
+  feedback_logger_core_time_step(e, &log_SNII.core);
+}
+
+INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e) {
+  
+  if (!feedback_logger_core_log(e, &log_SNII.core)) return;
+
+  /* We need to log */
+  
+  /* Get the feedback structure */
+  const struct feedback_props *feedback_properties = e->feedback_props; 
+
+  /* Get the core struct */
+  struct feedback_history_logger *core = &log_SNII.core;
+
+  /* Calculate the volume of the box */
+  const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
+
+  /* Calculate Delta time */
+  const double delta_time = log_SNII.core.delta_logger_time;
+
+  /* Get the total amount of SNIa energy */
+  const double E_SNII = log_SNII.SNII_energy;
+
+  /* Get the Energy of a single SNIa */
+  const double E_single_SNII = feedback_properties->E_SNII;
+
+  /* Calculate the number of SNIas in the simulation */
+  const double N_SNII = E_SNII / E_single_SNII;
+
+  /* Calculate the number of SNIa per time and per time per volume */
+  const double N_SNII_p_time = N_SNII / delta_time;
+  const double N_SNII_p_time_p_volume = N_SNII_p_time / volume;
+
+  /* Get the number of heating events */
+  const int N_heating_events = log_SNII.events;
+
+  /* Set constants of time */
+  const double a = e->cosmology->a;
+  const double z = e->cosmology->z;
+  const int step = e->step; 
+  const double time = e->time;
+
+  /* Print the data to the file */
+  fprintf(core->fp,
+          "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
+          "%12.7e  %12.7e %7d \n",
+          step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
+          core->z_prev, E_SNII, N_SNII, N_SNII_p_time, N_SNII_p_time_p_volume,
+          N_heating_events);
+  
+  feedback_logger_core_update(e,core);
+
+}
+
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_SNII_H */

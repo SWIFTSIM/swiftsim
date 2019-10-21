@@ -48,7 +48,11 @@ INLINE static void feedback_logger_init_log_file(const struct engine *restrict e
   feedback_logger_r_processes_init_log_file(e);
 }
 
-INLINE static void feedback_logger_log_data(const struct engine *restrict e) {}
+INLINE static void feedback_logger_log_data(const struct engine *restrict e) {
+  feedback_logger_SNII_log_data(e);
+  feedback_logger_SNIa_log_data(e);
+  feedback_logger_r_processes_log_data(e);
+}
 
 INLINE static void feedback_logger_open_files(void) {
   log_SNII.core.fp = fopen("SNII.txt", "w");
@@ -56,7 +60,11 @@ INLINE static void feedback_logger_open_files(void) {
   log_r_processes.core.fp = fopen("r_processes.txt", "w");
 }
 
-INLINE static void feedback_logger_time_step(const struct engine *restrict e) {}
+INLINE static void feedback_logger_time_step(const struct engine *restrict e) {
+  feedback_logger_SNII_time_step(e);
+  feedback_logger_SNIa_time_step(e);
+  feedback_logger_r_processes_time_step(e);
+}
 
 
 INLINE static void feedback_logger_close(const struct engine *restrict e) {

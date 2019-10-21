@@ -70,4 +70,37 @@ INLINE static void feedback_logger_core_init(const struct engine *restrict e, st
   fhl->delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
 }
 
+INLINE static void feedback_logger_core_time_step(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
+  
+  fhl->logger_time += e->time_step;
+}
+
+INLINE static int feedback_logger_core_log(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
+  
+  if (fhl->logger_time < fhl->delta_logger_time) return 0;
+
+  return 1;
+}
+
+INLINE static void feedback_logger_core_update(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
+  
+  /* Update the core values */
+  
+  /* The step number */
+  fhl->step_prev = e->step;
+
+  /* Update the time */
+  fhl->time_prev = e->time;
+
+  /* Update the scale factor */
+  fhl->a_prev = e->cosmology->a;
+
+  /* Update the redshift */
+  fhl->z_prev = e->cosmology->z;
+
+  /* Update the logger time */
+  fhl->logger_time -= fhl->delta_logger_time;
+
+}
+
 #endif
