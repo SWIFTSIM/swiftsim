@@ -184,8 +184,19 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
  */
 __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
-    const double age_of_star) {
+    const int with_cosmology, const struct cosmology* cosmo,
+    const double time) {
 
+  /* Calculate age of the star at current time */
+  double age_of_star;
+  if (with_cosmology) {
+    age_of_star = cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->birth_scale_factor, cosmo->a);
+  } else {
+    age_of_star = time - (double)sp->birth_time;
+  }
+
+  /* Is the star still young? */
   if (age_of_star < feedback_props->stellar_evolution_age_cut) {
 
     /* Set the counter to "let's do enrichment" */
