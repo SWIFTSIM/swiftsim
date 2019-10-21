@@ -58,7 +58,7 @@ struct feedback_history_SNIa {
   double SNIa_energy;
 
   /*! Number of heating events */
-  int heating;
+  int events;
 };
 
 /* feedback history struct for SNII */
@@ -74,7 +74,7 @@ struct feedback_history_SNII {
   double N_SNII;
 
   /*! Number of heating events */
-  int heating;
+  int events;
 };
 
 /* feedback history struct for r-processes */
