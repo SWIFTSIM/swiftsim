@@ -45,9 +45,6 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
 __attribute__((always_inline)) INLINE static void stars_first_init_spart(
     struct spart* sp, const struct stars_props* stars_properties) {
 
-  sp->birth_time = stars_properties->spart_first_init_birth_time;
-  sp->last_enrichment_time = stars_properties->spart_first_init_birth_time;
-
   sp->time_bin = 0;
 }
 
@@ -161,5 +158,15 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
   p->num_ngb_force = 0;
 #endif
 }
+
+/**
+ * @brief Initializes constants related to stellar evolution, initializes imf,
+ * reads and processes yield tables
+ *
+ * @param params swift_params parameters structure
+ * @param stars stars_props data structure
+ */
+inline static void stars_evolve_init(struct swift_params* params,
+                                     struct stars_props* restrict stars) {}
 
 #endif /* SWIFT_DEFAULT_STARS_H */
