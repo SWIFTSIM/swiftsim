@@ -34,17 +34,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const double dt);
 
 /**
- * @brief Should we do feedback for this star?
- *
- * @param sp The star to consider.
- */
-__attribute__((always_inline)) INLINE static int feedback_do_feedback(
-    const struct spart* sp) {
-
-  return (sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0);
-}
-
-/**
  * @brief Should this particle be doing any feedback-related operation?
  *
  * @param sp The #spart.

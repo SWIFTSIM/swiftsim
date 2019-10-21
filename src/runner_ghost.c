@@ -204,7 +204,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             stars_reset_feedback(sp);
 
             /* Only do feedback if stars have a reasonable birth time */
-            if (feedback_do_feedback(sp)) {
+            if (feedback_is_active(sp, e->time, cosmo, with_cosmology)) {
 
               /* Calculate age of the star at current time */
               double star_age_end_of_step;
@@ -344,7 +344,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         stars_reset_feedback(sp);
 
         /* Only do feedback if stars have a reasonable birth time */
-        if (feedback_do_feedback(sp)) {
+        if (feedback_is_active(sp, e->time, cosmo, with_cosmology)) {
 
           /* Calculate age of the star at current time */
           double star_age_end_of_step;
