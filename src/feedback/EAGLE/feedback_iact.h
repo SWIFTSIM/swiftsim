@@ -91,6 +91,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const struct cosmology *cosmo,
                                   const integertime_t ti_current) {
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (si->count_since_last_enrichment != 0)
+    error("Computing feedback from a star that should not");
+#endif
+
   /* Get r. */
   const float r = sqrtf(r2);
 

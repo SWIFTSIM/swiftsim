@@ -845,8 +845,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     error("Computing feedback on a star that should not");
 #endif
 
-  message("ENRICH!");
-
   /* Convert dt and stellar age from internal units to Gyr. */
   const double Gyr_in_cgs = 1e9 * 365.25 * 24. * 3600.;
   const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
