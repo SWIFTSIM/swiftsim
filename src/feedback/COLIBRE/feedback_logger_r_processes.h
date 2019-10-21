@@ -168,4 +168,50 @@ INLINE static void feedback_logger_r_processes_log_data(const struct engine *res
   feedback_logger_core_update(e,core);
 }
 
+INLINE static void feedback_logger_r_processes_log_event(
+    const struct spart *restrict si, const struct part *restrict pj,
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo, const double delta_mass) {
+  
+  if (lock_lock(&log_r_processes.core.lock) == 0) {
+    /* Get the injected energy */
+
+    log_r_processes.enrichment_mass += delta_mass;
+    log_r_processes.events += 1;
+  }
+  if (lock_unlock(&log_r_processes.core.lock) != 0) error("Failed to unlock the lock");
+}
+
+#ifdef WITH_MPI
+INLINE static void feedback_logger_r_processes_MPI(const struct engine *restrict e) {
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, &log_r_processes.core)) return;
+
+  /* Define empty variables for the MPI communication */
+  int number_events_received;
+  double total_mass;
+
+  MPI_Reduce(&log_r_processes.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.enrichment_mass, &total_mass, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  if (e->nodeID != 0) {
+    /* Get the core struct */
+    struct feedback_history_logger *core = &log_SNIa.core;   
+
+    /* Update the core struct */
+    feedback_logger_core_update(e,core);
+
+    /* Update the SNIa variables */
+    log_r_processes.enrichment_mass = 0.;
+    log_r_processes.events = 0;
+    return;
+  }
+
+  /* Update the variables for node 0 */
+  log_r_processes.enrichment_mass = total_mass;
+  log_r_processes.events = number_events_received;
+
+}
+#endif
+
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H */

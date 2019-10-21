@@ -311,8 +311,7 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      feedback_logger_SNII_log_event(&log_SNII, time, si, pj, xpj, cosmo, step,
-                                     si->SNII_f_E);
+      feedback_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
 
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
@@ -350,7 +349,7 @@ runner_iact_nonsym_feedback_apply(
       hydro_diffusive_feedback_reset(pj);
 
       /* Write the event to the SNIa logger file */
-      feedback_logger_SNIa_log_event(&log_SNIa, time, si, pj, xpj, cosmo, step);
+      feedback_logger_SNIa_log_event(si, pj, xpj, cosmo);
 
 #ifdef SWIFT_DEBUG_CHECKS
       feedback_logger_SNIa_log_event_debug(SNIa_logger_debug, time, si, pj, xpj,

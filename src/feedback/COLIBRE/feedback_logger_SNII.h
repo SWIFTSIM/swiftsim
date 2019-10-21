@@ -168,6 +168,28 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
 
 }
 
+INLINE static void feedback_logger_SNII_log_event(
+    const struct spart *restrict si, const struct part *restrict pj,
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo, const double f_E) {
+
+  if (lock_lock(&log_SNII.core.lock) == 0) {
+
+    /* Get the injected energy */
+    const double mass_init = pj->mass;  
+    const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
+    const double deltaE = delta_u * mass_init;
+
+    /* Update the total SNII energy */
+    log_SNII.SNII_energy += deltaE;
+    log_SNII.events += 1;
+
+    /* For the number of SNIIs first divide by the energy fraction, rest is done
+     * while writing the data */
+    log_SNII.N_SNII += deltaE / f_E;
+  }
+  if (lock_unlock(&log_SNII.core.lock) != 0) error("Failed to unlock the lock");
+}
+
 #ifdef WITH_MPI
 INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
 

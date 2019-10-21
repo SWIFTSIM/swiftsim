@@ -121,22 +121,4 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
     FILE *fp, const struct unit_system *restrict us,
     const struct phys_const *phys_const) {}
 
-INLINE static void feedback_logger_SNIa_log_event(
-    struct feedback_history_SNIa *restrict SNIa, const double time,
-    const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const int step) {}
-
-INLINE static void feedback_logger_SNII_log_event(
-    struct feedback_history_SNII *restrict SNII, const double time,
-    const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const int step, const float f_E) {}
-
-INLINE static void feedback_logger_r_processes_log_event(
-    struct feedback_history_r_processes *restrict r_processes,
-    const double time, const struct spart *restrict si,
-    const struct part *restrict pj, const struct xpart *restrict xpj,
-    const struct cosmology *restrict cosmo, const double delta_mass) {}
-
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
