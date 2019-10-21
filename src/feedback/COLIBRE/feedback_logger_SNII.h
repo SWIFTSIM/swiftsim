@@ -92,6 +92,7 @@ INLINE static void feedback_logger_SNII_init_log_file(const struct engine *restr
           "# step  prev. step      time          prev. time        a         "
           " prev a          z          prev z    injection E    Numb SNII    "
           "   SNII rate     SNII rate/V   Number\n");
+  fflush(fp);
 }
 
 
@@ -163,8 +164,13 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
           step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
           core->z_prev, E_SNII, N_SNII, N_SNII_p_time, N_SNII_p_time_p_volume,
           N_heating_events);
+  fflush(core->fp);
   
   feedback_logger_core_update(e,core);
+
+  log_SNII.SNII_energy = 0.;
+  log_SNII.events = 0;
+  log_SNII.N_SNII = 0.;
 
 }
 

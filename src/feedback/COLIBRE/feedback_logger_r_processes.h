@@ -104,6 +104,7 @@ INLINE static void feedback_logger_r_processes_init_log_file(const struct engine
           "# step  prev. step      time          prev. time        a         "
           " prev a          z          prev z     Inj. mass     Inj. mass rate"
           "  Inj.mass rate/V   N        N rate       N rate/V \n");
+  fflush(fp);
 }
 
 INLINE static void feedback_logger_r_processes_init(const struct engine *restrict e) {
@@ -164,8 +165,12 @@ INLINE static void feedback_logger_r_processes_log_data(const struct engine *res
           core->z_prev, delta_mass, delta_mass_p_time,
           delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
           N_r_processes_p_time_p_volume);
+  fflush(core->fp);
 
   feedback_logger_core_update(e,core);
+
+  log_r_processes.events = 0;
+  log_r_processes.enrichment_mass = 0.;
 }
 
 INLINE static void feedback_logger_r_processes_log_event(
