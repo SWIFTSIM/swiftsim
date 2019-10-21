@@ -124,6 +124,48 @@ INLINE static void feedback_logger_r_processes_time_step(const struct engine *re
   feedback_logger_core_time_step(e, &log_r_processes.core);
 }
 
-INLINE static void feedback_logger_r_processes_log_data(const struct engine *restrict e) {}
+INLINE static void feedback_logger_r_processes_log_data(const struct engine *restrict e) {
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, &log_r_processes.core)) return;
+
+  /* Get the core struct */
+  struct feedback_history_logger *core = &log_r_processes.core;
+
+  /* Calculate the volume of the box */
+  const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
+
+  /* Calculate Delta time */
+  const double delta_time = log_r_processes.core.delta_logger_time;
+
+  const int N_r_processes = log_r_processes.events;
+
+  const double N_r_processes_p_time = (double)N_r_processes / delta_time;
+
+  const double N_r_processes_p_time_p_volume = N_r_processes_p_time / volume;
+
+  const double delta_mass = log_r_processes.enrichment_mass;
+
+  const double delta_mass_p_time = delta_mass / delta_time;
+
+  const double delta_mass_p_time_p_volume = delta_mass_p_time / volume;
+
+  /* Set constants of time */
+  const double a = e->cosmology->a;
+  const double z = e->cosmology->z;
+  const int step = e->step; 
+  const double time = e->time;
+
+  /* Print the data to the file */
+  fprintf(core->fp,
+          "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
+          "%12.7e %7d      %12.7e %12.7e \n",
+          step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
+          core->z_prev, delta_mass, delta_mass_p_time,
+          delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
+          N_r_processes_p_time_p_volume);
+
+  feedback_logger_core_update(e,core);
+}
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H */

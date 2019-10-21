@@ -85,7 +85,13 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {
  * @param delta_logger_time the delta time stepping of the feedback logger
  * @return the new time variable used to log the feedback data
  */
-INLINE static double feedback_logger_MPI(const struct engine *restrict e) {}
+INLINE static double feedback_logger_MPI(const struct engine *restrict e) {
+  
+  feedback_logger_SNII_MPI(e);
+  feedback_logger_SNIa_MPI(e);
+  feedback_logger_r_processes_MPI(e);
+
+}
 #endif
 
 /**

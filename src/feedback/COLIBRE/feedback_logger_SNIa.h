@@ -116,6 +116,7 @@ INLINE static void feedback_logger_SNIa_time_step(const struct engine *restrict 
 
 INLINE static void feedback_logger_SNIa_log_data(const struct engine *restrict e) {
   
+  /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, &log_SNIa.core)) return;
 
   /* We need to log */
@@ -166,5 +167,37 @@ INLINE static void feedback_logger_SNIa_log_data(const struct engine *restrict e
 
 }
 
+#ifdef WITH_MPI
+INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, &log_SNIa.core)) return;
+
+  /* Define empty variables for the MPI communication */
+  int number_events_received;
+  double total_SNIa_energy;
+
+  MPI_Reduce(&log_SNIa.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_SNIa.SNIa_energy, &total_SNIa_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  if (e->nodeID != 0) {
+    /* Get the core struct */
+    struct feedback_history_logger *core = &log_SNIa.core;   
+
+    /* Update the core struct */
+    feedback_logger_core_update(e,core);
+
+    /* Update the SNIa variables */
+    log_SNIa.SNIa_energy = 0.;
+    log_SNIa.events = 0;
+    return;
+  }
+
+  /* Update the variables for node 0 */
+  log_SNIa.SNIa_energy = total_SNIa_energy;
+  log_SNIa.events = number_events_received;
+
+}
+#endif
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H */

@@ -99,20 +99,4 @@ extern struct feedback_history_SNII log_SNII;
 /* Global variable for the r-processes */
 extern struct feedback_history_r_processes log_r_processes;
 
-/* feedback history struct accumulator */
-struct feedback_history_accumulator {
-
-  /*! Previous storage step*/
-  int step_prev;
-
-  /*! Previous storage time */
-  float time_prev;
-
-  /*! Previous storage redshift */
-  float z_prev;
-
-  /*! Previous storage scale factor */
-  float a_prev;
-};
-
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H */
