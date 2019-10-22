@@ -18,6 +18,20 @@ then
     ./getYieldTable.sh
 fi
 
+if [ ! -e HIIregions_BPASS_binary.hdf5 ] 
+then     
+    echo "Fetching the COLIBRE feedback tables for the isolated galaxy example..."
+    ./getColibreFeedbackTables.sh
+fi
+
+if [ ! -e UV_dust1_CR1_G1_shield1.hdf5 ] 
+then     
+    echo "Fetching the COLIBRE feedback tables for the isolated galaxy example..."
+    ./getColibreCoolingTables.sh
+fi
+
+
+
 ../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --cooling --hydro isolated_galaxy.yml -P SNIaDTD:SNIa_efficiency_p_Msun:0.002 2>&1 | tee output.log
 
 python3 plotSolution.py nu0.002

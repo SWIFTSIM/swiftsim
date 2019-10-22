@@ -187,7 +187,9 @@ COLIBREFeedback:
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
   delta_time_feedback_logger_Myr:   10.0
-  HIIregion_maxage_Myr:             0.              # No HII regions
+  HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
+  HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
+  earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
@@ -227,7 +229,7 @@ COLIBRECooling:
   HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
-  rapid_cooling_threshold: 1.0
+  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold. 
 
 # COLIBRE star formation model (Following a density Schmidt law)
 COLIBREStarFormation:
