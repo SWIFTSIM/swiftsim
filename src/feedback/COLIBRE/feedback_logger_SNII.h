@@ -207,7 +207,7 @@ INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
   double doubles_received[2];
   const double logger_doubles_send[2] = {log_SNII.SNII_energy, log_SNII.N_SNII};
 
-  MPI_Reduce(&log_SNIa.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_SNII.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&logger_doubles_send, &doubles_received, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (e->nodeID != 0) {
