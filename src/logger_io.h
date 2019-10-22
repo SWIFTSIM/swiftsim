@@ -79,6 +79,28 @@ __attribute__((always_inline)) INLINE static int darkmatter_write_index(
   return 2;
 }
 
+/**
+ * @brief Specifies which particle fields to write to a dataset
+ *
+ * @param sparts The sparticle array.
+ * @param list (out) The parameters to write.
+ *
+ * In this version, we only want the ids and the offset.
+ */
+__attribute__((always_inline)) INLINE static int stars_write_index(
+    const struct spart* sparts, struct io_props* list) {
+
+  /* List what we want to write */
+  list[0] =
+    io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
+                         sparts, id, "Field not used");
+  list[1] =
+    io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+                         logger_data.last_offset, "Field not used");
+
+  return 2;
+}
+
 #endif
 
 #endif /* SWIFT_LOGGER_IO_H */

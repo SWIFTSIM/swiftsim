@@ -159,13 +159,13 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   struct part* parts = e->s->parts;
   struct xpart* xparts = e->s->xparts;
   struct gpart* gparts = e->s->gparts;
-  // struct spart* sparts = e->s->sparts;
+  struct spart* sparts = e->s->sparts;
   static int outputCount = 0;
 
   /* Number of particles currently in the arrays */
   const size_t Ntot = e->s->nr_gparts;
   const size_t Ngas = e->s->nr_parts;
-  /* const size_t Nstars = e->s->nr_sparts; */
+  const size_t Nstars = e->s->nr_sparts;
   /* const size_t Nblackholes = e->s->nr_bparts; */
 
   /* Number of particles that we will write */
@@ -295,7 +295,30 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
         break;
 
       case swift_type_stars:
-        error("TODO");
+        if (Nstars == Nstars_written) {
+
+          /* No inhibted particles: easy case */
+          N = Nstars;
+          num_fields += stars_write_index(sparts, list);
+
+        } else {
+
+          /* Ok, we need to fish out the particles we want */
+          N = Nstars_written;
+
+          /* Allocate temporary arrays */
+          if (swift_memalign("sparts_written", (void**)&sparts_written,
+                             spart_align,
+                             Nstars_written * sizeof(struct spart)) != 0)
+            error("Error while allocating temporary memory for sparts");
+
+          /* Collect the particles we want to write */
+          io_collect_sparts_to_write(sparts, sparts_written,
+                                     Nstars, Nstars_written);
+
+          /* Select the fields to write */
+          num_fields += stars_write_index(sparts, list);
+        }
         break;
 
       default:

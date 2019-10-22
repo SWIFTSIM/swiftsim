@@ -200,6 +200,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
 
   /* loop over all gparts */
   for (long long i = 0; i < e->total_nr_gparts; i++) {
+    /* Write only the particles that have not been written */
     /* Log only the dark matter */
     if (s->gparts[i].type != swift_type_dark_matter ||
         s->gparts[i].logger_data.steps_since_last_output == 0)
@@ -210,8 +211,16 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
     s->gparts[i].logger_data.steps_since_last_output = 0;
   }
 
-  // TODO
-  if (e->total_nr_sparts > 0) error("Not implemented");
+  /* loop over all sparts */
+  for (long long i = 0; i < e->total_nr_sparts; i++) {
+    /* Write only the particles that have not been written */
+    if (s->sparts[i].logger_data.steps_since_last_output == 0)
+      continue;
+
+    logger_log_spart(log, &s->sparts[i], mask_grav,
+                     &s->sparts[i].logger_data.last_offset);
+    s->sparts[i].logger_data.steps_since_last_output = 0;
+  }
 
   if (e->total_nr_bparts > 0) error("Not implemented");
 }
@@ -290,6 +299,54 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
   }
 
 #endif
+
+  /* Update the log message offset. */
+  *offset = offset_new;
+}
+
+/**
+ * @brief Dump a #spart to the log.
+ *
+ * @param log The #logger_writer
+ * @param sp The #spart to dump.
+ * @param mask The mask of the data to dump.
+ * @param offset Pointer to the offset of the previous log of this particle;
+ * (return) offset of this log.
+ */
+void logger_log_spart(struct logger_writer *log, const struct spart *sp,
+                      unsigned int mask, size_t *offset) {
+
+  /* Make sure we're not writing a timestamp. */
+  if (mask & logger_mask_data[logger_timestamp].mask)
+    error("You should not log particles as timestamps.");
+
+  /* Make sure we're not looging fields not supported by gparts. */
+  if (mask &
+      (logger_mask_data[logger_u].mask | logger_mask_data[logger_rho].mask
+       | logger_mask_data[logger_a].mask))
+    error("Can't log SPH quantities for sparts.");
+
+  /* Start by computing the size of the message. */
+  const int size = logger_compute_chunk_size(mask);
+
+  /* Allocate a chunk of memory in the dump of the right size. */
+  size_t offset_new;
+  char *buff = (char *)dump_get(&log->dump, size, &offset_new);
+
+  /* Write the header. */
+  buff = logger_write_chunk_header(buff, &mask, offset, offset_new);
+
+  /* Particle position as three doubles. */
+  if (mask & logger_mask_data[logger_x].mask) {
+    memcpy(buff, sp->x, logger_mask_data[logger_x].size);
+    buff += logger_mask_data[logger_x].size;
+  }
+
+  /* Particle velocity as three floats. */
+  if (mask & logger_mask_data[logger_v].mask) {
+    memcpy(buff, sp->v, logger_mask_data[logger_v].size);
+    buff += logger_mask_data[logger_v].size;
+  }
 
   /* Update the log message offset. */
   *offset = offset_new;
@@ -418,7 +475,7 @@ void logger_ensure_size(struct logger_writer *log, size_t total_nr_parts,
   limit += total_nr_gparts;
 
   /* count spart memory. */
-  if (total_nr_sparts > 0) error("Not implemented");
+  limit += total_nr_sparts;
 
   // TODO improve estimate with the size of each particle
   limit *= log->max_chunk_size;
