@@ -114,12 +114,41 @@ EAGLEFeedback:
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the
 
+# Standard COLIBRE cooling options
+COLIBRECooling:
+  dir_name:                UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
+  H_reion_eV_p_H:          2.0
+  He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
+  He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
+  He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
+  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
+  delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
+
+# Solar abundances
+COLIBREChemistry:
+  init_abundance_metal:      0.01           # Inital fraction of particle mass in *all* metals 
+  init_abundance_Hydrogen:   0.752
+  init_abundance_Helium:     0.248
+  init_abundance_Carbon:     0.0
+  init_abundance_Nitrogen:   0.0
+  init_abundance_Oxygen:     0.0
+  init_abundance_Neon:       0.0
+  init_abundance_Magnesium:  0.0
+  init_abundance_Silicon:    0.0
+  init_abundance_Iron:       0.0
+  metal_diffusion_constant:         0.   # No diffusion
+  metal_diffusion_timestep_mult:    100. # No diffusion
+
+
 # COLIBRE feedback model
 COLIBREFeedback:
   use_SNII_feedback:                0               # Global switch for SNII thermal (stochastic) feedback.
-  use_SNIa_feedback:                1               # Global switch for SNIa thermal (continuous) feedback.
-  use_AGB_enrichment:               0               # Global switch for enrichement from AGB stars.
-  use_SNII_enrichment:              0               # Global switch for enrichement from SNII stars.
+  use_SNIa_feedback:                0               # Global switch for SNIa thermal (continuous) feedback.
+  use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
+  use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
@@ -157,17 +186,8 @@ COLIBREFeedback:
 
 # COLIBRE feedback SNIa delay time distribution struct
 SNIaDTD:
-  SNIa_efficiency_p_Msun:       12.955225           # the effiency of SNIa, this is set artifical high in this example, a value of 0.6477612 produces 50 events in the life of a star, values of 1.2955225 (100 events), 6.477612 (500) and 12.955225 (1000).
-  SNIa_timescale_Gyr:           2.0                 # Exponential delay time for exponential DTD 
-  normalization_timescale_Gyr:  13.0                # Normalization time for DTDs that cannot be integrated to infinity
-  power_law_slope:              0.5                 # Power law slope for the power law DTD 
-  SNIa_delay_time_Gyr:          0.04                # Delay time before the DTD kicks in.
-  SNIa_efficiency_const_p_Msun: 0.0                 # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
-  SNIa_efficiency_gauss_p_Msun: 12.955225           # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
-  characteristic_time_Gyr:      4.0                 # Center of the Gaussian DTD
-  STD_characteristic_time_Gyr:  1.0                 # Standard deviation of the Gaussian DTD part
-  power_law_slope_short_time:   0.5                 # Power law slope at short times of broken power law 
-  power_law_slope_long_time:    1.1                 # Power law slope at long times of a broken power law
-  break_time_Gyr:               0.5                 # Break time of the broken power law DTD.
+  SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
+  SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
   
   
