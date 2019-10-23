@@ -21,7 +21,7 @@ TimeIntegration:
 
 # Parameters governing the snapshots
 Snapshots:
-  basename:   output      # Common part of the name of output files
+  basename:   output_wdevo      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
   delta_time: 0.01023     # Time difference between consecutive outputs (in internal units) 0.01023 TU = 10 Myr
 
@@ -60,9 +60,9 @@ COLIBRECooling:
 
 # Dust evolution options
 COLIBREDustEvolution:
-  use_sputtering:                0               # Global switch for thermal dust sputtering
-  use_SNII_destruction:          0               # Global switch for dust destruction by SNII shocks
-  use_accretion:                 0               # Global switch for dust growth by accretion
+  use_sputtering:                1               # Global switch for thermal dust sputtering
+  use_SNII_destruction:          1               # Global switch for dust destruction by SNII shocks
+  use_accretion:                 1               # Global switch for dust growth by accretion
 
 # Solar abundances
 COLIBREChemistry:
