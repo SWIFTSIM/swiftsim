@@ -6,6 +6,18 @@ then
     ./getIC.sh
 fi
 
+if [ ! -e UV_dust1_CR1_G1_shield1.hdf5 ]
+then
+    echo "Fetching cooling tables for the isolated galaxy example..."
+    ./getColibreCoolingTables.sh
+fi
+
+if [ ! -e HIIregions_BPASS_binary.hdf5 ]
+then
+    echo "Fetching feedback tables for the isolated galaxy example..."
+    ./getColibreFeedbackTables.sh
+fi
+
 if [ ! -e yieldtables.tar.gz ] 
 then     
     echo "Fetching yield tables for the isolated galaxy example..."

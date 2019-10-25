@@ -91,8 +91,8 @@ struct feedback_props {
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
 
-  /*! Are we doing HII regions? */
-  int with_HIIregions;
+  /*! Are we doing HII regions and-or stellar winds? */
+  int with_early_feedback;
 
   /* ------------ Yield tables    ----------------- */
 
@@ -172,8 +172,14 @@ struct feedback_props {
   /*! Conversion factor from temperature to internal energy */
   float temp_to_u_factor;
 
-  /*! Conversion factor from Myr to sec */
+  /*! Conversion factor for momentum to cgs */
   double Momentum_to_cgs;
+
+  /*! Conversion factor from Myr to sec */
+  double Myr_to_sec;
+
+  /*! Conversion factor from sec to Myr */
+  double sec_to_Myr;
 
   /* ------------- Parameters for IMF --------------- */
 
@@ -246,17 +252,8 @@ struct feedback_props {
    */
   double n_Z;
 
-  /* Momentum in cgs per unit solar mass g cm s^-1 Mo^-1 */
-  double p1;
-
-  /* Metallicity Normalization of the momentum injection.*/
-  double p2;
-
-  /* Exponent of the metalliticy dependence of the momentum injection*/
-  double p3;
-
-  /* Timescale above which stars no longer inject momentum */
-  double tw;
+  /* Timescale above which stars no longer inject momentum in Myr */
+  double SW_max_age_Myr;
 
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
@@ -268,10 +265,10 @@ struct feedback_props {
   char early_feedback_table_path[200];
 
   /* Maximum age in Myr of star particle to build HII region */
-  float HIIregion_maxageMyr;
+  float HIIregion_max_age_Myr;
 
   /* Time between rebuilding the HII region in Myr */
-  float HIIregion_dtMyr;
+  float HIIregion_dt_Myr;
 
   /* Recombination coefficient in cgs units [cm3 s-1]*/
   float alpha_caseb_recomb;
@@ -283,21 +280,25 @@ struct feedback_props {
   int HII_nr_metbins;
 
   /* Metallicity bins (log Z, metal mass fractions) from BPASS */
-  float *HII_logZbins;
+  float *HII_log10_Zbins;
 
   /* Age bins (star age in Myr) */
   float *HII_agebins;
 
   /* Cumululative number of ionizing photons per g stellar mass
    * dimension [HII_nr_metbins, HII_nr_agebins] */
-  float *HII_logQcum;
+  float *HII_log10_Qcum;
+
+  /* Cumulative momentum input per g stellar mass from stellar winds
+   * dimension [HII_nr_metbins, HII_nr_agebins] */
+  float *SW_log10_Pcum;
+
+  /* Minimum metallicity in the early feedback tables */
+  double Zmin_early_fb;
+
+  /* Maximum metallicity in the early feedback tables */
+  double Zmax_early_fb;
 };
-
-double compute_average_photoionizing_luminosity(const struct feedback_props *fp,
-                                                float t1, float t2, float Z);
-
-double get_cumulative_ionizing_photons(const struct feedback_props *fp,
-                                       float t_Myr, float logZ);
 
 void feedback_props_init(struct feedback_props *fp,
                          const struct phys_const *phys_const,

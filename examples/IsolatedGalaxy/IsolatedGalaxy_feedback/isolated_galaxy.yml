@@ -8,10 +8,10 @@ InternalUnitSystem:
 
 # Parameters for the self-gravity scheme
 Gravity:
-  eta:          0.025                # Constant dimensionless multiplier for time integration.
-  theta:        0.7                  # Opening angle (Multipole acceptance criterion).
-  max_physical_DM_softening: 0.1     # Maximal Plummer-equivalent softening length in physical coordinates for DM particles (in internal units).
-  max_physical_baryon_softening: 0.1 # Maximal Plummer-equivalent softening length in physical coordinates for baryon particles (in internal units).
+  eta:          0.025                 # Constant dimensionless multiplier for time integration.
+  theta:        0.7                   # Opening angle (Multipole acceptance criterion).
+  max_physical_DM_softening:     0.35 # Physical softening length (in internal units).
+  max_physical_baryon_softening: 0.35 # Physical softening length (in internal units).
 
 # Parameters governing the time integration (Set dt_min and dt_max to the same value for a fixed time-step run.)
 TimeIntegration:
@@ -24,7 +24,7 @@ TimeIntegration:
 Snapshots:
   basename:   output      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
-  delta_time: 0.0001        # Time difference between consecutive outputs (in internal units)
+  delta_time: 0.001        # Time difference between consecutive outputs (in internal units)
 
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -83,7 +83,7 @@ HernquistPotential:
   diskfraction:    0.040   # Disk mass fraction
   bulgefraction:   0.014   # Bulge mass fraction
   timestep_mult:   0.01    # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
-  epsilon:         0.1     # Softening size (internal units)
+  epsilon:         0.35     # Softening size (internal units)
  
 # EAGLE star formation parameters
 EAGLEStarFormation:
@@ -131,7 +131,7 @@ EAGLEFeedback:
   SNII_energy_fraction_min:         1.0             # Minimal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_max:         1.0             # Maximal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
-  SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
+  SNII_energy_fraction_n_0_H_p_cm3: 1.4588          # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
   SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
   SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
@@ -148,84 +148,3 @@ EAGLEFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-
-# COLIBRE feedback model
-COLIBREFeedback:
-  use_SNII_feedback:                0               # Global switch for SNII thermal (stochastic) feedback.
-  use_SNIa_feedback:                1               # Global switch for SNIa thermal (continuous) feedback.
-  use_AGB_enrichment:               0               # Global switch for enrichement from AGB stars.
-  use_SNII_enrichment:              0               # Global switch for enrichement from SNII stars.
-  use_SNIa_enrichment:              0               # Global switch for enrichement from SNIa stars.
-  filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
-  IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
-  IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
-  SNII_min_mass_Msun:               6.0             # Minimal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
-  SNII_max_mass_Msun:             100.0             # Maximal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
-  SNII_wind_delay_Gyr:              0.03            # Time in Gyr between a star's birth and the SNII thermal feedback event.
-  SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
-  SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
-  SNII_energy_fraction_min:         0.3             # Maximal fraction of energy applied in a SNII feedback event.
-  SNII_energy_fraction_max:         3.0             # Minimal fraction of energy applied in a SNII feedback event.
-  SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
-  SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
-  SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
-  SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
-  SNIa_max_mass_Msun:               8.0             # Maximal mass considered for SNIa feedback and enrichment in solar masses.
-  SNIa_energy_erg:                  1.0e51          # Energy of one SNIa explosion in ergs.
-  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
-  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
-  AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
-  SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
-  SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
-  SNII_yield_factor_Carbon:         0.5             # (Optional) Correction factor to apply to the Carbon yield from the SNII channel.
-  SNII_yield_factor_Nitrogen:       1.0             # (Optional) Correction factor to apply to the Nitrogen yield from the SNII channel.
-  SNII_yield_factor_Oxygen:         1.0             # (Optional) Correction factor to apply to the Oxygen yield from the SNII channel.
-  SNII_yield_factor_Neon:           1.0             # (Optional) Correction factor to apply to the Neon yield from the SNII channel.
-  SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
-  SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
-  SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-  Momentum_per_StellarMass:         1.8e40          # Momentum per unit stellar mass available from Starburst 99 g cm s^-1 Msun^-1
-  Momentum_time_scale:              6.5             # Momentum timescale in Myr
-  Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
-  Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
-  Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
-
-# The SNIa DTD properties in the COLIBRE feedback
-SNIaDTD:
-  SNIa_efficiency_p_Msun:       0.0012       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
-  SNIa_timescale_Gyr:           2.0         # Exponential delay time for exponential DTD 
-  normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
-  power_law_slope:              1.1         # Power law slope for the power law DTD 
-  SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
-  SNIa_efficiency_const_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for constant part of Gaussian + constant.
-  SNIa_efficiency_gauss_p_Msun: 0.001       # Normalisation of the SNIa rates in inverse solar masses, for Gaussian part of Gaussian + constant.
-  characteristic_time_Gyr:      4.0         # Center of the Gaussian DTD 
-  STD_characteristic_time_Gyr:  2.0         # Standard deviation of the Gaussian DTD part
-  power_law_slope_short_time:   0.5         # Power law slope at short times of broken power law 
-  power_law_slope_long_time:    1.1         # Power law slope at long times of a broken power law 
-  break_time_Gyr:               0.4         # Break time of the broken power law DTD.
-
-# Solar abundances
-COLIBREChemistry:
-  init_abundance_metal:     0.0133714      # Inital fraction of particle mass in *all* metals 
-  init_abundance_Hydrogen:  0.73738788833  # Inital fraction of particle mass in Hydrogen
-  init_abundance_Helium:    0.24924186942  # Inital fraction of particle mass in Helium
-  init_abundance_Carbon:    0.0023647215   # Inital fraction of particle mass in Carbon
-  init_abundance_Nitrogen:  0.0006928991   # Inital fraction of particle mass in Nitrogen
-  init_abundance_Oxygen:    0.00573271036  # Inital fraction of particle mass in Oxygen
-  init_abundance_Neon:      0.00125649278  # Inital fraction of particle mass in Neon
-  init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
-  init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
-  init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
-
-# Properties of the stars
-Stars:
-  birth_time:  -0.1   # Give the star in the ICs a decent birth time
-
-COLIBRECooling:
-  dir_name:                UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
-  H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
-  H_reion_eV_p_H:          2.0
-  He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
-  He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
-  He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
