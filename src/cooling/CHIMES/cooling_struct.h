@@ -124,6 +124,12 @@ struct cooling_function_data {
   
   /* Ionisation state of HII regions. */ 
   int HIIregion_ion_state; 
+
+  /* Switch for Hybrid cooling */
+  int hybrid_cooling_mode; 
+
+  /* Colibre cooling table */ 
+  struct colibre_cooling_tables colibre_table; 
 };
 
 /**

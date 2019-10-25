@@ -192,19 +192,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Maximum temperature for the molecular network */ 
   cooling->ChimesGlobalVars.T_mol = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:T_mol"); 
-
-  /* Determine which metal elements to include 
-   * in the CHIMES network. Note that H and He 
-   * are always included. */ 
-  cooling->ChimesGlobalVars.element_included[0] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeCarbon"); 
-  cooling->ChimesGlobalVars.element_included[1] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeNitrogen"); 
-  cooling->ChimesGlobalVars.element_included[2] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeOxygen"); 
-  cooling->ChimesGlobalVars.element_included[3] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeNeon"); 
-  cooling->ChimesGlobalVars.element_included[4] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeMagnesium"); 
-  cooling->ChimesGlobalVars.element_included[5] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeSilicon"); 
-  cooling->ChimesGlobalVars.element_included[6] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeSulphur"); 
-  cooling->ChimesGlobalVars.element_included[7] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeCalcium"); 
-  cooling->ChimesGlobalVars.element_included[8] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeIron"); 
   
   /* For now, the CMB temperature in CHIMES is just set 
    * to the present day value. For cosmological runs, this 
@@ -252,11 +239,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* CHIMES uses a solar metallicity of 0.0129. */ 
   cooling->Zsol = 0.0129; 
 
-  /* Parameter that controls whether to reduce 
-   * gas-phase metal abundances due to 
-   * dust depletion. */ 
-  cooling->colibre_metal_depletion = parser_get_param_int(parameter_file, "CHIMESCooling:colibre_metal_depletion"); 
-
   /* Dust depletion factors in the solar neighbourhood. 
    * Taken from Ploeckinger et al. (in prep). */ 
   cooling->f_dust0_C = 0.34385; 
@@ -265,6 +247,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->f_dust0_Si = 0.94492; 
   cooling->f_dust0_Ca = 0.9999; 
   cooling->f_dust0_Fe = 0.99363; 
+
+  /* Parameter that controls whether to reduce 
+   * gas-phase metal abundances due to 
+   * dust depletion. */ 
+  cooling->colibre_metal_depletion = parser_get_param_int(parameter_file, "CHIMESCooling:colibre_metal_depletion"); 
 
   /* delta log U above the EOS below which 
    * we evolve the chemistry in eqm. */ 
@@ -279,6 +266,62 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Properties of the HII region model */ 
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
   cooling->HIIregion_ion_state = 1; 
+
+  /* Switch for Hybrid cooling */ 
+  cooling->hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:hybrid_cooling_mode"); 
+
+  if (cooling->hybrid_cooling_mode == 0) 
+    {
+      /* Use only the CHIMES network 
+       * for cooling. */ 
+      
+      /* Determine which metal elements to include 
+       * in the CHIMES network. Note that H and He 
+       * are always included. */ 
+      cooling->ChimesGlobalVars.element_included[0] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeCarbon"); 
+      cooling->ChimesGlobalVars.element_included[1] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeNitrogen"); 
+      cooling->ChimesGlobalVars.element_included[2] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeOxygen"); 
+      cooling->ChimesGlobalVars.element_included[3] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeNeon"); 
+      cooling->ChimesGlobalVars.element_included[4] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeMagnesium"); 
+      cooling->ChimesGlobalVars.element_included[5] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeSilicon"); 
+      cooling->ChimesGlobalVars.element_included[6] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeSulphur"); 
+      cooling->ChimesGlobalVars.element_included[7] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeCalcium"); 
+      cooling->ChimesGlobalVars.element_included[8] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeIron"); 
+    }
+  else if (cooling->hybrid_cooling_mode == 1) 
+    {
+      /* Use CHIMES only for H and He. 
+       * Metal cooling will be read in 
+       * from the Cloudy cooling tables. */ 
+      
+      /* Since metals are not included in 
+       * CHIMES here, we hard-code their 
+       * include flags to zero. */ 
+      int i; 
+      for (i = 0; i < 9; i++) 
+	cooling->ChimesGlobalVars.element_included[i] = 0; 
+
+      /* Path to colibre cooling table */ 
+      parser_get_param_string(parameter_file, "CHIMESCooling:colibre_table_path", cooling->colibre_table.cooling_table_path); 
+
+      /* Redshift of H-reionisation is 
+       * needed by the Colibre table 
+       * to determine when to use 
+       * the high-redshift bin. */ 
+      cooling->colibre_table.H_reion_z = parser_get_param_float(parameter_file, "CHIMESCooling:H_reion_z"); 
+
+      /* Set the S/Si and Ca/Si ratios to 
+       * the values already read in for CHIMES. */ 
+      cooling->colibre_table.S_over_Si_ratio_in_solar = cooling->S_over_Si_ratio_in_solar; 
+      cooling->colibre_table.Ca_over_Si_ratio_in_solar = cooling->Ca_over_Si_ratio_in_solar; 
+
+      /* Read the Colibre table. */ 
+      message("Reading Colibre cooling table."); 
+      read_cooling_header(&(cooling->colibre_table));
+      read_cooling_tables(&(cooling->colibre_table));
+    }
+  else 
+    error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->hybrid_cooling_mode);
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
@@ -351,11 +394,13 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
     {
       /* Set initial values for CHIMES 
        * abundance array. */ 
+      ChimesGasVars.InitIonState = data->InitIonState; 
       initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
     }
   else if (data->init_abundance_mode == 2) 
     {
       /* Set abundance array to an initial guess. */ 
+      ChimesGasVars.InitIonState = data->InitIonState; 
       initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
 
       /* We cannot evolve to equilibrium here, because 
