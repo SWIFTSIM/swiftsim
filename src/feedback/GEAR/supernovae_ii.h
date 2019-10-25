@@ -58,7 +58,7 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_number(
 #endif
 
   /* Can we explode SNII? */
-  if (m1 > snii->mass_max || m2 < snii->mass_min) {
+  if (!supernovae_ii_can_explode(snii, m1, m2)) {
     return 0.;
   }
 
@@ -68,7 +68,7 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_number(
   const float pow_mass = pow(mass_max, snii->exponent) - pow(mass_min, snii->exponent);
 
   return snii->coef_exp * pow_mass;
-  
+
 };
 
 /**
@@ -371,17 +371,17 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_init(
 
   /* Read the parameters from the tables */
   supernovae_ii_read_from_tables(snii, params);
-  
+
   /* Read the parameters from the params file */
   supernovae_ii_read_from_tables(snii, params);
 
   /* Read the supernovae yields (and apply the units) */
   supernovae_ii_read_yields(snii, params, phys_const, sm);
-  
+
   /* Get the IMF parameters */
   snii->exponent = initial_mass_function_get_exponent(&sm->imf, snii->mass_min, snii->mass_max);
   snii->coef_exp = initial_mass_function_get_coefficient(&sm->imf, snii->mass_min, snii->mass_max);
-  snii->coef_exp /= snii->exponent - 1.;
+  snii->coef_exp /= snii->exponent;
 
 }
 
