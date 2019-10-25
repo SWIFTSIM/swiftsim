@@ -60,6 +60,9 @@ struct gasVariables
   int InitIonState;
   ChimesFloat constant_heating_rate;   /* erg s^-1 cm^-3 */
   ChimesFloat *abundances;             /* The size of this array will be set by init_chimes() */
+
+  /* COLIBRE-specific variables */ 
+  const float abundance_ratio[colibre_cooling_N_elementtypes]; 
 };
 
 /* This structure contains the global 
@@ -90,6 +93,10 @@ struct globalVariables
   ChimesFloat max_shielding_length_cgs; 
   ChimesFloat shielding_length_factor; 
   ChimesFloat colibre_cr_rate_0; 
+
+  /* COLIBRE-specific variables */ 
+  double redshift; 
+  const struct colibre_cooling_tables *colibre_table; 
 }; 
 
 /* The following structure contains
