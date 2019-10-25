@@ -359,7 +359,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
 
   /* Read the minimal mass limit */
   io_read_attribute(group_id, "Mmin", FLOAT, &imf->mass_limits[0]);
-  
+
   /* Read the maximal mass limit */
   io_read_attribute(group_id, "Mmax", FLOAT, &imf->mass_limits[imf->n_parts]);
 
@@ -402,7 +402,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   if (n_parts_changed) {
     free(imf->mass_limits);
     if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
-	NULL)
+        NULL)
       error("Failed to allocate the IMF masses.");
   }
 
