@@ -507,26 +507,50 @@ INLINE static double colibre_metal_cooling_rate_temperature(
   cooling_get_index_1d(table->nH, colibre_cooling_N_density, log10(n_H_cgs),
 	       &n_H_index, &d_n_H);
 
-  /* n_e / n_H from metals */
-  double electron_fraction = interpolation4d_plus_summation(
-      table->Telectron_fraction, abundance_ratio, /* */
-      element_H, colibre_cooling_N_electrontypes - 4,     /* */
-      red_index, T_index, met_index, n_H_index,           /* */
-      d_red, d_T, d_met, d_n_H,                           /* */
-      colibre_cooling_N_redshifts,                        /* */
-      colibre_cooling_N_internalenergy,                   /* */
-      colibre_cooling_N_metallicity,                      /* */
-      colibre_cooling_N_density,                          /* */
-      colibre_cooling_N_electrontypes);                   /* */
+  /* n_e / n_H from Colibre */
+  double colibre_electron_fraction_prim = interpolation4d_plus_summation(
+      table->Telectron_fraction, abundance_ratio, 
+      colibre_cooling_N_electrontypes - 3, 
+      colibre_cooling_N_electrontypes - 3, 
+      red_index, T_index, met_index, n_H_index,
+      d_red, d_T, d_met, d_n_H, 
+      colibre_cooling_N_redshifts, 
+      colibre_cooling_N_internalenergy, 
+      colibre_cooling_N_metallicity, 
+      colibre_cooling_N_density,
+      colibre_cooling_N_electrontypes); 
 
-  /* Add on non-eq electron 
-   * fraction from CHIMES. */ 
-  electron_fraction += noneq_electron_fraction; 
+  double colibre_electron_fraction_metal = interpolation4d_plus_summation(
+      table->Telectron_fraction, abundance_ratio, 
+      colibre_cooling_N_electrontypes - 2, 
+      colibre_cooling_N_electrontypes - 2, 
+      red_index, T_index, met_index, n_H_index,
+      d_red, d_T, d_met, d_n_H, 
+      colibre_cooling_N_redshifts, 
+      colibre_cooling_N_internalenergy, 
+      colibre_cooling_N_metallicity, 
+      colibre_cooling_N_density,
+      colibre_cooling_N_electrontypes); 
 
+  /* Adjust the weights based on the non-eq 
+   * electron fraction from CHIMES, compared 
+   * to the electron fraction that was used 
+   * in the Colibre tables. */ 
+
+  double electron_fraction_ratio = (noneq_electron_fraction + colibre_electron_fraction_metal) / (colibre_electron_fraction_prim + colibre_electron_fraction_metal + FLT_MIN); 
+
+  for (int i = element_C; i < colibre_cooling_N_elementtypes; i++) 
+    weights_cooling[i] *= electron_fraction_ratio; 
+
+  weights_cooling[cooltype_molecules] *= electron_fraction_ratio; 
+  weights_cooling[cooltype_HD] *= electron_fraction_ratio; 
+  weights_cooling[cooltype_NetFFM] *= electron_fraction_ratio; 
+  weights_cooling[cooltype_eeBrems] *= electron_fraction_ratio * electron_fraction_ratio; 
+  
   /* Lambda / n_H**2 */
   const double cooling_rate = interpolation4d_plus_summation(
       table->Tcooling, weights_cooling,   /* */
-      element_H, colibre_cooling_N_cooltypes - 3, /* */
+      element_C, colibre_cooling_N_cooltypes - 3, /* */
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
@@ -538,7 +562,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
   /* Gamma / n_H**2 */
   const double heating_rate = interpolation4d_plus_summation(
       table->Theating, weights_heating,   /* */
-      element_H, colibre_cooling_N_heattypes - 3, /* */
+      element_C, colibre_cooling_N_heattypes - 3, /* */
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
