@@ -35,6 +35,7 @@
 #include "chemistry.h"
 #include "cooling.h"
 #include "cooling_struct.h"
+#include "colibre_tables_restrict.h" 
 #include "entropy_floor.h"
 #include "error.h"
 #include "hydro.h"

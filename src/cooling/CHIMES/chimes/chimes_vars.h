@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Local COLIBRE include 
+#include "cooling/CHIMES/colibre_tables.h" 
+
 #define ELECTRON_MASS 9.1093829e-28
 #define PROTON_MASS 1.6726218e-24
 #define PI            3.1415927
