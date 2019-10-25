@@ -196,8 +196,15 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* For now, the CMB temperature in CHIMES is just set 
    * to the present day value. For cosmological runs, this 
    * will need to be updated for the current redshift. */ 
+
+  /* CMB temperature at redshift zero. */ 
   cooling->T_CMB_0 = phys_const->const_T_CMB_0 *
                      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+  /* Initially set the CMB temperature in 
+   * CHIMES to the redshift zero value. 
+   * This will be updated to the current 
+   * redshift in cooling_update(). */ 
   cooling->ChimesGlobalVars.cmb_temperature = (ChimesFloat) cooling->T_CMB_0; 
 
   /* Equilibrium mode: 
@@ -497,6 +504,24 @@ void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+}
+
+/**
+ * @brief Common operations performed on the cooling function at a
+ * given time-step or redshift.
+ *
+ * @param cosmo The current cosmological model.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param s The #space containing all the particles.
+ */
+void cooling_update(const struct cosmology* cosmo,
+		    struct cooling_function_data* cooling,
+		    struct space* s) {
+  /* Update redshift stored in ChimesGlobalVars. */ 
+  cooling->ChimesGlobalVars.redshift = cosmo->z; 
+
+  /* Update T_CMB in CHIMES to current redshift. */ 
+  cooling->ChimesGlobalVars.cmb_temperature = (ChimesFloat) cooling->T_CMB_0 * (1.0 + cosmo->z); 
 }
 
 /**
