@@ -9,7 +9,7 @@ fi
 if [ ! -e coolingtables ] 
 then     
     echo "Fetching EAGLE cooling tables for the isolated galaxy example..."
-    ./getEagleCoolingTable.sh
+    ./getColibreCoolingTable.sh
 fi
 
 if [ ! -e yieldtables ] 

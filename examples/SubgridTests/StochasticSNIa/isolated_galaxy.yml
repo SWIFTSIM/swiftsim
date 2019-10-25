@@ -153,7 +153,6 @@ COLIBREFeedback:
   use_AGB_enrichment:               0               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              0               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              0               # Global switch for enrichement from SNIa stars.
-  use_HIIregions:                   0               # Global switch for early feedback (HII regions).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -188,9 +187,7 @@ COLIBREFeedback:
   Momentum_Metallicity_norm:	    0.01	    # Metallicity (mass fraction).
   Momentum_Metallicity_exponent:    0.38            # Exponent of the relation with metallicty
   delta_time_feedback_logger_Myr:   10.0
-  HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
-  HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-  earlyfb_filename:                 /cosma7/data/dp004/dc-ploe1/EarlyFeedbackTables/HIIregions_BPASS_bin.hdf5
+  HIIregion_maxage_Myr:             0.              # No HII regions
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
@@ -221,7 +218,7 @@ Stars:
 
 
 COLIBRECooling:
-  dir_name:                /data2/nobels/swift-colibre/examples/IsolatedGalaxy/SF_project/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  dir_name:                UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
   H_reion_eV_p_H:          2.0
   He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
@@ -230,6 +227,7 @@ COLIBRECooling:
   HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  rapid_cooling_threshold: 1.0
 
 # COLIBRE star formation model (Following a density Schmidt law)
 COLIBREStarFormation:
