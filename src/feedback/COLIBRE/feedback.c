@@ -1579,6 +1579,15 @@ void feedback_props_init(struct feedback_props* fp,
 }
 
 /**
+ * @brief Clean-up the memory allocated for the feedback routines
+ *
+ * We simply free all the arrays.
+ *
+ * @param feedback_props the feedback data structure.
+ */
+void feedback_clean(struct feedback_props* feedback_props) {}
+
+/**
  * @brief Zero pointers in yield_table structs
  *
  * @param table yield_table struct in which pointers to tables
