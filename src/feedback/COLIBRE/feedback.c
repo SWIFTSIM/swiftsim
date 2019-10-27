@@ -1133,7 +1133,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute amount of momentum available for this stars, given its mass and age
    */
-
   if (feedback_props->with_early_feedback) {
     compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                              ngb_gas_mass);
