@@ -119,15 +119,15 @@ INLINE static void feedback_logger_SNII_time_step(const struct engine *restrict 
 
 INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e) {
   
-  if (!feedback_logger_core_log(e, &log_SNII.core)) return;
+  /* Get the core struct */
+  struct feedback_history_logger *core = &log_SNII.core;
+
+  if (!feedback_logger_core_log(e, core)) return;
 
   /* We need to log */
   
   /* Get the feedback structure */
   const struct feedback_props *feedback_properties = e->feedback_props; 
-
-  /* Get the core struct */
-  struct feedback_history_logger *core = &log_SNII.core;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
@@ -166,8 +166,10 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
           N_heating_events);
   fflush(core->fp);
   
+  /* Update the logger core */
   feedback_logger_core_update(e,core);
 
+  /* Update the specific logger values of this logger */
   log_SNII.SNII_energy = 0.;
   log_SNII.events = 0;
   log_SNII.N_SNII = 0.;

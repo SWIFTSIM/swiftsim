@@ -127,29 +127,41 @@ INLINE static void feedback_logger_r_processes_time_step(const struct engine *re
 
 INLINE static void feedback_logger_r_processes_log_data(const struct engine *restrict e) {
 
-  /* Are we one a logger time step? */
-  if (!feedback_logger_core_log(e, &log_r_processes.core)) return;
-
   /* Get the core struct */
   struct feedback_history_logger *core = &log_r_processes.core;
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, core)) return;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
 
+  /* Calculate the inverse of the volume of the box */
+  const double volume_inv = 1./volume;
+
   /* Calculate Delta time */
   const double delta_time = log_r_processes.core.delta_logger_time;
 
+  /* Calculate the inverse of the delta time */
+  const double delta_time_inv = 1. / delta_time;
+
+  /* Get the total number of r-process events */
   const int N_r_processes = log_r_processes.events;
 
-  const double N_r_processes_p_time = (double)N_r_processes / delta_time;
+  /* Get the total number of r-processes per time */
+  const double N_r_processes_p_time = (double)N_r_processes * delta_time_inv;
 
-  const double N_r_processes_p_time_p_volume = N_r_processes_p_time / volume;
+  /* Get the total number of r-processes per time per volume */
+  const double N_r_processes_p_time_p_volume = N_r_processes_p_time * volume_inv;
 
+  /* Get the total enrichment mass */
   const double delta_mass = log_r_processes.enrichment_mass;
 
-  const double delta_mass_p_time = delta_mass / delta_time;
+  /* Get the enrichment mass per time */
+  const double delta_mass_p_time = delta_mass * delta_time_inv;
 
-  const double delta_mass_p_time_p_volume = delta_mass_p_time / volume;
+  /* Get the enrichment mass per time per volume */
+  const double delta_mass_p_time_p_volume = delta_mass_p_time * volume_inv;
 
   /* Set constants of time */
   const double a = e->cosmology->a;
@@ -167,8 +179,10 @@ INLINE static void feedback_logger_r_processes_log_data(const struct engine *res
           N_r_processes_p_time_p_volume);
   fflush(core->fp);
 
+  /* Update the logger core */
   feedback_logger_core_update(e,core);
 
+  /* Update the type specific variables */
   log_r_processes.events = 0;
   log_r_processes.enrichment_mass = 0.;
 }
