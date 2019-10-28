@@ -350,7 +350,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
  */
 void cooling_print_backend(const struct cooling_function_data *cooling) {
 
-  message("Cooling function is 'CHIMES'.");
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 0) 
+    message("Cooling function is 'CHIMES'.");
+  else 
+    message("Cooling function is 'CHIMES-HYBRID'.");
 }
 
 /**
