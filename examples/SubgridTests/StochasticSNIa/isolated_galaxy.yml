@@ -35,9 +35,6 @@ InitialConditions:
   file_name:               lowres64.hdf5 # The file to read
   periodic:                0        # Are we running with periodic ICs?
   stars_smoothing_length:  0.5
-
-Scheduler:
-  links_per_tasks: 100
   
 # Parameters for the hydrodynamics scheme
 SPH:
