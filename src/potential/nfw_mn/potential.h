@@ -19,8 +19,8 @@
  ******************************************************************************/
 
 
-#ifndef SWIFT_POTENTIAL_NFW_H
-#define SWIFT_POTENTIAL_NFW_H
+#ifndef SWIFT_POTENTIAL_NFW_MN_H
+#define SWIFT_POTENTIAL_NFW_MN_H
 
 /* Config parameters. */
 #include "../config.h"
@@ -90,7 +90,7 @@ struct external_potential {
 };
 
 /**
- * @brief Computes the time-step due to the acceleration from the NFW potential
+ * @brief Computes the time-step due to the acceleration from the NFW + MN potential
  *        as a fraction (timestep_mult) of the circular orbital time of that
  *        particle.
  *
@@ -108,15 +108,20 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
+  const float R2 = dx * dx + dy * dy;
   const float r =
-      sqrtf(dx * dx + dy * dy + dz * dz + potential->eps * potential->eps);
+      sqrtf(R2 + dz * dz + potential->eps * potential->eps);
 
   const float mr = potential->M_200 *
                    (logf(1.f + r / potential->r_s) - r / (r + potential->r_s)) /
                    potential->log_c200_term;
 
-  const float period =
-      2 * M_PI * r * sqrtf(r / (phys_const->const_newton_G * mr));
+  const float Vcirc_NFW = sqrtf((phys_const->const_newton_G * mr)/r);
+  const float Vcirc_MN = sqrtf(phys_const->const_newton_G * potential->Mdisk * R2 / 
+			       pow(R2 + (potential->Rdisk + potential->Zdisk) * (potential->Rdisk + potential->Zdisk),3.0/2.0));
+  const float Vcirc = sqrtf(Vcirc_NFW * Vcirc_NFW + Vcirc_MN * Vcirc_MN);
+
+  const float period = 2 * M_PI * r / Vcirc;
 
   /* Time-step as a fraction of the circular period */
   const float time_step = potential->timestep_mult * period;
@@ -173,9 +178,9 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
 
 /**
  * @brief Computes the gravitational potential energy of a particle in an
- * NFW potential.
+ * NFW potential + MN potential.
  *
- * phi = -4 * pi * G * rho_0 * r_s^3 * ln(1+r/r_s)
+ * phi = -4 * pi * G * rho_0 * r_s^3 * ln(1+r/r_s) - G * Mdisk / sqrt(R^2 + (Rdisk + sqrt(z^2 + Zdisk^2))^2)
  *
  * @param time The current time (unused here).
  * @param potential The #external_potential used in the run.
@@ -252,7 +257,6 @@ static INLINE void potential_init_backend(
 
   potential->eps = 0.05;
 
-
   /* Compute R_200 */
   const double R_200 =
       cbrtf(3.0 * potential->M_200 / (4. * M_PI * 200.0 * potential->rho_c));
@@ -297,4 +301,4 @@ static INLINE void potential_print_backend(
       potential->timestep_mult, potential->mintime);
 }
 
-#endif /* SWIFT_POTENTIAL_NFW_H */
+#endif /* SWIFT_POTENTIAL_NFW_MN_H */
