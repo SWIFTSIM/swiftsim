@@ -20,6 +20,7 @@
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H
 
 #include "feedback_logger_core.h"
+#include "feedback_logger_struct.h" 
 
 /* MPI headers. */
 #ifdef WITH_MPI
