@@ -24,22 +24,24 @@
  *
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
- * @param log_type the log type to initialize 
+ * @param log_type the log type to initialize
  */
-INLINE static void feedback_logger_core_init(const struct engine *restrict e, struct feedback_history_logger *restrict fhl, const int log_type) {
-  
+INLINE static void feedback_logger_core_init(
+    const struct engine *restrict e,
+    struct feedback_history_logger *restrict fhl, const int log_type) {
+
   /* Initialize the lock*/
   lock_init(&fhl->lock);
 
   /* initialization of the step */
   fhl->step_prev = 0;
-  
+
   /* Initialize the first time */
   fhl->time_prev = e->time;
 
   /* Initialize the redshift */
   fhl->z_prev = e->cosmology->z;
- 
+
   /* Initialize the scale factor */
   fhl->a_prev = e->cosmology->a;
 
@@ -60,17 +62,17 @@ INLINE static void feedback_logger_core_init(const struct engine *restrict e, st
     case 1:
       /* Time interval to use to store the SNIa events */
       delta_logger_time_Myr = parser_get_param_double(
-      params, "Feedback_logger:delta_time_SNII_Myr");
+          params, "Feedback_logger:delta_time_SNII_Myr");
       break;
     case 2:
       /* Time interval to use to store the SNIa events */
       delta_logger_time_Myr = parser_get_param_double(
-      params, "Feedback_logger:delta_time_SNIa_Myr");
+          params, "Feedback_logger:delta_time_SNIa_Myr");
       break;
     case 3:
       /* Time interval to use to store the SNIa events */
       delta_logger_time_Myr = parser_get_param_double(
-      params, "Feedback_logger:delta_time_r_processes_Myr");
+          params, "Feedback_logger:delta_time_r_processes_Myr");
       break;
   }
 
@@ -83,8 +85,10 @@ INLINE static void feedback_logger_core_init(const struct engine *restrict e, st
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static void feedback_logger_core_time_step(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
-  
+INLINE static void feedback_logger_core_time_step(
+    const struct engine *restrict e,
+    struct feedback_history_logger *restrict fhl) {
+
   fhl->logger_time += e->time_step;
 }
 
@@ -94,8 +98,10 @@ INLINE static void feedback_logger_core_time_step(const struct engine *restrict 
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static int feedback_logger_core_log(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
-  
+INLINE static int feedback_logger_core_log(
+    const struct engine *restrict e,
+    struct feedback_history_logger *restrict fhl) {
+
   if (fhl->logger_time < fhl->delta_logger_time) return 0;
 
   return 1;
@@ -107,10 +113,12 @@ INLINE static int feedback_logger_core_log(const struct engine *restrict e, stru
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static void feedback_logger_core_update(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
-  
+INLINE static void feedback_logger_core_update(
+    const struct engine *restrict e,
+    struct feedback_history_logger *restrict fhl) {
+
   /* Update the core values */
-  
+
   /* The step number */
   fhl->step_prev = e->step;
 
@@ -125,7 +133,6 @@ INLINE static void feedback_logger_core_update(const struct engine *restrict e, 
 
   /* Update the logger time */
   fhl->logger_time -= fhl->delta_logger_time;
-
 }
 
 #endif

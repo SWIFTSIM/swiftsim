@@ -25,11 +25,11 @@
 #endif
 
 #include "engine.h"
+#include "feedback_logger_SNII.h"
+#include "feedback_logger_SNIa.h"
+#include "feedback_logger_r_processes.h"
 #include "feedback_logger_struct.h"
 #include "feedback_properties.h"
-#include "feedback_logger_SNIa.h"
-#include "feedback_logger_SNII.h"
-#include "feedback_logger_r_processes.h"
 
 /**
  * @brief Initialize the times of the feedback logger
@@ -51,8 +51,9 @@ INLINE static void feedback_logger_init(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_init_log_file(const struct engine *restrict e) {
-  feedback_logger_SNII_init_log_file(e); 
+INLINE static void feedback_logger_init_log_file(
+    const struct engine *restrict e) {
+  feedback_logger_SNII_init_log_file(e);
   feedback_logger_SNIa_init_log_file(e);
   feedback_logger_r_processes_init_log_file(e);
 
@@ -62,7 +63,8 @@ INLINE static void feedback_logger_init_log_file(const struct engine *restrict e
 }
 
 /**
- * @brief Write the data to the log file if we have the correct time, do this for all the log files
+ * @brief Write the data to the log file if we have the correct time, do this
+ * for all the log files
  *
  * @param e the engine we are running on
  */
@@ -90,7 +92,7 @@ INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
 }
 
 /**
- * @brief Update the core values in the logger for the time step 
+ * @brief Update the core values in the logger for the time step
  *
  * @param e the engine we are running on
  */
@@ -113,16 +115,16 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {
 
 #ifdef WITH_MPI
 /**
- * @brief Do the MPI communication between all the nodes regarding the feedback logger
+ * @brief Do the MPI communication between all the nodes regarding the feedback
+ * logger
  *
  * @param e the engine we are running on
  */
 INLINE static void feedback_logger_MPI(const struct engine *restrict e) {
-  
+
   feedback_logger_SNII_MPI(e);
   feedback_logger_SNIa_MPI(e);
   feedback_logger_r_processes_MPI(e);
-
 }
 #endif
 

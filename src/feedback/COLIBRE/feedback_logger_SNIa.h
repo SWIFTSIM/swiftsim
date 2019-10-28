@@ -20,7 +20,7 @@
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H
 
 #include "feedback_logger_core.h"
-#include "feedback_logger_struct.h" 
+#include "feedback_logger_struct.h"
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -30,9 +30,10 @@
 /**
  * @brief Initialize the SNIa logger file
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNIa_init_log_file(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNIa_init_log_file(
+    const struct engine *restrict e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -40,7 +41,7 @@ INLINE static void feedback_logger_SNIa_init_log_file(const struct engine *restr
 
   /* Use the File pointer */
   FILE *fp = log_SNIa.core.fp;
-  
+
   /* Calculate the energy unit */
   const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
                         us->UnitLength_in_cgs /
@@ -99,50 +100,51 @@ INLINE static void feedback_logger_SNIa_init_log_file(const struct engine *restr
 }
 
 /**
- * @brief Initialize the SNIa global struct 
+ * @brief Initialize the SNIa global struct
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
 INLINE static void feedback_logger_SNIa_init(const struct engine *restrict e) {
- 
-  /* Initialize the core variables */ 
-  feedback_logger_core_init(e, &log_SNIa.core,2);
+
+  /* Initialize the core variables */
+  feedback_logger_core_init(e, &log_SNIa.core, 2);
 
   /* Initialize the energy to zero */
   log_SNIa.SNIa_energy = 0.;
 
   /* Initialize the number of heating events to zero */
   log_SNIa.events = 0;
- 
 }
 
 /**
  * @brief Do a time step and update the SNIa global struct
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNIa_time_step(const struct engine *restrict e) {
-  
+INLINE static void feedback_logger_SNIa_time_step(
+    const struct engine *restrict e) {
+
   feedback_logger_core_time_step(e, &log_SNIa.core);
 }
 
 /**
  * @brief Write data to the feedback logger file if we are on a write step
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNIa_log_data(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNIa_log_data(
+    const struct engine *restrict e) {
 
   /* Get the core struct */
   struct feedback_history_logger *core = &log_SNIa.core;
-  
+
   /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, core)) return;
 
   /* We need to log */
-  
+
   /* Get the feedback structure */
-  const struct feedback_props *feedback_properties = e->feedback_props; 
+  const struct feedback_props *feedback_properties = e->feedback_props;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
@@ -169,7 +171,7 @@ INLINE static void feedback_logger_SNIa_log_data(const struct engine *restrict e
   /* Set constants of time */
   const double a = e->cosmology->a;
   const double z = e->cosmology->z;
-  const int step = e->step; 
+  const int step = e->step;
   const double time = e->time;
 
   /* Print the data to the file */
@@ -179,32 +181,31 @@ INLINE static void feedback_logger_SNIa_log_data(const struct engine *restrict e
           step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
           core->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume,
           N_heating_events);
-  fflush(core->fp);  
+  fflush(core->fp);
 
   /* Update the logger core */
-  feedback_logger_core_update(e,core);
+  feedback_logger_core_update(e, core);
 
   /* Update this logger specific values */
   log_SNIa.SNIa_energy = 0.;
   log_SNIa.events = 0;
-
 }
 
 /**
- * @brief log a SNIa event 
+ * @brief log a SNIa event
  *
  * @param si the spart of the feedback event pair
- * @param pj the part of the feedback event pair 
+ * @param pj the part of the feedback event pair
  * @param xpj the xpart of the part of the feedback event pair
  * @param cosmo the cosmology struct
  */
 INLINE static void feedback_logger_SNIa_log_event(
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo) {
-  
+
   if (lock_lock(&log_SNIa.core.lock) == 0) {
     /* Get the injected energy */
-    const double mass_init = pj->mass; 
+    const double mass_init = pj->mass;
     const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
     const double deltaE = delta_u * mass_init;
 
@@ -218,7 +219,7 @@ INLINE static void feedback_logger_SNIa_log_event(
 /**
  * @brief Do the MPI communication for the SNIa logger
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
 INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
 
@@ -229,15 +230,17 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
   int number_events_received;
   double total_SNIa_energy;
 
-  MPI_Reduce(&log_SNIa.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_SNIa.SNIa_energy, &total_SNIa_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_SNIa.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0,
+             MPI_COMM_WORLD);
+  MPI_Reduce(&log_SNIa.SNIa_energy, &total_SNIa_energy, 1, MPI_DOUBLE, MPI_SUM,
+             0, MPI_COMM_WORLD);
 
   if (e->nodeID != 0) {
     /* Get the core struct */
-    struct feedback_history_logger *core = &log_SNIa.core;   
+    struct feedback_history_logger *core = &log_SNIa.core;
 
     /* Update the core struct */
-    feedback_logger_core_update(e,core);
+    feedback_logger_core_update(e, core);
 
     /* Update the SNIa variables */
     log_SNIa.SNIa_energy = 0.;
@@ -248,7 +251,6 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
   /* Update the variables for node 0 */
   log_SNIa.SNIa_energy = total_SNIa_energy;
   log_SNIa.events = number_events_received;
-
 }
 #endif
 
@@ -260,7 +262,8 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
  * @param us The current internal system of units.
  * @param phys_const Physical constants in internal units
  */
-INLINE static void feedback_logger_SNIa_init_log_file_debug(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNIa_init_log_file_debug(
+    const struct engine *restrict e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -338,18 +341,19 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
             a, z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
     fflush(fp);
   }
-  if (lock_unlock(&log_SNIa_debug.lock) != 0) error("Failed to unlock the lock");
+  if (lock_unlock(&log_SNIa_debug.lock) != 0)
+    error("Failed to unlock the lock");
 }
 
 /**
- * @brief Initialize the SNIa debugging global struct 
+ * @brief Initialize the SNIa debugging global struct
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNIa_init_debug(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNIa_init_debug(
+    const struct engine *restrict e) {
   /* Initialize the lock*/
   lock_init(&log_SNIa_debug.lock);
-
 }
 #endif /* SWIFT_DEBUG_CHECKS */
 

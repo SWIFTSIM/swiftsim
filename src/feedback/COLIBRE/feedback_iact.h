@@ -21,9 +21,9 @@
 
 /* Local includes */
 #include "feedback_logger.h"
-#include "feedback_logger_struct.h"
+#include "feedback_logger_SNII.h"
 #include "feedback_logger_SNIa.h"
-#include "feedback_logger_SNII.h" 
+#include "feedback_logger_struct.h"
 #include "random.h"
 
 /* Define external variables */
@@ -350,8 +350,7 @@ runner_iact_nonsym_feedback_apply(
       feedback_logger_SNIa_log_event(si, pj, xpj, cosmo);
 
 #ifdef SWIFT_DEBUG_CHECKS
-      feedback_logger_SNIa_log_event_debug(time, si, pj, xpj,
-                                           cosmo, step);
+      feedback_logger_SNIa_log_event_debug(time, si, pj, xpj, cosmo, step);
 #endif
     }
   }

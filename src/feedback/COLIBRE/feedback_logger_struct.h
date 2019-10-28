@@ -21,7 +21,7 @@
 
 /* feedback history general struct for any quantity */
 struct feedback_history_logger {
-  
+
   /* Feedback history lock */
   swift_lock_type lock;
 
@@ -45,12 +45,11 @@ struct feedback_history_logger {
 
   /*! Previous storage scale factor */
   float a_prev;
-
 };
 
 /* feedback history struct for SNIa */
 struct feedback_history_SNIa {
-  
+
   /* Load the core of logging functions */
   struct feedback_history_logger core;
 
@@ -63,7 +62,7 @@ struct feedback_history_SNIa {
 
 /* feedback history struct for SNII */
 struct feedback_history_SNII {
-  
+
   /* Load the core of logging functions */
   struct feedback_history_logger core;
 
@@ -79,7 +78,7 @@ struct feedback_history_SNII {
 
 /* feedback history struct for r-processes */
 struct feedback_history_r_processes {
-  
+
   /* Load the core of logging functions */
   struct feedback_history_logger core;
 
@@ -93,7 +92,7 @@ struct feedback_history_r_processes {
 #ifdef SWIFT_DEBUG_CHECKS
 /* feedback history debug for SNIa */
 struct feedback_history_SNIa_debug {
-  
+
   /* The file pointer of the struct */
   FILE *fp;
 

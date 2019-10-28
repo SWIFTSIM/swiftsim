@@ -27,9 +27,10 @@
 /**
  * @brief Initialize the SNII logger file
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNII_init_log_file(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNII_init_log_file(
+    const struct engine *restrict e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -96,14 +97,14 @@ INLINE static void feedback_logger_SNII_init_log_file(const struct engine *restr
 }
 
 /**
- * @brief Initialize the SNII global struct 
+ * @brief Initialize the SNII global struct
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
 INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
- 
-  /* Initialize the core variables */ 
-  feedback_logger_core_init(e, &log_SNII.core,1);
+
+  /* Initialize the core variables */
+  feedback_logger_core_init(e, &log_SNII.core, 1);
 
   /* Initialize the energy to zero */
   log_SNII.SNII_energy = 0.;
@@ -113,35 +114,36 @@ INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
 
   /* Initialize the number of heating events to zero */
   log_SNII.events = 0;
- 
 }
 
 /**
  * @brief Do a time step and update the SNIa global struct
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNII_time_step(const struct engine *restrict e) {
-  
+INLINE static void feedback_logger_SNII_time_step(
+    const struct engine *restrict e) {
+
   feedback_logger_core_time_step(e, &log_SNII.core);
 }
 
 /**
  * @brief Write data to the feedback logger file if we are on a write step
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e) {
-  
+INLINE static void feedback_logger_SNII_log_data(
+    const struct engine *restrict e) {
+
   /* Get the core struct */
   struct feedback_history_logger *core = &log_SNII.core;
 
   if (!feedback_logger_core_log(e, core)) return;
 
   /* We need to log */
-  
+
   /* Get the feedback structure */
-  const struct feedback_props *feedback_properties = e->feedback_props; 
+  const struct feedback_props *feedback_properties = e->feedback_props;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
@@ -168,7 +170,7 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
   /* Set constants of time */
   const double a = e->cosmology->a;
   const double z = e->cosmology->z;
-  const int step = e->step; 
+  const int step = e->step;
   const double time = e->time;
 
   /* Print the data to the file */
@@ -179,34 +181,34 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
           core->z_prev, E_SNII, N_SNII, N_SNII_p_time, N_SNII_p_time_p_volume,
           N_heating_events);
   fflush(core->fp);
-  
+
   /* Update the logger core */
-  feedback_logger_core_update(e,core);
+  feedback_logger_core_update(e, core);
 
   /* Update the specific logger values of this logger */
   log_SNII.SNII_energy = 0.;
   log_SNII.events = 0;
   log_SNII.N_SNII = 0.;
-
 }
 
 /**
- * @brief log a SNII event 
+ * @brief log a SNII event
  *
  * @param si the spart of the feedback event pair
- * @param pj the part of the feedback event pair 
+ * @param pj the part of the feedback event pair
  * @param xpj the xpart of the part of the feedback event pair
  * @param cosmo the cosmology struct
- * @param f_E the energy fraction of the SNII event 
+ * @param f_E the energy fraction of the SNII event
  */
 INLINE static void feedback_logger_SNII_log_event(
     const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo, const double f_E) {
+    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
+    const double f_E) {
 
   if (lock_lock(&log_SNII.core.lock) == 0) {
 
     /* Get the injected energy */
-    const double mass_init = pj->mass;  
+    const double mass_init = pj->mass;
     const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
     const double deltaE = delta_u * mass_init;
 
@@ -225,7 +227,7 @@ INLINE static void feedback_logger_SNII_log_event(
 /**
  * @brief Do the MPI communication for the SNII logger
  *
- * @param e the engine we are running 
+ * @param e the engine we are running
  */
 INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
 
@@ -237,15 +239,17 @@ INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
   double doubles_received[2];
   const double logger_doubles_send[2] = {log_SNII.SNII_energy, log_SNII.N_SNII};
 
-  MPI_Reduce(&log_SNII.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&logger_doubles_send, &doubles_received, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_SNII.events, &number_events_received, 1, MPI_INT, MPI_SUM, 0,
+             MPI_COMM_WORLD);
+  MPI_Reduce(&logger_doubles_send, &doubles_received, 2, MPI_DOUBLE, MPI_SUM, 0,
+             MPI_COMM_WORLD);
 
   if (e->nodeID != 0) {
     /* Get the core struct */
-    struct feedback_history_logger *core = &log_SNII.core;   
+    struct feedback_history_logger *core = &log_SNII.core;
 
     /* Update the core struct */
-    feedback_logger_core_update(e,core);
+    feedback_logger_core_update(e, core);
 
     /* Update the SNIa variables */
     log_SNII.SNII_energy = 0.;
@@ -258,7 +262,6 @@ INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
   log_SNII.SNII_energy = doubles_received[0];
   log_SNII.N_SNII = doubles_received[1];
   log_SNII.events = number_events_received;
-
 }
 #endif
 
