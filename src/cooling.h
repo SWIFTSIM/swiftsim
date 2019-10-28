@@ -49,7 +49,7 @@
 #include "./cooling/EAGLE/cooling.h"
 #elif defined(COOLING_COLIBRE)
 #include "./cooling/COLIBRE/cooling.h"
-#elif defined(COOLING_CHIMES)
+#elif defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID) 
 #include "./cooling/CHIMES/cooling.h"
 #else
 #error "Invalid choice of cooling function."

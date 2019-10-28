@@ -275,7 +275,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->HIIregion_ion_state = 1; 
 
   /* Switch for Hybrid cooling */ 
-  cooling->ChimesGlobalVars.hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:hybrid_cooling_mode"); 
+#ifdef COOLING_CHIMES_HYBRID 
+  cooling->ChimesGlobalVars.hybrid_cooling_mode = 1; 
+#else 
+  cooling->ChimesGlobalVars.hybrid_cooling_mode = 0; 
+#endif 
 
   if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 0) 
     {
