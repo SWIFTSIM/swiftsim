@@ -88,15 +88,16 @@ struct globalVariables
   int speciesIndices[TOTSIZE];
   int totalNumberOfSpecies;
   int scale_metal_tolerances; 
+
+  /* COLIBRE-specific variables */ 
   int update_colibre_ISRF; 
   int update_colibre_shielding; 
   ChimesFloat max_shielding_length_cgs; 
   ChimesFloat shielding_length_factor; 
   ChimesFloat colibre_cr_rate_0; 
-
-  /* COLIBRE-specific variables */ 
   double redshift; 
   const struct colibre_cooling_tables *colibre_table; 
+  int hybrid_cooling_mode; 
 }; 
 
 /* The following structure contains

@@ -275,9 +275,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->HIIregion_ion_state = 1; 
 
   /* Switch for Hybrid cooling */ 
-  cooling->hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:hybrid_cooling_mode"); 
+  cooling->ChimesGlobalVars.hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:hybrid_cooling_mode"); 
 
-  if (cooling->hybrid_cooling_mode == 0) 
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 0) 
     {
       /* Use only the CHIMES network 
        * for cooling. */ 
@@ -295,7 +295,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
       cooling->ChimesGlobalVars.element_included[7] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeCalcium"); 
       cooling->ChimesGlobalVars.element_included[8] = parser_get_param_int(parameter_file, "CHIMESCooling:IncludeIron"); 
     }
-  else if (cooling->hybrid_cooling_mode == 1) 
+  else if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
     {
       /* Use CHIMES only for H and He. 
        * Metal cooling will be read in 
@@ -332,7 +332,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
       cooling->ChimesGlobalVars.colibre_table = &(cooling->colibre_table); 
     }
   else 
-    error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->hybrid_cooling_mode);
+    error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->ChimesGlobalVars.hybrid_cooling_mode);
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
@@ -708,7 +708,7 @@ void chimes_update_gas_vars(const double u_cgs,
   /* If using hybrid cooling, we need to 
    * set the abundance_ratio array using 
    * the corresponding routine from COLIBRE. */
-  if (cooling->hybrid_cooling_mode == 1) 
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
     abundance_ratio_to_solar(p, cooling->ChimesGlobalVars.colibre_table, ChimesGasVars->abundance_ratio); 
 }
 
