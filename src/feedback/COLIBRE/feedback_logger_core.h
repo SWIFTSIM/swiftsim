@@ -19,6 +19,13 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_CORE_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_CORE_H
 
+/**
+ * @brief Initialize the logger core
+ *
+ * @param e the engine we are running
+ * @param fhl the feedback history logger that is the core
+ * @param log_type the log type to initialize 
+ */
 INLINE static void feedback_logger_core_init(const struct engine *restrict e, struct feedback_history_logger *restrict fhl, const int log_type) {
   
   /* Initialize the lock*/
@@ -70,11 +77,23 @@ INLINE static void feedback_logger_core_init(const struct engine *restrict e, st
   fhl->delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
 }
 
+/**
+ * @brief update the current time with the timestep in the logger core
+ *
+ * @param e the engine we are running
+ * @param fhl the feedback history logger that is the core
+ */
 INLINE static void feedback_logger_core_time_step(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
   
   fhl->logger_time += e->time_step;
 }
 
+/**
+ * @brief Check if we need to log for this core
+ *
+ * @param e the engine we are running
+ * @param fhl the feedback history logger that is the core
+ */
 INLINE static int feedback_logger_core_log(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
   
   if (fhl->logger_time < fhl->delta_logger_time) return 0;
@@ -82,6 +101,12 @@ INLINE static int feedback_logger_core_log(const struct engine *restrict e, stru
   return 1;
 }
 
+/**
+ * @brief Update the logger core values after logging
+ *
+ * @param e the engine we are running
+ * @param fhl the feedback history logger that is the core
+ */
 INLINE static void feedback_logger_core_update(const struct engine *restrict e, struct feedback_history_logger *restrict fhl) {
   
   /* Update the core values */
@@ -102,6 +127,5 @@ INLINE static void feedback_logger_core_update(const struct engine *restrict e, 
   fhl->logger_time -= fhl->delta_logger_time;
 
 }
-
 
 #endif
