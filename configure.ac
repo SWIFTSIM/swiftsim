@@ -1920,7 +1920,7 @@ esac
 #  External potential
 AC_ARG_WITH([ext-potential],
    [AS_HELP_STRING([--with-ext-potential=<pot>],
-      [external potential @<:@none, point-mass, point-mass-ring, point-mass-softened, isothermal, nfw, hernquist, disc-patch, sine-wave, constant, default: none@:>@]
+      [external potential @<:@none, point-mass, point-mass-ring, point-mass-softened, isothermal, nfw, nfw_mn, hernquist, disc-patch, sine-wave, constant, default: none@:>@]
    )],
    [with_potential="$withval"],
    [with_potential="none"]
@@ -1940,6 +1940,9 @@ case "$with_potential" in
    ;;
    nfw)
       AC_DEFINE([EXTERNAL_POTENTIAL_NFW], [1], [Navarro-Frenk-White external potential])
+   ;;
+   nfw_mn)
+      AC_DEFINE([EXTERNAL_POTENTIAL_NFW_MN], [1], [Navarro-Frenk-White + Miyamoto-Nagai disk external potential])
    ;;
    disc-patch)
       AC_DEFINE([EXTERNAL_POTENTIAL_DISC_PATCH], [1], [Disc-patch external potential])
