@@ -29,14 +29,10 @@
 extern FILE *SNIa_logger_debug;
 #endif
 
+/* Define the external logger variables */
 extern struct feedback_history_SNIa log_SNIa;
-extern swift_lock_type lock_SNIa;
-
 extern struct feedback_history_SNII log_SNII;
-extern swift_lock_type lock_SNII;
-
 extern struct feedback_history_r_processes log_r_processes;
-extern swift_lock_type lock_r_processes;
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
