@@ -165,7 +165,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[1] += term1 * term2 * dy;
   g->a_grav[2] += term1 * term2 * dz;
 
-  
+
   /* Now the the MN disk */
   const float f1 = sqrtf(potential->Zdisk * potential->Zdisk + dz * dz);
   const float f2 = potential->Rdisk + f1;
@@ -174,6 +174,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[0] -= potential->Mdisk * f3 * dx; 
   g->a_grav[1] -= potential->Mdisk * f3 * dy; 
   g->a_grav[2] -= potential->Mdisk * f3 * f2 / f1 * dz; 
+
 }
 
 /**
@@ -197,16 +198,14 @@ external_gravity_get_potential_energy(
   const float dz = g->x[2] - potential->x[2];
 
   /* First for the NFW profile */
-  const float R2 = dx * dx + dy * dy
-  const float r =
-      sqrtf(R2 + dz * dz + potential->eps * potential->eps);
+  const float R2 = dx * dx + dy * dy;
+  const float r =sqrtf(R2 + dz * dz + potential->eps * potential->eps);
   const float term1 = -potential->pre_factor / r;
   const float term2 = logf(1.0f + r / potential->r_s);
 
   /* Now for the MN disk */
-  const MN_term = (potential->Rdisk + sqrtf(potential->Zdisk + dz * dx));
-  const float MN_pot = 
-    -potential->Mdisk / sqrtf(R2 + MN_term * MN_term)
+  const float MN_term = (potential->Rdisk + sqrtf(potential->Zdisk + dz * dx));
+  const float MN_pot = -potential->Mdisk / sqrtf(R2 + MN_term * MN_term);
 
   return term1 * term2 + MN_pot;
 }
