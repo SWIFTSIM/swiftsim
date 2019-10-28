@@ -95,7 +95,11 @@ INLINE static void feedback_logger_SNII_init_log_file(const struct engine *restr
   fflush(fp);
 }
 
-
+/**
+ * @brief Initialize the SNII global struct 
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
  
   /* Initialize the core variables */ 
@@ -112,11 +116,21 @@ INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
  
 }
 
+/**
+ * @brief Do a time step and update the SNIa global struct
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_SNII_time_step(const struct engine *restrict e) {
   
   feedback_logger_core_time_step(e, &log_SNII.core);
 }
 
+/**
+ * @brief Write data to the feedback logger file if we are on a write step
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e) {
   
   /* Get the core struct */
@@ -176,6 +190,15 @@ INLINE static void feedback_logger_SNII_log_data(const struct engine *restrict e
 
 }
 
+/**
+ * @brief log a SNII event 
+ *
+ * @param si the spart of the feedback event pair
+ * @param pj the part of the feedback event pair 
+ * @param xpj the xpart of the part of the feedback event pair
+ * @param cosmo the cosmology struct
+ * @param f_E the energy fraction of the SNII event 
+ */
 INLINE static void feedback_logger_SNII_log_event(
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo, const double f_E) {
@@ -199,6 +222,11 @@ INLINE static void feedback_logger_SNII_log_event(
 }
 
 #ifdef WITH_MPI
+/**
+ * @brief Do the MPI communication for the SNII logger
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
 
   /* Are we one a logger time step? */

@@ -107,6 +107,11 @@ INLINE static void feedback_logger_r_processes_init_log_file(const struct engine
   fflush(fp);
 }
 
+/**
+ * @brief Initialize the r-processes global struct 
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_r_processes_init(const struct engine *restrict e) {
  
   /* Initialize the core variables */ 
@@ -120,11 +125,21 @@ INLINE static void feedback_logger_r_processes_init(const struct engine *restric
  
 }
 
+/**
+ * @brief Do a time step and update the r-processes global struct
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_r_processes_time_step(const struct engine *restrict e) {
   
   feedback_logger_core_time_step(e, &log_r_processes.core);
 }
 
+/**
+ * @brief Write data to the feedback logger file if we are on a write step
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_r_processes_log_data(const struct engine *restrict e) {
 
   /* Get the core struct */
@@ -187,13 +202,22 @@ INLINE static void feedback_logger_r_processes_log_data(const struct engine *res
   log_r_processes.enrichment_mass = 0.;
 }
 
+/**
+ * @brief log a r-process event  
+ *
+ * @param si the spart of the feedback event pair
+ * @param pj the part of the feedback event pair 
+ * @param xpj the xpart of the part of the feedback event pair
+ * @param cosmo the cosmology struct
+ * @param delta_mass the enrichment mass of the r-processes
+ */
 INLINE static void feedback_logger_r_processes_log_event(
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo, const double delta_mass) {
   
   if (lock_lock(&log_r_processes.core.lock) == 0) {
-    /* Get the injected energy */
 
+    /* Store the injected mass and add an event */
     log_r_processes.enrichment_mass += delta_mass;
     log_r_processes.events += 1;
   }
@@ -201,6 +225,11 @@ INLINE static void feedback_logger_r_processes_log_event(
 }
 
 #ifdef WITH_MPI
+/**
+ * @brief Do the MPI communication for the r-processes logger
+ *
+ * @param e the engine we are running 
+ */
 INLINE static void feedback_logger_r_processes_MPI(const struct engine *restrict e) {
 
   /* Are we one a logger time step? */
