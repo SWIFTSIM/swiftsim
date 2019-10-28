@@ -201,7 +201,7 @@ INLINE static void feedback_logger_r_processes_MPI(const struct engine *restrict
 
   if (e->nodeID != 0) {
     /* Get the core struct */
-    struct feedback_history_logger *core = &log_SNIa.core;   
+    struct feedback_history_logger *core = &log_r_processes.core;   
 
     /* Update the core struct */
     feedback_logger_core_update(e,core);
