@@ -270,7 +270,7 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(const struct engine 
                         (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
 
   /* Use the File pointer */
-  FILE *fp = log_SNIa_debug.fp;
+  FILE *fp = &log_SNIa_debug.fp;
 
   /* Write some general text to the logger file */
   fprintf(fp, "# Stochastic SNIa Logger file\n");
@@ -336,7 +336,7 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
             a, z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
     fflush(fp);
   }
-  if (lock_unlock(&log_SNIa.core.lock) != 0) error("Failed to unlock the lock");
+  if (lock_unlock(&log_SNIa_debug.lock) != 0) error("Failed to unlock the lock");
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H */
