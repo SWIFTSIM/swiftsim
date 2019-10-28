@@ -62,7 +62,7 @@ struct gasVariables
   ChimesFloat *abundances;             /* The size of this array will be set by init_chimes() */
 
   /* COLIBRE-specific variables */ 
-  const float abundance_ratio[colibre_cooling_N_elementtypes]; 
+  float abundance_ratio[colibre_cooling_N_elementtypes]; 
 };
 
 /* This structure contains the global 

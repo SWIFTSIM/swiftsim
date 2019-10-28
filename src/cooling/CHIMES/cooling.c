@@ -326,6 +326,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
       message("Reading Colibre cooling table."); 
       read_cooling_header(&(cooling->colibre_table));
       read_cooling_tables(&(cooling->colibre_table));
+
+      /* Pass pointer to the Colibre 
+       * table to ChimesGlobalVars. */ 
+      cooling->ChimesGlobalVars.colibre_table = &(cooling->colibre_table); 
     }
   else 
     error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->hybrid_cooling_mode);
@@ -700,6 +704,12 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->doppler_broad = 7.1; 
 
   ChimesGasVars->InitIonState = cooling->InitIonState; 
+
+  /* If using hybrid cooling, we need to 
+   * set the abundance_ratio array using 
+   * the corresponding routine from COLIBRE. */
+  if (cooling->hybrid_cooling_mode == 1) 
+    abundance_ratio_to_solar(p, cooling->ChimesGlobalVars.colibre_table, ChimesGasVars->abundance_ratio); 
 }
 
 /** 
