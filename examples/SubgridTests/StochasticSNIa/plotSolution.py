@@ -9,12 +9,16 @@ data = np.loadtxt("SNIa.txt")
 
 g = h5.File("output_%.4d.hdf5" % 1, "r")
 
+unit_time_in_cgs = g["/Units"].attrs["Unit time in cgs (U_t)"]
+
 h = g["/PartType4/SmoothingLengths"][:]
 numbstars = len(h)
 hmaximalstars = len(h[h == 10.0])
 print(hmaximalstars, numbstars)
 
-times = data[:, 2] * 9.778131e+02
+Myr_in_cgs = 3.154e13
+
+times = data[:, 2] *unit_time_in_cgs / Myr_in_cgs 
 
 nu = float(g["/Parameters"].attrs["SNIaDTD:SNIa_efficiency_p_Msun"])
 DTD_delay = float(g["/Parameters"].attrs["SNIaDTD:SNIa_delay_time_Gyr"])
