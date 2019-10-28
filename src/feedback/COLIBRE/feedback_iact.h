@@ -28,7 +28,7 @@
 
 /* Define external variables */
 #ifdef SWIFT_DEBUG_CHECKS
-struct feedback_history_SNIa_debug log_SNIa_debug;
+extern struct feedback_history_SNIa_debug log_SNIa_debug;
 #endif
 
 /* Define the external logger variables */

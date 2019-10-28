@@ -40,6 +40,10 @@ INLINE static void feedback_logger_init(const struct engine *restrict e) {
   feedback_logger_SNII_init(e);
   feedback_logger_SNIa_init(e);
   feedback_logger_r_processes_init(e);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  feedback_logger_SNIa_init_debug(e);
+#endif /* SWIFT_DEBUG_CHECKS */
 }
 
 /**

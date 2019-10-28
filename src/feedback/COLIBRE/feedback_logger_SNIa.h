@@ -252,6 +252,7 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
 }
 #endif
 
+#ifdef SWIFT_DEBUG_CHECKS
 /**
  * @brief Initialize the SNIa logger debug file
  *
@@ -271,7 +272,7 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(const struct engine 
                         (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
 
   /* Use the File pointer */
-  FILE *fp = &log_SNIa_debug.fp;
+  FILE *fp = log_SNIa_debug.fp;
 
   /* Write some general text to the logger file */
   fprintf(fp, "# Stochastic SNIa Logger file\n");
@@ -339,5 +340,17 @@ INLINE static void feedback_logger_SNIa_log_event_debug(
   }
   if (lock_unlock(&log_SNIa_debug.lock) != 0) error("Failed to unlock the lock");
 }
+
+/**
+ * @brief Initialize the SNIa debugging global struct 
+ *
+ * @param e the engine we are running 
+ */
+INLINE static void feedback_logger_SNIa_init_debug(const struct engine *restrict e) {
+  /* Initialize the lock*/
+  lock_init(&log_SNIa_debug.lock);
+
+}
+#endif /* SWIFT_DEBUG_CHECKS */
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H */

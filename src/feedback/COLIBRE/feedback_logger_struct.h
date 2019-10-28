@@ -100,7 +100,6 @@ struct feedback_history_SNIa_debug {
   /* The lock of the debugger struct */
   swift_lock_type lock;
 };
-
 #endif /* SWIFT_DEBUG_CHECKS */
 
 /* Global variable for the SNIa events */
