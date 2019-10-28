@@ -117,8 +117,8 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
                    potential->log_c200_term;
 
   const float Vcirc_NFW = sqrtf((phys_const->const_newton_G * mr)/r);
-  const float Vcirc_MN = sqrtf(phys_const->const_newton_G * potential->Mdisk * R2 / 
-			       pow(R2 + (potential->Rdisk + potential->Zdisk) * (potential->Rdisk + potential->Zdisk),3.0/2.0));
+  const float f1 = potential->Rdisk + sqrtf(potential->Zdisk * potential->Zdisk + dz * dz);
+  const float Vcirc_MN = sqrtf(phys_const->const_newton_G * potential->Mdisk * R2 / pow(R2 + f1 * f1, 3.0/2.0));
   const float Vcirc = sqrtf(Vcirc_NFW * Vcirc_NFW + Vcirc_MN * Vcirc_MN);
 
   const float period = 2 * M_PI * r / Vcirc;
