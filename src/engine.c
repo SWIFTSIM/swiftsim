@@ -131,7 +131,7 @@ extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 
 #ifdef SWIFT_DEBUG_CHECKS
-FILE *SNIa_logger_debug;
+struct feedback_history_SNIa_debug log_SNIa_debug;
 #endif
 
 /* Declare the feedback structures */
@@ -3580,10 +3580,6 @@ void engine_config(int restart, int fof, struct engine *e,
   e->run_fof = 0;
   engine_rank = nodeID;
 
-#ifdef SWIFT_DEBUG_CHECKS
-  SNIa_logger_debug = NULL;
-#endif
-
   if (restart && fof) {
     error(
         "Can't configure the engine to be a stand-alone FOF and restarting "
@@ -3819,7 +3815,7 @@ void engine_config(int restart, int fof, struct engine *e,
     /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
       /* Open the feedback loggers */
-      feedback_logger_open_files();
+      feedback_logger_open_files(e);
 
       if (!restart) {
         /* Initialize the feedback loggers */
@@ -3827,17 +3823,6 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
   }
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (e->policy & engine_policy_feedback) {
-    char savename[50];
-    snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
-    SNIa_logger_debug = fopen(savename, "w");
-    feedback_logger_SNIa_init_log_file_debug(
-        SNIa_logger_debug, e->internal_units, e->physical_constants);
-    fflush(SNIa_logger_debug);
-  }
-#endif
 
   /* Print policy */
   engine_print_policy(e);
@@ -4778,10 +4763,6 @@ void engine_clean(struct engine *e, const int fof) {
     }
     if (e->policy & engine_policy_feedback) {
       feedback_logger_close(e);
-
-#ifdef SWIFT_DEBUG_CHECKS
-      fclose(SNIa_logger_debug);
-#endif
     }
   }
 }

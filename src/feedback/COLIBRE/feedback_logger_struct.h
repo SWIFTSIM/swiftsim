@@ -90,6 +90,19 @@ struct feedback_history_r_processes {
   int events;
 };
 
+#ifdef SWIFT_DEBUG_CHECKS
+/* feedback history debug for SNIa */
+struct feedback_history_SNIa_debug {
+  
+  /* The file pointer of the struct */
+  FILE *fp;
+
+  /* The lock of the debugger struct */
+  swift_lock_type lock;
+};
+
+#endif /* SWIFT_DEBUG_CHECKS */
+
 /* Global variable for the SNIa events */
 extern struct feedback_history_SNIa log_SNIa;
 
@@ -98,5 +111,10 @@ extern struct feedback_history_SNII log_SNII;
 
 /* Global variable for the r-processes */
 extern struct feedback_history_r_processes log_r_processes;
+
+#ifdef SWIFT_DEBUG_CHECKS
+/* Global variable for SNIa events in debugging mode */
+extern struct feedback_history_SNIa_debug log_SNIa_debug;
+#endif
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H */

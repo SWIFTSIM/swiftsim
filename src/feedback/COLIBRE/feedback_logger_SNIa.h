@@ -251,4 +251,92 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
 }
 #endif
 
+/**
+ * @brief Initialize the SNIa logger debug file
+ *
+ * @param fp the file pointer
+ * @param us The current internal system of units.
+ * @param phys_const Physical constants in internal units
+ */
+INLINE static void feedback_logger_SNIa_init_log_file_debug(const struct engine *restrict e) {
+
+  /* Load the structures of the internal units and the physical constants */
+  const struct unit_system *us = e->internal_units;
+  const struct phys_const *phys_const = e->physical_constants;
+
+  /* Calculate the energy unit */
+  const double E_unit = us->UnitMass_in_cgs * us->UnitLength_in_cgs *
+                        us->UnitLength_in_cgs /
+                        (us->UnitTime_in_cgs * us->UnitTime_in_cgs);
+
+  /* Use the File pointer */
+  FILE *fp = log_SNIa_debug.fp;
+
+  /* Write some general text to the logger file */
+  fprintf(fp, "# Stochastic SNIa Logger file\n");
+  fprintf(fp, "######################################################\n");
+  fprintf(fp, "# The quantities are all given in internal physical units!\n");
+  fprintf(fp, "#\n");
+  fprintf(fp, "# (0) Simulation step\n");
+  fprintf(fp,
+          "# (1) Time since Big Bang (cosmological run), Time since start of "
+          "the simulation (non-cosmological run).\n");
+  fprintf(fp, "#     Unit = %e seconds\n", us->UnitTime_in_cgs);
+  fprintf(fp, "#     Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
+          1.f / phys_const->const_year / 1e6);
+  fprintf(fp, "# (2) Scale factor     (no unit)\n");
+  fprintf(fp, "# (3) Redshift         (no unit)\n");
+  fprintf(fp, "# (4) ID star particle (no unit)\n");
+  fprintf(fp, "# (5) ID gas particle  (no unit)\n");
+  fprintf(fp, "# (6) Injected energy of SNIa events\n");
+  fprintf(fp, "#     Unit = %e erg\n", E_unit);
+  fprintf(fp, "#     Unit = %e 10^51 erg\n", E_unit / 1e51);
+  fprintf(fp, "# (7) Number of SNIa   (number, no unit)\n");
+  fprintf(fp, "#\n");
+  fprintf(
+      fp,
+      "# (0)         (1)            (2)          (3)            (4)           "
+      " (5)            (6)            (7)\n");
+  fprintf(fp,
+          "#            Time             a            z        ID star part.  "
+          "ID gas part.   Injected Energy  Number of SNIa\n");
+}
+
+/**
+ * @brief Log the event in case of debugging
+ *
+ * @param fp the file pointer to write the debugging information to
+ * @param time the current simulation time
+ * @param si the star particle
+ * @param pj the gas particle
+ * @param xpj the extra information of the gas particle
+ * @param cosmo the cosmology struct
+ * @param step the current simulation step
+ */
+INLINE static void feedback_logger_SNIa_log_event_debug(
+    const double time, const struct spart *restrict si,
+    struct part *restrict pj, struct xpart *restrict xpj,
+    const struct cosmology *restrict cosmo, const int step) {
+
+  if (lock_lock(&log_SNIa_debug.lock) == 0) {
+
+    /* Use the File pointer */
+    FILE *fp = log_SNIa_debug.fp;
+
+    /* Get the times */
+    const double a = cosmo->a;
+    const double z = cosmo->z;
+
+    /* Get the injected energy */
+    const double mass_init = si->mass_init;
+    const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
+    const double deltaE = delta_u * mass_init;
+
+    fprintf(fp, "%6d %16e %12.7f %12.7f %14llu %14llu %16e %16e\n", step, time,
+            a, z, si->id, pj->id, deltaE, deltaE * 1.9884e2);
+    fflush(fp);
+  }
+  if (lock_unlock(&log_SNIa.core.lock) != 0) error("Failed to unlock the lock");
+}
+
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H */
