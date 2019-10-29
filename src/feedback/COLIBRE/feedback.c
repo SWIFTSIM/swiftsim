@@ -1100,7 +1100,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
 
   /* Check if there are neighbours, otherwise exit */
-  if (ngb_gas_mass == 0.f) {
+  if (ngb_gas_mass == 0.f || sp->density.wcount * pow_dimension(sp->h) < 1e-4) {
     feedback_reset_feedback(sp, feedback_props);
     return;
   }
@@ -1108,6 +1108,12 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Update the enrichment weights */
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sp->feedback_data.to_collect.enrichment_weight_inv < 0.)
+    error("Negative inverse weight ! %e id=%lld",
+          sp->feedback_data.to_collect.enrichment_weight_inv, sp->id);
+#endif
 
   /* Now we start filling the data structure for information to apply to the
    * particles. Do _NOT_ read from the to_collect substructure any more. */
@@ -1119,9 +1125,13 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float enrichment_weight = 1.f / enrichment_weight_inv;
   sp->feedback_data.to_distribute.enrichment_weight = enrichment_weight;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sp->feedback_data.to_distribute.enrichment_weight < 0.)
+    error("Negative weight after reset!");
+#endif
+
   /* Compute amount of momentum available for this stars, given its mass and age
    */
-
   if (feedback_props->with_early_feedback) {
     compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                              ngb_gas_mass);
@@ -1570,6 +1580,15 @@ void feedback_props_init(struct feedback_props* fp,
 
   message("initialized stellar feedback");
 }
+
+/**
+ * @brief Clean-up the memory allocated for the feedback routines
+ *
+ * We simply free all the arrays.
+ *
+ * @param feedback_props the feedback data structure.
+ */
+void feedback_clean(struct feedback_props* feedback_props) {}
 
 /**
  * @brief Zero pointers in yield_table structs
