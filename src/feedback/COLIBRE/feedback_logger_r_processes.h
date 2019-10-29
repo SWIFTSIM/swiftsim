@@ -270,7 +270,7 @@ INLINE static void feedback_logger_r_processes_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_MPI(
+INLINE static void feedback_logger_r_processes_MPI_Reduce(
     const struct engine *restrict e) {
 
   /* Are we one a logger time step? */

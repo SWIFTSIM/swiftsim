@@ -266,7 +266,7 @@ INLINE static void feedback_logger_SNII_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNII_MPI(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNII_MPI_Reduce(const struct engine *restrict e) {
 
   /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, &log_SNII.core)) return;

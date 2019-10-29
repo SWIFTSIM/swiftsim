@@ -128,11 +128,11 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_MPI(const struct engine *restrict e) {
+INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
 
-  feedback_logger_SNII_MPI(e);
-  feedback_logger_SNIa_MPI(e);
-  feedback_logger_r_processes_MPI(e);
+  feedback_logger_SNII_MPI_Reduce(e);
+  feedback_logger_SNIa_MPI_Reduce(e);
+  feedback_logger_r_processes_MPI_Reduce(e);
 }
 #endif
 

@@ -2181,7 +2181,7 @@ void engine_step(struct engine *e) {
   if (e->policy & engine_policy_feedback) {
 
     /* Send around the feedback logger information */
-    feedback_logger_MPI(e);
+    feedback_logger_MPI_Reduce(e);
   }
 #endif /* WITH_MPI */
 
