@@ -186,7 +186,14 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sp->mass < 0.)
+    error("Stellar mass got negative! Check the yield and DTD normalisation!");
+#endif
 }
+
+void feedback_clean(struct feedback_props* feedback_props);
 
 void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream);
 

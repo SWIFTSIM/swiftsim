@@ -19,9 +19,12 @@
  ******************************************************************************/
 
 /* This file's header */
+
+/* This file's header */
 #include "feedback.h"
 
 /* Local includes. */
+#include "feedback_tables.h"
 #include "hydro_properties.h"
 #include "imf.h"
 #include "inline.h"
@@ -1098,7 +1101,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
 
   /* Check if there are neighbours, otherwise exit */
-  if (ngb_gas_mass == 0.f) {
+  if (ngb_gas_mass == 0.f || sp->density.wcount * pow_dimension(sp->h) < 1e-4) {
     feedback_reset_feedback(sp, feedback_props);
     return;
   }
@@ -1106,6 +1109,12 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Update the enrichment weights */
   const float enrichment_weight_inv =
       sp->feedback_data.to_collect.enrichment_weight_inv;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sp->feedback_data.to_collect.enrichment_weight_inv < 0.)
+    error("Negative inverse weight ! %e id=%lld",
+          sp->feedback_data.to_collect.enrichment_weight_inv, sp->id);
+#endif
 
   /* Now we start filling the data structure for information to apply to the
    * particles. Do _NOT_ read from the to_collect substructure any more. */
@@ -1117,9 +1126,13 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float enrichment_weight = 1.f / enrichment_weight_inv;
   sp->feedback_data.to_distribute.enrichment_weight = enrichment_weight;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sp->feedback_data.to_distribute.enrichment_weight < 0.)
+    error("Negative weight after reset!");
+#endif
+
   /* Compute amount of momentum available for this stars, given its mass and age
    */
-
   if (feedback_props->with_early_feedback) {
     compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                              ngb_gas_mass);
@@ -1463,88 +1476,14 @@ void feedback_props_init(struct feedback_props* fp,
       0.5f * ejecta_velocity * ejecta_velocity;
 
   /* Properties of the HII region model ------------------------------------- */
-  /* Read the HII table */
 
   if (fp->with_early_feedback) {
-#ifdef HAVE_HDF5
 
-    /* Read yield table filepath  */
     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
                             fp->early_feedback_table_path);
-    hid_t dataset;
-    herr_t status;
 
-    hid_t tempfile_id =
-        H5Fopen(fp->early_feedback_table_path, H5F_ACC_RDONLY, H5P_DEFAULT);
-    if (tempfile_id < 0)
-      error("unable to open file %s\n", fp->early_feedback_table_path);
-
-    /* read sizes of array dimensions */
-    dataset = H5Dopen(tempfile_id, "Header/NMETALLICITIES", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     &fp->HII_nr_metbins);
-    if (status < 0) error("error reading number of metallicities \n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: number of metallicities \n");
-
-    dataset = H5Dopen(tempfile_id, "Header/NAGES", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     &fp->HII_nr_agebins);
-    if (status < 0) error("error reading number of ages \n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: number of ages\n");
-
-    /* allocate arrays */
-    if (posix_memalign((void**)&fp->HII_log10_Zbins, SWIFT_STRUCT_ALIGNMENT,
-                       fp->HII_nr_metbins * sizeof(float)) != 0)
-      error("Failed to allocate metallicity bins\n");
-    if (posix_memalign((void**)&fp->HII_agebins, SWIFT_STRUCT_ALIGNMENT,
-                       fp->HII_nr_agebins * sizeof(float)) != 0)
-      error("Failed to allocate age bins\n");
-    if (posix_memalign(
-            (void**)&fp->HII_log10_Qcum, SWIFT_STRUCT_ALIGNMENT,
-            fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
-      error("Failed to allocate Q array\n");
-    if (posix_memalign(
-            (void**)&fp->SW_log10_Pcum, SWIFT_STRUCT_ALIGNMENT,
-            fp->HII_nr_metbins * fp->HII_nr_agebins * sizeof(float)) != 0)
-      error("Failed to allocate P array\n");
-
-    /* read in the metallicity bins */
-    dataset = H5Dopen(tempfile_id, "MetallicityBins", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->HII_log10_Zbins);
-    if (status < 0) error("error reading metallicity bins\n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: metallicity bins");
-
-    /* read in the stellar ages bins */
-    dataset = H5Dopen(tempfile_id, "AgeBins", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->HII_agebins);
-    if (status < 0) error("error reading age bins\n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: age bins");
-
-    /* read in cumulative ionizing photons */
-    dataset = H5Dopen(tempfile_id, "logQcumulative", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->HII_log10_Qcum);
-    if (status < 0) error("error reading Q\n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: logQcumulative");
-
-    /* read in cumulative momentum input */
-    dataset = H5Dopen(tempfile_id, "logPcumulative", H5P_DEFAULT);
-    status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     fp->SW_log10_Pcum);
-    if (status < 0) error("error reading P\n");
-    status = H5Dclose(dataset);
-    if (status < 0) error("error closing dataset: logPcumulative");
-
-    /* Close the file */
-    status = H5Fclose(tempfile_id);
-    if (status < 0) error("error closing file");
+    /* Read the HII tables */
+    read_feedback_tables(fp);
 
     /* set the minimum and maximum metallicities */
     fp->Zmin_early_fb = exp10(fp->HII_log10_Zbins[0]);
@@ -1563,9 +1502,6 @@ void feedback_props_init(struct feedback_props* fp,
           "(%.2f Myr)",
           fp->SW_max_age_Myr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
 
-#else
-    error("Need HDF5 to read early feedback tables");
-#endif
   } else {
     /* Initialize to zero if run without early feedback */
     fp->HIIregion_max_age_Myr = 0.;
@@ -1653,6 +1589,15 @@ void feedback_props_init(struct feedback_props* fp,
 }
 
 /**
+ * @brief Clean-up the memory allocated for the feedback routines
+ *
+ * We simply free all the arrays.
+ *
+ * @param feedback_props the feedback data structure.
+ */
+void feedback_clean(struct feedback_props* feedback_props) {}
+
+/**
  * @brief Zero pointers in yield_table structs
  *
  * @param table yield_table struct in which pointers to tables
@@ -1683,8 +1628,13 @@ void feedback_restore_tables(struct feedback_props* fp) {
   /* Allocate yield tables  */
   allocate_yield_tables(fp);
 
-  /* Read the tables  */
+  /* Read the yield tables  */
   read_yield_tables(fp);
+
+  /* Read the HII tables */
+  if (fp->with_early_feedback) {
+    read_feedback_tables(fp);
+  }
 
   /* Set yield_mass_bins array */
   const float imf_log10_mass_bin_size =
@@ -1742,6 +1692,12 @@ void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream) {
   feedback_copy.imf = NULL;
   feedback_copy.imf_mass_bin = NULL;
   feedback_copy.imf_mass_bin_log10 = NULL;
+
+  /* zero the HII tables */
+  feedback_copy.HII_log10_Zbins = NULL;
+  feedback_copy.HII_log10_Qcum = NULL;
+  feedback_copy.SW_log10_Pcum = NULL;
+  feedback_copy.HII_agebins = NULL;
 
   restart_write_blocks((void*)&feedback_copy, sizeof(struct feedback_props), 1,
                        stream, "feedback", "feedback function");

@@ -43,31 +43,10 @@ struct feedback_spart_data {
 
     /**
      * @brief Values to be distributed to the gas neighbours.
+     *
+     * WARNING: The first two elements must be the enrichment_weight and mass!!
      */
     struct {
-      /*! Age of star particle in Myr when SNII goes off */
-      float SNII_star_age_Myr;
-
-      /*! HII region timer in SU (time since BB for cosmo runs)*/
-      float HIIregion_endtime;
-
-      /*! ID of star particle responsible for HII region */
-      long long HIIregion_starid;
-
-      /*! HII region probability */
-      float HIIregion_probability;
-
-      /*! momentum available at the given timestep */
-      float momentum;
-
-      /*! momentum weigth */
-      float momentum_weight;
-
-      /*! momentum probability */
-      float momentum_probability;
-
-      /*! momentum probability */
-      float momentum_delta_v;
 
       /*! Normalisation factor used for the enrichment */
       float enrichment_weight;
@@ -116,6 +95,30 @@ struct feedback_spart_data {
 
       /*! Change in energy from SNIa feedback energy injection */
       float SNIa_delta_u;
+
+      /*! Age of star particle in Myr when SNII goes off */
+      float SNII_star_age_Myr;
+
+      /*! HII region timer in SU (time since BB for cosmo runs)*/
+      float HIIregion_endtime;
+
+      /*! ID of star particle responsible for HII region */
+      long long HIIregion_starid;
+
+      /*! HII region probability */
+      float HIIregion_probability;
+
+      /*! momentum available at the given timestep */
+      float momentum;
+
+      /*! momentum weigth */
+      float momentum_weight;
+
+      /*! momentum probability */
+      float momentum_probability;
+
+      /*! momentum probability */
+      float momentum_delta_v;
 
     } to_distribute;
   };
