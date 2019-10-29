@@ -1,8 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2018   Ashley Kelly ()
- *                      Folkert Nobels (nobels@strw.leidenuniv.nl)
- *                      Alejandro Benitez-Llambay
+ * Copyright (c) 2019  Alejandro Benitez-Llambay
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
