@@ -107,7 +107,19 @@ INLINE static void feedback_logger_SNIa_init_log_file(
 INLINE static void feedback_logger_SNIa_init(const struct engine *restrict e) {
 
   /* Initialize the core variables */
-  feedback_logger_core_init(e, &log_SNIa.core, 2);
+  feedback_logger_core_init(e, &log_SNIa.core);
+
+  /* Make a constant for the physical constants */
+  const struct phys_const *phys_const = e->physical_constants;
+
+  /* Define the swift parameter file */
+  struct swift_params *params = e->parameter_file;
+
+  /* Initialize the detla time core value */
+  const double delta_logger_time_Myr = parser_get_param_double(params, "Event_logger:delta_time_SNIa_Myr");
+
+  /* Convert the time to internal units */
+  log_SNIa.core.delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
 
   /* Initialize the energy to zero */
   log_SNIa.SNIa_energy = 0.;

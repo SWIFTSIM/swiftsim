@@ -120,7 +120,19 @@ INLINE static void feedback_logger_r_processes_init(
     const struct engine *restrict e) {
 
   /* Initialize the core variables */
-  feedback_logger_core_init(e, &log_r_processes.core, 3);
+  feedback_logger_core_init(e, &log_r_processes.core);
+
+  /* Make a constant for the physical constants */
+  const struct phys_const *phys_const = e->physical_constants;
+
+  /* Define the swift parameter file */
+  struct swift_params *params = e->parameter_file;
+
+  /* Initialize the detla time core value */
+  const double delta_logger_time_Myr = parser_get_param_double(params, "Event_logger:delta_time_r_processes_Myr");
+
+  /* Convert the time to internal units */
+  log_r_processes.core.delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
 
   /* Initialize the energy to zero */
   log_r_processes.enrichment_mass = 0.;

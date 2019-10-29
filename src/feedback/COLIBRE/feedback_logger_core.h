@@ -28,7 +28,7 @@
  */
 INLINE static void feedback_logger_core_init(
     const struct engine *restrict e,
-    struct feedback_history_logger *restrict fhl, const int log_type) {
+    struct feedback_history_logger *restrict fhl) {
 
   /* Initialize the lock*/
   lock_init(&fhl->lock);
@@ -47,36 +47,6 @@ INLINE static void feedback_logger_core_init(
 
   /* Initialize the logger time */
   fhl->logger_time = 0.;
-
-  /* Make a constant for the physical constants */
-  const struct phys_const *phys_const = e->physical_constants;
-
-  /* Define the swift parameter file */
-  struct swift_params *params = e->parameter_file;
-
-  /* Define the delta logger time */
-  double delta_logger_time_Myr;
-
-  /* Make a difference between the 3 types of logger */
-  switch (log_type) {
-    case 1:
-      /* Time interval to use to store the SNIa events */
-      delta_logger_time_Myr = parser_get_param_double(
-          params, "Feedback_logger:delta_time_SNII_Myr");
-      break;
-    case 2:
-      /* Time interval to use to store the SNIa events */
-      delta_logger_time_Myr = parser_get_param_double(
-          params, "Feedback_logger:delta_time_SNIa_Myr");
-      break;
-    case 3:
-      /* Time interval to use to store the SNIa events */
-      delta_logger_time_Myr = parser_get_param_double(
-          params, "Feedback_logger:delta_time_r_processes_Myr");
-      break;
-  }
-
-  fhl->delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
 }
 
 /**
