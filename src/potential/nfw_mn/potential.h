@@ -18,7 +18,6 @@
  *
  ******************************************************************************/
 
-
 #ifndef SWIFT_POTENTIAL_NFW_MN_H
 #define SWIFT_POTENTIAL_NFW_MN_H
 
@@ -39,16 +38,18 @@
 
 /**
  * @brief External Potential Properties - NFW Potential + Miyamoto-Nagai
-                halo --> rho(r) = rho_0 / ( (r/R_s)*(1+r/R_s)^2 )
-		disk --> phi(R,z) = -G * Mdisk / (R^2 + (Rdisk + (z^2+Zdisk^2)^1/2)^2)^(1/2)
-
-        We however parameterise this in terms of c and virial_mass, Mdisk, Rdisk and Zdisk
+ *
+ * halo --> rho(r) = rho_0 / ( (r/R_s)*(1+r/R_s)^2 )
+ * disk --> phi(R,z) = -G * Mdisk / (R^2 + (Rdisk +  (z^2+Zdisk^2)^1/2)^2)^(1/2)
+ *
+ * We however parameterise this in terms of c and virial_mass, Mdisk, Rdisk
+ * and Zdisk
  */
 struct external_potential {
 
   /*! Position of the centre of potential */
   double x[3];
-  
+
   /*! The scale radius of the NFW potential */
   double r_s;
 
@@ -90,9 +91,9 @@ struct external_potential {
 };
 
 /**
- * @brief Computes the time-step due to the acceleration from the NFW + MN potential
- *        as a fraction (timestep_mult) of the circular orbital time of that
- *        particle.
+ * @brief Computes the time-step due to the acceleration from the NFW + MN
+ * potential as a fraction (timestep_mult) of the circular orbital time of that
+ * particle.
  *
  * @param time The current time.
  * @param potential The #external_potential used in the run.
@@ -109,16 +110,17 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
   const float dz = g->x[2] - potential->x[2];
 
   const float R2 = dx * dx + dy * dy;
-  const float r =
-      sqrtf(R2 + dz * dz + potential->eps * potential->eps);
+  const float r = sqrtf(R2 + dz * dz + potential->eps * potential->eps);
 
   const float mr = potential->M_200 *
                    (logf(1.f + r / potential->r_s) - r / (r + potential->r_s)) /
                    potential->log_c200_term;
 
-  const float Vcirc_NFW = sqrtf((phys_const->const_newton_G * mr)/r);
-  const float f1 = potential->Rdisk + sqrtf(potential->Zdisk * potential->Zdisk + dz * dz);
-  const float Vcirc_MN = sqrtf(phys_const->const_newton_G * potential->Mdisk * R2 / pow(R2 + f1 * f1, 3.0/2.0));
+  const float Vcirc_NFW = sqrtf((phys_const->const_newton_G * mr) / r);
+  const float f1 =
+      potential->Rdisk + sqrtf(potential->Zdisk * potential->Zdisk + dz * dz);
+  const float Vcirc_MN = sqrtf(phys_const->const_newton_G * potential->Mdisk *
+                               R2 / pow(R2 + f1 * f1, 3.0 / 2.0));
   const float Vcirc = sqrtf(Vcirc_NFW * Vcirc_NFW + Vcirc_MN * Vcirc_MN);
 
   const float period = 2 * M_PI * r / Vcirc;
@@ -130,7 +132,8 @@ __attribute__((always_inline)) INLINE static float external_gravity_timestep(
 }
 
 /**
- * @brief Computes the gravitational acceleration from an NFW Halo potential + MN disk.
+ * @brief Computes the gravitational acceleration from an NFW Halo potential +
+ * MN disk.
  *
  * Note that the accelerations are multiplied by Newton's G constant
  * later on.
@@ -152,11 +155,9 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dy = g->x[1] - potential->x[1];
   const float dz = g->x[2] - potential->x[2];
 
-
   /* First for the NFW part */
   const float R2 = dx * dx + dy * dy;
-  const float r =
-      sqrtf(R2 + dz * dz + potential->eps * potential->eps);
+  const float r = sqrtf(R2 + dz * dz + potential->eps * potential->eps);
   const float term1 = potential->pre_factor;
   const float term2 = (1.0f / ((r + potential->r_s) * r * r) -
                        logf(1.0f + r / potential->r_s) / (r * r * r));
@@ -165,23 +166,22 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[1] += term1 * term2 * dy;
   g->a_grav[2] += term1 * term2 * dz;
 
-
   /* Now the the MN disk */
   const float f1 = sqrtf(potential->Zdisk * potential->Zdisk + dz * dz);
   const float f2 = potential->Rdisk + f1;
-  const float f3 = pow(R2 + f2 * f2, -3.0/2.0);
-      
-  g->a_grav[0] -= potential->Mdisk * f3 * dx; 
-  g->a_grav[1] -= potential->Mdisk * f3 * dy; 
-  g->a_grav[2] -= potential->Mdisk * f3 * f2 / f1 * dz; 
+  const float f3 = pow(R2 + f2 * f2, -3.0 / 2.0);
 
+  g->a_grav[0] -= potential->Mdisk * f3 * dx;
+  g->a_grav[1] -= potential->Mdisk * f3 * dy;
+  g->a_grav[2] -= potential->Mdisk * f3 * f2 / f1 * dz;
 }
 
 /**
  * @brief Computes the gravitational potential energy of a particle in an
  * NFW potential + MN potential.
  *
- * phi = -4 * pi * G * rho_0 * r_s^3 * ln(1+r/r_s) - G * Mdisk / sqrt(R^2 + (Rdisk + sqrt(z^2 + Zdisk^2))^2)
+ * phi = -4 * pi * G * rho_0 * r_s^3 * ln(1+r/r_s) - G * Mdisk / sqrt(R^2 +
+ * (Rdisk + sqrt(z^2 + Zdisk^2))^2)
  *
  * @param time The current time (unused here).
  * @param potential The #external_potential used in the run.
@@ -199,7 +199,7 @@ external_gravity_get_potential_energy(
 
   /* First for the NFW profile */
   const float R2 = dx * dx + dy * dy;
-  const float r =sqrtf(R2 + dz * dz + potential->eps * potential->eps);
+  const float r = sqrtf(R2 + dz * dz + potential->eps * potential->eps);
   const float term1 = -potential->pre_factor / r;
   const float term2 = logf(1.0f + r / potential->r_s);
 
@@ -245,8 +245,8 @@ static INLINE void potential_init_backend(
       parser_get_param_double(parameter_file, "NFW_MNPotential:concentration");
   potential->M_200 =
       parser_get_param_double(parameter_file, "NFW_MNPotential:M_200");
-  potential->rho_c =
-      parser_get_param_double(parameter_file, "NFW_MNPotential:critical_density");
+  potential->rho_c = parser_get_param_double(
+      parameter_file, "NFW_MNPotential:critical_density");
   potential->Mdisk =
       parser_get_param_double(parameter_file, "NFW_MNPotential:Mdisk");
   potential->Rdisk =
@@ -293,9 +293,8 @@ static INLINE void potential_print_backend(
     const struct external_potential* potential) {
 
   message(
-      "External potential is 'NFW + MN disk' with properties are (x,y,z) = (%e, "
-      "%e, %e), scale radius = %e "
-      "timestep multiplier = %e, mintime = %e",
+      "External potential is 'NFW + MN disk' with properties are (x,y,z) = "
+      "(%e, %e, %e), scale radius = %e timestep multiplier = %e, mintime = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->r_s,
       potential->timestep_mult, potential->mintime);
 }
