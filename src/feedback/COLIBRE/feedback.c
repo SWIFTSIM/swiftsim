@@ -1018,6 +1018,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   double prob = 0.;
 
+  printf("[delta_v] = %.5f\n", delta_v);
   /* We want the code to decide the velocity kick for us */
   if (delta_v < 0.) {
 
@@ -1039,7 +1040,6 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
     /* Mass inside the kernel too small makes prob > 1 */
     if (prob > 1.) {
-
       message("Not enough parts in the kernel to distribute momentum...");
 
       /* Correct the kick (in code units) to be consistent with the mass within
@@ -1389,19 +1389,6 @@ void feedback_props_init(struct feedback_props* fp,
   fp->n_Z = parser_get_param_double(params,
                                     "COLIBREFeedback:SNII_energy_fraction_n_Z");
 
-  /* Parameter only necessary if running with stellar winds */
-  if (fp->SW_max_age_Myr != 0.f) {
-    fp->delta_v = parser_get_param_double(
-        params, "COLIBREFeedback:Momentum_desired_delta_v");
-  } else {
-    fp->delta_v = 0.f;
-  }
-  /* Parameter only necessary if running with HII regions */
-  if (fp->HIIregion_max_age_Myr > 0.f) {
-    fp->HIIregion_dt_Myr = parser_get_param_float(
-        params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
-  }
-
   /* Properties of the stochastic SNIa model */
   fp->SNIa_deltaT_desired =
       parser_get_param_double(params, "COLIBREFeedback:SNIa_delta_T_K");
@@ -1475,6 +1462,12 @@ void feedback_props_init(struct feedback_props* fp,
     fp->SW_max_age_Myr = parser_get_opt_param_float(
       params, "COLIBREFeedback:stellarwind_maxage_Myr", maxage_Myr);
 
+    fp->delta_v = parser_get_param_double(
+        params, "COLIBREFeedback:Momentum_desired_delta_v");
+
+    fp->HIIregion_dt_Myr = parser_get_param_float(
+        params, "COLIBREFeedback:HIIregion_rebuild_dt_Myr");
+
     /* set the minimum and maximum metallicities */
     fp->Zmin_early_fb = exp10(fp->HII_log10_Zbins[0]);
     fp->Zmax_early_fb = exp10(fp->HII_log10_Zbins[fp->HII_nr_metbins - 1]);
@@ -1495,6 +1488,8 @@ void feedback_props_init(struct feedback_props* fp,
     /* Initialize to zero if run without early feedback */
     fp->HIIregion_max_age_Myr = 0.;
     fp->HIIregion_dt_Myr = 0.;
+    fp->delta_v = 0.;
+    fp->SW_max_age_Myr = 0.;
   }
 
   /* Gather common conversion factors --------------------------------------- */
