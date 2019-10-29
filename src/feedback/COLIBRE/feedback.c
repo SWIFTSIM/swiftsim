@@ -1018,7 +1018,6 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
   double prob = 0.;
 
-  printf("[delta_v] = %.5f\n", delta_v);
   /* We want the code to decide the velocity kick for us */
   if (delta_v < 0.) {
 
