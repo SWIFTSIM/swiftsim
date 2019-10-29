@@ -116,9 +116,9 @@ INLINE static void feedback_logger_time_step(const struct engine *restrict e) {
  * @param e the engine we are running on
  */
 INLINE static void feedback_logger_close(const struct engine *restrict e) {
-  fclose(log_SNII.core.fp);
-  fclose(log_SNIa.core.fp);
-  fclose(log_r_processes.core.fp);
+  feedback_logger_SNII_log_data_end(e);
+  feedback_logger_SNIa_log_data_end(e);
+  feedback_logger_r_processes_log_data_end(e);
 }
 
 #ifdef WITH_MPI

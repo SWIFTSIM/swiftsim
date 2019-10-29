@@ -128,20 +128,15 @@ INLINE static void feedback_logger_SNIa_time_step(
 }
 
 /**
- * @brief Write data to the feedback logger file if we are on a write step
+ * @brief Function that writes to the logger file
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNIa_log_data(
-    const struct engine *restrict e) {
+INLINE static void feedback_logger_SNIa_log_data_general(
+    const struct engine *restrict e, const double dt) {
 
   /* Get the core struct */
   struct feedback_history_logger *core = &log_SNIa.core;
-
-  /* Are we one a logger time step? */
-  if (!feedback_logger_core_log(e, core)) return;
-
-  /* We need to log */
 
   /* Get the feedback structure */
   const struct feedback_props *feedback_properties = e->feedback_props;
@@ -150,7 +145,7 @@ INLINE static void feedback_logger_SNIa_log_data(
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
 
   /* Calculate Delta time */
-  const double delta_time = log_SNIa.core.delta_logger_time;
+  const double delta_time = dt;
 
   /* Get the total amount of SNIa energy */
   const double E_SNIa = log_SNIa.SNIa_energy;
@@ -182,6 +177,24 @@ INLINE static void feedback_logger_SNIa_log_data(
           core->z_prev, E_SNIa, N_SNIa, N_SNIa_p_time, N_SNIa_p_time_p_volume,
           N_heating_events);
   fflush(core->fp);
+}
+
+/**
+ * @brief Write data to the feedback logger file if we are on a write step
+ *
+ * @param e the engine we are running
+ */
+INLINE static void feedback_logger_SNIa_log_data(
+    const struct engine *restrict e) {
+
+  /* Get the core struct */
+  struct feedback_history_logger *core = &log_SNIa.core;
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, core)) return;
+
+  /* We need to log */
+  feedback_logger_SNIa_log_data_general(e, log_SNIa.core.delta_logger_time);
 
   /* Update the logger core */
   feedback_logger_core_update(e, core);
@@ -190,6 +203,27 @@ INLINE static void feedback_logger_SNIa_log_data(
   log_SNIa.SNIa_energy = 0.;
   log_SNIa.events = 0;
 }
+
+/**
+ * @brief Write data to the feedback logger file on the last time step
+ *
+ * @param e the engine we are running
+ */
+INLINE static void feedback_logger_SNIa_log_data_end(
+    const struct engine *restrict e) {
+
+  /* We need to log before closing */
+  feedback_logger_SNIa_log_data_general(e, log_SNIa.core.logger_time);
+
+  /* Lets close the file */
+  fclose(log_SNIa.core.fp);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Close the debugging file */
+  fclose(log_SNIa_debug.fp);
+#endif /* SWIFT_DEBUG_CHECKS */
+}
+
 
 /**
  * @brief log a SNIa event

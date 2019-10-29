@@ -141,18 +141,15 @@ INLINE static void feedback_logger_r_processes_time_step(
 }
 
 /**
- * @brief Write data to the feedback logger file if we are on a write step
+ * @brief Function that writes to the logger file 
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_log_data(
-    const struct engine *restrict e) {
+INLINE static void feedback_logger_r_processes_log_data_general(
+    const struct engine *restrict e, const double dt) {
 
   /* Get the core struct */
   struct feedback_history_logger *core = &log_r_processes.core;
-
-  /* Are we one a logger time step? */
-  if (!feedback_logger_core_log(e, core)) return;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
@@ -200,6 +197,25 @@ INLINE static void feedback_logger_r_processes_log_data(
           delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
           N_r_processes_p_time_p_volume);
   fflush(core->fp);
+}
+
+
+/**
+ * @brief Write data to the feedback logger file if we are on a write step
+ *
+ * @param e the engine we are running
+ */
+INLINE static void feedback_logger_r_processes_log_data(
+    const struct engine *restrict e) {
+
+  /* Get the core struct */
+  struct feedback_history_logger *core = &log_r_processes.core;
+
+  /* Are we one a logger time step? */
+  if (!feedback_logger_core_log(e, core)) return;
+
+  /* We need to log */
+  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.delta_logger_time);
 
   /* Update the logger core */
   feedback_logger_core_update(e, core);
@@ -207,6 +223,21 @@ INLINE static void feedback_logger_r_processes_log_data(
   /* Update the type specific variables */
   log_r_processes.events = 0;
   log_r_processes.enrichment_mass = 0.;
+}
+
+/**
+ * @brief Write data to the feedback logger file on the last time step
+ *
+ * @param e the engine we are running
+ */
+INLINE static void feedback_logger_r_processes_log_data_end(
+    const struct engine *restrict e) {
+
+  /* Write on the last time step */
+  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.logger_time);
+
+  /* Close the logger file */
+  fclose(log_r_processes.core.fp);
 }
 
 /**
