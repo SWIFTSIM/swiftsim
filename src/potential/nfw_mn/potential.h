@@ -174,7 +174,7 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
 
   g->a_grav[0] -= potential->Mdisk * f3 * dx;
   g->a_grav[1] -= potential->Mdisk * f3 * dy;
-  g->a_grav[2] -= potential->Mdisk * f3 * f2 / f1 * dz;
+  g->a_grav[2] -= potential->Mdisk * f3 * (f2 / f1) * dz;
 }
 
 /**
