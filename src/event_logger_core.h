@@ -16,8 +16,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_CORE_H
-#define SWIFT_COLIBRE_FEEDBACK_LOGGER_CORE_H
+#ifndef SWIFT_EVENT_LOGGER_STRUCT_H
+#define SWIFT_EVENT_LOGGER_STRUCT_H
+
+/* feedback history general struct for any quantity */
+struct event_history_logger {
+
+  /* Feedback history lock */
+  swift_lock_type lock;
+
+  /* Feedback history file pointer */
+  FILE *fp;
+
+  /* Feedback history logger time since the last log to the file */
+  double logger_time;
+
+  /* Feedback history delta logger time */
+  double delta_logger_time;
+
+  /*! Previous storage step*/
+  int step_prev;
+
+  /*! Previous storage time */
+  float time_prev;
+
+  /*! Previous storage redshift */
+  float z_prev;
+
+  /*! Previous storage scale factor */
+  float a_prev;
+};
 
 /**
  * @brief Initialize the logger core
@@ -28,7 +56,7 @@
  */
 INLINE static void feedback_logger_core_init(
     const struct engine *restrict e,
-    struct feedback_history_logger *restrict fhl) {
+    struct event_history_logger *restrict fhl) {
 
   /* Initialize the lock*/
   lock_init(&fhl->lock);
@@ -57,7 +85,7 @@ INLINE static void feedback_logger_core_init(
  */
 INLINE static void feedback_logger_core_time_step(
     const struct engine *restrict e,
-    struct feedback_history_logger *restrict fhl) {
+    struct event_history_logger *restrict fhl) {
 
   fhl->logger_time += e->time_step;
 }
@@ -70,7 +98,7 @@ INLINE static void feedback_logger_core_time_step(
  */
 INLINE static int feedback_logger_core_log(
     const struct engine *restrict e,
-    struct feedback_history_logger *restrict fhl) {
+    struct event_history_logger *restrict fhl) {
 
   if (fhl->logger_time < fhl->delta_logger_time) return 0;
 
@@ -85,7 +113,7 @@ INLINE static int feedback_logger_core_log(
  */
 INLINE static void feedback_logger_core_update(
     const struct engine *restrict e,
-    struct feedback_history_logger *restrict fhl) {
+    struct event_history_logger *restrict fhl) {
 
   /* Update the core values */
 
@@ -105,4 +133,4 @@ INLINE static void feedback_logger_core_update(
   fhl->logger_time -= fhl->delta_logger_time;
 }
 
-#endif
+#endif /* SWIFT_EVENT_LOGGER_STRUCT_H */

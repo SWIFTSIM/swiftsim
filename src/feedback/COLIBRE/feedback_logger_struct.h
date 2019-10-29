@@ -19,39 +19,13 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H
 
-/* feedback history general struct for any quantity */
-struct feedback_history_logger {
-
-  /* Feedback history lock */
-  swift_lock_type lock;
-
-  /* Feedback history file pointer */
-  FILE *fp;
-
-  /* Feedback history logger time since the last log to the file */
-  double logger_time;
-
-  /* Feedback history delta logger time */
-  double delta_logger_time;
-
-  /*! Previous storage step*/
-  int step_prev;
-
-  /*! Previous storage time */
-  float time_prev;
-
-  /*! Previous storage redshift */
-  float z_prev;
-
-  /*! Previous storage scale factor */
-  float a_prev;
-};
+#include "event_logger_core.h"
 
 /* feedback history struct for SNIa */
 struct feedback_history_SNIa {
 
   /* Load the core of logging functions */
-  struct feedback_history_logger core;
+  struct event_history_logger core;
 
   /*! Total new SNIa injected energy */
   double SNIa_energy;
@@ -64,7 +38,7 @@ struct feedback_history_SNIa {
 struct feedback_history_SNII {
 
   /* Load the core of logging functions */
-  struct feedback_history_logger core;
+  struct event_history_logger core;
 
   /*! Total new SNIa injected energy */
   double SNII_energy;
@@ -80,7 +54,7 @@ struct feedback_history_SNII {
 struct feedback_history_r_processes {
 
   /* Load the core of logging functions */
-  struct feedback_history_logger core;
+  struct event_history_logger core;
 
   /*! Total new r-processes mass in the simulation */
   double enrichment_mass;

@@ -19,8 +19,8 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
 
+#include "event_logger_core.h"
 #include "feedback_logger_struct.h"
-#include "feedback_logger_core.h"
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -161,7 +161,7 @@ INLINE static void feedback_logger_r_processes_log_data_general(
     const struct engine *restrict e, const double dt) {
 
   /* Get the core struct */
-  struct feedback_history_logger *core = &log_r_processes.core;
+  struct event_history_logger *core = &log_r_processes.core;
 
   /* Calculate the volume of the box */
   const double volume = e->s->dim[0] * e->s->dim[1] * e->s->dim[2];
@@ -221,7 +221,7 @@ INLINE static void feedback_logger_r_processes_log_data(
     const struct engine *restrict e) {
 
   /* Get the core struct */
-  struct feedback_history_logger *core = &log_r_processes.core;
+  struct event_history_logger *core = &log_r_processes.core;
 
   /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, core)) return;
@@ -299,7 +299,7 @@ INLINE static void feedback_logger_r_processes_MPI_Reduce(
 
   if (e->nodeID != 0) {
     /* Get the core struct */
-    struct feedback_history_logger *core = &log_r_processes.core;
+    struct event_history_logger *core = &log_r_processes.core;
 
     /* Update the core struct */
     feedback_logger_core_update(e, core);

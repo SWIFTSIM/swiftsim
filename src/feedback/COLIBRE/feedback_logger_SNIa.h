@@ -19,7 +19,7 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_SNIA_H
 
-#include "feedback_logger_core.h"
+#include "event_logger_core.h"
 #include "feedback_logger_struct.h"
 
 /* MPI headers. */
@@ -148,7 +148,7 @@ INLINE static void feedback_logger_SNIa_log_data_general(
     const struct engine *restrict e, const double dt) {
 
   /* Get the core struct */
-  struct feedback_history_logger *core = &log_SNIa.core;
+  struct event_history_logger *core = &log_SNIa.core;
 
   /* Get the feedback structure */
   const struct feedback_props *feedback_properties = e->feedback_props;
@@ -200,7 +200,7 @@ INLINE static void feedback_logger_SNIa_log_data(
     const struct engine *restrict e) {
 
   /* Get the core struct */
-  struct feedback_history_logger *core = &log_SNIa.core;
+  struct event_history_logger *core = &log_SNIa.core;
 
   /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, core)) return;
@@ -283,7 +283,7 @@ INLINE static void feedback_logger_SNIa_MPI_Reduce(const struct engine *restrict
 
   if (e->nodeID != 0) {
     /* Get the core struct */
-    struct feedback_history_logger *core = &log_SNIa.core;
+    struct event_history_logger *core = &log_SNIa.core;
 
     /* Update the core struct */
     feedback_logger_core_update(e, core);
