@@ -26,17 +26,6 @@
 #include "feedback_logger_struct.h"
 #include "random.h"
 
-/* Define external variables */
-#ifdef SWIFT_DEBUG_CHECKS
-extern struct feedback_history_debug log_SNIa_debug;
-extern struct feedback_history_debug log_SNII_debug;
-#endif
-
-/* Define the external logger variables */
-extern struct feedback_history_SNIa log_SNIa;
-extern struct feedback_history_SNII log_SNII;
-extern struct feedback_history_r_processes log_r_processes;
-
 /**
  * @brief Density interaction between two particles (non-symmetric).
  *
