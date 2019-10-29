@@ -19,20 +19,65 @@
 #ifndef SWIFT_NONE_FEEDBACK_LOGGER_H
 #define SWIFT_NONE_FEEDBACK_LOGGER_H
 
+/* MPI headers. */
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
+#include "engine.h"
+
 /**
- * @brief Initialize the SFH logger file
+ * @brief Initialize the times of the feedback logger
  *
- * @param fp the file pointer
- * @param us The current internal system of units.
- * @param phys_const Physical constants in internal units
+ * @param e the engine on this node
  */
-INLINE static void feedback_SNIa_logger_init_log_file(
-    FILE *fp, const struct unit_system *restrict us,
-    const struct phys_const *phys_const) {}
+INLINE static void feedback_logger_init(const struct engine *restrict e) {}
 
-INLINE static void feedback_SNIa_logger_write_to_log_file(
-    FILE *fp, const double time, struct spart *restrict si,
-    struct part *restrict pj, struct xpart *restrict xpj,
-    const struct cosmology *restrict cosmo, const int step) {}
+/**
+ * @brief Initialize the log files
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_init_log_file(
+    const struct engine *restrict e) {}
 
-#endif /* SWIFT_NONE_FEEDBACK_LOGGER_H */
+/**
+ * @brief Write the data to the log file if we have the correct time, do this
+ * for all the log files
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_log_data(const struct engine *restrict e) {}
+
+/**
+ * @brief Open the files of the feedback loggers
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_open_files(const struct engine *restrict e) {}
+
+/**
+ * @brief Update the core values in the logger for the time step
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_time_step(const struct engine *restrict e) {}
+
+/**
+ * @brief Close the files for the feedback logger
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_close(const struct engine *restrict e) {}
+
+#ifdef WITH_MPI
+/**
+ * @brief Do the MPI communication between all the nodes regarding the feedback
+ * logger
+ *
+ * @param e the engine we are running on
+ */
+INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {}
+#endif
+
+#endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */

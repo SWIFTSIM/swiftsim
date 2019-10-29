@@ -130,16 +130,6 @@ int engine_current_step;
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 
-#ifdef SWIFT_DEBUG_CHECKS
-struct feedback_history_debug log_SNIa_debug;
-struct feedback_history_debug log_SNII_debug;
-#endif
-
-/* Declare the feedback structures */
-struct feedback_history_SNIa log_SNIa;
-struct feedback_history_SNII log_SNII;
-struct feedback_history_r_processes log_r_processes;
-
 /**
  * @brief Link a density/force task to a cell.
  *
