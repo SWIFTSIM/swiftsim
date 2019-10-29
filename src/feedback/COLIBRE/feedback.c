@@ -1323,7 +1323,7 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
   fp->with_early_feedback = 
-    parser_get_param_int(params, "COLIBREFeedback:with_early_feedback", 0);
+    parser_get_param_int(params, "COLIBREFeedback:with_early_feedback");
     
   /* Properties of the IMF model ------------------------------------------ */
 
