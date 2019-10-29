@@ -1322,18 +1322,9 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->HIIregion_max_age_Myr = parser_get_opt_param_float(
-      params, "COLIBREFeedback:HIIregion_maxage_Myr", 0.f);
-
-  fp->SW_max_age_Myr = parser_get_opt_param_double(
-      params, "COLIBREFeedback:stellarwind_maxage_Myr", 0.f);
-
-  if (fp->HIIregion_max_age_Myr == 0.f && fp->SW_max_age_Myr == 0.f) {
-    fp->with_early_feedback = 0;
-  } else {
-    fp->with_early_feedback = 1;
-  }
-
+  fp->with_early_feedback = 
+    parser_get_param_int(params, "COLIBREFeedback:with_early_feedback", 0);
+    
   /* Properties of the IMF model ------------------------------------------ */
 
   /* Minimal and maximal mass considered */
@@ -1465,33 +1456,41 @@ void feedback_props_init(struct feedback_props* fp,
   fp->AGB_ejecta_specific_kinetic_energy =
       0.5f * ejecta_velocity * ejecta_velocity;
 
-  /* Properties of the HII region model ------------------------------------- */
+
+  /* Properties of the HII regions and stellar winds model ------------------ */
 
   if (fp->with_early_feedback) {
-
     parser_get_param_string(params, "COLIBREFeedback:earlyfb_filename",
                             fp->early_feedback_table_path);
 
     /* Read the HII tables */
     read_feedback_tables(fp);
 
+    /* get the optional timescales, or set them from the tables by default */
+    const float maxage_Myr = fp->HII_agebins[fp->HII_nr_agebins - 1];
+
+    fp->HIIregion_max_age_Myr = parser_get_opt_param_float(
+     params, "COLIBREFeedback:HIIregion_maxage_Myr", maxage_Myr);
+
+    fp->SW_max_age_Myr = parser_get_opt_param_float(
+      params, "COLIBREFeedback:stellarwind_maxage_Myr", maxage_Myr);
+
     /* set the minimum and maximum metallicities */
     fp->Zmin_early_fb = exp10(fp->HII_log10_Zbins[0]);
     fp->Zmax_early_fb = exp10(fp->HII_log10_Zbins[fp->HII_nr_metbins - 1]);
 
     /* check that we won't exceed the maximum stellar age in the table */
-    if (fp->HIIregion_max_age_Myr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+    if (fp->HIIregion_max_age_Myr > maxage_Myr)
       error(
           "HIIregion_maxage_Myr (%.2f Myr) exceeds maximum age in table (%.2f "
           "Myr)",
-          fp->HIIregion_max_age_Myr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
+          fp->HIIregion_max_age_Myr, maxage_Myr);
 
-    if (fp->SW_max_age_Myr > fp->HII_agebins[fp->HII_nr_agebins - 1])
+    if (fp->SW_max_age_Myr > maxage_Myr)
       error(
           "stellarwind_maxage_Myr (%.2f Myr) exceeds maximum age in table "
           "(%.2f Myr)",
-          fp->SW_max_age_Myr, fp->HII_agebins[fp->HII_nr_agebins - 1]);
-
+          fp->SW_max_age_Myr, maxage_Myr);
   } else {
     /* Initialize to zero if run without early feedback */
     fp->HIIregion_max_age_Myr = 0.;
