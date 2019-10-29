@@ -43,6 +43,7 @@ INLINE static void feedback_logger_init(const struct engine *restrict e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   feedback_logger_SNIa_init_debug(e);
+  feedback_logger_SNII_init_debug(e);
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 
@@ -59,6 +60,7 @@ INLINE static void feedback_logger_init_log_file(
 
 #ifdef SWIFT_DEBUG_CHECKS
   feedback_logger_SNIa_init_log_file_debug(e);
+  feedback_logger_SNII_init_log_file_debug(e);
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 
@@ -85,9 +87,15 @@ INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
   log_r_processes.core.fp = fopen("r_processes.txt", "w");
 
 #ifdef SWIFT_DEBUG_CHECKS
-  char savename[50];
-  snprintf(savename, 50, "SNIa_%d.txt", e->nodeID);
-  log_SNIa_debug.fp = fopen(savename, "w");
+  /* Open SNIa debugging file */
+  char savename_SNIa[50];
+  snprintf(savename_SNIa, 50, "SNIa_%d.txt", e->nodeID);
+  log_SNIa_debug.fp = fopen(savename_SNIa, "w");
+
+  /* Open SNII debugging file */
+  char savename_SNII[50];
+  snprintf(savename_SNII, 50, "SNII_%d.txt", e->nodeID);
+  log_SNII_debug.fp = fopen(savename_SNII, "w");
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 

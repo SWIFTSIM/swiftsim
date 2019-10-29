@@ -19,6 +19,9 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
 #define SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
 
+#include "feedback_logger_struct.h"
+#include "feedback_logger_core.h"
+
 /* MPI headers. */
 #ifdef WITH_MPI
 #include <mpi.h>

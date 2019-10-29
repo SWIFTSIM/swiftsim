@@ -28,7 +28,8 @@
 
 /* Define external variables */
 #ifdef SWIFT_DEBUG_CHECKS
-extern struct feedback_history_SNIa_debug log_SNIa_debug;
+extern struct feedback_history_debug log_SNIa_debug;
+extern struct feedback_history_debug log_SNII_debug;
 #endif
 
 /* Define the external logger variables */
@@ -311,6 +312,9 @@ runner_iact_nonsym_feedback_apply(
 
       feedback_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
 
+#ifdef SWIFT_DEBUG_CHECKS
+      feedback_logger_SNII_log_event_debug(time, si, pj, xpj, cosmo, step);
+#endif
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
       /*     "random_num %.5e du %.5e du/ini %.5e", */

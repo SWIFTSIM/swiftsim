@@ -258,9 +258,7 @@ INLINE static void feedback_logger_SNIa_MPI(const struct engine *restrict e) {
 /**
  * @brief Initialize the SNIa logger debug file
  *
- * @param fp the file pointer
- * @param us The current internal system of units.
- * @param phys_const Physical constants in internal units
+ * @param e the engine we are running
  */
 INLINE static void feedback_logger_SNIa_init_log_file_debug(
     const struct engine *restrict e) {
@@ -310,7 +308,6 @@ INLINE static void feedback_logger_SNIa_init_log_file_debug(
 /**
  * @brief Log the event in case of debugging
  *
- * @param fp the file pointer to write the debugging information to
  * @param time the current simulation time
  * @param si the star particle
  * @param pj the gas particle

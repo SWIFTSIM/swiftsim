@@ -131,7 +131,8 @@ extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 
 #ifdef SWIFT_DEBUG_CHECKS
-struct feedback_history_SNIa_debug log_SNIa_debug;
+struct feedback_history_debug log_SNIa_debug;
+struct feedback_history_debug log_SNII_debug;
 #endif
 
 /* Declare the feedback structures */
