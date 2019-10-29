@@ -63,7 +63,7 @@ COLIBREDustEvolution:
   use_sputtering:                1               # Global switch for thermal dust sputtering
   use_SNII_destruction:          1               # Global switch for dust destruction by SNII shocks
   use_accretion:                 1               # Global switch for dust growth by accretion
-
+  cooling_on:                    1               # As dust evolution is done in the cooling loop an SWIFT must be run with cooling to work, can use this  switch to actually turn off cooling
 # Solar abundances
 COLIBREChemistry:
   init_abundance_metal:     0.0133714      # Inital fraction of particle mass in *all* metals 
