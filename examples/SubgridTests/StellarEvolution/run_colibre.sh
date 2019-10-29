@@ -26,23 +26,37 @@
 #     ./getSolutions.sh
 # fi
 
-../../swift  --temperature --feedback --stars --hydro --external-gravity --threads=16 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.08 2>&1 | tee output_0p08.log
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.08 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_nosputter.txt
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust_sputter.yml -P COLIBREChemistry:init_abundance_metal:0.08 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_sputter.txt
 
 python dustevo.py
 
-../../swift  --temperature --feedback --stars --hydro --external-gravity --threads=16 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.04 2>&1 | tee output_0p04.log
+echo "Done Z=0.08"
+
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.04 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_nosputter.txt
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust_sputter.yml -P COLIBREChemistry:init_abundance_metal:0.04 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_sputter.txt
 
 python dustevo.py
 
-../../swift  --temperature --feedback --stars --hydro --external-gravity --threads=16 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.01 2>&1 | tee output_0p01.log
+echo "Done Z=0.04"
+
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.01 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_nosputter.txt
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust_sputter.yml -P COLIBREChemistry:init_abundance_metal:0.01 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_sputter.txt
 
 python dustevo.py
 
-../../swift  --temperature --feedback --stars --hydro --external-gravity --threads=16 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.001 2>&1 | tee output_0p001.log
+echo "Done Z=0.01"
+
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.001 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_nosputter.txt
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust_sputter.yml -P COLIBREChemistry:init_abundance_metal:0.001 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_sputter.txt
 
 python dustevo.py
 
-../../swift  --temperature --feedback --stars --hydro --external-gravity --threads=16 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.0001 2>&1 | tee output_0p0001.log
+echo "Done Z=0.001"
+
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust.yml -P COLIBREChemistry:init_abundance_metal:0.0001 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_nosputter.txt
+../../swift  --temperature --feedback --stars --hydro --external-gravity --cooling --threads=8 stellar_evolution_dust_sputter.yml -P COLIBREChemistry:init_abundance_metal:0.0001 -P COLIBREChemistry:init_abundance_Hydrogen:0.752 -P COLIBREChemistry:init_abundance_Helium:0.248 > output_sputter.txt
 
 python dustevo.py
-# python plot_box_evolution.py
+
+echo "Done Z=1e-4"
