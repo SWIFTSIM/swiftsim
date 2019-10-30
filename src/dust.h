@@ -41,12 +41,15 @@ struct dustevo_props {
   int with_accretion;
 
   /*! Are we actually cooling? */
+  int with_subgrid_props;
+
+  /*! Are we actually cooling? */
   int with_cooling_on;
 
   /* ------------ Fixed parameters ------------ */
   
   /* Number of SNII per gram of star formation (assumes Chabrier 2000 IMF) */
-  float specific_numSNII_cgs;
+  float specific_numSNII;
 };
 
 void dustevo_sputter_part(const struct phys_const *phys_const,
@@ -55,17 +58,29 @@ void dustevo_sputter_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
+		       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm, const double time);
 
 void dustevo_accretion_part(const struct phys_const *phys_const,
-                       const struct unit_system *us,
-                       const struct cosmology *cosmo,
-                       const struct hydro_props *hydro_properties,
-                       const struct entropy_floor_properties *floor_props,
-                       const struct cooling_function_data *cooling,
-                       struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm, const double time);
+			    const struct unit_system *us,
+			    const struct cosmology *cosmo,
+			    const struct hydro_props *hydro_properties,
+			    const struct entropy_floor_properties *floor_props,
+			    const struct cooling_function_data *cooling,
+			    const struct dustevo_props *dp,
+			    struct part *restrict p, struct xpart *restrict xp,
+			    const float dt, const float dt_therm, const double time);
+
+void dustevo_SNIIdestruction_part(const struct phys_const *phys_const,
+				  const struct unit_system *us,
+				  const struct cosmology *cosmo,
+				  const struct hydro_props *hydro_properties,
+				  const struct entropy_floor_properties *floor_props,
+				  const struct cooling_function_data *cooling,
+				  const struct dustevo_props *dp,
+				  struct part *restrict p, struct xpart *restrict xp,
+				  const float dt, const float dt_therm, const double time);
 
 void dustevo_props_init(struct dustevo_props *dustevo_properties,
 			struct swift_params *params,

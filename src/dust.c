@@ -45,11 +45,14 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
   dustevo_properties->with_accretion =
       parser_get_param_int(params, "COLIBREDustEvolution:use_accretion");
 
+  dustevo_properties->with_subgrid_props =
+      parser_get_param_int(params, "COLIBREDustEvolution:use_subgrid_properties");
+
   dustevo_properties->with_cooling_on =
       parser_get_param_int(params, "COLIBREDustEvolution:cooling_on");
 
   dustevo_properties->specific_numSNII =
-    7.039463e-3 / phys_const.const_solar_mass;
+    7.039463e-3 / phys_const->const_solar_mass;
 }
 
 void dustevo_sputter_part(const struct phys_const *phys_const,
@@ -58,7 +61,7 @@ void dustevo_sputter_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
-		       /* const struct dustevo_props *dustevo_properties, */
+		       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
 			  const float dt, const float dt_therm, const double time){
   float const *metal_fraction =
@@ -81,16 +84,26 @@ void dustevo_sputter_part(const struct phys_const *phys_const,
   /* specific sputtering rate per grain mass fraction  */
   const double dfdr_cgs = 3./grain_radius_cgs;
 
+  /* set subgrid particle properties if using */
+  float rho, temp; 
+
+  if (dp->with_subgrid_props) {
+    rho = xp->tracers_data.subgrid_dens;
+    temp = xp->tracers_data.subgrid_temp;
+  }
+  else {
+    rho = hydro_get_physical_density(p, cosmo);
+    temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
+  					       cooling, p, xp);
+  }
+
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const float XH = metal_fraction[chemistry_element_H];
-  const float rho = hydro_get_physical_density(p, cosmo);
   const double n_H = rho * XH / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
   const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* surface area of a dust grain, assuming 0.1 micron radius */
-  const float temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
-  					       cooling, p, xp);
   const double drdt_grain_cgs = -3.2e-18 * n_H_cgs * pow(pow(2e6/temp, 2.5) + 1, -1);
   const double dfdt_cgs = drdt_grain_cgs * dfdr_cgs;
   const double dfrac = dfdt_cgs * dt_cgs;
@@ -99,12 +112,16 @@ void dustevo_sputter_part(const struct phys_const *phys_const,
   /* message("this particle"); */
   /* message("%e", *fGra); */
   /* message("%e", dt_cgs*dfdt_per_grain_dens_cgs*fSil); */
-  if (1. + dfrac < 0.) message("%e", 1. + dfrac); 
+  /* if ((1. + dfrac) < 1.) message("sputtering: %e", 1. + dfrac);  */
 
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] = fGra*max(1. + dfrac, 0.);
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] = fSil*max(1. + dfrac, 0.);
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] = fIde*max(1. + dfrac, 0.);
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] *= max(1. + dfrac, 0.);
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] *= max(1. + dfrac, 0.);
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] *= max(1. + dfrac, 0.);
   
+  /* if (xp->sf_data.SFR > 0.) { */
+  /*   message("Sputter: %e", dfrac); */
+  /* } */
+
   /* message("%e", temp); */
   /* message("%e", n_H_cgs); */
   /* message("%e", dmdt_grain_cgs); */
@@ -119,7 +136,7 @@ void dustevo_accretion_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
-		       /* const struct dustevo_props *dustevo_properties, */
+		       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
 			  const float dt, const float dt_therm, const double time){
  
@@ -135,19 +152,28 @@ void dustevo_accretion_part(const struct phys_const *phys_const,
   /* grain radius in cgs */ 
   const double grain_radius_cgs = 1e-5;
 
-  /* Convert Hydrogen mass fraction into Hydrogen number density */
-  const float rho = hydro_get_physical_density(p, cosmo);
-  const float rho_sg = xp->tracers_data.subgrid_temp;
+  /* set subgrid particle properties if using */
+  float rho, temp; 
 
+  if (dp->with_subgrid_props) {
+    rho = xp->tracers_data.subgrid_dens;
+    temp = xp->tracers_data.subgrid_temp;
+  }
+  else {
+    rho = hydro_get_physical_density(p, cosmo);
+    temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
+  					       cooling, p, xp);
+  }
+
+
+  /* Convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H = rho * X / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
-  const double n_H_sg_cgs = n_H_cgs * (rho_sg/rho);
+
 
   /* get other relevant particle properties */
   const float Z = p->chemistry_data.metal_mass_fraction_total;
-  const float temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
-					     cooling, p, xp);
-  const float temp_sg = xp->tracers_data.subgrid_temp;
+
 
   /* accretion timescale multiplicative terms  (Hirashita & Voshchinnikov 2013), 
      implicitly assuming S_acc = 0.3 */
@@ -170,8 +196,8 @@ void dustevo_accretion_part(const struct phys_const *phys_const,
   const double growfrac_Ide = dt_cgs / tau_Ide; 
 
   if (growfrac_Gra > 1) message("large growth fraction => %e", growfrac_Gra); 
-  if (0 > 1) message("%e %e", temp_sg/temp, n_H_sg_cgs/n_H_cgs); 
-  if (0 > 1) message("%e %e", n_H_cgs, temp_sg); 
+  if (0 > 1) message("%e %e", temp, n_H_cgs); 
+  if (0 > 1) message("%e %e", n_H_cgs, temp); 
 
   /* message("%e", 1./mult_terms);  */
 
@@ -181,72 +207,80 @@ void dustevo_accretion_part(const struct phys_const *phys_const,
   
 }
 
-void dustevo_accretion_part(const struct phys_const *phys_const,
-                       const struct unit_system *us,
-                       const struct cosmology *cosmo,
-                       const struct hydro_props *hydro_properties,
-                       const struct entropy_floor_properties *floor_props,
-                       const struct cooling_function_data *cooling,
-		       /* const struct dustevo_props *dustevo_properties, */
-                       struct part *restrict p, struct xpart *restrict xp,
-			  const float dt, const float dt_therm, const double time){
- 
+void dustevo_SNIIdestruction_part(const struct phys_const *phys_const,
+				  const struct unit_system *us,
+				  const struct cosmology *cosmo,
+				  const struct hydro_props *hydro_properties,
+				  const struct entropy_floor_properties *floor_props,
+				  const struct cooling_function_data *cooling,
+				  const struct dustevo_props *dp,
+				  struct part *restrict p, struct xpart *restrict xp,
+				  const float dt, const float dt_therm, const double time){
  
   const float X = p->chemistry_data.metal_mass_fraction[chemistry_element_H];
   const float fGra = p->chemistry_data.metal_mass_fraction[chemistry_element_Gra];
   const float fSil = p->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
   const float fIde = p->chemistry_data.metal_mass_fraction[chemistry_element_Ide];
 
-  /* no dust, no accretion */
+  /* no dust, no SNII destruction */
   if (fGra+fSil+fIde == 0.) return;
 
-  /* grain radius in cgs */ 
-  const double grain_radius_cgs = 1e-5;
+  /* no SF, no SNII */
+  if (xp->sf_data.SFR <= 0) return;
+
+  /* constants */ 
+  const float eps_eff = 0.1;
+  const double unit_mass_cgs = units_cgs_conversion_factor(us, UNIT_CONV_MASS);
+  const double unit_time_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+  const double dt_cgs = dt * unit_time_cgs;
+
+
+  /* set subgrid particle properties if using */
+  float rho, temp; 
+  if (dp->with_subgrid_props) {
+    rho = xp->tracers_data.subgrid_dens;
+    temp = xp->tracers_data.subgrid_temp;
+  }
+  else {
+    rho = hydro_get_physical_density(p, cosmo);
+    temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
+  					       cooling, p, xp);
+  }
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
-  const float rho = hydro_get_physical_density(p, cosmo);
-  const float rho_sg = xp->tracers_data.subgrid_temp;
-
   const double n_H = rho * X / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
-  const double n_H_sg_cgs = n_H_cgs * (rho_sg/rho);
+  /* const double n_H_sg_cgs = n_H_cgs * (rho_sg/rho); */
 
   /* get other relevant particle properties */
   const float Z = p->chemistry_data.metal_mass_fraction_total;
-  const float temp = cooling_get_temperature(phys_const, hydro_properties, us, cosmo,
-					     cooling, p, xp);
-  const float temp_sg = xp->tracers_data.subgrid_temp;
 
-  /* accretion timescale multiplicative terms  (Hirashita & Voshchinnikov 2013), 
-     implicitly assuming S_acc = 0.3 */
-  const float grain_radius_term = grain_radius_cgs / 1e-5;
-  const float Z_term  		= 0.0127 / Z; /* Z_sun accessible somewhere? */
-  const float n_H_term		= 1.e3 / n_H_cgs;
-  const float T_term		= pow(10./temp, 0.5);
-
-  const float mult_terms 	= grain_radius_term * Z_term * n_H_term * T_term;
-
-  /* conversion factor converted ro CGS from yr */
-  const float tau_Gra		= 3.132e15 * mult_terms;
-  const float tau_Sil		= 1.8126888 * tau_Gra;
-  const float tau_Ide		=  tau_Sil; /* this is probably a bad assumption */
-
-  const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
-
-  const double growfrac_Gra = dt_cgs / tau_Gra; 
-  const double growfrac_Sil = dt_cgs / tau_Sil; 
-  const double growfrac_Ide = dt_cgs / tau_Ide; 
-
-  if (growfrac_Gra > 1) message("large growth fraction => %e", growfrac_Gra); 
-  if (0 > 1) message("%e %e", temp_sg/temp, n_H_sg_cgs/n_H_cgs); 
-  if (0 > 1) message("%e %e", n_H_cgs, temp_sg); 
-
-  /* message("%e", 1./mult_terms);  */
-
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] *= 1. + growfrac_Gra;
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] *= 1. + growfrac_Sil;
-  p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] *= 1. + growfrac_Ide;
+  /* SNII rate assuming constant SFR, in cgs units */
+  const float rate_SNII = xp->sf_data.SFR * dp->specific_numSNII / unit_time_cgs;
   
+  /* Yamasawa et. al (2011): the cgs mass of material swept up in SNII shocks */
+  const float m_swept = 3.052e+36 * pow(n_H_cgs, -0.202)* pow((Z/0.0127) + 0.039, -0.289);
+
+  /* destruction timescale of dust in cgs */  
+  const float tau_dest = p->mass * unit_mass_cgs / (eps_eff*m_swept * rate_SNII);
+
+  /* fractional change in dust due to dust destruction */
+  const float dfrac = dt_cgs/tau_dest;
+
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] *= max(1. - dfrac, 0);
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] *= max(1. - dfrac, 0);
+  p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] *= max(1. - dfrac, 0);
+
+  if (dfrac  < 0){ /* (xp->sf_data.SFR > 0.) { */
+    message("SNII: %e", m_swept);
+    message("SNII: %e", xp->sf_data.SFR);
+    message("SNII: %e", dfrac);
+    message("SNII: %e", temp);
+    exit(0);
+  }
+
+  /* message("Exiting..."); */
+  /* exit(0); */
 }
 
 void dustevo_struct_restore(const struct dustevo_props* dustevo, FILE* stream) {
