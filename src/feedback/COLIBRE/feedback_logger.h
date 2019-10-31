@@ -81,21 +81,21 @@ INLINE static void feedback_logger_log_data(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
-  log_SNII.core.fp = fopen("SNII.txt", "w");
-  log_SNIa.core.fp = fopen("SNIa.txt", "w");
-  log_r_processes.core.fp = fopen("r_processes.txt", "w");
+INLINE static void feedback_logger_open_files(const struct engine *restrict e, const char *mode) {
+  log_SNII.core.fp = fopen("SNII.txt", mode);
+  log_SNIa.core.fp = fopen("SNIa.txt", mode);
+  log_r_processes.core.fp = fopen("r_processes.txt", mode);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Open SNIa debugging file */
   char savename_SNIa[50];
   snprintf(savename_SNIa, 50, "SNIa_%d.txt", e->nodeID);
-  log_SNIa_debug.fp = fopen(savename_SNIa, "w");
+  log_SNIa_debug.fp = fopen(savename_SNIa, mode);
 
   /* Open SNII debugging file */
   char savename_SNII[50];
   snprintf(savename_SNII, 50, "SNII_%d.txt", e->nodeID);
-  log_SNII_debug.fp = fopen(savename_SNII, "w");
+  log_SNII_debug.fp = fopen(savename_SNII, mode);
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 

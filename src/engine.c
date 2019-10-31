@@ -3806,7 +3806,7 @@ void engine_config(int restart, int fof, struct engine *e,
     /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
       /* Open the feedback loggers */
-      feedback_logger_open_files(e);
+      feedback_logger_open_files(e, mode);
 
       if (!restart) {
         /* Initialize the feedback loggers */
