@@ -29,6 +29,7 @@ times_expected = np.linspace(0,times[-1],100)
 SNIas = np.zeros(len(times_expected))
 
 for i in range(1,len(SNIas)):
+    # We shifted the age of the stars by 97.78 Myr so we need to add this in the prediction calculation
     SNIas[i] = StellarMass * nu / np.log(DTD_norm/DTD_delay) * np.log((times_expected[i]+97.78)/(times_expected[i-1]+97.78))
 
 SNIas_sim = data[:,9]
