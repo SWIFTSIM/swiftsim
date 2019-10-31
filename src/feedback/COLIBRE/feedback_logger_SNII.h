@@ -229,7 +229,7 @@ INLINE static void feedback_logger_SNII_log_data_end(
     const struct engine *restrict e) {
 
   /* End of simulation so we need to log */
-  feedback_logger_SNII_log_data_general(e, log_SNII.core.logger_time);  
+  feedback_logger_SNII_log_data_general(e, log_SNII.core.logger_time_since_last_log);  
 
   /* Close the logger file */
   fclose(log_SNII.core.fp);

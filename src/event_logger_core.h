@@ -29,7 +29,7 @@ struct event_history_logger {
   FILE *fp;
 
   /* Feedback history logger time since the last log to the file */
-  double logger_time;
+  double logger_time_since_last_log;
 
   /* Feedback history delta logger time */
   double delta_logger_time;
@@ -74,7 +74,7 @@ INLINE static void feedback_logger_core_init(
   fhl->a_prev = e->cosmology->a;
 
   /* Initialize the logger time */
-  fhl->logger_time = 0.;
+  fhl->logger_time_since_last_log = 0.;
 }
 
 /**
@@ -87,7 +87,7 @@ INLINE static void feedback_logger_core_time_step(
     const struct engine *restrict e,
     struct event_history_logger *restrict fhl) {
 
-  fhl->logger_time += e->time_step;
+  fhl->logger_time_since_last_log += e->time_step;
 }
 
 /**
@@ -100,9 +100,7 @@ INLINE static int feedback_logger_core_log(
     const struct engine *restrict e,
     struct event_history_logger *restrict fhl) {
 
-  if (fhl->logger_time < fhl->delta_logger_time) return 0;
-
-  return 1;
+  return (fhl->logger_time_since_last_log >= fhl->delta_logger_time);
 }
 
 /**
@@ -130,7 +128,7 @@ INLINE static void feedback_logger_core_update(
   fhl->z_prev = e->cosmology->z;
 
   /* Update the logger time */
-  fhl->logger_time -= fhl->delta_logger_time;
+  fhl->logger_time_since_last_log -= fhl->delta_logger_time;
 }
 
 #endif /* SWIFT_EVENT_LOGGER_STRUCT_H */

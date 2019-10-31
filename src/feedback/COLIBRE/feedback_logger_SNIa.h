@@ -225,7 +225,7 @@ INLINE static void feedback_logger_SNIa_log_data_end(
     const struct engine *restrict e) {
 
   /* We need to log before closing */
-  feedback_logger_SNIa_log_data_general(e, log_SNIa.core.logger_time);
+  feedback_logger_SNIa_log_data_general(e, log_SNIa.core.logger_time_since_last_log);
 
   /* Lets close the file */
   fclose(log_SNIa.core.fp);

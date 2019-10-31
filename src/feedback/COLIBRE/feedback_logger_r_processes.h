@@ -246,7 +246,7 @@ INLINE static void feedback_logger_r_processes_log_data_end(
     const struct engine *restrict e) {
 
   /* Write on the last time step */
-  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.logger_time);
+  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.logger_time_since_last_log);
 
   /* Close the logger file */
   fclose(log_r_processes.core.fp);
