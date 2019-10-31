@@ -27,6 +27,22 @@
 #include <mpi.h>
 #endif
 
+/* feedback history struct for SNII */
+struct feedback_history_SNII {
+
+  /* Load the core of logging functions */
+  struct event_history_logger core;
+
+  /*! Total new SNIa injected energy */
+  double SNII_energy;
+
+  /*! Total new SNIas in the simulation */
+  double N_SNII;
+
+  /*! Number of heating events */
+  int events;
+};
+
 /**
  * @brief Initialize the SNII logger file
  *

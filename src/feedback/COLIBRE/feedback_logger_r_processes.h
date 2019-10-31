@@ -27,6 +27,19 @@
 #include <mpi.h>
 #endif
 
+/* feedback history struct for r-processes */
+struct feedback_history_r_processes {
+
+  /* Load the core of logging functions */
+  struct event_history_logger core;
+
+  /*! Total new r-processes mass in the simulation */
+  double enrichment_mass;
+
+  /*! Number of r-processes events */
+  int events;
+};
+
 /**
  * @brief Initialize the r-processes logger file
  *

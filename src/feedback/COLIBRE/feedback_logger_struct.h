@@ -21,48 +21,6 @@
 
 #include "event_logger_core.h"
 
-/* feedback history struct for SNIa */
-struct feedback_history_SNIa {
-
-  /* Load the core of logging functions */
-  struct event_history_logger core;
-
-  /*! Total new SNIa injected energy */
-  double SNIa_energy;
-
-  /*! Number of heating events */
-  int events;
-};
-
-/* feedback history struct for SNII */
-struct feedback_history_SNII {
-
-  /* Load the core of logging functions */
-  struct event_history_logger core;
-
-  /*! Total new SNIa injected energy */
-  double SNII_energy;
-
-  /*! Total new SNIas in the simulation */
-  double N_SNII;
-
-  /*! Number of heating events */
-  int events;
-};
-
-/* feedback history struct for r-processes */
-struct feedback_history_r_processes {
-
-  /* Load the core of logging functions */
-  struct event_history_logger core;
-
-  /*! Total new r-processes mass in the simulation */
-  double enrichment_mass;
-
-  /*! Number of r-processes events */
-  int events;
-};
-
 #ifdef SWIFT_DEBUG_CHECKS
 /* feedback history debug for SNIa */
 struct feedback_history_debug {

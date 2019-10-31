@@ -21,4 +21,4 @@
 
 #include "event_logger_core.h"
 
-#endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_STRUCT_H */
+#endif /* SWIFT_NONE_FEEDBACK_LOGGER_STRUCT_H */

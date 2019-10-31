@@ -80,4 +80,4 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {}
 INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {}
 #endif
 
-#endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
+#endif /* SWIFT_NONE_FEEDBACK_LOGGER_H */
