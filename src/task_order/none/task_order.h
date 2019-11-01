@@ -42,7 +42,6 @@ INLINE static void task_order_addunlock_star_formation_feedback(
                       c->stars.stars_in);
 }
 
-
 /**
  * @brief Place the cooling cell at the right place in the dependency
  * graph.
@@ -54,8 +53,8 @@ INLINE static void task_order_addunlock_star_formation_feedback(
  * @param s The #scheduler.
  * @param c The #cell on which to act.
  */
-INLINE static void task_order_addunlock_cooling(
-    struct scheduler *s, struct cell *c) {
+INLINE static void task_order_addunlock_cooling(struct scheduler *s,
+                                                struct cell *c) {
 
   scheduler_addunlock(s, c->hydro.end_force, c->hydro.cooling);
   scheduler_addunlock(s, c->hydro.cooling, c->super->kick2);
