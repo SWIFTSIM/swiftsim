@@ -345,49 +345,54 @@ runner_iact_nonsym_feedback_apply(
    * timestep.This is done stochastically.
    * However, if delta_v is small enough (or even negative), this translates
    * into kicking all neighboring particles away from the star. */
-
+  
   const float delta_v = si->feedback_data.to_distribute.momentum_delta_v;
   const float momentum_prob =
-      si->feedback_data.to_distribute.momentum_probability;
-
-  const float HIIregion_prob =
-      si->feedback_data.to_distribute.HIIregion_probability;
-
+    si->feedback_data.to_distribute.momentum_probability;
+  
+  
   /* Draw a random number (Note mixing both IDs) */
   const float momentum_rand = random_unit_interval_two_IDs(
-      si->id, pj->id, ti_current, random_number_stellar_winds);
+    si->id, pj->id, ti_current, random_number_stellar_winds);
 
   /* if lucky, perform the actual kick  */
   if (momentum_rand < momentum_prob) {
-
+    
     /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
      * Therefore, a physical kick, dv, gets translated into a
      * code velocity kick, a * dv */
-
+    
     xpj->v_full[0] -= delta_v * dx[0] * r_inv * cosmo->a;
     xpj->v_full[1] -= delta_v * dx[1] * r_inv * cosmo->a;
     xpj->v_full[2] -= delta_v * dx[2] * r_inv * cosmo->a;
-
+    
     /* Store how much physical momentum is received, so we don't care about
      * cosmology */
     xpj->tracers_data.momentum_received += delta_v * current_mass;
   }
 
+
+  /* Put particles into HII regions */
+
+  const float HIIregion_prob =
+    si->feedback_data.to_distribute.HIIregion_probability;
+  
   /* Draw a random number (Note mixing both IDs) */
   const float HIIregion_rand = random_unit_interval_two_IDs(
-      si->id, pj->id, ti_current, random_number_HII_regions);
+    si->id, pj->id, ti_current, random_number_HII_regions);
 
   /* if lucky, particle is now flagged as HII region  */
   if (HIIregion_rand < HIIregion_prob) {
     /* gas particle gets flagged as HII region */
     xpj->tracers_data.HIIregion_timer_gas =
-        si->feedback_data.to_distribute.HIIregion_endtime;
+      si->feedback_data.to_distribute.HIIregion_endtime;
     xpj->tracers_data.HIIregion_starid =
-        si->feedback_data.to_distribute.HIIregion_starid;
-
+      si->feedback_data.to_distribute.HIIregion_starid;
+    
     /* Impose maximal viscosity */
     /* hydro_diffusive_feedback_reset(pj); */
   }
 }
+
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_IACT_H */
