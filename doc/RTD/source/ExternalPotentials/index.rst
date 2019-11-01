@@ -1,5 +1,6 @@
 .. External potentials in SWIFT
    Folkert Nobels, 25th October 2018
+   Alejandro Benitez-Llambay, October 2019
    
 External Potentials 
 ===================
