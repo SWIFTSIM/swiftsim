@@ -136,4 +136,16 @@ INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
 }
 #endif
 
+INLINE static void feedback_logger_struct_dump(FILE* stream) {
+  restart_write_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, "logger SNII", "Event logger for SNII");
+  restart_write_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, "logger SNIa", "Event logger for SNIa");
+  restart_write_blocks((void*)&log_r_processes, sizeof(struct feedback_history_r_processes), 1, stream, "logger r-proc", "Event logger for r-processes");
+}
+
+INLINE static void feedback_logger_struct_restore(FILE* stream) {
+  restart_read_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, NULL, "Event logger for SNII");
+  restart_read_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, NULL, "Event logger for SNIa");
+  restart_read_blocks((void*)&log_r_processes, sizeof(struct feedback_history_r_processes), 1, stream, NULL, "Event logger for r-processes");
+}
+
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
