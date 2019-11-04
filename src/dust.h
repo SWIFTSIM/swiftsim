@@ -50,17 +50,37 @@ struct dustevo_props {
   
   /* Number of SNII per gram of star formation (assumes Chabrier 2000 IMF) */
   float specific_numSNII;
+
+  /* ------------ grain species element mass ratios ------------- */
+
+  float comp_Gra [chemistry_element_Fe+1];
+
+  float comp_Ide [chemistry_element_Fe+1];
+
+  float comp_Sil [chemistry_element_Fe+1];
 };
 
+void evolve_dust_part(const struct phys_const *phys_const,
+		      const struct unit_system *us,
+		      const struct cosmology *cosmo,
+		      const struct hydro_props *hydro_properties,
+		      const struct entropy_floor_properties *floor_props,
+		      const struct cooling_function_data *cooling,
+		      const struct dustevo_props *dp,
+		      struct part *restrict p, struct xpart *restrict xp,
+		      const float dt, const float dt_therm, const double time);
+
+
+
 void dustevo_sputter_part(const struct phys_const *phys_const,
-                       const struct unit_system *us,
-                       const struct cosmology *cosmo,
-                       const struct hydro_props *hydro_properties,
-                       const struct entropy_floor_properties *floor_props,
-                       const struct cooling_function_data *cooling,
-		       const struct dustevo_props *dp,
-                       struct part *restrict p, struct xpart *restrict xp,
-                       const float dt, const float dt_therm, const double time);
+			  const struct unit_system *us,
+			  const struct cosmology *cosmo,
+			  const struct hydro_props *hydro_properties,
+			  const struct entropy_floor_properties *floor_props,
+			  const struct cooling_function_data *cooling,
+			  const struct dustevo_props *dp,
+			  struct part *restrict p, struct xpart *restrict xp,
+			  const float dt, const float dt_therm, const double time);
 
 void dustevo_accretion_part(const struct phys_const *phys_const,
 			    const struct unit_system *us,

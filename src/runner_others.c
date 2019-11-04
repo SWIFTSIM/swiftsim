@@ -202,6 +202,11 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 			    dt_therm, e->time);
 	}
 
+	evolve_dust_part(constants, us, cosmo, hydro_props,
+			       entropy_floor_props, cooling_func, 
+			       dustevo_props,  p, xp, dt_cool,
+			       dt_therm, e->time);
+
 	if (dustevo_props->with_sputtering) {
 	  /* do sputtering */
 	  dustevo_sputter_part(constants, us, cosmo, hydro_props,
