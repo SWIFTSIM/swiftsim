@@ -1471,11 +1471,9 @@ void feedback_props_init(struct feedback_props* fp,
     read_feedback_tables(fp);
 
     /* get the optional timescales, or set them from the tables by default */
-    const float maxage_Myr_HII = 50.0;
-    const float maxage_Myr_SW = 250.0;
 
     fp->HIIregion_max_age_Myr = parser_get_opt_param_float(
-        params, "COLIBREFeedback:HIIregion_maxage_Myr", maxage_Myr_HII);
+        params, "COLIBREFeedback:HIIregion_maxage_Myr", default_maxage_Myr_HII);
 
     if (fp->HIIregion_max_age_Myr == 0)
       error(
@@ -1484,7 +1482,8 @@ void feedback_props_init(struct feedback_props* fp,
           "in the parameter file");
 
     fp->SW_max_age_Myr = parser_get_opt_param_float(
-        params, "COLIBREFeedback:stellarwind_maxage_Myr", maxage_Myr_SW);
+        params, "COLIBREFeedback:stellarwind_maxage_Myr",
+        default_maxage_Myr_SW);
 
     if (fp->SW_max_age_Myr == 0)
       error(

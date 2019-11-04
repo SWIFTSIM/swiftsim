@@ -19,6 +19,9 @@
 #ifndef SWIFT_COLIBRE_FEEDBACK_TABLES_H
 #define SWIFT_COLIBRE_FEEDBACK_TABLES_H
 
+static const float default_maxage_Myr_HII = 50.f;
+static const float default_maxage_Myr_SW = 250.f;
+
 /**
  * @brief Allocates and reads early feedback tables, flattens and stores them in
  * the feedback properties.
