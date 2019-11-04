@@ -1130,8 +1130,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     error("Negative weight after reset!");
 #endif
 
-  /* Compute amount of momentum available for this stars, given its mass and age,
-     only if needed */
+  /* Compute amount of momentum available for this stars, given its mass and
+     age, only if needed */
   if (feedback_props->with_StellarWinds) {
     compute_stellar_momentum(sp, us, feedback_props, star_age_Gyr, dt,
                              ngb_gas_mass);
@@ -1331,12 +1331,12 @@ void feedback_props_init(struct feedback_props* fp,
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
 
-  fp->with_HIIRegions = 
-    parser_get_param_int(params, "COLIBREFeedback:with_HIIRegions");
+  fp->with_HIIRegions =
+      parser_get_param_int(params, "COLIBREFeedback:with_HIIRegions");
 
-  fp->with_StellarWinds = 
-    parser_get_param_int(params, "COLIBREFeedback:with_StellarWinds");
-    
+  fp->with_StellarWinds =
+      parser_get_param_int(params, "COLIBREFeedback:with_StellarWinds");
+
   /* Properties of the IMF model ------------------------------------------ */
 
   /* Minimal and maximal mass considered */
@@ -1455,13 +1455,12 @@ void feedback_props_init(struct feedback_props* fp,
   fp->AGB_ejecta_specific_kinetic_energy =
       0.5f * ejecta_velocity * ejecta_velocity;
 
-
   /* Properties of the HII regions and stellar winds model ------------------ */
 
-  if(fp->with_HIIRegions)
+  if (fp->with_HIIRegions)
     message("Running COLIBRE feedback with early feedback: HII regions");
 
-  if(fp->with_StellarWinds)
+  if (fp->with_StellarWinds)
     message("Running COLIBRE feedback with early feedback: Stellar Winds");
 
   if (fp->with_HIIRegions || fp->with_StellarWinds) {
@@ -1476,18 +1475,22 @@ void feedback_props_init(struct feedback_props* fp,
     const float maxage_Myr_SW = 250.0;
 
     fp->HIIregion_max_age_Myr = parser_get_opt_param_float(
-     params, "COLIBREFeedback:HIIregion_maxage_Myr", maxage_Myr_HII);
+        params, "COLIBREFeedback:HIIregion_maxage_Myr", maxage_Myr_HII);
 
-    if(fp->HIIregion_max_age_Myr == 0)
-      error("HIIregion_maxage_Myr can't be 0. Consider turning off HII regions by setting with_HIIRegions: 0"
-	    "in the parameter file");
+    if (fp->HIIregion_max_age_Myr == 0)
+      error(
+          "HIIregion_maxage_Myr can't be 0. Consider turning off HII regions "
+          "by setting with_HIIRegions: 0"
+          "in the parameter file");
 
     fp->SW_max_age_Myr = parser_get_opt_param_float(
-      params, "COLIBREFeedback:stellarwind_maxage_Myr", maxage_Myr_SW);
+        params, "COLIBREFeedback:stellarwind_maxage_Myr", maxage_Myr_SW);
 
-    if(fp->SW_max_age_Myr == 0)
-      error("stellarwind_maxage_Myr can't be 0. Consider turning off stellar winds by setting with_StellarWinds: 0"
-	    "in the parameter file");
+    if (fp->SW_max_age_Myr == 0)
+      error(
+          "stellarwind_maxage_Myr can't be 0. Consider turning off stellar "
+          "winds by setting with_StellarWinds: 0"
+          "in the parameter file");
 
     fp->delta_v = parser_get_param_double(
         params, "COLIBREFeedback:Momentum_desired_delta_v");
@@ -1519,7 +1522,6 @@ void feedback_props_init(struct feedback_props* fp,
     fp->HIIregion_dt_Myr = 0.;
     fp->delta_v = 0.;
     fp->SW_max_age_Myr = 0.;
-
   }
 
   /* Gather common conversion factors --------------------------------------- */
@@ -1651,10 +1653,10 @@ void feedback_restore_tables(struct feedback_props* fp) {
     read_feedback_tables(fp);
   }
 
-  if(fp->with_HIIRegions)
+  if (fp->with_HIIRegions)
     message("Running COLIBRE feedback with early feedback: HII regions");
 
-  if(fp->with_StellarWinds)
+  if (fp->with_StellarWinds)
     message("Running COLIBRE feedback with early feedback: Stellar Winds");
 
   /* Set yield_mass_bins array */
