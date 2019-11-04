@@ -350,9 +350,6 @@ runner_iact_nonsym_feedback_apply(
   const float momentum_prob =
       si->feedback_data.to_distribute.momentum_probability;
 
-  const float HIIregion_prob =
-      si->feedback_data.to_distribute.HIIregion_probability;
-
   /* Draw a random number (Note mixing both IDs) */
   const float momentum_rand = random_unit_interval_two_IDs(
       si->id, pj->id, ti_current, random_number_stellar_winds);
@@ -372,6 +369,11 @@ runner_iact_nonsym_feedback_apply(
      * cosmology */
     xpj->tracers_data.momentum_received += delta_v * current_mass;
   }
+
+  /* Put particles into HII regions */
+
+  const float HIIregion_prob =
+      si->feedback_data.to_distribute.HIIregion_probability;
 
   /* Draw a random number (Note mixing both IDs) */
   const float HIIregion_rand = random_unit_interval_two_IDs(
