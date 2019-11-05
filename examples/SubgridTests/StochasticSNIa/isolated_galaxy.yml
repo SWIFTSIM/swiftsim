@@ -187,6 +187,9 @@ COLIBREFeedback:
   HIIregion_maxage_Myr:             30.             # Maximum age in Myr of star particle to build HII region 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 
+  with_HIIRegions:                  0               # Switch for early feedback (HII regions).
+  with_StellarWinds:                0               # Switch for early feedback (Stellar winds).
+
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:
