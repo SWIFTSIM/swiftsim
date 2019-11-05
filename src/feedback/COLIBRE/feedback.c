@@ -962,12 +962,12 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
       (units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 1.0e-5);
 
   /* Unit conversion constant */
-  const double Myr_in_s = 1.0e6 * 365 * 24 * 60 * 60.;
+  const double Myr_in_s = 1.0e6 * 365 * 24 * 3600.;
 
   /* Convert the times to the units used my the model */
   const double star_age_Myr = star_age_Gyr * 1e3;
   double dt_cgs = dt * us->UnitTime_in_cgs;
-  double dt_Myr = dt_cgs / Myr_in_s;
+  const double dt_Myr = dt_cgs / Myr_in_s;
 
   /* Prevent star particle from injecting momentum for longer than tw */
   float dt_new = dt;
@@ -976,8 +976,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
     dt_cgs = dt_new * us->UnitTime_in_cgs;
   }
 
-  /* Star too old to do any momentum injection? */
-  if (star_age_Myr > tw) {
+  /* Star too old to do any momentum injection or time-step is 0? */
+  if (star_age_Myr > tw || dt == 0.) {
     sp->feedback_data.to_distribute.momentum = 0.0;
     sp->feedback_data.to_distribute.momentum_probability = -1;
     sp->feedback_data.to_distribute.momentum_weight = 0.0;
