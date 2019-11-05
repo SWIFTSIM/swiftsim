@@ -522,8 +522,10 @@ COLIBREFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-  stellarwind_maxage_Myr:           30.             # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds.
-  HIIregion_maxage_Myr:             30.             # (Optional) Maximum age in Myr of star particle to build HII region. Set to 0 to disable HII regions.
+  stellarwind_maxage_Myr:           250.            # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. If set > 0 this will ovewrite the default value of 250 Myr. 
+  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
+  with_StellarWinds:                1               # Switch for early feedback (Stell
+  HIIregion_maxage_Myr:             50.             # (Optional) Maximum age in Myr of star particle to build HII region. If set > 0 this will ovewrite the default value of 50 Myr. 
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
