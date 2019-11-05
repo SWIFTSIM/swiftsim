@@ -54,7 +54,8 @@ INLINE static void feedback_logger_log_data(const struct engine *restrict e) {}
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_open_files(const struct engine *restrict e) {}
+INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
+}
 
 /**
  * @brief Update the core values in the logger for the time step
@@ -77,21 +78,22 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {}
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {}
+INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
+}
 #endif
 
 /**
- * @brief dump the feedback logger info to the restart file 
+ * @brief dump the feedback logger info to the restart file
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_dump(FILE* stream) {}
+INLINE static void feedback_logger_struct_dump(FILE *stream) {}
 
 /**
- * @brief restore the feedback logger info to the restart file 
+ * @brief restore the feedback logger info to the restart file
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_restore(FILE* stream) {}
+INLINE static void feedback_logger_struct_restore(FILE *stream) {}
 
 #endif /* SWIFT_EAGLE_FEEDBACK_LOGGER_H */

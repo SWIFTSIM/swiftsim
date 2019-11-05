@@ -142,10 +142,12 @@ INLINE static void feedback_logger_r_processes_init(
   struct swift_params *params = e->parameter_file;
 
   /* Initialize the detla time core value */
-  const double delta_logger_time_Myr = parser_get_param_double(params, "Event_logger:delta_time_r_processes_Myr");
+  const double delta_logger_time_Myr = parser_get_param_double(
+      params, "Event_logger:delta_time_r_processes_Myr");
 
   /* Convert the time to internal units */
-  log_r_processes.core.delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
+  log_r_processes.core.delta_logger_time =
+      delta_logger_time_Myr * 1e6 * phys_const->const_year;
 
   /* Initialize the energy to zero */
   log_r_processes.enrichment_mass = 0.;
@@ -166,7 +168,7 @@ INLINE static void feedback_logger_r_processes_time_step(
 }
 
 /**
- * @brief Function that writes to the logger file 
+ * @brief Function that writes to the logger file
  *
  * @param e the engine we are running
  */
@@ -224,7 +226,6 @@ INLINE static void feedback_logger_r_processes_log_data_general(
   fflush(core->fp);
 }
 
-
 /**
  * @brief Write data to the feedback logger file if we are on a write step
  *
@@ -240,7 +241,8 @@ INLINE static void feedback_logger_r_processes_log_data(
   if (!feedback_logger_core_log(e, core)) return;
 
   /* We need to log */
-  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.delta_logger_time);
+  feedback_logger_r_processes_log_data_general(
+      e, log_r_processes.core.delta_logger_time);
 
   /* Update the logger core */
   feedback_logger_core_update(e, core);
@@ -259,7 +261,8 @@ INLINE static void feedback_logger_r_processes_log_data_end(
     const struct engine *restrict e) {
 
   /* Write on the last time step */
-  feedback_logger_r_processes_log_data_general(e, log_r_processes.core.logger_time_since_last_log);
+  feedback_logger_r_processes_log_data_general(
+      e, log_r_processes.core.logger_time_since_last_log);
 
   /* Close the logger file */
   fclose(log_r_processes.core.fp);

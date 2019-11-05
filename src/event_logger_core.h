@@ -96,9 +96,9 @@ INLINE static void feedback_logger_core_time_step(
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static int feedback_logger_core_log(
-    const struct engine *restrict e,
-    struct event_history_logger *restrict fhl) {
+INLINE static int feedback_logger_core_log(const struct engine *restrict e,
+                                           struct event_history_logger *restrict
+                                               fhl) {
 
   return (fhl->logger_time_since_last_log >= fhl->delta_logger_time);
 }

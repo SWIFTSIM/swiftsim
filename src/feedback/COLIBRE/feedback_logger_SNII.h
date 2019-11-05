@@ -132,10 +132,12 @@ INLINE static void feedback_logger_SNII_init(const struct engine *restrict e) {
   struct swift_params *params = e->parameter_file;
 
   /* Initialize the detla time core value */
-  const double delta_logger_time_Myr = parser_get_param_double(params, "Event_logger:delta_time_SNII_Myr");
+  const double delta_logger_time_Myr =
+      parser_get_param_double(params, "Event_logger:delta_time_SNII_Myr");
 
   /* Convert the time to internal units */
-  log_SNII.core.delta_logger_time = delta_logger_time_Myr * 1e6 * phys_const->const_year;
+  log_SNII.core.delta_logger_time =
+      delta_logger_time_Myr * 1e6 * phys_const->const_year;
 
   /* Initialize the energy to zero */
   log_SNII.SNII_energy = 0.;
@@ -210,7 +212,6 @@ INLINE static void feedback_logger_SNII_log_data_general(
   fflush(core->fp);
 }
 
-
 /**
  * @brief Write data to the feedback logger file if we are on a write step
  *
@@ -245,7 +246,8 @@ INLINE static void feedback_logger_SNII_log_data_end(
     const struct engine *restrict e) {
 
   /* End of simulation so we need to log */
-  feedback_logger_SNII_log_data_general(e, log_SNII.core.logger_time_since_last_log);  
+  feedback_logger_SNII_log_data_general(
+      e, log_SNII.core.logger_time_since_last_log);
 
   /* Close the logger file */
   fclose(log_SNII.core.fp);
@@ -294,7 +296,8 @@ INLINE static void feedback_logger_SNII_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_SNII_MPI_Reduce(const struct engine *restrict e) {
+INLINE static void feedback_logger_SNII_MPI_Reduce(
+    const struct engine *restrict e) {
 
   /* Are we one a logger time step? */
   if (!feedback_logger_core_log(e, &log_SNII.core)) return;
