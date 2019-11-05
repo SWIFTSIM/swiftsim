@@ -80,4 +80,18 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {}
 INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {}
 #endif
 
+/**
+ * @brief dump the feedback logger info to the restart file 
+ *
+ * @param stream, the data stream
+ */
+INLINE static void feedback_logger_struct_dump(FILE* stream) {}
+
+/**
+ * @brief restore the feedback logger info to the restart file 
+ *
+ * @param stream, the data stream
+ */
+INLINE static void feedback_logger_struct_restore(FILE* stream) {}
+
 #endif /* SWIFT_EAGLE_FEEDBACK_LOGGER_H */

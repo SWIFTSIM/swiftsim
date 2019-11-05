@@ -136,6 +136,11 @@ INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
 }
 #endif
 
+/**
+ * @brief dump the feedback logger info to the restart file 
+ *
+ * @param stream, the data stream
+ */
 INLINE static void feedback_logger_struct_dump(FILE* stream) {
   restart_write_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, "logger SNII", "Event logger for SNII");
   restart_write_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, "logger SNIa", "Event logger for SNIa");
@@ -146,6 +151,11 @@ INLINE static void feedback_logger_struct_dump(FILE* stream) {
 #endif /* SWIFT_DEBUG_CHECKS*/
 }
 
+/**
+ * @brief restore the feedback logger info to the restart file 
+ *
+ * @param stream, the data stream
+ */
 INLINE static void feedback_logger_struct_restore(FILE* stream) {
   restart_read_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, NULL, "Event logger for SNII");
   restart_read_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, NULL, "Event logger for SNIa");
