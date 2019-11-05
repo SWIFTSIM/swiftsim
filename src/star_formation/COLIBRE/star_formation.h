@@ -267,9 +267,27 @@ INLINE static void star_formation_copy_properties(
   sp->chemistry_data = p->chemistry_data;
 
   /* dust grains destroyed at star formation (astration) */
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_C] += 
+    sp->chemistry_data.metal_mass_fraction[chemistry_element_Gra];
+
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Fe] += 
+    sp->chemistry_data.metal_mass_fraction[chemistry_element_Ide];
+
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_O] += 
+    0.3715755*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Mg] += 
+    0.1411169*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil]; 
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Si] += 
+    0.1630668*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
+  sp->chemistry_data.metal_mass_fraction[chemistry_element_Si] += 
+    0.3242408*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
+
+
   sp->chemistry_data.metal_mass_fraction[chemistry_element_Gra] = 0.;
   sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil] = 0.;
   sp->chemistry_data.metal_mass_fraction[chemistry_element_Ide] = 0.;
+
+  
 
   /* Store the tracers data */
   sp->tracers_data = xp->tracers_data;

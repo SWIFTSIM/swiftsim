@@ -48,16 +48,15 @@ struct dustevo_props {
 
   /* ------------ Fixed parameters ------------ */
   
-  /* Number of SNII per gram of star formation (assumes Chabrier 2000 IMF) */
+  /* SNII events per mass of star formation in cgs (assumes Chabrier 2000 IMF) */
   float specific_numSNII;
 
   /* ------------ grain species element mass ratios ------------- */
 
-  float comp_Gra [chemistry_element_Fe+1];
+  float comp_Gra [chemistry_element_count];
+  float comp_Ide [chemistry_element_count];
+  float comp_Sil [chemistry_element_count];
 
-  float comp_Ide [chemistry_element_Fe+1];
-
-  float comp_Sil [chemistry_element_Fe+1];
 };
 
 void evolve_dust_part(const struct phys_const *phys_const,
