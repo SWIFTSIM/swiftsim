@@ -140,12 +140,26 @@ INLINE static void feedback_logger_struct_dump(FILE* stream) {
   restart_write_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, "logger SNII", "Event logger for SNII");
   restart_write_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, "logger SNIa", "Event logger for SNIa");
   restart_write_blocks((void*)&log_r_processes, sizeof(struct feedback_history_r_processes), 1, stream, "logger r-proc", "Event logger for r-processes");
+#ifdef SWIFT_DEBUG_CHECKS
+  restart_write_blocks((void*)&log_SNII_debug, sizeof(struct feedback_history_debug), 1, stream, "logger SNII debug", "Event logger for SNII during debugging");
+  restart_write_blocks((void*)&log_SNIa_debug, sizeof(struct feedback_history_debug), 1, stream, "logger SNIa debug", "Event logger for SNIa during debugging");
+#endif /* SWIFT_DEBUG_CHECKS*/
 }
 
 INLINE static void feedback_logger_struct_restore(FILE* stream) {
   restart_read_blocks((void*)&log_SNII, sizeof(struct feedback_history_SNII), 1, stream, NULL, "Event logger for SNII");
   restart_read_blocks((void*)&log_SNIa, sizeof(struct feedback_history_SNIa), 1, stream, NULL, "Event logger for SNIa");
   restart_read_blocks((void*)&log_r_processes, sizeof(struct feedback_history_r_processes), 1, stream, NULL, "Event logger for r-processes");
+  message("%e %d",log_SNIa.SNIa_energy, log_SNIa.events);
+  message("%e %e %d %e", log_SNIa.core.logger_time_since_last_log, log_SNIa.core.delta_logger_time, log_SNIa.core.step_prev, log_SNIa.core.time_prev);
+  message("%e %d %e",log_SNII.SNII_energy, log_SNII.events, log_SNII.N_SNII);
+  message("%e %e %d %e", log_SNII.core.logger_time_since_last_log, log_SNII.core.delta_logger_time, log_SNII.core.step_prev, log_SNII.core.time_prev);
+  message("%e %d",log_r_processes.enrichment_mass, log_r_processes.events);
+  message("%e %e %d %e", log_r_processes.core.logger_time_since_last_log, log_r_processes.core.delta_logger_time, log_r_processes.core.step_prev, log_r_processes.core.time_prev);
+#ifdef SWIFT_DEBUG_CHECKS
+  restart_read_blocks((void*)&log_SNII_debug, sizeof(struct feedback_history_debug), 1, stream, NULL, "Event logger for SNII during debugging");
+  restart_read_blocks((void*)&log_SNIa_debug, sizeof(struct feedback_history_debug), 1, stream, NULL, "Event logger for SNIa during debugging");
+#endif /* SWIFT_DEBUG_CHECKS*/
 }
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
