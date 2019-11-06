@@ -50,8 +50,7 @@ struct feedback_history_SNII {
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_init_log_file(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_init_log_file(const struct engine *e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -122,7 +121,7 @@ INLINE static void event_logger_SNII_init_log_file(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_init(const struct engine *restrict e) {
+INLINE static void event_logger_SNII_init(const struct engine *e) {
 
   /* Initialize the core variables */
   event_logger_core_init(e, &log_SNII.core);
@@ -156,8 +155,7 @@ INLINE static void event_logger_SNII_init(const struct engine *restrict e) {
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_time_step(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_time_step(const struct engine *e) {
 
   event_logger_core_time_step(e, &log_SNII.core);
 }
@@ -167,8 +165,8 @@ INLINE static void event_logger_SNII_time_step(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_log_data_general(
-    const struct engine *restrict e, const double dt) {
+INLINE static void event_logger_SNII_log_data_general(const struct engine *e,
+                                                      const double dt) {
 
   /* Get the core struct */
   struct event_history_logger *core = &log_SNII.core;
@@ -219,8 +217,7 @@ INLINE static void event_logger_SNII_log_data_general(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_log_data(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_log_data(const struct engine *e) {
 
   /* Get the core struct */
   struct event_history_logger *core = &log_SNII.core;
@@ -244,12 +241,11 @@ INLINE static void event_logger_SNII_log_data(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_log_data_end(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_log_data_end(const struct engine *e) {
 
   /* End of simulation so we need to log */
-  event_logger_SNII_log_data_general(
-      e, log_SNII.core.logger_time_since_last_log);
+  event_logger_SNII_log_data_general(e,
+                                     log_SNII.core.logger_time_since_last_log);
 
   /* Close the logger file */
   fclose(log_SNII.core.fp);
@@ -269,10 +265,11 @@ INLINE static void event_logger_SNII_log_data_end(
  * @param cosmo the cosmology struct
  * @param f_E the energy fraction of the SNII event
  */
-INLINE static void event_logger_SNII_log_event(
-    const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const double f_E) {
+INLINE static void event_logger_SNII_log_event(const struct spart *si,
+                                               const struct part *pj,
+                                               const struct xpart *xpj,
+                                               const struct cosmology *cosmo,
+                                               const double f_E) {
 
   if (lock_lock(&log_SNII.core.lock) == 0) {
 
@@ -298,8 +295,7 @@ INLINE static void event_logger_SNII_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_MPI_Reduce(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_MPI_Reduce(const struct engine *e) {
 
   /* Are we one a logger time step? */
   if (!event_logger_core_log(e, &log_SNII.core)) return;
@@ -342,7 +338,7 @@ INLINE static void event_logger_SNII_MPI_Reduce(
  * @param e the engine we are running
  */
 INLINE static void event_logger_SNII_init_log_file_debug(
-    const struct engine *restrict e) {
+    const struct engine *e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -398,9 +394,8 @@ INLINE static void event_logger_SNII_init_log_file_debug(
  * @param step the current simulation step
  */
 INLINE static void event_logger_SNII_log_event_debug(
-    const double time, const struct spart *restrict si,
-    struct part *restrict pj, struct xpart *restrict xpj,
-    const struct cosmology *restrict cosmo, const int step) {
+    const double time, const struct spart *si, struct part *pj,
+    struct xpart *xpj, const struct cosmology *cosmo, const int step) {
 
   if (lock_lock(&log_SNII_debug.lock) == 0) {
 
@@ -432,8 +427,7 @@ INLINE static void event_logger_SNII_log_event_debug(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_SNII_init_debug(
-    const struct engine *restrict e) {
+INLINE static void event_logger_SNII_init_debug(const struct engine *e) {
   /* Initialize the lock*/
   lock_init(&log_SNII_debug.lock);
 }

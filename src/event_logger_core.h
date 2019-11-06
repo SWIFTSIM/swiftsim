@@ -54,9 +54,8 @@ struct event_history_logger {
  * @param fhl the feedback history logger that is the core
  * @param log_type the log type to initialize
  */
-INLINE static void event_logger_core_init(
-    const struct engine *restrict e,
-    struct event_history_logger *restrict fhl) {
+INLINE static void event_logger_core_init(const struct engine *e,
+                                          struct event_history_logger *fhl) {
 
   /* Initialize the lock*/
   lock_init(&fhl->lock);
@@ -84,8 +83,7 @@ INLINE static void event_logger_core_init(
  * @param fhl the feedback history logger that is the core
  */
 INLINE static void event_logger_core_time_step(
-    const struct engine *restrict e,
-    struct event_history_logger *restrict fhl) {
+    const struct engine *e, struct event_history_logger *fhl) {
 
   fhl->logger_time_since_last_log += e->time_step;
 }
@@ -96,9 +94,8 @@ INLINE static void event_logger_core_time_step(
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static int event_logger_core_log(const struct engine *restrict e,
-                                           struct event_history_logger *restrict
-                                               fhl) {
+INLINE static int event_logger_core_log(const struct engine *e,
+                                        struct event_history_logger *fhl) {
 
   return (fhl->logger_time_since_last_log >= fhl->delta_logger_time);
 }
@@ -109,9 +106,8 @@ INLINE static int event_logger_core_log(const struct engine *restrict e,
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static void event_logger_core_update(
-    const struct engine *restrict e,
-    struct event_history_logger *restrict fhl) {
+INLINE static void event_logger_core_update(const struct engine *e,
+                                            struct event_history_logger *fhl) {
 
   /* Update the core values */
 

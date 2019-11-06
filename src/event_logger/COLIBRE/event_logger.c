@@ -30,4 +30,3 @@ struct feedback_history_debug log_SNII_debug;
 struct feedback_history_SNIa log_SNIa;
 struct feedback_history_SNII log_SNII;
 struct feedback_history_r_processes log_r_processes;
-

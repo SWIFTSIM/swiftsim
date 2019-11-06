@@ -48,7 +48,7 @@ struct feedback_history_r_processes {
  * @param e the engine we are running
  */
 INLINE static void event_logger_r_processes_init_log_file(
-    const struct engine *restrict e) {
+    const struct engine *e) {
 
   /* Load the structures of the internal units and the physical constants */
   const struct unit_system *us = e->internal_units;
@@ -131,8 +131,7 @@ INLINE static void event_logger_r_processes_init_log_file(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_r_processes_init(
-    const struct engine *restrict e) {
+INLINE static void event_logger_r_processes_init(const struct engine *e) {
 
   /* Initialize the core variables */
   event_logger_core_init(e, &log_r_processes.core);
@@ -163,8 +162,7 @@ INLINE static void event_logger_r_processes_init(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_r_processes_time_step(
-    const struct engine *restrict e) {
+INLINE static void event_logger_r_processes_time_step(const struct engine *e) {
 
   event_logger_core_time_step(e, &log_r_processes.core);
 }
@@ -175,7 +173,7 @@ INLINE static void event_logger_r_processes_time_step(
  * @param e the engine we are running
  */
 INLINE static void event_logger_r_processes_log_data_general(
-    const struct engine *restrict e, const double dt) {
+    const struct engine *e, const double dt) {
 
   /* Get the core struct */
   struct event_history_logger *core = &log_r_processes.core;
@@ -233,8 +231,7 @@ INLINE static void event_logger_r_processes_log_data_general(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_r_processes_log_data(
-    const struct engine *restrict e) {
+INLINE static void event_logger_r_processes_log_data(const struct engine *e) {
 
   /* Get the core struct */
   struct event_history_logger *core = &log_r_processes.core;
@@ -260,7 +257,7 @@ INLINE static void event_logger_r_processes_log_data(
  * @param e the engine we are running
  */
 INLINE static void event_logger_r_processes_log_data_end(
-    const struct engine *restrict e) {
+    const struct engine *e) {
 
   /* Write on the last time step */
   event_logger_r_processes_log_data_general(
@@ -280,9 +277,8 @@ INLINE static void event_logger_r_processes_log_data_end(
  * @param delta_mass the enrichment mass of the r-processes
  */
 INLINE static void event_logger_r_processes_log_event(
-    const struct spart *restrict si, const struct part *restrict pj,
-    const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const double delta_mass) {
+    const struct spart *si, const struct part *pj, const struct xpart *xpj,
+    const struct cosmology *cosmo, const double delta_mass) {
 
   if (lock_lock(&log_r_processes.core.lock) == 0) {
 
@@ -300,8 +296,7 @@ INLINE static void event_logger_r_processes_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void event_logger_r_processes_MPI_Reduce(
-    const struct engine *restrict e) {
+INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
 
   /* Are we one a logger time step? */
   if (!event_logger_core_log(e, &log_r_processes.core)) return;

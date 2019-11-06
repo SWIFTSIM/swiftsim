@@ -35,7 +35,7 @@
  *
  * @param e the engine on this node
  */
-INLINE static void event_logger_init(const struct engine *restrict e) {
+INLINE static void event_logger_init(const struct engine *e) {
   event_logger_SNII_init(e);
   event_logger_SNIa_init(e);
   event_logger_r_processes_init(e);
@@ -51,8 +51,7 @@ INLINE static void event_logger_init(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_init_log_file(
-    const struct engine *restrict e) {
+INLINE static void event_logger_init_log_file(const struct engine *e) {
   event_logger_SNII_init_log_file(e);
   event_logger_SNIa_init_log_file(e);
   event_logger_r_processes_init_log_file(e);
@@ -69,7 +68,7 @@ INLINE static void event_logger_init_log_file(
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_log_data(const struct engine *restrict e) {
+INLINE static void event_logger_log_data(const struct engine *e) {
   event_logger_SNII_log_data(e);
   event_logger_SNIa_log_data(e);
   event_logger_r_processes_log_data(e);
@@ -80,8 +79,8 @@ INLINE static void event_logger_log_data(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_open_files(const struct engine *restrict e,
-                                              const char *mode) {
+INLINE static void event_logger_open_files(const struct engine *e,
+                                           const char *mode) {
   log_SNII.core.fp = fopen("SNII.txt", mode);
   log_SNIa.core.fp = fopen("SNIa.txt", mode);
   log_r_processes.core.fp = fopen("r_processes.txt", mode);
@@ -104,7 +103,7 @@ INLINE static void event_logger_open_files(const struct engine *restrict e,
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_time_step(const struct engine *restrict e) {
+INLINE static void event_logger_time_step(const struct engine *e) {
   event_logger_SNII_time_step(e);
   event_logger_SNIa_time_step(e);
   event_logger_r_processes_time_step(e);
@@ -115,7 +114,7 @@ INLINE static void event_logger_time_step(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_close(const struct engine *restrict e) {
+INLINE static void event_logger_close(const struct engine *e) {
   event_logger_SNII_log_data_end(e);
   event_logger_SNIa_log_data_end(e);
   event_logger_r_processes_log_data_end(e);
@@ -128,7 +127,7 @@ INLINE static void event_logger_close(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_MPI_Reduce(const struct engine *restrict e) {
+INLINE static void event_logger_MPI_Reduce(const struct engine *e) {
 
   event_logger_SNII_MPI_Reduce(e);
   event_logger_SNIa_MPI_Reduce(e);

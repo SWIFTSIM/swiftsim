@@ -31,15 +31,14 @@
  *
  * @param e the engine on this node
  */
-INLINE static void event_logger_init(const struct engine *restrict e) {}
+INLINE static void event_logger_init(const struct engine *e) {}
 
 /**
  * @brief Initialize the log files
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_init_log_file(
-    const struct engine *restrict e) {}
+INLINE static void event_logger_init_log_file(const struct engine *e) {}
 
 /**
  * @brief Write the data to the log file if we have the correct time, do this
@@ -47,29 +46,28 @@ INLINE static void event_logger_init_log_file(
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_log_data(const struct engine *restrict e) {}
+INLINE static void event_logger_log_data(const struct engine *e) {}
 
 /**
  * @brief Open the files of the feedback loggers
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_open_files(const struct engine *restrict e) {
-}
+INLINE static void event_logger_open_files(const struct engine *e) {}
 
 /**
  * @brief Update the core values in the logger for the time step
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_time_step(const struct engine *restrict e) {}
+INLINE static void event_logger_time_step(const struct engine *e) {}
 
 /**
  * @brief Close the files for the feedback logger
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_close(const struct engine *restrict e) {}
+INLINE static void event_logger_close(const struct engine *e) {}
 
 #ifdef WITH_MPI
 /**
@@ -78,8 +76,7 @@ INLINE static void event_logger_close(const struct engine *restrict e) {}
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_MPI_Reduce(const struct engine *restrict e) {
-}
+INLINE static void event_logger_MPI_Reduce(const struct engine *e) {}
 #endif
 
 /**
