@@ -431,7 +431,7 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
               colibre_cooling_N_density * 3 * sizeof(float)) != 0)
     error("Failed to allocate hydrogen fractions array\n");
 
-  dataset = H5Dopen(tempfile_id, "/ThermEq/HydrogenFractionsCol", H5P_DEFAULT);
+  dataset = H5Dopen(tempfile_id, "/ThermEq/HydrogenFractionsVol", H5P_DEFAULT);
   status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                    cooling->table.logHfracs_Teq);
   if (status < 0) error("error reading hydrogen fractions array\n");
@@ -446,7 +446,7 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
               sizeof(float)) != 0)
     error("Failed to allocate big hydrogen fractions array\n");
 
-  dataset = H5Dopen(tempfile_id, "/Tdep/HydrogenFractionsCol", H5P_DEFAULT);
+  dataset = H5Dopen(tempfile_id, "/Tdep/HydrogenFractionsVol", H5P_DEFAULT);
   status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                    cooling->table.logHfracs_all);
   if (status < 0) error("error reading big hydrogen fractions array\n");
