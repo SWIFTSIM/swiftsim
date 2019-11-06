@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
-#define SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H
+#ifndef SWIFT_COLIBRE_EVENT_LOGGER_R_PROCESSES_H
+#define SWIFT_COLIBRE_EVENT_LOGGER_R_PROCESSES_H
 
 #include "event_logger_core.h"
-#include "feedback_logger_struct.h"
+#include "event_logger_struct.h"
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -332,4 +332,4 @@ INLINE static void feedback_logger_r_processes_MPI_Reduce(
 }
 #endif
 
-#endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_R_PROCESSES_H */
+#endif /* SWIFT_COLIBRE_EVENT_LOGGER_R_PROCESSES_H */

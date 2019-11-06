@@ -16,20 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_FEEDBACK_LOGGER_H
-#define SWIFT_COLIBRE_FEEDBACK_LOGGER_H
+#ifndef SWIFT_COLIBRE_EVENT_LOGGER_H
+#define SWIFT_COLIBRE_EVENT_LOGGER_H
 
 /* MPI headers. */
 #ifdef WITH_MPI
 #include <mpi.h>
 #endif
 
+/* Local includes */
 #include "engine.h"
-#include "feedback_logger_SNII.h"
-#include "feedback_logger_SNIa.h"
-#include "feedback_logger_r_processes.h"
-#include "feedback_logger_struct.h"
-#include "feedback_properties.h"
+#include "event_logger_SNII.h"
+#include "event_logger_SNIa.h"
+#include "event_logger_r_processes.h"
 
 /**
  * @brief Initialize the times of the feedback logger
@@ -195,4 +194,4 @@ INLINE static void feedback_logger_struct_restore(FILE *stream) {
 #endif /* SWIFT_DEBUG_CHECKS*/
 }
 
-#endif /* SWIFT_COLIBRE_FEEDBACK_LOGGER_H */
+#endif /* SWIFT_COLIBRE_EVENT_LOGGER_H */

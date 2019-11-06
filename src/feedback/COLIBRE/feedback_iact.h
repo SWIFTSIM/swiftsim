@@ -20,10 +20,7 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
-#include "feedback_logger.h"
-#include "feedback_logger_SNII.h"
-#include "feedback_logger_SNIa.h"
-#include "feedback_logger_struct.h"
+#include "event_logger.h"
 #include "random.h"
 
 /**
