@@ -271,12 +271,14 @@ INLINE static void event_logger_SNII_log_event(const struct spart *si,
                                                const struct cosmology *cosmo,
                                                const double f_E) {
 
-  if (lock_lock(&log_SNII.core.lock) == 0) {
+  /* Get the injected energy */
+  const double mass_init = pj->mass;
+  const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
+  const double deltaE = delta_u * mass_init;
+  const double num_SNII = deltaE / f_E;
 
-    /* Get the injected energy */
-    const double mass_init = pj->mass;
-    const double delta_u = si->feedback_data.to_distribute.SNII_delta_u;
-    const double deltaE = delta_u * mass_init;
+  /* Write to the log */
+  if (lock_lock(&log_SNII.core.lock) == 0) {
 
     /* Update the total SNII energy */
     log_SNII.SNII_energy += deltaE;
@@ -284,7 +286,7 @@ INLINE static void event_logger_SNII_log_event(const struct spart *si,
 
     /* For the number of SNIIs first divide by the energy fraction, rest is done
      * while writing the data */
-    log_SNII.N_SNII += deltaE / f_E;
+    log_SNII.N_SNII += num_SNII;
   }
   if (lock_unlock(&log_SNII.core.lock) != 0) error("Failed to unlock the lock");
 }

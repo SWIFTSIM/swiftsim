@@ -263,12 +263,13 @@ INLINE static void event_logger_SNIa_log_event(const struct spart *si,
                                                const struct xpart *xpj,
                                                const struct cosmology *cosmo) {
 
-  if (lock_lock(&log_SNIa.core.lock) == 0) {
-    /* Get the injected energy */
-    const double mass_init = pj->mass;
-    const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
-    const double deltaE = delta_u * mass_init;
+  /* Get the injected energy */
+  const double mass_init = pj->mass;
+  const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
+  const double deltaE = delta_u * mass_init;
 
+  /* Write to the log */
+  if (lock_lock(&log_SNIa.core.lock) == 0) {
     log_SNIa.SNIa_energy += deltaE;
     log_SNIa.events += 1;
   }
