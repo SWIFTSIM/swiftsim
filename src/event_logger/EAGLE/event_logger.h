@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_FEEDBACK_LOGGER_H
-#define SWIFT_EAGLE_FEEDBACK_LOGGER_H
+#ifndef SWIFT_EAGLE_EVENT_LOGGER_H
+#define SWIFT_EAGLE_EVENT_LOGGER_H
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -31,14 +31,14 @@
  *
  * @param e the engine on this node
  */
-INLINE static void feedback_logger_init(const struct engine *restrict e) {}
+INLINE static void event_logger_init(const struct engine *restrict e) {}
 
 /**
  * @brief Initialize the log files
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_init_log_file(
+INLINE static void event_logger_init_log_file(
     const struct engine *restrict e) {}
 
 /**
@@ -47,14 +47,14 @@ INLINE static void feedback_logger_init_log_file(
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_log_data(const struct engine *restrict e) {}
+INLINE static void event_logger_log_data(const struct engine *restrict e) {}
 
 /**
  * @brief Open the files of the feedback loggers
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
+INLINE static void event_logger_open_files(const struct engine *restrict e) {
 }
 
 /**
@@ -62,14 +62,14 @@ INLINE static void feedback_logger_open_files(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_time_step(const struct engine *restrict e) {}
+INLINE static void event_logger_time_step(const struct engine *restrict e) {}
 
 /**
  * @brief Close the files for the feedback logger
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_close(const struct engine *restrict e) {}
+INLINE static void event_logger_close(const struct engine *restrict e) {}
 
 #ifdef WITH_MPI
 /**
@@ -78,7 +78,7 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {}
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
+INLINE static void event_logger_MPI_Reduce(const struct engine *restrict e) {
 }
 #endif
 
@@ -87,13 +87,13 @@ INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_dump(FILE *stream) {}
+INLINE static void event_logger_struct_dump(FILE *stream) {}
 
 /**
  * @brief restore the feedback logger info to the restart file
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_restore(FILE *stream) {}
+INLINE static void event_logger_struct_restore(FILE *stream) {}
 
-#endif /* SWIFT_EAGLE_FEEDBACK_LOGGER_H */
+#endif /* SWIFT_EAGLE_EVENT_LOGGER_H */

@@ -54,7 +54,7 @@ struct event_history_logger {
  * @param fhl the feedback history logger that is the core
  * @param log_type the log type to initialize
  */
-INLINE static void feedback_logger_core_init(
+INLINE static void event_logger_core_init(
     const struct engine *restrict e,
     struct event_history_logger *restrict fhl) {
 
@@ -83,7 +83,7 @@ INLINE static void feedback_logger_core_init(
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static void feedback_logger_core_time_step(
+INLINE static void event_logger_core_time_step(
     const struct engine *restrict e,
     struct event_history_logger *restrict fhl) {
 
@@ -96,7 +96,7 @@ INLINE static void feedback_logger_core_time_step(
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static int feedback_logger_core_log(const struct engine *restrict e,
+INLINE static int event_logger_core_log(const struct engine *restrict e,
                                            struct event_history_logger *restrict
                                                fhl) {
 
@@ -109,7 +109,7 @@ INLINE static int feedback_logger_core_log(const struct engine *restrict e,
  * @param e the engine we are running
  * @param fhl the feedback history logger that is the core
  */
-INLINE static void feedback_logger_core_update(
+INLINE static void event_logger_core_update(
     const struct engine *restrict e,
     struct event_history_logger *restrict fhl) {
 

@@ -47,7 +47,7 @@ struct feedback_history_r_processes {
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_init_log_file(
+INLINE static void event_logger_r_processes_init_log_file(
     const struct engine *restrict e) {
 
   /* Load the structures of the internal units and the physical constants */
@@ -131,11 +131,11 @@ INLINE static void feedback_logger_r_processes_init_log_file(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_init(
+INLINE static void event_logger_r_processes_init(
     const struct engine *restrict e) {
 
   /* Initialize the core variables */
-  feedback_logger_core_init(e, &log_r_processes.core);
+  event_logger_core_init(e, &log_r_processes.core);
 
   /* Make a constant for the physical constants */
   const struct phys_const *phys_const = e->physical_constants;
@@ -163,10 +163,10 @@ INLINE static void feedback_logger_r_processes_init(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_time_step(
+INLINE static void event_logger_r_processes_time_step(
     const struct engine *restrict e) {
 
-  feedback_logger_core_time_step(e, &log_r_processes.core);
+  event_logger_core_time_step(e, &log_r_processes.core);
 }
 
 /**
@@ -174,7 +174,7 @@ INLINE static void feedback_logger_r_processes_time_step(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_log_data_general(
+INLINE static void event_logger_r_processes_log_data_general(
     const struct engine *restrict e, const double dt) {
 
   /* Get the core struct */
@@ -233,21 +233,21 @@ INLINE static void feedback_logger_r_processes_log_data_general(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_log_data(
+INLINE static void event_logger_r_processes_log_data(
     const struct engine *restrict e) {
 
   /* Get the core struct */
   struct event_history_logger *core = &log_r_processes.core;
 
   /* Are we one a logger time step? */
-  if (!feedback_logger_core_log(e, core)) return;
+  if (!event_logger_core_log(e, core)) return;
 
   /* We need to log */
-  feedback_logger_r_processes_log_data_general(
+  event_logger_r_processes_log_data_general(
       e, log_r_processes.core.delta_logger_time);
 
   /* Update the logger core */
-  feedback_logger_core_update(e, core);
+  event_logger_core_update(e, core);
 
   /* Update the type specific variables */
   log_r_processes.events = 0;
@@ -259,11 +259,11 @@ INLINE static void feedback_logger_r_processes_log_data(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_log_data_end(
+INLINE static void event_logger_r_processes_log_data_end(
     const struct engine *restrict e) {
 
   /* Write on the last time step */
-  feedback_logger_r_processes_log_data_general(
+  event_logger_r_processes_log_data_general(
       e, log_r_processes.core.logger_time_since_last_log);
 
   /* Close the logger file */
@@ -279,7 +279,7 @@ INLINE static void feedback_logger_r_processes_log_data_end(
  * @param cosmo the cosmology struct
  * @param delta_mass the enrichment mass of the r-processes
  */
-INLINE static void feedback_logger_r_processes_log_event(
+INLINE static void event_logger_r_processes_log_event(
     const struct spart *restrict si, const struct part *restrict pj,
     const struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
     const double delta_mass) {
@@ -300,11 +300,11 @@ INLINE static void feedback_logger_r_processes_log_event(
  *
  * @param e the engine we are running
  */
-INLINE static void feedback_logger_r_processes_MPI_Reduce(
+INLINE static void event_logger_r_processes_MPI_Reduce(
     const struct engine *restrict e) {
 
   /* Are we one a logger time step? */
-  if (!feedback_logger_core_log(e, &log_r_processes.core)) return;
+  if (!event_logger_core_log(e, &log_r_processes.core)) return;
 
   /* Define empty variables for the MPI communication */
   int number_events_received;
@@ -320,7 +320,7 @@ INLINE static void feedback_logger_r_processes_MPI_Reduce(
     struct event_history_logger *core = &log_r_processes.core;
 
     /* Update the core struct */
-    feedback_logger_core_update(e, core);
+    event_logger_core_update(e, core);
 
     /* Update the SNIa variables */
     log_r_processes.enrichment_mass = 0.;

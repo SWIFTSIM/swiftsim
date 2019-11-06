@@ -35,10 +35,10 @@
  *
  * @param e the engine on this node
  */
-INLINE static void feedback_logger_init(const struct engine *restrict e) {
-  feedback_logger_SNII_init(e);
-  feedback_logger_SNIa_init(e);
-  feedback_logger_r_processes_init(e);
+INLINE static void event_logger_init(const struct engine *restrict e) {
+  event_logger_SNII_init(e);
+  event_logger_SNIa_init(e);
+  event_logger_r_processes_init(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
   feedback_logger_SNIa_init_debug(e);
@@ -51,11 +51,11 @@ INLINE static void feedback_logger_init(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_init_log_file(
+INLINE static void event_logger_init_log_file(
     const struct engine *restrict e) {
-  feedback_logger_SNII_init_log_file(e);
-  feedback_logger_SNIa_init_log_file(e);
-  feedback_logger_r_processes_init_log_file(e);
+  event_logger_SNII_init_log_file(e);
+  event_logger_SNIa_init_log_file(e);
+  event_logger_r_processes_init_log_file(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
   feedback_logger_SNIa_init_log_file_debug(e);
@@ -69,10 +69,10 @@ INLINE static void feedback_logger_init_log_file(
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_log_data(const struct engine *restrict e) {
-  feedback_logger_SNII_log_data(e);
-  feedback_logger_SNIa_log_data(e);
-  feedback_logger_r_processes_log_data(e);
+INLINE static void event_logger_log_data(const struct engine *restrict e) {
+  event_logger_SNII_log_data(e);
+  event_logger_SNIa_log_data(e);
+  event_logger_r_processes_log_data(e);
 }
 
 /**
@@ -80,7 +80,7 @@ INLINE static void feedback_logger_log_data(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_open_files(const struct engine *restrict e,
+INLINE static void event_logger_open_files(const struct engine *restrict e,
                                               const char *mode) {
   log_SNII.core.fp = fopen("SNII.txt", mode);
   log_SNIa.core.fp = fopen("SNIa.txt", mode);
@@ -104,10 +104,10 @@ INLINE static void feedback_logger_open_files(const struct engine *restrict e,
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_time_step(const struct engine *restrict e) {
-  feedback_logger_SNII_time_step(e);
-  feedback_logger_SNIa_time_step(e);
-  feedback_logger_r_processes_time_step(e);
+INLINE static void event_logger_time_step(const struct engine *restrict e) {
+  event_logger_SNII_time_step(e);
+  event_logger_SNIa_time_step(e);
+  event_logger_r_processes_time_step(e);
 }
 
 /**
@@ -115,10 +115,10 @@ INLINE static void feedback_logger_time_step(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_close(const struct engine *restrict e) {
-  feedback_logger_SNII_log_data_end(e);
-  feedback_logger_SNIa_log_data_end(e);
-  feedback_logger_r_processes_log_data_end(e);
+INLINE static void event_logger_close(const struct engine *restrict e) {
+  event_logger_SNII_log_data_end(e);
+  event_logger_SNIa_log_data_end(e);
+  event_logger_r_processes_log_data_end(e);
 }
 
 #ifdef WITH_MPI
@@ -128,11 +128,11 @@ INLINE static void feedback_logger_close(const struct engine *restrict e) {
  *
  * @param e the engine we are running on
  */
-INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
+INLINE static void event_logger_MPI_Reduce(const struct engine *restrict e) {
 
-  feedback_logger_SNII_MPI_Reduce(e);
-  feedback_logger_SNIa_MPI_Reduce(e);
-  feedback_logger_r_processes_MPI_Reduce(e);
+  event_logger_SNII_MPI_Reduce(e);
+  event_logger_SNIa_MPI_Reduce(e);
+  event_logger_r_processes_MPI_Reduce(e);
 }
 #endif
 
@@ -141,7 +141,7 @@ INLINE static void feedback_logger_MPI_Reduce(const struct engine *restrict e) {
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_dump(FILE *stream) {
+INLINE static void event_logger_struct_dump(FILE *stream) {
   restart_write_blocks((void *)&log_SNII, sizeof(struct feedback_history_SNII),
                        1, stream, "logger SNII", "Event logger for SNII");
   restart_write_blocks((void *)&log_SNIa, sizeof(struct feedback_history_SNIa),
@@ -164,7 +164,7 @@ INLINE static void feedback_logger_struct_dump(FILE *stream) {
  *
  * @param stream, the data stream
  */
-INLINE static void feedback_logger_struct_restore(FILE *stream) {
+INLINE static void event_logger_struct_restore(FILE *stream) {
   restart_read_blocks((void *)&log_SNII, sizeof(struct feedback_history_SNII),
                       1, stream, NULL, "Event logger for SNII");
   restart_read_blocks((void *)&log_SNIa, sizeof(struct feedback_history_SNIa),

@@ -2163,14 +2163,14 @@ void engine_step(struct engine *e) {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   e->tic_step = getticks();
-  feedback_logger_time_step(e);
+  event_logger_time_step(e);
 
   /* Collect the feedback logger data from all the nodes */
 #ifdef WITH_MPI
   if (e->policy & engine_policy_feedback) {
 
     /* Send around the feedback logger information */
-    feedback_logger_MPI_Reduce(e);
+    event_logger_MPI_Reduce(e);
   }
 #endif /* WITH_MPI */
 
@@ -2202,7 +2202,7 @@ void engine_step(struct engine *e) {
 
     if (e->policy & engine_policy_feedback) {
       /* Log data */
-      feedback_logger_log_data(e);
+      event_logger_log_data(e);
     }
 
     if (!e->restarting)
@@ -3512,7 +3512,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
 
   /* Initialize the feedback history structure */
   if (e->policy & engine_policy_feedback) {
-    feedback_logger_init(e);
+    event_logger_init(e);
   }
 
   engine_init_output_lists(e, params);
@@ -3806,11 +3806,11 @@ void engine_config(int restart, int fof, struct engine *e,
     /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
       /* Open the feedback loggers */
-      feedback_logger_open_files(e, mode);
+      event_logger_open_files(e, mode);
 
       if (!restart) {
         /* Initialize the feedback loggers */
-        feedback_logger_init_log_file(e);
+        event_logger_init_log_file(e);
       }
     }
   }
@@ -4747,7 +4747,7 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      feedback_logger_close(e);
+      event_logger_close(e);
     }
   }
 }
@@ -4788,7 +4788,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
-  feedback_logger_struct_dump(stream);
+  event_logger_struct_dump(stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
 #ifdef WITH_FOF
@@ -4900,7 +4900,7 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   feedback_struct_restore(feedback_properties, stream);
   e->feedback_props = feedback_properties;
 
-  feedback_logger_struct_restore(stream);
+  event_logger_struct_restore(stream);
 
   struct black_holes_props *black_holes_properties =
       (struct black_holes_props *)malloc(sizeof(struct black_holes_props));
