@@ -53,7 +53,8 @@ INLINE static void event_logger_log_data(const struct engine *e) {}
  *
  * @param e the engine we are running on
  */
-INLINE static void event_logger_open_files(const struct engine *e) {}
+INLINE static void event_logger_open_files(const struct engine *e,
+                                           const char *mode) {}
 
 /**
  * @brief Update the core values in the logger for the time step
