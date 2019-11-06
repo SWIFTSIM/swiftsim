@@ -19,8 +19,11 @@
 #ifndef SWIFT_COLIBRE_EVENT_LOGGER_SNIA_H
 #define SWIFT_COLIBRE_EVENT_LOGGER_SNIA_H
 
+/* Local includes */
 #include "event_logger_core.h"
 #include "event_logger_struct.h"
+#include "feedback_properties.h"
+
 
 /* MPI headers. */
 #ifdef WITH_MPI

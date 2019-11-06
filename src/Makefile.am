@@ -105,7 +105,8 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
     hashmap.c pressure_floor.c \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
-    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES)
+    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
+    event_logger/COLIBRE/event_logger.c
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
