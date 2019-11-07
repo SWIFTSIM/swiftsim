@@ -41,8 +41,8 @@ INLINE static void event_logger_init(const struct engine *e) {
   event_logger_r_processes_init(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
-  feedback_logger_SNIa_init_debug(e);
-  feedback_logger_SNII_init_debug(e);
+  event_logger_SNIa_init_debug(e);
+  event_logger_SNII_init_debug(e);
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 
@@ -57,8 +57,8 @@ INLINE static void event_logger_init_log_file(const struct engine *e) {
   event_logger_r_processes_init_log_file(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
-  feedback_logger_SNIa_init_log_file_debug(e);
-  feedback_logger_SNII_init_log_file_debug(e);
+  event_logger_SNIa_init_log_file_debug(e);
+  event_logger_SNII_init_log_file_debug(e);
 #endif /* SWIFT_DEBUG_CHECKS */
 }
 
