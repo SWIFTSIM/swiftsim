@@ -16,21 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_FEEDBACK_LOGGER_H
-#define SWIFT_FEEDBACK_LOGGER_H
+#include "config.h"
 
-/* Config parameters. */
-#include "../config.h"
+/* This file's header */
+#include "event_logger.h"
 
-/* Select the correct feedback model */
-#if defined(FEEDBACK_NONE)
-#include "./feedback/none/feedback_logger.h"
-#elif defined(FEEDBACK_EAGLE)
-#include "./feedback/EAGLE/feedback_logger.h"
-#elif defined(FEEDBACK_COLIBRE)
-#include "./feedback/COLIBRE/feedback_logger.h"
-#else
-#error "Invalid choice of feedback model"
+#ifdef SWIFT_DEBUG_CHECKS
+struct feedback_history_debug log_SNIa_debug;
+struct feedback_history_debug log_SNII_debug;
 #endif
 
-#endif
+/* Declare the feedback structures */
+struct feedback_history_SNIa log_SNIa;
+struct feedback_history_SNII log_SNII;
+struct feedback_history_r_processes log_r_processes;

@@ -57,7 +57,8 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     pressure_floor.h pressure_floor_struct.h pressure_floor_iact.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
-    feedback.h feedback_struct.h feedback_properties.h task_order.h
+    feedback.h feedback_struct.h feedback_properties.h task_order.h \
+    event_logger.h event_logger_struct.h
 
 # source files for EAGLE cooling
 EAGLE_COOLING_SOURCES =
@@ -80,7 +81,7 @@ endif
 # source files for COLIBRE feedback
 COLIBRE_FEEDBACK_SOURCES =
 if HAVECOLIBREFEEDBACK
-COLIBRE_FEEDBACK_SOURCES += feedback/COLIBRE/feedback.c
+COLIBRE_FEEDBACK_SOURCES += feedback/COLIBRE/feedback.c event_logger/COLIBRE/event_logger.c
 endif
 
 
@@ -257,7 +258,6 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
                  feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
                  feedback/COLIBRE/yield_tables.h feedback/COLIBRE/SNIa_DTD.h feedback/COLIBRE/SNIa_DTD_struct.h \
-                 feedback/COLIBRE/feedback_tables.h \
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \
@@ -269,7 +269,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 pressure_floor/GEAR/pressure_floor.h pressure_floor/none/pressure_floor.h \
 		 pressure_floor/GEAR/pressure_floor_iact.h pressure_floor/none/pressure_floor_iact.h \
 		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h \
-	         task_order/GEAR/task_order.h task_order/EAGLE/task_order.h task_order/none/task_order.h
+	         task_order/GEAR/task_order.h task_order/EAGLE/task_order.h task_order/none/task_order.h \
+		 event_logger/COLIBRE/event_logger.h event_logger/COLIBRE/event_logger_struct.h \
+		 event_logger/COLIBRE/event_logger_SNIa.h event_logger/COLIBRE/event_logger_SNII.h event_logger/COLIBRE/event_logger_r_processes.h
 
 
 # Sources and special flags for the gravity library

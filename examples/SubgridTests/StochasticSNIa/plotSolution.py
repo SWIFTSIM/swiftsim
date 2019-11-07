@@ -9,73 +9,50 @@ data = np.loadtxt("SNIa.txt")
 
 g = h5.File("output_%.4d.hdf5" % 1, "r")
 
-h = g["/PartType4/SmoothingLength"][:]
+unit_time_in_cgs = g["/Units"].attrs["Unit time in cgs (U_t)"]
+
+h = g["/PartType4/SmoothingLengths"][:]
 numbstars = len(h)
 hmaximalstars = len(h[h == 10.0])
+print(hmaximalstars, numbstars)
 
-times = data[:, 1] * 0.9785
+Myr_in_cgs = 3.154e13
+
+times = data[:, 2] * unit_time_in_cgs / Myr_in_cgs
 
 nu = float(g["/Parameters"].attrs["SNIaDTD:SNIa_efficiency_p_Msun"])
 DTD_delay = float(g["/Parameters"].attrs["SNIaDTD:SNIa_delay_time_Gyr"])
 DTD_norm = float(g["/Parameters"].attrs["SNIaDTD:normalization_timescale_Gyr"])
 
-N = 1000
-N_bins = 1000
-t_sim = 0.09785
-t_start = 0.09785
-time_array = np.linspace(0, t_sim, N) + t_start
+StellarMass = (
+    np.sum(g["/PartType4/Masses"][:]) - np.sum(g["/PartType4/Masses"][h == 10.0])
+) * 1e10
+times_expected = np.linspace(0, times[-1], 100)
+SNIas = np.zeros(len(times_expected))
 
-
-def subplotvoid(time_array, t_start, times, numbs, hmaxs, backup=False, backup8=False):
-    plt.hist(
-        times,
-        bins=N_bins,
-        cumulative=True,
-        histtype="step",
-        label="Isolated galaxy simulation",
+for i in range(1, len(SNIas)):
+    # We shifted the age of the stars by 97.78 Myr so we need to add this in the prediction calculation
+    SNIas[i] = (
+        StellarMass
+        * nu
+        / np.log(DTD_norm / DTD_delay)
+        * np.log((times_expected[i] + 97.78) / (times_expected[i - 1] + 97.78))
     )
 
-    # lets plot calculate the ideal curve
-    idealcurve = (
-        nu / (1.736e-2 * np.log(DTD_norm / DTD_delay)) * np.log((time_array) / t_start)
-    ) * (numbs - hmaxs)
+SNIas_sim = data[:, 9]
+SNIas_number = data[:, 12]
+SNIas_number_cum = np.cumsum(SNIas_number)
+deviation_frac = np.cumsum(SNIas_number) ** 0.5 / np.cumsum(SNIas_number)
 
-    plt.plot(
-        time_array - t_start,
-        idealcurve,
-        label="Ideal prediction power law beta 1",
-        color="#ff7f0e",
-    )
-
-    plt.fill_between(
-        time_array - t_start,
-        idealcurve + np.sqrt(idealcurve),
-        idealcurve - np.sqrt(idealcurve),
-        facecolor="#ff7f0e",
-        alpha=0.25,
-    )
-    plt.fill_between(
-        time_array - t_start,
-        idealcurve + 2 * np.sqrt(idealcurve),
-        idealcurve - 2 * np.sqrt(idealcurve),
-        facecolor="#ff7f0e",
-        alpha=0.25,
-    )
-    plt.fill_between(
-        time_array - t_start,
-        idealcurve + 3 * np.sqrt(idealcurve),
-        idealcurve - 3 * np.sqrt(idealcurve),
-        facecolor="#ff7f0e",
-        alpha=0.25,
-    )
-
-    plt.xlabel("Time (Gyr)")
-    plt.ylabel("Cumulative number star particles that go SNIa")
-    plt.legend()
-
-
-plt.figure(figsize=(6, 5))
-plt.subplot(111)
-plt.title("nu = %1.6f, t_delay = %1.6f, t_norm = %1.4f" % (nu, DTD_delay, DTD_norm))
-subplotvoid(time_array, t_start, times, numbstars, hmaximalstars, backup=True)
-plt.savefig("./" + name + ".png")
+plt.plot(times_expected, np.cumsum(SNIas))
+plt.plot(times, np.cumsum(SNIas_sim))
+plt.fill_between(
+    times,
+    np.cumsum(SNIas_sim) * (1.0 - deviation_frac),
+    np.cumsum(SNIas_sim) * (1.0 + deviation_frac),
+    facecolor="#ff7f0e",
+    alpha=0.25,
+)
+plt.xlabel("Time (Myr)")
+plt.ylabel("Number of SNIa")
+plt.savefig("./SNIa_rate.png")

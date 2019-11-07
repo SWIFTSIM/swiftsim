@@ -16,23 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_NONE_FEEDBACK_LOGGER_H
-#define SWIFT_NONE_FEEDBACK_LOGGER_H
+#ifndef SWIFT_EVENT_LOGGER_STRUCT_H
+#define SWIFT_EVENT_LOGGER_STRUCT_H
 
-/**
- * @brief Initialize the SFH logger file
- *
- * @param fp the file pointer
- * @param us The current internal system of units.
- * @param phys_const Physical constants in internal units
- */
-INLINE static void feedback_SNIa_logger_init_log_file(
-    FILE *fp, const struct unit_system *restrict us,
-    const struct phys_const *phys_const) {}
+/* Config parameters. */
+#include "../config.h"
 
-INLINE static void feedback_SNIa_logger_write_to_log_file(
-    FILE *fp, const double time, struct spart *restrict si,
-    struct part *restrict pj, struct xpart *restrict xpj,
-    const struct cosmology *restrict cosmo, const int step) {}
+/* Select the correct feedback model */
+#if defined(FEEDBACK_NONE)
+#include "./feedback/none/feedback_logger_struct.h"
+#elif defined(FEEDBACK_EAGLE)
+#include "./feedback/EAGLE/feedback_logger_struct.h"
+#elif defined(FEEDBACK_COLIBRE)
+#include "./feedback/COLIBRE/feedback_logger_struct.h"
+#else
+#error "Invalid choice of feedback model"
+#endif
 
-#endif /* SWIFT_NONE_FEEDBACK_LOGGER_H */
+#endif /* SWIFT_EVENT_LOGGER_STRUCT_H */

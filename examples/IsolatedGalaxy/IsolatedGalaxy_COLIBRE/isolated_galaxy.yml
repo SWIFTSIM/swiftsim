@@ -158,3 +158,8 @@ SNIaDTD:
   SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
   normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
   SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
+
+Event_logger:
+  delta_time_SNIa_Myr:        10
+  delta_time_SNII_Myr:        1
+  delta_time_r_processes_Myr: 20

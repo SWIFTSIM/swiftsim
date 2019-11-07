@@ -20,11 +20,8 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
-#include "feedback_logger.h"
+#include "event_logger.h"
 #include "random.h"
-
-/* Define external variables */
-extern FILE *SNIa_logger;
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -299,6 +296,12 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
+      /* Write the event to the SNIII log file */
+      event_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
+
+#ifdef SWIFT_DEBUG_CHECKS
+      event_logger_SNII_log_event_debug(time, si, pj, xpj, cosmo, step);
+#endif
       /* message( */
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
       /*     "random_num %.5e du %.5e du/ini %.5e", */
@@ -334,10 +337,12 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
-      /* Write the event to the SNIa logger file */
-      feedback_SNIa_logger_write_to_log_file(SNIa_logger, time, si, pj, xpj,
-                                             cosmo, step);
-      fflush(SNIa_logger);
+      /* Write the event to the SNIa log file */
+      event_logger_SNIa_log_event(si, pj, xpj, cosmo);
+
+#ifdef SWIFT_DEBUG_CHECKS
+      event_logger_SNIa_log_event_debug(time, si, pj, xpj, cosmo, step);
+#endif
     }
   }
 

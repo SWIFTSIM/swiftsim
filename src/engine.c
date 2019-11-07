@@ -62,8 +62,8 @@
 #include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "error.h"
+#include "event_logger.h"
 #include "feedback.h"
-#include "feedback_logger.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -128,7 +128,6 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
-FILE *SNIa_logger;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -2164,6 +2163,16 @@ void engine_step(struct engine *e) {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   e->tic_step = getticks();
+  event_logger_time_step(e);
+
+  /* Collect the feedback logger data from all the nodes */
+#ifdef WITH_MPI
+  if (e->policy & engine_policy_feedback) {
+
+    /* Send around the feedback logger information */
+    event_logger_MPI_Reduce(e);
+  }
+#endif /* WITH_MPI */
 
   if (e->nodeID == 0) {
 
@@ -2189,6 +2198,11 @@ void engine_step(struct engine *e) {
 #else
       if (e->step % 32 == 0) fflush(e->sfh_logger);
 #endif
+    }
+
+    if (e->policy & engine_policy_feedback) {
+      /* Log data */
+      event_logger_log_data(e);
     }
 
     if (!e->restarting)
@@ -3496,6 +3510,11 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
     star_formation_logger_accumulator_init(&e->sfh);
   }
 
+  /* Initialize the feedback history structure */
+  if (e->policy & engine_policy_feedback) {
+    event_logger_init(e);
+  }
+
   engine_init_output_lists(e, params);
 }
 
@@ -3543,7 +3562,6 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
-  SNIa_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -3785,13 +3803,14 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
 
-    /* Initialize the SNIa logger if running with feedback */
+    /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
-      SNIa_logger = fopen("SNIa.txt", mode);
+      /* Open the feedback loggers */
+      event_logger_open_files(e, mode);
+
       if (!restart) {
-        feedback_SNIa_logger_init_log_file(SNIa_logger, e->internal_units,
-                                           e->physical_constants);
-        fflush(SNIa_logger);
+        /* Initialize the feedback loggers */
+        event_logger_init_log_file(e);
       }
     }
   }
@@ -4728,7 +4747,7 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      fclose(SNIa_logger);
+      event_logger_close(e);
     }
   }
 }
@@ -4769,6 +4788,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
+  event_logger_struct_dump(stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
 #ifdef WITH_FOF
@@ -4879,6 +4899,8 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct feedback_props *)malloc(sizeof(struct feedback_props));
   feedback_struct_restore(feedback_properties, stream);
   e->feedback_props = feedback_properties;
+
+  event_logger_struct_restore(stream);
 
   struct black_holes_props *black_holes_properties =
       (struct black_holes_props *)malloc(sizeof(struct black_holes_props));
