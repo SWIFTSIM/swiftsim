@@ -1232,3 +1232,69 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
   
   return N_ref; 
 }
+
+/**
+ * @brief Write a cooling struct to the given FILE as a stream of bytes.
+ *
+ * @param cooling the struct
+ * @param stream the file stream
+ */
+void cooling_struct_dump(const struct cooling_function_data* cooling, 
+			 FILE* stream) {
+
+  /* Zero all pointers in the colibre_table within 
+   * the cooling_function_data struct. */ 
+  struct cooling_function_data cooling_copy = *cooling; 
+  cooling_copy.colibre_table.Tcooling = NULL; 
+  cooling_copy.colibre_table.Theating = NULL; 
+  cooling_copy.colibre_table.Telectron_fraction = NULL; 
+  cooling_copy.colibre_table.Redshifts = NULL; 
+  cooling_copy.colibre_table.nH = NULL; 
+  cooling_copy.colibre_table.Temp = NULL; 
+  cooling_copy.colibre_table.Metallicity = NULL; 
+  cooling_copy.colibre_table.LogAbundances = NULL; 
+  cooling_copy.colibre_table.Abundances = NULL; 
+  cooling_copy.colibre_table.Abundances_inv = NULL; 
+  cooling_copy.colibre_table.atomicmass = NULL; 
+  cooling_copy.colibre_table.atomicmass_inv = NULL; 
+  cooling_copy.colibre_table.LogMassFractions = NULL; 
+  cooling_copy.colibre_table.MassFractions = NULL; 
+  cooling_copy.colibre_table.Zsol = NULL; 
+  cooling_copy.colibre_table.Zsol_inv = NULL; 
+  cooling_copy.ChimesGlobalVars.colibre_table = NULL; 
+
+  restart_write_blocks((void *) &cooling_copy,
+                       sizeof(struct cooling_function_data), 1, stream,
+                       "cooling", "cooling function");
+}
+
+/**
+ * @brief Restore a hydro_props struct from the given FILE as a stream of
+ * bytes.
+ *
+ * @param cooling the struct
+ * @param stream the file stream
+ * @param cosmo #cosmology structure
+ */
+void cooling_struct_restore(struct cooling_function_data* cooling,
+			    FILE* stream, const struct cosmology* cosmo) {
+
+  restart_read_blocks((void *) cooling, sizeof(struct cooling_function_data), 1,
+                      stream, NULL, "cooling function");
+
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
+    {
+      /* Read the Colibre table. */ 
+      message("Reading Colibre cooling table."); 
+      read_cooling_header(&(cooling->colibre_table));
+      read_cooling_tables(&(cooling->colibre_table));
+
+      /* Pass pointer to the Colibre 
+       * table to ChimesGlobalVars. */ 
+      cooling->ChimesGlobalVars.colibre_table = &(cooling->colibre_table); 
+    }
+
+  /* Initialise the CHIMES module. */ 
+  message("Initialising CHIMES cooling module."); 
+  init_chimes(&cooling->ChimesGlobalVars); 
+}

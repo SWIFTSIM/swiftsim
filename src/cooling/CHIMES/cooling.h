@@ -117,6 +117,11 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
 			       struct part *restrict p, struct xpart* restrict xp, 
 			       const double mu); 
 
+void cooling_struct_dump(const struct cooling_function_data* cooling, 
+			 FILE* stream); \
+
+void cooling_struct_restore(struct cooling_function_data* cooling,
+			    FILE* stream, const struct cosmology* cosmo); 
 
 /**
  * @brief Computes the cooling time-step.
@@ -148,30 +153,5 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param cooling the cooling data structure.
  */
 static INLINE void cooling_clean(struct cooling_function_data* cooling) {}
-
-/**
- * @brief Write a cooling struct to the given FILE as a stream of bytes.
- *
- * Empty structure so nothing to do here.
- *
- * @param cooling the struct
- * @param stream the file stream
- */
-static INLINE void cooling_struct_dump(
-    const struct cooling_function_data* cooling, FILE* stream) {}
-
-/**
- * @brief Restore a hydro_props struct from the given FILE as a stream of
- * bytes.
- *
- * Empty structure so nothing to do here.
- *
- * @param cooling the struct
- * @param stream the file stream
- * @param cosmo #cosmology structure
- */
-static INLINE void cooling_struct_restore(struct cooling_function_data* cooling,
-                                          FILE* stream,
-                                          const struct cosmology* cosmo) {}
 
 #endif /* SWIFT_COOLING_CHIMES_H */
