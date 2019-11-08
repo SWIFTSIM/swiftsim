@@ -51,6 +51,7 @@
 /* Local headers. */
 #include "active.h"
 #include "atomic.h"
+#include "black_holes.h"
 #include "cell.h"
 #include "chemistry.h"
 #include "clocks.h"
@@ -61,8 +62,8 @@
 #include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "error.h"
+#include "event_logger.h"
 #include "feedback.h"
-#include "feedback_logger.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -84,7 +85,6 @@
 #include "sort_part.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
-#include "star_formation_logger_struct.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"
@@ -128,7 +128,6 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
-FILE *SNIa_logger;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -1834,7 +1833,7 @@ void engine_skip_drift(struct engine *e) {
 
     /* Skip everything that moves the particles */
     if (t->type == task_type_drift_part || t->type == task_type_drift_gpart ||
-        t->type == task_type_drift_spart)
+        t->type == task_type_drift_spart || t->type == task_type_drift_bpart)
       t->skip = 1;
   }
 
@@ -2164,6 +2163,16 @@ void engine_step(struct engine *e) {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   e->tic_step = getticks();
+  event_logger_time_step(e);
+
+  /* Collect the feedback logger data from all the nodes */
+#ifdef WITH_MPI
+  if (e->policy & engine_policy_feedback) {
+
+    /* Send around the feedback logger information */
+    event_logger_MPI_Reduce(e);
+  }
+#endif /* WITH_MPI */
 
   if (e->nodeID == 0) {
 
@@ -2189,6 +2198,11 @@ void engine_step(struct engine *e) {
 #else
       if (e->step % 32 == 0) fflush(e->sfh_logger);
 #endif
+    }
+
+    if (e->policy & engine_policy_feedback) {
+      /* Log data */
+      event_logger_log_data(e);
     }
 
     if (!e->restarting)
@@ -2354,7 +2368,8 @@ void engine_step(struct engine *e) {
   /********************************************************/
 
   /* Create a restart file if needed. */
-  engine_dump_restarts(e, 0, e->restart_onexit && engine_is_done(e));
+  engine_dump_restarts(e, /*drifted_all=*/0,
+                       e->restart_onexit && engine_is_done(e));
 
   engine_check_for_dumps(e);
 
@@ -3495,6 +3510,11 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
     star_formation_logger_accumulator_init(&e->sfh);
   }
 
+  /* Initialize the feedback history structure */
+  if (e->policy & engine_policy_feedback) {
+    event_logger_init(e);
+  }
+
   engine_init_output_lists(e, params);
 }
 
@@ -3542,7 +3562,6 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
-  SNIa_logger = NULL;
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -3784,13 +3803,14 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
 
-    /* Initialize the SNIa logger if running with feedback */
+    /* Initialize the feedback loggers if running with feedback */
     if (e->policy & engine_policy_feedback) {
-      SNIa_logger = fopen("SNIa.txt", mode);
+      /* Open the feedback loggers */
+      event_logger_open_files(e, mode);
+
       if (!restart) {
-        feedback_SNIa_logger_init_log_file(SNIa_logger, e->internal_units,
-                                           e->physical_constants);
-        fflush(SNIa_logger);
+        /* Initialize the feedback loggers */
+        event_logger_init_log_file(e);
       }
     }
   }
@@ -4076,38 +4096,32 @@ void engine_config(int restart, int fof, struct engine *e,
 
     /* Overwrite the constants for the scheduler */
     space_maxsize = parser_get_opt_param_int(params, "Scheduler:cell_max_size",
-                                             space_maxsize_default);
-    space_subsize_pair_hydro =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_pair_hydro",
-                                 space_subsize_pair_hydro_default);
-    space_subsize_self_hydro =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_self_hydro",
-                                 space_subsize_self_hydro_default);
-    space_subsize_pair_stars =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_pair_stars",
-                                 space_subsize_pair_stars_default);
-    space_subsize_self_stars =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_self_stars",
-                                 space_subsize_self_stars_default);
-    space_subsize_pair_grav =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_pair_grav",
-                                 space_subsize_pair_grav_default);
-    space_subsize_self_grav =
-        parser_get_opt_param_int(params, "Scheduler:cell_sub_size_self_grav",
-                                 space_subsize_self_grav_default);
+                                             space_maxsize);
+    space_subsize_pair_hydro = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_pair_hydro", space_subsize_pair_hydro);
+    space_subsize_self_hydro = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_self_hydro", space_subsize_self_hydro);
+    space_subsize_pair_stars = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_pair_stars", space_subsize_pair_stars);
+    space_subsize_self_stars = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_self_stars", space_subsize_self_stars);
+    space_subsize_pair_grav = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_pair_grav", space_subsize_pair_grav);
+    space_subsize_self_grav = parser_get_opt_param_int(
+        params, "Scheduler:cell_sub_size_self_grav", space_subsize_self_grav);
     space_splitsize = parser_get_opt_param_int(
-        params, "Scheduler:cell_split_size", space_splitsize_default);
+        params, "Scheduler:cell_split_size", space_splitsize);
     space_subdepth_diff_grav =
         parser_get_opt_param_int(params, "Scheduler:cell_subdepth_diff_grav",
                                  space_subdepth_diff_grav_default);
     space_extra_parts = parser_get_opt_param_int(
-        params, "Scheduler:cell_extra_parts", space_extra_parts_default);
+        params, "Scheduler:cell_extra_parts", space_extra_parts);
     space_extra_sparts = parser_get_opt_param_int(
-        params, "Scheduler:cell_extra_sparts", space_extra_sparts_default);
+        params, "Scheduler:cell_extra_sparts", space_extra_sparts);
     space_extra_gparts = parser_get_opt_param_int(
-        params, "Scheduler:cell_extra_gparts", space_extra_gparts_default);
+        params, "Scheduler:cell_extra_gparts", space_extra_gparts);
     space_extra_bparts = parser_get_opt_param_int(
-        params, "Scheduler:cell_extra_bparts", space_extra_bparts_default);
+        params, "Scheduler:cell_extra_bparts", space_extra_bparts);
 
     engine_max_parts_per_ghost =
         parser_get_opt_param_int(params, "Scheduler:engine_max_parts_per_ghost",
@@ -4733,7 +4747,7 @@ void engine_clean(struct engine *e, const int fof) {
       fclose(e->sfh_logger);
     }
     if (e->policy & engine_policy_feedback) {
-      fclose(SNIa_logger);
+      event_logger_close(e);
     }
   }
 }
@@ -4774,6 +4788,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
+  event_logger_struct_dump(stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
 #ifdef WITH_FOF
@@ -4884,6 +4899,8 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct feedback_props *)malloc(sizeof(struct feedback_props));
   feedback_struct_restore(feedback_properties, stream);
   e->feedback_props = feedback_properties;
+
+  event_logger_struct_restore(stream);
 
   struct black_holes_props *black_holes_properties =
       (struct black_holes_props *)malloc(sizeof(struct black_holes_props));

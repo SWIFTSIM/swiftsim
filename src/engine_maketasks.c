@@ -1109,8 +1109,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         c->hydro.cooling = scheduler_addtask(s, task_type_cooling,
                                              task_subtype_none, 0, 0, c, NULL);
 
-        scheduler_addunlock(s, c->hydro.end_force, c->hydro.cooling);
-        scheduler_addunlock(s, c->hydro.cooling, c->super->kick2);
+        task_order_addunlock_cooling(s, c);
 
       } else {
         scheduler_addunlock(s, c->hydro.end_force, c->super->kick2);
@@ -1806,6 +1805,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
     /* Escape early */
     if (t->type == task_type_none) continue;
+    if (t->type == task_type_stars_resort) continue;
+    if (t->type == task_type_star_formation) continue;
 
 #ifdef WITH_LOGGER
     struct task *const ci_super_kick2_or_logger = ci->super->logger;

@@ -9,7 +9,7 @@ fi
 if [ ! -e coolingtables ] 
 then     
     echo "Fetching EAGLE cooling tables for the isolated galaxy example..."
-    ./getEagleCoolingTable.sh
+    ./getColibreCoolingTable.sh
 fi
 
 if [ ! -e yieldtables ] 
@@ -17,6 +17,20 @@ then
     echo "Fetching EAGLE stellar yield tables for the isolated galaxy example..."
     ./getYieldTable.sh
 fi
+
+if [ ! -e HIIregions_BPASS_binary.hdf5 ] 
+then     
+    echo "Fetching the COLIBRE feedback tables for the isolated galaxy example..."
+    ./getColibreFeedbackTables.sh
+fi
+
+if [ ! -e UV_dust1_CR1_G1_shield1.hdf5 ] 
+then     
+    echo "Fetching the COLIBRE feedback tables for the isolated galaxy example..."
+    ./getColibreCoolingTables.sh
+fi
+
+
 
 ../../swift --threads=16 --feedback --external-gravity --self-gravity --stars --cooling --hydro isolated_galaxy.yml -P SNIaDTD:SNIa_efficiency_p_Msun:0.002 2>&1 | tee output.log
 

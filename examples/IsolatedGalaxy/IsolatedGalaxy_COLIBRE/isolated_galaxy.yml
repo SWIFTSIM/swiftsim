@@ -120,11 +120,14 @@ COLIBREFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-  stellarwind_maxage_Myr:           30.             # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds.
-  HIIregion_maxage_Myr:             0.             # (Optional) Maximum age in Myr of star particle to build HII region. Set to 0 to disable HII regions.
+  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
+  with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
+#  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table
+                                    
+# HIIregion_maxage_Myr:             0 # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
 
 # Hernquist potential parameters
 HernquistPotential:
@@ -155,3 +158,8 @@ SNIaDTD:
   SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
   normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
   SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
+
+Event_logger:
+  delta_time_SNIa_Myr:        10
+  delta_time_SNII_Myr:        1
+  delta_time_r_processes_Myr: 20
