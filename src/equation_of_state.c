@@ -23,3 +23,20 @@
 /* Equation of state for the physics model
  * (temporary ugly solution as a global variable) */
 struct eos_parameters eos;
+
+#ifdef __APPLE__
+
+/*
+ * The clang compiler and linker on OSX incorrectly optimize
+ * out the eos global object before the final linking stage, which
+ * leads to a compilation error.
+ * The fake initialisation below forces the compiler to keep the
+ * instance and pass it to the linker stage.
+ */
+#if defined(EOS_PLANETARY)
+eos.Til_iron.rho_0 = -1.f;
+#elif defined(EOS_ISOTHERMAL_GAS)
+eos.isothermal_internal_energy = -1.;
+#endif
+
+#endif /* __APPLE__ */
