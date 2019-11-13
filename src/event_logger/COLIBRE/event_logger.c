@@ -27,6 +27,21 @@ struct feedback_history_debug log_SNII_debug;
 #endif
 
 /* Declare the feedback structures */
+
+#ifdef __APPLE__
+/*
+ * The clang compiler and linker on OSX incorrectly optimize
+ * out the logger global objects before the final linking stage, which
+ * leads to a compilation errors.
+ * The fake initialisations below forces the compiler to keep the
+ * instance and pass it to the linker stage.
+ */
+struct feedback_history_SNIa log_SNIa = {.core.fp = NULL};
+struct feedback_history_SNII log_SNII = {.core.fp = NULL};
+struct feedback_history_r_processes log_r_processes = {.core.fp = NULL};
+
+#else  /* i.e. not __APPLE__ */
 struct feedback_history_SNIa log_SNIa;
 struct feedback_history_SNII log_SNII;
 struct feedback_history_r_processes log_r_processes;
+#endif /* __APPLE__ */
