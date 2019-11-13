@@ -92,7 +92,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   struct xpart *xpj,
                                   const struct cosmology *cosmo,
                                   const integertime_t ti_current,
-				  const double time, const int step) {
+                                  const double time, const int step) {
 
   /* Get r. */
   const float r = sqrtf(r2);
