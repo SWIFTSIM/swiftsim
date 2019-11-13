@@ -152,15 +152,17 @@ size_t logger_particle_read(struct logger_particle *part,
   map = logger_loader_io_read_mask(h, map + offset, &mask, &h_offset);
 
   /* Check that the mask is meaningful */
-  if (mask > (size_t) (1 << h->number_mask)) {
+  if (mask > (unsigned int) (1 << h->masks_count)) {
       error("Found an unexpected mask %zi", mask);
   }
 
   /* Check if it is not a time record. */
-  if (mask == h->timestamp_mask) error("Unexpected mask: %lu.", mask);
+  if (mask == h->timestamp_mask) {
+    error("Unexpected timestamp while reading a particle: %lu.", mask);
+  }
 
   /* Read all the fields. */
-  for (size_t i = 0; i < h->number_mask; i++) {
+  for (size_t i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
       map = logger_particle_read_field(part, map, h->masks[i].name,
                                        h->masks[i].size);

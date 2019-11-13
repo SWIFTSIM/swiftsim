@@ -28,7 +28,7 @@ print("time: %g" % time)
 # read dump
 
 t = logger.getTimeLimits(basename)
-data = logger.loadFromIndex(basename, time)
+data = logger.loadSnapshotAtTime(basename, time)
 
 pos = data["positions"]
 
@@ -37,7 +37,7 @@ def plot3D():
     from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".")
+    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.2)
 
 
 def plot2D():
@@ -54,5 +54,5 @@ def plot2D():
     plt.ylabel("Entropy")
 
 
-plot2D()
+plot3D()
 plt.show()

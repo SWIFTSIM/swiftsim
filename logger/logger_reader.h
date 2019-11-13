@@ -123,10 +123,10 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
 const uint64_t *logger_reader_get_number_particles(
     struct logger_reader *reader, int *n_type);
 
-void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
-                                          void *extra_data);
-void logger_reader_read_from_index(struct logger_reader *reader, double time,
-                                   enum logger_reader_type inter_type,
-                                   struct logger_particle *parts, size_t n_tot);
+void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
+                                             void *extra_data);
+void logger_reader_read_all_particles(struct logger_reader *reader, double time,
+                                      enum logger_reader_type inter_type,
+                                      struct logger_particle *parts, size_t n_tot);
 
 #endif  // LOGGER_LOGGER_READER_H

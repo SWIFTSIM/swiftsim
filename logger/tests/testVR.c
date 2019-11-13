@@ -82,14 +82,13 @@ int main(int argc, char *argv[]) {
   struct logger_particle *particles =
       malloc(n_tot * sizeof(struct logger_particle));
 
-  logger_reader_read_from_index(&reader, begin, logger_reader_const, particles,
-                                n_tot);
+  logger_reader_read_all_particles(&reader, begin, logger_reader_const, particles,
+                                   n_tot);
 
   /* Loop over time for a single particle */
   size_t id = 0;
   struct logger_particle p = particles[id];
   for (double t = begin; t < end; t += (end - begin) / number_steps) {
-
     /* Get the offset of the given time */
     size_t o = logger_reader_get_next_offset_from_time(&reader, t);
     message("time: %f offset: %ld", t, o);

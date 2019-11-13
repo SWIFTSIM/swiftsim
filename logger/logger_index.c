@@ -31,19 +31,19 @@
 
 /* Define the place and size of each element in the header. */
 /* The time in double precision. */
-const int logger_index_time_offset = 0;
-const int logger_index_time_size = sizeof(double);
+#define logger_index_time_offset 0
+#define logger_index_time_size sizeof(double)
 /* The time on the integer timeline. */
-const int logger_index_integer_time_offset = logger_index_time_offset + logger_index_time_size;
-const int logger_index_integer_time_size = sizeof(integertime_t);
+#define logger_index_integer_time_offset logger_index_time_offset + logger_index_time_size
+#define logger_index_integer_time_size sizeof(integertime_t)
 /* The number of particle (for each type). */
-const int logger_index_npart_offset = logger_index_integer_time_offset + logger_index_integer_time_size;
-const int logger_index_npart_size = sizeof(uint64_t) *  swift_type_count;
+#define logger_index_npart_offset logger_index_integer_time_offset + logger_index_integer_time_size
+#define logger_index_npart_size sizeof(uint64_t) *  swift_type_count
 /* The flag used for checking if the file is sorted or not. */
-const int logger_index_is_sorted_offset = logger_index_npart_offset + logger_index_npart_size;
-const int logger_index_is_sorted_size = sizeof(char);
+#define logger_index_is_sorted_offset logger_index_npart_offset + logger_index_npart_size
+#define logger_index_is_sorted_size sizeof(char)
 /* The array containing the offset and ids */
-const int logger_index_data_offset = (logger_index_is_sorted_offset + logger_index_is_sorted_size + 7) & ~7;
+#define logger_index_data_offset ((logger_index_is_sorted_offset + logger_index_is_sorted_size + 7) & ~7)
 
 /**
  * @brief Read the index file header.

@@ -49,8 +49,8 @@ PyArray_Descr *logger_particle_descr;
  *
  * <b>returns</b> dictionnary containing the data read.
  */
-static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
-                               PyObject *args) {
+static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
+                                    PyObject *args) {
 
   /* declare variables. */
   char *basename = NULL;
@@ -94,8 +94,8 @@ static PyObject *loadFromIndex(__attribute__((unused)) PyObject *self,
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
-  logger_reader_read_from_index(&reader, time, logger_reader_const,
-                                PyArray_DATA(out), n_tot);
+  logger_reader_read_all_particles(&reader, time, logger_reader_const,
+                                   PyArray_DATA(out), n_tot);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;
@@ -177,7 +177,7 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
 /* definition of the method table. */
 
 static PyMethodDef libloggerMethods[] = {
-    {"loadFromIndex", loadFromIndex, METH_VARARGS,
+    {"loadSnapshotAtTime", loadSnapshotAtTime, METH_VARARGS,
      "Load a snapshot directly from the logger using the index files.\n\n"
      "Parameters\n"
      "----------\n\n"

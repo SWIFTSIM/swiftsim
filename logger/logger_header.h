@@ -68,7 +68,7 @@ struct header {
   unsigned int string_length;
 
   /* Number of masks. */
-  unsigned int number_mask;
+  unsigned int masks_count;
 
   /* List of masks. */
   struct mask_data *masks;

@@ -236,14 +236,14 @@ struct extra_data_read {
 };
 
 /**
- * @brief Mapper function of logger_reader_read_from_index().
+ * @brief Mapper function of logger_reader_read_all_particles().
  *
  * @param map_data The array of #logger_particle.
  * @param num_elements The number of element to process.
- * @param extra_data The read_from_index_mapper().
+ * @param extra_data The #extra_data_read.
  */
-void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
-                                          void *extra_data) {
+void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
+                                             void *extra_data) {
 
   struct logger_particle *parts = (struct logger_particle *)map_data;
   struct extra_data_read *read = (struct extra_data_read *)extra_data;
@@ -311,10 +311,10 @@ void logger_reader_read_from_index_mapper(void *map_data, int num_elements,
  * @param parts The array of particles to use.
  * @param n_tot The total number of particles
  */
-void logger_reader_read_from_index(struct logger_reader *reader, double time,
-                                   enum logger_reader_type interp_type,
-                                   struct logger_particle *parts,
-                                   size_t n_tot) {
+void logger_reader_read_all_particles(struct logger_reader *reader, double time,
+                                      enum logger_reader_type interp_type,
+                                      struct logger_particle *parts,
+                                      size_t n_tot) {
 
   /* Initialize the thread pool */
   struct threadpool threadpool;
@@ -333,7 +333,7 @@ void logger_reader_read_from_index(struct logger_reader *reader, double time,
   read.parts = parts;
   read.data = data;
   read.type = interp_type;
-  threadpool_map(&threadpool, logger_reader_read_from_index_mapper, parts,
+  threadpool_map(&threadpool, logger_reader_read_all_particles_mapper, parts,
                  n_tot, sizeof(struct logger_particle), 0, &read);
 
   /* Cleanup the threadpool */
