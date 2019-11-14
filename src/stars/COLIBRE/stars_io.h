@@ -57,10 +57,11 @@ INLINE static void stars_read_particles(struct spart *sparts,
 INLINE static void convert_spart_pos(const struct engine *e,
                                      const struct spart *sp, double *ret) {
 
-  if (e->s->periodic) {
-    ret[0] = box_wrap(sp->x[0], 0.0, e->s->dim[0]);
-    ret[1] = box_wrap(sp->x[1], 0.0, e->s->dim[1]);
-    ret[2] = box_wrap(sp->x[2], 0.0, e->s->dim[2]);
+  const struct space *s = e->s;
+  if (s->periodic) {
+    ret[0] = box_wrap(sp->x[0] - s->pos_dithering[0], 0.0, s->dim[0]);
+    ret[1] = box_wrap(sp->x[1] - s->pos_dithering[1], 0.0, s->dim[1]);
+    ret[2] = box_wrap(sp->x[2] - s->pos_dithering[2], 0.0, s->dim[2]);
   } else {
     ret[0] = sp->x[0];
     ret[1] = sp->x[1];
@@ -107,6 +108,7 @@ INLINE static void convert_spart_vel(const struct engine *e,
  * @param sparts The s-particle array.
  * @param list The list of i/o properties to write.
  * @param num_fields The number of i/o fields to write.
+ * @param with_cosmology Are we running a cosmological simulation?
  */
 INLINE static void stars_write_particles(const struct spart *sparts,
                                          struct io_props *list, int *num_fields,
