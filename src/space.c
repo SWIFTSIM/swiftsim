@@ -4654,12 +4654,19 @@ void space_convert_quantities_mapper(void *restrict map_data, int count,
   struct part *restrict parts = (struct part *)map_data;
   const ptrdiff_t index = parts - s->parts;
   struct xpart *restrict xparts = s->xparts + index;
+  const struct phys_const *phys_const = s->e->physical_constants;
+  const struct unit_system *us = s->e->internal_units;
+  const struct entropy_floor_properties *entropy_floor = s->e->entropy_floor; 
+  const struct cooling_function_data *cool_func = s->e->cooling_func;
 
   /* Loop over all the particles ignoring the extra buffer ones for on-the-fly
    * creation */
   for (int k = 0; k < count; k++)
-    if (parts[k].time_bin <= num_time_bins)
+    if (parts[k].time_bin <= num_time_bins) {
       hydro_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props);
+      cooling_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props, 
+				 phys_const, us, entropy_floor, cool_func);
+    }
 }
 
 /**
