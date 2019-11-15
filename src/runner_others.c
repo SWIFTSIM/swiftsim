@@ -53,6 +53,7 @@
 #include "star_formation_logger.h"
 #include "stars.h"
 #include "timers.h"
+#include "timestep_limiter.h"
 #include "tracers.h"
 
 /**
@@ -287,8 +288,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
           }
 
           /* Compute the SF rate of the particle */
-          star_formation_compute_SFR(p, xp, sf_props, phys_const, cosmo,
-                                     dt_star);
+          star_formation_compute_SFR(p, xp, sf_props, phys_const, hydro_props,
+                                     cosmo, dt_star);
 
           /* Add the SFR and SFR*dt to the SFH struct of this cell */
           star_formation_logger_log_active_part(p, xp, &c->stars.sfh, dt_star);
@@ -381,6 +382,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         hydro_end_force(p, cosmo);
+        timestep_limiter_end_force(p);
         chemistry_end_force(p, cosmo);
 
 #ifdef SWIFT_BOUNDARY_PARTICLES

@@ -1199,6 +1199,9 @@ void cooling_clean(struct cooling_function_data *cooling) {
   free(cooling->Abundances);
   free(cooling->Abundances_inv);
   free(cooling->atomicmass);
+  free(cooling->atomicmass_inv);
+  free(cooling->Zsol);
+  free(cooling->Zsol_inv);
   free(cooling->LogMassFractions);
   free(cooling->MassFractions);
 
@@ -1211,6 +1214,13 @@ void cooling_clean(struct cooling_function_data *cooling) {
   free(cooling->table.Uelectron_fraction);
   free(cooling->table.T_from_U);
   free(cooling->table.U_from_T);
+  free(cooling->table.Umu);
+  free(cooling->table.Tmu);
+  free(cooling->table.meanpartmass_Teq);
+  free(cooling->table.logHfracs_Teq);
+  free(cooling->table.logHfracs_all);
+  free(cooling->table.logTeq);
+  free(cooling->table.logPeq);
 }
 
 /**

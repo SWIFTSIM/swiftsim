@@ -22,6 +22,7 @@
 /* Local includes */
 #include "event_logger.h"
 #include "random.h"
+#include "timestep_sync_part.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -306,6 +307,9 @@ runner_iact_nonsym_feedback_apply(
       /*     "We did some heating! id %llu star id %llu probability %.5e " */
       /*     "random_num %.5e du %.5e du/ini %.5e", */
       /*     pj->id, si->id, prob, rand, delta_u, delta_u / u_init); */
+
+      /* Synchronize the particle on the timeline */
+      timestep_sync_part(pj);
     }
   }
 
@@ -343,6 +347,9 @@ runner_iact_nonsym_feedback_apply(
 #ifdef SWIFT_DEBUG_CHECKS
       event_logger_SNIa_log_event_debug(time, si, pj, xpj, cosmo, step);
 #endif
+
+      /* Synchronize the particle on the timeline */
+      timestep_sync_part(pj);
     }
   }
 

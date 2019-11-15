@@ -112,20 +112,6 @@ struct qstack {
 };
 
 /**
- * @brief Parallel particle-sorting stack
- */
-struct parallel_sort {
-  struct part *parts;
-  struct gpart *gparts;
-  struct xpart *xparts;
-  struct spart *sparts;
-  int *ind;
-  struct qstack *stack;
-  unsigned int stack_size;
-  volatile unsigned int first, last, waiting;
-};
-
-/**
  * @brief Information required to compute the particle cell indices.
  */
 struct index_data {
@@ -252,6 +238,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->kick2 = NULL;
     c->timestep = NULL;
     c->timestep_limiter = NULL;
+    c->timestep_sync = NULL;
     c->hydro.end_force = NULL;
     c->hydro.drift = NULL;
     c->stars.drift = NULL;
@@ -714,7 +701,7 @@ void space_allocate_extras(struct space *s, int verbose) {
 
   /* Anything to do here? (Abort if we don't want extras)*/
   if (space_extra_parts == 0 && space_extra_gparts == 0 &&
-      space_extra_sparts == 0)
+      space_extra_sparts == 0 && space_extra_bparts == 0)
     return;
 
   /* The top-level cells */
@@ -722,20 +709,6 @@ void space_allocate_extras(struct space *s, int verbose) {
   const double half_cell_width[3] = {0.5 * cells[0].width[0],
                                      0.5 * cells[0].width[1],
                                      0.5 * cells[0].width[2]};
-
-  /* The dithering vector
-   * Note that we use the old dithering vector here since
-   * (new - old) will be added to all positions further down */
-  const double pos_dithering[3] = {s->pos_dithering_old[0],
-                                   s->pos_dithering_old[1],
-                                   s->pos_dithering_old[2]};
-#ifdef SWIFT_DEBUG_CHECKS
-  if (!s->e->gravity_properties->with_dithering) {
-    if (s->pos_dithering[0] != 0. || s->pos_dithering[1] != 0. ||
-        s->pos_dithering[2] != 0.)
-      error("Non-zero dithering vector when dithering is off!");
-  }
-#endif
 
   /* The current number of particles (including spare ones) */
   size_t nr_parts = s->nr_parts;
@@ -760,7 +733,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     error("Failed to allocate list of local top-level cells");
 
   /* List the local cells */
-  int nr_local_cells = 0;
+  size_t nr_local_cells = 0;
   for (int i = 0; i < s->nr_cells; ++i) {
     if (s->cells_top[i].nodeID == local_nodeID) {
       local_cells[nr_local_cells] = i;
@@ -791,6 +764,8 @@ void space_allocate_extras(struct space *s, int verbose) {
   if (expected_num_extra_gparts < s->nr_extra_gparts)
     error("Reduction in top-level cells number not handled.");
   if (expected_num_extra_sparts < s->nr_extra_sparts)
+    error("Reduction in top-level cells number not handled.");
+  if (expected_num_extra_bparts < s->nr_extra_bparts)
     error("Reduction in top-level cells number not handled.");
 
   /* Do we have enough space for the extra gparts (i.e. we haven't used up any)
@@ -843,7 +818,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_gparts = 0;
@@ -857,12 +832,9 @@ void space_allocate_extras(struct space *s, int verbose) {
       if (s->gparts[i].time_bin == time_bin_not_created) {
 
         /* We want the extra particles to be at the centre of their cell */
-        s->gparts[i].x[0] =
-            cells[current_cell].loc[0] + half_cell_width[0] - pos_dithering[0];
-        s->gparts[i].x[1] =
-            cells[current_cell].loc[1] + half_cell_width[1] - pos_dithering[1];
-        s->gparts[i].x[2] =
-            cells[current_cell].loc[2] + half_cell_width[2] - pos_dithering[2];
+        s->gparts[i].x[0] = cells[current_cell].loc[0] + half_cell_width[0];
+        s->gparts[i].x[1] = cells[current_cell].loc[1] + half_cell_width[1];
+        s->gparts[i].x[2] = cells[current_cell].loc[2] + half_cell_width[2];
         ++count_in_cell;
         count_extra_gparts++;
       }
@@ -938,7 +910,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_parts = 0;
@@ -952,12 +924,9 @@ void space_allocate_extras(struct space *s, int verbose) {
       if (s->parts[i].time_bin == time_bin_not_created) {
 
         /* We want the extra particles to be at the centre of their cell */
-        s->parts[i].x[0] =
-            cells[current_cell].loc[0] + half_cell_width[0] - pos_dithering[0];
-        s->parts[i].x[1] =
-            cells[current_cell].loc[1] + half_cell_width[1] - pos_dithering[1];
-        s->parts[i].x[2] =
-            cells[current_cell].loc[2] + half_cell_width[2] - pos_dithering[2];
+        s->parts[i].x[0] = cells[current_cell].loc[0] + half_cell_width[0];
+        s->parts[i].x[1] = cells[current_cell].loc[1] + half_cell_width[1];
+        s->parts[i].x[2] = cells[current_cell].loc[2] + half_cell_width[2];
         ++count_in_cell;
         count_extra_parts++;
       }
@@ -1023,7 +992,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_sparts = 0;
@@ -1037,12 +1006,9 @@ void space_allocate_extras(struct space *s, int verbose) {
       if (s->sparts[i].time_bin == time_bin_not_created) {
 
         /* We want the extra particles to be at the centre of their cell */
-        s->sparts[i].x[0] =
-            cells[current_cell].loc[0] + half_cell_width[0] - pos_dithering[0];
-        s->sparts[i].x[1] =
-            cells[current_cell].loc[1] + half_cell_width[1] - pos_dithering[1];
-        s->sparts[i].x[2] =
-            cells[current_cell].loc[2] + half_cell_width[2] - pos_dithering[2];
+        s->sparts[i].x[0] = cells[current_cell].loc[0] + half_cell_width[0];
+        s->sparts[i].x[1] = cells[current_cell].loc[1] + half_cell_width[1];
+        s->sparts[i].x[2] = cells[current_cell].loc[2] + half_cell_width[2];
         ++count_in_cell;
         count_extra_sparts++;
       }
@@ -1108,7 +1074,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_bparts = 0;
@@ -1122,12 +1088,9 @@ void space_allocate_extras(struct space *s, int verbose) {
       if (s->bparts[i].time_bin == time_bin_not_created) {
 
         /* We want the extra particles to be at the centre of their cell */
-        s->bparts[i].x[0] =
-            cells[current_cell].loc[0] + half_cell_width[0] - pos_dithering[0];
-        s->bparts[i].x[1] =
-            cells[current_cell].loc[1] + half_cell_width[1] - pos_dithering[1];
-        s->bparts[i].x[2] =
-            cells[current_cell].loc[2] + half_cell_width[2] - pos_dithering[2];
+        s->bparts[i].x[0] = cells[current_cell].loc[0] + half_cell_width[0];
+        s->bparts[i].x[1] = cells[current_cell].loc[1] + half_cell_width[1];
+        s->bparts[i].x[2] = cells[current_cell].loc[2] + half_cell_width[2];
         ++count_in_cell;
         count_extra_bparts++;
       }
@@ -2104,6 +2067,10 @@ void space_reorder_extras(struct space *s, int verbose) {
   if (space_extra_sparts)
     threadpool_map(&s->e->threadpool, space_reorder_extra_sparts_mapper,
                    s->local_cells_top, s->nr_local_cells, sizeof(int), 0, s);
+
+  /* Re-order the black hole particles */
+  if (space_extra_bparts)
+    error("Missing implementation of BH extra reordering");
 }
 
 /**
@@ -2190,7 +2157,7 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
     double old_pos_y = p->x[1];
     double old_pos_z = p->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && p->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2236,11 +2203,6 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_part;
-
-      /* Update the position (since we may have dithered) */
-      p->x[0] = pos_x;
-      p->x[1] = pos_y;
-      p->x[2] = pos_z;
 
     } else {
       /* Normal case: list its top-level cell index */
@@ -2328,7 +2290,7 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
     double old_pos_y = gp->x[1];
     double old_pos_z = gp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && gp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2374,11 +2336,6 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_gpart;
-
-      /* Update the position (since we may have dithered) */
-      gp->x[0] = pos_x;
-      gp->x[1] = pos_y;
-      gp->x[2] = pos_z;
 
     } else {
       /* List its top-level cell index */
@@ -2472,7 +2429,7 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
     double old_pos_y = sp->x[1];
     double old_pos_z = sp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && sp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2518,11 +2475,6 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_spart;
-
-      /* Update the position (since we may have dithered) */
-      sp->x[0] = pos_x;
-      sp->x[1] = pos_y;
-      sp->x[2] = pos_z;
 
     } else {
       /* List its top-level cell index */
@@ -2612,7 +2564,7 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
     double old_pos_y = bp->x[1];
     double old_pos_z = bp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && bp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2658,11 +2610,6 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_bpart;
-
-      /* Update the position (since we may have dithered) */
-      bp->x[0] = pos_x;
-      bp->x[1] = pos_y;
-      bp->x[2] = pos_z;
 
     } else {
       /* List its top-level cell index */
@@ -3722,9 +3669,9 @@ void space_split_recursive(struct space *s, struct cell *c,
     for (int k = 0; k < bcount; k++) {
 #ifdef SWIFT_DEBUG_CHECKS
       if (bparts[k].time_bin == time_bin_not_created)
-        error("Extra s-particle present in space_split()");
+        error("Extra b-particle present in space_split()");
       if (bparts[k].time_bin == time_bin_inhibited)
-        error("Inhibited s-particle present in space_split()");
+        error("Inhibited b-particle present in space_split()");
 #endif
       black_holes_time_bin_min =
           min(black_holes_time_bin_min, bparts[k].time_bin);
@@ -4297,6 +4244,10 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
   for (int k = 0; k < count; k++) {
 
     hydro_first_init_part(&p[k], &xp[k]);
+    p[k].limiter_data.min_ngb_time_bin = num_time_bins + 1;
+    p[k].limiter_data.wakeup = time_bin_not_awake;
+    p[k].limiter_data.to_be_synchronized = 0;
+
 #ifdef WITH_LOGGER
     logger_part_data_init(&xp[k].logger_data);
 #endif
@@ -5501,14 +5452,26 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 #ifdef SWIFT_DEBUG_CHECKS
   /* Unpack the data */
   struct part *restrict parts = (struct part *)map_data;
+  const struct space *s = (struct space *)extra_data;
+  const int with_timestep_limiter =
+      (s->e->policy & engine_policy_timestep_limiter);
+  const int with_timestep_sync = (s->e->policy & engine_policy_timestep_sync);
 
   /* Verify that all limited particles have been treated */
   for (int k = 0; k < nr_parts; k++) {
 
     if (parts[k].time_bin == time_bin_inhibited) continue;
 
-    if (parts[k].wakeup == time_bin_awake)
-      error("Particle still woken up! id=%lld", parts[k].id);
+    if (parts[k].time_bin < 0) error("Particle has negative time-bin!");
+
+    if (with_timestep_limiter &&
+        parts[k].limiter_data.wakeup != time_bin_not_awake)
+      error("Particle still woken up! id=%lld wakeup=%d", parts[k].id,
+            parts[k].limiter_data.wakeup);
+
+    if (with_timestep_sync && parts[k].limiter_data.to_be_synchronized != 0)
+      error("Synchronized particle not treated! id=%lld synchronized=%d",
+            parts[k].id, parts[k].limiter_data.to_be_synchronized);
 
     if (parts[k].gpart != NULL)
       if (parts[k].time_bin != parts[k].gpart->time_bin)
@@ -5530,7 +5493,7 @@ void space_check_limiter(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   threadpool_map(&s->e->threadpool, space_check_limiter_mapper, s->parts,
-                 s->nr_parts, sizeof(struct part), 1000, NULL);
+                 s->nr_parts, sizeof(struct part), 1000, s);
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif

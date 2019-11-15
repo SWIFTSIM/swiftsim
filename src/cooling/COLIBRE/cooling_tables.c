@@ -189,6 +189,9 @@ void read_cooling_header(struct cooling_function_data *cooling) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /* Close the file */
+  H5Fclose(tempfile_id);
+
   cooling->Zsol_inv[0] = 1.f / cooling->Zsol[0];
 
   /* find the metallicity bin that refers to solar metallicity */
@@ -452,6 +455,9 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   if (status < 0) error("error reading big hydrogen fractions array\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing big hydrogen fractions dataset");
+
+  /* Close the file */
+  H5Fclose(tempfile_id);
 
   /* Pressure at thermal equilibrium temperature */
   if (posix_memalign((void **)&cooling->table.logPeq, SWIFT_STRUCT_ALIGNMENT,

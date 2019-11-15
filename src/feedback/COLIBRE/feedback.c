@@ -1610,7 +1610,53 @@ void feedback_props_init(struct feedback_props* fp,
  *
  * @param feedback_props the feedback data structure.
  */
-void feedback_clean(struct feedback_props* feedback_props) {}
+void feedback_clean(struct feedback_props* fp) {
+
+  free(fp->HII_log10_Zbins);
+  free(fp->HII_agebins);
+  free(fp->HII_log10_Qcum);
+  free(fp->SW_log10_Pcum);
+  swift_free("imf-tables", fp->imf);
+  swift_free("imf-tables", fp->imf_mass_bin);
+  swift_free("imf-tables", fp->imf_mass_bin_log10);
+  swift_free("feedback-tables", fp->yields_SNIa);
+  swift_free("feedback-tables", fp->yield_SNIa_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_AGB.mass);
+  swift_free("feedback-tables", fp->yield_AGB.metallicity);
+  swift_free("feedback-tables", fp->yield_AGB.yield);
+  swift_free("feedback-tables", fp->yield_AGB.yield_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_AGB.ejecta);
+  swift_free("feedback-tables", fp->yield_AGB.ejecta_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_AGB.total_metals);
+  swift_free("feedback-tables", fp->yield_AGB.total_metals_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_SNII.mass);
+  swift_free("feedback-tables", fp->yield_SNII.metallicity);
+  swift_free("feedback-tables", fp->yield_SNII.yield);
+  swift_free("feedback-tables", fp->yield_SNII.yield_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_SNII.ejecta);
+  swift_free("feedback-tables", fp->yield_SNII.ejecta_IMF_resampled);
+  swift_free("feedback-tables", fp->yield_SNII.total_metals);
+  swift_free("feedback-tables", fp->yield_SNII.total_metals_IMF_resampled);
+  swift_free("feedback-tables", fp->lifetimes.mass);
+  swift_free("feedback-tables", fp->lifetimes.metallicity);
+  swift_free("feedback-tables", fp->yield_mass_bins);
+  for (int i = 0; i < eagle_feedback_lifetime_N_metals; i++) {
+    free(fp->lifetimes.dyingtime[i]);
+  }
+  free(fp->lifetimes.dyingtime);
+  for (int i = 0; i < eagle_feedback_SNIa_N_elements; i++) {
+    free(fp->SNIa_element_names[i]);
+  }
+  free(fp->SNIa_element_names);
+  for (int i = 0; i < eagle_feedback_SNII_N_elements; i++) {
+    free(fp->SNII_element_names[i]);
+  }
+  free(fp->SNII_element_names);
+  for (int i = 0; i < eagle_feedback_AGB_N_elements; i++) {
+    free(fp->AGB_element_names[i]);
+  }
+  free(fp->AGB_element_names);
+}
 
 /**
  * @brief Zero pointers in yield_table structs

@@ -118,7 +118,8 @@ const char *engine_policy_names[] = {"none",
                                      "feedback",
                                      "black holes",
                                      "fof search",
-                                     "time-step limiter"};
+                                     "time-step limiter",
+                                     "time-step sync"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -595,7 +596,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
   /* Reallocate the particle arrays if necessary */
   if (offset_parts + count_parts_in > s->size_parts) {
-    message("re-allocating parts array.");
     s->size_parts = (offset_parts + count_parts_in) * engine_parts_size_grow;
     struct part *parts_new = NULL;
     struct xpart *xparts_new = NULL;
@@ -620,7 +620,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
   }
 
   if (offset_sparts + count_sparts_in > s->size_sparts) {
-    message("re-allocating sparts array.");
     s->size_sparts = (offset_sparts + count_sparts_in) * engine_parts_size_grow;
     struct spart *sparts_new = NULL;
     if (swift_memalign("sparts", (void **)&sparts_new, spart_align,
@@ -639,7 +638,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
   }
 
   if (offset_bparts + count_bparts_in > s->size_bparts) {
-    message("re-allocating bparts array.");
     s->size_bparts = (offset_bparts + count_bparts_in) * engine_parts_size_grow;
     struct bpart *bparts_new = NULL;
     if (swift_memalign("bparts", (void **)&bparts_new, bpart_align,
@@ -658,7 +656,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
   }
 
   if (offset_gparts + count_gparts_in > s->size_gparts) {
-    message("re-allocating gparts array.");
     s->size_gparts = (offset_gparts + count_gparts_in) * engine_parts_size_grow;
     struct gpart *gparts_new = NULL;
     if (swift_memalign("gparts", (void **)&gparts_new, gpart_align,
@@ -1354,7 +1351,7 @@ int engine_estimate_nr_tasks(const struct engine *e) {
 #endif
 #endif
   }
-  if (e->policy & engine_policy_limiter) {
+  if (e->policy & engine_policy_timestep_limiter) {
     n1 += 18;
     n2 += 1;
   }
@@ -1779,6 +1776,7 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_kick1 || t->type == task_type_kick2 ||
         t->type == task_type_timestep ||
         t->type == task_type_timestep_limiter ||
+        t->type == task_type_timestep_sync ||
         t->subtype == task_subtype_force ||
         t->subtype == task_subtype_limiter || t->subtype == task_subtype_grav ||
         t->type == task_type_end_hydro_force ||
@@ -2178,8 +2176,8 @@ void engine_step(struct engine *e) {
 
     /* Print some information to the screen */
     printf(
-        "  %6d %14e %12.7f %12.7f %14e %4d %4d %12lld %12lld %12lld %12lld "
-        "%21.3f %6d\n",
+        "  %6d %14e %12.7f %12.7f %14e %4d %4d %12lld %12lld %12lld "
+        "%12lld %21.3f %6d\n",
         e->step, e->time, e->cosmology->a, e->cosmology->z, e->time_step,
         e->min_active_bin, e->max_active_bin, e->updates, e->g_updates,
         e->s_updates, e->b_updates, e->wallclock_time, e->step_props);
@@ -2368,8 +2366,7 @@ void engine_step(struct engine *e) {
   /********************************************************/
 
   /* Create a restart file if needed. */
-  engine_dump_restarts(e, /*drifted_all=*/0,
-                       e->restart_onexit && engine_is_done(e));
+  engine_dump_restarts(e, 0, e->restart_onexit && engine_is_done(e));
 
   engine_check_for_dumps(e);
 
