@@ -437,12 +437,11 @@ void cooling_first_init_part(const struct phys_const* restrict phys_const,
       initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
 
       /* We cannot evolve to equilibrium here, because 
-       * the initial gas densities are not calculated 
-       * until after the various first_init_part() 
-       * routines, so p->rho = 0 here. Instead, set a 
-       * flag in xp so that, when we next call the 
-       * cooling_cool_part() routine, it will first 
-       * set up the equilibrium abundances. */ 
+       * the initial gas densities have not been 
+       * calculated. Instead, set a flag in xp to show 
+       * that the equilibrium will need to be calculated. 
+       * This will then be done within the 
+       * cooling_convert_quantities() routine. */ 
       xp->cooling_data.set_init_eqm_flag = 1; 
     } 
   else 
@@ -867,19 +866,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm, const double time) {
-
-  if (xp->cooling_data.set_init_eqm_flag) 
-    {
-      /* First time we call cooling_cool_part() on a 
-       * particle, if this flag is set to one then 
-       * we need to set its CHIMES abundances to 
-       * equilibrium. Note that we do this before 
-       * checking for dt == 0, so that the eqm 
-       * will be set during the call within 
-       * engine_init_particles(). */ 
-      chimes_set_init_eqm(phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp); 
-      xp->cooling_data.set_init_eqm_flag = 0; 
-    }
 
   /* No cooling happens over zero time */
   if (dt == 0.) return;
@@ -1319,4 +1305,40 @@ void cooling_struct_restore(struct cooling_function_data* cooling,
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
+}
+
+/**
+ * @brief Converts cooling quantities of a particle at the start of a run
+ *
+ * This function is called once at the end of the engine_init_particle()
+ * routine (at the start of a calculation) after the densities of
+ * particles have been computed.
+ *
+ * For this cooling module, this routine does not do anything. 
+ *
+ * @param p The particle to act upon
+ * @param xp The extended particle to act upon
+ * @param cosmo The cosmological model.
+ * @param hydro_props The constants used in the scheme.
+ * @param phys_const #phys_const data structure.
+ * @param us Internal system of units data structure.
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling #cooling_function_data data structure. 
+ */
+void cooling_convert_quantities(struct part *restrict p, 
+				struct xpart *restrict xp,
+				const struct cosmology *cosmo, 
+				const struct hydro_props *hydro_props, 
+				const struct phys_const *phys_const, 
+				const struct unit_system* us, 
+				const struct entropy_floor_properties *floor_props, 
+				const struct cooling_function_data* cooling) {
+
+  if (xp->cooling_data.set_init_eqm_flag) 
+    {
+      /* Compute the initial equilibrium 
+       * abundance array for this particle. */ 
+      chimes_set_init_eqm(phys_const, us, cosmo, hydro_props, floor_props, cooling, p, xp); 
+      xp->cooling_data.set_init_eqm_flag = 0; 
+    }
 }
