@@ -68,7 +68,6 @@ struct cooling_function_data {
   /* Parameters used for the 
    * COLIBRE ISRF. */ 
   double N_H0; 
-  double scale_MW_ISRF; 
 
   /* Flags to control eqm mode and 
    * thermal evolution. */ 

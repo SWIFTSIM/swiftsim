@@ -460,7 +460,6 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
 
   ChimesFloat N_ref, mu, XH; 
-  ChimesFloat scale_MW_ISRF = 0.1; 
   ChimesFloat N_H0 = 3.65e20; 
   
   if ((data->myGlobalVars->update_colibre_ISRF == 1) || (data->myGlobalVars->update_colibre_shielding == 1))
@@ -471,8 +470,8 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
       if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
 	{
-	  data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * scale_MW_ISRF * pow(N_ref / N_H0, 1.4); 
-	  data->myGasVars->cr_rate = data->myGlobalVars->colibre_cr_rate_0 * pow(N_ref / N_H0, 1.4); 
+	  data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * data->myGlobalVars->radiation_field_normalisation_factor * pow(N_ref / N_H0, 1.4); 
+	  data->myGasVars->cr_rate = data->myGlobalVars->colibre_cr_rate_0 * data->myGlobalVars->radiation_field_normalisation_factor * pow(N_ref / N_H0, 1.4); 
 	}
 
       if (data->myGlobalVars->update_colibre_shielding == 1) 

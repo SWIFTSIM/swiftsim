@@ -92,6 +92,7 @@ struct globalVariables
   /* COLIBRE-specific variables */ 
   int update_colibre_ISRF; 
   int update_colibre_shielding; 
+  ChimesFloat radiation_field_normalisation_factor; 
   ChimesFloat max_shielding_length_cgs; 
   ChimesFloat shielding_length_factor; 
   ChimesFloat colibre_cr_rate_0; 
