@@ -243,7 +243,6 @@ int main(int argc, char *argv[]) {
           "--star-formation --cooling --feedback.",
           NULL, 0, 0),
 
-      
       OPT_GROUP("  Control options:\n"),
       OPT_BOOLEAN('a', "pin", &with_aff,
                   "Pin runners using processor affinity.", NULL, 0, 0),
