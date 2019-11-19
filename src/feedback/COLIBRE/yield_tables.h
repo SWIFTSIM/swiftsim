@@ -132,7 +132,7 @@ INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
   if (status < 0) error("error closing SNIa file");
 
   /* Open SNII tables for reading */
-  sprintf(fname, "%s/SNII_wdust.hdf5", feedback_props->yield_table_path);
+  sprintf(fname, "%s/SNII_wdust_modyields.hdf5", feedback_props->yield_table_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) error("unable to open file %s\n", fname);
 
@@ -238,7 +238,7 @@ INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
   if (status < 0) error("error closing file");
 
   /* Read AGB tables */
-  sprintf(fname, "%s/AGB_wdust.hdf5", feedback_props->yield_table_path);
+  sprintf(fname, "%s/AGB_wdust_modyields.hdf5", feedback_props->yield_table_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) error("unable to open file %s\n", fname);
 
