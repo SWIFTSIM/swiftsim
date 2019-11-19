@@ -192,10 +192,12 @@ void evolve_dust_part(const struct phys_const *phys_const,
 
     /* abundance terms, depending on the key element for each grain species (normalised to solar ratio from Wiersma+09)*/
     /* !!! check consistency with yield factors, better to use an array of sola abundances defined in header? */
-    const float abundance_ratio_Gra =  2.07e-3/p->chemistry_data.metal_mass_fraction[chemistry_element_C];
-    const float abundance_ratio_Ide =  1.1e-3/p->chemistry_data.metal_mass_fraction[chemistry_element_Fe];
-    const float abundance_ratio_Sil =  max(5.91e-4/p->chemistry_data.metal_mass_fraction[chemistry_element_Mg],
+    float abundance_ratio_Gra =  2.07e-3/p->chemistry_data.metal_mass_fraction[chemistry_element_C];
+    float abundance_ratio_Ide =  1.1e-3/p->chemistry_data.metal_mass_fraction[chemistry_element_Fe];
+    float abundance_ratio_Sil =  max(5.91e-4/p->chemistry_data.metal_mass_fraction[chemistry_element_Mg],
 					   6.83e-4/p->chemistry_data.metal_mass_fraction[chemistry_element_Si]);
+    abundance_ratio_Sil       =  max(1.1e-3/p->chemistry_data.metal_mass_fraction[chemistry_element_Fe],
+				     abundance_ratio_Sil);
 
     /* conversion factor converted to CGS from yr */
     const float tau_Gra		= 3.132e15 * mult_terms * abundance_ratio_Gra;
@@ -216,16 +218,20 @@ void evolve_dust_part(const struct phys_const *phys_const,
 
   /* message("%e", max(1. + deltf_sput + deltf_SNII, 0.)); */
   /* compute total fractional change in mass for each grain species */
-  float delta_mfrac_Gra = p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] *
-    (1.-exp(deltf_sput + deltf_SNII + deltf_acc_Gra));
-  float delta_mfrac_Sil = p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] *
-    (1.-exp(deltf_sput + deltf_SNII + deltf_acc_Sil));
-  float delta_mfrac_Ide = p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] *
-    (1.-exp(deltf_sput + deltf_SNII + deltf_acc_Ide));
+  double delta_mfrac_Gra = p->chemistry_data.metal_mass_fraction[chemistry_element_Gra] *
+    (exp(deltf_sput + deltf_SNII + deltf_acc_Gra) - 1);
+  double delta_mfrac_Sil = p->chemistry_data.metal_mass_fraction[chemistry_element_Sil] *
+    (exp(deltf_sput + deltf_SNII + deltf_acc_Sil) - 1);
+  double delta_mfrac_Ide = p->chemistry_data.metal_mass_fraction[chemistry_element_Ide] *
+    (exp(deltf_sput + deltf_SNII + deltf_acc_Ide) - 1);
   
-  
+  /* message("%e %e %e", deltf_sput, deltf_SNII, deltf_acc_Gra); */
+  /* message("%e %e", exp(deltf_sput+deltf_SNII+deltf_acc_Gra)-1, deltf_sput+deltf_SNII+deltf_acc_Gra); */
+  /* if ((1-dp->with_accretion) && (delta_mfrac_Gra )){ */
+  /*   message("%e %e", deltf_sput, deltf_SNII); */
+  /* } */
   /* message("%e", (1-exp(deltf_sput + deltf_SNII + deltf_acc_Ide))); */
-  /* ensure mass growth in dust does not exceed that of current mass in key element */
+  /* ensure mass growth in dust does not exceed that of current mass in compositional element */
   delta_mfrac_Gra = min(delta_mfrac_Gra,
   			p->chemistry_data.metal_mass_fraction[chemistry_element_C]);
   delta_mfrac_Ide = min(delta_mfrac_Ide,
@@ -234,6 +240,8 @@ void evolve_dust_part(const struct phys_const *phys_const,
   			p->chemistry_data.metal_mass_fraction[chemistry_element_Mg]);
   delta_mfrac_Sil = min(delta_mfrac_Sil,
   			p->chemistry_data.metal_mass_fraction[chemistry_element_Sil]);
+  delta_mfrac_Sil = min(delta_mfrac_Sil,
+  			p->chemistry_data.metal_mass_fraction[chemistry_element_Fe]);
 
   /* apply mass fraction changes to elements and grains */
   int i;
