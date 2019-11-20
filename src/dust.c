@@ -259,10 +259,13 @@ void evolve_dust_part(const struct phys_const *phys_const,
     /* message("factors: %e %e %e ", deltf_sput, deltf_SNII, */
     /* 	    deltf_acc_Gra+deltf_acc_Sil+deltf_acc_Ide); */   
       /* exit(0); */
-  }
+    }
 
     
   }
+  
+  /* apply mass fraction changes to total metallicity */
+  p->chemistry_data.metal_mass_fraction_total -= (delta_mfrac_Gra + delta_mfrac_Sil + delta_mfrac_Ide);
   
 }
 
