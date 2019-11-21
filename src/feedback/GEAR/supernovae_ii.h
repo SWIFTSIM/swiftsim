@@ -305,7 +305,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_read_yields(
 				  group_id, "Ejnp", &previous_count, interpolation_size);
 
   /* Cleanup everything */
-  h5_close_group(file_id, group_id);  
+  h5_close_group(file_id, group_id);
 };
 
 

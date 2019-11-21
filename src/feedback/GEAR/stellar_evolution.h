@@ -212,7 +212,6 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
     sp->feedback_data.metal_mass_ejected[i] *=
       sp->birth.mass;
   }
-  
 }
 
 /**

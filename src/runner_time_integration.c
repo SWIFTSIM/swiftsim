@@ -128,10 +128,10 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
 
         const integertime_t ti_step = get_integer_timestep(p->time_bin);
         const integertime_t ti_begin =
-            get_integer_time_begin(ti_current + 1, p->time_bin);
+          get_integer_time_begin(ti_current + 1, p->time_bin);
 
 #ifdef SWIFT_DEBUG_CHECKS
-        const integertime_t ti_end = ti_begin + ti_step;
+          const integertime_t ti_end = ti_begin + ti_step;
 
         if (ti_begin != ti_current)
           error(
@@ -141,38 +141,41 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
               ti_current);
 #endif
 
-        /* Time interval for this half-kick */
-        double dt_kick_grav, dt_kick_hydro, dt_kick_therm, dt_kick_corr;
-        if (with_cosmology) {
-          dt_kick_hydro = cosmology_get_hydro_kick_factor(
-              cosmo, ti_begin, ti_begin + ti_step / 2);
-          dt_kick_grav = cosmology_get_grav_kick_factor(cosmo, ti_begin,
-                                                        ti_begin + ti_step / 2);
-          dt_kick_therm = cosmology_get_therm_kick_factor(
-              cosmo, ti_begin, ti_begin + ti_step / 2);
-          dt_kick_corr = cosmology_get_corr_kick_factor(cosmo, ti_begin,
-                                                        ti_begin + ti_step / 2);
-        } else {
-          dt_kick_hydro = (ti_step / 2) * time_base;
-          dt_kick_grav = (ti_step / 2) * time_base;
-          dt_kick_therm = (ti_step / 2) * time_base;
-          dt_kick_corr = (ti_step / 2) * time_base;
+          /* Time interval for this half-kick */
+          double dt_kick_grav, dt_kick_hydro, dt_kick_therm, dt_kick_corr;
+          if (with_cosmology) {
+            dt_kick_hydro = cosmology_get_hydro_kick_factor(
+                                                            cosmo, ti_begin, ti_begin + ti_step / 2);
+            dt_kick_grav = cosmology_get_grav_kick_factor(cosmo, ti_begin,
+                                                          ti_begin + ti_step / 2);
+            dt_kick_therm = cosmology_get_therm_kick_factor(
+                                                            cosmo, ti_begin, ti_begin + ti_step / 2);
+            dt_kick_corr = cosmology_get_corr_kick_factor(cosmo, ti_begin,
+                                                          ti_begin + ti_step / 2);
+          } else {
+            dt_kick_hydro = (ti_step / 2) * time_base;
+            dt_kick_grav = (ti_step / 2) * time_base;
+            dt_kick_therm = (ti_step / 2) * time_base;
+            dt_kick_corr = (ti_step / 2) * time_base;
+          }
+
+          /* do the kick */
+          kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
+                    dt_kick_corr, cosmo, hydro_props, entropy_floor, ti_begin,
+                    ti_begin + ti_step / 2);
+
+          /* Update the accelerations to be used in the drift for hydro */
+          if (p->gpart != NULL) {
+
+            xp->a_grav[0] = p->gpart->a_grav[0];
+            xp->a_grav[1] = p->gpart->a_grav[1];
+            xp->a_grav[2] = p->gpart->a_grav[2];
+          }
         }
-
-        /* do the kick */
-        kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
-                  dt_kick_corr, cosmo, hydro_props, entropy_floor, ti_begin,
-                  ti_begin + ti_step / 2);
-
-        /* Update the accelerations to be used in the drift for hydro */
-        if (p->gpart != NULL) {
-
-          xp->a_grav[0] = p->gpart->a_grav[0];
-          xp->a_grav[1] = p->gpart->a_grav[1];
-          xp->a_grav[2] = p->gpart->a_grav[2];
-        }
+      /* Do the operations required after the kick1 */
+      task_order_kick1(p, xp, e);
       }
-    }
+
 
     /* Loop over the gparts in this cell. */
     for (int k = 0; k < gcount; k++) {

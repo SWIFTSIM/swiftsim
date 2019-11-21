@@ -48,7 +48,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
 
   /* Turn off the cooling */
   xp->cooling_data.time_last_event = e->time;
-  
+
   /* Update mass */
   const float old_mass = hydro_get_mass(p);
   const float new_mass = old_mass + xp->feedback_data.delta_mass;
