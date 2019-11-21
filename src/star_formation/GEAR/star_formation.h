@@ -78,7 +78,7 @@ INLINE static int star_formation_is_star_forming(
   // const float sigma2 = p->pressure_floor_data.sigma2 * cosmo->a * cosmo->a;
   const float n_jeans_2_3 = starform->n_jeans_2_3;
 
-  const float h = p->h;
+  const float h = p->h * kernel_gamma;
   const float density = hydro_get_physical_density(p, cosmo);
 
   // TODO use GRACKLE */

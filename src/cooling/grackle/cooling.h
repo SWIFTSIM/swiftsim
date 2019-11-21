@@ -735,6 +735,32 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
   return cooling_time;
 }
 
+
+/**
+ * @brief Apply the cooling to a particle.
+ *
+ * Depending on the task order, you may wish to either
+ * cool down the particle immediately or do it during the drift.
+ *
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the xparticle data.
+ * @param cosmo The current cosmological model.
+ * @param cooling_du_dt Time derivative of the cooling.
+ * @param u_new Internal energy after the cooling.
+ */
+__attribute__((always_inline)) INLINE static void cooling_apply(
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct cosmology* restrict cosmo,
+    float cooling_du_dt, gr_float u_new) {
+
+#ifdef TASK_ORDER_GEAR
+  hydro_set_physical_internal_energy(p, xp, cosmo, u_new);
+  hydro_set_drifted_physical_internal_energy(p, cosmo, u_new);
+#else
+  hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+#endif
+}
+
 /**
  * @brief Apply the cooling function to a particle.
  *
@@ -788,7 +814,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   const float cooling_du_dt = delta_u / dt_therm;
 
   /* Update the internal energy time derivative */
-  hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
+  cooling_apply(p, xp, cosmo, cooling_du_dt, u_new);
 
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (cooling_du_dt - hydro_du_dt) * dt;

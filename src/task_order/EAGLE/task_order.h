@@ -20,6 +20,7 @@
 #define SWIFT_TASK_ORDER_EAGLE_H
 
 #define task_order_star_formation_before_feedback 1
+#define task_order_is_cooling_implicit 0
 
 /**
  * @brief Place the star formation cell at the right place in the dependency

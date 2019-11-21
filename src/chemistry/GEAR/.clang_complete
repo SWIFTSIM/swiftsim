@@ -1,0 +1,5 @@
+-I../
+-I./hydro/Gadget2
+-I/media/data/Linux/spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-9.1.0/hdf5-1.10.5-7wpneuftgkxxhfjkxeza323igcowsh4y/include
+-I/media/data/Linux/spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-9.1.0/mpich-3.3.1-2usjb32jjmvzio6clpmkvv2d33sqkza6/include
+-I/media/data/Linux/spack/opt/spack/linux-ubuntu18.04-x86_64/gcc-9.1.0/grackle-3.2-td2xx5z32nmf2hwahio6osvfhfuldres/include
