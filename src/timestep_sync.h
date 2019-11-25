@@ -56,6 +56,8 @@ INLINE static void timestep_process_sync_part(struct part *p, struct xpart *xp,
     return;
   }
 
+  message(" Synchronizing particle! %lld old bin=%d", p->id, p->time_bin);
+
   /* We want to make the particle finish it's time-step now. */
 
   /* Start by recovering the start and end point of the particle's time-step. */
@@ -111,6 +113,9 @@ INLINE static void timestep_process_sync_part(struct part *p, struct xpart *xp,
     dt_kick_corr = -(old_dti / 2) * time_base;
   }
 
+  if (p->id == ICHECK)
+    message("KICK start=%lld end=%lld", old_ti_beg + old_dti / 2, old_ti_beg);
+
   kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm, dt_kick_corr,
             e->cosmology, e->hydro_properties, e->entropy_floor,
             old_ti_beg + old_dti / 2, old_ti_beg);
@@ -131,6 +136,9 @@ INLINE static void timestep_process_sync_part(struct part *p, struct xpart *xp,
     dt_kick_therm = (new_dti)*time_base;
     dt_kick_corr = (new_dti)*time_base;
   }
+
+  if (p->id == ICHECK)
+    message("KICK start=%lld end=%lld", new_ti_beg, new_ti_beg + new_dti);
 
   kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm, dt_kick_corr,
             e->cosmology, e->hydro_properties, e->entropy_floor, new_ti_beg,

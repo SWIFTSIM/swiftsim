@@ -511,6 +511,8 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
 
   p->viscosity.div_v = 0.f;
   p->diffusion.laplace_u = 0.f;
+
+  if (p->id == ICHECK) message("INIT");
 }
 
 /**
@@ -558,6 +560,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   /* Finish calculation of the velocity divergence */
   p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2;
   p->viscosity.div_v += cosmo->H * hydro_dimension;
+
+  if (p->id == ICHECK) message("END DENSITY");
 }
 
 /**
@@ -805,6 +809,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   new_diffusion_alpha = min(new_diffusion_alpha, viscous_diffusion_limit);
 
   p->diffusion.alpha = new_diffusion_alpha;
+
+  if (p->id == ICHECK) message("PREPARE FORCE");
 }
 
 /**
@@ -943,6 +949,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_force(
     struct part *restrict p, const struct cosmology *cosmo) {
 
   p->force.h_dt *= p->h * hydro_dimension_inv;
+
+  if (p->id == ICHECK) message("END_FORCE");
 }
 
 /**

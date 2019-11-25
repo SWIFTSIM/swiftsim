@@ -20,6 +20,11 @@
 #ifndef SWIFT_CONST_H
 #define SWIFT_CONST_H
 
+#define ICHECK 8888888116610LL
+// 3869707670191LL
+// 8145499394633LL
+// 1092935460661
+
 /* Time integration constants. */
 #define const_max_u_change 0.1f
 
