@@ -168,7 +168,7 @@ void time_array_populate(struct time_array *t, struct logger_logfile *log) {
   /* get file size. */
   size_t file_size = log->log.mmap_size;
 
-  /* get first time stamp. */
+  /* get first timestamp. */
   size_t offset = time_offset_first_record(&log->header);
   while (offset < file_size) {
     /* read current time record and store it. */

@@ -262,7 +262,7 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
     size_t next_offset = prev_offset;
 
 #ifdef SWIFT_DEBUG_CHECKS
-    /* check with the offset of the next time stamp.
+    /* check with the offset of the next timestamp.
      * (the sentinel protects against overflow)
      */
     const size_t ind = reader->time.index + 1;

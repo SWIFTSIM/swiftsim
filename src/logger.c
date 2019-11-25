@@ -293,8 +293,9 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
     // TODO make it dependent of logger_mask_data
     memcpy(buff, &p->mass, sizeof(float));
     buff += sizeof(float);
-    memcpy(buff, &p->id, sizeof(long long));
-    buff += sizeof(long long);
+    const int64_t id = p->id;
+    memcpy(buff, &id, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
 #endif
@@ -359,8 +360,9 @@ void logger_log_spart(struct logger_writer *log, const struct spart *sp,
     // TODO make it dependent of logger_mask_data
     memcpy(buff, &sp->mass, sizeof(float));
     buff += sizeof(float);
-    memcpy(buff, &sp->id, sizeof(long long));
-    buff += sizeof(long long);
+    const int64_t id = sp->id;
+    memcpy(buff, &id, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
   /* Special flags */
@@ -434,8 +436,9 @@ void logger_log_gpart(struct logger_writer *log, const struct gpart *p,
     // TODO make it dependent of logger_mask_data.
     memcpy(buff, &p->mass, sizeof(float));
     buff += sizeof(float);
-    memcpy(buff, &p->id_or_neg_offset, sizeof(long long));
-    buff += sizeof(long long);
+    const int64_t id = p->id_or_neg_offset;
+    memcpy(buff, &id, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
   /* Special flags */
@@ -716,8 +719,10 @@ int logger_read_part(struct part *p, size_t *offset, const char *buff) {
     // TODO make it dependent of logger_mask_data.
     memcpy(&p->mass, buff, sizeof(float));
     buff += sizeof(float);
-    memcpy(&p->id, buff, sizeof(long long));
-    buff += sizeof(long long);
+    int64_t id = 0;
+    memcpy(&id, buff, sizeof(int64_t));
+    p->id = id;
+    buff += sizeof(int64_t);
   }
 
 #endif
@@ -778,8 +783,9 @@ int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff) {
     // TODO make it dependent of logger_mask_data
     memcpy(&p->mass, buff, sizeof(float));
     buff += sizeof(float);
-    memcpy(&p->id_or_neg_offset, buff, sizeof(long long));
-    buff += sizeof(long long);
+    int64_t id = p->id_or_neg_offset;
+    memcpy(&id, buff, sizeof(int64_t));
+    buff += sizeof(int64_t);
   }
 
   /* Finally, return the mask of the values we just read. */

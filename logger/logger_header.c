@@ -168,15 +168,15 @@ void header_read(struct header *h, struct logger_logfile *log) {
     map = logger_loader_io_read_data(map, sizeof(unsigned int),
                                      &h->masks[i].size);
 
-    /* Keep the time stamp mask in memory */
+    /* Keep the timestamp mask in memory */
     if (strcmp(h->masks[i].name, "timestamp") == 0) {
       h->timestamp_mask = h->masks[i].mask;
     }
   }
 
-  /* Check that the time stamp mask exists */
+  /* Check that the timestamp mask exists */
   if (h->timestamp_mask == 0) {
-    error("Unable to find the time stamp mask.");
+    error("Unable to find the timestamp mask.");
   }
 
   /* Check the logfile header's size. */

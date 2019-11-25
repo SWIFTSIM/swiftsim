@@ -54,7 +54,11 @@ void radix_sort(struct index_data *data, size_t N) {
   /* Copy the data back to the correct array */
   if (data_counting != data) {
     memcpy(data, data_counting, N * sizeof(struct index_data));
+    sorted = data_counting;
   }
+
+  /* Free the allocated memory */
+  free(sorted);
 }
 
 /**

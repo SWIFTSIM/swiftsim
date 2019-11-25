@@ -24,9 +24,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Number of character for the version information */
 #define LOGGER_VERSION_SIZE 20
-#define LOGGER_OFFSET_SIZE 6
+/* Number of bytes for the mask information in the headers
+   (need to be large enough for the larges mask) */
 #define LOGGER_MASK_SIZE 2
+/* Number of bytes for the offset size in the headers */
+#define LOGGER_OFFSET_SIZE (8 - LOGGER_MASK_SIZE)
 
 enum logger_offset_direction {
   logger_offset_backward = 0,

@@ -42,7 +42,7 @@
 /* The flag used for checking if the file is sorted or not. */
 #define logger_index_is_sorted_offset logger_index_npart_offset + logger_index_npart_size
 #define logger_index_is_sorted_size sizeof(char)
-/* The array containing the offset and ids */
+/* The array containing the offset and ids. Rounding to a multiplier of 8 in order to align the memory */
 #define logger_index_data_offset ((logger_index_is_sorted_offset + logger_index_is_sorted_size + 7) & ~7)
 
 /**
@@ -85,7 +85,7 @@ void logger_index_read_header(struct logger_index *index,
  */
 void logger_index_write_sorted(struct logger_index *index) {
   /* Set the value */
-  char is_sorted = 1;
+  const char is_sorted = 1;
 
   /* Write the value */
   memcpy(index->index.map + logger_index_is_sorted_offset, &is_sorted,
@@ -99,14 +99,14 @@ void logger_index_write_sorted(struct logger_index *index) {
  * @param type The particle type.
  */
 struct index_data *logger_index_get_data(struct logger_index *index, int type) {
-  /* Count the offset due to the previous types */
+  /* Get the offset of particles of this type by skipping entries of lower types. */
   size_t count = 0;
   for (int i = 0; i < type; i++) {
     count += index->nparts[i];
   }
-  count *= sizeof(struct index_data);
+  const size_t type_offset = count * sizeof(struct index_data);
 
-  return index->index.map + count + logger_index_data_offset;
+  return index->index.map + logger_index_data_offset + type_offset;
 }
 
 /**
@@ -174,8 +174,8 @@ void logger_index_free(struct logger_index *index) {
  *
  * @return The offset of the particle or 0 if not found.
  */
-size_t logger_index_get_particle(struct logger_index *index, long long id,
-                                 int type) {
+size_t logger_index_get_particle_offset(struct logger_index *index, long long id,
+                                        int type) {
   /* Define a few variables */
   const struct index_data *data = logger_index_get_data(index, type);
   size_t left = 0;

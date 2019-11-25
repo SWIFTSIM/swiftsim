@@ -69,7 +69,7 @@ void logger_logfile_init_from_file(struct logger_logfile *log, char *filename,
   }
 
   /* Initialize the time array. */
-  if (reader->verbose > 1) message("Reading the time stamps.");
+  if (reader->verbose > 1) message("Reading the timestamps.");
   time_array_populate(&log->times, log);
 
   /* Print the time array. */

@@ -299,6 +299,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
 #ifdef WITH_LOGGER
             /* Write the particle */
+            /* Logs all the fields request by the user */
+            // TODO select only the requested fields
             logger_log_part(e->logger, p,
                             logger_mask_data[logger_x].mask |
                             logger_mask_data[logger_v].mask |

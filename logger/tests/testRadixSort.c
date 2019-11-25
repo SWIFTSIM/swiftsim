@@ -23,13 +23,16 @@
 
 #define N 100000
 
+int64_t getRandom(void) {
+  return ((int64_t)rand() << 32) + (int64_t)rand();
+}
 /**
  * @brief Initialize the array.
  */
 void init_array(struct index_data *data) {
   /* Assign the ids */
   for (int i = 0; i < N; i++) {
-    data[i].id = i;
+    data[i].id = getRandom();
   }
 
   /* randomize the array */

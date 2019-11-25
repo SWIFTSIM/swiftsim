@@ -37,12 +37,7 @@ __attribute__((always_inline)) INLINE static int radix_sort_get_bucket(
     const struct index_data *data, int i) {
   /* Consider 4 bits at a time */
   const int n = RADIX_NUMBER_BITS * i;
-  const long long mask =
-      (1LL << n) + (1LL << (n + 1)) + (1LL << (n + 2)) + (1LL << (n + 3));
-
-  /* Now keep only the requested bits and
-   * translate the bits to the least significant part. */
-  return (data->id & mask) >> n;
+  return (data->id >> n) & 15LL;
 }
 
 void counting_sort(struct index_data *data, struct index_data *output, size_t N,
