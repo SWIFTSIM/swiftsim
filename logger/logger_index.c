@@ -27,7 +27,7 @@
 /* Include local headers */
 #include "logger_loader_io.h"
 #include "logger_reader.h"
-#include "radix_sort.h"
+#include "quick_sort.h"
 
 /* Define the place and size of each element in the header. */
 /* The time in double precision. */
@@ -134,7 +134,7 @@ void logger_index_map_file(struct logger_index *index, const char *filename,
     /* Sort the file */
     for (int i = 0; i < swift_type_count; i++) {
       struct index_data *data = logger_index_get_data(index, i);
-      radix_sort(data, index->nparts[i]);
+      quick_sort(data, index->nparts[i]);
     }
 
     /* Write that the file is sorted */

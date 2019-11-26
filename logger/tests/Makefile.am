@@ -20,10 +20,10 @@ AM_CFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/logger $(HDF5_CPPFLAGS) $(GSL_IN
 AM_LDFLAGS = ../../src/.libs/libswiftsim.a ../.libs/liblogger.a $(HDF5_LDFLAGS) $(HDF5_LIBS) $(FFTW_LIBS) $(TCMALLOC_LIBS) $(JEMALLOC_LIBS) $(TBBMALLOC_LIBS) $(GRACKLE_LIBS) $(GSL_LIBS) $(PROFILER_LIBS) -lswiftsim
 
 # List of programs and scripts to run in the test suite
-TESTS = testLogfileHeader testLogfileReader testTimeArray testRadixSort testVR
+TESTS = testLogfileHeader testLogfileReader testTimeArray testQuickSort testVR
 
 # List of test programs to compile
-check_PROGRAMS = testLogfileHeader testLogfileReader testTimeArray testRadixSort testVR
+check_PROGRAMS = testLogfileHeader testLogfileReader testTimeArray testQuickSort testVR
 
 # Rebuild tests when SWIFT is updated.
 $(check_PROGRAMS): ../../src/.libs/libswiftsim.a ../.libs/liblogger.a
@@ -32,7 +32,7 @@ $(check_PROGRAMS): ../../src/.libs/libswiftsim.a ../.libs/liblogger.a
 testLogfileHeader_SOURCES = testLogfileHeader.c
 testLogfileReader_SOURCES = testLogfileReader.c
 testTimeArray_SOURCES = testTimeArray.c
-testRadixSort_SOURCES = testRadixSort.c
+testQuickSort_SOURCES = testQuickSort.c
 testVR_SOURCES = testVR.c
 
 # Files necessary for distribution

@@ -19,12 +19,12 @@
  ******************************************************************************/
 
 #include "memswap.h"
-#include "radix_sort.h"
+#include "quick_sort.h"
 
-#define N 100000
+#define N 10000
 
 int64_t getRandom(void) {
-  return ((int64_t)rand() << 32) + (int64_t)rand();
+  return llabs(((int64_t)lrand48() << 32) + (int64_t)lrand48());
 }
 /**
  * @brief Initialize the array.
@@ -49,9 +49,10 @@ void init_array(struct index_data *data) {
  * @brief Ensure that the array is sorted
  */
 void check_sort(struct index_data *data) {
-  for (int i = 1; i < N; i++) {
+  for (size_t i = 1; i < N; i++) {
     if (data[i].id < data[i - 1].id) {
-      error("The array is not sorted");
+      error("The array is not sorted index=%zi, prev=%li, cur=%li",
+            i, data[i-1].id, data[i].id);
     }
   }
 }
@@ -83,7 +84,7 @@ int main(int argc, char *argv[]) {
   print_array(data);
 
   /* Sort the array */
-  radix_sort(data, N);
+  quick_sort(data, N);
 
   /* Print the array */
   message("\nArray after sort\n");

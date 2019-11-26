@@ -17,31 +17,11 @@
  *
  ******************************************************************************/
 
-#ifndef LOGGER_LOGGER_RADIX_SORT_H
-#define LOGGER_LOGGER_RADIX_SORT_H
+#ifndef LOGGER_LOGGER_QUICK_SORT_H
+#define LOGGER_LOGGER_QUICK_SORT_H
 
 #include "logger_index.h"
 
-/* Number of bits to consider at a time.
- * If you wish to change this, you will need to modify some other piece of codes
- */
-#define RADIX_NUMBER_BITS 4
+void quick_sort(struct index_data *data, size_t N);
 
-/**
- * @brief Get the index of the bucket for the radix-counting sort.
- *
- * @param data The #index_data to consider,
- * @param i The index of the radix loop.
- */
-__attribute__((always_inline)) INLINE static int radix_sort_get_bucket(
-    const struct index_data *data, int i) {
-  /* Consider 4 bits at a time */
-  const int n = RADIX_NUMBER_BITS * i;
-  return (data->id >> n) & 15LL;
-}
-
-void counting_sort(struct index_data *data, struct index_data *output, size_t N,
-                   int i);
-void radix_sort(struct index_data *data, size_t N);
-
-#endif  // LOGGER_LOGGER_RADIX_SORT_H
+#endif  // LOGGER_LOGGER_QUICK_SORT_H
