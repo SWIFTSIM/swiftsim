@@ -842,8 +842,8 @@ int logger_read_timestamp(unsigned long long int *t, double *time,
  * @param log the struct
  * @param stream the file stream
  */
-void logger_struct_dump(const struct logger *log, FILE *stream) {
-  restart_write_blocks((void *)log, sizeof(struct logger), 1, stream,
+void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
+  restart_write_blocks((void *)log, sizeof(struct logger_writer), 1, stream,
                        "logger", "logger");
 }
 
@@ -854,9 +854,9 @@ void logger_struct_dump(const struct logger *log, FILE *stream) {
  * @param logger the struct
  * @param stream the file stream
  */
-void logger_struct_restore(struct logger *log, FILE *stream) {
+void logger_struct_restore(struct logger_writer *log, FILE *stream) {
   /* Read the block */
-  restart_read_blocks((void *)log, sizeof(struct logger), 1, stream,
+  restart_read_blocks((void *)log, sizeof(struct logger_writer), 1, stream,
                       NULL, "logger");
 
   /* generate dump filename */

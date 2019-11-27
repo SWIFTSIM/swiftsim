@@ -4196,8 +4196,10 @@ void engine_config(int restart, int fof, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  /* Write the particle logger header */
-  logger_write_file_header(e->logger);
+  if (!restart) {
+    /* Write the particle logger header */
+    logger_write_file_header(e->logger);
+  }
 #endif
 
   /* Initialise the structure finder */
@@ -4943,8 +4945,8 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   }
 
 #ifdef WITH_LOGGER
-  struct logger *log = 
-    (struct logger *)malloc(sizeof(struct logger));
+  struct logger_writer *log = 
+    (struct logger_writer *)malloc(sizeof(struct logger_writer));
   logger_struct_restore(log, stream);
   e->logger = log;
 #endif
