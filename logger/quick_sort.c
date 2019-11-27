@@ -45,9 +45,6 @@ void quick_sort(struct index_data *data, size_t N) {
   qstack[0].hi = N - 1;
   qpos = 0;
   while (qpos >= 0) {
-    if (qpos >= stack_size) {
-      error("The stack size for sorting is too small.");
-    }
     lo = qstack[qpos].lo;
     hi = qstack[qpos].hi;
     qpos -= 1;

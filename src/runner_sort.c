@@ -77,15 +77,16 @@ void runner_do_sort_ascending(struct sort_entry *sort, int N) {
   struct sort_entry temp;
   float pivot;
 
+  if (N >= (1LL << stack_size)) {
+    error("The stack size for sorting is too small."
+          "Either increase it or reduce the number of parts per cell.");
+  }
+
   /* Sort parts in cell_i in decreasing order with quicksort */
   qstack[0].lo = 0;
   qstack[0].hi = N - 1;
   qpos = 0;
   while (qpos >= 0) {
-    if (qpos >= stack_size) {
-      error("The stack size for sorting is too small."
-            "Either increase it or reduce the number of parts per cell.");
-    }
     lo = qstack[qpos].lo;
     hi = qstack[qpos].hi;
     qpos -= 1;
