@@ -172,7 +172,7 @@ void dump_restart(struct dump *d, const char *filename, size_t size) {
      The option O_RDWR seems to be required by mmap.
   */
   if ((d->fd = open(filename, O_RDWR, 0660)) == -1) {
-    error("Failed to read dump file '%s' (%s).", filename, strerror(errno));
+    error("Failed to open dump file '%s' (%s).", filename, strerror(errno));
   }
 
   /* Adjust the size to be at least the page size. */
@@ -180,7 +180,7 @@ void dump_restart(struct dump *d, const char *filename, size_t size) {
   size = (size + ~page_mask) & page_mask;
 
   /* Map memory to the created file. */
-  if ((d->data = mmap(NULL, size, PROT_WRITE, MAP_SHARED, d->fd, 0)) ==
+  if ((d->data = mmap(NULL, size, PROT_WRITE, MAP_SHARED, d->fd, d->file_offset)) ==
       MAP_FAILED) {
     error("Failed to allocate map of size %zi bytes (%s).", size,
           strerror(errno));
