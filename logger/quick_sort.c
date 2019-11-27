@@ -36,7 +36,7 @@ void quick_sort(struct index_data *data, size_t N) {
   struct index_data temp;
 
   /* Allocate a stack of operations */
-  int stack_size = log(N) + 5;
+  int stack_size = log(N) + 1;
   struct qstack *qstack =
       (struct qstack *)malloc(sizeof(struct qstack) * stack_size);
 
