@@ -3594,17 +3594,16 @@ void engine_config(int restart, int fof, struct engine *e,
   if (nr_cores > CPU_SETSIZE) /* Unlikely, except on e.g. SGI UV. */
     error("must allocate dynamic cpu_set_t (too many cores per node)");
 
-
   if (verbose && with_aff) {
-      char *buf = (char *)malloc((nr_cores + 1) * sizeof(char));
-      buf[nr_cores] = '\0';
-      for (int j = 0; j < nr_cores; ++j) {
-        /* Reversed bit order from convention, but same as e.g. Intel MPI's
-         * I_MPI_PIN_DOMAIN explicit mask: left-to-right, LSB-to-MSB. */
-        buf[j] = CPU_ISSET(j, entry_affinity) ? '1' : '0';
-      }
-      message("Affinity at entry: %s", buf);
-      free(buf);
+    char *buf = (char *)malloc((nr_cores + 1) * sizeof(char));
+    buf[nr_cores] = '\0';
+    for (int j = 0; j < nr_cores; ++j) {
+      /* Reversed bit order from convention, but same as e.g. Intel MPI's
+       * I_MPI_PIN_DOMAIN explicit mask: left-to-right, LSB-to-MSB. */
+      buf[j] = CPU_ISSET(j, entry_affinity) ? '1' : '0';
+    }
+    message("Affinity at entry: %s", buf);
+    free(buf);
   }
 
   int *cpuid = NULL;
