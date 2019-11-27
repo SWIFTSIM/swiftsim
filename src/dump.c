@@ -164,9 +164,9 @@ void dump_init(struct dump *d, const char *filename, size_t size) {
  * @param d The #dump to restart.
  * @param filename The fully qualified name of the file in which to dump,
  *                 note that it will be overwritten.
- * @param size The initial buffer size for this #dump.
  */
-void dump_restart(struct dump *d, const char *filename, size_t size) {
+void dump_restart(struct dump *d, const char *filename) {
+  size_t size = d->size;
 
   /* Create the output file.
      The option O_RDWR seems to be required by mmap.

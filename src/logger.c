@@ -864,7 +864,7 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
   strcpy(logger_name_file, log->base_name);
   strcat(logger_name_file, ".dump");
 
-  dump_restart(&log->dump, logger_name_file, log->dump.size);
+  dump_restart(&log->dump, logger_name_file);
 }
 
 #endif /* WITH_LOGGER */
