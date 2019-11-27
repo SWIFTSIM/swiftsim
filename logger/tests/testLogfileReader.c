@@ -101,8 +101,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
             tmp = max_step - max_step % p->time_bin;
           }
           assert(tmp == lp.pos[i]);
-        }
-        else
+        } else
           assert(p->x[i] == lp.pos[i]);
         assert(p->v[i] == lp.vel[i]);
         assert(p->a_hydro[i] == lp.acc[i]);
@@ -146,7 +145,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
       count = 0;
 
       /* Check the record's data. */
-      const int tmp_step = step >= max_step? max_step : step;
+      const int tmp_step = step >= max_step ? max_step : step;
       assert(time == get_double_time(tmp_step));
     }
   }

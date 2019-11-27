@@ -152,8 +152,8 @@ size_t logger_particle_read(struct logger_particle *part,
   map = logger_loader_io_read_mask(h, map + offset, &mask, &h_offset);
 
   /* Check that the mask is meaningful */
-  if (mask > (unsigned int) (1 << h->masks_count)) {
-      error("Found an unexpected mask %zi", mask);
+  if (mask > (unsigned int)(1 << h->masks_count)) {
+    error("Found an unexpected mask %zi", mask);
   }
 
   /* Check if it is not a time record. */

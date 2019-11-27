@@ -199,8 +199,7 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
   /* loop over all gparts */
   for (size_t i = 0; i < s->nr_gparts; i++) {
     /* Log only the dark matter */
-    if (s->gparts[i].type != swift_type_dark_matter)
-      continue;
+    if (s->gparts[i].type != swift_type_dark_matter) continue;
 
     logger_log_gpart(log, &s->gparts[i], mask_grav,
                      &s->gparts[i].logger_data.last_offset,
@@ -208,9 +207,9 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
     s->gparts[i].logger_data.steps_since_last_output = 0;
   }
 
-  const unsigned int mask_stars =
-    logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
-    logger_mask_data[logger_consts].mask;
+  const unsigned int mask_stars = logger_mask_data[logger_x].mask |
+                                  logger_mask_data[logger_v].mask |
+                                  logger_mask_data[logger_consts].mask;
 
   /* loop over all sparts */
   for (size_t i = 0; i < s->nr_sparts; i++) {
@@ -234,7 +233,8 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
  * (return) offset of this log.
  */
 void logger_log_part(struct logger_writer *log, const struct part *p,
-                     unsigned int mask, size_t *offset, const int special_flags) {
+                     unsigned int mask, size_t *offset,
+                     const int special_flags) {
 
   /* Make sure we're not writing a timestamp. */
   if (mask & logger_mask_data[logger_timestamp].mask)
@@ -321,7 +321,8 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
  * (return) offset of this log.
  */
 void logger_log_spart(struct logger_writer *log, const struct spart *sp,
-                      unsigned int mask, size_t *offset, const int special_flags) {
+                      unsigned int mask, size_t *offset,
+                      const int special_flags) {
 
   /* Make sure we're not writing a timestamp. */
   if (mask & logger_mask_data[logger_timestamp].mask)
@@ -329,8 +330,8 @@ void logger_log_spart(struct logger_writer *log, const struct spart *sp,
 
   /* Make sure we're not looging fields not supported by gparts. */
   if (mask &
-      (logger_mask_data[logger_u].mask | logger_mask_data[logger_rho].mask
-       | logger_mask_data[logger_a].mask))
+      (logger_mask_data[logger_u].mask | logger_mask_data[logger_rho].mask |
+       logger_mask_data[logger_a].mask))
     error("Can't log SPH quantities for sparts.");
 
   /* Start by computing the size of the message. */
@@ -386,7 +387,8 @@ void logger_log_spart(struct logger_writer *log, const struct spart *sp,
  * (return) offset of this log.
  */
 void logger_log_gpart(struct logger_writer *log, const struct gpart *p,
-                      unsigned int mask, size_t *offset, const int special_flags) {
+                      unsigned int mask, size_t *offset,
+                      const int special_flags) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (p->id_or_neg_offset < 0) {
@@ -538,7 +540,7 @@ void logger_init(struct logger_writer *log, struct swift_params *params) {
   parser_get_param_string(params, "Logger:basename", log->base_name);
 
   log->index.mem_frac =
-    parser_get_opt_param_float(params, "Logger:index_mem_frac", 0.05);
+      parser_get_opt_param_float(params, "Logger:index_mem_frac", 0.05);
 
   /* set initial value of parameters. */
   log->timestamp_offset = 0;

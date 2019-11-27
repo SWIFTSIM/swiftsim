@@ -1952,8 +1952,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
                        &e->logger->timestamp_offset);
   /* Make sure that we have enough space in the particle logger file
    * to store the particles in current time step. */
-  logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts,
-                     s->nr_sparts);
+  logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
   logger_write_description(e->logger, e);
 #endif
 
@@ -2564,10 +2563,11 @@ void engine_check_for_index_dump(struct engine *e) {
   const size_t dump_size = log->dump.count;
   const size_t old_dump_size = log->index.dump_size_last_output;
   const float mem_frac = log->index.mem_frac;
-  const size_t total_nr_parts = (e->total_nr_parts + e->total_nr_gparts +
-                                 e->total_nr_sparts + e->total_nr_bparts +
-                                 e->total_nr_DM_background_gparts);
-  const size_t index_file_size = total_nr_parts * sizeof(struct logger_part_data);
+  const size_t total_nr_parts =
+      (e->total_nr_parts + e->total_nr_gparts + e->total_nr_sparts +
+       e->total_nr_bparts + e->total_nr_DM_background_gparts);
+  const size_t index_file_size =
+      total_nr_parts * sizeof(struct logger_part_data);
 
   /* Check if we should write a file */
   if (mem_frac * (dump_size - old_dump_size) > index_file_size) {
@@ -2580,9 +2580,7 @@ void engine_check_for_index_dump(struct engine *e) {
 #else
   error("This function should not be called without the logger.");
 #endif
-
 }
-
 
 /**
  * @brief dump restart files if it is time to do so and dumps are enabled.
@@ -3455,8 +3453,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->total_nr_tasks = 0;
 
 #if defined(WITH_LOGGER)
-  e->logger =
-      (struct logger_writer *)malloc(sizeof(struct logger_writer));
+  e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
   logger_init(e->logger, params);
 #endif
 

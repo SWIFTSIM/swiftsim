@@ -87,8 +87,9 @@ enum logger_masks_number {
   logger_h = 4,
   logger_rho = 5,
   logger_consts = 6,
-  logger_special_flags = 7, /* < 0 for MPI rank changes, 0 for none,
-                               > 0 for particle type changes, > part_type for deletion */
+  logger_special_flags =
+      7,                 /* < 0 for MPI rank changes, 0 for none,
+                            > 0 for particle type changes, > part_type for deletion */
   logger_timestamp = 8,  /* expect it to be before count. */
   logger_count_mask = 9, /* Need to be the last. */
 } __attribute__((packed));
@@ -155,11 +156,14 @@ struct logger_part_data {
 int logger_compute_chunk_size(unsigned int mask);
 void logger_log_all(struct logger_writer *log, const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
-                     unsigned int mask, size_t *offset, const int special_flags);
+                     unsigned int mask, size_t *offset,
+                     const int special_flags);
 void logger_log_spart(struct logger_writer *log, const struct spart *p,
-                      unsigned int mask, size_t *offset, const int special_flags);
+                      unsigned int mask, size_t *offset,
+                      const int special_flags);
 void logger_log_gpart(struct logger_writer *log, const struct gpart *p,
-                      unsigned int mask, size_t *offset, const int special_flags);
+                      unsigned int mask, size_t *offset,
+                      const int special_flags);
 void logger_init(struct logger_writer *log, struct swift_params *params);
 void logger_free(struct logger_writer *log);
 void logger_log_timestamp(struct logger_writer *log, integertime_t t,

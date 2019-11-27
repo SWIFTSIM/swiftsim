@@ -322,8 +322,8 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
             error("Error while allocating temporary memory for sparts");
 
           /* Collect the particles we want to write */
-          io_collect_sparts_to_write(sparts, sparts_written,
-                                     Nstars, Nstars_written);
+          io_collect_sparts_to_write(sparts, sparts_written, Nstars,
+                                     Nstars_written);
 
           /* Select the fields to write */
           num_fields += stars_write_index(sparts_written, list);
@@ -370,8 +370,7 @@ void logger_write_description(struct logger_writer* log, struct engine* e) {
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml",
-           e->logger->base_name);
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->logger->base_name);
 
   /* Open file */
   FILE* f = NULL;

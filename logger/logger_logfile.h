@@ -52,7 +52,6 @@ struct logger_logfile {
 
   /* The file. */
   struct mapped_file log;
-
 };
 
 void logger_logfile_init_from_file(struct logger_logfile *log, char *filename,

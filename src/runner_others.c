@@ -304,13 +304,13 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             // TODO select only the requested fields
             logger_log_part(e->logger, p,
                             logger_mask_data[logger_x].mask |
-                            logger_mask_data[logger_v].mask |
-                            logger_mask_data[logger_a].mask |
-                            logger_mask_data[logger_u].mask |
-                            logger_mask_data[logger_h].mask |
-                            logger_mask_data[logger_rho].mask |
-                            logger_mask_data[logger_consts].mask |
-                            logger_mask_data[logger_special_flags].mask,
+                                logger_mask_data[logger_v].mask |
+                                logger_mask_data[logger_a].mask |
+                                logger_mask_data[logger_u].mask |
+                                logger_mask_data[logger_h].mask |
+                                logger_mask_data[logger_rho].mask |
+                                logger_mask_data[logger_consts].mask |
+                                logger_mask_data[logger_special_flags].mask,
                             &xp->logger_data.last_offset,
                             /* special flags */ swift_type_stars);
 #endif
@@ -339,8 +339,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               /* Write the s-particle */
               logger_log_spart(e->logger, sp,
                                logger_mask_data[logger_x].mask |
-                               logger_mask_data[logger_v].mask |
-                               logger_mask_data[logger_consts].mask,
+                                   logger_mask_data[logger_v].mask |
+                                   logger_mask_data[logger_consts].mask,
                                &sp->logger_data.last_offset,
                                /* special flags */ 0);
 
@@ -585,8 +585,9 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
   const int scount = c->stars.count;
 
   /* Anything to do here? */
-  if (!cell_is_active_hydro(c, e) && !cell_is_active_gravity(c, e)
-      && !cell_is_active_stars(c, e)) return;
+  if (!cell_is_active_hydro(c, e) && !cell_is_active_gravity(c, e) &&
+      !cell_is_active_stars(c, e))
+    return;
 
   /* Recurse? Avoid spending too much time in useless cells. */
   if (c->split) {
@@ -643,9 +644,9 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Currently writing everything, should adapt it through time */
           logger_log_gpart(e->logger, gp,
                            logger_mask_data[logger_x].mask |
-                           logger_mask_data[logger_v].mask |
-                           logger_mask_data[logger_a].mask |
-                           logger_mask_data[logger_consts].mask,
+                               logger_mask_data[logger_v].mask |
+                               logger_mask_data[logger_a].mask |
+                               logger_mask_data[logger_consts].mask,
                            &gp->logger_data.last_offset,
                            /* Special flags */ 0);
 
@@ -671,8 +672,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Currently writing everything, should adapt it through time */
           logger_log_spart(e->logger, sp,
                            logger_mask_data[logger_x].mask |
-                           logger_mask_data[logger_v].mask |
-                           logger_mask_data[logger_consts].mask,
+                               logger_mask_data[logger_v].mask |
+                               logger_mask_data[logger_consts].mask,
                            &sp->logger_data.last_offset,
                            /* Special flags */ 0);
 
@@ -683,7 +684,6 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           sp->logger_data.steps_since_last_output += 1;
       }
     }
-
   }
 
   if (timer) TIMER_TOC(timer_logger);

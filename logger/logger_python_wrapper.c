@@ -79,12 +79,11 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
       logger_reader_get_number_particles(&reader, &n_type);
   for (int i = 0; i < n_type; i++) {
     n_tot += n_parts[i];
-
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
   message("Found %lu particles", n_tot);
-#endif // SWIFT_DEBUG_CHECKS
+#endif  // SWIFT_DEBUG_CHECKS
 
   /* Allocate the output memory */
   PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
@@ -105,7 +104,6 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
 
   return (PyObject *)out;
 }
-
 
 /**
  * @brief Read the minimal and maximal time.

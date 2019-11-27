@@ -71,9 +71,7 @@ void generate_particles(struct part *parts, struct xpart *xparts,
 integertime_t get_integer_time(int step) { return step; }
 
 /** Provides a double time given the step number. */
-double get_double_time(int step) {
-  return step * const_time_base;
-}
+double get_double_time(int step) { return step * const_time_base; }
 
 /**
  * @brief Write a few particles during multiple time steps.
@@ -84,8 +82,7 @@ double get_double_time(int step) {
  * @param log The #logger_writer.
  * @param e The #engine.
  */
-void write_particles(struct logger_writer *log,
-                     struct engine *e) {
+void write_particles(struct logger_writer *log, struct engine *e) {
 
   size_t nparts = e->total_nr_parts;
   struct part *parts = e->s->parts;

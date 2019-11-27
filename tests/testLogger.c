@@ -56,7 +56,8 @@ void test_log_parts(struct logger_writer *log) {
 
   /* Write only the position. */
   p.x[0] = 2.0;
-  logger_log_part(log, &p, logger_mask_data[logger_x].mask, &offset, /* special flags */ 0);
+  logger_log_part(log, &p, logger_mask_data[logger_x].mask, &offset,
+                  /* special flags */ 0);
   printf("Wrote part at offset %#016zx.\n", offset);
 
   /* Write the position and velocity. */
@@ -131,7 +132,8 @@ void test_log_gparts(struct logger_writer *log) {
 
   /* Write only the position. */
   p.x[0] = 2.0;
-  logger_log_gpart(log, &p, logger_mask_data[logger_x].mask, &offset, /* special flags */ 0);
+  logger_log_gpart(log, &p, logger_mask_data[logger_x].mask, &offset,
+                   /* special flags */ 0);
   printf("Wrote gpart at offset %#016zx.\n", offset);
 
   /* Write the position and velocity. */

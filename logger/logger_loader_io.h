@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 /* Structure for mapping a file. */
 struct mapped_file {
   /* Mapped data. */
@@ -37,13 +36,11 @@ struct mapped_file {
 
   /* File size. */
   size_t mmap_size;
-
 };
 
-
 size_t logger_loader_io_get_file_size(int fd);
-void logger_loader_io_mmap_file(
-    struct mapped_file *map, const char *filename, int read_only);
+void logger_loader_io_mmap_file(struct mapped_file *map, const char *filename,
+                                int read_only);
 void logger_loader_io_munmap_file(struct mapped_file *map);
 
 /**

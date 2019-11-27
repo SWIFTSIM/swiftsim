@@ -222,8 +222,8 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
  *
  * @return For each type possible, the number of particle.
  */
-const uint64_t *logger_reader_get_number_particles(
-    struct logger_reader *reader, int *n_type) {
+const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
+                                                   int *n_type) {
   *n_type = swift_type_count;
   return reader->index.index.nparts;
 }
@@ -279,10 +279,13 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
 
       if (test == -1) {
         size_t mask = 0;
-        logger_loader_io_read_mask(&reader->log.header, reader->log.log.map + prev_offset,
-                                   &mask, &next_offset);
-        error("Trying to get a particle without next record (mask: %zi, diff offset: %zi)",
-              mask, next_offset);
+        logger_loader_io_read_mask(&reader->log.header,
+                                   reader->log.log.map + prev_offset, &mask,
+                                   &next_offset);
+        error(
+            "Trying to get a particle without next record (mask: %zi, diff "
+            "offset: %zi)",
+            mask, next_offset);
       }
     }
 
@@ -292,7 +295,7 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
 
     /* Set the type */
     size_t count = 0;
-    for(int ptype = 0; ptype < swift_type_count; ptype++) {
+    for (int ptype = 0; ptype < swift_type_count; ptype++) {
       count += nparts[ptype];
       if (part_ind < count) {
         parts[i].type = ptype;
@@ -372,9 +375,9 @@ double logger_reader_get_time_end(struct logger_reader *reader) {
  * @return The offset of the timestamp.
  */
 size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
-                                          double time) {
+                                               double time) {
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
-  return reader->log.times.records[ind+1].offset;
+  return reader->log.times.records[ind + 1].offset;
 }
 
 /**
@@ -396,8 +399,8 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   size_t next_offset = 0;
 
   /* Get the mask index of the special flags */
-  const int spec_flag_ind = header_get_field_index(
-      &reader->log.header, "special flags");
+  const int spec_flag_ind =
+      header_get_field_index(&reader->log.header, "special flags");
   if (spec_flag_ind < -1) {
     error("The logfile does not contain the special flags field.");
   }
@@ -409,13 +412,14 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   while (1) {
     /* Read the offset to the next particle */
     size_t mask = 0;
-    logger_loader_io_read_mask(&reader->log.header, map + prev_offset,
-                               &mask, &next_offset);
+    logger_loader_io_read_mask(&reader->log.header, map + prev_offset, &mask,
+                               &next_offset);
 
     /* Check if something special happened */
     if (mask & reader->log.header.masks[spec_flag_ind].mask) {
       struct logger_particle tmp;
-      logger_particle_read(&tmp, reader, prev_offset, /* Time */-1, logger_reader_const);
+      logger_particle_read(&tmp, reader, prev_offset, /* Time */ -1,
+                           logger_reader_const);
       new_type = tmp.type;
     }
 
@@ -450,10 +454,8 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   if (new_type == -1) {
     next->type = prev_type;
     prev->type = prev_type;
-  }
-  else {
+  } else {
     next->type = new_type;
     prev->type = new_type;
   }
-
 }

@@ -92,11 +92,11 @@ __attribute__((always_inline)) INLINE static int stars_write_index(
 
   /* List what we want to write */
   list[0] =
-    io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
-                         sparts, id, "Field not used");
+      io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
+                           sparts, id, "Field not used");
   list[1] =
-    io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
-                         logger_data.last_offset, "Field not used");
+      io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+                           logger_data.last_offset, "Field not used");
 
   return 2;
 }

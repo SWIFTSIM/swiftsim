@@ -49,9 +49,8 @@ size_t logger_loader_io_get_file_size(int fd) {
  * @param read_only Open the file in read only mode?
  *
  */
-void logger_loader_io_mmap_file(
-    struct mapped_file *map, const char *filename,
-    int read_only) {
+void logger_loader_io_mmap_file(struct mapped_file *map, const char *filename,
+                                int read_only) {
   /* open the file. */
   int fd;
 

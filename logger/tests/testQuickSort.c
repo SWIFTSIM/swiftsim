@@ -51,8 +51,8 @@ void init_array(struct index_data *data) {
 void check_sort(struct index_data *data) {
   for (size_t i = 1; i < N; i++) {
     if (data[i].id < data[i - 1].id) {
-      error("The array is not sorted index=%zi, prev=%li, cur=%li",
-            i, data[i-1].id, data[i].id);
+      error("The array is not sorted index=%zi, prev=%li, cur=%li", i,
+            data[i - 1].id, data[i].id);
     }
   }
 }

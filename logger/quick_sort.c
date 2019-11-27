@@ -38,7 +38,7 @@ void quick_sort(struct index_data *data, size_t N) {
   /* Allocate a stack of operations */
   int stack_size = log(N) + 5;
   struct qstack *qstack =
-    (struct qstack *) malloc(sizeof(struct qstack) * stack_size);
+      (struct qstack *)malloc(sizeof(struct qstack) * stack_size);
 
   /* Sort parts in decreasing order with quicksort */
   qstack[0].lo = 0;
@@ -55,8 +55,7 @@ void quick_sort(struct index_data *data, size_t N) {
         imin = i;
         /* Find the minimal value. */
         for (j = i + 1; j <= hi; j++)
-          if (data[j].id < data[imin].id)
-            imin = j;
+          if (data[j].id < data[imin].id) imin = j;
         /* Did we find the minimal value? */
         if (imin != i) {
           /* Swap the elements. */
