@@ -1217,7 +1217,7 @@ int main(int argc, char *argv[]) {
 
     /* Write the state of the system before starting time integration. */
 #ifdef WITH_LOGGER
-    logger_log_all(e.logger.logger, &e);
+    logger_log_all(e.logger, &e);
     engine_dump_index(&e);
 #endif
     /* Dump initial state snapshot, if not working with an output list */
@@ -1418,11 +1418,11 @@ int main(int argc, char *argv[]) {
       engine_print_stats(&e);
     }
 #ifdef WITH_LOGGER
-    logger_log_all(e.logger.logger, &e);
+    logger_log_all(e.logger, &e);
 
     /* Write a sentinel timestamp */
-    logger_log_timestamp(e.logger.logger, e.ti_current, e.time,
-                         &e.logger.logger->timestamp_offset);
+    logger_log_timestamp(e.logger, e.ti_current, e.time,
+                         &e.logger->timestamp_offset);
 #endif
 
     /* Write final snapshot? */
