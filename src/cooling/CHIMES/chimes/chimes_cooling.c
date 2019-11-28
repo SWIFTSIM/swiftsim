@@ -330,7 +330,10 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
    ** SWIFT-specific code **
    *************************/ 
   if (myGlobalVars->hybrid_cooling_mode == 1) 
-    total_heating += colibre_metal_cooling_rate_temperature(log10(myGasVars->temperature), myGlobalVars->redshift, myGasVars->nH_tot, myGasVars->metallicity * 0.0129, myGasVars->abundances[sp_elec], myGasVars->abundance_ratio, myGlobalVars->colibre_table); 
+    {
+      if (myGasVars->metallicity > pow(10.0, myGlobalVars->colibre_table->Metallicity[1])) 
+	total_heating += colibre_metal_cooling_rate_temperature(log10(myGasVars->temperature), myGlobalVars->redshift, myGasVars->nH_tot, myGasVars->metallicity * 0.0129, myGasVars->abundances[sp_elec], myGasVars->abundance_ratio, myGlobalVars->colibre_table); 
+    }
   /** End SWIFT-specific **/  
 
   // Convert units to erg/cm3/s 
