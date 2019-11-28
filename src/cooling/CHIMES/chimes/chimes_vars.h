@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Local COLIBRE include 
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
 #include "cooling/CHIMES/colibre_tables.h" 
+/** End SWIFT-specific **/  
 
 #define ELECTRON_MASS 9.1093829e-28
 #define PROTON_MASS 1.6726218e-24
@@ -52,7 +55,7 @@ struct gasVariables
 				   * band 12.24 eV to 13.51 eV (all in cgs units). */
   ChimesFloat cr_rate;
   ChimesFloat metallicity;             /* Z / Z_sol */
-  ChimesFloat dust_ratio;              /* Relative to Milky Way */
+  ChimesFloat dust_ratio;              /* Relative to Milky Way */ 
   ChimesFloat cell_size;               /* cm; use kernel smoothing length in SPH */
   ChimesFloat hydro_timestep;          /* s */
   int ForceEqOn;
@@ -61,8 +64,11 @@ struct gasVariables
   ChimesFloat constant_heating_rate;   /* erg s^-1 cm^-3 */
   ChimesFloat *abundances;             /* The size of this array will be set by init_chimes() */
 
-  /* COLIBRE-specific variables */ 
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
   float abundance_ratio[colibre_cooling_N_elementtypes]; 
+/** End SWIFT-specific **/ 
 };
 
 /* This structure contains the global 
@@ -76,6 +82,10 @@ struct globalVariables
   char EqAbundanceTablePath[500];
   int cellSelfShieldingOn;
   int N_spectra;          /* The number of UV spectra. */ 
+  int redshift_dependent_UVB_index; 
+  int use_redshift_dependent_eqm_tables; 
+  ChimesFloat redshift; 
+  ChimesFloat reionisation_redshift; 
   int StaticMolCooling;
   ChimesFloat T_mol;
   ChimesFloat grain_temperature;
@@ -89,18 +99,20 @@ struct globalVariables
   int totalNumberOfSpecies;
   int scale_metal_tolerances; 
 
-  /* COLIBRE-specific variables */ 
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
   int update_colibre_ISRF; 
   int update_colibre_shielding; 
   ChimesFloat radiation_field_normalisation_factor; 
   ChimesFloat max_shielding_length_cgs; 
   ChimesFloat shielding_length_factor; 
   ChimesFloat colibre_cr_rate_0; 
-  double redshift; 
   double colibre_log_T_min; 
   double colibre_log_T_max; 
   const struct colibre_cooling_tables *colibre_table; 
   int hybrid_cooling_mode; 
+/** End SWIFT-specific **/ 
 }; 
 
 /* The following structure contains
@@ -340,7 +352,7 @@ extern struct chimes_CO_photodissoc_struct
 
 extern struct chimes_spectra_struct 
 { 
-  ChimesFloat *isotropic_photon_density;
+  ChimesFloat *isotropic_photon_density; 
   ChimesFloat *G0_parameter; 
   ChimesFloat *H2_dissocJ; 
 } chimes_table_spectra; 
@@ -399,6 +411,29 @@ extern struct chimes_eqm_abundances_struct
   ChimesFloat *Metallicities;
   ChimesFloat ****Abundances;
 } chimes_table_eqm_abundances; 
+
+extern struct chimes_redshift_dependent_UVB_struct 
+{
+  int N_redshifts; 
+  int z_index_low; 
+  int z_index_hi; 
+  ChimesFloat *redshift_bins; 
+  ChimesFloat **photoion_fuv_sigmaPhot; 
+  ChimesFloat **photoion_fuv_epsilonPhot; 
+  ChimesFloat **photoion_euv_sigmaPhot; 
+  ChimesFloat ****photoion_euv_shieldFactor_1D; 
+  ChimesFloat *****photoion_euv_shieldFactor_2D; 
+  ChimesFloat **photoion_auger_fuv_sigmaPhot; 
+  ChimesFloat **photoion_auger_euv_sigmaPhot; 
+  ChimesFloat isotropic_photon_density[2]; 
+  ChimesFloat G0_parameter[2]; 
+  ChimesFloat H2_dissocJ[2]; 
+  int **photoion_fuv_element_incl; 
+  int **photoion_euv_element_incl; 
+  int **photoion_auger_fuv_element_incl; 
+  int **photoion_auger_euv_element_incl; 
+  struct chimes_eqm_abundances_struct eqm_abundances[2]; 
+} chimes_table_redshift_dependent_UVB; 
 
 struct UserData
 {

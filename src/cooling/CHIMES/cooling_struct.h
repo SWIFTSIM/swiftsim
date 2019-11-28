@@ -50,6 +50,7 @@ struct cooling_function_data {
    * shielding options. */ 
   int UV_field_flag; 
   int Shielding_flag; 
+  int use_redshift_dependent_UVB; 
 
   /* User parameter to scale the 
    * normalisation of the radiation 

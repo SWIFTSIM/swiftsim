@@ -452,13 +452,17 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	  i++;
 	}
     }
-  
+	
   /* If Thermal Evolution is switched on, the final element in the
    * vector y is the internal energy (per unit volume). Use this 
    * to update the temperature, and also the rates that depend on T */
   if (data->myGasVars->ThermEvolOn == 1)
     data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
 
+
+  /*************************
+   ** SWIFT-specific code **
+   *************************/ 
   ChimesFloat N_ref, mu, XH; 
   ChimesFloat N_H0 = 3.65e20; 
   
@@ -501,6 +505,8 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
       set_initial_rate_coefficients(data->myGasVars, data->myGlobalVars, *data); 
     }
+  /** End SWIFT-specific **/  
+
 
   // Update rates 
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data, data->myGasVars->ThermEvolOn); 
@@ -533,6 +539,9 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   return 0;
 }
 
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
 ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars) 
 {
   /* Parameters that define N_ref. 
@@ -554,3 +563,4 @@ ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, C
   
   return N_ref; 
 }
+/** End SWIFT-specific **/  

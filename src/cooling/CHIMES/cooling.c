@@ -75,8 +75,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Define radiation field and shielding options. */ 
   /* Currently supported options: 
    * UV_field_flag == 0: No UV radiation. 
-   *               == 1: Single, constant user-defined spectrum.
+   *               == 1: Single user-defined spectrum. 
    *               == 2: COLIBRE UVB+ISRF (and scale cr_rate and f_dust).
+   * 
+   * use_redshift_dependent_UVB == 0: Constant UVB. 
+   *                            == 1: Redshift-dependent cross sections. 
+   *                            == 2: Redshift-dependent cross sections and eqm tables. 
    * 
    * Shielding_flag == 0: No shielding.
    *                == 1: Jeans shielding length. 
@@ -84,11 +88,32 @@ void cooling_init_backend(struct swift_params *parameter_file,
    */ 
   cooling->UV_field_flag = parser_get_param_int(parameter_file, "CHIMESCooling:UV_field_flag"); 
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
+  cooling->use_redshift_dependent_UVB = parser_get_param_int(parameter_file, "CHIMESCooling:use_redshift_dependent_UVB"); 
 
   cooling->ChimesGlobalVars.update_colibre_ISRF = 0; 
   cooling->ChimesGlobalVars.update_colibre_shielding = 0; 
   cooling->radiation_field_normalisation_factor = 0.0; 
 
+  if (cooling->use_redshift_dependent_UVB == 0) 
+    {
+      cooling->ChimesGlobalVars.redshift_dependent_UVB_index = -1; 
+      cooling->ChimesGlobalVars.use_redshift_dependent_eqm_tables = 0; 
+    }
+  else 
+    {
+      if (cooling->UV_field_flag == 0) 
+	error("CHIMES ERROR: redshift-dependent UVB has been switched on, but UV_field_flag == 0. These options are incompatible.\n"); 
+     
+      cooling->ChimesGlobalVars.redshift_dependent_UVB_index = 0;  
+      
+      if (cooling->use_redshift_dependent_UVB == 1)
+	cooling->ChimesGlobalVars.use_redshift_dependent_eqm_tables = 0; 
+      else if (cooling->use_redshift_dependent_UVB == 2)
+	cooling->ChimesGlobalVars.use_redshift_dependent_eqm_tables = 1; 
+      else 
+	error("CHIMES ERROR: use_redshift_depdent_UVB = %d not recognised. \n", cooling->use_redshift_dependent_UVB); 
+    }
+  
   if (cooling->UV_field_flag == 0) 
     cooling->ChimesGlobalVars.N_spectra = 0; 
   else if ((cooling->UV_field_flag == 1) || (cooling->UV_field_flag == 2))
@@ -161,6 +186,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
       cooling->ChimesGlobalVars.shielding_length_factor = 1.0; 
       cooling->ChimesGlobalVars.max_shielding_length_cgs = -1.0; 
     }
+
+  /* The redshift of hydrogren reionisation 
+   * will be needed if we use a redshift-dependent 
+   * UVB, and by the COLIBRE cooling tables if 
+   * we use hybrid cooling. */ 
+  cooling->ChimesGlobalVars.reionisation_redshift = (ChimesFloat) parser_get_param_float(parameter_file, "CHIMESCooling:H_reion_z"); 
 
   /* Parameters used for the COLIBRE ISRF and 
    * shielding length. These have just been 
@@ -340,7 +371,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
        * needed by the Colibre table 
        * to determine when to use 
        * the high-redshift bin. */ 
-      cooling->colibre_table.H_reion_z = parser_get_param_float(parameter_file, "CHIMESCooling:H_reion_z"); 
+      cooling->colibre_table.H_reion_z = (float) cooling->ChimesGlobalVars.reionisation_redshift; 
 
       /* Set the S/Si and Ca/Si ratios to 
        * the values already read in for CHIMES. */ 
@@ -553,6 +584,10 @@ void cooling_update(const struct cosmology* cosmo,
 
   /* Update T_CMB in CHIMES to current redshift. */ 
   cooling->ChimesGlobalVars.cmb_temperature = (ChimesFloat) cooling->T_CMB_0 * (1.0 + cosmo->z); 
+
+  /* Update redshift-dependent UVB. */ 
+  if (cooling->use_redshift_dependent_UVB) 
+    interpolate_redshift_dependent_UVB(&(cooling->ChimesGlobalVars)); 
 }
 
 /**

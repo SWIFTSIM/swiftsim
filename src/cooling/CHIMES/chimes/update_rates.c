@@ -932,3 +932,254 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 	}
     }
 }
+
+void redshift_dependent_UVB_copy_lowz_to_hiz(struct globalVariables *myGlobalVars) 
+{
+  int i, j, k, l; 
+
+  for (i = 0; i < chimes_table_photoion_fuv.N_reactions[1]; i++) 
+    {
+      chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[i][1] = chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[i][0]; 
+      chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[i][1] = chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[i][0]; 
+    }
+
+  for (i = 0; i < chimes_table_photoion_euv.N_reactions[1]; i++) 
+    {
+      chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[i][1] = chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[i][0]; 
+
+      for (j = 0; j < 3; j++) 
+	{
+	  for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+	    chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][1][j][k] = chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][0][j][k];
+	}
+
+      for (j = 0; j < 6; j++) 
+	{
+	  for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+	    {
+	      for (l = 0; l < chimes_table_bins.N_Column_densities; l++) 
+		chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][1][j][k][l] = chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][0][j][k][l];
+	    }
+	}
+    }
+
+  for (i = 0; i < chimes_table_photoion_auger_fuv.N_reactions[1]; i++) 
+    chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[i][1] = chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[i][0]; 
+
+  for (i = 0; i < chimes_table_photoion_auger_euv.N_reactions[1]; i++) 
+    chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[i][1] = chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[i][0]; 
+
+  chimes_table_redshift_dependent_UVB.isotropic_photon_density[1] = chimes_table_redshift_dependent_UVB.isotropic_photon_density[0]; 
+  chimes_table_redshift_dependent_UVB.G0_parameter[1] = chimes_table_redshift_dependent_UVB.G0_parameter[0]; 
+  chimes_table_redshift_dependent_UVB.H2_dissocJ[1] = chimes_table_redshift_dependent_UVB.H2_dissocJ[0]; 
+
+  if (myGlobalVars->use_redshift_dependent_eqm_tables == 1) 
+    {
+      for (i = 0; i < chimes_table_eqm_abundances.N_Temperatures; i++) 
+	{
+	  for (j = 0; j < chimes_table_eqm_abundances.N_Densities; j++) 
+	    {
+	      for (k = 0; k < chimes_table_eqm_abundances.N_Metallicities; k++) 
+		{
+		  for (l = 0; l < myGlobalVars->totalNumberOfSpecies; l++) 
+		    chimes_table_redshift_dependent_UVB.eqm_abundances[1].Abundances[l][i][j][k] = chimes_table_redshift_dependent_UVB.eqm_abundances[0].Abundances[l][i][j][k]; 
+		}
+	    }
+	}
+    }
+}  
+
+void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars) 
+{
+  ChimesFloat low_z, hi_z, dz, dz_m; 
+  ChimesFloat redshift = myGlobalVars->redshift; 
+  int N_reactions_all, i, j, k, l; 
+  int z_index_low = chimes_table_redshift_dependent_UVB.z_index_low; 
+  int z_index_hi = chimes_table_redshift_dependent_UVB.z_index_hi; 
+  int Nz = chimes_table_redshift_dependent_UVB.N_redshifts; 
+  int spectrum_index = myGlobalVars->redshift_dependent_UVB_index; 
+  int first_UVB_load_flag = 0; 
+
+  /* First, determine whether we need to load 
+   * a new UVB table. */ 
+  if ((z_index_low < 0) || (z_index_hi < 0)) 
+    {
+      // No UVB tables have yet been read in
+      first_UVB_load_flag = 1; 
+
+      if (redshift >= chimes_table_redshift_dependent_UVB.redshift_bins[Nz - 1]) 
+	{
+	  // Redshift is higher than the highest bin 
+	  low_z = chimes_table_redshift_dependent_UVB.redshift_bins[Nz - 1]; 
+	  hi_z = low_z; 
+	  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
+	  redshift_dependent_UVB_copy_lowz_to_hiz(myGlobalVars); 
+
+	  z_index_low = Nz - 1; 
+	  z_index_hi = Nz - 1; 
+	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
+	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
+	}
+      else if (redshift <= chimes_table_redshift_dependent_UVB.redshift_bins[0]) 
+	{
+	  // Redshift is lower than the lowest bin 
+	  low_z = chimes_table_redshift_dependent_UVB.redshift_bins[0]; 
+	  hi_z = low_z; 
+	  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
+	  redshift_dependent_UVB_copy_lowz_to_hiz(myGlobalVars); 
+
+	  z_index_low = 0; 
+	  z_index_hi = 0; 
+	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
+	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
+	}
+      else 
+	{
+	  z_index_hi = 0; 
+	  while (chimes_table_redshift_dependent_UVB.redshift_bins[z_index_hi] <= redshift) 
+	    z_index_hi += 1; 
+	  
+	  z_index_low = z_index_hi - 1; 
+
+	  low_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_low]; 
+	  hi_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_hi]; 
+	  
+	  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
+	  load_redshift_dependent_UVB(hi_z, 1, myGlobalVars); 
+
+	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
+	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
+	}
+    }
+  else 
+    {
+      low_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_low]; 
+      hi_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_hi]; 
+      
+      if (redshift < low_z)
+	{
+	  /* Current redshift has moved 
+	   * below low_z. */ 
+	  if ((z_index_low == 0) && (z_index_hi > z_index_low)) 
+	    {
+	      /* Current redshift has moved 
+	       * below lowest redshift bin. */ 
+	      z_index_hi = z_index_low; 
+	      hi_z = low_z; 
+	      chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
+	      
+	      redshift_dependent_UVB_copy_lowz_to_hiz(myGlobalVars); 
+	    }
+	  else if (z_index_low > 0) 
+	    {
+	      // Determine new z_index_low
+	      z_index_low = 0; 
+	      while (chimes_table_redshift_dependent_UVB.redshift_bins[z_index_low] <= redshift) 
+		z_index_low += 1; 
+	      z_index_low -= 1; 
+
+	      if (z_index_hi - z_index_low == 2) 
+		{
+		  /* We have only moved down 
+		   * a single redshift bin. */ 
+		  z_index_hi = z_index_low + 1; 
+		  low_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_low]; 
+		  hi_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_hi]; 
+
+		  redshift_dependent_UVB_copy_lowz_to_hiz(myGlobalVars); 
+		  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
+		}
+	      else 
+		{
+		  /* We have moved down 
+		   * multiple redshift bins. */ 
+		  z_index_hi = z_index_low + 1; 
+		  low_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_low]; 
+		  hi_z = chimes_table_redshift_dependent_UVB.redshift_bins[z_index_hi]; 
+		  
+		  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
+		  load_redshift_dependent_UVB(hi_z, 1, myGlobalVars); 
+		}
+	    }
+	}
+    }
+
+  // Interpolate tables to current redshift
+  if (z_index_low == z_index_hi) 
+    {
+      dz = 0.0; 
+      dz_m = 1.0; 
+    }
+  else 
+    {
+      dz = (redshift - low_z) / (hi_z - low_z); 
+      dz_m = 1.0 - dz; 
+    }
+
+  if (!((redshift > myGlobalVars->reionisation_redshift) && (first_UVB_load_flag == 0))) 
+    {
+      // photoion_fuv 
+      N_reactions_all = chimes_table_photoion_fuv.N_reactions[1]; 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_photoion_fuv.sigmaPhot[i][spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[i][0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[i][1]) * dz)); 
+	  chimes_table_photoion_fuv.epsilonPhot[i][spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[i][0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[i][1]) * dz)); 
+	}
+
+      // photoion_euv 
+      N_reactions_all = chimes_table_photoion_euv.N_reactions[1]; 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_photoion_euv.sigmaPhot[i][spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[i][0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[i][1]) * dz)); 
+
+	  for (j = 0; j < 3; j++) 
+	    {
+	      for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+		chimes_table_photoion_euv.shieldFactor_1D[i][spectrum_index][j][k] = (chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][0][j][k] * dz_m) + (chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][1][j][k] * dz); 
+	    }
+
+	  for (j = 0; j < 6; j++) 
+	    {
+	      for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+		{
+		  for (l = 0; l < chimes_table_bins.N_Column_densities; l++) 
+		    chimes_table_photoion_euv.shieldFactor_2D[i][spectrum_index][j][k][l] = (chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][0][j][k][l] * dz_m) + (chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][1][j][k][l] * dz); 
+		}
+	    }
+	}
+
+      // photoion_auger_fuv 
+      N_reactions_all = chimes_table_photoion_auger_fuv.N_reactions[1]; 
+      for (i = 0; i < N_reactions_all; i++) 
+	chimes_table_photoion_auger_fuv.sigmaPhot[i][spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[i][0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[i][1]) * dz)); 
+
+      // photoion_auger_euv 
+      N_reactions_all = chimes_table_photoion_auger_euv.N_reactions[1]; 
+      for (i = 0; i < N_reactions_all; i++) 
+	chimes_table_photoion_auger_euv.sigmaPhot[i][spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[i][0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[i][1]) * dz)); 
+
+      if (redshift > myGlobalVars->reionisation_redshift)
+	chimes_table_spectra.isotropic_photon_density[spectrum_index] = 0.0; 
+      else 
+	chimes_table_spectra.isotropic_photon_density[spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.isotropic_photon_density[0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.isotropic_photon_density[1]) * dz)); 
+
+      chimes_table_spectra.G0_parameter[spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.G0_parameter[0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.G0_parameter[1]) * dz)); 
+      chimes_table_spectra.H2_dissocJ[spectrum_index] = pow(10.0, (log10(chimes_table_redshift_dependent_UVB.H2_dissocJ[0]) * dz_m) + (log10(chimes_table_redshift_dependent_UVB.H2_dissocJ[1]) * dz)); 
+
+
+      if (myGlobalVars->use_redshift_dependent_eqm_tables == 1) 
+	{
+	  for (i = 0; i < chimes_table_eqm_abundances.N_Temperatures; i++) 
+	    {
+	      for (j = 0; j < chimes_table_eqm_abundances.N_Densities; j++) 
+		{
+		  for (k = 0; k < chimes_table_eqm_abundances.N_Metallicities; k++) 
+		    {
+		      for (l = 0; l < myGlobalVars->totalNumberOfSpecies; l++) 
+			chimes_table_eqm_abundances.Abundances[l][i][j][k] = (chimes_table_redshift_dependent_UVB.eqm_abundances[0].Abundances[l][i][j][k] * dz_m) + (chimes_table_redshift_dependent_UVB.eqm_abundances[1].Abundances[l][i][j][k] * dz); 
+		    }
+		}
+	    }
+	}
+    }
+}

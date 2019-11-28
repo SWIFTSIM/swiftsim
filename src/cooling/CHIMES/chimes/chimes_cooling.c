@@ -326,9 +326,12 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       total_cooling += pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer, T_index, dT)) * myGasVars->dust_ratio * (myGasVars->temperature - myGlobalVars->grain_temperature); 
     }
 
-  /* COLIBRE-specific code */ 
+  /*************************
+   ** SWIFT-specific code **
+   *************************/ 
   if (myGlobalVars->hybrid_cooling_mode == 1) 
     total_heating += colibre_metal_cooling_rate_temperature(log10(myGasVars->temperature), myGlobalVars->redshift, myGasVars->nH_tot, myGasVars->metallicity * 0.0129, myGasVars->abundances[sp_elec], myGasVars->abundance_ratio, myGlobalVars->colibre_table); 
+  /** End SWIFT-specific **/  
 
   // Convert units to erg/cm3/s 
   total_cooling *= pow(myGasVars->nH_tot, 2.0); 

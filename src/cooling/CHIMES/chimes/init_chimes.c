@@ -25,95 +25,121 @@ struct chimes_photodissoc_group2_struct chimes_table_photodissoc_group2;
 struct chimes_H2_photodissoc_struct chimes_table_H2_photodissoc; 
 struct chimes_CO_photodissoc_struct chimes_table_CO_photodissoc; 
 struct chimes_spectra_struct chimes_table_spectra; 
+struct chimes_redshift_dependent_UVB_struct chimes_table_redshift_dependent_UVB; 
 struct chimes_cooling_struct chimes_table_cooling; 
-struct chimes_eqm_abundances_struct chimes_table_eqm_abundances;
+struct chimes_eqm_abundances_struct chimes_table_eqm_abundances; 
 
-void GetEqAbundancesTables(struct globalVariables *myGlobalVars)
+void allocate_eqm_table_memory(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars) 
 {
-  hid_t file_id, dataset, dataspace_id, memspace_id;
-  hsize_t dims[2];
-  hsize_t dims4D[4], count4D[4], offset4D[4];
-  int rank, i, j, k, l; 
-  char fname[500]; 
-  float *T, *nH, *Z, *array1D;
+  hid_t file_id, dataset; 
+  int i, j, k; 
+  float *T, *nH, *Z; 
 
-  sprintf(fname, "%s", myGlobalVars->EqAbundanceTablePath); 
-  file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT); 
+  file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT); 
 
   if(file_id < 0)
-    printf("CHIMES ERROR: unable to open equilibrium abundance data file: %s\n", fname); 
+    {
+      printf("CHIMES ERROR: unable to open equilibrium abundance data file: %s\n", filename); 
+      exit(EXIT_FAILURE); 
+    }
 
   /* Read in size of each dimension */
   dataset = H5Dopen1(file_id, "TableBins/N_Temperatures");
-  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(chimes_table_eqm_abundances.N_Temperatures));
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(my_eqm_abundances->N_Temperatures));
   H5Dclose(dataset);  
 
   dataset = H5Dopen1(file_id, "TableBins/N_Densities");
-  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(chimes_table_eqm_abundances.N_Densities));
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(my_eqm_abundances->N_Densities));
   H5Dclose(dataset);  
 
   dataset = H5Dopen1(file_id, "TableBins/N_Metallicities");
-  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(chimes_table_eqm_abundances.N_Metallicities));
-  H5Dclose(dataset);  
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(my_eqm_abundances->N_Metallicities));
+  H5Dclose(dataset); 
 
-  /* Allocate memory to tables. */
-  chimes_table_eqm_abundances.Temperatures = (ChimesFloat *) malloc(chimes_table_eqm_abundances.N_Temperatures * sizeof(ChimesFloat));
-  chimes_table_eqm_abundances.Densities = (ChimesFloat *) malloc(chimes_table_eqm_abundances.N_Densities * sizeof(ChimesFloat));
-  chimes_table_eqm_abundances.Metallicities = (ChimesFloat *) malloc(chimes_table_eqm_abundances.N_Metallicities * sizeof(ChimesFloat));
-  T = (float *) malloc(chimes_table_eqm_abundances.N_Temperatures * sizeof(float));
-  nH = (float *) malloc(chimes_table_eqm_abundances.N_Densities * sizeof(float));
-  Z = (float *) malloc(chimes_table_eqm_abundances.N_Metallicities * sizeof(float));
-  array1D = (float *) malloc(chimes_table_eqm_abundances.N_Temperatures * sizeof(float));
+  // Allocate memory to buffers 
+  T = (float *) malloc(my_eqm_abundances->N_Temperatures * sizeof(float));
+  nH = (float *) malloc(my_eqm_abundances->N_Densities * sizeof(float));
+  Z = (float *) malloc(my_eqm_abundances->N_Metallicities * sizeof(float)); 
 
-  chimes_table_eqm_abundances.Abundances = (ChimesFloat ****) malloc(myGlobalVars->totalNumberOfSpecies * sizeof(ChimesFloat ***));
+  // Allocate memory to tables. 
+  my_eqm_abundances->Temperatures = (ChimesFloat *) malloc(my_eqm_abundances->N_Temperatures * sizeof(ChimesFloat));
+  my_eqm_abundances->Densities = (ChimesFloat *) malloc(my_eqm_abundances->N_Densities * sizeof(ChimesFloat));
+  my_eqm_abundances->Metallicities = (ChimesFloat *) malloc(my_eqm_abundances->N_Metallicities * sizeof(ChimesFloat));
+
+  my_eqm_abundances->Abundances = (ChimesFloat ****) malloc(myGlobalVars->totalNumberOfSpecies * sizeof(ChimesFloat ***));
   for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++)
     {
-      chimes_table_eqm_abundances.Abundances[i] = (ChimesFloat ***) malloc(chimes_table_eqm_abundances.N_Temperatures * sizeof(ChimesFloat **));
-      for (j = 0; j < chimes_table_eqm_abundances.N_Temperatures; j++)
+      my_eqm_abundances->Abundances[i] = (ChimesFloat ***) malloc(my_eqm_abundances->N_Temperatures * sizeof(ChimesFloat **));
+      for (j = 0; j < my_eqm_abundances->N_Temperatures; j++)
 	{
-	  chimes_table_eqm_abundances.Abundances[i][j] = (ChimesFloat **) malloc(chimes_table_eqm_abundances.N_Densities * sizeof(ChimesFloat *));
-	  for (k = 0; k < chimes_table_eqm_abundances.N_Densities; k++)
-	    chimes_table_eqm_abundances.Abundances[i][j][k] = (ChimesFloat *) malloc(chimes_table_eqm_abundances.N_Metallicities * sizeof(ChimesFloat));
+	  my_eqm_abundances->Abundances[i][j] = (ChimesFloat **) malloc(my_eqm_abundances->N_Densities * sizeof(ChimesFloat *));
+	  for (k = 0; k < my_eqm_abundances->N_Densities; k++)
+	    my_eqm_abundances->Abundances[i][j][k] = (ChimesFloat *) malloc(my_eqm_abundances->N_Metallicities * sizeof(ChimesFloat));
 	}
     }
 
-  // Read in the data arrays. 
+  // Read in table bins 
   dataset = H5Dopen1(file_id, "TableBins/Temperatures");
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, T);
   H5Dclose(dataset);
 
-  for (i = 0; i < chimes_table_eqm_abundances.N_Temperatures; i++)
-    chimes_table_eqm_abundances.Temperatures[i] = (ChimesFloat) T[i];
-
+  for (i = 0; i < my_eqm_abundances->N_Temperatures; i++)
+    my_eqm_abundances->Temperatures[i] = (ChimesFloat) T[i];
 
   dataset = H5Dopen1(file_id, "TableBins/Densities");
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, nH);
   H5Dclose(dataset);
 
-  for (i = 0; i < chimes_table_eqm_abundances.N_Densities; i++)
-    chimes_table_eqm_abundances.Densities[i] = (ChimesFloat) nH[i];
-
+  for (i = 0; i < my_eqm_abundances->N_Densities; i++)
+    my_eqm_abundances->Densities[i] = (ChimesFloat) nH[i];
 
   dataset = H5Dopen1(file_id, "TableBins/Metallicities");
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, Z);
   H5Dclose(dataset);
 
-  for (i = 0; i < chimes_table_eqm_abundances.N_Metallicities; i++)
-    chimes_table_eqm_abundances.Metallicities[i] = (ChimesFloat) Z[i];
+  for (i = 0; i < my_eqm_abundances->N_Metallicities; i++)
+    my_eqm_abundances->Metallicities[i] = (ChimesFloat) Z[i];
 
+  H5Fclose(file_id); 
+  
+  // Free buffer memory 
+  free(T);
+  free(nH);
+  free(Z);
+}
 
+void load_eqm_table(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars)
+{
+  hid_t file_id, dataset, dataspace_id, memspace_id;
+  hsize_t dims[2];
+  hsize_t dims4D[4], count4D[4], offset4D[4];
+  int rank, i, j, k, l; 
+  float *array1D;
+
+  file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT); 
+
+  if(file_id < 0)
+    {
+      printf("CHIMES ERROR: unable to open equilibrium abundance data file: %s\n", filename); 
+      exit(EXIT_FAILURE); 
+    }
+  
+  // Allocate memory to buffers 
+  array1D = (float *) malloc(my_eqm_abundances->N_Temperatures * sizeof(float));
+
+  // Read in the abundance array. 
   dataset = H5Dopen1(file_id, "Abundances");
   dataspace_id = H5Dget_space(dataset);
   H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
   
-  dims[0] = chimes_table_eqm_abundances.N_Temperatures;
+  dims[0] = my_eqm_abundances->N_Temperatures;
   dims[1] = 1;
   rank = 1;
   memspace_id = H5Screate_simple(rank, dims, NULL);
   
-  for (i = 0; i < chimes_table_eqm_abundances.N_Densities; i++)
+  for (i = 0; i < my_eqm_abundances->N_Densities; i++)
     {
-      for (j = 0; j < chimes_table_eqm_abundances.N_Metallicities; j++)
+      for (j = 0; j < my_eqm_abundances->N_Metallicities; j++)
 	{
 	  for (k = 0; k < myGlobalVars->totalNumberOfSpecies; k++)
 	    {
@@ -125,7 +151,7 @@ void GetEqAbundancesTables(struct globalVariables *myGlobalVars)
 	      offset4D[1] = i;
 	      offset4D[2] = j;
 	      offset4D[3] = k;
-	      count4D[0] = chimes_table_eqm_abundances.N_Temperatures;
+	      count4D[0] = my_eqm_abundances->N_Temperatures;
 	      count4D[1] = 1;
 	      count4D[2] = 1;
 	      count4D[3] = 1;
@@ -133,8 +159,8 @@ void GetEqAbundancesTables(struct globalVariables *myGlobalVars)
 			  
 	      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT, array1D);
 			  
-	      for (l = 0; l < chimes_table_eqm_abundances.N_Temperatures; l++)
-		chimes_table_eqm_abundances.Abundances[k][l][i][j] = (ChimesFloat) array1D[l]; 
+	      for (l = 0; l < my_eqm_abundances->N_Temperatures; l++)
+		my_eqm_abundances->Abundances[k][l][i][j] = (ChimesFloat) array1D[l]; 
 	    }
 	}
     }
@@ -144,9 +170,7 @@ void GetEqAbundancesTables(struct globalVariables *myGlobalVars)
 
   H5Fclose(file_id);
 
-  free(T);
-  free(nH);
-  free(Z);
+  // Free buffer memory 
   free(array1D);
 }
 
@@ -211,7 +235,10 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 
   if(file_id < 0)
-    printf("CHIMES ERROR: unable to open main data file: %s\n", fname); 
+    {
+      printf("CHIMES ERROR: unable to open main data file: %s\n", fname); 
+      exit(EXIT_FAILURE); 
+    }
 
   /**************** 
    ** Table bins ** 
@@ -3439,10 +3466,9 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
   /* We now need to read the cross-sections 
    * tables for each spectrum into the 
    * various chimes_master_photoion_XYZ 
-   * structures. */  
+   * structures. */    
   if (myGlobalVars->N_spectra > 0) 
     read_cross_sections_tables(&chimes_table_bins, &chimes_master_photoion_fuv, &chimes_master_photoion_euv, &chimes_master_photoion_auger_fuv, &chimes_master_photoion_auger_euv, &chimes_table_spectra, myGlobalVars); 
-
 
   /********************************************
    ** Now that we have read the data into    ** 
@@ -4487,6 +4513,62 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
       chimes_table_cooling.H2_cool_LTE[i] = chimes_master_cooling.H2_cool_LTE[i]; 
     }
 
+  if (myGlobalVars->redshift_dependent_UVB_index >= 0) 
+    {
+      if (myGlobalVars->redshift_dependent_UVB_index >= myGlobalVars->N_spectra) 
+	{
+	  printf("CHIMES ERROR: redshift_dependent_UVB_index = %d, N_spectra = %d.\n", myGlobalVars->redshift_dependent_UVB_index, myGlobalVars->N_spectra); 
+	  exit(EXIT_FAILURE); 
+	}
+	  
+      allocate_redshift_dependent_UVB_memory(myGlobalVars); 
+
+      /* We need to record the element_incl flags 
+       * from the full photoion reaction lists. 
+       * These will be used to re-construct the 
+       * reduced reaction lists every time we 
+       * load a new UVB spectrum. */ 
+      N_reactions_all = chimes_master_photoion_fuv.N_reactions[1]; 
+      chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl = (int **) malloc(N_reactions_all * sizeof(int *)); 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl[i] = (int *) malloc(9 * sizeof(int)); 
+
+	  for (j = 0; j < 9; j++) 
+	    chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl[i][j] = chimes_master_photoion_fuv.element_incl[i][j]; 
+	}
+
+      N_reactions_all = chimes_master_photoion_euv.N_reactions[1]; 
+      chimes_table_redshift_dependent_UVB.photoion_euv_element_incl = (int **) malloc(N_reactions_all * sizeof(int *)); 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_euv_element_incl[i] = (int *) malloc(9 * sizeof(int)); 
+
+	  for (j = 0; j < 9; j++) 
+	    chimes_table_redshift_dependent_UVB.photoion_euv_element_incl[i][j] = chimes_master_photoion_euv.element_incl[i][j]; 
+	}
+
+      N_reactions_all = chimes_master_photoion_auger_fuv.N_reactions[1]; 
+      chimes_table_redshift_dependent_UVB.photoion_auger_fuv_element_incl = (int **) malloc(N_reactions_all * sizeof(int *)); 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_auger_fuv_element_incl[i] = (int *) malloc(9 * sizeof(int)); 
+
+	  for (j = 0; j < 9; j++) 
+	    chimes_table_redshift_dependent_UVB.photoion_auger_fuv_element_incl[i][j] = chimes_master_photoion_auger_fuv.element_incl[i][j]; 
+	}
+
+      N_reactions_all = chimes_master_photoion_auger_euv.N_reactions[1]; 
+      chimes_table_redshift_dependent_UVB.photoion_auger_euv_element_incl = (int **) malloc(N_reactions_all * sizeof(int *)); 
+      for (i = 0; i < N_reactions_all; i++) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_auger_euv_element_incl[i] = (int *) malloc(9 * sizeof(int)); 
+
+	  for (j = 0; j < 9; j++) 
+	    chimes_table_redshift_dependent_UVB.photoion_auger_euv_element_incl[i][j] = chimes_master_photoion_auger_euv.element_incl[i][j]; 
+	}
+    }
+
   
   /**********************************
    ** Free memory in master tables ** 
@@ -4746,15 +4828,48 @@ void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, 
   hid_t file_id, dataset, dataspace_id, memspace_id;
   float *array_buffer_float; 
 
+  /* If using a redshift-dependent UVB, 
+   * read in the redshift bins. */ 
+  if (myGlobalVars->redshift_dependent_UVB_index >= 0) 
+    {
+      sprintf(fname, "%s/redshifts.hdf5", myGlobalVars->PhotoIonTablePath[myGlobalVars->redshift_dependent_UVB_index]); 
+      file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT); 
+
+      dataset = H5Dopen1(file_id, "N_redshifts"); 
+      H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(chimes_table_redshift_dependent_UVB.N_redshifts)); 
+      H5Dclose(dataset); 
+
+      array_buffer_float = (float *) malloc(chimes_table_redshift_dependent_UVB.N_redshifts * sizeof(float)); 
+      chimes_table_redshift_dependent_UVB.redshift_bins = (ChimesFloat *) malloc(chimes_table_redshift_dependent_UVB.N_redshifts * sizeof(ChimesFloat)); 
+      
+      dataset = H5Dopen1(file_id, "redshift_bins"); 
+      H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float); 
+      H5Dclose(dataset); 
+
+      for (i = 0; i < chimes_table_redshift_dependent_UVB.N_redshifts; i++) 
+	chimes_table_redshift_dependent_UVB.redshift_bins[i] = (ChimesFloat) array_buffer_float[i]; 
+
+      free(array_buffer_float); 
+
+      H5Fclose(file_id); 
+    }
+
   /* Read in the column density bins. 
    * These are the same for all cross 
    * sections files, so take from the 
    * first cross sections file. */ 
-  sprintf(fname, "%s", myGlobalVars->PhotoIonTablePath[0]); 
+  if (myGlobalVars->redshift_dependent_UVB_index == 0) 
+    sprintf(fname, "%s/z%.3f_cross_sections.hdf5", myGlobalVars->PhotoIonTablePath[0], chimes_table_redshift_dependent_UVB.redshift_bins[0]); 
+  else
+    sprintf(fname, "%s", myGlobalVars->PhotoIonTablePath[0]); 
+
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   
   if(file_id < 0)
-    printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname); 
+    {
+      printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname); 
+      exit(EXIT_FAILURE); 
+    }
 
   dataset = H5Dopen1(file_id, "TableBins/N_Column_densities"); 
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(my_table_bins->N_Column_densities));
@@ -4833,11 +4948,20 @@ void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, 
    * the cross sections tables for each one. */ 
   for (i = 0; i < myGlobalVars->N_spectra; i++) 
     {
+      /* If using a redshift-dependent UVB, 
+       * skip that spectrum index. This will 
+       * be loaded separately. */ 
+      if (i == myGlobalVars->redshift_dependent_UVB_index) 
+	continue; 
+
       sprintf(fname, "%s", myGlobalVars->PhotoIonTablePath[i]); 
       file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
       
       if(file_id < 0)
-	printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname); 
+	{
+	  printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname); 
+	  exit(EXIT_FAILURE); 
+	}
       
       // photoion_fuv 
       array_buffer_float = (float *) malloc(my_photoion_fuv->N_reactions[1] * sizeof(float)); 
@@ -5251,6 +5375,8 @@ int set_species_index_array(struct globalVariables *myGlobalVariables)
 
 void init_chimes(struct globalVariables *myGlobalVars)
 {
+  char fname[500]; 
+
   myGlobalVars->totalNumberOfSpecies = set_species_index_array(myGlobalVars);
   
   /* Read in the main CHIMES data file and 
@@ -5258,7 +5384,29 @@ void init_chimes(struct globalVariables *myGlobalVars)
   initialise_main_data(myGlobalVars); 
 
   // Read in tables of equilibrium abundances 
-  GetEqAbundancesTables(myGlobalVars);
+  if (myGlobalVars->use_redshift_dependent_eqm_tables == 1) 
+    {
+      if (myGlobalVars->redshift_dependent_UVB_index < 0) 
+	{
+	  printf("CHIMES ERROR: use_redshift_dependent_eqm_tables = %d, but redshift_dependent_UVB_index = %d. The redshift dependent UVB needs to be enabled before you can use the redshift-dependent eqm tables. \n", myGlobalVars->use_redshift_dependent_eqm_tables, myGlobalVars->redshift_dependent_UVB_index); 
+	  exit(EXIT_FAILURE); 
+	}
+      sprintf(fname, "%s/z%.3f_eqm.hdf5", myGlobalVars->EqAbundanceTablePath, chimes_table_redshift_dependent_UVB.redshift_bins[0]); 
+      allocate_eqm_table_memory(fname, &chimes_table_eqm_abundances, myGlobalVars); 
+      allocate_eqm_table_memory(fname, &(chimes_table_redshift_dependent_UVB.eqm_abundances[0]), myGlobalVars); 
+      allocate_eqm_table_memory(fname, &(chimes_table_redshift_dependent_UVB.eqm_abundances[1]), myGlobalVars); 
+    }
+  else 
+    {
+      sprintf(fname, "%s", myGlobalVars->EqAbundanceTablePath); 
+      allocate_eqm_table_memory(fname, &chimes_table_eqm_abundances, myGlobalVars); 
+      load_eqm_table(fname, &chimes_table_eqm_abundances, myGlobalVars); 
+    }
+
+  /* Interpolate UVB to current redshift, 
+   *  if required. */ 
+  if (myGlobalVars->redshift_dependent_UVB_index >= 0) 
+    interpolate_redshift_dependent_UVB(myGlobalVars); 
 }
 
 /* The following routines sets the initial
@@ -5626,13 +5774,13 @@ void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_cu
   if (buffer_position != buffer_size) 
     {
       printf("CHIMES ERROR: in allocate_current_rates_memory(), buffer_position = %d, buffer_size = %d. \n", buffer_position, buffer_size); 
-      exit(1); 
+      exit(EXIT_FAILURE); 
     }
 
   if (buffer_position_2d != buffer_size_2d) 
     {
       printf("CHIMES ERROR: in allocate_current_rates_memory(), buffer_position_2d = %d, buffer_size_2d = %d. \n", buffer_position_2d, buffer_size_2d); 
-      exit(1); 
+      exit(EXIT_FAILURE); 
     }
 
   return; 
@@ -5645,3 +5793,306 @@ void free_current_rates_memory(struct chimes_current_rates_struct *chimes_curren
 
   return; 
 } 
+
+void allocate_redshift_dependent_UVB_memory(struct globalVariables *myGlobalVars) 
+{
+  int i, j, k, l, N_reactions_all; 
+
+  /* Allocate memory to arrays 
+   * in redshift dependent UVB. */ 
+  N_reactions_all = chimes_table_photoion_fuv.N_reactions[1]; 
+  chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
+  chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[i] = (ChimesFloat *) malloc(2 * sizeof(ChimesFloat)); 
+      chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[i] = (ChimesFloat *) malloc(2 * sizeof(ChimesFloat)); 
+    }
+  
+  N_reactions_all = chimes_table_photoion_euv.N_reactions[1]; 
+  chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
+  chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D = (ChimesFloat ****) malloc(N_reactions_all * sizeof(ChimesFloat ***)); 
+  chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D = (ChimesFloat *****) malloc(N_reactions_all * sizeof(ChimesFloat ****)); 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[i] = (ChimesFloat *) malloc(2 * sizeof(ChimesFloat)); 
+      chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i] = (ChimesFloat ***) malloc(2 * sizeof(ChimesFloat **)); 
+      chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i] = (ChimesFloat ****) malloc(2 * sizeof(ChimesFloat ***)); 
+
+      for (j = 0; j < 2; j++) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][j] = (ChimesFloat **) malloc(3 * sizeof(ChimesFloat *)); 
+	  chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][j] = (ChimesFloat ***) malloc(6 * sizeof(ChimesFloat **)); 
+
+	  for (k = 0; k < 3; k++) 
+	    chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[i][j][k] = (ChimesFloat *) malloc(chimes_table_bins.N_Column_densities * sizeof(ChimesFloat)); 
+
+	  for (k = 0; k < 6; k++) 
+	    {
+	      chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][j][k] = (ChimesFloat **) malloc(chimes_table_bins.N_Column_densities * sizeof(ChimesFloat *)); 
+	      for (l = 0; l < chimes_table_bins.N_Column_densities; l++) 
+		chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[i][j][k][l] = (ChimesFloat *) malloc(chimes_table_bins.N_Column_densities * sizeof(ChimesFloat)); 
+	    }
+	}
+    }
+  
+  N_reactions_all = chimes_table_photoion_auger_fuv.N_reactions[1]; 
+  chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
+  for (i = 0; i < N_reactions_all; i++) 
+    chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[i] = (ChimesFloat *) malloc(2 * sizeof(ChimesFloat)); 
+
+  N_reactions_all = chimes_table_photoion_auger_euv.N_reactions[1]; 
+  chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot = (ChimesFloat **) malloc(N_reactions_all * sizeof(ChimesFloat *)); 
+  for (i = 0; i < N_reactions_all; i++) 
+    chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[i] = (ChimesFloat *) malloc(2 * sizeof(ChimesFloat)); 
+
+  /* Initialise the current redshift 
+   * indices to -1, as they haven't 
+   * yet been read in. */ 
+  chimes_table_redshift_dependent_UVB.z_index_low = -1; 
+  chimes_table_redshift_dependent_UVB.z_index_hi = -1; 
+}
+
+void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index, struct globalVariables *myGlobalVars) 
+{
+  char fname[500];
+  hid_t file_id, dataset, dataspace_id, memspace_id; 
+  hsize_t dims3D[3], count3D[3], offset3D[3]; 
+  hsize_t dims4D[4], count4D[4], offset4D[4]; 
+  int i, j, k, l, rank, N_reactions_all, incl_index; 
+  
+  float *array_buffer_float; 
+  int spectrum_index = myGlobalVars->redshift_dependent_UVB_index; 
+
+  if (!((bin_index == 0) || (bin_index == 1))) 
+    {
+      printf("CHIMES ERROR: load_redshift_dependent_UVB() called with bin_index == %d. Allowed values are 0 or 1.\n", bin_index); 
+      exit(EXIT_FAILURE); 
+    }
+
+  sprintf(fname, "%s/z%.3f_cross_sections.hdf5", myGlobalVars->PhotoIonTablePath[spectrum_index], redshift); 
+  file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+  
+  if (file_id < 0) 
+    {
+      printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname); 
+      exit(EXIT_FAILURE); 
+    } 
+
+  // photoion_fuv 
+  dataset = H5Dopen1(file_id, "photoion_fuv/N_reactions"); 
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_reactions_all);
+  H5Dclose(dataset); 
+  
+  array_buffer_float = (float *) malloc(N_reactions_all * sizeof(float)); 
+  
+  dataset = H5Dopen1(file_id, "photoion_fuv/sigmaPhot"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  incl_index = 0; 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl[i], myGlobalVars->element_included)) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_fuv_sigmaPhot[incl_index][bin_index] = (ChimesFloat) array_buffer_float[i]; 
+	  incl_index += 1; 
+	}
+    }
+  
+  dataset = H5Dopen1(file_id, "photoion_fuv/epsilonPhot"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+
+  incl_index = 0; 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl[i], myGlobalVars->element_included)) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_fuv_epsilonPhot[incl_index][bin_index] = (ChimesFloat) array_buffer_float[i]; 
+	  incl_index += 1; 
+	}
+    }
+
+  free(array_buffer_float); 
+
+  // photoion_euv  
+  dataset = H5Dopen1(file_id, "photoion_euv/N_reactions"); 
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_reactions_all);
+  H5Dclose(dataset); 
+  
+  array_buffer_float = (float *) malloc(N_reactions_all * sizeof(float)); 
+
+  dataset = H5Dopen1(file_id, "photoion_euv/sigmaPhot"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  incl_index = 0; 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_euv_element_incl[i], myGlobalVars->element_included)) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_euv_sigmaPhot[incl_index][bin_index] = (ChimesFloat) array_buffer_float[i]; 
+	  incl_index += 1; 
+	}
+    }  
+  
+  dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_1D"); 
+  dataspace_id = H5Dget_space(dataset);
+  H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
+  dims3D[0] = N_reactions_all; 
+  dims3D[1] = 1; 
+  dims3D[2] = 1; 
+  rank = 1;
+  memspace_id = H5Screate_simple(rank, dims3D, NULL);
+  
+  for (j = 0; j < 3; j++)
+    {
+      for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+	{
+	  offset3D[0] = 0;
+	  offset3D[1] = j;
+	  offset3D[2] = k; 
+	  count3D[0] = N_reactions_all; 
+	  count3D[1] = 1;
+	  count3D[2] = 1; 
+	  H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL, count3D, NULL);
+	  
+	  H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT, array_buffer_float);
+	  
+	  incl_index = 0; 
+	  for (i = 0; i < N_reactions_all; i++)
+	    {
+	      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_euv_element_incl[i], myGlobalVars->element_included)) 
+		{
+		  chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_1D[incl_index][bin_index][j][k] = (ChimesFloat) array_buffer_float[i]; 
+		  incl_index += 1; 
+		}
+	    }
+	}
+    }
+  H5Sclose(memspace_id);
+  H5Sclose(dataspace_id);
+  H5Dclose(dataset);
+
+  dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_2D"); 
+  dataspace_id = H5Dget_space(dataset);
+  H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
+  dims4D[0] = N_reactions_all; 
+  dims4D[1] = 1; 
+  dims4D[2] = 1; 
+  dims4D[3] = 1; 
+  rank = 1;
+  memspace_id = H5Screate_simple(rank, dims4D, NULL);
+  
+  for (j = 0; j < 6; j++)
+    {
+      for (k = 0; k < chimes_table_bins.N_Column_densities; k++) 
+	{
+	  for (l = 0; l < chimes_table_bins.N_Column_densities; l++) 
+	    {
+	      offset4D[0] = 0;
+	      offset4D[1] = j;
+	      offset4D[2] = k;
+	      offset4D[3] = l;  
+	      count4D[0] = N_reactions_all; 
+	      count4D[1] = 1;
+	      count4D[2] = 1;
+	      count4D[3] = 1;  
+	      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset4D, NULL, count4D, NULL);
+	      
+	      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT, array_buffer_float);
+	      
+	      incl_index = 0; 
+	      for (i = 0; i < N_reactions_all; i++)
+		{
+		  if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_euv_element_incl[i], myGlobalVars->element_included)) 
+		    {
+		      chimes_table_redshift_dependent_UVB.photoion_euv_shieldFactor_2D[incl_index][bin_index][j][k][l] = (ChimesFloat) array_buffer_float[i]; 
+		      incl_index += 1; 
+		    }
+		}
+	    }
+	}
+    }
+  H5Sclose(memspace_id);
+  H5Sclose(dataspace_id);
+  H5Dclose(dataset);
+
+  free(array_buffer_float); 
+
+  // photoion_auger_fuv  
+  dataset = H5Dopen1(file_id, "photoion_auger_fuv/N_reactions"); 
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_reactions_all);
+  H5Dclose(dataset); 
+  
+  array_buffer_float = (float *) malloc(N_reactions_all * sizeof(float)); 
+
+  dataset = H5Dopen1(file_id, "photoion_auger_fuv/sigmaPhot"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  incl_index = 0; 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_auger_fuv_element_incl[i], myGlobalVars->element_included)) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_auger_fuv_sigmaPhot[incl_index][bin_index] = (ChimesFloat) array_buffer_float[i]; 
+	  incl_index += 1; 
+	}
+    }  
+
+  free(array_buffer_float); 
+
+  // photoion_auger_euv  
+  dataset = H5Dopen1(file_id, "photoion_auger_euv/N_reactions"); 
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_reactions_all);
+  H5Dclose(dataset); 
+  
+  array_buffer_float = (float *) malloc(N_reactions_all * sizeof(float)); 
+
+  dataset = H5Dopen1(file_id, "photoion_auger_euv/sigmaPhot"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  incl_index = 0; 
+  for (i = 0; i < N_reactions_all; i++) 
+    {
+      if(compare_element_incl_arrays(chimes_table_redshift_dependent_UVB.photoion_auger_euv_element_incl[i], myGlobalVars->element_included)) 
+	{
+	  chimes_table_redshift_dependent_UVB.photoion_auger_euv_sigmaPhot[incl_index][bin_index] = (ChimesFloat) array_buffer_float[i]; 
+	  incl_index += 1; 
+	}
+    }  
+
+  free(array_buffer_float); 
+
+  // General spectrum info 
+  array_buffer_float = (float *) malloc(sizeof(float)); 
+
+  dataset = H5Dopen1(file_id, "isotropic_photon_density"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  chimes_table_redshift_dependent_UVB.isotropic_photon_density[bin_index] = (ChimesFloat) array_buffer_float[0]; 
+
+  dataset = H5Dopen1(file_id, "G0_parameter"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  chimes_table_redshift_dependent_UVB.G0_parameter[bin_index] = (ChimesFloat) array_buffer_float[0]; 
+
+  dataset = H5Dopen1(file_id, "H2_dissocJ"); 
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, array_buffer_float);
+  H5Dclose(dataset); 
+  
+  chimes_table_redshift_dependent_UVB.H2_dissocJ[bin_index] = (ChimesFloat) array_buffer_float[0]; 
+
+  free(array_buffer_float); 
+
+  if (myGlobalVars->use_redshift_dependent_eqm_tables == 1) 
+    {
+      sprintf(fname, "%s/z%.3f_eqm.hdf5", myGlobalVars->EqAbundanceTablePath, redshift); 
+      load_eqm_table(fname, &(chimes_table_redshift_dependent_UVB.eqm_abundances[bin_index]), myGlobalVars); 
+    } 
+}

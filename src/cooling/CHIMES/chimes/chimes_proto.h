@@ -27,7 +27,8 @@ void set_equilibrium_abundances_from_tables(struct UserData data);
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
 int compare_element_incl_arrays(int *reaction_array, int *network_array);
-void GetEqAbundancesTables(struct globalVariables *myGlobalVars); 
+void allocate_eqm_table_memory(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars); 
+void load_eqm_table(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars); 
 void init_chimes(struct globalVariables *myGlobalVars); 
 void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 void initialise_main_data(struct globalVariables *myGlobalVars);  
@@ -36,6 +37,8 @@ int set_species_index_array(struct globalVariables *myGlobalVariables);
 void determine_current_rates_buffer_size(int *buffer_size, int *buffer_size_2D, struct globalVariables *myGlobalVars); 
 void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars); 
 void free_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars); 
+void allocate_redshift_dependent_UVB_memory(struct globalVariables *myGlobalVars); 
+void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index, struct globalVariables *myGlobalVars); 
 
 // interpol.c 
 void chimes_get_table_index(ChimesFloat *table, int ntable, ChimesFloat x, int *i, ChimesFloat *dx); 
@@ -47,7 +50,12 @@ ChimesFloat chimes_interpol_4d(ChimesFloat ****table, int i, int j, int k, int l
 // rate_equations.c 
 void check_constraint_equations(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
 ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars); 
+/** End SWIFT-specific **/  
 
 // update_rates.c 
 void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
@@ -55,4 +63,6 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
 void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data, int mode); 
 void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
 void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
+void redshift_dependent_UVB_copy_lowz_to_hiz(struct globalVariables *myGlobalVars); 
+void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars); 
 
