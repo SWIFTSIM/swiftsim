@@ -47,22 +47,6 @@ void cooling_init_backend(struct swift_params* parameter_file,
 
 void cooling_print_backend(const struct cooling_function_data *cooling); 
 
-void cooling_first_init_part(const struct phys_const* restrict phys_const,
-			     const struct unit_system* restrict us,
-			     const struct cosmology* restrict cosmo,
-			     const struct cooling_function_data* data, 
-			     struct part* restrict p,
-			     struct xpart* restrict xp); 
-
-void chimes_set_init_eqm(const struct phys_const* restrict phys_const,
-			 const struct unit_system* restrict us,
-			 const struct cosmology* restrict cosmo,
-			 const struct hydro_props *hydro_properties,
-			 const struct entropy_floor_properties *floor_props,
-			 const struct cooling_function_data* data, 
-			 struct part* restrict p,
-			 struct xpart* restrict xp); 
-
 void cooling_update(const struct cosmology* cosmo,
 		    struct cooling_function_data* cooling,
 		    struct space* s); 
@@ -162,5 +146,27 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param cooling the cooling data structure.
  */
 static INLINE void cooling_clean(struct cooling_function_data* cooling) {}
+
+
+/**
+ * @brief Sets the cooling properties of the (x-)particles to a valid start
+ * state.
+ *
+ * For this cooling module, this routine does not do anything. 
+ *
+ * @param phys_const The physical constant in internal units.
+ * @param us The unit system.
+ * @param cosmo The current cosmological model.
+ * @param data The properties of the cooling function.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+__attribute__((always_inline)) INLINE static void cooling_first_init_part(
+    const struct phys_const* restrict phys_const,
+    const struct unit_system* restrict us,
+    const struct cosmology* restrict cosmo,
+    const struct cooling_function_data* data, 
+    struct part* restrict p,
+    struct xpart* restrict xp) {}
 
 #endif /* SWIFT_COOLING_CHIMES_H */
