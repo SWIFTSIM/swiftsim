@@ -390,6 +390,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
   else 
     error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->ChimesGlobalVars.hybrid_cooling_mode);
 
+  /* Set redshift to a very high value, just 
+   * while we initialise the CHIMES module. 
+   * It will be set to the correct redshift in 
+   * the cooling_update() routine. */ 
+  cooling->ChimesGlobalVars.redshift = 1000.0; 
+
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
