@@ -5871,6 +5871,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index, struct glo
     }
 
   sprintf(fname, "%s/z%.3f_cross_sections.hdf5", myGlobalVars->PhotoIonTablePath[spectrum_index], redshift); 
+  printf("CHIMES: reading redshift-dependent UVB cross sections table: %s\n", fname); 
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   
   if (file_id < 0) 
