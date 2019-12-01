@@ -60,6 +60,9 @@ examples/*/*/coolingtables.tar.gz
 examples/*/*/coolingtables
 examples/*/*/yieldtables.tar.gz
 examples/*/*/yieldtables
+examples/*/*/SNII.txt
+examples/*/*/SNIa.txt
+examples/*/*/r_processes.txt
 examples/Cooling/CoolingRates/cooling_rates
 examples/Cooling/CoolingRates/cooling_element_*.dat
 examples/Cooling/CoolingRates/cooling_output.dat
