@@ -1017,8 +1017,6 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
 
 	  z_index_low = Nz - 1; 
 	  z_index_hi = Nz - 1; 
-	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
-	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
 	}
       else if (redshift <= chimes_table_redshift_dependent_UVB.redshift_bins[0]) 
 	{
@@ -1030,8 +1028,6 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
 
 	  z_index_low = 0; 
 	  z_index_hi = 0; 
-	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
-	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
 	}
       else 
 	{
@@ -1046,10 +1042,12 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
 	  
 	  load_redshift_dependent_UVB(low_z, 0, myGlobalVars); 
 	  load_redshift_dependent_UVB(hi_z, 1, myGlobalVars); 
-
-	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
-	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
 	}
+
+      /* Update indices of current 
+       * loaded tables. */ 
+      chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
+      chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
     }
   else 
     {
@@ -1078,7 +1076,7 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
 		z_index_low += 1; 
 	      z_index_low -= 1; 
 
-	      if (z_index_hi - z_index_low == 2) 
+	      if ((z_index_hi - z_index_low == 2) || (z_index_hi - z_index_low == 1))
 		{
 		  /* We have only moved down 
 		   * a single redshift bin. */ 
@@ -1101,9 +1099,14 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
 		  load_redshift_dependent_UVB(hi_z, 1, myGlobalVars); 
 		}
 	    }
+
+	  /* Update indices of current 
+	   * loaded tables. */ 
+	  chimes_table_redshift_dependent_UVB.z_index_low = z_index_low; 
+	  chimes_table_redshift_dependent_UVB.z_index_hi = z_index_hi; 
 	}
     }
-
+  
   // Interpolate tables to current redshift
   if (z_index_low == z_index_hi) 
     {
