@@ -89,12 +89,16 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
       1, &n_tot, logger_particle_descr);
 
+  /* Reference is stolen, therefore need to take it into account */
+  Py_INCREF(logger_particle_descr);
+
+  void *data = PyArray_DATA(out);
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
   logger_reader_read_all_particles(&reader, time, logger_reader_const,
-                                   PyArray_DATA(out), n_tot);
+                                   data, n_tot);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;
@@ -129,7 +133,7 @@ static PyObject *getTimeLimits(__attribute__((unused)) PyObject *self,
   struct logger_reader reader;
   logger_reader_init(&reader, basename, verbose);
 
-  if (verbose > 1) message("Reading particles.");
+  if (verbose > 1) message("Reading time limits.");
 
   /* Get the time limits */
   double time_min = logger_reader_get_time_begin(&reader);
@@ -272,7 +276,7 @@ void pylogger_particle_define_descr(void) {
   CREATE_FIELD(fields, "velocities", vel, NPY_FLOAT32);
   CREATE_FIELD(fields, "accelerations", acc, NPY_FLOAT32);
   CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32);
-  CREATE_FIELD(fields, "smoothing_lenghts", h, NPY_FLOAT32);
+  CREATE_FIELD(fields, "smoothing_lengths", h, NPY_FLOAT32);
   CREATE_FIELD(fields, "densities", density, NPY_FLOAT32);
   CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32);
   CREATE_FIELD(fields, "ids", id, NPY_ULONGLONG);
