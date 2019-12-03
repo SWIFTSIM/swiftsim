@@ -74,6 +74,7 @@ INLINE static void task_order_kick1(
   if (part_is_starting(p, e) && p->wakeup == time_bin_not_awake) {
     /* Cool the particle */
     cooling_cool_part(e->physical_constants, e->internal_units, e->cosmology,
+                      e->hydro_properties,
                       e->entropy_floor, e->cooling_func, p, xp, e->time, dt_cool,
                       dt_therm);
   }

@@ -235,11 +235,6 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  const struct chemistry_global_data* cd,
                                  const struct cosmology* cosmo) {
 
-  /* Some smoothing length multiples. */
-  const float h = p->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float factor = pow_dimension(h_inv) / p->rho; /* 1 / h^d * rho */
-  const float m = p->mass;
   /* Set the smoothed fractions with the non smoothed fractions */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] =
