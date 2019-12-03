@@ -123,10 +123,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Energy received */
   const double e_sn = fp->energy_per_supernovae;
   // TODO compute inverse before feedback loop
-  const double u_sn = number_supernovae * e_sn / m_ej;
-  const double du = dm * u_sn * weight / new_mass;
+  const double mu_sn = number_supernovae * e_sn;
+  const double du = mu_sn * weight / new_mass;
 
-  
+
   xpj->feedback_data.delta_mass += dm;
   xpj->feedback_data.delta_u += du;
 
@@ -141,6 +141,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       weight * si->feedback_data.metal_mass_ejected[i];
   }
 
+  /* Synchronize the particle on the timeline */
+  timestep_sync_part(pj);
 }
 
 #endif /* SWIFT_GEAR_FEEDBACK_IACT_H */

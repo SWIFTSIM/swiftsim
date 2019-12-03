@@ -119,7 +119,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 8;
+  *num_fields = 11;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -169,6 +169,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  sparts, birth.mass,
                                  "Masses of the star particles at birth time");
 
+  list[9] = io_make_output_field(
+                                 "NumberSNIa", INT, 1, UNIT_CONV_LENGTH, 0.f, sparts, feedback_data.total_snia,
+                                 "Total number of SNIa since the formation");
+  list[10] = io_make_output_field(
+                                 "NumberSNII", INT, 1, UNIT_CONV_LENGTH, 0.f, sparts, feedback_data.total_snii,
+                                 "Total number of SNII since the formation");
 #ifdef DEBUG_INTERACTIONS_STARS
 
   list += *num_fields;

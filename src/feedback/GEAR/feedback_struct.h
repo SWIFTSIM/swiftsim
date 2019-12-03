@@ -78,6 +78,10 @@ struct feedback_spart_data {
   /*! Total mass ejected by the supernovae */
   float mass_ejected;
 
+
+  int total_snia;
+  int total_snii;
+
   /*! Chemical composition of the mass ejected */
   float metal_mass_ejected[CHEMISTRY_ELEMENT_COUNT];
 
