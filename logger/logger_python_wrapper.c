@@ -98,8 +98,8 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
-  logger_reader_read_all_particles(&reader, time, logger_reader_const,
-                                   data, n_tot);
+  logger_reader_read_all_particles(&reader, time, logger_reader_const, data,
+                                   n_tot);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;
@@ -303,7 +303,8 @@ void pylogger_particle_define_descr(void) {
   logger_particle_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
   // id of the data type (assigned automatically)
   logger_particle_descr->type_num = 0;
-  // Size of an element (using more size than required in order to log everything)
+  // Size of an element (using more size than required in order to log
+  // everything)
   logger_particle_descr->elsize = sizeof(struct logger_particle);
   // alignment (doc magic)
   logger_particle_descr->alignment = offsetof(
