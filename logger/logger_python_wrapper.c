@@ -35,6 +35,7 @@ typedef struct {
 } PyLoggerParticle;
 
 static PyTypeObject PyLoggerParticle_Type;
+const char *particle_name = "Particle";
 
 PyArray_Descr *logger_particle_descr;
 
@@ -257,6 +258,13 @@ static struct PyModuleDef libloggermodule = {
     PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
   })
 
+void pylogger_particle_define_typeobject(void) {
+
+  PyLoggerParticle_Type.tp_name = particle_name;
+  PyLoggerParticle_Type.tp_print = NULL;
+  PyType_Ready(&PyLoggerParticle_Type);
+}
+
 void pylogger_particle_define_descr(void) {
   /* Generate list of field names */
   PyObject *names = PyTuple_New(9);
@@ -273,14 +281,14 @@ void pylogger_particle_define_descr(void) {
   /* Generate list of fields */
   PyObject *fields = PyDict_New();
   CREATE_FIELD_3D(fields, "positions", pos, NPY_DOUBLE);
-  CREATE_FIELD(fields, "velocities", vel, NPY_FLOAT32);
-  CREATE_FIELD(fields, "accelerations", acc, NPY_FLOAT32);
+  CREATE_FIELD_3D(fields, "velocities", vel, NPY_FLOAT32);
+  CREATE_FIELD_3D(fields, "accelerations", acc, NPY_FLOAT32);
   CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32);
   CREATE_FIELD(fields, "smoothing_lengths", h, NPY_FLOAT32);
   CREATE_FIELD(fields, "densities", density, NPY_FLOAT32);
   CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32);
-  CREATE_FIELD(fields, "ids", id, NPY_ULONGLONG);
-  CREATE_FIELD(fields, "times", id, NPY_DOUBLE);
+  CREATE_FIELD(fields, "ids", id, NPY_LONGLONG);
+  CREATE_FIELD(fields, "times", time, NPY_DOUBLE);
 
   /* Generate descriptor */
   logger_particle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
@@ -288,14 +296,14 @@ void pylogger_particle_define_descr(void) {
   // V if for an arbitrary kind of array
   logger_particle_descr->kind = 'V';
   // Not well documented (seems any value is fine)
-  logger_particle_descr->type = 'p';
+  logger_particle_descr->type = 'v';
   // Native byte ordering
   logger_particle_descr->byteorder = '=';
   // Flags
   logger_particle_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
   // id of the data type (assigned automatically)
   logger_particle_descr->type_num = 0;
-  // Size of an element
+  // Size of an element (using more size than required in order to log everything)
   logger_particle_descr->elsize = sizeof(struct logger_particle);
   // alignment (doc magic)
   logger_particle_descr->alignment = offsetof(
@@ -324,6 +332,8 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   clocks_set_cpufreq(0);
 
   import_array();
+  /* Define the type object */
+  pylogger_particle_define_typeobject();
 
   /* Define the descr of the logger_particle */
   pylogger_particle_define_descr();
