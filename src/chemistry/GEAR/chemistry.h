@@ -150,7 +150,6 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
   if (scale_metallicity) {
     chemistry_scale_initial_metallicities(parameter_file, data);
   }
-  
 }
 
 /**
@@ -244,7 +243,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   /* Set the smoothed fractions with the non smoothed fractions */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] =
-      p->chemistry_data.metal_mass_fraction[i] * m * kernel_root * factor;
+      p->chemistry_data.metal_mass_fraction[i];
     p->chemistry_data.metal_mass[i] = p->chemistry_data.metal_mass_fraction[i] * p->mass;
   }
 }

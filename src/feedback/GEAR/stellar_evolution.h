@@ -108,7 +108,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_cont
   /* Compute the SNII yields */
   float snii_yields[CHEMISTRY_ELEMENT_COUNT];
   supernovae_ii_get_yields(&sm->snii, log_m_end_step, log_m_beg_step, snii_yields);
-    
+
   /* Compute the mass fraction of non processed elements */
   const float non_processed = supernovae_ii_get_ejected_mass_fraction(
      &sm->snii, log_m_end_step, log_m_beg_step);
@@ -128,7 +128,6 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_cont
     sp->feedback_data.metal_mass_ejected[i] *=
       sp->birth.mass;
   }
-  
 }
 
 /**
@@ -150,17 +149,10 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
     const float m_beg_step, const float m_end_step,
     const float m_init) {
 
-  const float m_end_step_limit = m_end_step < sm->snii.mass_min ?
-    sm->snii.mass_min : m_end_step;
-
-  const float m_beg_step_limit = m_beg_step > sm->snii.mass_max ?
-    sm->snii.mass_max : m_beg_step;
-
   /* Get the normalization to the average */
   const float normalization = sp->feedback_data.number_snii != 0 ?
-    sp->feedback_data.number_snii /
-    initial_mass_function_get_integral_xi(
-      &sm->imf, m_end_step_limit, m_beg_step_limit) : 0.;
+    sp->feedback_data.number_snii / (supernovae_ii_get_number(
+      &sm->snii, m_end_step, m_beg_step) * m_init) : 0.;
 
   /* Compute the mass ejected */
   /* SNIa */
@@ -295,6 +287,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   /* Does this star produce a supernovae? */
   if (sp->feedback_data.number_snia == 0 && sp->feedback_data.number_snii == 0)
     return;
+
+  sp->feedback_data.total_snia += sp->feedback_data.number_snia;
+  sp->feedback_data.total_snii += sp->feedback_data.number_snii;
 
   /* Compute the properties of the feedback (e.g. yields) */
   if (sm->discret_yields) {

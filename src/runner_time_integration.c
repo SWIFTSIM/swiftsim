@@ -85,6 +85,9 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
   const struct hydro_props *hydro_props = e->hydro_properties;
   const struct entropy_floor_properties *entropy_floor = e->entropy_floor;
+  const struct cooling_function_data *cooling_func = e->cooling_func;
+  const struct phys_const *constants = e->physical_constants;
+  const struct unit_system *us = e->internal_units;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
@@ -163,7 +166,6 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
           kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
                     dt_kick_corr, cosmo, hydro_props, entropy_floor, ti_begin,
                     ti_begin + ti_step / 2);
-
           /* Update the accelerations to be used in the drift for hydro */
           if (p->gpart != NULL) {
 
@@ -174,8 +176,7 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
         }
       /* Do the operations required after the kick1 */
       task_order_kick1(p, xp, e);
-      }
-
+    }
 
     /* Loop over the gparts in this cell. */
     for (int k = 0; k < gcount; k++) {
@@ -590,9 +591,6 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 
       /* If particle needs updating */
       if (part_is_active(p, e)) {
-
-        /* Update the particle after the feedback */
-        feedback_update_part(p, xp, e);
 
 #ifdef SWIFT_DEBUG_CHECKS
         /* Current end of time-step */

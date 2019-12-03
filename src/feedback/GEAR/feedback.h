@@ -84,7 +84,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   }
 
   /* wakeup the particle */
-  p->wakeup = time_bin_awake;
+  // p->wakeup = time_bin_awake;
 
 }
 
@@ -165,6 +165,9 @@ __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
   feedback_init_spart(sp);
 
   feedback_reset_feedback(sp, feedback_props);
+
+  sp->feedback_data.total_snia = 0;
+  sp->feedback_data.total_snii = 0;
 }
 
 /**
@@ -249,6 +252,15 @@ __attribute__((always_inline)) INLINE static void feedback_struct_restore(
                       NULL, "feedback function");
 
   stellar_evolution_restore(&feedback->stellar_model, stream);
+
+}
+
+
+/**
+ * TODO
+ */
+__attribute__((always_inline)) INLINE static void feedback_clean(
+                                                                 struct feedback_props* feedback) {
 
 }
 
