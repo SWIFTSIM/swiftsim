@@ -51,6 +51,7 @@ print("time: %g" % time)
 
 t = logger.getTimeLimits(basename)
 data = logger.loadSnapshotAtTime(basename, time)
+print(data.dtype)
 
 pos = data["positions"]
 
