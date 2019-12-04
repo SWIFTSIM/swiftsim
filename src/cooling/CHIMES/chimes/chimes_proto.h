@@ -51,12 +51,6 @@ ChimesFloat chimes_interpol_4d(ChimesFloat ****table, int i, int j, int k, int l
 void check_constraint_equations(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
-/*************************
- ** SWIFT-specific code **
- *************************/ 
-ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars); 
-/** End SWIFT-specific **/  
-
 // update_rates.c 
 void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data); 
 void set_species_structures(struct Species_Structure *mySpecies, struct gasVariables *myGasVars, int *total_network, int *nonmolecular_network, struct globalVariables *myGlobalVars);

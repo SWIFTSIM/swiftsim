@@ -460,54 +460,6 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
 
 
-  /*************************
-   ** SWIFT-specific code **
-   *************************/ 
-  ChimesFloat N_ref, mu, XH; 
-  ChimesFloat N_H0 = 3.65e20; 
-  
-  if ((data->myGlobalVars->update_colibre_ISRF == 1) || (data->myGlobalVars->update_colibre_shielding == 1))
-    {
-      mu = calculate_mean_molecular_weight(data->myGasVars, data->myGlobalVars); 
-      XH = 1.0 / (1.0 + (4.0 * data->myGasVars->element_abundances[0])); 
-      N_ref = chimes_calculate_Nref(data->myGasVars->temperature, data->myGasVars->nH_tot, mu, XH, data->myGlobalVars); 
-
-      if ((data->myGlobalVars->update_colibre_ISRF == 1) && (data->myGlobalVars->N_spectra >= 2)) 
-	{
-	  data->myGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * data->myGlobalVars->radiation_field_normalisation_factor * pow(N_ref / N_H0, 1.4); 
-	  data->myGasVars->cr_rate = data->myGlobalVars->colibre_cr_rate_0 * data->myGlobalVars->radiation_field_normalisation_factor * pow(N_ref / N_H0, 1.4); 
-	}
-
-      if (data->myGlobalVars->update_colibre_shielding == 1) 
-	{
-	  /* Update shielding length */ 
-	  data->myGasVars->cell_size = data->myGlobalVars->shielding_length_factor * N_ref / data->myGasVars->nH_tot; 
-	  
-	  /* Update column densities */ 
-	  data->HI_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_HI]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  data->H2_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_H2]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  data->HeI_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_HeI]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  data->HeII_column = data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_HeII]] * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  if (data->myGlobalVars->speciesIndices[sp_CO] > -1) 
-	    data->CO_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_CO]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  else 
-	    data->CO_column = 0.0; 
-	  if (data->myGlobalVars->speciesIndices[sp_H2O] > -1) 
-	    data->H2O_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_H2O]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  else 
-	    data->H2O_column = 0.0; 
-	  if (data->myGlobalVars->speciesIndices[sp_OH] > -1) 
-	    data->OH_column = chimes_max(data->myGasVars->abundances[data->myGlobalVars->speciesIndices[sp_OH]], 0.0) * data->myGasVars->cell_size * data->myGasVars->nH_tot;
-	  else 
-	    data->OH_column = 0.0; 
-	  data->extinction = DUSTEFFSIZE * data->myGasVars->cell_size * data->myGasVars->nH_tot * data->myGasVars->dust_ratio;
-	}
-
-      set_initial_rate_coefficients(data->myGasVars, data->myGlobalVars, *data); 
-    }
-  /** End SWIFT-specific **/  
-
-
   // Update rates 
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data, data->myGasVars->ThermEvolOn); 
   update_rates(data->myGasVars, data->myGlobalVars, *data); 
@@ -538,29 +490,3 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   return 0;
 }
-
-/*************************
- ** SWIFT-specific code **
- *************************/ 
-ChimesFloat chimes_calculate_Nref(ChimesFloat temperature, ChimesFloat nH_cgs, ChimesFloat mu, ChimesFloat XH, struct globalVariables *myGlobalVars) 
-{
-  /* Parameters that define N_ref. 
-   * Taken from Ploeckinger et al. (in prep). */
-  const double log_T_min = 3.0;       // K 
-  const double log_T_max = 5.0;       // K 
-  const double N_max = 1.0e24;        // cgs 
-  const double N_min = 3.08567758e15; // cgs 
-
-  /* Jeans column density */ 
-  double N_J = nH_cgs * sqrt((5.0 / 3.0) * BOLTZMANNCGS * temperature / (mu * 6.67408e-8 * (PROTON_MASS * nH_cgs / XH) * PROTON_MASS)); 
-
-  double N_ref_prime = chimes_min(N_J, N_max); 
-      
-  if (myGlobalVars->max_shielding_length_cgs > 0.0) 
-    N_ref_prime = chimes_min(N_ref_prime, myGlobalVars->max_shielding_length_cgs * nH_cgs); 
-
-  double N_ref = pow(10.0, log10(N_ref_prime) - ((log10(N_ref_prime) - log10(N_min)) / (1.0 + exp(-5.0 * (log10(temperature) - ((log_T_min + log_T_max) / 2.0))))));
-  
-  return N_ref; 
-}
-/** End SWIFT-specific **/  

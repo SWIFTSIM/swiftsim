@@ -90,8 +90,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
   cooling->use_redshift_dependent_UVB = parser_get_param_int(parameter_file, "CHIMESCooling:use_redshift_dependent_UVB"); 
 
-  cooling->ChimesGlobalVars.update_colibre_ISRF = 0; 
-  cooling->ChimesGlobalVars.update_colibre_shielding = 0; 
   cooling->radiation_field_normalisation_factor = 0.0; 
 
   if (cooling->use_redshift_dependent_UVB == 0) 
@@ -136,33 +134,15 @@ void cooling_init_backend(struct swift_params *parameter_file,
       
 	  parser_get_param_string(parameter_file, "CHIMESCooling:PhotoIonTable_ISRF", string_buffer); 
 	  sprintf(cooling->ChimesGlobalVars.PhotoIonTablePath[1], "%s/%s", chimes_data_dir, string_buffer); 
-
-	  /* Flag to update ISRF within the rate 
-	   * equations in CHIMES, using the COLIBRE 
-	   * ISRF. This can only be used with 
-	   * UV_field_flag == 2. */ 
-	  cooling->ChimesGlobalVars.update_colibre_ISRF = parser_get_param_int(parameter_file, "CHIMESCooling:update_colibre_ISRF"); 
 	}
     }
   else 
     error("CHIMESCooling: UV_field_flag %d not recognised.", cooling->UV_field_flag);
-  
-  cooling->ChimesGlobalVars.radiation_field_normalisation_factor = cooling->radiation_field_normalisation_factor; 
 
   if (cooling->Shielding_flag == 0) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 0; 
-  else if (cooling->Shielding_flag == 1) 
+  else if ((cooling->Shielding_flag == 1) || (cooling->Shielding_flag == 2)) 
     cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
-  else if (cooling->Shielding_flag == 2) 
-    {
-      cooling->ChimesGlobalVars.cellSelfShieldingOn = 1; 
-
-      /* Flag to update shielding within the rate 
-       * equations in CHIMES, using the COLIBRE 
-       * shielding length. This can only be used 
-       * with Shielding_flag == 2. */ 
-      cooling->ChimesGlobalVars.update_colibre_shielding = parser_get_param_int(parameter_file, "CHIMESCooling:update_colibre_shielding"); 
-    }
   else 
     error("CHIMESCooling: Shielding_flag %d not recognised.", cooling->Shielding_flag); 
 
@@ -174,17 +154,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
       /* Factor to re-scale shielding length. */ 
       cooling->shielding_length_factor = parser_get_opt_param_double(parameter_file, "CHIMESCooling:shielding_length_factor", 1.0); 
-      cooling->ChimesGlobalVars.shielding_length_factor = (ChimesFloat) cooling->shielding_length_factor; 
 
       /* Maximum shielding length (in code units). 
        * If negative, do not impose a maximum. */ 
       cooling->max_shielding_length = parser_get_opt_param_double(parameter_file, "CHIMESCooling:max_shielding_length", -1.0); 
-      cooling->ChimesGlobalVars.max_shielding_length_cgs = (ChimesFloat) cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
-    }
-  else 
-    {
-      cooling->ChimesGlobalVars.shielding_length_factor = 1.0; 
-      cooling->ChimesGlobalVars.max_shielding_length_cgs = -1.0; 
     }
 
   /* The redshift of hydrogren reionisation 
@@ -218,7 +191,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Cosmic ray ionisation rate of HI. */ 
   cooling->cosmic_ray_rate = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
-  cooling->ChimesGlobalVars.colibre_cr_rate_0 = cooling->cosmic_ray_rate; 
 
   /* CHIMES tolerance parameters */ 
   cooling->ChimesGlobalVars.relativeTolerance = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:relativeTolerance"); 
