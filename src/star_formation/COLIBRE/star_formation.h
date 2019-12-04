@@ -123,7 +123,7 @@ INLINE static int star_formation_is_star_forming(
    * instantaneously into a star?*/
   if (physical_density > starform->maximal_density) return 1;
 
-  /* Check if we are above the subgrid density criteria */ 
+  /* Check if we are above the subgrid density criteria */
   const double subgrid_density = xp->tracers_data.subgrid_dens;
 
   /* Check if the subgrid density criteria is satisfied */
@@ -320,14 +320,6 @@ INLINE static void starformation_init_backend(
   starform->mdot_const = starform->sfe / starform->ff_const;
 
   /* Get the temperature threshold */
-  starform->temperature_margin_threshold_dex = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:EOS_temperature_margin_dex", 10.f);
-
-  /* Write it as a constant temperature multiplication */
-  starform->ten_to_temperature_margin_threshold_dex =
-      exp10(starform->temperature_margin_threshold_dex);
-
-  /* Get the temperature threshold */
   starform->temperature_threshold = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:temperature_threshold_K", FLT_MAX);
 
@@ -347,10 +339,15 @@ INLINE static void starformation_init_backend(
 
   /* Get the subgrid density threshold */
   starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:subgrid_density_threshold_H_p_CM3", FLT_MAX);
+      parameter_file, "COLIBREStarFormation:subgrid_density_threshold_H_p_CM3",
+      FLT_MAX);
 
-  /* Calculate the subgrid density threshold using primordial gas mean molecular weights */
-  starform->subgrid_density_threshold = starform->subgrid_density_threshold_HpCM3 * phys_const->const_proton_mass * number_density_from_cgs * hydro_props->mu_neutral;
+  /* Calculate the subgrid density threshold using primordial gas mean molecular
+   * weights */
+  starform->subgrid_density_threshold =
+      starform->subgrid_density_threshold_HpCM3 *
+      phys_const->const_proton_mass * number_density_from_cgs *
+      hydro_props->mu_neutral;
 }
 
 /**
@@ -365,11 +362,11 @@ INLINE static void starformation_print_backend(
   message("Star formation law is COLIBRE");
   message(
       "With properties: Star formation efficiency = %e, temperature "
-      "threshold = %e, minimum over density = %e T dex = %e maximal "
+      "threshold = %e, minimum over density = %e maximal "
       "density = %e subgrid density threshold = %e",
       starform->sfe, starform->temperature_threshold, starform->min_over_den,
-      starform->temperature_margin_threshold_dex,
-      starform->maximal_density_HpCM3, starform->subgrid_density_threshold_HpCM3);
+      starform->maximal_density_HpCM3,
+      starform->subgrid_density_threshold_HpCM3);
 }
 
 /**
