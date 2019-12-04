@@ -74,6 +74,12 @@ struct star_formation {
   /*! Maximal physical density (internal units), particles with a higher density
    * instantaneously turn into stars */
   double maximal_density;
+
+  /*! subgrid density threshold in user units */
+  double subgrid_density_threshold_HpCM3;
+
+  /*! subgrid density threshold */
+  double subgrid_density_threshold;
 };
 
 /**
@@ -117,20 +123,17 @@ INLINE static int star_formation_is_star_forming(
    * instantaneously into a star?*/
   if (physical_density > starform->maximal_density) return 1;
 
-  /* Calculate the temperature */
-  const double temperature = cooling_get_temperature(phys_const, hydro_props,
-                                                     us, cosmo, cooling, p, xp);
+  /* Check if we are above the subgrid density criteria */ 
+  const double subgrid_density = xp->tracers_data.subgrid_dens;
 
-  /* Check if the temperature criteria is satisfied */
-  if (temperature < starform->temperature_threshold) return 1;
+  /* Check if the subgrid density criteria is satisfied */
+  if (subgrid_density > starform->subgrid_density_threshold) return 1;
 
-  /* Get the EOS temperature from the entropy floor */
-  const double temperature_eos =
-      entropy_floor_temperature(p, cosmo, entropy_props);
+  /* Get the subgrid temperature from the tracers */
+  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
-  /* Check if the constant temperature is satisfied */
-  return (temperature <
-          temperature_eos * starform->ten_to_temperature_margin_threshold_dex);
+  /* Check if the subgrid temperature criteria is satisfied */
+  return (subgrid_temperature < starform->temperature_threshold);
 }
 
 /**
@@ -341,6 +344,13 @@ INLINE static void starformation_init_backend(
   starform->maximal_density = starform->maximal_density_HpCM3 *
                               phys_const->const_proton_mass *
                               number_density_from_cgs * hydro_props->mu_neutral;
+
+  /* Get the subgrid density threshold */
+  starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
+      parameter_file, "COLIBREStarFormation:subgrid_density_threshold_H_p_CM3", FLT_MAX);
+
+  /* Calculate the subgrid density threshold using primordial gas mean molecular weights */
+  starform->subgrid_density_threshold = starform->subgrid_density_threshold_HpCM3 * phys_const->const_proton_mass * number_density_from_cgs * hydro_props->mu_neutral;
 }
 
 /**
@@ -356,10 +366,10 @@ INLINE static void starformation_print_backend(
   message(
       "With properties: Star formation efficiency = %e, temperature "
       "threshold = %e, minimum over density = %e T dex = %e maximal "
-      "density = %e",
+      "density = %e subgrid density threshold = %e",
       starform->sfe, starform->temperature_threshold, starform->min_over_den,
       starform->temperature_margin_threshold_dex,
-      starform->maximal_density_HpCM3);
+      starform->maximal_density_HpCM3, starform->subgrid_density_threshold_HpCM3);
 }
 
 /**
