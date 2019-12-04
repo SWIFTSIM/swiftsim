@@ -528,6 +528,7 @@ void chimes_update_gas_vars(const double u_cgs,
   else if (cooling->UV_field_flag == 2) 
     {
       /* COLIBRE radiation field */ 
+      ChimesFloat J_over_J0; 
 
       /* Extra-galactic UVB */ 
       ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
@@ -537,7 +538,12 @@ void chimes_update_gas_vars(const double u_cgs,
       /* ISRF */ 
       ChimesGasVars->G0_parameter[1] = chimes_table_spectra.G0_parameter[1]; 
       ChimesGasVars->H2_dissocJ[1] = chimes_table_spectra.H2_dissocJ[1]; 
-      ChimesGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * cooling->radiation_field_normalisation_factor * pow(N_ref / cooling->N_H0, 1.4); 
+      J_over_J0 = cooling->radiation_field_normalisation_factor * pow(N_ref / cooling->N_H0, 1.4); 
+      ChimesGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1] * J_over_J0; 
+
+      /* low-density cut-off before reionisation */ 
+      if ((cooling->ChimesGlobalVars.redshift > cooling->ChimesGlobalVars.reionisation_redshift) && (J_over_J0 > 0.0)) 
+	ChimesGasVars->isotropic_photon_density[1] /= pow(10.0, (log10(J_over_J0) + 20.0) / (1.0 + exp(2.0 * (log10(ChimesGasVars->nH_tot) + 4.0)))); 
       
       /* Scale cr_rate by N_ref */ 
       ChimesGasVars->cr_rate *= cooling->radiation_field_normalisation_factor * pow(N_ref / cooling->N_H0, 1.4); 
