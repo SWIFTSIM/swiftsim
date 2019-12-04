@@ -283,21 +283,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
   cooling->HIIregion_ion_state = 1; 
 
-  if ((cooling->UV_field_flag == 2) || (cooling->Shielding_flag == 2) || (cooling->colibre_metal_depletion == 1)) 
-    {
-      /* If using the COLIBRE models, we 
-       * need the log_T_min and log_T_max 
-       * parameters that go into N_ref. */ 
-      cooling->ChimesGlobalVars.colibre_log_T_min = parser_get_param_double(parameter_file, "CHIMESCooling:colibre_log_T_min"); 
-      cooling->ChimesGlobalVars.colibre_log_T_max = parser_get_param_double(parameter_file, "CHIMESCooling:colibre_log_T_max"); 
-    }
-  else 
-    {
-      /* These variables won't be used. */ 
-      cooling->ChimesGlobalVars.colibre_log_T_min = 0.0; 
-      cooling->ChimesGlobalVars.colibre_log_T_max = 0.0; 
-    }
-
   /* Switch for Hybrid cooling */ 
 #ifdef COOLING_CHIMES_HYBRID 
   cooling->ChimesGlobalVars.hybrid_cooling_mode = 1; 
@@ -1055,16 +1040,9 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
    * Taken from Ploeckinger et al. (in prep). */ 
   const double N_max = 1.0e24;         // cgs 
   const double N_min = 3.08567758e15;  // cgs 
-  const double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);  
-
-  /* log_T_min and log_T_max are currently taken 
-   * from the parameter file. This is only for 
-   * testing; when we start production runs, 
-   * these should be hard-coded to the same 
-   * values used in Sylvia's tables (which 
-   * currently use 3.0 and 5.0, respectively). */
-  const double log_T_min = cooling->ChimesGlobalVars.colibre_log_T_min; 
-  const double log_T_max = cooling->ChimesGlobalVars.colibre_log_T_max; 
+  const double l_max_cgs = cooling->max_shielding_length * units_cgs_conversion_factor(us, UNIT_CONV_LENGTH); 
+  const double log_T_min = 3.0; 
+  const double log_T_max = 5.0; 
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
   float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 

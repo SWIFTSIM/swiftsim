@@ -102,8 +102,6 @@ struct globalVariables
 /*************************
  ** SWIFT-specific code **
  *************************/ 
-  double colibre_log_T_min; 
-  double colibre_log_T_max; 
   const struct colibre_cooling_tables *colibre_table; 
   int hybrid_cooling_mode; 
 /** End SWIFT-specific **/ 
