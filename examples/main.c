@@ -170,6 +170,7 @@ int main(int argc, char *argv[]) {
   int with_mpole_reconstruction = 0;
   int with_structure_finding = 0;
   int with_eagle = 0;
+  int with_colibre = 0;
   int verbose = 0;
   int nr_threads = 1;
   int with_verbose_timers = 0;
@@ -234,6 +235,12 @@ int main(int argc, char *argv[]) {
           "Run with all the options needed for the EAGLE model. This is "
           "equivalent to --hydro --limiter --sync --self-gravity --stars "
           "--star-formation --cooling --feedback --black-holes --fof.",
+          NULL, 0, 0),
+      OPT_BOOLEAN(
+          0, "colibre", &with_colibre,
+          "Run with all the options needed for the COLIBRE model. This is "
+          "equivalent to --hydro --limiter --sync --self-gravity --stars "
+          "--star-formation --cooling --feedback.",
           NULL, 0, 0),
 
       OPT_GROUP("  Control options:\n"),
@@ -305,6 +312,16 @@ int main(int argc, char *argv[]) {
     with_feedback = 1;
     with_black_holes = 1;
     with_fof = 1;
+  }
+  if (with_colibre) {
+    with_hydro = 1;
+    with_timestep_limiter = 1;
+    with_timestep_sync = 1;
+    with_self_gravity = 1;
+    with_stars = 1;
+    with_star_formation = 1;
+    with_cooling = 1;
+    with_feedback = 1;
   }
 
   /* Write output parameter file */
