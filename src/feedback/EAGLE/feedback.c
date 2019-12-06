@@ -984,6 +984,8 @@ void feedback_props_init(struct feedback_props* fp,
                          const struct hydro_props* hydro_props,
                          const struct cosmology* cosmo) {
 
+  const double Gyr_in_cgs = 1.0e9 * 365.25 * 24. * 3600.;
+
   /* Main operation modes ------------------------------------------------- */
 
   fp->with_SNII_feedback =
@@ -1030,7 +1032,6 @@ void feedback_props_init(struct feedback_props* fp,
   if (!fp->SNII_sampled_delay) {
 
     /* Set the delay time before SNII occur */
-    const double Gyr_in_cgs = 1.0e9 * 365.25 * 24. * 3600.;
     fp->SNII_wind_delay =
         parser_get_param_double(params, "EAGLEFeedback:SNII_wind_delay_Gyr") *
         Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
