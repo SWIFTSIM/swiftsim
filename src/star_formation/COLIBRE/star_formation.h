@@ -58,12 +58,6 @@ struct star_formation {
    */
   double mdot_const;
 
-  /*! Dalla Vecchia & Schaye temperature criteria */
-  double temperature_margin_threshold_dex;
-
-  /*! 10^Tdex of Dalla Vecchia & SChaye temperature criteria */
-  double ten_to_temperature_margin_threshold_dex;
-
   /*! Absolute temperature criteria */
   double temperature_threshold;
 
@@ -78,7 +72,7 @@ struct star_formation {
   /*! subgrid density threshold in user units */
   double subgrid_density_threshold_HpCM3;
 
-  /*! subgrid density threshold */
+  /*! subgrid density threshold in internal units */
   double subgrid_density_threshold;
 };
 
@@ -320,8 +314,8 @@ INLINE static void starformation_init_backend(
   starform->mdot_const = starform->sfe / starform->ff_const;
 
   /* Get the temperature threshold */
-  starform->temperature_threshold = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:temperature_threshold_K", FLT_MAX);
+  starform->temperature_threshold = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:temperature_threshold_K");
 
   starform->maximal_density_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",
@@ -343,7 +337,7 @@ INLINE static void starformation_init_backend(
       FLT_MAX);
 
   /* Calculate the subgrid density threshold using primordial gas mean molecular
-   * weights */
+   * weights assuming neutral gas */
   starform->subgrid_density_threshold =
       starform->subgrid_density_threshold_HpCM3 *
       phys_const->const_proton_mass * number_density_from_cgs *
