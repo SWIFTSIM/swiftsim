@@ -267,14 +267,12 @@ s_s = P_s / rho_s ** gas_gamma  # entropic function
 # Plot the interesting quantities
 figure(figsize=(7, 7 / 1.6))
 
-scatter_color = "C3"
 line_color = "C4"
-binned_color = "C0"
+binned_color = "C2"
 binned_marker_size = 4
 
 scatter_props = dict(
     marker=".",
-    color=scatter_color,
     ms=1,
     markeredgecolor="none",
     alpha=0.2,
@@ -301,7 +299,7 @@ plot(r, rho, **scatter_props)
 plot(r_s, rho_s, "--", color=line_color, alpha=0.8, lw=1.2)
 errorbar(r_bin, rho_bin, yerr=rho_sigma_bin, **errorbar_props)
 xlabel("Radius $r$")
-ylabel("Density $rho$")
+ylabel("Density $\\rho$")
 xlim(0, 1.3 * r_shock)
 ylim(-0.2, 5.2)
 
