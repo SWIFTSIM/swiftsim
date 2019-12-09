@@ -56,9 +56,6 @@ struct spart {
   /*! Star mass */
   float mass;
 
-  /*! Initial star mass */
-  float mass_init;
-
   /*! Particle smoothing length. */
   float h;
 
@@ -81,6 +78,12 @@ struct spart {
     /*! Birth scale factor */
     float birth_scale_factor;
   };
+
+  /*! Scale-factor / time at which this particle last did enrichment */
+  float last_enrichment_time;
+
+  /*! Initial star mass */
+  float mass_init;
 
   /*! Birth density */
   float birth_density;
@@ -117,6 +120,9 @@ struct spart {
 
   /*! Particle time bin */
   timebin_t time_bin;
+
+  /*! Number of time-steps since the last enrichment step */
+  char count_since_last_enrichment;
 
 #ifdef SWIFT_DEBUG_CHECKS
 

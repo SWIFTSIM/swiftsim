@@ -92,6 +92,8 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
+  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
+  with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -111,6 +113,8 @@ COLIBREFeedback:
   SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
   SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
+  stellar_evolution_age_cut_Gyr:    100             # Stellar age in Gyr above which the enrichment is down-sampled.
+  stellar_evolution_sampling_rate:   10             # Number of time-steps in-between two enrichment events for a star above the age threshold.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
   SNII_yield_factor_Carbon:         0.5             # (Optional) Correction factor to apply to the Carbon yield from the SNII channel.
@@ -120,8 +124,6 @@ COLIBREFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
-  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
-  with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
