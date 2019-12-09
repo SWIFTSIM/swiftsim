@@ -30,6 +30,7 @@
 #include "black_holes.h"
 #include "cell.h"
 #include "engine.h"
+#include "feedback.h"
 #include "kick.h"
 #include "timers.h"
 #include "timestep.h"
@@ -541,6 +542,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   const struct engine *e = r->e;
   const integertime_t ti_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+  const int with_feedback = (e->policy & engine_policy_feedback);
   const int count = c->hydro.count;
   const int gcount = c->grav.count;
   const int scount = c->stars.count;
@@ -745,6 +747,11 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* Update particle */
         sp->time_bin = get_time_bin(ti_new_step);
         sp->gpart->time_bin = get_time_bin(ti_new_step);
+
+        /* Update feedback related counters */
+        if (with_feedback)
+          feedback_will_do_feedback(sp, e->feedback_props, with_cosmology,
+                                    e->cosmology, e->time);
 
         /* Number of updated s-particles */
         s_updated++;
