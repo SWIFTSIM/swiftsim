@@ -52,9 +52,12 @@ INLINE static void event_logger_init(const struct engine *e) {
  * @param e the engine we are running on
  */
 INLINE static void event_logger_init_log_file(const struct engine *e) {
-  event_logger_SNII_init_log_file(e);
-  event_logger_SNIa_init_log_file(e);
-  event_logger_r_processes_init_log_file(e);
+  /* Write the start of the header only to the global log files on node 0 */
+  if (e->nodeID==0) {
+    event_logger_SNII_init_log_file(e);
+    event_logger_SNIa_init_log_file(e);
+    event_logger_r_processes_init_log_file(e);
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   event_logger_SNIa_init_log_file_debug(e);
@@ -81,9 +84,11 @@ INLINE static void event_logger_log_data(const struct engine *e) {
  */
 INLINE static void event_logger_open_files(const struct engine *e,
                                            const char *mode) {
-  log_SNII.core.fp = fopen("SNII.txt", mode);
-  log_SNIa.core.fp = fopen("SNIa.txt", mode);
-  log_r_processes.core.fp = fopen("r_processes.txt", mode);
+  if (e->nodeID==0) {
+    log_SNII.core.fp = fopen("SNII.txt", mode);
+    log_SNIa.core.fp = fopen("SNIa.txt", mode);
+    log_r_processes.core.fp = fopen("r_processes.txt", mode);
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Open SNIa debugging file */
