@@ -3753,15 +3753,27 @@ void engine_config(int restart, int fof, struct engine *e,
 #endif
   }
 
+  /* When restarting append to these files. */
+  const char *mode;
+  if (restart)
+    mode = "a";
+  else
+    mode = "w";
+
+  /* Initialize the feedback loggers if running with feedback
+   * This function needs to be called for ALL NODES!! */
+  if (e->policy & engine_policy_feedback) {
+    /* Open the feedback loggers */
+    event_logger_open_files(e, mode);
+
+    if (!restart) {
+      /* Initialize the feedback loggers */
+      event_logger_init_log_file(e);
+    }
+  }
+
   /* Open some global files */
   if (!fof && e->nodeID == 0) {
-
-    /* When restarting append to these files. */
-    const char *mode;
-    if (restart)
-      mode = "a";
-    else
-      mode = "w";
 
     char energyfileName[200] = "";
     parser_get_opt_param_string(params, "Statistics:energy_file_name",
@@ -3834,16 +3846,6 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
 
-    /* Initialize the feedback loggers if running with feedback */
-    if (e->policy & engine_policy_feedback) {
-      /* Open the feedback loggers */
-      event_logger_open_files(e, mode);
-
-      if (!restart) {
-        /* Initialize the feedback loggers */
-        event_logger_init_log_file(e);
-      }
-    }
   }
 
   /* Print policy */
