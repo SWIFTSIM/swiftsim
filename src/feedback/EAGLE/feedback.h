@@ -61,6 +61,30 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 }
 
 /**
+ * @brief Returns the length of time since the particle last did
+ * enrichment/feedback.
+ *
+ * @param sp The #spart.
+ * @param with_cosmology Are we running with cosmological time integration on?
+ * @param cosmo The cosmological model.
+ * @param time The current time (since the Big Bang / start of the run) in
+ * internal units.
+ * @param dt_star the length of this particle's time-step in internal units.
+ * @return The length of the enrichment step in internal units.
+ */
+INLINE static double feedback_get_enrichment_timestep(
+    const struct spart* sp, const int with_cosmology,
+    const struct cosmology* cosmo, const double time, const double dt_star) {
+
+  if (with_cosmology) {
+    return cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->last_enrichment_time, cosmo->a);
+  } else {
+    return time - sp->last_enrichment_time;
+  }
+}
+
+/**
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  */

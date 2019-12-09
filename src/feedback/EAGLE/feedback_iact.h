@@ -117,7 +117,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-if (Omega_frac < 0. || Omega_frac > 1.01)
+  if (Omega_frac < 0. || Omega_frac > 1.01)
     error(
         "Invalid fraction of material to distribute for star ID=%lld "
         "Omega_frac=%e count since last enrich=%d",
