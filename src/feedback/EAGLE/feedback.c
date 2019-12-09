@@ -1167,7 +1167,9 @@ void feedback_props_init(struct feedback_props* fp,
     error("Stellar evolution sampling rate too large. Must be >0 and <%d",
           (1 << (8 * sizeof(char) - 1)));
 
-  if (fp->stellar_evolution_age_cut < fp->SNII_wind_delay)
+  /* Check that we are not downsampling before reaching the SNII delay */
+  if (!fp->SNII_sampled_delay &&
+      fp->stellar_evolution_age_cut < fp->SNII_wind_delay)
     error(
         "Time at which the enrichment downsampling stars is lower than the "
         "SNII wind delay!");
