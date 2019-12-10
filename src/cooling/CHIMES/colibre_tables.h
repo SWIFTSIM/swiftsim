@@ -112,9 +112,6 @@ struct colibre_cooling_tables {
 /*! Number of different bins along the metallicity axis of the tables */
 #define colibre_cooling_N_metallicity 11
 
-/*! Number of different bins along the internal energy axis of the tables */
-#define colibre_cooling_N_internalenergy 191
-
 /*! Number of different cooling channels in the tables */
 #define colibre_cooling_N_cooltypes 22
 
@@ -515,7 +512,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,
       d_red, d_T, d_met, d_n_H, 
       colibre_cooling_N_redshifts, 
-      colibre_cooling_N_internalenergy, 
+      colibre_cooling_N_temperature, 
       colibre_cooling_N_metallicity, 
       colibre_cooling_N_density,
       colibre_cooling_N_electrontypes); 
@@ -527,7 +524,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,
       d_red, d_T, d_met, d_n_H, 
       colibre_cooling_N_redshifts, 
-      colibre_cooling_N_internalenergy, 
+      colibre_cooling_N_temperature, 
       colibre_cooling_N_metallicity, 
       colibre_cooling_N_density,
       colibre_cooling_N_electrontypes); 
@@ -554,7 +551,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_internalenergy,           /* */
+      colibre_cooling_N_temperature,           /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_cooltypes);               /* */
@@ -566,7 +563,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_internalenergy,           /* */
+      colibre_cooling_N_temperature,           /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_heattypes);               /* */
