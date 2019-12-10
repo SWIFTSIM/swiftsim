@@ -39,6 +39,8 @@ const double displacement_factor = 0.2;
 
 void engine_split_gas_particles(struct engine *e) {
 
+  const ticks tic = getticks();
+
   struct space *s = e->s;
 
   /* Quick check to avoid problems */
@@ -232,10 +234,11 @@ void engine_split_gas_particles(struct engine *e) {
     }
   }
 
-  message("s->nr_parts=%zd, k_parts=%zd", s->nr_parts, k_parts);
-  message("s->nr_gparts=%zd, k_gparts=%zd", s->nr_gparts, k_gparts);
-
   /* Update the local counters */
   s->nr_parts = k_parts;
   s->nr_gparts = k_gparts;
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }
