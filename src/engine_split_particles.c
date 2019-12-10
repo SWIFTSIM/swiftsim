@@ -43,11 +43,13 @@ void engine_split_gas_particles(struct engine *e) {
 
   /* Quick check to avoid problems */
   if (particle_split_factor != 2) {
-    error("Invalid splitting factor. Can currently only split particles into 2!");
+    error(
+        "Invalid splitting factor. Can currently only split particles into 2!");
   }
-  
-  /* Start by counting how many particles are above the threshold for splitting */
-  
+
+  /* Start by counting how many particles are above the threshold for splitting
+   */
+
   size_t counter = 0;
   const size_t nr_parts_old = s->nr_parts;
   const struct part *parts_old = s->parts;
@@ -60,13 +62,14 @@ void engine_split_gas_particles(struct engine *e) {
 
     /* Is the mass of this particle larger than the threshold? */
     const float gas_mass = hydro_get_mass(p);
-    if (gas_mass > mass_threshold)
-      ++counter;
+    if (gas_mass > mass_threshold) ++counter;
   }
 
-  //  if(e->verbose)
-    message("Found %zd particles above the mass threshold", counter);
-    
+  /* Early abort? */
+  if (counter == 0) return;
+
+  message("Converting %zd particles above the mass threshold", counter);
+
   /* Number of particles to create */
   const size_t count_new_gas = counter * particle_split_factor;
 
@@ -77,14 +80,13 @@ void engine_split_gas_particles(struct engine *e) {
     s->size_parts = engine_parts_size_grow * nr_parts_new;
 
     message("Reallocating the part array!");
-    
+
     struct part *parts_new = NULL;
     if (swift_memalign("parts", (void **)&parts_new, part_align,
                        sizeof(struct part) * s->size_parts) != 0)
       error("Failed to allocate new part data.");
     memcpy(parts_new, s->parts, sizeof(struct part) * s->nr_parts);
     swift_free("parts", s->parts);
-
 
     struct xpart *xparts_new = NULL;
     if (swift_memalign("xparts", (void **)&xparts_new, xpart_align,
@@ -104,7 +106,7 @@ void engine_split_gas_particles(struct engine *e) {
     s->size_gparts = engine_parts_size_grow * nr_gparts_new;
 
     message("Reallocating the gpart array!");
-    
+
     struct gpart *gparts_new = NULL;
     if (swift_memalign("gparts", (void **)&gparts_new, gpart_align,
                        sizeof(struct gpart) * s->size_gparts) != 0)
@@ -112,30 +114,28 @@ void engine_split_gas_particles(struct engine *e) {
 
     /* Offset of the new array */
     const ptrdiff_t offset = gparts_new - s->gparts;
-    
+
     /* Copy the particles */
     memcpy(gparts_new, s->gparts, sizeof(struct gpart) * s->nr_gparts);
     swift_free("gparts", s->gparts);
 
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_parts; ++i)
-      s->parts[i].gpart += offset;
+    for (size_t i = 0; i < s->nr_parts; ++i) s->parts[i].gpart += offset;
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_sparts; ++i)
-      s->sparts[i].gpart += offset;
+    for (size_t i = 0; i < s->nr_sparts; ++i) s->sparts[i].gpart += offset;
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_bparts; ++i)
-      s->bparts[i].gpart += offset;
- 
+    for (size_t i = 0; i < s->nr_bparts; ++i) s->bparts[i].gpart += offset;
+
     s->gparts = gparts_new;
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Verify that whatever reallocation happened we are still having correct links */
-  part_verify_links(s->parts, s->gparts, s->sparts, s->bparts, s->nr_parts, s->nr_gparts,
-		    s->nr_sparts, s->nr_bparts, e->verbose);
+  /* Verify that whatever reallocation happened we are still having correct
+   * links */
+  part_verify_links(s->parts, s->gparts, s->sparts, s->bparts, s->nr_parts,
+                    s->nr_gparts, s->nr_sparts, s->nr_bparts, e->verbose);
 #endif
-  
+
   size_t k_parts = s->nr_parts;
   size_t k_gparts = s->nr_gparts;
 
@@ -147,19 +147,19 @@ void engine_split_gas_particles(struct engine *e) {
 
     /* Is the mass of this particle larger than the threshold? */
     struct part *p = &parts[i];
-    
+
     /* Ignore inhibited particles */
     if (part_is_inhibited(p, e)) continue;
-    
+
     const float gas_mass = hydro_get_mass(p);
     const float h = p->h;
-    
+
     /* Found a particle to split */
     if (gas_mass > mass_threshold) {
 
       struct xpart *xp = &xparts[i];
       struct gpart *gp = p->gpart;
-      
+
       /* Start by copying over the particles */
       memcpy(&parts[k_parts], p, sizeof(struct part));
       memcpy(&xparts[k_parts], xp, sizeof(struct xpart));
@@ -173,9 +173,12 @@ void engine_split_gas_particles(struct engine *e) {
       gparts[k_gparts].id_or_neg_offset = -k_parts;
 
       /* Displacement unit vector */
-      const double delta_x = (random_unit_interval(p->id, e->ti_current, 0) - 0.5);
-      const double delta_y = (random_unit_interval(p->id, e->ti_current, 1) - 0.5);
-      const double delta_z = (random_unit_interval(p->id, e->ti_current, 2) - 0.5);
+      const double delta_x =
+          (random_unit_interval(p->id, e->ti_current, 0) - 0.5);
+      const double delta_y =
+          (random_unit_interval(p->id, e->ti_current, 1) - 0.5);
+      const double delta_z =
+          (random_unit_interval(p->id, e->ti_current, 2) - 0.5);
 
       /* Displace the old particle */
       p->x[0] += delta_x * displacement_factor * h;
@@ -206,20 +209,23 @@ void engine_split_gas_particles(struct engine *e) {
 
       /* Split the cooling fields */
       cooling_split_part(p, xp, particle_split_factor);
-      cooling_split_part(&parts[k_parts], &xparts[k_parts], particle_split_factor);
-      
+      cooling_split_part(&parts[k_parts], &xparts[k_parts],
+                         particle_split_factor);
+
       /* Split the star formation fields */
       star_formation_split_part(p, xp, particle_split_factor);
-      star_formation_split_part(&parts[k_parts], &xparts[k_parts], particle_split_factor);
+      star_formation_split_part(&parts[k_parts], &xparts[k_parts],
+                                particle_split_factor);
 
       /* Split the tracer fields */
       tracers_split_part(p, xp, particle_split_factor);
-      tracers_split_part(&parts[k_parts], &xparts[k_parts], particle_split_factor);
-      
+      tracers_split_part(&parts[k_parts], &xparts[k_parts],
+                         particle_split_factor);
+
       /* Mark the particles as not having been swallowed */
       black_holes_mark_part_as_not_swallowed(&p->black_holes_data);
       black_holes_mark_part_as_not_swallowed(&parts[k_parts].black_holes_data);
-	
+
       /* Move to the next free slot */
       k_parts++;
       k_gparts++;
@@ -228,7 +234,7 @@ void engine_split_gas_particles(struct engine *e) {
 
   message("s->nr_parts=%zd, k_parts=%zd", s->nr_parts, k_parts);
   message("s->nr_gparts=%zd, k_gparts=%zd", s->nr_gparts, k_gparts);
-  
+
   /* Update the local counters */
   s->nr_parts = k_parts;
   s->nr_gparts = k_gparts;
