@@ -70,7 +70,7 @@ void engine_split_gas_particles(struct engine *e) {
   /* Early abort? */
   if (counter == 0) return;
 
-  message("Converting %zd particles above the mass threshold", counter);
+  message("Splitting %zd particles above the mass threshold", counter);
 
   /* Number of particles to create */
   const size_t count_new_gas = counter * particle_split_factor;
@@ -122,11 +122,17 @@ void engine_split_gas_particles(struct engine *e) {
     swift_free("gparts", s->gparts);
 
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_parts; ++i) s->parts[i].gpart += offset;
+    for (size_t i = 0; i < s->nr_parts; ++i) {
+      if (s->parts[i].time_bin <= num_time_bins) s->parts[i].gpart += offset;
+    }
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_sparts; ++i) s->sparts[i].gpart += offset;
+    for (size_t i = 0; i < s->nr_sparts; ++i) {
+      if (s->sparts[i].time_bin <= num_time_bins) s->sparts[i].gpart += offset;
+    }
     /* We now need to correct all the pointers */
-    for (size_t i = 0; i < s->nr_bparts; ++i) s->bparts[i].gpart += offset;
+    for (size_t i = 0; i < s->nr_bparts; ++i) {
+      if (s->bparts[i].time_bin <= num_time_bins) s->bparts[i].gpart += offset;
+    }
 
     s->gparts = gparts_new;
   }
