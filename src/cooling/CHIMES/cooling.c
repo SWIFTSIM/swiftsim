@@ -187,7 +187,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
   if (cooling->init_abundance_mode == 0) 
     cooling->InitIonState = parser_get_param_int(parameter_file, "CHIMESCooling:InitIonState"); 
   else 
-    cooling->InitIonState = 1; 
+    cooling->InitIonState = 0; 
 
   /* Cosmic ray ionisation rate of HI. */ 
   cooling->cosmic_ray_rate = (ChimesFloat) parser_get_param_double(parameter_file, "CHIMESCooling:cosmic_ray_rate"); 
@@ -1200,18 +1200,22 @@ void cooling_convert_quantities(struct part *restrict p,
   /* Zero particle's radiated energy. */ 
   xp->cooling_data.radiated_energy = 0.f; 
 
+  /* Set initial values for CHIMES 
+   * abundance array. */ 
+  ChimesGasVars.InitIonState = cooling->InitIonState; 
+  initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+
   if (cooling->init_abundance_mode == 0) 
     {
-      /* Set initial values for CHIMES 
-       * abundance array. */ 
-      ChimesGasVars.InitIonState = cooling->InitIonState; 
-      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+      // Copy abundances over to xp. 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
     }
   else if ((cooling->init_abundance_mode == 1) || (cooling->init_abundance_mode == 2)) 
     {
-      // Set abundance array to an initial guess. 
-      ChimesGasVars.InitIonState = cooling->InitIonState; 
-      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+      // Copy initial abundances over to xp. 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
       /* Get the particle's internal energy */ 
       double u_0 = hydro_get_physical_internal_energy(p, xp, cosmo); 
@@ -1256,13 +1260,13 @@ void cooling_convert_quantities(struct part *restrict p,
 	  /* Integrate to chemical equilibrium. */
 	  chimes_network(&ChimesGasVars, &ChimesGlobalVars); 
 	}
+
+      // Copy final abundances over to xp. 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
     }
   else 
     error("CHIMESCooling: init_abundance_mode %d not recognised.", cooling->init_abundance_mode); 
-
-  /* Copy abundances over to xp. */ 
-  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
-    xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
