@@ -33,15 +33,32 @@
 #include "star_formation.h"
 #include "tracers.h"
 
-const double mass_threshold = 1e-3;
 const int particle_split_factor = 2;
 const double displacement_factor = 0.2;
 
+/**
+ * @brief Identify all the gas particles above a given mass threshold
+ * and split them into 2.
+ *
+ * This may reallocate the space arrays as new particles are created.
+ * This is an expensive function as it has to loop multiple times over
+ * the local array of particles. In case of reallocations, it may
+ * also have to loop over the gravity and other arrays.
+ *
+ * @param e The #engine.
+ */
 void engine_split_gas_particles(struct engine *e) {
 
+  /* Abort if we are not doing any splitting */
+  if (!e->hydro_properties->particle_splitting) return;
+
+  /* Time this */
   const ticks tic = getticks();
 
+  /* Get useful constants */
   struct space *s = e->s;
+  const double mass_threshold =
+      e->hydro_properties->particle_splitting_mass_threshold;
 
   /* Quick check to avoid problems */
   if (particle_split_factor != 2) {
@@ -243,6 +260,12 @@ void engine_split_gas_particles(struct engine *e) {
   /* Update the local counters */
   s->nr_parts = k_parts;
   s->nr_gparts = k_gparts;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (s->nr_parts != nr_parts_old + (particle_split_factor - 1) * counter) {
+    error("Incorrect number of particles created");
+  }
+#endif
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
