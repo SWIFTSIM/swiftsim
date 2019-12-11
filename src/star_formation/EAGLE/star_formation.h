@@ -729,6 +729,7 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
  * storing the redshift/time of last SF event.
  *
  * @param p The #part.
+ * @param xp The #xpart.
  * @param n The number of pieces to split into.
  */
 __attribute__((always_inline)) INLINE static void star_formation_split_part(

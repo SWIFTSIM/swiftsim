@@ -110,4 +110,16 @@ static INLINE void tracers_first_init_xpart(
     const struct hydro_props *hydro_props,
     const struct cooling_function_data *cooling) {}
 
+/**
+ * @brief Split the tracer content of a particle into n pieces
+ *
+ * Nothing to do here.
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param n The number of pieces to split into.
+ */
+__attribute__((always_inline)) INLINE static void tracers_split_part(
+    struct part *p, struct xpart *xp, const double n) {}
+
 #endif /* SWIFT_TRACERS_NONE_H */
