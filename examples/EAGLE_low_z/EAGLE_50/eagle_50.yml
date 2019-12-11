@@ -59,7 +59,7 @@ SPH:
   CFL_condition:         0.1              # Courant-Friedrich-Levy condition for time integration.
   minimal_temperature:   100              # (internal units)
   particle_splitting:    1
-  particle_splitting_mass_threshold: 7e-4 # Internal units (i.e. 7e10 Msun ~ 4 times the initial gas mass)
+  particle_splitting_mass_threshold: 7e-4 # Internal units (i.e. 7e6 Msun ~ 4 times the initial gas mass)
 
 # Parameters of the stars neighbour search
 Stars:
