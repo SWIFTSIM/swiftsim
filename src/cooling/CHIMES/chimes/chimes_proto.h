@@ -22,6 +22,7 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
 // chimes.c 
 void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 void set_equilibrium_abundances_from_tables(struct UserData data);
+void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
 
 // init_chimes.c 
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);

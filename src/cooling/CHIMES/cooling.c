@@ -228,6 +228,18 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * 1 --> Enable thermal evolution. 
    */ 
   cooling->ThermEvolOn = parser_get_param_int(parameter_file, "CHIMESCooling:ThermEvolOn"); 
+
+  
+  /* Flag to switch on extra debug print 
+   * statements in CHIMES. 
+   * 0 --> No extra debug prints. 
+   * 1 --> If CVode returns a non-zero 
+   *       flag (i.e. it produces a 
+   *       CVODE error/warning), then 
+   *       we print out everything in 
+   *       the ChimesGasVars struct. 
+   */ 
+  cooling->ChimesGlobalVars.chimes_debug = parser_get_param_int(parameter_file, "CHIMESCooling:chimes_debug"); 
   
   /* The following CHIMES parameters do not need 
    * to be modified by the user. These are just 

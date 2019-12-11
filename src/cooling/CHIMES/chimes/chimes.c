@@ -30,6 +30,46 @@ void set_equilibrium_abundances_from_tables(struct UserData data)
   return;
 }
 
+void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars, struct globalVariables *myGlobalVars) 
+{
+  int i; 
+
+  fprintf(log_file, "**************\n"); 
+  fprintf(log_file, "ChimesGasVars:\n"); 
+  fprintf(log_file, "**************\n"); 
+
+  for (i = 0; i < 10; i++) 
+    fprintf(log_file, "element_abundances[%d] = %.6e \n", i, myGasVars->element_abundances[i]); 
+
+  fprintf(log_file, "nH_tot = %.6e \n", myGasVars->nH_tot); 
+  fprintf(log_file, "temperature = %.6e \n", myGasVars->temperature); 
+  fprintf(log_file, "TempFloor = %.6e \n", myGasVars->TempFloor); 
+  fprintf(log_file, "divVel = %.6e \n", myGasVars->divVel); 
+  fprintf(log_file, "doppler_broad = %.6e \n", myGasVars->doppler_broad); 
+
+  for (i = 0; i < myGlobalVars->N_spectra; i++) 
+    {
+      fprintf(log_file, "isotropic_photon_density[%d] = %.6e \n", i, myGasVars->isotropic_photon_density[i]); 
+      fprintf(log_file, "G0_parameter[%d] = %.6e \n", i, myGasVars->G0_parameter[i]); 
+      fprintf(log_file, "H2_dissocJ[%d] = %.6e \n", i, myGasVars->H2_dissocJ[i]); 
+    }
+
+  fprintf(log_file, "cr_rate = %.6e \n", myGasVars->cr_rate); 
+  fprintf(log_file, "metallicity = %.6e \n", myGasVars->metallicity); 
+  fprintf(log_file, "dust_ratio = %.6e \n", myGasVars->dust_ratio); 
+  fprintf(log_file, "cell_size = %.6e \n", myGasVars->cell_size); 
+  fprintf(log_file, "hydro_timestep = %.6e \n", myGasVars->hydro_timestep); 
+  fprintf(log_file, "ForceEqOn = %d \n", myGasVars->ForceEqOn); 
+  fprintf(log_file, "ThermEvolOn = %d \n", myGasVars->ThermEvolOn); 
+  fprintf(log_file, "InitIonState = %d \n", myGasVars->InitIonState); 
+  fprintf(log_file, "constant_heating_rate = %.6e \n", myGasVars->constant_heating_rate); 
+
+  for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++) 
+    fprintf(log_file, "abundances[%d] = %.6e \n", i, myGasVars->abundances[i]); 
+
+  fprintf(log_file, "++++++++++++++\n"); 
+}
+
 void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   realtype reltol, abstol_scalar, t;
@@ -294,7 +334,14 @@ void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGl
       CVodeSetMaxConvFails(cvode_mem, 5000);
 
       /* Call CVode() to integrate the chemistry. */ 
-      CVode(cvode_mem, (realtype) myGasVars->hydro_timestep, y, &t, CV_NORMAL);
+      int cv_flag; 
+      cv_flag = CVode(cvode_mem, (realtype) myGasVars->hydro_timestep, y, &t, CV_NORMAL);
+      
+      if ((cv_flag != 0) && (myGlobalVars->chimes_debug == 1)) 
+	{
+	  fprintf(stderr, "CHIMES CVode error at redshift %.4f \n", myGlobalVars->redshift); 
+	  chimes_print_gas_vars(stderr, myGasVars, myGlobalVars); 
+	}
 
       /* Write the output abundances to the gas cell 
        * Note that species not included in the reduced

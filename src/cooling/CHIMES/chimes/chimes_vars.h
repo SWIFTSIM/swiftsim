@@ -98,6 +98,7 @@ struct globalVariables
   int speciesIndices[TOTSIZE];
   int totalNumberOfSpecies;
   int scale_metal_tolerances; 
+  int chimes_debug; 
 
 /*************************
  ** SWIFT-specific code **
