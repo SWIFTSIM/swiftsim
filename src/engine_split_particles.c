@@ -198,12 +198,12 @@ void engine_split_gas_particles(struct engine *e) {
       gparts[k_gparts].id_or_neg_offset = -k_parts;
 
       /* Displacement unit vector */
-      const double delta_x =
-          (random_unit_interval(p->id, e->ti_current, 0) - 0.5);
-      const double delta_y =
-          (random_unit_interval(p->id, e->ti_current, 1) - 0.5);
-      const double delta_z =
-          (random_unit_interval(p->id, e->ti_current, 2) - 0.5);
+      const double delta_x = random_unit_interval(p->id, e->ti_current,
+                                                  (enum random_number_type)0);
+      const double delta_y = random_unit_interval(p->id, e->ti_current,
+                                                  (enum random_number_type)1);
+      const double delta_z = random_unit_interval(p->id, e->ti_current,
+                                                  (enum random_number_type)2);
 
       /* Displace the old particle */
       p->x[0] += delta_x * displacement_factor * h;
