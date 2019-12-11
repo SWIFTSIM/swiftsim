@@ -4654,19 +4654,12 @@ void space_convert_quantities_mapper(void *restrict map_data, int count,
   struct part *restrict parts = (struct part *)map_data;
   const ptrdiff_t index = parts - s->parts;
   struct xpart *restrict xparts = s->xparts + index;
-  const struct phys_const *phys_const = s->e->physical_constants;
-  const struct unit_system *us = s->e->internal_units;
-  const struct entropy_floor_properties *entropy_floor = s->e->entropy_floor; 
-  const struct cooling_function_data *cool_func = s->e->cooling_func;
 
   /* Loop over all the particles ignoring the extra buffer ones for on-the-fly
    * creation */
   for (int k = 0; k < count; k++)
-    if (parts[k].time_bin <= num_time_bins) {
+    if (parts[k].time_bin <= num_time_bins) 
       hydro_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props);
-      cooling_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props, 
-				 phys_const, us, entropy_floor, cool_func);
-    }
 }
 
 /**
@@ -4683,6 +4676,47 @@ void space_convert_quantities(struct space *s, int verbose) {
   if (s->nr_parts > 0)
     threadpool_map(&s->e->threadpool, space_convert_quantities_mapper, s->parts,
                    s->nr_parts, sizeof(struct part), 0, s);
+
+  if (verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+}
+
+void space_convert_cooling_quantities_mapper(void *restrict map_data, int count,
+					     void *restrict extra_data) {
+  struct space *s = (struct space *)extra_data;
+  const struct cosmology *cosmo = s->e->cosmology;
+  const struct hydro_props *hydro_props = s->e->hydro_properties;
+  struct part *restrict parts = (struct part *)map_data;
+  const ptrdiff_t index = parts - s->parts;
+  struct xpart *restrict xparts = s->xparts + index;
+  const struct phys_const *phys_const = s->e->physical_constants;
+  const struct unit_system *us = s->e->internal_units;
+  const struct entropy_floor_properties *entropy_floor = s->e->entropy_floor; 
+  const struct cooling_function_data *cool_func = s->e->cooling_func;
+
+  /* Loop over all the particles ignoring the extra buffer ones for on-the-fly
+   * creation */
+  for (int k = 0; k < count; k++)
+    if (parts[k].time_bin <= num_time_bins) 
+      cooling_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props, 
+				 phys_const, us, entropy_floor, cool_func);
+}
+
+/**
+ * @brief Calls the #part cooling quantities conversion function on 
+ * all particles in the space.
+ *
+ * @param s The #space.
+ * @param verbose Are we talkative?
+ */
+void space_convert_cooling_quantities(struct space *s, int verbose) {
+
+  const ticks tic = getticks();
+
+  if (s->nr_parts > 0)
+    threadpool_map(&s->e->threadpool, space_convert_cooling_quantities_mapper, 
+		   s->parts, s->nr_parts, sizeof(struct part), 0, s);
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
