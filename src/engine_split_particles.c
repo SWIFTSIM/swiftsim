@@ -85,7 +85,13 @@ void engine_split_gas_particles(struct engine *e) {
   }
 
   /* Early abort? */
-  if (counter == 0) return;
+  if (counter == 0) {
+
+    if (e->verbose)
+      message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+              clocks_getunit());
+    return;
+  }
 
   message("Splitting %zd particles above the mass threshold", counter);
 
