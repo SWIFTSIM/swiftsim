@@ -197,7 +197,7 @@ void engine_split_gas_particles(struct engine *e) {
       memcpy(&gparts[k_gparts], gp, sizeof(struct gpart));
 
       /* Update the IDs */
-      parts[k_parts].id++;
+      parts[k_parts].id += 2;
 
       /* Re-link everything */
       parts[k_parts].gpart = &gparts[k_gparts];
