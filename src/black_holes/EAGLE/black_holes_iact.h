@@ -172,11 +172,6 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) {
 
       const float potential = pj->black_holes_data.potential;
-      /* #ifdef SWIFT_DEBUG_CHECKS */
-      /*       if (potential == FLT_MAX) */
-      /*         error("Potential of gas particle was not copied from the
-       * gpart!"); */
-      /* #endif */
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
@@ -274,11 +269,6 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) {
 
       const float potential = bj->reposition.potential;
-      /* #ifdef SWIFT_DEBUG_CHECKS */
-      /*       if (potential == FLT_MAX) */
-      /*         error("Potential of black hole was not copied from the
-       * gpart!"); */
-      /* #endif */
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
