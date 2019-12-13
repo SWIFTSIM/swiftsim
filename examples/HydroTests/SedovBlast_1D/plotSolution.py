@@ -39,7 +39,7 @@ from pylab import *
 import h5py
 
 # Plot parameters
-style.use("../../mnras.mplstyle")
+style.use("../../../tools/stylesheets/mnras.mplstyle")
 
 snap = int(sys.argv[1])
 

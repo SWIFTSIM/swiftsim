@@ -9,7 +9,7 @@ import unyt
 import numpy as np
 
 try:
-    plt.style.use("../../mnras.mplstyle")
+    plt.style.use("../../../tools/stylesheets/mnras.mplstyle")
 except:
     print("Can't find Matplotlib stylesheet.")
 

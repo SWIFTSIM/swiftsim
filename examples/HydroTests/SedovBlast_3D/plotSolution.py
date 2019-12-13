@@ -40,7 +40,7 @@ from numpy import power
 from scipy import stats
 import h5py
 
-style.use("../../mnras.mplstyle")
+style.use("../../../tools/stylesheets/mnras.mplstyle")
 
 snap = int(sys.argv[1])
 
