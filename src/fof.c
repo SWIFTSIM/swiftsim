@@ -247,38 +247,35 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
 
   const int verbose = s->e->verbose;
 
-  /* Get the mean inter DM particle separation */
-  double mean_inter_particle_sep = -1.;
+  /* Start by computing the mean inter DM particle separation */
 
-  /* Are we in a zoom simulation? */
-  if (s->with_DM_background) {
-
-    /* Collect the mass of the first non-background gpart */
-    double high_res_DM_mass = 0.;
-    for (size_t i = 0; i < s->nr_gparts; ++i) {
-      const struct gpart *gp = &s->gparts[i];
-      if (gp->type == swift_type_dark_matter &&
-          gp->time_bin != time_bin_inhibited &&
-          gp->time_bin != time_bin_not_created) {
-        high_res_DM_mass = gp->mass;
-        break;
-      }
+  /* Collect the mass of the first non-background gpart */
+  double high_res_DM_mass = 0.;
+  for (size_t i = 0; i < s->nr_gparts; ++i) {
+    const struct gpart *gp = &s->gparts[i];
+    if (gp->type == swift_type_dark_matter &&
+        gp->time_bin != time_bin_inhibited &&
+        gp->time_bin != time_bin_not_created) {
+      high_res_DM_mass = gp->mass;
+      break;
     }
-
-    /* Calculate the mean inter-particle simulation as if we were in
-       a scenario where the entire box was filled with high-resolution
-       particles */
-    const double Omega_m = s->e->cosmology->Omega_m;
-    const double critical_density_0 = s->e->cosmology->critical_density_0;
-    const double mean_matter_density = Omega_m * critical_density_0;
-
-    mean_inter_particle_sep = cbrt(high_res_DM_mass / mean_matter_density);
-
-  } else {
-
-    /* Box simulation: just use the number of particles */
-    mean_inter_particle_sep = s->dim[0] / cbrt((double)total_nr_DM_particles);
   }
+
+  /* Calculate the mean inter-particle separation as if we were in
+     a scenario where the entire box was filled with high-resolution
+       particles */
+  const double Omega_m = s->e->cosmology->Omega_m;
+  const double Omega_b = s->e->cosmology->Omega_b;
+  const double critical_density_0 = s->e->cosmology->critical_density_0;
+  double mean_matter_density;
+  if (s->with_hydro)
+    mean_matter_density = (Omega_m - Omega_b) * critical_density_0;
+  else
+    mean_matter_density = Omega_m * critical_density_0;
+
+  /* Mean inter-particle separation of the DM particles */
+  const double mean_inter_particle_sep =
+      cbrt(high_res_DM_mass / mean_matter_density);
 
   /* Calculate the particle linking length based upon the mean inter-particle
    * spacing of the DM particles. */
