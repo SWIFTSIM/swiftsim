@@ -47,13 +47,7 @@ __attribute__((always_inline)) INLINE static int feedback_is_active(
     const struct spart* sp, const float time, const struct cosmology* cosmo,
     const int with_cosmology) {
 
-  if (sp->birth_time == -1.) return 0;
-
-  if (with_cosmology) {
-    return ((float)cosmo->a) > sp->birth_scale_factor;
-  } else {
-    return time > sp->birth_time;
-  }
+  return (sp->birth_time != -1.) && (sp->count_since_last_enrichment == 0);
 }
 
 /**
@@ -225,6 +219,27 @@ __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const int with_cosmology, const struct cosmology* cosmo,
     const double time) {
+
+  /* Special case for new-born stars */
+  if (with_cosmology) {
+    if (sp->birth_scale_factor == (float)cosmo->a) {
+
+      /* Set the counter to "let's do enrichment" */
+      sp->count_since_last_enrichment = 0;
+
+      /* Say we want to do feedback */
+      return 1;
+    }
+  } else {
+    if (sp->birth_time == (float)time) {
+
+      /* Set the counter to "let's do enrichment" */
+      sp->count_since_last_enrichment = 0;
+
+      /* Say we want to do feedback */
+      return 1;
+    }
+  }
 
   /* Calculate age of the star at current time */
   double age_of_star;
