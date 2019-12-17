@@ -79,7 +79,7 @@ __attribute__((always_inline)) INLINE static int task_order_cell_is_active_cooli
  * @param e The #engine containing information about the current time.
  * @return 1 if the #part is active, 0 otherwise.
  */
-__attribute__((always_inline)) INLINE static int part_is_starting(
+__attribute__((always_inline)) INLINE static int task_order_part_is_active_cooling(
     const struct part *p, const struct engine *e) {
   return part_is_active(p, e);
 }
