@@ -89,8 +89,10 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
  *
  * @param sp The star to consider.
  */
-__attribute__((always_inline)) INLINE static int feedback_do_feedback(
-    const struct spart* sp) {
+__attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
+    const struct spart* sp, const struct feedback_props* feedback_props,
+    const int with_cosmology, const struct cosmology* cosmo,
+    const double time) {
 
   return (sp->birth_time != -1.);
 }
@@ -115,6 +117,25 @@ __attribute__((always_inline)) INLINE static int feedback_is_active(
     return time > sp->birth_time;
   }
 }
+
+/**
+ * @brief Returns the length of time since the particle last did
+ * enrichment/feedback.
+ *
+ * @param sp The #spart.
+ * @param with_cosmology Are we running with cosmological time integration on?
+ * @param cosmo The cosmological model.
+ * @param time The current time (since the Big Bang / start of the run) in
+ * internal units.
+ * @param dt_star the length of this particle's time-step in internal units.
+ * @return The length of the enrichment step in internal units.
+ */
+INLINE static double feedback_get_enrichment_timestep(
+    const struct spart* sp, const int with_cosmology,
+    const struct cosmology* cosmo, const double time, const double dt_star) {
+  return dt_star;
+}
+
 
 /**
  * @brief Prepares a s-particle for its feedback interactions
@@ -188,17 +209,20 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param feedback_props The #feedback_props structure.
  * @param cosmo The current cosmological model.
  * @param us The unit system.
- * @param phys_const The physical constants in the internal unit system.
+ * @param phys_const The #phys_const.
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
+ * @param time The physical time in internal units.
+ * @param ti_begin The integer time at the beginning of the step.
+ * @param with_cosmology Are we running with cosmology on?
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const,
-    const integertime_t ti_begin,
-    const double star_age_beg_step, const double dt) {
+    const double star_age_beg_step, const double dt, const double time,
+    const integertime_t ti_begin, const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -210,7 +234,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Add missing h factor */
   const float hi_inv = 1.f / sp->h;
   const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
-  
+
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
 

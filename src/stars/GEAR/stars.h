@@ -61,7 +61,8 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
  * @param stars_properties Properties of the stars model.
  */
 __attribute__((always_inline)) INLINE static void stars_first_init_spart(
-    struct spart* sp, const struct stars_props* stars_properties) {
+    struct spart* sp, const struct stars_props* stars_properties,
+    const int with_cosmology, const double scale_factor, const double time) {
 
   sp->time_bin = 0;
   sp->birth.density = 0.f;
