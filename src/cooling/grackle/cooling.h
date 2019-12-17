@@ -754,6 +754,7 @@ __attribute__((always_inline)) INLINE static void cooling_apply(
     float cooling_du_dt, gr_float u_new) {
 
 #ifdef TASK_ORDER_GEAR
+  /* Cannot use du / dt as it will be erased before being used */
   hydro_set_physical_internal_energy(p, xp, cosmo, u_new);
   hydro_set_drifted_physical_internal_energy(p, cosmo, u_new);
 #else
