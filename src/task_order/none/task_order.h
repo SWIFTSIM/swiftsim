@@ -21,6 +21,8 @@
 
 #define task_order_star_formation_before_feedback 1
 
+#include "active.h"
+
 /**
  * @brief Place the star formation cell at the right place in the dependency
  * graph.

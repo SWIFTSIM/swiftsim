@@ -156,12 +156,6 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {
 
-  /* Zero the amount of mass that is distributed */
-  sp->feedback_data.to_distribute.mass = 0.f;
-
-  /* Zero the energy to inject */
-  sp->feedback_data.to_distribute.energy = 0.f;
-
   /* Zero the number of supernovae */
   sp->feedback_data.number_snia = 0;
   sp->feedback_data.number_snii = 0;

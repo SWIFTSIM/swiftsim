@@ -53,6 +53,7 @@
 #include "star_formation.h"
 #include "star_formation_logger.h"
 #include "stars.h"
+#include "task_order.h"
 #include "timers.h"
 #include "timestep_limiter.h"
 #include "tracers.h"
