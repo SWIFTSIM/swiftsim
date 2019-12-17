@@ -490,20 +490,44 @@ void chimes_update_gas_vars(const double u_cgs,
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
   float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
   ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
+
+  ChimesGasVars->metallicity = 0.0; 
+  float totmass = 0.0, metalmass = 0.0; 
+  for (enum colibre_cooling_element elem = element_H; elem < element_OA; elem++) 
+    {
+      if ((elem != element_S) && (elem != element_Ca)) 
+	{
+	  totmass += metal_fraction[element_from_table_to_code(elem)]; 
+	  if (elem > element_He) 
+	    metalmass += metal_fraction[element_from_table_to_code(elem)]; 
+	}
+      else if (elem == element_S) 
+	{
+	  totmass += metal_fraction[element_from_table_to_code(element_Si)] * cooling->S_over_Si_ratio_in_solar * cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction; 
+	  metalmass += metal_fraction[element_from_table_to_code(element_Si)] * cooling->S_over_Si_ratio_in_solar * cooling->S_solar_mass_fraction / cooling->Si_solar_mass_fraction; 
+	}
+      else if (elem == element_Ca) 
+	{
+	  totmass += metal_fraction[element_from_table_to_code(element_Si)] * cooling->Ca_over_Si_ratio_in_solar * cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction; 
+	  metalmass += metal_fraction[element_from_table_to_code(element_Si)] * cooling->Ca_over_Si_ratio_in_solar * cooling->Ca_solar_mass_fraction / cooling->Si_solar_mass_fraction; 
+	}
+    }
+  ChimesGasVars->metallicity = (ChimesFloat) (metalmass / totmass) / cooling->Zsol; 
 #else 
   /* Without COLIBRE or EAGLE chemistry, 
    * the metal abundances are unavailable. 
    * Set to primordial abundances. */ 
   ChimesFloat XH = 0.75; 
+  ChimesGasVars->metallicity = 0.0; 
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE 
+
+  ChimesGasVars->dust_ratio = ChimesGasVars->metallicity; 
 
   ChimesFloat nH = (ChimesFloat) hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass; 
   ChimesGasVars->nH_tot = nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY); 
 
   ChimesGasVars->TempFloor = (ChimesFloat) T_floor;
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate; 
-  ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p) / cooling->Zsol; 
-  ChimesGasVars->dust_ratio = ChimesGasVars->metallicity; 
   ChimesGasVars->hydro_timestep = (ChimesFloat) dt_cgs; 
 
   ChimesGasVars->constant_heating_rate = 0.0; 
