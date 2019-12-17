@@ -1527,11 +1527,11 @@ void feedback_props_init(struct feedback_props* fp,
 
   fp->stellar_evolution_age_cut =
       parser_get_param_double(params,
-                              "EAGLEFeedback:stellar_evolution_age_cut_Gyr") *
+                              "COLIBREFeedback:stellar_evolution_age_cut_Gyr") *
       Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   fp->stellar_evolution_sampling_rate = parser_get_param_double(
-      params, "EAGLEFeedback:stellar_evolution_sampling_rate");
+      params, "COLIBREFeedback:stellar_evolution_sampling_rate");
 
   if (fp->stellar_evolution_sampling_rate < 1 ||
       fp->stellar_evolution_sampling_rate >= (1 << (8 * sizeof(char) - 1)))
