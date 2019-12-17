@@ -21,11 +21,11 @@
 #include "../config.h"
 
 /* Some standard headers. */
-#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 /* This object's header. */
 #include "velociraptor_interface.h"
@@ -562,30 +562,33 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
         "VELOCIraptor conf: MPI rank %d sending %zu gparts to VELOCIraptor.",
         engine_rank, nr_gparts);
 
-  /* Generate directory name for this output - start with snapshot directory, if specified */
+  /* Generate directory name for this output - start with snapshot directory, if
+   * specified */
   char outputDirName[FILENAME_BUFFER_SIZE] = "";
-  if(strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
-    if(snprintf(outputDirName, FILENAME_BUFFER_SIZE, "%s/", e->snapshot_subdir) >= FILENAME_BUFFER_SIZE){
+  if (strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
+    if (snprintf(outputDirName, FILENAME_BUFFER_SIZE, "%s/",
+                 e->snapshot_subdir) >= FILENAME_BUFFER_SIZE) {
       error("FILENAME_BUFFER_SIZE is to small for snapshot directory name!");
     }
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(outputDirName, 0777);
+    if (engine_rank == 0) mkdir(outputDirName, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
     mkdir(outputDirName, 0777);
 #endif
   }
-  
+
   /* Then create output-specific subdirectory if necessary */
   char subDirName[FILENAME_BUFFER_SIZE] = "";
-  if(strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE) > 0) {
-    if(snprintf(subDirName, FILENAME_BUFFER_SIZE, "%s%s_%04i/", 
-                outputDirName, e->stf_subdir_per_output,
-                e->snapshot_output_count) >= FILENAME_BUFFER_SIZE) {
-      error("FILENAME_BUFFER_SIZE is to small for Velociraptor directory name!");      
+  if (strnlen(e->stf_subdir_per_output, PARSER_MAX_LINE_SIZE) > 0) {
+    if (snprintf(subDirName, FILENAME_BUFFER_SIZE, "%s%s_%04i/", outputDirName,
+                 e->stf_subdir_per_output,
+                 e->snapshot_output_count) >= FILENAME_BUFFER_SIZE) {
+      error(
+          "FILENAME_BUFFER_SIZE is to small for Velociraptor directory name!");
     }
 #ifdef WITH_MPI
-    if(engine_rank==0)mkdir(subDirName, 0777);
+    if (engine_rank == 0) mkdir(subDirName, 0777);
     MPI_Barrier(MPI_COMM_WORLD);
 #else
     mkdir(subDirName, 0777);
@@ -600,10 +603,10 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
 
   /* What should the filename be? */
   char outputFileName[FILENAME_BUFFER_SIZE];
-  if(snprintf(outputFileName, FILENAME_BUFFER_SIZE, 
-              "%s%s_%04i.VELOCIraptor", subDirName,
-              e->stf_base_name, e->stf_output_count) >= FILENAME_BUFFER_SIZE) {
-    error("FILENAME_BUFFER_SIZE is too small for Velociraptor file name!");      
+  if (snprintf(outputFileName, FILENAME_BUFFER_SIZE, "%s%s_%04i.VELOCIraptor",
+               subDirName, e->stf_base_name,
+               e->stf_output_count) >= FILENAME_BUFFER_SIZE) {
+    error("FILENAME_BUFFER_SIZE is too small for Velociraptor file name!");
   }
 
   tic = getticks();
