@@ -20,7 +20,6 @@
 #define SWIFT_TASK_ORDER_GEAR_H
 
 #define task_order_star_formation_before_feedback 0
-#define task_order_is_cooling_implicit 0
 
 #include "active.h"
 #include "cooling.h"
@@ -58,33 +57,6 @@ INLINE static void task_order_addunlock_cooling(struct scheduler *s,
 
   scheduler_addunlock(s, c->super->kick1, c->hydro.cooling);
   scheduler_addunlock(s, c->hydro.end_force, c->super->kick2);
-}
-
-/**
- * @brief Do some computations in the kick1.
- *
- * @param p The #part.
- * @param xp The #xpart.
- * @param e The #engine.
- */
-INLINE static void task_order_kick1(
-    struct part *p, struct xpart *xp, const struct engine *e) {
-
-  const double dt_cool = get_timestep(p->time_bin, e->time_base);
-  const double dt_therm = get_timestep(p->time_bin, e->time_base);
-
-  /* If particle needs to be kicked */
-  /* Skip particles that have been woken up and treated by the limiter. */
-  if (part_is_starting(p, e)) {
-    /* Cool the particle */
-    cooling_cool_part(e->physical_constants, e->internal_units, e->cosmology,
-                      e->hydro_properties,
-                      e->entropy_floor, e->cooling_func, p, xp, e->time, dt_cool,
-                      dt_therm);
-  }
-
-  /* Apply the feedback */
-  feedback_update_part(p, xp, e);
 }
 
 #endif /* SWIFT_TASK_ORDER_GEAR_H */

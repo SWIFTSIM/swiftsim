@@ -112,7 +112,9 @@ static INLINE void chemistry_scale_initial_metallicities(struct swift_params* pa
     strcat(txt, tmp);
   }
 
-  message("%s", txt);
+  if (engine_rank == 0) {
+    message("%s", txt);
+  }
 #else
   error("Cannot scale the solar abundances without HDF5");
 #endif

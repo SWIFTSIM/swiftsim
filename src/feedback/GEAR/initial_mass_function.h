@@ -63,7 +63,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_print(
   message("Number of parts: %i", imf->n_parts);
   message("Mass interval: [%g, %g]", imf->mass_min, imf->mass_max);
   for(int i = 0; i < imf->n_parts; i++) {
-    message("[%g, %g]: %g * m^{%g}", imf->mass_limits[i], imf->mass_limits[i+1],
+    message("[%g, %g]: %.2g * m^{%g}", imf->mass_limits[i], imf->mass_limits[i+1],
 	    imf->coef[i], imf->exp[i]);
   }
 }
@@ -511,5 +511,25 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_restore(
 			NULL, "imf_coef");
   }
 }
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param imf the #initial_mass_function.
+ */
+__attribute__((always_inline)) INLINE static void initial_mass_function_clean(
+    struct initial_mass_function* imf) {
+
+  /* Free the pointers */
+  free(imf->mass_limits);
+  imf->mass_limits = NULL;
+
+  free(imf->exp);
+  imf->exp = NULL;
+
+  free(imf->coef);
+  imf->coef = NULL;
+}
+
 
 #endif // SWIFT_INITIAL_MASS_FUNCTION_GEAR_H

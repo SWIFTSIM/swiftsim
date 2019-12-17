@@ -24,6 +24,22 @@
 #include "stellar_evolution_struct.h"
 
 /**
+ * @brief Print the supernovae II model.
+ *
+ * @param snii The #supernovae_ii.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ii_print(
+    const struct supernovae_ii* snii) {
+
+  /* Only the master print */
+  if (engine_rank != 0) {
+    return;
+  }
+
+  message("Mass range for SNII = [%g, %g]", snii->mass_min, snii->mass_max);
+}
+
+/**
  * @brief Check if the given mass is able to produce a SNII.
  *
  * @param snii The #supernovae_ii model.
@@ -81,11 +97,6 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_number(
  */
 __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
     const struct supernovae_ii *snii, float log_m1, float log_m2, float *yields) {
-#ifdef SWIFT_DEBUG_CHECKS
-  if (!snii->use_integrated_yields) {
-    error("Cannot use this function without the integrated yields");
-  }
-#endif
 
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     float yields_1 = interpolate_1d(&snii->integrated_yields[i], log_m1);
@@ -95,26 +106,6 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
   }
 };
 
-/**
- * @brief Get the SNII yields per supernovae (discret).
- *
- * @param snii The #supernovae_ii model.
- * @param m The mass in log.
- * @param yields The elements ejected (needs to be allocated).
- */
-__attribute__((always_inline)) INLINE static void supernovae_ii_get_discret_yields(
-    const struct supernovae_ii *snii, float log_m, float *yields) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (snii->use_integrated_yields) {
-    error("Cannot use this function with the integrated yields");
-  }
-#endif
-
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    yields[i] = interpolate_1d(&snii->yields[i], log_m);
-  }
-};
 
 /**
  * @brief Get the ejected mass per mass unit.
@@ -128,12 +119,6 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_get_discret_yiel
 __attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction(
     const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (!snii->use_integrated_yields) {
-    error("Cannot use this function without the integrated yields");
-  }
-#endif
-
   float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass, log_m1);
   float mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass, log_m2);
 
@@ -141,25 +126,6 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mas
 
 };
 
-/**
- * @brief Get the (discret) ejected mass per supernovae.
- *
- * @param snii The #supernovae_ii model.
- * @param log_m The mass in log.
- *
- * @return mass_ejected_processed The mass of processsed elements.
- */
-__attribute__((always_inline)) INLINE static float supernovae_ii_get_discret_ejected_mass_fraction(
-    const struct supernovae_ii *snii, float log_m) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (snii->use_integrated_yields) {
-    error("Cannot use this function with the integrated yields");
-  }
-#endif
-
-  return interpolate_1d(&snii->ejected_mass, log_m);
-};
 
 /**
  * @brief Get the ejected mass (processed) per mass.
@@ -173,36 +139,10 @@ __attribute__((always_inline)) INLINE static float supernovae_ii_get_discret_eje
 __attribute__((always_inline)) INLINE static float supernovae_ii_get_ejected_mass_fraction_processed(
     const struct supernovae_ii *snii, float log_m1, float log_m2) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (!snii->use_integrated_yields) {
-    error("Cannot use this function without the integrated yields");
-  }
-#endif
-
   float mass_ejected_1 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m1);
   float mass_ejected_2 = interpolate_1d(&snii->integrated_ejected_mass_processed, log_m2);
 
   return mass_ejected_2 - mass_ejected_1;
-};
-
-/**
- * @brief Get the discret ejected mass (processed) per supernovae.
- *
- * @param snii The #supernovae_ii model.
- * @param log_m The mass in log.
- *
- * @return mass_ejected The mass of non processsed elements.
- */
-__attribute__((always_inline)) INLINE static float supernovae_ii_get_discret_ejected_mass_fraction_processed(
-    const struct supernovae_ii *snii, float log_m) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (snii->use_integrated_yields) {
-    error("Cannot use this function with the integrated yields");
-  }
-#endif
-
-  return interpolate_1d(&snii->ejected_mass_processed, log_m);
 };
 
 /**
@@ -364,11 +304,6 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_init(
     const struct unit_system* us, struct swift_params* params,
     const struct stellar_model *sm) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  /* Not used yet */
-  snii->use_integrated_yields = 1;
-#endif
-
   /* Read the parameters from the tables */
   supernovae_ii_read_from_tables(snii, params);
 
@@ -471,6 +406,22 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_restore(
 			sizeof(float), snii->integrated_ejected_mass.N, stream,
 			NULL, "non_processed_mass");
   }
+}
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param snii the #supernovae_ii.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ii_clean(
+    struct supernovae_ii* snii) {
+
+  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    interpolate_1d_free(&snii->integrated_yields[i]);
+  }
+
+  interpolate_1d_free(&snii->integrated_ejected_mass_processed);
+  interpolate_1d_free(&snii->integrated_ejected_mass);
 }
 
 #endif // SWIFT_SUPERNOVAE_II_GEAR_H

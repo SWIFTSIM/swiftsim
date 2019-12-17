@@ -59,7 +59,7 @@ struct cooling_function_data {
   /*! User provide specific heating rates */
   int provide_specific_heating_rates;
 
-  /*! Self shielding method (1 -> 3 for grackle's ones, 0 for non and -1 for GEAR) */
+  /*! Self shielding method (1 -> 3 for grackle's ones, 0 for none and -1 for GEAR) */
   int self_shielding_method;
 
   /*! Self shielding threshold */

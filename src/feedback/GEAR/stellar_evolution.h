@@ -32,6 +32,29 @@
 
 
 /**
+ * @brief Print the stellar model.
+ *
+ * @param sm The #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_model_print(
+    const struct stellar_model* sm) {
+
+  /* Only the master print */
+  if (engine_rank != 0) {
+    return;
+  }
+
+  /* Print the type of yields */
+  message("Discret yields? %i", sm->discret_yields);
+
+  /* Print the sub properties */
+  initial_mass_function_print(&sm->imf);
+  lifetime_print(&sm->lifetime);
+  supernovae_ia_print(&sm->snia);
+  supernovae_ii_print(&sm->snii);
+}
+
+/**
  * @brief Compute the integer number of supernovae from the floating number.
  *
  * @param sp The particle to act upon
@@ -288,9 +311,6 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_evolve_spart
   if (sp->feedback_data.number_snia == 0 && sp->feedback_data.number_snii == 0)
     return;
 
-  sp->feedback_data.total_snia += sp->feedback_data.number_snia;
-  sp->feedback_data.total_snii += sp->feedback_data.number_snii;
-
   /* Compute the properties of the feedback (e.g. yields) */
   if (sm->discret_yields) {
     stellar_evolution_compute_discret_feedback_properties(
@@ -351,7 +371,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_read_element
     strcat(txt, stellar_evolution_get_element_name(sm, i));
   }
 
-  message("Chemistry elements: %s", txt);
+  if (engine_rank == 0) {
+    message("Chemistry elements: %s", txt);
+  }
 
   /* Cleanup everything */
   h5_close_group(file_id, group_id);
@@ -443,6 +465,22 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_restore(
  
   /* Restore the supernovae II model */
   supernovae_ii_restore(&sm->snii, stream, sm);
+}
+
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param sm the #stellar_model.
+ */
+__attribute__((always_inline)) INLINE static void stellar_evolution_clean(
+    struct stellar_model* sm) {
+
+  initial_mass_function_clean(&sm->imf);
+  lifetime_clean(&sm->lifetime);
+  supernovae_ia_clean(&sm->snia);
+  supernovae_ii_clean(&sm->snii);
+
 }
 
 #endif // SWIFT_STELLAR_EVOLUTION_GEAR_H

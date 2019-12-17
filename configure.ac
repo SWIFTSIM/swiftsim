@@ -1445,7 +1445,8 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=GEAR
+  # GEAR's order is not used anymore
+	with_subgrid_task_order=none
 	enable_fof=no
    ;;
    EAGLE)
@@ -1792,7 +1793,7 @@ esac
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
       [chemistry function @<:@none, GEAR_*, EAGLE default: none@:>@
-      For GEAR, you need to provide the number of element (e.g. GEAR_10)]
+      For GEAR, you need to provide the number of elements (e.g. GEAR_10)]
    )],
    [with_chemistry="$withval"],
    [with_chemistry="none"]

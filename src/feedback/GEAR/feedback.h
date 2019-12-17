@@ -29,7 +29,7 @@
 
 #include <strings.h>
 
-/**
+  /**
  * @brief Update the properties of the particle due to a supernovae.
  *
  * @param p The #part to consider.
@@ -182,9 +182,6 @@ __attribute__((always_inline)) INLINE static void feedback_first_init_spart(
   feedback_init_spart(sp);
 
   feedback_reset_feedback(sp, feedback_props);
-
-  sp->feedback_data.total_snia = 0;
-  sp->feedback_data.total_snii = 0;
 }
 
 /**
@@ -275,12 +272,15 @@ __attribute__((always_inline)) INLINE static void feedback_struct_restore(
 
 }
 
-
 /**
- * TODO
+ * @brief Clean the allocated memory.
+ *
+ * @param feedback the #feedback_props.
  */
 __attribute__((always_inline)) INLINE static void feedback_clean(
-                                                                 struct feedback_props* feedback) {
+    struct feedback_props* feedback) {
+
+  stellar_evolution_clean(&feedback->stellar_model);
 
 }
 

@@ -75,13 +75,8 @@ struct lifetime {
  * @brief Model for SNIa.
  */
 struct supernovae_ia {
-  /*! Yields TODO more comment */
-  struct {
-
-    /*! Mass of each element ejected by a single supernovae */
-    float data[CHEMISTRY_ELEMENT_COUNT];
-
-  } yields;
+  /*! Mass of each element ejected by a single supernovae */
+  float yields[CHEMISTRY_ELEMENT_COUNT];
 
   /*! White dwarf's mass */
   float mass_white_dwarf;
@@ -120,23 +115,14 @@ struct supernovae_ia {
  */
 struct supernovae_ii {
 
-  union {
-    struct interpolation_1d yields[CHEMISTRY_ELEMENT_COUNT];
-    /*! Integrated yields TODO more comment: Currently it is the integrated mass fraction */
-    struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
-  };
+  /*! Integrated (over the IMF) mass fraction of metals ejected by a supernovae */
+  struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
 
-  union {
-    struct interpolation_1d ejected_mass_processed;
-    /*! Integrated mass ejected (processed): Currently it is the mass fraction */
-    struct interpolation_1d integrated_ejected_mass_processed;
-  };
+  /*! Total mass fraction ejected (integrated over the IMF) */
+  struct interpolation_1d integrated_ejected_mass_processed;
 
-  union {
-    struct interpolation_1d ejected_mass;
-    /*! Integrated mass ejected (non processed): Currently it is the mass fraction */
-    struct interpolation_1d integrated_ejected_mass;
-  };
+  /*! Mass fraction ejected and not processed (=> with the star metallicity) */
+  struct interpolation_1d integrated_ejected_mass;
 
   /*! Minimal mass for a SNII */
   float mass_min;
@@ -149,10 +135,6 @@ struct supernovae_ii {
 
   /*! coefficient of the IMF over the exponent */
   float coef_exp;
-
-#ifdef SWIFT_DEBUG_CHECKS
-  char use_integrated_yields;
-#endif
 };
 
 /**
@@ -162,7 +144,7 @@ struct stellar_model {
 
   /*! Name of the different elements */
   char elements_name[CHEMISTRY_ELEMENT_COUNT * GEAR_LABELS_SIZE];
-  
+
   /*! The initial mass function */
   struct initial_mass_function imf;
 

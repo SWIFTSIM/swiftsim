@@ -29,6 +29,29 @@ __attribute__((always_inline)) INLINE static const char* stellar_evolution_get_e
 
 
 /**
+ * @brief Print the supernovae Ia model.
+ *
+ * @param snia The #supernovae_ia.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ia_print(
+    const struct supernovae_ia* snia) {
+
+  /* Only the master print */
+  if (engine_rank != 0) {
+    return;
+  }
+
+  message("Mass of the white dwarf = %g", snia->mass_white_dwarf);
+  message("Mass range of the progenitor = [%g, %g]",
+          snia->mass_min_progenitor, snia->mass_max_progenitor);
+
+  for(int i = 0; i < GEAR_NUMBER_TYPE_OF_COMPANION; i++) {
+    message("Mass range of the companion %i = [%g, %g]",
+            i, snia->companion[i].mass_min, snia->companion[i].mass_max);
+  }
+}
+
+/**
  * @brief Check if the given mass is able to produce a SNIa.
  *
  * @param snia The #supernovae_ia model.
@@ -59,7 +82,7 @@ __attribute__((always_inline)) INLINE static int supernovae_ia_can_explode(
  */
 __attribute__((always_inline)) INLINE static const float* supernovae_ia_get_yields(
     const struct supernovae_ia *snia) {
-  return snia->yields.data;
+  return snia->yields;
 }
 
 
@@ -179,7 +202,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ia_read_yields(
       const char *s2 = stellar_evolution_get_element_name(sm, i);
       if (strcmp(s1, s2) == 0) {
 	found = 1;
-	snia->yields.data[i] = yields[j];
+	snia->yields[i] = yields[j];
 	break;
       }
     }
@@ -377,6 +400,15 @@ __attribute__((always_inline)) INLINE static void supernovae_ia_restore(
     struct supernovae_ia* snia, FILE* stream, const struct stellar_model *sm) {
 
   /* Nothing to do here */
+}
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param snia the #supernovae_ia.
+ */
+__attribute__((always_inline)) INLINE static void supernovae_ia_clean(
+    struct supernovae_ia* snia) {
 }
 
 #endif // SWIFT_SUPERNOVAE_IA_GEAR_H

@@ -142,6 +142,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       weight * si->feedback_data.metal_mass_ejected[i];
   }
 
+  /* Impose maximal viscosity */
+  hydro_diffusive_feedback_reset(pj);
+
   /* Synchronize the particle on the timeline */
   timestep_sync_part(pj);
 }

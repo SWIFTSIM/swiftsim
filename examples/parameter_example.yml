@@ -442,6 +442,12 @@ GEARFeedback:
   YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5  # Table containing the yields.
   discret_yields: 0                                 # Should we use discret yields or the IMF integrated one?
 
+# Parameters related to IMF models  -----------------------------------------------
+# GEAR model
+GEARInitialMassFunction:
+  number_function_part: 4                           # (Optional) Number of part in the IMF
+  exponents: [0.7, -0.8, -1.7, -1.3]                # (Optional) Exponent of the IMF
+
 # Parameters related to AGN models  -----------------------------------------------
   
 # EAGLE AGN model

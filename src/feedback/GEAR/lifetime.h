@@ -23,6 +23,30 @@
 #include "stellar_evolution_struct.h"
 
 /**
+ * @brief Print the lifetime model.
+ *
+ * @param lf The #lifetime.
+ */
+__attribute__((always_inline)) INLINE static void lifetime_print(
+    const struct lifetime* lf) {
+
+  /* Only the master print */
+  if (engine_rank != 0) {
+    return;
+  }
+
+  message("Quadratic terms: %.2g %.2g %.2g",
+          lf->quadratic[0], lf->quadratic[1], lf->quadratic[2]);
+
+  message("Linear terms: %.2g %.2g %.2g",
+          lf->linear[0], lf->linear[1], lf->linear[2]);
+
+  message("Constant terms: %.2g %.2g %.2g",
+          lf->constant[0], lf->constant[1], lf->constant[2]);
+
+}
+
+/**
  * @brief Compute the lifetime of a star.
  *
  * @param life The #lifetime model.
@@ -47,7 +71,6 @@ __attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_fro
 
 /**
  * @brief Compute the mass of a star with a given lifetime
- * Returns -1 if out of range.
  *
  * @param life The #lifetime model.
  * @param log_time The star's lifetime (in log10(Myr)).
@@ -194,6 +217,16 @@ __attribute__((always_inline)) INLINE static void lifetime_restore(
     struct lifetime* lt, FILE* stream, const struct stellar_model *sm) {
 
   /* Nothing to do here */
+}
+
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param lifetime the #lifetime.
+ */
+__attribute__((always_inline)) INLINE static void lifetime_clean(
+    struct lifetime* lifetime) {
 }
 
 #endif // SWIFT_LIFETIME_GEAR_H

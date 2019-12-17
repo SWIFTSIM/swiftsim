@@ -39,6 +39,27 @@ struct feedback_props {
 };
 
 /**
+ * @brief Print the feedback model.
+ *
+ * @param feedback_props The #feedback_props
+ */
+__attribute__((always_inline)) INLINE static void feedback_props_print(
+    const struct feedback_props* feedback_props) {
+
+  /* Only the master print */
+  if (engine_rank != 0) {
+    return;
+  }
+
+  /* Print the feedback properties */
+  message("Energy per supernovae = %.2g", feedback_props->energy_per_supernovae);
+  message("Yields table = %s", feedback_props->filename);
+
+  /* Print the stellar model */
+  stellar_model_print(&feedback_props->stellar_model);
+}
+
+/**
  * @brief Initialize the global properties of the feedback scheme.
  *
  * By default, takes the values provided by the hydro.
@@ -67,8 +88,13 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   stellar_evolution_props_init(&fp->stellar_model, phys_const,
 			       us, params, cosmo);
 
+  /* Print the stellar properties */
+  feedback_props_print(fp);
+
   /* Print a final message. */
-  message("Stellar feedback initialized");
+  if (engine_rank == 0) {
+    message("Stellar feedback initialized");
+  }
 }
 
 #endif /* SWIFT_GEAR_FEEDBACK_PROPERTIES_H */
