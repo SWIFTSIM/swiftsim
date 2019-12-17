@@ -22,6 +22,7 @@
 /* Local includes */
 #include "random.h"
 #include "hydro.h"
+#include "timestep_sync_part.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).

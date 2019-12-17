@@ -20,7 +20,11 @@
 #define SWIFT_TASK_ORDER_GEAR_H
 
 #define task_order_star_formation_before_feedback 0
-#define task_order_is_cooling_implicit 1
+#define task_order_is_cooling_implicit 0
+
+#include "active.h"
+#include "cooling.h"
+#include "feedback.h"
 
 /**
  * @brief Place the star formation cell at the right place in the dependency
@@ -64,14 +68,14 @@ INLINE static void task_order_addunlock_cooling(struct scheduler *s,
  * @param e The #engine.
  */
 INLINE static void task_order_kick1(
-    struct part *p, struct xpart *xp, struct engine *e) {
+    struct part *p, struct xpart *xp, const struct engine *e) {
 
-  const double dt_cool = get_timestep(p->time_bin, time_base);
-  const double dt_therm = get_timestep(p->time_bin, time_base);
+  const double dt_cool = get_timestep(p->time_bin, e->time_base);
+  const double dt_therm = get_timestep(p->time_bin, e->time_base);
 
   /* If particle needs to be kicked */
   /* Skip particles that have been woken up and treated by the limiter. */
-  if (part_is_starting(p, e) && p->wakeup == time_bin_not_awake) {
+  if (part_is_starting(p, e)) {
     /* Cool the particle */
     cooling_cool_part(e->physical_constants, e->internal_units, e->cosmology,
                       e->hydro_properties,

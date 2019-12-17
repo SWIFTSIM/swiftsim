@@ -59,10 +59,10 @@ INLINE static int star_formation_is_star_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  /* /\* Check if collapsing particles *\/ */
-  /* if (xp->sf_data.div_v > 0) { */
-  /*   return 0; */
-  /* } */
+  /* Check if collapsing particles */
+  if (xp->sf_data.div_v > 0) {
+    return 0;
+  }
 
   const float temperature =
       cooling_get_temperature(phys_const, hydro_props, us, cosmo, cooling, p, xp);
@@ -238,8 +238,12 @@ INLINE static void starformation_print_backend(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, const struct star_formation* cd,
-    const struct cosmology* cosmo) {}
+    struct part* restrict p, struct xpart* restrict xp, const struct star_formation* cd,
+    const struct cosmology* cosmo) {
+
+  /* Copy the velocity divergence */
+  xp->sf_data.div_v = p->density.div_v;
+}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.

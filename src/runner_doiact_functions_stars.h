@@ -589,10 +589,6 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
-#endif
-
   /* Cosmological terms */
   const float a = cosmo->a;
   const float H = cosmo->H;
@@ -754,9 +750,6 @@ void DOPAIR1_SUBSET_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
-#endif
   /* Cosmological terms */
   const float a = cosmo->a;
   const float H = cosmo->H;
@@ -845,9 +838,6 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
 
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;

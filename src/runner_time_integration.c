@@ -32,6 +32,7 @@
 #include "engine.h"
 #include "feedback.h"
 #include "kick.h"
+#include "task_order.h"
 #include "timers.h"
 #include "timestep.h"
 #include "timestep_limiter.h"
@@ -85,9 +86,6 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
   const struct hydro_props *hydro_props = e->hydro_properties;
   const struct entropy_floor_properties *entropy_floor = e->entropy_floor;
-  const struct cooling_function_data *cooling_func = e->cooling_func;
-  const struct phys_const *constants = e->physical_constants;
-  const struct unit_system *us = e->internal_units;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
@@ -174,8 +172,6 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
             xp->a_grav[2] = p->gpart->a_grav[2];
           }
         }
-      /* Do the operations required after the kick1 */
-      task_order_kick1(p, xp, e);
     }
 
     /* Loop over the gparts in this cell. */

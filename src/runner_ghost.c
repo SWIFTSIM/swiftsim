@@ -1055,7 +1055,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           hydro_end_density(p, cosmo);
           chemistry_end_density(p, chemistry, cosmo);
           pressure_floor_end_density(p, cosmo);
-          star_formation_end_density(p, star_formation, cosmo);
+          star_formation_end_density(p, xp, star_formation, cosmo);
 
           /* Are we using the alternative definition of the
              number of neighbours? */
