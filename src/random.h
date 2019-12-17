@@ -137,9 +137,13 @@ INLINE static double inl_erand48(uint16_t xsubi[3]) { return erand48(xsubi); }
  * @param type The #random_number_type to generate.
  * @return a random number in the interval [0, 1.[.
  */
-INLINE static double random_unit_interval(int64_t id,
-                                          const integertime_t ti_current,
+INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
                                           const enum random_number_type type) {
+
+  /* Shift the input in order to change the "seed" */
+  ti_current += RANDOM_TIME_SHIFT;
+  id += RANDOM_ID_SHIFT;
+
   /* Start by packing the state into a sequence of 16-bit seeds for rand_r. */
   uint16_t buff[9];
   id += type;
