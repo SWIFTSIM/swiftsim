@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Init the project.
-AC_INIT([SWIFT],[0.8.4],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
+AC_INIT([SWIFT],[0.8.5],[https://gitlab.cosma.dur.ac.uk/swift/swiftsim])
 swift_config_flags="$*"
 
 #  We want to stop when given unrecognised options. No subdirs so this is safe.
@@ -92,6 +92,12 @@ AC_ARG_ENABLE([logger],
 
 if test "$with_logger" = "yes"; then
    AC_DEFINE([WITH_LOGGER], 1, [logger enabled])
+   # The logger requires that long long is a 64bit type, let's
+   # check that.
+   AC_CHECK_SIZEOF([long long int])
+   if test "$ac_cv_sizeof_long_long_int" != "8"; then
+      AC_MSG_ERROR([The particle logger requires that 'long long int' has size 8 bytes])
+   fi
 fi
 AM_CONDITIONAL([HAVELOGGER],[test $with_logger = "yes"])
 

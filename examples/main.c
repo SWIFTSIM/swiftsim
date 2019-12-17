@@ -163,11 +163,13 @@ int main(int argc, char *argv[]) {
   int with_star_formation = 0;
   int with_feedback = 0;
   int with_black_holes = 0;
-  int with_limiter = 0;
+  int with_timestep_limiter = 0;
+  int with_timestep_sync = 0;
   int with_fp_exceptions = 0;
   int with_drift_all = 0;
   int with_mpole_reconstruction = 0;
   int with_structure_finding = 0;
+  int with_eagle = 0;
   int verbose = 0;
   int nr_threads = 1;
   int with_verbose_timers = 0;
@@ -219,8 +221,20 @@ int main(int argc, char *argv[]) {
           NULL, 0, 0),
       OPT_BOOLEAN('x', "velociraptor", &with_structure_finding,
                   "Run with structure finding.", NULL, 0, 0),
-      OPT_BOOLEAN(0, "limiter", &with_limiter, "Run with time-step limiter.",
+      OPT_BOOLEAN(0, "limiter", &with_timestep_limiter,
+                  "Run with time-step limiter.", NULL, 0, 0),
+      OPT_BOOLEAN(0, "sync", &with_timestep_sync,
+                  "Run with time-step synchronization of particles hit by "
+                  "feedback events.",
                   NULL, 0, 0),
+
+      OPT_GROUP("  Simulation meta-options:\n"),
+      OPT_BOOLEAN(
+          0, "eagle", &with_eagle,
+          "Run with all the options needed for the EAGLE model. This is "
+          "equivalent to --hydro --limiter --sync --self-gravity --stars "
+          "--star-formation --cooling --feedback --black-holes --fof.",
+          NULL, 0, 0),
 
       OPT_GROUP("  Control options:\n"),
       OPT_BOOLEAN('a', "pin", &with_aff,
@@ -278,6 +292,20 @@ int main(int argc, char *argv[]) {
                     "\nSee the file examples/parameter_example.yml for an "
                     "example of parameter file.");
   int nargs = argparse_parse(&argparse, argc, (const char **)argv);
+
+  /* Deal with meta options */
+  if (with_eagle) {
+    with_hydro = 1;
+    with_timestep_limiter = 1;
+    with_timestep_sync = 1;
+    with_self_gravity = 1;
+    with_stars = 1;
+    with_star_formation = 1;
+    with_cooling = 1;
+    with_feedback = 1;
+    with_black_holes = 1;
+    with_fof = 1;
+  }
 
   /* Write output parameter file */
   if (myrank == 0 && output_parameters_filename != NULL) {
@@ -555,7 +583,10 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_MPI
   if (with_mpole_reconstruction && nr_nodes > 1)
     error("Cannot reconstruct m-poles every step over MPI (yet).");
-  if (with_limiter) error("Can't run with time-step limiter over MPI (yet)");
+  if (with_timestep_limiter)
+    error("Can't run with time-step limiter over MPI (yet)");
+  if (with_timestep_sync)
+    error("Can't run with time-step synchronization over MPI (yet)");
 #ifdef WITH_LOGGER
   error("Can't run with the particle logger over MPI (yet)");
 #endif
@@ -1105,7 +1136,9 @@ int main(int argc, char *argv[]) {
       engine_policies |= engine_policy_external_gravity;
     if (with_cosmology) engine_policies |= engine_policy_cosmology;
     if (with_temperature) engine_policies |= engine_policy_temperature;
-    if (with_limiter) engine_policies |= engine_policy_limiter;
+    if (with_timestep_limiter)
+      engine_policies |= engine_policy_timestep_limiter;
+    if (with_timestep_sync) engine_policies |= engine_policy_timestep_sync;
     if (with_cooling) engine_policies |= engine_policy_cooling;
     if (with_stars) engine_policies |= engine_policy_stars;
     if (with_star_formation) engine_policies |= engine_policy_star_formation;
@@ -1386,7 +1419,10 @@ int main(int argc, char *argv[]) {
     }
 #ifdef WITH_LOGGER
     logger_log_all(e.logger, &e);
-    engine_dump_index(&e);
+
+    /* Write a sentinel timestamp */
+    logger_log_timestamp(e.logger, e.ti_current, e.time,
+                         &e.logger->timestamp_offset);
 #endif
 
     /* Write final snapshot? */

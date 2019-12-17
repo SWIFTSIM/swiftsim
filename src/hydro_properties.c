@@ -225,6 +225,9 @@ void hydro_props_print(const struct hydro_props *p) {
   if (p->h_max != hydro_props_default_h_max)
     message("Maximal smoothing length allowed: %.4f", p->h_max);
 
+  message("Maximal time-bin difference between neighbours: %d",
+          time_bin_neighbour_max_delta_bin);
+
   if (p->max_smoothing_iterations != hydro_props_default_max_iterations)
     message("Maximal iterations in ghost task set to %d (default is %d)",
             p->max_smoothing_iterations, hydro_props_default_max_iterations);
@@ -271,6 +274,7 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
   io_write_attribute_f(h_grpsph, "Kernel target N_ngb", p->target_neighbours);
   io_write_attribute_f(h_grpsph, "Kernel delta N_ngb", p->delta_neighbours);
   io_write_attribute_f(h_grpsph, "Kernel eta", p->eta_neighbours);
+  io_write_attribute_f(h_grpsph, "Kernel gamma", kernel_gamma);
   io_write_attribute_f(h_grpsph, "Smoothing length tolerance", p->h_tolerance);
   io_write_attribute_f(h_grpsph, "Maximal smoothing length [internal units]",
                        p->h_max);
@@ -293,8 +297,9 @@ void hydro_props_print_snapshot(hid_t h_grpsph, const struct hydro_props *p) {
                        p->hydrogen_mass_fraction);
   io_write_attribute_f(h_grpsph, "Hydrogen ionization transition temperature",
                        p->hydrogen_ionization_temperature);
-  io_write_attribute_f(h_grpsph, "Max v_sig ratio (limiter)",
-                       const_limiter_max_v_sig_ratio);
+  io_write_attribute_i(h_grpsph,
+                       "Maximal time-bin difference between neighbours",
+                       time_bin_neighbour_max_delta_bin);
 
   /* Write out the implementation-dependent viscosity parameters
    * (see hydro/SCHEME/hydro_parameters.h for this implementation) */

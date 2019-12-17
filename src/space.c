@@ -112,20 +112,6 @@ struct qstack {
 };
 
 /**
- * @brief Parallel particle-sorting stack
- */
-struct parallel_sort {
-  struct part *parts;
-  struct gpart *gparts;
-  struct xpart *xparts;
-  struct spart *sparts;
-  int *ind;
-  struct qstack *stack;
-  unsigned int stack_size;
-  volatile unsigned int first, last, waiting;
-};
-
-/**
  * @brief Information required to compute the particle cell indices.
  */
 struct index_data {
@@ -252,6 +238,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->kick2 = NULL;
     c->timestep = NULL;
     c->timestep_limiter = NULL;
+    c->timestep_sync = NULL;
     c->hydro.end_force = NULL;
     c->hydro.drift = NULL;
     c->stars.drift = NULL;
@@ -714,7 +701,7 @@ void space_allocate_extras(struct space *s, int verbose) {
 
   /* Anything to do here? (Abort if we don't want extras)*/
   if (space_extra_parts == 0 && space_extra_gparts == 0 &&
-      space_extra_sparts == 0)
+      space_extra_sparts == 0 && space_extra_bparts == 0)
     return;
 
   /* The top-level cells */
@@ -746,7 +733,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     error("Failed to allocate list of local top-level cells");
 
   /* List the local cells */
-  int nr_local_cells = 0;
+  size_t nr_local_cells = 0;
   for (int i = 0; i < s->nr_cells; ++i) {
     if (s->cells_top[i].nodeID == local_nodeID) {
       local_cells[nr_local_cells] = i;
@@ -777,6 +764,8 @@ void space_allocate_extras(struct space *s, int verbose) {
   if (expected_num_extra_gparts < s->nr_extra_gparts)
     error("Reduction in top-level cells number not handled.");
   if (expected_num_extra_sparts < s->nr_extra_sparts)
+    error("Reduction in top-level cells number not handled.");
+  if (expected_num_extra_bparts < s->nr_extra_bparts)
     error("Reduction in top-level cells number not handled.");
 
   /* Do we have enough space for the extra gparts (i.e. we haven't used up any)
@@ -829,7 +818,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_gparts = 0;
@@ -875,7 +864,7 @@ void space_allocate_extras(struct space *s, int verbose) {
 
   /* Do we have enough space for the extra parts (i.e. we haven't used up any) ?
    */
-  if (expected_num_extra_parts > s->nr_extra_parts) {
+  if (nr_actual_parts + expected_num_extra_parts > nr_parts) {
 
     /* Ok... need to put some more in the game */
 
@@ -917,11 +906,11 @@ void space_allocate_extras(struct space *s, int verbose) {
       bzero(&s->parts[i], sizeof(struct part));
       bzero(&s->xparts[i], sizeof(struct xpart));
       s->parts[i].time_bin = time_bin_not_created;
-      s->parts[i].id = -1;
+      s->parts[i].id = -42;
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_parts = 0;
@@ -1003,7 +992,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_sparts = 0;
@@ -1085,7 +1074,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     }
 
     /* Put the spare particles in their correct cell */
-    int local_cell_id = 0;
+    size_t local_cell_id = 0;
     int current_cell = local_cells[local_cell_id];
     int count_in_cell = 0;
     size_t count_extra_bparts = 0;
@@ -1202,12 +1191,12 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
   /* Re-grid if necessary, or just re-set the cell data. */
   space_regrid(s, verbose);
 
-  /* Allocate extra space for particles that will be created */
-  if (s->with_star_formation) space_allocate_extras(s, verbose);
-
   /* Are we dithering the particles? */
   const int with_dithering = s->e->gravity_properties->with_dithering;
   if (s->with_self_gravity && with_dithering) space_dither(s, verbose);
+
+  /* Allocate extra space for particles that will be created */
+  if (s->with_star_formation) space_allocate_extras(s, verbose);
 
   struct cell *cells_top = s->cells_top;
   const integertime_t ti_current = (s->e != NULL) ? s->e->ti_current : 0;
@@ -2078,6 +2067,10 @@ void space_reorder_extras(struct space *s, int verbose) {
   if (space_extra_sparts)
     threadpool_map(&s->e->threadpool, space_reorder_extra_sparts_mapper,
                    s->local_cells_top, s->nr_local_cells, sizeof(int), 0, s);
+
+  /* Re-order the black hole particles */
+  if (space_extra_bparts)
+    error("Missing implementation of BH extra reordering");
 }
 
 /**
@@ -2164,7 +2157,7 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
     double old_pos_y = p->x[1];
     double old_pos_z = p->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && p->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2210,6 +2203,7 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_part;
+
     } else {
       /* Normal case: list its top-level cell index */
       ind[k] = index;
@@ -2296,7 +2290,7 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
     double old_pos_y = gp->x[1];
     double old_pos_z = gp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && gp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2342,6 +2336,7 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_gpart;
+
     } else {
       /* List its top-level cell index */
       ind[k] = index;
@@ -2434,7 +2429,7 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
     double old_pos_y = sp->x[1];
     double old_pos_z = sp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && sp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2480,6 +2475,7 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_spart;
+
     } else {
       /* List its top-level cell index */
       ind[k] = index;
@@ -2568,7 +2564,7 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
     double old_pos_y = bp->x[1];
     double old_pos_z = bp->x[2];
 
-    if (periodic && dithering) {
+    if (periodic && dithering && bp->time_bin != time_bin_not_created) {
       old_pos_x += delta_dithering_x;
       old_pos_y += delta_dithering_y;
       old_pos_z += delta_dithering_z;
@@ -2614,6 +2610,7 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
       ind[k] = index;
       cell_counts[index]++;
       ++count_extra_bpart;
+
     } else {
       /* List its top-level cell index */
       ind[k] = index;
@@ -3425,6 +3422,7 @@ void space_split_recursive(struct space *s, struct cell *c,
       cp->hydro.super = NULL;
       cp->grav.super = NULL;
       cp->flags = 0;
+      star_formation_logger_init(&cp->stars.sfh);
 #ifdef WITH_MPI
       cp->mpi.tag = -1;
 #endif  // WITH_MPI
@@ -3469,6 +3467,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         h_max = max(h_max, cp->hydro.h_max);
         stars_h_max = max(stars_h_max, cp->stars.h_max);
         black_holes_h_max = max(black_holes_h_max, cp->black_holes.h_max);
+
         ti_hydro_end_min = min(ti_hydro_end_min, cp->hydro.ti_end_min);
         ti_hydro_end_max = max(ti_hydro_end_max, cp->hydro.ti_end_max);
         ti_hydro_beg_max = max(ti_hydro_beg_max, cp->hydro.ti_beg_max);
@@ -3476,14 +3475,15 @@ void space_split_recursive(struct space *s, struct cell *c,
         ti_gravity_end_max = max(ti_gravity_end_max, cp->grav.ti_end_max);
         ti_gravity_beg_max = max(ti_gravity_beg_max, cp->grav.ti_beg_max);
         ti_stars_end_min = min(ti_stars_end_min, cp->stars.ti_end_min);
-        ti_stars_end_max = min(ti_stars_end_max, cp->stars.ti_end_max);
-        ti_stars_beg_max = min(ti_stars_beg_max, cp->stars.ti_beg_max);
+        ti_stars_end_max = max(ti_stars_end_max, cp->stars.ti_end_max);
+        ti_stars_beg_max = max(ti_stars_beg_max, cp->stars.ti_beg_max);
         ti_black_holes_end_min =
             min(ti_black_holes_end_min, cp->black_holes.ti_end_min);
         ti_black_holes_end_max =
-            min(ti_black_holes_end_max, cp->black_holes.ti_end_max);
+            max(ti_black_holes_end_max, cp->black_holes.ti_end_max);
         ti_black_holes_beg_max =
-            min(ti_black_holes_beg_max, cp->black_holes.ti_beg_max);
+            max(ti_black_holes_beg_max, cp->black_holes.ti_beg_max);
+
         star_formation_logger_add(&c->stars.sfh, &cp->stars.sfh);
 
         /* Increase the depth */
@@ -3672,9 +3672,9 @@ void space_split_recursive(struct space *s, struct cell *c,
     for (int k = 0; k < bcount; k++) {
 #ifdef SWIFT_DEBUG_CHECKS
       if (bparts[k].time_bin == time_bin_not_created)
-        error("Extra s-particle present in space_split()");
+        error("Extra b-particle present in space_split()");
       if (bparts[k].time_bin == time_bin_inhibited)
-        error("Inhibited s-particle present in space_split()");
+        error("Inhibited b-particle present in space_split()");
 #endif
       black_holes_time_bin_min =
           min(black_holes_time_bin_min, bparts[k].time_bin);
@@ -4247,6 +4247,10 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
   for (int k = 0; k < count; k++) {
 
     hydro_first_init_part(&p[k], &xp[k]);
+    p[k].limiter_data.min_ngb_time_bin = num_time_bins + 1;
+    p[k].limiter_data.wakeup = time_bin_not_awake;
+    p[k].limiter_data.to_be_synchronized = 0;
+
 #ifdef WITH_LOGGER
     logger_part_data_init(&xp[k].logger_data);
 #endif
@@ -4334,6 +4338,10 @@ void space_first_init_gparts_mapper(void *restrict map_data, int count,
 
     gravity_first_init_gpart(&gp[k], grav_props);
 
+#ifdef WITH_LOGGER
+    logger_part_data_init(&gp[k].logger_data);
+#endif
+
 #ifdef SWIFT_DEBUG_CHECKS
     /* Initialise the time-integration check variables */
     gp[k].ti_drift = 0;
@@ -4375,6 +4383,7 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
   const float initial_h = s->initial_spart_h;
 
   const int with_feedback = (e->policy & engine_policy_feedback);
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
 
   const struct cosmology *cosmo = e->cosmology;
   const struct stars_props *stars_properties = e->stars_properties;
@@ -4413,7 +4422,12 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
   /* Initialise the rest */
   for (int k = 0; k < count; k++) {
 
-    stars_first_init_spart(&sp[k], stars_properties);
+    stars_first_init_spart(&sp[k], stars_properties, with_cosmology, cosmo->a,
+                           e->time);
+
+#ifdef WITH_LOGGER
+    logger_part_data_init(&sp[k].logger_data);
+#endif
 
     /* Also initialise the chemistry */
     chemistry_first_init_spart(chemistry, &sp[k]);
@@ -4540,6 +4554,7 @@ void space_init_parts_mapper(void *restrict map_data, int count,
 
   for (int k = 0; k < count; k++) {
     hydro_init_part(&parts[k], hs);
+    black_holes_init_potential(&parts[k].black_holes_data);
     chemistry_init_part(&parts[k], e->chemistry);
     pressure_floor_init_part(&parts[k], &xparts[k]);
     star_formation_init_part(&parts[k], e->star_formation);
@@ -5451,14 +5466,26 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 #ifdef SWIFT_DEBUG_CHECKS
   /* Unpack the data */
   struct part *restrict parts = (struct part *)map_data;
+  const struct space *s = (struct space *)extra_data;
+  const int with_timestep_limiter =
+      (s->e->policy & engine_policy_timestep_limiter);
+  const int with_timestep_sync = (s->e->policy & engine_policy_timestep_sync);
 
   /* Verify that all limited particles have been treated */
   for (int k = 0; k < nr_parts; k++) {
 
     if (parts[k].time_bin == time_bin_inhibited) continue;
 
-    if (parts[k].wakeup == time_bin_awake)
-      error("Particle still woken up! id=%lld", parts[k].id);
+    if (parts[k].time_bin < 0) error("Particle has negative time-bin!");
+
+    if (with_timestep_limiter &&
+        parts[k].limiter_data.wakeup != time_bin_not_awake)
+      error("Particle still woken up! id=%lld wakeup=%d", parts[k].id,
+            parts[k].limiter_data.wakeup);
+
+    if (with_timestep_sync && parts[k].limiter_data.to_be_synchronized != 0)
+      error("Synchronized particle not treated! id=%lld synchronized=%d",
+            parts[k].id, parts[k].limiter_data.to_be_synchronized);
 
     if (parts[k].gpart != NULL)
       if (parts[k].time_bin != parts[k].gpart->time_bin)
@@ -5480,7 +5507,7 @@ void space_check_limiter(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   threadpool_map(&s->e->threadpool, space_check_limiter_mapper, s->parts,
-                 s->nr_parts, sizeof(struct part), 1000, NULL);
+                 s->nr_parts, sizeof(struct part), 1000, s);
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
