@@ -140,4 +140,20 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.HIIregion_starid = -1;
 }
 
+/**
+ * @brief Update the particles' tracer data after a stellar feedback
+ * event.
+ *
+ * @param xp The extended particle data.
+ */
+static INLINE void tracers_after_feedback(struct xpart *xp) {}
+
+/**
+ * @brief Update the particles' tracer data after an AGN feedback
+ * event.
+ *
+ * @param xp The extended particle data.
+ */
+static INLINE void tracers_after_black_holes_feedback(struct xpart *xp) {}
+
 #endif /* SWIFT_TRACERS_COLIBRE_H */
