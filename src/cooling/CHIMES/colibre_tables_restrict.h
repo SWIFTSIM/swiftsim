@@ -161,26 +161,30 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
    * the Carbon cooling rate is multiplied by 2 */
 
   for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
+    if ((met_index > 0) || (i <= element_He)) { 
 
-    /* Get min/max abundances */
-    const float log_nx_nH_min = table->LogAbundances[cooling_row_major_index_2d(
-        met_index, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+      /* Get min/max abundances */
+      const float log_nx_nH_min = table->LogAbundances[cooling_row_major_index_2d(
+		met_index, i, colibre_cooling_N_metallicity,
+		colibre_cooling_N_elementtypes)];
 
-    const float log_nx_nH_max = table->LogAbundances[cooling_row_major_index_2d(
-        met_index + 1, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+      const float log_nx_nH_max = table->LogAbundances[cooling_row_major_index_2d(
+		met_index + 1, i, colibre_cooling_N_metallicity,
+		colibre_cooling_N_elementtypes)];
 
-    /* Get solar abundances */
-    const float log_nx_nH_sol = table->LogAbundances[cooling_row_major_index_2d(
-        table->indxZsol, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+      /* Get solar abundances */
+      const float log_nx_nH_sol = table->LogAbundances[cooling_row_major_index_2d(
+		table->indxZsol, i, colibre_cooling_N_metallicity,
+		colibre_cooling_N_elementtypes)];
 
-    /* Interpolate ! */
-    const float log_nx_nH =
+      /* Interpolate ! */
+      const float log_nx_nH =
         (log_nx_nH_min * (1.f - d_met) + log_nx_nH_max * d_met) - log_nx_nH_sol;
 
-    ratio_solar[i] *= exp10f(-log_nx_nH);
+      ratio_solar[i] *= exp10f(-log_nx_nH);
+    }
+    else 
+      ratio_solar[i] = 0.0; 
   }
 
   /* at this point ratio_solar is (nx/nH) / (nx/nH)_table [Z],
