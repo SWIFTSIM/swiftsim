@@ -316,62 +316,64 @@ __attribute__((always_inline)) INLINE double interpolation4d_plus_summation(
 
   for (int i = istart; i <= iend; i++) {
 
-    /* Linear interpolation along each axis. We read the table 2^4=16 times */
-    result = tx * ty * tz * tw *
-             table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 0, i, Nx, Ny,
-                                      Nz, Nw, Nv)];
+    if (weights[i] > 0.0) {
+      /* Linear interpolation along each axis. We read the table 2^4=16 times */
+      result = tx * ty * tz * tw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 0, i, Nx, Ny,
+					 Nz, Nw, Nv)];
 
-    result += tx * ty * tz * dw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
+      result += tx * ty * tz * dw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
 
-    result += tx * ty * dz * tw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += tx * dy * tz * tw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * ty * tz * tw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
+      result += tx * ty * dz * tw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += tx * dy * tz * tw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * ty * tz * tw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
 
-    result += tx * ty * dz * dw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += tx * dy * tz * dw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * ty * tz * dw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += tx * dy * dz * tw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * ty * dz * tw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * dy * tz * tw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
+      result += tx * ty * dz * dw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += tx * dy * tz * dw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * ty * tz * dw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += tx * dy * dz * tw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * ty * dz * tw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * dy * tz * tw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
 
-    result += dx * dy * dz * tw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 0, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * dy * tz * dw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += dx * ty * dz * dw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
-    result += tx * dy * dz * dw *
-              table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
+      result += dx * dy * dz * tw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 0, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * dy * tz * dw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += dx * ty * dz * dw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
+      result += tx * dy * dz * dw *
+	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
 
-    result += dx * dy * dz * dw *
-              table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1, i, Nx,
-                                       Ny, Nz, Nw, Nv)];
+      result += dx * dy * dz * dw *
+	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1, i, Nx,
+					 Ny, Nz, Nw, Nv)];
 
-    result_global += weights[i] * pow(10.0, result);
+      result_global += weights[i] * pow(10.0, result);
+    }
   }
 
   return result_global;
