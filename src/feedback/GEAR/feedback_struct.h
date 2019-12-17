@@ -45,30 +45,6 @@ struct feedback_spart_data {
   /*! Inverse of normalisation factor used for the enrichment. */
   float enrichment_weight;
 
-  union {
-
-    /**
-     * @brief Values collected from the gas neighbours.
-     */
-    struct {
-
-
-    } to_collect;
-
-    /**
-     * @brief Values to be distributed to the gas neighbours.
-     */
-    struct {
-
-      /*! Mass released. */
-      float mass;
-
-      /*! Energy change due to ejectas. */
-      float energy;
-
-    } to_distribute;
-  };
-
   /*! Number of supernovae Ia to explode */
   int number_snia;
 

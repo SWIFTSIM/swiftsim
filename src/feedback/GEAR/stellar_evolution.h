@@ -179,7 +179,7 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_compute_disc
 
   /* Compute the mass ejected */
   /* SNIa */
-  const float mass_snia = (sp->feedback_data.number_snii == 0) ?
+  const float mass_snia = (sp->feedback_data.number_snia == 0) ?
     0 : (supernovae_ia_get_ejected_mass_processed(&sm->snia)
 	 * sp->feedback_data.number_snia);
 
