@@ -343,8 +343,8 @@ GrackleCooling:
   ProvideSpecificHeatingRates: 0              # (optional) User provide specific heating rates
   MaxSteps: 10000                             # (optional) Max number of step when computing the initial composition
   ConvergenceLimit: 1e-2                      # (optional) Convergence threshold (relative) for initial composition
-  ThermalTime_Myr: 1
-  SelfShieldingMethod: 0                      # (optional) Grackle (1->3 for Grackle's ones, 0 for none and -1 for GEAR)
+  ThermalTime_Myr: 5                          # (optional) Time for adiabatic cooling after a feedback event.
+  SelfShieldingMethod: -1                     # (optional) Grackle (1->3 for Grackle's ones, 0 for none and -1 for GEAR)
   SelfShieldingThreshold_atom_per_cm3: 0.007  # Required only with GEAR's self shielding. Density threshold of the self shielding
 
 # Parameters related to chemistry models  -----------------------------------------------
@@ -361,6 +361,12 @@ EAGLEChemistry:
   init_abundance_Magnesium: 0.000        # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.000        # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.000        # Inital fraction of particle mass in Iron
+
+# GEAR chemistry model (Revaz and Jablonka 2018)
+GEARChemistry:
+  InitialMetallicity: 1         # Initial metallicity of the gas
+  ScaleInitialMetallicity: 1    # Should we scale the initial metallicity with the solar one?
+
 
 # Parameters related to star formation models  -----------------------------------------------
 
@@ -430,6 +436,12 @@ EAGLEFeedback:
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
 
+# GEAR feedback model
+GEARFeedback:
+  SupernovaeEnergy_erg: 0.1e51                      # Energy released by a single supernovae.
+  YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5  # Table containing the yields.
+  discret_yields: 0                                 # Should we use discret yields or the IMF integrated one?
+
 # Parameters related to AGN models  -----------------------------------------------
   
 # EAGLE AGN model
@@ -445,13 +457,3 @@ EAGLEAGN:
   max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
   threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
   threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
-
-GEARInitialMassFunction:
-  number_function_part: 4                           # (Optional) Number of part in the IMF
-  exponents: [0.7, -0.8, -1.7, -1.3]                # (Optional) Exponent of the IMF
-  mass_limits_msun: [0.05, 0.08, 0.5, 1.0, 50.]          # (Optional) Mass limits of each part of the IMF
-
-
-GEARFeedback:
-  SupernovaeEnergy_erg: 1e50
-  YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5

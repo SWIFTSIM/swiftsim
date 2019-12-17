@@ -7,18 +7,28 @@ InternalUnitSystem:
   UnitTemp_in_cgs:     1             # Kelvin
 
 Scheduler:
-  max_top_level_cells: 8
+  max_top_level_cells: 16
+  cell_extra_sparts:  5000       # (Optional) Number of spare sparts per top-level allocated at rebuild time for on-the-fly creation.
+  cell_max_size:             8000   # (Optional) Maximal number of interactions per task if we force the split (this is the default value).
+  cell_sub_size_pair_hydro:  2560 # (Optional) Maximal number of hydro-hydro interactions per sub-pair hydro/star task (this is the default value).
+  cell_sub_size_self_hydro:  3200     # (Optional) Maximal number of hydro-hydro interactions per sub-self hydro/star task (this is the default value).
+  cell_sub_size_pair_stars:  2560 # (Optional) Maximal number of hydro-star interactions per sub-pair hydro/star task (this is the default value).
+  cell_sub_size_self_stars:  3200     # (Optional) Maximal number of hydro-star interactions per sub-self hydro/star task (this is the default value).
+  cell_sub_size_pair_grav:   2560 # (Optional) Maximal number of interactions per sub-pair gravity task  (this is the default value).
+  cell_sub_size_self_grav:   3200     # (Optional) Maximal number of interactions per sub-self gravity task  (this is the default value).
+  cell_split_size:           100       # (Optional) Maximal number of particles per cell (this is the default value).
   
 # Parameters governing the time integration
 TimeIntegration:
   time_begin: 0.    # The starting time of the simulation (in internal units).
   time_end:   0.5  # The end time of the simulation (in internal units).
   dt_min:     1e-10 # The minimal time-step size of the simulation (in internal units).
-  dt_max:     0.4  # The maximal time-step size of the simulation (in internal units).
-  
+  dt_max:     0.1  # The maximal time-step size of the simulation (in internal units).
+  max_dt_RMS_factor: 0.25  # (Optional) Dimensionless factor for the maximal displacement allowed based on the RMS velocities.
+
 # Parameters governing the snapshots
 Snapshots:
-  basename:            agora_disk # Common part of the name of output files
+  basename:            snap/agora_disk # Common part of the name of output files
   time_first:          0.    # Time of the first output (in internal units)
   delta_time:          1e-2  # Time difference between consecutive outputs (in internal units)
   compression:         4
@@ -29,10 +39,12 @@ Statistics:
 
 # Parameters for the self-gravity scheme
 Gravity:
-  eta:                    0.025    # Constant dimensionless multiplier for time integration.
+  eta:                    0.05    # Constant dimensionless multiplier for time integration.
   theta:                  0.7     # Opening angle (Multipole acceptance criterion)
-  comoving_softening:     0.08 # Comoving softening length (in internal units).
-  max_physical_softening: 0.08    # Physical softening length (in internal units).
+  comoving_DM_softening:     0.08 # Comoving softening length (in internal units).
+  max_physical_DM_softening: 0.08    # Physical softening length (in internal units).
+  comoving_baryon_softening:     0.08 # Comoving softening length (in internal units).
+  max_physical_baryon_softening: 0.08    # Physical softening length (in internal units).
   mesh_side_length:       32        # Number of cells along each axis for the periodic gravity mesh.
   
 # Parameters for the hydrodynamics scheme
@@ -40,6 +52,8 @@ SPH:
   resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
   CFL_condition:         0.1      # Courant-Friedrich-Levy condition for time integration.
   minimal_temperature:   10.      # Kelvin
+  h_min_ratio:           0.1095       # (Optional) Minimal allowed smoothing length in units of the softening. Defaults to 0 if unspecified.
+  h_max:                     10.      # (Optional) Maximal allowed smoothing length in internal units. Defaults to FLT_MAX if unspecified.
 
 # Parameters related to the initial conditions
 InitialConditions:
@@ -61,12 +75,11 @@ GrackleCooling:
   WithMetalCooling: 1 # Enable or not the metal cooling
   ProvideVolumetricHeatingRates: 0 # User provide volumetric heating rates
   ProvideSpecificHeatingRates: 0 # User provide specific heating rates
-  SelfShieldingMethod: 0 # Grackle (<= 3) or Gear self shielding method
+  SelfShieldingMethod: -1 # Grackle (<= 3) or Gear self shielding method
   SelfShieldingThreshold_atom_per_cm3: 0.007  # Required only with GEAR's self shielding. Density threshold of the self shielding
-  OutputMode: 1 # Write in output corresponding primordial chemistry mode
   MaxSteps: 1000
   ConvergenceLimit: 1e-2
-  ThermalTime_Myr: 0
+  ThermalTime_Myr: 5
 
 
 GEARStarFormation:
@@ -74,16 +87,16 @@ GEARStarFormation:
   maximal_temperature:  1e10         # Upper limit to the temperature of a star forming particle
 
 GEARPressureFloor:
-  Jeans_factor: 10.
+  Jeans_factor: 50
 
 GEARFeedback:
-  SupernovaeEnergy_erg: 1.115e51
+  SupernovaeEnergy_erg: 0.1e51
   YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
-  discret_yields: 1
+  discret_yields: 0
 
 GEARChemistry:
   InitialMetallicity: 1
   ScaleInitialMetallicity: 1
 
 Restarts:
-  delta_hours:        0.01        # (Optional) decimal hours between dumps of restart files.
+  delta_hours:        72        # (Optional) decimal hours between dumps of restart files.
