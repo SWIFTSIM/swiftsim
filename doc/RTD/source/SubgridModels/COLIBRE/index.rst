@@ -1,6 +1,6 @@
 .. COLIBRE sub-grid model
    Matthieu Schaller, 20th December 2018
-   Folkert Nobels, 3th of June
+   Folkert Nobels, 3th of June 2019
 
 
 COLIBRE model
@@ -30,19 +30,19 @@ redshift when the whole Universe has a density above the threshold), we apply an
 over-density criterion. Only gas with a density larger than a multiple of the
 critical density for closure can form stars.
 
-The COLIBRE star formation has optional criteria for the gas to be 
-star forming a list of optional paramters that can be set are given by:
+The COLIBRE star formation has a few parameters that determine of the gas is 
+star forming or not the list is shown below:
 
 +---------------------------------------+---------------------------------------+-----------------------+
 | Name                                  | Description                           | Comments              |
 +=======================================+=======================================+=======================+
-| | ``temperature_threshold``           | | Particles need to have a lower      | | Not specifying the  |
-|                                       | | temerpature than this to be         | | variables sets it   |
-|                                       | | starforming.                        | | equal to infinity   |
+| | ``temperature_threshold``           | | Particles need to have a lower      | | Mandatory           |
+|                                       | | subgrid temperature than this to be |                       |
+|                                       | | starforming.                        |                       |
 +---------------------------------------+---------------------------------------+-----------------------+
-| | ``EOS_temperature_margin_dex``      | | Off set in dex from the equation of | | Not specifying the  |
-|                                       | | state for gas to form stars         | | variable sets it    |
-|                                       |                                       | | equal to 10.        | 
+| |``subgrid_density_threshold_H_p_CM3``| | Subgrid density threshold from      | | Not specifying the  |
+|                                       | | which to always be starforming      | | variable sets it    |
+|                                       |                                       | | equal to infinity   | 
 +---------------------------------------+---------------------------------------+-----------------------+ 
 | | ``threshold_max_density_H_p_cm3``   | | Maximal gas density, gas above this | | Not specifying the  |
 |                                       | | density is instantaneously converted| | variable sets it    |
@@ -55,33 +55,22 @@ A run with all the paramters will have a YAML file that looks like:
 
     # COLIBRE star formation parameters
     COLIBREStarFormation:
-      min_over_density:                 57.7
-      star_formation_efficiency:        0.01 
-      temperature_threshold:            1000
-      threshold_max_density_H_p_cm3:    1e5
-      EOS_temperature_margin_dex:        0.2
+      min_over_density:                  57.7
+      star_formation_efficiency:         0.01 
+      temperature_threshold:             1000
+      threshold_max_density_H_p_cm3:     1e5
+      subgrid_density_threshold_H_p_CM3: 1e2
 
-Code that only has a temperature margin dex critiria will look like:
-
-.. code:: YAML
-
-    # COLIBRE star formation parameters
-    COLIBREStarFormation:
-      min_over_density:                 57.7
-      star_formation_efficiency:        0.01 
-      threshold_max_density_H_p_cm3:    1e5
-      EOS_temperature_margin_dex:        0.2
-
-And code with only a temperature threshold will look like:
+Code that only has a temperature threshold will look like:
 
 .. code:: YAML
 
     # COLIBRE star formation parameters
     COLIBREStarFormation:
-      min_over_density:                 57.7
-      star_formation_efficiency:        0.01 
-      temperature_threshold:            1000
-      threshold_max_density_H_p_cm3:    1e5
+      min_over_density:                  57.7
+      star_formation_efficiency:         0.01 
+      temperature_threshold:             1000
+      threshold_max_density_H_p_cm3:     1e5
 
 In the future new additional star formation criteria will be added to this 
 routine.

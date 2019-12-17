@@ -1523,6 +1523,21 @@ void feedback_props_init(struct feedback_props* fp,
     fp->SW_max_age_Myr = 0.;
   }
 
+  /* Properties of the enrichment down-sampling ----------------------------- */
+
+  fp->stellar_evolution_age_cut =
+      parser_get_param_double(params,
+                              "COLIBREFeedback:stellar_evolution_age_cut_Gyr") *
+      Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+
+  fp->stellar_evolution_sampling_rate = parser_get_param_double(
+      params, "COLIBREFeedback:stellar_evolution_sampling_rate");
+
+  if (fp->stellar_evolution_sampling_rate < 1 ||
+      fp->stellar_evolution_sampling_rate >= (1 << (8 * sizeof(char) - 1)))
+    error("Stellar evolution sampling rate too large. Must be >0 and <%d",
+          (1 << (8 * sizeof(char) - 1)));
+
   /* Gather common conversion factors --------------------------------------- */
 
   /* Calculate internal mass to solar mass conversion factor */

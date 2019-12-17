@@ -3422,6 +3422,7 @@ void space_split_recursive(struct space *s, struct cell *c,
       cp->hydro.super = NULL;
       cp->grav.super = NULL;
       cp->flags = 0;
+      star_formation_logger_init(&cp->stars.sfh);
 #ifdef WITH_MPI
       cp->mpi.tag = -1;
 #endif  // WITH_MPI
@@ -3466,6 +3467,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         h_max = max(h_max, cp->hydro.h_max);
         stars_h_max = max(stars_h_max, cp->stars.h_max);
         black_holes_h_max = max(black_holes_h_max, cp->black_holes.h_max);
+
         ti_hydro_end_min = min(ti_hydro_end_min, cp->hydro.ti_end_min);
         ti_hydro_end_max = max(ti_hydro_end_max, cp->hydro.ti_end_max);
         ti_hydro_beg_max = max(ti_hydro_beg_max, cp->hydro.ti_beg_max);
@@ -3473,14 +3475,15 @@ void space_split_recursive(struct space *s, struct cell *c,
         ti_gravity_end_max = max(ti_gravity_end_max, cp->grav.ti_end_max);
         ti_gravity_beg_max = max(ti_gravity_beg_max, cp->grav.ti_beg_max);
         ti_stars_end_min = min(ti_stars_end_min, cp->stars.ti_end_min);
-        ti_stars_end_max = min(ti_stars_end_max, cp->stars.ti_end_max);
-        ti_stars_beg_max = min(ti_stars_beg_max, cp->stars.ti_beg_max);
+        ti_stars_end_max = max(ti_stars_end_max, cp->stars.ti_end_max);
+        ti_stars_beg_max = max(ti_stars_beg_max, cp->stars.ti_beg_max);
         ti_black_holes_end_min =
             min(ti_black_holes_end_min, cp->black_holes.ti_end_min);
         ti_black_holes_end_max =
-            min(ti_black_holes_end_max, cp->black_holes.ti_end_max);
+            max(ti_black_holes_end_max, cp->black_holes.ti_end_max);
         ti_black_holes_beg_max =
-            min(ti_black_holes_beg_max, cp->black_holes.ti_beg_max);
+            max(ti_black_holes_beg_max, cp->black_holes.ti_beg_max);
+
         star_formation_logger_add(&c->stars.sfh, &cp->stars.sfh);
 
         /* Increase the depth */
@@ -4335,6 +4338,10 @@ void space_first_init_gparts_mapper(void *restrict map_data, int count,
 
     gravity_first_init_gpart(&gp[k], grav_props);
 
+#ifdef WITH_LOGGER
+    logger_part_data_init(&gp[k].logger_data);
+#endif
+
 #ifdef SWIFT_DEBUG_CHECKS
     /* Initialise the time-integration check variables */
     gp[k].ti_drift = 0;
@@ -4376,6 +4383,7 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
   const float initial_h = s->initial_spart_h;
 
   const int with_feedback = (e->policy & engine_policy_feedback);
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
 
   const struct cosmology *cosmo = e->cosmology;
   const struct stars_props *stars_properties = e->stars_properties;
@@ -4414,7 +4422,12 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
   /* Initialise the rest */
   for (int k = 0; k < count; k++) {
 
-    stars_first_init_spart(&sp[k], stars_properties);
+    stars_first_init_spart(&sp[k], stars_properties, with_cosmology, cosmo->a,
+                           e->time);
+
+#ifdef WITH_LOGGER
+    logger_part_data_init(&sp[k].logger_data);
+#endif
 
     /* Also initialise the chemistry */
     chemistry_first_init_spart(chemistry, &sp[k]);

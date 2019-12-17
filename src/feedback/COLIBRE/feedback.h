@@ -36,17 +36,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const double dt, const double time_beg_of_step);
 
 /**
- * @brief Should we do feedback for this star?
- *
- * @param sp The star to consider.
- */
-__attribute__((always_inline)) INLINE static int feedback_do_feedback(
-    const struct spart* sp) {
-
-  return (sp->birth_time != -1.);
-}
-
-/**
  * @brief Should this particle be doing any feedback-related operation?
  *
  * @param sp The #spart.
@@ -77,6 +66,30 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 
   sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
+}
+
+/**
+ * @brief Returns the length of time since the particle last did
+ * enrichment/feedback.
+ *
+ * @param sp The #spart.
+ * @param with_cosmology Are we running with cosmological time integration on?
+ * @param cosmo The cosmological model.
+ * @param time The current time (since the Big Bang / start of the run) in
+ * internal units.
+ * @param dt_star the length of this particle's time-step in internal units.
+ * @return The length of the enrichment step in internal units.
+ */
+INLINE static double feedback_get_enrichment_timestep(
+    const struct spart* sp, const int with_cosmology,
+    const struct cosmology* cosmo, const double time, const double dt_star) {
+
+  if (with_cosmology) {
+    return cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->last_enrichment_time, cosmo->a);
+  } else {
+    return time - sp->last_enrichment_time;
+  }
 }
 
 /**
@@ -172,8 +185,8 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const double star_age_beg_step, const double dt,
-    const double time_beg_of_step) {
+    const double star_age_beg_step, const double dt, const double time,
+    const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -182,15 +195,75 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
   compute_stellar_evolution(feedback_props, cosmo, sp, us, star_age_beg_step,
-                            dt, time_beg_of_step);
+                            dt, time - dt);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;
+
+  /* Mark this is the last time we did enrichment */
+  if (with_cosmology)
+    sp->last_enrichment_time = cosmo->a;
+  else
+    sp->last_enrichment_time = time;
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->mass < 0.)
     error("Stellar mass got negative! Check the yield and DTD normalisation!");
 #endif
+}
+
+/**
+ * @brief Will this star particle want to do feedback during the next time-step?
+ *
+ * @param sp The star of interest.
+ * @param feedback_props The properties of the feedback model.
+ * @param with_cosmology Are we running a cosmological problem?
+ * @param cosmo The cosmological model.
+ * @param time The current time (since the start of the run / Big Bang).
+ */
+__attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const int with_cosmology, const struct cosmology* cosmo,
+    const double time) {
+
+  /* Calculate age of the star at current time */
+  double age_of_star;
+  if (with_cosmology) {
+    age_of_star = cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->birth_scale_factor, cosmo->a);
+  } else {
+    age_of_star = time - (double)sp->birth_time;
+  }
+
+  /* Is the star still young? */
+  if (age_of_star < feedback_props->stellar_evolution_age_cut) {
+
+    /* Set the counter to "let's do enrichment" */
+    sp->count_since_last_enrichment = 0;
+
+    /* Say we want to do feedback */
+    return 1;
+
+  } else {
+
+    /* Increment counter */
+    sp->count_since_last_enrichment++;
+
+    if ((sp->count_since_last_enrichment %
+         feedback_props->stellar_evolution_sampling_rate) == 0) {
+
+      /* Reset counter */
+      sp->count_since_last_enrichment = 0;
+
+      /* Say we want to do feedback */
+      return 1;
+
+    } else {
+
+      /* Say we don't want to do feedback */
+      return 0;
+    }
+  }
 }
 
 void feedback_clean(struct feedback_props* feedback_props);
