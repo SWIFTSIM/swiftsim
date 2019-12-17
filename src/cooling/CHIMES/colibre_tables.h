@@ -484,6 +484,15 @@ INLINE static double colibre_metal_cooling_rate_temperature(
     }
   }
 
+  // Set weights for electron densities. 
+  float weights_electron[colibre_cooling_N_electrontypes];
+  for (int i = 0; i < colibre_cooling_N_electrontypes; i++) { 
+    if (i < colibre_cooling_N_elementtypes - 1) 
+      weights_electron[i] = abundance_ratio[i]; 
+    else
+      weights_electron[i] = 1.f; 
+  }
+
   /* Get indices of T, nH, metallicity and redshift */
   int T_index, n_H_index, met_index, red_index;
   float d_T, d_n_H, d_met, d_red;
@@ -504,9 +513,11 @@ INLINE static double colibre_metal_cooling_rate_temperature(
   cooling_get_index_1d(table->nH, colibre_cooling_N_density, log10(n_H_cgs),
 	       &n_H_index, &d_n_H);
 
-  /* n_e / n_H from Colibre */
+  // n_e / n_H from Colibre 
+
+  // From H + He 
   double colibre_electron_fraction_prim = interpolation4d_plus_summation(
-      table->Telectron_fraction, abundance_ratio, 
+      table->Telectron_fraction, weights_electron, 
       colibre_cooling_N_electrontypes - 3, 
       colibre_cooling_N_electrontypes - 3, 
       red_index, T_index, met_index, n_H_index,
@@ -517,10 +528,24 @@ INLINE static double colibre_metal_cooling_rate_temperature(
       colibre_cooling_N_density,
       colibre_cooling_N_electrontypes); 
 
-  double colibre_electron_fraction_metal = interpolation4d_plus_summation(
-      table->Telectron_fraction, abundance_ratio, 
+  // From metals, with table metal ratios 
+  double colibre_electron_fraction_metal_table = interpolation4d_plus_summation(
+      table->Telectron_fraction, weights_electron, 
       colibre_cooling_N_electrontypes - 2, 
       colibre_cooling_N_electrontypes - 2, 
+      red_index, T_index, met_index, n_H_index,
+      d_red, d_T, d_met, d_n_H, 
+      colibre_cooling_N_redshifts, 
+      colibre_cooling_N_temperature, 
+      colibre_cooling_N_metallicity, 
+      colibre_cooling_N_density,
+      colibre_cooling_N_electrontypes); 
+
+  // From metals, with actual metal ratios 
+  double colibre_electron_fraction_metal_actual = interpolation4d_plus_summation(
+      table->Telectron_fraction, weights_electron, 
+      element_C, 
+      colibre_cooling_N_electrontypes - 4, 
       red_index, T_index, met_index, n_H_index,
       d_red, d_T, d_met, d_n_H, 
       colibre_cooling_N_redshifts, 
@@ -533,8 +558,7 @@ INLINE static double colibre_metal_cooling_rate_temperature(
    * electron fraction from CHIMES, compared 
    * to the electron fraction that was used 
    * in the Colibre tables. */ 
-
-  double electron_fraction_ratio = (noneq_electron_fraction + colibre_electron_fraction_metal) / (colibre_electron_fraction_prim + colibre_electron_fraction_metal + FLT_MIN); 
+  double electron_fraction_ratio = (noneq_electron_fraction + colibre_electron_fraction_metal_actual) / (colibre_electron_fraction_prim + colibre_electron_fraction_metal_table + FLT_MIN); 
 
   for (int i = element_C; i < colibre_cooling_N_elementtypes; i++) 
     weights_cooling[i] *= electron_fraction_ratio; 
