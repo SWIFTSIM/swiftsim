@@ -1439,7 +1439,7 @@ case "$with_subgrid" in
    ;;
    GEAR)
 	with_subgrid_cooling=grackle_0
-	with_subgrid_chemistry=GEAR
+	with_subgrid_chemistry=GEAR_10
 	with_subgrid_pressure_floor=GEAR
 	with_subgrid_stars=GEAR
 	with_subgrid_star_formation=GEAR
@@ -1814,7 +1814,7 @@ case "$with_chemistry" in
    GEAR_*)
       AC_DEFINE([CHEMISTRY_GEAR], [1], [Chemistry taken from the GEAR model])
       number_element=${with_chemistry:5}
-      AC_DEFINE_UNQUOTED([CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow]
+      AC_DEFINE_UNQUOTED([CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow])
    ;;
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
