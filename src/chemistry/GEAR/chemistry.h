@@ -80,7 +80,7 @@ static INLINE void chemistry_scale_initial_metallicities(struct swift_params* pa
 
   /* Get the yields table */
   char filename[DESCRIPTION_BUFFER_SIZE];
-  parser_get_param_string(parameter_file, "GEARFeedback:YieldsTable", filename);
+  parser_get_param_string(parameter_file, "GEARFeedback:yields_table", filename);
 
   /* Open file. */
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -137,7 +137,7 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   /* read parameters */
   const float initial_metallicity = parser_get_param_float(
-      parameter_file, "GEARChemistry:InitialMetallicity");
+      parameter_file, "GEARChemistry:initial_metallicity");
 
   /* Set the initial metallicities */
   for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
@@ -146,7 +146,7 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   /* Check if need to scale the initial metallicity */
   const int scale_metallicity = parser_get_opt_param_int(
-      parameter_file, "GEARChemistry:ScaleInitialMetallicity", 0);
+      parameter_file, "GEARChemistry:scale_initial_metallicity", 0);
 
   /* Scale the metallicities if required */
   if (scale_metallicity) {

@@ -69,17 +69,17 @@ LambdaCooling:
 
 # Cooling with Grackle 2.0
 GrackleCooling:
-  CloudyTable: CloudyData_UVB=HM2012.h5 # Name of the Cloudy Table (available on the grackle bitbucket repository)
-  WithUVbackground: 1 # Enable or not the UV background
-  Redshift: 0 # Redshift to use (-1 means time based redshift)
-  WithMetalCooling: 1 # Enable or not the metal cooling
-  ProvideVolumetricHeatingRates: 0 # User provide volumetric heating rates
-  ProvideSpecificHeatingRates: 0 # User provide specific heating rates
-  SelfShieldingMethod: -1 # Grackle (<= 3) or Gear self shielding method
-  SelfShieldingThreshold_atom_per_cm3: 0.007  # Required only with GEAR's self shielding. Density threshold of the self shielding
-  MaxSteps: 1000
-  ConvergenceLimit: 1e-2
-  ThermalTime_Myr: 5
+  cloudy_table: CloudyData_UVB=HM2012.h5 # Name of the Cloudy Table (available on the grackle bitbucket repository)
+  with_UV_background: 1 # Enable or not the UV background
+  redshift: 0 # Redshift to use (-1 means time based redshift)
+  with_metal_cooling: 1 # Enable or not the metal cooling
+  provide_volumetric_heating_rates: 0 # User provide volumetric heating rates
+  provide_specific_heating_rates: 0 # User provide specific heating rates
+  self_shielding_method: -1 # Grackle (<= 3) or Gear self shielding method
+  self_shielding_threshold_atom_per_cm3: 0.007  # Required only with GEAR's self shielding. Density threshold of the self shielding
+  max_steps: 1000
+  convergence_limit: 1e-2
+  thermal_time_myr: 5
 
 
 GEARStarFormation:
@@ -87,16 +87,16 @@ GEARStarFormation:
   maximal_temperature:  1e10         # Upper limit to the temperature of a star forming particle
 
 GEARPressureFloor:
-  Jeans_factor: 50
+  jeans_factor: 50
 
 GEARFeedback:
-  SupernovaeEnergy_erg: 0.1e51
-  YieldsTable: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
+  supernovae_energy_erg: 0.1e51
+  yields_table: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
   discret_yields: 0
 
 GEARChemistry:
-  InitialMetallicity: 1
-  ScaleInitialMetallicity: 1
+  initial_metallicity: 1
+  scale_initial_metallicity: 1
 
 Restarts:
   delta_hours:        72        # (Optional) decimal hours between dumps of restart files.

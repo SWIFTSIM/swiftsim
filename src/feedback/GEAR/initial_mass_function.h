@@ -166,7 +166,7 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_coe
 
       /* Check if in only one segment */
       if (mass_max > imf->mass_limits[i+1]) {
-	error("Cannot get a single coefficient for the interval [%g, %g]", mass_min, mass_max);
+        error("Cannot get a single coefficient for the interval [%g, %g]", mass_min, mass_max);
       }
 
       return imf->coef[i];

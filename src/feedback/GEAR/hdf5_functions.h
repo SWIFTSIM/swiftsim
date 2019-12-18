@@ -98,7 +98,7 @@ __attribute__((always_inline)) INLINE static void h5_open_group(
 
   /* Get filename. */
   char filename[256];
-  parser_get_param_string(params, "GEARFeedback:YieldsTable",
+  parser_get_param_string(params, "GEARFeedback:yields_table",
 			  filename);
 
   /* Open file. */

@@ -77,12 +77,12 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
     const struct hydro_props* hydro_props, const struct cosmology* cosmo) {
 
   /* Supernovae energy */
-  double e_feedback = parser_get_param_double(params, "GEARFeedback:SupernovaeEnergy_erg");
+  double e_feedback = parser_get_param_double(params, "GEARFeedback:supernovae_energy_erg");
   e_feedback /= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
   fp->energy_per_supernovae = e_feedback;
 
   /* filename of the chemistry table */
-  parser_get_param_string(params, "GEARFeedback:YieldsTable", fp->filename);
+  parser_get_param_string(params, "GEARFeedback:yields_table", fp->filename);
 
   /* Initialize the stellar model */
   stellar_evolution_props_init(&fp->stellar_model, phys_const,
