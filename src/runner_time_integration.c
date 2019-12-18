@@ -1026,18 +1026,34 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
       /* Bip, bip, bip... wake-up time */
       if (p->limiter_data.wakeup != time_bin_not_awake) {
 
+        // p->limiter_data.to_be_synchronized = 0;
+        // p->limiter_data.wakeup = time_bin_not_awake;
+
+        message("Limiting particle %lld in cell %d", p->id, c->cellID);
+
+        const timebin_t old_bin = p->time_bin;
+
         /* Apply the limiter and get the new end of time-step */
         const integertime_t ti_end_new = timestep_limit_part(p, xp, e);
+        const timebin_t new_bin = p->time_bin;
+        const integertime_t ti_beg_new =
+            ti_end_new - get_integer_timestep(new_bin);
 
         /* Mark this particle has not needing synchronization */
         p->limiter_data.to_be_synchronized = 0;
+
+        /* message("old bin=%d new bin=%d ti_hydro_beg_max=%lld
+         * ti_beg_new=%lld", */
+        /* 	old_bin, new_bin, ti_hydro_beg_max, ti_beg_new); */
+        message("old bin=%d new bin=%d ti_hydro_end_max=%lld ti_end_new=%lld",
+                old_bin, new_bin, ti_hydro_end_max, ti_end_new);
 
         /* What is the next sync-point ? */
         ti_hydro_end_min = min(ti_end_new, ti_hydro_end_min);
         ti_hydro_end_max = max(ti_end_new, ti_hydro_end_max);
 
         /* What is the next starting point for this cell ? */
-        ti_hydro_beg_max = max(ti_current, ti_hydro_beg_max);
+        ti_hydro_beg_max = max(ti_beg_new, ti_hydro_beg_max);
 
         /* Also limit the gpart counter-part */
         if (p->gpart != NULL) {
@@ -1050,8 +1066,32 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
           ti_gravity_end_max = max(ti_end_new, ti_gravity_end_max);
 
           /* What is the next starting point for this cell ? */
-          ti_gravity_beg_max = max(ti_current, ti_gravity_beg_max);
+          ti_gravity_beg_max = max(ti_beg_new, ti_gravity_beg_max);
         }
+      } else {
+
+        /* if(part_is_active(p, e)) { */
+
+        /*   const timebin_t time_bin = p->time_bin; */
+        /*   const integertime_t ti_end = ti_current +
+         * get_integer_timestep(time_bin); */
+
+        /*   ti_hydro_end_max = max(ti_end, ti_hydro_end_max); */
+        /*   if (p->gpart != NULL) { */
+        /*     ti_gravity_end_max = max(ti_end, ti_gravity_end_max); */
+        /*   } */
+
+        /* } else { */
+
+        /*   const timebin_t time_bin = p->time_bin; */
+        /*   const integertime_t ti_end = get_integer_time_end(ti_current,
+         * time_bin); */
+
+        /*   ti_hydro_end_max = max(ti_end, ti_hydro_end_max); */
+        /*   if (p->gpart != NULL) { */
+        /*     ti_gravity_end_max = max(ti_end, ti_gravity_end_max); */
+        /*   } */
+        /* } */
       }
     }
 
@@ -1165,17 +1205,17 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
       }
 
       if (p->limiter_data.to_be_synchronized) {
-	
+
         /* Finish this particle's time-step */
         timestep_process_sync_part(p, xp, e, cosmo);
-	message("Synchronization in cell %d", c->cellID);
+        message("Synchronization in cell %d", c->cellID);
 
         /* Get new time-step */
         integertime_t ti_new_step = get_part_timestep(p, xp, e);
         timebin_t new_time_bin = get_time_bin(ti_new_step);
-	new_time_bin = min(new_time_bin, e->max_active_bin);
-	ti_new_step = get_integer_timestep(new_time_bin);
-	
+        new_time_bin = min(new_time_bin, e->max_active_bin);
+        ti_new_step = get_integer_timestep(new_time_bin);
+
         if (p->id == ICHECK)
           message("old bin=%d new bin=%d", p->time_bin, new_time_bin);
 
