@@ -63,6 +63,7 @@ INLINE static void cooling_update(const struct cosmology* cosmo,
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
+ * @param time The current time.
  * @param dt The time-step of this particle.
  * @param dt_therm The time-step operator used for thermal quantities.
  */
@@ -73,8 +74,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct hydro_props* hydro_props,
     const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* restrict cooling,
-    struct part* restrict p, struct xpart* restrict xp, const float dt,
-    const float dt_therm) {}
+    struct part* restrict p, struct xpart* restrict xp, const double time,
+    const float dt, const float dt_therm) {}
 
 /**
  * @brief Computes the cooling time-step.

@@ -34,6 +34,17 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const double dt);
 
 /**
+ * @brief Update the properties of the particle due to a supernovae.
+ *
+ * @param p The #part to consider.
+ * @param xp The #xpart to consider.
+ * @param cosmo The #cosmology.
+ */
+__attribute__((always_inline)) INLINE static void feedback_update_part(
+    struct part *restrict p, struct xpart *restrict xp,
+    const struct engine *restrict e) {}
+
+/**
  * @brief Should this particle be doing any feedback-related operation?
  *
  * @param sp The #spart.

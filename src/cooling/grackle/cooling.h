@@ -768,12 +768,16 @@ __attribute__((always_inline)) INLINE static void cooling_apply(
  * @param phys_const The physical constants in internal units.
  * @param us The internal system of units.
  * @param cosmo The current cosmological model.
- * @param cooling The #cooling_function_data used in the run.
- * @param p Pointer to the particle data.
- * @param dt The time-step of this particle.
  * @param hydro_properties the hydro_props struct, used for
  * getting the minimal internal energy allowed in by SWIFT.
  * Read from yml file into engine struct.
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the particle' extended data.
+ * @param time The current time.
+ * @param dt The time-step of this particle.
+ * @param dt_therm The time-step operator used for thermal quantities.
  */
 __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct phys_const* restrict phys_const,
@@ -782,8 +786,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct hydro_props* hydro_props,
     const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* restrict cooling,
-    struct part* restrict p, struct xpart* restrict xp, double time, double dt,
-    double dt_therm) {
+    struct part* restrict p, struct xpart* restrict xp, const double time,
+    const double dt, const double dt_therm) {
 
   /* Nothing to do here? */
   if (dt == 0.) return;

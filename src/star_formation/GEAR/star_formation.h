@@ -234,6 +234,7 @@ INLINE static void starformation_print_backend(
  * Nothing to do here.
  *
  * @param p The particle to act upon
+ * @param xp The extra particle to act upon
  * @param cd The global star_formation information.
  * @param cosmo The current cosmological model.
  */
