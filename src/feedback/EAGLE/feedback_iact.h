@@ -308,6 +308,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       timestep_sync_part(pj);
     }
   }
+
+  const float rand2 = random_unit_interval(si->id + pj->id, ti_current,
+                                           random_number_stellar_feedback);
+
+  if (rand2 < 0.1 && ti_current > 0) timestep_sync_part(pj);
 }
 
 #endif /* SWIFT_EAGLE_FEEDBACK_IACT_H */

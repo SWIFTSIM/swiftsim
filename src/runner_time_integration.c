@@ -1208,7 +1208,7 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
 
         /* Finish this particle's time-step */
         timestep_process_sync_part(p, xp, e, cosmo);
-        message("Synchronization in cell %d", c->cellID);
+        // message("Synchronization in cell %d", c->cellID);
 
         /* Get new time-step */
         integertime_t ti_new_step = get_part_timestep(p, xp, e);
