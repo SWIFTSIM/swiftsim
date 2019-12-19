@@ -57,6 +57,8 @@ void engine_split_gas_particles(struct engine *e) {
 
   /* Get useful constants */
   struct space *s = e->s;
+  const int with_gravity = (e->policy & engine_policy_self_gravity) ||
+                           (e->policy & engine_policy_external_gravity);
   const double mass_threshold =
       e->hydro_properties->particle_splitting_mass_threshold;
 
@@ -125,7 +127,7 @@ void engine_split_gas_particles(struct engine *e) {
   }
 
   /* Do we need to reallocate the gpart array for the new particles? */
-  if (s->nr_gparts + count_new_gas > s->size_gparts) {
+  if (with_gravity && s->nr_gparts + count_new_gas > s->size_gparts) {
 
     const size_t nr_gparts_new = s->nr_gparts + count_new_gas;
     s->size_gparts = engine_parts_size_grow * nr_gparts_new;
@@ -194,14 +196,19 @@ void engine_split_gas_particles(struct engine *e) {
       /* Start by copying over the particles */
       memcpy(&parts[k_parts], p, sizeof(struct part));
       memcpy(&xparts[k_parts], xp, sizeof(struct xpart));
-      memcpy(&gparts[k_gparts], gp, sizeof(struct gpart));
+
+      if (with_gravity) {
+        memcpy(&gparts[k_gparts], gp, sizeof(struct gpart));
+      }
 
       /* Update the IDs */
       parts[k_parts].id += 2;
 
       /* Re-link everything */
-      parts[k_parts].gpart = &gparts[k_gparts];
-      gparts[k_gparts].id_or_neg_offset = -k_parts;
+      if (with_gravity) {
+        parts[k_parts].gpart = &gparts[k_gparts];
+        gparts[k_gparts].id_or_neg_offset = -k_parts;
+      }
 
       /* Displacement unit vector */
       const double delta_x = random_unit_interval(p->id, e->ti_current,
@@ -215,24 +222,33 @@ void engine_split_gas_particles(struct engine *e) {
       p->x[0] += delta_x * displacement_factor * h;
       p->x[1] += delta_y * displacement_factor * h;
       p->x[2] += delta_z * displacement_factor * h;
-      gp->x[0] += delta_x * displacement_factor * h;
-      gp->x[1] += delta_y * displacement_factor * h;
-      gp->x[2] += delta_z * displacement_factor * h;
+
+      if (with_gravity) {
+        gp->x[0] += delta_x * displacement_factor * h;
+        gp->x[1] += delta_y * displacement_factor * h;
+        gp->x[2] += delta_z * displacement_factor * h;
+      }
 
       /* Displace the new particle */
       parts[k_parts].x[0] -= delta_x * displacement_factor * h;
       parts[k_parts].x[1] -= delta_y * displacement_factor * h;
       parts[k_parts].x[2] -= delta_z * displacement_factor * h;
-      gparts[k_gparts].x[0] -= delta_x * displacement_factor * h;
-      gparts[k_gparts].x[1] -= delta_y * displacement_factor * h;
-      gparts[k_gparts].x[2] -= delta_z * displacement_factor * h;
+
+      if (with_gravity) {
+        gparts[k_gparts].x[0] -= delta_x * displacement_factor * h;
+        gparts[k_gparts].x[1] -= delta_y * displacement_factor * h;
+        gparts[k_gparts].x[2] -= delta_z * displacement_factor * h;
+      }
 
       /* Divide the mass */
       const double new_mass = gas_mass * 0.5;
       hydro_set_mass(p, new_mass);
-      gp->mass = new_mass;
       hydro_set_mass(&parts[k_parts], new_mass);
-      gparts[k_gparts].mass = new_mass;
+
+      if (with_gravity) {
+        gp->mass = new_mass;
+        gparts[k_gparts].mass = new_mass;
+      }
 
       /* Split the chemistry fields */
       chemistry_split_part(p, particle_split_factor);
@@ -259,7 +275,7 @@ void engine_split_gas_particles(struct engine *e) {
 
       /* Move to the next free slot */
       k_parts++;
-      k_gparts++;
+      if (with_gravity) k_gparts++;
     }
   }
 
