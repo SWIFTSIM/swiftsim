@@ -1853,8 +1853,9 @@ void engine_skip_drift(struct engine *e) {
  * @brief Launch the runners.
  *
  * @param e The #engine.
+ * @param fof Are we launching the FOF tasks or the regular tasks?
  */
-void engine_launch(struct engine *e) {
+void engine_launch(struct engine *e, const int fof) {
   const ticks tic = getticks();
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1880,9 +1881,14 @@ void engine_launch(struct engine *e) {
   /* Sit back and wait for the runners to come home. */
   swift_barrier_wait(&e->wait_barrier);
 
-  if (e->verbose)
-    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-            clocks_getunit());
+  if (e->verbose) {
+    if (fof)
+      message("(fof) took %.3f %s.", clocks_from_ticks(getticks() - tic),
+              clocks_getunit());
+    else
+      message("(tasks) took %.3f %s.", clocks_from_ticks(getticks() - tic),
+              clocks_getunit());
+  }
 }
 
 /**
@@ -1969,7 +1975,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Now, launch the calculation */
   TIMER_TIC;
-  engine_launch(e);
+  engine_launch(e, /*fof=*/0);
   TIMER_TOC(timer_runners);
 
   /* Apply some conversions (e.g. internal energy -> entropy) */
@@ -1983,7 +1989,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     if (hydro_need_extra_init_loop) {
       engine_marktasks(e);
       engine_skip_force_and_kick(e);
-      engine_launch(e);
+      engine_launch(e, /*fof=*/0);
     }
   }
 
@@ -2031,7 +2037,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Run the 0th time-step */
   TIMER_TIC2;
-  engine_launch(e);
+  engine_launch(e, /*fof=*/0);
   TIMER_TOC2(timer_runners);
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
@@ -2329,7 +2335,7 @@ void engine_step(struct engine *e) {
 
   /* Start all the tasks. */
   TIMER_TIC;
-  engine_launch(e);
+  engine_launch(e, /*fof=*/0);
   TIMER_TOC(timer_runners);
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
@@ -2354,6 +2360,9 @@ void engine_step(struct engine *e) {
   e->b_updates_since_rebuild += e->collect_group1.b_updated;
 
 #ifdef SWIFT_DEBUG_CHECKS
+  /* Verify that all cells have correct time-step information */
+  space_check_timesteps(e->s);
+
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
 #endif
