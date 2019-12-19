@@ -1851,6 +1851,29 @@ void engine_skip_drift(struct engine *e) {
   space_map_cells_pre(e->s, 1, cell_clear_drift_flags, NULL);
 }
 
+void engine_unskip_timestep_communications(struct engine *e) {
+
+  const ticks tic = getticks();
+
+  struct scheduler *s = &e->sched;
+  struct task *tasks = e->sched.tasks;
+  const int nr_tasks = e->sched.nr_tasks;
+
+  for (int i = 0; i < nr_tasks; ++i) {
+
+    struct task *t = &tasks[i];
+
+    if (t->type == task_type_send && t->subtype == task_subtype_tend_part)
+      scheduler_activate(s, t);
+    else if (t->type == task_type_recv && t->subtype == task_subtype_tend_part)
+      scheduler_activate(s, t);
+  }
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+}
+
 /**
  * @brief Launch the runners.
  *
@@ -2339,6 +2362,16 @@ void engine_step(struct engine *e) {
   TIMER_TIC;
   engine_launch(e, /*fof=*/0);
   TIMER_TOC(timer_runners);
+
+  /* Since the time-steps may have changed because of the limiter's
+   * action, we need to communicate the new time-step sizes */
+  if ((e->policy & engine_policy_timestep_sync) ||
+      (e->policy & engine_policy_timestep_limiter)) {
+#ifdef WITH_MPI
+    engine_unskip_timestep_communications(e);
+    engine_launch(e, /*fof=*/0);
+#endif
+  }
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
