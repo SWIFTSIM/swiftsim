@@ -139,7 +139,7 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
                                 struct cell *cj, struct task *t_xv,
                                 struct task *t_rho, struct task *t_gradient,
                                 struct task *t_ti, struct task *t_limiter,
-                                const int with_limiter) {
+                                const int with_limiter, const int with_sync) {
 
 #ifdef WITH_MPI
   struct link *l = NULL;
@@ -215,7 +215,8 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
       /* Drift before you send */
       scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
 
-      scheduler_addunlock(s, ci->super->timestep, t_ti);
+      if (!with_limiter && !with_sync)
+        scheduler_addunlock(s, ci->super->timestep, t_ti);
       if (with_limiter) scheduler_addunlock(s, ci->super->timestep, t_limiter);
     }
 
@@ -234,7 +235,8 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
     for (int k = 0; k < 8; k++)
       if (ci->progeny[k] != NULL)
         engine_addtasks_send_hydro(e, ci->progeny[k], cj, t_xv, t_rho,
-                                   t_gradient, t_ti, t_limiter, with_limiter);
+                                   t_gradient, t_ti, t_limiter, with_limiter,
+                                   with_sync);
 
 #else
   error("SWIFT was not compiled with MPI support.");
@@ -453,8 +455,8 @@ void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
 void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
                                 struct task *t_xv, struct task *t_rho,
                                 struct task *t_gradient, struct task *t_ti,
-                                struct task *t_limiter,
-                                const int with_limiter) {
+                                struct task *t_limiter, const int with_limiter,
+                                const int with_sync) {
 
 #ifdef WITH_MPI
   struct scheduler *s = &e->sched;
@@ -515,12 +517,12 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     }
     for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_gradient, l->t);
-      scheduler_addunlock(s, l->t, t_ti);
+      if (!with_limiter && !with_sync) scheduler_addunlock(s, l->t, t_ti);
     }
 #else
     for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
-      scheduler_addunlock(s, l->t, t_ti);
+      if (!with_limiter && !with_sync) scheduler_addunlock(s, l->t, t_ti);
     }
 #endif
 
@@ -548,7 +550,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL)
         engine_addtasks_recv_hydro(e, c->progeny[k], t_xv, t_rho, t_gradient,
-                                   t_ti, t_limiter, with_limiter);
+                                   t_ti, t_limiter, with_limiter, with_sync);
 
 #else
   error("SWIFT was not compiled with MPI support.");
@@ -2937,6 +2939,7 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
   struct engine *e = (struct engine *)extra_data;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_limiter = (e->policy & engine_policy_timestep_limiter);
+  const int with_sync = (e->policy & engine_policy_timestep_sync);
   struct cell_type_pair *cell_type_pairs = (struct cell_type_pair *)map_data;
 
   for (int k = 0; k < num_elements; k++) {
@@ -2950,7 +2953,7 @@ void engine_addtasks_send_mapper(void *map_data, int num_elements,
       engine_addtasks_send_hydro(e, ci, cj, /*t_xv=*/NULL,
                                  /*t_rho=*/NULL, /*t_gradient=*/NULL,
                                  /*t_ti=*/NULL, /*t_limiter=*/NULL,
-                                 with_limiter);
+                                 with_limiter, with_sync);
 
     /* Add the send tasks for the cells in the proxy that have a stars
      * connection. */
@@ -2983,6 +2986,7 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
   struct engine *e = (struct engine *)extra_data;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_limiter = (e->policy & engine_policy_timestep_limiter);
+  const int with_sync = (e->policy & engine_policy_timestep_sync);
   struct cell_type_pair *cell_type_pairs = (struct cell_type_pair *)map_data;
 
   for (int k = 0; k < num_elements; k++) {
@@ -2994,7 +2998,7 @@ void engine_addtasks_recv_mapper(void *map_data, int num_elements,
     if ((e->policy & engine_policy_hydro) && (type & proxy_cell_type_hydro))
       engine_addtasks_recv_hydro(e, ci, /*t_xv=*/NULL, /*t_rho=*/NULL,
                                  /*t_gradient=*/NULL, /*t_ti=*/NULL,
-                                 /*t_limiter=*/NULL, with_limiter);
+                                 /*t_limiter=*/NULL, with_limiter, with_sync);
 
     /* Add the recv tasks for the cells in the proxy that have a stars
      * connection. */
