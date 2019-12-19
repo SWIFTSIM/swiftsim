@@ -549,6 +549,7 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
  *
  * @param phys_const #phys_const data structure.
  * @param us The internal system of units.
+ * @param hydro_props The properties of the hydro scheme.
  * @param cosmo #cosmology data structure.
  * @param cooling #cooling_function_data struct.
  * @param p #part data.
@@ -557,6 +558,7 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
 __attribute__((always_inline)) INLINE void cooling_first_init_part(
     const struct phys_const *restrict phys_const,
     const struct unit_system *restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *restrict cooling,
     const struct part *restrict p, struct xpart *restrict xp) {

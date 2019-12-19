@@ -57,6 +57,7 @@ static gr_float cooling_time(
 static gr_float cooling_new_energy(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology* restrict cosmo,
     const struct cooling_function_data* restrict cooling,
     const struct part* restrict p, struct xpart* restrict xp, double dt);
@@ -160,11 +161,14 @@ __attribute__((always_inline)) INLINE static int cooling_converged(
  *
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
+ * @param hydro_properties the hydro_props struct, used for
+ * getting the minimal internal energy allowed in by SWIFT.
  * @param cooling The properties of the cooling function.
  */
 __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology* restrict cosmo,
     const struct cooling_function_data* restrict cooling,
     const struct part* restrict p, struct xpart* restrict xp) {
@@ -180,7 +184,7 @@ __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
   const double alpha = 0.01;
   double dt =
       fabs(cooling_time(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp));
-  cooling_new_energy(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp, dt);
+  cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp, xp, dt);
   dt = alpha *
        fabs(cooling_time(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp));
 
@@ -196,7 +200,7 @@ __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
     old = *xp;
 
     /* update chemistry */
-    cooling_new_energy(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp, dt);
+    cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp, xp, dt);
   } while (step < max_step && !cooling_converged(xp, &old, conv_limit));
 
   if (step == max_step)
@@ -212,11 +216,14 @@ __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
  *
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
+ * @param hydro_properties the hydro_props struct, used for
+ * getting the minimal internal energy allowed in by SWIFT.
  * @param cooling The properties of the cooling function.
  */
 __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology* restrict cosmo,
     const struct cooling_function_data* cooling, const struct part* restrict p,
     struct xpart* restrict xp) {
@@ -254,7 +261,7 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
 #endif  // MODE >= 3
 
 #if COOLING_GRACKLE_MODE > 0
-  cooling_compute_equilibrium(phys_const, us, cosmo, cooling, p, xp);
+  cooling_compute_equilibrium(phys_const, us, hydro_props, cosmo, cooling, p, xp);
 #endif
 }
 
@@ -596,6 +603,8 @@ __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
  *
  * @param phys_const The physical constants in internal units.
  * @param us The internal system of units.
+ * @param hydro_properties the hydro_props struct, used for
+ * getting the minimal internal energy allowed in by SWIFT.
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
  * @param xp Pointer to the particle extra data
@@ -606,6 +615,7 @@ __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
 __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology* restrict cosmo,
     const struct cooling_function_data* restrict cooling,
     const struct part* restrict p, struct xpart* restrict xp, double dt) {
@@ -633,6 +643,10 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
   gr_float density = hydro_get_physical_density(p, cosmo);
   gr_float energy = hydro_get_physical_internal_energy(p, xp, cosmo) +
     dt * hydro_get_physical_internal_energy_dt(p, cosmo);
+
+  /* We now need to check that we are not going to go below any of the limits */
+  const double u_minimal = hydro_props->minimal_internal_energy;
+  energy = max(energy, u_minimal);
 
   /* initialize density */
   data.density = &density;
@@ -770,7 +784,6 @@ __attribute__((always_inline)) INLINE static void cooling_apply(
  * @param cosmo The current cosmological model.
  * @param hydro_properties the hydro_props struct, used for
  * getting the minimal internal energy allowed in by SWIFT.
- * Read from yml file into engine struct.
  * @param floor_props Properties of the entropy floor.
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
@@ -805,7 +818,7 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
 
   /* Calculate energy after dt */
   gr_float u_new =
-      cooling_new_energy(phys_const, us, cosmo, cooling, p, xp, dt);
+    cooling_new_energy(phys_const, us, hydro_props, cosmo, cooling, p, xp, dt);
 
   /* We now need to check that we are not going to go below any of the limits */
   const double u_minimal = hydro_props->minimal_internal_energy;
