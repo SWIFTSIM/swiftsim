@@ -288,11 +288,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Get the time derivative for u. */
 
   const float sph_du_term_i = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pj->u * pi->u * (f_ij / pi->pressure_bar) *
+                              pj->u * pi->u * (f_ij * pressure_inverse_i) *
                               wi_dr * dvdr * r_inv;
 
   const float sph_du_term_j = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pi->u * pj->u * (f_ji / pj->pressure_bar) *
+                              pi->u * pj->u * (f_ji * pressure_inverse_j) *
                               wj_dr * dvdr * r_inv;
 
   /* Viscosity term */
@@ -419,7 +419,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Get the time derivative for u. */
   const float sph_du_term_i = hydro_gamma_minus_one * hydro_gamma_minus_one *
-                              pj->u * pi->u * (f_ij / pi->pressure_bar) *
+                              pj->u * pi->u * (f_ij * pressure_inverse_i) *
                               wi_dr * dvdr * r_inv;
 
   /* Viscosity term */
