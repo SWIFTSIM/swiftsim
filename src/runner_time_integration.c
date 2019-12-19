@@ -1213,6 +1213,8 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
         /* Get new time-step */
         integertime_t ti_new_step = get_part_timestep(p, xp, e);
         timebin_t new_time_bin = get_time_bin(ti_new_step);
+
+        /* Limit the time-bin to what is allowed in this step */
         new_time_bin = min(new_time_bin, e->max_active_bin);
         ti_new_step = get_integer_timestep(new_time_bin);
 
