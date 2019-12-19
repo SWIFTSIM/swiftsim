@@ -3388,6 +3388,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
   const int with_feedback = e->policy & engine_policy_feedback;
   const int with_timestep_limiter =
       (e->policy & engine_policy_timestep_limiter);
+  const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
 
 #ifdef WITH_MPI
   const int with_star_formation = e->policy & engine_policy_star_formation;
@@ -3477,7 +3478,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         }
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (ci_active || with_timestep_limiter)
+        if (ci_active && !with_timestep_limiter && !with_timestep_sync)
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_part);
 
         if (with_timestep_limiter)
@@ -3509,7 +3510,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         }
 
         /* If the local cell is active, send its ti_end values. */
-        if (cj_active || with_timestep_limiter)
+        if (cj_active && !with_timestep_limiter && !with_timestep_sync)
           scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_part,
                                   ci_nodeID);
 
@@ -3545,7 +3546,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         }
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (cj_active || with_timestep_limiter)
+        if (cj_active && !with_timestep_limiter && !with_timestep_sync)
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_part);
 
         if (with_timestep_limiter)
@@ -3578,7 +3579,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         }
 
         /* If the local cell is active, send its ti_end values. */
-        if (ci_active || with_timestep_limiter)
+        if (ci_active && !with_timestep_limiter && !with_timestep_sync)
           scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_part,
                                   cj_nodeID);
 
