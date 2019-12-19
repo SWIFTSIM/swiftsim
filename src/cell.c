@@ -3388,9 +3388,9 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
   const int with_feedback = e->policy & engine_policy_feedback;
   const int with_timestep_limiter =
       (e->policy & engine_policy_timestep_limiter);
-  const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
 
 #ifdef WITH_MPI
+  const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_star_formation = e->policy & engine_policy_star_formation;
 #endif
   int rebuild = 0;
@@ -5282,11 +5282,15 @@ void cell_check_timesteps(const struct cell *c, const integertime_t ti_current,
   integertime_t ti_end_max = 0;
   integertime_t ti_beg_max = 0;
 
+  int count = 0;
+
   for (int i = 0; i < c->hydro.count; ++i) {
 
     const struct part *p = &c->hydro.parts[i];
     if (p->time_bin == time_bin_inhibited) continue;
     if (p->time_bin == time_bin_not_created) continue;
+
+    ++count;
 
     integertime_t ti_end, ti_beg;
 
@@ -5304,7 +5308,8 @@ void cell_check_timesteps(const struct cell *c, const integertime_t ti_current,
     ti_beg_max = max(ti_beg, ti_beg_max);
   }
 
-  if (c->hydro.count > 0) {
+  /* Only check cells that have at least one non-inhibited particle */
+  if (count > 0) {
 
     if (ti_end_min != c->hydro.ti_end_min)
       error(
