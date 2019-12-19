@@ -5310,7 +5310,7 @@ void cell_check_timesteps(const struct cell *c, const integertime_t ti_current,
           "Non-matching ti_end_min. Cell=%lld true=%lld ti_current=%lld "
           "depth=%d",
           c->hydro.ti_end_min, ti_end_min, ti_current, c->depth);
-    if (ti_end_max != c->hydro.ti_end_max)
+    if (ti_end_max > c->hydro.ti_end_max)
       error(
           "Non-matching ti_end_max. Cell=%lld true=%lld ti_current=%lld "
           "depth=%d",
