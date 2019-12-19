@@ -3226,7 +3226,6 @@ void engine_dump_snapshot(struct engine *e) {
       error("FILENAME_BUFFER_SIZE is too small for snapshot file name");
     }
   }
-  printf("%d: output file = %s\n", e->nodeID, snapshotBase);
 
 /* Dump... */
 #if defined(HAVE_HDF5)
