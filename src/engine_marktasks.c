@@ -497,7 +497,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_limiter);
 
           /* If the foreign cell is active, we want its ti_end values. */
-          if (ci_active_hydro && !with_timestep_limiter && !with_timestep_sync)
+          if (ci_active_hydro)  // && !with_timestep_limiter &&
+                                // !with_timestep_sync)
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_part);
 
           /* Is the foreign cell active and will need stuff from us? */
@@ -529,7 +530,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                     ci_nodeID);
 
           /* If the local cell is active, send its ti_end values. */
-          if (cj_active_hydro && !with_timestep_limiter && !with_timestep_sync)
+          if (cj_active_hydro)  // && !with_timestep_limiter &&
+                                // !with_timestep_sync)
             scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_part,
                                     ci_nodeID);
 
@@ -572,7 +574,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_limiter);
 
           /* If the foreign cell is active, we want its ti_end values. */
-          if (cj_active_hydro && !with_timestep_limiter && !with_timestep_sync)
+          if (cj_active_hydro)  // && !with_timestep_limiter &&
+                                // !with_timestep_sync)
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_part);
 
           /* Is the foreign cell active and will need stuff from us? */
@@ -606,7 +609,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                     cj_nodeID);
 
           /* If the local cell is active, send its ti_end values. */
-          if (ci_active_hydro && !with_timestep_limiter && !with_timestep_sync)
+          if (ci_active_hydro)  // && !with_timestep_limiter &&
+                                // !with_timestep_sync)
             scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_part,
                                     cj_nodeID);
 

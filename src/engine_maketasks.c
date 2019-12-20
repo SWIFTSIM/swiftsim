@@ -215,8 +215,7 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
       /* Drift before you send */
       scheduler_addunlock(s, ci->hydro.super->hydro.drift, t_xv);
 
-      if (!with_limiter && !with_sync)
-        scheduler_addunlock(s, ci->super->timestep, t_ti);
+      scheduler_addunlock(s, ci->super->timestep, t_ti);
       if (with_limiter) scheduler_addunlock(s, ci->super->timestep, t_limiter);
     }
 
@@ -504,6 +503,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     if (c->hydro.sorts != NULL) {
       scheduler_addunlock(s, t_xv, c->hydro.sorts);
       scheduler_addunlock(s, c->hydro.sorts, t_rho);
+      //if (with_limiter) scheduler_addunlock(s, c->hydro.sorts, t_limiter);
     }
 
     for (struct link *l = c->hydro.density; l != NULL; l = l->next) {
@@ -517,17 +517,18 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     }
     for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_gradient, l->t);
-      if (!with_limiter && !with_sync) scheduler_addunlock(s, l->t, t_ti);
+      scheduler_addunlock(s, l->t, t_ti);
     }
 #else
     for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
-      if (!with_limiter && !with_sync) scheduler_addunlock(s, l->t, t_ti);
+      scheduler_addunlock(s, l->t, t_ti);
     }
 #endif
 
     if (with_limiter) {
       for (struct link *l = c->hydro.limiter; l != NULL; l = l->next) {
+        scheduler_addunlock(s, t_ti, l->t);
         scheduler_addunlock(s, t_limiter, l->t);
       }
     }
