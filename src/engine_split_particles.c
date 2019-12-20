@@ -95,6 +95,7 @@ void engine_split_gas_particles(struct engine *e) {
     return;
   }
 
+  /* Be verbose about this. This is an important event */
   message("Splitting %zd particles above the mass threshold", counter);
 
   /* Number of particles to create */
@@ -106,7 +107,7 @@ void engine_split_gas_particles(struct engine *e) {
     const size_t nr_parts_new = s->nr_parts + count_new_gas;
     s->size_parts = engine_parts_size_grow * nr_parts_new;
 
-    message("Reallocating the part array!");
+    if (e->verbose) message("Reallocating the part array!");
 
     struct part *parts_new = NULL;
     if (swift_memalign("parts", (void **)&parts_new, part_align,
@@ -132,7 +133,7 @@ void engine_split_gas_particles(struct engine *e) {
     const size_t nr_gparts_new = s->nr_gparts + count_new_gas;
     s->size_gparts = engine_parts_size_grow * nr_gparts_new;
 
-    message("Reallocating the gpart array!");
+    if (e->verbose) message("Reallocating the gpart array!");
 
     struct gpart *gparts_new = NULL;
     if (swift_memalign("gparts", (void **)&gparts_new, gpart_align,
