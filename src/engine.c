@@ -1867,6 +1867,10 @@ void engine_unskip_timestep_communications(struct engine *e) {
       scheduler_activate(s, t);
     else if (t->type == task_type_recv && t->subtype == task_subtype_tend_part)
       scheduler_activate(s, t);
+    else if (t->type == task_type_send && t->subtype == task_subtype_tend_gpart)
+      scheduler_activate(s, t);
+    else if (t->type == task_type_recv && t->subtype == task_subtype_tend_gpart)
+      scheduler_activate(s, t);
   }
 
   if (e->verbose)
