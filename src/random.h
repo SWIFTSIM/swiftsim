@@ -137,7 +137,8 @@ INLINE static double inl_erand48(uint16_t xsubi[3]) { return erand48(xsubi); }
  * @param type The #random_number_type to generate.
  * @return a random number in the interval [0, 1.[.
  */
-INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
+INLINE static double random_unit_interval(int64_t id,
+                                          const integertime_t ti_current,
                                           const enum random_number_type type) {
 
   /* Start by packing the state into a sequence of 16-bit seeds for rand_r. */
@@ -152,7 +153,7 @@ INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
   buff[8] = 6178;
 
   /* Use the random seed to generate a new random number */
-  buff[0] = buff[0] ^ RANDOM_SEED;
+  buff[0] = buff[0] ^ (uint16_t) SWIFT_RANDOM_SEED_XOR;
 
   /* Shuffle the buffer values, this will be our source of entropy for
      the erand48 generator. */
