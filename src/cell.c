@@ -3390,7 +3390,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
       (e->policy & engine_policy_timestep_limiter);
 
 #ifdef WITH_MPI
-  //const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
+  // const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_star_formation = e->policy & engine_policy_star_formation;
 #endif
   int rebuild = 0;

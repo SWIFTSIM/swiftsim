@@ -503,7 +503,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     if (c->hydro.sorts != NULL) {
       scheduler_addunlock(s, t_xv, c->hydro.sorts);
       scheduler_addunlock(s, c->hydro.sorts, t_rho);
-      //if (with_limiter) scheduler_addunlock(s, c->hydro.sorts, t_limiter);
+      // if (with_limiter) scheduler_addunlock(s, c->hydro.sorts, t_limiter);
     }
 
     for (struct link *l = c->hydro.density; l != NULL; l = l->next) {
