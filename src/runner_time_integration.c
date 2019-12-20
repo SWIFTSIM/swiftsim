@@ -948,7 +948,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
 
   const struct engine *e = r->e;
-  const integertime_t ti_current = e->ti_current;
+  //const integertime_t ti_current = e->ti_current;
   const int count = c->hydro.count;
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
