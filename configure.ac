@@ -1054,7 +1054,7 @@ AM_CONDITIONAL([HAVETBBMALLOC],[test -n "$TBBMALLOC_LIBS"])
 
 # check for a random seed
 AC_ARG_WITH([random-seed],
-    [AS_HELP_STRING([--with-random-seed=INT],
+    [AS_HELP_STRING([--with-random-seed=SHORT INT],
        [Set the random seed.]
     )],
     [with_random_seed="$withval"],

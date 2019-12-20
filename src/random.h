@@ -153,7 +153,7 @@ INLINE static double random_unit_interval(int64_t id,
   buff[8] = 6178;
 
   /* Use the random seed to generate a new random number */
-  buff[0] = buff[0] ^ (uint16_t) SWIFT_RANDOM_SEED_XOR;
+  buff[0] = buff[0] ^ (uint16_t)SWIFT_RANDOM_SEED_XOR;
 
   /* Shuffle the buffer values, this will be our source of entropy for
      the erand48 generator. */
