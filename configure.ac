@@ -1053,23 +1053,14 @@ AC_SUBST([TBBMALLOC_LIBS])
 AM_CONDITIONAL([HAVETBBMALLOC],[test -n "$TBBMALLOC_LIBS"])
 
 # check for a random seed
-AC_ARG_WITH([random-shift-time],
-    [AS_HELP_STRING([--with-random-shift-time=INT],
-       [Change the random numbers by shifting the time parameter.]
+AC_ARG_WITH([random-seed],
+    [AS_HELP_STRING([--with-random-seed=INT],
+       [Set the random seed.]
     )],
-    [with_random_shift_time="$withval"],
-    [with_random_shift_time="0"]
+    [with_random_seed="$withval"LL],
+    [with_random_seed="0LL"]
 )
-AC_DEFINE_UNQUOTED([RANDOM_TIME_SHIFT], [$with_random_shift_time],[Shift in time for the random generator.]),
-
-AC_ARG_WITH([random-shift-id],
-[AS_HELP_STRING([--with-random-shift-id=INT],
-[Change the random numbers by shifting the id parameter.]
-)],
-[with_random_shift_id="$withval"],
-[with_random_shift_id="0"]
-)
-AC_DEFINE_UNQUOTED([RANDOM_ID_SHIFT], [$with_random_shift_id], [Shift in id for the random generator.]),
+AC_DEFINE_UNQUOTED([RANDOM_SEED], [$with_random_seed],[Value of the random seed.]),
 
 # Check for python.
 have_python="no"

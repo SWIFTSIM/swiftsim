@@ -140,10 +140,6 @@ INLINE static double inl_erand48(uint16_t xsubi[3]) { return erand48(xsubi); }
 INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
                                           const enum random_number_type type) {
 
-  /* Shift the input in order to change the "seed" */
-  ti_current += RANDOM_TIME_SHIFT;
-  id += RANDOM_ID_SHIFT;
-
   /* Start by packing the state into a sequence of 16-bit seeds for rand_r. */
   uint16_t buff[9];
   id += type;
@@ -154,6 +150,11 @@ INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
      calls to erand48(), so we add an additional aribrary constant two-byte
      value to get 18 bytes of state. */
   buff[8] = 6178;
+
+  /* Use the random seed to generate a new random number */
+  long long *tmp = (long long *) buff;
+  *tmp = *tmp ^ RANDOM_SEED;
+
 
   /* Shuffle the buffer values, this will be our source of entropy for
      the erand48 generator. */
