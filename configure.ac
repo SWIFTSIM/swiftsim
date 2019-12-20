@@ -1057,8 +1057,8 @@ AC_ARG_WITH([random-seed],
     [AS_HELP_STRING([--with-random-seed=INT],
        [Set the random seed.]
     )],
-    [with_random_seed="$withval"LL],
-    [with_random_seed="0LL"]
+    [with_random_seed="$withval"],
+    [with_random_seed="0"]
 )
 AC_DEFINE_UNQUOTED([RANDOM_SEED], [$with_random_seed],[Value of the random seed.]),
 
