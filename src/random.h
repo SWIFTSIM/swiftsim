@@ -154,7 +154,6 @@ INLINE static double random_unit_interval(int64_t id, integertime_t ti_current,
   /* Use the random seed to generate a new random number */
   buff[0] = buff[0] ^ RANDOM_SEED;
 
-
   /* Shuffle the buffer values, this will be our source of entropy for
      the erand48 generator. */
   uint32_t seed16 = 0;
