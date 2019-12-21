@@ -32,7 +32,7 @@ a distinct state per random number type.
 If the user wishes to run a simulation with a different set of random number,
 an option during the configuration (``--with-random-seed=INT``) is available.
 This option simply flip some bits in the initial number composed of the ID and the
-current simulation time through the logical operator XOR.
+current simulation time through the binary operator XOR.
 
 Implementation
 ~~~~~~~~~~~~~~
