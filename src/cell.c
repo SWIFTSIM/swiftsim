@@ -2602,8 +2602,8 @@ void cell_activate_super_sync_part(struct cell *c, struct scheduler *s) {
     cell_set_flag(parent, cell_flag_do_hydro_sub_sync);
 
     if (parent == c->super) {
-      scheduler_activate(s, c->timestep_sync);
-      scheduler_activate(s, c->kick1);
+      scheduler_activate(s, parent->timestep_sync);
+      scheduler_activate(s, parent->kick1);
       break;
     }
   }
