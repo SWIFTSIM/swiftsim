@@ -1071,6 +1071,9 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
   const int with_cooling = (e->policy & engine_policy_cooling);
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
+  const int with_timestep_limiter =
+      (e->policy & engine_policy_timestep_limiter);
+  const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
 
   /* Are we are the level where we create the stars' resort tasks?
    * If the tree is shallow, we need to do this at the super-level if the
@@ -1216,6 +1219,24 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #endif
         scheduler_addunlock(s, c->black_holes.black_holes_out,
                             c->super->timestep);
+      }
+
+      /* Time-step limiter */
+      if (with_timestep_limiter) {
+        c->hydro.limiter_in =
+            scheduler_addtask(s, task_type_limiter_in, task_subtype_none, 0,
+                              /* implicit = */ 1, c, NULL);
+
+        scheduler_addunlock(s, c->hydro.limiter_in, c->super->timestep_limiter);
+      }
+
+      /* Time-step sync */
+      if (with_timestep_sync) {
+        c->hydro.sync_in =
+            scheduler_addtask(s, task_type_sync_in, task_subtype_none, 0,
+                              /* implicit = */ 1, c, NULL);
+
+        scheduler_addunlock(s, c->hydro.sync_in, c->super->timestep_sync);
       }
     }
   } else { /* We are above the super-cell so need to go deeper */
@@ -2010,10 +2031,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_timestep_sync && with_feedback) {
-        scheduler_addunlock(sched, t_star_feedback, ci->super->timestep_sync);
+        scheduler_addunlock(sched, t_star_feedback,
+                            ci->hydro.super->hydro.sync_in);
       }
       if (with_timestep_sync && with_black_holes && bcount_i > 0) {
-        scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
+        scheduler_addunlock(sched, t_bh_feedback,
+                            ci->hydro.super->hydro.sync_in);
       }
     }
 
@@ -2210,11 +2233,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_timestep_sync && with_feedback) {
-          scheduler_addunlock(sched, t_star_feedback, ci->super->timestep_sync);
+          scheduler_addunlock(sched, t_star_feedback,
+                              ci->hydro.super->hydro.sync_in);
         }
         if (with_timestep_sync && with_black_holes &&
             (bcount_i > 0 || bcount_j > 0)) {
-          scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
+          scheduler_addunlock(sched, t_bh_feedback,
+                              ci->hydro.super->hydro.sync_in);
         }
       } else /*(ci->nodeID != nodeID) */ {
         if (with_feedback) {
@@ -2301,14 +2326,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, t_limiter, cj->super->kick1);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep_limiter);
           }
+        }
+
+        if (ci->hydro.super != cj->hydro.super) {
 
           if (with_timestep_sync && with_feedback) {
             scheduler_addunlock(sched, t_star_feedback,
-                                cj->super->timestep_sync);
+                                cj->hydro.super->hydro.sync_in);
           }
           if (with_timestep_sync && with_black_holes &&
               (bcount_i > 0 || bcount_j > 0)) {
-            scheduler_addunlock(sched, t_bh_feedback, cj->super->timestep_sync);
+            scheduler_addunlock(sched, t_bh_feedback,
+                                cj->hydro.super->hydro.sync_in);
           }
         }
 
@@ -2482,10 +2511,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_timestep_sync && with_feedback) {
-        scheduler_addunlock(sched, t_star_feedback, ci->super->timestep_sync);
+        scheduler_addunlock(sched, t_star_feedback,
+                            ci->hydro.super->hydro.sync_in);
       }
       if (with_timestep_sync && with_black_holes && bcount_i > 0) {
-        scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
+        scheduler_addunlock(sched, t_bh_feedback,
+                            ci->hydro.super->hydro.sync_in);
       }
     }
 
@@ -2685,11 +2716,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_timestep_sync && with_feedback) {
-          scheduler_addunlock(sched, t_star_feedback, ci->super->timestep_sync);
+          scheduler_addunlock(sched, t_star_feedback,
+                              ci->hydro.super->hydro.sync_in);
         }
         if (with_timestep_sync && with_black_holes &&
             (bcount_i > 0 || bcount_j > 0)) {
-          scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
+          scheduler_addunlock(sched, t_bh_feedback,
+                              ci->hydro.super->hydro.sync_in);
         }
       } else /* ci->nodeID != nodeID */ {
 
@@ -2777,14 +2810,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, t_limiter, cj->super->kick1);
             scheduler_addunlock(sched, t_limiter, cj->super->timestep_limiter);
           }
+        }
+
+        if (ci->hydro.super != cj->hydro.super) {
 
           if (with_timestep_sync && with_feedback) {
             scheduler_addunlock(sched, t_star_feedback,
-                                cj->super->timestep_sync);
+                                cj->hydro.super->hydro.sync_in);
           }
           if (with_timestep_sync && with_black_holes &&
               (bcount_i > 0 || bcount_j > 0)) {
-            scheduler_addunlock(sched, t_bh_feedback, cj->super->timestep_sync);
+            scheduler_addunlock(sched, t_bh_feedback,
+                                cj->hydro.super->hydro.sync_in);
           }
         }
       } else /* cj->nodeID != nodeID */ {

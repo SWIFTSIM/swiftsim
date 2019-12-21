@@ -2594,6 +2594,21 @@ void cell_activate_drift_part(struct cell *c, struct scheduler *s) {
   }
 }
 
+void cell_activate_super_sync_part(struct cell *c, struct scheduler *s) {
+
+  for (struct cell *parent = c; parent != NULL; parent = parent->parent) {
+
+    /* Mark this cell for synching */
+    cell_set_flag(parent, cell_flag_do_hydro_sub_sync);
+
+    if (parent == c->super) {
+      scheduler_activate(s, c->timestep_sync);
+      scheduler_activate(s, c->kick1);
+      break;
+    }
+  }
+}
+
 void cell_activate_sync_part(struct cell *c, struct scheduler *s) {
   /* If this cell is already marked for drift, quit early. */
   if (cell_get_flag(c, cell_flag_do_hydro_sync)) return;
@@ -2603,27 +2618,19 @@ void cell_activate_sync_part(struct cell *c, struct scheduler *s) {
 
   /* Set the do_sub_sync all the way up and activate the super sync
      if this has not yet been done. */
-  if (c == c->super) {
-#ifdef SWIFT_DEBUG_CHECKS
-    if (c->timestep_sync == NULL)
-      error("Trying to activate un-existing c->timestep_sync");
-#endif
-    scheduler_activate(s, c->timestep_sync);
-    scheduler_activate(s, c->kick1);
+  if (c == c->hydro.super) {
+    scheduler_activate(s, c->hydro.sync_in);
+    cell_activate_super_sync_part(c, s);
   } else {
     for (struct cell *parent = c->parent;
          parent != NULL && !cell_get_flag(parent, cell_flag_do_hydro_sub_sync);
          parent = parent->parent) {
-      /* Mark this cell for drifting */
+      /* Mark this cell for synching */
       cell_set_flag(parent, cell_flag_do_hydro_sub_sync);
 
-      if (parent == c->super) {
-#ifdef SWIFT_DEBUG_CHECKS
-        if (parent->timestep_sync == NULL)
-          error("Trying to activate un-existing parent->timestep_sync");
-#endif
-        scheduler_activate(s, parent->timestep_sync);
-        scheduler_activate(s, parent->kick1);
+      if (parent == c->hydro.super) {
+        scheduler_activate(s, parent->hydro.sync_in);
+        cell_activate_super_sync_part(parent, s);
         break;
       }
     }
