@@ -133,7 +133,10 @@ void engine_addtasks_send_gravity(struct engine *e, struct cell *ci,
  * @param t_xv The send_xv #task, if it has already been created.
  * @param t_rho The send_rho #task, if it has already been created.
  * @param t_gradient The send_gradient #task, if already created.
- * @param t_ti The recv_ti_end #task, if it has already been created.
+ * @param t_ti The send_ti_end #task, if it has already been created.
+ * @param t_limiter The send_limiter #task, if it has already been created.
+ * @param with_limiter Are we running with the time-step limiter?
+ * @param with_sync Are we running with time-step synchronization?
  */
 void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
                                 struct cell *cj, struct task *t_xv,
@@ -450,6 +453,9 @@ void engine_addtasks_send_black_holes(struct engine *e, struct cell *ci,
  * @param t_rho The recv_rho #task, if it has already been created.
  * @param t_gradient The recv_gradient #task, if it has already been created.
  * @param t_ti The recv_ti_end #task, if it has already been created.
+ * @param t_limiter The recv_limiter #task, if it has already been created.
+ * @param with_limiter Are we running with the time-step limiter?
+ * @param with_sync Are we running with time-step synchronization?
  */
 void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
                                 struct task *t_xv, struct task *t_rho,
