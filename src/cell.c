@@ -790,6 +790,7 @@ int cell_pack_end_step_hydro(struct cell *restrict c,
 #ifdef WITH_MPI
 
   /* Pack this cell's data. */
+  pcells[0].ti_beg_max = c->hydro.ti_beg_max;
   pcells[0].ti_end_min = c->hydro.ti_end_min;
   pcells[0].ti_end_max = c->hydro.ti_end_max;
   pcells[0].dx_max_part = c->hydro.dx_max_part;
@@ -823,6 +824,7 @@ int cell_unpack_end_step_hydro(struct cell *restrict c,
 #ifdef WITH_MPI
 
   /* Unpack this cell's data. */
+  c->hydro.ti_beg_max = pcells[0].ti_beg_max;
   c->hydro.ti_end_min = pcells[0].ti_end_min;
   c->hydro.ti_end_max = pcells[0].ti_end_max;
   c->hydro.dx_max_part = pcells[0].dx_max_part;
@@ -856,6 +858,7 @@ int cell_pack_end_step_grav(struct cell *restrict c,
 #ifdef WITH_MPI
 
   /* Pack this cell's data. */
+  pcells[0].ti_beg_max = c->grav.ti_beg_max;
   pcells[0].ti_end_min = c->grav.ti_end_min;
   pcells[0].ti_end_max = c->grav.ti_end_max;
 
@@ -888,6 +891,7 @@ int cell_unpack_end_step_grav(struct cell *restrict c,
 #ifdef WITH_MPI
 
   /* Unpack this cell's data. */
+  c->grav.ti_beg_max = pcells[0].ti_beg_max;
   c->grav.ti_end_min = pcells[0].ti_end_min;
   c->grav.ti_end_max = pcells[0].ti_end_max;
 

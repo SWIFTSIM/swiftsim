@@ -210,6 +210,9 @@ struct pcell {
  */
 struct pcell_step_hydro {
 
+  /*! Maximal integer beginning-of-timestep in this cell (hydro) */
+  integertime_t ti_beg_max;
+
   /*! Minimal integer end-of-timestep in this cell (hydro) */
   integertime_t ti_end_min;
 
@@ -221,6 +224,9 @@ struct pcell_step_hydro {
 };
 
 struct pcell_step_grav {
+
+  /*! Maximal integer beginning-of-timestep in this cell (gravity) */
+  integertime_t ti_beg_max;
 
   /*! Minimal integer end-of-timestep in this cell (gravity) */
   integertime_t ti_end_min;
