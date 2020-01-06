@@ -1116,7 +1116,6 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
   time_t tm = time(NULL);
   io_write_attribute_s(h_grp, "Snapshot date", ctime(&tm));
   io_write_attribute_s(h_grp, "RunName", e->run_name);
-  io_write_attribute_i(h_grp, "RandomSeed", SWIFT_RANDOM_SEED_XOR);
 
   /* GADGET-2 legacy values */
   /* Number of particles of each type */
