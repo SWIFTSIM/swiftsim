@@ -26,6 +26,7 @@
 #include "random.h"
 #include "space.h"
 #include "timestep_sync_part.h"
+#include "tracers.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -171,7 +172,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     /* Check the velocity criterion */
     if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) {
 
-      const float potential = gravity_get_comoving_potential(pj->gpart);
+      const float potential = pj->black_holes_data.potential;
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
@@ -268,7 +269,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     /* Check the velocity criterion */
     if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) {
 
-      const float potential = gravity_get_comoving_potential(bj->gpart);
+      const float potential = bj->reposition.potential;
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
@@ -379,6 +380,9 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
 
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
+
+      /* Mark this particle has having been heated by AGN feedback */
+      tracers_after_black_holes_feedback(xpj);
 
       /* message( */
       /*     "We did some AGN heating! id %llu BH id %llu probability " */

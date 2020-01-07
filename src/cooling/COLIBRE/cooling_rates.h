@@ -735,7 +735,7 @@ INLINE static double colibre_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,           /* */
       d_red, d_T, d_met, d_n_H,                           /* */
       colibre_cooling_N_redshifts,                        /* */
-      colibre_cooling_N_internalenergy,                   /* */
+      colibre_cooling_N_temperature,                      /* */
       colibre_cooling_N_metallicity,                      /* */
       colibre_cooling_N_density,                          /* */
       colibre_cooling_N_electrontypes);                   /* */
@@ -747,7 +747,7 @@ INLINE static double colibre_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_internalenergy,           /* */
+      colibre_cooling_N_temperature,              /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_cooltypes);               /* */
@@ -759,7 +759,7 @@ INLINE static double colibre_cooling_rate_temperature(
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_internalenergy,           /* */
+      colibre_cooling_N_temperature,              /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_heattypes);               /* */
