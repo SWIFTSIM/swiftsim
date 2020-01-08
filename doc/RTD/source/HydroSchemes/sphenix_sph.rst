@@ -14,7 +14,6 @@ This is the new scheme that will be used in EAGLE-XL. This scheme includes:
 + A diffusion limiter, used to prevent energy leakage out of EAGLE
   supernovae (Borrow+ 2020).
 
-More information will be made available in a forthcoming publication.
 
 The simplified version of the 'Inviscid SPH' artificial viscosity calculates
 the time differential of the velocity divergence explicitly, using the value
@@ -22,8 +21,16 @@ from the previous step. We also use the Balsara switch instead of the improved
 neighbour-based limiter from Cullen & Dehnen 2010, to avoid matrix
 calculations.
 
+
+To configure with this scheme, use
+
+.. code-block:: bash
+   
+   ./configure --with-hydro=sphenix --with-kernel=quintic-spline --disable-hand-vec
+
+
 The diffusion limiter is implemented to ensure that the diffusion is turned
-ff in very viscous flows and works as follows:
+off in very viscous flows and works as follows:
 
 .. code-block:: C
 
