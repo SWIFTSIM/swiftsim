@@ -3390,7 +3390,6 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
       (e->policy & engine_policy_timestep_limiter);
 
 #ifdef WITH_MPI
-  // const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_star_formation = e->policy & engine_policy_star_formation;
 #endif
   int rebuild = 0;
@@ -3483,7 +3482,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_limiter);
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (ci_active)  // && !with_timestep_limiter && !with_timestep_sync)
+        if (ci_active)
           scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_part);
 
         /* Is the foreign cell active and will need stuff from us? */
@@ -3514,7 +3513,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
                                   ci_nodeID);
 
         /* If the local cell is active, send its ti_end values. */
-        if (cj_active)  // && !with_timestep_limiter && !with_timestep_sync)
+        if (cj_active)
           scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_part,
                                   ci_nodeID);
 
@@ -3555,7 +3554,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_limiter);
 
         /* If the foreign cell is active, we want its ti_end values. */
-        if (cj_active)  // && !with_timestep_limiter && !with_timestep_sync)
+        if (cj_active)
           scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_part);
 
         /* Is the foreign cell active and will need stuff from us? */
@@ -3587,7 +3586,7 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
                                   cj_nodeID);
 
         /* If the local cell is active, send its ti_end values. */
-        if (ci_active)  // && !with_timestep_limiter && !with_timestep_sync)
+        if (ci_active)
           scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_part,
                                   cj_nodeID);
 
