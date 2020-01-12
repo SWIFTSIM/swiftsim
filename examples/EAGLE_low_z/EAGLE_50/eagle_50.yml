@@ -50,8 +50,7 @@ Gravity:
   max_physical_DM_softening:     0.0007    # Max physical DM softening length (in internal units).
   comoving_baryon_softening:     0.0026994 # Comoving DM softening length (in internal units).
   max_physical_baryon_softening: 0.0007    # Max physical DM softening length (in internal units).
-  dithering: 0
-  
+
 # Parameters for the hydrodynamics scheme
 SPH:
   resolution_eta:        1.2348           # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
