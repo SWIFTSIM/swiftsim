@@ -30,8 +30,6 @@
 __attribute__((always_inline)) INLINE static void timestep_sync_part(
     struct part *p) {
 
-  if (p->id == ICHECK) message("Synchronizing!");
-
   p->limiter_data.to_be_synchronized = 1;
 }
 

@@ -159,9 +159,6 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
           dt_kick_corr = (ti_step / 2) * time_base;
         }
 
-        if (p->id == ICHECK)
-          message("KICK start=%lld end=%lld", ti_begin, ti_begin + ti_step / 2);
-
         /* do the kick */
         kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
                   dt_kick_corr, cosmo, hydro_props, entropy_floor, ti_begin,
@@ -385,9 +382,6 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
           dt_kick_therm = (ti_end - (ti_begin + ti_step / 2)) * time_base;
           dt_kick_corr = (ti_end - (ti_begin + ti_step / 2)) * time_base;
         }
-
-        if (p->id == ICHECK)
-          message("KICK start=%lld end=%lld", ti_begin + ti_step / 2, ti_end);
 
         /* Finish the time-step with a second half-kick */
         kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
@@ -622,10 +616,6 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         /* What is the next sync-point ? */
         ti_hydro_end_min = min(ti_current + ti_new_step, ti_hydro_end_min);
         ti_hydro_end_max = max(ti_current + ti_new_step, ti_hydro_end_max);
-
-        if (p->id == ICHECK)
-          message("time_bin=%d ti_new_step=%lld ti_end=%lld", p->time_bin,
-                  ti_new_step, ti_current + ti_new_step);
 
         /* What is the next starting point for this cell ? */
         ti_hydro_beg_max = max(ti_current, ti_hydro_beg_max);
@@ -1026,12 +1016,7 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
       /* Bip, bip, bip... wake-up time */
       if (p->limiter_data.wakeup != time_bin_not_awake) {
 
-        // p->limiter_data.to_be_synchronized = 0;
-        // p->limiter_data.wakeup = time_bin_not_awake;
-
-        message("Limiting particle %lld in cell %d", p->id, c->cellID);
-
-        const timebin_t old_bin = p->time_bin;
+        // message("Limiting particle %lld in cell %d", p->id, c->cellID);
 
         /* Apply the limiter and get the new end of time-step */
         const integertime_t ti_end_new = timestep_limit_part(p, xp, e);
@@ -1041,12 +1026,6 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
 
         /* Mark this particle has not needing synchronization */
         p->limiter_data.to_be_synchronized = 0;
-
-        /* message("old bin=%d new bin=%d ti_hydro_beg_max=%lld
-         * ti_beg_new=%lld", */
-        /* 	old_bin, new_bin, ti_hydro_beg_max, ti_beg_new); */
-        message("old bin=%d new bin=%d ti_hydro_end_max=%lld ti_end_new=%lld",
-                old_bin, new_bin, ti_hydro_end_max, ti_end_new);
 
         /* What is the next sync-point ? */
         ti_hydro_end_min = min(ti_end_new, ti_hydro_end_min);
@@ -1068,30 +1047,6 @@ void runner_do_limiter(struct runner *r, struct cell *c, int force, int timer) {
           /* What is the next starting point for this cell ? */
           ti_gravity_beg_max = max(ti_beg_new, ti_gravity_beg_max);
         }
-      } else {
-
-        /* if(part_is_active(p, e)) { */
-
-        /*   const timebin_t time_bin = p->time_bin; */
-        /*   const integertime_t ti_end = ti_current +
-         * get_integer_timestep(time_bin); */
-
-        /*   ti_hydro_end_max = max(ti_end, ti_hydro_end_max); */
-        /*   if (p->gpart != NULL) { */
-        /*     ti_gravity_end_max = max(ti_end, ti_gravity_end_max); */
-        /*   } */
-
-        /* } else { */
-
-        /*   const timebin_t time_bin = p->time_bin; */
-        /*   const integertime_t ti_end = get_integer_time_end(ti_current,
-         * time_bin); */
-
-        /*   ti_hydro_end_max = max(ti_end, ti_hydro_end_max); */
-        /*   if (p->gpart != NULL) { */
-        /*     ti_gravity_end_max = max(ti_end, ti_gravity_end_max); */
-        /*   } */
-        /* } */
       }
     }
 
@@ -1208,7 +1163,6 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
 
         /* Finish this particle's time-step */
         timestep_process_sync_part(p, xp, e, cosmo);
-        // message("Synchronization in cell %d", c->cellID);
 
         /* Get new time-step */
         integertime_t ti_new_step = get_part_timestep(p, xp, e);
@@ -1218,9 +1172,6 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
         new_time_bin = min(new_time_bin, e->max_active_bin);
         ti_new_step = get_integer_timestep(new_time_bin);
 
-        if (p->id == ICHECK)
-          message("old bin=%d new bin=%d", p->time_bin, new_time_bin);
-
         /* Update particle */
         p->time_bin = new_time_bin;
         if (p->gpart != NULL) p->gpart->time_bin = new_time_bin;
@@ -1229,14 +1180,6 @@ void runner_do_sync(struct runner *r, struct cell *c, int force, int timer) {
         tracers_after_timestep(p, xp, e->internal_units, e->physical_constants,
                                with_cosmology, e->cosmology,
                                e->hydro_properties, e->cooling_func, e->time);
-
-        if (p->id == ICHECK)
-          message("old=%lld new=%lld depth=%d", ti_hydro_end_min,
-                  ti_current + ti_new_step, c->depth);
-
-        if (p->id == ICHECK)
-          message("old=%lld new=%lld depth=%d", ti_current, ti_hydro_beg_max,
-                  c->depth);
 
         /* What is the next sync-point ? */
         ti_hydro_end_min = min(ti_current + ti_new_step, ti_hydro_end_min);
