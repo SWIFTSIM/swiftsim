@@ -444,7 +444,7 @@ void engine_unskip_timestep_communications(struct engine *e) {
 
   /* Activate all the part and gpart ti_end tasks */
   threadpool_map(&e->threadpool, engine_unskip_timestep_communications_mapper,
-                 tasks, nr_tasks, sizeof(tasks), 0, s);
+                 tasks, nr_tasks, sizeof(struct task), 0, s);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
