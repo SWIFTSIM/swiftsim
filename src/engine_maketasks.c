@@ -475,7 +475,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure this cell has a valid tag. */
     if (c->mpi.tag < 0) error("Trying to receive from untagged cell.");
-#endif  // SWIFT_DEBUG_CHECKS
+#endif /* SWIFT_DEBUG_CHECKS */
 
     /* Create the tasks. */
     t_xv = scheduler_addtask(s, task_type_recv, task_subtype_xv, c->mpi.tag, 0,
@@ -509,7 +509,6 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     if (c->hydro.sorts != NULL) {
       scheduler_addunlock(s, t_xv, c->hydro.sorts);
       scheduler_addunlock(s, c->hydro.sorts, t_rho);
-      // if (with_limiter) scheduler_addunlock(s, c->hydro.sorts, t_limiter);
     }
 
     for (struct link *l = c->hydro.density; l != NULL; l = l->next) {
@@ -539,8 +538,8 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
       }
     }
 
-    /* Make sure the density has been computed before the stars compute theirs.
-     */
+    /* Make sure the gas density has been computed before the
+     * stars compute theirs. */
     for (struct link *l = c->stars.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }
