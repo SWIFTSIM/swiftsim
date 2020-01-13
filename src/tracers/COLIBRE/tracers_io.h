@@ -87,42 +87,7 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.HIIregion_starid,
       "ID of star particle responsible for this HII region");
 
-  list[5] = io_make_output_field("HydrogenNeutralFractions", FLOAT, 1,
-                                 UNIT_CONV_NO_UNITS, 0.f, xparts,
-                                 tracers_data.nHI_over_nH,
-                                 "Fraction of neutral hydrogen atoms, nHI/nH, "
-                                 "assuming equilibrium tables");
-
-  list[6] = io_make_output_field("HydrogenIonizedFractions", FLOAT, 1,
-                                 UNIT_CONV_NO_UNITS, 0.f, xparts,
-                                 tracers_data.nHII_over_nH,
-                                 "Fraction of ionized hydrogen atoms, nHII/nH, "
-                                 "assuming equilibrium tables");
-
-  list[7] = io_make_output_field(
-      "HydrogenMolecularFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
-      tracers_data.nH2_over_nH,
-      "Fraction of hydrogen molecules, nH2/nH, assuming equilibrium tables");
-
-  list[8] = io_make_output_field(
-      "SubgridPhysicalDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, xparts,
-      tracers_data.subgrid_dens,
-      "The subgrid physical density if the particles are within deltaT of the "
-      "equation of state the subgrid density is calculated assuming a pressure "
-      "equilibrium on the equation of state, if the particles are above deltaT "
-      "of the equation of state the subgrid density is identical to the "
-      "physical SPH density.");
-
-  list[9] = io_make_output_field(
-      "SubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, xparts,
-      tracers_data.subgrid_temp,
-      "The subgrid temperature if the particles are within deltaT of the "
-      "equation of state the subgrid temperature is calculated assuming a "
-      "pressure equilibrium on the equation of state, if the particles are "
-      "above deltaT of the equation of state the subgrid temperature is "
-      "identical to the SPH temperature.");
-
-  return 10;
+  return 5;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
