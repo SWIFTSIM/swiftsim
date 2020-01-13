@@ -162,8 +162,14 @@ struct cooling_function_data {
    */
   double internal_energy_from_cgs;
 
+  /*! Pressure conversion from internal units to CGS (for quick access) */
+  double pressure_to_cgs;
+
   /*! Number density conversion from internal units to CGS (for quick access) */
   double number_density_to_cgs;
+
+  /*! Number density conversion from CGS to internal units (for quick access) */
+  double number_density_from_cgs;
 
   /*! Inverse of proton mass in cgs (for quick access) */
   double inv_proton_mass_cgs;

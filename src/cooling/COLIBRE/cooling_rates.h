@@ -98,6 +98,9 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(
  * @param p Pointer to #part struct.
  * @param cooling #cooling_function_data struct.
  * @param ratio_solar (return) Array of ratios to solar abundances.
+ *
+ * @return The log10 of the total metallicity with respect to solar, i.e.
+ * log10(Z / Z_sun).
  */
 __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
     const struct part *p, const struct cooling_function_data *cooling,
@@ -201,7 +204,8 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
 
   /* At this point ratio_solar is (nx/nH) / (nx/nH)_sol.
    * To multiply with the tables, we want the individual abundance ratio
-   * relative to what is used in the tables for each metallicity */
+   * relative to what is used in the tables for each metallicity
+   */
 
   /* For example: for a metallicity of 1 per cent solar, the metallicity bin
    * for logZZsol = -2 has already the reduced cooling rates for each element;
@@ -209,29 +213,44 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
    *
    * BUT: if e.g. Carbon is twice as abundant as the solar abundance ratio,
    * i.e. nC / nH = 0.02 * (nC/nH)_sol for the overall metallicity of 0.01,
-   * the Carbon cooling rate is multiplied by 2 */
+   * the Carbon cooling rate is multiplied by 2
+   *
+   * We only do this if we are not in the primodial metallicity bin in which
+   * case the ratio to solar should be 0.
+   */
 
   for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
 
-    /* Get min/max abundances */
-    const float log_nx_nH_min = cooling->LogAbundances[row_major_index_2d(
-        met_index, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+    /* Are we considering a metal and are *not* in the primodial metallicity
+     * bin? Or are we looking at H or He? */
+    if ((met_index > 0) || (i == element_H) || (i == element_He)) {
 
-    const float log_nx_nH_max = cooling->LogAbundances[row_major_index_2d(
-        met_index + 1, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+      /* Get min/max abundances */
+      const float log_nx_nH_min = cooling->LogAbundances[row_major_index_2d(
+          met_index, i, colibre_cooling_N_metallicity,
+          colibre_cooling_N_elementtypes)];
 
-    /* Get solar abundances */
-    const float log_nx_nH_sol = cooling->LogAbundances[row_major_index_2d(
-        cooling->indxZsol, i, colibre_cooling_N_metallicity,
-        colibre_cooling_N_elementtypes)];
+      const float log_nx_nH_max = cooling->LogAbundances[row_major_index_2d(
+          met_index + 1, i, colibre_cooling_N_metallicity,
+          colibre_cooling_N_elementtypes)];
 
-    /* Interpolate ! */
-    const float log_nx_nH =
-        (log_nx_nH_min * (1.f - d_met) + log_nx_nH_max * d_met) - log_nx_nH_sol;
+      /* Get solar abundances */
+      const float log_nx_nH_sol = cooling->LogAbundances[row_major_index_2d(
+          cooling->indxZsol, i, colibre_cooling_N_metallicity,
+          colibre_cooling_N_elementtypes)];
 
-    ratio_solar[i] *= exp10f(-log_nx_nH);
+      /* Interpolate ! (linearly in log-space) */
+      const float log_nx_nH =
+          (log_nx_nH_min * (1.f - d_met) + log_nx_nH_max * d_met) -
+          log_nx_nH_sol;
+
+      ratio_solar[i] *= exp10f(-log_nx_nH);
+
+    } else {
+
+      /* Primordial bin --> Z/Z_sun is 0 for that element */
+      ratio_solar[i] = 0.;
+    }
   }
 
   /* at this point ratio_solar is (nx/nH) / (nx/nH)_table [Z],
@@ -300,7 +319,7 @@ eagle_helium_reionization_extraheat(
 __attribute__((always_inline)) INLINE static float colibre_convert_u_to_temp(
     const double log_10_u_cgs, const float redshift, int n_H_index, float d_n_H,
     int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling) {
+    const struct cooling_function_data *cooling) {
 
   /* Get index of u along the internal energy axis */
   int u_index;
@@ -352,7 +371,7 @@ __attribute__((always_inline)) INLINE static float colibre_convert_u_to_temp(
 __attribute__((always_inline)) INLINE static float colibre_convert_temp_to_u(
     const double log_10_T, const float redshift, int n_H_index, float d_n_H,
     int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling) {
+    const struct cooling_function_data *cooling) {
 
   /* Get index of u along the internal energy axis */
   int T_index;
@@ -397,7 +416,7 @@ __attribute__((always_inline)) INLINE static float colibre_convert_temp_to_u(
 INLINE static float colibre_meanparticlemass_temperature(
     double log_T_cgs, double redshift, double n_H_cgs, float ZZsol,
     int n_H_index, float d_n_H, int met_index, float d_met, int red_index,
-    float d_red, const struct cooling_function_data *restrict cooling) {
+    float d_red, const struct cooling_function_data *cooling) {
 
   /* Get index of T along the temperature axis */
   int T_index;
@@ -437,7 +456,7 @@ INLINE static float colibre_electron_density(
     double log_u_cgs, double redshift, double n_H_cgs, float ZZsol,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling) {
+    const struct cooling_function_data *cooling) {
 
   /* Get index of u along the internal energy axis */
   int U_index;
@@ -480,7 +499,7 @@ INLINE static float colibre_electron_density_temperature(
     double log_T_cgs, double redshift, double n_H_cgs, float ZZsol,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling) {
+    const struct cooling_function_data *cooling) {
 
   /* Get index of u along the internal energy axis */
   int T_index;
@@ -531,8 +550,8 @@ INLINE static double colibre_cooling_rate(
     double log_u_cgs, double redshift, double n_H_cgs,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling, int onlyicool,
-    int onlyiheat, int icool, int iheat) {
+    const struct cooling_function_data *cooling, int onlyicool, int onlyiheat,
+    int icool, int iheat) {
 
   /* Set weights for cooling rates */
   float weights_cooling[colibre_cooling_N_cooltypes - 2];
@@ -679,8 +698,8 @@ INLINE static double colibre_cooling_rate_temperature(
     double log_T_cgs, double redshift, double n_H_cgs,
     const float abundance_ratio[colibre_cooling_N_elementtypes], int n_H_index,
     float d_n_H, int met_index, float d_met, int red_index, float d_red,
-    const struct cooling_function_data *restrict cooling, int onlyicool,
-    int onlyiheat, int icool, int iheat) {
+    const struct cooling_function_data *cooling, int onlyicool, int onlyiheat,
+    int icool, int iheat) {
 
   /* Set weights for cooling rates */
   float weights_cooling[colibre_cooling_N_cooltypes - 2];

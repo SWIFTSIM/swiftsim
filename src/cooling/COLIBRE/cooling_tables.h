@@ -76,7 +76,7 @@ enum colibre_cooling_element {
 /**
  * @brief Hydrogen species
  */
-enum colibre_hydrogen_species { neutral, ionized, molecular };
+enum colibre_hydrogen_species { neutral = 0, ionized = 1, molecular = 2 };
 
 /**
  * @brief Cooling channels beyond the metal lines
