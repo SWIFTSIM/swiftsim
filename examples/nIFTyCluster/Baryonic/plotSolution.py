@@ -33,7 +33,7 @@ extra_data_directory = "data"
 extra_data_schemes = ["G2-anarchy", "AREPO", "G3-music"]
 h = 0.7
 
-gas_density_units = unyt.msun / unyt.Mpc ** 3
+gas_density_units = unyt.Solar_Mass / unyt.Mpc ** 3
 
 dm_density_units = gas_density_units
 
@@ -129,15 +129,15 @@ def gas_density(
     # binned_statistic strips unit info :/
     mass *= data.gas.masses.units
 
-    density = mass / bin_volumes(radial_bins)
+    density = (mass / bin_volumes(radial_bins)).to(gas_density_units)
 
     centers = bin_centers(radial_bins).to(radial_bin_units)
 
-    ax.plot(centers, density.to(gas_density_units), label="SWIFT")
+    ax.plot(centers, density, label="SWIFT")
 
     ax.loglog()
 
-    ax.set_ylabel(f"Gas Density [${density.units.latex_repr}$]")
+    ax.set_ylabel(f"Gas Density $\\left[{density.units.latex_repr}\\right]$")
     ax.set_xlabel(f"Radius [${centers.units.latex_repr}$]")
 
     ax.set_xlim(centers[0], centers[-1])
@@ -172,15 +172,15 @@ def dm_density(
     # binned_statistic strips unit info :/
     mass *= data.dark_matter.masses.units
 
-    density = mass / bin_volumes(radial_bins)
+    density = (mass / bin_volumes(radial_bins)).to(dm_density_units)
 
     centers = bin_centers(radial_bins).to(radial_bin_units)
 
-    ax.plot(centers, density.to(dm_density_units))
+    ax.plot(centers, density)
 
     ax.loglog()
 
-    ax.set_ylabel(f"Dark Matter Density [${density.units.latex_repr}$]")
+    ax.set_ylabel(f"Dark Matter Density $\\left[{density.units.latex_repr}\\right]$")
     ax.set_xlabel(f"Radius [${centers.units.latex_repr}$]")
 
     ax.set_xlim(centers[0], centers[-1])
