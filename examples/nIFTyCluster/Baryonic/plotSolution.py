@@ -1,10 +1,5 @@
 """
-NIFTY Cluster Solution. You will need to edit the file to tell the script
-where the centre of the cluster is (line 317).
-
-This is our 'best guess' reproduction of the original nIFTY paper, but there
-are some unresolved discrepancies. Always compare two SWIFT runs with
-different hydrodynamics schemes.
+NIFTY Cluster Solution
 
 Josh Borrow (joshua.borrow@durham.ac.uk)
 """
@@ -19,9 +14,10 @@ import scipy.stats as stat
 from matplotlib.colors import LogNorm
 
 import unyt
+import h5py
 
 try:
-    plt.style.use("mnras_durham")
+    plt.style.use("../../../tools/stylesheets/mnras.mplstyle")
 except:
     pass
 
@@ -32,6 +28,10 @@ image_bounds = [-2.5, 2.5] * unyt.Mpc
 image_cmap = "twilight"
 image_res = 1024
 image_textcolor = "black"
+
+extra_data_directory = "data"
+extra_data_schemes = ["G2-anarchy", "AREPO", "G3-music"]
+h = 0.7
 
 gas_density_units = unyt.msun / unyt.Mpc ** 3
 
@@ -133,7 +133,7 @@ def gas_density(
 
     centers = bin_centers(radial_bins).to(radial_bin_units)
 
-    ax.plot(centers, density.to(gas_density_units))
+    ax.plot(centers, density.to(gas_density_units), label="SWIFT")
 
     ax.loglog()
 
@@ -141,6 +141,17 @@ def gas_density(
     ax.set_xlabel(f"Radius [${centers.units.latex_repr}$]")
 
     ax.set_xlim(centers[0], centers[-1])
+
+    for scheme_name in extra_data_schemes:
+        path = f"{extra_data_directory}/rho_gas/{scheme_name}.csv"
+        R, rho = np.loadtxt(path, delimiter=",").T
+
+        # Correct h-factors
+        R /= h
+        rho *= (h * h)
+        ax.plot(R, rho, linestyle="dashed", lw=1, label=scheme_name)
+
+    ax.legend()
 
     return
 
@@ -216,6 +227,14 @@ def temperature(
     ax.set_ylabel(f"Gas Temperature (kT) [${kT.units.latex_repr}$]")
     ax.set_xlabel(f"Radius [${centers.units.latex_repr}$]")
 
+    for scheme_name in extra_data_schemes:
+        path = f"{extra_data_directory}/kT/{scheme_name}.csv"
+        R, kT = np.loadtxt(path, delimiter=",").T
+
+        # Correct h-factors
+        R /= h
+        ax.plot(R, kT, linestyle="dashed", lw=1, label=scheme_name)
+
     ax.set_xlim(centers[0], centers[-1])
 
     return
@@ -252,17 +271,26 @@ def entropy(
     # Really need the number density
     density = density / unyt.mh
 
-    entropy = temp / (density ** (2.0 / 3.0))
+    entropy = unyt.kb * temp / (density ** (2.0 / 3.0))
     entropy.convert_to_units(entropy_units)
 
     centers = bin_centers(radial_bins).to(radial_bin_units)
 
     ax.plot(centers, entropy)
 
-    ax.semilogx()
+    ax.loglog()
 
     ax.set_ylabel(f"Gas Entropy (T $n_e^{{2/3}}$) [${entropy.units.latex_repr}$]")
     ax.set_xlabel(f"Radius [${centers.units.latex_repr}$]")
+
+    for scheme_name in extra_data_schemes:
+        path = f"{extra_data_directory}/S/{scheme_name}.csv"
+        R, S = np.loadtxt(path, delimiter=",").T
+
+        # Correct h-factors
+        R /= h
+        S /= (h * h)
+        ax.plot(R, S, linestyle="dashed", lw=1, label=scheme_name)
 
     ax.set_xlim(centers[0], centers[-1])
 
@@ -314,13 +342,25 @@ def info(
 
     ax.axis("off")
 
+def get_center(snapshot):
+    catalogue_filename = f"halo_0303.properties"
+
+    with h5py.File(catalogue_filename, "r") as handle:
+        highest_mass = handle["Mass_200crit"][...].argsort()[-1]
+        x = handle["Xcmbp"][highest_mass]
+        y = handle["Ycmbp"][highest_mass]
+        z = handle["Zcmbp"][highest_mass]
+
+    return [x, y, z] * unyt.Mpc
+
+
 
 if __name__ == "__main__":
     import matplotlib.gridspec as gridspec
 
-    snapshot = "nifty_0303.hdf5"
-    center = [0, 0, 0] * unyt.kpc
-    radial_bins = np.logspace(-2, 0, 25) * unyt.Mpc
+    snapshot = "nifty_0303"
+    center = get_center(snapshot)
+    radial_bins = np.logspace(-1.5, 0.5, 25) * unyt.Mpc
 
     # Perform plotting to create the following figure structure:
     #  +---------------------+ +---------+
@@ -357,7 +397,7 @@ if __name__ == "__main__":
         }.items()
     }
 
-    data = load(snapshot)
+    data = load(f"{snapshot}.hdf5")
 
     for name, ax in axes.items():
         try:
