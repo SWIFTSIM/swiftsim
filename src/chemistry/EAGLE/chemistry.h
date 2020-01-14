@@ -236,6 +236,41 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
       data->initial_metal_mass_fraction[elem] =
           parser_get_param_float(parameter_file, buffer);
     }
+
+    /* Let's check that things make sense (broadly) */
+
+    /* H + He + Z should be ~1 */
+    float total_frac = data->initial_metal_mass_fraction[chemistry_element_H] +
+                       data->initial_metal_mass_fraction[chemistry_element_He] +
+                       data->initial_metal_mass_fraction_total;
+
+    if (total_frac < 0.98 || total_frac > 1.02)
+      error("The abundances provided seem odd! H + He + Z = %f =/= 1.",
+            total_frac);
+
+    /* Sum of metal elements should be <= Z */
+    total_frac = 0.f;
+    for (int elem = 0; elem < chemistry_element_count; ++elem) {
+      if (elem != chemistry_element_H && elem != chemistry_element_He) {
+        total_frac += data->initial_metal_mass_fraction[elem];
+      }
+    }
+
+    if (total_frac > 1.02 * data->initial_metal_mass_fraction_total)
+      error(
+          "The abundances provided seem odd! \\sum metal elements (%f) > Z "
+          "(%f)",
+          total_frac, data->initial_metal_mass_fraction_total);
+
+    /* Sum of all elements should be <= 1 */
+    total_frac = 0.f;
+    for (int elem = 0; elem < chemistry_element_count; ++elem) {
+      total_frac += data->initial_metal_mass_fraction[elem];
+    }
+
+    if (total_frac > 1.02)
+      error("The abundances provided seem odd! \\sum elements (%f) > 1",
+            total_frac);
   }
 }
 
@@ -282,6 +317,105 @@ __attribute__((always_inline)) INLINE static float chemistry_timestep(
     const struct hydro_props* hydro_props,
     const struct chemistry_global_data* cd, const struct part* restrict p) {
   return FLT_MAX;
+}
+
+/**
+ * @brief Initialise the chemistry properties of a black hole with
+ * the chemistry properties of the gas it is born from.
+ *
+ * Black holes don't store fractions so we need to use element masses.
+ *
+ * @param bp_data The black hole data to initialise.
+ * @param p_data The gas data to use.
+ * @param gas_mass The mass of the gas particle.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_bpart_from_part(
+    struct chemistry_bpart_data* bp_data,
+    const struct chemistry_part_data* p_data, const double gas_mass) {
+
+  bp_data->metal_mass_total = p_data->metal_mass_fraction_total * gas_mass;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_data->metal_mass[i] = p_data->metal_mass_fraction[i] * gas_mass;
+  }
+  bp_data->mass_from_SNIa = p_data->mass_from_SNIa;
+  bp_data->mass_from_SNII = p_data->mass_from_SNII;
+  bp_data->mass_from_AGB = p_data->mass_from_AGB;
+  bp_data->metal_mass_from_SNIa =
+      p_data->metal_mass_fraction_from_SNIa * gas_mass;
+  bp_data->metal_mass_from_SNII =
+      p_data->metal_mass_fraction_from_SNII * gas_mass;
+  bp_data->metal_mass_from_AGB =
+      p_data->metal_mass_fraction_from_AGB * gas_mass;
+  bp_data->iron_mass_from_SNIa =
+      p_data->iron_mass_fraction_from_SNIa * gas_mass;
+}
+
+/**
+ * @brief Add the chemistry data of a gas particle to a black hole.
+ *
+ * Black holes don't store fractions so we need to add element masses.
+ *
+ * @param bp_data The black hole data to add to.
+ * @param p_data The gas data to use.
+ * @param gas_mass The mass of the gas particle.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
+    struct chemistry_bpart_data* bp_data,
+    const struct chemistry_part_data* p_data, const double gas_mass) {
+
+  bp_data->metal_mass_total += p_data->metal_mass_fraction_total * gas_mass;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * gas_mass;
+  }
+  bp_data->mass_from_SNIa += p_data->mass_from_SNIa;
+  bp_data->mass_from_SNII += p_data->mass_from_SNII;
+  bp_data->mass_from_AGB += p_data->mass_from_AGB;
+  bp_data->metal_mass_from_SNIa +=
+      p_data->metal_mass_fraction_from_SNIa * gas_mass;
+  bp_data->metal_mass_from_SNII +=
+      p_data->metal_mass_fraction_from_SNII * gas_mass;
+  bp_data->metal_mass_from_AGB +=
+      p_data->metal_mass_fraction_from_AGB * gas_mass;
+  bp_data->iron_mass_from_SNIa +=
+      p_data->iron_mass_fraction_from_SNIa * gas_mass;
+}
+
+/**
+ * @brief Add the chemistry data of a black hole to another one.
+ *
+ * @param bp_data The black hole data to add to.
+ * @param swallowed_data The black hole data to use.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_add_bpart_to_bpart(
+    struct chemistry_bpart_data* bp_data,
+    const struct chemistry_bpart_data* swallowed_data) {
+
+  bp_data->metal_mass_total += swallowed_data->metal_mass_total;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_data->metal_mass[i] += swallowed_data->metal_mass[i];
+  }
+  bp_data->mass_from_SNIa += swallowed_data->mass_from_SNIa;
+  bp_data->mass_from_SNII += swallowed_data->mass_from_SNII;
+  bp_data->mass_from_AGB += swallowed_data->mass_from_AGB;
+  bp_data->metal_mass_from_SNIa += swallowed_data->metal_mass_from_SNIa;
+  bp_data->metal_mass_from_SNII += swallowed_data->metal_mass_from_SNII;
+  bp_data->metal_mass_from_AGB += swallowed_data->metal_mass_from_AGB;
+  bp_data->iron_mass_from_SNIa += swallowed_data->iron_mass_from_SNIa;
+}
+
+/**
+ * @brief Split the metal content of a particle into n pieces
+ *
+ * We only need to split the fields that are not fractions.
+ *
+ * @param p The #part.
+ * @param n The number of pieces to split into.
+ */
+__attribute__((always_inline)) INLINE static void chemistry_split_part(
+    struct part* p, const double n) {
+  p->chemistry_data.mass_from_SNIa /= n;
+  p->chemistry_data.mass_from_SNII /= n;
+  p->chemistry_data.mass_from_AGB /= n;
 }
 
 /**

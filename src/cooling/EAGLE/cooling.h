@@ -71,6 +71,8 @@ float cooling_get_temperature(
 
 float cooling_get_radiated_energy(const struct xpart *restrict xp);
 
+void cooling_split_part(struct part *p, struct xpart *xp, double n);
+
 void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
                                    const struct cosmology *cosmo,
                                    struct space *s);
@@ -78,6 +80,7 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
+                          const struct hydro_props *hydro_props,
                           struct cooling_function_data *cooling);
 
 void cooling_print_backend(const struct cooling_function_data *cooling);

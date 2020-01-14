@@ -23,6 +23,7 @@
 #include "../config.h"
 
 /* Local headers. */
+#include "black_holes.h"
 #include "const.h"
 #include "debug.h"
 #include "stars.h"
@@ -88,7 +89,8 @@ __attribute__((always_inline)) INLINE static void kick_part(
     error(
         "particle has not been kicked to the current time p->ti_kick=%lld, "
         "ti_start=%lld, ti_end=%lld id=%lld time_bin=%d wakeup=%d",
-        p->ti_kick, ti_start, ti_end, p->id, p->time_bin, p->wakeup);
+        p->ti_kick, ti_start, ti_end, p->id, p->time_bin,
+        p->limiter_data.wakeup);
 
   p->ti_kick = ti_end;
 #endif
@@ -153,6 +155,43 @@ __attribute__((always_inline)) INLINE static void kick_spart(
 
   /* Kick extra variables */
   stars_kick_extra(sp, dt_kick_grav);
+}
+
+/**
+ * @brief Perform the 'kick' operation on a #bpart
+ *
+ * @param bp The #bpart to kick.
+ * @param dt_kick_grav The kick time-step for gravity accelerations.
+ * @param ti_start The starting (integer) time of the kick (for debugging
+ * checks).
+ * @param ti_end The ending (integer) time of the kick (for debugging checks).
+ */
+__attribute__((always_inline)) INLINE static void kick_bpart(
+    struct bpart *restrict bp, double dt_kick_grav, integertime_t ti_start,
+    integertime_t ti_end) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (bp->ti_kick != ti_start)
+    error(
+        "s-particle has not been kicked to the current time bp->ti_kick=%lld, "
+        "ti_start=%lld, ti_end=%lld id=%lld",
+        bp->ti_kick, ti_start, ti_end, bp->id);
+
+  bp->ti_kick = ti_end;
+#endif
+
+  /* Kick particles in momentum space */
+  bp->v[0] += bp->gpart->a_grav[0] * dt_kick_grav;
+  bp->v[1] += bp->gpart->a_grav[1] * dt_kick_grav;
+  bp->v[2] += bp->gpart->a_grav[2] * dt_kick_grav;
+
+  /* Give the gpart friend the same velocity */
+  bp->gpart->v_full[0] = bp->v[0];
+  bp->gpart->v_full[1] = bp->v[1];
+  bp->gpart->v_full[2] = bp->v[2];
+
+  /* Kick extra variables */
+  black_holes_kick_extra(bp, dt_kick_grav);
 }
 
 #endif /* SWIFT_KICK_H */

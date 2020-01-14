@@ -342,6 +342,8 @@ void readArray(hid_t grp, struct io_props props, size_t N, long long N_total,
       props.parts += max_chunk_size;                  /* part* on the part */
       props.xparts += max_chunk_size;                 /* xpart* on the xpart */
       props.gparts += max_chunk_size;                 /* gpart* on the gpart */
+      props.sparts += max_chunk_size;                 /* spart* on the spart */
+      props.bparts += max_chunk_size;                 /* bpart* on the bpart */
       offset += max_chunk_size;
       redo = 1;
     } else {
@@ -555,10 +557,14 @@ void writeArray_chunk(struct engine* e, hid_t h_data,
   else
     H5Sselect_none(h_filespace);
 
-    /* message("Writing %lld '%s', %zd elements = %zd bytes (int=%d) at offset
-     * %zd", N, props.name, N * props.dimension, N * props.dimension * typeSize,
-     */
-    /* 	  (int)(N * props.dimension * typeSize), offset); */
+  /* message("Writing %lld '%s', %zd elements = %zd bytes (int=%d) at offset
+   * %zd", N, props.name, N * props.dimension, N * props.dimension * typeSize,
+   */
+  /* 	  (int)(N * props.dimension * typeSize), offset); */
+
+  /* Make a dataset creation property list and set MPI-I/O mode */
+  hid_t h_plist_id = H5Pcreate(H5P_DATASET_XFER);
+  H5Pset_dxpl_mpio(h_plist_id, H5FD_MPIO_COLLECTIVE);
 
 #ifdef IO_SPEED_MEASUREMENT
   MPI_Barrier(MPI_COMM_WORLD);
@@ -567,7 +573,7 @@ void writeArray_chunk(struct engine* e, hid_t h_data,
 
   /* Write temporary buffer to HDF5 dataspace */
   h_err = H5Dwrite(h_data, io_hdf5_type(props.type), h_memspace, h_filespace,
-                   H5P_DEFAULT, temp);
+                   h_plist_id, temp);
   if (h_err < 0) error("Error while writing data array '%s'.", props.name);
 
 #ifdef IO_SPEED_MEASUREMENT
@@ -584,6 +590,7 @@ void writeArray_chunk(struct engine* e, hid_t h_data,
 
   /* Free and close everything */
   swift_free("writebuff", temp);
+  H5Pclose(h_plist_id);
   H5Sclose(h_memspace);
   H5Sclose(h_filespace);
 }
@@ -641,6 +648,8 @@ void writeArray(struct engine* e, hid_t grp, char* fileName,
       props.parts += max_chunk_size;                  /* part* on the part */
       props.xparts += max_chunk_size;                 /* xpart* on the xpart */
       props.gparts += max_chunk_size;                 /* gpart* on the gpart */
+      props.sparts += max_chunk_size;                 /* spart* on the spart */
+      props.bparts += max_chunk_size;                 /* bpart* on the bpart */
       offset += max_chunk_size;
       redo = 1;
     } else {
@@ -680,6 +689,8 @@ void writeArray(struct engine* e, hid_t grp, char* fileName,
  * @param bparts (output) The array of #bpart read from the file.
  * @param Ngas (output) The number of particles read from the file.
  * @param Ngparts (output) The number of particles read from the file.
+ * @param Ngparts_background (output) The number of background DM particles read
+ * from the file.
  * @param Nstars (output) The number of particles read from the file.
  * @param Nblackholes (output) The number of particles read from the file.
  * @param flag_entropy (output) 1 if the ICs contained Entropy in the
@@ -1066,9 +1077,13 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
   if (e->snapshot_int_time_label_on)
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%06i.hdf5", baseName,
              (int)round(e->time));
-  else
+  else if (e->snapshot_invoke_stf) {
+    snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%04i.hdf5", baseName,
+             e->stf_output_count);
+  } else {
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%04i.hdf5", baseName,
              e->snapshot_output_count);
+  }
 
   /* Open HDF5 file with the chosen parameters */
   hid_t h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -1408,13 +1423,13 @@ void write_output_parallel(struct engine* e, const char* baseName,
                                 Nstars_written, Nblackholes_written};
   long long N_total[swift_type_count] = {0};
   long long offset[swift_type_count] = {0};
-  MPI_Exscan(&N, &offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
+  MPI_Exscan(N, offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
     N_total[ptype] = offset[ptype] + N[ptype];
 
   /* The last rank now has the correct N_total. Let's
    * broadcast from there */
-  MPI_Bcast(&N_total, 6, MPI_LONG_LONG_INT, mpi_size - 1, comm);
+  MPI_Bcast(N_total, 6, MPI_LONG_LONG_INT, mpi_size - 1, comm);
 
   /* Now everybody konws its offset and the total number of
    * particles of each type */
@@ -1442,9 +1457,13 @@ void write_output_parallel(struct engine* e, const char* baseName,
   if (e->snapshot_int_time_label_on)
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%06i.hdf5", baseName,
              (int)round(e->time));
-  else
+  else if (e->snapshot_invoke_stf) {
+    snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%04i.hdf5", baseName,
+             e->stf_output_count);
+  } else {
     snprintf(fileName, FILENAME_BUFFER_SIZE, "%s_%04i.hdf5", baseName,
              e->snapshot_output_count);
+  }
 
   /* Now write the top-level cell structure */
   hid_t h_file_cells = 0, h_grp_cells = 0;
@@ -1462,9 +1481,9 @@ void write_output_parallel(struct engine* e, const char* baseName,
   }
 
   /* Write the location of the particles in the arrays */
-  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->cells_top,
-                        e->s->nr_cells, e->s->width, mpi_rank, N_total, offset,
-                        internal_units, snapshot_units);
+  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->dim, e->s->pos_dithering,
+                        e->s->cells_top, e->s->nr_cells, e->s->width, mpi_rank,
+                        N_total, offset, internal_units, snapshot_units);
 
   /* Close everything */
   if (mpi_rank == 0) {
@@ -1780,9 +1799,10 @@ void write_output_parallel(struct engine* e, const char* baseName,
           /* Select the fields to write */
           stars_write_particles(sparts_written, list, &num_fields,
                                 with_cosmology);
-          num_fields += chemistry_write_sparticles(sparts, list + num_fields);
-          num_fields += tracers_write_sparticles(sparts, list + num_fields,
-                                                 with_cosmology);
+          num_fields +=
+              chemistry_write_sparticles(sparts_written, list + num_fields);
+          num_fields += tracers_write_sparticles(
+              sparts_written, list + num_fields, with_cosmology);
           if (with_fof) {
             num_fields += fof_write_sparts(sparts_written, list + num_fields);
           }
@@ -1912,6 +1932,7 @@ void write_output_parallel(struct engine* e, const char* baseName,
 #endif
 
   e->snapshot_output_count++;
+  if (e->snapshot_invoke_stf) e->stf_output_count++;
 }
 
 #endif /* HAVE_HDF5 */

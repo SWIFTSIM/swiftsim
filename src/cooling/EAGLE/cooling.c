@@ -643,6 +643,18 @@ __attribute__((always_inline)) INLINE float cooling_get_radiated_energy(
 }
 
 /**
+ * @brief Split the coolong content of a particle into n pieces
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param n The number of pieces to split into.
+ */
+void cooling_split_part(struct part *p, struct xpart *xp, double n) {
+
+  xp->cooling_data.radiated_energy /= n;
+}
+
+/**
  * @brief Inject a fixed amount of energy to each particle in the simulation
  * to mimic Hydrogen reionization.
  *
@@ -683,11 +695,13 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
  * @param parameter_file The parsed parameter file
  * @param us Internal system of units data structure
  * @param phys_const #phys_const data structure
+ * @param hydro_props The properties of the hydro scheme.
  * @param cooling #cooling_function_data struct to initialize
  */
 void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
+                          const struct hydro_props *hydro_props,
                           struct cooling_function_data *cooling) {
 
   /* Read model parameters */

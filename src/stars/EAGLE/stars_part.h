@@ -56,9 +56,6 @@ struct spart {
   /*! Star mass */
   float mass;
 
-  /*! Initial star mass */
-  float mass_init;
-
   /*! Particle smoothing length. */
   float h;
 
@@ -82,6 +79,12 @@ struct spart {
     float birth_scale_factor;
   };
 
+  /*! Scale-factor / time at which this particle last did enrichment */
+  float last_enrichment_time;
+
+  /*! Initial star mass */
+  float mass_init;
+
   /*! Birth density */
   float birth_density;
 
@@ -102,6 +105,14 @@ struct spart {
 
   /*! Particle time bin */
   timebin_t time_bin;
+
+  /*! Number of time-steps since the last enrichment step */
+  char count_since_last_enrichment;
+
+#ifdef WITH_LOGGER
+  /* Additional data for the particle logger */
+  struct logger_part_data logger_data;
+#endif
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -153,7 +164,10 @@ struct stars_props {
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
 
-  /*! Value to set birth time of stars read from ICs if not set to -1 */
+  /*! Are we overwriting the stars' birth time read from the ICs? */
+  int overwrite_birth_time;
+
+  /*! Value to set birth time of stars read from ICs */
   float spart_first_init_birth_time;
 };
 

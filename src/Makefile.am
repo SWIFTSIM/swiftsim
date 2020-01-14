@@ -19,7 +19,7 @@
 AM_CFLAGS = $(HDF5_CPPFLAGS) $(GSL_INCS) $(FFTW_INCS) $(NUMA_INCS) $(GRACKLE_INCS)
 
 # Assign a "safe" version number
-AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS) -version-info 0:0:0
+AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS)
 
 # The git command, if available.
 GIT_CMD = @GIT_CMD@
@@ -31,11 +31,13 @@ EXTRA_LIBS = $(HDF5_LIBS) $(FFTW_LIBS) $(NUMA_LIBS) $(PROFILER_LIBS) $(TCMALLOC_
 MPI_LIBS = $(PARMETIS_LIBS) $(METIS_LIBS) $(MPI_THREAD_LIBS)
 MPI_FLAGS = -DWITH_MPI $(PARMETIS_INCS) $(METIS_INCS)
 
-# Build the libswiftsim library
+# Build the libswiftsim library and a convenience library just for the gravity tasks
 lib_LTLIBRARIES = libswiftsim.la
+noinst_LTLIBRARIES = libgrav.la 
 # Build a MPI-enabled version too?
 if HAVEMPI
 lib_LTLIBRARIES += libswiftsim_mpi.la
+noinst_LTLIBRARIES += libgrav_mpi.la
 endif
 
 # List required headers
@@ -44,17 +46,18 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     common_io.h single_io.h multipole.h map.h tools.h partition.h partition_fixed_costs.h \
     clocks.h parser.h physical_constants.h physical_constants_cgs.h potential.h version.h \
     hydro_properties.h riemann.h threadpool.h cooling_io.h cooling.h cooling_struct.h \
-    statistics.h memswap.h cache.h runner_doiact_vec.h profiler.h entropy_floor.h \
+    statistics.h memswap.h cache.h runner_doiact_hydro_vec.h profiler.h entropy_floor.h \
     dump.h logger.h active.h timeline.h xmf.h gravity_properties.h gravity_derivatives.h \
     gravity_softened_derivatives.h vector_power.h collectgroup.h hydro_space.h sort_part.h \
     chemistry.h chemistry_io.h chemistry_struct.h cosmology.h restart.h space_getsid.h utilities.h \
     mesh_gravity.h cbrt.h exp10.h velociraptor_interface.h swift_velociraptor_part.h outputlist.h \
     logger_io.h tracers_io.h tracers.h tracers_struct.h star_formation_io.h fof.h fof_struct.h fof_io.h \
-    star_formation_struct.h star_formation.h \
+    star_formation_struct.h star_formation.h star_formation_iact.h \
     star_formation_logger.h star_formation_logger_struct.h \
     pressure_floor.h pressure_floor_struct.h pressure_floor_iact.h \
-    velociraptor_struct.h velociraptor_io.h random.h memuse.h black_holes.h black_holes_io.h \
-    black_holes_properties.h black_holes_struct.h feedback.h feedback_struct.h feedback_properties.h
+    velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
+    black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
+    feedback.h feedback_struct.h feedback_properties.h task_order.h
 
 # source files for EAGLE cooling
 EAGLE_COOLING_SOURCES =
@@ -69,27 +72,34 @@ EAGLE_FEEDBACK_SOURCES += feedback/EAGLE/feedback.c
 endif
 
 # Common source files
-AM_SOURCES = space.c runner.c queue.c task.c cell.c engine.c engine_maketasks.c \
-    engine_marktasks.c engine_drift.c serial_io.c timers.c debug.c scheduler.c \
+AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c \
+    runner_doiact_stars.c runner_doiact_black_holes.c runner_ghost.c runner_recv.c \
+    runner_sort.c runner_drift.c runner_black_holes.c runner_time_integration.c \
+    runner_doiact_hydro_vec.c runner_others.c\
+    queue.c task.c cell.c engine.c engine_maketasks.c engine_split_particles.c \
+    engine_marktasks.c engine_drift.c engine_unskip.c engine_collect_end_of_step.c \
+    engine_redistribute.c engine_fof.c serial_io.c timers.c debug.c scheduler.c \
     proxy.c parallel_io.c units.c common_io.c single_io.c multipole.c version.c map.c \
     kernel_hydro.c tools.c part.c partition.c clocks.c parser.c \
     physical_constants.c potential.c hydro_properties.c \
     threadpool.c cooling.c star_formation.c \
-    statistics.c runner_doiact_vec.c profiler.c dump.c logger.c \
+    statistics.c profiler.c dump.c logger.c \
     part_type.c xmf.c gravity_properties.c gravity.c \
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
-    outputlist.c velociraptor_dummy.c logger_io.c memuse.c fof.c \
+    outputlist.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
     hashmap.c pressure_floor.c \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES)
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
-		 gravity_iact.h kernel_long_gravity.h vector.h cache.h runner_doiact.h runner_doiact_vec.h runner_doiact_grav.h  \
-                 runner_doiact_nosort.h runner_doiact_stars.h runner_doiact_black_holes.h units.h intrinsics.h minmax.h \
+		 gravity_iact.h kernel_long_gravity.h vector.h cache.h \
+	         runner_doiact_nosort.h runner_doiact_hydro.h runner_doiact_stars.h runner_doiact_black_holes.h runner_doiact_grav.h \
+                 runner_doiact_functions_hydro.h runner_doiact_functions_stars.h runner_doiact_functions_black_holes.h \
+		 runner_doiact_functions_limiter.h runner_doiact_limiter.h units.h intrinsics.h minmax.h \
                  kick.h timestep.h drift.h adiabatic_index.h io_properties.h dimension.h part_type.h periodic.h memswap.h \
-                 dump.h logger.h sign.h logger_io.h timestep_limiter.h hashmap.h \
-		 gravity.h gravity_io.h gravity_cache.h \
+                 timestep_limiter.h timestep_limiter_iact.h timestep_sync.h timestep_sync_part.h timestep_limiter_struct.h \
+                 dump.h logger.h sign.h logger_io.h hashmap.h gravity.h gravity_io.h gravity_cache.h \
 		 gravity/Default/gravity.h gravity/Default/gravity_iact.h gravity/Default/gravity_io.h \
 		 gravity/Default/gravity_debug.h gravity/Default/gravity_part.h  \
 		 gravity/Potential/gravity.h gravity/Potential/gravity_iact.h gravity/Potential/gravity_io.h \
@@ -120,32 +130,33 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 hydro/AnarchyPU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
                  hydro/AnarchyPU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
 		 hydro/AnarchyPU/hydro_parameters.h \
-		 hydro/AnarchyDU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
-                 hydro/AnarchyDU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
-		 hydro/AnarchyDU/hydro_parameters.h \
-		 hydro/GizmoMFV/hydro.h hydro/GizmoMFV/hydro_iact.h \
-                 hydro/GizmoMFV/hydro_io.h hydro/GizmoMFV/hydro_debug.h \
-                 hydro/GizmoMFV/hydro_part.h \
-                 hydro/GizmoMFV/hydro_gradients_gizmo.h \
-                 hydro/GizmoMFV/hydro_gradients.h \
-                 hydro/GizmoMFV/hydro_gradients_sph.h \
-                 hydro/GizmoMFV/hydro_slope_limiters_cell.h \
-                 hydro/GizmoMFV/hydro_slope_limiters_face.h \
-                 hydro/GizmoMFV/hydro_slope_limiters.h \
-                 hydro/GizmoMFV/hydro_unphysical.h \
-                 hydro/GizmoMFV/hydro_velocities.h \
-		 hydro/GizmoMFV/hydro_parameters.h \
-		 hydro/GizmoMFM/hydro.h hydro/GizmoMFM/hydro_iact.h \
-                 hydro/GizmoMFM/hydro_io.h hydro/GizmoMFM/hydro_debug.h \
-                 hydro/GizmoMFM/hydro_part.h \
-                 hydro/GizmoMFM/hydro_gradients_gizmo.h \
-                 hydro/GizmoMFM/hydro_gradients.h \
-                 hydro/GizmoMFM/hydro_gradients_sph.h \
-                 hydro/GizmoMFM/hydro_slope_limiters_cell.h \
-                 hydro/GizmoMFM/hydro_slope_limiters_face.h \
-                 hydro/GizmoMFM/hydro_slope_limiters.h \
-                 hydro/GizmoMFM/hydro_unphysical.h \
-		 hydro/GizmoMFM/hydro_parameters.h \
+		 hydro/SPHENIX/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
+                 hydro/SPHENIX/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
+		 hydro/SPHENIX/hydro_parameters.h \
+		 hydro/Gizmo/hydro_parameters.h \
+                 hydro/Gizmo/hydro_io.h hydro/Gizmo/hydro_debug.h \
+                 hydro/Gizmo/hydro.h hydro/Gizmo/hydro_iact.h \
+                 hydro/Gizmo/hydro_part.h \
+                 hydro/Gizmo/hydro_gradients.h \
+                 hydro/Gizmo/hydro_getters.h \
+                 hydro/Gizmo/hydro_setters.h \
+                 hydro/Gizmo/hydro_flux.h \
+                 hydro/Gizmo/hydro_slope_limiters.h \
+                 hydro/Gizmo/hydro_slope_limiters_face.h \
+                 hydro/Gizmo/hydro_slope_limiters_cell.h \
+                 hydro/Gizmo/hydro_unphysical.h \
+                 hydro/Gizmo/hydro_gradients_sph.h \
+                 hydro/Gizmo/hydro_gradients_gizmo.h \
+                 hydro/Gizmo/hydro_velocities.h \
+                 hydro/Gizmo/hydro_lloyd.h \
+                 hydro/Gizmo/MFV/hydro_debug.h \
+                 hydro/Gizmo/MFV/hydro_part.h \
+                 hydro/Gizmo/MFV/hydro_velocities.h \
+                 hydro/Gizmo/MFV/hydro_flux.h \
+                 hydro/Gizmo/MFM/hydro_debug.h \
+                 hydro/Gizmo/MFM/hydro_part.h \
+                 hydro/Gizmo/MFM/hydro_flux.h \
+                 hydro/Gizmo/MFM/hydro_velocities.h \
                  hydro/Shadowswift/hydro_debug.h \
                  hydro/Shadowswift/hydro_gradients.h hydro/Shadowswift/hydro.h \
                  hydro/Shadowswift/hydro_iact.h \
@@ -175,11 +186,11 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
                  potential/sine_wave/potential.h \
 		 star_formation/none/star_formation.h star_formation/none/star_formation_struct.h \
-		 star_formation/none/star_formation_io.h \
+		 star_formation/none/star_formation_io.h star_formation/none/star_formation_iact.h \
 		 star_formation/EAGLE/star_formation.h star_formation/EAGLE/star_formation_struct.h \
-		 star_formation/EAGLE/star_formation_io.h \
+		 star_formation/EAGLE/star_formation_io.h star_formation/EAGLE/star_formation_iact.h \
 		 star_formation/GEAR/star_formation.h star_formation/GEAR/star_formation_struct.h \
-		 star_formation/GEAR/star_formation_io.h \
+		 star_formation/GEAR/star_formation_io.h star_formation/GEAR/star_formation_iact.h \
                  star_formation/EAGLE/star_formation_logger.h star_formation/EAGLE/star_formation_logger_struct.h \
                  star_formation/GEAR/star_formation_logger.h star_formation/GEAR/star_formation_logger_struct.h \
                  star_formation/none/star_formation_logger.h star_formation/none/star_formation_logger_struct.h \
@@ -224,26 +235,36 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  black_holes/Default/black_holes_struct.h \
                  black_holes/EAGLE/black_holes.h black_holes/EAGLE/black_holes_io.h \
 		 black_holes/EAGLE/black_holes_part.h black_holes/EAGLE/black_holes_iact.h \
-                 black_holes/EAGLE/black_holes_properties.h \
+                 black_holes/EAGLE/black_holes_properties.h black_holes/EAGLE/black_holes_parameters.h \
                  black_holes/EAGLE/black_holes_struct.h \
 		 pressure_floor/GEAR/pressure_floor.h pressure_floor/none/pressure_floor.h \
 		 pressure_floor/GEAR/pressure_floor_iact.h pressure_floor/none/pressure_floor_iact.h \
-		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h
+		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h \
+	         task_order/GEAR/task_order.h task_order/EAGLE/task_order.h task_order/none/task_order.h
 
+
+# Sources and special flags for the gravity library
+libgrav_la_SOURCES = runner_doiact_grav.c
+libgrav_la_CFLAGS = $(AM_CFLAGS) $(GRAVITY_CFLAGS) 
+libgrav_la_LDFLAGS = $(AM_LDFLAGS) $(EXTRA_LIBS)
+
+# Sources and special flags for the gravity MPI library
+libgrav_mpi_la_SOURCES = runner_doiact_grav.c
+libgrav_mpi_la_CFLAGS = $(AM_CFLAGS) $(GRAVITY_CFLAGS) -DWITH_MPI
+libgrav_mpi_la_LDFLAGS = $(AM_LDFLAGS) $(MPI_LIBS) $(EXTRA_LIBS)
 
 # Sources and flags for regular library
 libswiftsim_la_SOURCES = $(AM_SOURCES)
 libswiftsim_la_CFLAGS = $(AM_CFLAGS)
-libswiftsim_la_LDFLAGS = $(AM_LDFLAGS) $(EXTRA_LIBS)
-libswiftsim_la_LIBADD = $(GRACKLE_LIBS) $(VELOCIRAPTOR_LIBS)
+libswiftsim_la_LDFLAGS = $(AM_LDFLAGS) $(EXTRA_LIBS) -version-info 0:0:0
+libswiftsim_la_LIBADD = $(GRACKLE_LIBS) $(VELOCIRAPTOR_LIBS) libgrav.la
 
 # Sources and flags for MPI library
 libswiftsim_mpi_la_SOURCES = $(AM_SOURCES)
 libswiftsim_mpi_la_CFLAGS = $(AM_CFLAGS) $(MPI_FLAGS)
-libswiftsim_mpi_la_LDFLAGS = $(AM_LDFLAGS) $(MPI_LIBS) $(EXTRA_LIBS)
+libswiftsim_mpi_la_LDFLAGS = $(AM_LDFLAGS) $(MPI_LIBS) $(EXTRA_LIBS) -version-info 0:0:0
 libswiftsim_mpi_la_SHORTNAME = mpi
-libswiftsim_mpi_la_LIBADD = $(GRACKLE_LIBS) $(VELOCIRAPTOR_LIBS)
-
+libswiftsim_mpi_la_LIBADD = $(GRACKLE_LIBS) $(VELOCIRAPTOR_LIBS) $(MPI_LIBS) libgrav_mpi.la
 
 # Versioning. If any sources change then update the version_string.h file with
 # the current git revision and package version.

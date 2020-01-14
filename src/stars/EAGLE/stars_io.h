@@ -57,10 +57,11 @@ INLINE static void stars_read_particles(struct spart *sparts,
 INLINE static void convert_spart_pos(const struct engine *e,
                                      const struct spart *sp, double *ret) {
 
-  if (e->s->periodic) {
-    ret[0] = box_wrap(sp->x[0], 0.0, e->s->dim[0]);
-    ret[1] = box_wrap(sp->x[1], 0.0, e->s->dim[1]);
-    ret[2] = box_wrap(sp->x[2], 0.0, e->s->dim[2]);
+  const struct space *s = e->s;
+  if (s->periodic) {
+    ret[0] = box_wrap(sp->x[0] - s->pos_dithering[0], 0.0, s->dim[0]);
+    ret[1] = box_wrap(sp->x[1] - s->pos_dithering[1], 0.0, s->dim[1]);
+    ret[2] = box_wrap(sp->x[2] - s->pos_dithering[2], 0.0, s->dim[2]);
   } else {
     ret[0] = sp->x[0];
     ret[1] = sp->x[1];
@@ -217,10 +218,15 @@ INLINE static void stars_props_init(struct stars_props *sp,
   else
     sp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
-  /* Read birth time to set all stars in ICs to (defaults to -1 to indicate star
-   * present in ICs) */
-  sp->spart_first_init_birth_time =
-      parser_get_opt_param_float(params, "Stars:birth_time", -1.f);
+  /* Do we want to overwrite the stars' birth time? */
+  sp->overwrite_birth_time =
+      parser_get_opt_param_int(params, "Stars:overwrite_birth_time", 0);
+
+  /* Read birth time to set all stars in ICs */
+  if (sp->overwrite_birth_time) {
+    sp->spart_first_init_birth_time =
+        parser_get_param_float(params, "Stars:birth_time");
+  }
 }
 
 /**
@@ -244,6 +250,10 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
 
   message("Maximal iterations in ghost task set to %d",
           sp->max_smoothing_iterations);
+
+  if (sp->overwrite_birth_time)
+    message("Stars' birth time read from the ICs will be overwritten to %f",
+            sp->spart_first_init_birth_time);
 }
 
 #if defined(HAVE_HDF5)

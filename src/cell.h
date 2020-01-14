@@ -273,8 +273,10 @@ struct pcell_sf {
   } stars;
 };
 
-/** Bitmasks for the cell flags. Beware when adding flags that you don't exceed
-    the size of the flags variable in the struct cell. */
+/**
+ * @brief Bitmasks for the cell flags. Beware when adding flags that you don't
+ * exceed the size of the flags variable in the struct cell.
+ */
 enum cell_flags {
   cell_flag_split = (1UL << 0),
   cell_flag_do_hydro_drift = (1UL << 1),
@@ -289,7 +291,10 @@ enum cell_flags {
   cell_flag_do_stars_sub_drift = (1UL << 10),
   cell_flag_do_bh_drift = (1UL << 11),
   cell_flag_do_bh_sub_drift = (1UL << 12),
-  cell_flag_do_stars_resort = (1UL << 13)
+  cell_flag_do_stars_resort = (1UL << 13),
+  cell_flag_has_tasks = (1UL << 14),
+  cell_flag_do_hydro_sync = (1UL << 15),
+  cell_flag_do_hydro_sub_sync = (1UL << 16)
 };
 
 /**
@@ -755,6 +760,10 @@ struct cell {
   /*! The task to limit the time-step of inactive particles */
   struct task *timestep_limiter;
 
+  /*! The task to synchronize the time-step of inactive particles hit by
+   * feedback */
+  struct task *timestep_sync;
+
 #ifdef WITH_LOGGER
   /*! The logger task */
   struct task *logger;
@@ -876,17 +885,21 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force);
 void cell_drift_bpart(struct cell *c, const struct engine *e, int force);
 void cell_drift_multipole(struct cell *c, const struct engine *e);
 void cell_drift_all_multipoles(struct cell *c, const struct engine *e);
-void cell_check_timesteps(struct cell *c);
+void cell_check_timesteps(const struct cell *c, const integertime_t ti_current,
+                          const timebin_t max_bin);
 void cell_store_pre_drift_values(struct cell *c);
 void cell_set_star_resort_flag(struct cell *c);
-void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s);
+void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s,
+                                        const int with_feedback);
 void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
-                                       struct scheduler *s);
+                                       struct scheduler *s,
+                                       const int with_timestep_limiter);
 void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
                                       struct scheduler *s);
 void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
-                                       const int with_star_formation);
+                                       const int with_star_formation,
+                                       const int with_timestep_sync);
 void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
                                              struct scheduler *s);
 void cell_activate_subcell_external_grav_tasks(struct cell *ci,
@@ -896,6 +909,7 @@ void cell_activate_drift_part(struct cell *c, struct scheduler *s);
 void cell_activate_drift_gpart(struct cell *c, struct scheduler *s);
 void cell_activate_drift_spart(struct cell *c, struct scheduler *s);
 void cell_activate_drift_bpart(struct cell *c, struct scheduler *s);
+void cell_activate_sync_part(struct cell *c, struct scheduler *s);
 void cell_activate_hydro_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s);
 void cell_activate_limiter(struct cell *c, struct scheduler *s);
