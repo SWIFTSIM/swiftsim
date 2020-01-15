@@ -110,6 +110,7 @@ labels = [
     ["engine_activate_fof_tasks:", 2],
     ["fof_search_tree:", 2],
     ["engine_launch: \(fof\)", 2],
+    ["engine_launch: \(fof comms\)", 2],
 ]
 times = np.zeros(len(labels))
 counts = np.zeros(len(labels))
