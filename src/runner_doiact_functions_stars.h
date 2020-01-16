@@ -46,10 +46,6 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
   const integertime_t ti_current = e->ti_current;
   const struct cosmology *cosmo = e->cosmology;
 
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props *fp = e->feedback_props;
-#endif
-
   /* Anything to do here? */
   if (c->hydro.count == 0 || c->stars.count == 0) return;
   if (!cell_is_active_stars(c, e)) return;
@@ -116,7 +112,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
         runner_iact_nonsym_feedback_density(r2, dx, hi, hj, si, pj, NULL, cosmo,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, fp,
+        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj,
                                           cosmo, ti_current);
 #endif
       }
@@ -148,10 +144,6 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const integertime_t ti_current = e->ti_current;
   const struct cosmology *cosmo = e->cosmology;
-
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props *fp = e->feedback_props;
-#endif
 
   /* Anything to do here? */
   if (cj->hydro.count == 0 || ci->stars.count == 0) return;
@@ -229,7 +221,7 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
         runner_iact_nonsym_feedback_density(r2, dx, hi, hj, si, pj, NULL, cosmo,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, fp,
+        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj,
                                           cosmo, ti_current);
 #endif
       }
@@ -255,10 +247,6 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const integertime_t ti_current = e->ti_current;
   const struct cosmology *cosmo = e->cosmology;
-
-#if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props *fp = e->feedback_props;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -405,7 +393,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
           runner_iact_nonsym_feedback_density(r2, dx, hi, hj, spi, pj, NULL,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-          runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, fp,
+          runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj,
                                             cosmo, ti_current);
 #endif
         }
@@ -533,7 +521,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
           runner_iact_nonsym_feedback_density(r2, dx, hj, hi, spj, pi, xpi,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-          runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi, fp,
+          runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi,
                                             cosmo, ti_current);
 #endif
         }

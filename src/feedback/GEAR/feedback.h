@@ -153,9 +153,8 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {
 
-  /* Zero the number of supernovae */
-  sp->feedback_data.number_snia = 0;
-  sp->feedback_data.number_snii = 0;
+  /* Zero the energy of supernovae */
+  sp->feedback_data.energy_ejected = 0;
 }
 
 /**
@@ -228,6 +227,10 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute the stellar evolution */
   stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
                                  phys_const, ti_begin, star_age_beg_step, dt);
+
+  /* Transform the number of SN to the energy */
+  sp->feedback_data.energy_ejected = sp->feedback_data.number_sn
+    * feedback_props->energy_per_supernovae;
 }
 
 /**
