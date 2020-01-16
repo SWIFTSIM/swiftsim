@@ -233,17 +233,17 @@ hsize_t io_get_number_element_in_attribute(hid_t attr) {
   /* Get the dataspace */
   hid_t space = H5Aget_space(attr);
   if (space < 0) error("Failed to get data space");
-  
+
   /* Read the number of dimensions */
   const int ndims = H5Sget_simple_extent_ndims(space);
 
   /* Read the dimensions */
-  hsize_t *dims = (hsize_t*) malloc(sizeof(hsize_t) * ndims);
+  hsize_t* dims = (hsize_t*)malloc(sizeof(hsize_t) * ndims);
   H5Sget_simple_extent_dims(space, dims, NULL);
-  
+
   /* Compute number of elements */
   hsize_t count = 1;
-  for(int i = 0; i < ndims; i++) {
+  for (int i = 0; i < ndims; i++) {
     count *= dims[i];
   }
 
@@ -253,16 +253,17 @@ hsize_t io_get_number_element_in_attribute(hid_t attr) {
   return count;
 };
 
-
 /**
  * @brief Reads an attribute (array) from a given HDF5 group.
- * @param data (output) The attribute read from the HDF5 group (need to be already allocated).
+ * @param data (output) The attribute read from the HDF5 group (need to be
+ * already allocated).
  * @param number_element Number of elements in the attribute.
  *
  * Calls #error() if an error occurs.
  */
-void io_read_array_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type,
-			     void* data, hsize_t number_element) {
+void io_read_array_attribute(hid_t grp, const char* name,
+                             enum IO_DATA_TYPE type, void* data,
+                             hsize_t number_element) {
 
   /* Open attribute */
   const hid_t h_attr = H5Aopen(grp, name, H5P_DEFAULT);
@@ -273,8 +274,10 @@ void io_read_array_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type
 
   /* Check if correct number of element */
   if (count != number_element) {
-    error("Error found a different number of elements than expected (%lli != %lli) in attribute %s",
-	  count, number_element, name);
+    error(
+        "Error found a different number of elements than expected (%lli != "
+        "%lli) in attribute %s",
+        count, number_element, name);
   }
 
   /* Read attribute */
@@ -284,7 +287,6 @@ void io_read_array_attribute(hid_t grp, const char* name, enum IO_DATA_TYPE type
   /* Cleanup */
   H5Aclose(h_attr);
 }
-
 
 /**
  * @brief Reads the number of elements in a HDF5 dataset.
@@ -299,17 +301,17 @@ hsize_t io_get_number_element_in_dataset(hid_t dataset) {
   /* Get the dataspace */
   hid_t space = H5Dget_space(dataset);
   if (space < 0) error("Failed to get data space");
-  
+
   /* Read the number of dimensions */
   const int ndims = H5Sget_simple_extent_ndims(space);
 
   /* Read the dimensions */
-  hsize_t *dims = (hsize_t*) malloc(sizeof(hsize_t) * ndims);
+  hsize_t* dims = (hsize_t*)malloc(sizeof(hsize_t) * ndims);
   H5Sget_simple_extent_dims(space, dims, NULL);
 
   /* Compute number of elements */
   hsize_t count = 1;
-  for(int i = 0; i < ndims; i++) {
+  for (int i = 0; i < ndims; i++) {
     count *= dims[i];
   }
 
@@ -325,13 +327,14 @@ hsize_t io_get_number_element_in_dataset(hid_t dataset) {
  * @param grp The group from which to read.
  * @param name The name of the dataset to read.
  * @param type The #IO_DATA_TYPE of the attribute.
- * @param data (output) The attribute read from the HDF5 group (need to be already allocated).
+ * @param data (output) The attribute read from the HDF5 group (need to be
+ * already allocated).
  * @param number_element Number of elements in the attribute.
  *
  * Calls #error() if an error occurs.
  */
 void io_read_array_dataset(hid_t grp, const char* name, enum IO_DATA_TYPE type,
-			     void* data, hsize_t number_element) {
+                           void* data, hsize_t number_element) {
 
   /* Open dataset */
   const hid_t h_dataset = H5Dopen(grp, name, H5P_DEFAULT);
@@ -342,12 +345,15 @@ void io_read_array_dataset(hid_t grp, const char* name, enum IO_DATA_TYPE type,
 
   /* Check if correct number of element */
   if (count != number_element) {
-    error("Error found a different number of elements than expected (%lli != %lli) in dataset %s",
-	  count, number_element, name);
+    error(
+        "Error found a different number of elements than expected (%lli != "
+        "%lli) in dataset %s",
+        count, number_element, name);
   }
 
   /* Read dataset */
-  const hid_t h_err = H5Dread(h_dataset, io_hdf5_type(type), H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  const hid_t h_err = H5Dread(h_dataset, io_hdf5_type(type), H5S_ALL, H5S_ALL,
+                              H5P_DEFAULT, data);
   if (h_err < 0) error("Error while reading dataset '%s'", name);
 
   /* Cleanup */

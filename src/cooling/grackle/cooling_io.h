@@ -136,23 +136,22 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
  * @param cooling The cooling properties to initialize
  */
 __attribute__((always_inline)) INLINE static void cooling_read_parameters(
-    struct swift_params* parameter_file,
-    struct cooling_function_data* cooling,
+    struct swift_params* parameter_file, struct cooling_function_data* cooling,
     const struct phys_const* phys_const) {
 
   parser_get_param_string(parameter_file, "GrackleCooling:cloudy_table",
                           cooling->cloudy_table);
 
-  cooling->primordial_chemistry =
-    parser_get_opt_param_int(parameter_file, "GrackleCooling:primordial_chemistry",
-			     COOLING_GRACKLE_MODE);
+  cooling->primordial_chemistry = parser_get_opt_param_int(
+      parameter_file, "GrackleCooling:primordial_chemistry",
+      COOLING_GRACKLE_MODE);
 
   if (cooling->primordial_chemistry < 0)
     error("Primordial chemistry cannot be below 0");
 
   if (cooling->primordial_chemistry > COOLING_GRACKLE_MODE)
     error("Cannot run primordial chemistry %i when compiled with %i",
-	  cooling->primordial_chemistry, COOLING_GRACKLE_MODE);
+          cooling->primordial_chemistry, COOLING_GRACKLE_MODE);
 
   cooling->with_uv_background =
       parser_get_param_int(parameter_file, "GrackleCooling:with_UV_background");
@@ -175,7 +174,7 @@ __attribute__((always_inline)) INLINE static void cooling_read_parameters(
 
   if (cooling->self_shielding_method == -1) {
     cooling->self_shielding_threshold = parser_get_param_float(
-      parameter_file, "GrackleCooling:self_shielding_threshold_atom_per_cm3");
+        parameter_file, "GrackleCooling:self_shielding_threshold_atom_per_cm3");
   }
 
   /* Initial step convergence */
@@ -187,10 +186,8 @@ __attribute__((always_inline)) INLINE static void cooling_read_parameters(
 
   /* Thermal time */
   cooling->thermal_time =
-    parser_get_param_float(parameter_file, "GrackleCooling:thermal_time_myr");
+      parser_get_param_float(parameter_file, "GrackleCooling:thermal_time_myr");
   cooling->thermal_time *= phys_const->const_year * 1e6;
-
-
 }
 
 #endif /* SWIFT_COOLING_GRACKLE_IO_H */

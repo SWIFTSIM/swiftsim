@@ -26,7 +26,6 @@
  */
 struct feedback_part_data {};
 
-
 /**
  * @brief Feedback fields carried by each star particles
  */

@@ -53,7 +53,6 @@ struct initial_mass_function {
 
   /*! Maximal mass contained in mass_limits, copied for more clarity. */
   float mass_max;
-
 };
 
 /**
@@ -87,7 +86,8 @@ struct supernovae_ia {
   /*! Maximal mass of the progenitor */
   float mass_max_progenitor;
 
-  /*! coefficient of the initial mass function for progenitor divided by progenitor_exponent */
+  /*! coefficient of the initial mass function for progenitor divided by
+   * progenitor_exponent */
   float progenitor_coef_exp;
 
   /*! exponent of the initial mass function for progenitor */
@@ -106,8 +106,6 @@ struct supernovae_ia {
     /*! Minimal mass of the companion */
     float mass_min;
   } companion[GEAR_NUMBER_TYPE_OF_COMPANION];
-
-
 };
 
 /**
@@ -115,7 +113,8 @@ struct supernovae_ia {
  */
 struct supernovae_ii {
 
-  /*! Integrated (over the IMF) mass fraction of metals ejected by a supernovae */
+  /*! Integrated (over the IMF) mass fraction of metals ejected by a supernovae
+   */
   struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
 
   /*! Total mass fraction ejected (integrated over the IMF) */
@@ -161,6 +160,4 @@ struct stellar_model {
   char discret_yields;
 };
 
-
-
-#endif // SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H
+#endif  // SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H

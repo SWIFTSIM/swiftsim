@@ -669,8 +669,8 @@ INLINE static void starformation_print_backend(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, struct xpart* restrict xp, const struct star_formation* cd,
-    const struct cosmology* cosmo) {}
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct star_formation* cd, const struct cosmology* cosmo) {}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.

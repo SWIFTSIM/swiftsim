@@ -444,7 +444,7 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
   hydro_update_soundspeed(p, cosmo);
 
   const float comoving_pressure_with_floor =
-    pressure_floor_get_comoving_pressure(p, p->pressure_bar, cosmo);
+      pressure_floor_get_comoving_pressure(p, p->pressure_bar, cosmo);
   p->force.pressure_bar_with_floor = comoving_pressure_with_floor;
 }
 

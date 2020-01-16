@@ -29,7 +29,7 @@
 
 #include <strings.h>
 
-  /**
+/**
  * @brief Update the properties of the particle due to a supernovae.
  *
  * @param p The #part to consider.
@@ -37,14 +37,13 @@
  * @param cosmo The #cosmology.
  */
 __attribute__((always_inline)) INLINE static void feedback_update_part(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct engine *restrict e) {
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct engine* restrict e) {
 
   /* Did the particle receive a supernovae */
-  if (xp->feedback_data.delta_mass == 0)
-    return;
+  if (xp->feedback_data.delta_mass == 0) return;
 
-  const struct cosmology *cosmo = e->cosmology;
+  const struct cosmology* cosmo = e->cosmology;
 
   /* Turn off the cooling */
   xp->cooling_data.time_last_event = e->time;
@@ -58,7 +57,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   }
 
   hydro_set_mass(p, new_mass);
-  
+
   xp->feedback_data.delta_mass = 0;
 
   /* Update the density */
@@ -74,7 +73,7 @@ __attribute__((always_inline)) INLINE static void feedback_update_part(
   xp->feedback_data.delta_u = 0.;
 
   /* Update the velocities */
-  for(int i=0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     const float dv = xp->feedback_data.delta_p[i] / new_mass;
 
     xp->v_full[i] += dv;
@@ -136,7 +135,6 @@ INLINE static double feedback_get_enrichment_timestep(
   return dt_star;
 }
 
-
 /**
  * @brief Prepares a s-particle for its feedback interactions
  *
@@ -146,7 +144,6 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
     struct spart* sp) {
 
   sp->feedback_data.enrichment_weight = 0.f;
-
 }
 
 /**
@@ -211,9 +208,9 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const struct phys_const* phys_const,
-    const double star_age_beg_step, const double dt, const double time,
-    const integertime_t ti_begin, const int with_cosmology) {
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -224,16 +221,14 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
 
   /* Add missing h factor */
   const float hi_inv = 1.f / sp->h;
-  const float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+  const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
 
   sp->feedback_data.enrichment_weight *= hi_inv_dim;
 
-
   /* Compute the stellar evolution */
   stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
-				 phys_const, ti_begin, star_age_beg_step, dt);
+                                 phys_const, ti_begin, star_age_beg_step, dt);
 }
-
 
 /**
  * @brief Write a feedback struct to the given FILE as a stream of bytes.
@@ -241,7 +236,8 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
  * @param feedback the struct
  * @param stream the file stream
  */
-__attribute__((always_inline)) INLINE static void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream) {
+__attribute__((always_inline)) INLINE static void feedback_struct_dump(
+    const struct feedback_props* feedback, FILE* stream) {
 
   restart_write_blocks((void*)feedback, sizeof(struct feedback_props), 1,
                        stream, "feedback", "feedback function");
@@ -263,7 +259,6 @@ __attribute__((always_inline)) INLINE static void feedback_struct_restore(
                       NULL, "feedback function");
 
   stellar_evolution_restore(&feedback->stellar_model, stream);
-
 }
 
 /**
@@ -275,7 +270,6 @@ __attribute__((always_inline)) INLINE static void feedback_clean(
     struct feedback_props* feedback) {
 
   stellar_evolution_clean(&feedback->stellar_model);
-
 }
 
 #endif /* SWIFT_FEEDBACK_GEAR_H */

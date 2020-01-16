@@ -1123,8 +1123,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       if (with_cooling) {
 
         c->hydro.cooling = scheduler_addtask(s, task_type_cooling,
-                                             task_subtype_none, 0,
-                                             0, c, NULL);
+                                             task_subtype_none, 0, 0, c, NULL);
 
         task_order_addunlock_cooling(s, c);
 

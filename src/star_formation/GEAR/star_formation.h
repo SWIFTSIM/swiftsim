@@ -64,8 +64,8 @@ INLINE static int star_formation_is_star_forming(
     return 0;
   }
 
-  const float temperature =
-      cooling_get_temperature(phys_const, hydro_props, us, cosmo, cooling, p, xp);
+  const float temperature = cooling_get_temperature(phys_const, hydro_props, us,
+                                                    cosmo, cooling, p, xp);
 
   const float temperature_max = starform->maximal_temperature;
 
@@ -89,7 +89,8 @@ INLINE static int star_formation_is_star_forming(
       M_PI_4 / (phys_const->const_newton_G * n_jeans_2_3 * h * h);
   const float density_criterion =
       coef * (hydro_gamma * phys_const->const_boltzmann_k * temperature /
-	      (mu * phys_const->const_proton_mass) + sigma2);
+                  (mu * phys_const->const_proton_mass) +
+              sigma2);
 
   /* Check the density criterion */
   return density > density_criterion;
@@ -239,8 +240,8 @@ INLINE static void starformation_print_backend(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, struct xpart* restrict xp, const struct star_formation* cd,
-    const struct cosmology* cosmo) {
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct star_formation* cd, const struct cosmology* cosmo) {
 
   /* Copy the velocity divergence */
   xp->sf_data.div_v = p->density.div_v;

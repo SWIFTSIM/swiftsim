@@ -34,7 +34,6 @@ struct feedback_part_data {
 
   /*! Momemtum received from a supernovae */
   float delta_p[3];
-
 };
 
 /**
@@ -56,7 +55,6 @@ struct feedback_spart_data {
 
   /*! Chemical composition of the mass ejected */
   float metal_mass_ejected[CHEMISTRY_ELEMENT_COUNT];
-
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_GEAR_H */

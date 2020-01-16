@@ -20,8 +20,8 @@
 #define SWIFT_GEAR_FEEDBACK_IACT_H
 
 /* Local includes */
-#include "random.h"
 #include "hydro.h"
+#include "random.h"
 #include "timestep_sync_part.h"
 
 /**
@@ -65,7 +65,6 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
   /* The normalization by 1 / h^d is done in feedback.h */
   si->feedback_data.enrichment_weight += mj * wi;
-
 }
 
 /**
@@ -84,16 +83,14 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * generator
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
-                                  const float hi, const float hj,
-                                  struct spart *restrict si,
-                                  struct part *restrict pj,
-                                  struct xpart *restrict xpj,
-				  const struct feedback_props* fp,
-                                  const struct cosmology *restrict cosmo,
-                                  const integertime_t ti_current) {
+runner_iact_nonsym_feedback_apply(
+    const float r2, const float *dx, const float hi, const float hj,
+    struct spart *restrict si, struct part *restrict pj,
+    struct xpart *restrict xpj, const struct feedback_props *fp,
+    const struct cosmology *restrict cosmo, const integertime_t ti_current) {
 
-  const int number_supernovae = si->feedback_data.number_snia + si->feedback_data.number_snii;
+  const int number_supernovae =
+      si->feedback_data.number_snia + si->feedback_data.number_snii;
   /* Do we have supernovae? */
   if (number_supernovae == 0) {
     return;
@@ -104,15 +101,16 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* Get the kernel for hi. */
   float hi_inv = 1.0f / hi;
-  float hi_inv_dim = pow_dimension(hi_inv);       /* 1/h^d */
+  float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
   float xi = r * hi_inv;
   float wi, wi_dx;
   kernel_deval(xi, &wi, &wi_dx);
   wi *= hi_inv_dim;
 
   /* Compute inverse enrichment weight */
-  const double si_inv_weight = si->feedback_data.enrichment_weight == 0?
-    0. : 1. / si->feedback_data.enrichment_weight;
+  const double si_inv_weight = si->feedback_data.enrichment_weight == 0
+                                   ? 0.
+                                   : 1. / si->feedback_data.enrichment_weight;
 
   /* Mass received */
   const double m_ej = si->feedback_data.mass_ejected;
@@ -127,19 +125,18 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const double mu_sn = number_supernovae * e_sn;
   const double du = mu_sn * weight / new_mass;
 
-
   xpj->feedback_data.delta_mass += dm;
   xpj->feedback_data.delta_u += du;
 
   /* Compute momentum received. */
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     xpj->feedback_data.delta_p[i] += dm * (si->v[i] - xpj->v_full[i]);
   }
 
   /* Add the metals */
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     pj->chemistry_data.metal_mass[i] +=
-      weight * si->feedback_data.metal_mass_ejected[i];
+        weight * si->feedback_data.metal_mass_ejected[i];
   }
 
   /* Impose maximal viscosity */

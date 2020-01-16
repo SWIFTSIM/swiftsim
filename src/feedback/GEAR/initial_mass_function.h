@@ -25,26 +25,27 @@
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_exponent(
-    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+__attribute__((always_inline)) INLINE static float
+initial_mass_function_get_exponent(const struct initial_mass_function *imf,
+                                   float mass_min, float mass_max) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mass_max > imf->mass_max)
     error("Cannot have mass larger than the largest one in the IMF");
   if (mass_min < imf->mass_min)
     error("Cannot have mass smaller than the smallest one in the IMF");
-  if (mass_max < mass_min)
-    error("Cannot have mass_min larger than mass_max");
+  if (mass_max < mass_min) error("Cannot have mass_min larger than mass_max");
 #endif
-  
-  for(int i = 0; i < imf->n_parts; i++) {
+
+  for (int i = 0; i < imf->n_parts; i++) {
 
     /* Check if in the correct part of the IMF */
-    if (mass_min < imf->mass_limits[i+1]) {
+    if (mass_min < imf->mass_limits[i + 1]) {
 
       /* Check if in only one segment */
-      if (mass_max > imf->mass_limits[i+1]) {
-	error("Cannot get a single exponent for the interval [%g, %g]", mass_min, mass_max);
+      if (mass_max > imf->mass_limits[i + 1]) {
+        error("Cannot get a single exponent for the interval [%g, %g]",
+              mass_min, mass_max);
       }
 
       return imf->exp[i];
@@ -58,13 +59,13 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_exp
 
 /** @brief Print the initial mass function */
 __attribute__((always_inline)) INLINE static void initial_mass_function_print(
-    const struct initial_mass_function* imf) {
+    const struct initial_mass_function *imf) {
 
   message("Number of parts: %i", imf->n_parts);
   message("Mass interval: [%g, %g]", imf->mass_min, imf->mass_max);
-  for(int i = 0; i < imf->n_parts; i++) {
-    message("[%g, %g]: %.2g * m^{%g}", imf->mass_limits[i], imf->mass_limits[i+1],
-	    imf->coef[i], imf->exp[i]);
+  for (int i = 0; i < imf->n_parts; i++) {
+    message("[%g, %g]: %.2g * m^{%g}", imf->mass_limits[i],
+            imf->mass_limits[i + 1], imf->coef[i], imf->exp[i]);
   }
 }
 
@@ -76,8 +77,9 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_print(
  * @param imf The #initial_mass_function.
  * @param interp The #interpolation_1d.
  */
-__attribute__((always_inline)) INLINE static void initial_mass_function_integrate(
-    const struct initial_mass_function* imf, struct interpolation_1d *interp) {
+__attribute__((always_inline)) INLINE static void
+initial_mass_function_integrate(const struct initial_mass_function *imf,
+                                struct interpolation_1d *interp) {
 
   /* Index in the data */
   int j = 1;
@@ -86,14 +88,14 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
 
   float m = mass_min;
 
-  float *tmp = (float *) malloc(sizeof(float) * interp->N);
+  float *tmp = (float *)malloc(sizeof(float) * interp->N);
 
   /* Set lower limit */
   tmp[0] = 0;
-  for(int i = 0; i < imf->n_parts; i++) {
+  for (int i = 0; i < imf->n_parts; i++) {
 
     /* Check if already in the correct part */
-    if (mass_min > imf->mass_limits[i+1]) {
+    if (mass_min > imf->mass_limits[i + 1]) {
       continue;
     }
 
@@ -103,7 +105,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
     }
 
     /* Integrate the data */
-    while (m < imf->mass_limits[i+1] && j < interp->N) {
+    while (m < imf->mass_limits[i + 1] && j < interp->N) {
 
       /* Compute the masses */
       const float log_m1 = interp->xmin + (j - 1) * interp->dx;
@@ -115,15 +117,16 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
 
       /* Get the imf of the upper limit  */
       float imf_2;
-      if (m2 > imf->mass_limits[i+1]) {
-      	imf_2 = imf->coef[i+1] * pow(m2, imf->exp[i+1]);
-      }
-      else {
-	imf_2 = imf->coef[i] * pow(m2, imf->exp[i]);
+      if (m2 > imf->mass_limits[i + 1]) {
+        imf_2 = imf->coef[i + 1] * pow(m2, imf->exp[i + 1]);
+      } else {
+        imf_2 = imf->coef[i] * pow(m2, imf->exp[i]);
       }
 
       /* Compute the integral */
-      tmp[j] = tmp[j-1] + 0.5 * (imf_1 * interp->data[j-1] + imf_2 * interp->data[j]) * dm;
+      tmp[j] =
+          tmp[j - 1] +
+          0.5 * (imf_1 * interp->data[j - 1] + imf_2 * interp->data[j]) * dm;
 
       /* Update j and m */
       j += 1;
@@ -132,8 +135,8 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
   }
 
   /* The rest is extrapolated with 0 */
-  for(int k = j; k < interp->N; k++) {
-    tmp[k] = tmp[k-1];
+  for (int k = j; k < interp->N; k++) {
+    tmp[k] = tmp[k - 1];
   }
 
   /* Copy temporary array */
@@ -146,7 +149,6 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
   free(tmp);
 }
 
-
 /**
  * @brief Get the IMF coefficient in between mass_min and mass_max.
  *
@@ -156,31 +158,33 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_integrat
  *
  * @return The imf's coefficient of the interval.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_coefficient(
-    const struct initial_mass_function* imf, float mass_min, float mass_max) {
+__attribute__((always_inline)) INLINE static float
+initial_mass_function_get_coefficient(const struct initial_mass_function *imf,
+                                      float mass_min, float mass_max) {
 
-  for(int i = 0; i < imf->n_parts; i++) {
+  for (int i = 0; i < imf->n_parts; i++) {
 
     /* Check if in the correct part of the IMF */
-    if (mass_min < imf->mass_limits[i+1]) {
+    if (mass_min < imf->mass_limits[i + 1]) {
 
       /* Check if in only one segment */
-      if (mass_max > imf->mass_limits[i+1]) {
-        error("Cannot get a single coefficient for the interval [%g, %g]", mass_min, mass_max);
+      if (mass_max > imf->mass_limits[i + 1]) {
+        error("Cannot get a single coefficient for the interval [%g, %g]",
+              mass_min, mass_max);
       }
 
       return imf->coef[i];
     }
   }
-  
+
   error("Masses outside IMF ranges");
 
   return -1;
 }
 
-
 /**
- * @brief Compute the integral of the fraction number of the initial mass function.
+ * @brief Compute the integral of the fraction number of the initial mass
+ * function.
  *
  * @param imf The #initial_mass_function.
  * @param m1 The lower mass to evaluate.
@@ -188,13 +192,14 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_coe
  *
  * @return The number fraction.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_integral_xi(
-    const struct initial_mass_function *imf, float m1, float m2) {
+__attribute__((always_inline)) INLINE static float
+initial_mass_function_get_integral_xi(const struct initial_mass_function *imf,
+                                      float m1, float m2) {
 
   int k = -1;
   /* Find the correct part */
-  for(int i = 0; i < imf->n_parts; i++) {
-    if (m1 <= imf->mass_limits[i+1]) {
+  for (int i = 0; i < imf->n_parts; i++) {
+    if (m1 <= imf->mass_limits[i + 1]) {
       k = i;
       break;
     }
@@ -206,8 +211,9 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_int
   }
 
   /* Check if m2 is inside the part */
-  if (m2 < imf->mass_limits[k] || m2 > imf->mass_limits[k+1]) {
-    error("This function is not able to integrate in two different parts %g %g", m1, m2);
+  if (m2 < imf->mass_limits[k] || m2 > imf->mass_limits[k + 1]) {
+    error("This function is not able to integrate in two different parts %g %g",
+          m1, m2);
   }
 
   /* Compute the integral */
@@ -225,28 +231,29 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_int
  *
  * @return The mass fraction.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_imf(
-    const struct initial_mass_function *imf, float m) {
+__attribute__((always_inline)) INLINE static float
+initial_mass_function_get_imf(const struct initial_mass_function *imf,
+                              float m) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (m > imf->mass_max || m < imf->mass_min)
-    error("Mass below or above limits expecting %g < %g < %g.",
-	  imf->mass_min, m, imf->mass_max);
+    error("Mass below or above limits expecting %g < %g < %g.", imf->mass_min,
+          m, imf->mass_max);
 #endif
 
-  for(int i = 0; i < imf->n_parts; i++) {
-    if (m <= imf->mass_limits[i+1]) {
+  for (int i = 0; i < imf->n_parts; i++) {
+    if (m <= imf->mass_limits[i + 1]) {
       return imf->coef[i] * pow(m, imf->exp[i]);
     }
   }
 
-  error("Failed to find correct function part: %g larger than mass max %g.",
-	m, imf->mass_max);
+  error("Failed to find correct function part: %g larger than mass max %g.", m,
+        imf->mass_max);
 };
 
-
 /**
- * @brief Compute the integral of the mass fraction of the initial mass function.
+ * @brief Compute the integral of the mass fraction of the initial mass
+ * function.
  *
  * @param imf The #initial_mass_function.
  * @param m1 The lower mass to evaluate.
@@ -254,22 +261,25 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_imf
  *
  * @return The integral of the mass fraction.
  */
-__attribute__((always_inline)) INLINE static float initial_mass_function_get_integral_imf(
-    const struct initial_mass_function *imf, const float m1, const float m2) {
+__attribute__((always_inline)) INLINE static float
+initial_mass_function_get_integral_imf(const struct initial_mass_function *imf,
+                                       const float m1, const float m2) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
-    error("Mass 1 below or above limits expecting %g < %g < %g.",
-	  imf->mass_min, m1, imf->mass_max);
+    error("Mass 1 below or above limits expecting %g < %g < %g.", imf->mass_min,
+          m1, imf->mass_max);
   if (m2 > imf->mass_max || m2 < imf->mass_min)
-    error("Mass 2 below or above limits expecting %g < %g < %g.",
-	  imf->mass_min, m2, imf->mass_max);
+    error("Mass 2 below or above limits expecting %g < %g < %g.", imf->mass_min,
+          m2, imf->mass_max);
 #endif
 
-  for(int i = 0; i < imf->n_parts; i++) {
-    if (m1 <= imf->mass_limits[i+1]) {
-      if (m2 < imf->mass_limits[i] || m2 > imf->mass_limits[i+1]) {
-	error("The code does not support the integration over multiple parts of the IMF");
+  for (int i = 0; i < imf->n_parts; i++) {
+    if (m1 <= imf->mass_limits[i + 1]) {
+      if (m2 < imf->mass_limits[i] || m2 > imf->mass_limits[i + 1]) {
+        error(
+            "The code does not support the integration over multiple parts of "
+            "the IMF");
       }
       const float exp = imf->exp[i] + 1.;
       return imf->coef[i] * (pow(m2, exp) - pow(m1, exp)) / exp;
@@ -277,45 +287,43 @@ __attribute__((always_inline)) INLINE static float initial_mass_function_get_int
   }
 
   error("Failed to find correct function part: %g, %g larger than mass max %g.",
-	m1, m2, imf->mass_max);
+        m1, m2, imf->mass_max);
 };
-
 
 /**
  * @brief Compute the coefficients of the initial mass function.
  *
  * @param imf The #initial_mass_function.
  */
-__attribute__((always_inline)) INLINE static void initial_mass_function_compute_coefficients(
-    struct initial_mass_function *imf) {
+__attribute__((always_inline)) INLINE static void
+initial_mass_function_compute_coefficients(struct initial_mass_function *imf) {
 
   /* Allocate memory */
-  if ((imf->coef = (float *) malloc(sizeof(float) * imf->n_parts)) == NULL)
+  if ((imf->coef = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
     error("Failed to allocate the IMF coefficients.");
 
   /* Suppose that the first coefficients is 1 (will be corrected later) */
   imf->coef[0] = 1.;
 
   /* Use the criterion of continuity for the IMF */
-  for(int i = 1; i < imf->n_parts; i++) {
-    float exp = imf->exp[i-1] - imf->exp[i];
-    imf->coef[i] = imf->coef[i-1] * pow(imf->mass_limits[i], exp);
+  for (int i = 1; i < imf->n_parts; i++) {
+    float exp = imf->exp[i - 1] - imf->exp[i];
+    imf->coef[i] = imf->coef[i - 1] * pow(imf->mass_limits[i], exp);
   }
 
   /* Use the criterion on the integral = 1 */
   float integral = 0;
-  for(int i = 0; i < imf->n_parts; i++) {
+  for (int i = 0; i < imf->n_parts; i++) {
     const float exp = imf->exp[i] + 1.;
     const float m_i = pow(imf->mass_limits[i], exp);
-    const float m_i1 = pow(imf->mass_limits[i+1], exp);
-    integral += imf->coef[i] * (m_i1 - m_i)/ exp;
+    const float m_i1 = pow(imf->mass_limits[i + 1], exp);
+    integral += imf->coef[i] * (m_i1 - m_i) / exp;
   }
 
   /* Normalize the coefficients (fix initial supposition) */
-  for(int i = 0; i < imf->n_parts; i++) {
+  for (int i = 0; i < imf->n_parts; i++) {
     imf->coef[i] /= integral;
   }
-
 }
 
 /**
@@ -324,8 +332,9 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_compute_
  * @param imf The #initial_mass_function.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void initial_mass_function_read_from_table(
-    struct initial_mass_function* imf, struct swift_params* params) {
+__attribute__((always_inline)) INLINE static void
+initial_mass_function_read_from_table(struct initial_mass_function *imf,
+                                      struct swift_params *params) {
 
   hid_t file_id, group_id;
 
@@ -346,15 +355,17 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   io_read_array_attribute(group_id, "as", FLOAT, imf->exp, imf->n_parts);
 
   /* Allocate the memory for the temporary mass limits */
-  if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
+  if ((imf->mass_limits =
+           (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
     error("Failed to allocate the IMF masses.");
 
   /* Read the mass limits */
-  io_read_array_attribute(group_id, "ms", FLOAT, imf->mass_limits, imf->n_parts - 1);
+  io_read_array_attribute(group_id, "ms", FLOAT, imf->mass_limits,
+                          imf->n_parts - 1);
 
   /* Copy the data (need to shift for mass_min) */
-  for(int i = imf->n_parts - 1; i > 0; i--) {
-    imf->mass_limits[i] = imf->mass_limits[i-1];
+  for (int i = imf->n_parts - 1; i > 0; i--) {
+    imf->mass_limits[i] = imf->mass_limits[i - 1];
   }
 
   /* Read the minimal mass limit */
@@ -368,16 +379,19 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
 }
 
 /**
- * @brief Reads the parameters file and if required overwrites the parameters found in the yields table.
+ * @brief Reads the parameters file and if required overwrites the parameters
+ * found in the yields table.
  *
  * @param imf The #initial_mass_function.
  * @param params The #swift_params.
  */
-__attribute__((always_inline)) INLINE static void initial_mass_function_read_from_params(
-    struct initial_mass_function* imf, struct swift_params* params) {
+__attribute__((always_inline)) INLINE static void
+initial_mass_function_read_from_params(struct initial_mass_function *imf,
+                                       struct swift_params *params) {
 
   /* Read the number of elements */
-  const int n_parts = parser_get_opt_param_int(params, "GEARInitialMassFunction:number_function_part", imf->n_parts);
+  const int n_parts = parser_get_opt_param_int(
+      params, "GEARInitialMassFunction:number_function_part", imf->n_parts);
 
   const int n_parts_changed = n_parts != imf->n_parts;
   imf->n_parts = n_parts;
@@ -393,28 +407,27 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
   const char *exponent_name = "GEARInitialMassFunction:exponents";
   if (n_parts_changed) {
     parser_get_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
-  }
-  else {
-    parser_get_opt_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
+  } else {
+    parser_get_opt_param_float_array(params, exponent_name, imf->n_parts,
+                                     imf->exp);
   }
 
   /* Reallocate the mass limits memory */
   if (n_parts_changed) {
     free(imf->mass_limits);
-    if ((imf->mass_limits = (float *)malloc(sizeof(float) * (imf->n_parts + 1))) ==
-        NULL)
+    if ((imf->mass_limits =
+             (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
       error("Failed to allocate the IMF masses.");
   }
 
   /* Read the mass limits */
   const char *mass_limits_name = "GEARInitialMassFunction:mass_limits_msun";
   if (n_parts_changed) {
-    parser_get_param_float_array(params, mass_limits_name,
-				 imf->n_parts + 1, imf->mass_limits);
-  }
-  else {
-    parser_get_opt_param_float_array(params, mass_limits_name,
-				     imf->n_parts + 1, imf->mass_limits);
+    parser_get_param_float_array(params, mass_limits_name, imf->n_parts + 1,
+                                 imf->mass_limits);
+  } else {
+    parser_get_opt_param_float_array(params, mass_limits_name, imf->n_parts + 1,
+                                     imf->mass_limits);
   }
 }
 
@@ -427,8 +440,8 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_read_fro
  * @param params The #swift_params.
  */
 __attribute__((always_inline)) INLINE static void initial_mass_function_init(
-    struct initial_mass_function* imf, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params) {
+    struct initial_mass_function *imf, const struct phys_const *phys_const,
+    const struct unit_system *us, struct swift_params *params) {
 
   /* Read the parameters from the yields table */
   initial_mass_function_read_from_table(imf, params);
@@ -442,73 +455,77 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_init(
 
   /* Compute the coefficients */
   initial_mass_function_compute_coefficients(imf);
-
 }
 
 /**
- * @brief Write a initial_mass_function struct to the given FILE as a stream of bytes.
+ * @brief Write a initial_mass_function struct to the given FILE as a stream of
+ * bytes.
  *
- * Here we are only writing the arrays, everything else has been copied in the feedback.
+ * Here we are only writing the arrays, everything else has been copied in the
+ * feedback.
  *
  * @param imf the struct
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void initial_mass_function_dump(
-    const struct initial_mass_function* imf, FILE* stream, const struct stellar_model *sm) {
+    const struct initial_mass_function *imf, FILE *stream,
+    const struct stellar_model *sm) {
 
   /* Dump the mass limits. */
   if (imf->mass_limits != NULL) {
-    restart_write_blocks((void*)imf->mass_limits, sizeof(float), imf->n_parts + 1,
-			 stream, "imf_mass_limits", "imf_mass_limits");
+    restart_write_blocks((void *)imf->mass_limits, sizeof(float),
+                         imf->n_parts + 1, stream, "imf_mass_limits",
+                         "imf_mass_limits");
   }
 
   /*! Dump the exponents. */
   if (imf->exp != NULL) {
-    restart_write_blocks((void*)imf->exp, sizeof(float), imf->n_parts,
-			 stream, "imf_exponents", "imf_exponents");
+    restart_write_blocks((void *)imf->exp, sizeof(float), imf->n_parts, stream,
+                         "imf_exponents", "imf_exponents");
   }
 
   /*! Dump the coefficients. */
   if (imf->coef != NULL) {
-    restart_write_blocks((void*)imf->coef, sizeof(float), imf->n_parts,
-			 stream, "imf_coef", "imf_coef");
+    restart_write_blocks((void *)imf->coef, sizeof(float), imf->n_parts, stream,
+                         "imf_coef", "imf_coef");
   }
 }
 
-
 /**
- * @brief Restore a initial_mass_function struct from the given FILE as a stream of
- * bytes.
+ * @brief Restore a initial_mass_function struct from the given FILE as a stream
+ * of bytes.
  *
- * Here we are only writing the arrays, everything else has been copied in the feedback.
+ * Here we are only writing the arrays, everything else has been copied in the
+ * feedback.
  *
  * @param imf the struct
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void initial_mass_function_restore(
-    struct initial_mass_function* imf, FILE* stream, const struct stellar_model *sm) {
+    struct initial_mass_function *imf, FILE *stream,
+    const struct stellar_model *sm) {
 
   /* Restore the mass limits */
   if (imf->mass_limits != NULL) {
     imf->mass_limits = (float *)malloc(sizeof(float) * imf->n_parts + 1);
-    restart_read_blocks((void*)imf->mass_limits, sizeof(float), imf->n_parts + 1, stream,
-			NULL, "imf_mass_limits");
+    restart_read_blocks((void *)imf->mass_limits, sizeof(float),
+                        imf->n_parts + 1, stream, NULL, "imf_mass_limits");
   }
 
   /* Restore the exponents */
   if (imf->exp != NULL) {
     imf->exp = (float *)malloc(sizeof(float) * imf->n_parts);
-    restart_read_blocks((void*)imf->exp, sizeof(float), imf->n_parts, stream,
-			NULL, "imf_exponents");
+    restart_read_blocks((void *)imf->exp, sizeof(float), imf->n_parts, stream,
+                        NULL, "imf_exponents");
   }
 
   /* Restore the coefficients */
   if (imf->coef != NULL) {
     imf->coef = (float *)malloc(sizeof(float) * imf->n_parts);
-    restart_read_blocks((void*)imf->coef, sizeof(float), imf->n_parts, stream,
-			NULL, "imf_coef");
+    restart_read_blocks((void *)imf->coef, sizeof(float), imf->n_parts, stream,
+                        NULL, "imf_coef");
   }
 }
 
@@ -518,7 +535,7 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_restore(
  * @param imf the #initial_mass_function.
  */
 __attribute__((always_inline)) INLINE static void initial_mass_function_clean(
-    struct initial_mass_function* imf) {
+    struct initial_mass_function *imf) {
 
   /* Free the pointers */
   free(imf->mass_limits);
@@ -531,5 +548,4 @@ __attribute__((always_inline)) INLINE static void initial_mass_function_clean(
   imf->coef = NULL;
 }
 
-
-#endif // SWIFT_INITIAL_MASS_FUNCTION_GEAR_H
+#endif  // SWIFT_INITIAL_MASS_FUNCTION_GEAR_H

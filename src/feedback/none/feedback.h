@@ -34,8 +34,8 @@
  * @param cosmo The #cosmology.
  */
 __attribute__((always_inline)) INLINE static void feedback_update_part(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct engine *restrict e) {}
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct engine* restrict e) {}
 
 /**
  * @brief Prepares a s-particle for its feedback interactions
@@ -150,9 +150,9 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const struct phys_const* phys_const,
-    const double star_age_beg_step, const double dt, const double time,
-    const integertime_t ti_begin, const int with_cosmology) {}
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {}
 
 /**
  * @brief Will this star particle want to do feedback during the next time-step?

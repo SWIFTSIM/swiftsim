@@ -64,9 +64,9 @@ struct interpolation_1d {
  * @params boundary_condition The type of #interpolate_boundary_condition.
  */
 __attribute__((always_inline)) static INLINE void interpolate_1d_init(
-    struct interpolation_1d *interp, float xmin, float xmax,
-    int N, float log_data_xmin, float step_size, int N_data,
-    const float *data, enum interpolate_boundary_condition boundary_condition) {
+    struct interpolation_1d *interp, float xmin, float xmax, int N,
+    float log_data_xmin, float step_size, int N_data, const float *data,
+    enum interpolate_boundary_condition boundary_condition) {
 
   /* Save the variables */
   interp->N = N;
@@ -80,7 +80,7 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_init(
     error("Failed to allocate memory for the interpolation");
 
   /* Interpolate the data */
-  for(int i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     const float log_x = xmin + i * interp->dx;
     const float x_j = (log_x - log_data_xmin) / step_size;
 
@@ -88,32 +88,31 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_init(
     if (x_j < 0) {
       switch (boundary_condition) {
         case boundary_condition_error:
-	  error("Cannot extrapolate");
-	  break;
+          error("Cannot extrapolate");
+          break;
         case boundary_condition_zero:
-	  interp->data[i] = 0;
-	  break;
+          interp->data[i] = 0;
+          break;
         case boundary_condition_zero_const:
-	  interp->data[i] = 0;
-	  break;
+          interp->data[i] = 0;
+          break;
         default:
-	  error("Interpolation type not implemented");
+          error("Interpolation type not implemented");
       }
       continue;
-    }
-    else if (x_j >= N_data) {
+    } else if (x_j >= N_data) {
       switch (boundary_condition) {
         case boundary_condition_error:
-	  error("Cannot extrapolate");
-	  break;
+          error("Cannot extrapolate");
+          break;
         case boundary_condition_zero:
-	  interp->data[i] = 0;
-	  break;
+          interp->data[i] = 0;
+          break;
         case boundary_condition_zero_const:
-	  interp->data[i] = interp->data[i-1];
-	  break;
+          interp->data[i] = interp->data[i - 1];
+          break;
         default:
-	  error("Interpolation type not implemented");
+          error("Interpolation type not implemented");
       }
       continue;
     }
@@ -121,9 +120,8 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_init(
     /* Interpolate i */
     const int j = x_j;
     const float f = x_j - j;
-    interp->data[i] = (1. - f) * data[j] + f * data[j+1];
+    interp->data[i] = (1. - f) * data[j] + f * data[j + 1];
   }
-
 }
 
 /**
@@ -146,33 +144,30 @@ __attribute__((always_inline)) static INLINE float interpolate_1d(
   if (i < 0) {
     switch (interp->boundary_condition) {
       case boundary_condition_error:
-	error("Cannot extrapolate");
-	break;
+        error("Cannot extrapolate");
+        break;
       case boundary_condition_zero:
       case boundary_condition_zero_const:
-	return 0;
+        return 0;
       default:
-	error("Interpolation type not implemented");
+        error("Interpolation type not implemented");
     }
-  }
-  else if (i >= interp->N - 1) {
+  } else if (i >= interp->N - 1) {
     switch (interp->boundary_condition) {
       case boundary_condition_error:
-	error("Cannot extrapolate");
-	break;
+        error("Cannot extrapolate");
+        break;
       case boundary_condition_zero:
-	return 0;
+        return 0;
       case boundary_condition_zero_const:
-	return interp->data[interp->N-1];
+        return interp->data[interp->N - 1];
       default:
-	error("Interpolation type not implemented");
+        error("Interpolation type not implemented");
     }
   }
 
   /* interpolate */
-  return interp->data[idx] * (1. - dx) +
-    interp->data[idx+1] * dx;
-  
+  return interp->data[idx] * (1. - dx) + interp->data[idx + 1] * dx;
 }
 
 /**
@@ -184,19 +179,17 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_print(
     const struct interpolation_1d *interp) {
 
   message("Interpolation between %g and %g", interp->xmin,
-	  interp->xmin + interp->dx * interp->N);
+          interp->xmin + interp->dx * interp->N);
 
-  message("Contains %i values and use the boundary condition %i",
-	  interp->N, interp->boundary_condition);
+  message("Contains %i values and use the boundary condition %i", interp->N,
+          interp->boundary_condition);
 
   /* Print values */
-  for(int i = 0; i < interp->N; i++) {
+  for (int i = 0; i < interp->N; i++) {
     float x = interp->xmin + i * interp->dx;
     message("%.2g: %g", x, interp->data[i]);
   }
 }
-
-
 
 /**
  * @brief Cleanup the #interpolation_1d structure.
@@ -211,4 +204,4 @@ __attribute__((always_inline)) static INLINE void interpolate_1d_free(
   interp->data = NULL;
 }
 
-#endif // SWIFT_GEAR_INTERPOLATION_H
+#endif  // SWIFT_GEAR_INTERPOLATION_H
