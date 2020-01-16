@@ -86,13 +86,13 @@ __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(
     const float r2, const float *dx, const float hi, const float hj,
     struct spart *restrict si, struct part *restrict pj,
-    struct xpart *restrict xpj, const struct feedback_props *fp,
+    struct xpart *restrict xpj,
     const struct cosmology *restrict cosmo, const integertime_t ti_current) {
 
-  const int number_supernovae =
-      si->feedback_data.number_snia + si->feedback_data.number_snii;
+  const double e_sn = si->feedback_data.energy_ejected;
+
   /* Do we have supernovae? */
-  if (number_supernovae == 0) {
+  if (e_sn == 0) {
     return;
   }
 
@@ -120,10 +120,8 @@ runner_iact_nonsym_feedback_apply(
   const double new_mass = mj + dm;
 
   /* Energy received */
-  const double e_sn = fp->energy_per_supernovae;
   // TODO compute inverse before feedback loop
-  const double mu_sn = number_supernovae * e_sn;
-  const double du = mu_sn * weight / new_mass;
+  const double du = e_sn * weight / new_mass;
 
   xpj->feedback_data.delta_mass += dm;
   xpj->feedback_data.delta_u += du;
