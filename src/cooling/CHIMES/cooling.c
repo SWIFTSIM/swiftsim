@@ -499,7 +499,7 @@ void chimes_update_gas_vars(const double u_cgs,
       if ((elem != element_S) && (elem != element_Ca)) 
 	{
 	  totmass += metal_fraction[element_from_table_to_code(elem)]; 
-	  if (elem > element_He) 
+	  if ((elem != element_H) && (elem != element_He)) 
 	    metalmass += metal_fraction[element_from_table_to_code(elem)]; 
 	}
       else if (elem == element_S) 

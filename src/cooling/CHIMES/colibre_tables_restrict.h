@@ -158,10 +158,17 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
    *
    * BUT: if e.g. Carbon is twice as abundant as the solar abundance ratio,
    * i.e. nC / nH = 0.02 * (nC/nH)_sol for the overall metallicity of 0.01,
-   * the Carbon cooling rate is multiplied by 2 */
+   * the Carbon cooling rate is multiplied by 2 
+   * 
+   * We only do this if we are not in the primodial metallicity bin in which 
+   * case the ratio to solar should be 0. 
+   */
 
   for (int i = 0; i < colibre_cooling_N_elementtypes; i++) {
-    if ((met_index > 0) || (i <= element_He)) { 
+
+    /* Are we considering a metal and are *not* in the primodial metallicity
+     * bin? Or are we looking at H or He? */
+    if ((met_index > 0) || (i == element_H) || (i == element_He)) { 
 
       /* Get min/max abundances */
       const float log_nx_nH_min = table->LogAbundances[cooling_row_major_index_2d(
@@ -177,14 +184,17 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
 		table->indxZsol, i, colibre_cooling_N_metallicity,
 		colibre_cooling_N_elementtypes)];
 
-      /* Interpolate ! */
+      /* Interpolate ! (linearly in log-space) */
       const float log_nx_nH =
         (log_nx_nH_min * (1.f - d_met) + log_nx_nH_max * d_met) - log_nx_nH_sol;
 
       ratio_solar[i] *= exp10f(-log_nx_nH);
-    }
-    else 
+
+    } else { 
+      
+      /* Primordial bin --> Z/Z_sun is 0 for that element */
       ratio_solar[i] = 0.0; 
+    }
   }
 
   /* at this point ratio_solar is (nx/nH) / (nx/nH)_table [Z],
