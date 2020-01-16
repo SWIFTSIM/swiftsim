@@ -67,12 +67,12 @@ INLINE static void task_order_addunlock_cooling(struct scheduler *s,
  * @param e The #engine containing information about the current time.
  * @return 1 if the #cell contains at least an active particle, 0 otherwise.
  */
-__attribute__((always_inline)) INLINE static int task_order_cell_is_active_cooling(
-    const struct cell *c, const struct engine *e) {
+__attribute__((always_inline)) INLINE static int
+task_order_cell_is_active_cooling(const struct cell *c,
+                                  const struct engine *e) {
 
   return cell_is_active_hydro(c, e);
 }
-
 
 /**
  * @brief Does this particle need to do the cooling now ?
@@ -81,8 +81,9 @@ __attribute__((always_inline)) INLINE static int task_order_cell_is_active_cooli
  * @param e The #engine containing information about the current time.
  * @return 1 if the #part is active, 0 otherwise.
  */
-__attribute__((always_inline)) INLINE static int task_order_part_is_active_cooling(
-    const struct part *p, const struct engine *e) {
+__attribute__((always_inline)) INLINE static int
+task_order_part_is_active_cooling(const struct part *p,
+                                  const struct engine *e) {
   return part_is_active(p, e);
 }
 

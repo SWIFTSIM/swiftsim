@@ -41,8 +41,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
  * @param cosmo The #cosmology.
  */
 __attribute__((always_inline)) INLINE static void feedback_update_part(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct engine *restrict e) {}
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct engine* restrict e) {}
 
 /**
  * @brief Should this particle be doing any feedback-related operation?
@@ -179,9 +179,9 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
-    const struct phys_const* phys_const,
-    const double star_age_beg_step, const double dt, const double time,
-    const integertime_t ti_begin, const int with_cosmology) {
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");

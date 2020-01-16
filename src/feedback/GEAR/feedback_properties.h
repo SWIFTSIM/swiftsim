@@ -52,7 +52,8 @@ __attribute__((always_inline)) INLINE static void feedback_props_print(
   }
 
   /* Print the feedback properties */
-  message("Energy per supernovae = %.2g", feedback_props->energy_per_supernovae);
+  message("Energy per supernovae = %.2g",
+          feedback_props->energy_per_supernovae);
   message("Yields table = %s", feedback_props->filename);
 
   /* Print the stellar model */
@@ -77,7 +78,8 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
     const struct hydro_props* hydro_props, const struct cosmology* cosmo) {
 
   /* Supernovae energy */
-  double e_feedback = parser_get_param_double(params, "GEARFeedback:supernovae_energy_erg");
+  double e_feedback =
+      parser_get_param_double(params, "GEARFeedback:supernovae_energy_erg");
   e_feedback /= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
   fp->energy_per_supernovae = e_feedback;
 
@@ -85,8 +87,8 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   parser_get_param_string(params, "GEARFeedback:yields_table", fp->filename);
 
   /* Initialize the stellar model */
-  stellar_evolution_props_init(&fp->stellar_model, phys_const,
-			       us, params, cosmo);
+  stellar_evolution_props_init(&fp->stellar_model, phys_const, us, params,
+                               cosmo);
 
   /* Print the stellar properties */
   feedback_props_print(fp);

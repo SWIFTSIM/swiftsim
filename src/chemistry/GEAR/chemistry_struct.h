@@ -41,7 +41,6 @@ struct chemistry_part_data {
 
   /*! Smoothed fraction of the particle mass in a given element */
   float smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT];
-
 };
 
 /**

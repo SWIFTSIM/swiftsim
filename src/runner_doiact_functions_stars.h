@@ -47,7 +47,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
 
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
+  const struct feedback_props *fp = e->feedback_props;
 #endif
 
   /* Anything to do here? */
@@ -150,7 +150,7 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
   const struct cosmology *cosmo = e->cosmology;
 
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
+  const struct feedback_props *fp = e->feedback_props;
 #endif
 
   /* Anything to do here? */
@@ -257,7 +257,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   const struct cosmology *cosmo = e->cosmology;
 
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-  const struct feedback_props* fp = e->feedback_props;
+  const struct feedback_props *fp = e->feedback_props;
 #endif
 
   /* Cosmological terms */
@@ -837,7 +837,6 @@ void DOSELF1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
-
 
   /* Cosmological terms */
   const float a = cosmo->a;

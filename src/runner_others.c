@@ -161,8 +161,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
   double time;
   if (with_cosmology) {
     time = cosmo->time;
-  }
-  else {
+  } else {
     time = e->time;
   }
 
@@ -204,8 +203,8 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 
         /* Let's cool ! */
         cooling_cool_part(constants, us, cosmo, hydro_props,
-                          entropy_floor_props, cooling_func, p, xp, time, dt_cool,
-                          dt_therm);
+                          entropy_floor_props, cooling_func, p, xp, time,
+                          dt_cool, dt_therm);
         /* Apply the feedback */
         feedback_update_part(p, xp, e);
       }

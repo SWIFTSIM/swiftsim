@@ -383,7 +383,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
                        struct part *restrict p, struct xpart *restrict xp,
-                       const double time, const float dt, const float dt_therm) {
+                       const double time, const float dt,
+                       const float dt_therm) {
 
   /* No cooling happens over zero time */
   if (dt == 0.) return;
@@ -558,7 +559,7 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
 __attribute__((always_inline)) INLINE void cooling_first_init_part(
     const struct phys_const *restrict phys_const,
     const struct unit_system *restrict us,
-    const struct hydro_props* hydro_props,
+    const struct hydro_props *hydro_props,
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *restrict cooling,
     const struct part *restrict p, struct xpart *restrict xp) {

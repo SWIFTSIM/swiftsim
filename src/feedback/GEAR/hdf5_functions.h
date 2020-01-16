@@ -28,15 +28,17 @@
  *
  * @param grp The group from which to read.
  * @param name The name of the attribute to read.
- * @param data (output) The attribute read from the HDF5 group (need to be allocated).
+ * @param data (output) The attribute read from the HDF5 group (need to be
+ * allocated).
  * @param number_element Number of elements in the attribute.
  * @param size_per_element Maximal size per element in data.
  *
  * Calls #error() if an error occurs.
  */
-__attribute__((always_inline)) INLINE static void io_read_string_array_attribute(
-    hid_t grp, const char* name, void* data, hsize_t number_element,
-    hsize_t size_per_element) {
+__attribute__((always_inline)) INLINE static void
+io_read_string_array_attribute(hid_t grp, const char *name, void *data,
+                               hsize_t number_element,
+                               hsize_t size_per_element) {
 
   /* Open attribute */
   const hid_t h_attr = H5Aopen(grp, name, H5P_DEFAULT);
@@ -47,8 +49,10 @@ __attribute__((always_inline)) INLINE static void io_read_string_array_attribute
 
   /* Check if correct number of element */
   if (count != number_element) {
-    error("Error found a different number of elements than expected (%lli != %lli) in attribute %s",
-	  count, number_element, name);
+    error(
+        "Error found a different number of elements than expected (%lli != "
+        "%lli) in attribute %s",
+        count, number_element, name);
   }
 
   /* Get the string length */
@@ -73,7 +77,7 @@ __attribute__((always_inline)) INLINE static void io_read_string_array_attribute
   if (h_err < 0) error("Error while reading attribute '%s'", name);
 
   /* Copy the attribute correctly */
-  for(hsize_t i = 0; i < number_element; i++) {
+  for (hsize_t i = 0; i < number_element; i++) {
     char *src = tmp + i * sdim;
     char *dest = data + i * size_per_element;
     memcpy(dest, src, sdim);
@@ -94,12 +98,12 @@ __attribute__((always_inline)) INLINE static void io_read_string_array_attribute
  *
  */
 __attribute__((always_inline)) INLINE static void h5_open_group(
-    struct swift_params* params, char *group_name, hid_t *file_id, hid_t *group_id) {
+    struct swift_params *params, char *group_name, hid_t *file_id,
+    hid_t *group_id) {
 
   /* Get filename. */
   char filename[256];
-  parser_get_param_string(params, "GEARFeedback:yields_table",
-			  filename);
+  parser_get_param_string(params, "GEARFeedback:yields_table", filename);
 
   /* Open file. */
   *file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -108,9 +112,7 @@ __attribute__((always_inline)) INLINE static void h5_open_group(
   /* Open group. */
   *group_id = H5Gopen(*file_id, group_name, H5P_DEFAULT);
   if (*group_id < 0) error("unable to open group %s.\n", group_name);
-  
 }
-
 
 /**
  * @brief Close a group in the yields table.
@@ -130,4 +132,4 @@ __attribute__((always_inline)) INLINE static void h5_close_group(
   status = H5Fclose(file_id);
   if (status < 0) error("error closing file.");
 }
-#endif // SWIFT_HDF5_FUNCTIONS_GEAR_H
+#endif  // SWIFT_HDF5_FUNCTIONS_GEAR_H

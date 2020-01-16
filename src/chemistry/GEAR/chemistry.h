@@ -50,11 +50,11 @@ INLINE static void chemistry_copy_star_formation_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp) {
 
   /* Store the chemistry struct in the star particle */
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-    sp->chemistry_data.metal_mass_fraction[i] = p->chemistry_data.smoothed_metal_mass_fraction[i];
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    sp->chemistry_data.metal_mass_fraction[i] =
+        p->chemistry_data.smoothed_metal_mass_fraction[i];
   }
 }
-
 
 /**
  * @brief Prints the properties of the chemistry model to stdout.
@@ -69,18 +69,20 @@ static INLINE void chemistry_print_backend(
 }
 
 /**
- * @brief Read the solar abundances and scale with them the initial metallicities.
+ * @brief Read the solar abundances and scale with them the initial
+ * metallicities.
  *
  * @param parameter_file The parsed parameter file.
  * @param data The properties to initialise.
  */
-static INLINE void chemistry_scale_initial_metallicities(struct swift_params* parameter_file,
-							 struct chemistry_global_data *data) {
+static INLINE void chemistry_scale_initial_metallicities(
+    struct swift_params* parameter_file, struct chemistry_global_data* data) {
 #ifdef HAVE_HDF5
 
   /* Get the yields table */
   char filename[DESCRIPTION_BUFFER_SIZE];
-  parser_get_param_string(parameter_file, "GEARFeedback:yields_table", filename);
+  parser_get_param_string(parameter_file, "GEARFeedback:yields_table",
+                          filename);
 
   /* Open file. */
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -91,8 +93,9 @@ static INLINE void chemistry_scale_initial_metallicities(struct swift_params* pa
   if (group_id < 0) error("unable to open group Data.\n");
 
   /* Read the data */
-  float *sol_ab = (float*) malloc(sizeof(float) * CHEMISTRY_ELEMENT_COUNT);
-  io_read_array_attribute(group_id, "SolarMassAbundances", FLOAT, sol_ab, CHEMISTRY_ELEMENT_COUNT);
+  float* sol_ab = (float*)malloc(sizeof(float) * CHEMISTRY_ELEMENT_COUNT);
+  io_read_array_attribute(group_id, "SolarMassAbundances", FLOAT, sol_ab,
+                          CHEMISTRY_ELEMENT_COUNT);
 
   /* Close group */
   hid_t status = H5Gclose(group_id);
@@ -102,10 +105,9 @@ static INLINE void chemistry_scale_initial_metallicities(struct swift_params* pa
   status = H5Fclose(file_id);
   if (status < 0) error("error closing file.");
 
-
   /* Scale the initial metallicities */
   char txt[DESCRIPTION_BUFFER_SIZE] = "Scaling initial metallicities by:";
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     data->initial_metallicities[i] *= sol_ab[i];
     char tmp[10];
     sprintf(tmp, " %.2g", sol_ab[i]);
@@ -140,8 +142,8 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
       parameter_file, "GEARChemistry:initial_metallicity");
 
   /* Set the initial metallicities */
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
-      data->initial_metallicities[i] = initial_metallicity;
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+    data->initial_metallicities[i] = initial_metallicity;
   }
 
   /* Check if need to scale the initial metallicity */
@@ -238,10 +240,11 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
                                  const struct cosmology* cosmo) {
 
   /* Set the smoothed fractions with the non smoothed fractions */
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] =
-      p->chemistry_data.metal_mass_fraction[i];
-    p->chemistry_data.metal_mass[i] = p->chemistry_data.metal_mass_fraction[i] * p->mass;
+        p->chemistry_data.metal_mass_fraction[i];
+    p->chemistry_data.metal_mass[i] =
+        p->chemistry_data.metal_mass_fraction[i] * p->mass;
   }
 }
 
@@ -283,12 +286,11 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     const struct chemistry_global_data* data, struct part* restrict p,
     struct xpart* restrict xp) {
 
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.metal_mass[i] = data->initial_metallicities[i] * p->mass;
   }
 
   chemistry_init_part(p, data);
-
 }
 
 /**
@@ -301,7 +303,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     const struct chemistry_global_data* data, struct spart* restrict sp) {
 
-  for(int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
     sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicities[i];
   }
 }
@@ -362,7 +364,6 @@ __attribute__((always_inline)) INLINE static void chemistry_split_part(
   error("Loic: to be implemented");
 }
 
-
 /**
  * @brief Returns the total metallicity (metal mass fraction) of the
  * star particle to be used in feedback/enrichment related routines.
@@ -384,11 +385,10 @@ chemistry_get_total_metal_mass_fraction_for_feedback(
  */
 __attribute__((always_inline)) INLINE static float const*
 chemistry_get_metal_mass_fraction_for_feedback(
-                                               const struct spart* restrict sp) {
+    const struct spart* restrict sp) {
 
   return sp->chemistry_data.metal_mass_fraction;
 }
-
 
 /**
  * @brief Returns the total metallicity (metal mass fraction) of the
@@ -398,11 +398,11 @@ chemistry_get_metal_mass_fraction_for_feedback(
  */
 __attribute__((always_inline)) INLINE static float
 chemistry_get_total_metal_mass_fraction_for_cooling(
-                                                    const struct part* restrict p) {
+    const struct part* restrict p) {
 
-  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+  return p->chemistry_data
+      .smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
-
 
 /**
  * @brief Returns the abundance array (metal mass fractions) of the
@@ -424,11 +424,11 @@ chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) {
  */
 __attribute__((always_inline)) INLINE static float
 chemistry_get_total_metal_mass_fraction_for_star_formation(
-                                                           const struct part* restrict p) {
+    const struct part* restrict p) {
 
-  return p->chemistry_data.smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
+  return p->chemistry_data
+      .smoothed_metal_mass_fraction[CHEMISTRY_ELEMENT_COUNT - 1];
 }
-
 
 /**
  * @brief Returns the abundance array (metal mass fractions) of the
@@ -438,7 +438,7 @@ chemistry_get_total_metal_mass_fraction_for_star_formation(
  */
 __attribute__((always_inline)) INLINE static float const*
 chemistry_get_metal_mass_fraction_for_star_formation(
-                                                     const struct part* restrict p) {
+    const struct part* restrict p) {
 
   return p->chemistry_data.smoothed_metal_mass_fraction;
 }

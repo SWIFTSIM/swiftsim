@@ -35,15 +35,14 @@ __attribute__((always_inline)) INLINE static void lifetime_print(
     return;
   }
 
-  message("Quadratic terms: %.2g %.2g %.2g",
-          lf->quadratic[0], lf->quadratic[1], lf->quadratic[2]);
+  message("Quadratic terms: %.2g %.2g %.2g", lf->quadratic[0], lf->quadratic[1],
+          lf->quadratic[2]);
 
-  message("Linear terms: %.2g %.2g %.2g",
-          lf->linear[0], lf->linear[1], lf->linear[2]);
+  message("Linear terms: %.2g %.2g %.2g", lf->linear[0], lf->linear[1],
+          lf->linear[2]);
 
-  message("Constant terms: %.2g %.2g %.2g",
-          lf->constant[0], lf->constant[1], lf->constant[2]);
-
+  message("Constant terms: %.2g %.2g %.2g", lf->constant[0], lf->constant[1],
+          lf->constant[2]);
 }
 
 /**
@@ -55,15 +54,22 @@ __attribute__((always_inline)) INLINE static void lifetime_print(
  *
  * @return The star's lifetime (in log10(Myr)).
  */
-__attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_from_mass(
-    const struct lifetime *life, float log_mass, float metallicity) {
+__attribute__((always_inline)) INLINE static float
+lifetime_get_log_lifetime_from_mass(const struct lifetime* life, float log_mass,
+                                    float metallicity) {
 
   /* Compute quadratic term */
-  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
+  const float quadratic =
+      (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity +
+      life->quadratic[2];
   /* Compute linear term */
-  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
+  const float linear =
+      (life->linear[0] * metallicity + life->linear[1]) * metallicity +
+      life->linear[2];
   /* Compute constant term */
-  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
+  const float constant =
+      (life->constant[0] * metallicity + life->constant[1]) * metallicity +
+      life->constant[2];
 
   /* Compute lifetime */
   return (quadratic * log_mass + linear) * log_mass + constant;
@@ -78,15 +84,22 @@ __attribute__((always_inline)) INLINE static float lifetime_get_log_lifetime_fro
  *
  * @return The star's mass (in log10(solMass))
  */
-__attribute__((always_inline)) INLINE static float lifetime_get_log_mass_from_lifetime(
-    const struct lifetime *life, float log_time, float metallicity) {
+__attribute__((always_inline)) INLINE static float
+lifetime_get_log_mass_from_lifetime(const struct lifetime* life, float log_time,
+                                    float metallicity) {
 
   /* Compute quadratic term */
-  const float quadratic = (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity + life->quadratic[2];
+  const float quadratic =
+      (life->quadratic[0] * metallicity + life->quadratic[1]) * metallicity +
+      life->quadratic[2];
   /* Compute linear term */
-  const float linear = (life->linear[0] * metallicity + life->linear[1]) * metallicity + life->linear[2];
+  const float linear =
+      (life->linear[0] * metallicity + life->linear[1]) * metallicity +
+      life->linear[2];
   /* Compute constant term */
-  const float constant = (life->constant[0] * metallicity + life->constant[1]) * metallicity + life->constant[2];
+  const float constant =
+      (life->constant[0] * metallicity + life->constant[1]) * metallicity +
+      life->constant[2];
 
   /* Compute the "c" with the time */
   const float c_t = constant - log_time;
@@ -97,17 +110,14 @@ __attribute__((always_inline)) INLINE static float lifetime_get_log_mass_from_li
 
     /* Avoid complex number should not happen in real simulation */
     if (delta < 0) {
-      return - linear / (2. * quadratic);
-    }
-    else {
+      return -linear / (2. * quadratic);
+    } else {
       return (-linear - sqrt(delta)) / (2. * quadratic);
     }
-  }
-  else {
-    return - c_t / linear;
+  } else {
+    return -c_t / linear;
   }
 }
-
 
 /**
  * @brief Read lifetime parameters from tables.
@@ -124,28 +134,27 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
   h5_open_group(params, "Data/LiveTimes", &file_id, &group_id);
 
   /* Allocate the temporary array */
-  float *tmp;
-  if ((tmp = (float *)malloc(sizeof(float) * 9)) == NULL)
+  float* tmp;
+  if ((tmp = (float*)malloc(sizeof(float) * 9)) == NULL)
     error("Failed to allocate the temporary array.");
 
   /* Read the coefficients */
   io_read_array_dataset(group_id, "coeff_z", FLOAT, tmp, 9);
-  
+
   /* Copy the coefficents */
   const int dim = 3;
-  for(int i = 0; i < dim; i++) {
+  for (int i = 0; i < dim; i++) {
     lt->quadratic[i] = tmp[i];
-    lt->linear[i] = tmp[i+dim];
-    lt->constant[i] = tmp[i+2*dim];
+    lt->linear[i] = tmp[i + dim];
+    lt->constant[i] = tmp[i + 2 * dim];
   }
 
   /* Change units from yr into Myr */
-  lt->constant[dim-1] -= 6;
+  lt->constant[dim - 1] -= 6;
 
   /* Cleanup everything */
   free(tmp);
   h5_close_group(file_id, group_id);
-
 }
 
 /**
@@ -158,14 +167,16 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_params(
     struct lifetime* lt, struct swift_params* params) {
 
   /* Read quadratic terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3, lt->quadratic);
+  parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3,
+                                   lt->quadratic);
 
   /* Read linear terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:linear", 3, lt->linear);
+  parser_get_opt_param_float_array(params, "GEARLifetime:linear", 3,
+                                   lt->linear);
 
   /* Read constant terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:constant", 3, lt->constant);
-
+  parser_get_opt_param_float_array(params, "GEARLifetime:constant", 3,
+                                   lt->constant);
 }
 
 /**
@@ -190,35 +201,35 @@ __attribute__((always_inline)) INLINE static void lifetime_init(
 /**
  * @brief Write a lifetime struct to the given FILE as a stream of bytes.
  *
- * Here we are only writing the arrays, everything else has been copied in the feedback.
+ * Here we are only writing the arrays, everything else has been copied in the
+ * feedback.
  *
  * @param lt the struct
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void lifetime_dump(
-    const struct lifetime* lt, FILE* stream, const struct stellar_model *sm) {
+    const struct lifetime* lt, FILE* stream, const struct stellar_model* sm) {
 
   /* Nothing to do here */
 }
-
 
 /**
  * @brief Restore a lifetime struct from the given FILE as a stream of
  * bytes.
  *
- * Here we are only writing the arrays, everything else has been copied in the feedback.
+ * Here we are only writing the arrays, everything else has been copied in the
+ * feedback.
  *
  * @param lt the struct
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
 __attribute__((always_inline)) INLINE static void lifetime_restore(
-    struct lifetime* lt, FILE* stream, const struct stellar_model *sm) {
+    struct lifetime* lt, FILE* stream, const struct stellar_model* sm) {
 
   /* Nothing to do here */
 }
-
 
 /**
  * @brief Clean the allocated memory.
@@ -226,7 +237,6 @@ __attribute__((always_inline)) INLINE static void lifetime_restore(
  * @param lifetime the #lifetime.
  */
 __attribute__((always_inline)) INLINE static void lifetime_clean(
-    struct lifetime* lifetime) {
-}
+    struct lifetime* lifetime) {}
 
-#endif // SWIFT_LIFETIME_GEAR_H
+#endif  // SWIFT_LIFETIME_GEAR_H

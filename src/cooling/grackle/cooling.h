@@ -184,7 +184,8 @@ __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
   const double alpha = 0.01;
   double dt =
       fabs(cooling_time(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp));
-  cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp, xp, dt);
+  cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp,
+                     xp, dt);
   dt = alpha *
        fabs(cooling_time(phys_const, us, cosmo, &cooling_tmp, &p_tmp, xp));
 
@@ -200,7 +201,8 @@ __attribute__((always_inline)) INLINE static void cooling_compute_equilibrium(
     old = *xp;
 
     /* update chemistry */
-    cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp, xp, dt);
+    cooling_new_energy(phys_const, us, hydro_props, cosmo, &cooling_tmp, &p_tmp,
+                       xp, dt);
   } while (step < max_step && !cooling_converged(xp, &old, conv_limit));
 
   if (step == max_step)
@@ -229,7 +231,7 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     struct xpart* restrict xp) {
 
   xp->cooling_data.radiated_energy = 0.f;
-  xp->cooling_data.time_last_event = - cooling->thermal_time;
+  xp->cooling_data.time_last_event = -cooling->thermal_time;
 
 #if COOLING_GRACKLE_MODE >= 1
   gr_float zero = 1.e-20;
@@ -261,7 +263,8 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
 #endif  // MODE >= 3
 
 #if COOLING_GRACKLE_MODE > 0
-  cooling_compute_equilibrium(phys_const, us, hydro_props, cosmo, cooling, p, xp);
+  cooling_compute_equilibrium(phys_const, us, hydro_props, cosmo, cooling, p,
+                              xp);
 #endif
 }
 
@@ -318,8 +321,8 @@ __attribute__((always_inline)) INLINE static void cooling_print_backend(
  */
 #if COOLING_GRACKLE_MODE > 0
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle1(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   /* HI */
   xp->cooling_data.HI_frac *= rho;
   data->HI_density = &xp->cooling_data.HI_frac;
@@ -345,8 +348,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle1(
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle1(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   data->HI_density = NULL;
   data->HII_density = NULL;
   data->HeI_density = NULL;
@@ -366,8 +369,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle1(
  */
 #if COOLING_GRACKLE_MODE > 1
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle2(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   /* HM */
   xp->cooling_data.HM_frac *= rho;
   data->HM_density = &xp->cooling_data.HM_frac;
@@ -382,8 +385,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle2(
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle2(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   data->HM_density = NULL;
   data->H2I_density = NULL;
   data->H2II_density = NULL;
@@ -400,8 +403,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle2(
  */
 #if COOLING_GRACKLE_MODE > 2
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle3(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   /* DI */
   xp->cooling_data.DI_frac *= rho;
   data->DI_density = &xp->cooling_data.DI_frac;
@@ -413,12 +416,11 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle3(
   /* HDI */
   xp->cooling_data.HDI_frac *= rho;
   data->HDI_density = &xp->cooling_data.HDI_frac;
-
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle3(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   data->DI_density = NULL;
   data->DII_density = NULL;
   data->HDI_density = NULL;
@@ -435,8 +437,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle3(
  */
 #if COOLING_GRACKLE_MODE > 0
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle1(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
 
   /* HI */
   xp->cooling_data.HI_frac = *data->HI_density / rho;
@@ -458,8 +460,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle1(
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle1(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {}
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {}
 #endif
 
 /**
@@ -472,8 +474,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle1(
  */
 #if COOLING_GRACKLE_MODE > 1
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle2(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   /* HM */
   xp->cooling_data.HM_frac = *data->HM_density / rho;
   /* H2I */
@@ -483,8 +485,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle2(
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle2(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {}
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {}
 #endif
 
 /**
@@ -497,8 +499,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle2(
  */
 #if COOLING_GRACKLE_MODE > 2
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle3(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
 
   /* DI */
   xp->cooling_data.DI_frac = *data->DI_density / rho;
@@ -511,8 +513,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle3(
 }
 #else
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle3(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {}
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {}
 #endif
 
 /**
@@ -527,8 +529,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle3(
  * @param rho Particle density
  */
 __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
 
   cooling_copy_to_grackle1(data, p, xp, rho);
   cooling_copy_to_grackle2(data, p, xp, rho);
@@ -542,7 +544,7 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle(
   data->RT_HeII_ionization_rate = NULL;
   data->RT_H2_dissociation_rate = NULL;
 
-  gr_float *metal_density = (gr_float*) malloc(sizeof(gr_float));
+  gr_float* metal_density = (gr_float*)malloc(sizeof(gr_float));
   *metal_density = chemistry_get_total_metal_mass_fraction_for_cooling(p) * rho;
   data->metal_density = metal_density;
 }
@@ -559,8 +561,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_to_grackle(
  * @param rho Particle density
  */
 __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle(
-    grackle_field_data *data, const struct part *p,
-    struct xpart *xp, gr_float rho) {
+    grackle_field_data* data, const struct part* p, struct xpart* xp,
+    gr_float rho) {
   cooling_copy_from_grackle1(data, p, xp, rho);
   cooling_copy_from_grackle2(data, p, xp, rho);
   cooling_copy_from_grackle3(data, p, xp, rho);
@@ -569,7 +571,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle(
 }
 
 /**
- * @brief Apply the self shielding (if needed) by turning on/off the UV background.
+ * @brief Apply the self shielding (if needed) by turning on/off the UV
+ * background.
  *
  * @param cooling The #cooling_function_data used in the run.
  * @param chemistry The #chemistry_data from grackle.
@@ -578,9 +581,8 @@ __attribute__((always_inline)) INLINE static void cooling_copy_from_grackle(
  */
 __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
     const struct cooling_function_data* restrict cooling,
-    chemistry_data* restrict chemistry,
-    const struct part* restrict p,
-    const struct cosmology *cosmo) {
+    chemistry_data* restrict chemistry, const struct part* restrict p,
+    const struct cosmology* cosmo) {
 
   /* Are we using self shielding or UV background? */
   if (!cooling->with_uv_background || cooling->self_shielding_method >= 0) {
@@ -591,8 +593,7 @@ __attribute__((always_inline)) INLINE static void cooling_apply_self_shielding(
   const float rho = hydro_get_physical_density(p, cosmo);
   if (rho > cooling->self_shielding_threshold) {
     chemistry->UVbackground = 0;
-  }
-  else {
+  } else {
     chemistry->UVbackground = 1;
   }
 }
@@ -642,7 +643,7 @@ __attribute__((always_inline)) INLINE static gr_float cooling_new_energy(
   /* general particle data */
   gr_float density = hydro_get_physical_density(p, cosmo);
   gr_float energy = hydro_get_physical_internal_energy(p, xp, cosmo) +
-    dt * hydro_get_physical_internal_energy_dt(p, cosmo);
+                    dt * hydro_get_physical_internal_energy_dt(p, cosmo);
 
   /* We now need to check that we are not going to go below any of the limits */
   const double u_minimal = hydro_props->minimal_internal_energy;
@@ -749,7 +750,6 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
   return cooling_time;
 }
 
-
 /**
  * @brief Apply the cooling to a particle.
  *
@@ -764,8 +764,8 @@ __attribute__((always_inline)) INLINE static gr_float cooling_time(
  */
 __attribute__((always_inline)) INLINE static void cooling_apply(
     struct part* restrict p, struct xpart* restrict xp,
-    const struct cosmology* restrict cosmo,
-    float cooling_du_dt, gr_float u_new) {
+    const struct cosmology* restrict cosmo, float cooling_du_dt,
+    gr_float u_new) {
 
 #ifdef TASK_ORDER_GEAR
   /* Cannot use du / dt as it will be erased before being used */
@@ -817,8 +817,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
 
   /* Calculate energy after dt */
-  gr_float u_new =
-    cooling_new_energy(phys_const, us, hydro_props, cosmo, cooling, p, xp, dt);
+  gr_float u_new = cooling_new_energy(phys_const, us, hydro_props, cosmo,
+                                      cooling, p, xp, dt);
 
   /* We now need to check that we are not going to go below any of the limits */
   const double u_minimal = hydro_props->minimal_internal_energy;
@@ -835,7 +835,8 @@ __attribute__((always_inline)) INLINE static void cooling_cool_part(
   cooling_apply(p, xp, cosmo, cooling_du_dt, u_new);
 
   /* Store the radiated energy */
-  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (cooling_du_dt - hydro_du_dt) * dt;
+  xp->cooling_data.radiated_energy -=
+      hydro_get_mass(p) * (cooling_du_dt - hydro_du_dt) * dt;
 }
 
 /**
@@ -949,8 +950,8 @@ __attribute__((always_inline)) INLINE static void cooling_init_units(
   /* Self shielding */
   if (cooling->self_shielding_method == -1) {
     cooling->self_shielding_threshold *=
-      phys_const->const_proton_mass *
-      pow(units_cgs_conversion_factor(us, UNIT_CONV_LENGTH), 3.);
+        phys_const->const_proton_mass *
+        pow(units_cgs_conversion_factor(us, UNIT_CONV_LENGTH), 3.);
   }
 }
 
