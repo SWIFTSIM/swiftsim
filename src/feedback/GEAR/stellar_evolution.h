@@ -186,16 +186,18 @@ stellar_evolution_compute_discret_feedback_properties(
 
   /* Get the normalization to the average */
   const float normalization =
-    number_snii == 0 ? 0. : number_snii /
-    (supernovae_ii_get_number(&sm->snii, m_end_step, m_beg_step) *
-     m_init);
+      number_snii == 0
+          ? 0.
+          : number_snii /
+                (supernovae_ii_get_number(&sm->snii, m_end_step, m_beg_step) *
+                 m_init);
 
   /* Compute the mass ejected */
   /* SNIa */
   const float mass_snia =
-    (number_snia == 0) ? 0
-    : (supernovae_ia_get_ejected_mass_processed(&sm->snia) *
-       number_snia);
+      (number_snia == 0)
+          ? 0
+          : (supernovae_ia_get_ejected_mass_processed(&sm->snia) * number_snia);
 
   /* SNII */
   const float mass_snii =
@@ -312,9 +314,8 @@ stellar_evolution_evolve_spart(
         supernovae_ia_get_number(&sm->snia, m_end_step, m_beg_step) * m_init;
 
     /* Get the integer number of supernovae */
-    number_snia =
-        stellar_evolution_compute_integer_number_supernovae(
-            sp, number_snia_f, ti_begin, random_number_stellar_feedback);
+    number_snia = stellar_evolution_compute_integer_number_supernovae(
+        sp, number_snia_f, ti_begin, random_number_stellar_feedback);
   }
 
   /* Compute number of SNII */
@@ -325,14 +326,12 @@ stellar_evolution_evolve_spart(
         supernovae_ii_get_number(&sm->snii, m_end_step, m_beg_step) * m_init;
 
     /* Get the integer number of supernovae */
-    number_snii =
-        stellar_evolution_compute_integer_number_supernovae(
-            sp, number_snii_f, ti_begin, random_number_stellar_feedback_2);
+    number_snii = stellar_evolution_compute_integer_number_supernovae(
+        sp, number_snii_f, ti_begin, random_number_stellar_feedback_2);
   }
 
   /* Does this star produce a supernovae? */
-  if (number_snia == 0 && number_snii == 0)
-    return;
+  if (number_snia == 0 && number_snii == 0) return;
 
   sp->feedback_data.number_sn = number_snia + number_snii;
 
