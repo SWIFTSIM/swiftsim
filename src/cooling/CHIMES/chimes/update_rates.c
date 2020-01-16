@@ -1,19 +1,40 @@
-/* This file contains functions to 
- * set up the reaction and 
- * photoionisation rates at the 
- * beginning of the run, based
- * on the given parameters.
- */
+/****************************************************************************
+ * This file is part of CHIMES.
+ * Copyright (c) 2020 Alexander Richings (alexander.j.richings@durham.ac.uk)
+ *
+ * CHIMES is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "chimes_vars.h"
 #include "chimes_proto.h"
 
-/* This routine is called at the beginning of the 
- * integration to set all rate coefficients, 
- * including those that will be held fixed during 
- * the integration. */ 
+/** 
+ * @brief Sets the initial rate coefficients. 
+ * 
+ * Sets the initial rate coefficients. This routine is called 
+ * at the beginning of the integration to set all rate 
+ * coefficients, including those that will be held 
+ * fixed during the integration. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct containing the input data. 
+ */ 
 void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data) 
 { 
   int i, j, NHI_index, NH_eff_index, NHeI_index, NHe_eff_index, NCO_index, NH2_index; 
@@ -267,9 +288,17 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars, struct global
   return; 
 }
 
-
-/* This routine updates the rate coefficients that 
- * can vary during the course of the integration. */ 
+/** 
+ * @brief Update the rate coefficients. 
+ * 
+ * Updates the rate coefficients that can vary 
+ * during the course of the integration. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct containing the input data. 
+ * @param mode Set to 1 if ThermEvolOn == 1 OR the routine has been called from #set_initial_rate_coefficients(); otherwise 0. 
+ */ 
 void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data, int mode) 
 {
   int i, j, T_index, Psi_index, T_dust_index, NH2_index, b_index; 
@@ -405,10 +434,19 @@ void update_rate_coefficients(struct gasVariables *myGasVars, struct globalVaria
   return; 
 } 
 
-/* This routine updates the current rate, i.e. dx_i / dt, 
- * for each reaction. This typically takes the rate coefficient 
- * and multiplies it by the densities of each reactant, although 
- * the exact format depends on the reaction group. */ 
+/** 
+ * @brief Update the current rates. 
+ * 
+ * Updates the current rates, i.e. dx_i / dt, for each 
+ * reaction. This typically takes the rate coefficient 
+ * and multiplies it by the densities of each reactant, 
+ * although the exact format depends on the reaction 
+ * group. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct containing the input data. 
+ */ 
 void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data) 
 { 
   int i, j, xHII_index; 
@@ -532,9 +570,18 @@ void update_rates(struct gasVariables *myGasVars, struct globalVariables *myGlob
   return; 
 }
 
-/* This routine loops through all reactions 
- * and updates the creation and destruction 
- * rates stored in the species structures. */
+/** 
+ * @brief Update the rate vector. 
+ * 
+ * Loops through all reactions and updates the total 
+ * creation and destruction rates stores in the 
+ * #Species_Structure struct. 
+ * 
+ * @param mySpecies The #Species_Structure struct. 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct containing the input data. 
+ */ 
 void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data) 
 {
   int i, j; 
@@ -735,12 +782,21 @@ void update_rate_vector(struct Species_Structure *mySpecies, struct gasVariables
   return; 
 }
 
-
-  /* This function determines which species are to be 
-   * included in the CVODE integration. Here we exclude 
-   * species that contain elements whose abundances are 
-   * zero, even if the element is included in the overall
-   * network. */
+/** 
+ * @brief Sets the species structures. 
+ * 
+ * Determines which species are to be included in 
+ * the CVode integration. Here we exclude species 
+ * that contain elements whose abundnces are zero, 
+ * even if the element is included in the overall 
+ * network. 
+ * 
+ * @param mySpecies The #Species_Structure struct. 
+ * @param myGasVars The #gasVariables struct. 
+ * @param total_network Output size of the full network. 
+ * @param nonmolecular_network Output size of the network without molecules. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void set_species_structures(struct Species_Structure *mySpecies, struct gasVariables *myGasVars, int *total_network, int *nonmolecular_network, struct globalVariables *myGlobalVars)
 {
   int i;
@@ -933,6 +989,14 @@ void set_species_structures(struct Species_Structure *mySpecies, struct gasVaria
     }
 }
 
+/** 
+ * @brief Copies UVB tables from low- to high-redshift bin. 
+ * 
+ * Copies the redshift-dependent UVB tables stored in the 
+ * low-redshift bin into the high-redshift bin. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void redshift_dependent_UVB_copy_lowz_to_hiz(struct globalVariables *myGlobalVars) 
 {
   int i, j, k, l; 
@@ -989,6 +1053,18 @@ void redshift_dependent_UVB_copy_lowz_to_hiz(struct globalVariables *myGlobalVar
     }
 }  
 
+/** 
+ * @brief Interpolates the redshift-dependent UVB. 
+ * 
+ * Interpolates the cross-sections tables for the redshift- 
+ * dependent UVB between the low- and high-redshift bins, 
+ * according to the current redshift. If the current redshift 
+ * does not lie between the two redshift bins that have been 
+ * loaded, or if now UVB tables have been loaded yet, then 
+ * it will first load the necessary tables. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */
 void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars) 
 {
   ChimesFloat low_z, hi_z, dz, dz_m; 

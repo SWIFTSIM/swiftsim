@@ -1,9 +1,38 @@
+/****************************************************************************
+ * This file is part of CHIMES.
+ * Copyright (c) 2020 Alexander Richings (alexander.j.richings@durham.ac.uk)
+ *
+ * CHIMES is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "chimes_vars.h"
 #include "chimes_proto.h"
 
+/** 
+ * @brief Calculates the total number density. 
+ * 
+ * Sums the number densities of all ions and molecules 
+ * in the network to get the total number density. 
+ * 
+ * @param my_abundances Abundance array. 
+ * @param nH Total hydrogen number density. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 ChimesFloat calculate_total_number_density(ChimesFloat *my_abundances, ChimesFloat nH, struct globalVariables *myGlobalVars)
 {
   int i;
@@ -15,6 +44,20 @@ ChimesFloat calculate_total_number_density(ChimesFloat *my_abundances, ChimesFlo
   return result;
 }
 
+/** 
+ * @brief Calculates the mean molecular weight. 
+ * 
+ * Calculates the mean molecular weight from the abundance 
+ * array. This is defined as: 
+ * mu = (1.0 + sum(element_abundances[i] * Z[i])) / sum(abundances[i]). 
+ * Where element_abundances[] are the abundances of He and the metals 
+ * relative to H, Z[] are the atomic masses of each element, and 
+ * abundances[] are the abundances of the individual ions and molecules 
+ * relative to H. 
+ * 
+ * @param myGasVars The gasVariables struct. 
+ * @param myGlobalVars The globalVariables struct. 
+ */ 
 ChimesFloat calculate_mean_molecular_weight(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   ChimesFloat denominator = 0.0;
@@ -26,11 +69,38 @@ ChimesFloat calculate_mean_molecular_weight(struct gasVariables *myGasVars, stru
   return (1.0 + myGasVars->element_abundances[0] * 4.0 + myGasVars->element_abundances[1] * 12.0 + myGasVars->element_abundances[2] * 14.0 + myGasVars->element_abundances[3] * 16.0 + myGasVars->element_abundances[4] * 20.0 + myGasVars->element_abundances[5] * 24.0 + myGasVars->element_abundances[6] * 28.0 + myGasVars->element_abundances[7] * 32.0 + myGasVars->element_abundances[8] * 40.0 + myGasVars->element_abundances[9] * 56.0) / denominator;
 }
 
+/** 
+ * @brief Compton cooling rate. 
+ * 
+ * Calculates the Compton cooling rate from the 
+ * CMB radiation. It returns Lambda/nH^2, in 
+ * units of erg cm^3 s^-1 
+ * 
+ * @param T Gas temperature. 
+ * @param Tcmb CMB temperatures. 
+ * @param xe Electron abundance. 
+ * @param nH Total hydrogen number density. 
+ */ 
 ChimesFloat compton_cooling(ChimesFloat T, ChimesFloat Tcmb, ChimesFloat xe, ChimesFloat nH)
 {
   return 1.017e-37 * pow(Tcmb, 4) * (T - Tcmb) * xe / nH;	/* Lambda/nH^2 */
 }
 
+/** 
+ * @brief OH rotational cooling. 
+ * 
+ * Calculates the cooling rate from rotational 
+ * transitions of the OH molecule. This is calculated 
+ * from Hollenbach and McKee 1979, ApJS, 41, 555 (see 
+ * their equations 6.21 and 6.22, and the parameters 
+ * in their Table 3). 
+ * This function returns Lambda/nH^2, in units of 
+ * erg cm^3 s^-1. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct. 
+ */ 
 ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data)
 {
   ChimesFloat dv, N_tau, tau_T, c_tau, n_cr, ym; 
@@ -53,6 +123,18 @@ ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars, struct globalV
   return myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] * (2.0 * pow(BOLTZMANNCGS * myGasVars->temperature, 2.0) * 2.3e-2 / (myGasVars->nH_tot * 27.0 * BOLTZMANNCGS)) * ((2.0 + ym + 0.6 * pow(ym, 2.0)) / (1.0 + c_tau + (n_cr / myGasVars->nH_tot) + 1.5 * pow(n_cr / myGasVars->nH_tot, 0.5))); 
 }
 
+/** 
+ * @brief Update the cooling rates. 
+ * 
+ * Calculates the rates of the various cooling 
+ * and heating channels and stores them in the 
+ * #chimes_current_rates_struct struct within 
+ * the #UserData struct. 
+ *
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct. 
+ */ 
 void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data) 
 { 
   int i, T_index, nHI_index, ne_index, nHII_index; 
@@ -115,6 +197,24 @@ void update_cooling_rates(struct gasVariables *myGasVars, struct globalVariables
   return; 
 }
 
+/** 
+ * @brief Calculates the total cooling rate. 
+ * 
+ * Sums all cooling and heating channels to calculate 
+ * the total cooling rate. This function can return 
+ * either the net cooling rate, cooling only, or heating 
+ * only, depending on the mode argument. The rate is 
+ * returned in units of erg cm^-3 s^-1. 
+ * If the net cooling rate is returned, a positive value 
+ * indicates net cooling, while a negative value indicates 
+ * net heating. If only the cooling or heating rate is 
+ * returned, the value will always be positive. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ * @param data The #UserData struct. 
+ * @param mode An integer flag. 0: return net cooling; 1: return cooling only; 2: return heating only. 
+ */ 
 ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars, struct UserData data, int mode) 
 {
   int i, xHII_index, Psi_index, T_index, T_mol_index, N_CO_rot_index, N_CO_vib_index; 
@@ -354,6 +454,19 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
     }
 }
 
+/** 
+ * @brief Evolve the cooling for equilibrium abundances. 
+ * 
+ * If the abundances have been set to equilibrium, from the 
+ * pre-computed equilibrium tables, and thermal evolution 
+ * is switched on, then this routine is used to evolve 
+ * the temperature, using a bisection integration method. 
+ * As the temperature evolves, the equilibrium abundances 
+ * are re-computed from the tables, and are then used 
+ * to update the net cooling rate. 
+ * 
+ * @param data The #UserData struct. 
+ */
 void do_equilibrium_cooling(struct UserData data)
 {
   int i, maxIter;

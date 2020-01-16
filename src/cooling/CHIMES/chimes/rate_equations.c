@@ -1,3 +1,22 @@
+/****************************************************************************
+ * This file is part of CHIMES.
+ * Copyright (c) 2020 Alexander Richings (alexander.j.richings@durham.ac.uk)
+ *
+ * CHIMES is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -10,6 +29,21 @@
 #include "chimes_vars.h"
 #include "chimes_proto.h"
 
+/** 
+ * @brief Checks the constraint equations. 
+ * 
+ * Checks the constraint equations that ensure that the 
+ * sum on all species containing a particular element 
+ * matches the total element abundance, and that the 
+ * net charge of all ions is zero. If any of these 
+ * constraints are not met to within 1 per cent, the 
+ * abundances of all species involved in that constraint 
+ * are re-scaled accordingly. This routine also enforces 
+ * that all abundances are non-negative. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void check_constraint_equations(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   ChimesFloat x;
@@ -428,6 +462,18 @@ void check_constraint_equations(struct gasVariables *myGasVars, struct globalVar
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] = x;
 }
 
+/** 
+ * @brief Defines the right-hand side function. 
+ * 
+ * Defines the system of differential equations that make 
+ * up the right-hand side function, which will be integrated 
+ * by CVode. 
+ * 
+ * @param t Current time. 
+ * @param y Vector containing the variables to be integrated. 
+ * @param ydot Vector containing the time derivatives of the variables. 
+ * @param user_data The #UserData struct containing the input data. 
+ */
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   int i, j;		
@@ -458,7 +504,6 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
    * to update the temperature, and also the rates that depend on T */
   if (data->myGasVars->ThermEvolOn == 1)
     data->myGasVars->temperature = chimes_max(((ChimesFloat) NV_Ith_S(y, data->network_size)) / (1.5 * calculate_total_number_density(data->myGasVars->abundances, data->myGasVars->nH_tot, data->myGlobalVars) * BOLTZMANNCGS), 10.1); /* The rates are not defined below ~10 K */
-
 
   // Update rates 
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data, data->myGasVars->ThermEvolOn); 

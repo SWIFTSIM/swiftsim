@@ -1,3 +1,22 @@
+/****************************************************************************
+ * This file is part of CHIMES.
+ * Copyright (c) 2020 Alexander Richings (alexander.j.richings@durham.ac.uk)
+ *
+ * CHIMES is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -7,28 +26,39 @@
 #include "chimes_proto.h"
 
 // CHIMES data tables. 
-struct chimes_table_bins_struct chimes_table_bins; 
-struct chimes_T_dependent_struct chimes_table_T_dependent; 
-struct chimes_constant_struct chimes_table_constant; 
-struct chimes_recombination_AB_struct chimes_table_recombination_AB; 
-struct chimes_grain_recombination_struct chimes_table_grain_recombination; 
-struct chimes_cosmic_ray_struct chimes_table_cosmic_ray; 
-struct chimes_CO_cosmic_ray_struct chimes_table_CO_cosmic_ray; 
-struct chimes_H2_dust_formation_struct chimes_table_H2_dust_formation; 
-struct chimes_H2_collis_dissoc_struct chimes_table_H2_collis_dissoc; 
-struct chimes_photoion_fuv_struct chimes_table_photoion_fuv; 
-struct chimes_photoion_euv_struct chimes_table_photoion_euv; 
-struct chimes_photoion_auger_fuv_struct chimes_table_photoion_auger_fuv; 
-struct chimes_photoion_auger_euv_struct chimes_table_photoion_auger_euv; 
-struct chimes_photodissoc_group1_struct chimes_table_photodissoc_group1; 
-struct chimes_photodissoc_group2_struct chimes_table_photodissoc_group2; 
-struct chimes_H2_photodissoc_struct chimes_table_H2_photodissoc; 
-struct chimes_CO_photodissoc_struct chimes_table_CO_photodissoc; 
-struct chimes_spectra_struct chimes_table_spectra; 
-struct chimes_redshift_dependent_UVB_struct chimes_table_redshift_dependent_UVB; 
-struct chimes_cooling_struct chimes_table_cooling; 
-struct chimes_eqm_abundances_struct chimes_table_eqm_abundances; 
+struct chimes_table_bins_struct chimes_table_bins;                               /*!< Structure containing table bins for all of the rate tables. */ 
+struct chimes_T_dependent_struct chimes_table_T_dependent;                       /*!< Structure containing the rates for the T-dependent reaction group. */
+struct chimes_constant_struct chimes_table_constant;                             /*!< Structure containing the rates for the constant reaction group. */ 
+struct chimes_recombination_AB_struct chimes_table_recombination_AB;             /*!< Structure containing the rates for the reacombination_AB group. */ 
+struct chimes_grain_recombination_struct chimes_table_grain_recombination;       /*!< Structure containing the rates from the grain_recombination group. */ 
+struct chimes_cosmic_ray_struct chimes_table_cosmic_ray;                         /*!< Structure containing the rates for the cosmic_ray group. */ 
+struct chimes_CO_cosmic_ray_struct chimes_table_CO_cosmic_ray;                   /*!< Structure containing the rates for the CO_cosmic_ray group. */ 
+struct chimes_H2_dust_formation_struct chimes_table_H2_dust_formation;           /*!< Structure containing the rates for the H2_dust_formation group. */ 
+struct chimes_H2_collis_dissoc_struct chimes_table_H2_collis_dissoc;             /*!< Structure containing the rates for the H2_collis_dissoc group. */ 
+struct chimes_photoion_fuv_struct chimes_table_photoion_fuv;                     /*!< Structure containing the rates for the photoion_fuv group. */ 
+struct chimes_photoion_euv_struct chimes_table_photoion_euv;                     /*!< Structure containing the rates for the photoion_euv group. */ 
+struct chimes_photoion_auger_fuv_struct chimes_table_photoion_auger_fuv;         /*!< Structure containing the rates for the photoion_auger_fuv group. */ 
+struct chimes_photoion_auger_euv_struct chimes_table_photoion_auger_euv;         /*!< Structure containing the rates for the photoion_auger_euv group. */ 
+struct chimes_photodissoc_group1_struct chimes_table_photodissoc_group1;         /*!< Structure containing the rates for the photodissoc_group1 group. */ 
+struct chimes_photodissoc_group2_struct chimes_table_photodissoc_group2;         /*!< Structure containing the rates for the photodissoc_group2 group. */ 
+struct chimes_H2_photodissoc_struct chimes_table_H2_photodissoc;                 /*!< Structure containing the rates for the H2_photodissoc group. */ 
+struct chimes_CO_photodissoc_struct chimes_table_CO_photodissoc;                 /*!< Structure containing the rates for the CO_photodissoc group. */ 
+struct chimes_spectra_struct chimes_table_spectra;                               /*!< Structure containing the spectra information. */ 
+struct chimes_redshift_dependent_UVB_struct chimes_table_redshift_dependent_UVB; /*!< Structure containing information needed to interpolate the redshift-dependent UVB. */
+struct chimes_cooling_struct chimes_table_cooling;                               /*!< Structure containing the cooling and heating rates. */ 
+struct chimes_eqm_abundances_struct chimes_table_eqm_abundances;                 /*!< Structure containing the equilibrium abundance tables. */ 
 
+/** 
+ * @brief Allocate memory to eqm tables. 
+ * 
+ * Reads in the size of each dimension of the equilibrium 
+ * abundance tables and then allocates memory for the 
+ * arrays that will store these tables. 
+ * 
+ * @param filename String containing the path to the eqm abundance table file. 
+ * @param my_eqm_abundances The #chimes_eqm_abundances_struct struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void allocate_eqm_table_memory(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars) 
 {
   hid_t file_id, dataset; 
@@ -108,6 +138,17 @@ void allocate_eqm_table_memory(char *filename, struct chimes_eqm_abundances_stru
   free(Z);
 }
 
+/** 
+ * @brief Loads the eqm table. 
+ * 
+ * Reads in the equilibrium abundance table. Note that 
+ * the memory for arrays that will store these tables 
+ * needs to be allocated before this routine is called. 
+ * 
+ * @param filename String containing the path to the eqm abundance table file. 
+ * @param my_eqm_abundances The #chimes_eqm_abundances_struct struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void load_eqm_table(char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances, struct globalVariables *myGlobalVars)
 {
   hid_t file_id, dataset, dataspace_id, memspace_id;
@@ -174,9 +215,18 @@ void load_eqm_table(char *filename, struct chimes_eqm_abundances_struct *my_eqm_
   free(array1D);
 }
 
-/* This routine determines whether a reaction 
- * should be included in the network, based 
- * on its element_incl array */ 
+/** 
+ * @brief Determines whether to include a reaction. 
+ * 
+ * Compares the elements that are needed for a given 
+ * reaction to those that are to be included in the 
+ * network, as specified by the user. If all required 
+ * elements are included, this routine returns 1, 
+ * otherwise it returns 0. 
+ * 
+ * @param reaction_array Array of 9 integer flags specifying the elements needed for the reaction. 
+ * @param network_array Array of 9 integer flags specifying the elements included in the network. 
+ */ 
 int compare_element_incl_arrays(int *reaction_array, int *network_array) 
 {
   int i, include_reaction; 
@@ -184,7 +234,7 @@ int compare_element_incl_arrays(int *reaction_array, int *network_array)
   include_reaction = 1; 
   for (i = 0; i < 9; i++) 
     {
-      if ((reaction_array[i] == 1) && network_array[i] == 0) 
+      if ((reaction_array[i] == 1) && (network_array[i] == 0)) 
 	{
 	  include_reaction = 0; 
 	  break; 
@@ -195,6 +245,15 @@ int compare_element_incl_arrays(int *reaction_array, int *network_array)
 }
 
 
+/** 
+ * @brief Loads the main reaction data. 
+ * 
+ * Reads in the main reaction data tables. These define 
+ * all of the reactions in the network, and tabulate the 
+ * reaction rate coefficients. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void initialise_main_data(struct globalVariables *myGlobalVars) 
 {  
   char fname[500];
@@ -4819,6 +4878,20 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
   return; 
 }
 
+/** 
+ * @brief Read cross sections tables. 
+ * 
+ * Reads in all of the photoionisation cross sections 
+ * tables, one for each spectrum. 
+ * 
+ * @param my_table_bins The #chimes_table_bins_struct struct. 
+ * @param my_photoion_fuv The #chimes_photoion_fuv_struct struct. 
+ * @param my_photoion_euv The #chimes_photoion_euv_struct struct. 
+ * @param my_photoion_auger_fuv The #chimes_photoion_auger_fuv_struct struct. 
+ * @param my_photoion_auger_euv The #chimes_photoion_auger_euv_struct struct. 
+ * @param my_spectra The #chimes_spectra_struct struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, struct chimes_photoion_fuv_struct *my_photoion_fuv, struct chimes_photoion_euv_struct *my_photoion_euv, struct chimes_photoion_auger_fuv_struct *my_photoion_auger_fuv, struct chimes_photoion_auger_euv_struct *my_photoion_auger_euv, struct chimes_spectra_struct *my_spectra, struct globalVariables *myGlobalVars) 
 {   
   char fname[500];
@@ -5126,17 +5199,21 @@ void read_cross_sections_tables(struct chimes_table_bins_struct *my_table_bins, 
   return; 
 } 
 
-
-/* This routine determines which species are included 
+/** 
+ * @brief Set the species index array. 
+ * 
+ * This routine determines which species are included 
  * in the network, based on the element_included flags. 
  * Note that if an element is included but has zero 
  * abundance, its corresponding species WILL be given 
  * as included by this routine, because they will be 
  * present in the abundance array. However, they will 
  * NOT be included in the actual rate vector that CVODE 
- * will integrate. See the set_species_structures() 
- * routine in update_rates.c for more details. */ 
-int set_species_index_array(struct globalVariables *myGlobalVariables)
+ * will integrate. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
+int set_species_index_array(struct globalVariables *myGlobalVars)
 {
   int i;
   int current_index = 0;
@@ -5145,7 +5222,7 @@ int set_species_index_array(struct globalVariables *myGlobalVariables)
    * H & He ions. */
   for (i = sp_elec; i <= sp_HeIII; i++)
     {
-      myGlobalVariables->speciesIndices[i] = current_index;
+      myGlobalVars->speciesIndices[i] = current_index;
       current_index += 1;
     }
   
@@ -5155,224 +5232,233 @@ int set_species_index_array(struct globalVariables *myGlobalVariables)
    * make that index -1. */
   for (i = sp_CI; i <= sp_Cm; i++)
     {
-      if (myGlobalVariables->element_included[0] == 1)
+      if (myGlobalVars->element_included[0] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_NI; i <= sp_NVIII; i++)
     {
-      if (myGlobalVariables->element_included[1] == 1)
+      if (myGlobalVars->element_included[1] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_OI; i <= sp_Om; i++)
     {
-      if (myGlobalVariables->element_included[2] == 1)
+      if (myGlobalVars->element_included[2] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_NeI; i <= sp_NeXI; i++)
     {
-      if (myGlobalVariables->element_included[3] == 1)
+      if (myGlobalVars->element_included[3] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_MgI; i <= sp_MgXIII; i++)
     {
-      if (myGlobalVariables->element_included[4] == 1)
+      if (myGlobalVars->element_included[4] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_SiI; i <= sp_SiXV; i++)
     {
-      if (myGlobalVariables->element_included[5] == 1)
+      if (myGlobalVars->element_included[5] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_SI; i <= sp_SXVII; i++)
     {
-      if (myGlobalVariables->element_included[6] == 1)
+      if (myGlobalVars->element_included[6] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_CaI; i <= sp_CaXXI; i++)
     {
-      if (myGlobalVariables->element_included[7] == 1)
+      if (myGlobalVars->element_included[7] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   for (i = sp_FeI; i <= sp_FeXXVII; i++)
     {
-      if (myGlobalVariables->element_included[8] == 1)
+      if (myGlobalVars->element_included[8] == 1)
 	{
-	  myGlobalVariables->speciesIndices[i] = current_index;
+	  myGlobalVars->speciesIndices[i] = current_index;
 	  current_index += 1;
 	}
       else
-	myGlobalVariables->speciesIndices[i] = -1;
+	myGlobalVars->speciesIndices[i] = -1;
     }
 
   /* Determine which molecules are present. */
   for (i = sp_H2; i <= sp_H3p; i++)
     {
-      myGlobalVariables->speciesIndices[i] = current_index;
+      myGlobalVars->speciesIndices[i] = current_index;
       current_index += 1;
     }
 
-  if (myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_OH] = current_index;
+      myGlobalVars->speciesIndices[sp_OH] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_H2O] = current_index;
+      myGlobalVars->speciesIndices[sp_H2O] = current_index;
       current_index += 1;
     }
   else
     {
-      myGlobalVariables->speciesIndices[sp_OH] = -1;
-      myGlobalVariables->speciesIndices[sp_H2O] = -1;
+      myGlobalVars->speciesIndices[sp_OH] = -1;
+      myGlobalVars->speciesIndices[sp_H2O] = -1;
     }
 	
-  if (myGlobalVariables->element_included[0] == 1)
+  if (myGlobalVars->element_included[0] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_C2] = current_index;
+      myGlobalVars->speciesIndices[sp_C2] = current_index;
       current_index += 1;
     }
   else
-    myGlobalVariables->speciesIndices[sp_C2] = -1;
+    myGlobalVars->speciesIndices[sp_C2] = -1;
 
-  if (myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_O2] = current_index;
+      myGlobalVars->speciesIndices[sp_O2] = current_index;
       current_index += 1;
     }
   else
-    myGlobalVariables->speciesIndices[sp_O2] = -1;
+    myGlobalVars->speciesIndices[sp_O2] = -1;
 
-  if (myGlobalVariables->element_included[0] == 1 && myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[0] == 1 && myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_HCOp] = current_index;
+      myGlobalVars->speciesIndices[sp_HCOp] = current_index;
       current_index += 1;
     }
   else
-    myGlobalVariables->speciesIndices[sp_HCOp] = -1;
+    myGlobalVars->speciesIndices[sp_HCOp] = -1;
 
-  if (myGlobalVariables->element_included[0] == 1)
+  if (myGlobalVars->element_included[0] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_CH] = current_index;
+      myGlobalVars->speciesIndices[sp_CH] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_CH2] = current_index;
+      myGlobalVars->speciesIndices[sp_CH2] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_CH3p] = current_index;
+      myGlobalVars->speciesIndices[sp_CH3p] = current_index;
       current_index += 1;
     }
   else
     {
-      myGlobalVariables->speciesIndices[sp_CH] = -1;
-      myGlobalVariables->speciesIndices[sp_CH2] = -1;
-      myGlobalVariables->speciesIndices[sp_CH3p] = -1;
-    }
-
-  if (myGlobalVariables->element_included[0] == 1 && myGlobalVariables->element_included[2] == 1)
-    {
-      myGlobalVariables->speciesIndices[sp_CO] = current_index;
-      current_index += 1;
-    }
-  else
-    myGlobalVariables->speciesIndices[sp_CO] = -1;
-
-  if (myGlobalVariables->element_included[0] == 1)
-    {
-      myGlobalVariables->speciesIndices[sp_CHp] = current_index;
-      current_index += 1;
-      myGlobalVariables->speciesIndices[sp_CH2p] = current_index;
-      current_index += 1;
-    }
-  else
-    {
-      myGlobalVariables->speciesIndices[sp_CHp] = -1;
-      myGlobalVariables->speciesIndices[sp_CH2p] = -1;
+      myGlobalVars->speciesIndices[sp_CH] = -1;
+      myGlobalVars->speciesIndices[sp_CH2] = -1;
+      myGlobalVars->speciesIndices[sp_CH3p] = -1;
     }
 
-  if (myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[0] == 1 && myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_OHp] = current_index;
+      myGlobalVars->speciesIndices[sp_CO] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_H2Op] = current_index;
+    }
+  else
+    myGlobalVars->speciesIndices[sp_CO] = -1;
+
+  if (myGlobalVars->element_included[0] == 1)
+    {
+      myGlobalVars->speciesIndices[sp_CHp] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_H3Op] = current_index;
+      myGlobalVars->speciesIndices[sp_CH2p] = current_index;
       current_index += 1;
     }
   else
     {
-      myGlobalVariables->speciesIndices[sp_OHp] = -1;
-      myGlobalVariables->speciesIndices[sp_H2Op] = -1;
-      myGlobalVariables->speciesIndices[sp_H3Op] = -1;
+      myGlobalVars->speciesIndices[sp_CHp] = -1;
+      myGlobalVars->speciesIndices[sp_CH2p] = -1;
     }
 
-  if (myGlobalVariables->element_included[0] == 1 && myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_COp] = current_index;
+      myGlobalVars->speciesIndices[sp_OHp] = current_index;
       current_index += 1;
-      myGlobalVariables->speciesIndices[sp_HOCp] = current_index;
+      myGlobalVars->speciesIndices[sp_H2Op] = current_index;
+      current_index += 1;
+      myGlobalVars->speciesIndices[sp_H3Op] = current_index;
       current_index += 1;
     }
   else
     {
-      myGlobalVariables->speciesIndices[sp_COp] = -1;
-      myGlobalVariables->speciesIndices[sp_HOCp] = -1;
+      myGlobalVars->speciesIndices[sp_OHp] = -1;
+      myGlobalVars->speciesIndices[sp_H2Op] = -1;
+      myGlobalVars->speciesIndices[sp_H3Op] = -1;
     }
 
-  if (myGlobalVariables->element_included[2] == 1)
+  if (myGlobalVars->element_included[0] == 1 && myGlobalVars->element_included[2] == 1)
     {
-      myGlobalVariables->speciesIndices[sp_O2p] = current_index;
+      myGlobalVars->speciesIndices[sp_COp] = current_index;
+      current_index += 1;
+      myGlobalVars->speciesIndices[sp_HOCp] = current_index;
       current_index += 1;
     }
   else
-    myGlobalVariables->speciesIndices[sp_O2p] = -1;
+    {
+      myGlobalVars->speciesIndices[sp_COp] = -1;
+      myGlobalVars->speciesIndices[sp_HOCp] = -1;
+    }
+
+  if (myGlobalVars->element_included[2] == 1)
+    {
+      myGlobalVars->speciesIndices[sp_O2p] = current_index;
+      current_index += 1;
+    }
+  else
+    myGlobalVars->speciesIndices[sp_O2p] = -1;
 	  
   return current_index;
 }
 
+/** 
+ * @brief Initialise the CHIMES network. 
+ * 
+ * Calls the various routines that read in the reaction 
+ * data tables and allocate memory to the various arrays 
+ * that store these tables. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void init_chimes(struct globalVariables *myGlobalVars)
 {
   char fname[500]; 
@@ -5409,11 +5495,15 @@ void init_chimes(struct globalVariables *myGlobalVars)
     interpolate_redshift_dependent_UVB(myGlobalVars); 
 }
 
-/* The following routines sets the initial
- * abundances of each species. Note that
- * they will need to be called by the 
- * simulation code for each gas parcel. */
-
+/** 
+ * @brief Allocate memory for the gasVars arrays. 
+ * 
+ * Allocates memory for the abundances, isotropic_photon_density, 
+ * G0_parameter and H2_dissocJ arrays in the #gasVariables struct. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   myGasVars->abundances = (ChimesFloat *) malloc(myGlobalVars->totalNumberOfSpecies * sizeof(ChimesFloat));
@@ -5427,6 +5517,15 @@ void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globa
     }
 }
 
+/** 
+ * @brief Free memory for the gasVars arrays. 
+ * 
+ * Frees the memory for the abundances, isotropic_photon_density, 
+ * G0_parameter and H2_dissocJ arrays in the #gasVariables struct. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   free(myGasVars->abundances); 
@@ -5439,6 +5538,22 @@ void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVar
     }
 }
 
+/** 
+ * @brief Initialise the abundance array. 
+ * 
+ * Sets the initial abundances in the abundance array, according 
+ * to the InitIonState parameter in the #gasVariables struct. 
+ * Each element is set to be in the ionisation state given by this 
+ * parameter. If the parameter exceeds the maximum ionisation state 
+ * of that element, then it is set to the highest possible state. 
+ * For example, if InitIonState == 0, all elements are set to be 
+ * fully neutral. If InitIonState == 2, all elements are set to be 
+ * doubly ionised, except Hydrogen which is set to be singly ionised. 
+ * Molecules are always initialised to zero in this routine. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   int i, init_ion_state;
@@ -5539,6 +5654,22 @@ void initialise_gas_abundances(struct gasVariables *myGasVars, struct globalVari
   myGasVars->constant_heating_rate = 0.0; 
 }
 
+/** 
+ * @brief Determines size of the current rates buffer. 
+ * 
+ * Counts the total number of reactions in the network, 
+ * which determines the size of the data buffers that will 
+ * be needed to store the current values of all the 
+ * reaction rate coefficients. For some reactions we need 
+ * to store multiple numbers (e.g. the rate coefficient itself, 
+ * and the rate after multiplying by the reactant abundances). 
+ * Some of the photo-chemical reactions require a 2-dimensional 
+ * data buffer, to tabulate by reaction and spectrum. 
+ * 
+ * @param buffer_size number of single/double floats in the data buffer. 
+ * @param buffer_size_2D Number of single/double floats in the 2d data buffer. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void determine_current_rates_buffer_size(int *buffer_size, int *buffer_size_2D, struct globalVariables *myGlobalVars) 
 {
   *buffer_size = 0; 
@@ -5569,6 +5700,17 @@ void determine_current_rates_buffer_size(int *buffer_size, int *buffer_size_2D, 
   return; 
 } 
 
+/** 
+ * @brief Allocates memory for the current rates. 
+ * 
+ * Allocates memory for the various arrays in the 
+ * #chimes_current_rates_struct struct that will 
+ * record the current values of the various 
+ * reaction rates. 
+ * 
+ * @param chimes_current_rates The #chimes_current_rates_struct struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars) 
 {
   int buffer_size, buffer_size_2d; 
@@ -5786,6 +5928,15 @@ void allocate_current_rates_memory(struct chimes_current_rates_struct *chimes_cu
   return; 
 } 
 
+/** 
+ * @brief Frees memory for the current rates. 
+ * 
+ * Frees the memory for the various arrays in the 
+ * #chimes_current_rates_struct struct. 
+ * 
+ * @param chimes_current_rates The #chimes_current_rates_struct struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void free_current_rates_memory(struct chimes_current_rates_struct *chimes_current_rates, struct globalVariables *myGlobalVars) 
 {
   free(chimes_current_rates->data_buffer); 
@@ -5794,6 +5945,16 @@ void free_current_rates_memory(struct chimes_current_rates_struct *chimes_curren
   return; 
 } 
 
+/** 
+ * @brief Allocates memory for the redshift-dependent UVB. 
+ * 
+ * Allocates memory for the various arrays in the 
+ * #chimes_redshift_dependent_UVB_struct struct, which will store 
+ * the cross sections, shielding factors etc. for the two redshift bins 
+ * bracketing the current redshift. 
+ * 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void allocate_redshift_dependent_UVB_memory(struct globalVariables *myGlobalVars) 
 {
   int i, j, k, l, N_reactions_all; 
@@ -5853,6 +6014,16 @@ void allocate_redshift_dependent_UVB_memory(struct globalVariables *myGlobalVars
   chimes_table_redshift_dependent_UVB.z_index_hi = -1; 
 }
 
+/** 
+ * @brief Load the redshift-dependent UVB. 
+ * 
+ * Loads the photoionisation cross-sections data tables for 
+ * the UVB at the specified redshift. 
+ * 
+ * @param redshift The redshift of the required UVB table. 
+ * @param bin_index Indicates the low- (0) or high- (1) redshift bin.  
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index, struct globalVariables *myGlobalVars) 
 {
   char fname[500];
@@ -5870,7 +6041,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index, struct glo
       exit(EXIT_FAILURE); 
     }
 
-  sprintf(fname, "%s/z%.3f_cross_sections.hdf5", myGlobalVars->PhotoIonTablePath[spectrum_index], redshift); 
+  sprintf(fname, "%s/z%.3f_cross_sections.hdf5", myGlobalVars->PhotoIonTablePath[spectrum_index], redshift);
   printf("CHIMES: reading redshift-dependent UVB cross sections table: %s\n", fname); 
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
   

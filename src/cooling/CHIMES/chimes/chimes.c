@@ -1,3 +1,22 @@
+/****************************************************************************
+ * This file is part of CHIMES.
+ * Copyright (c) 2020 Alexander Richings (alexander.j.richings@durham.ac.uk)
+ *
+ * CHIMES is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -10,6 +29,14 @@
 #include "chimes_vars.h"
 #include "chimes_proto.h"
 
+/** 
+ * @brief Sets equilibrium abundances. 
+ * 
+ * Sets the abundances to their equilibrium values, taken 
+ * from the pre-computed equilibrium abundance tables. 
+ * 
+ * @param data The #UserData struct containing the input data. 
+ */ 
 void set_equilibrium_abundances_from_tables(struct UserData data)
 {
   // This is used when ForceEqOn == 1 
@@ -30,6 +57,15 @@ void set_equilibrium_abundances_from_tables(struct UserData data)
   return;
 }
 
+/** 
+ * @brief Prints the gasVariables struct. 
+ * 
+ * Prints everything in the #gasVariables struct. 
+ * 
+ * @param log_file Output file to print to (typically, you would set this to stderr). 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars, struct globalVariables *myGlobalVars) 
 {
   int i; 
@@ -70,6 +106,15 @@ void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars, struc
   fprintf(log_file, "++++++++++++++\n"); 
 }
 
+/** 
+ * @brief Evolves the CHIMES network. 
+ * 
+ * This is the main CHIMES routine that actually integrates 
+ * the chemical abundances and, if required, the temperature. 
+ * 
+ * @param myGasVars The #gasVariables struct. 
+ * @param myGlobalVars The #globalVariables struct. 
+ */ 
 void chimes_network(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars)
 {
   realtype reltol, abstol_scalar, t;
