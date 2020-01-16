@@ -229,8 +229,8 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
                                  phys_const, ti_begin, star_age_beg_step, dt);
 
   /* Transform the number of SN to the energy */
-  sp->feedback_data.energy_ejected = sp->feedback_data.number_sn
-    * feedback_props->energy_per_supernovae;
+  sp->feedback_data.energy_ejected =
+      sp->feedback_data.number_sn * feedback_props->energy_per_supernovae;
 }
 
 /**
