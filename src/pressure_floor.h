@@ -37,7 +37,7 @@ extern struct pressure_floor_properties pressure_floor_props;
 
 /* Check if pressure floor is implemented in hydro */
 #ifndef PRESSURE_FLOOR_NONE
-#if defined(GADGET2_SPH) || defined(HOPKINS_PU_SPH)
+#if defined(GADGET2_SPH) || defined(HOPKINS_PU_SPH) || defined(SPHENIX_SPH)
 /* Implemented */
 #else
 #error Pressure floor not implemented with this hydro scheme
