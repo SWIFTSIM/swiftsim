@@ -87,7 +87,7 @@ GEARStarFormation:
   maximal_temperature:  1e10         # Upper limit to the temperature of a star forming particle
 
 GEARPressureFloor:
-  jeans_factor: 50
+  jeans_factor: 10
 
 GEARFeedback:
   supernovae_energy_erg: 0.1e51
