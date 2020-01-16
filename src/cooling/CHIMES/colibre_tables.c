@@ -45,8 +45,7 @@
  * of values for temperature, hydrogen number density, metallicity,
  * abundance ratios, and elements used to index the cooling tables.
  *
- * @param fname Filepath for cooling table from which to read header
- * @param cooling Cooling data structure
+ * @param table Colibre cooling table structure. 
  */
 void read_cooling_header(struct colibre_cooling_tables *table) {
 
@@ -218,7 +217,7 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
 /**
  * @brief Allocate space for cooling tables and read them
  *
- * @param cooling #cooling_function_data structure
+ * @param table Colibre cooling table structure. 
  */
 void read_cooling_tables(struct colibre_cooling_tables *restrict table) {
 

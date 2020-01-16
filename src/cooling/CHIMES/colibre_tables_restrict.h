@@ -43,7 +43,7 @@
  * [H, He, C, N, O, Ne, Mg, Si, S, Ca, Fe].
  *
  * @param p Pointer to #part struct.
- * @param cooling #cooling_function_data struct.
+ * @param table Colibre cooling table structure. 
  * @param ratio_solar (return) Array of ratios to solar abundances.
  */
 __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(

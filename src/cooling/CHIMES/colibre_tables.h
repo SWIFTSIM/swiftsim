@@ -436,7 +436,7 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(
  * @param Z_absolute absolute metal mass fraction 
  * @param noneq_electron_fraction ne/nH from CHIMES 
  * @param abundance_ratio Abundance ratio for each element x relative to solar
- * @param cooling #colibre_cooling_function_data structure
+ * @param table Colibre cooling table structure. 
  */
 INLINE static double colibre_metal_cooling_rate_temperature(
     double log_T_cgs, double redshift, double n_H_cgs, 

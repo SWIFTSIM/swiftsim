@@ -52,6 +52,7 @@
  * @param parameter_file The parsed parameter file
  * @param us Internal system of units data structure
  * @param phys_const #phys_const data structure
+ * @param hydro_props The properties of the hydro scheme. 
  * @param cooling #cooling_function_data struct to initialize
  */
 void cooling_init_backend(struct swift_params *parameter_file,
@@ -422,7 +423,7 @@ void cooling_update(const struct cosmology* cosmo,
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
  * @param ChimesGasVars CHIMES gasVariables structure. 
- * @param dt The cooling time-step of this particle.
+ * @param dt_cgs The cooling time-step of this particle.
  */
 void chimes_update_gas_vars(const double u_cgs,
 			    const struct phys_const *phys_const,
