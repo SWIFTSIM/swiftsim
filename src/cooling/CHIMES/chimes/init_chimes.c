@@ -5493,6 +5493,13 @@ void init_chimes(struct globalVariables *myGlobalVars)
    *  if required. */ 
   if (myGlobalVars->redshift_dependent_UVB_index >= 0) 
     interpolate_redshift_dependent_UVB(myGlobalVars); 
+
+  /* Initialise the hybrid cooling 
+   * pointers to NULL. */ 
+  myGlobalVars->hybrid_data = NULL; 
+  myGlobalVars->hybrid_cooling_fn = NULL; 
+  myGlobalVars->allocate_gas_hybrid_data_fn = NULL; 
+  myGlobalVars->free_gas_hybrid_data_fn = NULL; 
 }
 
 /** 
@@ -5518,6 +5525,8 @@ void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globa
 
   if (myGlobalVars->hybrid_cooling_mode == 1) 
     (*myGlobalVars->allocate_gas_hybrid_data_fn)(myGasVars); 
+  else 
+    myGasVars->hybrid_data = NULL; 
 }
 
 /** 

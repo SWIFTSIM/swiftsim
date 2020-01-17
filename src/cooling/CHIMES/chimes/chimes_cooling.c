@@ -427,7 +427,15 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
     }
   
   if (myGlobalVars->hybrid_cooling_mode == 1) 
-    total_heating += (ChimesFloat) (*myGlobalVars->hybrid_cooling_fn)(myGasVars, myGlobalVars); 
+    {
+      if (myGlobalVars->hybrid_cooling_fn == NULL) 
+	{
+	  printf("CHIMES error: hybrid_cooling_mode == %d, but the hybrid_cooling_fn has not been set. \n", myGlobalVars->hybrid_cooling_mode); 
+	  exit(EXIT_FAILURE); 
+	}
+      
+      total_heating += (ChimesFloat) (*myGlobalVars->hybrid_cooling_fn)(myGasVars, myGlobalVars); 
+    }
   
   // Convert units to erg/cm3/s 
   total_cooling *= pow(myGasVars->nH_tot, 2.0); 
