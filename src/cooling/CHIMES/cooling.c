@@ -352,10 +352,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
       message("Reading Colibre cooling table."); 
       read_cooling_header(&(cooling->colibre_table));
       read_cooling_tables(&(cooling->colibre_table));
-
-      /* Pass pointer to the Colibre 
-       * table to ChimesGlobalVars. */ 
-      cooling->ChimesGlobalVars.colibre_table = &(cooling->colibre_table); 
     }
   else 
     error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->ChimesGlobalVars.hybrid_cooling_mode);
@@ -369,6 +365,20 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
+
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
+    {
+      /* Create data structure for hybrid cooling, 
+       * and store pointer to the Colibre table. */ 
+      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct hybrid_data_struct)); 
+      struct hybrid_data_struct *myData; 
+      myData = (struct hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
+      myData->table = &(cooling->colibre_table); 
+
+      /* Set the hybrid_cooling_fn pointer to 
+       * the colibre metal cooling function. */ 
+      cooling->ChimesGlobalVars.hybrid_cooling_fn = &colibre_metal_cooling_rate_temperature; 
+    }
 }
 
 /**
@@ -619,7 +629,7 @@ void chimes_update_gas_vars(const double u_cgs,
    * set the abundance_ratio array using 
    * the corresponding routine from COLIBRE. */
   if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
-    abundance_ratio_to_solar(p, cooling->ChimesGlobalVars.colibre_table, ChimesGasVars->abundance_ratio); 
+    abundance_ratio_to_solar(p, &(cooling->colibre_table), ChimesGasVars->abundance_ratio); 
 }
 
 /** 
@@ -1151,7 +1161,7 @@ void cooling_struct_dump(const struct cooling_function_data* cooling,
   cooling_copy.colibre_table.MassFractions = NULL; 
   cooling_copy.colibre_table.Zsol = NULL; 
   cooling_copy.colibre_table.Zsol_inv = NULL; 
-  cooling_copy.ChimesGlobalVars.colibre_table = NULL; 
+  cooling_copy.ChimesGlobalVars.hybrid_data = NULL; 
 
   restart_write_blocks((void *) &cooling_copy,
                        sizeof(struct cooling_function_data), 1, stream,
@@ -1178,15 +1188,25 @@ void cooling_struct_restore(struct cooling_function_data* cooling,
       message("Reading Colibre cooling table."); 
       read_cooling_header(&(cooling->colibre_table));
       read_cooling_tables(&(cooling->colibre_table));
-
-      /* Pass pointer to the Colibre 
-       * table to ChimesGlobalVars. */ 
-      cooling->ChimesGlobalVars.colibre_table = &(cooling->colibre_table); 
     }
 
   /* Initialise the CHIMES module. */ 
   message("Initialising CHIMES cooling module."); 
   init_chimes(&cooling->ChimesGlobalVars); 
+
+  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
+    {
+      /* Create data structure for hybrid cooling, 
+       * and store pointer to the Colibre table. */ 
+      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct hybrid_data_struct)); 
+      struct hybrid_data_struct *myData; 
+      myData = (struct hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
+      myData->table = &(cooling->colibre_table); 
+
+      /* Set the hybrid_cooling_fn pointer to 
+       * the colibre metal cooling function. */ 
+      cooling->ChimesGlobalVars.hybrid_cooling_fn = &colibre_metal_cooling_rate_temperature; 
+    }
 }
 
 /**

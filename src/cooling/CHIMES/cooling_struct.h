@@ -27,6 +27,7 @@
 /* Local includes. */
 #include "cooling/CHIMES/chimes/chimes_vars.h" 
 #include "cooling/CHIMES/chimes/chimes_proto.h"
+#include "cooling/CHIMES/colibre_tables.h" 
 
 /* Maximum size of CHIMES abundance arrays. */ 
 #ifdef COOLING_CHIMES_HYBRID 

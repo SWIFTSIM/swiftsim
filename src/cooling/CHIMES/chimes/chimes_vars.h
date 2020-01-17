@@ -20,12 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*************************
- ** SWIFT-specific code **
- *************************/ 
-#include "cooling/CHIMES/colibre_tables.h" 
-/** End SWIFT-specific **/  
-
 /*!< Electron mass. Units: g. */ 
 #define ELECTRON_MASS 9.1093829e-28 
 
@@ -106,8 +100,8 @@ struct gasVariables
 
 /*************************
  ** SWIFT-specific code **
- *************************/ 
-  float abundance_ratio[colibre_cooling_N_elementtypes];  /*!< Element abundance ratios for the Colibre cooling tables, used in hybrid cooling. */ 
+ *************************/  
+  float abundance_ratio[12];  /*!< Element abundance ratios for the Colibre cooling tables, used in hybrid cooling. */ 
 /** End SWIFT-specific **/ 
 };
 
@@ -144,8 +138,9 @@ struct globalVariables
 /*************************
  ** SWIFT-specific code **
  *************************/ 
-  const struct colibre_cooling_tables *colibre_table;  /*!< Colibre cooling table, for hybrid cooling. */ 
-  int hybrid_cooling_mode;                             /*!< 0 - do not use hybrid cooling; 1 - use hybrid cooling. */ 
+  int hybrid_cooling_mode;                     /*!< 0 - do not use hybrid cooling; 1 - use hybrid cooling. */ 
+  double (*hybrid_cooling_fn)(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); /*!< Hybrid cooling function. */ 
+  void *hybrid_data;                           /*!< Structure containing extra data for the hybrid cooling function. */ 
 /** End SWIFT-specific **/ 
 }; 
 
