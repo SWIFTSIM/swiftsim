@@ -5515,6 +5515,13 @@ void allocate_gas_abundances_memory(struct gasVariables *myGasVars, struct globa
       myGasVars->G0_parameter = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
       myGasVars->H2_dissocJ = (ChimesFloat *) malloc(myGlobalVars->N_spectra * sizeof(ChimesFloat)); 
     }
+
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
+  if (myGlobalVars->hybrid_cooling_mode == 1) 
+    (*myGlobalVars->allocate_gas_hybrid_data_fn)(myGasVars); 
+/** End SWIFT-specific **/ 
 }
 
 /** 
@@ -5536,6 +5543,13 @@ void free_gas_abundances_memory(struct gasVariables *myGasVars, struct globalVar
       free(myGasVars->G0_parameter); 
       free(myGasVars->H2_dissocJ); 
     }
+
+/*************************
+ ** SWIFT-specific code **
+ *************************/ 
+  if (myGlobalVars->hybrid_cooling_mode == 1) 
+    (*myGlobalVars->free_gas_hybrid_data_fn)(myGasVars); 
+/** End SWIFT-specific **/ 
 }
 
 /** 

@@ -424,10 +424,17 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(
   return -1;
 }
 
-struct hybrid_data_struct 
+struct global_hybrid_data_struct 
 {
   struct colibre_cooling_tables *table; 
 }; 
 
+struct gas_hybrid_data_struct 
+{
+  float abundance_ratio[colibre_cooling_N_elementtypes];
+}; 
+
 double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
+void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars); 
+void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars); 
 #endif

@@ -100,8 +100,8 @@ struct gasVariables
 
 /*************************
  ** SWIFT-specific code **
- *************************/  
-  float abundance_ratio[12];  /*!< Element abundance ratios for the Colibre cooling tables, used in hybrid cooling. */ 
+ *************************/ 
+  void *hybrid_data;                           /*!< Structure containing extra data for the hybrid cooling function. */ 
 /** End SWIFT-specific **/ 
 };
 
@@ -139,8 +139,10 @@ struct globalVariables
  ** SWIFT-specific code **
  *************************/ 
   int hybrid_cooling_mode;                     /*!< 0 - do not use hybrid cooling; 1 - use hybrid cooling. */ 
-  double (*hybrid_cooling_fn)(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); /*!< Hybrid cooling function. */ 
   void *hybrid_data;                           /*!< Structure containing extra data for the hybrid cooling function. */ 
+  double (*hybrid_cooling_fn)(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); /*!< Hybrid cooling function. */ 
+  void (*allocate_gas_hybrid_data_fn)(struct gasVariables *myGasVars); /*!< Allocate memory for the gasVars hybrid_data struct. */ 
+  void (*free_gas_hybrid_data_fn)(struct gasVariables *myGasVars); /*!< Free memory for the gasVars hybrid_data struct. */ 
 /** End SWIFT-specific **/ 
 }; 
 

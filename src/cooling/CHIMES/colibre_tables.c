@@ -289,7 +289,9 @@ void read_cooling_tables(struct colibre_cooling_tables *restrict table) {
 }
 
 /**
- * @brief Computes the net heating rate (heating - cooling) for a given element
+ * @brief Computes net metal heating rate from Colibre tables. 
+ * 
+ * Computes the net heating rate (heating - cooling) for a given element
  * abundance ratio, temperature, redshift, and density. The unit of the net
  * cooling rate is Lambda / nH**2 [erg cm^3 s-1] and all input values are in
  * cgs. 
@@ -298,9 +300,9 @@ void read_cooling_tables(struct colibre_cooling_tables *restrict table) {
  * @param myGlobalVars The #globalVariables struct. 
  */
 double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars) {
-  struct hybrid_data_struct *myData; 
-  myData = (struct hybrid_data_struct *) myGlobalVars->hybrid_data; 
-  struct colibre_cooling_tables *table = myData->table; 
+  struct global_hybrid_data_struct *myGlobalData; 
+  myGlobalData = (struct global_hybrid_data_struct *) myGlobalVars->hybrid_data; 
+  struct colibre_cooling_tables *table = myGlobalData->table; 
   
   double log_T_cgs = log10(myGasVars->temperature); 
   double redshift = myGlobalVars->redshift; 
@@ -309,7 +311,9 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
   double noneq_electron_fraction = myGasVars->abundances[sp_elec]; 
   
   const float *abundance_ratio; 
-  abundance_ratio = myGasVars->abundance_ratio; 
+  struct gas_hybrid_data_struct *myGasData; 
+  myGasData = (struct gas_hybrid_data_struct *) myGasVars->hybrid_data; 
+  abundance_ratio = myGasData->abundance_ratio; 
 
   /* Set weights for cooling rates */
   float weights_cooling[colibre_cooling_N_cooltypes - 2];
@@ -464,3 +468,23 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
   /* Return the net heating rate (Lambda_heat - Lambda_cool) */
   return heating_rate - cooling_rate;
 }
+
+/**
+ * @brief Allocate gas_hybrid_data struct in gasVars. 
+ *
+ * @param myGasVars The #gasVariables struct. 
+ */
+void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars) 
+{ 
+  myGasVars->hybrid_data = (void *) malloc(sizeof(struct gas_hybrid_data_struct)); 
+} 
+
+/**
+ * @brief Allocate gas_hybrid_data struct in gasVars. 
+ *
+ * @param myGasVars The #gasVariables struct. 
+ */
+void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars) 
+{
+  free(myGasVars->hybrid_data); 
+} 

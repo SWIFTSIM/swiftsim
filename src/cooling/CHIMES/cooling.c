@@ -370,14 +370,15 @@ void cooling_init_backend(struct swift_params *parameter_file,
     {
       /* Create data structure for hybrid cooling, 
        * and store pointer to the Colibre table. */ 
-      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct hybrid_data_struct)); 
-      struct hybrid_data_struct *myData; 
-      myData = (struct hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
+      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct global_hybrid_data_struct)); 
+      struct global_hybrid_data_struct *myData; 
+      myData = (struct global_hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
       myData->table = &(cooling->colibre_table); 
 
-      /* Set the hybrid_cooling_fn pointer to 
-       * the colibre metal cooling function. */ 
+      /* Set the hybrid cooling function pointers. */
       cooling->ChimesGlobalVars.hybrid_cooling_fn = &colibre_metal_cooling_rate_temperature; 
+      cooling->ChimesGlobalVars.allocate_gas_hybrid_data_fn = &chimes_allocate_gas_hybrid_data; 
+      cooling->ChimesGlobalVars.free_gas_hybrid_data_fn = &chimes_free_gas_hybrid_data; 
     }
 }
 
@@ -629,7 +630,11 @@ void chimes_update_gas_vars(const double u_cgs,
    * set the abundance_ratio array using 
    * the corresponding routine from COLIBRE. */
   if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
-    abundance_ratio_to_solar(p, &(cooling->colibre_table), ChimesGasVars->abundance_ratio); 
+    {
+      struct gas_hybrid_data_struct *myData; 
+      myData = (struct gas_hybrid_data_struct *) ChimesGasVars->hybrid_data; 
+      abundance_ratio_to_solar(p, &(cooling->colibre_table), myData->abundance_ratio); 
+    }
 }
 
 /** 
@@ -1198,14 +1203,15 @@ void cooling_struct_restore(struct cooling_function_data* cooling,
     {
       /* Create data structure for hybrid cooling, 
        * and store pointer to the Colibre table. */ 
-      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct hybrid_data_struct)); 
-      struct hybrid_data_struct *myData; 
-      myData = (struct hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
+      cooling->ChimesGlobalVars.hybrid_data = (void *) malloc(sizeof(struct global_hybrid_data_struct)); 
+      struct global_hybrid_data_struct *myData; 
+      myData = (struct global_hybrid_data_struct *) cooling->ChimesGlobalVars.hybrid_data; 
       myData->table = &(cooling->colibre_table); 
 
-      /* Set the hybrid_cooling_fn pointer to 
-       * the colibre metal cooling function. */ 
+      /* Set the hybrid cooling function pointers. */
       cooling->ChimesGlobalVars.hybrid_cooling_fn = &colibre_metal_cooling_rate_temperature; 
+      cooling->ChimesGlobalVars.allocate_gas_hybrid_data_fn = &chimes_allocate_gas_hybrid_data; 
+      cooling->ChimesGlobalVars.free_gas_hybrid_data_fn = &chimes_free_gas_hybrid_data; 
     }
 }
 
