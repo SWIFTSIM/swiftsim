@@ -600,10 +600,6 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_MPI
   if (with_mpole_reconstruction && nr_nodes > 1)
     error("Cannot reconstruct m-poles every step over MPI (yet).");
-  if (with_timestep_limiter)
-    error("Can't run with time-step limiter over MPI (yet)");
-  if (with_timestep_sync)
-    error("Can't run with time-step synchronization over MPI (yet)");
 #ifdef WITH_LOGGER
   error("Can't run with the particle logger over MPI (yet)");
 #endif
@@ -875,9 +871,9 @@ int main(int argc, char *argv[]) {
 
       /* Initialise the cooling function properties */
 #ifdef COOLING_NONE
-    if (with_cooling || with_temperature) {
+    if (with_cooling) {
       error(
-          "ERROR: Running with cooling / temperature calculation"
+          "ERROR: Running with cooling calculation"
           " but compiled without it.");
     }
 #else
