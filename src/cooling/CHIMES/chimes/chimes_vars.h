@@ -97,12 +97,7 @@ struct gasVariables
   int InitIonState;                      /*!< Sets initial ionisation state if using #initialise_gas_abundances(). */ 
   ChimesFloat constant_heating_rate;     /*!< Extra heating term to add to the radiative cooling rates (positive for heating). Units: erg s^-1 cm^-3. */
   ChimesFloat *abundances;               /*!<  Abundance array, defined for species i as n_i / n_H. */ 
-
-/*************************
- ** SWIFT-specific code **
- *************************/ 
-  void *hybrid_data;                           /*!< Structure containing extra data for the hybrid cooling function. */ 
-/** End SWIFT-specific **/ 
+  void *hybrid_data;                     /*!< Structure containing extra data for the hybrid cooling function. */ 
 };
 
 /**  
@@ -134,16 +129,11 @@ struct globalVariables
   int totalNumberOfSpecies;                    /*!< Total number of species included in the network. */ 
   int scale_metal_tolerances;                  /*!< Scale the absolute tolerances by the corresponding element abundance. */ 
   int chimes_debug;                            /*!< If set to 1, print gasVariables if CVODE returns an error or warning message. */ 
-
-/*************************
- ** SWIFT-specific code **
- *************************/ 
   int hybrid_cooling_mode;                     /*!< 0 - do not use hybrid cooling; 1 - use hybrid cooling. */ 
   void *hybrid_data;                           /*!< Structure containing extra data for the hybrid cooling function. */ 
   double (*hybrid_cooling_fn)(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); /*!< Hybrid cooling function. */ 
   void (*allocate_gas_hybrid_data_fn)(struct gasVariables *myGasVars); /*!< Allocate memory for the gasVars hybrid_data struct. */ 
-  void (*free_gas_hybrid_data_fn)(struct gasVariables *myGasVars); /*!< Free memory for the gasVars hybrid_data struct. */ 
-/** End SWIFT-specific **/ 
+  void (*free_gas_hybrid_data_fn)(struct gasVariables *myGasVars);     /*!< Free memory for the gasVars hybrid_data struct. */ 
 }; 
 
 /** 

@@ -6,13 +6,6 @@
  * @brief COLIBRE cooling tables - restricted.
  */
 
-/* The routines in this header file 
- * are needed in cooling.c, but they 
- * cannot be included in chimes_vars.h 
- * as that would cause a conflict. I 
- * have therefore separated them out 
- * into this header file. */ 
-
 /* Config parameters */ 
 #include "../config.h" 
 

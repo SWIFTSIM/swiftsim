@@ -425,14 +425,10 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars, struct 
       // Gas-grain energy transfer 
       total_cooling += pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer, T_index, dT)) * myGasVars->dust_ratio * (myGasVars->temperature - myGlobalVars->grain_temperature); 
     }
-
-  /*************************
-   ** SWIFT-specific code **
-   *************************/ 
+  
   if (myGlobalVars->hybrid_cooling_mode == 1) 
-    total_heating += (*myGlobalVars->hybrid_cooling_fn)(myGasVars, myGlobalVars); 
-  /** End SWIFT-specific **/  
-
+    total_heating += (ChimesFloat) (*myGlobalVars->hybrid_cooling_fn)(myGasVars, myGlobalVars); 
+  
   // Convert units to erg/cm3/s 
   total_cooling *= pow(myGasVars->nH_tot, 2.0); 
   total_heating *= pow(myGasVars->nH_tot, 2.0); 

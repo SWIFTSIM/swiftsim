@@ -238,7 +238,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h cooling/COLIBRE/cooling_subgrid.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
                  cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
-                 cooling/CHIMES/cooling_io.h cooling/CHIMES/colibre_tables.h \ 
+                 cooling/CHIMES/cooling_io.h cooling/CHIMES/colibre_tables.h \
 		 cooling/CHIMES/colibre_tables_restrict.h \
 		 cooling/CHIMES/chimes/chimes_vars.h cooling/CHIMES/chimes/chimes_proto.h \
                  chemistry/none/chemistry.h \
