@@ -98,6 +98,18 @@ struct colibre_cooling_tables {
 
   /*! Redshift of H reionization */
   float H_reion_z;
+
+  /*! Logarithm base 10 of the Boltzmann constant in CGS (for quick access) */
+  double log10_kB_cgs;
+
+  /* array of equilibrium temperatures */
+  float *logTeq;
+
+  /* array of mean particle masses at equilibrium temperatures */
+  float *meanpartmass_Teq;
+
+  /* array of pressures at equilibrium temperatures */
+  float *logPeq;
 };
 
 /*! Number of different bins along the temperature axis of the tables */
@@ -200,6 +212,24 @@ __attribute__((always_inline)) INLINE int cooling_row_major_index_2d(const int x
 }
 
 /**
+ * @brief Returns the 1d index of element with 3d indices x,y,z
+ * from a flattened 3d array in row major order
+ *
+ * @param x, y, z Indices of element of interest
+ * @param Nx, Ny, Nz Sizes of array dimensions
+ */
+__attribute__((always_inline)) INLINE int cooling_row_major_index_3d(
+    const int x, const int y, const int z, const int Nx, const int Ny,
+    const int Nz) {
+#ifdef SWIFT_DEBUG_CHECKS
+  assert(x < Nx);
+  assert(y < Ny);
+  assert(z < Nz);
+#endif
+  return x * Ny * Nz + y * Nz + z;
+}
+
+/**
  * @brief Returns the 1d index of element with 5d indices x,y,z,w
  * from a flattened 5d array in row major order
  *
@@ -285,6 +315,121 @@ __attribute__((always_inline)) INLINE void cooling_get_index_1d(
 #ifdef SWIFT_DEBUG_CHECKS
   if (*dx < -0.001f || *dx > 1.001f) error("Invalid distance found dx=%e", *dx);
 #endif
+}
+
+/**
+ * @brief Interpolate a flattened 3D table at a given position.
+ *
+ * This function uses linear interpolation along each axis. It also
+ * assumes that the table is aligned on SWIFT_STRUCT_ALIGNMENT.
+ *
+ * @param table The 3D table to interpolate.
+ * @param xi, yi, zi Indices of element of interest.
+ * @param Nx, Ny, Nz Sizes of array dimensions.
+ * @param dx, dy, dz Distance between the point and the index in units of
+ * the grid spacing.
+ */
+__attribute__((always_inline)) INLINE float interpolation_3d(
+    const float *table, const int xi, const int yi, const int zi,
+    const float dx, const float dy, const float dz, const int Nx, const int Ny,
+    const int Nz) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dx < -0.001f || dx > 1.001f) error("Invalid dx=%e", dx);
+  if (dy < -0.001f || dy > 1.001f) error("Invalid dy=%e", dy);
+  if (dz < -0.001f || dz > 1.001f) error("Invalid dz=%e", dz);
+#endif
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f - dz;
+
+  /* Indicate that the whole array is aligned on page boundaries */
+  swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
+
+  /* Linear interpolation along each axis. We read the table 2^3=8 times */
+  float result = tx * ty * tz *
+                 table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  result += tx * ty * dz *
+            table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)];
+  result += tx * dy * tz *
+            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result += dx * ty * tz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  result += tx * dy * dz *
+            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)];
+  result += dx * ty * dz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)];
+  result += dx * dy * tz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
+
+  result += dx * dy * dz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)];
+
+  return result;
+}
+
+/**
+ * @brief Interpolate a flattened 3D table at a given position but avoid the
+ * z-dimension.
+ *
+ * This function uses linear interpolation along each axis.
+ * We look at the zi coordoniate but do not interpolate around it. We just
+ * interpolate the remaining 2 dimensions.
+ * The function also assumes that the table is aligned on
+ * SWIFT_STRUCT_ALIGNMENT.
+ *
+ * @param table The 3D table to interpolate.
+ * @param xi, yi, zi Indices of element of interest.
+ * @param Nx, Ny, Nz Sizes of array dimensions.
+ * @param dx, dy, dz Distance between the point and the index in units of
+ * the grid spacing.
+ */
+__attribute__((always_inline)) INLINE float interpolation_3d_no_z(
+    const float *table, const int xi, const int yi, const int zi,
+    const float dx, const float dy, const float dz, const int Nx, const int Ny,
+    const int Nz) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dx < -0.001f || dx > 1.001f) error("Invalid dx=%e", dx);
+  if (dy < -0.001f || dy > 1.001f) error("Invalid dy=%e", dy);
+  if (dz != 0.f) error("Attempting to interpolate along z!");
+#endif
+
+  const float tx = 1.f - dx;
+  const float ty = 1.f - dy;
+  const float tz = 1.f;
+
+  /* Indicate that the whole array is aligned on page boundaries */
+  swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
+
+  /* Linear interpolation along each axis. We read the table 2^2=4 times */
+  /* Note that we intentionally kept the table access along the axis where */
+  /* we do not interpolate as comments in the code to allow readers to */
+  /* understand what is going on. */
+  float result = tx * ty * tz *
+                 table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  /* result += tx * ty * dz *
+            table[row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)]; */
+  result += tx * dy * tz *
+            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result += dx * ty * tz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
+
+  /* result += tx * dy * dz *
+            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+  /* result += dx * ty * dz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)]; */
+  result += dx * dy * tz *
+            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
+
+  /* result += dx * dy * dz *
+             table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+
+  return result;
 }
 
 /**

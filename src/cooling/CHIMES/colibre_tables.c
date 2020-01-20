@@ -25,9 +25,6 @@
 /* Config parameters. */
 #include "../config.h"
 
-/* This file's header */
-//#include "colibre_tables.h"
-
 /* Standard includes */
 #include <hdf5.h>
 #include <math.h>
@@ -36,8 +33,7 @@
 
 /* Local includes. */
 #include "chemistry_struct.h"
-#include "cooling/CHIMES/cooling_struct.h" 
-//#include "cooling_struct.h" 
+#include "cooling_struct.h" 
 #include "error.h"
 #include "exp10.h"
 
@@ -177,6 +173,9 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /* Close the file */
+  H5Fclose(tempfile_id);
+
   table->Zsol_inv[0] = 1.f / table->Zsol[0];
 
   /* find the metallicity bin that refers to solar metallicity */
@@ -218,9 +217,9 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
 /**
  * @brief Allocate space for cooling tables and read them
  *
- * @param table Colibre cooling table structure. 
+ * @param table Colibre cooling table structure.
  */
-void read_cooling_tables(struct colibre_cooling_tables *restrict table) {
+void read_cooling_tables(struct colibre_cooling_tables *table) {
 
 #ifdef HAVE_HDF5
   hid_t dataset;
@@ -278,6 +277,69 @@ void read_cooling_tables(struct colibre_cooling_tables *restrict table) {
   if (status < 0) error("error reading electron_fraction (temperature)\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
+
+  /* Thermal equilibrium temperature */
+  if (posix_memalign((void **)&table->logTeq, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate logTeq array\n");
+
+  dataset = H5Dopen(tempfile_id, "/ThermEq/Temperature", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   table->logTeq);
+  if (status < 0) error("error reading Teq array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing logTeq dataset");
+
+  /* Mean particle mass at thermal equilibrium temperature */
+  if (posix_memalign(
+          (void **)&table->meanpartmass_Teq, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_metallicity *
+              colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate mu array\n");
+
+  dataset = H5Dopen(tempfile_id, "/ThermEq/MeanParticleMass", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   table->meanpartmass_Teq);
+  if (status < 0) error("error reading mu array\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing mu dataset");
+
+  /* Close the file */
+  H5Fclose(tempfile_id);
+
+  /* Pressure at thermal equilibrium temperature */
+  if (posix_memalign((void **)&table->logPeq, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
+    error("Failed to allocate logPeq array\n");
+
+  const double log10_kB_cgs = table->log10_kB_cgs; 
+
+  /* Compute the pressures at thermal eq. */
+  for (int ired = 0; ired < colibre_cooling_N_redshifts; ired++) {
+    for (int imet = 0; imet < colibre_cooling_N_metallicity; imet++) {
+
+      const int index_XH =
+          cooling_row_major_index_2d(imet, 0, colibre_cooling_N_metallicity,
+                             colibre_cooling_N_elementtypes);
+
+      const float log10_XH = table->LogMassFractions[index_XH];
+
+      for (int iden = 0; iden < colibre_cooling_N_density; iden++) {
+
+        const int index_Peq = cooling_row_major_index_3d(
+            ired, imet, iden, colibre_cooling_N_redshifts,
+            colibre_cooling_N_metallicity, colibre_cooling_N_density);
+
+        table->logPeq[index_Peq] =
+            table->nH[iden] + table->logTeq[index_Peq] - log10_XH -
+            log10(table->meanpartmass_Teq[index_Peq]) + log10_kB_cgs;
+      }
+    }
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   message("Done reading in general cooling table");

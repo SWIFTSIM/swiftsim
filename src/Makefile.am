@@ -240,6 +240,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
                  cooling/CHIMES/cooling_io.h cooling/CHIMES/colibre_tables.h \
 		 cooling/CHIMES/colibre_tables_restrict.h \
+		 cooling/CHIMES/colibre_subgrid.h \
 		 cooling/CHIMES/chimes/chimes_vars.h cooling/CHIMES/chimes/chimes_proto.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \

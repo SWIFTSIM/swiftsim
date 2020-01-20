@@ -36,6 +36,7 @@
 #include "cooling.h"
 #include "cooling_struct.h"
 #include "colibre_tables_restrict.h" 
+#include "colibre_subgrid.h" 
 #include "entropy_floor.h"
 #include "error.h"
 #include "hydro.h"
@@ -347,6 +348,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
        * the values already read in for CHIMES. */ 
       cooling->colibre_table.S_over_Si_ratio_in_solar = cooling->S_over_Si_ratio_in_solar; 
       cooling->colibre_table.Ca_over_Si_ratio_in_solar = cooling->Ca_over_Si_ratio_in_solar; 
+
+      /* Store some constants in CGS units */
+      const float units_kB[5] = {1, 2, -2, 0, -1};
+      const double kB_cgs = phys_const->const_boltzmann_k *
+	units_general_cgs_conversion_factor(us, units_kB);
+      cooling->colibre_table.log10_kB_cgs = log10(kB_cgs);
 
       /* Read the Colibre table. */ 
       message("Reading Colibre cooling table."); 

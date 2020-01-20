@@ -40,7 +40,7 @@
  * @param ratio_solar (return) Array of ratios to solar abundances.
  */
 __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
-    struct part *restrict p, const struct colibre_cooling_tables *table,
+    const struct part *p, const struct colibre_cooling_tables *table,
     float ratio_solar[colibre_cooling_N_elementtypes]) {
 
   /* Get the particle's metal mass fractions (M_x / M) */
