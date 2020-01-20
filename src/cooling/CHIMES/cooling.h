@@ -82,6 +82,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
 float cooling_get_radiated_energy(const struct xpart* restrict xp); 
 
+void cooling_split_part(struct part *p, struct xpart *xp, double n);
+
 double chimes_mu(const struct cooling_function_data *cooling,
 		 const struct part *restrict p, 
 		 const struct xpart *restrict xp); 

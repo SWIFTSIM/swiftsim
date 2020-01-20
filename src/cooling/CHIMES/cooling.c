@@ -964,6 +964,18 @@ float cooling_get_radiated_energy(const struct xpart* restrict xp) {
 }
 
 /**
+ * @brief Split the cooling content of a particle into n pieces
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param n The number of pieces to split into.
+ */
+void cooling_split_part(struct part *p, struct xpart *xp, double n) {
+
+  xp->cooling_data.radiated_energy /= n;
+}
+
+/**
  *
  * @brief Calculate mean molecular weight from CHIMES abundances. 
  * 
