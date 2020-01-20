@@ -58,16 +58,16 @@ INLINE static int chemistry_write_particles(const struct part* parts,
                                             struct io_props* list) {
 
   /* List what we want to write */
-  list[0] =
-      io_make_output_field("SmoothedElementAbundances", FLOAT,
-                           GEAR_CHEMISTRY_ELEMENT_COUNT, UNIT_CONV_NO_UNITS, 0.f,
-                           parts, chemistry_data.smoothed_metal_mass_fraction,
-                           "Element abundances smoothed over the neighbors");
+  list[0] = io_make_output_field(
+      "SmoothedElementAbundances", FLOAT, GEAR_CHEMISTRY_ELEMENT_COUNT,
+      UNIT_CONV_NO_UNITS, 0.f, parts,
+      chemistry_data.smoothed_metal_mass_fraction,
+      "Element abundances smoothed over the neighbors");
 
-  list[1] = io_make_output_field("ElementAbundances", FLOAT,
-                                 GEAR_CHEMISTRY_ELEMENT_COUNT, UNIT_CONV_NO_UNITS,
-                                 0.f, parts, chemistry_data.metal_mass_fraction,
-                                 "Mass fraction of each element");
+  list[1] = io_make_output_field(
+      "ElementAbundances", FLOAT, GEAR_CHEMISTRY_ELEMENT_COUNT,
+      UNIT_CONV_NO_UNITS, 0.f, parts, chemistry_data.metal_mass_fraction,
+      "Mass fraction of each element");
 
   return 2;
 }
@@ -85,8 +85,8 @@ INLINE static int chemistry_write_sparticles(const struct spart* sparts,
 
   /* List what we want to write */
   list[0] = io_make_output_field(
-      "ElementAbundances", FLOAT, GEAR_CHEMISTRY_ELEMENT_COUNT, UNIT_CONV_NO_UNITS,
-      0.f, sparts, chemistry_data.metal_mass_fraction,
+      "ElementAbundances", FLOAT, GEAR_CHEMISTRY_ELEMENT_COUNT,
+      UNIT_CONV_NO_UNITS, 0.f, sparts, chemistry_data.metal_mass_fraction,
       "Mass fraction of each element");
 
   return 1;
