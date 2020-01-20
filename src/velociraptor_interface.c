@@ -596,9 +596,18 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   for (int i = 0; i < s->nr_cells; i++) {
     cell_node_ids[i] = cells_top[i].nodeID;
 
-    sim_info.cell_loc[i].loc[0] = cells_top[i].loc[0];
-    sim_info.cell_loc[i].loc[1] = cells_top[i].loc[1];
-    sim_info.cell_loc[i].loc[2] = cells_top[i].loc[2];
+    if (s->periodic) {
+      sim_info.cell_loc[i].loc[0] =
+          box_wrap(cells_top[i].loc[0] - s->pos_dithering[0], 0.0, s->dim[0]);
+      sim_info.cell_loc[i].loc[1] =
+          box_wrap(cells_top[i].loc[1] - s->pos_dithering[1], 0.0, s->dim[1]);
+      sim_info.cell_loc[i].loc[2] =
+          box_wrap(cells_top[i].loc[2] - s->pos_dithering[2], 0.0, s->dim[2]);
+    } else {
+      sim_info.cell_loc[i].loc[0] = cells_top[i].loc[0];
+      sim_info.cell_loc[i].loc[1] = cells_top[i].loc[1];
+      sim_info.cell_loc[i].loc[2] = cells_top[i].loc[2];
+    }
   }
 
   if (e->verbose) {
