@@ -375,16 +375,18 @@ stellar_evolution_read_elements(struct stellar_model* sm,
 
   /* Read the elements */
   io_read_string_array_attribute(group_id, "elts", sm->elements_name,
-                                 GEAR_CHEMISTRY_ELEMENT_COUNT, GEAR_LABELS_SIZE);
+                                 GEAR_CHEMISTRY_ELEMENT_COUNT,
+                                 GEAR_LABELS_SIZE);
 
   /* Check that we received correctly the metals */
-  if (strcmp(
-             stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1),
-          "Metals") != 0) {
+  if (strcmp(stellar_evolution_get_element_name(
+                 sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1),
+             "Metals") != 0) {
     error(
         "The chemistry table should contain the metals in the last column "
         "(found %s)",
-        stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1));
+        stellar_evolution_get_element_name(sm,
+                                           GEAR_CHEMISTRY_ELEMENT_COUNT - 1));
   }
 
   /* Print the name of the elements */

@@ -374,7 +374,8 @@ __attribute__((always_inline)) INLINE static float
 chemistry_get_total_metal_mass_fraction_for_feedback(
     const struct spart* restrict sp) {
 
-  return sp->chemistry_data.metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
+  return sp->chemistry_data
+      .metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
@@ -401,7 +402,7 @@ chemistry_get_total_metal_mass_fraction_for_cooling(
     const struct part* restrict p) {
 
   return p->chemistry_data
-    .smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
+      .smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
@@ -427,7 +428,7 @@ chemistry_get_total_metal_mass_fraction_for_star_formation(
     const struct part* restrict p) {
 
   return p->chemistry_data
-    .smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
+      .smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
