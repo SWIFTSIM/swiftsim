@@ -29,7 +29,6 @@
 
 /* Local includes */
 #include "common_io.h"
-#include "cosmology.h"
 #include "error.h"
 #include "inline.h"
 

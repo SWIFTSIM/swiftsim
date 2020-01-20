@@ -19,13 +19,14 @@
 #ifndef SWIFT_PRESSURE_FLOOR_NONE_H
 #define SWIFT_PRESSURE_FLOOR_NONE_H
 
-#include "adiabatic_index.h"
-#include "cosmology.h"
-#include "equation_of_state.h"
-#include "hydro_properties.h"
-#include "parser.h"
-#include "part.h"
-#include "units.h"
+/* Pre-declarations */
+struct cosmology;
+struct hydro_props;
+struct phys_const;
+struct part;
+struct xpart;
+struct swift_params;
+struct unit_system;
 
 /**
  * @file src/pressure_floor/none/pressure_floor.h
