@@ -178,7 +178,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ia_read_yields(
     const struct stellar_model *sm) {
 
   hid_t file_id, group_id;
-  const int number_labels = CHEMISTRY_ELEMENT_COUNT + 2;
+  const int number_labels = GEAR_CHEMISTRY_ELEMENT_COUNT + 2;
 
   /* Open IMF group */
   h5_open_group(params, "Data/SNIa/Metals", &file_id, &group_id);
@@ -188,13 +188,13 @@ __attribute__((always_inline)) INLINE static void supernovae_ia_read_yields(
   io_read_array_attribute(group_id, "data", FLOAT, yields, number_labels);
 
   /* Read the labels */
-  char labels[(CHEMISTRY_ELEMENT_COUNT + 2) * GEAR_LABELS_SIZE] = "";
+  char labels[(GEAR_CHEMISTRY_ELEMENT_COUNT + 2) * GEAR_LABELS_SIZE] = "";
   io_read_string_array_attribute(group_id, "elts", labels, number_labels,
                                  GEAR_LABELS_SIZE);
 
   /* Save the yields */
   /* Loop over the elements in sm */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     int found = 0;
     /* Loop over SNIa yields labels */
     for (int j = 0; j < number_labels; j++) {

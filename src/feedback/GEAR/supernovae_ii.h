@@ -98,7 +98,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_get_yields(
     const struct supernovae_ii *snii, float log_m1, float log_m2,
     float *yields) {
 
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     float yields_1 = interpolate_1d(&snii->integrated_yields[i], log_m1);
     float yields_2 = interpolate_1d(&snii->integrated_yields[i], log_m2);
 
@@ -231,7 +231,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_read_yields(
   h5_open_group(params, "Data/SNII", &file_id, &group_id);
 
   /* Do all the elements */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
 
     /* Get the element name */
     const char *name = stellar_evolution_get_element_name(sm, i);
@@ -345,7 +345,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_dump(
     const struct stellar_model *sm) {
 
   /* Dump the yields. */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     if (snii->integrated_yields[i].data == NULL) {
       continue;
     }
@@ -385,7 +385,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_restore(
     struct supernovae_ii *snii, FILE *stream, const struct stellar_model *sm) {
 
   /* Restore the yields */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     if (snii->integrated_yields[i].data == NULL) {
       continue;
     }
@@ -429,7 +429,7 @@ __attribute__((always_inline)) INLINE static void supernovae_ii_restore(
 __attribute__((always_inline)) INLINE static void supernovae_ii_clean(
     struct supernovae_ii *snii) {
 
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     interpolate_1d_free(&snii->integrated_yields[i]);
   }
 
