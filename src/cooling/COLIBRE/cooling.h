@@ -111,6 +111,8 @@ void cooling_set_subgrid_properties(
 
 float cooling_get_radiated_energy(const struct xpart *xp);
 
+void cooling_split_part(struct part *p, struct xpart *xp, double n);
+
 void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
                                    const struct cosmology *cosmo,
                                    struct space *s);

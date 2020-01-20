@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_ANARCHY_DU_HYDRO_IO_H
-#define SWIFT_ANARCHY_DU_HYDRO_IO_H
+#ifndef SWIFT_SPHENIX_HYDRO_IO_H
+#define SWIFT_SPHENIX_HYDRO_IO_H
 
 /**
- * @file AnarchyDU/hydro_io.h
+ * @file SPHENIX/hydro_io.h
  * @brief Density-Energy conservative implementation of SPH,
- *        with added ANARCHY physics (Cullen & Denhen 2011 AV,
- *        Price 2008 thermal diffusion (i/o routines)
+ *        with added SPHENIX physics (Borrow 2020) (i/o routines)
  */
 
 #include "adiabatic_index.h"
@@ -223,10 +222,6 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
                        "Simple treatment as in Price (2008)");
   io_write_attribute_s(h_grpsph, "Viscosity Model",
                        "Simplified version of Cullen & Denhen (2011)");
-
-  /* Time integration properties */
-  io_write_attribute_f(h_grpsph, "Maximal Delta u change over dt",
-                       const_max_u_change);
 }
 
 /**
@@ -236,4 +231,4 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
  */
 INLINE static int writeEntropyFlag(void) { return 0; }
 
-#endif /* SWIFT_ANARCHY_DU_HYDRO_IO_H */
+#endif /* SWIFT_SPHENIX_HYDRO_IO_H */

@@ -1,0 +1,23 @@
+This directory contains initial conditions generated for
+the COLIBRE suite of simulations. The cosmology, resolution
+and phases are the same as used in the original EAGLE suite. The only
+difference is the file format, adapted for SWIFT.
+
+All COLIBRE boxes have (independent of the resolution):
+- the same low entropy floor (10 K at 0.1 cm-3)
+- the same BH seed mass (1e5 Msol)
+
+VELOCIraptor can be run on the output. The code is compiled
+using
+
+cmake -DVR_USE_GAS=ON -DVR_USE_STAR=ON -DV_USE_BH=ON
+
+and run using
+
+stf -C ../vrconfig_3dfof_subhalos_SO_hydro.cfg -i eagle_0035 -o halos_0035 -I 2
+
+----
+Recommended configure options:
+
+./configure -with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quartic-spline --with-tbbmalloc --disable-hand-vec
+
