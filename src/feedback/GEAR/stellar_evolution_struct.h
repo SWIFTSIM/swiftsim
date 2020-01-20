@@ -156,8 +156,8 @@ struct stellar_model {
   /*! The supernovae type II */
   struct supernovae_ii snii;
 
-  /*! Use a discret yields approach */
-  char discret_yields;
+  /*! Use a discrete yields approach */
+  char discrete_yields;
 };
 
 #endif  // SWIFT_STELLAR_EVOLUTION_STRUCT_GEAR_H

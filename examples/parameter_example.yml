@@ -343,7 +343,7 @@ GrackleCooling:
   provide_specific_heating_rates: 0              # (optional) User provide specific heating rates
   max_steps: 10000                             # (optional) Max number of step when computing the initial composition
   convergence_limit: 1e-2                      # (optional) Convergence threshold (relative) for initial composition
-  thermal_time_myr: 5                          # (optional) Time for adiabatic cooling after a feedback event.
+  thermal_time_myr: 5                          # (optional) Time (in Myr) for adiabatic cooling after a feedback event.
   self_shielding_method: -1                     # (optional) Grackle (1->3 for Grackle's ones, 0 for none and -1 for GEAR)
   self_shielding_threshold_atom_per_cm3: 0.007  # Required only with GEAR's self shielding. Density threshold of the self shielding
 
@@ -364,7 +364,7 @@ EAGLEChemistry:
 
 # GEAR chemistry model (Revaz and Jablonka 2018)
 GEARChemistry:
-  initial_metallicity: 1         # Initial metallicity of the gas
+  initial_metallicity: 1         # Initial metallicity of the gas (mass fraction)
   scale_initial_metallicity: 1    # Should we scale the initial metallicity with the solar one?
 
 
@@ -440,7 +440,7 @@ EAGLEFeedback:
 GEARFeedback:
   supernovae_energy_erg: 0.1e51                      # Energy released by a single supernovae.
   yields_table: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5  # Table containing the yields.
-  discret_yields: 0                                 # Should we use discret yields or the IMF integrated one?
+  discrete_yields: 0                                 # Should we use discrete yields or the IMF integrated one?
 
 # Parameters related to AGN models  -----------------------------------------------
   
