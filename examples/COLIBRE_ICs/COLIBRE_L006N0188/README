@@ -1,0 +1,8 @@
+Initial conditions corresponding to the 6.25 Mpc volume
+of the COLIBRE suite. The ICs only contain DM particles. The
+gas particles will be generated in SWIFT.
+
+This resolution corresponds to: EAGLE high res (m_B = 2.26e5 Msol)
+
+MD5 hash:
+532743eff6cd4e626a759fba9103d095  Eagle_06Mpc_188.hdf5
