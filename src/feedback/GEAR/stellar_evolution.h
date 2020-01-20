@@ -135,7 +135,7 @@ stellar_evolution_compute_continuous_feedback_properties(
   const float* snia_yields = supernovae_ia_get_yields(&sm->snia);
 
   /* Compute the SNII yields */
-  float snii_yields[CHEMISTRY_ELEMENT_COUNT];
+  float snii_yields[GEAR_CHEMISTRY_ELEMENT_COUNT];
   supernovae_ii_get_yields(&sm->snii, log_m_end_step, log_m_beg_step,
                            snii_yields);
 
@@ -144,7 +144,7 @@ stellar_evolution_compute_continuous_feedback_properties(
       &sm->snii, log_m_end_step, log_m_beg_step);
 
   /* Set the yields */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     /* Compute the mass fraction of metals */
     sp->feedback_data.metal_mass_ejected[i] =
         /* Supernovae Ia yields */
@@ -221,7 +221,7 @@ stellar_evolution_compute_discrete_feedback_properties(
   const float* snia_yields = supernovae_ia_get_yields(&sm->snia);
 
   /* Compute the SNII yields (without the normalization) */
-  float snii_yields[CHEMISTRY_ELEMENT_COUNT];
+  float snii_yields[GEAR_CHEMISTRY_ELEMENT_COUNT];
   supernovae_ii_get_yields(&sm->snii, log_m_end_step, log_m_beg_step,
                            snii_yields);
 
@@ -231,7 +231,7 @@ stellar_evolution_compute_discrete_feedback_properties(
                           &sm->snii, log_m_end_step, log_m_beg_step);
 
   /* Set the yields */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     /* Compute the mass fraction of metals */
     sp->feedback_data.metal_mass_ejected[i] =
         /* Supernovae Ia yields */
@@ -336,7 +336,7 @@ stellar_evolution_evolve_spart(
   sp->feedback_data.number_sn = number_snia + number_snii;
 
   /* Compute the properties of the feedback (e.g. yields) */
-  if (sm->discret_yields) {
+  if (sm->discrete_yields) {
     stellar_evolution_compute_discrete_feedback_properties(
         sp, sm, phys_const, log_m_beg_step, log_m_end_step, m_beg_step,
         m_end_step, m_init, number_snia, number_snii);
@@ -375,21 +375,21 @@ stellar_evolution_read_elements(struct stellar_model* sm,
 
   /* Read the elements */
   io_read_string_array_attribute(group_id, "elts", sm->elements_name,
-                                 CHEMISTRY_ELEMENT_COUNT, GEAR_LABELS_SIZE);
+                                 GEAR_CHEMISTRY_ELEMENT_COUNT, GEAR_LABELS_SIZE);
 
   /* Check that we received correctly the metals */
   if (strcmp(
-          stellar_evolution_get_element_name(sm, CHEMISTRY_ELEMENT_COUNT - 1),
+             stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1),
           "Metals") != 0) {
     error(
         "The chemistry table should contain the metals in the last column "
         "(found %s)",
-        stellar_evolution_get_element_name(sm, CHEMISTRY_ELEMENT_COUNT - 1));
+        stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1));
   }
 
   /* Print the name of the elements */
-  char txt[CHEMISTRY_ELEMENT_COUNT * (GEAR_LABELS_SIZE + 2)] = "";
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  char txt[GEAR_CHEMISTRY_ELEMENT_COUNT * (GEAR_LABELS_SIZE + 2)] = "";
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     if (i != 0) {
       strcat(txt, ", ");
     }

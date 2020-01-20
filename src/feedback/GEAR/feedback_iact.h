@@ -85,9 +85,10 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const float hi, const float hj,
-                                  struct spart *si, struct part *pj,
-                                  struct xpart *xpj,
-                                  const struct cosmology *cosmo,
+                                  struct spart *restrict si,
+                                  struct part *restrict pj,
+                                  struct xpart *restrict xpj,
+                                  const struct cosmology *restrict cosmo,
                                   const integertime_t ti_current) {
 
   const double e_sn = si->feedback_data.energy_ejected;
@@ -133,7 +134,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
 
   /* Add the metals */
-  for (int i = 0; i < CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     pj->chemistry_data.metal_mass[i] +=
         weight * si->feedback_data.metal_mass_ejected[i];
   }

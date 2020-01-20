@@ -75,7 +75,7 @@ struct lifetime {
  */
 struct supernovae_ia {
   /*! Mass of each element ejected by a single supernovae */
-  float yields[CHEMISTRY_ELEMENT_COUNT];
+  float yields[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
   /*! White dwarf's mass */
   float mass_white_dwarf;
@@ -115,7 +115,7 @@ struct supernovae_ii {
 
   /*! Integrated (over the IMF) mass fraction of metals ejected by a supernovae
    */
-  struct interpolation_1d integrated_yields[CHEMISTRY_ELEMENT_COUNT];
+  struct interpolation_1d integrated_yields[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
   /*! Total mass fraction ejected (integrated over the IMF) */
   struct interpolation_1d integrated_ejected_mass_processed;
@@ -142,7 +142,7 @@ struct supernovae_ii {
 struct stellar_model {
 
   /*! Name of the different elements */
-  char elements_name[CHEMISTRY_ELEMENT_COUNT * GEAR_LABELS_SIZE];
+  char elements_name[GEAR_CHEMISTRY_ELEMENT_COUNT * GEAR_LABELS_SIZE];
 
   /*! The initial mass function */
   struct initial_mass_function imf;

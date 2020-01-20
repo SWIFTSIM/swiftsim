@@ -158,12 +158,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
   const int count = c->hydro.count;
-  double time;
-  if (with_cosmology) {
-    time = cosmo->time;
-  } else {
-    time = e->time;
-  }
+  const double time = e->time;
 
   TIMER_TIC;
 
