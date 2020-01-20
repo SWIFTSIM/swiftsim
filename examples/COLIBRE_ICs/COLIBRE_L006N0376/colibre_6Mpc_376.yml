@@ -1,0 +1,208 @@
+# Define some meta-data about the simulation
+MetaData:
+  run_name:   COLIBRE-L006N0376
+
+# Define the system of units to use internally. 
+InternalUnitSystem:
+  UnitMass_in_cgs:     1.98848e43    # 10^10 M_sun
+  UnitLength_in_cgs:   3.08567758e24 # 1 Mpc
+  UnitVelocity_in_cgs: 1e5           # 1 km/s
+  UnitCurrent_in_cgs:  1             # Amperes
+  UnitTemp_in_cgs:     1             # Kelvin
+
+Cosmology:                      # EAGLE cosmology
+  Omega_m:        0.307
+  Omega_lambda:   0.693
+  Omega_b:        0.0482519
+  h:              0.6777
+  a_begin:        0.0078125     # z_ini = 127.
+  a_end:          1.0           # z_end = 0.
+
+# Parameters governing the time integration
+TimeIntegration:
+  dt_min:     1e-10
+  dt_max:     1e-2
+
+# Parameters for the self-gravity scheme
+Gravity:
+  eta:          0.025
+  theta:        0.7
+  comoving_DM_softening:         0.00083     # New EAGLE-Ref values: 0.003320 # Comoving softening for DM (3.32 ckpc); scale with resolution
+  max_physical_DM_softening:     0.000325    # New EAGLE-Ref values: 0.001300 # Physical softening for DM (1.30 pkpc); scale with resolution
+  comoving_baryon_softening:     0.0004475   # New EAGLE-Ref values: 0.001790 # Comoving softening for baryons (1.79 ckpc); scale with resolution
+  max_physical_baryon_softening: 0.000175    # New EAGLE-Ref values: 0.000700 # Physical softening for baryons (0.70 pkpc); scale with resolution
+  mesh_side_length:       256    # use 128 for 188^3 particles and 256 for 376^3 particles
+  dithering: 0
+
+# Parameters governing the snapshots
+Snapshots:
+  basename:            colibre
+  output_list_on:      1
+  output_list:         ./output_list.txt
+
+# Parameters governing the conserved quantities statistics
+Statistics:
+  delta_time:          1.02
+  scale_factor_first:  0.05
+
+Scheduler:
+  max_top_level_cells: 16    # use 8 for 188^3, 16 for 376^3, 32 for 752^3 particles
+  cell_split_size:     200  # should be fine for most systems, could use 50 for older system such as cosma5 and cosma6
+
+# Parameters related to the initial conditions
+InitialConditions:
+  file_name:           Eagle_06Mpc_376.hdf5
+  periodic:                    1
+  cleanup_h_factors:           1
+  cleanup_velocity_factors:    1
+  generate_gas_in_ics:         1     # Generate gas particles from the DM-only ICs
+  cleanup_smoothing_lengths:   1     # Since we generate gas, make use of the (expensive) cleaning-up procedure.
+
+# Parameters of the hydro scheme
+SPH:
+  H_mass_fraction:     0.756    # overwrites the default H mass fraction (updated since EAGLE) 
+  resolution_eta:      1.2348   # "48 Ngb" with the cubic spline kernel
+  h_min_ratio:         0.1
+  CFL_condition:       0.1
+  initial_temperature: 268.7 
+  minimal_temperature: 10.
+  h_max:               0.5      # Maximal softening in co-moving internal units.
+
+# Standard COLIBRE cooling options
+COLIBRECooling:
+  dir_name:                ./UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  H_reion_z:               7.5              # Redshift of Hydrogen re-ionization
+  H_reion_eV_p_H:          2.0
+  He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
+  He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
+  He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
+  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
+  delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
+
+# Solar abundances
+COLIBREChemistry:
+  init_abundance_metal:     0.0    # Inital fraction of particle mass in *all* metals 
+  init_abundance_Hydrogen:  0.756  # Inital fraction of particle mass in Hydrogen
+  init_abundance_Helium:    0.244  # Inital fraction of particle mass in Helium
+  init_abundance_Carbon:    0.0    # Inital fraction of particle mass in Carbon
+  init_abundance_Nitrogen:  0.0    # Inital fraction of particle mass in Nitrogen
+  init_abundance_Oxygen:    0.0    # Inital fraction of particle mass in Oxygen
+  init_abundance_Neon:      0.0    # Inital fraction of particle mass in Neon
+  init_abundance_Magnesium: 0.0    # Inital fraction of particle mass in Magnesium
+  init_abundance_Silicon:   0.0    # Inital fraction of particle mass in Silicon
+  init_abundance_Iron:      0.0    # Inital fraction of particle mass in Iron
+  metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
+  metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
+
+# COLIBRE star formation model (Following a density Schmidt law)
+COLIBREStarFormation:
+  min_over_density:                 57.7    # Minimum over density above which star formation is allowed
+  star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
+  temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
+  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Default set to infinity).
+  EOS_temperature_margin_dex:       0.2     # (Optional) Logarithm base 10 of the maximal temperature difference above the EOS allowed to form stars. Default set to 10 (almost infinity)
+
+# Feedback parameter
+COLIBREFeedback:
+  use_SNII_feedback:                1               # Global switch for SNII thermal (stochastic) feedback.
+  use_SNIa_feedback:                1               # Global switch for SNIa thermal (continuous) feedback.
+  use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
+  use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
+  use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
+  filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
+  IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
+  IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
+  SNII_min_mass_Msun:               8.0             # Minimal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
+  SNII_max_mass_Msun:             100.0             # Maximal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
+  SNII_wind_delay_Gyr:              -1.           # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
+  SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
+  SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
+  SNII_energy_fraction_min:         1.0             # Maximal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_max:         1.0             # Minimal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
+  SNII_energy_fraction_n_0_H_p_cm3: 0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
+  SNII_energy_fraction_n_Z:         0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
+  SNII_energy_fraction_n_n:         0.8686          # Power-law for the birth density dependance of the SNII energy fraction.
+  SNIa_max_mass_Msun:              8.0              # Maximal mass considered for SNIa feedback and enrichment in solar masses.
+  SNIa_energy_erg:                 1.0e51           # Energy of one SNIa explosion in ergs.
+  SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
+  SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
+  AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
+  SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
+  SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
+  SNII_yield_factor_Carbon:         0.5             # (Optional) Correction factor to apply to the Carbon yield from the SNII channel.
+  SNII_yield_factor_Nitrogen:       1.0             # (Optional) Correction factor to apply to the Nitrogen yield from the SNII channel.
+  SNII_yield_factor_Oxygen:         1.0             # (Optional) Correction factor to apply to the Oxygen yield from the SNII channel.
+  SNII_yield_factor_Neon:           1.0             # (Optional) Correction factor to apply to the Neon yield from the SNII channel.
+  SNII_yield_factor_Magnesium:      4.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
+  SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
+  SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
+  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
+  with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
+  Momentum_desired_delta_v:         50.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
+  HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
+  earlyfb_filename:                 ./HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
+  stellar_evolution_age_cut_Gyr:    1.0             # Stellar age in Gyr above which the enrichment is down-sampled.
+  stellar_evolution_sampling_rate:   10             # Number of time-steps in-between two enrichment events for a star above the age threshold.
+
+# Parameters for the EAGLE "equation of state"
+EAGLEEntropyFloor:
+  Jeans_density_threshold_H_p_cm3: 0.1       # Physical density above which the COLIBRE Jeans limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Jeans_over_density_threshold:    10.       # Overdensity above which the COLIBRE Jeans limiter entropy floor can kick in.
+  Jeans_temperature_norm_K:        10.      # Temperature of the COLIBRE Jeans limiter entropy floor at the density threshold expressed in Kelvin.
+  Jeans_gamma_effective:           1.3333333 # Slope the of the COLIBRE Jeans limiter entropy floor
+  Cool_density_threshold_H_p_cm3: 1e-5       # Physical density above which the COLIBRE Cool limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Cool_over_density_threshold:    10.        # Overdensity above which the COLIBRE Cool limiter entropy floor can kick in.
+  Cool_temperature_norm_K:        10.       # Temperature of the COLIBRE Cool limiter entropy floor at the density threshold expressed in Kelvin.
+  Cool_gamma_effective:           1.         # Slope the of the COLIBRE Cool limiter entropy floor
+
+# The SNIa DTD properties in the COLIBRE feedback
+SNIaDTD:
+  SNIa_efficiency_p_Msun:       0.0012      # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
+  normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
+  SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
+
+Event_logger:
+  delta_time_SNIa_Myr:        100
+  delta_time_SNII_Myr:        10
+  delta_time_r_processes_Myr: 100
+
+# EAGLE AGN model
+EAGLEAGN:
+  subgrid_seed_mass_Msun:           1e5        # Black hole subgrid mass at creation time in solar masses.
+  max_eddington_fraction:           1.0        # Maximal allowed accretion rate in units of the Eddington rate.
+  eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
+  viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
+  radiative_efficiency:             0.1        # Fraction of the accreted mass that gets radiated.
+  coupling_efficiency:              0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
+  AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
+  AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
+  max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
+  threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
+  threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
+
+# Parameters for the Friends-Of-Friends algorithm
+FOF:
+  basename:                        fof_output  # Filename for the FOF outputs.
+  min_group_size:                  256         # The minimum no. of particles required for a group.
+  linking_length_ratio:            0.2         # Linking length in units of the main inter-particle separation.
+  black_hole_seed_halo_mass_Msun:  1e10        # Minimal halo mass in which to seed a black hole (in solar masses).
+  scale_factor_first:              0.01        # Scale-factor of first FoF black hole seeding calls.
+  delta_time:                      1.005       # Scale-factor ratio between consecutive FoF black hole seeding calls.
+
+# Parameters of the stars neighbour search
+Stars:
+  resolution_eta:        1.1642   # Target smoothing length in units of the mean inter-particle separation
+  h_tolerance:           7e-3
+
+Restarts:
+  delta_hours:        2.0
+  onexit:             1
+
+
+
+
+
+
