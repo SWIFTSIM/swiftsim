@@ -44,7 +44,7 @@ __attribute__((always_inline)) INLINE static void stellar_model_print(
   }
 
   /* Print the type of yields */
-  message("Discret yields? %i", sm->discret_yields);
+  message("Discrete yields? %i", sm->discrete_yields);
 
   /* Print the sub properties */
   initial_mass_function_print(&sm->imf);
@@ -178,7 +178,7 @@ stellar_evolution_compute_continuous_feedback_properties(
  *
  */
 __attribute__((always_inline)) INLINE static void
-stellar_evolution_compute_discret_feedback_properties(
+stellar_evolution_compute_discrete_feedback_properties(
     struct spart* restrict sp, const struct stellar_model* sm,
     const struct phys_const* phys_const, const float log_m_beg_step,
     const float log_m_end_step, const float m_beg_step, const float m_end_step,
@@ -337,7 +337,7 @@ stellar_evolution_evolve_spart(
 
   /* Compute the properties of the feedback (e.g. yields) */
   if (sm->discret_yields) {
-    stellar_evolution_compute_discret_feedback_properties(
+    stellar_evolution_compute_discrete_feedback_properties(
         sp, sm, phys_const, log_m_beg_step, log_m_end_step, m_beg_step,
         m_end_step, m_init, number_snia, number_snii);
   } else {
@@ -422,9 +422,9 @@ __attribute__((always_inline)) INLINE static void stellar_evolution_props_init(
   /* Read the list of elements */
   stellar_evolution_read_elements(sm, params);
 
-  /* Use the discret yields approach? */
-  sm->discret_yields =
-      parser_get_param_int(params, "GEARFeedback:discret_yields");
+  /* Use the discrete yields approach? */
+  sm->discrete_yields =
+      parser_get_param_int(params, "GEARFeedback:discrete_yields");
 
   /* Initialize the initial mass function */
   initial_mass_function_init(&sm->imf, phys_const, us, params);
