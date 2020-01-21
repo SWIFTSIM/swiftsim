@@ -21,9 +21,10 @@
  * @brief Cooling using the GRACKLE 3.0 library.
  */
 
+#include "../config.h"
+
 /* Include header */
 #include "cooling.h"
-#include "../config.h"
 
 /* Some standard headers. */
 #include <fenv.h>
