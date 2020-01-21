@@ -951,49 +951,19 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0); 
 
-  /* Set subgrid properties */
-  cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
-                                 floor_props, cooling, p, xp);
-
-  if (u_final < u_floor * pow(10.0, cooling->dlogT_EOS)) 
-    {
-      /* If the particle is within dlogT_EOS of 
-       * the entropy floor, we need to re-set 
-       * its abundance array to be in equilibrium 
-       * using the subgrid density and temperature. 
-       * Note that, if use_colibe_subgrid_EOS == 0, 
-       * the subgrid density and temperature have 
-       * simply been set to the particle density 
-       * and temperature. */ 
-      chimes_update_gas_vars(u_final_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
-
-#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
-      float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
-      ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
-#else 
-      ChimesFloat XH = 0.75; 
-#endif 
-      ChimesGasVars.nH_tot = XH * xp->tracers_data.subgrid_dens * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY) / phys_const->const_proton_mass; 
-      ChimesGasVars.temperature = xp->tracers_data.subgrid_temp; 
-      ChimesGasVars.ForceEqOn = 1; 
-      ChimesGasVars.ThermEvolOn = 0; 
-
-      /* Note that, if using the Colibre shielding length 
-       * and/or ISRF, these have not been calculated for 
-       * the correct T and nH in ChimesGasVars. However, 
-       * since we are only setting the abundances to 
-       * equilibrium from pre-computed tables here, these 
-       * variables aren't used at all, so this is not 
-       * a problem. */ 
-      chimes_network(&ChimesGasVars, &ChimesGlobalVars);
-    }
-
   /* Copy abundances from ChimesGasVars back to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+
+  /* Set subgrid properties. If the particle 
+   * is below logT_EOS_max, the CHIMES 
+   * abundances will be re-computed from the 
+   * subgrid temperature and density. */
+  cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
+                                 floor_props, cooling, p, xp);
 }
 
 /**
@@ -1430,5 +1400,55 @@ void cooling_set_subgrid_properties(
     {
       xp->tracers_data.subgrid_temp = T; 
       xp->tracers_data.subgrid_dens = hydro_get_physical_density(p, cosmo); 
+    }
+
+  if (log10_T < log10_T_EOS_max) 
+    {
+      /* If the particle is within dlogT_EOS of 
+       * the entropy floor, we need to re-set 
+       * its abundance array to be in equilibrium 
+       * using the subgrid density and temperature. 
+       * Note that, if use_colibe_subgrid_EOS == 0, 
+       * the subgrid density and temperature have 
+       * simply been set to the particle density 
+       * and temperature. */ 
+      struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+      struct gasVariables ChimesGasVars; 
+
+      allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+
+      int i; 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	ChimesGasVars.abundances[i] = (ChimesFloat) xp->cooling_data.chimes_abundances[i]; 
+      chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp, &ChimesGasVars, 1); 
+
+      double mu = chimes_mu(cooling, p, xp); 
+      double u_subgrid_cgs = xp->tracers_data.subgrid_temp; 
+      u_subgrid_cgs *= hydro_one_over_gamma_minus_one; 
+      u_subgrid_cgs *= phys_const->const_boltzmann_k / phys_const->const_proton_mass; 
+      u_subgrid_cgs /= mu; 
+      u_subgrid_cgs *= units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+
+      chimes_update_gas_vars(u_subgrid_cgs, phys_const, us, cosmo, hydro_props, floor_props, cooling, p, xp, &ChimesGasVars, 1.0); 
+
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+      float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+      ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
+#else 
+      ChimesFloat XH = 0.75; 
+#endif 
+      ChimesGasVars.nH_tot = XH * xp->tracers_data.subgrid_dens * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY) / phys_const->const_proton_mass; 
+      ChimesGasVars.temperature = xp->tracers_data.subgrid_temp; 
+      ChimesGasVars.ForceEqOn = 1; 
+      ChimesGasVars.ThermEvolOn = 0; 
+
+      chimes_network(&ChimesGasVars, &ChimesGlobalVars);
+
+      /* Copy abundances from ChimesGasVars back to xp. */ 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
+
+      /* Free CHIMES memory. */ 
+      free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
     }
 }
