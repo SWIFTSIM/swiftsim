@@ -1452,3 +1452,88 @@ void cooling_set_subgrid_properties(
       free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
     }
 }
+
+
+
+
+
+
+/**
+ * @brief Compute the temperature of the gas.
+ *
+ * For particles on the entropy floor, we use pressure equilibrium to
+ * infer the properties of the particle.
+ *
+ * @param us The internal system of units.
+ * @param phys_const The physical constants.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param cosmo The cosmological model.
+ * @param floor_props The properties of the entropy floor.
+ * @param cooling The properties of the cooling scheme.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+float cooling_get_subgrid_temperature(
+    const struct unit_system *us, const struct phys_const *phys_const,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, const struct part *p,
+    const struct xpart *xp) {
+
+  /* Get the EOS temperature from the entropy floor */
+  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
+  const float log10_T_EOS_max =
+      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
+
+  /* Get the particle's temperature */
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
+  const float log10_T = log10f(T);
+
+  if (cooling->use_colibre_subgrid_EOS == 1) 
+    return compute_subgrid_temperature(cooling, us, phys_const, floor_props, cosmo, p,
+				       xp, log10_T, log10_T_EOS_max);
+  else 
+    return T; 
+}
+
+/**
+ * @brief Compute the physical density of the gas.
+ *
+ * For particles on the entropy floor, we use pressure equilibrium to
+ * infer the properties of the particle.
+ *
+ * Note that we return the density in physical coordinates.
+ *
+ * @param us The internal system of units.
+ * @param phys_const The physical constants.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param cosmo The cosmological model.
+ * @param floor_props The properties of the entropy floor.
+ * @param cooling The properties of the cooling scheme.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+float cooling_get_subgrid_density(
+    const struct unit_system *us, const struct phys_const *phys_const,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, const struct part *p,
+    const struct xpart *xp) {
+
+  /* Get the EOS temperature from the entropy floor */
+  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
+  const float log10_T_EOS_max =
+      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
+
+  /* Get the particle's temperature */
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
+  const float log10_T = log10f(T);
+
+  if (cooling->use_colibre_subgrid_EOS == 1) 
+    return compute_subgrid_density(cooling, us, phys_const, floor_props, cosmo, p, xp,
+				   log10_T, log10_T_EOS_max);
+  else 
+    return hydro_get_physical_density(p, cosmo); 
+}

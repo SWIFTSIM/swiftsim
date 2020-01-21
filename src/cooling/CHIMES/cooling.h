@@ -125,6 +125,20 @@ void cooling_set_subgrid_properties(
     const struct cooling_function_data *cooling, struct part *p,
     struct xpart *xp); 
 
+float cooling_get_subgrid_temperature(
+    const struct unit_system *us, const struct phys_const *phys_const,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, const struct part *p,
+    const struct xpart *xp); 
+
+float cooling_get_subgrid_density(
+    const struct unit_system *us, const struct phys_const *phys_const,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, const struct part *p,
+    const struct xpart *xp); 
+
 /**
  * @brief Computes the cooling time-step.
  *
