@@ -20,6 +20,7 @@
 #define SWIFT_PRESSURE_FLOOR_GEAR_H
 
 /* Forward declaration */
+struct cosmology;
 __attribute__((always_inline)) static INLINE float
 pressure_floor_get_comoving_pressure(const struct part* p, const float pressure,
                                      const struct cosmology* cosmo);
