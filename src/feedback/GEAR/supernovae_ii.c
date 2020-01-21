@@ -50,8 +50,8 @@ void supernovae_ii_print(const struct supernovae_ii *snii) {
  *
  * @return If the mass is in the range of SNII.
  */
-int supernovae_ii_can_explode(
-    const struct supernovae_ii *snii, float m_low, float m_high) {
+int supernovae_ii_can_explode(const struct supernovae_ii *snii, float m_low,
+                              float m_high) {
 
   if (m_high < snii->mass_min || m_low > snii->mass_max) return 0;
 
@@ -68,8 +68,8 @@ int supernovae_ii_can_explode(
  *
  * @return The number of supernovae II per unit of mass.
  */
-float supernovae_ii_get_number(
-    const struct supernovae_ii *snii, float m1, float m2) {
+float supernovae_ii_get_number(const struct supernovae_ii *snii, float m1,
+                               float m2) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > m2) error("Mass 1 larger than mass 2 %g > %g.", m1, m2);
 #endif
@@ -96,9 +96,8 @@ float supernovae_ii_get_number(
  * @param m2 The upper mass in log.
  * @param yields The elements ejected (needs to be allocated).
  */
-void supernovae_ii_get_yields(
-    const struct supernovae_ii *snii, float log_m1, float log_m2,
-    float *yields) {
+void supernovae_ii_get_yields(const struct supernovae_ii *snii, float log_m1,
+                              float log_m2, float *yields) {
 
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     float yields_1 = interpolate_1d(&snii->integrated_yields[i], log_m1);
@@ -152,13 +151,11 @@ float supernovae_ii_get_ejected_mass_fraction_processed(
  * @param snii The #supernovae_ii model.
  * @param sm The #stellar_model.
  */
-void supernovae_ii_read_yields_array(struct supernovae_ii *snii,
-                                     struct interpolation_1d *interp,
-                                     const struct phys_const *phys_const,
-                                     const struct stellar_model *sm, hid_t group_id,
-                                     const char *hdf5_dataset_name,
-                                     hsize_t *previous_count,
-                                     int interpolation_size) {
+void supernovae_ii_read_yields_array(
+    struct supernovae_ii *snii, struct interpolation_1d *interp,
+    const struct phys_const *phys_const, const struct stellar_model *sm,
+    hid_t group_id, const char *hdf5_dataset_name, hsize_t *previous_count,
+    int interpolation_size) {
 
   /* Now let's get the number of elements */
   /* Open attribute */
@@ -215,9 +212,10 @@ void supernovae_ii_read_yields_array(struct supernovae_ii *snii,
  * @param params The simulation parameters.
  * @param sm The #stellar_model.
  */
-void supernovae_ii_read_yields(
-    struct supernovae_ii *snii, struct swift_params *params,
-    const struct phys_const *phys_const, const struct stellar_model *sm) {
+void supernovae_ii_read_yields(struct supernovae_ii *snii,
+                               struct swift_params *params,
+                               const struct phys_const *phys_const,
+                               const struct stellar_model *sm) {
 
   hid_t file_id, group_id;
 
@@ -306,10 +304,11 @@ void supernovae_ii_read_from_tables(struct supernovae_ii *snii,
  * @param params The simulation parameters.
  * @param sm The #stellar_model.
  */
-void supernovae_ii_init(
-    struct supernovae_ii *snii, const struct phys_const *phys_const,
-    const struct unit_system *us, struct swift_params *params,
-    const struct stellar_model *sm) {
+void supernovae_ii_init(struct supernovae_ii *snii,
+                        const struct phys_const *phys_const,
+                        const struct unit_system *us,
+                        struct swift_params *params,
+                        const struct stellar_model *sm) {
 
   /* Read the parameters from the tables */
   supernovae_ii_read_from_tables(snii, params);
@@ -337,9 +336,8 @@ void supernovae_ii_init(
  * @param snii the struct
  * @param stream the file stream
  */
-void supernovae_ii_dump(
-    const struct supernovae_ii *snii, FILE *stream,
-    const struct stellar_model *sm) {
+void supernovae_ii_dump(const struct supernovae_ii *snii, FILE *stream,
+                        const struct stellar_model *sm) {
 
   /* Dump the yields. */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
@@ -378,8 +376,8 @@ void supernovae_ii_dump(
  * @param snii the struct
  * @param stream the file stream
  */
-void supernovae_ii_restore(
-    struct supernovae_ii *snii, FILE *stream, const struct stellar_model *sm) {
+void supernovae_ii_restore(struct supernovae_ii *snii, FILE *stream,
+                           const struct stellar_model *sm) {
 
   /* Restore the yields */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {

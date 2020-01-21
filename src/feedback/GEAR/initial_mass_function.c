@@ -27,8 +27,8 @@
 /**
  * @brief Get the IMF exponent in between mass_min and mass_max.
  */
-float initial_mass_function_get_exponent(const struct initial_mass_function *imf,
-                                         float mass_min, float mass_max) {
+float initial_mass_function_get_exponent(
+    const struct initial_mass_function *imf, float mass_min, float mass_max) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mass_max > imf->mass_max)
@@ -59,8 +59,7 @@ float initial_mass_function_get_exponent(const struct initial_mass_function *imf
 }
 
 /** @brief Print the initial mass function */
-void initial_mass_function_print(
-    const struct initial_mass_function *imf) {
+void initial_mass_function_print(const struct initial_mass_function *imf) {
 
   message("Number of parts: %i", imf->n_parts);
   message("Mass interval: [%g, %g]", imf->mass_min, imf->mass_max);
@@ -158,8 +157,8 @@ void initial_mass_function_integrate(const struct initial_mass_function *imf,
  *
  * @return The imf's coefficient of the interval.
  */
-float initial_mass_function_get_coefficient(const struct initial_mass_function *imf,
-                                            float mass_min, float mass_max) {
+float initial_mass_function_get_coefficient(
+    const struct initial_mass_function *imf, float mass_min, float mass_max) {
 
   for (int i = 0; i < imf->n_parts; i++) {
 
@@ -191,8 +190,8 @@ float initial_mass_function_get_coefficient(const struct initial_mass_function *
  *
  * @return The number fraction.
  */
-float initial_mass_function_get_integral_xi(const struct initial_mass_function *imf,
-                                            float m1, float m2) {
+float initial_mass_function_get_integral_xi(
+    const struct initial_mass_function *imf, float m1, float m2) {
 
   int k = -1;
   /* Find the correct part */
@@ -258,8 +257,8 @@ float initial_mass_function_get_imf(const struct initial_mass_function *imf,
  *
  * @return The integral of the mass fraction.
  */
-float initial_mass_function_get_integral_imf(const struct initial_mass_function *imf,
-                                             const float m1, const float m2) {
+float initial_mass_function_get_integral_imf(
+    const struct initial_mass_function *imf, const float m1, const float m2) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (m1 > imf->mass_max || m1 < imf->mass_min)
@@ -291,7 +290,8 @@ float initial_mass_function_get_integral_imf(const struct initial_mass_function 
  *
  * @param imf The #initial_mass_function.
  */
-void initial_mass_function_compute_coefficients(struct initial_mass_function *imf) {
+void initial_mass_function_compute_coefficients(
+    struct initial_mass_function *imf) {
 
   /* Allocate memory */
   if ((imf->coef = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
@@ -432,9 +432,10 @@ void initial_mass_function_read_from_params(struct initial_mass_function *imf,
  * @param us The #unit_system.
  * @param params The #swift_params.
  */
-void initial_mass_function_init(
-    struct initial_mass_function *imf, const struct phys_const *phys_const,
-    const struct unit_system *us, struct swift_params *params) {
+void initial_mass_function_init(struct initial_mass_function *imf,
+                                const struct phys_const *phys_const,
+                                const struct unit_system *us,
+                                struct swift_params *params) {
 
   /* Read the parameters from the yields table */
   initial_mass_function_read_from_table(imf, params);
@@ -461,9 +462,8 @@ void initial_mass_function_init(
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
-void initial_mass_function_dump(
-    const struct initial_mass_function *imf, FILE *stream,
-    const struct stellar_model *sm) {
+void initial_mass_function_dump(const struct initial_mass_function *imf,
+                                FILE *stream, const struct stellar_model *sm) {
 
   /* Dump the mass limits. */
   if (imf->mass_limits != NULL) {
@@ -496,9 +496,9 @@ void initial_mass_function_dump(
  * @param stream the file stream
  * @param sm The #stellar_model.
  */
-void initial_mass_function_restore(
-    struct initial_mass_function *imf, FILE *stream,
-    const struct stellar_model *sm) {
+void initial_mass_function_restore(struct initial_mass_function *imf,
+                                   FILE *stream,
+                                   const struct stellar_model *sm) {
 
   /* Restore the mass limits */
   if (imf->mass_limits != NULL) {
