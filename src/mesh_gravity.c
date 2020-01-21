@@ -557,7 +557,7 @@ void pm_mesh_assign_densities(struct pm_mesh* mesh, const struct space* s,
                  MPI_COMM_WORLD, request);
 
   if (verbose)
-    message("Starting mesh comunication took %.3f %s.",
+    message("Starting mesh communication took %.3f %s.",
             clocks_from_ticks(getticks() - tic), clocks_getunit());
 #endif
 
