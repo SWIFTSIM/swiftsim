@@ -350,7 +350,8 @@ void stellar_evolution_evolve_spart(
  * @param sm The #stellar_model.
  * @param i The element indice.
  */
-const char* stellar_evolution_get_element_name(const struct stellar_model* sm, int i) {
+const char* stellar_evolution_get_element_name(const struct stellar_model* sm,
+                                               int i) {
 
   return sm->elements_name + i * GEAR_LABELS_SIZE;
 }
@@ -361,7 +362,7 @@ const char* stellar_evolution_get_element_name(const struct stellar_model* sm, i
  * @param sm The #stellar_model.
  */
 void stellar_evolution_read_elements(struct stellar_model* sm,
-                                struct swift_params* params) {
+                                     struct swift_params* params) {
 
   hid_t file_id, group_id;
 
@@ -370,16 +371,18 @@ void stellar_evolution_read_elements(struct stellar_model* sm,
 
   /* Read the elements */
   io_read_string_array_attribute(group_id, "elts", sm->elements_name,
-                                 GEAR_CHEMISTRY_ELEMENT_COUNT, GEAR_LABELS_SIZE);
+                                 GEAR_CHEMISTRY_ELEMENT_COUNT,
+                                 GEAR_LABELS_SIZE);
 
   /* Check that we received correctly the metals */
-  if (strcmp(
-             stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1),
-          "Metals") != 0) {
+  if (strcmp(stellar_evolution_get_element_name(
+                 sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1),
+             "Metals") != 0) {
     error(
         "The chemistry table should contain the metals in the last column "
         "(found %s)",
-        stellar_evolution_get_element_name(sm, GEAR_CHEMISTRY_ELEMENT_COUNT - 1));
+        stellar_evolution_get_element_name(sm,
+                                           GEAR_CHEMISTRY_ELEMENT_COUNT - 1));
   }
 
   /* Print the name of the elements */
@@ -409,10 +412,11 @@ void stellar_evolution_read_elements(struct stellar_model* sm,
  * @param hydro_props The already read-in properties of the hydro scheme.
  * @param cosmo The cosmological model.
  */
-void stellar_evolution_props_init(
-    struct stellar_model* sm, const struct phys_const* phys_const,
-    const struct unit_system* us, struct swift_params* params,
-    const struct cosmology* cosmo) {
+void stellar_evolution_props_init(struct stellar_model* sm,
+                                  const struct phys_const* phys_const,
+                                  const struct unit_system* us,
+                                  struct swift_params* params,
+                                  const struct cosmology* cosmo) {
 
   /* Read the list of elements */
   stellar_evolution_read_elements(sm, params);
@@ -444,8 +448,7 @@ void stellar_evolution_props_init(
  * @param sm the struct
  * @param stream the file stream
  */
-void stellar_evolution_dump(
-    const struct stellar_model* sm, FILE* stream) {
+void stellar_evolution_dump(const struct stellar_model* sm, FILE* stream) {
 
   /* Dump the initial mass function */
   initial_mass_function_dump(&sm->imf, stream, sm);
