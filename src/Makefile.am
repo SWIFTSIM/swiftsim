@@ -64,17 +64,24 @@ EAGLE_COOLING_SOURCES =
 if HAVEEAGLECOOLING
 EAGLE_COOLING_SOURCES += cooling/EAGLE/cooling.c cooling/EAGLE/cooling_tables.c
 endif
+
+# source files for EAGLE feedback
+EAGLE_FEEDBACK_SOURCES =
+if HAVEEAGLEFEEDBACK
+EAGLE_FEEDBACK_SOURCES += feedback/EAGLE/feedback.c
+endif
+
 # source files for GRACKLE cooling
 GRACKLE_COOLING_SOURCES =
 if HAVEGRACKLECOOLING
 GRACKLE_COOLING_SOURCES += cooling/grackle/cooling.c
 endif
 
-
-# source files for EAGLE feedback
-EAGLE_FEEDBACK_SOURCES =
-if HAVEEAGLEFEEDBACK
-EAGLE_FEEDBACK_SOURCES += feedback/EAGLE/feedback.c
+# source files for GRACKLE cooling
+GEAR_FEEDBACK_SOURCES =
+if HAVEGEARFEEDBACK
+GEAR_FEEDBACK_SOURCES += feedback/GEAR/stellar_evolution.c feedback/GEAR/feedback.c \
+	feedback/GEAR/initial_mass_function.c feedback/GEAR/supernovae_ia.c feedback/GEAR/supernovae_ii.c
 endif
 
 # Common source files
@@ -95,7 +102,8 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
     hashmap.c pressure_floor.c \
-    $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) $(GRACKLE_COOLING_SOURCES)
+    $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) $(GRACKLE_COOLING_SOURCES) \
+		$(GEAR_FEEDBACK_SOURCES)
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
@@ -241,7 +249,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
 		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
                  feedback/GEAR/initial_mass_function.h feedback/GEAR/supernovae_ia.h feedback/GEAR/supernovae_ii.h \
-                 feedback/GEAR/lifetime.h feedback/GEAR/hdf5_functions.h \
+                 feedback/GEAR/lifetime.h feedback/GEAR/hdf5_functions.h feedback/GEAR/interpolation.h \
                  black_holes/Default/black_holes.h black_holes/Default/black_holes_io.h \
 		 black_holes/Default/black_holes_part.h black_holes/Default/black_holes_iact.h \
                  black_holes/Default/black_holes_properties.h \
@@ -258,7 +266,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 
 # Sources and special flags for the gravity library
 libgrav_la_SOURCES = runner_doiact_grav.c
-libgrav_la_CFLAGS = $(AM_CFLAGS) $(GRAVITY_CFLAGS) 
+libgrav_la_CFLAGS = $(AM_CFLAGS) $(GRAVITY_CFLAGS)
 libgrav_la_LDFLAGS = $(AM_LDFLAGS) $(EXTRA_LIBS)
 
 # Sources and special flags for the gravity MPI library
