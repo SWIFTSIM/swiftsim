@@ -48,6 +48,43 @@ INLINE static void convert_part_T(const struct engine* e, const struct part* p,
                                    e->cooling_func, p, xp);
 }
 
+INLINE static void convert_part_sub_T(const struct engine* e,
+                                      const struct part* p,
+                                      const struct xpart* xp, float* ret) {
+
+  ret[0] = cooling_get_subgrid_temperature(
+      e->internal_units, e->physical_constants, e->cosmology,
+      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
+}
+
+INLINE static void convert_part_sub_rho(const struct engine* e,
+                                        const struct part* p,
+                                        const struct xpart* xp, float* ret) {
+
+  ret[0] = cooling_get_subgrid_density(
+      e->internal_units, e->physical_constants, e->cosmology,
+      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
+}
+
+INLINE static void convert_part_chimes_abundances(const struct engine* e, const struct part* p,
+						  const struct xpart* xp, double* ret) {
+  /* Create dummy part and xpart 
+   * structures that we can use to 
+   * temporarily update the CHIMES 
+   * abundance array for the snapshot. */ 
+  struct part dummy_p = *p; 
+  struct xpart dummy_xp = *xp; 
+  
+  /* Update abundance array for 
+   * particles on the EOS. */ 
+  cooling_set_subgrid_properties(e->physical_constants, e->internal_units, e->cosmology, e->hydro_properties,
+                                 e->entropy_floor, e->cooling_func, &dummy_p, &dummy_xp);
+
+  int i; 
+  for (i = 0; i < CHIMES_NETWORK_SIZE; i++) 
+    ret[i] = (double) dummy_xp.cooling_data.chimes_abundances[i]; 
+}
+
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -66,9 +103,29 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "Temperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts, xparts,
       convert_part_T, "Temperature of the particles");
 
-  list[1] = io_make_output_field("ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f, xparts, cooling_data.chimes_abundances, "CHIMES abundance array. The abundance of species i is defined in terms of its number density relative to hydrogen, i.e. n_i / n_H_tot."); 
+  list[1] = io_make_output_field_convert_part(
+      "SubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts,
+      xparts, convert_part_sub_T,
+      "The subgrid temperatures if the particles are within deltaT of the "
+      "entropy floor the subgrid temperature is calculated assuming a "
+      "pressure equilibrium on the entropy floor, if the particles are "
+      "above deltaT of the entropy floor the subgrid temperature is "
+      "identical to the SPH temperature.");
 
-  return 2;
+  list[2] = io_make_output_field_convert_part(
+      "SubgridPhysicalDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, parts,
+      xparts, convert_part_sub_rho,
+      "The subgrid physical density if the particles are within deltaT of the "
+      "entropy floor the subgrid density is calculated assuming a pressure "
+      "equilibrium on the entropy floor, if the particles are above deltaT "
+      "of the entropy floor the subgrid density is identical to the "
+      "physical SPH density.");
+
+  list[3] = io_make_output_field_convert_part(
+      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f, parts,
+      xparts, convert_part_chimes_abundances, "CHIMES abundance array. The abundance of species i is defined in terms of its number density relative to hydrogen, i.e. n_i / n_H_tot."); 
+
+  return 4;
 }
 
 #endif /* SWIFT_COOLING_CHIMES_IO_H */
