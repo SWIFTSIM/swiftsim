@@ -312,7 +312,7 @@ void stellar_evolution_evolve_spart(
 
     /* Get the integer number of supernovae */
     number_snia = stellar_evolution_compute_integer_number_supernovae(
-        sp, number_snia_f, ti_begin, random_number_stellar_feedback);
+        sp, number_snia_f, ti_begin, random_number_stellar_feedback_1);
   }
 
   /* Compute number of SNII */
