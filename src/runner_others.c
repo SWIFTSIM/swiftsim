@@ -162,8 +162,10 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 
   TIMER_TIC;
 
-  /* Anything to do here? */
-  if (!task_order_cell_is_active_cooling(c, e)) return;
+  /* Anything to do here? (i.e. does this cell need updating?) */
+  if (!((task_order_cooling_after_timestep && cell_is_starting_hydro(c, e)) ||
+        (!task_order_cooling_after_timestep && cell_is_active_hydro(c, e))))
+    return;
 
   /* Recurse? */
   if (c->split) {
@@ -178,7 +180,9 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &parts[i];
       struct xpart *restrict xp = &xparts[i];
 
-      if (task_order_part_is_active_cooling(p, e)) {
+      /* Anything to do here? (i.e. does this particle need updating?) */
+      if ((task_order_cooling_after_timestep && part_is_starting(p, e)) ||
+          (!task_order_cooling_after_timestep && part_is_active(p, e))) {
 
         double dt_cool, dt_therm;
         if (with_cosmology) {
