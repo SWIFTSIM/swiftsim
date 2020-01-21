@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
   struct chemistry_global_data chemistry;
   struct cooling_function_data cooling_func;
   struct cosmology cosmo;
+  struct dustevo_props dustevo_properties;
   struct external_potential potential;
   struct star_formation starform;
   struct pm_mesh mesh;
@@ -905,6 +906,11 @@ int main(int argc, char *argv[]) {
     chemistry_init(params, &us, &prog_const, &chemistry);
     if (myrank == 0) chemistry_print(&chemistry);
 
+    /* Initialise the dust evolution properties */
+    bzero(&dustevo_properties, sizeof(struct dustevo_props));
+    dustevo_props_init(&dustevo_properties, params, &prog_const);
+
+
     /* Initialise the FOF properties */
     bzero(&fof_properties, sizeof(struct fof_props));
 #ifdef WITH_FOF
@@ -1170,7 +1176,8 @@ int main(int argc, char *argv[]) {
         &reparttype, &us, &prog_const, &cosmo, &hydro_properties,
         &entropy_floor, &gravity_properties, &stars_properties,
         &black_holes_properties, &feedback_properties, &mesh, &potential,
-        &cooling_func, &starform, &chemistry, &fof_properties);
+        &cooling_func, &starform, &chemistry, &dustevo_properties, 
+	&fof_properties);
     engine_config(/*restart=*/0, /*fof=*/0, &e, params, nr_nodes, myrank,
                   nr_threads, with_aff, talking, restart_file);
 

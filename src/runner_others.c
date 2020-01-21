@@ -42,6 +42,7 @@
 #include "cell.h"
 #include "chemistry.h"
 #include "cooling.h"
+#include "dust.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity.h"
@@ -152,6 +153,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
   const struct unit_system *us = e->internal_units;
   const struct hydro_props *hydro_props = e->hydro_properties;
   const struct entropy_floor_properties *entropy_floor_props = e->entropy_floor;
+  const struct dustevo_props *dustevo_props = e->dustevo_props;
   const double time_base = e->time_base;
   const integertime_t ti_current = e->ti_current;
   struct part *restrict parts = c->hydro.parts;
@@ -195,9 +197,17 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
         }
 
         /* Let's cool ! */
-        cooling_cool_part(constants, us, cosmo, hydro_props,
-                          entropy_floor_props, cooling_func, p, xp, dt_cool,
-                          dt_therm, e->time);
+	if (dustevo_props->with_cooling_on) {
+	  cooling_cool_part(constants, us, cosmo, hydro_props,
+			    entropy_floor_props, cooling_func, p, xp, dt_cool,
+			    dt_therm, e->time);
+	}
+
+	evolve_dust_part(constants, us, cosmo, hydro_props,
+			       entropy_floor_props, cooling_func, 
+			       dustevo_props,  p, xp, dt_cool,
+			       dt_therm, e->time);
+
       }
     }
   }

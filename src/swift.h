@@ -38,6 +38,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "dump.h"
+#include "dust.h"
 #include "engine.h"
 #include "entropy_floor.h"
 #include "error.h"

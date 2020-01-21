@@ -60,6 +60,7 @@
 #include "cooling.h"
 #include "cosmology.h"
 #include "cycle.h"
+#include "dust.h"
 #include "debug.h"
 #include "entropy_floor.h"
 #include "equation_of_state.h"
@@ -3441,6 +3442,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
                  const struct chemistry_global_data *chemistry,
+                 const struct dustevo_props *dustevo,
                  struct fof_props *fof_properties) {
 
   /* Clean-up everything */
@@ -3517,6 +3519,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->star_formation = starform;
   e->feedback_props = feedback;
   e->chemistry = chemistry;
+  e->dustevo_props = dustevo;
   e->fof_properties = fof_properties;
   e->parameter_file = params;
   e->stf_this_timestep = 0;
@@ -4886,6 +4889,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   event_logger_struct_dump(stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
+  dustevo_struct_dump(e->dustevo_props, stream);
 #ifdef WITH_FOF
   fof_struct_dump(e->fof_properties, stream);
 #endif
@@ -5011,6 +5015,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
           sizeof(struct chemistry_global_data));
   chemistry_struct_restore(chemistry, stream);
   e->chemistry = chemistry;
+
+  struct dustevo_props *dustevo_properties =
+      (struct dustevo_props *)malloc(sizeof(struct dustevo_props));
+  dustevo_struct_restore(dustevo_properties, stream);
+  e->dustevo_props = dustevo_properties;
+
 
 #ifdef WITH_FOF
   struct fof_props *fof_props =

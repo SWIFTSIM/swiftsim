@@ -21,7 +21,7 @@ TimeIntegration:
 
 # Parameters governing the snapshots
 Snapshots:
-  basename:   output      # Common part of the name of output files
+  basename:   output_wdevo      # Common part of the name of output files
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
   delta_time: 0.01023     # Time difference between consecutive outputs (in internal units) 0.01023 TU = 10 Myr
 
@@ -60,10 +60,10 @@ COLIBRECooling:
 
 # Dust evolution options
 COLIBREDustEvolution:
-  use_sputtering:                0               # Global switch for thermal dust sputtering
-  use_SNII_destruction:          0               # Global switch for dust destruction by SNII shocks
-  use_accretion:                 0               # Global switch for dust growth by accretion
-
+  use_sputtering:                1               # Global switch for thermal dust sputtering
+  use_SNII_destruction:          1               # Global switch for dust destruction by SNII shocks
+  use_accretion:                 1               # Global switch for dust growth by accretion
+  cooling_on:                    1               # As dust evolution is done in the cooling loop an SWIFT must be run with cooling to work, can use this  switch to actually turn off cooling
 # Solar abundances
 COLIBREChemistry:
   init_abundance_metal:     0.0133714      # Inital fraction of particle mass in *all* metals 
@@ -86,9 +86,9 @@ COLIBREChemistry:
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  temperature_threshold_K:          1000    # (Optional) Subgrid temperature threshold below which stars are allowed to form (Default set to infinity).
+  temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
   threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Default set to infinity).
-  subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (defualt set to infinity)
+  EOS_temperature_margin_dex:       0.2     # (Optional) Logarithm base 10 of the maximal temperature difference above the EOS allowed to form stars. Default set to 10 (almost infinity)
 
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
@@ -101,8 +101,6 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
-  with_HIIRegions:                  1               # Switch for early feedback (HII regions).
-  with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -122,8 +120,6 @@ COLIBREFeedback:
   SNIa_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNIa thermal feedback event in Kelvin.
   SNIa_energy_fraction:             1.0             # Fraction of energy applied in a SNIa feedback event.
   AGB_ejecta_velocity_km_p_s:      10.0             # Velocity of the AGB ejectas in km/s.
-  stellar_evolution_age_cut_Gyr:    100             # Stellar age in Gyr above which the enrichment is down-sampled.
-  stellar_evolution_sampling_rate:   10             # Number of time-steps in-between two enrichment events for a star above the age threshold.
   SNII_yield_factor_Hydrogen:       1.0             # (Optional) Correction factor to apply to the Hydrogen yield from the SNII channel.
   SNII_yield_factor_Helium:         1.0             # (Optional) Correction factor to apply to the Helium yield from the SNII channel.
   SNII_yield_factor_Carbon:         0.5             # (Optional) Correction factor to apply to the Carbon yield from the SNII channel.
@@ -133,12 +129,11 @@ COLIBREFeedback:
   SNII_yield_factor_Magnesium:      2.0             # (Optional) Correction factor to apply to the Magnesium yield from the SNII channel.
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
+  stellarwind_maxage_Myr:           30.             # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds.
+  HIIregion_maxage_Myr:             0.             # (Optional) Maximum age in Myr of star particle to build HII region. Set to 0 to disable HII regions.
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
-#  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table
-                                    
-# HIIregion_maxage_Myr:             0 # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
 
 # Hernquist potential parameters
 HernquistPotential:
@@ -169,8 +164,3 @@ SNIaDTD:
   SNIa_efficiency_p_Msun:       0.001       # Normalisation of the SNIa rates in inverse solar masses, used when there is only one functional form in the DTD.
   normalization_timescale_Gyr:  13.6        # Normalization time for DTDs that cannot be integrated to infinity 
   SNIa_delay_time_Gyr:          0.04        # Delay time before the DTD kicks in.
-
-Event_logger:
-  delta_time_SNIa_Myr:        10
-  delta_time_SNII_Myr:        1
-  delta_time_r_processes_Myr: 20

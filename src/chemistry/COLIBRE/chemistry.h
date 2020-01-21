@@ -45,7 +45,8 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron"};
+      "Neon",     "Magnesium", "Silicon", "Iron", "Graphite",
+      "Silicate", "CarbideOxide"};
 
   return chemistry_element_names[elem];
 }
@@ -471,6 +472,46 @@ chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) {
 
   return p->chemistry_data.metal_mass_fraction;
 }
+
+/* /\** */
+/*  * @brief Returns the total metallicity (metal mass fraction) of the */
+/*  * gas particle to be used in cooling related routines. */
+/*  * */
+/*  * @param p Pointer to the particle data. */
+/*  *\/ */
+/* __attribute__((always_inline)) INLINE static float */
+/* chemistry_get_total_metal_mass_fraction_for_cooling( */
+/*     const struct part* restrict p) { */
+  
+/*   return 0.0127; */
+/* } */
+
+/* /\** */
+/*  * @brief Returns the abundance array (metal mass fractions) of the */
+/*  * gas particle to be used in cooling related routines. */
+/*  * */
+/*  * @param p Pointer to the particle data. */
+/*  *\/ */
+/* __attribute__((always_inline)) INLINE static float const* */
+/* chemistry_get_metal_mass_fraction_for_cooling(const struct part* restrict p) { */
+/*   float *temp_arr  = malloc (sizeof (float) * chemistry_element_count); */
+
+/*   temp_arr[chemistry_element_H]  = 0.7065; */
+/*   temp_arr[chemistry_element_He]  = 0.2806; */
+/*   temp_arr[chemistry_element_C]  = 2.07e-3; */
+/*   temp_arr[chemistry_element_N]  = 8.36e-4; */
+/*   temp_arr[chemistry_element_O]  = 5.49e-3; */
+/*   temp_arr[chemistry_element_Ne]  = 1.41e-3; */
+/*   temp_arr[chemistry_element_Mg]  = 5.91e-4; */
+/*   temp_arr[chemistry_element_Si]  = 6.83e-4; */
+/*   temp_arr[chemistry_element_Fe]  = 1.1e-3; */
+/*   temp_arr[chemistry_element_Gra]  = 0.; */
+/*   temp_arr[chemistry_element_Sil]  = 0.; */
+/*   temp_arr[chemistry_element_Ide]  = 0.; */
+  
+/*   return temp_arr; */
+
+/* } */
 
 /**
  * @brief Returns the total metallicity (metal mass fraction) of the
