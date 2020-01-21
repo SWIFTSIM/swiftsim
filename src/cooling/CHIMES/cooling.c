@@ -283,9 +283,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * dust depletion. */ 
   cooling->colibre_metal_depletion = parser_get_param_int(parameter_file, "CHIMESCooling:colibre_metal_depletion"); 
 
-  /* delta log U above the EOS below which 
-   * we evolve the chemistry in eqm. */ 
-  cooling->delta_logUEOS_apply_eqm = parser_get_param_float(parameter_file, "CHIMESCooling:delta_logUEOS_apply_eqm"); 
+  /* Distance from EOS to use thermal equilibrium 
+   * temperature for subgrid props, and to evolve 
+   * the chemistry in equilibrium. */
+  cooling->dlogT_EOS = parser_get_param_float(parameter_file, "CHIMESCooling:delta_logTEOS_subgrid_properties"); 
 
   /* Threshold in dt / t_cool above which we 
    * are in the rapid cooling regime. If negative, 
@@ -479,7 +480,7 @@ void chimes_update_gas_vars(const double u_cgs,
       ChimesGasVars->ForceEqOn = 1; 
       T_floor = u_floor * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs; 
     }
-  else if (u_cgs < pow(10.0, cooling->delta_logUEOS_apply_eqm) * u_floor) 
+  else if (u_cgs < pow(10.0, cooling->dlogT_EOS) * u_floor) 
     {
       /* Particle is above the entropy floor, but 
        * close enough that we will need to evolve 

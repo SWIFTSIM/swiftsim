@@ -117,9 +117,10 @@ struct cooling_function_data {
   double f_dust0_Ca; 
   double f_dust0_Fe; 
 
-  /* delta log U above the EOS below which 
-   * we evolve the chemistry in eqm. */ 
-  float delta_logUEOS_apply_eqm; 
+  /* Distance from EOS to use thermal equilibrium 
+   * temperature for subgrid props, and to evolve 
+   * the chemistry in equilibrium. */
+  float dlogT_EOS; 
 
   /* Threshold to switch between rapid and slow cooling regimes. */
   double rapid_cooling_threshold; 
