@@ -288,6 +288,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
    * the chemistry in equilibrium. */
   cooling->dlogT_EOS = parser_get_param_float(parameter_file, "CHIMESCooling:delta_logTEOS_subgrid_properties"); 
 
+  
+  /* Flag to use the subgrid density and 
+   * temperature from the COLIBRE cooling tables. */ 
+  cooling->use_colibre_subgrid_EOS = parser_get_param_int(parameter_file, "CHIMESCooling:use_colibre_subgrid_EOS"); 
+
   /* Threshold in dt / t_cool above which we 
    * are in the rapid cooling regime. If negative, 
    * we never use this scheme (i.e. always drift 
@@ -335,7 +340,17 @@ void cooling_init_backend(struct swift_params *parameter_file,
       int i; 
       for (i = 0; i < 9; i++) 
 	cooling->ChimesGlobalVars.element_included[i] = 0; 
+    }
+  else 
+    error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->ChimesGlobalVars.hybrid_cooling_mode);
 
+  
+  /* The COLIBRE cooling tables are needed 
+   * if we are using hybrid cooling or 
+   * if we are using the subgrid density 
+   * and temperature on the EOS. */ 
+  if ((cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) || (cooling->use_colibre_subgrid_EOS == 1))
+    {
       /* Path to colibre cooling table */ 
       parser_get_param_string(parameter_file, "CHIMESCooling:colibre_table_path", cooling->colibre_table.cooling_table_path); 
 
@@ -361,8 +376,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
       read_cooling_header(&(cooling->colibre_table));
       read_cooling_tables(&(cooling->colibre_table));
     }
-  else 
-    error("CHIMES ERROR: hybrid_cooling mode %d not recognised. Allowed values are 0 (full CHIMES network) or 1 (Only H+He in CHIMES; metals from COLIBRE tables).", cooling->ChimesGlobalVars.hybrid_cooling_mode);
 
   /* Set redshift to a very high value, just 
    * while we initialise the CHIMES module. 
@@ -903,21 +916,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   u_final = max(u_final, u_floor); 
 
-  if ((u_final == u_floor) && (ChimesGasVars.ForceEqOn == 0)) 
-    {
-      /* The particle has reached the entropy 
-       * floor, but it was evolved with non-
-       * eqm chemistry (meaning that it started 
-       * from a long way above the EOS). We 
-       * now need to re-set its abundance array 
-       * to be in chemical equilibrium. */ 
-      const double u_floor_cgs = u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
-      chimes_update_gas_vars(u_floor_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
-      ChimesGasVars.ForceEqOn = 1; 
-      ChimesGasVars.ThermEvolOn = 0; 
-      chimes_network(&ChimesGasVars, &ChimesGlobalVars);
-    }
-
   /* Expected change in energy over the next kick step
      (assuming no change in dt) */
   const double delta_u = u_final - max(u_start, u_floor);
@@ -952,7 +950,44 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0); 
-  
+
+  /* Set subgrid properties */
+  cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
+                                 floor_props, cooling, p, xp);
+
+  if (u_final < u_floor * pow(10.0, cooling->dlogT_EOS)) 
+    {
+      /* If the particle is within dlogT_EOS of 
+       * the entropy floor, we need to re-set 
+       * its abundance array to be in equilibrium 
+       * using the subgrid density and temperature. 
+       * Note that, if use_colibe_subgrid_EOS == 0, 
+       * the subgrid density and temperature have 
+       * simply been set to the particle density 
+       * and temperature. */ 
+      chimes_update_gas_vars(u_final_cgs, phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs); 
+
+#if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE) 
+      float const *metal_fraction = chemistry_get_metal_mass_fraction_for_cooling(p); 
+      ChimesFloat XH = (ChimesFloat) metal_fraction[chemistry_element_H]; 
+#else 
+      ChimesFloat XH = 0.75; 
+#endif 
+      ChimesGasVars.nH_tot = XH * xp->tracers_data.subgrid_dens * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY) / phys_const->const_proton_mass; 
+      ChimesGasVars.temperature = xp->tracers_data.subgrid_temp; 
+      ChimesGasVars.ForceEqOn = 1; 
+      ChimesGasVars.ThermEvolOn = 0; 
+
+      /* Note that, if using the Colibre shielding length 
+       * and/or ISRF, these have not been calculated for 
+       * the correct T and nH in ChimesGasVars. However, 
+       * since we are only setting the abundances to 
+       * equilibrium from pre-computed tables here, these 
+       * variables aren't used at all, so this is not 
+       * a problem. */ 
+      chimes_network(&ChimesGasVars, &ChimesGlobalVars);
+    }
+
   /* Copy abundances from ChimesGasVars back to xp. */ 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
     xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
@@ -1207,7 +1242,7 @@ void cooling_struct_restore(struct cooling_function_data* cooling,
   restart_read_blocks((void *) cooling, sizeof(struct cooling_function_data), 1,
                       stream, NULL, "cooling function");
 
-  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) 
+  if ((cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) || (cooling->use_colibre_subgrid_EOS == 1)) 
     {
       /* Read the Colibre table. */ 
       message("Reading Colibre cooling table."); 
@@ -1353,4 +1388,47 @@ void cooling_convert_quantities(struct part *restrict p,
 
   /* Free CHIMES memory. */ 
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+}
+
+/**
+ * @brief Set the subgrid properties of the gas particle
+ *
+ * @param phys_const The physical constants in internal units.
+ * @param us The internal system of units.
+ * @param cosmo The current cosmological model.
+ * @param hydro_props the hydro_props struct
+ * @param starform the star formation law properties to initialize
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling The #cooling_function_data used in the run.
+ * @param p Pointer to the particle data.
+ * @param xp Pointer to the extended particle data.
+ */
+void cooling_set_subgrid_properties(
+    const struct phys_const *phys_const, const struct unit_system *us,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, struct part *p,
+    struct xpart *xp) {
+
+  /* Get the EOS temperature from the entropy floor */
+  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
+  const float log10_T_EOS_max =
+      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
+
+  /* Get the particle's temperature */
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
+  const float log10_T = log10f(T);
+
+  if (cooling->use_colibre_subgrid_EOS == 1) 
+    {
+      /* Compute the subgrid properties */
+      xp->tracers_data.subgrid_temp = compute_subgrid_temperature(cooling, us, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
+      xp->tracers_data.subgrid_dens = compute_subgrid_density(cooling, us, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
+    }
+  else 
+    {
+      xp->tracers_data.subgrid_temp = T; 
+      xp->tracers_data.subgrid_dens = hydro_get_physical_density(p, cosmo); 
+    }
 }

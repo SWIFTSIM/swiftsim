@@ -122,6 +122,10 @@ struct cooling_function_data {
    * the chemistry in equilibrium. */
   float dlogT_EOS; 
 
+  /* Flag to use the subgrid density and 
+   * temperature from the COLIBRE cooling tables. */ 
+  int use_colibre_subgrid_EOS; 
+
   /* Threshold to switch between rapid and slow cooling regimes. */
   double rapid_cooling_threshold; 
 

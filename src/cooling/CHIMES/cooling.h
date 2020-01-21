@@ -118,6 +118,13 @@ void cooling_convert_quantities(struct part *restrict p,
 				const struct entropy_floor_properties *floor_props, 
 				const struct cooling_function_data* cooling); 
 
+void cooling_set_subgrid_properties(
+    const struct phys_const *phys_const, const struct unit_system *us,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling, struct part *p,
+    struct xpart *xp); 
+
 /**
  * @brief Computes the cooling time-step.
  *
