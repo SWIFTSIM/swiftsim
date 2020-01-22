@@ -602,7 +602,7 @@ double compute_subgrid_H2_fraction(
 }
 
 /**
- * @brief Compute the temperature of the gas.
+ * @brief Compute the subgrid temperature of the gas.
  *
  * For particles on the entropy floor, we use pressure equilibrium to
  * infer the properties of the particle.
@@ -781,7 +781,7 @@ double compute_subgrid_temperature(
 }
 
 /**
- * @brief Compute the physical density of the gas.
+ * @brief Compute the physical subgrid density of the gas.
  *
  * For particles on the entropy floor, we use pressure equilibrium to
  * infer the properties of the particle.
@@ -933,7 +933,7 @@ double compute_subgrid_density(
 
     const float n_at_Peq = exp10(log10_n_at_Peq);
     return n_at_Peq * cooling->number_density_from_cgs *
-           phys_const->const_proton_mass * cosmo->a * cosmo->a * cosmo->a / XH;
+           phys_const->const_proton_mass / XH;
 
   } else {
 
