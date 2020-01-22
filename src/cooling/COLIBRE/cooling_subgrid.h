@@ -778,18 +778,8 @@ double compute_subgrid_temperature(
   } else {
 
     /* We are above the EoS. */
-
-    /* Are we in an HII region? */
-    if (xp->tracers_data.HIIregion_timer_gas > 0.) {
-
-      /* Temp = HII region temp. */
-      return cooling->HIIregion_temp;
-
-    } else {
-
-      /* Use the normal temperature */
-      return exp10(log10_T);
-    }
+    /* Use the normal temperature */
+    return exp10(log10_T);
   }
 }
 
