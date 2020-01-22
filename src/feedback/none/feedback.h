@@ -199,4 +199,16 @@ static INLINE void feedback_struct_dump(const struct feedback_props* feedback,
 static INLINE void feedback_struct_restore(struct feedback_props* feedback,
                                            FILE* stream) {}
 
+#ifdef HAVE_HDF5
+/**
+ * @brief Writes the current model of feedback to the file
+ * @param h_grpsph The HDF5 group in which to write
+ */
+INLINE static  void feedback_write_flavour(struct feedback_props *feedback, hid_t h_grp) {
+
+  io_write_attribute_s(h_grp, "Feedback Model", "None");
+
+};
+#endif
+
 #endif /* SWIFT_FEEDBACK_NONE_H */

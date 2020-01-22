@@ -28,7 +28,7 @@ TimeIntegration:
 
 # Parameters governing the snapshots
 Snapshots:
-  basename:            snap/agora_disk # Common part of the name of output files
+  basename:            agora_disk # Common part of the name of output files
   time_first:          0.    # Time of the first output (in internal units)
   delta_time:          1e-2  # Time difference between consecutive outputs (in internal units)
   compression:         4
@@ -92,7 +92,7 @@ GEARPressureFloor:
 GEARFeedback:
   supernovae_energy_erg: 0.1e51
   yields_table: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5
-  discret_yields: 0
+  discrete_yields: 0
 
 GEARChemistry:
   initial_metallicity: 1
