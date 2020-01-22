@@ -975,7 +975,7 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
   const float extra_heat =
       cooling->H_reion_heat_cgs * cooling->internal_energy_from_cgs;
 
-  message("Applying extra energy for H reionization!");
+  message("Applying extra energy for H reionization to non-star-forming gas!");
 
   /* Loop through particles and set new heat */
   for (size_t i = 0; i < s->nr_parts; i++) {
@@ -983,11 +983,13 @@ void cooling_Hydrogen_reionization(const struct cooling_function_data *cooling,
     struct part *p = &parts[i];
     struct xpart *xp = &xparts[i];
 
-    const float old_u = hydro_get_physical_internal_energy(p, xp, cosmo);
-    const float new_u = old_u + extra_heat;
+    if (xp->sf_data.SFR <= 0.) {
+      const float old_u = hydro_get_physical_internal_energy(p, xp, cosmo);
+      const float new_u = old_u + extra_heat;
 
-    hydro_set_physical_internal_energy(p, xp, cosmo, new_u);
-    hydro_set_drifted_physical_internal_energy(p, cosmo, new_u);
+      hydro_set_physical_internal_energy(p, xp, cosmo, new_u);
+      hydro_set_drifted_physical_internal_energy(p, cosmo, new_u);
+    }
   }
 }
 
