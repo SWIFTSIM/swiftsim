@@ -245,6 +245,7 @@ float initial_mass_function_get_imf(const struct initial_mass_function *imf,
 
   error("Failed to find correct function part: %g larger than mass max %g.", m,
         imf->mass_max);
+  return 0.;
 };
 
 /**
@@ -283,6 +284,7 @@ float initial_mass_function_get_integral_imf(
 
   error("Failed to find correct function part: %g, %g larger than mass max %g.",
         m1, m2, imf->mass_max);
+  return 0.;
 };
 
 /**
