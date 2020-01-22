@@ -111,7 +111,15 @@ double compute_subgrid_temperature(
                                 colibre_cooling_N_metallicity,             /* */
                                 colibre_cooling_N_density);
 
-      return exp10f(log10_T_at_Peq);
+      const float T_at_Peq = exp10f(log10_T_at_Peq);
+
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. */
+      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
+          (T_at_Peq < cooling->HIIregion_temp))
+        return cooling->HIIregion_temp;
+      else
+        return T_at_Peq;
 
     } else {
 
@@ -182,24 +190,21 @@ double compute_subgrid_temperature(
                            colibre_cooling_N_metallicity, /* */
                            colibre_cooling_N_density);
 
-      return exp10f(log10_T_at_Peq);
-    }
+      const float T_at_Peq = exp10f(log10_T_at_Peq);
 
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. */
+      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
+          (T_at_Peq < cooling->HIIregion_temp))
+        return cooling->HIIregion_temp;
+      else
+        return T_at_Peq;
+    }
   } else {
 
-    /* We are above the EoS. */
-
-    /* Are we in an HII region? */
-    if (xp->tracers_data.HIIregion_timer_gas > 0.) {
-
-      /* Temp = HII region temp. */
-      return cooling->HIIregion_temp;
-
-    } else {
-
-      /* Use the normal temperature */
-      return exp10(log10_T);
-    }
+    /* We are above the EoS. 
+     * Use the normal temperature */
+    return exp10(log10_T);
   }
 }
 
@@ -299,8 +304,17 @@ double compute_subgrid_density(
           colibre_cooling_N_density);
 
       const double log10_kB = cooling->colibre_table.log10_kB_cgs; 
-      log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
-                       log10(mu_at_Peq) - log10_kB;
+
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. Also, use
+       * mu = 0.6, for ionised gas, in this case. */
+      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
+          (log10_T_at_Peq < log10(cooling->HIIregion_temp)))
+        log10_n_at_Peq = log10_P_cgs - log10(cooling->HIIregion_temp) +
+                         log10(XH) + log10(0.6) - log10_kB;
+      else
+        log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
+                         log10(mu_at_Peq) - log10_kB;
 
     } else {
 
@@ -350,6 +364,31 @@ double compute_subgrid_density(
           /* Interpolate to get the density at equilibrium */
           log10_n_at_Peq = cooling->colibre_table.nH[i - 1] +
                            delta_P_eq * (cooling->colibre_table.nH[i] - cooling->colibre_table.nH[i - 1]);
+
+          /* For HII regions, limit the subgrid temperature
+           * to be no less than HIIregion_temp. */
+          if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+            int iden_eq;
+            float dden_eq;
+            cooling_get_index_1d(cooling->colibre_table.nH, colibre_cooling_N_density, log10_n_at_Peq,
+                         &iden_eq, &dden_eq);
+
+            float log10_T_at_Peq =
+                interpolation_3d(cooling->colibre_table.logTeq, /* */
+                                 ired, imet, iden_eq,           /* */
+                                 dred, dmet, dden_eq,           /* */
+                                 colibre_cooling_N_redshifts,   /* */
+                                 colibre_cooling_N_metallicity, /* */
+                                 colibre_cooling_N_density);
+
+            if (log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
+              log10_T_at_Peq = log10(cooling->HIIregion_temp);
+
+              /* HII region is fully ionised, so use mu = 0.6 */
+              log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
+                               log10(0.6) - cooling->colibre_table.log10_kB_cgs;
+            }
+          }
 
           break;
         }
