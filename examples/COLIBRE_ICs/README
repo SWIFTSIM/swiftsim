@@ -19,5 +19,8 @@ stf -C ../vrconfig_3dfof_subhalos_SO_hydro.cfg -i eagle_0035 -o halos_0035 -I 2
 ----
 Recommended configure options:
 
-./configure -with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quartic-spline --with-tbbmalloc --disable-hand-vec
+single node runs:
+./configure -with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quartic-spline --with-tbbmalloc --disable-hand-vec --enable-ipo
 
+parallel runs:
+./configure -with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quartic-spline --with-tbbmalloc --disable-hand-vec --enable-ipo --with-parmetis

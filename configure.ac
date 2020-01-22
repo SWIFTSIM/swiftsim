@@ -701,7 +701,7 @@ if test "x$with_parmetis" != "xno"; then
 
 # Check if we have ParMETIS.
    if test "x$with_parmetis" != "xyes" -a "x$with_parmetis" != "x"; then
-      PARMETIS_LIBS="-L$with_parmetis/lib -lparmetis"
+      PARMETIS_LIBS="-L$with_parmetis/lib -lparmetis -lmetis"
       PARMETIS_INCS="-I$with_parmetis/include"
    else
       PARMETIS_LIBS="-lparmetis"
