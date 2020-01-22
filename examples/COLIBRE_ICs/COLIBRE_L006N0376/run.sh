@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Generate the initial conditions if they are not present.
-if [ ! -e Eagle_06Mpc_188.hdf5 ]
+if [ ! -e Eagle_06Mpc_376.hdf5 ]
 then
     echo "Fetching initial conditions for the COLIBRE 6Mpc example..."
     ./getIC.sh
