@@ -701,7 +701,7 @@ if test "x$with_parmetis" != "xno"; then
 
 # Check if we have ParMETIS.
    if test "x$with_parmetis" != "xyes" -a "x$with_parmetis" != "x"; then
-      PARMETIS_LIBS="-L$with_parmetis/lib -lparmetis -lmetis"
+      PARMETIS_LIBS="-L$with_parmetis/lib -lparmetis"
       PARMETIS_INCS="-I$with_parmetis/include"
    else
       PARMETIS_LIBS="-lparmetis"
@@ -720,7 +720,8 @@ if test "x$with_parmetis" != "xno"; then
          PARMETIS_LIBS="-lparmetis -lmetis"
          PARMETIS_INCS=""
       fi
-      AC_CHECK_LIB([parmetis],[ParMETIS_V3_RefineKway], [have_parmetis="yes"],
+      # Note use different function to avoid caching of first check.
+      AC_CHECK_LIB([parmetis],[ParMETIS_V3_PartKway], [have_parmetis="yes"],
                    [have_parmetis="no"], [$METIS_LIBS $PARMETIS_LIBS])
 
    fi
