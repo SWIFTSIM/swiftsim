@@ -27,7 +27,10 @@
 #include "units.h"
 
 /**
- * @brief Update the properties of the particle due to a supernovae.
+ * @brief Update the properties of a particle fue to feedback effects after
+ * the cooling was applied.
+ *
+ * Nothing to do here.
  *
  * @param p The #part to consider.
  * @param xp The #xpart to consider.

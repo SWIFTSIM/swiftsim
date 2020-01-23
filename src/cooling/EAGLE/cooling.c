@@ -372,7 +372,8 @@ INLINE static double bisection_iter(
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
- * @param time The current time.
+ * @param time The current time (since the Big Bang or start of the run) in
+ * internal units.
  * @param dt The cooling time-step of this particle.
  * @param dt_therm The hydro time-step of this particle.
  */

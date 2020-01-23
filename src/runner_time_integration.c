@@ -32,7 +32,6 @@
 #include "engine.h"
 #include "feedback.h"
 #include "kick.h"
-#include "task_order.h"
 #include "timers.h"
 #include "timestep.h"
 #include "timestep_limiter.h"
@@ -164,6 +163,7 @@ void runner_do_kick1(struct runner *r, struct cell *c, int timer) {
         kick_part(p, xp, dt_kick_hydro, dt_kick_grav, dt_kick_therm,
                   dt_kick_corr, cosmo, hydro_props, entropy_floor, ti_begin,
                   ti_begin + ti_step / 2);
+
         /* Update the accelerations to be used in the drift for hydro */
         if (p->gpart != NULL) {
 

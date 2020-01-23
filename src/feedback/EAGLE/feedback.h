@@ -34,7 +34,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const double dt);
 
 /**
- * @brief Update the properties of the particle due to a supernovae.
+ * @brief Update the properties of a particle fue to feedback effects after
+ * the cooling was applied.
+ *
+ * Nothing to do here in the EAGLE model.
  *
  * @param p The #part to consider.
  * @param xp The #xpart to consider.
@@ -168,7 +171,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param feedback_props The #feedback_props structure.
  * @param cosmo The current cosmological model.
  * @param us The unit system.
- * @param phys_const The #phys_const.
+ * @param phys_const The physical constants in internal units.
  * @param star_age_beg_step The age of the star at the star of the time-step in
  * internal units.
  * @param dt The time-step size of this star in internal units.
