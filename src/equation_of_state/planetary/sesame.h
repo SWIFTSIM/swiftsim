@@ -338,6 +338,7 @@ INLINE static float SESAME_pressure_from_internal_energy(
     idx_u_2 = mat->num_T - 2;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_rho[idx_rho + 1] != mat->table_log_rho[idx_rho]) {
     intp_rho = (log_rho - mat->table_log_rho[idx_rho]) /
                (mat->table_log_rho[idx_rho + 1] - mat->table_log_rho[idx_rho]);
@@ -345,6 +346,7 @@ INLINE static float SESAME_pressure_from_internal_energy(
     intp_rho = 1.;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_u_rho_T[idx_rho * mat->num_T + (idx_u_1 + 1)] !=
       mat->table_log_u_rho_T[idx_rho * mat->num_T + idx_u_1]) {
     intp_u_1 =
@@ -355,6 +357,7 @@ INLINE static float SESAME_pressure_from_internal_energy(
     intp_u_1 = 1.;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_u_rho_T[(idx_rho + 1) * mat->num_T + (idx_u_2 + 1)] !=
       mat->table_log_u_rho_T[(idx_rho + 1) * mat->num_T + idx_u_2]) {
     intp_u_2 =
@@ -459,6 +462,7 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
     idx_u_2 = mat->num_T - 2;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_rho[idx_rho + 1] != mat->table_log_rho[idx_rho]) {
     intp_rho = (log_rho - mat->table_log_rho[idx_rho]) /
                (mat->table_log_rho[idx_rho + 1] - mat->table_log_rho[idx_rho]);
@@ -466,6 +470,7 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
     intp_rho = 1.;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_u_rho_T[idx_rho * mat->num_T + (idx_u_1 + 1)] !=
       mat->table_log_u_rho_T[idx_rho * mat->num_T + idx_u_1]) {
     intp_u_1 =
@@ -476,6 +481,7 @@ INLINE static float SESAME_soundspeed_from_internal_energy(
     intp_u_1 = 1.;
   }
 
+  // Check for duplicates in SESAME tables before interpolation
   if (mat->table_log_u_rho_T[(idx_rho + 1) * mat->num_T + (idx_u_2 + 1)] !=
       mat->table_log_u_rho_T[(idx_rho + 1) * mat->num_T + idx_u_2]) {
     intp_u_2 =
