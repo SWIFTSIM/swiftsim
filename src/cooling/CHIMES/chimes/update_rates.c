@@ -1185,16 +1185,30 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars)
   
   // Interpolate tables to current redshift
   if (z_index_low == z_index_hi) 
+    dz = 0.0; 
+  else if ((low_z < myGlobalVars->reionisation_redshift) && (hi_z > myGlobalVars->reionisation_redshift)) 
     {
-      dz = 0.0; 
-      dz_m = 1.0; 
+      /* Reionisation occurs in between the 
+       * two redshift bins. We don't want to 
+       * interpolate over reionisation, so 
+       * just take one bin or the other, 
+       * depending on whether the current 
+       * redshift is before or after reionisation. */ 
+      if (redshift <= myGlobalVars->reionisation_redshift) 
+	dz = 0.0; 
+      else 
+	dz = 1.0; 
     }
   else 
-    {
-      dz = (redshift - low_z) / (hi_z - low_z); 
-      dz_m = 1.0 - dz; 
-    }
+    dz = (redshift - low_z) / (hi_z - low_z); 
 
+  dz_m = 1.0 - dz; 
+
+  /* Before reionisation, the UVB is zero, 
+   * so the following aren't changing over 
+   * time. We therefore only need to do this 
+   * once, i.e. the first time we load the 
+   * UVB tables. */
   if (!((redshift > myGlobalVars->reionisation_redshift) && (first_UVB_load_flag == 0))) 
     {
       // photoion_fuv 
