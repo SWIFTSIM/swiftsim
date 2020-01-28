@@ -544,6 +544,11 @@ void read_ic_single(const char* fileName,
     dim[j] *=
         units_conversion_factor(ic_units, internal_units, UNIT_CONV_LENGTH);
 
+  /* Check if running a DMO simulation and the ICs contains gas particles */
+  if (!with_hydro && N[swift_type_gas] != 0) {
+    error("Cannot run a dark matter only simulation with gas particles in the IC.");
+  }
+
   /* Allocate memory to store SPH particles */
   if (with_hydro) {
     *Ngas = N[swift_type_gas];

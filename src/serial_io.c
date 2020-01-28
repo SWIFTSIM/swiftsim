@@ -659,6 +659,11 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
     N[ptype] = (mpi_rank + 1) * N_total[ptype] / mpi_size - offset[ptype];
   }
 
+  /* Check if running a DMO simulation and the ICs contains gas particles */
+  if (!with_hydro && N_total[swift_type_gas] != 0) {
+    error("Cannot run a dark matter only simulation with gas particles in the IC.");
+  }
+
   /* Allocate memory to store SPH particles */
   if (with_hydro) {
     *Ngas = N[0];
