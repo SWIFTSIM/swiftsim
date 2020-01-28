@@ -829,7 +829,9 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
 
   /* Check if running a DMO simulation and the ICs contain gas particles */
   if (!with_hydro && N_total[swift_type_gas] != 0) {
-    error("Cannot run a dark matter only simulation with gas particles in the IC.");
+    error(
+        "Cannot run a dark matter only simulation with gas particles in the "
+        "IC.");
   }
 
   /* Read the unit system used in the ICs */
