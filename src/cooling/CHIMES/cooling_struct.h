@@ -29,13 +29,6 @@
 #include "cooling/CHIMES/chimes/chimes_proto.h"
 #include "colibre_tables.h" 
 
-/* Maximum size of CHIMES abundance arrays. */ 
-#ifdef COOLING_CHIMES_HYBRID 
-#define CHIMES_NETWORK_SIZE 10 
-#else 
-#define CHIMES_NETWORK_SIZE 157 
-#endif 
-
 /**
  * @brief Properties of the cooling function. 
  * This includes the globalVaraibles structure 

@@ -306,11 +306,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
 
   /* Switch for Hybrid cooling */ 
-#ifdef COOLING_CHIMES_HYBRID 
-  cooling->ChimesGlobalVars.hybrid_cooling_mode = 1; 
-#else 
-  cooling->ChimesGlobalVars.hybrid_cooling_mode = 0; 
-#endif 
+  cooling->ChimesGlobalVars.hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:use_hybrid_cooling"); 
 
   if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 0) 
     {
@@ -411,11 +407,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
  * @param cooling #cooling_function_data struct.
  */
 void cooling_print_backend(const struct cooling_function_data *cooling) {
-
-  if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 0) 
     message("Cooling function is 'CHIMES'.");
-  else 
-    message("Cooling function is 'CHIMES-HYBRID'.");
 }
 
 /**

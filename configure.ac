@@ -1843,15 +1843,9 @@ case "$with_cooling" in
       if test "$have_sundials" != "yes"; then 
          AC_MSG_ERROR([The Sundials library is not present. Sundials is required for the CHIMES module.]) 
       fi
-   ;;
-   CHIMES-HYBRID)
-      AC_DEFINE([COOLING_CHIMES_HYBRID], [1], [Cooling using the CHIMES module with COLIBRE metal cooling])
-      AC_MSG_CHECKING([for Sundials libraries])
-      AC_MSG_RESULT($have_sundials)
-      
-      if test "$have_sundials" != "yes"; then 
-         AC_MSG_ERROR([The Sundials library is not present. Sundials is required for the CHIMES module.]) 
-      fi
+
+      AC_ARG_WITH([chimes-network-size], [AS_HELP_STRING([--with-chimes-network-size=<size>], [size of the CHIMES network, default: 157])], [with_chimes_network_size="$withval"], [with_chimes_network_size="157"]) 
+      AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [$with_chimes_network_size], [Chimes network size]) 
    ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
@@ -2281,8 +2275,6 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 # Check if using CHIMES cooling
 AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
-# Check if using CHIMES-HYBRID cooling
-AM_CONDITIONAL([HAVECHIMESHYBRIDCOOLING], [test $with_cooling = "CHIMES-HYBRID"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
