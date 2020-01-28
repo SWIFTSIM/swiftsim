@@ -129,11 +129,11 @@ struct cooling_function_data {
   /* Threshold to switch between rapid and slow cooling regimes. */
   double rapid_cooling_threshold; 
 
+  /* Ionization fraction of gas particles tagged as HII regions */
+  float HIIregion_fion; 
+
   /* Temperature of gas particles tagged as HII regions */ 
   float HIIregion_temp; 
-  
-  /* Ionisation state of HII regions. */ 
-  int HIIregion_ion_state; 
 
   /* Colibre cooling table */ 
   struct colibre_cooling_tables colibre_table; 

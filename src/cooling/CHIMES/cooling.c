@@ -300,8 +300,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->rapid_cooling_threshold = parser_get_param_double(parameter_file, "CHIMESCooling:rapid_cooling_threshold");
 
   /* Properties of the HII region model */ 
+  cooling->HIIregion_fion = parser_get_param_float(
+      parameter_file, "CHIMESCooling:HIIregion_ionization_fraction");
+
   cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
-  cooling->HIIregion_ion_state = 1; 
 
   /* Switch for Hybrid cooling */ 
 #ifdef COOLING_CHIMES_HYBRID 
@@ -873,9 +875,8 @@ void cooling_cool_part(const struct phys_const *phys_const,
     {
       /* If particle is in an HII region, manually 
        * set it to be ionised, according to the 
-       * HIIregion_ion_state parameter. */ 
-      ChimesGasVars.InitIonState = cooling->HIIregion_ion_state; 
-      initialise_gas_abundances(&ChimesGasVars, &ChimesGlobalVars); 
+       * HIIregion_fion parameter. */ 
+      cooling_set_HIIregion_chimes_abundances(&ChimesGasVars, cooling); 
     }
 
   /* Physical constants that we will 
@@ -1537,3 +1538,100 @@ float cooling_get_subgrid_density(
   else 
     return hydro_get_physical_density(p, cosmo); 
 }
+
+/**
+ * @brief Set CHIMES abundances for HII regions. 
+ * 
+ * Sets the CHIMES abundance array according to the 
+ * HIIregion_fion parameter. This parameter gives the 
+ * fraction of each element that is singly ionised, 
+ * with the remainder set to neutral. 
+ *  
+ * @param ChimesGasVars CHIMES gasVariables structure. 
+ * @param cooling The #cooling_function_data used in the run.
+ */
+void cooling_set_HIIregion_chimes_abundances(struct gasVariables *ChimesGasVars, 
+					     const struct cooling_function_data *cooling) { 
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+
+  /* First zero all abundances */ 
+  int i; 
+  for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+    ChimesGasVars->abundances[i] = 0.0; 
+
+  /* Set H and He ionisation fractions. */ 
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HII]] = (ChimesFloat) cooling->HIIregion_fion; 
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HII]]); 
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HII]]; 
+
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeII]] = (ChimesFloat) ChimesGasVars->element_abundances[0] * cooling->HIIregion_fion; 
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeII]]); 
+  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeII]]; 
+
+  if (ChimesGlobalVars.hybrid_cooling_mode == 0) 
+    {
+      /* Set metal ionisation fractions. */ 
+      if ((ChimesGlobalVars.element_included[0] == 1) && (ChimesGasVars->element_abundances[1] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CII]] = (ChimesFloat) ChimesGasVars->element_abundances[1] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[1] == 1) && (ChimesGasVars->element_abundances[2] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NII]] = (ChimesFloat) ChimesGasVars->element_abundances[2] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[2] == 1) && (ChimesGasVars->element_abundances[3] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_OII]] = (ChimesFloat) ChimesGasVars->element_abundances[3] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_OI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_OII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_OII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[3] == 1) && (ChimesGasVars->element_abundances[4] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NeII]] = (ChimesFloat) ChimesGasVars->element_abundances[4] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NeI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NeII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_NeII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[4] == 1) && (ChimesGasVars->element_abundances[5] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_MgII]] = (ChimesFloat) ChimesGasVars->element_abundances[5] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_MgI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_MgII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_MgII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[5] == 1) && (ChimesGasVars->element_abundances[6] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SiII]] = (ChimesFloat) ChimesGasVars->element_abundances[6] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SiI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SiII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SiII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[6] == 1) && (ChimesGasVars->element_abundances[7] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SII]] = (ChimesFloat) ChimesGasVars->element_abundances[7] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_SII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[7] == 1) && (ChimesGasVars->element_abundances[8] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CaII]] = (ChimesFloat) ChimesGasVars->element_abundances[8] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CaI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CaII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_CaII]]; 
+	} 
+      
+      if ((ChimesGlobalVars.element_included[8] == 1) && (ChimesGasVars->element_abundances[9] > 0.0)) 
+	{
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeII]] = (ChimesFloat) ChimesGasVars->element_abundances[9] * cooling->HIIregion_fion; 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeI]] = (ChimesFloat) (1.0 - ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeII]]); 
+	  ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] += ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeII]]; 
+	} 
+    }
+}      

@@ -139,6 +139,9 @@ float cooling_get_subgrid_density(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp); 
 
+void cooling_set_HIIregion_chimes_abundances(struct gasVariables *ChimesGasVars, 
+					     const struct cooling_function_data *cooling); 
+
 /**
  * @brief Computes the cooling time-step.
  *
