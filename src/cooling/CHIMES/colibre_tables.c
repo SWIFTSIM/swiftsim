@@ -384,8 +384,14 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
     if (i <= element_He) {
       /* H and He are in CHIMES. */ 
       weights_cooling[i] = 0.f; 
-    } else if (i < colibre_cooling_N_elementtypes) {
-      /* Use abundance ratios */
+    } else if (i < element_OA) {
+      /* Only include metals that aren't 
+       * already included in CHIMES. */
+      if (myGlobalVars->element_included[i - 2] == 0) 
+	weights_cooling[i] = abundance_ratio[i];
+      else 
+	weights_cooling[i] = 0.f; 
+    } else if (i == element_OA) { 
       weights_cooling[i] = abundance_ratio[i];
     } else if ((i == cooltype_H2) || 
 	       (i == cooltype_NetFFH) || 
@@ -405,8 +411,15 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
     if (i <= element_He) { 
       /* H and He are in CHIMES. */ 
       weights_heating[i] = 0.f; 
-    } else if (i < colibre_cooling_N_elementtypes) {
-      weights_heating[i] = abundance_ratio[i];
+    } else if (i < element_OA) {
+      /* Only include metals that aren't 
+       * already included in CHIMES. */
+      if (myGlobalVars->element_included[i - 2] == 0) 
+	weights_heating[i] = abundance_ratio[i];
+      else 
+	weights_heating[i] = 0.f; 
+    } else if (i == element_OA) { 
+      weights_heating[i] = abundance_ratio[i]; 
     } else if ((i == heattype_H2) || 
 	       (i == heattype_CosmicRay) || 
 	       (i == heattype_HFF) || 
@@ -476,7 +489,15 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
       colibre_cooling_N_density,
       colibre_cooling_N_electrontypes); 
 
-  // From metals, with actual metal ratios 
+  /* From metals, with actual metal ratios. 
+   * We also need to exclude any metals 
+   * that are already included in CHIMES. */
+  for (int i = element_C; i < element_OA; i++) 
+    {
+      if (myGlobalVars->element_included[i - 2] == 1) 
+	weights_electron[i] = 0.f; 
+    }
+   
   double colibre_electron_fraction_metal_actual = interpolation4d_plus_summation(
       table->Telectron_fraction, weights_electron, 
       element_C, 
