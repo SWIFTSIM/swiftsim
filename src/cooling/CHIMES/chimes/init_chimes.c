@@ -272,6 +272,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 {  
   char fname[500];
   int i, j, k, l, m, rank, N_reactions_all, incl_index;
+  int base_index, base_incl_index, found_base; 
   int *array_buffer_int; 
   float *array_buffer_float; 
   hid_t file_id, dataset, dataspace_id, memspace_id;
@@ -4166,7 +4167,27 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	      for (j = 0; j < myGlobalVars->N_spectra; j++) 
 		chimes_table_photoion_auger_fuv.sigmaPhot[incl_index][j] = chimes_master_photoion_auger_fuv.sigmaPhot[i][j]; 
 
-	      chimes_table_photoion_auger_fuv.base_reaction[incl_index] = chimes_master_photoion_auger_fuv.base_reaction[i]; 
+	      base_incl_index = 0;
+              found_base = 0;
+              for (base_index = 0; base_index < chimes_master_photoion_fuv.N_reactions[1]; base_index++)
+                {
+                  if(compare_element_incl_arrays(chimes_master_photoion_fuv.element_incl[base_index], myGlobalVars->element_included))
+                    {
+                      if (base_index == chimes_master_photoion_auger_fuv.base_reaction[i])
+                        {
+                          chimes_table_photoion_auger_fuv.base_reaction[incl_index] = base_incl_index;
+                          found_base = 1;
+                          break;
+                        }
+                      base_incl_index++;
+                    }
+                }
+
+              if (found_base == 0)
+                {
+                  printf("CHIMES ERROR: In photoion_auger_fuv group, base reaction not found in reduced network.\n");
+                  exit(EXIT_FAILURE);
+                }
 
 	      /* Auger ionisations involve a single photon releasing 
 	       * multiple electrons. Here we record how many electrons 
@@ -4231,7 +4252,27 @@ void initialise_main_data(struct globalVariables *myGlobalVars)
 	      for (j = 0; j < myGlobalVars->N_spectra; j++) 
 		chimes_table_photoion_auger_euv.sigmaPhot[incl_index][j] = chimes_master_photoion_auger_euv.sigmaPhot[i][j]; 
 
-	      chimes_table_photoion_auger_euv.base_reaction[incl_index] = chimes_master_photoion_auger_euv.base_reaction[i]; 
+	      base_incl_index = 0;
+              found_base = 0;
+              for (base_index = 0; base_index < chimes_master_photoion_euv.N_reactions[1]; base_index++)
+                {
+                  if(compare_element_incl_arrays(chimes_master_photoion_euv.element_incl[base_index], myGlobalVars->element_included))
+                    {
+                      if (base_index == chimes_master_photoion_auger_euv.base_reaction[i])
+                        {
+                          chimes_table_photoion_auger_euv.base_reaction[incl_index] = base_incl_index;
+                          found_base = 1;
+                          break;
+			}
+                      base_incl_index++;
+                    }
+                }
+
+              if (found_base == 0)
+                {
+                  printf("CHIMES ERROR: In photoion_auger_euv group, base reaction not found in reduced network.\n");
+                  exit(EXIT_FAILURE);
+                }
 
 	      /* Auger ionisations involve a single photon releasing 
 	       * multiple electrons. Here we record how many electrons 
