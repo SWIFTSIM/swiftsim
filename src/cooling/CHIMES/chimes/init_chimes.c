@@ -73,6 +73,20 @@ void allocate_eqm_table_memory(char *filename, struct chimes_eqm_abundances_stru
       exit(EXIT_FAILURE); 
     }
 
+  /* Check that the number of species 
+   * in the equilibrium table matches 
+   * the size of the network. */ 
+  int N_species; 
+  dataset = H5Dopen1(file_id, "TableBins/N_species");
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_species);
+  H5Dclose(dataset);  
+  
+  if (N_species != myGlobalVars->totalNumberOfSpecies) 
+    {
+      printf("CHIMES ERROR: equilibrium table %s contains %d species, but we are using a network with %d species.\n", filename, N_species, myGlobalVars->totalNumberOfSpecies); 
+      exit(EXIT_FAILURE); 
+    }
+
   /* Read in size of each dimension */
   dataset = H5Dopen1(file_id, "TableBins/N_Temperatures");
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &(my_eqm_abundances->N_Temperatures));
