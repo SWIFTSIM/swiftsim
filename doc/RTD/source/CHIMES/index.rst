@@ -15,3 +15,4 @@ The details of the CHIMES model are described in  `Richings et al. (2014a) <http
    :caption: Contents:
 
    setup
+   config

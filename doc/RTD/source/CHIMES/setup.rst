@@ -24,21 +24,13 @@ Sundials library
 
 CHIMES also requires the CVODE library of Ordinary Differential Equation (ODE) solvers, from the Sundials package. Sundials can be downloaded `here <https://computing.llnl.gov/projects/sundials/sundials-software>`_. Note that CHIMES has not been tested with the most recent version of CVODE. You should only use version 2.6.0 of Sundials (on the above page, scroll down to the Archive section, where it lists the old versions of Sundials). 
 
-Once you have downloaded Sundials from the above website, you can untar it and then build it in the usual way using: 
-
-.. code-block:: bash
-
-  ./configure 
-  make
-  make install
-
-If you don't have super user access on the machine that you are installing Sundials on, you can specify a directory where you do have write access to install it, using the --prefix=/path/to/dir option in the configure script. 
+Once you have downloaded Sundials from the above website, you can then untar it and build it. You will need to build it as a shared library, i.e. using the -fpic option. If you don't have super user access on the machine that you are installing Sundials on, you can specify a directory where you do have write access to install it, using the --prefix=/path/to/dir option in the configure script. 
 
 Also, note that choosing an appropriate compiler and optimisation flags when building Sundials can affect the speed of CHIMES by up to a factor ~2. If you have access to the Intel compilers, I find the following works best (but the best setup will depend on the machine that you are running on): 
 
 .. code-block:: bash
 
-  ./configure --prefix=/path/to/dir CC=icc CFLAGS=-O2 F77=ifort FFLAGS=-O2
+  ./configure --prefix=/path/to/dir CC=icc CFLAGS="-O2 -fpic" F77=ifort FFLAGS="-O2 -fpic"
   make
   make install
 
