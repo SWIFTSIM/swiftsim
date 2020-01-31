@@ -827,13 +827,6 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   /* Close header */
   H5Gclose(h_grp);
 
-  /* Check if running a DMO simulation and the ICs contain gas particles */
-  if (!with_hydro && N_total[swift_type_gas] != 0) {
-    error(
-        "Cannot run a dark matter only simulation with gas particles in the "
-        "IC.");
-  }
-
   /* Read the unit system used in the ICs */
   struct unit_system* ic_units =
       (struct unit_system*)malloc(sizeof(struct unit_system));
@@ -877,8 +870,8 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
         units_conversion_factor(ic_units, internal_units, UNIT_CONV_LENGTH);
 
   /* Allocate memory to store SPH particles */
+  *Ngas = N[0];
   if (with_hydro) {
-    *Ngas = N[0];
     if (swift_memalign("parts", (void**)parts, part_align,
                        (*Ngas) * sizeof(struct part)) != 0)
       error("Error while allocating memory for particles");

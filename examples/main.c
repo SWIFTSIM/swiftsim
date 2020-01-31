@@ -1096,6 +1096,12 @@ int main(int argc, char *argv[]) {
     }
 
     /* Verify that we are not using basic modes incorrectly */
+    if (!with_hydro && N_total[swift_type_gas] != 0) {
+      error(
+          "ERROR: Running without hydrodynamics but gas particles found in the "
+          "ICs!");
+    }
+
     if (with_hydro && N_total[swift_type_gas] == 0) {
       error(
           "ERROR: Running with hydrodynamics but no gas particles found in the "
