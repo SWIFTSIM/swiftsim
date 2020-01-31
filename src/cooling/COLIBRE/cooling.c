@@ -651,8 +651,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
   if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
       (xp->tracers_data.HIIregion_timer_gas > 0.)) {
 
-    const float u_old = hydro_get_physical_internal_energy(p, xp, cosmo);
-
     /* HII region internal energy is the internal energy of a particle at a
      * temperature of cooling->HIIregion_temp */
     const float u_HII_cgs = cooling_get_internalenergy_for_temperature(
@@ -662,7 +660,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
     const float u_HII = u_HII_cgs * cooling->internal_energy_from_cgs;
 
     /* The enrgy is below the HII target energy */
-    if (u_old < u_HII) {
+    if (u_final < u_HII) {
 
       /* Inject energy into the particle */
       hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
