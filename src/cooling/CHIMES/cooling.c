@@ -92,7 +92,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->Shielding_flag = parser_get_param_int(parameter_file, "CHIMESCooling:Shielding_flag"); 
   cooling->use_redshift_dependent_UVB = parser_get_param_int(parameter_file, "CHIMESCooling:use_redshift_dependent_UVB"); 
 
-  cooling->radiation_field_normalisation_factor = 0.0; 
+  cooling->rad_field_norm_factor = 0.0; 
 
   if (cooling->use_redshift_dependent_UVB == 0) 
     {
@@ -118,7 +118,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
     cooling->ChimesGlobalVars.N_spectra = 0; 
   else if ((cooling->UV_field_flag == 1) || (cooling->UV_field_flag == 2))
     {
-      cooling->radiation_field_normalisation_factor = (ChimesFloat) parser_get_opt_param_double(parameter_file, "CHIMESCooling:radiation_field_normalisation_factor", 1.0); 
+      cooling->rad_field_norm_factor = (ChimesFloat) parser_get_opt_param_double(parameter_file, "CHIMESCooling:rad_field_norm_factor", 1.0); 
 
       if (cooling->UV_field_flag == 1) 
 	{
@@ -571,7 +571,7 @@ void chimes_update_gas_vars(const double u_cgs,
       ChimesGasVars->G0_parameter[0] = chimes_table_spectra.G0_parameter[0]; 
       ChimesGasVars->H2_dissocJ[0] = chimes_table_spectra.H2_dissocJ[0]; 
       ChimesGasVars->isotropic_photon_density[0] = chimes_table_spectra.isotropic_photon_density[0]; 
-      ChimesGasVars->isotropic_photon_density[0] *= cooling->radiation_field_normalisation_factor; 
+      ChimesGasVars->isotropic_photon_density[0] *= cooling->rad_field_norm_factor; 
     }
   else if (cooling->UV_field_flag == 2) 
     {
@@ -586,7 +586,7 @@ void chimes_update_gas_vars(const double u_cgs,
       /* ISRF */ 
       ChimesGasVars->G0_parameter[1] = chimes_table_spectra.G0_parameter[1]; 
       ChimesGasVars->H2_dissocJ[1] = chimes_table_spectra.H2_dissocJ[1]; 
-      J_over_J0 = cooling->radiation_field_normalisation_factor * pow(N_ref / cooling->N_H0, 1.4); 
+      J_over_J0 = cooling->rad_field_norm_factor * pow(N_ref / cooling->N_H0, 1.4); 
       ChimesGasVars->isotropic_photon_density[1] = chimes_table_spectra.isotropic_photon_density[1]; 
 
       /* low-density cut-off before reionisation */ 
@@ -596,7 +596,7 @@ void chimes_update_gas_vars(const double u_cgs,
 	ChimesGasVars->isotropic_photon_density[1] *= J_over_J0; 
       
       /* Scale cr_rate by N_ref */ 
-      ChimesGasVars->cr_rate *= cooling->radiation_field_normalisation_factor * pow(N_ref / cooling->N_H0, 1.4); 
+      ChimesGasVars->cr_rate *= cooling->rad_field_norm_factor * pow(N_ref / cooling->N_H0, 1.4); 
     }
 
   if (cooling->Shielding_flag == 0) 

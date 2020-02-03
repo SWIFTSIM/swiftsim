@@ -49,7 +49,7 @@ struct cooling_function_data {
   /* User parameter to scale the 
    * normalisation of the radiation 
    * field by a constant factor. */ 
-  ChimesFloat radiation_field_normalisation_factor; 
+  ChimesFloat rad_field_norm_factor; 
 
   /* Factor to re-scale shielding 
    * length. */ 
