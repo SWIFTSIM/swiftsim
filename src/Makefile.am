@@ -77,7 +77,7 @@ if HAVEGRACKLECOOLING
 GRACKLE_COOLING_SOURCES += cooling/grackle/cooling.c
 endif
 
-# source files for GRACKLE cooling
+# source files for GEAR feedback
 GEAR_FEEDBACK_SOURCES =
 if HAVEGEARFEEDBACK
 GEAR_FEEDBACK_SOURCES += feedback/GEAR/stellar_evolution.c feedback/GEAR/feedback.c \
