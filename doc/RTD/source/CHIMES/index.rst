@@ -17,3 +17,4 @@ The details of the CHIMES model are described in  `Richings et al. (2014a) <http
    setup
    config
    param
+   output

@@ -116,3 +116,178 @@ The following parameters are specified in the parameter file when running SWIFT 
 |                                    | | al. in prep).                                               |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
+| ``H_reion_z``                      | | Redshift of reionisation.                                   |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``init_abundance_mode``            | | Integer flag that determines how the initial CHIMES         |
+|                                    | | abundances are set at the beginning of the simulation.      |
+|                                    | | Possible values are as follows:                             |
+|                                    | | 0 - Set each element to one ionisation state (e.g. neutral, |
+|                                    | |     single ionised etc.) according to the ``InitIonState``  |
+|                                    | |     parameter (see below).                                  |
+|                                    | | 1 - Read in the abundances for each particle from           |
+|                                    | |     pre-computed equilibrium abundance tables, as a         |
+|                                    | |     function of temperature, density and metallicity.       |
+|                                    | | 2 - Compute the initial equilibrium abundances for each     |
+|                                    | |     particle at the beginning of the simulation.            |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``InitIonState``                   | | Only used if ``init_abundance_mode == 0``.                  |
+|                                    | | Gives the initial ionisation state to set each element to   |
+|                                    | | at the beginning of the simulation (0: neutral, 1: single   |
+|                                    | | ionised etc.).                                              |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``cosmic_ray_rate``                | | Ionisation rate of HI by cosmic rays, in units of s^-1.     |
+|                                    | | If ``UV_field_flag == 2``, this needs to be set to the      |
+|                                    | | Milky Way value, i.e. ``1.8e-16``. It will then be scaled   |
+|                                    | | along with the local ISRF as in Ploeckinger et al. (in      |
+|                                    | | prep). Note that, in this case, the Milky Way value is      |
+|                                    | | then multiplied by ``rad_field_norm_factor``. So if you are |
+|                                    | | using the fiducial cooling model from Ploeckinger et al (in |
+|                                    | | prep), i.e. with ``rad_field_norm_factor = 0.1``, you do    |
+|                                    | | not need to reduce ``cosmic_ray_rate`` by another factor of |
+|                                    | | 10, as this is already dealt with internally in the code.   |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``relativeTolerance``              | | Relative tolerance parameter, used to define the accuracy   |
+|                                    | | of the chemistry and cooling integration in CHIMES.         |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``absoluteTolerance``              | | Absolute tolerance parameter, used to define the accuracy   |
+|                                    | | of the chemistry integration in CHIMES.                     |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``thermalAbsoluteTolerance``       | | Absolute tolerance parameter for the temperature, used to   |
+|                                    | | define the accuracy of the cooling integration in CHIMES.   |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``explicitTolerance``              | | Tolerance parameter that determines when we just use the    |
+|                                    | | explicit solution for the chemistry and cooling integration |
+|                                    | | in CHIMES.                                                  |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``scale_metal_tolerances``         | | Integer flag (``0`` or ``1``) that determines whether to    |
+|                                    | | scale the abolute tolerances of each species by its         |
+|                                    | | corresponding element abundance.                            |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``T_mol``                          | | Maximum temperature for the molecular network. Above this   |
+|                                    | | temperature we skip over all reactions involving molecules  |
+|                                    | | and set all molecule abundances to zero.                    |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``ChemistryEqmMode``               | | Integer flag to set the equilibrium mode in CHIMES.         |
+|                                    | | Possible values are as follows:                             |
+|                                    | | 0 - Evolve CHIMES species in non-equilibrium.               |
+|                                    | | 1 - Evolve the cooling with CHIMES species in equilibrium,  |
+|                                    | |     i.e. use the pre-computed equilibrium abundance tables. |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``ThermEvolOn``                    | | Integer flag to switch the temperature evolution on/off in  |
+|                                    | | CHIMES. Possible values are as follows:                     |
+|                                    | | 0 - Evolve the chemical abundances at fixed temperature.    |
+|                                    | | 1 - Evolve both the temperature and the chemical            |
+|                                    | |     abundances.                                             |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``chimes_debug``                   | | Integer flag for additional debug output from CHIMES.       |
+|                                    | | Possible values are as follows:                             |
+|                                    | | 0 - No additional output.                                   |
+|                                    | | 1 - If CVode returns a non-zero flag (i.e. it returns a     |
+|                                    | |     CVode error or warning), print out all of the variables |
+|                                    | |     in the ChimesGasVars stucture.                          |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``S_over_Si_in_solar``             | | S to Si ratio relative to the Solar ratio.                  |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``Ca_over_Si_in_solar``            | | Ca to Si ratio relative to the Solar ratio.                 |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``colibre_metal_depletion``        | | Integer flag (``0`` or ``1``) that sets whether to reduce   |
+|                                    | | the gas-phase element abundances in CHIMES due to dust      | 
+|                                    | | depletion according to Ploeckinger et al. (in prep).        |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+|``delta_logTEOS_subgrid_properties``| | Distance from the EOS to use the thermal equilibrium        |
+|                                    | | temperature for subgrid properties, and to evolve the       |
+|                                    | | cooling using equilibrium abundances.                       |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``use_colibre_subgrid_EOS``        | | Integer flag (``0`` or ``1``) to use the subgrid density    |
+|                                    | | and temperature from the COLIBRE cooling tables (see        |
+|                                    | | Ploeckinger et al. in prep).                                |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``rapid_cooling_threshold``        | | Threshold in ``dt / t_cool`` above which we are in the      |
+|                                    | | rapid cooling regime (i.e. cooling time is short compared   |
+|                                    | | to the hydro time-step). In this case, the cooling routines |
+|                                    | | will instantly update the particle's internal energy with   |
+|                                    | | the final internal energy at the end of the time-step.      |
+|                                    | | If the particle is below this threshold, its internal       |
+|                                    | | energy will instead be drifted using the ``du_dt`` from the |
+|                                    | | cooling routines.                                           |
+|                                    | | If this parameter is negative, we always drift the          |
+|                                    | | temperature.                                                |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``HIIregion_ionization_fraction``  | | Ionisation fraction of HII regions (``0`` - fully neutral;  |
+|                                    | | ``1`` - fully ionised).                                     |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``HIIregion_temperature``          | | Minimum temperature of HII regions.                         |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``use_hybrid_cooling``             | | Integer flag to set whether to use the hybrid cooling mode. |
+|                                    | | Possible values are as follows:                             |
+|                                    | | 0 - Don't use hybrid cooling. If any elements are switched  |
+|                                    | |     off in the CHIMES network, their cooling is neglected.  |
+|                                    | | 1 - Use hybrid cooling. If any elements are switched off in |
+|                                    | |     the CHIMES network, we look up their cooling rates from |
+|                                    | |     the COLIBRE cooling tables and add it on to the total   |
+|                                    | |     cooling rate from CHIMES when integrating the           |
+|                                    | |     temperature.                                            |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeCarbon``                  | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | carbon in the CHIMES network.                               |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeNitrogen``                | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | nitrogen in the CHIMES network.                             |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeOxygen``                  | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | oxygen in the CHIMES network.                               |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeNeon``                    | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | neon in the CHIMES network.                                 |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeMagnesium``               | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | magnesium in the CHIMES network.                            |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeSilicon``                 | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | silicon in the CHIMES network.                              |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeSulphur``                 | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | sulphur in the CHIMES network.                              |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeCalcium``                 | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | calcium in the CHIMES network.                              |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``IncludeIron``                    | | Integer flag (``0`` or ``1``) to set whether to include     |
+|                                    | | iron in the CHIMES network.                                 |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``colibre_table_path``             | | Only used if ``use_hybrid_cooling == 1`` or                 |
+|                                    | | ``use_colibre_subgrid_EOS == 1``. Specifies the path to the |
+|                                    | | COLIBRE cooling table (see Ploeckinger et al. in prep).     |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
