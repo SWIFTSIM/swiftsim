@@ -35,6 +35,8 @@ enum chemistry_element {
   chemistry_element_Gra,
   chemistry_element_Sil,
   chemistry_element_Ide,
+  chemistry_element_Mgd,
+  chemistry_element_Fed,
   chemistry_element_count
 };
 
