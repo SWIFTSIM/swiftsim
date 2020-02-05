@@ -313,8 +313,10 @@ void space_free_cells(struct space *s) {
  * @brief Free any memory in use for foreign particles.
  *
  * @param s The #space.
+ * @param clear_cell_pointers Are we also setting all the foreign cell particle
+ * pointers to NULL?
  */
-void space_free_foreign_parts(struct space *s) {
+void space_free_foreign_parts(struct space *s, const int clear_cell_pointers) {
 
 #ifdef WITH_MPI
   if (s->parts_foreign != NULL) {
@@ -336,6 +338,12 @@ void space_free_foreign_parts(struct space *s) {
     swift_free("bparts_foreign", s->bparts_foreign);
     s->size_bparts_foreign = 0;
     s->bparts_foreign = NULL;
+  }
+  if (clear_cell_pointers) {
+    for (int i = 0; i < s->nr_local_cells_with_tasks; ++i) {
+      struct cell *c = &s->cells_top[s->local_cells_with_tasks_top[i]];
+      if (c->nodeID != s->e->nodeID) cell_unlink_foreign_particles(c);
+    }
   }
 #endif
 }

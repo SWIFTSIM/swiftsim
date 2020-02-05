@@ -411,7 +411,7 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   /* Start by freeing some of the unnecessary memory to give VR some breathing
      space */
 #ifdef WITH_MPI
-  space_free_foreign_parts(e->s);
+  space_free_foreign_parts(e->s, /*clear_cell_pointers=*/1);
 #endif
 
   /* Allow thread to run on any core for the duration of the call to

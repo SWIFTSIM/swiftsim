@@ -409,6 +409,22 @@ int cell_link_foreign_gparts(struct cell *c, struct gpart *gparts) {
 #endif
 }
 
+void cell_unlink_foreign_particles(struct cell *c) {
+
+  c->grav.parts = NULL;
+  c->hydro.parts = NULL;
+  c->stars.parts = NULL;
+  c->black_holes.parts = NULL;
+
+  if (c->split) {
+    for (int k = 0; k < 8; k++) {
+      if (c->progeny[k] != NULL) {
+        cell_unlink_foreign_particles(c->progeny[k]);
+      }
+    }
+  }
+}
+
 /**
  * @brief Recursively count the number of #part in foreign cells that
  * are in cells with hydro-related tasks.
