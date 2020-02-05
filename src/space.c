@@ -1752,12 +1752,20 @@ void space_check_top_multipoles_drift_point(struct space *s,
  */
 void space_check_timesteps(const struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
+
+  const ticks tic = getticks();
+
   for (int i = 0; i < s->nr_cells; ++i) {
     if (s->cells_top[i].nodeID == engine_rank) {
       cell_check_timesteps(&s->cells_top[i], s->e->ti_current,
                            s->e->max_active_bin);
     }
   }
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -1811,8 +1819,14 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 void space_check_limiter(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_limiter_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), 1000, s);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -1879,6 +1893,8 @@ void space_check_bpart_swallow_mapper(void *map_data, int nr_bparts,
 void space_check_swallow(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_part_swallow_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), threadpool_auto_chunk_size,
                  /*extra_data=*/NULL);
@@ -1886,6 +1902,10 @@ void space_check_swallow(struct space *s) {
   threadpool_map(&s->e->threadpool, space_check_bpart_swallow_mapper, s->bparts,
                  s->nr_bparts, sizeof(struct bpart), threadpool_auto_chunk_size,
                  /*extra_data=*/NULL);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -1918,9 +1938,16 @@ void space_check_sort_flags_mapper(void *map_data, int nr_cells,
 void space_check_sort_flags(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_sort_flags_mapper,
                  s->local_cells_with_tasks_top, s->nr_local_cells_with_tasks,
                  sizeof(int), 1, s);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
