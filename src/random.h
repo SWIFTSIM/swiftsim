@@ -52,7 +52,6 @@ enum random_number_type {
   random_number_BH_feedback = 1640531371LL,
   random_number_BH_swallow = 4947009007LL,
   random_number_stellar_winds = 5947309451LL,
-  random_number_SNIa_feedback = 6977309513LL,
   random_number_HII_regions = 8134165677LL
 };
 

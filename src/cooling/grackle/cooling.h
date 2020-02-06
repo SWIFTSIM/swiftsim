@@ -146,45 +146,44 @@ void cooling_init_backend(struct swift_params* parameter_file,
                           const struct hydro_props* hydro_props,
                           struct cooling_function_data* cooling);
 
-  data.grid_rank = GRACKLE_RANK;
-  data.grid_dimension = grid_dimension;
-  data.grid_start = grid_start;
-  data.grid_end = grid_end;
+data.grid_rank = GRACKLE_RANK;
+data.grid_dimension = grid_dimension;
+data.grid_start = grid_start;
+data.grid_end = grid_end;
 
-  /* general particle data */
-  const gr_float energy_before =
-      hydro_get_physical_internal_energy(p, xp, cosmo);
-  gr_float density = hydro_get_physical_density(p, cosmo);
-  gr_float energy = energy_before;
+/* general particle data */
+const gr_float energy_before = hydro_get_physical_internal_energy(p, xp, cosmo);
+gr_float density = hydro_get_physical_density(p, cosmo);
+gr_float energy = energy_before;
 
-  /* initialize density */
-  data.density = &density;
+/* initialize density */
+data.density = &density;
 
-  /* initialize energy */
-  data.internal_energy = &energy;
+/* initialize energy */
+data.internal_energy = &energy;
 
-  /* grackle 3.0 doc: "Currently not used" */
-  data.x_velocity = NULL;
-  data.y_velocity = NULL;
-  data.z_velocity = NULL;
+/* grackle 3.0 doc: "Currently not used" */
+data.x_velocity = NULL;
+data.y_velocity = NULL;
+data.z_velocity = NULL;
 
-  /* copy data from particle to grackle data */
-  cooling_copy_to_grackle(data, p, xp, density);
+/* copy data from particle to grackle data */
+cooling_copy_to_grackle(data, p, xp, density);
 
-  /* Compute cooling time */
-  gr_float cooling_time;
-  chemistry_data chemistry_grackle = cooling->chemistry;
-  chemistry_data_storage chemistry_rates = grackle_rates;
-  if (local_calculate_cooling_time(&chemistry_grackle, &chemistry_rates, &units,
-                                   &data, &cooling_time) == 0) {
-    error("Error in calculate_cooling_time.");
-  }
+/* Compute cooling time */
+gr_float cooling_time;
+chemistry_data chemistry_grackle = cooling->chemistry;
+chemistry_data_storage chemistry_rates = grackle_rates;
+if (local_calculate_cooling_time(&chemistry_grackle, &chemistry_rates, &units,
+                                 &data, &cooling_time) == 0) {
+  error("Error in calculate_cooling_time.");
+}
 
-  /* copy from grackle data to particle */
-  cooling_copy_from_grackle(data, p, xp, density);
+/* copy from grackle data to particle */
+cooling_copy_from_grackle(data, p, xp, density);
 
-  /* compute rate */
-  return cooling_time;
+/* compute rate */
+return cooling_time;
 }
 
 /**

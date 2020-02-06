@@ -699,8 +699,9 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
  */
 __attribute__((always_inline)) INLINE void cooling_first_init_part(
     const struct phys_const *phys_const, const struct unit_system *us,
-    const struct cosmology *cosmo, const struct cooling_function_data *cooling,
-    const struct part *p, struct xpart *xp) {
+    const struct hydro_props *hydro_props, const struct cosmology *cosmo,
+    const struct cooling_function_data *cooling, const struct part *p,
+    struct xpart *xp) {
 
   xp->cooling_data.radiated_energy = 0.f;
 }
