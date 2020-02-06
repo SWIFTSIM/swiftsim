@@ -120,7 +120,9 @@ const char *engine_policy_names[] = {"none",
                                      "black holes",
                                      "fof search",
                                      "time-step limiter",
-                                     "time-step sync"};
+                                     "time-step sync",
+                                     "logger"
+};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -220,7 +222,7 @@ void engine_repartition(struct engine *e) {
      Finally, the space, tasks, and proxies need to be rebuilt. */
 
   /* Redistribute the particles between the nodes. */
-  engine_redistribute(e, /* initial_redistribute */ 0);
+  engine_redistribute(e);
 
   /* Make the proxies. */
   engine_makeproxies(e);
@@ -451,21 +453,17 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
                      &s->xparts[offset_parts + k], 1);
 
 #ifdef WITH_LOGGER
-    const int logger_flag = logger_generate_flag(
-      logger_flag_mpi | logger_flag_delete, node_id);
+    if (e->policy & engine_policy_logger) {
+      const int logger_flag = logger_generate_flag(
+        logger_flag_mpi_exit, node_id);
 
-    /* Log the particle when leaving a rank. */
-    logger_log_part(e->logger, &s->parts[offset_parts + k],
-                    logger_mask_data[logger_x].mask |
-                    logger_mask_data[logger_v].mask |
-                    logger_mask_data[logger_a].mask |
-                    logger_mask_data[logger_u].mask |
-                    logger_mask_data[logger_h].mask |
-                    logger_mask_data[logger_rho].mask |
-                    logger_mask_data[logger_consts].mask |
-                    logger_mask_data[logger_special_flags].mask,
-                    &s->xparts[offset_parts + k].logger_data.last_offset,
-                    logger_flag);
+      /* Log the particle when leaving a rank. */
+      logger_log_part(e->logger, &s->parts[offset_parts + k],
+                      logger_masks_all_part |
+                      logger_mask_data[logger_special_flags].mask,
+                      &s->xparts[offset_parts + k].logger_data.last_offset,
+                      logger_flag);
+    }
 #endif
   }
 
@@ -504,17 +502,17 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
     proxy_sparts_load(&e->proxies[pid], &s->sparts[offset_sparts + k], 1);
 
 #ifdef WITH_LOGGER
-    const int logger_flag = logger_generate_flag(
-      logger_flag_mpi | logger_flag_delete, node_id);
+    if (e->policy & engine_policy_logger) {
+      const int logger_flag = logger_generate_flag(
+        logger_flag_mpi_exit, node_id);
 
       /* Log the particle when leaving a rank. */
-    logger_log_spart(e->logger, &s->sparts[offset_sparts + k],
-                     logger_mask_data[logger_x].mask |
-                     logger_mask_data[logger_v].mask |
-                     logger_mask_data[logger_consts].mask |
-                     logger_mask_data[logger_special_flags].mask,
-                     &s->sparts[offset_parts + k].logger_data.last_offset,
-                     logger_flag);
+      logger_log_spart(e->logger, &s->sparts[offset_sparts + k],
+                       logger_masks_all_spart |
+                       logger_mask_data[logger_special_flags].mask,
+                       &s->sparts[offset_parts + k].logger_data.last_offset,
+                       logger_flag);
+    }
 #endif
   }
 
@@ -553,7 +551,9 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
     proxy_bparts_load(&e->proxies[pid], &s->bparts[offset_bparts + k], 1);
 
 #ifdef WITH_LOGGER
-    error("TODO");
+    if (e->policy & engine_policy_logger) {
+      error("TODO");
+    }
 #endif
   }
 
@@ -587,17 +587,15 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
 #ifdef WITH_LOGGER
     /* Write only the dark matter particles */
-    if (s->gparts[offset_gparts + k].type == swift_type_dark_matter) {
+    if ((e->policy & engine_policy_logger) &&
+        s->gparts[offset_gparts + k].type == swift_type_dark_matter) {
 
       const int logger_flag = logger_generate_flag(
-         logger_flag_mpi | logger_flag_delete, node_id);
+         logger_flag_mpi_exit, node_id);
 
       /* Log the particle when leaving a rank. */
       logger_log_gpart(e->logger, &s->gparts[offset_gparts + k],
-                       logger_mask_data[logger_x].mask |
-                       logger_mask_data[logger_v].mask |
-                       logger_mask_data[logger_a].mask |
-                       logger_mask_data[logger_consts].mask |
+                       logger_masks_all_gpart |
                        logger_mask_data[logger_special_flags].mask,
                        &s->sparts[offset_parts + k].logger_data.last_offset,
                        logger_flag);
@@ -824,12 +822,57 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
              sizeof(struct bpart) * prox->nr_bparts_in);
 
 #ifdef WITH_LOGGER
-      logger_log_recv_strays(e->logger, &s->parts[offset_parts + count_parts],
-                             &s->xparts[offset_parts + count_parts], prox->nr_parts_in,
-                             &s->gparts[offset_gparts + count_gparts], prox->nr_gparts_in,
-                             &s->sparts[offset_sparts + count_sparts], prox->nr_sparts_in,
-                             &s->bparts[offset_bparts + count_bparts], prox->nr_bparts_in,
-                             prox->nodeID);
+      if (e->policy & engine_policy_logger) {
+        const int flag = logger_generate_flag(logger_flag_mpi_enter,
+                                              prox->nodeID);
+
+        struct part *parts = &s->parts[offset_parts + count_parts];
+        struct xpart *xparts = &s->xparts[offset_parts + count_parts];
+        struct spart *sparts = &s->sparts[offset_sparts + count_sparts];
+        struct gpart *gparts = &s->gparts[offset_gparts + count_gparts];
+
+        /* Log the gas particles */
+        const unsigned int mask_hydro =
+          logger_masks_all_part |
+          logger_mask_data[logger_special_flags].mask;
+
+        for(int i = 0; i < prox->nr_parts_in; i++) {
+          logger_log_part(e->logger, &parts[i], mask_hydro,
+                          &xparts[i].logger_data.last_offset,
+                          flag);
+          /* Reset the counter */
+          xparts[i].logger_data.steps_since_last_output = 0;
+        }
+
+        /* Log the stellar particles */
+        const unsigned int mask_stars = logger_masks_all_spart |
+          logger_mask_data[logger_special_flags].mask;
+        for(int i = 0; i < prox->nr_sparts_in; i++) {
+          logger_log_spart(e->logger, &sparts[i], mask_stars,
+                           &sparts[i].logger_data.last_offset,
+                           flag);
+          sparts[i].logger_data.steps_since_last_output = 0;
+        }
+
+        /* Log the gparts */
+        const unsigned int mask_grav =
+          logger_masks_all_gpart |
+          logger_mask_data[logger_special_flags].mask;
+        for(int i = 0; i < prox->nr_gparts_in; i++) {
+          /* Log only the dark matter */
+          if (gparts[i].type != swift_type_dark_matter) continue;
+
+          logger_log_gpart(e->logger, &gparts[i], mask_grav,
+                           &gparts[i].logger_data.last_offset,
+                           flag);
+          gparts[i].logger_data.steps_since_last_output = 0;
+        }
+
+        /* Log the bparts */
+        if (prox->nr_bparts_in > 0) {
+          error("TODO");
+        }
+      }
 #endif
       /* for (int k = offset; k < offset + count; k++)
          message(
@@ -1455,7 +1498,9 @@ int engine_estimate_nr_tasks(const struct engine *e) {
   }
 #if defined(WITH_LOGGER)
   /* each cell logs its particles */
-  n1 += 1;
+  if (e->policy & engine_policy_logger) {
+    n1 += 1;
+  }
 #endif
 
 #ifdef WITH_MPI
@@ -2029,13 +2074,15 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     cooling_update(e->cosmology, e->cooling_func, e->s);
 
 #ifdef WITH_LOGGER
-  /* Mark the first time step in the particle logger file. */
-  logger_log_timestamp(e->logger, e->ti_current, e->time,
-                       &e->logger->timestamp_offset);
-  /* Make sure that we have enough space in the particle logger file
-   * to store the particles in current time step. */
-  logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
-  logger_write_description(e->logger, e);
+  if (e->policy & engine_policy_logger) {
+    /* Mark the first time step in the particle logger file. */
+    logger_log_timestamp(e->logger, e->ti_current, e->time,
+                         &e->logger->timestamp_offset);
+    /* Make sure that we have enough space in the particle logger file
+     * to store the particles in current time step. */
+    logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
+    logger_write_description(e->logger, e);
+  }
 #endif
 
   /* Now, launch the calculation */
@@ -2342,13 +2389,15 @@ void engine_step(struct engine *e) {
   }
 
 #ifdef WITH_LOGGER
-  /* Mark the current time step in the particle logger file. */
-  logger_log_timestamp(e->logger, e->ti_current, e->time,
-                       &e->logger->timestamp_offset);
-  /* Make sure that we have enough space in the particle logger file
-   * to store the particles in current time step. */
-  logger_ensure_size(e->logger, e->s->nr_parts, e->s->nr_gparts,
-                     e->s->nr_sparts);
+  if (e->policy & engine_policy_logger) {
+    /* Mark the current time step in the particle logger file. */
+    logger_log_timestamp(e->logger, e->ti_current, e->time,
+                         &e->logger->timestamp_offset);
+    /* Make sure that we have enough space in the particle logger file
+     * to store the particles in current time step. */
+    logger_ensure_size(e->logger, e->s->nr_parts, e->s->nr_gparts,
+                       e->s->nr_sparts);
+  }
 #endif
 
   /* Are we drifting everything (a la Gadget/GIZMO) ? */
@@ -2441,7 +2490,9 @@ void engine_step(struct engine *e) {
 
   engine_check_for_dumps(e);
 #ifdef WITH_LOGGER
-  engine_check_for_index_dump(e);
+  if (e->policy & engine_policy_logger) {
+    engine_check_for_index_dump(e);
+  }
 #endif
 
   TIMER_TOC2(timer_step);
@@ -3560,8 +3611,10 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->total_nr_tasks = 0;
 
 #if defined(WITH_LOGGER)
-  e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
-  logger_init(e->logger, params);
+  if (e->policy & engine_policy_logger) {
+    e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
+    logger_init(e->logger, params);
+  }
 #endif
 
   /* Make the space link back to the engine. */
@@ -4083,7 +4136,7 @@ void engine_config(int restart, int fof, struct engine *e,
 #endif
 
 #if defined(WITH_LOGGER)
-    if (e->nodeID == 0)
+    if ((e->policy & engine_policy_logger) && e->nodeID == 0)
       message(
           "WARNING: There is currently no way of predicting the output "
           "size, please use it carefully");
@@ -4306,7 +4359,7 @@ void engine_config(int restart, int fof, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  if (!restart) {
+  if ((e->policy & engine_policy_logger) && !restart) {
     /* Write the particle logger header */
     logger_write_file_header(e->logger);
   }
@@ -4826,8 +4879,10 @@ void engine_clean(struct engine *e, const int fof) {
 
   swift_free("links", e->links);
 #if defined(WITH_LOGGER)
-  logger_free(e->logger);
-  free(e->logger);
+  if (e->policy & engine_policy_logger) {
+    logger_free(e->logger);
+    free(e->logger);
+  }
 #endif
   scheduler_clean(&e->sched);
   space_clean(e->s);
@@ -4908,7 +4963,9 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
 
 #ifdef WITH_LOGGER
-  logger_struct_dump(e->logger, stream);
+  if (e->policy & engine_policy_logger) {
+    logger_struct_dump(e->logger, stream);
+  }
 #endif
 }
 
@@ -5055,10 +5112,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   }
 
 #ifdef WITH_LOGGER
-  struct logger_writer *log =
+  if (e->policy & engine_policy_logger) {
+    struct logger_writer *log =
       (struct logger_writer *)malloc(sizeof(struct logger_writer));
-  logger_struct_restore(log, stream);
-  e->logger = log;
+    logger_struct_restore(log, stream);
+    e->logger = log;
+  }
 #endif
 
 #ifdef EOS_PLANETARY
