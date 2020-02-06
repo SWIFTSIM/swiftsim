@@ -409,7 +409,22 @@ int cell_link_foreign_gparts(struct cell *c, struct gpart *gparts) {
 #endif
 }
 
+/**
+ * @brief Recursively nullify all the particle pointers in a cell hierarchy.
+ *
+ * Should only be used on foreign cells!
+ *
+ * This will make any task or action running on these cells likely crash.
+ * Recreating the foreign links will be necessary.
+ *
+ * @param c The #cell to act on.
+ */
 void cell_unlink_foreign_particles(struct cell *c) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->nodeID == engine_rank)
+    error("Unlinking foreign particles in a local cell!");
+#endif
 
   c->grav.parts = NULL;
   c->hydro.parts = NULL;
