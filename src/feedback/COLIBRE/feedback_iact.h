@@ -282,7 +282,7 @@ runner_iact_nonsym_feedback_apply(
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNII = random_unit_interval_two_IDs(
-        si->id, pj->id, ti_current, random_number_stellar_feedback);
+        si->id, pj->id, ti_current, random_number_stellar_feedback_1);
 
     /* Are we lucky? */
     do_SNII = (rand_SNII < prob_SNII);
@@ -334,8 +334,7 @@ runner_iact_nonsym_feedback_apply(
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval_two_IDs(
-        si->id, pj->id, ti_current, random_number_SNIa_feedback);
-
+        si->id, pj->id, ti_current, random_number_stellar_feedback_2);
     /* Are we lucky? */
     do_SNIa = (rand_SNIa < prob_SNIa);
 

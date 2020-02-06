@@ -288,7 +288,7 @@ INLINE static void compute_SNII_feedback(
 
     /* Make sure a star does not do feedback twice
      * when using a fixed delay! */
-    if (!SNII_sampled_delay && sp->f_E != -1.f) {
+    if (!SNII_sampled_delay && sp->SNII_f_E != -1.f) {
 #ifdef SWIFT_DEBUG_CHECKS
       message("Star has already done feedback! sp->id=%lld age=%e d=%e", sp->id,
               star_age, dt);

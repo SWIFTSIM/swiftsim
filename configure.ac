@@ -407,6 +407,18 @@ if test "$enable_memuse_reports" = "yes"; then
    AC_DEFINE([SWIFT_MEMUSE_REPORTS],1,[Enable memory usage reports])
 fi
 
+# Check if we want to make the dumper thread active.
+AC_ARG_ENABLE([dumper],
+   [AS_HELP_STRING([--enable-dumper],
+     [Dump active tasks and memory use (if configured)@<:@yes/no@:>@]
+   )],
+   [enable_dumper="$enableval"],
+   [enable_dumper="no"]
+)
+if test "$enable_dumper" = "yes"; then
+   AC_DEFINE([SWIFT_DUMPER_THREAD],1,[Enable dumper thread])
+fi
+
 # See if we want mpi reporting.
 AC_ARG_ENABLE([mpiuse-reports],
    [AS_HELP_STRING([--enable-mpiuse-reports],
@@ -1440,15 +1452,16 @@ case "$with_subgrid" in
    ;;
    GEAR)
 	with_subgrid_cooling=grackle_0
-	with_subgrid_chemistry=GEAR
+	with_subgrid_chemistry=GEAR_10
 	with_subgrid_pressure_floor=GEAR
 	with_subgrid_stars=GEAR
 	with_subgrid_star_formation=GEAR
-	with_subgrid_feedback=none
+	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=GEAR
+  # GEAR's order is not used anymore
+	with_subgrid_task_order=none
 	enable_fof=no
-  with_subgrid_SNIa_DTD=power-law-beta-one
+        with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
    EAGLE)
 	with_subgrid_cooling=EAGLE
@@ -1816,7 +1829,8 @@ esac
 #  chemistry function
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
-      [chemistry function @<:@none, GEAR, EAGLE, COLIBRE default: none@:>@]
+      [chemistry function @<:@none, GEAR_*, EAGLE, COLIBRE default: none@:>@
+      For GEAR, you need to provide the number of elements (e.g. GEAR_10)]
    )],
    [with_chemistry="$withval"],
    [with_chemistry="none"]
@@ -1834,8 +1848,10 @@ case "$with_chemistry" in
    none)
       AC_DEFINE([CHEMISTRY_NONE], [1], [No chemistry function])
    ;;
-   GEAR)
+   GEAR_*)
       AC_DEFINE([CHEMISTRY_GEAR], [1], [Chemistry taken from the GEAR model])
+      number_element=${with_chemistry:5}
+      AC_DEFINE_UNQUOTED([GEAR_CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow])
    ;;
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
@@ -1949,6 +1965,9 @@ case "$with_feedback" in
    ;;
    COLIBRE)
       AC_DEFINE([FEEDBACK_COLIBRE], [1], [COLIBRE stellar feedback and evolution model])
+   ;;
+   GEAR)
+      AC_DEFINE([FEEDBACK_GEAR], [1], [GEAR stellar feedback and evolution model])
    ;;
    none)
       AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
@@ -2239,6 +2258,13 @@ AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
 # Check if using COLIBRE feedback
 AM_CONDITIONAL([HAVECOLIBREFEEDBACK], [test $with_feedback = "COLIBRE"])
+
+# check if using grackle cooling
+AM_CONDITIONAL([HAVEGRACKLECOOLING], [test ${with_cooling:0:7} == "grackle"])
+
+# check if using gear feedback
+AM_CONDITIONAL([HAVEGEARFEEDBACK], [test $with_feedback == "GEAR"])
+
 
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile examples/Cooling/CoolingRatesCOLIBRE/Makefile doc/Makefile doc/Doxyfile tests/Makefile])

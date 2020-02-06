@@ -34,6 +34,8 @@
 #include "./feedback/EAGLE/feedback_struct.h"
 #elif defined(FEEDBACK_COLIBRE)
 #include "./feedback/COLIBRE/feedback_struct.h"
+#elif defined(FEEDBACK_GEAR)
+#include "./feedback/GEAR/feedback_struct.h"
 #else
 #error "Invalid choice of feedback function."
 #endif

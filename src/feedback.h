@@ -32,6 +32,9 @@
 #elif defined(FEEDBACK_COLIBRE)
 #include "./feedback/COLIBRE/feedback.h"
 #include "./feedback/COLIBRE/feedback_iact.h"
+#elif defined(FEEDBACK_GEAR)
+#include "./feedback/GEAR/feedback.h"
+#include "./feedback/GEAR/feedback_iact.h"
 #else
 #error "Invalid choice of feedback model"
 #endif
