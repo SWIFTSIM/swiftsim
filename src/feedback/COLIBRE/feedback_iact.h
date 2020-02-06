@@ -401,6 +401,9 @@ runner_iact_nonsym_feedback_apply(
 
     /* Impose maximal viscosity */
     /* hydro_diffusive_feedback_reset(pj); */
+
+    /* Synchronize the particle on the timeline */
+    timestep_sync_part(pj);
   }
 }
 
