@@ -1387,7 +1387,28 @@ void cooling_set_subgrid_properties(
       xp->tracers_data.subgrid_dens = hydro_get_physical_density(p, cosmo); 
     }
 
-  if (log10_T < log10_T_EOS_max) 
+  if (xp->tracers_data.HIIregion_timer_gas > 0.)
+    {
+      /* If the particle is flagged as an HII region, 
+       * we need to set its abundance array accordingly. */ 
+
+      // Create ChimesGasVars struct 
+      struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars; 
+      struct gasVariables ChimesGasVars; 
+      allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+
+      // Set HII region abundance array 
+      cooling_set_HIIregion_chimes_abundances(&ChimesGasVars, cooling); 
+
+      // Copy abundances from ChimesGasVars to xp. 
+      int i; 
+      for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++) 
+	xp->cooling_data.chimes_abundances[i] = (double) ChimesGasVars.abundances[i]; 
+
+      // Free CHIMES memory. 
+      free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
+    }
+  else if (log10_T < log10_T_EOS_max) 
     {
       /* If the particle is within dlogT_EOS of 
        * the entropy floor, we need to re-set 
@@ -1437,11 +1458,6 @@ void cooling_set_subgrid_properties(
       free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
     }
 }
-
-
-
-
-
 
 /**
  * @brief Compute the temperature of the gas.
