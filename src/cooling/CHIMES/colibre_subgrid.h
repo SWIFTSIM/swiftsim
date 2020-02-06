@@ -32,23 +32,32 @@
  * @param us Internal system of units data structure.
  * @param phys_const The physical constants.
  * @param floor_props The properties of the entropy floor.
+ * @param hydro_props the hydro_props struct. 
  * @param cosmo The cosmological model.
  * @param p The #part.
  * @param xp The #xpart.
- * @param log10_T The logarithm base 10 of the temperature of the particle.
- * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
- * to be considered on the EOS at the density of this particle.
  */
 double compute_subgrid_temperature(
     const struct cooling_function_data *cooling,
     const struct unit_system *us,
     const struct phys_const *phys_const,
     const struct entropy_floor_properties *floor_props,
-    const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
-    const float log10_T, const float log10_T_EOS_max) {
+    const struct hydro_props *hydro_props,
+    const struct cosmology *cosmo, const struct part *p, const struct xpart *xp) {
 
-  /* Physical density of this particle */
+  /* Limit imposed by the entropy floor */
+  const double A_EOS = entropy_floor(p, cosmo, floor_props);
   const double rho_phys = hydro_get_physical_density(p, cosmo);
+  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
+  const double u_EOS_max = u_EOS * pow(10.0, cooling->dlogT_EOS); 
+  
+  /* Particle's internal energy */ 
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
+
+  /* Particle's temperature */
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
+  const float log10_T = log10f(T);
 
   /* Get the total metallicity */
   float dummy[colibre_cooling_N_elementtypes];
@@ -79,7 +88,7 @@ double compute_subgrid_temperature(
                &dtem);
 
   /* Are we above or below the EoS? */
-  if (log10_T < log10_T_EOS_max) {
+  if (u < u_EOS_max) {
 
     /* We are below the EoS. Use subgrid properties assuming P equilibrium */
 
@@ -220,23 +229,32 @@ double compute_subgrid_temperature(
  * @param us Internal system of units data structure.
  * @param phys_const The physical constants.
  * @param floor_props The properties of the entropy floor.
+ * @param hydro_props the hydro_props struct. 
  * @param cosmo The cosmological model.
  * @param p The #part.
  * @param xp The #xpart.
- * @param log10_T The logarithm base 10 of the temperature of the particle.
- * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
- * to be considered on the EOS at the density of this particle.
  */
 double compute_subgrid_density(
     const struct cooling_function_data *cooling,
     const struct unit_system *us,
     const struct phys_const *phys_const,
     const struct entropy_floor_properties *floor_props,
-    const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
-    const float log10_T, const float log10_T_EOS_max) {
+    const struct hydro_props *hydro_props,
+    const struct cosmology *cosmo, const struct part *p, const struct xpart *xp) {
 
-  /* Physical density of this particle */
+  /* Limit imposed by the entropy floor */
+  const double A_EOS = entropy_floor(p, cosmo, floor_props);
   const double rho_phys = hydro_get_physical_density(p, cosmo);
+  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
+  const double u_EOS_max = u_EOS * pow(10.0, cooling->dlogT_EOS); 
+  
+  /* Particle's internal energy */ 
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
+
+  /* Particle's temperature */
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
+  const float log10_T = log10f(T);
 
   /* Get the total metallicity */
   float dummy[colibre_cooling_N_elementtypes];
@@ -267,7 +285,7 @@ double compute_subgrid_density(
                &dtem);
 
   /* Are we above or below the EoS? */
-  if (log10_T < log10_T_EOS_max) {
+  if (u < u_EOS_max) {
 
     /* We are below the EoS. Use subgrid properties assuming P equilibrium */
 

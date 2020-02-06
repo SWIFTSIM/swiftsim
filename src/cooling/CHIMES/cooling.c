@@ -1363,28 +1363,31 @@ void cooling_set_subgrid_properties(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props,
     const struct cooling_function_data *cooling, struct part *p,
-    struct xpart *xp) {
+    struct xpart *xp) {  
 
-  /* Get the EOS temperature from the entropy floor */
-  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
-  const float log10_T_EOS_max =
-      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
+  /* Limit imposed by the entropy floor */
+  const double A_EOS = entropy_floor(p, cosmo, floor_props);
+  const double rho = hydro_get_physical_density(p, cosmo);
+  const double u_EOS = gas_internal_energy_from_entropy(rho, A_EOS);
+  const double u_EOS_max = u_EOS * pow(10.0, cooling->dlogT_EOS); 
+  
+  /* Particle's internal energy */ 
+  const double u = hydro_get_physical_internal_energy(p, xp, cosmo);
 
-  /* Get the particle's temperature */
+  /* Particle's temperature */
   const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
                                           cooling, p, xp);
-  const float log10_T = log10f(T);
 
   if (cooling->use_colibre_subgrid_EOS == 1) 
     {
       /* Compute the subgrid properties */
-      xp->tracers_data.subgrid_temp = compute_subgrid_temperature(cooling, us, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-      xp->tracers_data.subgrid_dens = compute_subgrid_density(cooling, us, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
+      xp->tracers_data.subgrid_temp = compute_subgrid_temperature(cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
+      xp->tracers_data.subgrid_dens = compute_subgrid_density(cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
     }
   else 
     {
       xp->tracers_data.subgrid_temp = T; 
-      xp->tracers_data.subgrid_dens = hydro_get_physical_density(p, cosmo); 
+      xp->tracers_data.subgrid_dens = rho; 
     }
 
   if (xp->tracers_data.HIIregion_timer_gas > 0.)
@@ -1408,7 +1411,7 @@ void cooling_set_subgrid_properties(
       // Free CHIMES memory. 
       free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars); 
     }
-  else if (log10_T < log10_T_EOS_max) 
+  else if (u < u_EOS_max) 
     {
       /* If the particle is within dlogT_EOS of 
        * the entropy floor, we need to re-set 
@@ -1481,19 +1484,12 @@ float cooling_get_subgrid_temperature(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Get the EOS temperature from the entropy floor */
-  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
-  const float log10_T_EOS_max =
-      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
-
   /* Get the particle's temperature */
   const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
                                           cooling, p, xp);
-  const float log10_T = log10f(T);
 
   if (cooling->use_colibre_subgrid_EOS == 1) 
-    return compute_subgrid_temperature(cooling, us, phys_const, floor_props, cosmo, p,
-				       xp, log10_T, log10_T_EOS_max);
+    return compute_subgrid_temperature(cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
   else 
     return T; 
 }
@@ -1522,19 +1518,8 @@ float cooling_get_subgrid_density(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Get the EOS temperature from the entropy floor */
-  const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
-  const float log10_T_EOS_max =
-      log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
-                                          cooling, p, xp);
-  const float log10_T = log10f(T);
-
   if (cooling->use_colibre_subgrid_EOS == 1) 
-    return compute_subgrid_density(cooling, us, phys_const, floor_props, cosmo, p, xp,
-				   log10_T, log10_T_EOS_max);
+    return compute_subgrid_density(cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
   else 
     return hydro_get_physical_density(p, cosmo); 
 }
