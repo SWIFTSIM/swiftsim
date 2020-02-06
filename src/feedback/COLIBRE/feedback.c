@@ -1295,7 +1295,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   sp->feedback_data.to_distribute.SNII_star_age_Myr = (float)star_age_Myr;
 
   /* HII region energy to distribute (will be used only if the star is young) */
-  sp->feedback_data.to_distribute.HII_delta_u = feedback_props->HII_delta_u;
+  sp->feedback_data.to_distribute.HII_u = feedback_props->HII_u;
 
   TIMER_TOC(timer_do_star_evol);
 }
@@ -1532,10 +1532,9 @@ void feedback_props_init(struct feedback_props* fp,
   const double HIIregion_fion = parser_get_param_double(
       params, "COLIBRECooling:HIIregion_ionization_fraction");
   const double XH = 1. - phys_const->const_primordial_He_fraction;
-  const double mu_HII = .0 / ((1.0 + HIIregion_fion) * (1.0 + (3.0 * XH)));
-  fp->HII_delta_u =
-      HII_region_temp * phys_const->const_boltzmann_k /
-      (phys_const->const_proton_mass * hydro_gamma_minus_one * mu_HII);
+  const double mu_HII = 4.0 / ((1.0 + HIIregion_fion) * (1.0 + (3.0 * XH)));
+  fp->HII_u = HII_region_temp * phys_const->const_boltzmann_k /
+              (phys_const->const_proton_mass * hydro_gamma_minus_one * mu_HII);
 
   /* Properties of the enrichment down-sampling ----------------------------- */
 

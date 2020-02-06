@@ -108,8 +108,8 @@ struct feedback_spart_data {
       /*! HII region probability */
       float HIIregion_probability;
 
-      /*! Change in energy from HII region energy injection */
-      float HII_delta_u;
+      /*! Energy floor of the HII region for injection */
+      float HII_u;
 
       /*! momentum available at the given timestep */
       float momentum;

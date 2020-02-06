@@ -420,12 +420,19 @@ runner_iact_nonsym_feedback_apply(
       /* Compute new energy of this particle */
       const double u_init_HII =
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
-      const float delta_u_HII = si->feedback_data.to_distribute.HII_delta_u;
-      const double u_new_HII = u_init_HII + delta_u_HII;
+      const float u_HII = si->feedback_data.to_distribute.HII_u;
 
-      /* Inject energy into the particle */
-      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_HII);
-      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_HII);
+      /* Put the particle on the HII temperature floor or leave it
+         if it was already above */
+      if (u_init_HII < u_HII) {
+
+        /* Inject energy into the particle */
+        hydro_set_physical_internal_energy(pj, xpj, cosmo, u_HII);
+        hydro_set_drifted_physical_internal_energy(pj, cosmo, u_HII);
+
+        /* Make sure the particle does not cool any more */
+        hydro_set_physical_internal_energy_dt(pj, cosmo, 0.f);
+      }
 
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
