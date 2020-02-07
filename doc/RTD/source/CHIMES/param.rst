@@ -6,7 +6,7 @@
 CHIMES parameters
 -----------------
 
-The following parameters are specified in the parameter file when running SWIFT with the CHIMES module: 
+The parameters needed when running SWIFT with the CHIMES module are described in detail below. At the bottom of this page we have included example sets of CHIMES parameters to familiarise new users with typical parameter values for common set ups. 
 
 +------------------------------------+---------------------------------------------------------------+
 | Parameter                          | Description                                                   |
@@ -291,3 +291,108 @@ The following parameters are specified in the parameter file when running SWIFT 
 |                                    | | COLIBRE cooling table (see Ploeckinger et al. in prep).     |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
+
+
+Example: Isolated galaxy hybrid cooling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following set of CHIMES parameters are suitable for running a non-cosmological isolated galaxy with hybrid cooling, i.e. with hydrogen and helium in non-equilibrium and metal cooling read in from the COLIBRE cooling tables in equilibrium. This example uses the COLIBRE models for the UV radiation field, shielding and metal depletion. Note that you will need to change the `data_path` and `colibre_table_path` parameters to point to the correct directory on your system. 
+
+.. code:: YAML
+
+    # CHIMES cooling parameters
+    CHIMESCooling: 
+      data_path:                  /path/to/chimes-data 
+      EqmAbundanceTable:          colibre_HHe/z0.000_eqm.hdf5 
+      PhotoIonTable_UVB:          HM12_cross_sections/z0.000_cross_sections.hdf5 
+      PhotoIonTable_ISRF:         cross_sections_B87.hdf5 
+      UV_field_flag:              2 
+      Shielding_flag:             2
+      use_redshift_dependent_UVB: 0
+      shielding_length_factor:    0.5 
+      max_shielding_length:       100.0 
+      rad_field_norm_factor:      0.1 
+      init_abundance_mode:        1 
+      colibre_metal_depletion:    1
+      relativeTolerance:          1e-4 
+      absoluteTolerance:          1e-10 
+      thermalAbsoluteTolerance:   1e-40 
+      explicitTolerance:          0.05 
+      scale_metal_tolerances:     1 
+      T_mol:                      1.0e5 
+      ChemistryEqmMode:           0 
+      ThermEvolOn:                1 
+      chimes_debug:               0 
+      cosmic_ray_rate:            1.8e-16 
+      delta_logTEOS_subgrid_properties:  0.2 
+      use_colibre_subgrid_EOS:    1 
+      use_hybrid_cooling:         1 
+      rapid_cooling_threshold:    1.0 
+      HIIregion_ionization_fraction: 1.0 
+      HIIregion_temperature:      1.0e4 
+      colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
+      H_reion_z:                  7.5 
+      S_over_Si_in_solar:         1.0
+      Ca_over_Si_in_solar:        1.0
+      IncludeCarbon:              0 
+      IncludeNitrogen:            0 
+      IncludeOxygen:              0 
+      IncludeNeon:                0 
+      IncludeMagnesium:           0 
+      IncludeSilicon:             0 
+      IncludeSulphur:             0 
+      IncludeCalcium:             0 
+      IncludeIron:                0 
+
+
+Example: Cosmological box hybrid cooling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following set of CHIMES parameters are suitable for running a cosmological box with hybrid cooling, i.e. with hydrogen and helium in non-equilibrium and metal cooling read in from the COLIBRE cooling tables in equilibrium. This example uses the COLIBRE models for the UV radiation field, shielding and metal depletion. Note that you will need to change the `data_path` and `colibre_table_path` parameters to point to the correct directory on your system. 
+
+Compared to the isolated galaxy example above, this example uses a redshift-dependent UVB. 
+
+.. code:: YAML
+
+    # CHIMES cooling parameters
+    CHIMESCooling: 
+      data_path:                  /path/to/chimes-data 
+      EqmAbundanceTable:          colibre_HHe 
+      PhotoIonTable_UVB:          HM12_cross_sections
+      PhotoIonTable_ISRF:         cross_sections_B87.hdf5 
+      UV_field_flag:              2 
+      Shielding_flag:             2
+      use_redshift_dependent_UVB: 2
+      shielding_length_factor:    0.5 
+      max_shielding_length:       100.0 
+      rad_field_norm_factor:      0.1 
+      init_abundance_mode:        1 
+      colibre_metal_depletion:    1
+      relativeTolerance:          1e-4 
+      absoluteTolerance:          1e-10 
+      thermalAbsoluteTolerance:   1e-40 
+      explicitTolerance:          0.05 
+      scale_metal_tolerances:     1 
+      T_mol:                      1.0e5 
+      ChemistryEqmMode:           0 
+      ThermEvolOn:                1 
+      chimes_debug:               0 
+      cosmic_ray_rate:            1.8e-16 
+      delta_logTEOS_subgrid_properties:  0.2 
+      use_colibre_subgrid_EOS:    1 
+      use_hybrid_cooling:         1 
+      rapid_cooling_threshold:    1.0 
+      HIIregion_ionization_fraction: 1.0 
+      HIIregion_temperature:      1.0e4 
+      colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
+      H_reion_z:                  7.5 
+      S_over_Si_in_solar:         1.0
+      Ca_over_Si_in_solar:        1.0
+      IncludeCarbon:              0 
+      IncludeNitrogen:            0 
+      IncludeOxygen:              0 
+      IncludeNeon:                0 
+      IncludeMagnesium:           0 
+      IncludeSilicon:             0 
+      IncludeSulphur:             0 
+      IncludeCalcium:             0 
+      IncludeIron:                0 
