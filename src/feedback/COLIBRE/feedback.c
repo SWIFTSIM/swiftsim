@@ -1528,9 +1528,9 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Energy injected by the HII regions */
   const double HII_region_temp =
-      parser_get_param_double(params, "COLIBRECooling:HIIregion_temperature");
+      parser_get_param_double(params, "COLIBREFeedback:HIIregion_temperature");
   const double HIIregion_fion = parser_get_param_double(
-      params, "COLIBRECooling:HIIregion_ionization_fraction");
+      params, "COLIBREFeedback:HIIregion_ionization_fraction");
   const double XH = 1. - phys_const->const_primordial_He_fraction;
   const double mu_HII = 4.0 / ((1.0 + HIIregion_fion) * (1.0 + (3.0 * XH)));
   fp->HII_u = HII_region_temp * phys_const->const_boltzmann_k /

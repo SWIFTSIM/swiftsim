@@ -1049,12 +1049,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
 
   /* Properties of the HII region model ------------------------------------- */
   cooling->HIIregion_fion = parser_get_param_float(
-      parameter_file, "COLIBRECooling:HIIregion_ionization_fraction");
+      parameter_file, "COLIBREFeedback:HIIregion_ionization_fraction");
 
   cooling->HIIregion_temp = parser_get_param_float(
-      parameter_file, "COLIBRECooling:HIIregion_temperature");
+      parameter_file, "COLIBREFeedback:HIIregion_temperature");
 
-  /* Properties for the subgrid properties model */
+  /* Properties for the subgrid properties model ---------------------------- */
   cooling->dlogT_EOS = parser_get_param_float(
       parameter_file, "COLIBRECooling:delta_logTEOS_subgrid_properties");
 
