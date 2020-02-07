@@ -266,24 +266,34 @@ runner_iact_nonsym_feedback_apply(
   hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_enrich);
   hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_enrich);
 
-  /* Finally, SNII stochastic feedback */
+  /* Apply the different sources of energy and momentum feedback */
+
+  int do_SNII = 0;
+  int do_SNIa = 0;
+
+  /* SNII stochastic feedback */
 
   /* Get the SNII feedback properties */
-  const float prob = si->feedback_data.to_distribute.SNII_heating_probability;
+  const float prob_SNII =
+      si->feedback_data.to_distribute.SNII_heating_probability;
 
   /* Are we doing some SNII (big boys) feedback? */
-  if (prob > 0.f) {
+  if (prob_SNII > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
-    const float rand = random_unit_interval_two_IDs(
+    const float rand_SNII = random_unit_interval_two_IDs(
         si->id, pj->id, ti_current, random_number_stellar_feedback_1);
+
     /* Are we lucky? */
-    if (rand < prob) {
+    do_SNII = (rand_SNII < prob_SNII);
+
+    if (do_SNII) {
 
       /* Compute new energy of this particle */
-      const double u_init = hydro_get_physical_internal_energy(pj, xpj, cosmo);
-      const float delta_u = si->feedback_data.to_distribute.SNII_delta_u;
-      const double u_new = u_init + delta_u;
+      const double u_init_SNII =
+          hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      const float delta_u_SNII = si->feedback_data.to_distribute.SNII_delta_u;
+      const double u_new_SNII = u_init_SNII + delta_u_SNII;
 
 #ifdef SWIFT_DEBUG_CHECKS
       message("SNII event at star age [Myr]  = %.4f",
@@ -291,8 +301,8 @@ runner_iact_nonsym_feedback_apply(
 #endif
 
       /* Inject energy into the particle */
-      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
-      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_SNII);
+      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_SNII);
 
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
@@ -313,30 +323,32 @@ runner_iact_nonsym_feedback_apply(
     }
   }
 
-  /* Finally, SNIa stochastic feedback */
+  /* SNIa stochastic feedback */
 
   /* Get the SNIa feedback properties */
   const float prob_SNIa =
       si->feedback_data.to_distribute.SNIa_heating_probability;
 
-  /* Are we doing some SNIa (old boys) feedback? */
+  /* Are we doing some SNIa feedback? */
   if (prob_SNIa > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval_two_IDs(
         si->id, pj->id, ti_current, random_number_stellar_feedback_2);
     /* Are we lucky? */
-    if (rand_SNIa < prob_SNIa) {
+    do_SNIa = (rand_SNIa < prob_SNIa);
+
+    if (do_SNIa) {
 
       /* Compute new energy of this particle */
       const double u_init_SNIa =
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
       const float delta_u_SNIa = si->feedback_data.to_distribute.SNIa_delta_u;
-      const double u_new = u_init_SNIa + delta_u_SNIa;
+      const double u_new_SNIa = u_init_SNIa + delta_u_SNIa;
 
       /* Inject energy into the particle */
-      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new);
-      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new);
+      hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_SNIa);
+      hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_SNIa);
 
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
@@ -393,14 +405,40 @@ runner_iact_nonsym_feedback_apply(
 
   /* if lucky, particle is now flagged as HII region  */
   if (HIIregion_rand < HIIregion_prob) {
+
     /* gas particle gets flagged as HII region */
     xpj->tracers_data.HIIregion_timer_gas =
         si->feedback_data.to_distribute.HIIregion_endtime;
     xpj->tracers_data.HIIregion_starid =
         si->feedback_data.to_distribute.HIIregion_starid;
 
-    /* Impose maximal viscosity */
-    /* hydro_diffusive_feedback_reset(pj); */
+    /* If the particle hasn't received feedback from other
+       sources, heat it up to the HII region energy level */
+    if (!do_SNII && !do_SNIa) {
+
+      /* Compute new energy of this particle */
+      const double u_init_HII =
+          hydro_get_physical_internal_energy(pj, xpj, cosmo);
+      const float u_HII = si->feedback_data.to_distribute.HII_u;
+
+      /* Put the particle on the HII temperature floor or leave it
+         if it was already above */
+      if (u_init_HII < u_HII) {
+
+        /* Inject energy into the particle */
+        hydro_set_physical_internal_energy(pj, xpj, cosmo, u_HII);
+        hydro_set_drifted_physical_internal_energy(pj, cosmo, u_HII);
+
+        /* Make sure the particle does not cool any more */
+        hydro_set_physical_internal_energy_dt(pj, cosmo, 0.f);
+      }
+
+      /* Impose maximal viscosity */
+      hydro_diffusive_feedback_reset(pj);
+
+      /* Synchronize the particle on the timeline */
+      timestep_sync_part(pj);
+    }
   }
 }
 
