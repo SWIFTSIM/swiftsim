@@ -57,6 +57,7 @@
 #include "minmax.h"
 #include "multipole.h"
 #include "pressure_floor.h"
+#include "proxy.h"
 #include "restart.h"
 #include "sort_part.h"
 #include "star_formation.h"
@@ -340,9 +341,10 @@ void space_free_foreign_parts(struct space *s, const int clear_cell_pointers) {
     s->bparts_foreign = NULL;
   }
   if (clear_cell_pointers) {
-    for (int i = 0; i < s->nr_local_cells_with_tasks; ++i) {
-      struct cell *c = &s->cells_top[s->local_cells_with_tasks_top[i]];
-      if (c->nodeID != s->e->nodeID) cell_unlink_foreign_particles(c);
+    for (int k = 0; k < s->e->nr_proxies; k++) {
+      for (int j = 0; j < s->e->proxies[k].nr_cells_in; j++) {
+        cell_unlink_foreign_particles(s->e->proxies[k].cells_in[j]);
+      }
     }
   }
 #endif
