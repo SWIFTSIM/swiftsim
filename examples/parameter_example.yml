@@ -361,9 +361,7 @@ COLIBRECooling:
   He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   S_over_Si_in_solar:        1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
-  HIIregion_ionization_fraction:    1.0        # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
-  HIIregion_temperature:            1.e4       # Temperature of gas particles tagged as HII regions
-  delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  delta_logTEOS_subgrid_properties: 0.2        # delta log T above the EOS below which the subgrid properties use Teq assumption
   rapid_cooling_threshold:          1.0        # Switch to rapid cooling regime for dt / t_cool above this threshold.
  
 # Cooling with Grackle 3.0
@@ -506,7 +504,7 @@ COLIBREFeedback:
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
   SNII_min_mass_Msun:               6.0             # Minimal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
   SNII_max_mass_Msun:             100.0             # Maximal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
-  SNII_wind_delay_Gyr:              -1.           # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
+  SNII_wind_delay_Gyr:              -1.             # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
   SNII_energy_fraction_min:         1.0             # Maximal fraction of energy applied in a SNII feedback event.
@@ -532,11 +530,12 @@ COLIBREFeedback:
   with_HIIRegions:                  1               # Switch for early feedback (HII regions).
   with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
+  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-  earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
-  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table
-                                    
-  HIIregion_maxage_Myr:             0 # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
+  earlyfb_filename:                 BPASS_table.hdf5# Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
+  stellarwind_maxage_Myr:           0               # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table.
+  HIIregion_maxage_Myr:             0               # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
 
 # GEAR feedback model
 GEARFeedback:
