@@ -57,7 +57,7 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   char *basename = NULL;
 
   double time = 0;
-  int verbose = 2;
+  int verbose = 1;
 
   /* parse arguments. */
   if (!PyArg_ParseTuple(args, "sd|i", &basename, &time, &verbose)) return NULL;
@@ -82,9 +82,9 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
     n_tot += n_parts[i];
   }
 
-#ifdef SWIFT_DEBUG_CHECKS
-  message("Found %lu particles", n_tot);
-#endif  // SWIFT_DEBUG_CHECKS
+  if (verbose > 0) {
+    message("Found %lu particles", n_tot);
+  }
 
   /* Allocate the output memory */
   PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
@@ -125,7 +125,7 @@ static PyObject *getTimeLimits(__attribute__((unused)) PyObject *self,
   /* declare variables. */
   char *basename = NULL;
 
-  int verbose = 2;
+  int verbose = 1;
 
   /* parse arguments. */
   if (!PyArg_ParseTuple(args, "s|i", &basename, &verbose)) return NULL;
