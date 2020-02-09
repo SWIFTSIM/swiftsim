@@ -30,15 +30,17 @@ import liblogger as logger
 plt.style.use("mpl_style")
 
 center = np.array([0.5 * makeIC.boxsize]*3)
+id_focus = 0
 
 
-def getErrorSnapshots():
+def getSnapshots():
     filenames = glob("simple_orbits_*.hdf5")
     N = len(filenames)
     filenames.sort()
 
     r2 = np.zeros((N, makeIC.num_part))
     t = np.zeros(N)
+    p = np.zeros((N, 3))
 
     for i, f in enumerate(filenames):
         if i % 10 == 0:
@@ -47,46 +49,50 @@ def getErrorSnapshots():
         pos = f["PartType1/Coordinates"][:]
         pos -= center
         ids = f["PartType1/ParticleIDs"][:]
-        print(ids)
 
         t[i] = f["Header"].attrs["Time"]
         for j in range(makeIC.num_part):
             ind = ids == j
-            print(ind)
             r2[i, j] = np.sum(pos[ind, :]**2)
+            if j == id_focus:
+                p[i, :] = pos[ind, :]
 
     # compute the plotting variables
     r = np.sqrt(r2)
     av = r.mean(axis=0)
     eps = (r - av) / r[0, :]
-    return t, eps
+    return t, eps, p
 
 
-def getErrorLogger():
+def getLogger():
     basename = "index"
     N = 1000
-    t_min, t_max = logger.getTimeLimits(basename)
+    verbose = 0
+    t_min, t_max = logger.getTimeLimits(basename, verbose)
     times = np.linspace(t_min, t_max, N)
     r2 = np.zeros((N, makeIC.num_part))
+    p = np.zeros((N, 3))
 
     for i, t in enumerate(times):
-        parts = logger.loadSnapshotAtTime(basename, t)
+        parts = logger.loadSnapshotAtTime(basename, t, verbose)
         pos = parts["positions"]
         pos -= center
 
         for j in range(makeIC.num_part):
             ind = parts["ids"] == j
             r2[i, j] = np.sum(pos[ind, :]**2)
+            if j == id_focus:
+                p[i, :] = pos[ind, :]
 
     # compute the plotting variables
     r = np.sqrt(r2)
     av = r.mean(axis=0)
     eps = (r - av) / r[0, :]
-    return times, eps
+    return times, eps, p
 
 
-t_log, eps_log = getErrorLogger()
-t_snap, eps_snap = getErrorSnapshots()
+t_log, eps_log, p_log = getLogger()
+t_snap, eps_snap, p_snap = getSnapshots()
 
 plt.figure()
 colors = ["b", "r", "m", "g", "k"]
@@ -96,4 +102,12 @@ for i in range(makeIC.num_part):
 plt.xlabel("Time [yr]")
 plt.ylabel("Relative error on the radius")
 plt.legend(["Snapshot", "Logger"])
+
+
+plt.figure()
+plt.plot(p_log[:, 0], p_log[:, 1], label="Logger")
+plt.plot(p_snap[:, 0], p_snap[:, 1], label="Snapshot")
+plt.xlabel("Position [AU]")
+plt.ylabel("Position [AU]")
+plt.legend()
 plt.show()
