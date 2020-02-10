@@ -40,7 +40,7 @@ struct tracers_xpart_data {
   float nHI_over_nH;
   float nHII_over_nH;
   float nH2_over_nH;
-#endif 
+#endif
 
   /*! HII region timer */
   float HIIregion_timer_gas;

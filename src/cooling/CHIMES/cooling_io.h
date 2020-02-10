@@ -66,23 +66,27 @@ INLINE static void convert_part_sub_rho(const struct engine* e,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
 }
 
-INLINE static void convert_part_chimes_abundances(const struct engine* e, const struct part* p,
-						  const struct xpart* xp, double* ret) {
-  /* Create dummy part and xpart 
-   * structures that we can use to 
-   * temporarily update the CHIMES 
-   * abundance array for the snapshot. */ 
-  struct part dummy_p = *p; 
-  struct xpart dummy_xp = *xp; 
-  
-  /* Update abundance array for 
-   * particles on the EOS. */ 
-  cooling_set_subgrid_properties(e->physical_constants, e->internal_units, e->cosmology, e->hydro_properties,
-                                 e->entropy_floor, e->cooling_func, &dummy_p, &dummy_xp);
+INLINE static void convert_part_chimes_abundances(const struct engine* e,
+                                                  const struct part* p,
+                                                  const struct xpart* xp,
+                                                  double* ret) {
+  /* Create dummy part and xpart
+   * structures that we can use to
+   * temporarily update the CHIMES
+   * abundance array for the snapshot. */
+  struct part dummy_p = *p;
+  struct xpart dummy_xp = *xp;
 
-  int i; 
-  for (i = 0; i < CHIMES_NETWORK_SIZE; i++) 
-    ret[i] = (double) dummy_xp.cooling_data.chimes_abundances[i]; 
+  /* Update abundance array for
+   * particles on the EOS. */
+  cooling_set_subgrid_properties(e->physical_constants, e->internal_units,
+                                 e->cosmology, e->hydro_properties,
+                                 e->entropy_floor, e->cooling_func, &dummy_p,
+                                 &dummy_xp);
+
+  int i;
+  for (i = 0; i < CHIMES_NETWORK_SIZE; i++)
+    ret[i] = (double)dummy_xp.cooling_data.chimes_abundances[i];
 }
 
 /**
@@ -122,8 +126,10 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "physical SPH density.");
 
   list[3] = io_make_output_field_convert_part(
-      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f, parts,
-      xparts, convert_part_chimes_abundances, "CHIMES abundance array. The abundance of species i is defined in terms of its number density relative to hydrogen, i.e. n_i / n_H_tot."); 
+      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f,
+      parts, xparts, convert_part_chimes_abundances,
+      "CHIMES abundance array. The abundance of species i is defined in terms "
+      "of its number density relative to hydrogen, i.e. n_i / n_H_tot.");
 
   return 4;
 }

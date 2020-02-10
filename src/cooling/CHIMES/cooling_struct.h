@@ -21,123 +21,123 @@
 
 /**
  * @file src/cooling/CHIMES/cooling_struct.h
- * @brief Infrastructure for CHIMES cooling. 
+ * @brief Infrastructure for CHIMES cooling.
  */
 
 /* Local includes. */
-#include "cooling/CHIMES/chimes/chimes_vars.h" 
+#include "colibre_tables.h"
 #include "cooling/CHIMES/chimes/chimes_proto.h"
-#include "colibre_tables.h" 
+#include "cooling/CHIMES/chimes/chimes_vars.h"
 
 /**
- * @brief Properties of the cooling function. 
- * This includes the globalVaraibles structure 
- * that holds the parameters used to control 
- * the behaviour of the CHIMES module. 
+ * @brief Properties of the cooling function.
+ * This includes the globalVaraibles structure
+ * that holds the parameters used to control
+ * the behaviour of the CHIMES module.
  */
 struct cooling_function_data {
 
-  /* CHIMES global variables. */ 
-  struct globalVariables ChimesGlobalVars; 
+  /* CHIMES global variables. */
+  struct globalVariables ChimesGlobalVars;
 
-  /* Flags to control UV field and 
-   * shielding options. */ 
-  int UV_field_flag; 
-  int Shielding_flag; 
-  int use_redshift_dependent_UVB; 
+  /* Flags to control UV field and
+   * shielding options. */
+  int UV_field_flag;
+  int Shielding_flag;
+  int use_redshift_dependent_UVB;
 
-  /* User parameter to scale the 
-   * normalisation of the radiation 
-   * field by a constant factor. */ 
-  ChimesFloat rad_field_norm_factor; 
+  /* User parameter to scale the
+   * normalisation of the radiation
+   * field by a constant factor. */
+  ChimesFloat rad_field_norm_factor;
 
-  /* Factor to re-scale shielding 
-   * length. */ 
-  double shielding_length_factor; 
+  /* Factor to re-scale shielding
+   * length. */
+  double shielding_length_factor;
 
-  /* Maximum shielding length, in code, 
-   * units. If negative, do not impose 
-   * a maximum. */ 
-  double max_shielding_length; 
+  /* Maximum shielding length, in code,
+   * units. If negative, do not impose
+   * a maximum. */
+  double max_shielding_length;
 
-  /* Parameters used for the 
-   * COLIBRE ISRF. */ 
-  double N_H0; 
+  /* Parameters used for the
+   * COLIBRE ISRF. */
+  double N_H0;
 
-  /* Flags to control eqm mode and 
-   * thermal evolution. */ 
-  int ChemistryEqmMode; 
-  int ThermEvolOn; 
+  /* Flags to control eqm mode and
+   * thermal evolution. */
+  int ChemistryEqmMode;
+  int ThermEvolOn;
 
   /* Flag to determine how we set
    * the initial CHIMES abundances. */
-  int init_abundance_mode; 
+  int init_abundance_mode;
 
   /* For init_abundance_mode == 1, all
-   * elements are initially set to one 
-   * ionisation state, determined by 
-   * the InitIonState parameter. */ 
-  int InitIonState; 
-  
-  /* Cosmic ray ionisation rate of HI. */ 
-  double cosmic_ray_rate; 
+   * elements are initially set to one
+   * ionisation state, determined by
+   * the InitIonState parameter. */
+  int InitIonState;
+
+  /* Cosmic ray ionisation rate of HI. */
+  double cosmic_ray_rate;
 
   /* Temperature of the CMB at present day */
   double T_CMB_0;
 
-  /* Parameters to compute S and Ca 
-   * from Si. */ 
-  float S_over_Si_ratio_in_solar; 
-  float Ca_over_Si_ratio_in_solar; 
-  
-  float Si_solar_mass_fraction; 
-  float S_solar_mass_fraction; 
-  float Ca_solar_mass_fraction; 
+  /* Parameters to compute S and Ca
+   * from Si. */
+  float S_over_Si_ratio_in_solar;
+  float Ca_over_Si_ratio_in_solar;
 
-  /* Solar metallicity */ 
-  float Zsol; 
+  float Si_solar_mass_fraction;
+  float S_solar_mass_fraction;
+  float Ca_solar_mass_fraction;
 
-  /* Flag to implement dust depletion 
-   * as in COLIBRE. */ 
-  int colibre_metal_depletion; 
+  /* Solar metallicity */
+  float Zsol;
 
-  /* Dust depletion factors in the solar neighbourhood. 
-   * Taken from Ploeckinger et al. (in prep). */ 
-  double f_dust0_C; 
-  double f_dust0_O; 
-  double f_dust0_Mg; 
-  double f_dust0_Si; 
-  double f_dust0_Ca; 
-  double f_dust0_Fe; 
+  /* Flag to implement dust depletion
+   * as in COLIBRE. */
+  int colibre_metal_depletion;
 
-  /* Distance from EOS to use thermal equilibrium 
-   * temperature for subgrid props, and to evolve 
+  /* Dust depletion factors in the solar neighbourhood.
+   * Taken from Ploeckinger et al. (in prep). */
+  double f_dust0_C;
+  double f_dust0_O;
+  double f_dust0_Mg;
+  double f_dust0_Si;
+  double f_dust0_Ca;
+  double f_dust0_Fe;
+
+  /* Distance from EOS to use thermal equilibrium
+   * temperature for subgrid props, and to evolve
    * the chemistry in equilibrium. */
-  float dlogT_EOS; 
+  float dlogT_EOS;
 
-  /* Flag to use the subgrid density and 
-   * temperature from the COLIBRE cooling tables. */ 
-  int use_colibre_subgrid_EOS; 
+  /* Flag to use the subgrid density and
+   * temperature from the COLIBRE cooling tables. */
+  int use_colibre_subgrid_EOS;
 
   /* Threshold to switch between rapid and slow cooling regimes. */
-  double rapid_cooling_threshold; 
+  double rapid_cooling_threshold;
 
   /* Ionization fraction of gas particles tagged as HII regions */
-  float HIIregion_fion; 
+  float HIIregion_fion;
 
-  /* Temperature of gas particles tagged as HII regions */ 
-  float HIIregion_temp; 
+  /* Temperature of gas particles tagged as HII regions */
+  float HIIregion_temp;
 
-  /* Colibre cooling table */ 
-  struct colibre_cooling_tables colibre_table; 
+  /* Colibre cooling table */
+  struct colibre_cooling_tables colibre_table;
 };
 
 /**
  * @brief Properties of the cooling stored in the particle data
  */
 struct cooling_xpart_data {
-  /* CHIMES abundance array */ 
-  double chimes_abundances[CHIMES_NETWORK_SIZE]; 
+  /* CHIMES abundance array */
+  double chimes_abundances[CHIMES_NETWORK_SIZE];
 
   /* Cumulative energy radiated by the particle */
   float radiated_energy;

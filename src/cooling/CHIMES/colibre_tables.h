@@ -27,9 +27,9 @@
 /* Config parameters. */
 #include "config.h"
 
-/* Some standard headers. */ 
-#include <float.h> 
-#include <math.h> 
+/* Some standard headers. */
+#include <float.h>
+#include <math.h>
 
 /* Local includes. */
 #include "align.h"
@@ -200,10 +200,8 @@ void read_cooling_tables(struct colibre_cooling_tables *table);
  * @param x, y Indices of element of interest
  * @param Nx, Ny Sizes of array dimensions
  */
-__attribute__((always_inline)) INLINE int cooling_row_major_index_2d(const int x,
-                                                             const int y,
-                                                             const int Nx,
-                                                             const int Ny) {
+__attribute__((always_inline)) INLINE int cooling_row_major_index_2d(
+    const int x, const int y, const int Nx, const int Ny) {
 #ifdef SWIFT_DEBUG_CHECKS
   assert(x < Nx);
   assert(y < Ny);
@@ -348,25 +346,33 @@ __attribute__((always_inline)) INLINE float interpolation_3d(
   swift_align_information(float, table, SWIFT_STRUCT_ALIGNMENT);
 
   /* Linear interpolation along each axis. We read the table 2^3=8 times */
-  float result = tx * ty * tz *
-                 table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
+  float result =
+      tx * ty * tz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
 
-  result += tx * ty * dz *
-            table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)];
-  result += tx * dy * tz *
-            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
-  result += dx * ty * tz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
+  result +=
+      tx * ty * dz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)];
+  result +=
+      tx * dy * tz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result +=
+      dx * ty * tz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
 
-  result += tx * dy * dz *
-            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)];
-  result += dx * ty * dz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)];
-  result += dx * dy * tz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result +=
+      tx * dy * dz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)];
+  result +=
+      dx * ty * dz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)];
+  result +=
+      dx * dy * tz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
 
-  result += dx * dy * dz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)];
+  result +=
+      dx * dy * dz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)];
 
   return result;
 }
@@ -409,25 +415,32 @@ __attribute__((always_inline)) INLINE float interpolation_3d_no_z(
   /* Note that we intentionally kept the table access along the axis where */
   /* we do not interpolate as comments in the code to allow readers to */
   /* understand what is going on. */
-  float result = tx * ty * tz *
-                 table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
+  float result =
+      tx * ty * tz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 0, zi + 0, Nx, Ny, Nz)];
 
   /* result += tx * ty * dz *
             table[row_major_index_3d(xi + 0, yi + 0, zi + 1, Nx, Ny, Nz)]; */
-  result += tx * dy * tz *
-            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
-  result += dx * ty * tz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
+  result +=
+      tx * dy * tz *
+      table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 0, Nx, Ny, Nz)];
+  result +=
+      dx * ty * tz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 0, Nx, Ny, Nz)];
 
   /* result += tx * dy * dz *
-            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+            table[cooling_row_major_index_3d(xi + 0, yi + 1, zi + 1, Nx, Ny,
+     Nz)]; */
   /* result += dx * ty * dz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny, Nz)]; */
-  result += dx * dy * tz *
-            table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
+            table[cooling_row_major_index_3d(xi + 1, yi + 0, zi + 1, Nx, Ny,
+     Nz)]; */
+  result +=
+      dx * dy * tz *
+      table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 0, Nx, Ny, Nz)];
 
   /* result += dx * dy * dz *
-             table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny, Nz)]; */
+             table[cooling_row_major_index_3d(xi + 1, yi + 1, zi + 1, Nx, Ny,
+     Nz)]; */
 
   return result;
 }
@@ -464,58 +477,58 @@ __attribute__((always_inline)) INLINE double interpolation4d_plus_summation(
     if (weights[i] > 0.0) {
       /* Linear interpolation along each axis. We read the table 2^4=16 times */
       result = tx * ty * tz * tw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 0, i, Nx, Ny,
-					 Nz, Nw, Nv)];
+               table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 0,
+                                                i, Nx, Ny, Nz, Nw, Nv)];
 
       result += tx * ty * tz * dw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 0, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
 
       result += tx * ty * dz * tw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += tx * dy * tz * tw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * ty * tz * tw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
 
       result += tx * ty * dz * dw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 0, zi + 1, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += tx * dy * tz * dw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 0, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * ty * tz * dw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 0, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += tx * dy * dz * tw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * ty * dz * tw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * dy * tz * tw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
 
       result += dx * dy * dz * tw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 0, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 0,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * dy * tz * dw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 0, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += dx * ty * dz * dw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 0, zi + 1, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
       result += tx * dy * dz * dw *
-	table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 0, yi + 1, zi + 1, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
 
       result += dx * dy * dz * dw *
-	table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1, i, Nx,
-					 Ny, Nz, Nw, Nv)];
+                table[cooling_row_major_index_5d(xi + 1, yi + 1, zi + 1, wi + 1,
+                                                 i, Nx, Ny, Nz, Nw, Nv)];
 
       result_global += weights[i] * pow(10.0, result);
     }
@@ -569,17 +582,16 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(
   return -1;
 }
 
-struct global_hybrid_data_struct 
-{
-  struct colibre_cooling_tables *table; 
-}; 
+struct global_hybrid_data_struct {
+  struct colibre_cooling_tables *table;
+};
 
-struct gas_hybrid_data_struct 
-{
+struct gas_hybrid_data_struct {
   float abundance_ratio[colibre_cooling_N_elementtypes];
-}; 
+};
 
-double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars); 
-void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars); 
-void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars); 
+double colibre_metal_cooling_rate_temperature(
+    struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
+void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars);
+void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars);
 #endif

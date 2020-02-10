@@ -495,7 +495,7 @@ static INLINE void cooling_struct_restore(struct cooling_function_data* cooling,
  * routine (at the start of a calculation) after the densities of
  * particles have been computed.
  *
- * For this cooling module, this routine does not do anything. 
+ * For this cooling module, this routine does not do anything.
  *
  * @param p The particle to act upon
  * @param xp The extended particle to act upon
@@ -504,13 +504,13 @@ static INLINE void cooling_struct_restore(struct cooling_function_data* cooling,
  * @param phys_const #phys_const data structure.
  * @param us Internal system of units data structure.
  * @param floor_props Properties of the entropy floor.
- * @param cooling #cooling_function_data data structure. 
+ * @param cooling #cooling_function_data data structure.
  */
 __attribute__((always_inline)) INLINE static void cooling_convert_quantities(
-    struct part *restrict p, struct xpart *restrict xp,
-    const struct cosmology *cosmo, const struct hydro_props *hydro_props, 
-    const struct phys_const *phys_const, const struct unit_system* us, 
-    const struct entropy_floor_properties *floor_props, 
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    const struct phys_const* phys_const, const struct unit_system* us,
+    const struct entropy_floor_properties* floor_props,
     const struct cooling_function_data* cooling) {}
 
 #endif /* SWIFT_COOLING_GRACKLE_H */

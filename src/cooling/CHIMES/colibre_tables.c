@@ -33,7 +33,7 @@
 
 /* Local includes. */
 #include "chemistry_struct.h"
-#include "cooling_struct.h" 
+#include "cooling_struct.h"
 #include "error.h"
 #include "exp10.h"
 
@@ -42,7 +42,7 @@
  * of values for temperature, hydrogen number density, metallicity,
  * abundance ratios, and elements used to index the cooling tables.
  *
- * @param table Colibre cooling table structure. 
+ * @param table Colibre cooling table structure.
  */
 void read_cooling_header(struct colibre_cooling_tables *table) {
 
@@ -105,8 +105,7 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
                      1 * sizeof(float)) != 0)
     error("Failed to allocate inverse solar metallicity array\n");
 
-  if (posix_memalign((void **)&table->LogMassFractions,
-                     SWIFT_STRUCT_ALIGNMENT,
+  if (posix_memalign((void **)&table->LogMassFractions, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_metallicity *
                          colibre_cooling_N_elementtypes * sizeof(float)) != 0)
     error("Failed to allocate log mass fraction array\n");
@@ -200,12 +199,11 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
 #pragma novector
 #endif
     for (int j = 0; j < colibre_cooling_N_elementtypes; j++) {
-      const int indx1d = cooling_row_major_index_2d(i, j, colibre_cooling_N_metallicity,
-                                            colibre_cooling_N_elementtypes);
+      const int indx1d = cooling_row_major_index_2d(
+          i, j, colibre_cooling_N_metallicity, colibre_cooling_N_elementtypes);
       table->Abundances[indx1d] = exp10f(table->LogAbundances[indx1d]);
       table->Abundances_inv[indx1d] = 1.f / table->Abundances[indx1d];
-      table->MassFractions[indx1d] =
-          exp10f(table->LogMassFractions[indx1d]);
+      table->MassFractions[indx1d] = exp10f(table->LogMassFractions[indx1d]);
     }
   }
 
@@ -293,10 +291,10 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
   if (status < 0) error("error closing logTeq dataset");
 
   /* Mean particle mass at thermal equilibrium temperature */
-  if (posix_memalign(
-          (void **)&table->meanpartmass_Teq, SWIFT_STRUCT_ALIGNMENT,
-          colibre_cooling_N_redshifts * colibre_cooling_N_metallicity *
-              colibre_cooling_N_density * sizeof(float)) != 0)
+  if (posix_memalign((void **)&table->meanpartmass_Teq, SWIFT_STRUCT_ALIGNMENT,
+                     colibre_cooling_N_redshifts *
+                         colibre_cooling_N_metallicity *
+                         colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate mu array\n");
 
   dataset = H5Dopen(tempfile_id, "/ThermEq/MeanParticleMass", H5P_DEFAULT);
@@ -316,7 +314,7 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
                          colibre_cooling_N_density * sizeof(float)) != 0)
     error("Failed to allocate logPeq array\n");
 
-  const double log10_kB_cgs = table->log10_kB_cgs; 
+  const double log10_kB_cgs = table->log10_kB_cgs;
 
   /* Compute the pressures at thermal eq. */
   for (int ired = 0; ired < colibre_cooling_N_redshifts; ired++) {
@@ -324,7 +322,7 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
 
       const int index_XH =
           cooling_row_major_index_2d(imet, 0, colibre_cooling_N_metallicity,
-                             colibre_cooling_N_elementtypes);
+                                     colibre_cooling_N_elementtypes);
 
       const float log10_XH = table->LogMassFractions[index_XH];
 
@@ -351,52 +349,51 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
 }
 
 /**
- * @brief Computes net metal heating rate from Colibre tables. 
- * 
+ * @brief Computes net metal heating rate from Colibre tables.
+ *
  * Computes the net heating rate (heating - cooling) for a given element
  * abundance ratio, temperature, redshift, and density. The unit of the net
  * cooling rate is Lambda / nH**2 [erg cm^3 s-1] and all input values are in
- * cgs. 
+ * cgs.
  *
- * @param myGasVars The #gasVariables struct. 
- * @param myGlobalVars The #globalVariables struct. 
+ * @param myGasVars The #gasVariables struct.
+ * @param myGlobalVars The #globalVariables struct.
  */
-double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, struct globalVariables *myGlobalVars) {
-  struct global_hybrid_data_struct *myGlobalData; 
-  myGlobalData = (struct global_hybrid_data_struct *) myGlobalVars->hybrid_data; 
-  struct colibre_cooling_tables *table = myGlobalData->table; 
-  
-  double log_T_cgs = log10(myGasVars->temperature); 
-  double redshift = myGlobalVars->redshift; 
-  double n_H_cgs = myGasVars->nH_tot; 
-  double Z_absolute = myGasVars->metallicity * 0.0129; 
-  double noneq_electron_fraction = myGasVars->abundances[sp_elec]; 
-  
-  const float *abundance_ratio; 
-  struct gas_hybrid_data_struct *myGasData; 
-  myGasData = (struct gas_hybrid_data_struct *) myGasVars->hybrid_data; 
-  abundance_ratio = myGasData->abundance_ratio; 
+double colibre_metal_cooling_rate_temperature(
+    struct gasVariables *myGasVars, struct globalVariables *myGlobalVars) {
+  struct global_hybrid_data_struct *myGlobalData;
+  myGlobalData = (struct global_hybrid_data_struct *)myGlobalVars->hybrid_data;
+  struct colibre_cooling_tables *table = myGlobalData->table;
+
+  double log_T_cgs = log10(myGasVars->temperature);
+  double redshift = myGlobalVars->redshift;
+  double n_H_cgs = myGasVars->nH_tot;
+  double Z_absolute = myGasVars->metallicity * 0.0129;
+  double noneq_electron_fraction = myGasVars->abundances[sp_elec];
+
+  const float *abundance_ratio;
+  struct gas_hybrid_data_struct *myGasData;
+  myGasData = (struct gas_hybrid_data_struct *)myGasVars->hybrid_data;
+  abundance_ratio = myGasData->abundance_ratio;
 
   /* Set weights for cooling rates */
   float weights_cooling[colibre_cooling_N_cooltypes - 2];
   for (int i = 0; i < colibre_cooling_N_cooltypes - 2; i++) {
 
     if (i <= element_He) {
-      /* H and He are in CHIMES. */ 
-      weights_cooling[i] = 0.f; 
+      /* H and He are in CHIMES. */
+      weights_cooling[i] = 0.f;
     } else if (i < element_OA) {
-      /* Only include metals that aren't 
+      /* Only include metals that aren't
        * already included in CHIMES. */
-      if (myGlobalVars->element_included[i - 2] == 0) 
-	weights_cooling[i] = abundance_ratio[i];
-      else 
-	weights_cooling[i] = 0.f; 
-    } else if (i == element_OA) { 
+      if (myGlobalVars->element_included[i - 2] == 0)
+        weights_cooling[i] = abundance_ratio[i];
+      else
+        weights_cooling[i] = 0.f;
+    } else if (i == element_OA) {
       weights_cooling[i] = abundance_ratio[i];
-    } else if ((i == cooltype_H2) || 
-	       (i == cooltype_NetFFH) || 
-	       (i == cooltype_Compton) || 
-	       (i == cooltype_Dust)) {
+    } else if ((i == cooltype_H2) || (i == cooltype_NetFFH) ||
+               (i == cooltype_Compton) || (i == cooltype_Dust)) {
       /* These channels are in CHIMES. */
       weights_cooling[i] = 0.f;
     } else {
@@ -408,142 +405,130 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
   /* Set weights for heating rates */
   float weights_heating[colibre_cooling_N_heattypes - 2];
   for (int i = 0; i < colibre_cooling_N_heattypes - 2; i++) {
-    if (i <= element_He) { 
-      /* H and He are in CHIMES. */ 
-      weights_heating[i] = 0.f; 
+    if (i <= element_He) {
+      /* H and He are in CHIMES. */
+      weights_heating[i] = 0.f;
     } else if (i < element_OA) {
-      /* Only include metals that aren't 
+      /* Only include metals that aren't
        * already included in CHIMES. */
-      if (myGlobalVars->element_included[i - 2] == 0) 
-	weights_heating[i] = abundance_ratio[i];
-      else 
-	weights_heating[i] = 0.f; 
-    } else if (i == element_OA) { 
-      weights_heating[i] = abundance_ratio[i]; 
-    } else if ((i == heattype_H2) || 
-	       (i == heattype_CosmicRay) || 
-	       (i == heattype_HFF) || 
-	       (i == heattype_Compton) || 
-	       (i == heattype_Dust)){ 
-      /* These channels are in CHIMES. */ 
-      weights_heating[i] = 0.f; 
+      if (myGlobalVars->element_included[i - 2] == 0)
+        weights_heating[i] = abundance_ratio[i];
+      else
+        weights_heating[i] = 0.f;
+    } else if (i == element_OA) {
+      weights_heating[i] = abundance_ratio[i];
+    } else if ((i == heattype_H2) || (i == heattype_CosmicRay) ||
+               (i == heattype_HFF) || (i == heattype_Compton) ||
+               (i == heattype_Dust)) {
+      /* These channels are in CHIMES. */
+      weights_heating[i] = 0.f;
     } else {
       weights_heating[i] = 1.f; /* use same abundances as in the tables */
     }
   }
 
-  // Set weights for electron densities. 
+  // Set weights for electron densities.
   float weights_electron[colibre_cooling_N_electrontypes];
-  for (int i = 0; i < colibre_cooling_N_electrontypes; i++) { 
-    if (i < colibre_cooling_N_elementtypes - 1) 
-      weights_electron[i] = abundance_ratio[i]; 
+  for (int i = 0; i < colibre_cooling_N_electrontypes; i++) {
+    if (i < colibre_cooling_N_elementtypes - 1)
+      weights_electron[i] = abundance_ratio[i];
     else
-      weights_electron[i] = 1.f; 
+      weights_electron[i] = 1.f;
   }
 
   /* Get indices of T, nH, metallicity and redshift */
   int T_index, n_H_index, met_index, red_index;
   float d_T, d_n_H, d_met, d_red;
-  float logZZsol = log10((Z_absolute / table->Zsol[0]) + FLT_MIN); 
+  float logZZsol = log10((Z_absolute / table->Zsol[0]) + FLT_MIN);
 
-  if (redshift < table->H_reion_z) { 
-    cooling_get_index_1d(table->Redshifts, colibre_cooling_N_redshifts, redshift,
-		 &red_index, &d_red);
+  if (redshift < table->H_reion_z) {
+    cooling_get_index_1d(table->Redshifts, colibre_cooling_N_redshifts,
+                         redshift, &red_index, &d_red);
   } else {
     red_index = colibre_cooling_N_redshifts - 2;
     d_red = 1.0;
   }
 
   cooling_get_index_1d(table->Temp, colibre_cooling_N_temperature, log_T_cgs,
-               &T_index, &d_T);
-  cooling_get_index_1d(table->Metallicity, colibre_cooling_N_metallicity, logZZsol,
-	       &met_index, &d_met);
+                       &T_index, &d_T);
+  cooling_get_index_1d(table->Metallicity, colibre_cooling_N_metallicity,
+                       logZZsol, &met_index, &d_met);
   cooling_get_index_1d(table->nH, colibre_cooling_N_density, log10(n_H_cgs),
-	       &n_H_index, &d_n_H);
+                       &n_H_index, &d_n_H);
 
-  // n_e / n_H from Colibre 
+  // n_e / n_H from Colibre
 
-  // From H + He 
+  // From H + He
   double colibre_electron_fraction_prim = interpolation4d_plus_summation(
-      table->Telectron_fraction, weights_electron, 
-      colibre_cooling_N_electrontypes - 3, 
-      colibre_cooling_N_electrontypes - 3, 
-      red_index, T_index, met_index, n_H_index,
-      d_red, d_T, d_met, d_n_H, 
-      colibre_cooling_N_redshifts, 
-      colibre_cooling_N_temperature, 
-      colibre_cooling_N_metallicity, 
-      colibre_cooling_N_density,
-      colibre_cooling_N_electrontypes); 
+      table->Telectron_fraction, weights_electron,
+      colibre_cooling_N_electrontypes - 3, colibre_cooling_N_electrontypes - 3,
+      red_index, T_index, met_index, n_H_index, d_red, d_T, d_met, d_n_H,
+      colibre_cooling_N_redshifts, colibre_cooling_N_temperature,
+      colibre_cooling_N_metallicity, colibre_cooling_N_density,
+      colibre_cooling_N_electrontypes);
 
-  // From metals, with table metal ratios 
+  // From metals, with table metal ratios
   double colibre_electron_fraction_metal_table = interpolation4d_plus_summation(
-      table->Telectron_fraction, weights_electron, 
-      colibre_cooling_N_electrontypes - 2, 
-      colibre_cooling_N_electrontypes - 2, 
-      red_index, T_index, met_index, n_H_index,
-      d_red, d_T, d_met, d_n_H, 
-      colibre_cooling_N_redshifts, 
-      colibre_cooling_N_temperature, 
-      colibre_cooling_N_metallicity, 
-      colibre_cooling_N_density,
-      colibre_cooling_N_electrontypes); 
+      table->Telectron_fraction, weights_electron,
+      colibre_cooling_N_electrontypes - 2, colibre_cooling_N_electrontypes - 2,
+      red_index, T_index, met_index, n_H_index, d_red, d_T, d_met, d_n_H,
+      colibre_cooling_N_redshifts, colibre_cooling_N_temperature,
+      colibre_cooling_N_metallicity, colibre_cooling_N_density,
+      colibre_cooling_N_electrontypes);
 
-  /* From metals, with actual metal ratios. 
-   * We also need to exclude any metals 
+  /* From metals, with actual metal ratios.
+   * We also need to exclude any metals
    * that are already included in CHIMES. */
-  for (int i = element_C; i < element_OA; i++) 
-    {
-      if (myGlobalVars->element_included[i - 2] == 1) 
-	weights_electron[i] = 0.f; 
-    }
-   
-  double colibre_electron_fraction_metal_actual = interpolation4d_plus_summation(
-      table->Telectron_fraction, weights_electron, 
-      element_C, 
-      colibre_cooling_N_electrontypes - 4, 
-      red_index, T_index, met_index, n_H_index,
-      d_red, d_T, d_met, d_n_H, 
-      colibre_cooling_N_redshifts, 
-      colibre_cooling_N_temperature, 
-      colibre_cooling_N_metallicity, 
-      colibre_cooling_N_density,
-      colibre_cooling_N_electrontypes); 
+  for (int i = element_C; i < element_OA; i++) {
+    if (myGlobalVars->element_included[i - 2] == 1) weights_electron[i] = 0.f;
+  }
 
-  /* Adjust the weights based on the non-eq 
-   * electron fraction from CHIMES, compared 
-   * to the electron fraction that was used 
-   * in the Colibre tables. */ 
-  double electron_fraction_ratio = (noneq_electron_fraction + colibre_electron_fraction_metal_actual) / (colibre_electron_fraction_prim + colibre_electron_fraction_metal_table + FLT_MIN); 
+  double colibre_electron_fraction_metal_actual =
+      interpolation4d_plus_summation(
+          table->Telectron_fraction, weights_electron, element_C,
+          colibre_cooling_N_electrontypes - 4, red_index, T_index, met_index,
+          n_H_index, d_red, d_T, d_met, d_n_H, colibre_cooling_N_redshifts,
+          colibre_cooling_N_temperature, colibre_cooling_N_metallicity,
+          colibre_cooling_N_density, colibre_cooling_N_electrontypes);
 
-  for (int i = element_C; i < colibre_cooling_N_elementtypes; i++) 
-    weights_cooling[i] *= electron_fraction_ratio; 
+  /* Adjust the weights based on the non-eq
+   * electron fraction from CHIMES, compared
+   * to the electron fraction that was used
+   * in the Colibre tables. */
+  double electron_fraction_ratio =
+      (noneq_electron_fraction + colibre_electron_fraction_metal_actual) /
+      (colibre_electron_fraction_prim + colibre_electron_fraction_metal_table +
+       FLT_MIN);
 
-  weights_cooling[cooltype_molecules] *= electron_fraction_ratio; 
-  weights_cooling[cooltype_HD] *= electron_fraction_ratio; 
-  weights_cooling[cooltype_NetFFM] *= electron_fraction_ratio; 
-  weights_cooling[cooltype_eeBrems] *= electron_fraction_ratio * electron_fraction_ratio; 
-  
+  for (int i = element_C; i < colibre_cooling_N_elementtypes; i++)
+    weights_cooling[i] *= electron_fraction_ratio;
+
+  weights_cooling[cooltype_molecules] *= electron_fraction_ratio;
+  weights_cooling[cooltype_HD] *= electron_fraction_ratio;
+  weights_cooling[cooltype_NetFFM] *= electron_fraction_ratio;
+  weights_cooling[cooltype_eeBrems] *=
+      electron_fraction_ratio * electron_fraction_ratio;
+
   /* Lambda / n_H**2 */
   const double cooling_rate = interpolation4d_plus_summation(
-      table->Tcooling, weights_cooling,   /* */
+      table->Tcooling, weights_cooling,           /* */
       element_C, colibre_cooling_N_cooltypes - 3, /* */
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_temperature,           /* */
+      colibre_cooling_N_temperature,              /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_cooltypes);               /* */
 
   /* Gamma / n_H**2 */
   const double heating_rate = interpolation4d_plus_summation(
-      table->Theating, weights_heating,   /* */
+      table->Theating, weights_heating,           /* */
       element_C, colibre_cooling_N_heattypes - 3, /* */
       red_index, T_index, met_index, n_H_index,   /* */
       d_red, d_T, d_met, d_n_H,                   /* */
       colibre_cooling_N_redshifts,                /* */
-      colibre_cooling_N_temperature,           /* */
+      colibre_cooling_N_temperature,              /* */
       colibre_cooling_N_metallicity,              /* */
       colibre_cooling_N_density,                  /* */
       colibre_cooling_N_heattypes);               /* */
@@ -553,21 +538,20 @@ double colibre_metal_cooling_rate_temperature(struct gasVariables *myGasVars, st
 }
 
 /**
- * @brief Allocate gas_hybrid_data struct in gasVars. 
+ * @brief Allocate gas_hybrid_data struct in gasVars.
  *
- * @param myGasVars The #gasVariables struct. 
+ * @param myGasVars The #gasVariables struct.
  */
-void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars) 
-{ 
-  myGasVars->hybrid_data = (void *) malloc(sizeof(struct gas_hybrid_data_struct)); 
-} 
+void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars) {
+  myGasVars->hybrid_data =
+      (void *)malloc(sizeof(struct gas_hybrid_data_struct));
+}
 
 /**
- * @brief Allocate gas_hybrid_data struct in gasVars. 
+ * @brief Allocate gas_hybrid_data struct in gasVars.
  *
- * @param myGasVars The #gasVariables struct. 
+ * @param myGasVars The #gasVariables struct.
  */
-void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars) 
-{
-  free(myGasVars->hybrid_data); 
-} 
+void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars) {
+  free(myGasVars->hybrid_data);
+}

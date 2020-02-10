@@ -42,7 +42,7 @@
 #include "./cooling/EAGLE/cooling_struct.h"
 #elif defined(COOLING_COLIBRE)
 #include "./cooling/COLIBRE/cooling_struct.h"
-#elif defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID) 
+#elif defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID)
 #include "./cooling/CHIMES/cooling_struct.h"
 #else
 #error "Invalid choice of cooling function."
