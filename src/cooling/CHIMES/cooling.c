@@ -300,10 +300,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->rapid_cooling_threshold = parser_get_param_double(parameter_file, "CHIMESCooling:rapid_cooling_threshold");
 
   /* Properties of the HII region model */ 
-  cooling->HIIregion_fion = parser_get_param_float(
-      parameter_file, "CHIMESCooling:HIIregion_ionization_fraction");
-
-  cooling->HIIregion_temp = parser_get_param_float(parameter_file, "CHIMESCooling:HIIregion_temperature");
+  cooling->HIIregion_fion = parser_get_opt_param_float(parameter_file, "COLIBREFeedback:HIIregion_ionization_fraction", 1.0);
+  cooling->HIIregion_temp = parser_get_opt_param_float(parameter_file, "COLIBREFeedback:HIIregion_temperature", 1.0e4);
 
   /* Switch for Hybrid cooling */ 
   cooling->ChimesGlobalVars.hybrid_cooling_mode = parser_get_param_int(parameter_file, "CHIMESCooling:use_hybrid_cooling"); 
