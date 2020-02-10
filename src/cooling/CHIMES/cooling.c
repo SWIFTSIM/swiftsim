@@ -34,8 +34,6 @@
 #include "adiabatic_index.h"
 #include "chemistry.h"
 #include "colibre_subgrid.h"
-#include "colibre_tables_restrict.h"
-#include "cooling.h"
 #include "cooling_struct.h"
 #include "entropy_floor.h"
 #include "error.h"

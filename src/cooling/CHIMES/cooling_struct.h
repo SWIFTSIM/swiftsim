@@ -26,8 +26,6 @@
 
 /* Local includes. */
 #include "colibre_tables.h"
-#include "cooling/CHIMES/chimes/chimes_proto.h"
-#include "cooling/CHIMES/chimes/chimes_vars.h"
 
 /**
  * @brief Properties of the cooling function.

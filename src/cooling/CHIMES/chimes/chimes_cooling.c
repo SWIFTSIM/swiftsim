@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "chimes_proto.h"
-#include "chimes_vars.h"
 
 /**
  * @brief Calculates the total number density.

@@ -22,6 +22,10 @@
 /* Config parameters. */
 #include "../config.h"
 
+/* Local includes. */
+#include "colibre_tables_restrict.h"
+#include "cooling.h"
+
 /**
  * @brief Compute the subgrid temperature of the gas.
  *

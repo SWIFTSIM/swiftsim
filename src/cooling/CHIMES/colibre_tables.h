@@ -34,6 +34,7 @@
 /* Local includes. */
 #include "align.h"
 #include "chemistry_struct.h"
+#include "cooling/CHIMES/chimes/chimes_proto.h"
 #include "error.h"
 #include "inline.h"
 

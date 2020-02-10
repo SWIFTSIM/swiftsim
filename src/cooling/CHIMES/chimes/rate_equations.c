@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <time.h>
 #include "chimes_proto.h"
-#include "chimes_vars.h"
 
 /**
  * @brief Checks the constraint equations.

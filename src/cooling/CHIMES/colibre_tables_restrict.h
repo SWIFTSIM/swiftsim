@@ -45,8 +45,8 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
 
   /* Get the particle's metal mass fractions (M_x / M) */
   // const float *Z_mass_frac =
-  // chemistry_get_metal_mass_fraction_for_cooling(p);  static float *Z_mass_frac
-  // = chemistry_get_metal_mass_fraction_for_cooling(p);
+  // chemistry_get_metal_mass_fraction_for_cooling(p);  static float
+  // *Z_mass_frac = chemistry_get_metal_mass_fraction_for_cooling(p);
   float const *Z_mass_frac = chemistry_get_metal_mass_fraction_for_cooling(p);
 
   /* Convert mass fractions to abundances (nx/nH) and compute metal mass */

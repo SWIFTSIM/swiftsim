@@ -21,6 +21,7 @@
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_types.h>
+#include "chimes_vars.h"
 
 #ifndef chimes_max
 #define chimes_max(a, b) ((a) > (b) ? (a) : (b))
