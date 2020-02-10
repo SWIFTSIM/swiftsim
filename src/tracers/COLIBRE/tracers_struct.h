@@ -35,7 +35,7 @@ struct tracers_xpart_data {
   /* subgrid density */
   float subgrid_dens;
 
-#if !defined(COOLING_CHIMES) && !defined(COOLING_CHIMES_HYBRID)
+#if !defined(COOLING_CHIMES) 
   /*! Hydrogen fractions */
   float nHI_over_nH;
   float nHII_over_nH;
