@@ -1508,7 +1508,6 @@ void cooling_convert_quantities(
  * @param us The internal system of units.
  * @param cosmo The current cosmological model.
  * @param hydro_props the hydro_props struct
- * @param starform the star formation law properties to initialize
  * @param floor_props Properties of the entropy floor.
  * @param cooling The #cooling_function_data used in the run.
  * @param p Pointer to the particle data.
