@@ -306,6 +306,7 @@ SineWavePotential:
   timestep_limit:   1.      # Time-step dimensionless pre-factor.
   growth_time:      0.      # (Optional) Time for the potential to grow to its final size.
 
+
 # Parameters related to entropy floors    ----------------------------------------------
 
 EAGLEEntropyFloor:
@@ -317,11 +318,13 @@ EAGLEEntropyFloor:
   Cool_over_density_threshold:     10.       # Overdensity above which the EAGLE Cool limiter entropy floor can kick in.
   Cool_temperature_norm_K:         8000      # Temperature of the EAGLE Cool limiter entropy floor at the density threshold expressed in Kelvin.
   Cool_gamma_effective:            1.        # Slope the of the EAGLE Cool limiter entropy floor
-  
+
+
 # Parameters related to pressure floors    ----------------------------------------------
 
 GEARPressureFloor:
-  Jeans_factor: 10.       # Number of particles required to suppose a resolved clump and avoid the pressure floor.
+  jeans_factor: 10.       # Number of particles required to suppose a resolved clump and avoid the pressure floor.
+
 
 # Parameters related to cooling function  ----------------------------------------------
 
@@ -358,9 +361,7 @@ COLIBRECooling:
   He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   S_over_Si_in_solar:        1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
-  HIIregion_ionization_fraction:    1.0        # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
-  HIIregion_temperature:            1.e4       # Temperature of gas particles tagged as HII regions
-  delta_logTEOS_subgrid_properties:     0.2    # delta log T above the EOS below which the subgrid properties use Teq assumption
+  delta_logTEOS_subgrid_properties: 0.2        # delta log T above the EOS below which the subgrid properties use Teq assumption
   rapid_cooling_threshold:          1.0        # Switch to rapid cooling regime for dt / t_cool above this threshold.
 
 # Cooling with CHIMES (Richings et al. 2014a, b) 
@@ -411,15 +412,18 @@ CHIMESCooling:
  
 # Cooling with Grackle 3.0
 GrackleCooling:
-  CloudyTable: CloudyData_UVB=HM2012.h5 # Name of the Cloudy Table (available on the grackle bitbucket repository)
-  WithUVbackground: 1                   # Enable or not the UV background
-  Redshift: 0                           # Redshift to use (-1 means time based redshift)
-  WithMetalCooling: 1                   # Enable or not the metal cooling
-  ProvideVolumetricHeatingRates: 0      # (optional) User provide volumetric heating rates
-  ProvideSpecificHeatingRates: 0        # (optional) User provide specific heating rates
-  SelfShieldingMethod: 0                # (optional) Grackle (<= 3) or Gear self shielding method
-  MaxSteps: 10000                       # (optional) Max number of step when computing the initial composition
-  ConvergenceLimit: 1e-2                # (optional) Convergence threshold (relative) for initial composition
+  cloudy_table: CloudyData_UVB=HM2012.h5       # Name of the Cloudy Table (available on the grackle bitbucket repository)
+  with_UV_background: 1                        # Enable or not the UV background
+  redshift: 0                                  # Redshift to use (-1 means time based redshift)
+  with_metal_cooling: 1                        # Enable or not the metal cooling
+  provide_volumetric_heating_rates: 0          # (optional) User provide volumetric heating rates
+  provide_specific_heating_rates: 0            # (optional) User provide specific heating rates
+  max_steps: 10000                             # (optional) Max number of step when computing the initial composition
+  convergence_limit: 1e-2                      # (optional) Convergence threshold (relative) for initial composition
+  thermal_time_myr: 5                          # (optional) Time (in Myr) for adiabatic cooling after a feedback event.
+  self_shielding_method: -1                    # (optional) Grackle (1->3 for Grackle's ones, 0 for none and -1 for GEAR)
+  self_shielding_threshold_atom_per_cm3: 0.007 # Required only with GEAR's self shielding. Density threshold of the self shielding
+
 
 # Parameters related to chemistry models  -----------------------------------------------
 
@@ -451,12 +455,13 @@ COLIBREChemistry:
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
-# Parameters related to star formation models  -----------------------------------------------
+# GEAR chemistry model (Revaz and Jablonka 2018)
+GEARChemistry:
+  initial_metallicity: 1         # Initial metallicity of the gas (mass fraction)
+  scale_initial_metallicity: 1   # Should we scale the initial metallicity with the solar one?
 
-# GEAR star formation model (Revaz and Jablonka 2018)
-GEARStarFormation:
-  star_formation_efficiency: 0.01   # star formation efficiency (c_*)
-  maximal_temperature:  3e4         # Upper limit to the temperature of a star forming particle
+
+# Parameters related to star formation models  -----------------------------------------------
 
 # EAGLE star formation model (Schaye and Dalla Vecchia 2008)
 EAGLEStarFormation:
@@ -483,6 +488,12 @@ COLIBREStarFormation:
   temperature_threshold_K:          1000    # (Optional) Subgrid temperature threshold below which stars are allowed to form (Default set to infinity).
   threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Default set to infinity).
   subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (defualt set to infinity)
+
+# GEAR star formation model (Revaz and Jablonka 2018)
+GEARStarFormation:
+  star_formation_efficiency: 0.01   # star formation efficiency (c_*)
+  maximal_temperature:  3e4         # Upper limit to the temperature of a star forming particle
+
 
 # Parameters related to feedback models  -----------------------------------------------
 
@@ -527,7 +538,7 @@ EAGLEFeedback:
   SNII_yield_factor_Silicon:        1.0             # (Optional) Correction factor to apply to the Silicon yield from the SNII channel.
   SNII_yield_factor_Iron:           0.5             # (Optional) Correction factor to apply to the Iron yield from the SNII channel.
 
-# Feedback parameter
+# COLIBRE feedback parameter
 COLIBREFeedback:
   use_SNII_feedback:                1               # Global switch for SNII thermal (stochastic) feedback.
   use_SNIa_feedback:                1               # Global switch for SNIa thermal (continuous) feedback.
@@ -539,7 +550,7 @@ COLIBREFeedback:
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
   SNII_min_mass_Msun:               6.0             # Minimal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
   SNII_max_mass_Msun:             100.0             # Maximal mass considered for SNII feedback (not SNII enrichment!) in solar masses.
-  SNII_wind_delay_Gyr:              -1.           # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
+  SNII_wind_delay_Gyr:              -1.             # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
   SNII_energy_fraction_min:         1.0             # Maximal fraction of energy applied in a SNII feedback event.
@@ -565,11 +576,19 @@ COLIBREFeedback:
   with_HIIRegions:                  1               # Switch for early feedback (HII regions).
   with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   Momentum_desired_delta_v:         -1.0            # Desired kick in km/s (Done stochastically given the amount of momentum available - v<0 for the code to decide the kick - ) 
+  HIIregion_ionization_fraction:    1.0             # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
+  HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
-  earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
-  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table
-                                    
-  HIIregion_maxage_Myr:             0 # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
+  earlyfb_filename:                 BPASS_table.hdf5# Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
+  stellarwind_maxage_Myr:           0               # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table.
+  HIIregion_maxage_Myr:             0               # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
+
+# GEAR feedback model
+GEARFeedback:
+  supernovae_energy_erg: 0.1e51                            # Energy released by a single supernovae.
+  yields_table: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5  # Table containing the yields.
+  discrete_yields: 0                                       # Should we use discrete yields or the IMF integrated one?
+
 
 # Parameters related to AGN models  -----------------------------------------------
   

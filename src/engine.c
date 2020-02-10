@@ -2670,6 +2670,13 @@ void engine_dump_restarts(struct engine *e, int drifted_all, int force) {
       if (!drifted_all) engine_drift_all(e, /*drift_mpole=*/1);
       restart_write(e, e->restart_file);
 
+#ifdef WITH_MPI
+      /* Make sure all ranks finished writing to avoid having incomplete
+       * sets of restart files should the code crash before all the ranks
+       * are done */
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
       if (e->verbose)
         message("Dumping restart files took %.3f %s",
                 clocks_from_ticks(getticks() - tic), clocks_getunit());
@@ -3185,7 +3192,7 @@ void engine_collect_stars_counter(struct engine *e) {
 
   /* Reset counters */
   for (size_t i = 0; i < e->s->nr_sparts_foreign; i++) {
-    e->s->sparts_foreign[i].num_ngb_force = 0;
+    e->s->sparts_foreign[i].num_ngb_feedback = 0;
   }
 
   /* Update counters */
@@ -3205,7 +3212,7 @@ void engine_collect_stars_counter(struct engine *e) {
               id_j, j, displs[engine_rank], n_sparts_int[engine_rank]);
         }
 
-        local_sparts[i].num_ngb_force += sparts[j].num_ngb_force;
+        local_sparts[i].num_ngb_feedback += sparts[j].num_ngb_feedback;
       }
     }
   }
@@ -3394,6 +3401,67 @@ void engine_unpin(void) {
   error("SWIFT was not compiled with support for pinning.");
 #endif
 }
+
+#ifdef SWIFT_DUMPER_THREAD
+/**
+ * @brief dumper thread action, checks got the existence of the .dump file
+ * every 5 seconds and does the dump if found.
+ *
+ * @param p the #engine
+ */
+static void *engine_dumper_poll(void *p) {
+  struct engine *e = (struct engine *)p;
+  while (1) {
+    if (access(".dump", F_OK) == 0) {
+
+      /* OK, do our work. */
+      message("Dumping engine tasks in step: %d", e->step);
+      task_dump_active(e);
+
+#ifdef SWIFT_MEMUSE_REPORTS
+      /* Dump the currently logged memory. */
+      message("Dumping memory use report");
+      memuse_log_dump_error(e->nodeID);
+#endif
+
+      /* Add more interesting diagnostics. */
+      scheduler_dump_queues(e);
+
+      /* Delete the file. */
+      unlink(".dump");
+      message("Dumping completed");
+      fflush(stdout);
+    }
+
+    /* Take a breath. */
+    sleep(5);
+  }
+  return NULL;
+}
+#endif /* SWIFT_DUMPER_THREAD */
+
+#ifdef SWIFT_DUMPER_THREAD
+/**
+ * @brief creates the dumper thread.
+ *
+ * This watches for the creation of a ".dump" file in the current directory
+ * and if found dumps the current state of the tasks and memory use (if also
+ * configured).
+ *
+ * @param e the #engine
+ *
+ */
+static void engine_dumper_init(struct engine *e) {
+  pthread_t dumper;
+
+  /* Make sure the .dump file is not present, that is bad when starting up. */
+  struct stat buf;
+  if (stat(".dump", &buf) == 0) unlink(".dump");
+
+  /* Thread does not exit, so nothing to do but create it. */
+  pthread_create(&dumper, NULL, &engine_dumper_poll, e);
+}
+#endif /* SWIFT_DUMPER_THREAD */
 
 /**
  * @brief init an engine struct with the necessary properties for the
@@ -4310,6 +4378,12 @@ void engine_config(int restart, int fof, struct engine *e,
   if (with_aff) {
     free(cpuid);
   }
+#endif
+
+#ifdef SWIFT_DUMPER_THREAD
+
+  /* Start the dumper thread.*/
+  engine_dumper_init(e);
 #endif
 
   /* Wait for the runner threads to be in place. */

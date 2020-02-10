@@ -2274,3 +2274,29 @@ void scheduler_write_task_level(const struct scheduler *s) {
   fclose(f);
   free(count);
 }
+/**
+ * @brief dump all the active queues of all the known schedulers into files.
+ *
+ * @param e the #scheduler
+ */
+void scheduler_dump_queues(struct engine *e) {
+
+  struct scheduler *s = &e->sched;
+  char dumpfile[35];
+
+#ifdef WITH_MPI
+  /* Open a file per rank and write the header. Use per rank to avoid MPI
+   * calls that can interact with other blocking ones.  */
+  snprintf(dumpfile, sizeof(dumpfile), "queue_dump_MPI-step%d.dat_%d", e->step,
+           e->nodeID);
+#else
+  snprintf(dumpfile, sizeof(dumpfile), "queue_dump-step%d.dat", e->step);
+#endif
+
+  FILE *file_thread = fopen(dumpfile, "w");
+  fprintf(file_thread, "# rank queue index type subtype weight\n");
+  for (int l = 0; l < s->nr_queues; l++) {
+    queue_dump(engine_rank, l, file_thread, &s->queues[l]);
+  }
+  fclose(file_thread);
+}

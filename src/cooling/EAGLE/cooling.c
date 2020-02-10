@@ -374,7 +374,8 @@ INLINE static double bisection_iter(
  * @param xp Pointer to the extended particle data.
  * @param dt The cooling time-step of this particle.
  * @param dt_therm The hydro time-step of this particle.
- * @param time Time since Big Bang
+ * @param time The current time (since the Big Bang or start of the run) in
+ * internal units.
  */
 void cooling_cool_part(const struct phys_const *phys_const,
                        const struct unit_system *us,
@@ -550,6 +551,7 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
  *
  * @param phys_const #phys_const data structure.
  * @param us The internal system of units.
+ * @param hydro_props The properties of the hydro scheme.
  * @param cosmo #cosmology data structure.
  * @param cooling #cooling_function_data struct.
  * @param p #part data.
@@ -558,6 +560,7 @@ __attribute__((always_inline)) INLINE float cooling_timestep(
 __attribute__((always_inline)) INLINE void cooling_first_init_part(
     const struct phys_const *restrict phys_const,
     const struct unit_system *restrict us,
+    const struct hydro_props *hydro_props,
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *restrict cooling,
     const struct part *restrict p, struct xpart *restrict xp) {
