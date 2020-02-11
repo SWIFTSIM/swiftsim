@@ -33,21 +33,21 @@ critical density for closure can form stars.
 The COLIBRE star formation has a few parameters that determine of the gas is 
 star forming or not the list is shown below:
 
-+---------------------------------------+---------------------------------------+-----------------------+
-| Name                                  | Description                           | Comments              |
-+=======================================+=======================================+=======================+
-| | ``temperature_threshold``           | | Particles need to have a lower      | | Mandatory           |
-|                                       | | subgrid temperature than this to be |                       |
-|                                       | | starforming.                        |                       |
-+---------------------------------------+---------------------------------------+-----------------------+
-| |``subgrid_density_threshold_H_p_CM3``| | Subgrid density threshold from      | | Not specifying the  |
-|                                       | | which to always be starforming      | | variable sets it    |
-|                                       |                                       | | equal to infinity   | 
-+---------------------------------------+---------------------------------------+-----------------------+ 
-| | ``threshold_max_density_H_p_cm3``   | | Maximal gas density, gas above this | | Not specifying the  |
-|                                       | | density is instantaneously converted| | variable sets it    |
-|                                       | | into stars.                         | | to infinity         |
-+---------------------------------------+---------------------------------------+-----------------------+ 
++----------------------------------------+---------------------------------------+-----------------------+
+| Name                                   | Description                           | Comments              |
++========================================+=======================================+=======================+
+|| ``temperature_threshold``             | | Particles need to have a lower      | | Mandatory           |
+|                                        | | subgrid temperature than this to be |                       |
+|                                        | | starforming.                        |                       |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``subgrid_density_threshold_H_p_CM3`` | | Subgrid density threshold from      | | Not specifying the  |
+|                                        | | which to always be starforming      | | variable sets it    |
+|                                        |                                       | | equal to infinity   |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``threshold_max_density_H_p_cm3``     | | Maximal gas density, gas above this | | Not specifying the  |
+|                                        | | density is instantaneously converted| | variable sets it    |
+|                                        | | into stars.                         | | to infinity         |
++----------------------------------------+---------------------------------------+-----------------------+
 
 A run with all the paramters will have a YAML file that looks like:
 
