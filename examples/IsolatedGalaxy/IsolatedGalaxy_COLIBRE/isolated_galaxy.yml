@@ -56,6 +56,48 @@ COLIBRECooling:
   delta_logTEOS_subgrid_properties: 0.2      # delta log T above the EOS below which the subgrid properties use Teq assumption
   rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
 
+# CHIMES cooling parameters
+CHIMESCooling: 
+  data_path:                  /path/to/chimes-data         # Path to chimes-data repository
+  EqmAbundanceTable:          colibre_HHe/z0.000_eqm.hdf5  # Path to equilibrium abundance tables
+  PhotoIonTable_UVB:          HM12_cross_sections/z0.000_cross_sections.hdf5 # Path to cross-sections tables; UVB 
+  PhotoIonTable_ISRF:         cross_sections_B87.hdf5      # Path to cross-sections tables; ISRF
+  UV_field_flag:              2           # Flag specifying radiation field model 
+  Shielding_flag:             2           # Flag specifying local shielding model 
+  use_redshift_dependent_UVB: 0           # Flag to switch on redshift-dependent UVB 
+  shielding_length_factor:    0.5         # Multiplicative factor to scale shielding length
+  max_shielding_length:       100.0       # Max shielding length in code units
+  rad_field_norm_factor:      0.1         # Multiplicative factor to scale ISRF
+  init_abundance_mode:        1           # Flag to specify how to set initial CHIMES abundances
+  colibre_metal_depletion:    1           # Flag to specify metal depletion model
+  relativeTolerance:          1e-4        # Relative tolerance for CHIMES intergration
+  absoluteTolerance:          1e-10       # Absolute tolerance for CHIMES chemistry integration
+  thermalAbsoluteTolerance:   1e-40       # Absolute tolerance for CHIMES cooling integration
+  explicitTolerance:          0.05        # Tolerance below which we use the explicit solution in CHIMES
+  scale_metal_tolerances:     1           # Flag to scale absolute tolerances by element abundance
+  T_mol:                      1.0e5       # Maximum temperature for the molecular network
+  ChemistryEqmMode:           0           # Flag to use pre-computed equilibrium abundances throughout
+  ThermEvolOn:                1           # Flag to switch on thermal evolution in CHIMES
+  chimes_debug:               0           # Flag to include extra debug outputs in CHIMES
+  cosmic_ray_rate:            1.8e-16     # HI ionisation rate from cosmic rays
+  delta_logTEOS_subgrid_properties:  0.2  # delta logT above the EOS below which set CHIMES to eqm and use subgrid properties
+  use_colibre_subgrid_EOS:    1           # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
+  use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
+  rapid_cooling_threshold:    1.0         # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
+  colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
+  H_reion_z:                  7.5         # Redshift of hydrogen reionisation
+  S_over_Si_in_solar:         1.0         # S / Si relative to Solar 
+  Ca_over_Si_in_solar:        1.0         # Ca / Si relative to Solar 
+  IncludeCarbon:              0           # Include Carbon in the CHIMES network
+  IncludeNitrogen:            0           # Include Nitrogen in the CHIMES network
+  IncludeOxygen:              0           # Include Oxygen in the CHIMES network
+  IncludeNeon:                0           # Include Neon in the CHIMES network
+  IncludeMagnesium:           0           # Include Magnesium in the CHIMES network
+  IncludeSilicon:             0           # Include Silicon in the CHIMES network
+  IncludeSulphur:             0           # Include Sulphur in the CHIMES network
+  IncludeCalcium:             0           # Include Calcium in the CHIMES network
+  IncludeIron:                0           # Include Iron in the CHIMES network
+
 # Solar abundances
 COLIBREChemistry:
   init_abundance_metal:     0.0133714      # Inital fraction of particle mass in *all* metals 

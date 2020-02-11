@@ -232,13 +232,6 @@ The parameters needed when running SWIFT with the CHIMES module are described in
 |                                    | | temperature.                                                |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
-| ``HIIregion_ionization_fraction``  | | Ionisation fraction of HII regions (``0`` - fully neutral;  |
-|                                    | | ``1`` - fully ionised).                                     |
-|                                    |                                                               |
-+------------------------------------+---------------------------------------------------------------+
-| ``HIIregion_temperature``          | | Minimum temperature of HII regions.                         |
-|                                    |                                                               |
-+------------------------------------+---------------------------------------------------------------+
 | ``use_hybrid_cooling``             | | Integer flag to set whether to use the hybrid cooling mode. |
 |                                    | | Possible values are as follows:                             |
 |                                    | | 0 - Don't use hybrid cooling. If any elements are switched  |
@@ -328,8 +321,6 @@ The following set of CHIMES parameters are suitable for running a non-cosmologic
       use_colibre_subgrid_EOS:    1 
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
-      HIIregion_ionization_fraction: 1.0 
-      HIIregion_temperature:      1.0e4 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
       H_reion_z:                  7.5 
       S_over_Si_in_solar:         1.0
@@ -381,8 +372,6 @@ Compared to the isolated galaxy example above, this example uses a redshift-depe
       use_colibre_subgrid_EOS:    1 
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
-      HIIregion_ionization_fraction: 1.0 
-      HIIregion_temperature:      1.0e4 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
       H_reion_z:                  7.5 
       S_over_Si_in_solar:         1.0

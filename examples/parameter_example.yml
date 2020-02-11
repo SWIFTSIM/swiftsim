@@ -394,8 +394,6 @@ CHIMESCooling:
   use_colibre_subgrid_EOS:    1                # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
   use_hybrid_cooling:         1                # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
   rapid_cooling_threshold:    1.0              # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
-  HIIregion_ionization_fraction: 1.0           # Ionisation fraction of HII regions
-  HIIregion_temperature:      1.0e4            # Temperature floor of HII regions
   colibre_table_path:         ../UV_dust1_CR1_G1_shield1.hdf5   # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
   H_reion_z:                  7.5              # Redshift of hydrogen reionisation
   S_over_Si_in_solar:         1.0              # S / Si relative to Solar 
