@@ -74,6 +74,7 @@
 #include "map.h"
 #include "memuse.h"
 #include "minmax.h"
+#include "mpiuse.h"
 #include "outputlist.h"
 #include "parallel_io.h"
 #include "part.h"
@@ -211,8 +212,9 @@ void engine_repartition(struct engine *e) {
   /* Task arrays. */
   scheduler_free_tasks(&e->sched);
 
-  /* Foreign parts. */
-  space_free_foreign_parts(e->s);
+  /* Foreign parts. (no need to nullify the cell pointers as the cells
+   * will be regenerated) */
+  space_free_foreign_parts(e->s, /*clear_cell_pointers=*/0);
 
   /* Now comes the tricky part: Exchange particles between all nodes.
      This is done in two steps, first allreducing a matrix of
@@ -3419,6 +3421,11 @@ static void *engine_dumper_poll(void *p) {
       /* Dump the currently logged memory. */
       message("Dumping memory use report");
       memuse_log_dump_error(e->nodeID);
+#endif
+
+#if defined(SWIFT_MPIUSE_REPORTS) && defined(WITH_MPI)
+      /* Dump the MPI interactions in the step. */
+      mpiuse_log_dump_error(e->nodeID);
 #endif
 
       /* Add more interesting diagnostics. */
