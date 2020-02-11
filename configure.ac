@@ -2358,6 +2358,7 @@ AC_MSG_RESULT([
    GSL enabled          : $have_gsl
    libNUMA enabled      : $have_numa
    GRACKLE enabled      : $have_grackle
+   Sundials enabled     : $have_sundials
    Special allocators   : $have_special_allocator
    CPU profiler         : $have_profiler
    Pthread barriers     : $have_pthread_barrier
