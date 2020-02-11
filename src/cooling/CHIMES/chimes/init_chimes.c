@@ -6094,7 +6094,7 @@ int set_species_index_array(struct globalVariables *myGlobalVars) {
  * @param myGlobalVars The #globalVariables struct.
  */
 void init_chimes(struct globalVariables *myGlobalVars) {
-  char fname[500];
+  char fname[520];
 
   myGlobalVars->totalNumberOfSpecies = set_species_index_array(myGlobalVars);
 
@@ -6771,7 +6771,7 @@ void allocate_redshift_dependent_UVB_memory(
  */
 void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
                                  struct globalVariables *myGlobalVars) {
-  char fname[500];
+  char fname[520];
   hid_t file_id, dataset, dataspace_id, memspace_id;
   hsize_t dims3D[3], count3D[3], offset3D[3];
   hsize_t dims4D[4], count4D[4], offset4D[4];
