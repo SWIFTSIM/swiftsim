@@ -5546,7 +5546,7 @@ void read_cross_sections_tables(
     struct chimes_photoion_auger_euv_struct *my_photoion_auger_euv,
     struct chimes_spectra_struct *my_spectra,
     struct globalVariables *myGlobalVars) {
-  char fname[500];
+  char fname[1000];
   int i, j, k, l, m, rank;
   hsize_t dims3D[3], count3D[3], offset3D[3];
   hsize_t dims4D[4], count4D[4], offset4D[4];
