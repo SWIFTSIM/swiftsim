@@ -202,11 +202,19 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 			    entropy_floor_props, cooling_func, p, xp, dt_cool,
 			    dt_therm, e->time);
 	}
-
-	evolve_dust_part(constants, us, cosmo, hydro_props,
-			       entropy_floor_props, cooling_func, 
-			       dustevo_props,  p, xp, dt_cool,
-			       dt_therm, e->time);
+	
+	if (dustevo_props->model_type == 0){
+	  evolve_dust_part(constants, us, cosmo, hydro_props,
+			   entropy_floor_props, cooling_func, 
+			   dustevo_props,  p, xp, dt_cool,
+			   dt_therm, e->time);
+	}
+	if (dustevo_props->model_type == 1){
+	  evolve_dust_part_m16(constants, us, cosmo, hydro_props,
+			   entropy_floor_props, cooling_func, 
+			   dustevo_props,  p, xp, dt_cool,
+			   dt_therm, e->time);
+	}
 
       }
     }
@@ -223,6 +231,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const struct star_formation *sf_props = e->star_formation;
+  const struct dustevo_props *dp = e->dustevo_props;
   const struct phys_const *phys_const = e->physical_constants;
   const int count = c->hydro.count;
   struct part *restrict parts = c->hydro.parts;
@@ -337,7 +346,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
                                              with_cosmology, phys_const,
-                                             hydro_props, us, cooling);
+                                             hydro_props, dp, us, cooling);
 
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);

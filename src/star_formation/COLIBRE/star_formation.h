@@ -34,6 +34,7 @@
 #include "random.h"
 #include "stars.h"
 #include "units.h"
+#include "dust.h"
 
 /**
  * @file src/star_formation/COLIBRE/star_formation.h
@@ -246,6 +247,7 @@ INLINE static void star_formation_copy_properties(
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
+    const struct dustevo_props* restrict dp,
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
 
@@ -267,6 +269,8 @@ INLINE static void star_formation_copy_properties(
 
   /* ---- dust grains destroyed at star formation (astration) ---- */
   
+  redistribute_dust_to_element_abundances(sp, dp);
+
   /* return mass from dust to individual elements according to assumed grain composition */
   sp->chemistry_data.metal_mass_fraction[chemistry_element_C] += 
     sp->chemistry_data.metal_mass_fraction[chemistry_element_Gra];

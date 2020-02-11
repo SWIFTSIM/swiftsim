@@ -786,7 +786,13 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
 
         feedback_props->yield_SNII.yield_IMF_resampled[flat_index_3d] *=
             feedback_props->SNII_yield_factor[elem];
+	
       }
+      message("SNII :: Metallicity: |%f| Element: |%s| Yield: |%f|", 
+	      feedback_props->yield_SNII.metallicity[i],
+	      chemistry_get_element_name(elem), 
+	      feedback_props->yield_SNII.yield_IMF_resampled[flat_index_3d]);
+
     }
 
     /* AGB  */
@@ -826,6 +832,11 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
           feedback_props->yield_AGB.yield_IMF_resampled[flat_index_3d] =
               exp(M_LN10 * feedback_props->yield_mass_bins[j]) * result;
         }
+	message("AGB :: Metallicity: |%f| Element: |%s| Yield: |%f|", 
+		feedback_props->yield_AGB.metallicity[i],
+		chemistry_get_element_name(elem), 
+		feedback_props->yield_AGB.yield_IMF_resampled[flat_index_3d]);
+
       }
     }
   }

@@ -31,16 +31,19 @@ struct dustevo_props {
 
   /* ------------ Main operation modes ------------- */
 
+  /*! What dust model implementation are we using? */
+  int model_type;
+
   /*! Are we doing grain destruction by sputtering? */
   int with_sputtering;
 
-  /*! Are we doing grain destrubtion by SNII? */
+  /*! Are we doing grain destruction by SNII? */
   int with_SNII_destruction;
 
   /*! Are we doing grain growth by accretion? */
   int with_accretion;
 
-  /*! Are we actually cooling? */
+  /*! Are we using the subgrid T and rho? */
   int with_subgrid_props;
 
   /*! Are we actually cooling? */
@@ -53,11 +56,16 @@ struct dustevo_props {
 
   /* ------------ grain species element mass ratios ------------- */
 
-  float comp_Gra [chemistry_element_count];
-  float comp_Ide [chemistry_element_count];
-  float comp_Sil [chemistry_element_count];
 
+  float comp_Gra[chemistry_element_count];
+  float comp_Ide[chemistry_element_count];
+  float comp_Sil[chemistry_element_count];
+  float comp_Mgd[chemistry_element_count]; 
+  float comp_Fed[chemistry_element_count];
 };
+
+void redistribute_dust_to_element_abundances(struct spart* sp,
+					     const struct dustevo_props *dp);
 
 void evolve_dust_part(const struct phys_const *phys_const,
 		      const struct unit_system *us,
@@ -69,6 +77,15 @@ void evolve_dust_part(const struct phys_const *phys_const,
 		      struct part *restrict p, struct xpart *restrict xp,
 		      const float dt, const float dt_therm, const double time);
 
+void evolve_dust_part_m16(const struct phys_const *phys_const,
+		      const struct unit_system *us,
+		      const struct cosmology *cosmo,
+		      const struct hydro_props *hydro_properties,
+		      const struct entropy_floor_properties *floor_props,
+		      const struct cooling_function_data *cooling,
+		      const struct dustevo_props *dp,
+		      struct part *restrict p, struct xpart *restrict xp,
+		      const float dt, const float dt_therm, const double time);
 
 
 void dustevo_sputter_part(const struct phys_const *phys_const,
