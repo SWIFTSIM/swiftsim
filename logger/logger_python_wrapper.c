@@ -177,6 +177,91 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
   return Py_BuildValue("");
 }
 
+
+/**
+ * @brief Move forward in time an array of particles.
+ *
+ * <b>filename</b> string filename of the log file.
+ * <b>parts</b> Numpy array containing the particles to evolve.
+ * <b>time</b> Time requested for the particles.
+ * <b>verbose</b> Verbose level
+ *
+ * <b>returns</b> The evolved array of particles.
+ */
+static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
+                                     PyObject *args) {
+  /* input variables. */
+  char *filename = NULL;
+
+  int verbose = 0;
+  PyArrayObject *parts = NULL;
+  double time = 0;
+  int new_array = 1;
+
+  /* parse the arguments. */
+  if (!PyArg_ParseTuple(args, "sOd|ii", &filename,
+                        &parts, &time, &verbose, &new_array)) return NULL;
+
+
+  /* Check parts */
+  if (!PyArray_Check(parts)) {
+    error("Expecting a numpy array of particles.");
+  }
+
+  if (PyArray_NDIM(parts) != 1) {
+    error("Expecting a 1D array of particles.");
+  }
+
+  if (PyArray_TYPE(parts) != logger_particle_descr->type_num) {
+    error("Expecting an array of particles.");
+  }
+
+  /* Create the interpolated array. */
+  PyArrayObject *interp = NULL;
+  if (new_array) {
+    interp = (PyArrayObject *) PyArray_NewLikeArray(
+      parts, NPY_ANYORDER, NULL, 0);
+  }
+  else {
+    interp = parts;
+    // We return it, therefore one more reference exists.
+    Py_INCREF(interp);
+  }
+
+  /* initialize the reader. */
+  struct logger_reader reader;
+  logger_reader_init(&reader, filename, verbose);
+
+  /* Get the offset of the requested time. */
+  size_t offset = logger_reader_get_next_offset_from_time(&reader, time);
+
+  /* Loop over all the particles */
+  size_t N = PyArray_DIM(parts, 0);
+  for(size_t i = 0; i < N; i++) {
+
+    /* Obtain the required particle records. */
+    struct logger_particle *p = PyArray_GETPTR1(parts, i);
+    /* Check that we are really going forward in time. */
+    if (time < p->time) {
+      error("Requesting to go backward in time (%g < %g)",
+            time, p->time);
+    }
+    struct logger_particle new;
+    logger_reader_get_next_particle(&reader, p, &new, offset);
+
+    /* Interpolate the particle. */
+    struct logger_particle *p_ret = PyArray_GETPTR1(interp, i);
+    *p_ret = *p;
+
+    logger_particle_interpolate(p_ret, &new, time);
+  }
+
+  /* Free the reader. */
+  logger_reader_free(&reader);
+
+  return PyArray_Return(interp);
+}
+
 /* definition of the method table. */
 
 static PyMethodDef libloggerMethods[] = {
@@ -214,6 +299,25 @@ static PyMethodDef libloggerMethods[] = {
      "-------\n\n"
      "times: tuple\n"
      "  time min, time max\n"},
+    {"moveForwardInTime", pyMoveForwardInTime, METH_VARARGS,
+    "Move the particles forward in time.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "basename: str\n"
+     "  The basename of the index files.\n\n"
+     "parts: np.array\n"
+     "  The array of particles.\n\n"
+     "time: double\n"
+     "  The requested time for the particles.\n\n"
+     "verbose: int, optional\n"
+     "  The verbose level of the loader.\n\n"
+     "new_array: bool, optional\n"
+     "  Does the function return a new array (or use the provided one)?\n\n"
+     "Returns\n"
+     "-------\n\n"
+     "parts: np.array\n"
+     "  The particles at the requested time.\n"
+    },
 
     {NULL, NULL, 0, NULL} /* Sentinel */
 };

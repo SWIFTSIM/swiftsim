@@ -10,7 +10,7 @@ mathtext.fontset: stix
 text.usetex: False
 
 # Legend options
-legend.frameon: False
+legend.frameon: True
 legend.fontsize: 8
 
 # Figure options for publications
