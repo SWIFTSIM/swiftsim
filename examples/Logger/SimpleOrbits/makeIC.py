@@ -26,7 +26,7 @@ np.random.seed(50)
 # parameters
 
 filename = "simple_orbits.hdf5"
-num_part = 3
+num_part = 1
 masses = 1.
 # If changed, need to update simple_orbits.yml
 M = units.solMass.to("earthMass")
