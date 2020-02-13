@@ -392,6 +392,9 @@ runner_iact_nonsym_feedback_apply(
     /* Store how much physical momentum is received, so we don't care about
      * cosmology */
     xpj->tracers_data.momentum_received += delta_v * current_mass;
+    
+    /* Update the signal velocity of the particle based on the velocity kick */
+    hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, delta_v);
   }
 
   /* Put particles into HII regions */

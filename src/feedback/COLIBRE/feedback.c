@@ -1010,7 +1010,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   sp->feedback_data.to_distribute.momentum = P_cgs / props->Momentum_to_cgs;
   sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
 
-  /* Now compute the robability of kicking particle with given delta_v
+  /* Now compute the probability of kicking particle with given delta_v
    * in the current timestep.
    * Note that this could be prop > 1 if there are no enough particles in the
    * kernel to distribute the amount of momentum available in
