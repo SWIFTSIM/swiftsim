@@ -14,8 +14,14 @@ To build SWIFT with the CHIMES module, you will need the following configuration
 | ``--with-cooling=CHIMES``          | | Sets the SWIFT cooling function to use the CHIMES module.   |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
-| ``--with-sundials=/sundials/path`` | | Path to the directory where the Sundials library is         |
-|                                    | | installed.                                                  |
+| ``--with-sundials=/sundials/path`` | | Builds SWIFT with the Sundials libraries, which are         |
+|                                    | | required by the CHIMES module. If you just use              |
+|                                    | | ``--with-sundials``, it will try to find the Sundials       |
+|                                    | | libraries automatically on your system. However, if it      |
+|                                    | | cannot find these libraries automatically (for example, if  |
+|                                    | | you built the libraries yourself), then you can directly    |
+|                                    | | pass it the path to the directory where the Sundials        |
+|                                    | | libraries are installed.                                    |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
 | ``--with-chimes-network-size=157`` | | The number of ions and molecules included in the CHIMES     |
@@ -28,3 +34,5 @@ To build SWIFT with the CHIMES module, you will need the following configuration
 |                                    | | Full network: 157                                           |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
+
+

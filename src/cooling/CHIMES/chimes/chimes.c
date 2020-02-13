@@ -18,12 +18,13 @@
  ***************************************************************************/
 
 #include <cvode/cvode.h>
-#include <cvode/cvode_dense.h>
 #include <math.h>
 #include <nvector/nvector_serial.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sundials/sundials_types.h>
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunmatrix/sunmatrix_dense.h>
 #include <sys/types.h>
 #include <time.h>
 #include "chimes_proto.h"
@@ -380,7 +381,7 @@ void chimes_network(struct gasVariables *myGasVars,
     /* Use CVodeCreate to create the solver
      * memory and specify the Backward Differentiation
      * Formula and Newton iteration. */
-    cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
+    cvode_mem = CVodeCreate(CV_BDF);
     data.cvode_mem = cvode_mem;
 
     /* Set the user data for CVode */
@@ -405,13 +406,24 @@ void chimes_network(struct gasVariables *myGasVars,
     else
       CVodeSVtolerances(cvode_mem, reltol, abstol_vector);
 
-    /* Use CVDense to specify the CVDENSE dense linear
-     * solver. */
+    /* Create a dense SUNMatrix to use in the 
+     * linear solver. */ 
+    SUNMatrix A_sun; 
+    
     if (myGasVars->ThermEvolOn == 0)
-      CVDense(cvode_mem, data.network_size);
-    else
-      CVDense(cvode_mem, data.network_size + 1);
+      A_sun = SUNDenseMatrix(data.network_size, data.network_size);
+    else 
+      A_sun = SUNDenseMatrix(data.network_size + 1, data.network_size + 1);
 
+    /* Create a denst SUNLinearSolver object 
+     * to use in CVode. */ 
+    SUNLinearSolver LS_sun; 
+    LS_sun = SUNLinSol_Dense(y, A_sun);
+
+    /* Attach the matrix and linear 
+     * solver to CVode. */ 
+    CVodeSetLinearSolver(cvode_mem, LS_sun, A_sun);
+    
     /* Specify the maximum number of convergence
      * test failures. */
     CVodeSetMaxConvFails(cvode_mem, 5000);
@@ -449,6 +461,8 @@ void chimes_network(struct gasVariables *myGasVars,
                BOLTZMANNCGS),
           myGasVars->TempFloor);
 
+    SUNLinSolFree(LS_sun);
+    SUNMatDestroy(A_sun);
     N_VDestroy_Serial(y);
     N_VDestroy_Serial(abstol_vector);
     CVodeFree(&cvode_mem);
