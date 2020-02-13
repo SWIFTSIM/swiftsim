@@ -274,15 +274,16 @@ plt.figure(fig_1.number)
 plt.xlabel("Time [yr]")
 plt.ylabel(r"$\frac{E - E(t=0)}{E(t=0)}$")
 plt.legend(ncol=2)
+plt.savefig("Energy.png")
 
 plt.figure(fig_2.number)
 plt.xlabel("Position [AU]")
 plt.ylabel("Position [AU]")
 plt.legend()
+plt.savefig("Positions.png")
 
 plt.figure(fig_3.number)
 plt.xlabel("Velocity [AU / yr]")
 plt.ylabel("Velocity [AU / yr]")
 plt.legend()
-
-plt.show()
+plt.savefig("Velocities.png")
