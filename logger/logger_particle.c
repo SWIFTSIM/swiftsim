@@ -246,12 +246,12 @@ double logger_particle_quintic_hermite_spline(
 
   /* Derivatives */
   const double v0_dt = v0 * dt;
-  const double a0_dt2 = a0 * dt2;
+  const double a0_dt2 = 0.5 * a0 * dt2;
   const double v1_dt = v1 * dt;
-  const double a1_dt2 = a1 * dt2;
+  const double a1_dt2 = 0.5 * a1 * dt2;
 
   /* Do the first 3 terms of the hermite spline */
-  double x = x0 + v0 * t_t0 + a0 * t_t0_2;
+  double x = x0 + v0 * t_t0 + 0.5 * a0 * t_t0_2;
 
   /* Cubic term */
   x += (x1 - x0 - v0_dt - a0_dt2) * t_t0_3 / dt3;
