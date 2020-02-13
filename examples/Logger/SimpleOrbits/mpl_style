@@ -7,7 +7,7 @@ font.family: STIXGeneral
 mathtext.fontset: stix
 
 # LaTeX options
-text.usetex: False
+text.usetex: True
 
 # Legend options
 legend.frameon: True

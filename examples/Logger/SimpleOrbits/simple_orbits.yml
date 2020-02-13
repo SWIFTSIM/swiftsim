@@ -17,7 +17,7 @@ TimeIntegration:
 Snapshots:
   basename:            simple_orbits # Common part of the name of output files
   time_first:          0.        # Time of the first output (in internal units)
-  delta_time:          3e-3      # Time difference between consecutive outputs (in internal units)
+  delta_time:          4e-3      # Time difference between consecutive outputs (in internal units)
 
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -40,7 +40,7 @@ PointMassPotential:
 
 # Parameters governing the logger snapshot system
 Logger:
-  delta_step:           500     # Update the particle log every this many updates
+  delta_step:           2000     # Update the particle log every this many updates
   basename:             index  # Common part of the filenames
   initial_buffer_size:  0.01      # (Optional) Buffer size in GB
   buffer_scale:	        10     # (Optional) When buffer size is too small, update it with required memory times buffer_scale
