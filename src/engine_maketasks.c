@@ -837,8 +837,7 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
 
         /* Create a variable in order to avoid to many ifdef */
         kick2_or_logger = c->logger;
-      }
-      else {
+      } else {
         kick2_or_logger = c->kick2;
       }
 #else
@@ -1156,8 +1155,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #ifdef WITH_LOGGER
         if (with_logger) {
           scheduler_addunlock(s, c->super->logger, c->stars.stars_in);
-        }
-        else {
+        } else {
           scheduler_addunlock(s, c->super->kick2, c->stars.stars_in);
         }
 #else
@@ -1193,10 +1191,11 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 
 #ifdef WITH_LOGGER
         if (with_logger) {
-          scheduler_addunlock(s, c->super->logger, c->black_holes.black_holes_in);
-        }
-        else {
-          scheduler_addunlock(s, c->super->kick2, c->black_holes.black_holes_in);
+          scheduler_addunlock(s, c->super->logger,
+                              c->black_holes.black_holes_in);
+        } else {
+          scheduler_addunlock(s, c->super->kick2,
+                              c->black_holes.black_holes_in);
         }
 #else
         scheduler_addunlock(s, c->super->kick2, c->black_holes.black_holes_in);
