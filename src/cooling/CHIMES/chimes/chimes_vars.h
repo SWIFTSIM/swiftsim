@@ -21,22 +21,22 @@
 #include <stdlib.h>
 
 /*!< Electron mass. Units: g. */
-#define ELECTRON_MASS 9.1093829e-28
+#define ELECTRON_MASS 9.10938356e-28
 
 /*!< Proton mass. Units: g. */
-#define PROTON_MASS 1.6726218e-24
+#define PROTON_MASS 1.672621898e-24
 
 /*!< Pi. */
 #define PI 3.1415927
 
 /*!< Speed of light. Units: cm / s. */
-#define LIGHTSPEED 3.0e10
+#define LIGHTSPEED 2.99792458e10
 
 /*!< Boltzmann constant. Units: erg / K. */
-#define BOLTZMANNCGS 1.3806e-16
+#define BOLTZMANNCGS 1.38064852e-16
 
 /*!< Boltzmann constant. Units: eV / K. */
-#define BOLTZMANN_EVK 8.6173324e-5
+#define BOLTZMANN_EVK 8.61733105e-5
 
 /*!< For dust processes involving G0, e.g. photoelectric heating, we attenuate
  * G0 by exp(- G0_gamma * Av). */
