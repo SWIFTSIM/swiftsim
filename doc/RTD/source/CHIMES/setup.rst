@@ -14,9 +14,9 @@ CHIMES data files
 
 To run CHIMES, you will need the CHIMES data files that contain the various reaction rate coefficients, photoionisation cross sections etc. These can be downloaded from the `chimes-data <https://bitbucket.org/richings/chimes-data>`_ Bitbucket repository. 
 
-Make sure to use the master branch of the chimes-data repository. The legacy branch was for an old version of CHIMES, and is incompatible with the version of CHIMES that has been implemented in SWIFT. 
+In general, you will not need all of the data files in this repository. If you are only running CHIMES with the COLIBRE sub-grid physics models and only with the 'hybrid' cooling mode (i.e. only H and He in non-equilibrium), then you can use the ``getChimesData.sh`` script in the ``examples/COLIBRE_ICs/`` directory to download only the data files that you will need for such a run. 
 
-You will need to make a note of the path to your local chimes-data repository, as you will need to pass this as a parameter to SWIFT (see the CHIMES parameters section for more details). 
+You will need to make a note of the path to your local copy of chimes-data, as you will need to pass this as a parameter to SWIFT (see the CHIMES parameters section for more details). 
 
 
 Sundials library
