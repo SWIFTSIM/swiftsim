@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "chimes_proto.h"
+#include "chimes_vars.h"
 
 // CHIMES data tables.
 struct chimes_table_bins_struct

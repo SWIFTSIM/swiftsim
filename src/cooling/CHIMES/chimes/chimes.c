@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include "chimes_proto.h"
+#include "chimes_vars.h" 
 
 /**
  * @brief Sets equilibrium abundances.
@@ -249,7 +250,7 @@ void chimes_network(struct gasVariables *myGasVars,
    *****************************/
 
   // Update rates
-  int indices[TOTSIZE];
+  int indices[CHIMES_TOTSIZE];
   update_rate_coefficients(data.myGasVars, data.myGlobalVars, data,
                            data.myGasVars->ThermEvolOn);
   update_rates(data.myGasVars, data.myGlobalVars, data);
@@ -268,7 +269,7 @@ void chimes_network(struct gasVariables *myGasVars,
   // Compute creation and destruction rates
   update_rate_vector(data.species, data.myGasVars, data.myGlobalVars, data);
 
-  ChimesFloat new_abundances[TOTSIZE];
+  ChimesFloat new_abundances[CHIMES_TOTSIZE];
   ChimesFloat old_energy, cool_rate, relative_change, this_absolute_tolerance;
   ChimesFloat new_energy = 0.0;
   ChimesFloat max_relative_change = 0.0;
