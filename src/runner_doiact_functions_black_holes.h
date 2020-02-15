@@ -213,7 +213,7 @@ void DOSELF1_BH(struct runner *r, struct cell *c, int timer) {
 #endif
 
       if (r2 < hig2) {
-        runner_iact_nonsym_bh_gpart_repos(r2, dx, hi, 0.f, bi, gpj, cosmo,
+        runner_iact_nonsym_bh_gpart_repos(r2, dx, hi, bi, gpj, cosmo,
                                           e->gravity_properties, ti_current);
       }
 
@@ -373,6 +373,60 @@ void DO_NONSYM_PAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
   }   /* loop over the bparts in ci. */
 
 #endif /* (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW) */
+
+    /* When doing BH swallowing, we need a quick loop also over
+     * *all* the neighbours for repositioning */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
+
+  const int gcount_j = cj->grav.count;
+  struct gpart *gparts_j = cj->grav.parts;
+
+  /* Loop over the bparts in ci. */
+  for (int bid = 0; bid < bcount_i; bid++) {
+
+    /* Get a hold of the ith bpart in ci. */
+    struct bpart *bi = &bparts_i[bid];
+
+    /* Skip inactive particles */
+    if (!bpart_is_active(bi, e)) continue;
+
+    const float hi = bi->h;
+    const float hig2 = hi * hi * kernel_gamma2;
+    const float bix[3] = {(float)(bi->x[0] - (cj->loc[0] + shift[0])),
+                          (float)(bi->x[1] - (cj->loc[1] + shift[1])),
+                          (float)(bi->x[2] - (cj->loc[2] + shift[2]))};
+
+    /* Loop over the gparts in cj. */
+    for (int gjd = 0; gjd < gcount_j; gjd++) {
+
+      /* Get a pointer to the jth particle. */
+      struct gpart *gpj = &gparts_j[gjd];
+
+      /* Skip inhibited particles. */
+      if (gpart_is_inhibited(gpj, e)) continue;
+
+      /* Compute the pairwise distance. */
+      const float gjx[3] = {(float)(gpj->x[0] - cj->loc[0]),
+                            (float)(gpj->x[1] - cj->loc[1]),
+                            (float)(gpj->x[2] - cj->loc[2])};
+      float dx[3] = {bix[0] - gjx[0], bix[1] - gjx[1], bix[2] - gjx[2]};
+      const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
+      if (gpj->ti_drift != e->ti_current)
+        error("Particle gpj not drifted to current time");
+#endif
+
+      if (r2 < hig2) {
+        runner_iact_nonsym_bh_gpart_repos(r2, dx, hi, bi, gpj, cosmo,
+                                          e->gravity_properties, ti_current);
+      }
+    } /* loop over the gparts in cj. */
+  }   /* loop over the bparts in ci. */
+#endif
 }
 
 void DOPAIR1_BH_NAIVE(struct runner *r, struct cell *restrict ci,
