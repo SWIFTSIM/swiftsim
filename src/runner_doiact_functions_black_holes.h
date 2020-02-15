@@ -163,6 +163,65 @@ void DOSELF1_BH(struct runner *r, struct cell *c, int timer) {
 
 #endif /* (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW) */
 
+    /* When doing BH swallowing, we need a quick loop also over
+     * *all* the neighbours for repositioning */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW)
+
+  const int gcount = c->grav.count;
+  struct gpart *gparts = c->grav.parts;
+
+  /* Loop over the bparts in ci. */
+  for (int bid = 0; bid < bcount; bid++) {
+
+    /* Get a hold of the ith bpart in ci. */
+    struct bpart *bi = &bparts[bid];
+
+    /* Skip inactive particles */
+    if (!bpart_is_active(bi, e)) continue;
+
+    struct gpart *const gpi = bi->gpart;
+    const float hi = bi->h;
+    const float hig2 = hi * hi * kernel_gamma2;
+    const float bix[3] = {(float)(bi->x[0] - c->loc[0]),
+                          (float)(bi->x[1] - c->loc[1]),
+                          (float)(bi->x[2] - c->loc[2])};
+
+    for (int gjd = 0; gjd < gcount; gjd++) {
+
+      /* Get a pointer to the jth particle. */
+      struct gpart *gpj = &gparts[gjd];
+
+      /* Skip self-interaction */
+      if (gpj == gpi) continue;
+
+      /* Early abort? */
+      if (gpart_is_inhibited(gpj, e)) continue;
+
+      /* Compute the pairwise distance. */
+      const float gjx[3] = {(float)(gpj->x[0] - c->loc[0]),
+                            (float)(gpj->x[1] - c->loc[1]),
+                            (float)(gpj->x[2] - c->loc[2])};
+      float dx[3] = {bix[0] - gjx[0], bix[1] - gjx[1], bix[2] - gjx[2]};
+      const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles have been drifted to the current time */
+      if (bi->ti_drift != e->ti_current)
+        error("Particle bi not drifted to current time");
+      if (gpj->ti_drift != e->ti_current)
+        error("Particle gpj not drifted to current time");
+#endif
+
+      if (r2 < hig2) {
+        runner_iact_nonsym_bh_gpart_repos(r2, dx, hi, 0.f, bi, gpj, cosmo,
+                                          e->gravity_properties, ti_current);
+      }
+
+    } /* loop over the gparts in ci. */
+  }   /* loop over the bparts in ci. */
+
+#endif /* (FUNCTION_TASK_LOOP == TASK_LOOP_SWALLOW) */
+
   TIMER_TOC(TIMER_DOSELF_BH);
 }
 
