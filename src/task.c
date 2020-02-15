@@ -459,10 +459,13 @@ void task_unlock(struct task *t) {
         cell_unlocktree(ci);
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
-                 (subtype == task_subtype_bh_swallow) ||
                  (subtype == task_subtype_do_gas_swallow)) {
         cell_bunlocktree(ci);
         cell_unlocktree(ci);
+      } else if (subtype == task_subtype_bh_swallow) {
+        cell_bunlocktree(ci);
+        cell_unlocktree(ci);
+        cell_gunlocktree(ci);
       } else if (subtype == task_subtype_do_bh_swallow) {
         cell_bunlocktree(ci);
       } else {
@@ -485,12 +488,18 @@ void task_unlock(struct task *t) {
         cell_unlocktree(cj);
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
-                 (subtype == task_subtype_bh_swallow) ||
                  (subtype == task_subtype_do_gas_swallow)) {
         cell_bunlocktree(ci);
         cell_bunlocktree(cj);
         cell_unlocktree(ci);
         cell_unlocktree(cj);
+      } else if (subtype == task_subtype_bh_swallow) {
+        cell_bunlocktree(ci);
+        cell_bunlocktree(cj);
+        cell_unlocktree(ci);
+        cell_unlocktree(cj);
+        cell_gunlocktree(ci);
+        cell_gunlocktree(cj);
       } else if (subtype == task_subtype_do_bh_swallow) {
         cell_bunlocktree(ci);
         cell_bunlocktree(cj);
@@ -626,13 +635,26 @@ int task_lock(struct task *t) {
         }
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
-                 (subtype == task_subtype_bh_swallow) ||
                  (subtype == task_subtype_do_gas_swallow)) {
         if (ci->black_holes.hold) return 0;
         if (ci->hydro.hold) return 0;
         if (cell_blocktree(ci) != 0) return 0;
         if (cell_locktree(ci) != 0) {
           cell_bunlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_bh_swallow) {
+        if (ci->black_holes.hold) return 0;
+        if (ci->hydro.hold) return 0;
+        if (ci->grav.phold) return 0;
+        if (cell_blocktree(ci) != 0) return 0;
+        if (cell_locktree(ci) != 0) {
+          cell_bunlocktree(ci);
+          return 0;
+        }
+        if (cell_glocktree(ci) != 0) {
+          cell_bunlocktree(ci);
+          cell_unlocktree(ci);
           return 0;
         }
       } else if (subtype == task_subtype_do_bh_swallow) {
@@ -686,7 +708,6 @@ int task_lock(struct task *t) {
         }
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
-                 (subtype == task_subtype_bh_swallow) ||
                  (subtype == task_subtype_do_gas_swallow)) {
         /* Lock the BHs and the gas particles in both cells */
         if (ci->black_holes.hold || cj->black_holes.hold) return 0;
@@ -705,6 +726,41 @@ int task_lock(struct task *t) {
           cell_bunlocktree(ci);
           cell_bunlocktree(cj);
           cell_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_bh_swallow) {
+        if (ci->black_holes.hold || cj->black_holes.hold) return 0;
+        if (ci->hydro.hold || cj->hydro.hold) return 0;
+        if (ci->grav.phold || cj->grav.phold) return 0;
+	if (cell_blocktree(ci) != 0) return 0;
+        if (cell_blocktree(cj) != 0) {
+          cell_bunlocktree(ci);
+          return 0;
+        }
+        if (cell_locktree(ci) != 0) {
+          cell_bunlocktree(ci);
+          cell_bunlocktree(cj);
+          return 0;
+        }
+        if (cell_locktree(cj) != 0) {
+          cell_bunlocktree(ci);
+          cell_bunlocktree(cj);
+          cell_unlocktree(ci);
+          return 0;
+        }
+        if (cell_glocktree(ci) != 0) {
+          cell_bunlocktree(ci);
+          cell_bunlocktree(cj);
+          cell_unlocktree(ci);
+          cell_unlocktree(cj);
+          return 0;
+        }
+        if (cell_glocktree(cj) != 0) {
+          cell_bunlocktree(ci);
+          cell_bunlocktree(cj);
+          cell_unlocktree(ci);
+          cell_unlocktree(cj);
+          cell_gunlocktree(ci);
           return 0;
         }
       } else if (subtype == task_subtype_do_bh_swallow) {
