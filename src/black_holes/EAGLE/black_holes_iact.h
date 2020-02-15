@@ -146,46 +146,6 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   const float ui = r * hi_inv;
   kernel_eval(ui, &wi);
 
-  /* /\* Start by checking the repositioning criteria *\/ */
-
-  /* /\* (Square of) Max repositioning distance allowed based on the softening *\/ */
-  /* const float max_dist_repos2 = */
-  /*     kernel_gravity_softening_plummer_equivalent_inv * */
-  /*     kernel_gravity_softening_plummer_equivalent_inv * */
-  /*     const_max_repositioning_distance_ratio * */
-  /*     const_max_repositioning_distance_ratio * grav_props->epsilon_baryon_cur * */
-  /*     grav_props->epsilon_baryon_cur; */
-
-  /* /\* This gas neighbour is close enough that we can consider it's potential */
-  /*    for repositioning *\/ */
-  /* if (r2 < max_dist_repos2) { */
-
-  /*   /\* Compute relative peculiar velocity between the two BHs */
-  /*    * Recall that in SWIFT v is (v_pec * a) *\/ */
-  /*   const float delta_v[3] = {bi->v[0] - pj->v[0], bi->v[1] - pj->v[1], */
-  /*                             bi->v[2] - pj->v[2]}; */
-  /*   const float v2 = delta_v[0] * delta_v[0] + delta_v[1] * delta_v[1] + */
-  /*                    delta_v[2] * delta_v[2]; */
-
-  /*   const float v2_pec = v2 * cosmo->a2_inv; */
-
-  /*   /\* Check the velocity criterion *\/ */
-  /*   if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) { */
-
-  /*     const float potential = pj->black_holes_data.potential; */
-
-  /*     /\* Is the potential lower? *\/ */
-  /*     if (potential < bi->reposition.min_potential) { */
-
-  /*       /\* Store this as our new best *\/ */
-  /*       bi->reposition.min_potential = potential; */
-  /*       bi->reposition.delta_x[0] = -dx[0]; */
-  /*       bi->reposition.delta_x[1] = -dx[1]; */
-  /*       bi->reposition.delta_x[2] = -dx[2]; */
-  /*     } */
-  /*   } */
-  /* } */
-
   /* Is the BH hungry? */
   if (bi->subgrid_mass > bi->mass) {
 
@@ -254,35 +214,6 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
 
   const float v2_pec = v2 * cosmo->a2_inv;
 
-  /* /\* (Square of) Max repositioning distance allowed based on the softening *\/ */
-  /* const float max_dist_repos2 = */
-  /*     kernel_gravity_softening_plummer_equivalent_inv * */
-  /*     kernel_gravity_softening_plummer_equivalent_inv * */
-  /*     const_max_repositioning_distance_ratio * */
-  /*     const_max_repositioning_distance_ratio * grav_props->epsilon_baryon_cur * */
-  /*     grav_props->epsilon_baryon_cur; */
-
-  /* /\* This gas neighbour is close enough that we can consider it's potential */
-  /*    for repositioning *\/ */
-  /* if (r2 < max_dist_repos2) { */
-
-  /*   /\* Check the velocity criterion *\/ */
-  /*   if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) { */
-
-  /*     const float potential = bj->reposition.potential; */
-
-  /*     /\* Is the potential lower? *\/ */
-  /*     if (potential < bi->reposition.min_potential) { */
-
-  /*       /\* Store this as our new best *\/ */
-  /*       bi->reposition.min_potential = potential; */
-  /*       bi->reposition.delta_x[0] = -dx[0]; */
-  /*       bi->reposition.delta_x[1] = -dx[1]; */
-  /*       bi->reposition.delta_x[2] = -dx[2]; */
-  /*     } */
-  /*   } */
-  /* } */
-
   /* Find the most massive of the two BHs */
   float M = bi->subgrid_mass;
   float h = hi;
@@ -329,6 +260,66 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
             "BH %lld wants to swallow gas particle %lld BUT CANNOT (old "
             "swallow id=%lld)",
             bi->id, bj->id, bj->merger_data.swallow_id);
+      }
+    }
+  }
+}
+
+/**
+ * @brief Repositioning interaction between a BH particle and a gpart
+ *
+ * @param r2 Comoving square distance between the two particles.
+ * @param dx Comoving vector separating both particles (bi - gpj).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param bi First particle (black hole).
+ * @param gpj Second particle (#gpart of unknow type)
+ * @param cosmo The cosmological model.
+ * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ * @param ti_current Current integer time value (for random numbers).
+ */
+__attribute__((always_inline)) INLINE static void
+runner_iact_nonsym_bh_gpart_repos(const float r2, const float *dx,
+                                  const float hi, struct bpart *bi,
+                                  const struct gpart *gpj,
+                                  const struct cosmology *cosmo,
+                                  const struct gravity_props *grav_props,
+                                  const integertime_t ti_current) {
+
+  /* Compute relative peculiar velocity between the two particles
+   * Recall that in SWIFT v is (v_pec * a) */
+  const float delta_v[3] = {bi->v[0] - gpj->v_full[0],
+                            bi->v[1] - gpj->v_full[1],
+                            bi->v[2] - gpj->v_full[2]};
+  const float v2 = delta_v[0] * delta_v[0] + delta_v[1] * delta_v[1] +
+                   delta_v[2] * delta_v[2];
+
+  const float v2_pec = v2 * cosmo->a2_inv;
+
+  /* (Square of) Max repositioning distance allowed based on the softening */
+  const float max_dist_repos2 =
+      kernel_gravity_softening_plummer_equivalent_inv *
+      kernel_gravity_softening_plummer_equivalent_inv *
+      const_max_repositioning_distance_ratio *
+      const_max_repositioning_distance_ratio * grav_props->epsilon_baryon_cur *
+      grav_props->epsilon_baryon_cur;
+
+  /* This gas neighbour is close enough that we can consider it's potential
+     for repositioning */
+  if (r2 < max_dist_repos2) {
+
+    /* Check the velocity criterion */
+    if (v2_pec < 0.25f * bi->sound_speed_gas * bi->sound_speed_gas) {
+
+      const float potential = gpj->potential;
+
+      /* Is the potential lower? */
+      if (potential < bi->reposition.min_potential) {
+
+        /* Store this as our new best */
+        bi->reposition.min_potential = potential;
+        bi->reposition.delta_x[0] = -dx[0];
+        bi->reposition.delta_x[1] = -dx[1];
+        bi->reposition.delta_x[2] = -dx[2];
       }
     }
   }
