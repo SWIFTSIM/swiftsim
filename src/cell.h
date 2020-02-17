@@ -95,7 +95,7 @@ struct pcell {
   struct {
 
     /*! Maximal smoothing length. */
-    double h_max;
+    float h_max;
 
     /*! Minimal integer end-of-timestep in this cell for hydro tasks */
     integertime_t ti_end_min;
@@ -159,7 +159,7 @@ struct pcell {
     int count;
 
     /*! Maximal smoothing length. */
-    double h_max;
+    float h_max;
 
     /*! Minimal integer end-of-timestep in this cell for stars tasks */
     integertime_t ti_end_min;
@@ -179,7 +179,7 @@ struct pcell {
     int count;
 
     /*! Maximal smoothing length. */
-    double h_max;
+    float h_max;
 
     /*! Minimal integer end-of-timestep in this cell for black hole tasks */
     integertime_t ti_end_min;
@@ -387,7 +387,7 @@ struct cell {
     struct task *stars_resort;
 
     /*! Max smoothing length in this cell. */
-    double h_max;
+    float h_max;
 
     /*! Last (integer) time the cell's part were drifted forward in time. */
     integertime_t ti_old_part;
@@ -570,7 +570,7 @@ struct cell {
     struct task *stars_out;
 
     /*! Max smoothing length in this cell. */
-    double h_max;
+    float h_max;
 
     /*! Last (integer) time the cell's spart were drifted forward in time. */
     integertime_t ti_old_part;
@@ -679,7 +679,7 @@ struct cell {
     struct link *feedback;
 
     /*! Max smoothing length in this cell. */
-    double h_max;
+    float h_max;
 
     /*! Last (integer) time the cell's bpart were drifted forward in time. */
     integertime_t ti_old_part;
