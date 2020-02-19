@@ -176,7 +176,7 @@ struct siminfo {
 
 #ifdef HAVE_VELOCIRAPTOR_WITH_NOMASS
   /*! Mass of the DM particles */
-  double massuniformbox;
+  double mass_uniform_box;
 #endif
 };
 
@@ -535,7 +535,7 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
     sim_info.interparticlespacing = -1.;
   }
 
-#ifdef HAVE_VELOCIRAPTOR_WIH_NOMASS
+#ifdef HAVE_VELOCIRAPTOR_WITH_NOMASS
   /* Assume all particles have the same mass */
   double DM_mass = 0.;
   for (size_t i = 0; i < e->s->nr_gparts; ++i) {
