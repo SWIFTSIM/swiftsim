@@ -42,5 +42,20 @@ Also, we only need the CVODE library, so I have switched off building the variou
 
 Finally, you will need to set the ``-DCMAKE_INSTALL_PREFIX`` path to a directory where you have write access. This is where the libraries will be installed. 
 
-Once you have installed Sundials, make a note of the directory that it has been installed in, as you may need to pass this to the configure script when you build SWIFT (see the next section). You will also need to add ``/path/to/install/dir/lib`` (or possibly ``/path/to/install/dir/lib64``, depending on your system) to your `LD_LIBRARY_PATH` environment variable, both when you compile SWIFT and when you run it. 
+Once you have installed Sundials, make a note of the directory that it has been installed in, as you may need to pass this to the configure script when you build SWIFT (see the next section). You will also need to add ``/path/to/install/dir/lib`` (or possibly ``/path/to/install/dir/lib64``, depending on your system) to your ``LD_LIBRARY_PATH`` environment variable, both when you compile SWIFT and when you run it. The command to set this variable depends on which shell you are using (to determine which shell you are using, you can run ``echo $SHELL`` in your terminal). The commands for two commonly used shells are as follows: 
 
+For ``bash``, use: 
+
+.. code-block:: bash
+
+  export LD_LIBRARY_PATH=/path/to/install/dir/lib:$LD_LIBRARY_PATH 
+
+For ``tcsh``, use: 
+
+.. code-block:: tcsh
+
+  setenv LD_LIBRARY_PATH /path/to/install/dir/lib:$LD_LIBRARY_PATH 
+
+The above examples assume that ``LD_LIBRARY_PATH`` already exists, and prepends the Sundials path to it (which preserves any other paths that are already defined there). If it does not already exist, you will need to omit the ``:$LD_LIBRARY_PATH`` from the end of the command. 
+
+You can run this command every time you compile or run SWIFT. Or, for convenience, you can simply add this command to your ``~/.bashrc`` or ``~/.tcshrc`` file (for your given shell), which will then define ``LD_LIBRARY_PATH`` every time you open a terminal. 
