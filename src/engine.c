@@ -294,51 +294,52 @@ void engine_repartition_trigger(struct engine *e) {
         }
 
         /* Get CPU times used by the tasks in the last step. */
-        double elapsed_time[2] = {e->usertime_last_step,
-                                  e->systime_last_step};
+        double elapsed_time[2] = {e->usertime_last_step, e->systime_last_step};
 
         /* Gather the elapsed CPU times from all ranks for the last step. */
         double elapsed_times[e->nr_nodes * 2];
-        MPI_Gather(&elapsed_time, 2, MPI_DOUBLE, elapsed_times, 2,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gather(&elapsed_time, 2, MPI_DOUBLE, elapsed_times, 2, MPI_DOUBLE,
+                   0, MPI_COMM_WORLD);
         if (e->nodeID == 0) {
 
           /* Get the range and mean of cputimes. */
-          double mintime = elapsed_times[0];
-          double maxtime = elapsed_times[0];
+          double umintime = elapsed_times[0];
+          double umaxtime = elapsed_times[0];
 
           double smintime = elapsed_times[1];
           double smaxtime = elapsed_times[1];
 
-          double tmintime = mintime + smintime;
-          double tmaxtime = maxtime + smaxtime;
+          double tmintime = umintime + smintime;
+          double tmaxtime = umaxtime + smaxtime;
 
-          double sum = elapsed_times[0];
+          double usum = elapsed_times[0];
           double ssum = elapsed_times[1];
-          double tsum = sum + ssum;
+          double tsum = usum + ssum;
 
-          for (int k = 1; k < e->nr_nodes * 2; k += 2) {
-            if (elapsed_times[k] > maxtime) maxtime = elapsed_times[k];
-            if (elapsed_times[k] < mintime) mintime = elapsed_times[k];
+          for (int k = 2; k < e->nr_nodes * 2; k += 2) {
+            if (elapsed_times[k] > umaxtime) umaxtime = elapsed_times[k];
+            if (elapsed_times[k] < umintime) umintime = elapsed_times[k];
 
-            if (elapsed_times[k + 1] > smaxtime) smaxtime = elapsed_times[k + 1];
-            if (elapsed_times[k + 1] < smintime) smintime = elapsed_times[k + 1];
+            if (elapsed_times[k + 1] > smaxtime)
+              smaxtime = elapsed_times[k + 1];
+            if (elapsed_times[k + 1] < smintime)
+              smintime = elapsed_times[k + 1];
 
             double total = elapsed_times[k] + elapsed_times[k + 1];
             if (total > tmaxtime) tmaxtime = total;
             if (total < tmintime) tmintime = total;
 
-            sum += elapsed_times[k];
+            usum += elapsed_times[k];
             ssum += elapsed_times[k + 1];
             tsum += total;
           }
-          double mean = sum / (double)e->nr_nodes;
+          double umean = usum / (double)e->nr_nodes;
           double smean = ssum / (double)e->nr_nodes;
           double tmean = tsum / (double)e->nr_nodes;
 
           /* Are we out of balance? */
           double abs_trigger = fabs(e->reparttype->trigger);
-          double balance = (maxtime - mintime) / mean;
+          double balance = (umaxtime - umintime) / umean;
           if (balance > abs_trigger) {
             if (e->verbose)
               message("trigger fraction %.3f > %.3f will repartition", balance,
@@ -365,9 +366,12 @@ void engine_repartition_trigger(struct engine *e) {
                     elapsed_times[k], elapsed_times[k + 1],
                     elapsed_times[k] + elapsed_times[k + 1]);
           }
-          fprintf(logfile, "# balances: %f %f %f, means %f %f %f\n", balance,
-                  (smaxtime - smintime) / smean, (tmaxtime - tmintime) / tmean,
-                  mean, smean, tmean);
+          fprintf(logfile, "# %d mean times %f %f %f\n", e->step, umean, smean,
+                  tmean);
+          fprintf(logfile,
+                  "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
+                  e->step, balance, abs_trigger, (smaxtime - smintime) / smean,
+                  (tmaxtime - tmintime) / tmean);
 
           fclose(logfile);
         }
