@@ -293,49 +293,61 @@ void engine_repartition_trigger(struct engine *e) {
           e->reparttype->use_ticks = 1;
         }
 
-        /* Get CPU times used by the tasks in the last step. */
-        double elapsed_time[2] = {e->usertime_last_step, e->systime_last_step};
+        /* It is a good time to also get the resident size of the process. */
+        long size, resident, shared, text, library, data, dirty;
+        memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
 
-        /* Gather the elapsed CPU times from all ranks for the last step. */
-        double elapsed_times[e->nr_nodes * 2];
-        MPI_Gather(&elapsed_time, 2, MPI_DOUBLE, elapsed_times, 2, MPI_DOUBLE,
+        /* Gather it together with the CPU times used by the tasks in the last
+         * step. */
+        double timemem[3] = {e->usertime_last_step, e->systime_last_step,
+                             (double)resident};
+        double timemems[e->nr_nodes * 3];
+        MPI_Gather(&timemem, 3, MPI_DOUBLE, timemems, 3, MPI_DOUBLE,
                    0, MPI_COMM_WORLD);
         if (e->nodeID == 0) {
 
-          /* Get the range and mean of cputimes. */
-          double umintime = elapsed_times[0];
-          double umaxtime = elapsed_times[0];
+          /* Get the range and mean of the two CPU times and memory. */
+          double umintime = timemems[0];
+          double umaxtime = timemems[0];
 
-          double smintime = elapsed_times[1];
-          double smaxtime = elapsed_times[1];
+          double smintime = timemems[1];
+          double smaxtime = timemems[1];
+
+          double minmem = timemems[2];
+          double maxmem = timemems[2];
 
           double tmintime = umintime + smintime;
           double tmaxtime = umaxtime + smaxtime;
 
-          double usum = elapsed_times[0];
-          double ssum = elapsed_times[1];
+          double usum = timemems[0];
+          double ssum = timemems[1];
           double tsum = usum + ssum;
 
-          for (int k = 2; k < e->nr_nodes * 2; k += 2) {
-            if (elapsed_times[k] > umaxtime) umaxtime = elapsed_times[k];
-            if (elapsed_times[k] < umintime) umintime = elapsed_times[k];
+          double msum = timemems[2];
 
-            if (elapsed_times[k + 1] > smaxtime)
-              smaxtime = elapsed_times[k + 1];
-            if (elapsed_times[k + 1] < smintime)
-              smintime = elapsed_times[k + 1];
+          for (int k = 3; k < e->nr_nodes * 3; k += 3) {
+            if (timemems[k] > umaxtime) umaxtime = timemems[k];
+            if (timemems[k] < umintime) umintime = timemems[k];
 
-            double total = elapsed_times[k] + elapsed_times[k + 1];
+            if (timemems[k + 1] > smaxtime) smaxtime = timemems[k + 1];
+            if (timemems[k + 1] < smintime) smintime = timemems[k + 1];
+
+            double total = timemems[k] + timemems[k + 1];
             if (total > tmaxtime) tmaxtime = total;
             if (total < tmintime) tmintime = total;
 
-            usum += elapsed_times[k];
-            ssum += elapsed_times[k + 1];
+            usum += timemems[k];
+            ssum += timemems[k + 1];
             tsum += total;
+
+            if (timemems[k + 2] > maxmem) maxmem = timemems[k + 2];
+            if (timemems[k + 2] < minmem) minmem = timemems[k + 2];
+            msum += timemems[k + 2];
           }
           double umean = usum / (double)e->nr_nodes;
           double smean = ssum / (double)e->nr_nodes;
           double tmean = tsum / (double)e->nr_nodes;
+          double mmean = msum / (double)e->nr_nodes;
 
           /* Are we out of balance? */
           double abs_trigger = fabs(e->reparttype->trigger);
@@ -351,29 +363,44 @@ void engine_repartition_trigger(struct engine *e) {
                       balance, abs_trigger);
           }
 
-          /* Keep a log of all CPU times for debugging load issues. */
-          FILE *logfile = NULL;
+          /* Keep logs of all CPU times and resident memory size for debugging
+           * load issues. */
+          FILE *timelog = NULL;
+          FILE *memlog = NULL;
           if (!opened) {
-            logfile = fopen("cpu-loads.log", "w");
-            fprintf(logfile, "# step rank user sys sum\n");
+            timelog = fopen("rank_cpu_per_step.log", "w");
+            fprintf(timelog, "# step rank user sys sum\n");
+
+            memlog = fopen("rank_memory_use.log", "w");
+            fprintf(memlog, "# step rank resident\n");
+
             opened = 1;
           } else {
-            logfile = fopen("cpu-loads.log", "a");
+            timelog = fopen("rank_cpu_per_step.log", "a");
+            memlog = fopen("rank_memory_use.log", "a");
           }
 
-          for (int k = 0; k < e->nr_nodes * 2; k += 2) {
-            fprintf(logfile, "%d %d %f %f %f\n", e->step, k / 2,
-                    elapsed_times[k], elapsed_times[k + 1],
-                    elapsed_times[k] + elapsed_times[k + 1]);
+          for (int k = 0; k < e->nr_nodes * 3; k += 3) {
+
+            fprintf(timelog, "%d %d %f %f %f\n", e->step, k / 3,
+                    timemems[k], timemems[k + 1],
+                    timemems[k] + timemems[k + 1]);
+
+            fprintf(memlog, "%d %d %ld\n", e->step, k / 3, (long)timemems[k + 2]);
           }
-          fprintf(logfile, "# %d mean times %f %f %f\n", e->step, umean, smean,
+
+          fprintf(timelog, "# %d mean times: %f %f %f\n", e->step, umean, smean,
                   tmean);
-          fprintf(logfile,
+          fprintf(timelog,
                   "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
                   e->step, balance, abs_trigger, (smaxtime - smintime) / smean,
                   (tmaxtime - tmintime) / tmean);
 
-          fclose(logfile);
+          fclose(timelog);
+
+          fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n",
+                  e->step, mmean, (maxmem - minmem) / mmean);
+          fclose(memlog);
         }
       }
 
