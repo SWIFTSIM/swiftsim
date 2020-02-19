@@ -293,46 +293,43 @@ void engine_repartition_trigger(struct engine *e) {
           e->reparttype->use_ticks = 1;
         }
 
-        /* Get CPU time used since the last call to this function. */
-        double elapsed_cputime = e->cputime_last_step_launch;
-        double elapsed_sys_cputime = e->sys_cputime_last_step_launch;
+        /* Get CPU times used by the tasks in the last step. */
+        double elapsed_time[2] = {e->usertime_last_step,
+                                  e->systime_last_step};
 
         /* Gather the elapsed CPU times from all ranks for the last step. */
-        double elapsed_cputimes[e->nr_nodes];
-        MPI_Gather(&elapsed_cputime, 1, MPI_DOUBLE, elapsed_cputimes, 1,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        double elapsed_sys_cputimes[e->nr_nodes];
-        MPI_Gather(&elapsed_sys_cputime, 1, MPI_DOUBLE, elapsed_sys_cputimes, 1,
+        double elapsed_times[e->nr_nodes * 2];
+        MPI_Gather(&elapsed_time, 2, MPI_DOUBLE, elapsed_times, 2,
                    MPI_DOUBLE, 0, MPI_COMM_WORLD);
         if (e->nodeID == 0) {
 
           /* Get the range and mean of cputimes. */
-          double mintime = elapsed_cputimes[0];
-          double maxtime = elapsed_cputimes[0];
+          double mintime = elapsed_times[0];
+          double maxtime = elapsed_times[0];
 
-          double smintime = elapsed_sys_cputimes[0];
-          double smaxtime = elapsed_sys_cputimes[0];
+          double smintime = elapsed_times[1];
+          double smaxtime = elapsed_times[1];
 
           double tmintime = mintime + smintime;
           double tmaxtime = maxtime + smaxtime;
 
-          double sum = elapsed_cputimes[0];
-          double ssum = elapsed_sys_cputimes[0];
+          double sum = elapsed_times[0];
+          double ssum = elapsed_times[1];
           double tsum = sum + ssum;
 
-          for (int k = 1; k < e->nr_nodes; k++) {
-            if (elapsed_cputimes[k] > maxtime) maxtime = elapsed_cputimes[k];
-            if (elapsed_cputimes[k] < mintime) mintime = elapsed_cputimes[k];
+          for (int k = 1; k < e->nr_nodes * 2; k += 2) {
+            if (elapsed_times[k] > maxtime) maxtime = elapsed_times[k];
+            if (elapsed_times[k] < mintime) mintime = elapsed_times[k];
 
-            if (elapsed_sys_cputimes[k] > smaxtime) smaxtime = elapsed_sys_cputimes[k];
-            if (elapsed_sys_cputimes[k] < smintime) smintime = elapsed_sys_cputimes[k];
+            if (elapsed_times[k + 1] > smaxtime) smaxtime = elapsed_times[k + 1];
+            if (elapsed_times[k + 1] < smintime) smintime = elapsed_times[k + 1];
 
-            double total = elapsed_cputimes[k] + elapsed_sys_cputimes[k];
+            double total = elapsed_times[k] + elapsed_times[k + 1];
             if (total > tmaxtime) tmaxtime = total;
             if (total < tmintime) tmintime = total;
 
-            sum += elapsed_cputimes[k];
-            ssum += elapsed_sys_cputimes[k];
+            sum += elapsed_times[k];
+            ssum += elapsed_times[k + 1];
             tsum += total;
           }
           double mean = sum / (double)e->nr_nodes;
@@ -344,13 +341,13 @@ void engine_repartition_trigger(struct engine *e) {
           double balance = (maxtime - mintime) / mean;
           if (balance > abs_trigger) {
             if (e->verbose)
-              message("trigger fraction %.3f > %.3f will repartition",
-                      balance, abs_trigger);
+              message("trigger fraction %.3f > %.3f will repartition", balance,
+                      abs_trigger);
             e->forcerepart = 1;
           } else {
             if (e->verbose)
               message("trigger fraction %.3f =< %.3f will not repartition",
-                     balance, abs_trigger);
+                      balance, abs_trigger);
           }
 
           /* Keep a log of all CPU times for debugging load issues. */
@@ -363,14 +360,14 @@ void engine_repartition_trigger(struct engine *e) {
             logfile = fopen("cpu-loads.log", "a");
           }
 
-          for (int k = 0; k < e->nr_nodes; k++) {
-            fprintf(logfile, "%d %d %f %f %f\n", e->step, k, 
-                    elapsed_cputimes[k], elapsed_sys_cputimes[k],
-                    elapsed_cputimes[k] + elapsed_sys_cputimes[k]);
+          for (int k = 0; k < e->nr_nodes * 2; k += 2) {
+            fprintf(logfile, "%d %d %f %f %f\n", e->step, k / 2,
+                    elapsed_times[k], elapsed_times[k + 1],
+                    elapsed_times[k] + elapsed_times[k + 1]);
           }
-          fprintf(logfile, "# balances: %f %f %f, means %f %f %f\n",
-                  balance, (smaxtime - smintime) / smean,
-                  (tmaxtime - tmintime) / tmean, mean, smean, tmean);
+          fprintf(logfile, "# balances: %f %f %f, means %f %f %f\n", balance,
+                  (smaxtime - smintime) / smean, (tmaxtime - tmintime) / tmean,
+                  mean, smean, tmean);
 
           fclose(logfile);
         }
@@ -2387,13 +2384,12 @@ void engine_step(struct engine *e) {
     gravity_exact_force_compute(e->s, e);
 #endif
 
-  /* CPU timing used for estimating the balance.*/
+    /* Get current CPU times.*/
 #ifdef WITH_MPI
-  double cputime = 0.0;
-  double sys_cputime = 0.0;
+  double start_usertime = 0.0;
+  double start_systime = 0.0;
   if (e->reparttype->type != REPART_NONE) {
-    cputime = clocks_get_cputime_used();
-    sys_cputime = clocks_get_sys_cputime_used();
+    clocks_get_cputimes_used(&start_usertime, &start_systime);
   }
 #endif
 
@@ -2402,12 +2398,14 @@ void engine_step(struct engine *e) {
   engine_launch(e, "tasks");
   TIMER_TOC(timer_runners);
 
+  /* Now record the CPU times used by the tasks. */
 #ifdef WITH_MPI
-  /* And the actual CPU time used. XXX ignore these calls unless the trigger
-   * will be checked. Could move into engine_launch() and always call? XXX */
   if (e->reparttype->type != REPART_NONE) {
-    e->cputime_last_step_launch = clocks_get_cputime_used() - cputime;
-    e->sys_cputime_last_step_launch = clocks_get_sys_cputime_used() - sys_cputime;
+    double end_usertime = 0.0;
+    double end_systime = 0.0;
+    clocks_get_cputimes_used(&end_usertime, &end_systime);
+    e->usertime_last_step = end_usertime - start_usertime;
+    e->systime_last_step = end_systime - start_systime;
   }
 #endif
 
@@ -3638,8 +3636,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->parameter_file = params;
   e->stf_this_timestep = 0;
 #ifdef WITH_MPI
-  e->cputime_last_step_launch = 0;
-  e->sys_cputime_last_step_launch = 0;
+  e->usertime_last_step = 0.0;
+  e->systime_last_step = 0.0;
   e->last_repartition = 0;
 #endif
   e->total_nr_cells = 0;

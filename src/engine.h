@@ -360,9 +360,9 @@ struct engine {
   ticks tic_step, toc_step;
 
 #ifdef WITH_MPI
-  /* CPU time of last engine launch in last engine step. */
-  double cputime_last_step_launch;
-  double sys_cputime_last_step_launch;
+  /* CPU times that the tasks used in the last step. */
+  double usertime_last_step;
+  double systime_last_step;
 
   /* Step of last repartition. */
   int last_repartition;
