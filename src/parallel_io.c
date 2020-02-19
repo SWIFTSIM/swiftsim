@@ -45,6 +45,7 @@
 #include "engine.h"
 #include "entropy_floor.h"
 #include "error.h"
+#include "feedback.h"
 #include "fof_io.h"
 #include "gravity_io.h"
 #include "gravity_properties.h"
@@ -342,6 +343,8 @@ void readArray(hid_t grp, struct io_props props, size_t N, long long N_total,
       props.parts += max_chunk_size;                  /* part* on the part */
       props.xparts += max_chunk_size;                 /* xpart* on the xpart */
       props.gparts += max_chunk_size;                 /* gpart* on the gpart */
+      props.sparts += max_chunk_size;                 /* spart* on the spart */
+      props.bparts += max_chunk_size;                 /* bpart* on the bpart */
       offset += max_chunk_size;
       redo = 1;
     } else {
@@ -646,6 +649,8 @@ void writeArray(struct engine* e, hid_t grp, char* fileName,
       props.parts += max_chunk_size;                  /* part* on the part */
       props.xparts += max_chunk_size;                 /* xpart* on the xpart */
       props.gparts += max_chunk_size;                 /* gpart* on the gpart */
+      props.sparts += max_chunk_size;                 /* spart* on the spart */
+      props.bparts += max_chunk_size;                 /* bpart* on the bpart */
       offset += max_chunk_size;
       redo = 1;
     } else {
@@ -1166,6 +1171,7 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
   cooling_write_flavour(h_grp, e->cooling_func);
   chemistry_write_flavour(h_grp);
   tracers_write_flavour(h_grp);
+  feedback_write_flavour(e->feedback_props, h_grp);
   H5Gclose(h_grp);
 
   /* Print the gravity parameters */
@@ -1419,13 +1425,13 @@ void write_output_parallel(struct engine* e, const char* baseName,
                                 Nstars_written, Nblackholes_written};
   long long N_total[swift_type_count] = {0};
   long long offset[swift_type_count] = {0};
-  MPI_Exscan(&N, &offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
+  MPI_Exscan(N, offset, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
   for (int ptype = 0; ptype < swift_type_count; ++ptype)
     N_total[ptype] = offset[ptype] + N[ptype];
 
   /* The last rank now has the correct N_total. Let's
    * broadcast from there */
-  MPI_Bcast(&N_total, 6, MPI_LONG_LONG_INT, mpi_size - 1, comm);
+  MPI_Bcast(N_total, 6, MPI_LONG_LONG_INT, mpi_size - 1, comm);
 
   /* Now everybody konws its offset and the total number of
    * particles of each type */
@@ -1477,9 +1483,9 @@ void write_output_parallel(struct engine* e, const char* baseName,
   }
 
   /* Write the location of the particles in the arrays */
-  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->cells_top,
-                        e->s->nr_cells, e->s->width, mpi_rank, N_total, offset,
-                        internal_units, snapshot_units);
+  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->dim, e->s->pos_dithering,
+                        e->s->cells_top, e->s->nr_cells, e->s->width, mpi_rank,
+                        N_total, offset, internal_units, snapshot_units);
 
   /* Close everything */
   if (mpi_rank == 0) {

@@ -407,6 +407,18 @@ if test "$enable_memuse_reports" = "yes"; then
    AC_DEFINE([SWIFT_MEMUSE_REPORTS],1,[Enable memory usage reports])
 fi
 
+# Check if we want to make the dumper thread active.
+AC_ARG_ENABLE([dumper],
+   [AS_HELP_STRING([--enable-dumper],
+     [Dump active tasks and memory use (if configured)@<:@yes/no@:>@]
+   )],
+   [enable_dumper="$enableval"],
+   [enable_dumper="no"]
+)
+if test "$enable_dumper" = "yes"; then
+   AC_DEFINE([SWIFT_DUMPER_THREAD],1,[Enable dumper thread])
+fi
+
 # See if we want mpi reporting.
 AC_ARG_ENABLE([mpiuse-reports],
    [AS_HELP_STRING([--enable-mpiuse-reports],
@@ -720,7 +732,8 @@ if test "x$with_parmetis" != "xno"; then
          PARMETIS_LIBS="-lparmetis -lmetis"
          PARMETIS_INCS=""
       fi
-      AC_CHECK_LIB([parmetis],[ParMETIS_V3_RefineKway], [have_parmetis="yes"],
+      # Note use different function to avoid caching of first check.
+      AC_CHECK_LIB([parmetis],[ParMETIS_V3_PartKway], [have_parmetis="yes"],
                    [have_parmetis="no"], [$METIS_LIBS $PARMETIS_LIBS])
 
    fi
@@ -1051,6 +1064,16 @@ if test "x$with_tbbmalloc" != "xno"; then
 fi
 AC_SUBST([TBBMALLOC_LIBS])
 AM_CONDITIONAL([HAVETBBMALLOC],[test -n "$TBBMALLOC_LIBS"])
+
+# check for a random seed
+AC_ARG_WITH([random-seed],
+    [AS_HELP_STRING([--with-random-seed=SHORT INT],
+       [Set the random seed.]
+    )],
+    [with_random_seed="$withval"],
+    [with_random_seed="0"]
+)
+AC_DEFINE_UNQUOTED([SWIFT_RANDOM_SEED_XOR], [$with_random_seed],[Value of the random seed.])
 
 # Check for python.
 have_python="no"
@@ -1428,13 +1451,14 @@ case "$with_subgrid" in
    ;;
    GEAR)
 	with_subgrid_cooling=grackle_0
-	with_subgrid_chemistry=GEAR
+	with_subgrid_chemistry=GEAR_10
 	with_subgrid_pressure_floor=GEAR
 	with_subgrid_stars=GEAR
 	with_subgrid_star_formation=GEAR
-	with_subgrid_feedback=none
+	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=GEAR
+  # GEAR's order is not used anymore
+	with_subgrid_task_order=none
 	enable_fof=no
    ;;
    EAGLE)
@@ -1545,8 +1569,11 @@ case "$with_hydro" in
    planetary)
       AC_DEFINE([PLANETARY_SPH], [1], [Planetary SPH])
    ;;
+   sphenix)
+      AC_DEFINE([SPHENIX_SPH], [1], [SPHENIX SPH])
+   ;;
    anarchy-du)
-      AC_DEFINE([ANARCHY_DU_SPH], [1], [ANARCHY (DU) SPH])
+      AC_DEFINE([SPHENIX_SPH], [1], [SPHENIX SPH])
    ;;
    anarchy-pu)
       AC_DEFINE([ANARCHY_PU_SPH], [1], [ANARCHY (PU) SPH])
@@ -1777,7 +1804,8 @@ esac
 #  chemistry function
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
-      [chemistry function @<:@none, GEAR, EAGLE default: none@:>@]
+      [chemistry function @<:@none, GEAR_*, EAGLE default: none@:>@
+      For GEAR, you need to provide the number of elements (e.g. GEAR_10)]
    )],
    [with_chemistry="$withval"],
    [with_chemistry="none"]
@@ -1795,8 +1823,10 @@ case "$with_chemistry" in
    none)
       AC_DEFINE([CHEMISTRY_NONE], [1], [No chemistry function])
    ;;
-   GEAR)
+   GEAR_*)
       AC_DEFINE([CHEMISTRY_GEAR], [1], [Chemistry taken from the GEAR model])
+      number_element=${with_chemistry:5}
+      AC_DEFINE_UNQUOTED([GEAR_CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow])
    ;;
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
@@ -1881,7 +1911,7 @@ esac
 # Feedback model
 AC_ARG_WITH([feedback],
    [AS_HELP_STRING([--with-feedback=<model>],
-      [Feedback model to use @<:@none, EAGLE, debug default: none@:>@]
+      [Feedback model to use @<:@none, EAGLE, GEAR default: none@:>@]
    )],
    [with_feedback="$withval"],
    [with_feedback="none"]
@@ -1899,6 +1929,9 @@ case "$with_feedback" in
    EAGLE)
       AC_DEFINE([FEEDBACK_EAGLE], [1], [EAGLE stellar feedback and evolution model])
    ;;
+   GEAR)
+      AC_DEFINE([FEEDBACK_GEAR], [1], [GEAR stellar feedback and evolution model])
+   ;;
    none)
       AC_DEFINE([FEEDBACK_NONE], [1], [No feedback])
    ;;
@@ -1911,7 +1944,7 @@ esac
 # Black hole model.
 AC_ARG_WITH([black-holes],
    [AS_HELP_STRING([--with-black-holes=<model>],
-      [Black holes model to use @<:@none, default: none@:>@]
+      [Black holes model to use @<:@none, EAGLE default: none@:>@]
    )],
    [with_black_holes="$withval"],
    [with_black_holes="none"]
@@ -1940,14 +1973,14 @@ esac
 # Task order
 AC_ARG_WITH([task-order],
 [AS_HELP_STRING([--with-task-order=<model>],
-[Task order to use @<:@none, EAGLE, GEAR default: none@:>@]
+[Task order to use @<:@default, EAGLE, GEAR default: default@:>@]
 )],
 [with_task_order="$withval"],
-[with_task_order="none"]
+[with_task_order="default"]
 )
 
 if test "$with_subgrid" != "none"; then
-if test "$with_task_order" != "none"; then
+if test "$with_task_order" != "default"; then
 AC_MSG_ERROR([Cannot provide with-subgrid and with-task-order together])
 else
 with_task_order="$with_subgrid_task_order"
@@ -1958,8 +1991,8 @@ case "$with_task_order" in
 EAGLE)
 AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
 ;;
-none)
-AC_DEFINE([TASK_ORDER_NONE], [1], [Default task order])
+default)
+AC_DEFINE([TASK_ORDER_NONE], [1], [Default (i.e. EAGLE/OWLS) task order])
 ;;
 GEAR)
 AC_DEFINE([TASK_ORDER_GEAR], [1], [GEAR task order])
@@ -2124,6 +2157,12 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
+
+# check if using grackle cooling
+AM_CONDITIONAL([HAVEGRACKLECOOLING], [test ${with_cooling:0:7} == "grackle"])
+
+# check if using gear feedback
+AM_CONDITIONAL([HAVEGEARFEEDBACK], [test $with_feedback == "GEAR"])
 
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile doc/Makefile doc/Doxyfile tests/Makefile])

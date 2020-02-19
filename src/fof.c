@@ -245,12 +245,42 @@ void fof_set_initial_group_id_mapper(void *map_data, int num_elements,
 void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
                   struct fof_props *props) {
 
+  const int verbose = s->e->verbose;
+  const ticks total_tic = getticks();
+
+  /* Start by computing the mean inter DM particle separation */
+
+  /* Collect the mass of the first non-background gpart */
+  double high_res_DM_mass = 0.;
+  for (size_t i = 0; i < s->nr_gparts; ++i) {
+    const struct gpart *gp = &s->gparts[i];
+    if (gp->type == swift_type_dark_matter &&
+        gp->time_bin != time_bin_inhibited &&
+        gp->time_bin != time_bin_not_created) {
+      high_res_DM_mass = gp->mass;
+      break;
+    }
+  }
+
+  /* Calculate the mean inter-particle separation as if we were in
+     a scenario where the entire box was filled with high-resolution
+       particles */
+  const double Omega_m = s->e->cosmology->Omega_m;
+  const double Omega_b = s->e->cosmology->Omega_b;
+  const double critical_density_0 = s->e->cosmology->critical_density_0;
+  double mean_matter_density;
+  if (s->with_hydro)
+    mean_matter_density = (Omega_m - Omega_b) * critical_density_0;
+  else
+    mean_matter_density = Omega_m * critical_density_0;
+
+  /* Mean inter-particle separation of the DM particles */
+  const double mean_inter_particle_sep =
+      cbrt(high_res_DM_mass / mean_matter_density);
+
   /* Calculate the particle linking length based upon the mean inter-particle
    * spacing of the DM particles. */
-  const double mean_inter_particle_sep =
-      s->dim[0] / cbrt((double)total_nr_DM_particles);
   const double l_x = props->l_x_ratio * mean_inter_particle_sep;
-  int verbose = s->e->verbose;
 
   /* Are we using the aboslute value or the one derived from the mean
      inter-particle sepration? */
@@ -294,8 +324,8 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
 
   /* Set initial group index */
   threadpool_map(&s->e->threadpool, fof_set_initial_group_index_mapper,
-                 props->group_index, s->nr_gparts, sizeof(size_t), 0,
-                 props->group_index);
+                 props->group_index, s->nr_gparts, sizeof(size_t),
+                 threadpool_auto_chunk_size, props->group_index);
 
   if (verbose)
     message("Setting initial group index took: %.3f %s.",
@@ -305,7 +335,8 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
 
   /* Set initial group sizes */
   threadpool_map(&s->e->threadpool, fof_set_initial_group_size_mapper,
-                 props->group_size, s->nr_gparts, sizeof(size_t), 0, NULL);
+                 props->group_size, s->nr_gparts, sizeof(size_t),
+                 threadpool_auto_chunk_size, NULL);
 
   if (verbose)
     message("Setting initial group sizes took: %.3f %s.",
@@ -314,6 +345,10 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
 #ifdef SWIFT_DEBUG_CHECKS
   ti_current = s->e->ti_current;
 #endif
+
+  if (verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - total_tic),
+            clocks_getunit());
 }
 
 /**
@@ -1725,7 +1760,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
 
   /* Increment the group mass for groups above min_group_size. */
   threadpool_map(&s->e->threadpool, fof_calc_group_mass_mapper, gparts,
-                 nr_gparts, sizeof(struct gpart), 0, (struct space *)s);
+                 nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
+                 (struct space *)s);
 
   /* Loop over particles and find the densest particle in each group. */
   /* JSW TODO: Parallelise with threadpool*/
@@ -2244,7 +2280,8 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
   data.nr_gparts = nr_gparts;
   data.space_gparts = s->gparts;
   threadpool_map(&e->threadpool, fof_set_outgoing_root_mapper, local_cells,
-                 num_cells_out, sizeof(struct cell **), 0, &data);
+                 num_cells_out, sizeof(struct cell **),
+                 threadpool_auto_chunk_size, &data);
 
   if (verbose)
     message(
@@ -2274,7 +2311,7 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
   tic = getticks();
 
   /* Perform send and receive tasks. */
-  engine_launch(e);
+  engine_launch(e, "fof comms");
 
   if (verbose)
     message("MPI send/recv comms took: %.3f %s.",
@@ -2602,7 +2639,8 @@ void fof_search_tree(struct fof_props *props,
   ticks tic_calc_group_size = getticks();
 
   threadpool_map(&s->e->threadpool, fof_calc_group_size_mapper, gparts,
-                 nr_gparts, sizeof(struct gpart), 0, s);
+                 nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
+                 s);
   if (verbose)
     message("FOF calc group size took (FOF SCALING): %.3f %s.",
             clocks_from_ticks(getticks() - tic_calc_group_size),
@@ -2744,7 +2782,7 @@ void fof_search_tree(struct fof_props *props,
 
   /* Set default group ID for all particles */
   threadpool_map(&s->e->threadpool, fof_set_initial_group_id_mapper, s->gparts,
-                 s->nr_gparts, sizeof(struct gpart), 0,
+                 s->nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
                  (void *)&group_id_default);
 
   if (verbose)
@@ -2945,8 +2983,8 @@ void fof_search_tree(struct fof_props *props,
     message("Largest group by size: %d", max_group_size);
   }
   if (verbose)
-    message("FOF search took: %.3f %s.",
-            clocks_from_ticks(getticks() - tic_total), clocks_getunit());
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic_total),
+            clocks_getunit());
 
 #ifdef WITH_MPI
   MPI_Barrier(MPI_COMM_WORLD);

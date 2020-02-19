@@ -171,12 +171,13 @@ INLINE static void starformation_print_backend(
  * Nothing to do here.
  *
  * @param p The particle to act upon
+ * @param xp The extra particle to act upon
  * @param cd The global star_formation information.
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, const struct star_formation* cd,
-    const struct cosmology* cosmo) {}
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct star_formation* cd, const struct cosmology* cosmo) {}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -226,5 +227,15 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
                                const struct star_formation* data,
                                const struct part* restrict p,
                                struct xpart* restrict xp) {}
+
+/**
+ * @brief Split the star formation content of a particle into n pieces
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param n The number of pieces to split into.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_split_part(
+    struct part* p, struct xpart* xp, const double n) {}
 
 #endif /* SWIFT_NONE_STAR_FORMATION_H */

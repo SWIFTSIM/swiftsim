@@ -44,6 +44,7 @@
 #include "engine.h"
 #include "entropy_floor.h"
 #include "error.h"
+#include "feedback.h"
 #include "fof_io.h"
 #include "gravity_io.h"
 #include "gravity_properties.h"
@@ -880,6 +881,7 @@ void write_output_single(struct engine* e, const char* baseName,
   cooling_write_flavour(h_grp, e->cooling_func);
   chemistry_write_flavour(h_grp);
   tracers_write_flavour(h_grp);
+  feedback_write_flavour(e->feedback_props, h_grp);
   H5Gclose(h_grp);
 
   /* Print the gravity parameters */
@@ -937,9 +939,10 @@ void write_output_single(struct engine* e, const char* baseName,
   if (h_grp < 0) error("Error while creating cells group");
 
   /* Write the location of the particles in the arrays */
-  io_write_cell_offsets(h_grp, e->s->cdim, e->s->cells_top, e->s->nr_cells,
-                        e->s->width, e->nodeID, N_total, global_offsets,
-                        internal_units, snapshot_units);
+  io_write_cell_offsets(h_grp, e->s->cdim, e->s->dim, e->s->pos_dithering,
+                        e->s->cells_top, e->s->nr_cells, e->s->width, e->nodeID,
+                        N_total, global_offsets, internal_units,
+                        snapshot_units);
   H5Gclose(h_grp);
 
   /* Tell the user if a conversion will be needed */

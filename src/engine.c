@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 /* MPI headers. */
@@ -51,7 +53,7 @@
 /* Local headers. */
 #include "active.h"
 #include "atomic.h"
-#include "black_holes.h"
+#include "black_holes_properties.h"
 #include "cell.h"
 #include "chemistry.h"
 #include "clocks.h"
@@ -63,6 +65,7 @@
 #include "equation_of_state.h"
 #include "error.h"
 #include "feedback.h"
+#include "fof.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -71,6 +74,7 @@
 #include "map.h"
 #include "memuse.h"
 #include "minmax.h"
+#include "mpiuse.h"
 #include "outputlist.h"
 #include "parallel_io.h"
 #include "part.h"
@@ -208,8 +212,9 @@ void engine_repartition(struct engine *e) {
   /* Task arrays. */
   scheduler_free_tasks(&e->sched);
 
-  /* Foreign parts. */
-  space_free_foreign_parts(e->s);
+  /* Foreign parts. (no need to nullify the cell pointers as the cells
+   * will be regenerated) */
+  space_free_foreign_parts(e->s, /*clear_cell_pointers=*/0);
 
   /* Now comes the tricky part: Exchange particles between all nodes.
      This is done in two steps, first allreducing a matrix of
@@ -1324,7 +1329,7 @@ void engine_print_task_counts(const struct engine *e) {
   for (int k = 0; k <= task_type_count; k++) counts[k] = 0;
   threadpool_map((struct threadpool *)&e->threadpool,
                  engine_do_tasks_count_mapper, (void *)tasks, nr_tasks,
-                 sizeof(struct task), 0, counts);
+                 sizeof(struct task), threadpool_auto_chunk_size, counts);
 
 #ifdef WITH_MPI
   printf("[%04i] %s engine_print_task_counts: task counts are [ %s=%i",
@@ -1671,6 +1676,17 @@ void engine_prepare(struct engine *e) {
     engine_fof(e, /*dump_results=*/0, /*seed_black_holes=*/1);
   }
 
+  /* Perform particle splitting. Only if there is a rebuild coming and no
+     repartitioning. */
+  if (e->forcerebuild && !e->forcerepart && e->step > 1) {
+
+    /* Let's start by drifting everybody to the current time */
+    if (!drifted_all) engine_drift_all(e, /*drift_mpole=*/0);
+    drifted_all = 1;
+
+    engine_split_gas_particles(e);
+  }
+
   /* Do we need repartitioning ? */
   if (e->forcerepart) {
 
@@ -1886,8 +1902,9 @@ void engine_skip_drift(struct engine *e) {
  * @brief Launch the runners.
  *
  * @param e The #engine.
+ * @param call What kind of tasks are we running? (For time analysis)
  */
-void engine_launch(struct engine *e) {
+void engine_launch(struct engine *e, const char *call) {
   const ticks tic = getticks();
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1914,7 +1931,7 @@ void engine_launch(struct engine *e) {
   swift_barrier_wait(&e->wait_barrier);
 
   if (e->verbose)
-    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+    message("(%s) took %.3f %s.", call, clocks_from_ticks(getticks() - tic),
             clocks_getunit());
 }
 
@@ -1996,12 +2013,13 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
                        &e->logger->timestamp_offset);
   /* Make sure that we have enough space in the particle logger file
    * to store the particles in current time step. */
-  logger_ensure_size(e->logger, e->total_nr_parts, e->total_nr_gparts, 0);
+  logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
+  logger_write_description(e->logger, e);
 #endif
 
   /* Now, launch the calculation */
   TIMER_TIC;
-  engine_launch(e);
+  engine_launch(e, "tasks");
   TIMER_TOC(timer_runners);
 
   /* Apply some conversions (e.g. internal energy -> entropy) */
@@ -2015,7 +2033,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     if (hydro_need_extra_init_loop) {
       engine_marktasks(e);
       engine_skip_force_and_kick(e);
-      engine_launch(e);
+      engine_launch(e, "tasks");
     }
   }
 
@@ -2063,8 +2081,18 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
   /* Run the 0th time-step */
   TIMER_TIC2;
-  engine_launch(e);
+  engine_launch(e, "tasks");
   TIMER_TOC2(timer_runners);
+
+  /* Since the time-steps may have changed because of the limiter's
+   * action, we need to communicate the new time-step sizes */
+  if ((e->policy & engine_policy_timestep_sync) ||
+      (e->policy & engine_policy_timestep_limiter)) {
+#ifdef WITH_MPI
+    engine_unskip_timestep_communications(e);
+    engine_launch(e, "timesteps");
+#endif
+  }
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
@@ -2308,7 +2336,8 @@ void engine_step(struct engine *e) {
                        &e->logger->timestamp_offset);
   /* Make sure that we have enough space in the particle logger file
    * to store the particles in current time step. */
-  logger_ensure_size(e->logger, e->total_nr_parts, e->total_nr_gparts, 0);
+  logger_ensure_size(e->logger, e->s->nr_parts, e->s->nr_gparts,
+                     e->s->nr_sparts);
 #endif
 
   /* Are we drifting everything (a la Gadget/GIZMO) ? */
@@ -2370,7 +2399,7 @@ void engine_step(struct engine *e) {
 
   /* Start all the tasks. */
   TIMER_TIC;
-  engine_launch(e);
+  engine_launch(e, "tasks");
   TIMER_TOC(timer_runners);
 
 #ifdef WITH_MPI
@@ -2381,6 +2410,16 @@ void engine_step(struct engine *e) {
     e->sys_cputime_last_step_launch = clocks_get_sys_cputime_used() - sys_cputime;
   }
 #endif
+
+  /* Since the time-steps may have changed because of the limiter's
+   * action, we need to communicate the new time-step sizes */
+  if ((e->policy & engine_policy_timestep_sync) ||
+      (e->policy & engine_policy_timestep_limiter)) {
+#ifdef WITH_MPI
+    engine_unskip_timestep_communications(e);
+    engine_launch(e, "timesteps");
+#endif
+  }
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
@@ -2404,6 +2443,9 @@ void engine_step(struct engine *e) {
   e->b_updates_since_rebuild += e->collect_group1.b_updated;
 
 #ifdef SWIFT_DEBUG_CHECKS
+  /* Verify that all cells have correct time-step information */
+  space_check_timesteps(e->s);
+
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
 #endif
@@ -2416,6 +2458,9 @@ void engine_step(struct engine *e) {
   engine_dump_restarts(e, 0, e->restart_onexit && engine_is_done(e));
 
   engine_check_for_dumps(e);
+#ifdef WITH_LOGGER
+  engine_check_for_index_dump(e);
+#endif
 
   TIMER_TOC2(timer_step);
 
@@ -2445,7 +2490,7 @@ void engine_check_for_dumps(struct engine *e) {
     output_none,
     output_snapshot,
     output_statistics,
-    output_stf
+    output_stf,
   };
 
   /* What kind of output do we want? And at which time ?
@@ -2503,6 +2548,7 @@ void engine_check_for_dumps(struct engine *e) {
 
     /* Write some form of output */
     switch (type) {
+
       case output_snapshot:
 
         /* Do we want a corresponding VELOCIraptor output? */
@@ -2518,13 +2564,8 @@ void engine_check_for_dumps(struct engine *e) {
 #endif
         }
 
-          /* Dump... */
-#ifdef WITH_LOGGER
-        /* Write a file containing the offsets in the particle logger. */
-        engine_dump_index(e);
-#else
+        /* Dump... */
         engine_dump_snapshot(e);
-#endif
 
         /* Free the memory allocated for VELOCIraptor i/o. */
         if (with_stf && e->snapshot_invoke_stf && e->s->gpart_group_data) {
@@ -2613,6 +2654,38 @@ void engine_check_for_dumps(struct engine *e) {
 }
 
 /**
+ * @brief Check whether an index file has to be written during this
+ * step.
+ *
+ * @param e The #engine.
+ */
+void engine_check_for_index_dump(struct engine *e) {
+#ifdef WITH_LOGGER
+  /* Get a few variables */
+  struct logger_writer *log = e->logger;
+  const size_t dump_size = log->dump.count;
+  const size_t old_dump_size = log->index.dump_size_last_output;
+  const float mem_frac = log->index.mem_frac;
+  const size_t total_nr_parts =
+      (e->total_nr_parts + e->total_nr_gparts + e->total_nr_sparts +
+       e->total_nr_bparts + e->total_nr_DM_background_gparts);
+  const size_t index_file_size =
+      total_nr_parts * sizeof(struct logger_part_data);
+
+  /* Check if we should write a file */
+  if (mem_frac * (dump_size - old_dump_size) > index_file_size) {
+    /* Write an index file */
+    engine_dump_index(e);
+
+    /* Update the dump size for last output */
+    log->index.dump_size_last_output = dump_size;
+  }
+#else
+  error("This function should not be called without the logger.");
+#endif
+}
+
+/**
  * @brief dump restart files if it is time to do so and dumps are enabled.
  *
  * @param e the engine.
@@ -2643,6 +2716,13 @@ void engine_dump_restarts(struct engine *e, int drifted_all, int force) {
       /* Drift all particles first (may have just been done). */
       if (!drifted_all) engine_drift_all(e, /*drift_mpole=*/1);
       restart_write(e, e->restart_file);
+
+#ifdef WITH_MPI
+      /* Make sure all ranks finished writing to avoid having incomplete
+       * sets of restart files should the code crash before all the ranks
+       * are done */
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
       if (e->verbose)
         message("Dumping restart files took %.3f %s",
@@ -2701,7 +2781,8 @@ void engine_reconstruct_multipoles(struct engine *e) {
 #endif
 
   threadpool_map(&e->threadpool, engine_do_reconstruct_multipoles_mapper,
-                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 0, e);
+                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell),
+                 threadpool_auto_chunk_size, e);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -3091,17 +3172,10 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   swift_free("gparts", s->gparts);
   s->gparts = gparts_new;
 
-  /* Re-link the parts. */
-  if (s->nr_parts > 0 && s->nr_gparts > 0)
-    part_relink_parts_to_gparts(s->gparts, s->nr_gparts, s->parts);
-
-  /* Re-link the sparts. */
-  if (s->nr_sparts > 0 && s->nr_gparts > 0)
-    part_relink_sparts_to_gparts(s->gparts, s->nr_gparts, s->sparts);
-
-  /* Re-link the bparts. */
-  if (s->nr_bparts > 0 && s->nr_gparts > 0)
-    part_relink_bparts_to_gparts(s->gparts, s->nr_gparts, s->bparts);
+  /* Re-link everything to the gparts. */
+  if (s->nr_gparts > 0)
+    part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts,
+                                    s->sparts, s->bparts, &e->threadpool);
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -3159,7 +3233,7 @@ void engine_collect_stars_counter(struct engine *e) {
 
   /* Reset counters */
   for (size_t i = 0; i < e->s->nr_sparts_foreign; i++) {
-    e->s->sparts_foreign[i].num_ngb_force = 0;
+    e->s->sparts_foreign[i].num_ngb_feedback = 0;
   }
 
   /* Update counters */
@@ -3179,7 +3253,7 @@ void engine_collect_stars_counter(struct engine *e) {
               id_j, j, displs[engine_rank], n_sparts_int[engine_rank]);
         }
 
-        local_sparts[i].num_ngb_force += sparts[j].num_ngb_force;
+        local_sparts[i].num_ngb_feedback += sparts[j].num_ngb_feedback;
       }
     }
   }
@@ -3232,21 +3306,41 @@ void engine_dump_snapshot(struct engine *e) {
   engine_collect_stars_counter(e);
 #endif
 
+  /* Determine snapshot location */
+  char snapshotBase[FILENAME_BUFFER_SIZE];
+  if (strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
+    if (snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s/%s",
+                 e->snapshot_subdir,
+                 e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
+      error(
+          "FILENAME_BUFFER_SIZE is too small for snapshot path and file name");
+    }
+      /* Try to ensure the directory exists */
+#ifdef WITH_MPI
+    if (engine_rank == 0) mkdir(e->snapshot_subdir, 0777);
+    MPI_Barrier(MPI_COMM_WORLD);
+#else
+    mkdir(e->snapshot_subdir, 0777);
+#endif
+  } else {
+    if (snprintf(snapshotBase, FILENAME_BUFFER_SIZE, "%s",
+                 e->snapshot_base_name) >= FILENAME_BUFFER_SIZE) {
+      error("FILENAME_BUFFER_SIZE is too small for snapshot file name");
+    }
+  }
+
 /* Dump... */
 #if defined(HAVE_HDF5)
 #if defined(WITH_MPI)
 #if defined(HAVE_PARALLEL_HDF5)
-  write_output_parallel(e, e->snapshot_base_name, e->internal_units,
-                        e->snapshot_units, e->nodeID, e->nr_nodes,
-                        MPI_COMM_WORLD, MPI_INFO_NULL);
+  write_output_parallel(e, snapshotBase, e->internal_units, e->snapshot_units,
+                        e->nodeID, e->nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL);
 #else
-  write_output_serial(e, e->snapshot_base_name, e->internal_units,
-                      e->snapshot_units, e->nodeID, e->nr_nodes, MPI_COMM_WORLD,
-                      MPI_INFO_NULL);
+  write_output_serial(e, snapshotBase, e->internal_units, e->snapshot_units,
+                      e->nodeID, e->nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL);
 #endif
 #else
-  write_output_single(e, e->snapshot_base_name, e->internal_units,
-                      e->snapshot_units);
+  write_output_single(e, snapshotBase, e->internal_units, e->snapshot_units);
 #endif
 #endif
 
@@ -3280,8 +3374,7 @@ void engine_dump_index(struct engine *e) {
   }
 
   /* Dump... */
-  write_index_single(e, e->logger->base_name, e->internal_units,
-                     e->snapshot_units);
+  logger_write_index_file(e->logger, e);
 
   /* Flag that we dumped a snapshot */
   e->step_props |= engine_step_prop_logger_index;
@@ -3350,6 +3443,72 @@ void engine_unpin(void) {
 #endif
 }
 
+#ifdef SWIFT_DUMPER_THREAD
+/**
+ * @brief dumper thread action, checks got the existence of the .dump file
+ * every 5 seconds and does the dump if found.
+ *
+ * @param p the #engine
+ */
+static void *engine_dumper_poll(void *p) {
+  struct engine *e = (struct engine *)p;
+  while (1) {
+    if (access(".dump", F_OK) == 0) {
+
+      /* OK, do our work. */
+      message("Dumping engine tasks in step: %d", e->step);
+      task_dump_active(e);
+
+#ifdef SWIFT_MEMUSE_REPORTS
+      /* Dump the currently logged memory. */
+      message("Dumping memory use report");
+      memuse_log_dump_error(e->nodeID);
+#endif
+
+#if defined(SWIFT_MPIUSE_REPORTS) && defined(WITH_MPI)
+      /* Dump the MPI interactions in the step. */
+      mpiuse_log_dump_error(e->nodeID);
+#endif
+
+      /* Add more interesting diagnostics. */
+      scheduler_dump_queues(e);
+
+      /* Delete the file. */
+      unlink(".dump");
+      message("Dumping completed");
+      fflush(stdout);
+    }
+
+    /* Take a breath. */
+    sleep(5);
+  }
+  return NULL;
+}
+#endif /* SWIFT_DUMPER_THREAD */
+
+#ifdef SWIFT_DUMPER_THREAD
+/**
+ * @brief creates the dumper thread.
+ *
+ * This watches for the creation of a ".dump" file in the current directory
+ * and if found dumps the current state of the tasks and memory use (if also
+ * configured).
+ *
+ * @param e the #engine
+ *
+ */
+static void engine_dumper_init(struct engine *e) {
+  pthread_t dumper;
+
+  /* Make sure the .dump file is not present, that is bad when starting up. */
+  struct stat buf;
+  if (stat(".dump", &buf) == 0) unlink(".dump");
+
+  /* Thread does not exit, so nothing to do but create it. */
+  pthread_create(&dumper, NULL, &engine_dumper_poll, e);
+}
+#endif /* SWIFT_DUMPER_THREAD */
+
 /**
  * @brief init an engine struct with the necessary properties for the
  *        simulation.
@@ -3394,7 +3553,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  const struct entropy_floor_properties *entropy_floor,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  const struct black_holes_props *black_holes,
-                 const struct feedback_props *feedback, struct pm_mesh *mesh,
+                 struct feedback_props *feedback, struct pm_mesh *mesh,
                  const struct external_potential *potential,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
@@ -3434,6 +3593,8 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
       parser_get_opt_param_double(params, "Snapshots:delta_time", -1.);
   e->ti_next_snapshot = 0;
   parser_get_param_string(params, "Snapshots:basename", e->snapshot_base_name);
+  parser_get_opt_param_string(params, "Snapshots:subdir", e->snapshot_subdir,
+                              engine_default_snapshot_subdir);
   e->snapshot_compression =
       parser_get_opt_param_int(params, "Snapshots:compression", 0);
   e->snapshot_int_time_label_on =
@@ -3528,6 +3689,9 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   if (e->policy & engine_policy_structure_finding) {
     parser_get_param_string(params, "StructureFinding:basename",
                             e->stf_base_name);
+    parser_get_opt_param_string(params, "StructureFinding:subdir_per_output",
+                                e->stf_subdir_per_output,
+                                engine_default_stf_subdir_per_output);
     parser_get_param_string(params, "StructureFinding:config_file_name",
                             e->stf_config_file_name);
 
@@ -3637,15 +3801,17 @@ void engine_config(int restart, int fof, struct engine *e,
   if (nr_cores > CPU_SETSIZE) /* Unlikely, except on e.g. SGI UV. */
     error("must allocate dynamic cpu_set_t (too many cores per node)");
 
-  char *buf = (char *)malloc((nr_cores + 1) * sizeof(char));
-  buf[nr_cores] = '\0';
-  for (int j = 0; j < nr_cores; ++j) {
-    /* Reversed bit order from convention, but same as e.g. Intel MPI's
-     * I_MPI_PIN_DOMAIN explicit mask: left-to-right, LSB-to-MSB. */
-    buf[j] = CPU_ISSET(j, entry_affinity) ? '1' : '0';
+  if (verbose && with_aff) {
+    char *buf = (char *)malloc((nr_cores + 1) * sizeof(char));
+    buf[nr_cores] = '\0';
+    for (int j = 0; j < nr_cores; ++j) {
+      /* Reversed bit order from convention, but same as e.g. Intel MPI's
+       * I_MPI_PIN_DOMAIN explicit mask: left-to-right, LSB-to-MSB. */
+      buf[j] = CPU_ISSET(j, entry_affinity) ? '1' : '0';
+    }
+    message("Affinity at entry: %s", buf);
+    free(buf);
   }
-
-  if (verbose && with_aff) message("Affinity at entry: %s", buf);
 
   int *cpuid = NULL;
   cpu_set_t cpuset;
@@ -4226,11 +4392,13 @@ void engine_config(int restart, int fof, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  /* Write the particle logger header */
-  logger_write_file_header(e->logger);
+  if (!restart) {
+    /* Write the particle logger header */
+    logger_write_file_header(e->logger);
+  }
 #endif
 
-  /* Initialise the structure finder */
+    /* Initialise the structure finder */
 #ifdef HAVE_VELOCIRAPTOR
   if (e->policy & engine_policy_structure_finding) velociraptor_init(e);
 #endif
@@ -4240,7 +4408,12 @@ void engine_config(int restart, int fof, struct engine *e,
   if (with_aff) {
     free(cpuid);
   }
-  free(buf);
+#endif
+
+#ifdef SWIFT_DUMPER_THREAD
+
+  /* Start the dumper thread.*/
+  engine_dumper_init(e);
 #endif
 
   /* Wait for the runner threads to be in place. */
@@ -4825,6 +4998,10 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stats)
     output_list_struct_dump(e->output_list_stats, stream);
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
+
+#ifdef WITH_LOGGER
+  logger_struct_dump(e->logger, stream);
+#endif
 }
 
 /**
@@ -4968,6 +5145,13 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
     output_list_struct_restore(output_list_stf, stream);
     e->output_list_stf = output_list_stf;
   }
+
+#ifdef WITH_LOGGER
+  struct logger_writer *log =
+      (struct logger_writer *)malloc(sizeof(struct logger_writer));
+  logger_struct_restore(log, stream);
+  e->logger = log;
+#endif
 
 #ifdef EOS_PLANETARY
   eos_init(&eos, e->physical_constants, e->snapshot_units, e->parameter_file);

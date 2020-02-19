@@ -73,9 +73,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
   const int with_timestep_limiter = e->policy & engine_policy_timestep_limiter;
   const int with_timestep_sync = e->policy & engine_policy_timestep_sync;
   const int with_star_formation = e->policy & engine_policy_star_formation;
-#ifdef WITH_MPI
   const int with_feedback = e->policy & engine_policy_feedback;
-#endif
 
   for (int ind = 0; ind < num_elements; ind++) {
 
@@ -113,7 +111,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                t_subtype == task_subtype_density) {
         if (ci_active_hydro) {
           scheduler_activate(s, t);
-          cell_activate_subcell_hydro_tasks(ci, NULL, s);
+          cell_activate_subcell_hydro_tasks(ci, NULL, s, with_timestep_limiter);
           if (with_timestep_limiter) cell_activate_limiter(ci, s);
         }
       }
@@ -162,7 +160,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                t_subtype == task_subtype_stars_density) {
         if (ci_active_stars) {
           scheduler_activate(s, t);
-          cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation);
+          cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation,
+                                            with_timestep_sync);
         }
       }
 
@@ -334,7 +333,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         /* Store current values of dx_max and h_max. */
         else if (t_type == task_type_sub_pair &&
                  t_subtype == task_subtype_density) {
-          cell_activate_subcell_hydro_tasks(t->ci, t->cj, s);
+          cell_activate_subcell_hydro_tasks(t->ci, t->cj, s,
+                                            with_timestep_limiter);
         }
       }
 
@@ -396,7 +396,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         /* Store current values of dx_max and h_max. */
         else if (t_type == task_type_sub_pair &&
                  t_subtype == task_subtype_stars_density) {
-          cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation);
+          cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation,
+                                            with_timestep_sync);
         }
       }
 
@@ -490,6 +491,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             }
           }
 
+          /* If the foreign cell is active, we want its particles for the
+           * limiter */
+          if (ci_active_hydro && with_timestep_limiter)
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_limiter);
+
           /* If the foreign cell is active, we want its ti_end values. */
           if (ci_active_hydro)
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_part);
@@ -515,6 +521,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 #endif
             }
           }
+
+          /* If the local cell is active, send its particles for the limiting.
+           */
+          if (cj_active_hydro && with_timestep_limiter)
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_limiter,
+                                    ci_nodeID);
 
           /* If the local cell is active, send its ti_end values. */
           if (cj_active_hydro)
@@ -554,6 +566,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             }
           }
 
+          /* If the foreign cell is active, we want its particles for the
+           * limiter */
+          if (cj_active_hydro && with_timestep_limiter)
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_limiter);
+
           /* If the foreign cell is active, we want its ti_end values. */
           if (cj_active_hydro)
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_part);
@@ -581,6 +598,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 #endif
             }
           }
+
+          /* If the local cell is active, send its particles for the limiting.
+           */
+          if (ci_active_hydro && with_timestep_limiter)
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_limiter,
+                                    cj_nodeID);
 
           /* If the local cell is active, send its ti_end values. */
           if (ci_active_hydro)
@@ -960,7 +983,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     /* Subgrid tasks: star formation */
     else if (t_type == task_type_star_formation) {
       if (cell_is_active_hydro(t->ci, e)) {
-        cell_activate_star_formation_tasks(t->ci, s);
+        cell_activate_star_formation_tasks(t->ci, s, with_feedback);
         cell_activate_super_spart_drifts(t->ci, s);
       }
     }
@@ -981,7 +1004,7 @@ int engine_marktasks(struct engine *e) {
   /* Run through the tasks and mark as skip or not. */
   size_t extra_data[3] = {(size_t)e, (size_t)rebuild_space, (size_t)&e->sched};
   threadpool_map(&e->threadpool, engine_marktasks_mapper, s->tasks, s->nr_tasks,
-                 sizeof(struct task), 0, extra_data);
+                 sizeof(struct task), threadpool_auto_chunk_size, extra_data);
   rebuild_space = extra_data[1];
 
   if (e->verbose)
