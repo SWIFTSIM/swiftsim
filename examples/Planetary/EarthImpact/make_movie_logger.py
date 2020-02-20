@@ -237,19 +237,9 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
 
     convert = "ffmpeg -i output/image_%04d.png -y -vcodec libx264 "
     convert += "-profile:v high444 -refs 16 -crf 0 "
     convert += "-preset ultrafast movie.mp4"
     call(convert, shell=True)
-
-"""
-TODO:
- - change speed (back in time?)
- - zoom in / out
- - trace particle
- - zoom on different area (different time scale and show it?)
- - Add length scale
- - show large scale
-"""
