@@ -526,30 +526,31 @@ void chimes_update_gas_vars(const double u_cgs,
   const double A_floor = entropy_floor(p, cosmo, floor_props);
   const double rho = hydro_get_physical_density(p, cosmo);
   const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
+  const double u_floor_cgs = u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
 
-  double u_actual, T_floor;
+  double u_actual_cgs, T_floor;
 
-  if (u_cgs < u_floor) {
+  if (u_cgs < u_floor_cgs) {
     /* Particle is below the entropy floor.
      * Set internal energy to the floor.
      * Chemistry will be evolved in equilibrium. */
-    u_actual = u_floor;
+    u_actual_cgs = u_floor_cgs;
     ChimesGasVars->ForceEqOn = 1;
-    T_floor = u_floor * hydro_gamma_minus_one * proton_mass_cgs * mu /
+    T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
               boltzmann_k_cgs;
-  } else if (u_cgs < pow(10.0, cooling->dlogT_EOS) * u_floor) {
+  } else if (u_cgs < pow(10.0, cooling->dlogT_EOS) * u_floor_cgs) {
     /* Particle is above the entropy floor, but
      * close enough that we will need to evolve
      * the chemistry in equilibrium. */
-    u_actual = u_cgs;
+    u_actual_cgs = u_cgs;
     ChimesGasVars->ForceEqOn = 1;
-    T_floor = u_floor * hydro_gamma_minus_one * proton_mass_cgs * mu /
+    T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
               boltzmann_k_cgs;
   } else {
     /* Particle is well above the entropy floor.
      * Evolve chemistry as usual, according to the
      * user-provided parameter. */
-    u_actual = u_cgs;
+    u_actual_cgs = u_cgs;
     ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode;
 
     /* Set T_floor to minimal_temperature, not the
@@ -560,7 +561,7 @@ void chimes_update_gas_vars(const double u_cgs,
     T_floor = hydro_properties->minimal_temperature;
   }
 
-  ChimesGasVars->temperature = (ChimesFloat)u_actual * hydro_gamma_minus_one *
+  ChimesGasVars->temperature = (ChimesFloat)u_actual_cgs * hydro_gamma_minus_one *
                                proton_mass_cgs * mu / boltzmann_k_cgs;
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
