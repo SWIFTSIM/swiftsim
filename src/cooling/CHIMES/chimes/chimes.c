@@ -143,7 +143,9 @@ void chimes_network(struct gasVariables *myGasVars,
   struct chimes_current_rates_struct chimes_current_rates;
   allocate_current_rates_memory(&chimes_current_rates, myGlobalVars);
 
+  /* Enforce constraint equations. */ 
   check_constraint_equations(myGasVars, myGlobalVars);
+
   set_species_structures(species, myGasVars, &total_network_size,
                          &nonmolecular_network_size, myGlobalVars);
 
@@ -322,6 +324,9 @@ void chimes_network(struct gasVariables *myGasVars,
     for (i = 0; i < data.network_size; i++)
       myGasVars->abundances[indices[i]] = new_abundances[indices[i]];
 
+    /* Enforce constraint equations. */ 
+    check_constraint_equations(myGasVars, myGlobalVars);
+
     if (data.myGasVars->ThermEvolOn == 1)
       myGasVars->temperature = chimes_max(
           new_energy /
@@ -451,6 +456,7 @@ void chimes_network(struct gasVariables *myGasVars,
       }
     }
 
+    /* Enforce constraint equations. */ 
     check_constraint_equations(myGasVars, myGlobalVars);
 
     if (myGasVars->ThermEvolOn == 1)
