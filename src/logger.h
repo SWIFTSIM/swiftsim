@@ -40,6 +40,8 @@ struct engine;
 
 #define logger_major_version 0
 #define logger_minor_version 3
+/* Size of the strings. */
+#define logger_string_length 200
 
 /**
  * Logger entries contain messages representing the particle data at a given
@@ -79,31 +81,6 @@ struct engine;
  * indicated that this is the first message for the given particle/timestamp.
  */
 
-/* Some constants. */
-enum logger_masks_number {
-  logger_x = 0,
-  logger_v = 1,
-  logger_a = 2,
-  logger_u = 3,
-  logger_h = 4,
-  logger_rho = 5,
-  logger_consts = 6,
-  logger_special_flags = 7, /* Flag for special cases */
-  logger_timestamp = 8,     /* expect it to be before count. */
-  logger_count_mask = 9,    /* Need to be the last. */
-} __attribute__((packed));
-
-/* Defines some mask for logging all the fields */
-enum logger_masks_all {
-  logger_masks_all_part = (1 << logger_x) | (1 << logger_v) | (1 << logger_a) |
-                          (1 << logger_u) | (1 << logger_h) |
-                          (1 << logger_rho) | (1 << logger_consts),
-  logger_masks_all_gpart = (1 << logger_x) | (1 << logger_v) | (1 << logger_a) |
-                           (1 << logger_consts),
-  logger_masks_all_spart =
-      (1 << logger_x) | (1 << logger_v) | (1 << logger_consts),
-} __attribute__((packed));
-
 enum logger_special_flags {
   logger_flag_change_type = 1, /* Flag for a change of particle type */
   logger_flag_mpi_enter, /* Flag for a particle received from another  MPI rank
@@ -112,22 +89,6 @@ enum logger_special_flags {
   logger_flag_delete,    /* Flag for a deleted particle */
   logger_flag_create,    /* Flag for a created particle */
 } __attribute__((packed));
-
-struct mask_data {
-  /* Number of bytes for a mask. */
-  int size;
-
-  /* Mask value. */
-  unsigned int mask;
-
-  /* Name of the mask. */
-  char name[100];
-};
-
-extern const struct mask_data logger_mask_data[logger_count_mask];
-
-/* Size of the strings. */
-#define logger_string_length 200
 
 /**
  * @brief structure containing global data for the particle logger.
@@ -175,19 +136,19 @@ struct logger_part_data {
 int logger_compute_chunk_size(unsigned int mask);
 void logger_log_all(struct logger_writer *log, const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
-                     struct xpart *xp, unsigned int mask,
+                     struct xpart *xp, const int log_all,
                      const uint32_t special_flags);
 void logger_log_parts(struct logger_writer *log, const struct part *p,
-                      struct xpart *xp, int count, unsigned int mask,
+                      struct xpart *xp, int count, const int log_all,
                       const uint32_t special_flags);
 void logger_log_spart(struct logger_writer *log, struct spart *p,
-                      unsigned int mask, const uint32_t special_flags);
+                      const int log_all, const uint32_t special_flags);
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
-                       unsigned int mask, const uint32_t special_flags);
+                       const int log_all, const uint32_t special_flags);
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
-                      unsigned int mask, const uint32_t special_flags);
+                      const int log_all, const uint32_t special_flags);
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
-                       unsigned int mask, const uint32_t special_flags);
+                       const int log_all, const uint32_t special_flags);
 void logger_init(struct logger_writer *log, struct swift_params *params);
 void logger_free(struct logger_writer *log);
 void logger_log_timestamp(struct logger_writer *log, integertime_t t,

@@ -30,6 +30,52 @@
 #include "part.h"
 #include "units.h"
 
+
+struct mask_data {
+  /* Number of bytes for a mask. */
+  int size;
+
+  /* Offset to the field in the structure. */
+  size_t offset;
+
+  /* Mask value. */
+  unsigned int mask;
+
+  /* Name of the mask. */
+  char name[100];
+};
+
+// TODO move it inside #logger_writer
+extern struct mask_data *logger_mask_data;
+extern int logger_count_mask;
+
+// TODO use directly the offset function
+#define logger_io_make_output_field(name, part, field)                  \
+  logger_io_make_output_field_function(                                 \
+      name, ((char*)(&part[0].field) - (char *)parts),          \
+      sizeof(part[0].field));
+
+/**
+ * @brief Create a #mask_data from the particle.
+ *
+ * @param name The field name.
+ * @param offset The offset of the field.
+ * @param data_size The size of data to copy.
+ *
+ * @return The #mask_data created.
+ */
+INLINE static struct mask_data logger_io_make_output_field_function(
+    char *name, size_t offset, int data_size) {
+
+  struct mask_data mask;
+  strcpy(mask.name, name);
+  mask.size = data_size;
+  mask.offset = offset;
+
+  return mask;
+}
+
+
 void logger_write_index_file(struct logger_writer* log, struct engine* e);
 void logger_write_description(struct logger_writer* log, struct engine* e);
 
