@@ -21,7 +21,9 @@
 
 #include "adiabatic_index.h"
 #include "hydro.h"
+#include "hydro_io.h"
 #include "io_properties.h"
+#include "logger_io.h"
 #include "kernel_hydro.h"
 
 #include "./hydro_parameters.h"
@@ -229,5 +231,38 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
  * @return 1 if entropy is in 'internal energy', 0 otherwise.
  */
 INLINE static int writeEntropyFlag(void) { return 0; }
+
+/**
+ * @brief Specifies which particle fields to write to the logger
+ *
+ * @param parts The particle array.
+ * @param list The list of logger i/o properties to write.
+ * @param num_fields The number of i/o fields to write.
+ */
+INLINE static void hydro_logger_write_particles(const struct part* parts,
+                                                struct mask_data* list,
+                                                int* num_fields) {
+#ifdef WITH_LOGGER
+
+  *num_fields = 7;
+
+  /* List what we want to write */
+  list[0] = logger_io_make_output_field("Coordinates", parts, x);
+
+  list[1] = logger_io_make_output_field("Velocities", parts, v);
+
+  list[2] = logger_io_make_output_field("Masses", parts, mass);
+
+  list[3] = logger_io_make_output_field("SmoothingLengths", parts, h);
+
+  list[4] = logger_io_make_output_field("Entropies", parts, entropy);
+
+  list[5] = logger_io_make_output_field("ParticleIDs", parts, id);
+
+  list[6] = logger_io_make_output_field("Densities", parts, rho);
+#else
+  error("Should not be called without the logger.");
+#endif /* WITH_LOGGER */
+}
 
 #endif /* SWIFT_GADGET2_HYDRO_IO_H */
