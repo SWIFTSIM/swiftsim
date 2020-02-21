@@ -43,6 +43,9 @@ struct mask_data {
 
   /* Name of the mask. */
   char name[100];
+
+  /* Type of particle (bit masks). */
+  int type;
 };
 
 // TODO move it inside #logger_writer
@@ -52,7 +55,7 @@ extern int logger_count_mask;
 // TODO use directly the offset function
 #define logger_io_make_output_field(name, part, field)                  \
   logger_io_make_output_field_function(                                 \
-      name, ((char*)(&part[0].field) - (char *)parts),          \
+      name, ((char*)(&part[0].field) - (char *)part),          \
       sizeof(part[0].field));
 
 /**
@@ -71,6 +74,7 @@ INLINE static struct mask_data logger_io_make_output_field_function(
   strcpy(mask.name, name);
   mask.size = data_size;
   mask.offset = offset;
+  mask.mask = 0;
 
   return mask;
 }
