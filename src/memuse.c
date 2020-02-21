@@ -35,8 +35,8 @@
 #include <unistd.h>
 
 #ifndef SWIFT_MEMUSE_STATM
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #endif
 
 /* Local defines. */
@@ -472,7 +472,6 @@ void memuse_use(long *size, long *resident, long *shared, long *text,
   *data = usage.ru_isrss;
   *dirty = 0;
 #endif
-
 }
 
 /**
