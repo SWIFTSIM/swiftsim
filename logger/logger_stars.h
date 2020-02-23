@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2019 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,30 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef LOGGER_LOGGER_PARTICLE_H
-#define LOGGER_LOGGER_PARTICLE_H
+#ifndef SWIFT_LOGGER_STARS_H
+#define SWIFT_LOGGER_STARS_H
 
-#include "logger_header.h"
-#include "logger_hydro.h"
-#include "logger_time.h"
-#include "logger_tools.h"
+/* Config parameters. */
+#include "../config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+/* Select the correct star model */
+#if defined(STARS_NONE)
+#include "./stars/Default/logger_stars.h"
+#elif defined(STARS_EAGLE)
+#error TODO
+#include "./stars/EAGLE/logger_stars.h"
+#elif defined(STARS_GEAR)
+#error TODO
+#include "./stars/GEAR/logger_stars.h"
+#else
+#error "Invalid choice of star model"
+#endif
 
-struct logger_reader;
-
-/**
- * @brief Defines the type of interpolation
- */
-enum logger_reader_type {
-  logger_reader_const, /* Constant interpolation. */
-  logger_reader_lin,   /* Linear interpolation. */
-};
-
-size_t logger_particle_read(struct logger_particle *part,
-                            const struct logger_reader *reader, size_t offset,
-                            const double time,
-                            const enum logger_reader_type reader_type);
-
-#endif  // LOGGER_LOGGER_PARTICLE_H
+#endif /* SWIFT_STARS_H */

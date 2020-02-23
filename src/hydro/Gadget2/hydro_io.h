@@ -244,22 +244,25 @@ INLINE static void hydro_logger_write_particles(const struct part* parts,
                                                 int* num_fields) {
 #ifdef WITH_LOGGER
 
-  *num_fields = 7;
+  *num_fields = 8;
 
   /* List what we want to write */
   list[0] = logger_io_make_output_field("Coordinates", parts, x);
 
   list[1] = logger_io_make_output_field("Velocities", parts, v);
 
-  list[2] = logger_io_make_output_field("Masses", parts, mass);
+  // TODO sum the grav + hydro accelerations
+  list[2] = logger_io_make_output_field("Accelerations", parts, a_hydro);
 
-  list[3] = logger_io_make_output_field("SmoothingLengths", parts, h);
+  list[3] = logger_io_make_output_field("Masses", parts, mass);
 
-  list[4] = logger_io_make_output_field("Entropies", parts, entropy);
+  list[4] = logger_io_make_output_field("SmoothingLengths", parts, h);
 
-  list[5] = logger_io_make_output_field("ParticleIDs", parts, id);
+  list[5] = logger_io_make_output_field("Entropies", parts, entropy);
 
-  list[6] = logger_io_make_output_field("Densities", parts, rho);
+  list[6] = logger_io_make_output_field("ParticleIDs", parts, id);
+
+  list[7] = logger_io_make_output_field("Densities", parts, rho);
 #else
   error("Should not be called without the logger.");
 #endif /* WITH_LOGGER */

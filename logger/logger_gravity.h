@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2019 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,30 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef LOGGER_LOGGER_PARTICLE_H
-#define LOGGER_LOGGER_PARTICLE_H
+#ifndef SWIFT_LOGGER_GRAVITY_H
+#define SWIFT_LOGGER_GRAVITY_H
 
-#include "logger_header.h"
-#include "logger_hydro.h"
-#include "logger_time.h"
-#include "logger_tools.h"
+/* Config parameters. */
+#include "../config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+/* Import the right functions */
+#if defined(DEFAULT_GRAVITY)
+#include "./gravity/Default/logger_gravity.h"
+#elif defined(POTENTIAL_GRAVITY)
+#error TODO
+#include "./gravity/Potential/logger_gravity.h"
+#elif defined(MULTI_SOFTENING_GRAVITY)
+#error TODO
+#include "./gravity/MultiSoftening/logger_gravity.h"
+#else
+#error "Invalid choice of gravity variant"
+#endif
 
-struct logger_reader;
-
-/**
- * @brief Defines the type of interpolation
- */
-enum logger_reader_type {
-  logger_reader_const, /* Constant interpolation. */
-  logger_reader_lin,   /* Linear interpolation. */
-};
-
-size_t logger_particle_read(struct logger_particle *part,
-                            const struct logger_reader *reader, size_t offset,
-                            const double time,
-                            const enum logger_reader_type reader_type);
-
-#endif  // LOGGER_LOGGER_PARTICLE_H
+#endif

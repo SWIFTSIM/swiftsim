@@ -53,9 +53,9 @@ extern struct mask_data *logger_mask_data;
 extern int logger_count_mask;
 
 // TODO use directly the offset function
-#define logger_io_make_output_field(name, part, field)                  \
-  logger_io_make_output_field_function(                                 \
-      name, ((char*)(&part[0].field) - (char *)part),          \
+#define logger_io_make_output_field(name, part, field)  \
+  logger_io_make_output_field_function(                 \
+      name, ((char*)(&part[0].field) - (char *)part),   \
       sizeof(part[0].field));
 
 /**
