@@ -299,7 +299,7 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
     for (int ptype = 0; ptype < swift_type_count; ptype++) {
       count += nparts[ptype];
       if (part_ind < count) {
-        parts[i].type = ptype;
+        parts[i].flag = ptype;
         break;
       }
     }
@@ -411,7 +411,7 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   }
 
   /* Keep the type in memory */
-  const int prev_type = prev->type;
+  const int prev_type = prev->flag;
   int new_type = -1;
 
   while (1) {
@@ -425,7 +425,7 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
       struct logger_particle tmp;
       logger_particle_read(&tmp, reader, prev_offset, /* Time */ -1,
                            logger_reader_const);
-      new_type = tmp.type;
+      new_type = tmp.flag;
     }
 
     /* Are we at the end of the file? */
@@ -461,10 +461,10 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
 
   /* Set the types */
   if (new_type == -1) {
-    next->type = prev_type;
-    prev->type = prev_type;
+    next->flag = prev_type;
+    prev->flag = prev_type;
   } else {
-    next->type = new_type;
-    prev->type = new_type;
+    next->flag = new_type;
+    prev->flag = new_type;
   }
 }

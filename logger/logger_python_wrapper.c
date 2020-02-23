@@ -19,6 +19,7 @@
 #include "logger_header.h"
 #include "logger_loader_io.h"
 #include "logger_particle.h"
+#include "logger_python_tools.h"
 #include "logger_reader.h"
 #include "logger_time.h"
 
@@ -26,7 +27,6 @@
 
 #include <Python.h>
 #include <errno.h>
-#include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -336,34 +336,6 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
-#define CREATE_FIELD(fields, name, field_name, type)                      \
-  ({                                                                      \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));   \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
-  })
-
-#define CREATE_FIELD_3D(fields, name, field_name, type)                   \
-  ({                                                                      \
-    /* Create the 3D descriptor */                                        \
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                  \
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                   \
-    vec->subarray->base = PyArray_DescrFromType(type);                    \
-    vec->subarray->shape = PyTuple_New(1);                                \
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(3));       \
-                                                                          \
-    /* Create the field */                                                \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                           \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
-  })
-
 void pylogger_particle_define_typeobject(void) {
 
   PyLoggerParticle_Type.tp_name = particle_name;
@@ -372,29 +344,28 @@ void pylogger_particle_define_typeobject(void) {
 }
 
 void pylogger_particle_define_descr(void) {
-  /* Generate list of field names */
-  PyObject *names = PyTuple_New(9);
-  PyTuple_SetItem(names, 0, PyUnicode_FromString("positions"));
-  PyTuple_SetItem(names, 1, PyUnicode_FromString("velocities"));
-  PyTuple_SetItem(names, 2, PyUnicode_FromString("accelerations"));
-  PyTuple_SetItem(names, 3, PyUnicode_FromString("entropies"));
-  PyTuple_SetItem(names, 4, PyUnicode_FromString("smoothing_lengths"));
-  PyTuple_SetItem(names, 5, PyUnicode_FromString("densities"));
-  PyTuple_SetItem(names, 6, PyUnicode_FromString("masses"));
-  PyTuple_SetItem(names, 7, PyUnicode_FromString("ids"));
-  PyTuple_SetItem(names, 8, PyUnicode_FromString("times"));
 
-  /* Generate list of fields */
+  /* Get the fields */
+  struct logger_python_field list[100];
+  int num_fields = 0;
+  struct logger_particle part;
+
+  logger_particles_generate_python(&part, list, &num_fields);
+
+  /* Generate list of field names and objects */
+  PyObject *names = PyTuple_New(num_fields);
   PyObject *fields = PyDict_New();
-  CREATE_FIELD_3D(fields, "positions", pos, NPY_DOUBLE);
-  CREATE_FIELD_3D(fields, "velocities", vel, NPY_FLOAT32);
-  CREATE_FIELD_3D(fields, "accelerations", acc, NPY_FLOAT32);
-  CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32);
-  CREATE_FIELD(fields, "smoothing_lengths", h, NPY_FLOAT32);
-  CREATE_FIELD(fields, "densities", density, NPY_FLOAT32);
-  CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32);
-  CREATE_FIELD(fields, "ids", id, NPY_LONGLONG);
-  CREATE_FIELD(fields, "times", time, NPY_DOUBLE);
+  for(int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, 0, PyUnicode_FromString(list[i].name));
+
+    if (list[i].dimension == 1) {
+      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+    }
+    else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
+                        list[i].type, list[i].dimension);
+    }
+  }
 
   /* Generate descriptor */
   logger_particle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
