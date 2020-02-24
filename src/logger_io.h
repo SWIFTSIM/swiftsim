@@ -44,7 +44,7 @@ struct mask_data {
   /* Name of the mask. */
   char name[100];
 
-  /* Type of particle (bit masks). */
+  /* Type of particle (follow part_type.h and -1 for timestamp). */
   int type;
 };
 
@@ -52,7 +52,6 @@ struct mask_data {
 extern struct mask_data *logger_mask_data;
 extern int logger_count_mask;
 
-// TODO use directly the offset function
 #define logger_io_make_output_field(name, part, field)  \
   logger_io_make_output_field_function(                 \
       name, ((char*)(&part[0].field) - (char *)part),   \

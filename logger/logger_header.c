@@ -172,7 +172,7 @@ void header_read(struct header *h, struct logger_logfile *log) {
                                      &h->masks[i].size);
 
     /* Keep the timestamp mask in memory */
-    if (strcmp(h->masks[i].name, "timestamp") == 0) {
+    if (strcmp(h->masks[i].name, "Timestamp") == 0) {
       h->timestamp_mask = h->masks[i].mask;
     }
   }
