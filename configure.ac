@@ -1868,8 +1868,9 @@ esac
 #  Cooling function
 AC_ARG_WITH([cooling],
    [AS_HELP_STRING([--with-cooling=<function>],
-      [cooling function @<:@none, const-du, const-lambda, EAGLE, grackle_* default: none@:>@.
-      For Grackle, you need to provide the primordial chemistry parameter (e.g. grackle_0)]
+      [cooling function @<:@none, const-du, const-lambda, EAGLE, COLIBRE, CHIMES, CHIMES_* grackle_* default: none@:>@.
+      For Grackle, the primordial chemistry parameter needs to be provided (e.g. grackle_0).
+      For CHIMES, the size of the network can be provided (e.g. CHIMES_157). Otherwise defaults to 10.]
    )],
    [with_cooling="$withval"],
    [with_cooling="none"]
@@ -1911,13 +1912,26 @@ case "$with_cooling" in
       AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
       AC_MSG_CHECKING([for Sundials libraries])
       AC_MSG_RESULT($have_sundials)
-      
+
       if test "$have_sundials" != "yes"; then 
          AC_MSG_ERROR([The Sundials library is not present. Sundials is required for the CHIMES module.]) 
       fi
 
-      AC_ARG_WITH([chimes-network-size], [AS_HELP_STRING([--with-chimes-network-size=<size>], [size of the CHIMES network, default: 157])], [with_chimes_network_size="$withval"], [with_chimes_network_size="157"]) 
-      AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [$with_chimes_network_size], [Chimes network size]) 
+      # The default CHIMEs netowkr size is 10
+      AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [10], [Chimes network size])	
+   ;; 
+   CHIMES_*)
+      AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
+      AC_MSG_CHECKING([for Sundials libraries])
+      AC_MSG_RESULT($have_sundials)
+
+      if test "$have_sundials" != "yes"; then 
+         AC_MSG_ERROR([The Sundials library is not present. Sundials is required for the CHIMES module.]) 
+      fi
+      
+      # Extract the CHIMES network size
+      chimes_network_size=${with_cooling:7}
+      AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [$chimes_network_size], [Chimes network size]) 
    ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
