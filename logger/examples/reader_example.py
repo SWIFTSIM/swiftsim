@@ -23,7 +23,7 @@ def plot2D():
     r2 = np.sum((pos - center)**2, axis=1)
 
     # plot entropy vs distance
-    plt.plot(np.sqrt(r2), data["entropies"], '.',
+    plt.plot(np.sqrt(r2), data["Entropies"], '.',
              markersize=0.2)
 
     plt.xlim(0., 0.5)
@@ -32,8 +32,8 @@ def plot2D():
     plt.ylabel("Entropy")
 
 
-basename = "../../examples/HydroTests/SedovBlast_3D/index"
-time = 0.05
+basename = "../../examples/HydroTests/SedovBlast_3D/index_0000"
+time = 0.03
 if len(sys.argv) >= 2:
     basename = sys.argv[1]
 else:
@@ -54,7 +54,7 @@ data = logger.loadSnapshotAtTime(basename, time, 2)
 print("The data contains the following elements:")
 print(data.dtype.names)
 
-pos = data["positions"]
+pos = data["Coordinates"]
 
 plot3D(pos)
 plt.show()

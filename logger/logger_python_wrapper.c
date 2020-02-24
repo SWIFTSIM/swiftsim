@@ -356,7 +356,7 @@ void pylogger_particle_define_descr(void) {
   PyObject *names = PyTuple_New(num_fields);
   PyObject *fields = PyDict_New();
   for(int i = 0; i < num_fields; i++) {
-    PyTuple_SetItem(names, 0, PyUnicode_FromString(list[i].name));
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
       CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);

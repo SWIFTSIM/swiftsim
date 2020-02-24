@@ -132,21 +132,24 @@ __attribute__((always_inline)) INLINE static void *logger_particle_read_field(
   void *p = NULL;
 
   /* Get the correct pointer. */
-  if (strcmp("positions", field) == 0) {
+  if (strcmp("Coordinates", field) == 0) {
     p = &part->x;
-  } else if (strcmp("velocities", field) == 0) {
+  } else if (strcmp("Velocities", field) == 0) {
     p = &part->v;
-  } else if (strcmp("accelerations", field) == 0) {
+  } else if (strcmp("Accelerations", field) == 0) {
     p = &part->a;
-  } else if (strcmp("entropy", field) == 0) {
+  } else if (strcmp("Entropies", field) == 0) {
     p = &part->entropy;
-  } else if (strcmp("smoothing length", field) == 0) {
+  } else if (strcmp("SmoothingLengths", field) == 0) {
     p = &part->h;
-  } else if (strcmp("density", field) == 0) {
+  } else if (strcmp("Densities", field) == 0) {
     p = &part->rho;
-  } else if (strcmp("consts", field) == 0) {
-    p = malloc(size);
-  } else if (strcmp("special flags", field) == 0) {
+    // TODO link mass and ids together?
+  } else if (strcmp("Masses", field) == 0) {
+    p = &part->mass;
+  } else if (strcmp("ParticleIDs", field) == 0) {
+    p = &part->id;
+  } else if (strcmp("SpecialFlags", field) == 0) {
     p = &part->flag;
   } else {
     error("Type %s not defined.", field);
@@ -155,17 +158,6 @@ __attribute__((always_inline)) INLINE static void *logger_particle_read_field(
   /* read the data. */
   // TODO read the record only once.
   map = logger_loader_io_read_data(map, size, p);
-
-  /* Split the required fields. */
-  if (strcmp("consts", field) == 0) {
-    part->mass = 0;
-    part->id = 0;
-    memcpy(&part->mass, p, sizeof(float));
-    p = (char *)p + sizeof(float);
-    memcpy(&part->id, p, sizeof(size_t));
-    p = (char *)p - sizeof(float);
-    free(p);
-  }
 
   return map;
 }

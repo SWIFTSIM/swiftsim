@@ -133,7 +133,7 @@ struct logger_part_data {
 };
 
 /* Function prototypes. */
-int logger_compute_chunk_size(unsigned int mask);
+int logger_compute_chunk_size(unsigned int mask, int type);
 void logger_log_all(struct logger_writer *log, const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const int log_all,
