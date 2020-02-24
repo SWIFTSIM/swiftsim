@@ -422,10 +422,10 @@ void cooling_init_backend(struct swift_params *parameter_file,
     error(
         "The size of the CHIMES network based on the Include<Element> "
         "parameters is %d. However, Swift was configured and compiled using "
-        "--with-chimes-network-size=%d. If you are sure that you have "
+        "--with-cooling=CHIMES_%d. If you are sure that you have "
         "correctly set which metals to include in the network in the parameter "
         "file, then you will need to re-compile Swift using ./configure "
-        "--with-cooling=CHIMES --with-chimes-network-size=%d \n",
+        "--with-cooling=CHIMES_%d \n",
         cooling->ChimesGlobalVars.totalNumberOfSpecies, CHIMES_NETWORK_SIZE,
         cooling->ChimesGlobalVars.totalNumberOfSpecies);
 
