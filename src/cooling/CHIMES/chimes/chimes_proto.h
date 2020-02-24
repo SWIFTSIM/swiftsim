@@ -96,10 +96,11 @@ struct gasVariables {
 struct globalVariables {
   char MainDataTablePath
       [500]; /*!< Path to the chimes_main_data.hdf5 data file. */
-  char PhotoIonTablePath[CHIMES_MAX_UV_SPECTRA][500]; /*!< Array of strings containing
-                                                  the paths to the cross
-                                                  sections tables, one for each
-                                                  UV spectrum. */
+  char PhotoIonTablePath[CHIMES_MAX_UV_SPECTRA]
+                        [500]; /*!< Array of strings containing
+                           the paths to the cross
+                           sections tables, one for each
+                           UV spectrum. */
   char EqAbundanceTablePath
       [500];               /*!< Path to the equilibrium abundance table. */
   int cellSelfShieldingOn; /*!< 0 - switch off self-shielding; 1 - switch on
@@ -130,14 +131,14 @@ struct globalVariables {
                                          */
   ChimesFloat explicitTolerance; /*!< Tolerance below which we will use the
                                     explicit solution. */
-  int element_included[9];     /*!< Array of flags to exclude (0) or include (1)
-                                  each metal element. */
-  int speciesIndices[CHIMES_TOTSIZE]; /*!< Maps the position of each species in the
-                                  abundance array. */
-  int totalNumberOfSpecies;    /*!< Total number of species included in the
-                                  network. */
-  int scale_metal_tolerances;  /*!< Scale the absolute tolerances by the
-                                  corresponding element abundance. */
+  int element_included[9]; /*!< Array of flags to exclude (0) or include (1)
+                              each metal element. */
+  int speciesIndices[CHIMES_TOTSIZE]; /*!< Maps the position of each species in
+                                  the abundance array. */
+  int totalNumberOfSpecies;   /*!< Total number of species included in the
+                                 network. */
+  int scale_metal_tolerances; /*!< Scale the absolute tolerances by the
+                                 corresponding element abundance. */
   int chimes_debug; /*!< If set to 1, print gasVariables if CVODE returns an
                        error or warning message. */
   int hybrid_cooling_mode; /*!< 0 - do not use hybrid cooling; 1 - use hybrid
@@ -1179,4 +1180,3 @@ enum {
   sp_HOCp,    /* 155 */
   sp_O2p      /* 156 */
 };
-

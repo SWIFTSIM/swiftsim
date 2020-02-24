@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include "chimes_proto.h"
-#include "chimes_vars.h" 
+#include "chimes_vars.h"
 
 /**
  * @brief Sets equilibrium abundances.
@@ -143,7 +143,7 @@ void chimes_network(struct gasVariables *myGasVars,
   struct chimes_current_rates_struct chimes_current_rates;
   allocate_current_rates_memory(&chimes_current_rates, myGlobalVars);
 
-  /* Enforce constraint equations. */ 
+  /* Enforce constraint equations. */
   check_constraint_equations(myGasVars, myGlobalVars);
 
   set_species_structures(species, myGasVars, &total_network_size,
@@ -324,7 +324,7 @@ void chimes_network(struct gasVariables *myGasVars,
     for (i = 0; i < data.network_size; i++)
       myGasVars->abundances[indices[i]] = new_abundances[indices[i]];
 
-    /* Enforce constraint equations. */ 
+    /* Enforce constraint equations. */
     check_constraint_equations(myGasVars, myGlobalVars);
 
     if (data.myGasVars->ThermEvolOn == 1)
@@ -412,24 +412,24 @@ void chimes_network(struct gasVariables *myGasVars,
     else
       CVodeSVtolerances(cvode_mem, reltol, abstol_vector);
 
-    /* Create a dense SUNMatrix to use in the 
-     * linear solver. */ 
-    SUNMatrix A_sun; 
-    
+    /* Create a dense SUNMatrix to use in the
+     * linear solver. */
+    SUNMatrix A_sun;
+
     if (myGasVars->ThermEvolOn == 0)
       A_sun = SUNDenseMatrix(data.network_size, data.network_size);
-    else 
+    else
       A_sun = SUNDenseMatrix(data.network_size + 1, data.network_size + 1);
 
-    /* Create a denst SUNLinearSolver object 
-     * to use in CVode. */ 
-    SUNLinearSolver LS_sun; 
+    /* Create a denst SUNLinearSolver object
+     * to use in CVode. */
+    SUNLinearSolver LS_sun;
     LS_sun = SUNLinSol_Dense(y, A_sun);
 
-    /* Attach the matrix and linear 
-     * solver to CVode. */ 
+    /* Attach the matrix and linear
+     * solver to CVode. */
     CVodeSetLinearSolver(cvode_mem, LS_sun, A_sun);
-    
+
     /* Specify the maximum number of convergence
      * test failures. */
     CVodeSetMaxConvFails(cvode_mem, 5000);
@@ -456,7 +456,7 @@ void chimes_network(struct gasVariables *myGasVars,
       }
     }
 
-    /* Enforce constraint equations. */ 
+    /* Enforce constraint equations. */
     check_constraint_equations(myGasVars, myGlobalVars);
 
     if (myGasVars->ThermEvolOn == 1)

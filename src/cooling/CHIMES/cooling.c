@@ -526,7 +526,8 @@ void chimes_update_gas_vars(const double u_cgs,
   const double A_floor = entropy_floor(p, cosmo, floor_props);
   const double rho = hydro_get_physical_density(p, cosmo);
   const double u_floor = gas_internal_energy_from_entropy(rho, A_floor);
-  const double u_floor_cgs = u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS); 
+  const double u_floor_cgs =
+      u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
   double u_actual_cgs, T_floor;
 
@@ -561,8 +562,9 @@ void chimes_update_gas_vars(const double u_cgs,
     T_floor = hydro_properties->minimal_temperature;
   }
 
-  ChimesGasVars->temperature = (ChimesFloat)u_actual_cgs * hydro_gamma_minus_one *
-                               proton_mass_cgs * mu / boltzmann_k_cgs;
+  ChimesGasVars->temperature = (ChimesFloat)u_actual_cgs *
+                               hydro_gamma_minus_one * proton_mass_cgs * mu /
+                               boltzmann_k_cgs;
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
   float const *metal_fraction =
@@ -1554,15 +1556,15 @@ void cooling_set_subgrid_properties(
     struct gasVariables ChimesGasVars;
     allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
 
-    // Copy abundances over from xp to ChimesGasVars 
+    // Copy abundances over from xp to ChimesGasVars
     int i;
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
       ChimesGasVars.abundances[i] =
-        (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
 
-    // Update element abundances 
+    // Update element abundances
     chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
-				     &ChimesGasVars, 1);
+                                     &ChimesGasVars, 1);
 
     // Set HII region abundance array
     cooling_set_HIIregion_chimes_abundances(&ChimesGasVars, cooling);
@@ -1734,7 +1736,7 @@ void cooling_set_HIIregion_chimes_abundances(
       cooling->HIIregion_fion;
   ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeI]] =
       (ChimesFloat)ChimesGasVars->element_abundances[0] *
-    (1.0 - cooling->HIIregion_fion);
+      (1.0 - cooling->HIIregion_fion);
   ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] +=
       ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_HeII]];
 
