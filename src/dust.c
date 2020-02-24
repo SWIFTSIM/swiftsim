@@ -57,6 +57,17 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
   dustevo_properties->specific_numSNII =
     7.039463e-3 / phys_const->const_solar_mass;
 
+  dustevo_properties->refractory_idx[0] = chemistry_element_C;
+  dustevo_properties->refractory_idx[1] = chemistry_element_O;
+  dustevo_properties->refractory_idx[2] = chemistry_element_Mg;
+  dustevo_properties->refractory_idx[3] = chemistry_element_Si;
+  dustevo_properties->refractory_idx[4] = chemistry_element_Fe;
+
+  dustevo_properties->dust_idx[0] = chemistry_element_Gra;
+  dustevo_properties->dust_idx[1] = chemistry_element_Ide;
+  dustevo_properties->dust_idx[2] = chemistry_element_Mgd;
+  dustevo_properties->dust_idx[3] = chemistry_element_Sil;
+  dustevo_properties->dust_idx[4] = chemistry_element_Fed;
 
   int j;
   /* initialize elements of array n to 0 */         
@@ -79,6 +90,7 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
     dustevo_properties->comp_Sil[chemistry_element_Si] = -0.1630668;
     dustevo_properties->comp_Sil[chemistry_element_Fe] = -0.3242408;
     dustevo_properties->comp_Sil[chemistry_element_Sil] = 1.;
+
   }
 
   if (dustevo_properties->model_type == 1){
@@ -86,17 +98,17 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
     dustevo_properties->comp_Gra[chemistry_element_C] = -1.;
     dustevo_properties->comp_Gra[chemistry_element_Gra] = 1.;
     /* Silicon content */
-    dustevo_properties->comp_Gra[chemistry_element_Si] = -1.;
-    dustevo_properties->comp_Gra[chemistry_element_Sil] = 1.;
+    dustevo_properties->comp_Sil[chemistry_element_Si] = -1.;
+    dustevo_properties->comp_Sil[chemistry_element_Sil] = 1.;
     /* Oxygen content */
-    dustevo_properties->comp_Gra[chemistry_element_O] = -1.;
-    dustevo_properties->comp_Gra[chemistry_element_Ide] = 1.;
+    dustevo_properties->comp_Ide[chemistry_element_O] = -1.;
+    dustevo_properties->comp_Ide[chemistry_element_Ide] = 1.;
     /* Magnesium content */
-    dustevo_properties->comp_Gra[chemistry_element_Mg] = -1.;
-    dustevo_properties->comp_Gra[chemistry_element_Mgd] = 1.;
+    dustevo_properties->comp_Mgd[chemistry_element_Mg] = -1.;
+    dustevo_properties->comp_Mgd[chemistry_element_Mgd] = 1.;
     /* Iron content */
-    dustevo_properties->comp_Gra[chemistry_element_Fe] = -1.;
-    dustevo_properties->comp_Gra[chemistry_element_Fed] = 1.;
+    dustevo_properties->comp_Fed[chemistry_element_Fe] = -1.;
+    dustevo_properties->comp_Fed[chemistry_element_Fed] = 1.;
 
   }
   
@@ -376,40 +388,46 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
 
     /* abundance terms, depending on the key element for each grain species (normalised to solar ratio from Wiersma+09)*/
     /* !!! check consistency with yield factors, better to use an array of sola abundances defined in header? */
+
+
+    /* if (p->id == 3426890137225) { */
+    /*   message("mfrac :: | C %e | Si %e | O %e | Mg %e | Fe %e | Gra %e | Sil %e | Ide %e | Mgd %e | Fed %e", */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_C], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Si], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_O], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mg], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fe], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Gra], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Sil], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Ide], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mgd], */
+    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fed]); */
+    /* } */
     
-    
-    float abundance_ratio_Gra =  ((p->chemistry_data.metal_mass_fraction[chemistry_element_Gra]+
-				   p->chemistry_data.metal_mass_fraction[chemistry_element_C])/
-				  p->chemistry_data.metal_mass_fraction[chemistry_element_C]);
-    float abundance_ratio_Sil =  ((p->chemistry_data.metal_mass_fraction[chemistry_element_Sil]+
-				   p->chemistry_data.metal_mass_fraction[chemistry_element_Si])/
-				  p->chemistry_data.metal_mass_fraction[chemistry_element_Si]);
-    float abundance_ratio_Ide =  ((p->chemistry_data.metal_mass_fraction[chemistry_element_Ide]+
-				   p->chemistry_data.metal_mass_fraction[chemistry_element_O])/
-				  p->chemistry_data.metal_mass_fraction[chemistry_element_O]);
-    float abundance_ratio_Mgd =  ((p->chemistry_data.metal_mass_fraction[chemistry_element_Mgd]+
-				   p->chemistry_data.metal_mass_fraction[chemistry_element_Mg])/
-				  p->chemistry_data.metal_mass_fraction[chemistry_element_Mg]);
-    float abundance_ratio_Fed =  ((p->chemistry_data.metal_mass_fraction[chemistry_element_Fed]+
-				   p->chemistry_data.metal_mass_fraction[chemistry_element_Fe])/
-				  p->chemistry_data.metal_mass_fraction[chemistry_element_Fe]);
+    int di;
+    float diffuse_fraction[5];
+
+    /* Compute diffuse fraction of refractory elements for accretion */
+    for (di = 0; di < 5; di++) {
+      if (p->chemistry_data.metal_mass_fraction[dp->refractory_idx[di]] > 0){
+	diffuse_fraction[di] = (p->chemistry_data.metal_mass_fraction[dp->refractory_idx[di]]/
+				(p->chemistry_data.metal_mass_fraction[dp->dust_idx[di]]+
+				 p->chemistry_data.metal_mass_fraction[dp->refractory_idx[di]]));
+      }
+      else {
+	diffuse_fraction[di] =  0.;
+      }
+    }
 
     /* conversion factor converted to CGS from yr */
     const float tau_ref		= 6.31e15 * mult_terms;
 
-    const float tau_Gra		= tau_ref * abundance_ratio_Gra;
-    const float tau_Sil		= tau_ref * abundance_ratio_Sil;
-    const float tau_Ide		= tau_ref * abundance_ratio_Ide;
-    const float tau_Mgd		= tau_ref * abundance_ratio_Mgd;
-    const float tau_Fed		= tau_ref * abundance_ratio_Fed;
-
     /* message("%f %f", fMgd, fFed);       */
-
-    deltf_acc_Gra = dt_cgs / tau_Gra; 
-    deltf_acc_Sil = dt_cgs / tau_Sil; 
-    deltf_acc_Ide = dt_cgs / tau_Ide; 
-    deltf_acc_Mgd = dt_cgs / tau_Mgd; 
-    deltf_acc_Fed = dt_cgs / tau_Fed; 
+    deltf_acc_Gra = dt_cgs * diffuse_fraction[0] / tau_ref; 
+    deltf_acc_Ide = dt_cgs * diffuse_fraction[1] / tau_ref; 
+    deltf_acc_Mgd = dt_cgs * diffuse_fraction[2] / tau_ref; 
+    deltf_acc_Sil = dt_cgs * diffuse_fraction[3] / tau_ref; 
+    deltf_acc_Fed = dt_cgs * diffuse_fraction[4] / tau_ref; 
     /* message("deltf_acc_Gra: %e", deltf_acc_Gra); */
   }
   else {
@@ -433,11 +451,11 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
     (exp(deltf_sput + deltf_SNII + deltf_acc_Mgd) - 1);
   double delta_mfrac_Fed = p->chemistry_data.metal_mass_fraction[chemistry_element_Fed] *
     (exp(deltf_sput + deltf_SNII + deltf_acc_Fed) - 1);
-  if (p->id == 3426890137225) {
-    message("delta mfrac :: | Gra %e | Sil %e | Ide %e | Mgd %e | Fed %e | sput_tau %e | snii tau %e", 
-	    delta_mfrac_Gra, delta_mfrac_Sil, delta_mfrac_Ide, delta_mfrac_Mgd, delta_mfrac_Fed,
-	    deltf_sput, deltf_SNII);
-  }
+  /* if (p->id == 3426890137225) { */
+  /*   message("delta mfrac :: | Gra %e | Sil %e | Ide %e | Mgd %e | Fed %e | sput_tau %e | snii tau %e", */
+  /* 	    delta_mfrac_Gra, delta_mfrac_Sil, delta_mfrac_Ide, delta_mfrac_Mgd, delta_mfrac_Fed, */
+  /* 	    deltf_sput, deltf_SNII); */
+  /* } */
 
   /* Message("%e %e %e", deltf_sput, deltf_SNII, deltf_acc_Gra); */
   /* message("%e %e", exp(deltf_sput+deltf_SNII+deltf_acc_Gra)-1, deltf_sput+deltf_SNII+deltf_acc_Gra); */
@@ -461,16 +479,15 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
   /* apply mass fraction changes to elements and grains */
   int i;
   for ( i = 0; i < chemistry_element_count; i++ ) {
-    if (p->id == 3426890137225) {
-      message("Element #%d mfrac: %e delta Element mfrac: %e", i, 
-	      p->chemistry_data.metal_mass_fraction[i],
-	      (dp->comp_Gra[i]*delta_mfrac_Gra+
-	       dp->comp_Sil[i]*delta_mfrac_Sil+
-	       dp->comp_Ide[i]*delta_mfrac_Ide+
-	       dp->comp_Mgd[i]*delta_mfrac_Mgd+
-	       dp->comp_Fed[i]*delta_mfrac_Fed));
-      
-    }
+    /* if (p->id == 3426890137225) { */
+    /*   message("Element #%d mfrac: %e delta Element mfrac: %e", i, */
+    /* 	      p->chemistry_data.metal_mass_fraction[i], */
+    /* 	      (dp->comp_Gra[i]*delta_mfrac_Gra+ */
+    /* 	       dp->comp_Sil[i]*delta_mfrac_Sil+ */
+    /* 	       dp->comp_Ide[i]*delta_mfrac_Ide+ */
+    /* 	       dp->comp_Mgd[i]*delta_mfrac_Mgd+ */
+    /* 	       dp->comp_Fed[i]*delta_mfrac_Fed)); */
+    /* } */
 
     p->chemistry_data.metal_mass_fraction[i] += dp->comp_Gra[i]*delta_mfrac_Gra;   
     p->chemistry_data.metal_mass_fraction[i] += dp->comp_Sil[i]*delta_mfrac_Sil;   
@@ -478,10 +495,10 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
     p->chemistry_data.metal_mass_fraction[i] += dp->comp_Mgd[i]*delta_mfrac_Mgd;   
     p->chemistry_data.metal_mass_fraction[i] += dp->comp_Fed[i]*delta_mfrac_Fed;    
 
-    if (p->id == 3426890137225) {
-      message("Element #%d mfrac after: %e", i, 
-	      p->chemistry_data.metal_mass_fraction[i]);
-    }
+    /* if (p->id == 3426890137225) { */
+    /*   message("Element #%d mfrac after: %e", i, */
+    /* 	      p->chemistry_data.metal_mass_fraction[i]); */
+    /* } */
 
 
     /* if (p->chemistry_data.metal_mass_fraction[i] < 0) { */

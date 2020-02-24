@@ -56,12 +56,16 @@ struct dustevo_props {
 
   /* ------------ grain species element mass ratios ------------- */
 
-
   float comp_Gra[chemistry_element_count];
   float comp_Ide[chemistry_element_count];
   float comp_Sil[chemistry_element_count];
   float comp_Mgd[chemistry_element_count]; 
   float comp_Fed[chemistry_element_count];
+
+  /* ------------ mapping refractory elements to grains ------------ */
+  int refractory_idx[5];
+  int dust_idx[5];
+
 };
 
 void redistribute_dust_to_element_abundances(struct spart* sp,
