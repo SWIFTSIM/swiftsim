@@ -66,6 +66,7 @@
 #include "error.h"
 #include "event_logger.h"
 #include "feedback.h"
+#include "fof.h"
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
@@ -1285,7 +1286,7 @@ void engine_print_task_counts(const struct engine *e) {
   for (int k = 0; k <= task_type_count; k++) counts[k] = 0;
   threadpool_map((struct threadpool *)&e->threadpool,
                  engine_do_tasks_count_mapper, (void *)tasks, nr_tasks,
-                 sizeof(struct task), 0, counts);
+                 sizeof(struct task), threadpool_auto_chunk_size, counts);
 
 #ifdef WITH_MPI
   printf("[%04i] %s engine_print_task_counts: task counts are [ %s=%i",
@@ -2733,7 +2734,8 @@ void engine_reconstruct_multipoles(struct engine *e) {
 #endif
 
   threadpool_map(&e->threadpool, engine_do_reconstruct_multipoles_mapper,
-                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell), 0, e);
+                 e->s->cells_top, e->s->nr_cells, sizeof(struct cell),
+                 threadpool_auto_chunk_size, e);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -3123,17 +3125,10 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   swift_free("gparts", s->gparts);
   s->gparts = gparts_new;
 
-  /* Re-link the parts. */
-  if (s->nr_parts > 0 && s->nr_gparts > 0)
-    part_relink_parts_to_gparts(s->gparts, s->nr_gparts, s->parts);
-
-  /* Re-link the sparts. */
-  if (s->nr_sparts > 0 && s->nr_gparts > 0)
-    part_relink_sparts_to_gparts(s->gparts, s->nr_gparts, s->sparts);
-
-  /* Re-link the bparts. */
-  if (s->nr_bparts > 0 && s->nr_gparts > 0)
-    part_relink_bparts_to_gparts(s->gparts, s->nr_gparts, s->bparts);
+  /* Re-link everything to the gparts. */
+  if (s->nr_gparts > 0)
+    part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts,
+                                    s->sparts, s->bparts, &e->threadpool);
 
 #ifdef SWIFT_DEBUG_CHECKS
 
