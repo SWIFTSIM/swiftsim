@@ -1511,7 +1511,7 @@ AC_SUBST([SUNDIALS_INCS])
 # As an example for this, see the call to AC_ARG_WITH for cooling.
 AC_ARG_WITH([subgrid],
 	[AS_HELP_STRING([--with-subgrid=<subgrid>],
-		[Master switch for subgrid methods. Inexperienced users should start here @<:@none, GEAR, EAGLE, COLIBRE default: none@:>@]
+		[Master switch for subgrid methods. Inexperienced users should start here @<:@none, GEAR, EAGLE, COLIBRE, COLIBRE-CHIMES default: none@:>@]
 	)],
 	[with_subgrid="$withval"],
 	[with_subgrid=none]
@@ -1563,6 +1563,19 @@ case "$with_subgrid" in
    ;;
    COLIBRE)
 	with_subgrid_cooling=COLIBRE
+	with_subgrid_chemistry=COLIBRE
+	with_subgrid_tracers=COLIBRE
+	with_subgrid_entropy_floor=EAGLE
+	with_subgrid_stars=COLIBRE
+	with_subgrid_star_formation=COLIBRE
+	with_subgrid_feedback=COLIBRE
+	with_subgrid_black_holes=EAGLE
+	with_subgrid_task_order=EAGLE
+	enable_fof=yes
+        with_subgrid_SNIa_DTD=power-law-beta-one
+   ;;
+   COLIBRE-CHIMES)
+	with_subgrid_cooling=CHIMES
 	with_subgrid_chemistry=COLIBRE
 	with_subgrid_tracers=COLIBRE
 	with_subgrid_entropy_floor=EAGLE
