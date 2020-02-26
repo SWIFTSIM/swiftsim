@@ -17,7 +17,7 @@
 #
 ##############################################################################
 
-from h5py import File
+from h5py import HDF5File
 import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
@@ -113,7 +113,7 @@ def doSnapshots():
 
     for i, f in enumerate(filenames):
         # get the data from the file
-        f = File(f, "r")
+        f = HDF5File(f, "r")
         pos = f["PartType1/Coordinates"][:]
         pos -= center
         vel = f["PartType1/Velocities"][:]
@@ -150,12 +150,12 @@ def doSnapshots():
     plt.figure(fig_2.number)
     if diff_to_sol:
         p[:, :2] = p[:, :2] - y[:2, :].transpose()
-    plt.plot(p[:, 0], p[:, 1], ".", label="Snapshot")
+    plt.plot(p[:, 0], p[:, 1], "-", label="Snapshot", lw=1.)
 
     plt.figure(fig_3.number)
     if diff_to_sol:
         v[:, :2] = v[:, :2] - y[2:, :].transpose()
-    plt.plot(v[:, 0], v[:, 1], ".", label="Snapshot")
+    plt.plot(v[:, 0], v[:, 1], "-", label="Snapshot", lw=1.)
 
 
 def doStatistics():
@@ -256,12 +256,12 @@ def doLogger():
     if diff_to_sol:
         p[:, :2] = p[:, :2] - y[:2, :].transpose()
     plt.figure(fig_2.number)
-    plt.plot(p[:, 0], p[:, 1], "--", label="Logger (Interpolation)")
+    plt.plot(p[:, 0], p[:, 1], ":r", label="Logger (Interpolation)")
 
     plt.figure(fig_3.number)
     if diff_to_sol:
         v[:, :2] = v[:, :2] - y[2:, :].transpose()
-    plt.plot(v[:, 0], v[:, 1], "--", label="Logger (Interpolation)")
+    plt.plot(v[:, 0], v[:, 1], ":r", label="Logger (Interpolation)")
 
 
 # do all the plots
@@ -279,11 +279,15 @@ plt.savefig("Energy.png")
 plt.figure(fig_2.number)
 plt.xlabel("Position [AU]")
 plt.ylabel("Position [AU]")
+plt.axis("equal")
 plt.legend()
-plt.savefig("Positions.png")
+plt.savefig("Positions.pdf")
 
 plt.figure(fig_3.number)
 plt.xlabel("Velocity [AU / yr]")
 plt.ylabel("Velocity [AU / yr]")
+plt.axis("equal")
 plt.legend()
 plt.savefig("Velocities.png")
+
+plt.show()

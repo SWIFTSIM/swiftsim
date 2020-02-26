@@ -90,9 +90,6 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
       1, &n_tot, logger_particle_descr);
 
-  /* Reference is stolen, therefore need to take it into account */
-  Py_INCREF(logger_particle_descr);
-
   void *data = PyArray_DATA(out);
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
@@ -221,6 +218,14 @@ static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
   if (new_array) {
     interp = (PyArrayObject *) PyArray_NewLikeArray(
       parts, NPY_ANYORDER, NULL, 0);
+
+    /* Check if the allocation was fine */
+    if (interp == NULL) {
+      return NULL;
+    }
+
+    /* Reference stolen in PyArray_NewLikeArray => incref */
+    Py_INCREF(PyArray_DESCR(parts));
   }
   else {
     interp = parts;
@@ -241,6 +246,7 @@ static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
 
     /* Obtain the required particle records. */
     struct logger_particle *p = PyArray_GETPTR1(parts, i);
+
     /* Check that we are really going forward in time. */
     if (time < p->time) {
       error("Requesting to go backward in time (%g < %g)",

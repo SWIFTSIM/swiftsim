@@ -17,9 +17,10 @@
 #
 ##############################################################################
 
-from h5py import File
 import numpy as np
-from astropy import units, constants
+from astropy import units
+from swiftsimio import Writer
+import unyt
 
 np.random.seed(50)
 
@@ -54,9 +55,6 @@ coords += boxsize * 0.5
 # generate the masses
 m = np.ones(num_part) * masses
 
-# generate the ids
-ids = np.arange(num_part)
-
 # generate the velocities
 sign = np.random.rand(num_part)
 sign[sign < 0.5] = -1
@@ -66,34 +64,12 @@ v = np.zeros((num_part, 3))
 v[:, 0] = sign * np.sqrt(G * M / (dist * (1 + np.tan(angle)**2)))
 v[:, 1] = - np.tan(angle) * v[:, 0]
 
-# File
-file = File(filename, 'w')
+# Write the snapshot
+units = unyt.UnitSystem("Planets", unyt.AU, unyt.mearth, unyt.yr)
 
-# Header
-grp = file.create_group("/Header")
-grp.attrs["BoxSize"] = [boxsize]*3
-grp.attrs["NumPart_Total"] = [0, num_part, 0, 0, 0, 0]
-grp.attrs["NumPart_Total_HighWord"] = [0, 0, 0, 0, 0, 0]
-grp.attrs["NumPart_ThisFile"] = [0, num_part, 0, 0, 0, 0]
-grp.attrs["Time"] = 0.0
-grp.attrs["NumFilesPerSnapshot"] = 1
-grp.attrs["MassTable"] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-grp.attrs["Flag_Entropy_ICs"] = 0
-grp.attrs["Dimension"] = 3
+snapshot = Writer(units, boxsize * unyt.AU)
+snapshot.dark_matter.coordinates = coords * unyt.AU
+snapshot.dark_matter.velocities = v * unyt.AU / unyt.yr
+snapshot.dark_matter.masses = m * unyt.mearth
 
-# Units
-grp = file.create_group("/Units")
-grp.attrs["Unit length in cgs (U_L)"] = u_l
-grp.attrs["Unit mass in cgs (U_M)"] = u_m
-grp.attrs["Unit time in cgs (U_t)"] = u_t
-grp.attrs["Unit current in cgs (U_I)"] = 1.
-grp.attrs["Unit temperature in cgs (U_T)"] = 1.
-
-# Particle group
-grp = file.create_group("/PartType1")
-grp.create_dataset('Coordinates', data=coords, dtype='d')
-grp.create_dataset('Velocities', data=v, dtype='f')
-grp.create_dataset('Masses', data=m, dtype='f')
-grp.create_dataset('ParticleIDs', data=ids, dtype='L')
-
-file.close()
+snapshot.write(filename)

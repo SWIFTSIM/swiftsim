@@ -70,7 +70,7 @@ const struct mask_data logger_mask_data[logger_count_mask] = {
     /* Particle's acceleration. */
     {3 * sizeof(float), 1 << logger_a, "accelerations"},
     /* Particle's entropy. */
-    {sizeof(float), 1 << logger_u, "entropy"},
+    {sizeof(int), 1 << logger_u, "entropy"},
     /* Particle's smoothing length. */
     {sizeof(float), 1 << logger_h, "smoothing length"},
     /* Particle's density. */
@@ -249,6 +249,7 @@ void logger_copy_part_fields(const struct part *p, unsigned int mask,
     buff += logger_mask_data[logger_u].size;
     mask &= ~logger_mask_data[logger_u].mask;
   }
+#endif
 
   /* Particle smoothing length as a single float. */
   if (mask & logger_mask_data[logger_h].mask) {
@@ -274,8 +275,6 @@ void logger_copy_part_fields(const struct part *p, unsigned int mask,
     buff += sizeof(int64_t);
     mask &= ~logger_mask_data[logger_consts].mask;
   }
-
-#endif
 
   /* Special flags */
   if (mask & logger_mask_data[logger_special_flags].mask) {

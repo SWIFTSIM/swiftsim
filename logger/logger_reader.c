@@ -430,9 +430,13 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
 
     /* Are we at the end of the file? */
     if (next_offset == 0) {
-      time_array_print(&reader->log.times);
-      error("End of file for offset %zi when requesting time with offset %zi",
-            prev_offset, time_offset);
+      bzero(prev, sizeof(struct logger_particle));
+      bzero(next, sizeof(struct logger_particle));
+      return;
+      /* time_array_print(&reader->log.times); */
+      /* error("End of file for particle %lli offset %zi when requesting time %g with offset %zi", */
+      /*       prev->id, prev_offset, time_array_get_time(&reader->log.times, time_offset), */
+      /*       time_offset); */
     }
 
     next_offset += prev_offset;
