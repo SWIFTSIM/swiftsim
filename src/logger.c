@@ -70,7 +70,7 @@ const struct mask_data logger_mask_data[logger_count_mask] = {
     /* Particle's acceleration. */
     {3 * sizeof(float), 1 << logger_a, "accelerations"},
     /* Particle's entropy. */
-    {sizeof(float), 1 << logger_u, "entropy"},
+    {sizeof(int), 1 << logger_u, "entropy"},
     /* Particle's smoothing length. */
     {sizeof(float), 1 << logger_h, "smoothing length"},
     /* Particle's density. */
@@ -268,14 +268,6 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
     buff += logger_mask_data[logger_a].size;
   }
 
-#if defined(GADGET2_SPH)
-
-  /* Particle internal energy as a single float. */
-  if (mask & logger_mask_data[logger_u].mask) {
-    memcpy(buff, &p->entropy, logger_mask_data[logger_u].size);
-    buff += logger_mask_data[logger_u].size;
-  }
-
   /* Particle smoothing length as a single float. */
   if (mask & logger_mask_data[logger_h].mask) {
     memcpy(buff, &p->h, logger_mask_data[logger_h].size);
@@ -286,6 +278,19 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
   if (mask & logger_mask_data[logger_rho].mask) {
     memcpy(buff, &p->rho, logger_mask_data[logger_rho].size);
     buff += logger_mask_data[logger_rho].size;
+  }
+
+  /* /\* Particle internal energy as a single float. *\/ */
+  /* if (mask & logger_mask_data[logger_u].mask) { */
+  /*   memcpy(buff, &p->mat_id, logger_mask_data[logger_u].size); */
+  /*   buff += logger_mask_data[logger_u].size; */
+  /* } */
+#if defined(GADGET2_SPH)
+
+  /* Particle internal energy as a single float. */
+  if (mask & logger_mask_data[logger_u].mask) {
+    memcpy(buff, &p->entropy, logger_mask_data[logger_u].size);
+    buff += logger_mask_data[logger_u].size;
   }
 
   /* Particle constants, which is a bit more complicated. */

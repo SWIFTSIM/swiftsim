@@ -40,7 +40,7 @@ void logger_particle_print(const struct logger_particle *p) {
   message("Positions:     (%g, %g, %g).", p->pos[0], p->pos[1], p->pos[2]);
   message("Velocities:    (%g, %g, %g).", p->vel[0], p->vel[1], p->vel[2]);
   message("Accelerations: (%g, %g, %g).", p->acc[0], p->acc[1], p->acc[2]);
-  message("Entropy:       %g.", p->entropy);
+  message("Entropy:       %i.", p->entropy);
   message("Density:       %g.", p->density);
   message("Type:          %i.", p->type);
 }
@@ -361,9 +361,14 @@ void logger_particle_interpolate(struct logger_particle *part_curr,
     part_curr->acc[i] += ftmp * scaling;
   }
 
-  /* interpolate scalars. */
-  ftmp = (part_next->entropy - part_curr->entropy);
-  part_curr->entropy += ftmp * scaling;
+  /* /\* interpolate scalars. *\/ */
+  /* ftmp = (part_next->entropy - part_curr->entropy); */
+  /* part_curr->entropy += ftmp * scaling; */
+  ftmp = (part_next->h - part_curr->h);
+  part_curr->h += ftmp * scaling;
+
+  ftmp = (part_next->density - part_curr->density);
+  part_curr->density += ftmp * scaling;
 
   /* set time. */
   part_curr->time = time;
