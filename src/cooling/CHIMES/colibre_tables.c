@@ -368,7 +368,7 @@ double colibre_metal_cooling_rate_temperature(
   double log_T_cgs = log10(myGasVars->temperature);
   double redshift = myGlobalVars->redshift;
   double n_H_cgs = myGasVars->nH_tot;
-  double Z_absolute = myGasVars->metallicity * 0.0129;
+  double Z_absolute = myGasVars->metallicity * myGlobalData->Zsol;
   double noneq_electron_fraction = myGasVars->abundances[sp_elec];
 
   const float *abundance_ratio;

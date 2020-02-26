@@ -585,6 +585,7 @@ __attribute__((always_inline)) INLINE int element_from_table_to_code(
 
 struct global_hybrid_data_struct {
   struct colibre_cooling_tables *table;
+  float Zsol; 
 };
 
 struct gas_hybrid_data_struct {

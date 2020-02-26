@@ -438,6 +438,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
     myData = (struct global_hybrid_data_struct *)
                  cooling->ChimesGlobalVars.hybrid_data;
     myData->table = &(cooling->colibre_table);
+    myData->Zsol = cooling->Zsol; 
 
     /* Set the hybrid cooling function pointers. */
     cooling->ChimesGlobalVars.hybrid_cooling_fn =
@@ -1370,6 +1371,7 @@ void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
     myData = (struct global_hybrid_data_struct *)
                  cooling->ChimesGlobalVars.hybrid_data;
     myData->table = &(cooling->colibre_table);
+    myData->Zsol = cooling->Zsol; 
 
     /* Set the hybrid cooling function pointers. */
     cooling->ChimesGlobalVars.hybrid_cooling_fn =
