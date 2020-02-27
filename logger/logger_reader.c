@@ -255,7 +255,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   logger_reader_set_time(reader, time);
 
   /* Read the hydro */
-  struct index_data *data = logger_index_get_data(index, /* Particle type */ 0);
+  struct index_data *data = logger_index_get_data(index, swift_type_gas);
 
   /* Read the particles */
   for (size_t i = 0; i < array->hydro.n; i++) {
@@ -303,6 +303,109 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     /* Read the particle */
     logger_particle_read(&array->hydro.parts[i], reader, prev_offset, reader->time.time,
                          interp_type);
+  }
+
+
+  /* Do the dark matter now */
+  data = logger_index_get_data(index, swift_type_dark_matter);
+
+  /* Read the dark matter particles */
+  for (size_t i = 0; i < array->dark_matter.n; i++) {
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
+
+#ifdef SWIFT_DEBUG_CHECKS
+    /* check with the offset of the next timestamp.
+     * (the sentinel protects against overflow)
+     */
+    const size_t ind = reader->time.index + 1;
+    if (prev_offset >= reader->log.times.records[ind].offset) {
+      error("An offset is out of range (%zi > %zi).", prev_offset,
+            reader->log.times.records[ind].offset);
+    }
+#endif
+
+    while (next_offset < reader->time.time_offset) {
+      // TODO use a single call for the offset and mask
+      size_t mask = 0;
+      logger_loader_io_read_mask(
+        &reader->log.header, reader->log.log.map + prev_offset,
+        &mask, /* diff_offset */ NULL);
+
+      if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+        error("TODO");
+      }
+
+      int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
+                                       &next_offset, reader->log.log.mmap_size);
+
+      if (test == -1) {
+        mask = 0;
+        logger_loader_io_read_mask(&reader->log.header,
+                                   (char *)reader->log.log.map + prev_offset,
+                                   &mask, &next_offset);
+        error(
+            "Trying to get a particle without next record (mask: %zi, diff "
+            "offset: %zi)",
+            mask, next_offset);
+      }
+    }
+
+    /* Read the particle */
+    logger_gparticle_read(&array->dark_matter.parts[i], reader, prev_offset, reader->time.time,
+                         interp_type);
+  }
+
+
+  data = logger_index_get_data(index, swift_type_stars);
+
+  /* Read the particles */
+  for (size_t i = 0; i < array->stars.n; i++) {
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
+
+#ifdef SWIFT_DEBUG_CHECKS
+    /* check with the offset of the next timestamp.
+     * (the sentinel protects against overflow)
+     */
+    const size_t ind = reader->time.index + 1;
+    if (prev_offset >= reader->log.times.records[ind].offset) {
+      error("An offset is out of range (%zi > %zi).", prev_offset,
+            reader->log.times.records[ind].offset);
+    }
+#endif
+
+    while (next_offset < reader->time.time_offset) {
+      // TODO use a single call for the offset and mask
+      size_t mask = 0;
+      logger_loader_io_read_mask(
+        &reader->log.header, reader->log.log.map + prev_offset,
+        &mask, /* diff_offset */ NULL);
+
+      if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+        error("TODO");
+      }
+
+      int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
+                                       &next_offset, reader->log.log.mmap_size);
+
+      if (test == -1) {
+        mask = 0;
+        logger_loader_io_read_mask(&reader->log.header,
+                                   (char *)reader->log.log.map + prev_offset,
+                                   &mask, &next_offset);
+        error(
+            "Trying to get a particle without next record (mask: %zi, diff "
+            "offset: %zi)",
+            mask, next_offset);
+      }
+    }
+
+    /* Read the particle */
+    logger_sparticle_read(&array->stars.parts[i], reader, prev_offset, reader->time.time,
+                          interp_type);
   }
 }
 
