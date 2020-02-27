@@ -219,19 +219,5 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
     error("Error in the offset (mask %lu at %lu != %lu at %lu).", mask, offset,
           pointed_mask, pointed_offset);
 
-  if (pointed_mask == h->timestamp_mask)
-    return (size_t)((char *)map - (char *)file_init);
-
-  struct logger_particle part;
-  logger_particle_read(&part, reader, offset, 0, logger_reader_const);
-
-  long long id = part.id;
-  logger_particle_read(&part, reader, pointed_offset, 0, logger_reader_const);
-
-  if (id != part.id) {
-    error("Offset wrong, id incorrect (%lli != %lli) at %lu.", id, part.id,
-          pointed_offset);
-  }
-
   return (size_t)((char *)map - (char *)file_init);
 }

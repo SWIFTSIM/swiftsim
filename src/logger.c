@@ -703,6 +703,7 @@ void logger_free(struct logger_writer *log) {
 
   free(logger_mask_data);
   logger_mask_data = NULL;
+  logger_count_mask = 0;
 }
 
 /**

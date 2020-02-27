@@ -52,9 +52,7 @@ static PyTypeObject PyLoggerSParticle_Type;
 const char *sparticle_name = "StarsParticle";
 
 PyArray_Descr *logger_particle_descr;
-
 PyArray_Descr *logger_gparticle_descr;
-
 PyArray_Descr *logger_sparticle_descr;
 
 /**
@@ -108,12 +106,19 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
       1, &n_tot, logger_particle_descr);
 
-  void *data = PyArray_DATA(out);
+  struct logger_particle_array array;
+  logger_particle_array_init(&array);
+  array.hydro.parts = PyArray_DATA(out);
+  array.hydro.n = n_parts[swift_type_gas];
+
+  /* Reference is stolen, therefore need to take it into account */
+  Py_INCREF(logger_particle_descr);
+
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
-  logger_reader_read_all_particles(&reader, time, logger_reader_const, data,
+  logger_reader_read_all_particles(&reader, time, logger_reader_const, &array,
                                    n_tot);
 
   /* No need of threads anymore */
@@ -121,6 +126,7 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
 
   /* Free the memory. */
   logger_reader_free(&reader);
+
 
   return (PyObject *)out;
 }

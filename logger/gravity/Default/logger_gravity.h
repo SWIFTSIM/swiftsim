@@ -61,7 +61,7 @@ struct logger_gparticle {
   size_t offset;
 
   /* Special flag */
-  int flag;
+  uint32_t flag;
 };
 
 /**

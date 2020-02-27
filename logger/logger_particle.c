@@ -72,7 +72,7 @@ size_t logger_particle_read(struct logger_particle *part,
   }
 
   /* Read all the fields. */
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
       map = logger_particle_read_field(part, map, h->masks[i].name,
                                        h->masks[i].size);
@@ -165,7 +165,7 @@ size_t logger_gparticle_read(struct logger_gparticle *part,
   }
 
   /* Read all the fields. */
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
       map = logger_gparticle_read_field(part, map, h->masks[i].name,
                                         h->masks[i].size);
@@ -258,7 +258,7 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
   }
 
   /* Read all the fields. */
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
       map = logger_sparticle_read_field(part, map, h->masks[i].name,
                                         h->masks[i].size);

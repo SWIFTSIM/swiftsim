@@ -100,28 +100,31 @@ void check_data(struct logger_reader *reader, struct part *parts,
           if (step >= max_step) {
             tmp = max_step - max_step % p->time_bin;
           }
-          assert(tmp == lp.pos[i]);
+          assert(tmp == lp.x[i]);
         } else
-          assert(p->x[i] == lp.pos[i]);
-        assert(p->v[i] == lp.vel[i]);
-        assert(p->a_hydro[i] == lp.acc[i]);
+          assert(p->x[i] == lp.x[i]);
+        assert(p->v[i] == lp.v[i]);
+        assert(p->a_hydro[i] == lp.a[i]);
       }
 
       assert(p->entropy == lp.entropy);
       assert(p->mass == lp.mass);
 
       /* Check optional fields. */
-      int number_steps = step / p->time_bin;
-      if (number_steps % period_h == 0 || step > max_step) {
-        assert(p->h == lp.h);
-      } else {
-        assert(-1 == lp.h);
-      }
-      if (number_steps % period_rho == 0 || step > max_step) {
-        assert(p->rho == lp.density);
-      } else {
-        assert(-1 == lp.density);
-      }
+      //int number_steps = step / p->time_bin;
+      // TODO check only every few steps
+      assert(p->h == lp.h);
+      /* if (number_steps % period_h == 0 || step > max_step) { */
+      /*   assert(p->h == lp.h); */
+      /* } else { */
+      /*   assert(-1 == lp.h); */
+      /* } */
+      assert(p->rho == lp.rho);
+      /* if (number_steps % period_rho == 0 || step > max_step) { */
+      /*   assert(p->rho == lp.rho); */
+      /* } else { */
+      /*   assert(-1 == lp.rho); */
+      /* } */
     }
     /* Time stamp case. */
     else {

@@ -24,6 +24,7 @@
 #include "engine.h"
 #include "hydro.h"
 #include "logger.h"
+#include "logger_io.h"
 
 /* Not all the fields are written at every step.
  * Here we define how often a few fields are written.
@@ -117,20 +118,9 @@ void write_particles(struct logger_writer *log, struct engine *e) {
       /* Write a time information to check that the correct particle is read. */
       parts[j].x[0] = i;
 
-      /* Write this particle. */
-      unsigned int mask =
-          logger_mask_data[logger_x].mask | logger_mask_data[logger_v].mask |
-          logger_mask_data[logger_a].mask | logger_mask_data[logger_u].mask |
-          logger_mask_data[logger_consts].mask;
+      // TODO write only a few masks at the time
 
-      int number_particle_step = i / parts[j].time_bin;
-
-      if (number_particle_step % period_h == 0)
-        mask |= logger_mask_data[logger_h].mask;
-      if (number_particle_step % period_rho == 0)
-        mask |= logger_mask_data[logger_rho].mask;
-
-      logger_log_part(log, &parts[j], mask, &xparts[j].logger_data.last_offset,
+      logger_log_part(log, &parts[j], &xparts[j], /* log_all */ 0,
                       /* special flags */ 0);
     }
   }

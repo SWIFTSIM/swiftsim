@@ -51,6 +51,7 @@
 #include "logger_loader_io.h"
 #include "logger_logfile.h"
 #include "logger_particle.h"
+#include "logger_particle_array.h"
 
 /**
  * @brief Main structure of the logger.
@@ -102,6 +103,12 @@ struct logger_reader {
   int verbose;
 };
 
+enum logger_reader_event {
+  logger_reader_event_null, /* No event */
+  logger_reader_event_deleted, /* Particle has been deleted */
+  logger_reader_event_stars, /* The particle has been transformed into a star */
+};
+
 void logger_reader_init_index(struct logger_reader *reader);
 void logger_reader_init(struct logger_reader *reader, const char *basename,
                         int verbose);
@@ -116,9 +123,15 @@ double logger_reader_get_time_begin(struct logger_reader *reader);
 double logger_reader_get_time_end(struct logger_reader *reader);
 size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
                                                double time);
-void logger_reader_get_next_particle(struct logger_reader *reader,
-                                     struct logger_particle *prev,
-                                     struct logger_particle *next, size_t time);
+enum logger_reader_event logger_reader_get_next_particle(
+  struct logger_reader *reader, struct logger_particle *prev,
+  struct logger_particle *next, size_t time);
+enum logger_reader_event logger_reader_get_next_gparticle(
+  struct logger_reader *reader, struct logger_gparticle *prev,
+  struct logger_gparticle *next, size_t time);
+enum logger_reader_event logger_reader_get_next_sparticle(
+  struct logger_reader *reader, struct logger_sparticle *prev,
+  struct logger_sparticle *next, size_t time);
 
 const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
                                                    int *n_type);
@@ -127,7 +140,7 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
                                              void *extra_data);
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type inter_type,
-                                      struct logger_particle *parts,
+                                      struct logger_particle_array *array,
                                       size_t n_tot);
 
 #endif  // LOGGER_LOGGER_READER_H
