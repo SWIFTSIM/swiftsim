@@ -123,7 +123,8 @@ const char *engine_policy_names[] = {"none",
                                      "black holes",
                                      "fof search",
                                      "time-step limiter",
-                                     "time-step sync"};
+                                     "time-step sync",
+                                     "logger"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -257,89 +258,176 @@ void engine_repartition_trigger(struct engine *e) {
 #ifdef WITH_MPI
 
   const ticks tic = getticks();
+  static int opened = 0;
+  if (e->restarting) opened = 1;
 
   /* Do nothing if there have not been enough steps since the last repartition
    * as we don't want to repeat this too often or immediately after a
-   * repartition step. Also nothing to do when requested. */
-  if (e->step - e->last_repartition >= 2 &&
-      e->reparttype->type != REPART_NONE) {
+   * repartition step. We attempt all this even when we are not repartitioning
+   * as the balance logs can still be interesting. */
+  if (e->step - e->last_repartition >= 2) {
 
     /* If we have fixed costs available and this is step 2 or we are forcing
-     * repartitioning then we do a fixed costs one now. */
-    if (e->reparttype->trigger > 1 ||
-        (e->step == 2 && e->reparttype->use_fixed_costs)) {
-
-      if (e->reparttype->trigger > 1) {
-        if ((e->step % (int)e->reparttype->trigger) == 0) e->forcerepart = 1;
-      } else {
-        e->forcerepart = 1;
-      }
-      e->reparttype->use_ticks = 0;
-
-    } else {
-
-      /* It is only worth checking the CPU loads when we have processed a
-       * significant number of all particles as we require all tasks to have
-       * timings. */
-      if ((e->updates > 1 &&
-           e->updates >= e->total_nr_parts * e->reparttype->minfrac) ||
-          (e->g_updates > 1 &&
-           e->g_updates >= e->total_nr_gparts * e->reparttype->minfrac)) {
-
-        /* Should we are use the task timings or fixed costs. */
-        if (e->reparttype->use_fixed_costs > 1) {
-          e->reparttype->use_ticks = 0;
+     * repartitioning then we do a forced fixed costs repartition regardless. */
+    int forced = 0;
+    if (e->reparttype->type != REPART_NONE) {
+      if (e->reparttype->trigger > 1 ||
+          (e->step == 2 && e->reparttype->use_fixed_costs)) {
+        if (e->reparttype->trigger > 1) {
+          if ((e->step % (int)e->reparttype->trigger) == 0) e->forcerepart = 1;
         } else {
-          e->reparttype->use_ticks = 1;
+          e->forcerepart = 1;
         }
+        e->reparttype->use_ticks = 0;
+        forced = 1;
+      }
+    }
 
-        /* Get CPU time used since the last call to this function. */
-        double elapsed_cputime =
-            clocks_get_cputime_used() - e->cputime_last_step;
+    /* We only check the CPU loads when we have processed a significant number
+     * of all particles as we require all tasks to have timings or are
+     * interested in the various balances logs. */
+    if ((e->updates > 1 &&
+         e->updates >= e->total_nr_parts * e->reparttype->minfrac) ||
+        (e->g_updates > 1 &&
+         e->g_updates >= e->total_nr_gparts * e->reparttype->minfrac)) {
 
-        /* Gather the elapsed CPU times from all ranks for the last step. */
-        double elapsed_cputimes[e->nr_nodes];
-        MPI_Gather(&elapsed_cputime, 1, MPI_DOUBLE, elapsed_cputimes, 1,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        if (e->nodeID == 0) {
-
-          /* Get the range and mean of cputimes. */
-          double mintime = elapsed_cputimes[0];
-          double maxtime = elapsed_cputimes[0];
-          double sum = elapsed_cputimes[0];
-          for (int k = 1; k < e->nr_nodes; k++) {
-            if (elapsed_cputimes[k] > maxtime) maxtime = elapsed_cputimes[k];
-            if (elapsed_cputimes[k] < mintime) mintime = elapsed_cputimes[k];
-            sum += elapsed_cputimes[k];
-          }
-          double mean = sum / (double)e->nr_nodes;
-
-          /* Are we out of balance? */
-          double abs_trigger = fabs(e->reparttype->trigger);
-          if (((maxtime - mintime) / mean) > abs_trigger) {
-            if (e->verbose)
-              message("trigger fraction %.3f > %.3f will repartition",
-                      (maxtime - mintime) / mean, abs_trigger);
-            e->forcerepart = 1;
-          } else {
-            if (e->verbose)
-              message("trigger fraction %.3f =< %.3f will not repartition",
-                      (maxtime - mintime) / mean, abs_trigger);
-          }
-        }
+      /* Are we using the task tick timings or fixed costs? */
+      if (e->reparttype->use_fixed_costs > 1) {
+        e->reparttype->use_ticks = 0;
+      } else {
+        e->reparttype->use_ticks = 1;
       }
 
-      /* All nodes do this together. */
+      /* Get the resident size of the process for the memory logs. */
+      long size, resident, shared, text, library, data, dirty;
+      memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
+
+      /* Gather it together with the CPU times used by the tasks in the last
+       * step. */
+      double timemem[3] = {e->usertime_last_step, e->systime_last_step,
+                           (double)resident};
+      double timemems[e->nr_nodes * 3];
+      MPI_Gather(&timemem, 3, MPI_DOUBLE, timemems, 3, MPI_DOUBLE, 0,
+                 MPI_COMM_WORLD);
+      if (e->nodeID == 0) {
+
+        /* Get the range and mean of the two CPU times and memory. */
+        double umintime = timemems[0];
+        double umaxtime = timemems[0];
+
+        double smintime = timemems[1];
+        double smaxtime = timemems[1];
+
+        double minmem = timemems[2];
+        double maxmem = timemems[2];
+
+        double tmintime = umintime + smintime;
+        double tmaxtime = umaxtime + smaxtime;
+
+        double usum = timemems[0];
+        double ssum = timemems[1];
+        double tsum = usum + ssum;
+
+        double msum = timemems[2];
+
+        for (int k = 3; k < e->nr_nodes * 3; k += 3) {
+          if (timemems[k] > umaxtime) umaxtime = timemems[k];
+          if (timemems[k] < umintime) umintime = timemems[k];
+
+          if (timemems[k + 1] > smaxtime) smaxtime = timemems[k + 1];
+          if (timemems[k + 1] < smintime) smintime = timemems[k + 1];
+
+          double total = timemems[k] + timemems[k + 1];
+          if (total > tmaxtime) tmaxtime = total;
+          if (total < tmintime) tmintime = total;
+
+          usum += timemems[k];
+          ssum += timemems[k + 1];
+          tsum += total;
+
+          if (timemems[k + 2] > maxmem) maxmem = timemems[k + 2];
+          if (timemems[k + 2] < minmem) minmem = timemems[k + 2];
+          msum += timemems[k + 2];
+        }
+        double umean = usum / (double)e->nr_nodes;
+        double smean = ssum / (double)e->nr_nodes;
+        double tmean = tsum / (double)e->nr_nodes;
+        double mmean = msum / (double)e->nr_nodes;
+
+        /* Are we out of balance and need to repartition? */
+        /* ---------------------------------------------- */
+        double abs_trigger = fabs(e->reparttype->trigger);
+        double balance = (umaxtime - umintime) / umean;
+        if (e->reparttype->type != REPART_NONE) {
+
+          /* When forced we don't care about the balance. */
+          if (!forced) {
+            if (balance > abs_trigger) {
+              if (e->verbose)
+                message("trigger fraction %.3f > %.3f will repartition",
+                        balance, abs_trigger);
+              e->forcerepart = 1;
+            } else {
+              if (e->verbose && e->reparttype->type != REPART_NONE)
+                message("trigger fraction %.3f =< %.3f will not repartition",
+                        balance, abs_trigger);
+            }
+          }
+
+        } else {
+          /* Not repartitioning, would that have been done otherwise? */
+          if (e->verbose)
+            message("trigger fraction %.3f > %.3f would have repartitioned",
+                    balance, abs_trigger);
+        }
+
+        /* Keep logs of all CPU times and resident memory size for debugging
+         * load issues. */
+        FILE *timelog = NULL;
+        FILE *memlog = NULL;
+        if (!opened) {
+          timelog = fopen("rank_cpu_balance.log", "w");
+          fprintf(timelog, "# step rank user sys sum\n");
+
+          memlog = fopen("rank_memory_balance.log", "w");
+          fprintf(memlog, "# step rank resident\n");
+
+          opened = 1;
+        } else {
+          timelog = fopen("rank_cpu_balance.log", "a");
+          memlog = fopen("rank_memory_balance.log", "a");
+        }
+
+        for (int k = 0; k < e->nr_nodes * 3; k += 3) {
+
+          fprintf(timelog, "%d %d %f %f %f\n", e->step, k / 3, timemems[k],
+                  timemems[k + 1], timemems[k] + timemems[k + 1]);
+
+          fprintf(memlog, "%d %d %ld\n", e->step, k / 3, (long)timemems[k + 2]);
+        }
+
+        fprintf(timelog, "# %d mean times: %f %f %f\n", e->step, umean, smean,
+                tmean);
+        if (abs_trigger > 1.f) abs_trigger = 0.f; /* Not relevant. */
+        fprintf(timelog,
+                "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
+                e->step, balance, abs_trigger, (smaxtime - smintime) / smean,
+                (tmaxtime - tmintime) / tmean);
+
+        fclose(timelog);
+
+        fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n", e->step,
+                mmean, (maxmem - minmem) / mmean);
+        fclose(memlog);
+      }
+
+      /* All nodes do this together, so send to other ranks. */
       MPI_Bcast(&e->forcerepart, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
 
     /* Remember we did this. */
     if (e->forcerepart) e->last_repartition = e->step;
   }
-
-  /* We always reset CPU time for next check, unless it will not be used. */
-  if (e->reparttype->type != REPART_NONE)
-    e->cputime_last_step = clocks_get_cputime_used();
 
   if (e->verbose)
     message("took %.3f %s", clocks_from_ticks(getticks() - tic),
@@ -408,7 +496,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
                             size_t *Nbpart) {
 
 #ifdef WITH_MPI
-
   struct space *s = e->s;
   ticks tic = getticks();
 
@@ -454,6 +541,19 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
     /* Load the part and xpart into the proxy. */
     proxy_parts_load(&e->proxies[pid], &s->parts[offset_parts + k],
                      &s->xparts[offset_parts + k], 1);
+
+#ifdef WITH_LOGGER
+    if (e->policy & engine_policy_logger) {
+      const uint32_t logger_flag =
+          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id);
+
+      /* Log the particle when leaving a rank. */
+      logger_log_part(
+          e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
+          logger_masks_all_part | logger_mask_data[logger_special_flags].mask,
+          logger_flag);
+    }
+#endif
   }
 
   /* Put the sparts into the corresponding proxies. */
@@ -489,6 +589,19 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
     /* Load the spart into the proxy */
     proxy_sparts_load(&e->proxies[pid], &s->sparts[offset_sparts + k], 1);
+
+#ifdef WITH_LOGGER
+    if (e->policy & engine_policy_logger) {
+      const uint32_t logger_flag =
+          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id);
+
+      /* Log the particle when leaving a rank. */
+      logger_log_spart(
+          e->logger, &s->sparts[offset_sparts + k],
+          logger_masks_all_spart | logger_mask_data[logger_special_flags].mask,
+          logger_flag);
+    }
+#endif
   }
 
   /* Put the bparts into the corresponding proxies. */
@@ -524,6 +637,12 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
     /* Load the bpart into the proxy */
     proxy_bparts_load(&e->proxies[pid], &s->bparts[offset_bparts + k], 1);
+
+#ifdef WITH_LOGGER
+    if (e->policy & engine_policy_logger) {
+      error("Not yet implemented.");
+    }
+#endif
   }
 
   /* Put the gparts into the corresponding proxies. */
@@ -553,6 +672,22 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
     /* Load the gpart into the proxy */
     proxy_gparts_load(&e->proxies[pid], &s->gparts[offset_gparts + k], 1);
+
+#ifdef WITH_LOGGER
+    /* Write only the dark matter particles */
+    if ((e->policy & engine_policy_logger) &&
+        s->gparts[offset_gparts + k].type == swift_type_dark_matter) {
+
+      const uint32_t logger_flag =
+          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id);
+
+      /* Log the particle when leaving a rank. */
+      logger_log_gpart(
+          e->logger, &s->gparts[offset_gparts + k],
+          logger_masks_all_gpart | logger_mask_data[logger_special_flags].mask,
+          logger_flag);
+    }
+#endif
   }
 
   /* Launch the proxies. */
@@ -772,6 +907,41 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
              sizeof(struct spart) * prox->nr_sparts_in);
       memcpy(&s->bparts[offset_bparts + count_bparts], prox->bparts_in,
              sizeof(struct bpart) * prox->nr_bparts_in);
+
+#ifdef WITH_LOGGER
+      if (e->policy & engine_policy_logger) {
+        const uint32_t flag =
+            logger_pack_flags_and_data(logger_flag_mpi_enter, prox->nodeID);
+
+        struct part *parts = &s->parts[offset_parts + count_parts];
+        struct xpart *xparts = &s->xparts[offset_parts + count_parts];
+        struct spart *sparts = &s->sparts[offset_sparts + count_sparts];
+        struct gpart *gparts = &s->gparts[offset_gparts + count_gparts];
+
+        /* Log the gas particles */
+        logger_log_parts(
+            e->logger, parts, xparts, prox->nr_parts_in,
+            logger_masks_all_part | logger_mask_data[logger_special_flags].mask,
+            flag);
+
+        /* Log the stellar particles */
+        logger_log_sparts(e->logger, sparts, prox->nr_sparts_in,
+                          logger_masks_all_spart |
+                              logger_mask_data[logger_special_flags].mask,
+                          flag);
+
+        /* Log the gparts */
+        logger_log_gparts(e->logger, gparts, prox->nr_gparts_in,
+                          logger_masks_all_gpart |
+                              logger_mask_data[logger_special_flags].mask,
+                          flag);
+
+        /* Log the bparts */
+        if (prox->nr_bparts_in > 0) {
+          error("TODO");
+        }
+      }
+#endif
       /* for (int k = offset; k < offset + count; k++)
          message(
             "received particle %lli, x=[%.3e %.3e %.3e], h=%.3e, from node %i.",
@@ -1396,7 +1566,9 @@ int engine_estimate_nr_tasks(const struct engine *e) {
   }
 #if defined(WITH_LOGGER)
   /* each cell logs its particles */
-  n1 += 1;
+  if (e->policy & engine_policy_logger) {
+    n1 += 1;
+  }
 #endif
 
 #ifdef WITH_MPI
@@ -1484,6 +1656,28 @@ void engine_rebuild(struct engine *e, int repartitioned,
         e->s->nr_cells, e->s->tot_cells,
         (e->s->nr_cells + e->s->tot_cells) * sizeof(struct gravity_tensors) /
             (1024 * 1024));
+
+  /* Report the number of particles and memory */
+  if (e->verbose)
+    message(
+        "Space has memory for %zd/%zd/%zd/%zd part/gpart/spart/bpart "
+        "(%zd/%zd/%zd/%zd MB)",
+        e->s->size_parts, e->s->size_gparts, e->s->size_sparts,
+        e->s->size_bparts,
+        e->s->size_parts * sizeof(struct part) / (1024 * 1024),
+        e->s->size_gparts * sizeof(struct gpart) / (1024 * 1024),
+        e->s->size_sparts * sizeof(struct spart) / (1024 * 1024),
+        e->s->size_bparts * sizeof(struct bpart) / (1024 * 1024));
+
+  if (e->verbose)
+    message(
+        "Space holds %zd/%zd/%zd/%zd part/gpart/spart/bpart (fracs: "
+        "%f/%f/%f/%f)",
+        e->s->nr_parts, e->s->nr_gparts, e->s->nr_sparts, e->s->nr_bparts,
+        e->s->nr_parts ? e->s->nr_parts / ((double)e->s->size_parts) : 0.,
+        e->s->nr_gparts ? e->s->nr_gparts / ((double)e->s->size_gparts) : 0.,
+        e->s->nr_sparts ? e->s->nr_sparts / ((double)e->s->size_sparts) : 0.,
+        e->s->nr_bparts ? e->s->nr_bparts / ((double)e->s->size_bparts) : 0.);
 
   const ticks tic2 = getticks();
 
@@ -1965,13 +2159,15 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     cooling_update(e->cosmology, e->cooling_func, e->s);
 
 #ifdef WITH_LOGGER
-  /* Mark the first time step in the particle logger file. */
-  logger_log_timestamp(e->logger, e->ti_current, e->time,
-                       &e->logger->timestamp_offset);
-  /* Make sure that we have enough space in the particle logger file
-   * to store the particles in current time step. */
-  logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
-  logger_write_description(e->logger, e);
+  if (e->policy & engine_policy_logger) {
+    /* Mark the first time step in the particle logger file. */
+    logger_log_timestamp(e->logger, e->ti_current, e->time,
+                         &e->logger->timestamp_offset);
+    /* Make sure that we have enough space in the particle logger file
+     * to store the particles in current time step. */
+    logger_ensure_size(e->logger, s->nr_parts, s->nr_gparts, s->nr_sparts);
+    logger_write_description(e->logger, e);
+  }
 #endif
 
   /* Now, launch the calculation */
@@ -2306,13 +2502,15 @@ void engine_step(struct engine *e) {
   }
 
 #ifdef WITH_LOGGER
-  /* Mark the current time step in the particle logger file. */
-  logger_log_timestamp(e->logger, e->ti_current, e->time,
-                       &e->logger->timestamp_offset);
-  /* Make sure that we have enough space in the particle logger file
-   * to store the particles in current time step. */
-  logger_ensure_size(e->logger, e->s->nr_parts, e->s->nr_gparts,
-                     e->s->nr_sparts);
+  if (e->policy & engine_policy_logger) {
+    /* Mark the current time step in the particle logger file. */
+    logger_log_timestamp(e->logger, e->ti_current, e->time,
+                         &e->logger->timestamp_offset);
+    /* Make sure that we have enough space in the particle logger file
+     * to store the particles in current time step. */
+    logger_ensure_size(e->logger, e->s->nr_parts, e->s->nr_gparts,
+                       e->s->nr_sparts);
+  }
 #endif
 
   /* Are we drifting everything (a la Gadget/GIZMO) ? */
@@ -2362,10 +2560,28 @@ void engine_step(struct engine *e) {
     gravity_exact_force_compute(e->s, e);
 #endif
 
+    /* Get current CPU times.*/
+#ifdef WITH_MPI
+  double start_usertime = 0.0;
+  double start_systime = 0.0;
+  if (e->reparttype->type != REPART_NONE) {
+    clocks_get_cputimes_used(&start_usertime, &start_systime);
+  }
+#endif
+
   /* Start all the tasks. */
   TIMER_TIC;
   engine_launch(e, "tasks");
   TIMER_TOC(timer_runners);
+
+  /* Now record the CPU times used by the tasks. */
+#ifdef WITH_MPI
+  double end_usertime = 0.0;
+  double end_systime = 0.0;
+  clocks_get_cputimes_used(&end_usertime, &end_systime);
+  e->usertime_last_step = end_usertime - start_usertime;
+  e->systime_last_step = end_systime - start_systime;
+#endif
 
   /* Since the time-steps may have changed because of the limiter's
    * action, we need to communicate the new time-step sizes */
@@ -2415,7 +2631,9 @@ void engine_step(struct engine *e) {
 
   engine_check_for_dumps(e);
 #ifdef WITH_LOGGER
-  engine_check_for_index_dump(e);
+  if (e->policy & engine_policy_logger) {
+    engine_check_for_index_dump(e);
+  }
 #endif
 
   TIMER_TOC2(timer_step);
@@ -3316,7 +3534,7 @@ void engine_dump_snapshot(struct engine *e) {
  */
 void engine_dump_index(struct engine *e) {
 
-#if defined(WITH_LOGGER) && !defined(WITH_MPI)
+#if defined(WITH_LOGGER)
   struct clocks_time time1, time2;
   clocks_gettime(&time1);
 
@@ -3594,15 +3812,18 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->parameter_file = params;
   e->stf_this_timestep = 0;
 #ifdef WITH_MPI
-  e->cputime_last_step = 0;
+  e->usertime_last_step = 0.0;
+  e->systime_last_step = 0.0;
   e->last_repartition = 0;
 #endif
   e->total_nr_cells = 0;
   e->total_nr_tasks = 0;
 
 #if defined(WITH_LOGGER)
-  e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
-  logger_init(e->logger, params);
+  if (e->policy & engine_policy_logger) {
+    e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
+    logger_init(e->logger, params);
+  }
 #endif
 
   /* Make the space link back to the engine. */
@@ -4141,7 +4362,7 @@ void engine_config(int restart, int fof, struct engine *e,
 #endif
 
 #if defined(WITH_LOGGER)
-    if (e->nodeID == 0)
+    if ((e->policy & engine_policy_logger) && e->nodeID == 0)
       message(
           "WARNING: There is currently no way of predicting the output "
           "size, please use it carefully");
@@ -4364,7 +4585,7 @@ void engine_config(int restart, int fof, struct engine *e,
   }
 
 #ifdef WITH_LOGGER
-  if (!restart) {
+  if ((e->policy & engine_policy_logger) && !restart) {
     /* Write the particle logger header */
     logger_write_file_header(e->logger);
   }
@@ -4890,8 +5111,10 @@ void engine_clean(struct engine *e, const int fof) {
 
   swift_free("links", e->links);
 #if defined(WITH_LOGGER)
-  logger_free(e->logger);
-  free(e->logger);
+  if (e->policy & engine_policy_logger) {
+    logger_free(e->logger);
+    free(e->logger);
+  }
 #endif
   scheduler_clean(&e->sched);
   space_clean(e->s);
@@ -4976,7 +5199,9 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   if (e->output_list_stf) output_list_struct_dump(e->output_list_stf, stream);
 
 #ifdef WITH_LOGGER
-  logger_struct_dump(e->logger, stream);
+  if (e->policy & engine_policy_logger) {
+    logger_struct_dump(e->logger, stream);
+  }
 #endif
 }
 
@@ -5125,10 +5350,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   }
 
 #ifdef WITH_LOGGER
-  struct logger_writer *log =
-      (struct logger_writer *)malloc(sizeof(struct logger_writer));
-  logger_struct_restore(log, stream);
-  e->logger = log;
+  if (e->policy & engine_policy_logger) {
+    struct logger_writer *log =
+        (struct logger_writer *)malloc(sizeof(struct logger_writer));
+    logger_struct_restore(log, stream);
+    e->logger = log;
+  }
 #endif
 
 #ifdef EOS_PLANETARY
