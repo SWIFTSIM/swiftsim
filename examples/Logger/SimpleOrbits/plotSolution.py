@@ -17,7 +17,7 @@
 #
 ##############################################################################
 
-from h5py import HDF5File
+from h5py import File as HDF5File
 import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
@@ -114,28 +114,23 @@ def doSnapshots():
     for i, f in enumerate(filenames):
         # get the data from the file
         f = HDF5File(f, "r")
-        pos = f["PartType1/Coordinates"][:]
-        pos -= center
-        vel = f["PartType1/Velocities"][:]
         ids = f["PartType1/ParticleIDs"][:]
+        sort = np.argsort(ids)
+        ids = ids[sort]
+        pos = f["PartType1/Coordinates"][sort, :]
+        pos -= center
+        vel = f["PartType1/Velocities"][sort, :]
 
         t[i] = f["Header"].attrs["Time"]
 
-        # loop over all the particles
-        # (avoids comparing different particles)
-        for j in range(makeIC.num_part):
-            # Get the current id
-            ind = ids == j
+        r = np.sum(pos**2, axis=1)**0.5
+        v2 = np.sum(vel**2, axis=1)
+        E[i, :] = 0.5 * v2 - G * M / r
 
-            # Compute the energy
-            r = np.sum(pos[ind, :]**2)**0.5
-            v2 = np.sum(vel[ind, :]**2)
-            E[i, ind] = 0.5 * v2 - G * M / r
-
-            # Get the pos / vel of the required particle
-            if j == id_focus:
-                p[i, :] = pos[ind, :]
-                v[i, :] = vel[ind, :]
+        # Get the pos / vel of the required particle
+        ind = ids == id_focus
+        p[i, :] = pos[ind, :]
+        v[i, :] = vel[ind, :]
 
     # Compute the solution
     y0 = np.zeros(4)
@@ -199,31 +194,31 @@ def doLogger():
         # Get the next particles
         interp = logger.moveForwardInTime(
             basename, parts, t, verbose)
-        rel_pos = interp["positions"] - center
-        vel = interp["velocities"]
+        ids = interp["ids"]
+        sort = np.argsort(ids)
+        ids = ids[sort]
+        rel_pos = interp["positions"][sort, :] - center
+        vel = interp["velocities"][sort, :]
 
-        rel_pos_parts = parts["positions"] - center
-        vel_parts = parts["velocities"]
+        rel_pos_parts = parts["positions"][sort, :] - center
+        vel_parts = parts["velocities"][sort, :]
 
-        for j in range(makeIC.num_part):
-            # Compute the interpolated variables
-            ind = interp["ids"] == j
-            r = np.sum(rel_pos[ind, :]**2)**0.5
-            v2 = np.sum(vel[ind, :]**2)
-            E[i, ind] = 0.5 * v2 - G * M / r
-            if j == id_focus:
-                p[i, :] = rel_pos[ind, :]
-                v[i, :] = vel[ind, :]
+        # Compute the interpolated variables
+        r = np.sum(rel_pos**2, axis=1)**0.5
+        v2 = np.sum(vel**2, axis=1)
+        E[i, :] = 0.5 * v2 - G * M / r
+        ind = ids == id_focus
+        p[i, :] = rel_pos[ind, :]
+        v[i, :] = vel[ind, :]
 
-            # Compute the variables of the last record
-            ind = parts["ids"] == j
-            r = np.sum(rel_pos_parts[ind, :]**2)**0.5
-            v2 = np.sum(vel_parts[ind, :]**2)
-            E_parts[i, ind] = 0.5 * v2 - G * M / r
-            t_parts[i, ind] = parts["times"][ind]
-            if j == id_focus:
-                p_parts[i, :] = rel_pos_parts[ind, :]
-                v_parts[i, :] = vel_parts[ind, :]
+        # Compute the variables of the last record
+        r = np.sum(rel_pos_parts**2, axis=1)**0.5
+        v2 = np.sum(vel_parts**2, axis=1)
+        E_parts[i, :] = 0.5 * v2 - G * M / r
+        t_parts[i, :] = parts["times"][sort]
+        ind = ids == id_focus
+        p_parts[i, :] = rel_pos_parts[ind, :]
+        v_parts[i, :] = vel_parts[ind, :]
 
     # compute the plotting variables
     plt.figure(fig_1.number)
