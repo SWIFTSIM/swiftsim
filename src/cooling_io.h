@@ -37,6 +37,8 @@
 #include "./cooling/EAGLE/cooling_io.h"
 #elif defined(COOLING_COLIBRE)
 #include "./cooling/COLIBRE/cooling_io.h"
+#elif defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID)
+#include "./cooling/CHIMES/cooling_io.h"
 #else
 #error "Invalid choice of cooling function."
 #endif

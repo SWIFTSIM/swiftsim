@@ -22,6 +22,7 @@ difference is the parameter file that will need to be adapted for SWIFT.
    HydroSchemes/index
    TimeStepping/index
    SubgridModels/index
+   CHIMES/index
    eventLogging
    random
    FriendsOfFriends/index

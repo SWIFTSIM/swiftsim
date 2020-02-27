@@ -1994,6 +1994,9 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     }
   }
 
+  if (e->nodeID == 0) message("Converting cooling quantities.");
+  space_convert_cooling_quantities(e->s, e->verbose);
+
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we have the correct total mass in the top-level multipoles */
   long long num_gpart_mpole = 0;
