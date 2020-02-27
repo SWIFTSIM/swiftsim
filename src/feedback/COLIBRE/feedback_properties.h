@@ -272,6 +272,9 @@ struct feedback_props {
   /* Recombination coefficient in cgs units [cm3 s-1]*/
   float alpha_caseb_recomb;
 
+  /*! Energy floor of the HII region for injection (internal units) */
+  float HII_u;
+
   /* Number of age bins */
   int HII_nr_agebins;
 

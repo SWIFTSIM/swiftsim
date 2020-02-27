@@ -410,11 +410,12 @@ INLINE static void starformation_print_backend(
  * density loop for the COLIBRE star formation model.
  *
  * @param p The particle to act upon
+ * @param xp The extra particle data to act upon
  * @param cd The global star_formation information.
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, const struct star_formation* cd,
+    struct part* p, struct xpart* xp, const struct star_formation* cd,
     const struct cosmology* cosmo) {}
 
 /**

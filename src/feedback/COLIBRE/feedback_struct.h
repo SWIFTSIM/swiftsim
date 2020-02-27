@@ -22,6 +22,11 @@
 #include "chemistry_struct.h"
 
 /**
+ * @brief Feedback fields carried by each hydro particles
+ */
+struct feedback_part_data {};
+
+/**
  * @brief Feedback fields carried by each star particles
  */
 struct feedback_spart_data {
@@ -107,6 +112,9 @@ struct feedback_spart_data {
 
       /*! HII region probability */
       float HIIregion_probability;
+
+      /*! Energy floor of the HII region for injection */
+      float HII_u;
 
       /*! momentum available at the given timestep */
       float momentum;

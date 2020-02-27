@@ -108,7 +108,8 @@ __attribute__((always_inline)) INLINE static double cooling_rate_cgs(
  * @param xp Pointer to the particle' extended data.
  * @param dt The time-step of this particle.
  * @param dt_therm The time-step operator used for thermal quantities.
- * @param time Time since Big Bang
+ * @param time Time since Big Bang (or start of the simulation) in internal
+ * units.
  */
 __attribute__((always_inline)) INLINE static void cooling_cool_part(
     const struct phys_const* restrict phys_const,
@@ -235,6 +236,7 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
  * @param phys_const The physical constants in internal units.
  * @param cooling The properties of the cooling function.
  * @param us The internal system of units.
+ * @param hydro_props The properties of the hydro scheme.
  * @param cosmo The current cosmological model.
  * @param p Pointer to the particle data.
  * @param xp Pointer to the extended particle data.
@@ -242,6 +244,7 @@ __attribute__((always_inline)) INLINE static float cooling_timestep(
 __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     const struct phys_const* restrict phys_const,
     const struct unit_system* restrict us,
+    const struct hydro_props* hydro_props,
     const struct cosmology* restrict cosmo,
     const struct cooling_function_data* restrict cooling,
     const struct part* restrict p, struct xpart* restrict xp) {
@@ -423,5 +426,30 @@ static INLINE void cooling_struct_restore(struct cooling_function_data* cooling,
   restart_read_blocks((void*)cooling, sizeof(struct cooling_function_data), 1,
                       stream, NULL, "cooling function");
 }
+
+/**
+ * @brief Converts cooling quantities of a particle at the start of a run
+ *
+ * This function is called once at the end of the engine_init_particle()
+ * routine (at the start of a calculation) after the densities of
+ * particles have been computed.
+ *
+ * For this cooling module, this routine does not do anything.
+ *
+ * @param p The particle to act upon
+ * @param xp The extended particle to act upon
+ * @param cosmo The cosmological model.
+ * @param hydro_props The constants used in the scheme.
+ * @param phys_const #phys_const data structure.
+ * @param us Internal system of units data structure.
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling #cooling_function_data data structure.
+ */
+__attribute__((always_inline)) INLINE static void cooling_convert_quantities(
+    struct part* restrict p, struct xpart* restrict xp,
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    const struct phys_const* phys_const, const struct unit_system* us,
+    const struct entropy_floor_properties* floor_props,
+    const struct cooling_function_data* cooling) {}
 
 #endif /* SWIFT_COOLING_CONST_LAMBDA_H */

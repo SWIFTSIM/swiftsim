@@ -24,4 +24,4 @@ then
     ./getEagleYieldTable.sh
 fi
 
-../../swift --threads=8 --external-gravity --self-gravity --stars --star-formation --cooling --temperature --hydro --feedback --limiter isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --threads=8 --external-gravity --self-gravity --stars --star-formation --cooling --temperature --hydro --feedback --limiter --sync isolated_galaxy.yml 2>&1 | tee output.log

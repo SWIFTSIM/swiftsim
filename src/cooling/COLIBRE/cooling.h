@@ -56,6 +56,7 @@ float cooling_timestep(const struct cooling_function_data *cooling,
 
 void cooling_first_init_part(const struct phys_const *phys_const,
                              const struct unit_system *us,
+                             const struct hydro_props *hydro_props,
                              const struct cosmology *cosmo,
                              const struct cooling_function_data *cooling,
                              const struct part *p, struct xpart *xp);
@@ -126,5 +127,30 @@ void cooling_init_backend(struct swift_params *parameter_file,
 void cooling_print_backend(const struct cooling_function_data *cooling);
 
 void cooling_clean(struct cooling_function_data *data);
+
+/**
+ * @brief Converts cooling quantities of a particle at the start of a run
+ *
+ * This function is called once at the end of the engine_init_particle()
+ * routine (at the start of a calculation) after the densities of
+ * particles have been computed.
+ *
+ * For this cooling module, this routine does not do anything.
+ *
+ * @param p The particle to act upon
+ * @param xp The extended particle to act upon
+ * @param cosmo The cosmological model.
+ * @param hydro_props The constants used in the scheme.
+ * @param phys_const #phys_const data structure.
+ * @param us Internal system of units data structure.
+ * @param floor_props Properties of the entropy floor.
+ * @param cooling #cooling_function_data data structure.
+ */
+__attribute__((always_inline)) INLINE static void cooling_convert_quantities(
+    struct part *restrict p, struct xpart *restrict xp,
+    const struct cosmology *cosmo, const struct hydro_props *hydro_props,
+    const struct phys_const *phys_const, const struct unit_system *us,
+    const struct entropy_floor_properties *floor_props,
+    const struct cooling_function_data *cooling) {}
 
 #endif /* SWIFT_COOLING_COLIBRE_H */

@@ -360,6 +360,7 @@ void space_init_gparts(struct space *s, int verbose);
 void space_init_sparts(struct space *s, int verbose);
 void space_init_bparts(struct space *s, int verbose);
 void space_convert_quantities(struct space *s, int verbose);
+void space_convert_cooling_quantities(struct space *s, int verbose);
 void space_link_cleanup(struct space *s);
 void space_check_drift_point(struct space *s, integertime_t ti_drift,
                              int multipole);
@@ -379,7 +380,7 @@ void space_reset_task_counters(struct space *s);
 void space_clean(struct space *s);
 void space_free_cells(struct space *s);
 
-void space_free_foreign_parts(struct space *s);
+void space_free_foreign_parts(struct space *s, const int clear_cell_pointers);
 
 void space_struct_dump(struct space *s, FILE *stream);
 void space_struct_restore(struct space *s, FILE *stream);

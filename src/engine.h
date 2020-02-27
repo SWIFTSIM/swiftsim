@@ -77,9 +77,10 @@ enum engine_policy {
   engine_policy_black_holes = (1 << 19),
   engine_policy_fof = (1 << 20),
   engine_policy_timestep_limiter = (1 << 21),
-  engine_policy_timestep_sync = (1 << 22)
+  engine_policy_timestep_sync = (1 << 22),
+  engine_policy_logger = (1 << 23),
 };
-#define engine_maxpolicy 23
+#define engine_maxpolicy 24
 extern const char *engine_policy_names[engine_maxpolicy + 1];
 
 /**
@@ -360,8 +361,9 @@ struct engine {
   ticks tic_step, toc_step;
 
 #ifdef WITH_MPI
-  /* CPU time of the last step. */
-  double cputime_last_step;
+  /* CPU times that the tasks used in the last step. */
+  double usertime_last_step;
+  double systime_last_step;
 
   /* Step of last repartition. */
   int last_repartition;
@@ -478,6 +480,9 @@ struct engine {
 
   /* Maximum number of tasks needed for restarting. */
   int restart_max_tasks;
+
+  /* The globally agreed runtime, in hours. */
+  float runtime;
 
   /* Label of the run */
   char run_name[PARSER_MAX_LINE_SIZE];
