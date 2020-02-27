@@ -30,8 +30,8 @@
  * @brief Compute the subgrid temperature of the gas.
  *
  * For particles on the entropy floor, we use pressure equilibrium to
- * infer the properties of the particle. We use the thermal equilibrium 
- * temperatures calculated from the Cloudy tables, not using CHIMES. 
+ * infer the properties of the particle. We use the thermal equilibrium
+ * temperatures calculated from the Cloudy tables, not using CHIMES.
  *
  * @param cooling The properties of the cooling scheme.
  * @param us Internal system of units data structure.
@@ -229,8 +229,8 @@ double compute_subgrid_temperature(
  * @brief Compute the physical subgrid density of the gas.
  *
  * For particles on the entropy floor, we use pressure equilibrium to
- * infer the properties of the particle. We use the thermal equilibrium 
- * calculated from the Cloudy tables, not using CHIMES. 
+ * infer the properties of the particle. We use the thermal equilibrium
+ * calculated from the Cloudy tables, not using CHIMES.
  *
  * Note that we return the density in physical coordinates.
  *
