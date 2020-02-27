@@ -103,13 +103,30 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   }
 
   /* Allocate the output memory */
-  PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
-      1, &n_tot, logger_particle_descr);
-
   struct logger_particle_array array;
   logger_particle_array_init(&array);
-  array.hydro.parts = PyArray_DATA(out);
+
+  /* Hydro */
+  npy_intp n = n_parts[swift_type_gas];
+  PyArrayObject *parts = (PyArrayObject *)PyArray_SimpleNewFromDescr(
+      1, &n, logger_particle_descr);
+  array.hydro.parts = PyArray_DATA(parts);
   array.hydro.n = n_parts[swift_type_gas];
+
+  /* gravity */
+  n = n_parts[swift_type_dark_matter];
+  PyArrayObject *gparts = (PyArrayObject *)PyArray_SimpleNewFromDescr(
+      1, &n, logger_gparticle_descr);
+  array.dark_matter.parts = PyArray_DATA(gparts);
+  array.dark_matter.n = n_parts[swift_type_dark_matter];
+
+  /* stars */
+  n = n_parts[swift_type_stars];
+  PyArrayObject *sparts = (PyArrayObject *)PyArray_SimpleNewFromDescr(
+      1, &n, logger_sparticle_descr);
+  array.stars.parts = PyArray_DATA(sparts);
+  array.stars.n = n_parts[swift_type_stars];
+
 
   /* Reference is stolen, therefore need to take it into account */
   Py_INCREF(logger_particle_descr);
@@ -127,8 +144,18 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   /* Free the memory. */
   logger_reader_free(&reader);
 
-
-  return (PyObject *)out;
+  /* Create the output */
+  PyObject *output = PyDict_New();
+  if (n_parts[swift_type_gas] != 0) {
+    PyDict_SetItem(output, PyUnicode_FromString("gas"), (PyObject *) parts);
+  }
+  if (n_parts[swift_type_dark_matter] != 0) {
+    PyDict_SetItem(output, PyUnicode_FromString("dark_matter"), (PyObject *) gparts);
+  }
+  if (n_parts[swift_type_stars] != 0) {
+    PyDict_SetItem(output, PyUnicode_FromString("stars"), (PyObject *) sparts);
+  }
+  return output;
 }
 
 /**
