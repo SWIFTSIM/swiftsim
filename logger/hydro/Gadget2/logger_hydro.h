@@ -26,19 +26,16 @@
 #include "logger_python_tools.h"
 
 /**
- * @brief Store the data from a record.
+ * @brief Store the data from a record (hydro particle).
  *
  * This structure contains all the required fields
  * present in a file.
- *
- * As we need only a few particles, no need to keep it small.
  *
  * The particle is initialized with #logger_particle_init
  * and can be updated with a record through #logger_particle_read.
  *
  * In #logger_particle_read, we use #logger_particle_read_field on
- * each field and #logger_particle_interpolate if a linear
- * interpolation is required.
+ * each field and #logger_particle_interpolate if an interpolation is required.
  */
 struct logger_particle {
 
@@ -77,7 +74,7 @@ struct logger_particle {
 };
 
 /**
- * @brief Print the properties of a logger_particle.
+ * @brief Print the properties of a #logger_particle.
  *
  * @param p The #logger_particle to print
  */

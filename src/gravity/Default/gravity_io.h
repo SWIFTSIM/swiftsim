@@ -20,6 +20,7 @@
 #define SWIFT_DEFAULT_GRAVITY_IO_H
 
 #include "io_properties.h"
+#include "logger_io.h"
 
 INLINE static void convert_gpart_pos(const struct engine* e,
                                      const struct gpart* gp, double* ret) {
@@ -125,4 +126,31 @@ INLINE static void darkmatter_write_particles(const struct gpart* gparts,
       id_or_neg_offset, "Unique ID of the particles");
 }
 
+/**
+ * @brief Specifies which g-particle fields to write to a dataset
+ *
+ * @param gparts The g-particle array.
+ * @param list The list of logger i/o properties to write.
+ * @param num_fields The number of i/o fields to write.
+ */
+INLINE static void darkmatter_logger_write_particles(const struct gpart* gparts,
+                                                     struct mask_data* list,
+                                                     int* num_fields) {
+
+#ifdef WITH_LOGGER
+  /* Say how much we want to write */
+  *num_fields = 4;
+
+  /* List what we want to write */
+  list[0] = logger_io_make_output_field("Coordinates", gparts, x);
+
+  list[1] = logger_io_make_output_field("Velocities", gparts, v_full);
+
+  list[2] = logger_io_make_output_field("Masses", gparts, mass);
+
+  list[3] = logger_io_make_output_field("ParticleIDs", gparts, id_or_neg_offset);
+#else
+  error("Should not be called without the logger.");
+#endif
+}
 #endif /* SWIFT_DEFAULT_GRAVITY_IO_H */
