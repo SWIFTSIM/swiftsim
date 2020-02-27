@@ -69,6 +69,7 @@
 #include "gravity.h"
 #include "gravity_cache.h"
 #include "hydro.h"
+#include "line_of_sight.h"
 #include "logger.h"
 #include "logger_io.h"
 #include "map.h"
@@ -2750,6 +2751,7 @@ void engine_check_for_dumps(struct engine *e) {
     output_snapshot,
     output_statistics,
     output_stf,
+    output_los,
   };
 
   /* What kind of output do we want? And at which time ?
@@ -2784,6 +2786,10 @@ void engine_check_for_dumps(struct engine *e) {
       }
     }
   }
+
+  /* Do we want to write a line of sight file? */
+  ti_output = e->ti_current;
+  type = output_los;
 
   /* Store information before attempting extra dump-related drifts */
   const integertime_t ti_current = e->ti_current;
@@ -2869,6 +2875,11 @@ void engine_check_for_dumps(struct engine *e) {
             "Asking for a VELOCIraptor output but SWIFT was compiled without "
             "the interface!");
 #endif
+        break;
+
+      case output_los:
+        do_line_of_sight(e);
+
         break;
 
       default:
