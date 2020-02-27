@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
   /* Read the header. */
   char basename[200];
   parser_get_param_string(&params, "Logger:basename", basename);
+  strcat(basename, "_0000");
   logger_reader_init(&reader, basename, /* verbose */ 1);
 
   /*
