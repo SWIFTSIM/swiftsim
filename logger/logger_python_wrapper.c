@@ -34,10 +34,28 @@ typedef struct {
   PyObject_HEAD struct logger_particle part;
 } PyLoggerParticle;
 
+typedef struct {
+  PyObject_HEAD struct logger_gparticle gpart;
+} PyLoggerGParticle;
+
+typedef struct {
+  PyObject_HEAD struct logger_sparticle spart;
+} PyLoggerSParticle;
+
 static PyTypeObject PyLoggerParticle_Type;
 const char *particle_name = "Particle";
 
+static PyTypeObject PyLoggerGParticle_Type;
+const char *gparticle_name = "GravityParticle";
+
+static PyTypeObject PyLoggerSParticle_Type;
+const char *sparticle_name = "StarsParticle";
+
 PyArray_Descr *logger_particle_descr;
+
+PyArray_Descr *logger_gparticle_descr;
+
+PyArray_Descr *logger_sparticle_descr;
 
 /**
  * @brief load data from the index files.
@@ -336,13 +354,30 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
+/**
+ * @brief Defines the particle types for all type of particles.
+ */
 void pylogger_particle_define_typeobject(void) {
 
+  /* Do the hydro */
   PyLoggerParticle_Type.tp_name = particle_name;
   PyLoggerParticle_Type.tp_print = NULL;
   PyType_Ready(&PyLoggerParticle_Type);
+
+  /* Do the gravity */
+  PyLoggerGParticle_Type.tp_name = gparticle_name;
+  PyLoggerGParticle_Type.tp_print = NULL;
+  PyType_Ready(&PyLoggerGParticle_Type);
+
+  /* Do the stars */
+  PyLoggerSParticle_Type.tp_name = sparticle_name;
+  PyLoggerSParticle_Type.tp_print = NULL;
+  PyType_Ready(&PyLoggerSParticle_Type);
 }
 
+/**
+ * @brief Defines the numpy descriptor for the (hydro) particle.
+ */
 void pylogger_particle_define_descr(void) {
 
   /* Get the fields */
@@ -401,6 +436,137 @@ void pylogger_particle_define_descr(void) {
   logger_particle_descr->fields = fields;
 }
 
+/**
+ * @brief Defines the numpy descriptor for the (gravity) particle.
+ */
+void pylogger_gparticle_define_descr(void) {
+
+  /* Get the fields */
+  struct logger_python_field list[100];
+  int num_fields = 0;
+  struct logger_gparticle gpart;
+
+  logger_gparticles_generate_python(&gpart, list, &num_fields);
+
+  /* Generate list of field names and objects */
+  PyObject *names = PyTuple_New(num_fields);
+  PyObject *fields = PyDict_New();
+  for(int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
+
+    if (list[i].dimension == 1) {
+      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+    }
+    else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
+                        list[i].type, list[i].dimension);
+    }
+  }
+
+  /* Generate descriptor */
+  logger_gparticle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
+  logger_gparticle_descr->typeobj = &PyLoggerGParticle_Type;
+  // V if for an arbitrary kind of array
+  logger_gparticle_descr->kind = 'V';
+  // Not well documented (seems any value is fine)
+  logger_gparticle_descr->type = 'v';
+  // Native byte ordering
+  logger_gparticle_descr->byteorder = '=';
+  // Flags
+  logger_gparticle_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
+  // id of the data type (assigned automatically)
+  logger_gparticle_descr->type_num = 0;
+  // Size of an element (using more size than required in order to log
+  // everything)
+  logger_gparticle_descr->elsize = sizeof(struct logger_gparticle);
+  // alignment (doc magic)
+  logger_gparticle_descr->alignment = offsetof(
+      struct {
+        char c;
+        struct logger_gparticle v;
+      },
+      v);
+  // no subarray
+  logger_gparticle_descr->subarray = NULL;
+  // functions
+  logger_gparticle_descr->f = NULL;
+  // Meta data
+  logger_gparticle_descr->metadata = NULL;
+  logger_gparticle_descr->c_metadata = NULL;
+  logger_gparticle_descr->names = names;
+  logger_gparticle_descr->fields = fields;
+}
+
+/**
+ * @brief Defines the numpy descriptor for the (stars) particle.
+ */
+void pylogger_sparticle_define_descr(void) {
+
+  /* Get the fields */
+  struct logger_python_field list[100];
+  int num_fields = 0;
+  struct logger_particle part;
+
+  logger_sparticles_generate_python(&part, list, &num_fields);
+
+  /* Generate list of field names and objects */
+  PyObject *names = PyTuple_New(num_fields);
+  PyObject *fields = PyDict_New();
+  for(int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
+
+    if (list[i].dimension == 1) {
+      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+    }
+    else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
+                        list[i].type, list[i].dimension);
+    }
+  }
+
+  /* Generate descriptor */
+  logger_sparticle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
+  logger_sparticle_descr->typeobj = &PyLoggerSParticle_Type;
+  // V if for an arbitrary kind of array
+  logger_sparticle_descr->kind = 'V';
+  // Not well documented (seems any value is fine)
+  logger_sparticle_descr->type = 'v';
+  // Native byte ordering
+  logger_sparticle_descr->byteorder = '=';
+  // Flags
+  logger_sparticle_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
+  // id of the data type (assigned automatically)
+  logger_sparticle_descr->type_num = 0;
+  // Size of an element (using more size than required in order to log
+  // everything)
+  logger_sparticle_descr->elsize = sizeof(struct logger_sparticle);
+  // alignment (doc magic)
+  logger_sparticle_descr->alignment = offsetof(
+      struct {
+        char c;
+        struct logger_sparticle v;
+      },
+      v);
+  // no subarray
+  logger_sparticle_descr->subarray = NULL;
+  // functions
+  logger_sparticle_descr->f = NULL;
+  // Meta data
+  logger_sparticle_descr->metadata = NULL;
+  logger_sparticle_descr->c_metadata = NULL;
+  logger_sparticle_descr->names = names;
+  logger_sparticle_descr->fields = fields;
+}
+
+/**
+ * @brief Defines the numpy descriptor for the all particles.
+ */
+void pylogger_all_particle_define_descr(void) {
+  pylogger_particle_define_descr();
+  pylogger_gparticle_define_descr();
+  pylogger_sparticle_define_descr();
+}
+
 PyMODINIT_FUNC PyInit_liblogger(void) {
   PyObject *m;
   m = PyModule_Create(&libloggermodule);
@@ -414,7 +580,7 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   pylogger_particle_define_typeobject();
 
   /* Define the descr of the logger_particle */
-  pylogger_particle_define_descr();
+  pylogger_all_particle_define_descr();
 
   return m;
 }

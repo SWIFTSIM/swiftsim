@@ -20,7 +20,9 @@
 #define LOGGER_LOGGER_PARTICLE_H
 
 #include "logger_header.h"
+#include "logger_gravity.h"
 #include "logger_hydro.h"
+#include "logger_stars.h"
 #include "logger_time.h"
 #include "logger_tools.h"
 
