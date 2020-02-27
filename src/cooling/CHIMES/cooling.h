@@ -24,6 +24,7 @@
  * @brief Empty infrastructure for CHIMES cooling.
  */
 #include "../config.h"
+#include "dust.h"
 
 /* Some standard headers. */
 #include <float.h>
@@ -73,6 +74,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
+                       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm, const double time);
 

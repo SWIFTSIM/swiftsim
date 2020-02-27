@@ -49,6 +49,7 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
+#include "dust.h"
 
 /* Maximum number of iterations for
  * bisection integration schemes */
@@ -485,6 +486,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
+		       const struct dustevo_props *dp,
                        struct part *p, struct xpart *xp, const float dt,
                        const float dt_therm, const double time) {
 

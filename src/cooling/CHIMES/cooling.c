@@ -44,6 +44,7 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
+#include "dust.h"
 
 /**
  * @brief Initialises properties stored in the cooling_function_data struct
@@ -507,6 +508,7 @@ void chimes_update_gas_vars(const double u_cgs,
                             const struct hydro_props *hydro_properties,
                             const struct entropy_floor_properties *floor_props,
                             const struct cooling_function_data *cooling,
+			    const struct dustevo_props *dp,
                             struct part *restrict p, struct xpart *restrict xp,
                             struct gasVariables *ChimesGasVars,
                             const float dt_cgs) {
@@ -610,7 +612,20 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->metallicity = 0.0;
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE
 
-  ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
+
+  if (dp->pair_to_cooling) {
+    float dfrac = (metal_fraction[chemistry_element_Gra] +
+		   metal_fraction[chemistry_element_Sil] +
+		   metal_fraction[chemistry_element_Ide] +
+		   metal_fraction[chemistry_element_Mgd] +
+		   metal_fraction[chemistry_element_Fed]);
+
+    /* Assume a dust-to-gas ratio of 0.06 for the 'local' value (Zsun*D2M) */
+    ChimesGasVars->dust_ratio = dfrac/0.06;
+  }
+  else {
+    ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
+  }
 
   ChimesFloat nH = (ChimesFloat)hydro_get_physical_density(p, cosmo) * XH /
                    phys_const->const_proton_mass;
@@ -874,6 +889,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
+		       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm,
                        const double time) {
@@ -938,7 +954,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Update the ChimesGasVars structure with the
    * particle's thermodynamic variables. */
   chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties,
-                         floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs);
+                         floor_props, cooling, dp, p, xp, &ChimesGasVars, dt_cgs);
 
   /* check if the particle is in an HII region. If it is, we
    * immediately heat it up to 1e4 K (if required), and it
@@ -1476,7 +1492,7 @@ void cooling_convert_quantities(
       /* Update ChimesGasVars with the particle's
        * thermodynamic variables. */
       chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_props,
-                             floor_props, cooling, p, xp, &ChimesGasVars,
+                             floor_props, cooling, dp, p, xp, &ChimesGasVars,
                              dt_cgs);
 
       /* Set temperature evolution off, so that we
@@ -1609,7 +1625,7 @@ void cooling_set_subgrid_properties(
         units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
     chimes_update_gas_vars(u_subgrid_cgs, phys_const, us, cosmo, hydro_props,
-                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+                           floor_props, cooling, dp, p, xp, &ChimesGasVars, 1.0);
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
     float const *metal_fraction =

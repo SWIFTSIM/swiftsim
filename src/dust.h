@@ -49,6 +49,9 @@ struct dustevo_props {
   /*! Are we actually cooling? */
   int with_cooling_on;
 
+  /*! Are we pairing the dust fractions to cooling? */
+  int pair_to_cooling;
+
   /* ------------ Fixed parameters ------------ */
   
   /* SNII events per mass of star formation in cgs (assumes Chabrier 2000 IMF) */

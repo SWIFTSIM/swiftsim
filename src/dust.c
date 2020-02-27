@@ -1,4 +1,4 @@
-
+B65;5803;1c
 /* This file's header */
 #include "dust.h"
 
@@ -53,6 +53,9 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
 
   dustevo_properties->model_type =
       parser_get_param_int(params, "COLIBREDustEvolution:model_type");
+
+  dustevo_properties->pair_to_cooling =
+      parser_get_param_int(params, "COLIBREDustEvolution:pair_to_cooling");
 
   dustevo_properties->specific_numSNII =
     7.039463e-3 / phys_const->const_solar_mass;
@@ -136,6 +139,7 @@ void evolve_dust_part(const struct phys_const *phys_const,
 
   /* no dust, no accretion */
   if (fGra+fSil+fIde <= 0.) return;
+
 
   /* set temperature and density with subgrid or hydro */
   float rho, temp; 
@@ -260,7 +264,7 @@ void evolve_dust_part(const struct phys_const *phys_const,
   delta_mfrac_Sil = min(delta_mfrac_Sil,
   			p->chemistry_data.metal_mass_fraction[chemistry_element_Mg]);
   delta_mfrac_Sil = min(delta_mfrac_Sil,
-  			p->chemistry_data.metal_mass_fraction[chemistry_element_Sil]);
+  			p->chemistry_data.metal_mass_fraction[chemistry_element_Si]);
   delta_mfrac_Sil = min(delta_mfrac_Sil,
   			p->chemistry_data.metal_mass_fraction[chemistry_element_Fe]);
 
@@ -283,8 +287,7 @@ void evolve_dust_part(const struct phys_const *phys_const,
     }
 
     
-  }
-  
+  }  
   /* apply mass fraction changes to total metallicity */
   p->chemistry_data.metal_mass_fraction_total -= (delta_mfrac_Gra + delta_mfrac_Sil + delta_mfrac_Ide);
   
@@ -771,7 +774,7 @@ void redistribute_dust_to_element_abundances(struct spart* sp,
       0.1411169*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil]; 
     sp->chemistry_data.metal_mass_fraction[chemistry_element_Si] += 
       0.1630668*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
-    sp->chemistry_data.metal_mass_fraction[chemistry_element_Si] += 
+    sp->chemistry_data.metal_mass_fraction[chemistry_element_Fe] += 
       0.3242408*sp->chemistry_data.metal_mass_fraction[chemistry_element_Sil];
   }
 
