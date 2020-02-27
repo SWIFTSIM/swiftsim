@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
   struct logger_reader reader;
   char basename[200];
   parser_get_param_string(&params, "Logger:basename", basename);
+  strcat(basename, "_0000");
   logger_reader_init(&reader, basename,
                      /* Verbose */ 0);
 

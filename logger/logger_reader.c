@@ -53,7 +53,7 @@ void logger_reader_init(struct logger_reader *reader, const char *basename,
 
   /* Generate the logfile filename */
   char logfile_name[STRING_SIZE];
-  sprintf(logfile_name, "%s_0000.dump", basename);
+  sprintf(logfile_name, "%s.dump", basename);
 
   /* Initialize the log file. */
   logger_logfile_init_from_file(&reader->log, logfile_name, reader,
@@ -78,7 +78,7 @@ void logger_reader_init_index(struct logger_reader *reader) {
   int count = 0;
   while (1) {
     char filename[STRING_SIZE + 50];
-    sprintf(filename, "%s_0000_%04i.index", reader->basename, count);
+    sprintf(filename, "%s_%04i.index", reader->basename, count);
 
     /* Check if file exists */
     if (access(filename, F_OK) != -1) {
@@ -98,7 +98,7 @@ void logger_reader_init_index(struct logger_reader *reader) {
   /* Get the information contained in the headers */
   for (int i = 0; i < reader->index.n_files; i++) {
     char filename[STRING_SIZE + 50];
-    sprintf(filename, "%s_0000_%04i.index", reader->basename, i);
+    sprintf(filename, "%s_%04i.index", reader->basename, i);
 
     /* Read the header */
     logger_index_read_header(&reader->index.index, filename);
@@ -192,7 +192,7 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   message("Found time");
   /* Generate the filename */
   char filename[STRING_SIZE + 50];
-  sprintf(filename, "%s_0000_%04u.index", reader->basename, left);
+  sprintf(filename, "%s_%04u.index", reader->basename, left);
 
   /* Check if the file is already mapped */
   if (reader->index.index.index.map != NULL) {
