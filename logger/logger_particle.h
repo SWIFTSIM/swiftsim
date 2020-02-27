@@ -54,4 +54,17 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
                              const double time,
                              const enum logger_reader_type reader_type);
 
+/**
+ * @brief Generate the data for the special flags.
+ *
+ * @param flag The special flag to use.
+ * @param data The data to write in the .
+ */
+INLINE static enum logger_special_flags logger_unpack_flags_and_data(
+    uint32_t flag, int *data) {
+  *data = flag & 0xFFFFFF;
+  return flag >> (3 * 8);
+}
+
+
 #endif  // LOGGER_LOGGER_PARTICLE_H

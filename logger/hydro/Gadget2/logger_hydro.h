@@ -70,7 +70,7 @@ struct logger_particle {
   size_t offset;
 
   /* Special flag */
-  int flag;
+  uint32_t flag;
 };
 
 /**
