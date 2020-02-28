@@ -49,11 +49,11 @@ int main(int argc, char *argv[]) {
   logger_write_file_header(&log);
 
   /* Copy the masks */
-  const int logger_count_mask_tmp = logger_count_mask;
+  const int logger_count_mask_tmp = log.logger_count_mask;
   struct mask_data *mask_data =
-      (struct mask_data *)malloc(logger_count_mask * sizeof(struct mask_data));
-  memcpy(mask_data, logger_mask_data,
-         logger_count_mask * sizeof(struct mask_data));
+      (struct mask_data *)malloc(log.logger_count_mask * sizeof(struct mask_data));
+  memcpy(mask_data, log.logger_mask_data,
+         log.logger_count_mask * sizeof(struct mask_data));
 
   /* clean memory. */
   logger_free(&log);

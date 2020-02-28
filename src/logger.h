@@ -121,6 +121,12 @@ struct logger_writer {
   /* Size of a chunk if every mask are activated. */
   int max_chunk_size;
 
+  /* Description of all the fields that can be written. */
+  struct mask_data* logger_mask_data;
+
+  /* Number of elements in logger_mask_data. */
+  int logger_count_mask;
+
 } SWIFT_STRUCT_ALIGN;
 
 /* required structure for each particle type. */
@@ -133,21 +139,25 @@ struct logger_part_data {
 };
 
 /* Function prototypes. */
-int logger_compute_chunk_size(unsigned int mask, int type);
+int logger_compute_chunk_size(const struct logger_writer *log, unsigned int mask, int type);
 void logger_log_all(struct logger_writer *log, const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
-                     struct xpart *xp, const int log_all,
+                     struct xpart *xp, const struct engine *e, const int log_all,
                      const uint32_t special_flags);
 void logger_log_parts(struct logger_writer *log, const struct part *p,
-                      struct xpart *xp, int count, const int log_all,
+                      struct xpart *xp, int count, const struct engine *e, const int log_all,
                       const uint32_t special_flags);
 void logger_log_spart(struct logger_writer *log, struct spart *p,
+                      const struct engine *e,
                       const int log_all, const uint32_t special_flags);
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
+                       const struct engine *e,
                        const int log_all, const uint32_t special_flags);
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
+                      const struct engine *e,
                       const int log_all, const uint32_t special_flags);
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
+                       const struct engine *e,
                        const int log_all, const uint32_t special_flags);
 void logger_init(struct logger_writer *log, struct swift_params *params);
 void logger_free(struct logger_writer *log);
@@ -157,9 +167,12 @@ void logger_ensure_size(struct logger_writer *log, size_t total_nr_parts,
                         size_t total_nr_gparts, size_t total_nr_sparts);
 void logger_write_file_header(struct logger_writer *log);
 
-int logger_read_part(struct part *p, size_t *offset, const char *buff);
-int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff);
-int logger_read_timestamp(unsigned long long int *t, double *time,
+int logger_read_part(const struct logger_writer *log, struct part *p,
+                     size_t *offset, const char *buff);
+int logger_read_gpart(const struct logger_writer *log, struct gpart *p,
+                      size_t *offset, const char *buff);
+int logger_read_timestamp(const struct logger_writer *log,
+                          unsigned long long int *t, double *time,
                           size_t *offset, const char *buff);
 void logger_struct_dump(const struct logger_writer *log, FILE *stream);
 void logger_struct_restore(struct logger_writer *log, FILE *stream);

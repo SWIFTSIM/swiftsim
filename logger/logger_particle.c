@@ -70,13 +70,26 @@ size_t logger_particle_read(struct logger_particle *part,
     error("Unexpected timestamp while reading a particle: %lu.", mask);
   }
 
-  /* Read all the fields. */
+  /* Compute the size of the record. */
+  size_t record_size = 0;
   for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      map = logger_particle_read_field(part, map, h->masks[i].name,
-                                       h->masks[i].size);
+      record_size += h->masks[i].size;
     }
   }
+  /* Read the record and copy it to a particle */
+  char *buff = (char *) malloc(record_size);
+  map = logger_loader_io_read_data(map, record_size, buff);
+  for(int i =0 ; i < h->masks_count; i++) {
+    if (mask & h->masks[i].mask) {
+      logger_particle_read_field(part, buff, h->masks[i].name,
+                                 h->masks[i].size);
+      buff += h->masks[i].size;
+    }
+  }
+  /* Free the memory */
+  buff -= record_size;
+  free(buff);
 
   /* Get the time of current record.
      This check is required for the manipulating the file before
@@ -163,13 +176,26 @@ size_t logger_gparticle_read(struct logger_gparticle *part,
     error("Unexpected timestamp while reading a particle: %lu.", mask);
   }
 
-  /* Read all the fields. */
+  /* Compute the size of the record. */
+  size_t record_size = 0;
   for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      map = logger_gparticle_read_field(part, map, h->masks[i].name,
-                                        h->masks[i].size);
+      record_size += h->masks[i].size;
     }
   }
+  /* Read the record and copy it to a particle */
+  char *buff = (char *) malloc(record_size);
+  map = logger_loader_io_read_data(map, record_size, buff);
+  for(int i =0 ; i < h->masks_count; i++) {
+    if (mask & h->masks[i].mask) {
+      logger_gparticle_read_field(part, buff, h->masks[i].name,
+                                  h->masks[i].size);
+      buff += h->masks[i].size;
+    }
+  }
+  /* Free the memory */
+  buff -= record_size;
+  free(buff);
 
   /* Get the time of current record.
      This check is required for the manipulating the file before
@@ -256,13 +282,26 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
     error("Unexpected timestamp while reading a particle: %lu.", mask);
   }
 
-  /* Read all the fields. */
+  /* Compute the size of the record. */
+  size_t record_size = 0;
   for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      map = logger_sparticle_read_field(part, map, h->masks[i].name,
-                                        h->masks[i].size);
+      record_size += h->masks[i].size;
     }
   }
+  /* Read the record and copy it to a particle */
+  char *buff = (char *) malloc(record_size);
+  map = logger_loader_io_read_data(map, record_size, buff);
+  for(int i =0 ; i < h->masks_count; i++) {
+    if (mask & h->masks[i].mask) {
+      logger_sparticle_read_field(part, buff, h->masks[i].name,
+                                  h->masks[i].size);
+      buff += h->masks[i].size;
+    }
+  }
+  /* Free the memory */
+  buff -= record_size;
+  free(buff);
 
   /* Get the time of current record.
      This check is required for the manipulating the file before

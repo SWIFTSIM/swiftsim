@@ -136,7 +136,7 @@ void logger_reader_free(struct logger_reader *reader) {
  *
  * @return The offset after this record.
  */
-size_t reader_read_record(struct logger_reader *reader,
+size_t logger_reader_read_record(struct logger_reader *reader,
                           struct logger_particle *lp, double *time,
                           int *is_particle, size_t offset) {
 
