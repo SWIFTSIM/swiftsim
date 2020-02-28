@@ -306,7 +306,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       (bj->subgrid_mass == bi->subgrid_mass && bj->id < bi->id)) {
 
     /* Maximum velocity difference between BHs allowed to merge */
-    const float v2_threshold = 2 * G_Newton * M / sqrt(r2);
+    const float v2_threshold = 2.f * G_Newton * M / sqrt(r2);
 
     /* Merge if gravitationally bound AND if within max distance */
     if ((v2_pec < v2_threshold) && (r2 < max_dist_merge2)) {
