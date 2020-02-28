@@ -50,8 +50,8 @@ int main(int argc, char *argv[]) {
 
   /* Copy the masks */
   const int logger_count_mask_tmp = logger_count_mask;
-  struct mask_data *mask_data = (struct mask_data *) malloc(
-    logger_count_mask * sizeof(struct mask_data));
+  struct mask_data *mask_data =
+      (struct mask_data *)malloc(logger_count_mask * sizeof(struct mask_data));
   memcpy(mask_data, logger_mask_data,
          logger_count_mask * sizeof(struct mask_data));
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
   int count_mask = 0;
   size_t mask = 0;
   /* Skip the mask that appears multiple times */
-  for(int i = 0; i < logger_count_mask_tmp; i++) {
+  for (int i = 0; i < logger_count_mask_tmp; i++) {
     if (mask_data[i].mask & ~mask) {
       mask |= mask_data[i].mask;
       count_mask += 1;
@@ -114,7 +114,6 @@ int main(int argc, char *argv[]) {
 
   message("Checking offset direction");
   assert(h->offset_direction == logger_offset_backward);
-
 
   free(mask_data);
   return 0;

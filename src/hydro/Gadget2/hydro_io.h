@@ -23,8 +23,8 @@
 #include "hydro.h"
 #include "hydro_io.h"
 #include "io_properties.h"
-#include "logger_io.h"
 #include "kernel_hydro.h"
+#include "logger_io.h"
 
 #include "./hydro_parameters.h"
 

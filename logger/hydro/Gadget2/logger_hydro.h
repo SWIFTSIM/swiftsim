@@ -124,8 +124,8 @@ __attribute__((always_inline)) INLINE static void logger_particle_init(
  * @return mapped data after the block read.
  */
 __attribute__((always_inline)) INLINE static void *logger_particle_read_field(
-    struct logger_particle *part, void *map,
-    const char *field, const size_t size) {
+    struct logger_particle *part, void *map, const char *field,
+    const size_t size) {
   void *p = NULL;
 
   /* Get the correct pointer. */
@@ -224,7 +224,8 @@ __attribute__((always_inline)) INLINE static void logger_particle_interpolate(
  * @param num_fields The number of i/o fields to give access to.
  */
 INLINE static void logger_particles_generate_python(
-    const struct logger_particle* parts, struct logger_python_field* list, int* num_fields) {
+    const struct logger_particle *parts, struct logger_python_field *list,
+    int *num_fields) {
 #ifdef HAVE_PYTHON
 
   *num_fields = 9;
@@ -235,15 +236,19 @@ INLINE static void logger_particles_generate_python(
   list[1] = logger_loader_python_field("Velocities", parts, v, 3, NPY_FLOAT32);
 
   // TODO sum the grav + hydro accelerations
-  list[2] = logger_loader_python_field("Accelerations", parts, a, 3, NPY_FLOAT32);
+  list[2] =
+      logger_loader_python_field("Accelerations", parts, a, 3, NPY_FLOAT32);
 
   list[3] = logger_loader_python_field("Masses", parts, mass, 1, NPY_FLOAT32);
 
-  list[4] = logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
+  list[4] =
+      logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
 
-  list[5] = logger_loader_python_field("Entropies", parts, entropy, 1, NPY_FLOAT32);
+  list[5] =
+      logger_loader_python_field("Entropies", parts, entropy, 1, NPY_FLOAT32);
 
-  list[6] = logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
+  list[6] =
+      logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
 
   list[7] = logger_loader_python_field("Densities", parts, rho, 1, NPY_FLOAT32);
 

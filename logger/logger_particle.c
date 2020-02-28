@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 /**
  * @brief Read a particle entry in the log file.
  *

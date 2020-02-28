@@ -43,13 +43,11 @@ struct logger_python_field {
 
   /* The number of dimension for a field */
   int dimension;
-
 };
-
 
 #define logger_loader_python_field(name, parts, field, dim, type) \
   logger_loader_python_field_function(                            \
-      name, ((char*)(&parts[0].field) - (char *)parts), dim, type)
+      name, ((char *)(&parts[0].field) - (char *)parts), dim, type)
 
 /**
  * @brief Generate a #logger_python_field structure.
@@ -57,12 +55,14 @@ struct logger_python_field {
  * @param name The name of the field.
  * @param offset The offset of the field in the corresponding structure.
  * @param dimension The number of dimension for the field.
- * @param type The numpy data type (e.g. NPY_FLOAT32, NPY_DOUBLE, NPY_LONGLONG, ...)
+ * @param type The numpy data type (e.g. NPY_FLOAT32, NPY_DOUBLE, NPY_LONGLONG,
+ * ...)
  *
  * @return The initialized structure.
  */
-__attribute__((always_inline)) INLINE static struct logger_python_field logger_loader_python_field_function(
-    char *name, size_t offset, int dimension, int type) {
+__attribute__((always_inline)) INLINE static struct logger_python_field
+logger_loader_python_field_function(char *name, size_t offset, int dimension,
+                                    int type) {
   struct logger_python_field ret;
 
   strcpy(ret.name, name);
@@ -73,36 +73,30 @@ __attribute__((always_inline)) INLINE static struct logger_python_field logger_l
   return ret;
 }
 
-
-#define CREATE_FIELD(fields, name, offset, type)                          \
-  ({                                                                      \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));   \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offset));                                       \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
+#define CREATE_FIELD(fields, name, offset, type)                        \
+  ({                                                                    \
+    PyObject *tuple = PyTuple_New(2);                                   \
+    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type)); \
+    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));               \
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
   })
 
-#define CREATE_FIELD_NDIM(fields, name, offset, type, dim)                \
-  ({                                                                      \
-    /* Create the N-D descriptor */                                       \
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                  \
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                   \
-    vec->subarray->base = PyArray_DescrFromType(type);                    \
-    vec->subarray->shape = PyTuple_New(1);                                \
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(dim));     \
-                                                                          \
-    /* Create the field */                                                \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                           \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offset));                                       \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
+#define CREATE_FIELD_NDIM(fields, name, offset, type, dim)            \
+  ({                                                                  \
+    /* Create the N-D descriptor */                                   \
+    PyArray_Descr *vec = PyArray_DescrNewFromType(type);              \
+    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));               \
+    vec->subarray->base = PyArray_DescrFromType(type);                \
+    vec->subarray->shape = PyTuple_New(1);                            \
+    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(dim)); \
+                                                                      \
+    /* Create the field */                                            \
+    PyObject *tuple = PyTuple_New(2);                                 \
+    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                       \
+    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));             \
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);        \
   })
 
-#endif // HAVE_PYTHON
+#endif  // HAVE_PYTHON
 
-
-#endif // SWIFT_LOGGER_PYTHON_TOOLS_H
+#endif  // SWIFT_LOGGER_PYTHON_TOOLS_H

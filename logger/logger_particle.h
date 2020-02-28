@@ -19,8 +19,8 @@
 #ifndef LOGGER_LOGGER_PARTICLE_H
 #define LOGGER_LOGGER_PARTICLE_H
 
-#include "logger_header.h"
 #include "logger_gravity.h"
+#include "logger_header.h"
 #include "logger_hydro.h"
 #include "logger_stars.h"
 #include "logger_time.h"
@@ -65,6 +65,5 @@ INLINE static enum logger_special_flags logger_unpack_flags_and_data(
   *data = flag & 0xFFFFFF;
   return flag >> (3 * 8);
 }
-
 
 #endif  // LOGGER_LOGGER_PARTICLE_H

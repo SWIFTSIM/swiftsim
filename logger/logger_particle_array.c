@@ -47,18 +47,20 @@ void logger_particle_array_init(struct logger_particle_array *array) {
  * @param n_gpart The number of #logger_gparticle.
  * @param n_spart The number of #logger_sparticle.
  */
-void logger_particle_array_allocate(struct logger_particle_array *array, size_t n_part, size_t n_gpart, size_t n_spart) {
+void logger_particle_array_allocate(struct logger_particle_array *array,
+                                    size_t n_part, size_t n_gpart,
+                                    size_t n_spart) {
   /* Hydro */
   array->hydro.n = n_part;
-  array->hydro.parts = (struct logger_particle *) malloc(
-      n_part * sizeof(struct logger_particle));
+  array->hydro.parts =
+      (struct logger_particle *)malloc(n_part * sizeof(struct logger_particle));
   if (array->hydro.parts == NULL) {
     error("Failed to allocate the hydro particles");
   }
 
   /* Gravity */
   array->dark_matter.n = n_part;
-  array->dark_matter.parts = (struct logger_gparticle *) malloc(
+  array->dark_matter.parts = (struct logger_gparticle *)malloc(
       n_gpart * sizeof(struct logger_gparticle));
   if (array->dark_matter.parts == NULL) {
     error("Failed to allocate the gravity particles");
@@ -66,7 +68,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array, size_t 
 
   /* Stars */
   array->stars.n = n_part;
-  array->stars.parts = (struct logger_sparticle *) malloc(
+  array->stars.parts = (struct logger_sparticle *)malloc(
       n_spart * sizeof(struct logger_sparticle));
   if (array->stars.parts == NULL) {
     error("Failed to allocate the stars particles");
@@ -94,7 +96,9 @@ void logger_particle_array_free(struct logger_particle_array *array) {
  * @param new_n_gpart The new number of (gravity) particles.
  * @param new_n_spart The new number of (stars) particles.
  */
-void logger_particle_array_change_size(struct logger_particle_array *array, size_t new_n_part, size_t new_n_gpart, size_t new_n_spart) {
+void logger_particle_array_change_size(struct logger_particle_array *array,
+                                       size_t new_n_part, size_t new_n_gpart,
+                                       size_t new_n_spart) {
   /* Hydro */
   /* Check if need to free memory */
   if (new_n_part == 0 && array->hydro.n != 0) {
@@ -104,7 +108,7 @@ void logger_particle_array_change_size(struct logger_particle_array *array, size
   /* Check if need to change the size */
   else if (new_n_part != array->hydro.n) {
     /* Allocate the new array */
-    struct logger_particle *parts = (struct logger_particle *) malloc(
+    struct logger_particle *parts = (struct logger_particle *)malloc(
         new_n_part * sizeof(struct logger_particle));
     if (parts == NULL) {
       error("Failed to allocate the hydro particles.");
@@ -112,7 +116,8 @@ void logger_particle_array_change_size(struct logger_particle_array *array, size
 
     /* Copy the previous particles */
     if (array->hydro.n != 0) {
-      memcpy(parts, array->hydro.parts, array->hydro.n * sizeof(struct logger_particle));
+      memcpy(parts, array->hydro.parts,
+             array->hydro.n * sizeof(struct logger_particle));
     }
     array->hydro.parts = parts;
   }
@@ -126,19 +131,19 @@ void logger_particle_array_change_size(struct logger_particle_array *array, size
   /* Check if need to change the size */
   else if (new_n_gpart != array->dark_matter.n) {
     /* Allocate the new array */
-    struct logger_gparticle *parts = (struct logger_gparticle *) malloc(
-      new_n_gpart * sizeof(struct logger_gparticle));
+    struct logger_gparticle *parts = (struct logger_gparticle *)malloc(
+        new_n_gpart * sizeof(struct logger_gparticle));
     if (parts == NULL) {
       error("Failed to allocate the dark matter particles.");
     }
 
     /* Copy the previous particles */
     if (array->dark_matter.n != 0) {
-      memcpy(parts, array->dark_matter.parts, array->dark_matter.n * sizeof(struct logger_gparticle));
+      memcpy(parts, array->dark_matter.parts,
+             array->dark_matter.n * sizeof(struct logger_gparticle));
     }
     array->dark_matter.parts = parts;
   }
-
 
   /* Stars */
   /* Check if need to free memory */
@@ -149,17 +154,17 @@ void logger_particle_array_change_size(struct logger_particle_array *array, size
   /* Check if need to change the size */
   else if (new_n_spart != array->stars.n) {
     /* Allocate the new array */
-    struct logger_sparticle *parts = (struct logger_sparticle *) malloc(
-      new_n_spart * sizeof(struct logger_sparticle));
+    struct logger_sparticle *parts = (struct logger_sparticle *)malloc(
+        new_n_spart * sizeof(struct logger_sparticle));
     if (parts == NULL) {
       error("Failed to allocate the stars particles.");
     }
 
     /* Copy the previous particles */
     if (array->stars.n != 0) {
-      memcpy(parts, array->stars.parts, array->stars.n * sizeof(struct logger_sparticle));
+      memcpy(parts, array->stars.parts,
+             array->stars.n * sizeof(struct logger_sparticle));
     }
     array->stars.parts = parts;
   }
-
 }
