@@ -66,9 +66,9 @@ void test_log_parts(struct logger_writer *log) {
   size_t offset_old = offset;
   unsigned int mask = logger_read_part(&p, &offset, (const char *)d->data);
   printf(
-         "Recovered part at offset %#016zx with mask %#04x: p.x[0]=%e, "
-         "p.v[0]=%e.\n",
-         offset_old, mask, p.x[0], p.v[0]);
+      "Recovered part at offset %#016zx with mask %#04x: p.x[0]=%e, "
+      "p.v[0]=%e.\n",
+      offset_old, mask, p.x[0], p.v[0]);
   if (p.x[0] != 3.0 || p.v[0] != 0.3f) {
     printf("FAIL: could not read position and velocity of stored particle.\n");
     abort();
@@ -92,9 +92,9 @@ void test_log_parts(struct logger_writer *log) {
   offset_old = offset;
   mask = logger_read_part(&p, &offset, (const char *)d->data);
   printf(
-         "Recovered part at offset %#016zx with mask %#04x: p.x[0]=%e, "
-         "p.v[0]=%e.\n",
-         offset_old, mask, p.x[0], p.v[0]);
+      "Recovered part at offset %#016zx with mask %#04x: p.x[0]=%e, "
+      "p.v[0]=%e.\n",
+      offset_old, mask, p.x[0], p.v[0]);
   if (p.x[0] != 1.0 || p.v[0] != 0.1f) {
     printf("FAIL: could not read position and velocity of stored particle.\n");
     abort();
