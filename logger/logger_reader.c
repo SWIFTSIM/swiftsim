@@ -249,7 +249,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* Shortcut to some structures */
   struct logger_index *index = &reader->index.index;
   const int spec_flag_ind =
-    header_get_field_index(&reader->log.header, "special flags");
+      header_get_field_index(&reader->log.header, "special flags");
 
   /* Get the correct index file */
   logger_reader_set_time(reader, time);
@@ -277,9 +277,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     while (next_offset < reader->time.time_offset) {
       // TODO use a single call for the offset and mask
       size_t mask = 0;
-      logger_loader_io_read_mask(
-        &reader->log.header, reader->log.log.map + prev_offset,
-        &mask, /* diff_offset */ NULL);
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
 
       if (mask & reader->log.header.masks[spec_flag_ind].mask) {
         error("TODO");
@@ -301,10 +301,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
 
     /* Read the particle */
-    logger_particle_read(&array->hydro.parts[i], reader, prev_offset, reader->time.time,
-                         interp_type);
+    logger_particle_read(&array->hydro.parts[i], reader, prev_offset,
+                         reader->time.time, interp_type);
   }
-
 
   /* Do the dark matter now */
   data = logger_index_get_data(index, swift_type_dark_matter);
@@ -329,9 +328,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     while (next_offset < reader->time.time_offset) {
       // TODO use a single call for the offset and mask
       size_t mask = 0;
-      logger_loader_io_read_mask(
-        &reader->log.header, reader->log.log.map + prev_offset,
-        &mask, /* diff_offset */ NULL);
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
 
       if (mask & reader->log.header.masks[spec_flag_ind].mask) {
         error("TODO");
@@ -353,10 +352,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
 
     /* Read the particle */
-    logger_gparticle_read(&array->dark_matter.parts[i], reader, prev_offset, reader->time.time,
-                         interp_type);
+    logger_gparticle_read(&array->dark_matter.parts[i], reader, prev_offset,
+                          reader->time.time, interp_type);
   }
-
 
   data = logger_index_get_data(index, swift_type_stars);
 
@@ -380,9 +378,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     while (next_offset < reader->time.time_offset) {
       // TODO use a single call for the offset and mask
       size_t mask = 0;
-      logger_loader_io_read_mask(
-        &reader->log.header, reader->log.log.map + prev_offset,
-        &mask, /* diff_offset */ NULL);
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
 
       if (mask & reader->log.header.masks[spec_flag_ind].mask) {
         error("TODO");
@@ -404,8 +402,8 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
 
     /* Read the particle */
-    logger_sparticle_read(&array->stars.parts[i], reader, prev_offset, reader->time.time,
-                          interp_type);
+    logger_sparticle_read(&array->stars.parts[i], reader, prev_offset,
+                          reader->time.time, interp_type);
   }
 }
 
@@ -465,35 +463,36 @@ void logger_reader_move_forward(struct logger_reader *reader,
                                 size_t time_offset) {
 
   /* Ensure to have enough place in the next */
-  logger_particle_array_change_size(next, prev->hydro.n, prev->dark_matter.n, prev->stars.n);
+  logger_particle_array_change_size(next, prev->hydro.n, prev->dark_matter.n,
+                                    prev->stars.n);
 
-  for(size_t i = 0; i < prev->hydro.n; i++) {
+  for (size_t i = 0; i < prev->hydro.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_particle(
-      reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
+        reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
 
     if (event != logger_reader_event_null) {
       error("TODO");
     }
   }
 
-  for(size_t i = 0; i < prev->dark_matter.n; i++) {
+  for (size_t i = 0; i < prev->dark_matter.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_gparticle(
-      reader, &prev->dark_matter.parts[i], &next->dark_matter.parts[i], time_offset);
+        reader, &prev->dark_matter.parts[i], &next->dark_matter.parts[i],
+        time_offset);
 
     if (event != logger_reader_event_null) {
       error("TODO");
     }
   }
 
-  for(size_t i = 0; i < prev->stars.n; i++) {
+  for (size_t i = 0; i < prev->stars.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_sparticle(
-      reader, &prev->stars.parts[i], &next->stars.parts[i], time_offset);
+        reader, &prev->stars.parts[i], &next->stars.parts[i], time_offset);
 
     if (event != logger_reader_event_null) {
       error("TODO");
     }
   }
-
 }
 
 /**
@@ -505,13 +504,12 @@ void logger_reader_move_forward(struct logger_reader *reader,
  * @param next (out) The first record after the requested time.
  * @param time_offset The offset of the requested time.
  *
- * @return The event encountered (update also the offset of the previous particle).
+ * @return The event encountered (update also the offset of the previous
+ * particle).
  */
 enum logger_reader_event logger_reader_get_next_particle(
-    struct logger_reader *reader,
-    struct logger_particle *prev,
-    struct logger_particle *next,
-    size_t time_offset) {
+    struct logger_reader *reader, struct logger_particle *prev,
+    struct logger_particle *next, size_t time_offset) {
 
   void *map = reader->log.log.map;
   size_t prev_offset = prev->offset;
@@ -539,20 +537,19 @@ enum logger_reader_event logger_reader_get_next_particle(
 
       /* Get the data from the flag */
       int data = 0;
-      enum logger_special_flags flag = logger_unpack_flags_and_data(
-        tmp.flag, &data);
+      enum logger_special_flags flag =
+          logger_unpack_flags_and_data(tmp.flag, &data);
 
       /* Save the offset information */
       prev->offset = prev_offset;
 
       /* Deal with the different cases */
-      switch(flag) {
+      switch (flag) {
 
         case logger_flag_change_type:
           if (data == swift_type_stars) {
             return logger_reader_event_stars;
-          }
-          else {
+          } else {
             error("Not implemented yet.");
           }
 
@@ -608,13 +605,12 @@ enum logger_reader_event logger_reader_get_next_particle(
  * @param next (out) The first record after the requested time.
  * @param time_offset The offset of the requested time.
  *
- * @return The event encountered (update also the offset of the previous particle).
+ * @return The event encountered (update also the offset of the previous
+ * particle).
  */
 enum logger_reader_event logger_reader_get_next_gparticle(
-                                                         struct logger_reader *reader,
-                                                         struct logger_gparticle *prev,
-                                                         struct logger_gparticle *next,
-                                                         size_t time_offset) {
+    struct logger_reader *reader, struct logger_gparticle *prev,
+    struct logger_gparticle *next, size_t time_offset) {
   error("TODO");
 }
 
@@ -627,13 +623,12 @@ enum logger_reader_event logger_reader_get_next_gparticle(
  * @param next (out) The first record after the requested time.
  * @param time_offset The offset of the requested time.
  *
- * @return The event encountered (update also the offset of the previous particle).
+ * @return The event encountered (update also the offset of the previous
+ * particle).
  */
 enum logger_reader_event logger_reader_get_next_sparticle(
-                                                         struct logger_reader *reader,
-                                                         struct logger_sparticle *prev,
-                                                         struct logger_sparticle *next,
-                                                         size_t time_offset) {
+    struct logger_reader *reader, struct logger_sparticle *prev,
+    struct logger_sparticle *next, size_t time_offset) {
 
   error("TODO");
 }

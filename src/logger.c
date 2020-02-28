@@ -128,7 +128,7 @@ int logger_compute_chunk_size(unsigned int mask, int type) {
   /* Start with 8 bytes for the header. */
   int size = logger_mask_size + logger_offset_size;
 
-  for(int i = 0; i < logger_count_mask; i++) {
+  for (int i = 0; i < logger_count_mask; i++) {
     if ((logger_mask_data[i].mask & mask) &&
         (logger_mask_data[i].type == type)) {
       size += logger_mask_data[i].size;
@@ -193,10 +193,10 @@ void logger_copy_part_fields(const struct part *p, unsigned int mask,
   buff = logger_write_chunk_header(buff, &mask, offset, offset_new);
 
   /* Skip the time stamp and the special flags */
-  for(int i = 0; i < logger_count_mask - 2; i++) {
+  for (int i = 0; i < logger_count_mask - 2; i++) {
     if ((mask & logger_mask_data[i].mask) &&
         (logger_mask_data[i].type == swift_type_gas)) {
-      const char *pos = (char *) p + logger_mask_data[i].offset;
+      const char *pos = (char *)p + logger_mask_data[i].offset;
       const size_t size = logger_mask_data[i].size;
       memcpy(buff, pos, size);
       buff += size;
@@ -229,7 +229,7 @@ void logger_copy_part_fields(const struct part *p, unsigned int mask,
 unsigned int logger_generate_mask(enum part_type ptype, const int log_all,
                                   const uint32_t special_flags) {
   unsigned int mask = 0;
-  for(int i = 0; i < logger_count_mask; i++) {
+  for (int i = 0; i < logger_count_mask; i++) {
     // TODO skip fields if required
     if (logger_mask_data[i].type == ptype) {
       mask |= logger_mask_data[i].mask;
@@ -313,10 +313,10 @@ void logger_copy_spart_fields(const struct spart *sp, unsigned int mask,
   buff = logger_write_chunk_header(buff, &mask, offset, offset_new);
 
   /* Skip the time stamp and the special flags */
-  for(int i = 0; i < logger_count_mask - 2; i++) {
+  for (int i = 0; i < logger_count_mask - 2; i++) {
     if ((mask & logger_mask_data[i].mask) &&
         (logger_mask_data[i].type == swift_type_stars)) {
-      const char *pos = (char *) sp + logger_mask_data[i].offset;
+      const char *pos = (char *)sp + logger_mask_data[i].offset;
       const size_t size = logger_mask_data[i].size;
       memcpy(buff, pos, size);
       buff += size;
@@ -406,10 +406,10 @@ void logger_copy_gpart_fields(const struct gpart *gp, unsigned int mask,
   buff = logger_write_chunk_header(buff, &mask, offset, offset_new);
 
   /* Skip the time stamp and the special flags */
-  for(int i = 0; i < logger_count_mask - 2; i++) {
+  for (int i = 0; i < logger_count_mask - 2; i++) {
     if ((mask & logger_mask_data[i].mask) &&
         (logger_mask_data[i].type == swift_type_dark_matter)) {
-      const char *pos = (char *) gp + logger_mask_data[i].offset;
+      const char *pos = (char *)gp + logger_mask_data[i].offset;
       const size_t size = logger_mask_data[i].size;
       memcpy(buff, pos, size);
       buff += size;
@@ -457,8 +457,8 @@ void logger_log_gpart(struct logger_writer *log, struct gpart *p,
 void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
                        const int log_all, const uint32_t special_flags) {
 
-  unsigned int mask = logger_generate_mask(/* particle_type */ swift_type_dark_matter,
-                                           log_all, special_flags);
+  unsigned int mask = logger_generate_mask(
+      /* particle_type */ swift_type_dark_matter, log_all, special_flags);
 
   /* Start by computing the size of the message. */
   const int size = logger_compute_chunk_size(mask, swift_type_dark_matter);
@@ -499,8 +499,8 @@ void logger_log_timestamp(struct logger_writer *log, integertime_t timestamp,
 
   /* Start by computing the size of the message. */
   const int size =
-    logger_compute_chunk_size(logger_mask_data[logger_timestamp].mask,
-                              /* type */ -1);
+      logger_compute_chunk_size(logger_mask_data[logger_timestamp].mask,
+                                /* type */ -1);
 
   /* Allocate a chunk of memory in the dump of the right size. */
   size_t offset_new;
@@ -580,7 +580,7 @@ void logger_init_masks(struct logger_writer *log) {
   /* Get all the fields that need to be written for the hydro. */
   hydro_logger_write_particles(&part, list, &num_fields);
   /* Set the particle type */
-  for(int i = 0; i < num_fields; i++) {
+  for (int i = 0; i < num_fields; i++) {
     list[i].type = swift_type_gas;
   }
 
@@ -591,27 +591,27 @@ void logger_init_masks(struct logger_writer *log) {
   int tmp_num_fields = 0;
   darkmatter_logger_write_particles(&gpart, tmp, &tmp_num_fields);
   /* Set the particle type */
-  for(int i = 0; i < tmp_num_fields; i++) {
+  for (int i = 0; i < tmp_num_fields; i++) {
     tmp[i].type = swift_type_dark_matter;
   }
   num_fields += tmp_num_fields;
 
   /* The next fields must be the two last one. */
   /* Add the special flags (written manually => no need of offset) */
-  list[num_fields] = logger_io_make_output_field_function(
-      "SpecialFlags", 0, sizeof(int));
+  list[num_fields] =
+      logger_io_make_output_field_function("SpecialFlags", 0, sizeof(int));
   num_fields += 1;
 
   /* Add the timestamp */
   list[num_fields] = logger_io_make_output_field_function(
       "Timestamp", 0, sizeof(integertime_t) + sizeof(double));
-  list[num_fields].type = -1; // flag it as timestamp
+  list[num_fields].type = -1;  // flag it as timestamp
   num_fields += 1;
 
   /* Set the masks and ensure to have only one for the common fields
      (e.g. Coordinates) */
   int mask = 0;
-  for(int i = 0; i < num_fields; i++) {
+  for (int i = 0; i < num_fields; i++) {
     /* Skip the elements already processed. */
     if (list[i].mask != 0) {
       continue;
@@ -620,7 +620,7 @@ void logger_init_masks(struct logger_writer *log) {
     list[i].mask = 1 << mask;
 
     /* Check if the field exists in the other particle type. */
-    for(int j = i+1; j < num_fields; j++) {
+    for (int j = i + 1; j < num_fields; j++) {
       /* Check if the name is the same */
       if (strcmp(name, list[j].name) == 0) {
         /* Check if the data are the same */
@@ -636,13 +636,14 @@ void logger_init_masks(struct logger_writer *log) {
 
   /* Check that we have enough available flags. */
   if (mask >= 8 * logger_mask_size) {
-    error("Not enough available flags for all the fields. "
-          "Please reduce the number of output fields.");
+    error(
+        "Not enough available flags for all the fields. "
+        "Please reduce the number of output fields.");
   }
 
   /* Save the data */
   size_t size_list = sizeof(struct mask_data) * num_fields;
-  logger_mask_data = (struct mask_data *) malloc(size_list);
+  logger_mask_data = (struct mask_data *)malloc(size_list);
   memcpy(logger_mask_data, list, size_list);
 
   /* Set the counter */
@@ -690,7 +691,6 @@ void logger_init(struct logger_writer *log, struct swift_params *params) {
 
   /* init dump. */
   dump_init(&log->dump, logger_name_file, buffer_size);
-
 }
 
 /**
@@ -756,7 +756,7 @@ void logger_write_file_header(struct logger_writer *log) {
   for (int i = 0; i < logger_count_mask; i++) {
     /* Check if the mask was not already written */
     int is_written = 0;
-    for(int j = 0; j < i; j++) {
+    for (int j = 0; j < i; j++) {
       if (logger_mask_data[i].mask == logger_mask_data[j].mask) {
         is_written = 1;
         break;
@@ -825,10 +825,10 @@ int logger_read_part(struct part *p, size_t *offset, const char *buff) {
   unsigned int mask = 0;
   buff += logger_read_chunk_header(buff, &mask, offset, cur_offset);
 
-  for(int i = 0; i < logger_count_mask; i++) {
+  for (int i = 0; i < logger_count_mask; i++) {
     if ((mask & logger_mask_data[i].mask) &&
         (logger_mask_data[i].type == swift_type_gas)) {
-      char *pos = (char *) p + logger_mask_data[i].offset;
+      char *pos = (char *)p + logger_mask_data[i].offset;
       const size_t size = logger_mask_data[i].size;
       memcpy(pos, buff, size);
       buff += size;
@@ -859,10 +859,10 @@ int logger_read_gpart(struct gpart *p, size_t *offset, const char *buff) {
   unsigned int mask = 0;
   buff += logger_read_chunk_header(buff, &mask, offset, cur_offset);
 
-  for(int i = 0; i < logger_count_mask; i++) {
+  for (int i = 0; i < logger_count_mask; i++) {
     if ((mask & logger_mask_data[i].mask) &&
         (logger_mask_data[i].type == swift_type_dark_matter)) {
-      char *pos = (char *) p + logger_mask_data[i].offset;
+      char *pos = (char *)p + logger_mask_data[i].offset;
       const size_t size = logger_mask_data[i].size;
       memcpy(pos, buff, size);
       buff += size;

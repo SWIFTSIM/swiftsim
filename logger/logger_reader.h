@@ -104,7 +104,7 @@ struct logger_reader {
 };
 
 enum logger_reader_event {
-  logger_reader_event_null, /* No event */
+  logger_reader_event_null,    /* No event */
   logger_reader_event_deleted, /* Particle has been deleted */
   logger_reader_event_stars, /* The particle has been transformed into a star */
 };
@@ -124,14 +124,14 @@ double logger_reader_get_time_end(struct logger_reader *reader);
 size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
                                                double time);
 enum logger_reader_event logger_reader_get_next_particle(
-  struct logger_reader *reader, struct logger_particle *prev,
-  struct logger_particle *next, size_t time);
+    struct logger_reader *reader, struct logger_particle *prev,
+    struct logger_particle *next, size_t time);
 enum logger_reader_event logger_reader_get_next_gparticle(
-  struct logger_reader *reader, struct logger_gparticle *prev,
-  struct logger_gparticle *next, size_t time);
+    struct logger_reader *reader, struct logger_gparticle *prev,
+    struct logger_gparticle *next, size_t time);
 enum logger_reader_event logger_reader_get_next_sparticle(
-  struct logger_reader *reader, struct logger_sparticle *prev,
-  struct logger_sparticle *next, size_t time);
+    struct logger_reader *reader, struct logger_sparticle *prev,
+    struct logger_sparticle *next, size_t time);
 
 const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
                                                    int *n_type);

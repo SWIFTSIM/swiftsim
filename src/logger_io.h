@@ -30,7 +30,6 @@
 #include "part.h"
 #include "units.h"
 
-
 struct mask_data {
   /* Number of bytes for a mask. */
   int size;
@@ -49,13 +48,12 @@ struct mask_data {
 };
 
 // TODO move it inside #logger_writer
-extern struct mask_data *logger_mask_data;
+extern struct mask_data* logger_mask_data;
 extern int logger_count_mask;
 
-#define logger_io_make_output_field(name, part, field)  \
-  logger_io_make_output_field_function(                 \
-      name, ((char*)(&part[0].field) - (char *)part),   \
-      sizeof(part[0].field));
+#define logger_io_make_output_field(name, part, field) \
+  logger_io_make_output_field_function(                \
+      name, ((char*)(&part[0].field) - (char*)part), sizeof(part[0].field));
 
 /**
  * @brief Create a #mask_data from the particle.
@@ -67,7 +65,7 @@ extern int logger_count_mask;
  * @return The #mask_data created.
  */
 INLINE static struct mask_data logger_io_make_output_field_function(
-    char *name, size_t offset, int data_size) {
+    char* name, size_t offset, int data_size) {
 
   struct mask_data mask;
   strcpy(mask.name, name);
@@ -77,7 +75,6 @@ INLINE static struct mask_data logger_io_make_output_field_function(
 
   return mask;
 }
-
 
 void logger_write_index_file(struct logger_writer* log, struct engine* e);
 void logger_write_description(struct logger_writer* log, struct engine* e);

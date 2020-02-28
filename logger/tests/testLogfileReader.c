@@ -111,7 +111,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
       assert(p->mass == lp.mass);
 
       /* Check optional fields. */
-      //int number_steps = step / p->time_bin;
+      // int number_steps = step / p->time_bin;
       // TODO check only every few steps
       assert(p->h == lp.h);
       /* if (number_steps % period_h == 0 || step > max_step) { */

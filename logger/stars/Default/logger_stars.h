@@ -104,8 +104,8 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_init(
  * @return mapped data after the block read.
  */
 __attribute__((always_inline)) INLINE static void *logger_sparticle_read_field(
-    struct logger_sparticle *part, void *map,
-    const char *field, const size_t size) {
+    struct logger_sparticle *part, void *map, const char *field,
+    const size_t size) {
   void *p = NULL;
 
   /* Get the correct pointer. */
@@ -140,8 +140,8 @@ __attribute__((always_inline)) INLINE static void *logger_sparticle_read_field(
  *
  */
 __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
-    struct logger_sparticle *part_curr, const struct logger_sparticle *part_next,
-    const double time) {
+    struct logger_sparticle *part_curr,
+    const struct logger_sparticle *part_next, const double time) {
 
   /* Check that a particle is provided. */
   if (!part_curr) error("part_curr is NULL.");
@@ -188,7 +188,8 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
  * @param num_fields The number of i/o fields to give access to.
  */
 INLINE static void logger_sparticles_generate_python(
-    const struct logger_particle* parts, struct logger_python_field* list, int* num_fields) {
+    const struct logger_particle *parts, struct logger_python_field *list,
+    int *num_fields) {
 #ifdef HAVE_PYTHON
 
   *num_fields = 6;
@@ -200,9 +201,11 @@ INLINE static void logger_sparticles_generate_python(
 
   list[2] = logger_loader_python_field("Masses", parts, mass, 1, NPY_FLOAT32);
 
-  list[3] = logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
+  list[3] =
+      logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
 
-  list[4] = logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
+  list[4] =
+      logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
 
   list[5] = logger_loader_python_field("Times", parts, time, 1, NPY_DOUBLE);
 #else
@@ -210,4 +213,4 @@ INLINE static void logger_sparticles_generate_python(
 #endif /* WITH_LOGGER */
 }
 
-#endif // SWIFT_DEFAULT_LOGGER_GRAVITY_H
+#endif  // SWIFT_DEFAULT_LOGGER_GRAVITY_H

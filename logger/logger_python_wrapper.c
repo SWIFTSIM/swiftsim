@@ -108,8 +108,8 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
 
   /* Hydro */
   npy_intp n = n_parts[swift_type_gas];
-  PyArrayObject *parts = (PyArrayObject *)PyArray_SimpleNewFromDescr(
-      1, &n, logger_particle_descr);
+  PyArrayObject *parts =
+      (PyArrayObject *)PyArray_SimpleNewFromDescr(1, &n, logger_particle_descr);
   array.hydro.parts = PyArray_DATA(parts);
   array.hydro.n = n_parts[swift_type_gas];
 
@@ -126,7 +126,6 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
       1, &n, logger_sparticle_descr);
   array.stars.parts = PyArray_DATA(sparts);
   array.stars.n = n_parts[swift_type_stars];
-
 
   /* Reference is stolen, therefore need to take it into account */
   Py_INCREF(logger_particle_descr);
@@ -147,13 +146,14 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   /* Create the output */
   PyObject *output = PyDict_New();
   if (n_parts[swift_type_gas] != 0) {
-    PyDict_SetItem(output, PyUnicode_FromString("gas"), (PyObject *) parts);
+    PyDict_SetItem(output, PyUnicode_FromString("gas"), (PyObject *)parts);
   }
   if (n_parts[swift_type_dark_matter] != 0) {
-    PyDict_SetItem(output, PyUnicode_FromString("dark_matter"), (PyObject *) gparts);
+    PyDict_SetItem(output, PyUnicode_FromString("dark_matter"),
+                   (PyObject *)gparts);
   }
   if (n_parts[swift_type_stars] != 0) {
-    PyDict_SetItem(output, PyUnicode_FromString("stars"), (PyObject *) sparts);
+    PyDict_SetItem(output, PyUnicode_FromString("stars"), (PyObject *)sparts);
   }
   return output;
 }
@@ -423,15 +423,14 @@ void pylogger_particle_define_descr(void) {
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
   PyObject *fields = PyDict_New();
-  for(int i = 0; i < num_fields; i++) {
+  for (int i = 0; i < num_fields; i++) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
       CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
-    }
-    else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
-                        list[i].type, list[i].dimension);
+    } else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+                        list[i].dimension);
     }
   }
 
@@ -484,15 +483,14 @@ void pylogger_gparticle_define_descr(void) {
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
   PyObject *fields = PyDict_New();
-  for(int i = 0; i < num_fields; i++) {
+  for (int i = 0; i < num_fields; i++) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
       CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
-    }
-    else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
-                        list[i].type, list[i].dimension);
+    } else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+                        list[i].dimension);
     }
   }
 
@@ -545,15 +543,14 @@ void pylogger_sparticle_define_descr(void) {
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
   PyObject *fields = PyDict_New();
-  for(int i = 0; i < num_fields; i++) {
+  for (int i = 0; i < num_fields; i++) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
       CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
-    }
-    else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset,
-                        list[i].type, list[i].dimension);
+    } else {
+      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+                        list[i].dimension);
     }
   }
 

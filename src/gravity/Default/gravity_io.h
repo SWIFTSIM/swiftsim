@@ -148,7 +148,8 @@ INLINE static void darkmatter_logger_write_particles(const struct gpart* gparts,
 
   list[2] = logger_io_make_output_field("Masses", gparts, mass);
 
-  list[3] = logger_io_make_output_field("ParticleIDs", gparts, id_or_neg_offset);
+  list[3] =
+      logger_io_make_output_field("ParticleIDs", gparts, id_or_neg_offset);
 #else
   error("Should not be called without the logger.");
 #endif
