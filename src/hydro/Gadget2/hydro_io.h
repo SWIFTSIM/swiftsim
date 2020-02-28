@@ -233,26 +233,46 @@ INLINE static void hydro_write_flavour(hid_t h_grpsph) {
 INLINE static int writeEntropyFlag(void) { return 0; }
 
 /**
+ * @brief Write the full acceleration into a buff
+ *
+ * @param e The #engine.
+ * @param p The particle.
+ * @param xp The extra particle.
+ * @param buff The return buffer (already allocated thanks to #hydro_logger_write_particles).
+ */
+INLINE static void hydro_logger_acceleration_conversion(const struct engine *e,
+                                                        const struct part* p,
+                                                        const struct xpart* xp,
+                                                        char *buff) {
+  /* Compute the acceleration */
+  float acc[3];
+  acc[0] = p->a_hydro[0] + xp->a_grav[0];
+  acc[1] = p->a_hydro[1] + xp->a_grav[1];
+  acc[2] = p->a_hydro[2] + xp->a_grav[2];
+
+  /* Copy it to the buffer */
+  memcpy(buff, acc, sizeof(acc));
+}
+
+/**
  * @brief Specifies which particle fields to write to the logger
  *
  * @param parts The particle array.
  * @param list The list of logger i/o properties to write.
- * @param num_fields The number of i/o fields to write.
+ *
+ * @return The number of i/o fields to write.
  */
-INLINE static void hydro_logger_write_particles(const struct part* parts,
-                                                struct mask_data* list,
-                                                int* num_fields) {
+INLINE static int hydro_logger_write_particles(const struct part* parts,
+                                                struct mask_data* list) {
 #ifdef WITH_LOGGER
-
-  *num_fields = 8;
 
   /* List what we want to write */
   list[0] = logger_io_make_output_field("Coordinates", parts, x);
 
   list[1] = logger_io_make_output_field("Velocities", parts, v);
 
-  // TODO sum the grav + hydro accelerations
-  list[2] = logger_io_make_output_field("Accelerations", parts, a_hydro);
+  list[2] = logger_io_make_output_field_conversion("Accelerations", 3 * sizeof(float),
+                                                   hydro_logger_acceleration_conversion);
 
   list[3] = logger_io_make_output_field("Masses", parts, mass);
 
@@ -263,6 +283,8 @@ INLINE static void hydro_logger_write_particles(const struct part* parts,
   list[6] = logger_io_make_output_field("ParticleIDs", parts, id);
 
   list[7] = logger_io_make_output_field("Densities", parts, rho);
+
+  return 8;
 #else
   error("Should not be called without the logger.");
 #endif /* WITH_LOGGER */

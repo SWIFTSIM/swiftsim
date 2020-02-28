@@ -188,6 +188,11 @@ void header_read(struct header *h, struct logger_logfile *log) {
     error("Wrong header size (in header %zi, current %zi).",
           h->offset_first_record, offset);
   }
+
+  /* Check that the fields have the correct size */
+  logger_particle_check_fields(h);
+  logger_sparticle_check_fields(h);
+  logger_gparticle_check_fields(h);
 };
 
 /**

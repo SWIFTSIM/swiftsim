@@ -57,6 +57,7 @@ void generate_particles(struct part *parts, struct xpart *xparts,
       parts[i].x[j] = 0;
       parts[i].v[j] = (j == 0) ? -1 : 0;
       parts[i].a_hydro[j] = (j == 1) ? 1e-2 : 0;
+      xparts[i].a_grav[j] = 0;
     }
     parts[i].h = 15;
     parts[i].rho = 50;
@@ -120,7 +121,7 @@ void write_particles(struct logger_writer *log, struct engine *e) {
 
       // TODO write only a few masks at the time
 
-      logger_log_part(log, &parts[j], &xparts[j], /* log_all */ 0,
+      logger_log_part(log, &parts[j], &xparts[j], e, /* log_all */ 0,
                       /* special flags */ 0);
     }
   }

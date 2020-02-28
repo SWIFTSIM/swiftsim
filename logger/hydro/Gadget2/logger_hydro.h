@@ -117,46 +117,83 @@ __attribute__((always_inline)) INLINE static void logger_particle_init(
  * @brief Read a single named entry for a particle.
  *
  * @param part The #logger_particle to update.
- * @param map The mapped data.
+ * @param buff The buffer containing the particle.
  * @param field field to read.
  * @param size number of bits to read.
  *
  * @return mapped data after the block read.
  */
-__attribute__((always_inline)) INLINE static void *logger_particle_read_field(
-    struct logger_particle *part, void *map, const char *field,
+__attribute__((always_inline)) INLINE static void logger_particle_read_field(
+    struct logger_particle *part, char *buff, const char *field,
     const size_t size) {
-  void *p = NULL;
 
-  /* Get the correct pointer. */
+  /* Copy the buffer to the particle. */
   if (strcmp("Coordinates", field) == 0) {
-    p = &part->x;
+    memcpy(&part->x, buff, size);
   } else if (strcmp("Velocities", field) == 0) {
-    p = &part->v;
+    memcpy(&part->v, buff, size);
   } else if (strcmp("Accelerations", field) == 0) {
-    p = &part->a;
+    memcpy(&part->a, buff, size);
   } else if (strcmp("Entropies", field) == 0) {
-    p = &part->entropy;
+    memcpy(&part->entropy, buff, size);
   } else if (strcmp("SmoothingLengths", field) == 0) {
-    p = &part->h;
+    memcpy(&part->h, buff, size);
   } else if (strcmp("Densities", field) == 0) {
-    p = &part->rho;
+    memcpy(&part->rho, buff, size);
     // TODO link mass and ids together?
   } else if (strcmp("Masses", field) == 0) {
-    p = &part->mass;
+    memcpy(&part->mass, buff, size);
   } else if (strcmp("ParticleIDs", field) == 0) {
-    p = &part->id;
+    memcpy(&part->id, buff, size);
   } else if (strcmp("SpecialFlags", field) == 0) {
-    p = &part->flag;
+    memcpy(&part->flag, buff, size);
   } else {
     error("Type %s not defined.", field);
   }
+}
 
-  /* read the data. */
-  // TODO read the record only once.
-  map = logger_loader_io_read_data(map, size, p);
+/**
+ * @brief Check if the required fields are correct.
+ *
+ * @param head The #header.
+ */
+__attribute__((always_inline)) INLINE static void logger_particle_check_fields(
+    struct header *head) {
 
-  return map;
+  struct logger_particle part;
+  for(int i = 0; i < head->masks_count; i++) {
+    int size = -1;
+    if (strcmp(head->masks[i].name, "Positions") == 0) {
+      size = sizeof(part.x);
+    }
+    else if (strcmp(head->masks[i].name, "Velocities") == 0) {
+      size = sizeof(part.v);
+    }
+    else if (strcmp(head->masks[i].name, "Accelerations") == 0) {
+      size = sizeof(part.a);
+    }
+    else if (strcmp(head->masks[i].name, "Masses") == 0) {
+      size = sizeof(part.mass);
+    }
+    else if (strcmp(head->masks[i].name, "SmoothingLengths") == 0) {
+      size = sizeof(part.h);
+    }
+    else if (strcmp(head->masks[i].name, "Entropies") == 0) {
+      size = sizeof(part.entropy);
+    }
+    else if (strcmp(head->masks[i].name, "ParticleIDs") == 0) {
+      size = sizeof(part.id);
+    }
+    else if (strcmp(head->masks[i].name, "Densities") == 0) {
+      size = sizeof(part.rho);
+    }
+
+    if (size != -1 && size != head->masks[i].size) {
+      error("The field size is not compatible for %s (%i %i)",
+            head->masks[i].name, size, head->masks[i].size);
+    }
+
+  }
 }
 
 /**

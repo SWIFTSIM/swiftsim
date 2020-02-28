@@ -45,11 +45,18 @@ struct mask_data {
 
   /* Type of particle (follow part_type.h and -1 for timestamp). */
   int type;
+
+  /* function to generate the field */
+  void *function;
 };
 
-// TODO move it inside #logger_writer
-extern struct mask_data* logger_mask_data;
-extern int logger_count_mask;
+typedef void (*logger_conversion_part)(const struct engine*,
+                                       const struct part*,
+                                       const struct xpart*, char*);
+typedef void (*logger_conversion_gpart)(const struct engine*,
+                                       const struct gpart*, char*);
+typedef void (*logger_conversion_spart)(const struct engine*,
+                                       const struct spart*, char*);
 
 #define logger_io_make_output_field(name, part, field) \
   logger_io_make_output_field_function(                \
@@ -72,6 +79,33 @@ INLINE static struct mask_data logger_io_make_output_field_function(
   mask.size = data_size;
   mask.offset = offset;
   mask.mask = 0;
+  mask.function = NULL;
+
+  return mask;
+}
+
+#define logger_io_make_output_field_conversion(name, size, func)      \
+  logger_io_make_output_field_conversion_function(                    \
+      name, (void *) func, size);
+
+/**
+ * @brief Create a #mask_data from the particle.
+ *
+ * @param name The field name.
+ * @param func The function that write the field into a buffer.
+ * @param data_size The size of data to copy.
+ *
+ * @return The #mask_data created.
+ */
+INLINE static struct mask_data logger_io_make_output_field_conversion_function(
+    char* name, void *func, int data_size) {
+
+  struct mask_data mask;
+  strcpy(mask.name, name);
+  mask.size = data_size;
+  mask.offset = 0;
+  mask.mask = 0;
+  mask.function = func;
 
   return mask;
 }
