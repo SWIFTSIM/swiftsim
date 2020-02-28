@@ -258,6 +258,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   struct index_data *data = logger_index_get_data(index, swift_type_gas);
 
   /* Read the particles */
+  // TODO make it parallel
   for (size_t i = 0; i < array->hydro.n; i++) {
     /* Get the offset */
     size_t prev_offset = data[i].offset;
@@ -466,6 +467,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
   logger_particle_array_change_size(next, prev->hydro.n, prev->dark_matter.n,
                                     prev->stars.n);
 
+  // TODO make it parallel
   for (size_t i = 0; i < prev->hydro.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_particle(
         reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
