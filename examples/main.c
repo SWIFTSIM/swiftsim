@@ -917,7 +917,7 @@ int main(int argc, char *argv[]) {
 
     /* Initialise the dust evolution properties */
     bzero(&dustevo_properties, sizeof(struct dustevo_props));
-    dustevo_props_init(&dustevo_properties, params, &prog_const);
+    dustevo_props_init(&dustevo_properties, params, &prog_const, &us);
 
 
     /* Initialise the FOF properties */

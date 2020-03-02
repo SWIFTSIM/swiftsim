@@ -153,6 +153,7 @@ __attribute__((always_inline)) INLINE static void cooling_convert_quantities(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling) {}
+    const struct cooling_function_data *cooling,
+    const struct dustevo_props *dp) {}
 
 #endif /* SWIFT_COOLING_COLIBRE_H */

@@ -69,6 +69,9 @@ struct dustevo_props {
   int refractory_idx[5];
   int dust_idx[5];
 
+  /* ------------ constants that are used a lot ---------- */
+  /* const float number_density_to_cgs; */ // setting here not working - see dust.c
+
 };
 
 void redistribute_dust_to_element_abundances(struct spart* sp,
@@ -127,7 +130,8 @@ void dustevo_SNIIdestruction_part(const struct phys_const *phys_const,
 
 void dustevo_props_init(struct dustevo_props *dustevo_properties,
 			struct swift_params *params,
-			const struct phys_const *phys_const);
+			const struct phys_const *phys_const,
+			const struct unit_system *us);
 
 void dustevo_struct_restore(const struct dustevo_props* dustevo, FILE* stream);
 

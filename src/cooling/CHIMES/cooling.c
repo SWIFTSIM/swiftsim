@@ -1074,7 +1074,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * abundances will be re-computed from the
    * subgrid temperature and density. */
   cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
-                                 floor_props, cooling, p, xp);
+                                 floor_props, cooling, dp, p, xp);
 }
 
 /**
@@ -1430,7 +1430,8 @@ void cooling_convert_quantities(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling) {
+    const struct cooling_function_data *cooling,
+    const struct dustevo_props *dp) {
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
   struct gasVariables ChimesGasVars;
   int i;
@@ -1538,7 +1539,8 @@ void cooling_set_subgrid_properties(
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling, struct part *p,
+    const struct cooling_function_data *cooling, 
+    const struct dustevo_props *dp, struct part *p,
     struct xpart *xp) {
 
   /* Limit imposed by the entropy floor */

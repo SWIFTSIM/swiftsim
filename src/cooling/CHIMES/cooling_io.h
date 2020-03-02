@@ -25,6 +25,7 @@
 /* Local includes */
 #include "cooling.h"
 #include "io_properties.h"
+#include "dust.h"
 
 #ifdef HAVE_HDF5
 
@@ -81,7 +82,8 @@ INLINE static void convert_part_chimes_abundances(const struct engine* e,
    * particles on the EOS. */
   cooling_set_subgrid_properties(e->physical_constants, e->internal_units,
                                  e->cosmology, e->hydro_properties,
-                                 e->entropy_floor, e->cooling_func, &dummy_p,
+                                 e->entropy_floor, e->cooling_func,
+				 e->dustevo_props, &dummy_p,
                                  &dummy_xp);
 
   int i;

@@ -15,14 +15,14 @@
 #include "adiabatic_index.h"
 #include "chemistry.h"
 #include "cooling.h"
-#include "cooling/COLIBRE/cooling_rates.h"
+//#include "cooling/COLIBRE/cooling_rates.h"
 #include "cooling_struct.h"
-#include "cooling/COLIBRE/cooling_tables.h"
+//#include "cooling/COLIBRE/cooling_tables.h"
 #include "entropy_floor.h"
 #include "error.h"
 #include "exp10.h"
 #include "hydro.h"
-#include "cooling/COLIBRE/interpolate.h"
+//#include "cooling/COLIBRE/interpolate.h"
 #include "io_properties.h"
 #include "parser.h"
 #include "part.h"
@@ -32,7 +32,8 @@
 
 void dustevo_props_init(struct dustevo_props *dustevo_properties,
 			struct swift_params *params,
-			const struct phys_const *phys_const) {
+			const struct phys_const *phys_const,
+			const struct unit_system *us) {
   message("Initialising dust parameter values");
 
   dustevo_properties->with_sputtering =
@@ -58,6 +59,13 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
 
   dustevo_properties->specific_numSNII =
     7.039463e-3 / phys_const->const_solar_mass;
+
+  /* dustevo_properties->number_density_to_cgs =  */
+  /*   units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY); */
+  // message("%e", dustevo_properties->number_density_to_cgs);
+  // ASK MATTHIEU: why does this return 0 when initialised here??
+
+
 
   dustevo_properties->refractory_idx[0] = chemistry_element_C;
   dustevo_properties->refractory_idx[1] = chemistry_element_O;
@@ -139,7 +147,6 @@ void evolve_dust_part(const struct phys_const *phys_const,
   /* no dust, no accretion */
   if (fGra+fSil+fIde <= 0.) return;
 
-
   /* set temperature and density with subgrid or hydro */
   float rho, temp; 
 
@@ -160,8 +167,9 @@ void evolve_dust_part(const struct phys_const *phys_const,
   /* convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H = rho * X / phys_const->const_proton_mass;
 
+
   /* convert some properties to cgs  */
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  const double n_H_cgs = n_H * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
   const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /*------------------------- Sputtering -------------------------*/
@@ -335,7 +343,7 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
   const double n_H = rho * X / phys_const->const_proton_mass;
 
   /* convert some properties to cgs  */
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  const double n_H_cgs = n_H * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
   const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /*------------------------- Sputtering -------------------------*/
@@ -569,7 +577,7 @@ void dustevo_sputter_part(const struct phys_const *phys_const,
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const float XH = metal_fraction[chemistry_element_H];
   const double n_H = rho * XH / phys_const->const_proton_mass;
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  const double n_H_cgs = n_H * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
   const double dt_cgs = dt * units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* surface area of a dust grain, assuming 0.1 micron radius */
@@ -625,7 +633,7 @@ void dustevo_accretion_part(const struct phys_const *phys_const,
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H = rho * X / phys_const->const_proton_mass;
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  const double n_H_cgs = n_H * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
 
   /* get other relevant particle properties */
@@ -709,7 +717,7 @@ void dustevo_SNIIdestruction_part(const struct phys_const *phys_const,
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const double n_H = rho * X / phys_const->const_proton_mass;
-  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  const double n_H_cgs = n_H * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
   /* const double n_H_sg_cgs = n_H_cgs * (rho_sg/rho); */
 
   /* get other relevant particle properties */

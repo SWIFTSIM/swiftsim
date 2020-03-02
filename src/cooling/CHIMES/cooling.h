@@ -58,6 +58,7 @@ void chimes_update_gas_vars(const double u_cgs,
                             const struct hydro_props *hydro_properties,
                             const struct entropy_floor_properties *floor_props,
                             const struct cooling_function_data *cooling,
+			    const struct dustevo_props *dp,
                             struct part *restrict p, struct xpart *restrict xp,
                             struct gasVariables *ChimesGasVars,
                             const float dt_cgs);
@@ -112,13 +113,15 @@ void cooling_convert_quantities(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling);
+    const struct cooling_function_data *cooling,
+    const struct dustevo_props *dp);
 
 void cooling_set_subgrid_properties(
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling, struct part *p,
+    const struct cooling_function_data *cooling, 
+    const struct dustevo_props *dp, struct part *p,
     struct xpart *xp);
 
 float cooling_get_subgrid_temperature(
