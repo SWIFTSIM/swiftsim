@@ -190,4 +190,12 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     const struct cooling_function_data *data, struct part *restrict p,
     struct xpart *restrict xp) {}
 
+/**
+ * @brief Updates cooling properties of particle hit by feedback. 
+ *
+ * For this cooling module, this routine does not do anything.
+ * 
+ * @param xp Pointer to the extended particle data.
+ */ 
+__attribute__((always_inline)) INLINE static void cooling_update_feedback_particle(struct xpart *restrict xp) {}
 #endif /* SWIFT_COOLING_CHIMES_H */

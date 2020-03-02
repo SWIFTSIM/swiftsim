@@ -307,6 +307,9 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
+      /* Update cooling properties. */ 
+      cooling_update_feedback_particle(xpj); 
+
       /* Write the event to the SNIII log file */
       event_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
 
@@ -352,6 +355,9 @@ runner_iact_nonsym_feedback_apply(
 
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
+
+      /* Update cooling properties. */ 
+      cooling_update_feedback_particle(xpj); 
 
       /* Write the event to the SNIa log file */
       event_logger_SNIa_log_event(si, pj, xpj, cosmo);

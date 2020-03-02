@@ -113,4 +113,13 @@ __attribute__((always_inline)) INLINE static void cooling_convert_quantities(
     const struct entropy_floor_properties *floor_props,
     const struct cooling_function_data *cooling) {}
 
+/**
+ * @brief Updates cooling properties of particle hit by feedback. 
+ *
+ * For this cooling module, this routine does not do anything.
+ * 
+ * @param xp Pointer to the extended particle data.
+ */ 
+__attribute__((always_inline)) INLINE static void cooling_update_feedback_particle(struct xpart *restrict xp) {}
+
 #endif /* SWIFT_COOLING_EAGLE_H */
