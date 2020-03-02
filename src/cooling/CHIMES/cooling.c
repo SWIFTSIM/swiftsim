@@ -1651,6 +1651,47 @@ void cooling_set_subgrid_properties(
 
     /* Free CHIMES memory. */
     free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+  } else if ((xp->cooling_data.heated_by_FB == 1) && (cooling->set_FB_particles_to_eqm == 1)) {
+    /* If the particle is not on, or near, the EOS 
+     * but has been heated by feedback since it 
+     * last went through the cooling routines, then 
+     * we need to re-set its abundance array to 
+     * be in equilibrium. */ 
+    
+    // Create ChimesGasVars struct
+    struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
+    struct gasVariables ChimesGasVars;
+    allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+
+    // Copy abundances over from xp to ChimesGasVars
+    int i;
+    for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
+      ChimesGasVars.abundances[i] =
+          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+
+    // Update element abundances
+    chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
+                                     &ChimesGasVars, 1);
+
+    // Update ChimesGasVars 
+    const double u_cgs = u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+
+    chimes_update_gas_vars(u_cgs, phys_const, us, cosmo, hydro_props,
+                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+
+    // Set abundances to equilibrium 
+    cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling); 
+
+    // Copy abundances from ChimesGasVars to xp.
+    for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
+      xp->cooling_data.chimes_abundances[i] =
+          (double)ChimesGasVars.abundances[i];
+
+    // Free CHIMES memory.
+    free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+
+    // Re-set heated_by_FB flag. 
+    xp->cooling_data.heated_by_FB = 0; 
   }
 }
 
