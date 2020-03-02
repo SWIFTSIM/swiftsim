@@ -139,6 +139,9 @@ struct cooling_xpart_data {
 
   /* Cumulative energy radiated by the particle */
   float radiated_energy;
+
+  /* Flag to indicate when the particle has been heated by feedback. */ 
+  int heated_by_FB; 
 };
 
 #endif /* SWIFT_COOLING_STRUCT_CHIMES_H */
