@@ -137,6 +137,10 @@ void cooling_set_HIIregion_chimes_abundances(
     struct gasVariables *ChimesGasVars,
     const struct cooling_function_data *cooling);
 
+void cooling_set_FB_particle_chimes_abundances(
+    struct gasVariables *ChimesGasVars,
+    const struct cooling_function_data *cooling); 
+
 /**
  * @brief Computes the cooling time-step.
  *

@@ -940,6 +940,15 @@ void cooling_cool_part(const struct phys_const *phys_const,
   chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties,
                          floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs);
 
+  /* Check if the particle has just been heated by 
+   * feedback. If it has, re-set its abundance 
+   * array to equilibrium. */ 
+  if (xp->cooling_data.heated_by_FB == 1) 
+    {
+      cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling); 
+      xp->cooling_data.heated_by_FB = 0; 
+    }
+
   /* check if the particle is in an HII region. If it is, we
    * immediately heat it up to 1e4 K (if required), and it
    * will subsequently be evolved with equilibrium cooling. */
@@ -1851,3 +1860,37 @@ void cooling_set_HIIregion_chimes_abundances(
         ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeII]];
   }
 }
+
+/**
+ * @brief Set CHIMES abundances for particles heated by feedback. 
+ *
+ * Sets gas particle that has just been heated by feedback 
+ * to be in chemical equilibrium at its new temperature. 
+ *
+ * @param ChimesGasVars CHIMES gasVariables structure.
+ * @param cooling The #cooling_function_data used in the run.
+ */
+void cooling_set_FB_particle_chimes_abundances(
+    struct gasVariables *ChimesGasVars,
+    const struct cooling_function_data *cooling) {
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
+
+  /* Save equilibrium and ThermEvol flags. */ 
+  int ForceEqOn_save = ChimesGasVars->ForceEqOn; 
+  int ThermEvolOn_save = ChimesGasVars->ThermEvolOn; 
+
+  /* Use equilibrium abundances. */ 
+  ChimesGasVars->ForceEqOn = 1; 
+
+  /* Disable temperature evolution. */ 
+  ChimesGasVars->ThermEvolOn = 0; 
+
+  /* Set abundance array to equilibrium. */ 
+  chimes_network(ChimesGasVars, &ChimesGlobalVars); 
+
+  /* Revert flags to saved values. */ 
+  ChimesGasVars->ForceEqOn = ForceEqOn_save; 
+  ChimesGasVars->ThermEvolOn = ThermEvolOn_save; 
+} 
+
+
