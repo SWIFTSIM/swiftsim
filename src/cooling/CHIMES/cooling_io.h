@@ -104,10 +104,16 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
     const struct cooling_function_data* cooling) {
 
   list[0] = io_make_output_field_convert_part(
+      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f,
+      parts, xparts, convert_part_chimes_abundances,
+      "CHIMES abundance array. The abundance of species i is defined in terms "
+      "of its number density relative to hydrogen, i.e. n_i / n_H_tot.");
+
+  list[1] = io_make_output_field_convert_part(
       "Temperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts, xparts,
       convert_part_T, "Temperature of the particles");
 
-  list[1] = io_make_output_field_convert_part(
+  list[2] = io_make_output_field_convert_part(
       "SubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts,
       xparts, convert_part_sub_T,
       "The subgrid temperatures if the particles are within deltaT of the "
@@ -116,7 +122,7 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "above deltaT of the entropy floor the subgrid temperature is "
       "identical to the SPH temperature.");
 
-  list[2] = io_make_output_field_convert_part(
+  list[3] = io_make_output_field_convert_part(
       "SubgridPhysicalDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, parts,
       xparts, convert_part_sub_rho,
       "The subgrid physical density if the particles are within deltaT of the "
@@ -124,12 +130,6 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "equilibrium on the entropy floor, if the particles are above deltaT "
       "of the entropy floor the subgrid density is identical to the "
       "physical SPH density.");
-
-  list[3] = io_make_output_field_convert_part(
-      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f,
-      parts, xparts, convert_part_chimes_abundances,
-      "CHIMES abundance array. The abundance of species i is defined in terms "
-      "of its number density relative to hydrogen, i.e. n_i / n_H_tot.");
 
   return 4;
 }
