@@ -380,6 +380,7 @@ CHIMESCooling:
   init_abundance_mode:        1                # Flag to specify how to set initial CHIMES abundances
   InitIonState:               0                # Initial ionisation state (init_abundance_mode == 0 only)
   colibre_metal_depletion:    1                # Flag to specify metal depletion model
+  set_FB_particles_to_eqm:    1                # Flag to set particles to eqm if they have been heated by feedback 
   relativeTolerance:          1e-4             # Relative tolerance for CHIMES intergration
   absoluteTolerance:          1e-10            # Absolute tolerance for CHIMES chemistry integration
   thermalAbsoluteTolerance:   1e-40            # Absolute tolerance for CHIMES cooling integration

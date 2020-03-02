@@ -329,6 +329,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->use_colibre_subgrid_EOS = parser_get_param_int(
       parameter_file, "CHIMESCooling:use_colibre_subgrid_EOS");
 
+  /* Flag to set particles to chemical equilibrium 
+   * if they have been heated by feedback. */ 
+  cooling->set_FB_particles_to_eqm = parser_get_param_int(
+      parameter_file, "CHIMESCooling:set_FB_particles_to_eqm");
+
   /* Threshold in dt / t_cool above which we
    * are in the rapid cooling regime. If negative,
    * we never use this scheme (i.e. always drift
@@ -945,7 +950,9 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * array to equilibrium. */ 
   if (xp->cooling_data.heated_by_FB == 1) 
     {
-      cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling); 
+      if (cooling->set_FB_particles_to_eqm == 1) 
+	cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling); 
+
       xp->cooling_data.heated_by_FB = 0; 
     }
 
