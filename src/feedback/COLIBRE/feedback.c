@@ -928,7 +928,7 @@ double compute_average_photoionizing_luminosity(const struct feedback_props* fp,
   /* No luminosity at t=0 */
   if (t2 <= 0.f) return 0.f;
 
-  const float log10_Z = log10(Z);
+  const float log10_Z = log10(Z+FLT_MIN);
   const double Q_t1 = get_cumulative_ionizing_photons(fp, t1, log10_Z);
   const double Q_t2 = get_cumulative_ionizing_photons(fp, t2, log10_Z);
 
@@ -1172,7 +1172,15 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       Qbar = compute_average_photoionizing_luminosity(feedback_props, t1_Myr,
                                                       t2_Myr, Z);
 
+      /* Time-dependent solution of the Stromgren sphere */
+      /* R(t) = R_S (1 - e^(-t/t_rec) )^(1/3) */
+      /*    with the recombination timescale t_rec = 1/ (n*alpha_B) */
+      /*    and R_S the Stromgren radius R_S = (3/(4 pi alpha_B) * Q(t) / n^2)^(1/3) */
       /* masses in system units */
+      /* [n_birth] = cm-3 */
+      /* [alpha_B] = cgs */
+      /* [t_half]  = s */
+      /* [Qbar]    = average number of ionizing photons per second per g stellar mass */
       sp->HIIregion_mass_to_ionize =
           (float)(0.84 * (double)sp->mass_init *
                   (1. - exp(-alpha_B * n_birth * t_half)) * (10. / n_birth) *
