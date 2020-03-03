@@ -338,7 +338,7 @@ struct cell {
     struct xpart *xparts;
 
     /*! Pointer for the sorted indices. */
-    struct sort_entry *sort[13];
+    struct sort_entry *sort;
 
     /*! Super cell, i.e. the highest-level parent cell that has a hydro
      * pair/self tasks */
@@ -440,6 +440,9 @@ struct cell {
 
     /*! Bit-mask indicating the sorted directions */
     uint16_t sorted;
+
+    /*! Bit-mask indicating the sorted directions */
+    uint16_t sort_allocated;
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -1289,16 +1292,68 @@ __attribute__((always_inline)) INLINE static void cell_ensure_tagged(
  * @param flags Cell flags.
  */
 __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
-    struct cell *c, int flags) {
+    struct cell *c, const int flags) {
 
   const int count = c->hydro.count;
 
-  /* Note that sorts can be used by different tasks at the same time (but not
-   * on the same dimensions), so we need separate allocations per dimension. */
-  for (int j = 0; j < 13; j++) {
-    if ((flags & (1 << j)) && c->hydro.sort[j] == NULL) {
-      if ((c->hydro.sort[j] = (struct sort_entry *)swift_malloc(
-               "hydro.sort", sizeof(struct sort_entry) * (count + 1))) == NULL)
+  /* Have we already allocated something? */
+  if (c->hydro.sort != NULL) {
+
+    /* Start by counting how many dimensions we need
+       and how many we already have */
+    int num_arrays_wanted = 0;
+    int num_already_allocated = 0;
+    for (int j = 0; j < 13; j++) {
+      if (flags & (1 << j) || c->hydro.sort_allocated & (1 << j)) {
+        num_arrays_wanted++;
+      }
+      if (c->hydro.sort_allocated & (1 << j)) {
+        num_already_allocated++;
+      }
+    }
+
+    /* Allocate memory for the new array */
+    struct sort_entry *new_array = NULL;
+    if ((new_array = (struct sort_entry *)swift_malloc(
+             "hydro.sort", sizeof(struct sort_entry) * num_arrays_wanted *
+                               (count + 1))) == NULL)
+      error("Failed to allocate sort memory.");
+
+    /* Now, copy the already existing arrays */
+    int from = 0;
+    int to = 0;
+    for (int j = 0; j < 13; j++) {
+      if (c->hydro.sort_allocated & (1 << j)) {
+        memcpy(&new_array[to * (count + 1)], &c->hydro.sort[from * (count + 1)],
+               sizeof(struct sort_entry) * (count + 1));
+        ++from;
+        ++to;
+      } else if (flags & (1 << j)) {
+        ++to;
+        c->hydro.sort_allocated |= (1 << j);
+      }
+    }
+
+    /* Swap the pointers */
+    swift_free("hydro.sort", c->hydro.sort);
+    c->hydro.sort = new_array;
+
+  } else {
+
+    /* Start by counting how many dimensions we need */
+    int num_arrays = 0;
+    for (int j = 0; j < 13; j++) {
+      if (flags & (1 << j)) {
+        num_arrays++;
+        c->hydro.sort_allocated |= (1 << j);
+      }
+    }
+
+    /* If there is anything, allocate enough memory */
+    if (num_arrays) {
+      if ((c->hydro.sort = (struct sort_entry *)swift_malloc(
+               "hydro.sort",
+               sizeof(struct sort_entry) * num_arrays * (count + 1))) == NULL)
         error("Failed to allocate sort memory.");
     }
   }
@@ -1312,12 +1367,30 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_hydro_sorts(
     struct cell *c) {
 
-  for (int i = 0; i < 13; i++) {
-    if (c->hydro.sort[i] != NULL) {
-      swift_free("hydro.sort", c->hydro.sort[i]);
-      c->hydro.sort[i] = NULL;
+  if (c->hydro.sort != NULL) {
+    swift_free("hydro.sort", c->hydro.sort);
+    c->hydro.sort = NULL;
+    c->hydro.sort_allocated = 0;
+  }
+}
+
+__attribute__((always_inline)) INLINE static struct sort_entry *
+cell_get_hydro_sorts(const struct cell *c, const int sid) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (!(c->hydro.sort_allocated & (1 << sid)))
+    error("Sort not allocated along direction %d", sid);
+#endif
+
+  int j = 0;
+  for (int i = 0; i < 13; ++i) {
+    if (i == sid) break;
+    if (c->hydro.sort_allocated & (1 << i)) {
+      ++j;
     }
   }
+
+  return &c->hydro.sort[j * (c->hydro.count + 1)];
 }
 
 /**

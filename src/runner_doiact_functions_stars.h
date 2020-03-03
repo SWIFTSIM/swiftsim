@@ -272,7 +272,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   if (do_ci_stars) {
 
     /* Pick-out the sorted lists. */
-    const struct sort_entry *restrict sort_j = cj->hydro.sort[sid];
+    const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
     const struct sort_entry *restrict sort_i = ci->stars.sort[sid];
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -403,7 +403,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
 
   if (do_cj_stars) {
     /* Pick-out the sorted lists. */
-    const struct sort_entry *restrict sort_i = ci->hydro.sort[sid];
+    const struct sort_entry *restrict sort_i = cell_get_hydro_sorts(ci, sid);
     const struct sort_entry *restrict sort_j = cj->stars.sort[sid];
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -588,7 +588,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
   if (count_j == 0) return;
 
   /* Pick-out the sorted lists. */
-  const struct sort_entry *restrict sort_j = cj->hydro.sort[sid];
+  const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
   const float dxj = cj->hydro.dx_max_sort;
 
   /* Sparts are on the left? */
