@@ -1378,6 +1378,8 @@ __attribute__((always_inline)) INLINE static struct sort_entry *
 cell_get_hydro_sorts(const struct cell *c, const int sid) {
 
 #ifdef SWIFT_DEBUG_CHECKS
+  if (sid >= 13 || sid < 0) error("Invalid sid!");
+
   if (!(c->hydro.sort_allocated & (1 << sid)))
     error("Sort not allocated along direction %d", sid);
 #endif
