@@ -606,13 +606,16 @@ struct cell {
     float dx_max_sort_old;
 
     /*! Pointer for the sorted indices. */
-    struct sort_entry *sort[13];
+    struct sort_entry *sort;
 
     /*! Bit mask of sort directions that will be needed in the next timestep. */
     uint16_t requires_sorts;
 
     /*! Bit-mask indicating the sorted directions */
     uint16_t sorted;
+
+    /*! Bit-mask indicating the sorted directions */
+    uint16_t sort_allocated;
 
     /*! Bit mask of sorts that need to be computed for this cell. */
     uint16_t do_sort;
@@ -1402,16 +1405,68 @@ cell_get_hydro_sorts(const struct cell *c, const int sid) {
  * @param flags Cell flags.
  */
 __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
-    struct cell *c, int flags) {
+    struct cell *c, const int flags) {
 
   const int count = c->stars.count;
 
-  /* Note that sorts can be used by different tasks at the same time (but not
-   * on the same dimensions), so we need separate allocations per dimension. */
-  for (int j = 0; j < 13; j++) {
-    if ((flags & (1 << j)) && c->stars.sort[j] == NULL) {
-      if ((c->stars.sort[j] = (struct sort_entry *)swift_malloc(
-               "stars.sort", sizeof(struct sort_entry) * (count + 1))) == NULL)
+  /* Have we already allocated something? */
+  if (c->stars.sort != NULL) {
+
+    /* Start by counting how many dimensions we need
+       and how many we already have */
+    int num_arrays_wanted = 0;
+    int num_already_allocated = 0;
+    for (int j = 0; j < 13; j++) {
+      if (flags & (1 << j) || c->stars.sort_allocated & (1 << j)) {
+        num_arrays_wanted++;
+      }
+      if (c->stars.sort_allocated & (1 << j)) {
+        num_already_allocated++;
+      }
+    }
+
+    /* Allocate memory for the new array */
+    struct sort_entry *new_array = NULL;
+    if ((new_array = (struct sort_entry *)swift_malloc(
+             "stars.sort", sizeof(struct sort_entry) * num_arrays_wanted *
+                               (count + 1))) == NULL)
+      error("Failed to allocate sort memory.");
+
+    /* Now, copy the already existing arrays */
+    int from = 0;
+    int to = 0;
+    for (int j = 0; j < 13; j++) {
+      if (c->stars.sort_allocated & (1 << j)) {
+        memcpy(&new_array[to * (count + 1)], &c->stars.sort[from * (count + 1)],
+               sizeof(struct sort_entry) * (count + 1));
+        ++from;
+        ++to;
+      } else if (flags & (1 << j)) {
+        ++to;
+        c->stars.sort_allocated |= (1 << j);
+      }
+    }
+
+    /* Swap the pointers */
+    swift_free("stars.sort", c->stars.sort);
+    c->stars.sort = new_array;
+
+  } else {
+
+    /* Start by counting how many dimensions we need */
+    int num_arrays = 0;
+    for (int j = 0; j < 13; j++) {
+      if (flags & (1 << j)) {
+        num_arrays++;
+        c->stars.sort_allocated |= (1 << j);
+      }
+    }
+
+    /* If there is anything, allocate enough memory */
+    if (num_arrays) {
+      if ((c->stars.sort = (struct sort_entry *)swift_malloc(
+               "stars.sort",
+               sizeof(struct sort_entry) * num_arrays * (count + 1))) == NULL)
         error("Failed to allocate sort memory.");
     }
   }
@@ -1425,12 +1480,32 @@ __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_stars_sorts(
     struct cell *c) {
 
-  for (int i = 0; i < 13; i++) {
-    if (c->stars.sort[i] != NULL) {
-      swift_free("stars.sort", c->stars.sort[i]);
-      c->stars.sort[i] = NULL;
+  if (c->stars.sort != NULL) {
+    swift_free("stars.sort", c->stars.sort);
+    c->stars.sort = NULL;
+    c->stars.sort_allocated = 0;
+  }
+}
+
+__attribute__((always_inline)) INLINE static struct sort_entry *
+cell_get_stars_sorts(const struct cell *c, const int sid) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (sid >= 13 || sid < 0) error("Invalid sid!");
+
+  if (!(c->stars.sort_allocated & (1 << sid)))
+    error("Sort not allocated along direction %d", sid);
+#endif
+
+  int j = 0;
+  for (int i = 0; i < 13; ++i) {
+    if (i == sid) break;
+    if (c->stars.sort_allocated & (1 << i)) {
+      ++j;
     }
   }
+
+  return &c->stars.sort[j * (c->stars.count + 1)];
 }
 
 /** Set the given flag for the given cell. */

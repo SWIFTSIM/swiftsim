@@ -273,7 +273,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
 
     /* Pick-out the sorted lists. */
     const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
-    const struct sort_entry *restrict sort_i = ci->stars.sort[sid];
+    const struct sort_entry *restrict sort_i = cell_get_stars_sorts(ci, sid);
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Some constants used to checks that the parts are in the right frame */
@@ -404,7 +404,7 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   if (do_cj_stars) {
     /* Pick-out the sorted lists. */
     const struct sort_entry *restrict sort_i = cell_get_hydro_sorts(ci, sid);
-    const struct sort_entry *restrict sort_j = cj->stars.sort[sid];
+    const struct sort_entry *restrict sort_j = cell_get_stars_sorts(cj, sid);
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Some constants used to checks that the parts are in the right frame */
@@ -1072,7 +1072,8 @@ void DOSELF1_BRANCH_STARS(struct runner *r, struct cell *c) {
 
 #define RUNNER_CHECK_SORT(TYPE, PART, cj, ci, sid)                          \
   ({                                                                        \
-    const struct sort_entry *restrict sort_j = cj->TYPE.sort[sid];          \
+    const struct sort_entry *restrict sort_j =                              \
+        cell_get_##TYPE##_sorts(cj, sid);                                   \
                                                                             \
     for (int pjd = 0; pjd < cj->TYPE.count; pjd++) {                        \
       const struct PART *p = &cj->TYPE.parts[sort_j[pjd].i];                \

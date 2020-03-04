@@ -533,7 +533,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
       for (int k = 0; k < 8; k++) {
         inds[k] = k;
         if (c->progeny[k] != NULL && c->progeny[k]->stars.count > 0) {
-          fingers[k] = c->progeny[k]->stars.sort[j];
+          fingers[k] = cell_get_stars_sorts(c->progeny[k], j);
           buff[k] = fingers[k]->d;
           off[k] = off[k];
         } else
@@ -550,7 +550,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
           }
 
       /* For each entry in the new sort list. */
-      struct sort_entry *finger = c->stars.sort[j];
+      struct sort_entry *finger = cell_get_stars_sorts(c, j);
       for (int ind = 0; ind < count; ind++) {
 
         /* Copy the minimum into the new sort array. */
@@ -571,8 +571,9 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
       } /* Merge. */
 
       /* Add a sentinel. */
-      c->stars.sort[j][count].d = FLT_MAX;
-      c->stars.sort[j][count].i = 0;
+      struct sort_entry *entries = cell_get_stars_sorts(c, j);
+      entries[count].d = FLT_MAX;
+      entries[count].i = 0;
 
       /* Mark as sorted. */
       atomic_or(&c->stars.sorted, 1 << j);
@@ -602,19 +603,21 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
       const double px[3] = {sparts[k].x[0], sparts[k].x[1], sparts[k].x[2]};
       for (int j = 0; j < 13; j++)
         if (flags & (1 << j)) {
-          c->stars.sort[j][k].i = k;
-          c->stars.sort[j][k].d = px[0] * runner_shift[j][0] +
-                                  px[1] * runner_shift[j][1] +
-                                  px[2] * runner_shift[j][2];
+          struct sort_entry *entries = cell_get_stars_sorts(c, j);
+          entries[k].i = k;
+          entries[k].d = px[0] * runner_shift[j][0] +
+                         px[1] * runner_shift[j][1] +
+                         px[2] * runner_shift[j][2];
         }
     }
 
     /* Add the sentinel and sort. */
     for (int j = 0; j < 13; j++)
       if (flags & (1 << j)) {
-        c->stars.sort[j][count].d = FLT_MAX;
-        c->stars.sort[j][count].i = 0;
-        runner_do_sort_ascending(c->stars.sort[j], count);
+        struct sort_entry *entries = cell_get_stars_sorts(c, j);
+        entries[count].d = FLT_MAX;
+        entries[count].i = 0;
+        runner_do_sort_ascending(entries, count);
         atomic_or(&c->stars.sorted, 1 << j);
       }
   }
@@ -623,7 +626,7 @@ void runner_do_stars_sort(struct runner *r, struct cell *c, int flags,
   /* Verify the sorting. */
   for (int j = 0; j < 13; j++) {
     if (!(flags & (1 << j))) continue;
-    struct sort_entry *finger = c->stars.sort[j];
+    struct sort_entry *finger = cell_get_stars_sorts(c, j);
     for (int k = 1; k < count; k++) {
       if (finger[k].d < finger[k - 1].d)
         error("Sorting failed, ascending array.");
