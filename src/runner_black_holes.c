@@ -351,7 +351,8 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 	    if (bpart_is_inhibited(bp, e)) {
 	      message("BH %lld inhibited -- DOES NOT swallow BH %lld",
 		      bp->id, cell_bp->id);
-	      continue;
+	      found = 1;
+	      break;
 	    }
 	    
 	    /* Lock the space as we are going to work directly on the
