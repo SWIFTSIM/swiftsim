@@ -2401,6 +2401,55 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 }
 
 /**
+ * @brief Compute some information for the star formation based on the #part.
+ *
+ * @param e The #engine.
+ * @param star_form The #star_formation structure that will be updated.
+ */
+void engine_compute_star_formation_stats(struct engine *e, struct star_formation *star_form) {
+  const struct space *s = e->s;
+
+  /* compute the stats on all the particles */
+  for(size_t i = 0; i < s->nr_parts; i++) {
+    star_formation_stats_add_part(star_form, &s->parts[i], &s->xparts[i]);
+  }
+
+  /* Allocate the communication array */
+  struct star_formation *mpi_starforms = (struct star_formation *) malloc(
+      e->nr_nodes * sizeof(struct star_formation));
+  if (mpi_starforms == NULL) {
+    error("Failed to allocate memory for the star formation statistics.");
+  }
+
+#ifdef WITH_MPI
+  /* Define the MPI type */
+  MPI_Datatype mpi_star_formation_type;
+  if (MPI_Type_contiguous(sizeof(struct star_formation), MPI_BYTE, &mpi_star_formation_type) != MPI_SUCCESS) {
+    error("Failed to create the MPI type for star formation.");
+  }
+  if (MPI_Type_commit(&mpi_star_formation_type) != MPI_SUCCESS) {
+    error("Failed to commit the MPI type for star formation.");
+  }
+
+  /* Do the communication */
+  MPI_Allgather(star_form, 1, mpi_star_formation_type, mpi_starforms,
+                1, mpi_star_formation_type, MPI_COMM_WORLD);
+
+  /* Free the MPI datatype */
+  MPI_Type_free(&mpi_star_formation_type);
+#else
+  /* Copy the memory in order to mimic the MPI stuff */
+  memcpy(mpi_starforms, star_form, sizeof(struct star_formation));
+#endif
+
+  /* Finish the computation */
+  star_formation_end_stats(star_form, mpi_starforms, e->nr_nodes, e);
+
+  /* Free the allocated memory */
+  free(mpi_starforms);
+}
+
+/**
  * @brief Let the #engine loose to compute the forces.
  *
  * @param e The #engine.

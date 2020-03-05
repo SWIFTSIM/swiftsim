@@ -325,4 +325,41 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
       "or Scheduler:cell_extra_gparts");
 }
 
+/**
+ * @brief Compute some statistics on the hydro particles.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
+    struct star_formation *starform, struct part* p, struct xpart* xp) {
+  starform->mass_stars += hydro_get_mass(p);
+}
+
+/**
+ * @brief End the computation of the statistics.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param e The #engine.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_end_stats(
+  struct star_formation *starform, const struct star_formation *stats, int n, const struct engine *e) {
+
+  /* Ensure that the counter is set to 0 */
+  starform->mass_stars = 0;
+
+  /* Compute the average mass */
+  for(int i = 0; i < n; i++) {
+    starform->mass_stars += stats->mass_stars;
+  }
+  starform->mass_stars /= e->total_nr_parts;
+
+  if (e->nodeID == 0) {
+    message("Average hydro mass: %g", starform->mass_stars);
+  }
+}
+
 #endif /* SWIFT_GEAR_STAR_FORMATION_H */
