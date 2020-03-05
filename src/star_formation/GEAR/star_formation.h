@@ -145,11 +145,23 @@ INLINE static int star_formation_should_convert_to_star(
   const float G = phys_const->const_newton_G;
   const float density = hydro_get_physical_density(p, cosmo);
 
+  /* Get the mass of the future possible star */
+  const float mass_gas = hydro_get_mass(p);
+
   /* Compute the probability */
   const float inv_free_fall_time =
       sqrtf(density * 32.f * G * 0.33333333f * M_1_PI);
-  const float prob = 1.f - exp(-starform->star_formation_efficiency *
-                               inv_free_fall_time * dt_star);
+  float prob = 1.f - exp(-starform->star_formation_efficiency *
+                         inv_free_fall_time * dt_star);
+
+  /* Add the mass factor */
+  if (starform->n_stars_per_part != 1) {
+    const float min_mass = starform->mass_stars * starform->min_mass_frac;
+    const float mass_star = mass_gas > min_mass ?
+      starform->mass_stars : mass_gas;
+
+    prob *= mass_gas / mass_star;
+  }
 
   /* Roll the dice... */
   const float random_number =
@@ -157,6 +169,28 @@ INLINE static int star_formation_should_convert_to_star(
 
   /* Can we form a star? */
   return random_number < prob;
+}
+
+/**
+ * @brief Decides whether a new particle should be created or if the hydro particle
+ * needs to be transformed.
+
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param starform The properties of the star formation model.
+ *
+ * @return 1 if a new spart needs to be created.
+ */
+INLINE static int star_formation_should_add_spart(
+    struct part* p, struct xpart* xp, const struct star_formation* starform) {
+
+  /* Check if we are splitting the particles or not */
+  if (starform->n_stars_per_part == 1) {
+    return 0;
+  }
+
+  const float mass_min = starform->min_mass_frac * starform->mass_stars;
+  return hydro_get_mass(p) > mass_min;
 }
 
 /**
@@ -184,6 +218,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param phys_const the physical constants in internal units.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
+ * @param add_spart Did we add a part (or transformed one)?
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -192,10 +227,24 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
+    const struct cooling_function_data* restrict cooling,
+    const int add_spart) {
 
   /* Store the current mass */
-  sp->mass = hydro_get_mass(p);
+  const float mass_gas = hydro_get_mass(p);
+  if (add_spart) {
+    /* Update the spart */
+    const float min_mass = starform->mass_stars * starform->min_mass_frac;
+    const float mass_star = mass_gas > min_mass ?
+      starform->mass_stars : mass_gas;
+    sp->mass = mass_star;
+
+    /* Update the part */
+    hydro_set_mass(p, mass_gas - mass_star);
+  }
+  else {
+    sp->mass = mass_gas;
+  }
   sp->birth.mass = sp->mass;
 
   /* Store either the birth_scale_factor or birth_time depending  */
@@ -355,7 +404,7 @@ __attribute__((always_inline)) INLINE static void star_formation_end_stats(
   for(int i = 0; i < n; i++) {
     starform->mass_stars += stats->mass_stars;
   }
-  starform->mass_stars /= e->total_nr_parts;
+  starform->mass_stars /= e->total_nr_parts * starform->n_stars_per_part;
 
   if (e->nodeID == 0) {
     message("Average hydro mass: %g", starform->mass_stars);
