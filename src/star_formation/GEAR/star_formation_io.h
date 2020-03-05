@@ -71,6 +71,8 @@ INLINE static void starformation_init_backend(
   /* Minimal fraction of mass for the last star formed. */
   starform->min_mass_frac = parser_get_param_double(
       parameter_file, "GEARStarFormation:min_mass_frac");
+  /* Avoid generating gas particle with mass below the fraction => + 1. */
+  starform->min_mass_frac += 1.;
 
   /* Get the jeans factor */
   starform->n_jeans_2_3 = pow(pressure_floor_props.n_jeans, 2. / 3.);
