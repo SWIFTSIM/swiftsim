@@ -634,12 +634,18 @@ void logger_get_dump_name(struct logger_writer *log, char *filename) {
  * @brief Initialize the variable logger_mask_data.
  *
  * @param log The #logger_writer.
+ * @param e The #engine.
  */
-void logger_init_masks(struct logger_writer *log) {
+void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   /* Create empty particles for calling the API */
   struct part part;
   struct spart spart;
   struct gpart gpart;
+
+  const int with_hydro = e->policy & engine_policy_hydro;
+  const int with_grav = (e->policy & engine_policy_self_gravity) ||
+    (e->policy & engine_policy_external_gravity);
+  const int with_stars = e->policy & engine_policy_stars;
 
   struct mask_data list[100];
 
@@ -647,29 +653,36 @@ void logger_init_masks(struct logger_writer *log) {
   // TODO add chemistry, cooling, ... + xpart + spart
 
   /* Get all the fields that need to be written for the hydro. */
-  int num_fields = hydro_logger_write_particles(&part, list);
-  /* Set the particle type */
-  for (int i = 0; i < num_fields; i++) {
-    list[i].type = swift_type_gas;
+  int num_fields = 0;
+  if (with_hydro) {
+    num_fields = hydro_logger_write_particles(&part, list);
+    /* Set the particle type */
+    for (int i = 0; i < num_fields; i++) {
+      list[i].type = swift_type_gas;
+    }
   }
 
   /* Get all the fields that need to be written for the stars. */
-  struct mask_data *tmp = &list[num_fields];
-  int tmp_num_fields = stars_logger_write_particles(&spart, tmp);
-  /* Set the particle type */
-  for (int i = 0; i < tmp_num_fields; i++) {
-    tmp[i].type = swift_type_stars;
+  if (with_stars) {
+    struct mask_data *tmp = &list[num_fields];
+    int tmp_num_fields = stars_logger_write_particles(&spart, tmp);
+    /* Set the particle type */
+    for (int i = 0; i < tmp_num_fields; i++) {
+      tmp[i].type = swift_type_stars;
+    }
+    num_fields += tmp_num_fields;
   }
-  num_fields += tmp_num_fields;
 
   /* Get all the fields that need to be written for the gravity. */
-  tmp = &list[num_fields];
-  tmp_num_fields = darkmatter_logger_write_particles(&gpart, tmp);
-  /* Set the particle type */
-  for (int i = 0; i < tmp_num_fields; i++) {
-    tmp[i].type = swift_type_dark_matter;
+  if (with_grav) {
+    struct mask_data *tmp = &list[num_fields];
+    int tmp_num_fields = darkmatter_logger_write_particles(&gpart, tmp);
+    /* Set the particle type */
+    for (int i = 0; i < tmp_num_fields; i++) {
+      tmp[i].type = swift_type_dark_matter;
+    }
+    num_fields += tmp_num_fields;
   }
-  num_fields += tmp_num_fields;
 
   /* The next fields must be the two last one. */
   /* Add the special flags (written manually => no need of offset) */
@@ -729,9 +742,11 @@ void logger_init_masks(struct logger_writer *log) {
  * @brief intialize the logger structure
  *
  * @param log The #logger_writer
+ * @param e The #engine.
  * @param params The #swift_params
  */
-void logger_init(struct logger_writer *log, struct swift_params *params) {
+void logger_init(struct logger_writer *log, const struct engine *e,
+                 struct swift_params *params) {
   /* read parameters. */
   log->delta_step = parser_get_param_int(params, "Logger:delta_step");
   size_t buffer_size =
@@ -745,7 +760,7 @@ void logger_init(struct logger_writer *log, struct swift_params *params) {
       parser_get_opt_param_float(params, "Logger:index_mem_frac", 0.05);
 
   /* Initialize the logger_mask_data */
-  logger_init_masks(log);
+  logger_init_masks(log, e);
 
   /* set initial value of parameters. */
   log->timestamp_offset = 0;
@@ -1002,6 +1017,11 @@ int logger_read_timestamp(const struct logger_writer *log,
 void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
   restart_write_blocks((void *)log, sizeof(struct logger_writer), 1, stream,
                        "logger", "logger");
+
+  /* Write the masks */
+  restart_write_blocks((void *) log->logger_mask_data,
+                       sizeof(struct mask_data), log->logger_count_mask, stream,
+                       "logger_masks", "logger_masks");
 }
 
 /**
@@ -1015,6 +1035,10 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
   /* Read the block */
   restart_read_blocks((void *)log, sizeof(struct logger_writer), 1, stream,
                       NULL, "logger");
+
+  /* Read the masks */
+  restart_read_blocks((void *) log, sizeof(struct mask_data), log->logger_count_mask,
+                      stream, "logger_masks", "logger_masks");
 
   /* generate dump filename */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
