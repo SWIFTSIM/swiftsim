@@ -752,4 +752,29 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
   /* Nothing to do, we just skip it and deal with it next step */
 }
 
+/**
+ * @brief Compute some statistics on the hydro particles.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
+    struct star_formation *starform, struct part* p, struct xpart* xp) {
+  error("This function is  not used");
+}
+
+/**
+ * @brief End the computation of the statistics.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param e The #engine.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_end_stats(
+  struct star_formation *starform, const struct star_formation *stats, int n, const struct engine *e) {
+  error("This function is  not used");
+}
+
 #endif /* SWIFT_EAGLE_STAR_FORMATION_H */

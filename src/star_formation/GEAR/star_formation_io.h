@@ -64,12 +64,23 @@ INLINE static void starformation_init_backend(
   starform->maximal_temperature = parser_get_param_double(
       parameter_file, "GEARStarFormation:maximal_temperature");
 
+  /* Number of stars per particles */
+  starform->n_stars_per_part = parser_get_param_double(
+      parameter_file, "GEARStarFormation:n_stars_per_particle");
+
+  /* Minimal fraction of mass for the last star formed. */
+  starform->min_mass_frac = parser_get_param_double(
+      parameter_file, "GEARStarFormation:min_mass_frac");
+
   /* Get the jeans factor */
   starform->n_jeans_2_3 = pow(pressure_floor_props.n_jeans, 2. / 3.);
 
   /* Apply unit change */
   starform->maximal_temperature *=
       units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+  /* Initialize the mass of the stars to 0 for the stats computation */
+  starform->mass_stars = 0;
 }
 
 #endif /* SWIFT_STAR_FORMATION_GEAR_IO_H */
