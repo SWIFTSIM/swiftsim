@@ -328,8 +328,17 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                                                        swift_type_stars));
 #endif
 
-            /* Convert the gas particle to a star particle */
-            struct spart *sp = cell_convert_part_to_spart(e, c, p, xp);
+            struct spart *sp = NULL;
+            const int add_spart = star_formation_should_add_spart(p, xp, sf_props);
+
+            /* Check if we should create a new particle or transform one */
+            if (add_spart) {
+              sp = cell_add_spart(e, c);
+            }
+            else {
+              /* Convert the gas particle to a star particle */
+              sp = cell_convert_part_to_spart(e, c, p, xp);
+            }
 
             /* Did we get a star? (Or did we run out of spare ones?) */
             if (sp != NULL) {
@@ -340,7 +349,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
                                              with_cosmology, phys_const,
-                                             hydro_props, us, cooling);
+                                             hydro_props, us, cooling, add_spart);
 
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
