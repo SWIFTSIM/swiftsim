@@ -602,8 +602,14 @@ EAGLEAGN:
   AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
   max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
-  threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
+  max_reposition_distance_ratio:    3.0        # Maximal distance a BH can be repositioned, in units of the softening length.
+  max_reposition_velocity_ratio:    -1.0       # Maximal velocity offset of a particle to reposition a BH to [c_sound]. -1 for no threshold.
+  min_reposition_velocity_threshold: -1.0      # Minimal value of the velocity threshold for repositioning [km/s]
+  threshold_major_merger:           0.333        # Mass ratio threshold to consider a BH merger as 'major'
   threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
+  merger_threshold_type:            2          # Type of velocity threshold for BH mergers (0: v_circ at kernel edge, 1: v_circ at actual distance, with softening, 2: v_circ at actual distance, no softening).
+  merger_max_distance_ratio:       3.0         # Maximal distance over which two BHs can merge, in units of the softening length.
+
 
 # Parameters related to logging
 
@@ -612,3 +618,5 @@ Event_logger:
   delta_time_SNIa_Myr:        10 # The delta time interval to log SNIa events in Myr
   delta_time_SNII_Myr:        1  # The delta time interval to log SNII events in Myr
   delta_time_r_processes_Myr: 20 # The delta time interval to log R-process events in Myr
+
+

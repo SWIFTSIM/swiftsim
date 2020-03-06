@@ -165,10 +165,11 @@ __attribute__((always_inline)) INLINE static void drift_spart(
  * @param dt_drift The drift time-step.
  * @param ti_old Integer start of time-step (for debugging checks).
  * @param ti_current Integer end of time-step (for debugging checks).
+ * @param props BH props structure (for bug fix, temporary)
  */
 __attribute__((always_inline)) INLINE static void drift_bpart(
     struct bpart *restrict bp, double dt_drift, integertime_t ti_old,
-    integertime_t ti_current) {
+    integertime_t ti_current, const struct black_holes_props* props) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (bp->ti_drift != ti_old)

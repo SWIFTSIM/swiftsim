@@ -829,7 +829,8 @@ void runner_do_black_holes_swallow_ghost(struct runner *r, struct cell *c,
 
         /* Compute the final operations for repositioning of this BH */
         black_holes_end_reposition(bp, e->black_holes_properties,
-                                   e->physical_constants, e->cosmology);
+                                   e->physical_constants, e->cosmology,
+				   e->time);
 
         /* Get particle time-step */
         double dt;
