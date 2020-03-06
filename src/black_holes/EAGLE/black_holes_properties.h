@@ -77,6 +77,7 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
+  
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -87,6 +88,9 @@ struct black_holes_props {
 
   /*! Maximal velocity offset of repositioning targets [c_sound] */
   float max_reposition_velocity_ratio;
+
+  /*! Minimum value of velocity repositioning threshold  */
+  float min_reposition_velocity_threshold;
 
   
   /* ---- Properties of the merger model ---------- */
@@ -202,6 +206,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_reposition_velocity_ratio =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_velocity_ratio");
+
+  bp->min_reposition_velocity_threshold =
+    parser_get_param_float(params,
+			   "EAGLEAGN:min_reposition_velocity_threshold");
+  /* Convert from km/s to internal units */
+  bp->min_reposition_velocity_threshold *=
+    (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
 
   
   /* Merger parameters ------------------------------------- */
