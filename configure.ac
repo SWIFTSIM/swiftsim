@@ -2327,6 +2327,17 @@ if test "$with_subgrid" != "none"; then
    fi
 fi
 
+AC_ARG_WITH([gadget2-physical-constants],
+    [AS_HELP_STRING([--with-gadget2-physical-constants],
+       [Use the same physical constants (G, Msun, Mpc) as the Gadget-2 code rather than more up-to-date values.]
+    )],
+    [with_gadget2_physical_constants="$withval"],
+    [with_gadget2_physical_constants="no"]
+)
+if test "$with_gadget2_physical_constants" = "yes"; then
+   AC_DEFINE([SWIFT_USE_GADGET2_PHYSICAL_CONSTANTS],1,[Use the same physical constants as Gadget-2])
+fi
+
 case "$with_SNIa_DTD" in
    EAGLE)
       AC_DEFINE([SNIA_DTD_EXP], [1], [Exponential SNIa delay time distribution (DTD)])

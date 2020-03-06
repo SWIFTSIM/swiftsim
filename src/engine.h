@@ -112,6 +112,7 @@ enum engine_step_properties {
 #define engine_default_timesteps_file_name "timesteps"
 #define engine_max_parts_per_ghost_default 1000
 #define engine_max_sparts_per_ghost_default 1000
+#define engine_max_parts_per_cooling_default 200
 #define engine_star_resort_task_depth_default 2
 #define engine_tasks_per_cell_margin 1.2
 #define engine_default_stf_subdir_per_output ""
@@ -403,7 +404,7 @@ struct engine {
 
   /* Average number of links per tasks. This number is used before
      the creation of communication tasks so needs to be large enough. */
-  size_t links_per_tasks;
+  float links_per_tasks;
 
   /* Are we talkative ? */
   int verbose;
