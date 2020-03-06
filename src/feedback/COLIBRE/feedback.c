@@ -1548,10 +1548,12 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Properties of the enrichment down-sampling ----------------------------- */
 
+  const double stellar_evolution_age_cut_Gyr = parser_get_param_double(
+      params, "COLIBREFeedback:stellar_evolution_age_cut_Gyr");
+
   fp->stellar_evolution_age_cut =
-      parser_get_param_double(params,
-                              "COLIBREFeedback:stellar_evolution_age_cut_Gyr") *
-      Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+      stellar_evolution_age_cut_Gyr * Gyr_in_cgs /
+      units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   fp->stellar_evolution_sampling_rate = parser_get_param_double(
       params, "COLIBREFeedback:stellar_evolution_sampling_rate");
@@ -1560,6 +1562,19 @@ void feedback_props_init(struct feedback_props* fp,
       fp->stellar_evolution_sampling_rate >= (1 << (8 * sizeof(char) - 1)))
     error("Stellar evolution sampling rate too large. Must be >0 and <%d",
           (1 << (8 * sizeof(char) - 1)));
+
+  /* Make sure the cut does not happen before the end of the early feedback */
+  if (stellar_evolution_age_cut_Gyr * 1000. < fp->HIIregion_max_age_Myr)
+    error(
+        "Downsampling the stellar evolution calculation at ages lower than the "
+        "max HII region age is forbidden. Increase the "
+        "stellar_evolution_age_cut_Gyr parameter.");
+
+  if (stellar_evolution_age_cut_Gyr * 1000. < fp->SW_max_age_Myr)
+    error(
+        "Downsampling the stellar evolution calculation at ages lower than the "
+        "max stellar wind age is forbidden. Increase the "
+        "stellar_evolution_age_cut_Gyr parameter.");
 
   /* Gather common conversion factors --------------------------------------- */
 
