@@ -332,7 +332,9 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             struct spart *sp = cell_convert_part_to_spart(e, c, p, xp);
 
             /* Did we get a star? (Or did we run out of spare ones?) */
-            if (sp != NULL) {
+            if (sp == NULL) {
+              star_formation_no_spart_available(e, p, xp);
+            } else {
 
               /* message("We formed a star id=%lld cellID=%d", sp->id,
                * c->cellID); */

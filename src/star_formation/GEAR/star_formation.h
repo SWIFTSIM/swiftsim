@@ -309,4 +309,19 @@ __attribute__((always_inline)) INLINE static void star_formation_split_part(
   error("Loic: to be implemented");
 }
 
+/**
+ * @brief Deal with the case where no spart are available for star formation.
+ *
+ * @param e The #engine.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_split_part(
+    const struct engine* e, const struct part* p, const struct xpart* xp) {
+  error(
+      "Failed to get a new particle. Please increase "
+      "Scheduler:cell_extra_sparts "
+      "or Scheduler:cell_extra_gparts");
+}
+
 #endif /* SWIFT_GEAR_STAR_FORMATION_H */
