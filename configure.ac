@@ -1458,7 +1458,7 @@ with_subgrid_pressure_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
-with_subgrid_task_order=none
+with_subgrid_task_order=default
 
 case "$with_subgrid" in
    yes)
@@ -1475,7 +1475,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
   # GEAR's order is not used anymore
-	with_subgrid_task_order=none
+	with_subgrid_task_order=default
 	enable_fof=no
    ;;
    EAGLE)
@@ -1993,11 +1993,11 @@ AC_ARG_WITH([task-order],
 [Task order to use @<:@default, EAGLE, GEAR default: default@:>@]
 )],
 [with_task_order="$withval"],
-[with_task_order="none"]
+[with_task_order="default"]
 )
 
 if test "$with_subgrid" != "none"; then
-if test "$with_task_order" != "none"; then
+if test "$with_task_order" != "default"; then
 AC_MSG_ERROR([Cannot provide with-subgrid and with-task-order together])
 else
 with_task_order="$with_subgrid_task_order"
@@ -2008,8 +2008,8 @@ case "$with_task_order" in
 EAGLE)
 AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
 ;;
-none)
-AC_DEFINE([TASK_ORDER_NONE], [1], [Default (i.e. EAGLE/OWLS) task order])
+default)
+AC_DEFINE([TASK_ORDER_DEFAULT], [1], [Default (i.e. EAGLE/OWLS) task order])
 ;;
 GEAR)
 AC_DEFINE([TASK_ORDER_GEAR], [1], [GEAR task order])
