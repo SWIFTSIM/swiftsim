@@ -332,9 +332,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             struct spart *sp = cell_convert_part_to_spart(e, c, p, xp);
 
             /* Did we get a star? (Or did we run out of spare ones?) */
-            if (sp == NULL) {
-              star_formation_no_spart_available(e, p, xp);
-            } else {
+            if (sp != NULL) {
 
               /* message("We formed a star id=%lld cellID=%d", sp->id,
                * c->cellID); */
@@ -358,6 +356,13 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                                    logger_mask_data[logger_consts].mask,
                                /* special flags */ 0);
 #endif
+            } else {
+
+              /* Do something about the fact no star could be formed.
+                 Note that in such cases a tree rebuild to create more free
+                 slots has already been triggered by the function
+                 cell_convert_part_to_spart() */
+              star_formation_no_spart_available(e, p, xp);
             }
           }
 
