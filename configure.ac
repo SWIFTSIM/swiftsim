@@ -1993,11 +1993,11 @@ AC_ARG_WITH([task-order],
 [Task order to use @<:@default, EAGLE, GEAR default: default@:>@]
 )],
 [with_task_order="$withval"],
-[with_task_order="default"]
+[with_task_order="none"]
 )
 
 if test "$with_subgrid" != "none"; then
-if test "$with_task_order" != "default"; then
+if test "$with_task_order" != "none"; then
 AC_MSG_ERROR([Cannot provide with-subgrid and with-task-order together])
 else
 with_task_order="$with_subgrid_task_order"
@@ -2008,7 +2008,7 @@ case "$with_task_order" in
 EAGLE)
 AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
 ;;
-default)
+none)
 AC_DEFINE([TASK_ORDER_NONE], [1], [Default (i.e. EAGLE/OWLS) task order])
 ;;
 GEAR)
