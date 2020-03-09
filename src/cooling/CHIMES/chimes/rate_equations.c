@@ -491,7 +491,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
            chimes_max(
                myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]],
                1.0e-100)) > 0.01)
-    myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] = x;
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] = chimes_max(x, 0.0);
 }
 
 /**
