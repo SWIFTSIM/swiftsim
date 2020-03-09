@@ -264,7 +264,7 @@ INLINE static void event_logger_SNIa_log_event(const struct spart *si,
                                                const struct cosmology *cosmo) {
 
   /* Get the injected energy */
-  const double mass_init = pj->mass;
+  const double mass_init = hydro_get_mass(pj);
   const double delta_u = si->feedback_data.to_distribute.SNIa_delta_u;
   const double deltaE = delta_u * mass_init;
 
