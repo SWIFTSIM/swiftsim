@@ -746,8 +746,9 @@ __attribute__((always_inline)) INLINE static void star_formation_split_part(
  * @param p The #part.
  * @param xp The #xpart.
  */
-__attribute__((always_inline)) INLINE static void star_formation_no_spart_available(
-    const struct engine* e, const struct part* p, const struct xpart* xp) {
+__attribute__((always_inline)) INLINE static void
+star_formation_no_spart_available(const struct engine* e, const struct part* p,
+                                  const struct xpart* xp) {
   /* Nothing to do, we just skip it and deal with it next step */
 }
 

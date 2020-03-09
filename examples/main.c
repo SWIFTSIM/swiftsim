@@ -241,11 +241,11 @@ int main(int argc, char *argv[]) {
           NULL, 0, 0),
 
       OPT_BOOLEAN(
-                  0, "gear", &with_gear,
-                  "Run with all the options needed for the GEAR model. This is "
-                  "equivalent to --hydro --limiter --sync --self-gravity --stars "
-                  "--star-formation --cooling --feedback.",
-                  NULL, 0, 0),
+          0, "gear", &with_gear,
+          "Run with all the options needed for the GEAR model. This is "
+          "equivalent to --hydro --limiter --sync --self-gravity --stars "
+          "--star-formation --cooling --feedback.",
+          NULL, 0, 0),
 
       OPT_GROUP("  Control options:\n"),
       OPT_BOOLEAN('a', "pin", &with_aff,

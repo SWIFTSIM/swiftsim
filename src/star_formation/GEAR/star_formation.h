@@ -316,8 +316,9 @@ __attribute__((always_inline)) INLINE static void star_formation_split_part(
  * @param p The #part.
  * @param xp The #xpart.
  */
-__attribute__((always_inline)) INLINE static void star_formation_no_spart_available(
-    const struct engine* e, const struct part* p, const struct xpart* xp) {
+__attribute__((always_inline)) INLINE static void
+star_formation_no_spart_available(const struct engine* e, const struct part* p,
+                                  const struct xpart* xp) {
   error(
       "Failed to get a new particle. Please increase "
       "Scheduler:cell_extra_sparts "
