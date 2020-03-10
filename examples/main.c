@@ -344,7 +344,6 @@ int main(int argc, char *argv[]) {
     with_feedback = 1;
   }
 
-
   /* Write output parameter file */
   if (myrank == 0 && output_parameters_filename != NULL) {
     io_write_output_field_parameter(output_parameters_filename);
