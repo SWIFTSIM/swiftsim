@@ -16,24 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_BLACK_HOLES_H
-#define SWIFT_BLACK_HOLES_H
+#ifndef SWIFT_EAGLE_BLACK_HOLES_PARAMETERS_H
+#define SWIFT_EAGLE_BLACK_HOLES_PARAMETERS_H
 
-/* Config parameters. */
-#include "../config.h"
+/* Configuration file */
+#include "config.h"
 
-/* Select the correct BH model */
-#if defined(BLACK_HOLES_NONE)
-#include "./black_holes/Default/black_holes.h"
-#include "./black_holes/Default/black_holes_iact.h"
-#elif defined(BLACK_HOLES_EAGLE)
-#include "./black_holes/EAGLE/black_holes.h"
-#include "./black_holes/EAGLE/black_holes_iact.h"
-#elif defined(BLACK_HOLES_COLIBRE)
-#include "./black_holes/COLIBRE/black_holes.h"
-#include "./black_holes/COLIBRE/black_holes_iact.h"
-#else
-#error "Invalid choice of BH model"
-#endif
+/**
+ * @file EAGLE/black_holes_parameters.h
+ * @brief Parameters of the EAGLE black holes
+ *        model that need to be defined at compile time.
+ */
 
-#endif
+/*! Maximal distance for merging particles in units of the (spline not Plummer)
+ *  softening length. */
+#define const_max_merging_distance_ratio 3.f
+
+/*! Maximal distance for repositioning particles in units of the (spline not
+ * Plummer) softening length. */
+#define const_max_repositioning_distance_ratio 3.f
+
+#endif /* SWIFT_EAGLE_BLACK_HOLES_PARAMETERS_H */

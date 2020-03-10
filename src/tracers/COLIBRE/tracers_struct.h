@@ -27,12 +27,13 @@ struct tracers_xpart_data {
   /*! Maximum temperature achieved by this particle */
   float maximum_temperature;
 
+  /*! Total (physical) momentum received from stellar feedback */
   float momentum_received;
 
-  /* subgrid temperature */
+  /*! This particle's subgrid temperature */
   float subgrid_temp;
 
-  /* subgrid density */
+  /*! This particle's subgrid density */
   float subgrid_dens;
 
 #if !defined(COOLING_CHIMES)

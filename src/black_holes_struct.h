@@ -34,8 +34,10 @@
 #include "./black_holes/Default/black_holes_struct.h"
 #elif defined(BLACK_HOLES_EAGLE)
 #include "./black_holes/EAGLE/black_holes_struct.h"
+#elif defined(BLACK_HOLES_COLIBRE)
+#include "./black_holes/COLIBRE/black_holes_struct.h"
 #else
-#error "Invalid choice of black holes function."
+#error "Invalid choice of black holes model."
 #endif
 
 #endif /* SWIFT_BLACK_HOLES_STRUCT_H */
