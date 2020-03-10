@@ -22,15 +22,18 @@
 /* Config parameters. */
 #include "../config.h"
 
-/* Select the correct star model */
+/* Select the correct BH model */
 #if defined(BLACK_HOLES_NONE)
 #include "./black_holes/Default/black_holes.h"
 #include "./black_holes/Default/black_holes_iact.h"
 #elif defined(BLACK_HOLES_EAGLE)
 #include "./black_holes/EAGLE/black_holes.h"
 #include "./black_holes/EAGLE/black_holes_iact.h"
+#elif defined(BLACK_HOLES_COLIBRE)
+#include "./black_holes/COLIBRE/black_holes.h"
+#include "./black_holes/COLIBRE/black_holes_iact.h"
 #else
-#error "Invalid choice of star model"
+#error "Invalid choice of BH model"
 #endif
 
 #endif
