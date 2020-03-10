@@ -68,7 +68,7 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
   } else {
 
     list[1] = io_make_output_field(
-        "MaximalTemperatureTimes", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+        "MaximalTemperatureTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
         tracers_data.maximum_temperature_time,
         "Times at which the maximal temperature was reached");
   }
@@ -87,7 +87,75 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       tracers_data.HIIregion_starid,
       "ID of star particle responsible for this HII region");
 
-  return 5;
+  if (with_cosmology) {
+
+    list[5] = io_make_output_field(
+        "LastSNIIFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        xparts, tracers_data.last_SNII_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by SNII feedback. "
+        "-1 if a particle has never been hit by feedback");
+
+  } else {
+
+    list[5] = io_make_output_field(
+        "LastSNIIFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+        tracers_data.last_SNII_injection_time,
+        "Times at which the particles were last hit by SNII feedback. -1 if a "
+        "particle has never been hit by feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[6] = io_make_output_field(
+        "LastSNIaFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        xparts, tracers_data.last_SNIa_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by SNIa feedback. "
+        "-1 if a particle has never been hit by feedback");
+
+  } else {
+
+    list[6] = io_make_output_field(
+        "LastSNIaFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+        tracers_data.last_SNIa_injection_time,
+        "Times at which the particles were last hit by SNIa feedback. -1 if a "
+        "particle has never been hit by feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[7] = io_make_output_field(
+        "LastKineticFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        xparts, tracers_data.last_momentum_kick_scale_factor,
+        "Scale-factors at which the particles were last hit by kinetic early "
+        "feedback. -1 if a particle has never been hit by feedback");
+
+  } else {
+
+    list[7] = io_make_output_field(
+        "LastKineticFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+        tracers_data.last_momentum_kick_time,
+        "Times at which the particles were last hit by kinetic early feedback. "
+        "-1 if a particle has never been hit by feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[8] = io_make_output_field(
+        "LastAGNFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        xparts, tracers_data.last_AGN_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by AGN feedback. "
+        "-1 if a particle has never been hit by feedback");
+
+  } else {
+
+    list[8] = io_make_output_field(
+        "LastAGNFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, xparts,
+        tracers_data.last_AGN_injection_time,
+        "Times at which the particles were last hit by AGN feedback. -1 if a "
+        "particle has never been hit by feedback");
+  }
+
+  return 9;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
@@ -109,7 +177,7 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
   } else {
 
     list[1] = io_make_output_field(
-        "MaximalTemperatureTimes", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+        "MaximalTemperatureTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, sparts,
         tracers_data.maximum_temperature_time,
         "Times at which the maximal temperature was reached");
   }
@@ -120,7 +188,83 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
       "Momentum received by the gas particles from stellar winds before it was "
       "converted to a star in physical coordinates");
 
-  return 3;
+  if (with_cosmology) {
+
+    list[3] = io_make_output_field(
+        "LastSNIIFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        sparts, tracers_data.last_SNII_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by SNII feedback "
+        "when they were still gas particles. -1 if a particle has never been "
+        "hit by feedback");
+
+  } else {
+
+    list[3] = io_make_output_field(
+        "LastSNIIFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, sparts,
+        tracers_data.last_SNII_injection_time,
+        "Times at which the particles were last hit by SNII feedback when they "
+        "were still gas particles. -1 if a particle has never been hit by "
+        "feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[4] = io_make_output_field(
+        "LastSNIaFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        sparts, tracers_data.last_SNIa_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by SNIa feedback "
+        "when they were still gas particles. -1 if a particle has never been "
+        "hit by feedback");
+
+  } else {
+
+    list[4] = io_make_output_field(
+        "LastSNIaFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, sparts,
+        tracers_data.last_SNIa_injection_time,
+        "Times at which the particles were last hit by SNIa feedback when they "
+        "were still gas particles. -1 if a particle has never been hit by "
+        "feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[5] = io_make_output_field(
+        "LastKineticFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        sparts, tracers_data.last_momentum_kick_scale_factor,
+        "Scale-factors at which the particles were last hit by kinetic early "
+        "feedback when they were still gas particles. -1 if a particle has "
+        "never been hit by feedback");
+
+  } else {
+
+    list[5] = io_make_output_field(
+        "LastKineticFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, sparts,
+        tracers_data.last_momentum_kick_time,
+        "Times at which the particles were last hit by kinetic early feedback "
+        "when they were still gas particles. -1 if a particle has never been "
+        "hit by feedback");
+  }
+
+  if (with_cosmology) {
+
+    list[6] = io_make_output_field(
+        "LastAGNFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        sparts, tracers_data.last_AGN_injection_scale_factor,
+        "Scale-factors at which the particles were last hit by AGN feedback "
+        "when they were still gas particles. -1 if a particle has never been "
+        "hit by feedback");
+
+  } else {
+
+    list[6] =
+        io_make_output_field("LastAGNFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME,
+                             0.f, sparts, tracers_data.last_AGN_injection_time,
+                             "Times at which the particles were last hit by "
+                             "AGN feedback when they were still gas particles. "
+                             "-1 if a particle has never been hit by feedback");
+  }
+
+  return 7;
 }
 
 #endif /* SWIFT_TRACERS_COLIBRE_IO_H */
