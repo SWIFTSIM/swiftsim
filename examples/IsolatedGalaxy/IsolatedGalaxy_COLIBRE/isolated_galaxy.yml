@@ -41,7 +41,7 @@ InitialConditions:
 SPH:
   minimal_temperature:   10.      # Minimum allowed gas temperature
   resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
-  CFL_condition:         0.1      # Courant-Friedrich-Levy condition for time integration.
+  CFL_condition:         0.2      # Courant-Friedrich-Levy condition for time integration.
   h_min_ratio:           0.1      # Minimal smoothing in units of softening.
   h_max:                 10.
 
