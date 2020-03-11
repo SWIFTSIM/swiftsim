@@ -212,9 +212,9 @@ INLINE static void hydro_write_particles(const struct part* parts,
       convert_diffusion, "Diffusion coefficient (alpha_diff) of the particles");
 
   list[11] = io_make_output_field(
-      "LaplaceInternalEnergies", FLOAT, 1, UNIT_CONV_FREQUENCY_SQUARED, 0.f,
+      "LaplacianInternalEnergies", FLOAT, 1, UNIT_CONV_FREQUENCY_SQUARED, 0.f,
       parts, diffusion.laplace_u,
-      "Laplace (del squared) of the Internal Energy per "
+      "Laplacian (del squared) of the Internal Energy per "
       "unit mass of the particles");
 
   list[12] = io_make_output_field(
