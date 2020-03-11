@@ -137,6 +137,10 @@ void cooling_set_HIIregion_chimes_abundances(
     struct gasVariables *ChimesGasVars,
     const struct cooling_function_data *cooling);
 
+void cooling_set_FB_particle_chimes_abundances(
+    struct gasVariables *ChimesGasVars,
+    const struct cooling_function_data *cooling);
+
 /**
  * @brief Computes the cooling time-step.
  *
@@ -172,7 +176,7 @@ static INLINE void cooling_clean(struct cooling_function_data *cooling) {}
  * @brief Sets the cooling properties of the (x-)particles to a valid start
  * state.
  *
- * For this cooling module, this routine does not do anything.
+ * Initialises the cooling_data.heated_by_FB flag to zero.
  *
  * @param phys_const The physical constant in internal units.
  * @param us The unit system.
@@ -188,6 +192,19 @@ __attribute__((always_inline)) INLINE static void cooling_first_init_part(
     const struct hydro_props *hydro_props,
     const struct cosmology *restrict cosmo,
     const struct cooling_function_data *data, struct part *restrict p,
-    struct xpart *restrict xp) {}
+    struct xpart *restrict xp) {
+  xp->cooling_data.heated_by_FB = 0;
+}
 
+/**
+ * @brief Updates cooling properties of particle hit by feedback.
+ *
+ * Sets the cooling_data.heated_by_FB flag to 1.
+ *
+ * @param xp Pointer to the extended particle data.
+ */
+__attribute__((always_inline)) INLINE static void
+cooling_update_feedback_particle(struct xpart *restrict xp) {
+  xp->cooling_data.heated_by_FB = 1;
+}
 #endif /* SWIFT_COOLING_CHIMES_H */
