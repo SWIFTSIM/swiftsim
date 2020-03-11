@@ -306,7 +306,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
     }
   } else {
 
-    /* Loop over all the gas particles in the cell
+    /* Loop over all the BH particles in the cell
      * Note that the cell (and hence the bparts) may be local or foreign. */
     const size_t nr_cell_bparts = c->black_holes.count;
 
@@ -318,7 +318,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
       /* Ignore inhibited particles (they have already been removed!) */
       if (bpart_is_inhibited(cell_bp, e)) continue;
 
-      /* Get the ID of the black holes that will swallow this part */
+      /* Get the ID of the black holes that will swallow this bpart */
       const long long swallow_id =
           black_holes_get_bpart_swallow_id(&cell_bp->merger_data);
 
@@ -347,8 +347,8 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
           if (bp->id == BH_id) {
 
-            /* Lock the space as we are going to work directly on the
-               bpart list */
+            /* Lock the space as we are going to work directly on the bpart list
+             */
             lock_lock(&s->lock);
 
             /* If bpart is inhibited, it cannot do any swallowing */
@@ -364,8 +364,8 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
               break;
             }
 
-            /* Swallow the gas particle (i.e. update the swallowing BH
-             * properties) */
+            /* Swallow the BH particle (i.e. update the swallowing BH
+             * properties with the properties of cell_bp) */
             black_holes_swallow_bpart(bp, cell_bp, e->cosmology, e->time,
                                       with_cosmology, props);
 
