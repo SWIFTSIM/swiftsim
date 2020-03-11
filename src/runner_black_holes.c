@@ -347,19 +347,25 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
           if (bp->id == BH_id) {
 
-            /* If bpart is inhibited, it cannot do any swallowing */
-            if (bpart_is_inhibited(bp, e)) {
-              message("BH %lld inhibited -- DOES NOT swallow BH %lld", bp->id,
-                      cell_bp->id);
-              found = 1;
-              break;
-            }
-
             /* Lock the space as we are going to work directly on the
                bpart list */
             lock_lock(&s->lock);
 
-            /* Swallow the gas particle (i.e. update the BH properties) */
+            /* If bpart is inhibited, it cannot do any swallowing */
+            if (bpart_is_inhibited(bp, e)) {
+              message("BH %lld inhibited -- DOES NOT swallow BH %lld", bp->id,
+                      cell_bp->id);
+
+              /* Pretend it was found */
+              found = 1;
+
+              if (lock_unlock(&s->lock) != 0)
+                error("Failed to unlock the space.");
+              break;
+            }
+
+            /* Swallow the gas particle (i.e. update the swallowing BH
+             * properties) */
             black_holes_swallow_bpart(bp, cell_bp, e->cosmology, e->time,
                                       with_cosmology, props);
 
@@ -369,12 +375,12 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
             message("BH %lld swallowing BH particle %lld", bp->id, cell_bp->id);
 
-            /* If the gas particle is local, remove it */
+            /* If the BH particle is local, remove it */
             if (c->nodeID == e->nodeID) {
 
               message("BH %lld removing BH particle %lld", bp->id, cell_bp->id);
 
-              /* Finally, remove the gas particle from the system
+              /* Finally, remove the BH particle from the system
                * Recall that the gpart associated with it is also removed
                * at the same time. */
               cell_remove_bpart(e, c, cell_bp);
