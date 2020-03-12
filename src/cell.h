@@ -1410,16 +1410,13 @@ __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
 
     /* Start by counting how many dimensions we need
        and how many we already have */
-    int num_arrays_wanted = 0;
-    int num_already_allocated = 0;
-    for (int j = 0; j < 13; j++) {
-      if (flags & (1 << j) || c->stars.sort_allocated & (1 << j)) {
-        num_arrays_wanted++;
-      }
-      if (c->stars.sort_allocated & (1 << j)) {
-        num_already_allocated++;
-      }
-    }
+    const int num_arrays_wanted =
+        intrinsics_popcount(c->stars.sort_allocated | flags);
+    const int num_already_allocated =
+        intrinsics_popcount(c->stars.sort_allocated);
+
+    /* Do we already have what we want? */
+    if (num_arrays_wanted == num_already_allocated) return;
 
     /* Allocate memory for the new array */
     struct sort_entry *new_array = NULL;
@@ -1449,14 +1446,10 @@ __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
 
   } else {
 
+    c->stars.sort_allocated = flags;
+
     /* Start by counting how many dimensions we need */
-    int num_arrays = 0;
-    for (int j = 0; j < 13; j++) {
-      if (flags & (1 << j)) {
-        num_arrays++;
-        c->stars.sort_allocated |= (1 << j);
-      }
-    }
+    const int num_arrays = intrinsics_popcount(flags);
 
     /* If there is anything, allocate enough memory */
     if (num_arrays) {
@@ -1493,14 +1486,17 @@ cell_get_stars_sorts(const struct cell *c, const int sid) {
     error("Sort not allocated along direction %d", sid);
 #endif
 
-  int j = 0;
-  for (int i = 0; i < 13; ++i) {
-    if (i == sid) break;
-    if (c->stars.sort_allocated & (1 << i)) {
-      ++j;
-    }
-  }
+  /* We need to find at what position in the meta-array of
+     sorts where the corresponding sid has been allocated since
+     there might be gaps as we only allocated the directions that
+     are in use.
+     We create a mask with all the bits before the sid's one set to 1
+     and apply it on the list of allocated directions. We then count
+     the number of bits that are in the results to obtain the position
+     of the correspondin sid in the meta-array */
+  const int j = intrinsics_popcount(c->stars.sort_allocated & ((1 << sid) - 1));
 
+  /* Return the corresponding array */
   return &c->stars.sort[j * (c->stars.count + 1)];
 }
 
