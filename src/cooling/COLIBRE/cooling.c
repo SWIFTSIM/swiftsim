@@ -292,6 +292,24 @@ static INLINE double bisection_iter(
   double u_lower_cgs = max(u_ini_cgs, cooling->umin_cgs);
   double u_upper_cgs = max(u_ini_cgs, cooling->umin_cgs);
 
+  /* if (ID == 2149308301825) { */
+  /*   message("rel abundances ::  | 0 %e | 1 %e | 2 %e | 3 %e | 4 %e | 5 %e | 6 %e | 7 %e | 8 %e | 9 %e | 10 %e | 11 %e | 12 %e | 13 %e |", */
+  /* 	    abundance_ratio[0], */
+  /* 	    abundance_ratio[1], */
+  /* 	    abundance_ratio[2], */
+  /* 	    abundance_ratio[3], */
+  /* 	    abundance_ratio[4], */
+  /* 	    abundance_ratio[5], */
+  /* 	    abundance_ratio[6], */
+  /* 	    abundance_ratio[7], */
+  /* 	    abundance_ratio[8], */
+  /* 	    abundance_ratio[9], */
+  /* 	    abundance_ratio[10], */
+  /* 	    abundance_ratio[11], */
+  /* 	    abundance_ratio[12], */
+  /* 	    abundance_ratio[13]); */
+  /* } */
+
   /*************************************/
   /* Let's get a first guess           */
   /*************************************/
@@ -341,20 +359,21 @@ static INLINE double bisection_iter(
 
       i++;
     }
-
+    
     if (i >= bisection_max_iterations) {
       error(
-          "particle %llu exceeded max iterations searching for bounds when "
-          "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = "
-          "%.4f\n"
-          "n_H_index = %i, d_n_H = %.4f\n"
-          "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial "
-          "Lambda = %.4e",
-          ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met,
-          red_index, d_red,
-          colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs,
-                               abundance_ratio, n_H_index, d_n_H, met_index,
-                               d_met, red_index, d_red, cooling, 0, 0, 0, 0));
+	    "particle %llu exceeded max iterations searching for bounds when "
+	    "cooling \n more info: n_H_cgs = %.4e, u_ini_cgs = %.4e, redshift = "
+	    "%.4f\n"
+	    "n_H_index = %i, d_n_H = %.4f\n"
+	    "met_index = %i, d_met = %.4f, red_index = %i, d_red = %.4f, initial "
+	    "Lambda = %.4e"
+	    "",
+	    ID, n_H_cgs, u_ini_cgs, redshift, n_H_index, d_n_H, met_index, d_met,
+	    red_index, d_red,
+	    colibre_cooling_rate(log10(u_ini_cgs), redshift, n_H_cgs,
+				 abundance_ratio, n_H_index, d_n_H, met_index,
+				 d_met, red_index, d_red, cooling, 0, 0, 0, 0));
     }
   } else {
 

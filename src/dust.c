@@ -400,19 +400,19 @@ void evolve_dust_part_m16(const struct phys_const *phys_const,
     /* !!! check consistency with yield factors, better to use an array of sola abundances defined in header? */
 
 
-    /* if (p->id == 3426890137225) { */
-    /*   message("mfrac :: | C %e | Si %e | O %e | Mg %e | Fe %e | Gra %e | Sil %e | Ide %e | Mgd %e | Fed %e", */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_C], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Si], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_O], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mg], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fe], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Gra], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Sil], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Ide], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mgd], */
-    /* 	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fed]); */
-    /* } */
+    if (p->id == 2149308301825) {
+      message("mfrac :: | C %e | Si %e | O %e | Mg %e | Fe %e | Gra %e | Sil %e | Ide %e | Mgd %e | Fed %e",
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_C],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Si],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_O],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mg],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fe],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Gra],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Sil],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Ide],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Mgd],
+    	      p->chemistry_data.metal_mass_fraction[chemistry_element_Fed]);
+    }
     
     int di;
     float diffuse_fraction[5];
