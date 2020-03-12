@@ -330,6 +330,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->use_colibre_subgrid_EOS = parser_get_param_int(
       parameter_file, "CHIMESCooling:use_colibre_subgrid_EOS");
 
+  /* Flag to set particles to chemical equilibrium
+   * if they have been heated by feedback. */
+  cooling->set_FB_particles_to_eqm = parser_get_param_int(
+      parameter_file, "CHIMESCooling:set_FB_particles_to_eqm");
+
   /* Threshold in dt / t_cool above which we
    * are in the rapid cooling regime. If negative,
    * we never use this scheme (i.e. always drift
@@ -955,6 +960,16 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * particle's thermodynamic variables. */
   chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties,
                          floor_props, cooling, dp, p, xp, &ChimesGasVars, dt_cgs);
+
+  /* Check if the particle has just been heated by
+   * feedback. If it has, re-set its abundance
+   * array to equilibrium. */
+  if (xp->cooling_data.heated_by_FB == 1) {
+    if (cooling->set_FB_particles_to_eqm == 1)
+      cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling);
+
+    xp->cooling_data.heated_by_FB = 0;
+  }
 
   /* check if the particle is in an HII region. If it is, we
    * immediately heat it up to 1e4 K (if required), and it
@@ -1653,6 +1668,49 @@ void cooling_set_subgrid_properties(
 
     /* Free CHIMES memory. */
     free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+  } else if ((xp->cooling_data.heated_by_FB == 1) &&
+             (cooling->set_FB_particles_to_eqm == 1)) {
+    /* If the particle is not on, or near, the EOS
+     * but has been heated by feedback since it
+     * last went through the cooling routines, then
+     * we need to re-set its abundance array to
+     * be in equilibrium. */
+
+    // Create ChimesGasVars struct
+    struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
+    struct gasVariables ChimesGasVars;
+    allocate_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+
+    // Copy abundances over from xp to ChimesGasVars
+    int i;
+    for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
+      ChimesGasVars.abundances[i] =
+          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+
+    // Update element abundances
+    chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
+                                     &ChimesGasVars, 1);
+
+    // Update ChimesGasVars
+    const double u_cgs =
+        u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+
+    chimes_update_gas_vars(u_cgs, phys_const, us, cosmo, hydro_props,
+                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+
+    // Set abundances to equilibrium
+    cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling);
+
+    // Copy abundances from ChimesGasVars to xp.
+    for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
+      xp->cooling_data.chimes_abundances[i] =
+          (double)ChimesGasVars.abundances[i];
+
+    // Free CHIMES memory.
+    free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
+
+    // Re-set heated_by_FB flag.
+    xp->cooling_data.heated_by_FB = 0;
   }
 }
 
@@ -1868,4 +1926,36 @@ void cooling_set_HIIregion_chimes_abundances(
     ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_elec]] +=
         ChimesGasVars->abundances[ChimesGlobalVars.speciesIndices[sp_FeII]];
   }
+}
+
+/**
+ * @brief Set CHIMES abundances for particles heated by feedback.
+ *
+ * Sets gas particle that has just been heated by feedback
+ * to be in chemical equilibrium at its new temperature.
+ *
+ * @param ChimesGasVars CHIMES gasVariables structure.
+ * @param cooling The #cooling_function_data used in the run.
+ */
+void cooling_set_FB_particle_chimes_abundances(
+    struct gasVariables *ChimesGasVars,
+    const struct cooling_function_data *cooling) {
+  struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
+
+  /* Save equilibrium and ThermEvol flags. */
+  int ForceEqOn_save = ChimesGasVars->ForceEqOn;
+  int ThermEvolOn_save = ChimesGasVars->ThermEvolOn;
+
+  /* Use equilibrium abundances. */
+  ChimesGasVars->ForceEqOn = 1;
+
+  /* Disable temperature evolution. */
+  ChimesGasVars->ThermEvolOn = 0;
+
+  /* Set abundance array to equilibrium. */
+  chimes_network(ChimesGasVars, &ChimesGlobalVars);
+
+  /* Revert flags to saved values. */
+  ChimesGasVars->ForceEqOn = ForceEqOn_save;
+  ChimesGasVars->ThermEvolOn = ThermEvolOn_save;
 }

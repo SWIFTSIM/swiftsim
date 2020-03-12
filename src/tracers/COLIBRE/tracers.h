@@ -138,23 +138,52 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.momentum_received = 0.f;
   xp->tracers_data.HIIregion_timer_gas = -1.f;
   xp->tracers_data.HIIregion_starid = -1;
+  xp->tracers_data.last_momentum_kick_scale_factor = -1.f;
+  xp->tracers_data.last_SNII_injection_scale_factor = -1.f;
+  xp->tracers_data.last_AGN_injection_scale_factor = -1.f;
 }
 
-/**
- * @brief Update the particles' tracer data after a stellar feedback
- * event.
- *
- * @param xp The extended particle data.
- */
-static INLINE void tracers_after_feedback(struct xpart *xp) {}
+static INLINE void tracers_after_SNII_feedback(struct xpart *xp,
+                                               const int with_cosmology,
+                                               const float scale_factor,
+                                               const double time) {
 
-/**
- * @brief Update the particles' tracer data after an AGN feedback
- * event.
- *
- * @param xp The extended particle data.
- */
-static INLINE void tracers_after_black_holes_feedback(struct xpart *xp) {}
+  if (with_cosmology)
+    xp->tracers_data.last_SNII_injection_scale_factor = scale_factor;
+  else
+    xp->tracers_data.last_SNII_injection_time = time;
+}
+
+static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,
+                                               const int with_cosmology,
+                                               const float scale_factor,
+                                               const double time) {
+
+  if (with_cosmology)
+    xp->tracers_data.last_SNIa_injection_scale_factor = scale_factor;
+  else
+    xp->tracers_data.last_SNIa_injection_time = time;
+}
+
+static INLINE void tracers_after_black_holes_feedback(struct xpart *xp,
+                                                      const int with_cosmology,
+                                                      const float scale_factor,
+                                                      const double time) {
+  if (with_cosmology)
+    xp->tracers_data.last_AGN_injection_scale_factor = scale_factor;
+  else
+    xp->tracers_data.last_AGN_injection_time = time;
+}
+
+static INLINE void tracers_after_momentum_feedback(struct xpart *xp,
+                                                   const int with_cosmology,
+                                                   const float scale_factor,
+                                                   const double time) {
+  if (with_cosmology)
+    xp->tracers_data.last_momentum_kick_scale_factor = scale_factor;
+  else
+    xp->tracers_data.last_momentum_kick_time = time;
+}
 
 /**
  * @brief Split the tracer content of a particle into n pieces

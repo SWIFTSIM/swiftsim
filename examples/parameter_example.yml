@@ -104,13 +104,14 @@ Scheduler:
   cell_subdepth_diff_grav:   4         # (Optional) Maximal depth difference between leaves and a cell that gravity tasks can be pushed down to (this is the default value).
   cell_extra_parts:          0         # (Optional) Number of spare parts per top-level allocated at rebuild time for on-the-fly creation.
   cell_extra_gparts:         0         # (Optional) Number of spare gparts per top-level allocated at rebuild time for on-the-fly creation.
-  cell_extra_sparts:         400       # (Optional) Number of spare sparts per top-level allocated at rebuild time for on-the-fly creation.
+  cell_extra_sparts:         100       # (Optional) Number of spare sparts per top-level allocated at rebuild time for on-the-fly creation.
   max_top_level_cells:       12        # (Optional) Maximal number of top-level cells in any dimension. The number of top-level cells will be the cube of this (this is the default value).
   tasks_per_cell:            0.0       # (Optional) The average number of tasks per cell. If not large enough the simulation will fail (means guess...).
   links_per_tasks:           25        # (Optional) The average number of links per tasks (before adding the communication tasks). If not large enough the simulation will fail (means guess...). Defaults to 10.
   mpi_message_limit:         4096      # (Optional) Maximum MPI task message size to send non-buffered, KB.
-  engine_max_parts_per_ghost:   1000   # (Optional) Maximum number of parts per ghost.
-  engine_max_sparts_per_ghost:  1000   # (Optional) Maximum number of sparts per ghost.
+  engine_max_parts_per_ghost:   1000   # (Optional) Maximum number of parts per ghost task.
+  engine_max_sparts_per_ghost:  1000   # (Optional) Maximum number of sparts per ghost task.
+  engine_max_parts_per_cooling:  200   # (Optional) Maximum number of parts per cooling task.
 
 # Parameters governing the time integration (Set dt_min and dt_max to the same value for a fixed time-step run.)
 TimeIntegration:
@@ -380,6 +381,7 @@ CHIMESCooling:
   init_abundance_mode:        1                # Flag to specify how to set initial CHIMES abundances
   InitIonState:               0                # Initial ionisation state (init_abundance_mode == 0 only)
   colibre_metal_depletion:    1                # Flag to specify metal depletion model
+  set_FB_particles_to_eqm:    1                # Flag to set particles to eqm if they have been heated by feedback 
   relativeTolerance:          1e-4             # Relative tolerance for CHIMES intergration
   absoluteTolerance:          1e-10            # Absolute tolerance for CHIMES chemistry integration
   thermalAbsoluteTolerance:   1e-40            # Absolute tolerance for CHIMES cooling integration

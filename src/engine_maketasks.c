@@ -56,6 +56,7 @@
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 extern int engine_star_resort_task_depth;
+extern int engine_max_parts_per_cooling;
 
 /**
  * @brief Add send tasks for the gravity pairs to a hierarchy of cells.
@@ -1056,6 +1057,33 @@ void engine_add_ghosts(struct engine *e, struct cell *c, struct task *ghost_in,
 }
 
 /**
+ * @brief Recursively add non-implicit cooling tasks to a cell hierarchy.
+ */
+void engine_add_cooling(struct engine *e, struct cell *c,
+                        struct task *cooling_in, struct task *cooling_out) {
+
+  /* Abort as there are no hydro particles here? */
+  if (c->hydro.count_total == 0) return;
+
+  /* If we have reached the leaf OR have to few particles to play with*/
+  if (!c->split || c->hydro.count_total < engine_max_parts_per_cooling) {
+
+    /* Add the cooling task and its dependencies */
+    struct scheduler *s = &e->sched;
+    c->hydro.cooling = scheduler_addtask(s, task_type_cooling,
+                                         task_subtype_none, 0, 0, c, NULL);
+    scheduler_addunlock(s, cooling_in, c->hydro.cooling);
+    scheduler_addunlock(s, c->hydro.cooling, cooling_out);
+
+  } else {
+    /* Keep recursing */
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL)
+        engine_add_cooling(e, c->progeny[k], cooling_in, cooling_out);
+  }
+}
+
+/**
  * @brief Generate the hydro hierarchical tasks for a hierarchy of cells -
  * i.e. all the O(Npart) tasks -- hydro version
  *
@@ -1163,10 +1191,17 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       /* Subgrid tasks: cooling */
       if (with_cooling) {
 
-        c->hydro.cooling = scheduler_addtask(s, task_type_cooling,
-                                             task_subtype_none, 0, 0, c, NULL);
+        c->hydro.cooling_in =
+            scheduler_addtask(s, task_type_cooling_in, task_subtype_none, 0,
+                              /*implicit=*/1, c, NULL);
+        c->hydro.cooling_out =
+            scheduler_addtask(s, task_type_cooling_out, task_subtype_none, 0,
+                              /*implicit=*/1, c, NULL);
 
-        task_order_addunlock_cooling(s, c);
+        engine_add_cooling(e, c, c->hydro.cooling_in, c->hydro.cooling_out);
+
+        scheduler_addunlock(s, c->hydro.end_force, c->hydro.cooling_in);
+        scheduler_addunlock(s, c->hydro.cooling_out, c->super->kick2);
 
       } else {
         scheduler_addunlock(s, c->hydro.end_force, c->super->kick2);
@@ -1236,6 +1271,13 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #endif
         scheduler_addunlock(s, c->black_holes.black_holes_out,
                             c->super->timestep);
+      }
+
+      if (with_black_holes && with_feedback) {
+
+        /* Make sure we don't start swallowing gas particles before the stars
+           have converged on their smoothing lengths. */
+        scheduler_addunlock(s, c->stars.ghost, c->black_holes.swallow_ghost[0]);
       }
     }
   } else { /* We are above the super-cell so need to go deeper */
@@ -3417,6 +3459,12 @@ void engine_maketasks(struct engine *e) {
         "Nr. of links: %zd allocated links: %zd ratio: %f memory use: %zd MB.",
         e->nr_links, e->size_links, (float)e->nr_links / (float)e->size_links,
         e->size_links * sizeof(struct link) / (1024 * 1024));
+
+  /* Report the values that could have been used */
+  if (e->verbose)
+    message("Actual usage: tasks/cell: %f links/task: %f",
+            (float)e->sched.nr_tasks / s->tot_cells,
+            (float)e->nr_links / e->sched.nr_tasks);
 
   tic2 = getticks();
 

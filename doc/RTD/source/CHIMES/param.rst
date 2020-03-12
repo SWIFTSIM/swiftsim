@@ -220,6 +220,10 @@ The parameters needed when running SWIFT with the CHIMES module are described in
 |                                    | | Ploeckinger et al. in prep).                                |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
+| ``set_FB_particles_to_eqm``        | | Integer flag (``0`` or ``1``) to set particles to           |
+|                                    | | equilibrium if they have been heated by feedback.           |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
 | ``rapid_cooling_threshold``        | | Threshold in ``dt / t_cool`` above which we are in the      |
 |                                    | | rapid cooling regime (i.e. cooling time is short compared   |
 |                                    | | to the hydro time-step). In this case, the cooling routines |
@@ -319,6 +323,7 @@ The following set of CHIMES parameters are suitable for running a non-cosmologic
       cosmic_ray_rate:            1.8e-16 
       delta_logTEOS_subgrid_properties:  0.2 
       use_colibre_subgrid_EOS:    1 
+      set_FB_particles_to_eqm:    1 
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
@@ -370,6 +375,7 @@ Compared to the isolated galaxy example above, this example uses a redshift-depe
       cosmic_ray_rate:            1.8e-16 
       delta_logTEOS_subgrid_properties:  0.2 
       use_colibre_subgrid_EOS:    1 
+      set_FB_particles_to_eqm:    1 
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 

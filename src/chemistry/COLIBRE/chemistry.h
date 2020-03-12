@@ -292,6 +292,10 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
       p->chemistry_data.metal_mass_fraction[chemistry_element_H];
   p->chemistry_data.metal_mass_fraction_total -=
       p->chemistry_data.metal_mass_fraction[chemistry_element_He];
+
+  /* Make sure the total metallicity is >= 0 */
+  p->chemistry_data.metal_mass_fraction_total =
+      max(p->chemistry_data.metal_mass_fraction_total, 0.f);
 }
 
 /**
