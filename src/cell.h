@@ -1370,6 +1370,13 @@ __attribute__((always_inline)) INLINE static void cell_free_hydro_sorts(
   }
 }
 
+/**
+ * @brief Returns the array of sorted indices for the gas particles of a given
+ * cell along agiven direction.
+ *
+ * @param c The #cell.
+ * @param sid the direction id.
+ */
 __attribute__((always_inline)) INLINE static struct sort_entry *
 cell_get_hydro_sorts(const struct cell *c, const int sid) {
 
@@ -1476,6 +1483,13 @@ __attribute__((always_inline)) INLINE static void cell_free_stars_sorts(
   }
 }
 
+/**
+ * @brief Returns the array of sorted indices for the star particles of a given
+ * cell along agiven direction.
+ *
+ * @param c The #cell.
+ * @param sid the direction id.
+ */
 __attribute__((always_inline)) INLINE static struct sort_entry *
 cell_get_stars_sorts(const struct cell *c, const int sid) {
 
