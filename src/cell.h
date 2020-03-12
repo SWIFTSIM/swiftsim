@@ -1304,16 +1304,10 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
 
     /* Start by counting how many dimensions we need
        and how many we already have */
-    int num_arrays_wanted = 0;
-    int num_already_allocated = 0;
-    for (int j = 0; j < 13; j++) {
-      if (flags & (1 << j) || c->hydro.sort_allocated & (1 << j)) {
-        num_arrays_wanted++;
-      }
-      if (c->hydro.sort_allocated & (1 << j)) {
-        num_already_allocated++;
-      }
-    }
+    const int num_arrays_wanted =
+        intrinsics_popcount(c->hydro.sort_allocated | flags);
+    const int num_already_allocated =
+        intrinsics_popcount(c->hydro.sort_allocated);
 
     /* Do we already have what we want? */
     if (num_arrays_wanted == num_already_allocated) return;
@@ -1346,14 +1340,10 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
 
   } else {
 
+    c->hydro.sort_allocated = flags;
+
     /* Start by counting how many dimensions we need */
-    int num_arrays = 0;
-    for (int j = 0; j < 13; j++) {
-      if (flags & (1 << j)) {
-        num_arrays++;
-        c->hydro.sort_allocated |= (1 << j);
-      }
-    }
+    const int num_arrays = intrinsics_popcount(flags);
 
     /* If there is anything, allocate enough memory */
     if (num_arrays) {
