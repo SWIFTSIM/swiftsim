@@ -1575,7 +1575,7 @@ case "$with_subgrid" in
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
-	with_subgrid_black_holes=EAGLE
+	with_subgrid_black_holes=COLIBRE
 	with_subgrid_task_order=EAGLE
 	enable_fof=yes
         with_subgrid_SNIa_DTD=power-law-beta-one
@@ -1588,7 +1588,7 @@ case "$with_subgrid" in
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
-	with_subgrid_black_holes=EAGLE
+	with_subgrid_black_holes=COLIBRE
 	with_subgrid_task_order=EAGLE
 	enable_fof=yes
         with_subgrid_SNIa_DTD=power-law-beta-one
@@ -2133,6 +2133,9 @@ case "$with_black_holes" in
    EAGLE)
       AC_DEFINE([BLACK_HOLES_EAGLE], [1], [EAGLE black hole model])
    ;;
+   COLIBRE)
+      AC_DEFINE([BLACK_HOLES_COLIBRE], [1], [COLIBRE black hole model])
+   ;;
    *)
       AC_MSG_ERROR([Unknown black-hole model: $with_black_holes])
    ;;
@@ -2384,6 +2387,11 @@ AC_SUBST([GIT_CMD])
 if test $with_black_holes = "EAGLE"; then
    if test $with_gravity == "basic"; then
       AC_MSG_ERROR([The EAGLE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
+   fi
+fi
+if test $with_black_holes = "COLIBRE"; then
+   if test $with_gravity == "basic"; then
+      AC_MSG_ERROR([The COLIBRE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
    fi
 fi
 
