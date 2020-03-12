@@ -1387,14 +1387,17 @@ cell_get_hydro_sorts(const struct cell *c, const int sid) {
     error("Sort not allocated along direction %d", sid);
 #endif
 
-  int j = 0;
-  for (int i = 0; i < 13; ++i) {
-    if (i == sid) break;
-    if (c->hydro.sort_allocated & (1 << i)) {
-      ++j;
-    }
-  }
+  /* We need to find at what position in the meta-array of
+     sorts where the corresponding sid has been allocated since
+     there might be gaps as we only allocated the directions that
+     are in use.
+     We create a mask with all the bits before the sid's one set to 1
+     and apply it on the list of allocated directions. We then count
+     the number of bits that are in the results to obtain the position
+     of the correspondin sid in the meta-array */
+  const int j = intrinsics_popcount(c->hydro.sort_allocated & ((1 << sid) - 1));
 
+  /* Return the corresponding array */
   return &c->hydro.sort[j * (c->hydro.count + 1)];
 }
 
