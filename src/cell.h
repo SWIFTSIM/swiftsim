@@ -1315,6 +1315,9 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
       }
     }
 
+    /* Do we already have what we want? */
+    if (num_arrays_wanted == num_already_allocated) return;
+
     /* Allocate memory for the new array */
     struct sort_entry *new_array = NULL;
     if ((new_array = (struct sort_entry *)swift_malloc(
