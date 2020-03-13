@@ -173,9 +173,8 @@ INLINE static int star_formation_should_convert_to_star(
 
 /**
  * @brief Decides whether a new particle should be created or if the hydro
- particle
- * needs to be transformed.
-
+ * particle needs to be transformed.
+ *
  * @param p The #part.
  * @param xp The #xpart.
  * @param starform The properties of the star formation model.
