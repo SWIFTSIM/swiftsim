@@ -760,7 +760,7 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
  * @param xp The #xpart.
  */
 __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation *starform, struct part* p, struct xpart* xp) {
+    struct star_formation* starform, struct part* p, struct xpart* xp) {
   error("This function is  not used");
 }
 
@@ -773,7 +773,8 @@ __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_stats(
-  struct star_formation *starform, const struct star_formation *stats, int n, const struct engine *e) {
+    struct star_formation* starform, const struct star_formation* stats, int n,
+    const struct engine* e) {
   error("This function is  not used");
 }
 

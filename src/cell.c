@@ -5728,11 +5728,9 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
     for (size_t i = 0; i < n_copy; ++i) {
       if (gparts[i + 1].type == swift_type_gas) {
         s->parts[-gparts[i + 1].id_or_neg_offset].gpart++;
-      }
-      else if (gparts[i + 1].type == swift_type_stars) {
+      } else if (gparts[i + 1].type == swift_type_stars) {
         s->sparts[-gparts[i + 1].id_or_neg_offset].gpart++;
-      }
-      else if (gparts[i + 1].type == swift_type_black_hole) {
+      } else if (gparts[i + 1].type == swift_type_black_hole) {
         s->bparts[-gparts[i + 1].id_or_neg_offset].gpart++;
       }
     }
@@ -6117,7 +6115,8 @@ struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
  * time-bin as the original #part.
  */
 struct spart *cell_create_new_spart_from_part(struct engine *e, struct cell *c,
-                                              struct part *p, struct xpart *xp) {
+                                              struct part *p,
+                                              struct xpart *xp) {
   /* Quick cross-check */
   if (c->nodeID != e->nodeID)
     error("Can't remove a particle in a foreign cell.");
