@@ -221,7 +221,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param add_spart Did we add a part (or transformed one)?
  */
 INLINE static void star_formation_copy_properties(
-    const struct part* p, const struct xpart* xp, struct spart* sp,
+    struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
@@ -238,6 +238,7 @@ INLINE static void star_formation_copy_properties(
     const float mass_star = mass_gas > min_mass ?
       starform->mass_stars : mass_gas;
     sp->mass = mass_star;
+    sp->gpart->mass = mass_star;
 
     /* Update the part */
     hydro_set_mass(p, mass_gas - mass_star);

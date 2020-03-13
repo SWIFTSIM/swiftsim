@@ -328,7 +328,6 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                                                        swift_type_stars));
 #endif
 
-<<<<<< HEAD
             /* Convert the gas particle to a star particle */
             struct spart *sp = NULL;
 
@@ -337,12 +336,11 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
               /* Check if we should create a new particle or transform one */
               if (add_spart) {
-                sp = cell_add_spart(e, c);
+                sp = cell_create_new_spart_from_part(e, c, p, xp);
               }
               else {
                 /* Convert the gas particle to a star particle */
                 sp = cell_convert_part_to_spart(e, c, p, xp);
-              }
             } else {
               cell_convert_part_to_gpart(e, c, p, xp);
             }
@@ -560,7 +558,8 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
 #ifdef SWIFT_DEBUG_CHECKS
         if ((e->policy & engine_policy_self_gravity) &&
-            !(e->policy & engine_policy_black_holes)) {
+            !(e->policy & engine_policy_black_holes) &&
+            !(e->policy & engine_policy_star_formation)) {
 
           /* Let's add a self interaction to simplify the count */
           gp->num_interacted++;
