@@ -19,6 +19,8 @@
 #ifndef SWIFT_QLA_STAR_FORMATION_STRUCT_H
 #define SWIFT_QLA_STAR_FORMATION_STRUCT_H
 
+/* Does the model need to compute some statistics on parts
+   before the start of the simulation? */
 #define star_formation_compute_stats 0
 
 /**

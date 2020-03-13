@@ -5591,7 +5591,7 @@ struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
     memmove(&c->stars.parts[1], &c->stars.parts[0],
             n_copy * sizeof(struct spart));
 
-    /* Update the gpart->spart links (shift by 1) */
+    /* Update the spart->gpart links (shift by 1) */
     for (size_t i = 0; i < n_copy; ++i) {
 #ifdef SWIFT_DEBUG_CHECKS
       if (c->stars.parts[i + 1].gpart == NULL) {
@@ -6105,6 +6105,7 @@ struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
 
 /**
  * @brief Add a new #spart based on a #part and link it to a new #gpart.
+ * The part and xpart are not changed.
  *
  * @param e The #engine.
  * @param c The #cell from which to remove the #part.
@@ -6115,8 +6116,8 @@ struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
  * time-bin as the original #part.
  */
 struct spart *cell_create_new_spart_from_part(struct engine *e, struct cell *c,
-                                              struct part *p,
-                                              struct xpart *xp) {
+                                              const struct part *p,
+                                              const struct xpart *xp) {
   /* Quick cross-check */
   if (c->nodeID != e->nodeID)
     error("Can't remove a particle in a foreign cell.");

@@ -151,8 +151,8 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param hydro_props The properties of the hydro scheme.
  * @param us The internal system of units.
  * @param cooling The cooling data struct.
- * @param add_spart Did we add a part (or transformed one)?
- */
+ * @param convert_part Did we convert a part (or created one)?
+*/
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
@@ -160,7 +160,8 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling, const int add_spart) {
+    const struct cooling_function_data* restrict cooling,
+    const int convert_part) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
@@ -322,7 +323,6 @@ INLINE static int star_formation_should_add_spart(
  */
 __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
     struct star_formation* starform, struct part* p, struct xpart* xp) {
-  error("This function is  not used");
 }
 
 /**
@@ -336,7 +336,6 @@ __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
 __attribute__((always_inline)) INLINE static void star_formation_end_stats(
     struct star_formation* starform, const struct star_formation* stats, int n,
     const struct engine* e) {
-  error("This function is  not used");
 }
 
 #endif /* SWIFT_QLA_STAR_FORMATION_H */
