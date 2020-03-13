@@ -292,6 +292,9 @@ acs-*.bib
 *.snm
 *.vrb
 
+# emacs
+*#
+
 # glossaries
 *.acn
 *.acr
