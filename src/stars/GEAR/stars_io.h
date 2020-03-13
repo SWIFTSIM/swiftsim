@@ -169,8 +169,8 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  sparts, birth.mass,
                                  "Masses of the star particles at birth time");
 
-  list[9] = io_make_output_field("ProgenitorIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,
-                                 sparts, prog_id,
+  list[9] = io_make_output_field("ProgenitorIDs", LONGLONG, 1,
+                                 UNIT_CONV_NO_UNITS, 0.f, sparts, prog_id,
                                  "Unique IDs of the progenitor particle");
 
 #ifdef DEBUG_INTERACTIONS_STARS

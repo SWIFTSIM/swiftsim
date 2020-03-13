@@ -157,8 +157,8 @@ INLINE static int star_formation_should_convert_to_star(
   /* Add the mass factor */
   if (starform->n_stars_per_part != 1) {
     const float min_mass = starform->mass_stars * starform->min_mass_frac;
-    const float mass_star = mass_gas > min_mass ?
-      starform->mass_stars : mass_gas;
+    const float mass_star =
+        mass_gas > min_mass ? starform->mass_stars : mass_gas;
 
     prob *= mass_gas / mass_star;
   }
@@ -172,7 +172,8 @@ INLINE static int star_formation_should_convert_to_star(
 }
 
 /**
- * @brief Decides whether a new particle should be created or if the hydro particle
+ * @brief Decides whether a new particle should be created or if the hydro
+ particle
  * needs to be transformed.
 
  * @param p The #part.
@@ -227,23 +228,21 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
-    const int add_spart) {
+    const struct cooling_function_data* restrict cooling, const int add_spart) {
 
   /* Store the current mass */
   const float mass_gas = hydro_get_mass(p);
   if (add_spart) {
     /* Update the spart */
     const float min_mass = starform->mass_stars * starform->min_mass_frac;
-    const float mass_star = mass_gas > min_mass ?
-      starform->mass_stars : mass_gas;
+    const float mass_star =
+        mass_gas > min_mass ? starform->mass_stars : mass_gas;
     sp->mass = mass_star;
     sp->gpart->mass = mass_star;
 
     /* Update the part */
     hydro_set_mass(p, mass_gas - mass_star);
-  }
-  else {
+  } else {
     sp->mass = mass_gas;
   }
   sp->birth.mass = sp->mass;
@@ -386,7 +385,7 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
  * @param xp The #xpart.
  */
 __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation *starform, struct part* p, struct xpart* xp) {
+    struct star_formation* starform, struct part* p, struct xpart* xp) {
   starform->mass_stars += hydro_get_mass(p);
 }
 
@@ -399,13 +398,14 @@ __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_stats(
-  struct star_formation *starform, const struct star_formation *stats, int n, const struct engine *e) {
+    struct star_formation* starform, const struct star_formation* stats, int n,
+    const struct engine* e) {
 
   /* Ensure that the counter is set to 0 */
   starform->mass_stars = 0;
 
   /* Compute the average mass */
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     starform->mass_stars += stats->mass_stars;
   }
   starform->mass_stars /= e->total_nr_parts * starform->n_stars_per_part;
