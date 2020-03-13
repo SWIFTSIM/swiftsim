@@ -1206,7 +1206,7 @@ int main(int argc, char *argv[]) {
 
     /* Compute some stats for the star formation */
     if (with_star_formation && star_formation_compute_stats) {
-      engine_compute_star_formation_stats(&e, &starform);
+      space_compute_star_formation_stats(e.s, &starform);
     }
 
     /* Get some info to the user. */
