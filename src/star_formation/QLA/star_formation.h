@@ -338,6 +338,6 @@ __attribute__((always_inline)) INLINE static void star_formation_end_stats(
     struct star_formation* starform, const struct star_formation* stats, int n,
     const struct engine* e) {
   error("This function is  not used");
-
+}
 
 #endif /* SWIFT_QLA_STAR_FORMATION_H */
