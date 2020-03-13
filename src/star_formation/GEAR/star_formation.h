@@ -267,6 +267,9 @@ INLINE static void star_formation_copy_properties(
 
   /* Copy the chemistry properties */
   chemistry_copy_star_formation_properties(p, xp, sp);
+
+  /* Copy the progenitor id */
+  sp->prog_id = p->id;
 }
 
 /**

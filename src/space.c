@@ -2213,8 +2213,8 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (index < 0 || index >= cdim[0] * cdim[1] * cdim[2])
-      error("Invalid index=%d cdim=[%d %d %d] p->x=[%e %e %e] id=%lli mass=%g", index, cdim[0],
-            cdim[1], cdim[2], pos_x, pos_y, pos_z, p->id, p->mass);
+      error("Invalid index=%d cdim=[%d %d %d] p->x=[%e %e %e]", index, cdim[0],
+            cdim[1], cdim[2], pos_x, pos_y, pos_z);
 
     if (pos_x >= dim_x || pos_y >= dim_y || pos_z >= dim_z || pos_x < 0. ||
         pos_y < 0. || pos_z < 0.)
