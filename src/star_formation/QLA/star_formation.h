@@ -160,8 +160,7 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
-    const int add_spart) {
+    const struct cooling_function_data* restrict cooling, const int add_spart) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
