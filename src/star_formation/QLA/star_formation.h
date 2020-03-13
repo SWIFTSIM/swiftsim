@@ -151,6 +151,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param hydro_props The properties of the hydro scheme.
  * @param us The internal system of units.
  * @param cooling The cooling data struct.
+ * @param add_spart Did we add a part (or transformed one)?
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -159,7 +160,8 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
+    const struct cooling_function_data* restrict cooling,
+    const int add_spart) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
@@ -296,5 +298,46 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
                                   const struct xpart* xp) {
   /* Nothing to do since we just turn gas particles into DM. */
 }
+
+/**
+ * @brief Decides whether a new particle should be created or if the hydro
+ * particle needs to be transformed.
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param starform The properties of the star formation model.
+ *
+ * @return 1 if a new spart needs to be created.
+ */
+INLINE static int star_formation_should_add_spart(
+    struct part* p, struct xpart* xp, const struct star_formation* starform) {
+  return 0;
+}
+
+/**
+ * @brief Compute some statistics on the hydro particles.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
+    struct star_formation* starform, struct part* p, struct xpart* xp) {
+  error("This function is  not used");
+}
+
+/**
+ * @brief End the computation of the statistics.
+ *
+ * @param starform The #star_formation structure.
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param e The #engine.
+ */
+__attribute__((always_inline)) INLINE static void star_formation_end_stats(
+    struct star_formation* starform, const struct star_formation* stats, int n,
+    const struct engine* e) {
+  error("This function is  not used");
+
 
 #endif /* SWIFT_QLA_STAR_FORMATION_H */
