@@ -518,6 +518,9 @@ struct cell {
     /*! Spin lock for various uses (#multipole case). */
     swift_lock_type mlock;
 
+    /*! Spin lock for star formation use. */
+    swift_lock_type star_formation_lock;
+
     /*! Nr of #gpart in this cell. */
     int count;
 
@@ -933,7 +936,8 @@ void cell_remove_bpart(const struct engine *e, struct cell *c,
                        struct bpart *bp);
 struct spart *cell_add_spart(struct engine *e, struct cell *c);
 struct gpart *cell_add_gpart(struct engine *e, struct cell *c);
-struct spart *cell_create_spart(struct engine *e, struct cell *c);
+struct spart *cell_create_new_spart_from_part(struct engine *e, struct cell *c,
+                                              struct part *p, struct xpart *xp);
 struct gpart *cell_convert_part_to_gpart(const struct engine *e, struct cell *c,
                                          struct part *p, struct xpart *xp);
 struct gpart *cell_convert_spart_to_gpart(const struct engine *e,
