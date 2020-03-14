@@ -1,0 +1,1 @@
+./configure --with-gravity=with-tidaltensor --with-stars=MOSAICS
