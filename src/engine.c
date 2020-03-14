@@ -1596,8 +1596,9 @@ int engine_estimate_nr_tasks(const struct engine *e) {
     /* 2 self (density, feedback), 1 sort, 26/2 density pairs
        26/2 feedback pairs, 1 drift, 3 ghosts, 2 kicks, 1 time-step,
        1 end_force, 2 extra space
+       1 mosaics
      */
-    n1 += 37;
+    n1 += 38;
     n2 += 2;
 #ifdef WITH_MPI
     n1 += 6;
@@ -2055,6 +2056,7 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_drift_gpart_out || t->type == task_type_cooling ||
         t->type == task_type_stars_in || t->type == task_type_stars_out ||
         t->type == task_type_star_formation ||
+        t->type == task_type_stars_mosaics ||
         t->type == task_type_stars_resort || t->type == task_type_extra_ghost ||
         t->type == task_type_bh_swallow_ghost1 ||
         t->type == task_type_bh_swallow_ghost2 ||

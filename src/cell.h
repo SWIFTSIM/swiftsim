@@ -597,6 +597,9 @@ struct cell {
     /*! Implicit tasks marking the exit of the stellar physics block of tasks */
     struct task *stars_out;
 
+    /*! Task for subgrid star clusters */
+    struct task *mosaics;
+
     /*! Last (integer) time the cell's spart were drifted forward in time. */
     integertime_t ti_old_part;
 

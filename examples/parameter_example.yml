@@ -59,6 +59,7 @@ Stars:
   max_volume_change:    1.4      # (Optional) Maximal allowed change of kernel volume over one time-step. Defaults to the SPH value.
   overwrite_birth_time:  0       # (Optional) Do we want to overwrite the birth time of the stars read from the ICs? (default: 0).
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
+  calculate_all_star_tensors: 1  # (Optional) Force the tidal tensor calculation for all   stars. For --with-gravity=with-potential. (default:0)
 
 # Parameters for the self-gravity scheme
 Gravity:

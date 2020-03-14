@@ -146,6 +146,13 @@ __attribute__((always_inline)) INLINE static void gravity_init_gpart(
   gp->a_grav[2] = 0.f;
   gp->potential = 0.f;
 
+  gp->tidal_tensor[0] = 0.f;
+  gp->tidal_tensor[1] = 0.f;
+  gp->tidal_tensor[2] = 0.f;
+  gp->tidal_tensor[3] = 0.f;
+  gp->tidal_tensor[4] = 0.f;
+  gp->tidal_tensor[5] = 0.f;
+
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM = 0.f;
   gp->a_grav_PM[0] = 0.f;
@@ -181,6 +188,13 @@ __attribute__((always_inline)) INLINE static void gravity_end_force(
   gp->a_grav[1] *= const_G;
   gp->a_grav[2] *= const_G;
   gp->potential *= const_G;
+
+  gp->tidal_tensor[0] *= const_G;
+  gp->tidal_tensor[1] *= const_G;
+  gp->tidal_tensor[2] *= const_G;
+  gp->tidal_tensor[3] *= const_G;
+  gp->tidal_tensor[4] *= const_G;
+  gp->tidal_tensor[5] *= const_G;
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM *= const_G;
@@ -227,6 +241,23 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
   gp->time_bin = 0;
 
   gravity_init_gpart(gp);
+}
+
+/**
+ * @brief Returns the calc_tensor flag of a particle.
+ *
+ * Always returns true if calc_all_tensors is set in param file.
+ * 
+ * @param gp The particle of interest
+ * @param grav_props The global gravity properties.
+ */
+__attribute__((always_inline)) INLINE static int
+gravity_get_tensor_flag(const struct gpart* restrict gp, const struct gravity_props* restrict grav_props) {
+
+  if (grav_props->calc_all_tensors)
+    return 1;
+  else
+    return gp->calc_tensor;
 }
 
 #endif /* SWIFT_TIDALTENSOR_GRAVITY_H */

@@ -161,6 +161,10 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
     p->epsilon_baryon_comoving = p->epsilon_baryon_max_physical;
   }
 
+  /* Flag for forcing tensor calculation */
+  p->calc_all_tensors = 
+      parser_get_opt_param_int(params, "Gravity:calculate_all_tensors", 0);
+
   /* Copy over the gravitational constant */
   p->G_Newton = phys_const->const_newton_G;
 
@@ -247,6 +251,8 @@ void gravity_props_print(const struct gravity_props *p) {
           kernel_long_gravity_truncation_name);
 
   message("Self-gravity tree update frequency: f=%f", p->rebuild_frequency);
+
+  message("Calculate all tensors: %d", p->calc_all_tensors);
 }
 
 #if defined(HAVE_HDF5)

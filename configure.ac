@@ -1698,6 +1698,9 @@ case "$with_gravity" in
    with-potential)
       AC_DEFINE([POTENTIAL_GRAVITY], [1], [Basic gravity scheme with potential calculation])
    ;;
+   with-tidaltensor)
+      AC_DEFINE([TIDALTENSOR_GRAVITY], [1], [Basic gravity scheme with potential and tidal tensor calculation])
+   ;;
    with-multi-softening)
       AC_DEFINE([MULTI_SOFTENING_GRAVITY], [1], [Gravity scheme with per-particle type softening value and background particles])
    ;;
@@ -2100,7 +2103,7 @@ esac
 # Stellar model.
 AC_ARG_WITH([stars],
    [AS_HELP_STRING([--with-stars=<model>],
-      [Stellar model to use @<:@none, EAGLE, COLIBRE, GEAR, debug default: none@:>@]
+      [Stellar model to use @<:@none, EAGLE, COLIBRE, GEAR, MOSAICS, debug default: none@:>@]
    )],
    [with_stars="$withval"],
    [with_stars="none"]
@@ -2123,6 +2126,9 @@ case "$with_stars" in
    ;;
    GEAR)
       AC_DEFINE([STARS_GEAR], [1], [GEAR stellar model])
+   ;;
+   MOSAICS)
+      AC_DEFINE([STARS_MOSAICS], [1], [MOSAICS stellar model])
    ;;
    none)
       AC_DEFINE([STARS_NONE], [1], [Basic stellar model])

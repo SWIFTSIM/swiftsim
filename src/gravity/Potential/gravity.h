@@ -230,4 +230,18 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
   gravity_init_gpart(gp);
 }
 
+/**
+ * @brief Returns the calc_tensor flag of a particle.
+ *
+ * This returns 0 as this version does not compute the particles' tensor.
+ *
+ * @param gp The particle of interest
+ */
+__attribute__((always_inline)) INLINE static int
+gravity_get_tensor_flag(const struct gpart* restrict gp, 
+    const struct gravity_props* restrict grav_props) {
+
+  return 0;
+}
+
 #endif /* SWIFT_POTENTIAL_GRAVITY_H */

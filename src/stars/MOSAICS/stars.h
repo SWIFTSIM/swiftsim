@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ *               2019 Joel Pfeffer (j.l.pfeffer@ljmu.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,10 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_STARS_H
-#define SWIFT_COLIBRE_STARS_H
+#ifndef SWIFT_MOSAICS_STARS_H
+#define SWIFT_MOSAICS_STARS_H
 
 #include <float.h>
+
+#include <float.h>
+
+/* Local includes */
+#include "cosmology.h"
+#include "engine.h"
+#include "hydro.h"
+#include "mosaics_clform.h"
+#include "mosaics_clevo.h"
 
 /**
  * @brief Computes the gravity time-step of a given star particle.
@@ -48,6 +58,8 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
 
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
+
+  sp->gpart->calc_tensor = sp->calc_tensor;
 }
 
 /**
@@ -84,6 +96,14 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
   sp->HIIregion_mass_to_ionize = 0.f;
   sp->HIIregion_mass_in_kernel = -1.f;
   sp->star_timestep = 0.f;
+
+  /* TODO temporary until we read gc props from ICs */
+  /* i.e. does this particle have any clusters with M>0? */
+  sp->gcflag = 0;
+
+  /* Redundant if grav_props->calc_all_tensors=1 */
+  if (stars_properties->calc_all_star_tensors || sp->gcflag)
+    sp->calc_tensor = 1;
 
   stars_init_spart(sp);
 }
@@ -194,4 +214,89 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 #endif
 }
 
-#endif /* SWIFT_COLIBRE_STARS_H */
+/**
+ * @brief Do the mosaics subgrid star cluster model
+ *
+ * @param sp The particle to act upon
+ * @param stars_properties Properties of the stars model.
+ * @param e The #engine
+ * @param cosmo the cosmological parameters and properties.
+ * @param with_cosmology if we run with cosmology.
+ */
+__attribute__((always_inline)) INLINE static void stars_do_mosaics(
+    struct spart* restrict sp, const struct stars_props* stars_properties,
+    const struct engine* e, const struct cosmology* cosmo, 
+    const int with_cosmology) {
+
+  if (sp->calc_tensor) {
+    /* Did we get a tensor for this particle? (regardless if have clusters) */
+
+    /* shift old tensors along */
+    for (int i=0; i<2; i++) {
+      sp->tidal_tensor[i][0] = sp->tidal_tensor[i+1][0];
+      sp->tidal_tensor[i][1] = sp->tidal_tensor[i+1][1];
+      sp->tidal_tensor[i][2] = sp->tidal_tensor[i+1][2];
+      sp->tidal_tensor[i][3] = sp->tidal_tensor[i+1][3];
+      sp->tidal_tensor[i][4] = sp->tidal_tensor[i+1][4];
+      sp->tidal_tensor[i][5] = sp->tidal_tensor[i+1][5];
+    }
+
+    /* Now retrieve the new ones from the gpart */
+    sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
+    sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
+    sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
+    sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
+    sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
+    sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
+  }
+
+  if (sp->new_star) {
+    /* Do cluster formation */
+
+    /* TODO need to calculate this beforehand */
+    sp->gasVelDisp = 0.;
+    sp->starVelDisp = 0.;
+    sp->fgas = 1.;
+
+    mosaics_clform(sp, stars_properties, e, cosmo, with_cosmology);
+    sp->new_star = 0;
+    sp->gcflag = 1;
+
+  } else if (sp->gcflag) {
+    /* Do cluster evolution, if the particle has clusters */
+    mosaics_clevo(sp, stars_properties, e, cosmo, with_cosmology);
+
+    /* Do we still need to calculate tensors for this particle */
+    if ( !stars_properties->calc_all_star_tensors && !sp->gcflag)
+      sp->calc_tensor = 0;
+  }
+}
+
+/**
+ * @brief Gather some extra props needed at star formation time for mosaics
+ *
+ * @param sp The gas particle
+ * @param sp The star particle
+ * @param cosmo the cosmological parameters and properties.
+ */
+__attribute__((always_inline)) INLINE static void stars_mosaics_copy_extra_properties(
+    const struct part* p, struct spart* restrict sp,
+    const struct cosmology* cosmo) {
+
+  /* Store the birth pressure in the star particle */
+  sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
+
+  /* TODO we also want the weighted density when that exists? */
+  /*
+  if (...) {
+  } else {
+    sp->birth_weighted_density = sp->birth_density;
+  }
+  */
+  sp->birth_weighted_density = sp->birth_density;
+
+  /* Flag it for cluster formation */
+  sp->new_star = 1;
+}
+
+#endif /* SWIFT_MOSAICS_STARS_H */

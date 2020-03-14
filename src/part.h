@@ -92,6 +92,8 @@ struct threadpool;
 #include "./gravity/Default/gravity_part.h"
 #elif defined(POTENTIAL_GRAVITY)
 #include "./gravity/Potential/gravity_part.h"
+#elif defined(TIDALTENSOR_GRAVITY)
+#include "./gravity/TidalTensor/gravity_part.h"
 #elif defined(MULTI_SOFTENING_GRAVITY)
 #include "./gravity/MultiSoftening/gravity_part.h"
 #else
@@ -109,6 +111,8 @@ struct threadpool;
 #include "./stars/COLIBRE/stars_part.h"
 #elif defined(STARS_GEAR)
 #include "./stars/GEAR/stars_part.h"
+#elif defined(STARS_MOSAICS)
+#include "./stars/MOSAICS/stars_part.h"
 #else
 #error "Invalid choice of star particle"
 #endif

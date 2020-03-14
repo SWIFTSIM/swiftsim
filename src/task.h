@@ -88,6 +88,7 @@ enum task_types {
   task_type_stars_ghost_out, /* Implicit */
   task_type_stars_sort,
   task_type_stars_resort,
+  task_type_stars_mosaics,
   task_type_bh_in,  /* Implicit */
   task_type_bh_out, /* Implicit */
   task_type_bh_density_ghost,

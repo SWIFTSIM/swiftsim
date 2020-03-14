@@ -990,6 +990,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         cell_activate_super_spart_drifts(t->ci, s);
       }
     }
+
+    /* Subgrid tasks: star clusters */
+    else if (t_type == task_type_stars_mosaics) {
+      if (cell_is_active_stars(t->ci, e)) scheduler_activate(s, t);
+    }
   }
 }
 

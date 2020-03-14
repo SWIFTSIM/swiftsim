@@ -229,6 +229,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->stars.ghost = NULL;
     c->stars.density = NULL;
     c->stars.feedback = NULL;
+    c->stars.mosaics = NULL;
     c->black_holes.density_ghost = NULL;
     c->black_holes.swallow_ghost[0] = NULL;
     c->black_holes.swallow_ghost[1] = NULL;

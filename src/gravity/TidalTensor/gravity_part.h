@@ -54,6 +54,10 @@ struct gpart {
   /*! Type of the #gpart (DM, gas, star, ...) */
   enum part_type type;
 
+  /*! Tidal tensor (xx,xy,xz,yy,yz,zz) and flag */
+  float tidal_tensor[6];
+  int calc_tensor;
+
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Numer of gparts this gpart interacted with */

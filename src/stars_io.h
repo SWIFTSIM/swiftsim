@@ -33,6 +33,8 @@
 #include "./stars/COLIBRE/stars_io.h"
 #elif defined(STARS_GEAR)
 #include "./stars/GEAR/stars_io.h"
+#elif defined(STARS_MOSAICS)
+#include "./stars/MOSAICS/stars_io.h"
 #else
 #error "Invalid choice of star model"
 #endif

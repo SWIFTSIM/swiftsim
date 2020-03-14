@@ -346,6 +346,91 @@ void mesh_to_gparts_CIC(struct gpart* gp, const double* pot, const int N,
   gp->a_grav_PM[1] = fac * a[1];
   gp->a_grav_PM[2] = fac * a[2];
 #endif
+
+#ifdef TIDALTENSOR_GRAVITY
+  if (gp->calc_tensor) {
+    /* Tensor components xx, xy, xz, yy, yz, zz */
+    double T[6] = {0.};
+
+    /* 5-point stencil */
+    T[0] -=       CIC_get(phi, ii + 2, jj, kk, tx, ty, tz, dx, dy, dz);
+    T[0] += 16. * CIC_get(phi, ii + 1, jj, kk, tx, ty, tz, dx, dy, dz);
+    T[0] -= 30. * CIC_get(phi, ii    , jj, kk, tx, ty, tz, dx, dy, dz);
+    T[0] += 16. * CIC_get(phi, ii - 1, jj, kk, tx, ty, tz, dx, dy, dz);
+    T[0] -=       CIC_get(phi, ii - 2, jj, kk, tx, ty, tz, dx, dy, dz);
+
+    T[1] +=       CIC_get(phi, ii + 2, jj + 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=  8. * CIC_get(phi, ii + 2, jj + 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] +=  8. * CIC_get(phi, ii + 2, jj - 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=       CIC_get(phi, ii + 2, jj - 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=  8. * CIC_get(phi, ii + 1, jj + 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] += 64. * CIC_get(phi, ii + 1, jj + 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -= 64. * CIC_get(phi, ii + 1, jj - 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] +=  8. * CIC_get(phi, ii + 1, jj - 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] +=  8. * CIC_get(phi, ii - 1, jj + 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -= 64. * CIC_get(phi, ii - 1, jj + 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] += 64. * CIC_get(phi, ii - 1, jj - 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=  8. * CIC_get(phi, ii - 1, jj - 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=       CIC_get(phi, ii - 2, jj + 2, kk, tx, ty, tz, dx, dy, dz);
+    T[1] +=  8. * CIC_get(phi, ii - 2, jj + 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] -=  8. * CIC_get(phi, ii - 2, jj - 1, kk, tx, ty, tz, dx, dy, dz);
+    T[1] +=       CIC_get(phi, ii - 2, jj - 2, kk, tx, ty, tz, dx, dy, dz);
+
+    T[2] +=       CIC_get(phi, ii + 2, jj, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[2] -=  8. * CIC_get(phi, ii + 2, jj, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[2] +=  8. * CIC_get(phi, ii + 2, jj, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[2] -=       CIC_get(phi, ii + 2, jj, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[2] -=  8. * CIC_get(phi, ii + 1, jj, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[2] += 64. * CIC_get(phi, ii + 1, jj, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[2] -= 64. * CIC_get(phi, ii + 1, jj, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[2] +=  8. * CIC_get(phi, ii + 1, jj, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[2] +=  8. * CIC_get(phi, ii - 1, jj, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[2] -= 64. * CIC_get(phi, ii - 1, jj, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[2] += 64. * CIC_get(phi, ii - 1, jj, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[2] -=  8. * CIC_get(phi, ii - 1, jj, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[2] -=       CIC_get(phi, ii - 2, jj, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[2] +=  8. * CIC_get(phi, ii - 2, jj, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[2] -=  8. * CIC_get(phi, ii - 2, jj, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[2] +=       CIC_get(phi, ii - 2, jj, kk - 2, tx, ty, tz, dx, dy, dz);
+
+    T[3] -=       CIC_get(phi, ii, jj + 2, kk, tx, ty, tz, dx, dy, dz);
+    T[3] += 16. * CIC_get(phi, ii, jj + 1, kk, tx, ty, tz, dx, dy, dz);
+    T[3] -= 30. * CIC_get(phi, ii, jj    , kk, tx, ty, tz, dx, dy, dz);
+    T[3] += 16. * CIC_get(phi, ii, jj - 1, kk, tx, ty, tz, dx, dy, dz);
+    T[3] -=       CIC_get(phi, ii, jj - 2, kk, tx, ty, tz, dx, dy, dz);
+
+    T[4] +=       CIC_get(phi, ii, jj + 2, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[4] -=  8. * CIC_get(phi, ii, jj + 2, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[4] +=  8. * CIC_get(phi, ii, jj + 2, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[4] -=       CIC_get(phi, ii, jj + 2, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[4] -=  8. * CIC_get(phi, ii, jj + 1, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[4] += 64. * CIC_get(phi, ii, jj + 1, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[4] -= 64. * CIC_get(phi, ii, jj + 1, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[4] +=  8. * CIC_get(phi, ii, jj + 1, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[4] +=  8. * CIC_get(phi, ii, jj - 1, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[4] -= 64. * CIC_get(phi, ii, jj - 1, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[4] += 64. * CIC_get(phi, ii, jj - 1, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[4] -=  8. * CIC_get(phi, ii, jj - 1, kk - 2, tx, ty, tz, dx, dy, dz);
+    T[4] -=       CIC_get(phi, ii, jj - 2, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[4] +=  8. * CIC_get(phi, ii, jj - 2, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[4] -=  8. * CIC_get(phi, ii, jj - 2, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[4] +=       CIC_get(phi, ii, jj - 2, kk - 2, tx, ty, tz, dx, dy, dz);
+
+    T[5] -=       CIC_get(phi, ii, jj, kk + 2, tx, ty, tz, dx, dy, dz);
+    T[5] += 16. * CIC_get(phi, ii, jj, kk + 1, tx, ty, tz, dx, dy, dz);
+    T[5] -= 30. * CIC_get(phi, ii, jj, kk    , tx, ty, tz, dx, dy, dz);
+    T[5] += 16. * CIC_get(phi, ii, jj, kk - 1, tx, ty, tz, dx, dy, dz);
+    T[5] -=       CIC_get(phi, ii, jj, kk - 2, tx, ty, tz, dx, dy, dz);
+
+    /* Store things back */
+    gp->tidal_tensor[0] += -1. * fac * fac * T[0] / 12.;
+    gp->tidal_tensor[1] += -1. * fac * fac * T[1] / 144.;
+    gp->tidal_tensor[2] += -1. * fac * fac * T[2] / 144.;
+    gp->tidal_tensor[3] += -1. * fac * fac * T[3] / 12.;
+    gp->tidal_tensor[4] += -1. * fac * fac * T[4] / 144.;
+    gp->tidal_tensor[5] += -1. * fac * fac * T[5] / 12.;
+  }
+#endif
 }
 
 /**

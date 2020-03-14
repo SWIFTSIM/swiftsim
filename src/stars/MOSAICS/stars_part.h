@@ -2,6 +2,7 @@
  * This file is part of SWIFT.
  * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *               2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
+ *               2019 Joel Pfeffer (j.l.pfeffer@ljmu.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_STAR_PART_H
-#define SWIFT_COLIBRE_STAR_PART_H
+#ifndef SWIFT_MOSAICS_STAR_PART_H
+#define SWIFT_MOSAICS_STAR_PART_H
 
 /* Some standard headers. */
 #include <stdlib.h>
@@ -124,6 +125,61 @@ struct spart {
   /*! Number of time-steps since the last enrichment step */
   char count_since_last_enrichment;
 
+  /*** Now the MOSAICS data ***/
+
+  /*! Second derivative of gravitational potential */
+  /* upper symmetric 3*3 matrix:
+   * tt[0] == xx
+   * tt[1] == xy == yx
+   * tt[2] == xz == zx
+   * tt[3] == yy
+   * tt[4] == yz == zy
+   * tt[5] == zz
+   */
+  float tidal_tensor[3][6];
+
+  /*! Birth weighted density (if it exists) */
+  float birth_weighted_density;
+
+  /*! Birth pressure */
+  float birth_pressure;
+
+  /*! Cluster formation efficiency */
+  float CFE;
+
+  /*! Exponential truncation to mass function */
+  float Mcstar;
+
+  /*! The local gas velocity dispersion at formation */
+  float gasVelDisp;
+
+  /*! The local stellar velocity dispersion at formation */
+  float starVelDisp;
+
+  /*! Gas fraction within that same region */
+  float fgas;
+
+  /*! Combined resolved and unresolved gas velocity dispersion (potentially) */
+  float totalVelDisp;
+
+  /*! Epicyclic frequency at formation */
+  float kappa;
+
+  /*! Circular frequency at formation */
+  float Omega;
+
+  /*! Local Toomre mass */
+  float Toomre_mass;
+
+  /*! Fraction of Mtoomre that may collapse to a GMC */
+  float fracCollapse;
+
+  /*! Flag denoting whether we need to run cluster formation  */
+  int new_star;
+
+  /*! In case we want tensors for particles without GCs */
+  int calc_tensor;
+
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Time of the last drift */
@@ -179,6 +235,58 @@ struct stars_props {
 
   /*! Value to set birth time of stars read from ICs */
   float spart_first_init_birth_time;
+
+  /* ---------------- MOSAICS parameters ---------------- */
+
+  /*! Flag to force tensor calculation for all stars */
+  int calc_all_star_tensors;
+
+  /*! King '66 density profile parameter */
+  float W0;
+
+  /*! Star formation efficiency for Mcstar */
+  float SFE;
+
+  /* ----- Cluster formation efficiency parameters ------ */
+
+  /*! Sound speed of cold ISM (m/s) */
+  float Fixedcs;
+
+  /*! star formation law */
+  int sflaw;
+
+  /*! GMC virial parameter */
+  float qvir;
+
+  /*! time of first SN (Myr) */
+  float tsn;
+
+  /*! time of determining the CFE (Myr) */
+  float tview;
+
+  /*! GMC surface density (Msun/pc^2) */
+  float surfGMC;
+
+  /*! maximum (protostellar core) SFE */
+  float ecore;
+
+  /*! turbulent/magnetic pressure ratio */
+  float beta0;
+
+  /*! SN/radiative feedback mode */
+  int radfb;
+
+  /* --------------- Conversion factors ----------------- */
+
+  /*! Conversion factor from internal density unit to cgs */
+  double density_to_kgm3;
+
+  /*! Conversion factor from internal velocity unit to m/s */
+  double velocity_to_ms;
+
+  /* TODO not sure if needed? */
+  /*! Conversion factor from internal mass unit to solar mass */
+  //double mass_to_solar_mass;
 };
 
-#endif /* SWIFT_COLIBRE_STAR_PART_H */
+#endif /* SWIFT_MOSAICS_STAR_PART_H */

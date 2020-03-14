@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_STARS_IACT_H
-#define SWIFT_COLIBRE_STARS_IACT_H
+#ifndef SWIFT_MOSAICS_STARS_IACT_H
+#define SWIFT_MOSAICS_STARS_IACT_H
 
 #include "random.h"
 
@@ -91,4 +91,4 @@ runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
 #endif
 }
 
-#endif /* SWIFT_COLIBRE_STARS_IACT_H */
+#endif /* SWIFT_MOSAICS_STARS_IACT_H */

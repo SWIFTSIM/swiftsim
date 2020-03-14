@@ -2,6 +2,7 @@
  * This file is part of SWIFT.
  * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
  *               2018 Folkert Nobels (nobels@strw.leidenuniv.nl)
+ *               2019 Joel Pfeffer (j.l.pfeffer@ljmu.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_COLIBRE_STARS_IO_H
-#define SWIFT_COLIBRE_STARS_IO_H
+#ifndef SWIFT_MOSAICS_STARS_IO_H
+#define SWIFT_MOSAICS_STARS_IO_H
 
 #include "io_properties.h"
 #include "stars_part.h"
@@ -115,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 14;
+  *num_fields = 27;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -192,6 +193,69 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
+
+  list[14] =
+      io_make_output_field("GCFlag", CHAR, 1, UNIT_CONV_NO_UNITS,
+                           0.f, sparts, gcflag,
+                           "Flag denoting whether the star particle has star surviving"
+                           "clusters");                           
+
+  list[15] = io_make_output_field(
+      "TidalTensor", FLOAT, 18, UNIT_CONV_TIDAL_TENSOR, 0.f, sparts, tidal_tensor, 
+      "Second derivative of gravitational potential at the last 3 snapshots. We"
+      "store the upper components of the symmeteric matrix (i.e. 6 values per"
+      "tensor: xx, xy, xz, yy, yz, zz)");
+
+  list[16] = io_make_output_field(
+      "BirthPressures", FLOAT, 1, UNIT_CONV_PRESSURE, 0.f, sparts, birth_pressure,
+      "Physical pressures at the time of birth of the gas particles that "
+      "turned into stars (note that "
+      "we store the physical pressure at the birth redshift, no conversion is "
+      "needed)");
+
+  list[17] = io_make_output_field(
+      "BirthWeightedDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts, 
+      birth_weighted_density,
+      "Physical weighted densities at the time of birth of the gas particles that "
+      "turned into stars (note that "
+      "we store the physical density at the birth redshift, no conversion is "
+      "needed)");
+
+  list[18] = io_make_output_field(
+      "ClusterFormationEfficiency", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      CFE, "Fraction of star formation which occurs in bound clusters");
+
+  list[19] = io_make_output_field(
+      "Mcstar", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      Mcstar, "Exponential truncation of star cluster mass function");
+
+  list[20] = io_make_output_field(
+      "GasVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
+      gasVelDisp, "Local velocity dispersion of gas at the time of star formation");
+
+  list[21] = io_make_output_field(
+      "StellarVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
+      starVelDisp, "Local velocity dispersion of stars at the time of star formation");
+
+  list[22] = io_make_output_field(
+      "GasFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      fgas, "Local gas fraction at time of star formation");
+
+  list[23] = io_make_output_field(
+      "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts,
+      kappa, "Epicyclic frequency at formation");
+
+  list[24] = io_make_output_field(
+      "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts,
+      Omega, "Circular frequency at formation");
+
+  list[25] = io_make_output_field(
+      "ToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      Toomre_mass, "Local Toomre mass at formation");
+
+  list[26] = io_make_output_field(
+      "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      fracCollapse, "Fraction of Toomre mass which can collapse to a GMC");
 }
 
 /**
@@ -249,6 +313,61 @@ INLINE static void stars_props_init(struct stars_props *sp,
     sp->spart_first_init_birth_time =
         parser_get_param_float(params, "Stars:birth_time");
   }
+
+  /* MOSAICS parameters ----------------------------------------------------- */
+
+  /* Flag for forcing the tensor calculation */
+  sp->calc_all_star_tensors =
+      parser_get_opt_param_int(params, "Stars:calculate_all_star_tensors", 0);
+
+  /* King parameter */
+  sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
+
+  /* Star formation efficiency for Mcstar */
+  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", 0.1);
+
+  /* Cluster formation efficiency parameters -------------------------------- */
+
+  /* Sound speed of cold ISM (m/s) */
+  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:Fixedcs", 300.);
+
+  /* star formation law */
+  sp->sflaw = parser_get_opt_param_int(params, "Stars:sflaw", 0);
+
+  /* GMC virial parameter */
+  sp->qvir = parser_get_opt_param_float(params, "Stars:qvir", 1.3);
+
+  /* time of first SN (Myr) */
+  sp->tsn = parser_get_opt_param_float(params, "Stars:tsn", 3.0);
+
+  /* time of determining the CFE (Myr) */
+  sp->tview = parser_get_opt_param_float(params, "Stars:tview", 10.0);
+
+  /* GMC surface density (Msun/pc^2) */
+  sp->surfGMC = parser_get_opt_param_float(params, "Stars:surfGMC", 100.0);
+
+  /* maximum (protostellar core) SFE */
+  sp->ecore = parser_get_opt_param_float(params, "Stars:ecore", 0.5);
+
+  /* turbulent/magnetic pressure ratio */
+  sp->beta0 = parser_get_opt_param_float(params, "Stars:beta0", 1.0e10);
+
+  /* SN/radiative feedback mode */
+  sp->radfb = parser_get_opt_param_int(params, "Stars:radfb", 0);
+
+  /* Some useful conversion values ------------------------------------------ */
+
+  sp->density_to_kgm3 = 
+      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
+
+  sp->velocity_to_ms = 
+      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 0.01;
+
+  /* TODO not sure if needed */
+  //const double Msun_cgs = phys_const->const_solar_mass *
+  //                        units_cgs_conversion_factor(us, UNIT_CONV_MASS);
+  //const double unit_mass_cgs = units_cgs_conversion_factor(us, UNIT_CONV_MASS);
+  //sp->mass_to_solar_mass = unit_mass_cgs / Msun_cgs;
 }
 
 /**
@@ -276,6 +395,9 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
   if (sp->overwrite_birth_time)
     message("Stars' birth time read from the ICs will be overwritten to %f",
             sp->spart_first_init_birth_time);
+
+  message("Calculate tensors for all stars: %d",
+          sp->calc_all_star_tensors);
 }
 
 #if defined(HAVE_HDF5)
@@ -323,4 +445,4 @@ INLINE static void stars_props_struct_restore(const struct stars_props *p,
                       "stars props");
 }
 
-#endif /* SWIFT_COLIBRE_STAR_IO_H */
+#endif /* SWIFT_MOSAICS_STAR_IO_H */

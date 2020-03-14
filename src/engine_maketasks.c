@@ -832,6 +832,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
   const int with_timestep_limiter =
       (e->policy & engine_policy_timestep_limiter);
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
+  const int with_stars = (e->policy & engine_policy_stars);
+  const int with_feedback = (e->policy & engine_policy_feedback);
 #ifdef WITH_LOGGER
   const int with_logger = e->policy & engine_policy_logger;
 #endif
@@ -888,6 +890,21 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       if (with_star_formation && c->hydro.count > 0) {
         scheduler_addunlock(s, kick2_or_logger, c->top->hydro.star_formation);
         scheduler_addunlock(s, c->top->hydro.star_formation, c->timestep);
+      }
+
+      /* Subgrid tasks: star clusters */
+      if (with_stars) {
+        c->stars.mosaics = scheduler_addtask(s, task_type_stars_mosaics,
+                                             task_subtype_none, 0, 0, c, NULL);
+  
+        scheduler_addunlock(s, kick2_or_logger, c->stars.mosaics);
+        /* should happen after star formation */
+        if (with_star_formation && c->hydro.count > 0)
+          scheduler_addunlock(s, c->top->hydro.star_formation, c->stars.mosaics);
+        /* and after feedback/stellar evo */
+        if (with_feedback)
+          scheduler_addunlock(s, c->stars.stars_out, c->stars.mosaics);
+        scheduler_addunlock(s, c->stars.mosaics, c->timestep);
       }
 
       /* Time-step limiter */

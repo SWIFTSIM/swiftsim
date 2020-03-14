@@ -64,6 +64,17 @@ struct gravity_cache {
   /*! #gpart potential. */
   float *restrict pot SWIFT_CACHE_ALIGN;
 
+  /*! #gpart upper 6 tensor elements */
+  float *restrict tensor_xx SWIFT_CACHE_ALIGN;
+  float *restrict tensor_xy SWIFT_CACHE_ALIGN;
+  float *restrict tensor_xz SWIFT_CACHE_ALIGN;
+  float *restrict tensor_yy SWIFT_CACHE_ALIGN;
+  float *restrict tensor_yz SWIFT_CACHE_ALIGN;
+  float *restrict tensor_zz SWIFT_CACHE_ALIGN;
+
+  /*! Do we need to calculate the tidal tensor for this #gpart? */
+  int *restrict calc_tensor SWIFT_CACHE_ALIGN;
+
   /*! Is this #gpart active ? */
   int *restrict active SWIFT_CACHE_ALIGN;
 
@@ -91,6 +102,13 @@ static INLINE void gravity_cache_clean(struct gravity_cache *c) {
     swift_free("gravity_cache", c->a_y);
     swift_free("gravity_cache", c->a_z);
     swift_free("gravity_cache", c->pot);
+    swift_free("gravity_cache", c->tensor_xx);
+    swift_free("gravity_cache", c->tensor_xy);
+    swift_free("gravity_cache", c->tensor_xz);
+    swift_free("gravity_cache", c->tensor_yy);
+    swift_free("gravity_cache", c->tensor_yz);
+    swift_free("gravity_cache", c->tensor_zz);
+    swift_free("gravity_cache", c->calc_tensor);
     swift_free("gravity_cache", c->active);
     swift_free("gravity_cache", c->use_mpole);
   }
@@ -137,6 +155,20 @@ static INLINE void gravity_cache_init(struct gravity_cache *c,
                       sizeBytesF);
   e += swift_memalign("gravity_cache", (void **)&c->pot, SWIFT_CACHE_ALIGNMENT,
                       sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xx, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xy, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xz, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_yy, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_yz, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_zz, SWIFT_CACHE_ALIGNMENT,
+                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->calc_tensor,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesI);
   e += swift_memalign("gravity_cache", (void **)&c->active,
                       SWIFT_CACHE_ALIGNMENT, sizeBytesI);
   e += swift_memalign("gravity_cache", (void **)&c->use_mpole,
@@ -167,6 +199,12 @@ __attribute__((always_inline)) INLINE static void gravity_cache_zero_output(
   swift_declare_aligned_ptr(float, a_y, c->a_y, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, a_z, c->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, c->pot, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz, SWIFT_CACHE_ALIGNMENT);
   swift_assume_size(gcount_padded, VEC_SIZE);
 
   /* Zero everything */
@@ -174,6 +212,12 @@ __attribute__((always_inline)) INLINE static void gravity_cache_zero_output(
   bzero(a_y, gcount_padded * sizeof(float));
   bzero(a_z, gcount_padded * sizeof(float));
   bzero(pot, gcount_padded * sizeof(float));
+  bzero(tensor_xx, gcount_padded * sizeof(float));
+  bzero(tensor_xy, gcount_padded * sizeof(float));
+  bzero(tensor_xz, gcount_padded * sizeof(float));
+  bzero(tensor_yy, gcount_padded * sizeof(float));
+  bzero(tensor_yz, gcount_padded * sizeof(float));
+  bzero(tensor_zz, gcount_padded * sizeof(float));
 }
 
 /**
@@ -221,6 +265,7 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
   swift_declare_aligned_ptr(float, z, c->z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, c->use_mpole,
                             SWIFT_CACHE_ALIGNMENT);
@@ -259,6 +304,9 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
     /* Check whether we can use the multipole instead of P-P */
     use_mpole[i] =
         allow_mpole && gravity_M2P_accept(r_max2, theta_crit2, r2, epsilon[i]);
+
+    /* Are we calculating tidal tensor for this particle? */
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -281,6 +329,7 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
     m[i] = 0.f;
     active[i] = 0;
     use_mpole[i] = 0;
+    calc_tensor[i] = 0;
   }
 
   /* Zero the output as well */
@@ -322,6 +371,7 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, z, c->z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_assume_size(gcount_padded, VEC_SIZE);
 
@@ -340,6 +390,9 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
       m[i] = gparts[i].mass;
       active[i] = (int)(gparts[i].time_bin <= max_active_bin);
     }
+
+    /* Are we calculating tidal tensor for this particle? */
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -361,6 +414,7 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
     epsilon[i] = eps_padded;
     m[i] = 0.f;
     active[i] = 0;
+    calc_tensor[i] = 0;
   }
 
   /* Zero the output as well */
@@ -410,6 +464,7 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, z, c->z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, c->use_mpole,
                             SWIFT_CACHE_ALIGNMENT);
@@ -424,6 +479,9 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
     m[i] = gparts[i].mass;
     active[i] = (int)(gparts[i].time_bin <= max_active_bin);
     use_mpole[i] = 1;
+
+    /* Are we calculating tidal tensor for this particle? */
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Distance to the CoM of the other cell. */
@@ -464,6 +522,7 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
     m[i] = 0.f;
     active[i] = 0;
     use_mpole[i] = 0;
+    calc_tensor[i] = 0;
   }
 
   /* Zero the output as well */
@@ -488,6 +547,13 @@ __attribute__((always_inline)) INLINE static void gravity_cache_write_back(
   swift_declare_aligned_ptr(float, a_y, c->a_y, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, a_z, c->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, c->pot, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
 
   /* Write stuff back to the particles */
@@ -497,6 +563,17 @@ __attribute__((always_inline)) INLINE static void gravity_cache_write_back(
       accumulate_add_f(&gparts[i].a_grav[1], a_y[i]);
       accumulate_add_f(&gparts[i].a_grav[2], a_z[i]);
       gravity_add_comoving_potential(&gparts[i], pot[i]);
+
+#ifdef TIDALTENSOR_GRAVITY
+      if (calc_tensor[i]) {
+        gparts[i].tidal_tensor[0] += tensor_xx[i];
+        gparts[i].tidal_tensor[1] += tensor_xy[i];
+        gparts[i].tidal_tensor[2] += tensor_xz[i];
+        gparts[i].tidal_tensor[3] += tensor_yy[i];
+        gparts[i].tidal_tensor[4] += tensor_yz[i];
+        gparts[i].tidal_tensor[5] += tensor_zz[i];
+      }
+#endif
     }
   }
 }

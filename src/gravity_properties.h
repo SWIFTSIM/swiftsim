@@ -120,6 +120,11 @@ struct gravity_props {
   /*! Gravitational constant (in internal units, copied from the physical
    * constants) */
   float G_Newton;
+
+  /* ------------------------- For testing ----------------------------- */
+
+  /*! Flag to force tidal tensor calculation for all particles */
+  int calc_all_tensors;
 };
 
 void gravity_props_print(const struct gravity_props *p);

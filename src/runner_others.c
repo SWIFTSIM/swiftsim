@@ -364,6 +364,11 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   p, xp, sp, e, sf_props, cosmo, with_cosmology, phys_const,
                   hydro_props, us, cooling, !spawn_spart);
 
+#ifdef STARS_MOSAICS
+              /* TODO not very elegant but we need more info... */
+              stars_mosaics_copy_extra_properties(p, sp, cosmo);
+#endif
+
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
 
@@ -815,5 +820,49 @@ void runner_do_fof_pair(struct runner *r, struct cell *ci, struct cell *cj,
   if (timer) TIMER_TOC(timer_fof_pair);
 #else
   error("SWIFT was not compiled with FOF enabled!");
+#endif
+}
+
+/**
+ * @brief Call the mosaics scripts
+ *
+ * @param r runner task
+ * @param c cell
+ * @param timer 1 if the time is to be recorded.
+ */
+void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
+
+#ifdef STARS_MOSAICS
+  const struct engine *e = r->e;
+  const struct cosmology *cosmo = e->cosmology;
+  const int with_cosmology = (e->policy & engine_policy_cosmology);
+
+  TIMER_TIC;
+
+  /* Anything to do here? */
+  if (c->stars.count == 0) return;
+  if (!cell_is_active_stars(c, e)) return;
+
+  /* Recurse? */
+  if (c->split) {
+    for (int k = 0; k < 8; k++)
+      if (c->progeny[k] != NULL) runner_do_mosaics(r, c->progeny[k], 0);
+  } else {
+    const int scount = c->stars.count;
+    struct spart *restrict sparts = c->stars.parts;
+    const struct stars_props *stars_properties = e->stars_properties;
+
+    /* Loop over the stars particles in this cell. */
+    for (int k = 0; k < scount; k++) {
+
+      /* Get a handle on the s-part. */
+      struct spart *restrict sp = &sparts[k];
+
+      if (spart_is_active(sp, e))
+        stars_do_mosaics(sp, stars_properties, e, cosmo, with_cosmology);
+    }
+  }
+
+  if (timer) TIMER_TOC(timer_mosaics);
 #endif
 }

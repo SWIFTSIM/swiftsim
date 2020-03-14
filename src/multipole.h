@@ -2577,6 +2577,10 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   /* Local accumulator */
   double a_grav[3] = {0., 0., 0.};
   double pot = 0.;
+#ifdef TIDALTENSOR_GRAVITY
+  double T_xx = 0., T_xy = 0., T_xz = 0., T_yy = 0., T_yz = 0., T_zz = 0.;
+  const int calc_tensor = gp->calc_tensor;
+#endif
 
   /* Distance to the multipole */
   const double dx[3] = {gp->x[0] - loc[0], gp->x[1] - loc[1],
@@ -2605,6 +2609,17 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
 
   pot -= X_002(dx) * lb->F_002 + X_011(dx) * lb->F_011 + X_020(dx) * lb->F_020 +
          X_101(dx) * lb->F_101 + X_110(dx) * lb->F_110 + X_200(dx) * lb->F_200;
+
+#ifdef TIDALTENSOR_GRAVITY
+  if (calc_tensor) {
+    T_xx += X_000(dx) * lb->F_200;
+    T_xy += X_000(dx) * lb->F_110;
+    T_xz += X_000(dx) * lb->F_101;
+    T_yy += X_000(dx) * lb->F_020;
+    T_yz += X_000(dx) * lb->F_011;
+    T_zz += X_000(dx) * lb->F_002;
+  }
+#endif
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 2
 
@@ -2626,6 +2641,17 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_030(dx) * lb->F_030 + X_102(dx) * lb->F_102 + X_111(dx) * lb->F_111 +
          X_120(dx) * lb->F_120 + X_201(dx) * lb->F_201 + X_210(dx) * lb->F_210 +
          X_300(dx) * lb->F_300;
+
+#ifdef TIDALTENSOR_GRAVITY
+  if (calc_tensor) {
+    T_xx += X_100(dx) * lb->F_300 + X_010(dx) * lb->F_210 + X_001(dx) * lb->F_201;
+    T_xy += X_100(dx) * lb->F_210 + X_010(dx) * lb->F_120 + X_001(dx) * lb->F_111;
+    T_xz += X_100(dx) * lb->F_201 + X_010(dx) * lb->F_111 + X_001(dx) * lb->F_102;
+    T_yy += X_100(dx) * lb->F_120 + X_010(dx) * lb->F_030 + X_001(dx) * lb->F_021;
+    T_yz += X_100(dx) * lb->F_111 + X_010(dx) * lb->F_021 + X_001(dx) * lb->F_012;
+    T_zz += X_100(dx) * lb->F_102 + X_010(dx) * lb->F_012 + X_001(dx) * lb->F_003;
+  }
+#endif
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 3
 
@@ -2652,6 +2678,22 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_202(dx) * lb->F_202 + X_211(dx) * lb->F_211 + X_220(dx) * lb->F_220 +
          X_301(dx) * lb->F_301 + X_310(dx) * lb->F_310 + X_400(dx) * lb->F_400;
 
+#ifdef TIDALTENSOR_GRAVITY
+  if (calc_tensor) {
+    T_xx += X_002(dx) * lb->F_202 + X_011(dx) * lb->F_211 + X_020(dx) * lb->F_220 +
+            X_101(dx) * lb->F_301 + X_110(dx) * lb->F_310 + X_200(dx) * lb->F_400;
+    T_xy += X_002(dx) * lb->F_112 + X_011(dx) * lb->F_121 + X_020(dx) * lb->F_130 +
+            X_101(dx) * lb->F_211 + X_110(dx) * lb->F_220 + X_200(dx) * lb->F_310;
+    T_xz += X_002(dx) * lb->F_103 + X_011(dx) * lb->F_112 + X_020(dx) * lb->F_121 +
+            X_101(dx) * lb->F_202 + X_110(dx) * lb->F_211 + X_200(dx) * lb->F_301;
+    T_yy += X_002(dx) * lb->F_022 + X_011(dx) * lb->F_031 + X_020(dx) * lb->F_040 +
+            X_101(dx) * lb->F_121 + X_110(dx) * lb->F_130 + X_200(dx) * lb->F_220;
+    T_yz += X_002(dx) * lb->F_013 + X_011(dx) * lb->F_022 + X_020(dx) * lb->F_031 +
+            X_101(dx) * lb->F_112 + X_110(dx) * lb->F_121 + X_200(dx) * lb->F_211;
+    T_zz += X_002(dx) * lb->F_004 + X_011(dx) * lb->F_013 + X_020(dx) * lb->F_022 +
+            X_101(dx) * lb->F_103 + X_110(dx) * lb->F_112 + X_200(dx) * lb->F_202;
+  }
+#endif
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 4
 
@@ -2683,6 +2725,34 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_302(dx) * lb->F_302 + X_311(dx) * lb->F_311 + X_320(dx) * lb->F_320 +
          X_401(dx) * lb->F_401 + X_410(dx) * lb->F_410 + X_500(dx) * lb->F_500;
 
+#ifdef TIDALTENSOR_GRAVITY
+  if (calc_tensor) {
+    T_xx += X_003(dx) * lb->F_203 + X_012(dx) * lb->F_212 + X_021(dx) * lb->F_221 +
+            X_030(dx) * lb->F_230 + X_102(dx) * lb->F_302 + X_111(dx) * lb->F_311 +
+            X_120(dx) * lb->F_320 + X_201(dx) * lb->F_401 + X_210(dx) * lb->F_410 +
+            X_300(dx) * lb->F_500;
+    T_xy += X_003(dx) * lb->F_113 + X_012(dx) * lb->F_122 + X_021(dx) * lb->F_131 +
+            X_030(dx) * lb->F_140 + X_102(dx) * lb->F_212 + X_111(dx) * lb->F_221 +
+            X_120(dx) * lb->F_230 + X_201(dx) * lb->F_311 + X_210(dx) * lb->F_320 +
+            X_300(dx) * lb->F_410;
+    T_xz += X_003(dx) * lb->F_104 + X_012(dx) * lb->F_113 + X_021(dx) * lb->F_122 +
+            X_030(dx) * lb->F_131 + X_102(dx) * lb->F_203 + X_111(dx) * lb->F_212 +
+            X_120(dx) * lb->F_221 + X_201(dx) * lb->F_302 + X_210(dx) * lb->F_311 +
+            X_300(dx) * lb->F_401;
+    T_yy += X_003(dx) * lb->F_023 + X_012(dx) * lb->F_032 + X_021(dx) * lb->F_041 +
+            X_030(dx) * lb->F_050 + X_102(dx) * lb->F_122 + X_111(dx) * lb->F_131 +
+            X_120(dx) * lb->F_140 + X_201(dx) * lb->F_221 + X_210(dx) * lb->F_230 +
+            X_300(dx) * lb->F_320;
+    T_yz += X_003(dx) * lb->F_014 + X_012(dx) * lb->F_023 + X_021(dx) * lb->F_032 +
+            X_030(dx) * lb->F_041 + X_102(dx) * lb->F_113 + X_111(dx) * lb->F_122 +
+            X_120(dx) * lb->F_131 + X_201(dx) * lb->F_212 + X_210(dx) * lb->F_221 +
+            X_300(dx) * lb->F_311;
+    T_zz += X_003(dx) * lb->F_005 + X_012(dx) * lb->F_014 + X_021(dx) * lb->F_023 +
+            X_030(dx) * lb->F_032 + X_102(dx) * lb->F_104 + X_111(dx) * lb->F_113 +
+            X_120(dx) * lb->F_122 + X_201(dx) * lb->F_203 + X_210(dx) * lb->F_212 +
+            X_300(dx) * lb->F_302;
+  }
+#endif
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 5
 #error "Missing implementation for order >5"
@@ -2693,6 +2763,16 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   accumulate_add_f(&gp->a_grav[1], a_grav[1]);
   accumulate_add_f(&gp->a_grav[2], a_grav[2]);
   gravity_add_comoving_potential(gp, pot);
+#ifdef TIDALTENSOR_GRAVITY
+  if (calc_tensor) {
+    gp->tidal_tensor[0] += T_xx;
+    gp->tidal_tensor[1] += T_xy;
+    gp->tidal_tensor[2] += T_xz;
+    gp->tidal_tensor[3] += T_yy;
+    gp->tidal_tensor[4] += T_yz;
+    gp->tidal_tensor[5] += T_zz;
+  }
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   accumulate_add_f(&gp->a_grav_m2l[0], a_grav[0]);

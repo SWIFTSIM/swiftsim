@@ -32,6 +32,8 @@
 #include "./gravity/Default/gravity_iact.h"
 #elif defined(POTENTIAL_GRAVITY)
 #include "./gravity/Potential/gravity_iact.h"
+#elif defined(TIDALTENSOR_GRAVITY)
+#include "./gravity/TidalTensor/gravity_iact.h"
 #elif defined(MULTI_SOFTENING_GRAVITY)
 #include "./gravity/MultiSoftening/gravity_iact.h"
 #else

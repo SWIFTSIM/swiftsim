@@ -154,6 +154,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 gravity/Default/gravity_debug.h gravity/Default/gravity_part.h  \
 		 gravity/Potential/gravity.h gravity/Potential/gravity_iact.h gravity/Potential/gravity_io.h \
 		 gravity/Potential/gravity_debug.h gravity/Potential/gravity_part.h  \
+		 gravity/TidalTensor/gravity.h gravity/TidalTensor/gravity_iact.h gravity/TidalTensor/gravity_io.h \
+		 gravity/TidalTensor/gravity_debug.h gravity/TidalTensor/gravity_part.h  \
 		 gravity/MultiSoftening/gravity.h gravity/MultiSoftening/gravity_iact.h gravity/MultiSoftening/gravity_io.h \
 		 gravity/MultiSoftening/gravity_debug.h gravity/MultiSoftening/gravity_part.h  \
 		 equation_of_state.h \
@@ -236,6 +238,10 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 stars/COLIBRE/stars_debug.h stars/COLIBRE/stars_part.h \
 		 stars/GEAR/stars.h stars/GEAR/stars_iact.h stars/GEAR/stars_io.h \
 		 stars/GEAR/stars_debug.h stars/GEAR/stars_part.h \
+		 stars/MOSAICS/stars.h stars/MOSAICS/stars_iact.h stars/MOSAICS/stars_io.h \
+		 stars/MOSAICS/stars_debug.h stars/MOSAICS/stars_part.h \
+                 stars/MOSAICS/mosaics_clform.h stars/MOSAICS/mosaics_clevo.h \
+                 stars/MOSAICS/mosaics_cfelocal.h stars/MOSAICS/dsyevj3.h \
 	         potential/none/potential.h potential/point_mass/potential.h \
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
                  potential/sine_wave/potential.h potential/constant/potential.h \
