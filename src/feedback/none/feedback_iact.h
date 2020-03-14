@@ -54,12 +54,13 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param hj Comoving smoothing-length of particle j.
  * @param si First (star) particle (not updated).
  * @param pj Second (gas) particle.
- * @param xp Extra particle data
+ * @param xpj Extra particle data.
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param ti_current Current integer time used value for seeding random number
+ * generator
  * @param time current physical time in the simulation
  * @param step current step counter
- * generator
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
