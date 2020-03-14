@@ -1695,7 +1695,7 @@ AM_CONDITIONAL([HAVESTANDALONEFOF],[test $enable_standalone_fof = "yes"])
 # Gravity scheme.
 AC_ARG_WITH([gravity],
    [AS_HELP_STRING([--with-gravity=<scheme>],
-      [Gravity scheme to use @<:@basic, with-potential, with-tidaltensor, with-multi-softening, with-multi-sofetning-tensors default: with-multi-softening@:>@]
+      [Gravity scheme to use @<:@basic, with-potential, with-tidaltensor, with-multi-softening, with-multi-softening-tensors default: with-multi-softening@:>@]
    )],
    [with_gravity="$withval"],
    [with_gravity="with-multi-softening"]
