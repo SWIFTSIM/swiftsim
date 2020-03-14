@@ -143,7 +143,11 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
                                    const float hi, const float hj,
+<<<<<<< HEAD
                                    struct bpart *bi, struct part *pj,
+=======
+                                   const struct bpart *bi, struct part *pj,
+>>>>>>> temp fix for missing params
                                    struct xpart *xpj, const int with_cosmology,
                                    const struct cosmology *cosmo,
                                    const struct gravity_props *grav_props,
