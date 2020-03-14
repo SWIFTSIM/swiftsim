@@ -34,6 +34,8 @@
 #include "./gravity/TidalTensor/gravity_io.h"
 #elif defined(MULTI_SOFTENING_GRAVITY)
 #include "./gravity/MultiSoftening/gravity_io.h"
+#elif defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+#include "./gravity/MultiSofteningTensors/gravity_io.h"
 #else
 #error "Invalid choice of gravity variant"
 #endif

@@ -40,6 +40,9 @@
 #elif defined(MULTI_SOFTENING_GRAVITY)
 #include "./gravity/MultiSoftening/gravity.h"
 #define GRAVITY_IMPLEMENTATION "With per-particle softening"
+#elif defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+#include "./gravity/MultiSofteningTensors/gravity.h"
+#define GRAVITY_IMPLEMENTATION "With per-particle softening and tidal tensors"
 #else
 #error "Invalid choice of gravity variant"
 #endif

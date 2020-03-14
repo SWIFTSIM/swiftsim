@@ -96,6 +96,8 @@ struct threadpool;
 #include "./gravity/TidalTensor/gravity_part.h"
 #elif defined(MULTI_SOFTENING_GRAVITY)
 #include "./gravity/MultiSoftening/gravity_part.h"
+#elif defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+#include "./gravity/MultiSofteningTensors/gravity_part.h"
 #else
 #error "Invalid choice of gravity variant"
 #endif

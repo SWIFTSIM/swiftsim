@@ -59,7 +59,7 @@ Stars:
   max_volume_change:    1.4      # (Optional) Maximal allowed change of kernel volume over one time-step. Defaults to the SPH value.
   overwrite_birth_time:  0       # (Optional) Do we want to overwrite the birth time of the stars read from the ICs? (default: 0).
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
-  calculate_all_star_tensors: 1  # (Optional) Force the tidal tensor calculation for all   stars. For --with-gravity=with-potential. (default:0)
+  calculate_all_star_tensors: 1  # (Optional) Force the tidal tensor calculation for all   stars.
 
 # Parameters for the self-gravity scheme
 Gravity:
@@ -77,6 +77,7 @@ Gravity:
   r_cut_min:                     0.1       # (Optional) Cut-off in number of top-level cells below which no truncation of FMM forces are performed (this is the default value).
   dithering:                     1         # (Optional) Activate the dithering of the gravity mesh at every rebuild (this is the default value).
   dithering_ratio:               1.0       # (Optional) Magnitude of each component of the dithering vector in units of the top-level cell sizes (this is the default value).
+  calculate_all_tensors:         1         # (Optional) Force the tidal tensor calculation for all particles.
 
 # Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS 
 ForceChecks:
