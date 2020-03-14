@@ -44,5 +44,4 @@ InitialConditions:
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
   overwrite_birth_time:  1       # (Optional) Do we want to overwrite the birth time of the stars read from the ICs? (default: 0).
-  calculate_all_star_tensors: 1  # Force the tidal tensor calculation for all stars
 
