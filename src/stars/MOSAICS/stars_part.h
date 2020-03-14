@@ -177,6 +177,9 @@ struct spart {
   /*! Flag denoting whether we need to run cluster formation  */
   int new_star;
 
+  /*! Flag denoting whether particle has GCs */
+  int gcflag;
+
   /*! In case we want tensors for particles without GCs */
   int calc_tensor;
 
