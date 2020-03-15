@@ -154,8 +154,8 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling, const int convert_part) {
-}
+    const struct cooling_function_data* restrict cooling,
+    const int convert_part) {}
 
 /**
  * @brief initialization of the star formation law
@@ -276,8 +276,7 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
  * @param xp The #xpart.
  */
 __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation* starform, struct part* p, struct xpart* xp) {
-}
+    struct star_formation* starform, struct part* p, struct xpart* xp) {}
 
 /**
  * @brief End the computation of the statistics.
@@ -289,7 +288,6 @@ __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_stats(
     struct star_formation* starform, const struct star_formation* stats, int n,
-    const struct engine* e) {
-}
+    const struct engine* e) {}
 
 #endif /* SWIFT_NONE_STAR_FORMATION_H */

@@ -152,11 +152,12 @@ INLINE static int star_formation_should_convert_to_star(
   const float inv_free_fall_time =
       sqrtf(density * 32.f * G * 0.33333333f * M_1_PI);
   float prob = 1.f - expf(-starform->star_formation_efficiency *
-                         inv_free_fall_time * dt_star);
+                          inv_free_fall_time * dt_star);
 
   /* Add the mass factor */
   if (starform->n_stars_per_part != 1) {
-    const float min_mass = starform->mass_stars * starform->min_mass_frac_plus_one;
+    const float min_mass =
+        starform->mass_stars * starform->min_mass_frac_plus_one;
     const float mass_star =
         mass_gas > min_mass ? starform->mass_stars : mass_gas;
 
@@ -189,7 +190,8 @@ INLINE static int star_formation_should_add_spart(
     return 0;
   }
 
-  const float mass_min = starform->min_mass_frac_plus_one * starform->mass_stars;
+  const float mass_min =
+      starform->min_mass_frac_plus_one * starform->mass_stars;
   return hydro_get_mass(p) > mass_min;
 }
 
@@ -227,13 +229,15 @@ INLINE static void star_formation_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling, const int convert_part) {
+    const struct cooling_function_data* restrict cooling,
+    const int convert_part) {
 
   /* Store the current mass */
   const float mass_gas = hydro_get_mass(p);
   if (!convert_part) {
     /* Update the spart */
-    const float min_mass = starform->mass_stars * starform->min_mass_frac_plus_one;
+    const float min_mass =
+        starform->mass_stars * starform->min_mass_frac_plus_one;
     const float mass_star =
         mass_gas > min_mass ? starform->mass_stars : mass_gas;
     sp->mass = mass_star;

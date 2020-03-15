@@ -152,7 +152,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param us The internal system of units.
  * @param cooling The cooling data struct.
  * @param convert_part Did we convert a part (or created one)?
-*/
+ */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
@@ -322,8 +322,7 @@ INLINE static int star_formation_should_add_spart(
  * @param xp The #xpart.
  */
 __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation* starform, struct part* p, struct xpart* xp) {
-}
+    struct star_formation* starform, struct part* p, struct xpart* xp) {}
 
 /**
  * @brief End the computation of the statistics.
@@ -335,7 +334,6 @@ __attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_stats(
     struct star_formation* starform, const struct star_formation* stats, int n,
-    const struct engine* e) {
-}
+    const struct engine* e) {}
 
 #endif /* SWIFT_QLA_STAR_FORMATION_H */
