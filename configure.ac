@@ -1552,7 +1552,6 @@ case "$with_subgrid" in
   # GEAR's order is not used anymore
 	with_subgrid_task_order=default
 	enable_fof=no
-        with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
    QLA)
 	with_subgrid_cooling=QLA
