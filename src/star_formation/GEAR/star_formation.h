@@ -182,7 +182,7 @@ INLINE static int star_formation_should_convert_to_star(
  *
  * @return 1 if a new spart needs to be created.
  */
-INLINE static int star_formation_should_add_spart(
+INLINE static int star_formation_should_spawn_spart(
     struct part* p, struct xpart* xp, const struct star_formation* starform) {
 
   /* Check if we are splitting the particles or not */
@@ -220,7 +220,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param phys_const the physical constants in internal units.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
- * @param convert_part Did we convert a part (or created one)?
+ * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
     struct part* p, const struct xpart* xp, struct spart* sp,
@@ -382,40 +382,33 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
 }
 
 /**
- * @brief Compute some statistics on the hydro particles.
+ * @brief Compute some information for the star formation just before the first step.
  *
- * @param starform The #star_formation structure.
- * @param p The #part.
- * @param xp The #xpart.
- */
-__attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation* starform, struct part* p, struct xpart* xp) {
-  starform->mass_stars += hydro_get_mass(p);
-}
-
-/**
- * @brief End the computation of the statistics.
- *
- * @param starform The #star_formation structure.
- * @param p The #part.
- * @param xp The #xpart.
+ * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
-__attribute__((always_inline)) INLINE static void star_formation_end_stats(
-    struct star_formation* starform, const struct star_formation* stats, int n,
-    const struct engine* e) {
+__attribute__((always_inline)) INLINE static void
+star_formation_compute_init_stats(struct star_formation *star_form,
+                                  const struct engine *e) {
 
-  /* Ensure that the counter is set to 0 */
-  starform->mass_stars = 0;
+  const struct space *s = e->s;
+  double avg_mass = 0;
 
-  /* Compute the average mass */
-  for (int i = 0; i < n; i++) {
-    starform->mass_stars += stats->mass_stars;
+  /* Sum the mass over all the particles. */
+  for (size_t i = 0; i < s->nr_parts; i++) {
+    avg_mass += hydro_get_mass(&s->parts[i]);
   }
-  starform->mass_stars /= (e->total_nr_parts * starform->n_stars_per_part);
+
+#ifdef WITH_MPI
+  /* Compute the contribution from the other nodes. */
+  MPI_Allreduce(MPI_IN_PLACE, &avg_mass, 1, MPI_DOUBLE,
+                MPI_SUM, MPI_COMM_WORLD);
+#endif
+
+  star_form->mass_stars = avg_mass / e->total_nr_parts;
 
   if (e->nodeID == 0) {
-    message("Average hydro mass: %g", starform->mass_stars);
+    message("Average hydro mass: %g", star_form->mass_stars);
   }
 }
 

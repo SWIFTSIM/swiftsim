@@ -111,7 +111,7 @@ INLINE static int star_formation_should_convert_to_star(
  *
  * @return 1 if a new spart needs to be created.
  */
-INLINE static int star_formation_should_add_spart(
+INLINE static int star_formation_should_spawn_spart(
     struct part* p, struct xpart* xp, const struct star_formation* starform) {
   return 0;
 }
@@ -145,7 +145,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param phys_const the physical constants in internal units.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
- * @param convert_part Did we convert a part (or created one)?
+ * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -269,25 +269,13 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
 }
 
 /**
- * @brief Compute some statistics on the hydro particles.
+ * @brief Compute some information for the star formation just before the first step.
  *
- * @param starform The #star_formation structure.
- * @param p The #part.
- * @param xp The #xpart.
- */
-__attribute__((always_inline)) INLINE static void star_formation_stats_add_part(
-    struct star_formation* starform, struct part* p, struct xpart* xp) {}
-
-/**
- * @brief End the computation of the statistics.
- *
- * @param starform The #star_formation structure.
- * @param p The #part.
- * @param xp The #xpart.
+ * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
-__attribute__((always_inline)) INLINE static void star_formation_end_stats(
-    struct star_formation* starform, const struct star_formation* stats, int n,
-    const struct engine* e) {}
+__attribute__((always_inline)) INLINE static void
+star_formation_compute_init_stats(struct star_formation *star_form,
+                                  const struct engine *e) {}
 
 #endif /* SWIFT_NONE_STAR_FORMATION_H */
