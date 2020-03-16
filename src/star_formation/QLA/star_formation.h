@@ -315,14 +315,18 @@ INLINE static int star_formation_should_spawn_spart(
 }
 
 /**
- * @brief Compute some information for the star formation just before the first
- * step.
+ * @brief Compute some information for the star formation model based
+ * on all the particles that were read in.
+ *
+ * This is called once on start-up of the code.
+ *
+ * Nothing to do here for the quick Lyman-alpha model.
  *
  * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_compute_init_stats(struct star_formation* star_form,
-                                  const struct engine* e) {}
+star_formation_first_init_stats(struct star_formation* star_form,
+                                const struct engine* e) {}
 
 #endif /* SWIFT_QLA_STAR_FORMATION_H */

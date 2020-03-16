@@ -382,15 +382,17 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
 }
 
 /**
- * @brief Compute some information for the star formation just before the first
- * step.
+ * @brief Compute some information for the star formation model based
+ * on all the particles that were read in.
+ *
+ * This is called once on start-up of the code.
  *
  * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_compute_init_stats(struct star_formation* star_form,
-                                  const struct engine* e) {
+star_formation_first_init_stats(struct star_formation* star_form,
+                                const struct engine* e) {
 
   const struct space* s = e->s;
   double avg_mass = 0;
