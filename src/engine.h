@@ -487,6 +487,20 @@ struct engine {
 
   /* Has there been an stf this timestep? */
   char stf_this_timestep;
+
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  /* Run brute force checks only on steps when all gparts active? */
+  int force_checks_only_all_active;
+
+  /* Run brute force checks only during snapshot timesteps? */
+  int force_checks_only_at_snapshots;
+
+  /* Are all gparts active this timestep? */
+  int all_gparts_active;
+
+  /* Flag to tell brute force checks a snapshot was recently written. */
+  int force_checks_snapshot_flag;
+#endif
 };
 
 /* Function prototypes, engine.c. */
@@ -534,6 +548,8 @@ void engine_launch(struct engine *e, const char *call);
 void engine_prepare(struct engine *e);
 void engine_init_particles(struct engine *e, int flag_entropy_ICs,
                            int clean_h_values);
+void engine_compute_star_formation_stats(struct engine *e,
+                                         struct star_formation *starform);
 void engine_step(struct engine *e);
 void engine_split(struct engine *e, struct partition *initial_partition);
 void engine_exchange_strays(struct engine *e, const size_t offset_parts,
