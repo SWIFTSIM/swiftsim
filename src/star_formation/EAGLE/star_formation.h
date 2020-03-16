@@ -770,13 +770,14 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
 }
 
 /**
- * @brief Compute some information for the star formation just before the first step.
+ * @brief Compute some information for the star formation just before the first
+ * step.
  *
  * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_compute_init_stats(struct star_formation *star_form,
-                                  const struct engine *e) {}
+star_formation_compute_init_stats(struct star_formation* star_form,
+                                  const struct engine* e) {}
 
 #endif /* SWIFT_EAGLE_STAR_FORMATION_H */

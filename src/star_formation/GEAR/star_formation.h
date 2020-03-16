@@ -382,16 +382,17 @@ star_formation_no_spart_available(const struct engine* e, const struct part* p,
 }
 
 /**
- * @brief Compute some information for the star formation just before the first step.
+ * @brief Compute some information for the star formation just before the first
+ * step.
  *
  * @param star_form The #star_formation structure.
  * @param e The #engine.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_compute_init_stats(struct star_formation *star_form,
-                                  const struct engine *e) {
+star_formation_compute_init_stats(struct star_formation* star_form,
+                                  const struct engine* e) {
 
-  const struct space *s = e->s;
+  const struct space* s = e->s;
   double avg_mass = 0;
 
   /* Sum the mass over all the particles. */
@@ -401,8 +402,8 @@ star_formation_compute_init_stats(struct star_formation *star_form,
 
 #ifdef WITH_MPI
   /* Compute the contribution from the other nodes. */
-  MPI_Allreduce(MPI_IN_PLACE, &avg_mass, 1, MPI_DOUBLE,
-                MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE, &avg_mass, 1, MPI_DOUBLE, MPI_SUM,
+                MPI_COMM_WORLD);
 #endif
 
   star_form->mass_stars = avg_mass / e->total_nr_parts;

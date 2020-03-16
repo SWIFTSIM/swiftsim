@@ -1205,7 +1205,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Compute some stats for the star formation */
-    if (with_star_formation && star_formation_compute_stats) {
+    if (with_star_formation) {
       star_formation_compute_init_stats(&starform, &e);
     }
 

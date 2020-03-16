@@ -937,7 +937,8 @@ void cell_remove_bpart(const struct engine *e, struct cell *c,
 struct spart *cell_add_spart(struct engine *e, struct cell *c);
 struct gpart *cell_add_gpart(struct engine *e, struct cell *c);
 struct spart *cell_spawn_new_spart_from_part(struct engine *e, struct cell *c,
-                                              const struct part *p, const struct xpart *xp);
+                                             const struct part *p,
+                                             const struct xpart *xp);
 struct gpart *cell_convert_part_to_gpart(const struct engine *e, struct cell *c,
                                          struct part *p, struct xpart *xp);
 struct gpart *cell_convert_spart_to_gpart(const struct engine *e,

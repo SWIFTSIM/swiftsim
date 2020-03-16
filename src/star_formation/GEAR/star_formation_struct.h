@@ -19,10 +19,6 @@
 #ifndef SWIFT_GEAR_STAR_FORMATION_STRUCT_H
 #define SWIFT_GEAR_STAR_FORMATION_STRUCT_H
 
-/* Does the model need to compute some statistics on parts
-   before the start of the simulation? */
-#define star_formation_compute_stats 1
-
 /**
  * @brief Star-formation-related properties stored in the extended particle
  * data.
