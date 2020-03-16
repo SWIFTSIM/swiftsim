@@ -264,11 +264,6 @@ INLINE static void star_formation_copy_properties(
     const struct unit_system* us, const struct cooling_function_data* cooling,
     const int convert_part) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (!convert_part)
-    error("COLIBRE SF model only makes sense when converting a full particle!");
-#endif
-
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
 
