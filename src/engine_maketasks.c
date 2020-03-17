@@ -833,7 +833,6 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       (e->policy & engine_policy_timestep_limiter);
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_stars = (e->policy & engine_policy_stars);
-  const int with_feedback = (e->policy & engine_policy_feedback);
 #ifdef WITH_LOGGER
   const int with_logger = e->policy & engine_policy_logger;
 #endif
@@ -902,8 +901,12 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
         if (with_star_formation && c->hydro.count > 0)
           scheduler_addunlock(s, c->top->hydro.star_formation, c->stars.mosaics);
         /* and after feedback/stellar evo */
+        /* TODO this breaks things... */
+        /*
+        const int with_feedback = (e->policy & engine_policy_feedback);
         if (with_feedback)
           scheduler_addunlock(s, c->stars.stars_out, c->stars.mosaics);
+        */
         scheduler_addunlock(s, c->stars.mosaics, c->timestep);
       }
 

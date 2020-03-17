@@ -187,8 +187,10 @@ static INLINE void runner_dopair_grav_pp_full(
 
     /* Local accumulators for the acceleration and potential */
     float a_x = 0.f, a_y = 0.f, a_z = 0.f, pot = 0.f;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     float tensor_xx = 0.f, tensor_xy = 0.f, tensor_xz = 0.f;
     float tensor_yy = 0.f, tensor_yz = 0.f, tensor_zz = 0.f;
+#endif
 
     /* Make the compiler understand we are in happy vectorization land */
     swift_align_information(float, cj_cache->x, SWIFT_CACHE_ALIGNMENT);
@@ -255,7 +257,7 @@ static INLINE void runner_dopair_grav_pp_full(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -297,12 +299,14 @@ static INLINE void runner_dopair_grav_pp_full(
     ci_cache->a_y[pid] += a_y;
     ci_cache->a_z[pid] += a_z;
     ci_cache->pot[pid] += pot;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     ci_cache->tensor_xx[pid] += tensor_xx;
     ci_cache->tensor_xy[pid] += tensor_xy;
     ci_cache->tensor_xz[pid] += tensor_xz;
     ci_cache->tensor_yy[pid] += tensor_yy;
     ci_cache->tensor_yz[pid] += tensor_yz;
     ci_cache->tensor_zz[pid] += tensor_zz;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
     accumulate_add_f(&gparts_i[pid].a_grav_p2p[0], a_x);
@@ -368,8 +372,10 @@ static INLINE void runner_dopair_grav_pp_truncated(
 
     /* Local accumulators for the acceleration and potential */
     float a_x = 0.f, a_y = 0.f, a_z = 0.f, pot = 0.f;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     float tensor_xx = 0.f, tensor_xy = 0.f, tensor_xz = 0.f;
     float tensor_yy = 0.f, tensor_yz = 0.f, tensor_zz = 0.f;
+#endif
 
     /* Make the compiler understand we are in happy vectorization land */
     swift_align_information(float, cj_cache->x, SWIFT_CACHE_ALIGNMENT);
@@ -434,7 +440,7 @@ static INLINE void runner_dopair_grav_pp_truncated(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -477,12 +483,14 @@ static INLINE void runner_dopair_grav_pp_truncated(
     ci_cache->a_y[pid] += a_y;
     ci_cache->a_z[pid] += a_z;
     ci_cache->pot[pid] += pot;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     ci_cache->tensor_xx[pid] += tensor_xx;
     ci_cache->tensor_xy[pid] += tensor_xy;
     ci_cache->tensor_xz[pid] += tensor_xz;
     ci_cache->tensor_yy[pid] += tensor_yy;
     ci_cache->tensor_yz[pid] += tensor_yz;
     ci_cache->tensor_zz[pid] += tensor_zz;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
     accumulate_add_f(&gparts_i[pid].a_grav_p2p[0], a_x);
@@ -530,6 +538,7 @@ static INLINE void runner_dopair_grav_pm_full(
   swift_declare_aligned_ptr(float, a_y, ci_cache->a_y, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, a_z, ci_cache->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, ci_cache->pot, SWIFT_CACHE_ALIGNMENT);
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   swift_declare_aligned_ptr(float, tensor_xx, ci_cache->tensor_xx, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_xy, ci_cache->tensor_xy, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_xz, ci_cache->tensor_xz, SWIFT_CACHE_ALIGNMENT);
@@ -538,6 +547,7 @@ static INLINE void runner_dopair_grav_pm_full(
   swift_declare_aligned_ptr(float, tensor_zz, ci_cache->tensor_zz, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, ci_cache->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
+#endif
   swift_declare_aligned_ptr(int, active, ci_cache->active,
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, ci_cache->use_mpole,
@@ -609,7 +619,7 @@ static INLINE void runner_dopair_grav_pm_full(
 
     /* Interact! */
     float f_x, f_y, f_z, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
       float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
       runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_i, h_inv_i, multi_j, &f_x, &f_y,
@@ -699,6 +709,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
   swift_declare_aligned_ptr(float, a_y, ci_cache->a_y, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, a_z, ci_cache->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, ci_cache->pot, SWIFT_CACHE_ALIGNMENT);
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   swift_declare_aligned_ptr(float, tensor_xx, ci_cache->tensor_xx, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_xy, ci_cache->tensor_xy, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_xz, ci_cache->tensor_xz, SWIFT_CACHE_ALIGNMENT);
@@ -707,6 +718,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
   swift_declare_aligned_ptr(float, tensor_zz, ci_cache->tensor_zz, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, ci_cache->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
+#endif
   swift_declare_aligned_ptr(int, active, ci_cache->active,
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, ci_cache->use_mpole,
@@ -776,7 +788,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
 
     /* Interact! */
     float f_x, f_y, f_z, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
       float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
       runner_iact_grav_pm_truncated_tensors(dx, dy, dz, r2, h_i, h_inv_i, r_s_inv,
@@ -1069,8 +1081,10 @@ static INLINE void runner_doself_grav_pp_full(
 
     /* Local accumulators for the acceleration */
     float a_x = 0.f, a_y = 0.f, a_z = 0.f, pot = 0.f;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     float tensor_xx = 0.f, tensor_xy = 0.f, tensor_xz = 0.f;
     float tensor_yy = 0.f, tensor_yz = 0.f, tensor_zz = 0.f;
+#endif
 
     /* Make the compiler understand we are in happy vectorization land */
     swift_align_information(float, ci_cache->x, SWIFT_CACHE_ALIGNMENT);
@@ -1132,7 +1146,7 @@ static INLINE void runner_doself_grav_pp_full(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -1174,12 +1188,14 @@ static INLINE void runner_doself_grav_pp_full(
     ci_cache->a_y[pid] += a_y;
     ci_cache->a_z[pid] += a_z;
     ci_cache->pot[pid] += pot;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     ci_cache->tensor_xx[pid] += tensor_xx;
     ci_cache->tensor_xy[pid] += tensor_xy;
     ci_cache->tensor_xz[pid] += tensor_xz;
     ci_cache->tensor_yy[pid] += tensor_yy;
     ci_cache->tensor_yz[pid] += tensor_yz;
     ci_cache->tensor_zz[pid] += tensor_zz;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
     accumulate_add_f(&gparts[pid].a_grav_p2p[0], a_x);
@@ -1230,8 +1246,10 @@ static INLINE void runner_doself_grav_pp_truncated(
 
     /* Local accumulators for the acceleration and potential */
     float a_x = 0.f, a_y = 0.f, a_z = 0.f, pot = 0.f;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     float tensor_xx = 0.f, tensor_xy = 0.f, tensor_xz = 0.f;
     float tensor_yy = 0.f, tensor_yz = 0.f, tensor_zz = 0.f;
+#endif
 
     /* Make the compiler understand we are in happy vectorization land */
     swift_align_information(float, ci_cache->x, SWIFT_CACHE_ALIGNMENT);
@@ -1294,7 +1312,7 @@ static INLINE void runner_doself_grav_pp_truncated(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -1337,12 +1355,14 @@ static INLINE void runner_doself_grav_pp_truncated(
     ci_cache->a_y[pid] += a_y;
     ci_cache->a_z[pid] += a_z;
     ci_cache->pot[pid] += pot;
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     ci_cache->tensor_xx[pid] += tensor_xx;
     ci_cache->tensor_xy[pid] += tensor_xy;
     ci_cache->tensor_xz[pid] += tensor_xz;
     ci_cache->tensor_yy[pid] += tensor_yy;
     ci_cache->tensor_yz[pid] += tensor_yz;
     ci_cache->tensor_zz[pid] += tensor_zz;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
     accumulate_add_f(&gparts[pid].a_grav_p2p[0], a_x);

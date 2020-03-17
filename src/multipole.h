@@ -2577,7 +2577,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   /* Local accumulator */
   double a_grav[3] = {0., 0., 0.};
   double pot = 0.;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   double T_xx = 0., T_xy = 0., T_xz = 0., T_yy = 0., T_yz = 0., T_zz = 0.;
   const int calc_tensor = gp->calc_tensor;
 #endif
@@ -2610,7 +2610,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   pot -= X_002(dx) * lb->F_002 + X_011(dx) * lb->F_011 + X_020(dx) * lb->F_020 +
          X_101(dx) * lb->F_101 + X_110(dx) * lb->F_110 + X_200(dx) * lb->F_200;
 
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
     T_xx += X_000(dx) * lb->F_200;
     T_xy += X_000(dx) * lb->F_110;
@@ -2642,7 +2642,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_120(dx) * lb->F_120 + X_201(dx) * lb->F_201 + X_210(dx) * lb->F_210 +
          X_300(dx) * lb->F_300;
 
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
     T_xx += X_100(dx) * lb->F_300 + X_010(dx) * lb->F_210 + X_001(dx) * lb->F_201;
     T_xy += X_100(dx) * lb->F_210 + X_010(dx) * lb->F_120 + X_001(dx) * lb->F_111;
@@ -2678,7 +2678,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_202(dx) * lb->F_202 + X_211(dx) * lb->F_211 + X_220(dx) * lb->F_220 +
          X_301(dx) * lb->F_301 + X_310(dx) * lb->F_310 + X_400(dx) * lb->F_400;
 
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
     T_xx += X_002(dx) * lb->F_202 + X_011(dx) * lb->F_211 + X_020(dx) * lb->F_220 +
             X_101(dx) * lb->F_301 + X_110(dx) * lb->F_310 + X_200(dx) * lb->F_400;
@@ -2725,7 +2725,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
          X_302(dx) * lb->F_302 + X_311(dx) * lb->F_311 + X_320(dx) * lb->F_320 +
          X_401(dx) * lb->F_401 + X_410(dx) * lb->F_410 + X_500(dx) * lb->F_500;
 
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
     T_xx += X_003(dx) * lb->F_203 + X_012(dx) * lb->F_212 + X_021(dx) * lb->F_221 +
             X_030(dx) * lb->F_230 + X_102(dx) * lb->F_302 + X_111(dx) * lb->F_311 +
@@ -2763,7 +2763,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   accumulate_add_f(&gp->a_grav[1], a_grav[1]);
   accumulate_add_f(&gp->a_grav[2], a_grav[2]);
   gravity_add_comoving_potential(gp, pot);
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
     gp->tidal_tensor[0] += T_xx;
     gp->tidal_tensor[1] += T_xy;

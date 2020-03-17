@@ -347,7 +347,7 @@ void mesh_to_gparts_CIC(struct gpart* gp, const double* pot, const int N,
   gp->a_grav_PM[2] = fac * a[2];
 #endif
 
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (gp->calc_tensor) {
     /* Tensor components xx, xy, xz, yy, yz, zz */
     double T[6] = {0.};
