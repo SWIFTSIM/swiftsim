@@ -257,7 +257,7 @@ static INLINE void runner_dopair_grav_pp_full(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -471,7 +471,7 @@ static INLINE void runner_dopair_grav_pp_truncated(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -689,7 +689,7 @@ static INLINE void runner_dopair_grav_pm_full(
 
     /* Interact! */
     float f_x, f_y, f_z, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
       float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
       runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_i, h_inv_i, multi_j, &f_x, &f_y,
@@ -895,7 +895,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
 
     /* Interact! */
     float f_x, f_y, f_z, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
       float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
       runner_iact_grav_pm_truncated_tensors(dx, dy, dz, r2, h_i, h_inv_i, r_s_inv,
@@ -1282,7 +1282,7 @@ static INLINE void runner_doself_grav_pp_full(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
@@ -1479,7 +1479,7 @@ static INLINE void runner_doself_grav_pp_truncated(
 
       /* Interact! */
       float f_ij, pot_ij;
-#ifdef TIDALTENSOR_GRAVITY
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
