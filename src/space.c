@@ -6086,4 +6086,7 @@ void space_update_after_spart_spawned(struct space *s, const struct part *p,
   /* Update the minimal mass of the particles */
   atomic_min_f(&s->min_part_mass, hydro_get_mass(p));
   atomic_min_f(&s->min_spart_mass, sp->mass);
+
+  const float min_gpart = min(sp->mass, hydro_get_mass(p));
+  atomic_min_f(&s->min_gpart_mass, min_gpart);
 }
