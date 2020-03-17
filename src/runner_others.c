@@ -360,11 +360,6 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
 
-              /* Update the engine with the new particles. */
-              if (spawn_spart) {
-                space_update_after_spart_spawned(e->s, p, xp, sp);
-              }
-
 #ifdef WITH_LOGGER
               /* Copy the properties back to the stellar particle */
               sp->logger_data = xp->logger_data;
