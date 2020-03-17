@@ -1573,6 +1573,46 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
     s->nr_sparts = nr_sparts + nr_sparts_exchanged;
     s->nr_bparts = nr_bparts + nr_bparts_exchanged;
 
+    /* Update the minimal masse (part) */
+    s->min_part_mass = FLT_MAX;
+    for (size_t i = 0; i < s->nr_parts; i++) {
+      if (s->parts[i].time_bin == time_bin_not_created ||
+          s->parts[i].time_bin == time_bin_inhibited) {
+        continue;
+      }
+      s->min_part_mass = min(s->min_part_mass, hydro_get_mass(&s->parts[i]));
+    }
+
+    /* Update the minimal masse (gpart) */
+    s->min_gpart_mass = FLT_MAX;
+    for (size_t i = 0; i < s->nr_gparts; i++) {
+      if (s->gparts[i].time_bin == time_bin_not_created ||
+          s->gparts[i].time_bin == time_bin_inhibited) {
+        continue;
+      }
+      s->min_gpart_mass = min(s->min_gpart_mass, s->gparts[i].mass);
+    }
+
+    /* Update the minimal masse (spart) */
+    s->min_spart_mass = FLT_MAX;
+    for (size_t i = 0; i < s->nr_sparts; i++) {
+      if (s->sparts[i].time_bin == time_bin_not_created ||
+          s->sparts[i].time_bin == time_bin_inhibited) {
+        continue;
+      }
+      s->min_spart_mass = min(s->min_spart_mass, s->sparts[i].mass);
+    }
+
+    /* Update the minimal masse (bpart) */
+    s->min_bpart_mass = FLT_MAX;
+    for (size_t i = 0; i < s->nr_bparts; i++) {
+      if (s->bparts[i].time_bin == time_bin_not_created ||
+          s->bparts[i].time_bin == time_bin_inhibited) {
+        continue;
+      }
+      s->min_bpart_mass = min(s->min_bpart_mass, s->bparts[i].mass);
+    }
+
   } else {
 #ifdef SWIFT_DEBUG_CHECKS
     if (s->nr_parts != nr_parts)
@@ -6028,4 +6068,22 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
   /* Cleanup */
   fclose(f);
 #endif
+}
+
+/**
+ * @brief When a new spart is spawn, some variables may need to be updated (e.g.
+ * min mass of #part). They can be updated here (this is not checked against
+ * race condition).
+ *
+ * @param s The #space.
+ * @param p The #part from which sp is spawned.
+ * @param xp The #xpart from which sp is spawned.
+ * @param sp The new #spart.
+ */
+void space_update_after_spart_spawned(struct space *s, const struct part *p,
+                                      const struct xpart *xp,
+                                      const struct spart *sp) {
+  /* Update the minimal mass of the particles */
+  atomic_min_f(&s->min_part_mass, hydro_get_mass(p));
+  atomic_min_f(&s->min_spart_mass, sp->mass);
 }

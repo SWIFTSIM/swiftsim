@@ -408,7 +408,8 @@ star_formation_first_init_stats(struct star_formation* star_form,
                 MPI_COMM_WORLD);
 #endif
 
-  star_form->mass_stars = avg_mass / e->total_nr_parts;
+  star_form->mass_stars =
+      avg_mass / (e->total_nr_parts * star_form->n_stars_per_part);
 
   if (e->nodeID == 0) {
     message("Average hydro mass: %g", star_form->mass_stars);
