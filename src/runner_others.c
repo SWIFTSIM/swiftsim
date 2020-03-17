@@ -329,7 +329,21 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 #endif
 
             /* Convert the gas particle to a star particle */
-            struct spart *sp = cell_convert_part_to_spart(e, c, p, xp);
+            struct spart *sp = NULL;
+            const int spawn_spart =
+                star_formation_should_spawn_spart(p, xp, sf_props);
+
+            if (swift_star_formation_model_creates_stars) {
+              /* Check if we should create a new particle or transform one */
+              if (spawn_spart) {
+                sp = cell_spawn_new_spart_from_part(e, c, p, xp);
+              } else {
+                /* Convert the gas particle to a star particle */
+                sp = cell_convert_part_to_spart(e, c, p, xp);
+              }
+            } else {
+              cell_convert_part_to_gpart(e, c, p, xp);
+            }
 
             /* Did we get a star? (Or did we run out of spare ones?) */
             if (sp != NULL) {
@@ -338,9 +352,9 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                * c->cellID); */
 
               /* Copy the properties of the gas particle to the star particle */
-              star_formation_copy_properties(p, xp, sp, e, sf_props, cosmo,
-                                             with_cosmology, phys_const,
-                                             hydro_props, us, cooling);
+              star_formation_copy_properties(
+                  p, xp, sp, e, sf_props, cosmo, with_cosmology, phys_const,
+                  hydro_props, us, cooling, spawn_spart);
 
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
@@ -356,6 +370,13 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                                    logger_mask_data[logger_consts].mask,
                                /* special flags */ 0);
 #endif
+            } else {
+
+              /* Do something about the fact no star could be formed.
+                 Note that in such cases a tree rebuild to create more free
+                 slots has already been triggered by the function
+                 cell_convert_part_to_spart() */
+              star_formation_no_spart_available(e, p, xp);
             }
           }
 
@@ -537,7 +558,8 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 
 #ifdef SWIFT_DEBUG_CHECKS
         if ((e->policy & engine_policy_self_gravity) &&
-            !(e->policy & engine_policy_black_holes)) {
+            !(e->policy & engine_policy_black_holes) &&
+            !(e->policy & engine_policy_star_formation)) {
 
           /* Let's add a self interaction to simplify the count */
           gp->num_interacted++;

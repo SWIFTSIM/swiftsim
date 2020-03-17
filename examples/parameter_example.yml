@@ -77,7 +77,11 @@ Gravity:
   dithering:                     1         # (Optional) Activate the dithering of the gravity mesh at every rebuild (this is the default value).
   dithering_ratio:               1.0       # (Optional) Magnitude of each component of the dithering vector in units of the top-level cell sizes (this is the default value).
 
-# Parameters for the Friends-Of-Friends algorithm
+# Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS 
+ForceChecks:
+  only_when_all_active: 1  # (Optional) Only compute exact forces during timesteps when all gparts are active (default: 0).
+  only_at_snapshots:    1  # (Optional) Only compute exact forces during timesteps when a snapshot is being dumped (default: 0).
+
 FOF:
   basename:                        fof_output  # Filename for the FOF outputs (Unused when FoF is only run to seed BHs).
   scale_factor_first:              0.91        # Scale-factor of first FoF black hole seeding calls (needed for cosmological runs).
@@ -104,7 +108,7 @@ Scheduler:
   cell_subdepth_diff_grav:   4         # (Optional) Maximal depth difference between leaves and a cell that gravity tasks can be pushed down to (this is the default value).
   cell_extra_parts:          0         # (Optional) Number of spare parts per top-level allocated at rebuild time for on-the-fly creation.
   cell_extra_gparts:         0         # (Optional) Number of spare gparts per top-level allocated at rebuild time for on-the-fly creation.
-  cell_extra_sparts:         400       # (Optional) Number of spare sparts per top-level allocated at rebuild time for on-the-fly creation.
+  cell_extra_sparts:         100       # (Optional) Number of spare sparts per top-level allocated at rebuild time for on-the-fly creation.
   max_top_level_cells:       12        # (Optional) Maximal number of top-level cells in any dimension. The number of top-level cells will be the cube of this (this is the default value).
   tasks_per_cell:            0.0       # (Optional) The average number of tasks per cell. If not large enough the simulation will fail (means guess...).
   links_per_tasks:           25        # (Optional) The average number of links per tasks (before adding the communication tasks). If not large enough the simulation will fail (means guess...). Defaults to 10.
@@ -320,6 +324,12 @@ EAGLEEntropyFloor:
   Cool_temperature_norm_K:         8000      # Temperature of the EAGLE Cool limiter entropy floor at the density threshold expressed in Kelvin.
   Cool_gamma_effective:            1.        # Slope the of the EAGLE Cool limiter entropy floor
 
+# Parameters for the Quick Lyman-alpha floor
+QLAEntropyFloor:
+  density_threshold_H_p_cm3: 0.1       # Physical density above which the entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  over_density_threshold:    10.       # Overdensity above which the entropy floor can kick in.
+  temperature_norm_K:        8000      # Temperature of the entropy floor at the density threshold expressed in Kelvin.
+
 
 # Parameters related to pressure floors    ----------------------------------------------
 
@@ -347,11 +357,19 @@ EAGLECooling:
   H_reion_eV_p_H:            2.0               # Energy inject by Hydrogen re-ionization in electron-volt per Hydrogen atom
   He_reion_z_centre:         3.5               # Redshift of the centre of the Helium re-ionization Gaussian
   He_reion_z_sigma:          0.5               # Spread in redshift of the  Helium re-ionization Gaussian
-  He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
-  newton_integration:        0                 # (Optional) Set to 1 to use the Newton-Raphson method to solve the xplicit cooling problem.
+  He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom               # (Optional) Set to 1 to use the Newton-Raphson method to solve the xplicit cooling problem.
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0, i.e. Ca/Si = 0.0941736.
   S_over_Si_in_solar:        1.                # (Optional) Ratio of S/Si to use in units of solar. If set to 1, the code uses [S/Si] = 0, i.e. S/Si = 0.6054160.
  
+# Quick Lyman-alpha cooling (EAGLE with fixed primoridal Z)
+QLACooling:
+  dir_name:                ./coolingtables/   # Location of the Wiersma+08 cooling tables
+  H_reion_z:               7.5                # Redshift of Hydrogen re-ionization
+  H_reion_eV_p_H:          2.0                # Energy inject by Hydrogen re-ionization in electron-volt per Hydrogen atom
+  He_reion_z_centre:       3.5                # Redshift of the centre of the Helium re-ionization Gaussian
+  He_reion_z_sigma:        0.5                # Spread in redshift of the  Helium re-ionization Gaussian
+  He_reion_eV_p_H:         2.0                # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
+  
 # Parameters of the COLIBRE cooling model (Ploeckinger+?? cooling tables).
 COLIBRECooling:
   dir_name:  UV_dust0_CR0_G0_shield0.hdf5      # Location of Ploeckinger+?? cooling tables
@@ -381,6 +399,7 @@ CHIMESCooling:
   init_abundance_mode:        1                # Flag to specify how to set initial CHIMES abundances
   InitIonState:               0                # Initial ionisation state (init_abundance_mode == 0 only)
   colibre_metal_depletion:    1                # Flag to specify metal depletion model
+  set_FB_particles_to_eqm:    1                # Flag to set particles to eqm if they have been heated by feedback 
   relativeTolerance:          1e-4             # Relative tolerance for CHIMES intergration
   absoluteTolerance:          1e-10            # Absolute tolerance for CHIMES chemistry integration
   thermalAbsoluteTolerance:   1e-40            # Absolute tolerance for CHIMES cooling integration
@@ -479,7 +498,11 @@ EAGLEStarFormation:
   threshold_Z0:                      0.002     # Reference metallicity (metal mass fraction) for the metal-dependant threshold for star formation.
   threshold_slope:                   -0.64     # Slope of the metal-dependant star formation threshold
   threshold_max_density_H_p_cm3:     10.0      # Maximal density of the metal-dependant density threshold for star formation in Hydrogen atoms per cm^3.  
-  
+
+# Quick Lyman-alpha star formation parameters
+QLAStarFormation:
+  over_density:              1000      # The over-density above which gas particles turn into stars.
+
 # COLIBRE star formation model (Following a density Schmidt law)
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed

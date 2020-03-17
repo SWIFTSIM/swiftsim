@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2018 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ * Coypright (c) 2020 Matthieu Schaller (schaller@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_BLACK_HOLES_PROPERTIES_H
-#define SWIFT_EAGLE_BLACK_HOLES_PROPERTIES_H
+#ifndef SWIFT_COLIBRE_BLACK_HOLES_PROPERTIES_H
+#define SWIFT_COLIBRE_BLACK_HOLES_PROPERTIES_H
 
 #include "chemistry.h"
 #include "hydro_properties.h"
@@ -77,7 +77,7 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
-  
+
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -92,7 +92,7 @@ struct black_holes_props {
   /*! Minimum value of velocity repositioning threshold  */
   float min_reposition_velocity_threshold;
 
-  
+
   /* ---- Properties of the merger model ---------- */
 
   /*! Mass ratio above which a merger is considered 'minor' */
@@ -107,7 +107,7 @@ struct black_holes_props {
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
 
-  
+
   /* ---- Common conversion factors --------------- */
 
   /*! Conversion factor from temperature to internal energy */
@@ -169,47 +169,49 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Initialisation properties  ---------------------------- */
 
   bp->subgrid_seed_mass =
-      parser_get_param_float(params, "EAGLEAGN:subgrid_seed_mass_Msun");
+      parser_get_param_float(params, "COLIBREAGN:subgrid_seed_mass_Msun");
 
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
   /* Accretion parameters ---------------------------------- */
 
-  bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
+  bp->f_Edd =
+      parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
   bp->f_Edd_recording = parser_get_param_float(
-      params, "EAGLEAGN:eddington_fraction_for_recording");
+      params, "COLIBREAGN:eddington_fraction_for_recording");
   bp->epsilon_r =
-      parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
+      parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
   bp->epsilon_f =
-      parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
-  bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
+      parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
+  bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
 
   /* Feedback parameters ---------------------------------- */
 
   bp->AGN_delta_T_desired =
-      parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");
-
+      parser_get_param_float(params, "COLIBREAGN:AGN_delta_T_K");
   bp->num_ngbs_to_heat =
-      parser_get_param_float(params, "EAGLEAGN:AGN_num_ngb_to_heat");
+      parser_get_param_float(params, "COLIBREAGN:AGN_num_ngb_to_heat");
 
   /* Reposition parameters --------------------------------- */
 
   bp->max_reposition_mass =
-      parser_get_param_float(params, "EAGLEAGN:max_reposition_mass");
+      parser_get_param_float(params, "COLIBREAGN:max_reposition_mass");
 
   /* Convert to internal units */
   bp->max_reposition_mass *= phys_const->const_solar_mass;
 
   bp->max_reposition_distance_ratio =
-      parser_get_param_float(params, "EAGLEAGN:max_reposition_distance_ratio");
+      parser_get_param_float(params,
+			     "COLIBREAGN:max_reposition_distance_ratio");
 
   bp->max_reposition_velocity_ratio =
-      parser_get_param_float(params, "EAGLEAGN:max_reposition_velocity_ratio");
+      parser_get_param_float(params,
+			     "COLIBREAGN:max_reposition_velocity_ratio");
 
   bp->min_reposition_velocity_threshold =
     parser_get_param_float(params,
-			   "EAGLEAGN:min_reposition_velocity_threshold");
+			   "COLIBREAGN:min_reposition_velocity_threshold");
   /* Convert from km/s to internal units */
   bp->min_reposition_velocity_threshold *=
     (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
@@ -218,16 +220,16 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
-      parser_get_param_float(params, "EAGLEAGN:threshold_minor_merger");
+      parser_get_param_float(params, "COLIBREAGN:threshold_minor_merger");
 
   bp->major_merger_threshold =
-      parser_get_param_float(params, "EAGLEAGN:threshold_major_merger");
+      parser_get_param_float(params, "COLIBREAGN:threshold_major_merger");
 
   bp->merger_threshold_type =
-      parser_get_param_int(params, "EAGLEAGN:merger_threshold_type");
+      parser_get_param_int(params, "COLIBREAGN:merger_threshold_type");
 
   bp->max_merging_distance_ratio =
-      parser_get_param_float(params, "EAGLEAGN:merger_max_distance_ratio");
+      parser_get_param_float(params, "COLIBREAGN:merger_max_distance_ratio");
 
   
   /* Common conversion factors ----------------------------- */
@@ -266,4 +268,5 @@ INLINE static void black_holes_struct_restore(
                       stream, NULL, "black holes props");
 }
 
-#endif /* SWIFT_EAGLE_BLACK_HOLES_PROPERTIES_H */
+#endif /* SWIFT_COLIBRE_BLACK_HOLES_PROPERTIES_H */
+

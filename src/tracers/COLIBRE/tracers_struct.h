@@ -27,13 +27,14 @@ struct tracers_xpart_data {
   /*! Maximum temperature achieved by this particle */
   float maximum_temperature;
 
-  /*! Total (physical) momentum received from stellar feedback */
+  /*! Cumulative momentum received from stellar winds (physical internal units)
+   */
   float momentum_received;
 
-  /*! This particle's subgrid temperature */
+  /*! Subgrid temperature */
   float subgrid_temp;
 
-  /*! This particle's subgrid density */
+  /*! Subgrid density (internal units, physical frame) */
   float subgrid_dens;
 
 #if !defined(COOLING_CHIMES)
@@ -57,6 +58,44 @@ struct tracers_xpart_data {
 
     /*! Time at which the maximal temperature was reached */
     float maximum_temperature_time;
+  };
+
+  union {
+
+    /*! Scale-factor at which the particle was last kicked */
+    float last_momentum_kick_scale_factor;
+
+    /*! Time at which the particle was last kicked */
+    float last_momentum_kick_time;
+  };
+
+  union {
+
+    /*! Scale-factor at which the particle last received energy from type II SNe
+     */
+    float last_SNII_injection_scale_factor;
+
+    /*! Time at which the particle last received energy from type II SNe */
+    float last_SNII_injection_time;
+  };
+
+  union {
+
+    /*! Scale-factor at which the particle last received energy from type Ia SNe
+     */
+    float last_SNIa_injection_scale_factor;
+
+    /*! Time at which the particle last received energy from type Ia SNe */
+    float last_SNIa_injection_time;
+  };
+
+  union {
+
+    /*! Scale-factor at which the particle last received energy from AGN */
+    float last_AGN_injection_scale_factor;
+
+    /*! Time at which the particle last received energy from AGN */
+    float last_AGN_injection_time;
   };
 };
 

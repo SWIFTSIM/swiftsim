@@ -164,7 +164,15 @@ __attribute__((always_inline)) INLINE static void
 chemistry_part_has_no_neighbours(struct part* restrict p,
                                  struct xpart* restrict xp,
                                  const struct chemistry_global_data* cd,
-                                 const struct cosmology* cosmo) {}
+                                 const struct cosmology* cosmo) {
+
+  /* Getting ready for diffusion rate calculation in the force loop */
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+    p->chemistry_data.diffusion_rate[elem] = 0.0f;
+    p->chemistry_data.dmetal_mass_fraction[elem] =
+        p->chemistry_data.metal_mass_fraction[elem];
+  }
+}
 
 /**
  * @brief Sets the chemistry properties of the (x-)particles to a valid start
@@ -291,6 +299,10 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
       p->chemistry_data.metal_mass_fraction[chemistry_element_H];
   p->chemistry_data.metal_mass_fraction_total -=
       p->chemistry_data.metal_mass_fraction[chemistry_element_He];
+
+  /* Make sure the total metallicity is >= 0 */
+  p->chemistry_data.metal_mass_fraction_total =
+      max(p->chemistry_data.metal_mass_fraction_total, 0.f);
 }
 
 /**

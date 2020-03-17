@@ -89,6 +89,23 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
 }
 
 /**
+ * @brief Correct the signal velocity of the particle partaking in
+ * supernova (kinetic) feedback based on the velocity kick the particle receives
+ *
+ * @param p The particle of interest.
+ * @param cosmo Cosmology data structure
+ * @param dv_phys The velocity kick received by the particle expressed in
+ * physical units (note that dv_phys must be positive or equal to zero)
+ */
+__attribute__((always_inline)) INLINE static void
+hydro_set_v_sig_based_on_velocity_kick(struct part* p,
+                                       const struct cosmology* cosmo,
+                                       const float dv_phys) {
+
+  error("To be implemented");
+}
+
+/**
  * @brief Does some extra hydro operations once the actual physical time step
  * for the particle is known.
  *

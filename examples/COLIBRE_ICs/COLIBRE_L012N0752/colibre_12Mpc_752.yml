@@ -63,10 +63,10 @@ SPH:
   H_mass_fraction:     0.756    # overwrites the default H mass fraction (updated since EAGLE) 
   resolution_eta:      1.2348   # "48 Ngb" with the cubic spline kernel
   h_min_ratio:         0.1
-  CFL_condition:       0.1
+  CFL_condition:       0.2
   initial_temperature: 268.7 
   minimal_temperature: 10.
-  h_max:               0.5      # Maximal softening in co-moving internal units.
+  h_max:               0.5      # Maximal smoothing length in co-moving internal units.
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
@@ -105,6 +105,7 @@ CHIMESCooling:
   cosmic_ray_rate:            1.8e-16     # HI ionisation rate from cosmic rays
   delta_logTEOS_subgrid_properties:  0.2  # delta logT above the EOS below which set CHIMES to eqm and use subgrid properties
   use_colibre_subgrid_EOS:    1           # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
+  set_FB_particles_to_eqm:    1           # Flag to set particles to eqm if they have been heated by feedback 
   use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
   rapid_cooling_threshold:    1.0         # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
   colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)

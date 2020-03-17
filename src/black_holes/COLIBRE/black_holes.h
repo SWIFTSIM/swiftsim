@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Coypright (c) 2020 Matthieu Schaller (schaller@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_BLACK_HOLES_H
-#define SWIFT_EAGLE_BLACK_HOLES_H
+
+#ifndef SWIFT_COLIBRE_BLACK_HOLES_H
+#define SWIFT_COLIBRE_BLACK_HOLES_H
 
 /* Local includes */
 #include "black_holes_properties.h"
@@ -668,4 +669,4 @@ INLINE static void black_holes_create_from_gas(
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 }
 
-#endif /* SWIFT_EAGLE_BLACK_HOLES_H */
+#endif /* SWIFT_COLIBRE_BLACK_HOLES_H */

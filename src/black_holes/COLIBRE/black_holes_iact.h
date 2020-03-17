@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2018 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2020 Matthieu Schaller (schaller@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_BH_IACT_H
-#define SWIFT_EAGLE_BH_IACT_H
+#ifndef SWIFT_COLIBRE_BH_IACT_H
+#define SWIFT_COLIBRE_BH_IACT_H
 
 /* Local includes */
 #include "black_holes_parameters.h"
@@ -134,10 +134,12 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
                                   const float hi, const float hj,
                                   struct bpart *bi, struct part *pj,
                                   struct xpart *xpj,
+				  const int with_cosmology,
                                   const struct cosmology *cosmo,
                                   const struct gravity_props *grav_props,
                                   const struct black_holes_props *bh_props,
-				  const integertime_t ti_current) {
+				  const integertime_t ti_current,
+				  const double time) {
 
   float wi;
 
@@ -152,7 +154,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   kernel_eval(ui, &wi);
 
   /* Start by checking the repositioning criteria */
-    
+
   /* (Square of) Max repositioning distance allowed based on the softening */
   const float max_dist_repos2 =
       kernel_gravity_softening_plummer_equivalent_inv *
@@ -297,17 +299,16 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     }
 
     if (neighbour_is_slow_enough) {
-
       const float potential = bj->reposition.potential;
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
-	
-	/* Store this as our new best */
-	bi->reposition.min_potential = potential;
-	bi->reposition.delta_x[0] = -dx[0];
-	bi->reposition.delta_x[1] = -dx[1];
-	bi->reposition.delta_x[2] = -dx[2];
+
+        /* Store this as our new best */
+        bi->reposition.min_potential = potential;
+        bi->reposition.delta_x[0] = -dx[0];
+        bi->reposition.delta_x[1] = -dx[1];
+        bi->reposition.delta_x[2] = -dx[2];
       }
     }
   }
@@ -404,20 +405,23 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
  * @param bi First particle (black hole).
  * @param pj Second particle (gas)
  * @param xpj The extended data of the second particle.
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
  * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
+ * @param time current physical time in the simulation
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
                                    const float hi, const float hj,
                                    const struct bpart *bi, struct part *pj,
-                                   struct xpart *xpj,
+                                   struct xpart *xpj, const int with_cosmology,
                                    const struct cosmology *cosmo,
                                    const struct gravity_props *grav_props,
                                    const struct black_holes_props *bh_props,
-				   const integertime_t ti_current) {
+				   const integertime_t ti_current,
+                                   const double time) {
 
   /* Get the heating probability */
   const float prob = bi->to_distribute.AGN_heating_probability;
@@ -443,8 +447,11 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
+      /* Update cooling properties. */
+      cooling_update_feedback_particle(xpj);
+
       /* Mark this particle has having been heated by AGN feedback */
-      tracers_after_black_holes_feedback(xpj);
+      tracers_after_black_holes_feedback(xpj, with_cosmology, cosmo->a, time);
 
       /* message( */
       /*     "We did some AGN heating! id %llu BH id %llu probability " */
@@ -466,4 +473,4 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
 #endif
 }
 
-#endif /* SWIFT_EAGLE_BH_IACT_H */
+#endif /* SWIFT_COLIBRE_BH_IACT_H */

@@ -23,6 +23,7 @@
 #include "event_logger.h"
 #include "random.h"
 #include "timestep_sync_part.h"
+#include "tracers.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -40,10 +41,9 @@
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_density(const float r2, const float *dx,
                                     const float hi, const float hj,
-                                    struct spart *restrict si,
-                                    const struct part *restrict pj,
-                                    const struct xpart *restrict xpj,
-                                    const struct cosmology *restrict cosmo,
+                                    struct spart *si, const struct part *pj,
+                                    const struct xpart *xpj,
+                                    const struct cosmology *cosmo,
                                     const integertime_t ti_current) {
 
   /* Get the gas mass. */
@@ -80,7 +80,8 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param hj Comoving smoothing-length of particle j.
  * @param si First (star) particle (not updated).
  * @param pj Second (gas) particle.
- * @param xpj Extra particle data
+ * @param xpj Extra particle data.
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param ti_current Current integer time used value for seeding random number
  * generator
@@ -88,11 +89,13 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
  * @param step current step counter
  */
 __attribute__((always_inline)) INLINE static void
-runner_iact_nonsym_feedback_apply(
-    const float r2, const float *dx, const float hi, const float hj,
-    const struct spart *restrict si, struct part *restrict pj,
-    struct xpart *restrict xpj, const struct cosmology *restrict cosmo,
-    const integertime_t ti_current, const double time, const int step) {
+runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
+                                  const float hi, const float hj,
+                                  const struct spart *si, struct part *pj,
+                                  struct xpart *xpj, const int with_cosmology,
+                                  const struct cosmology *cosmo,
+                                  const integertime_t ti_current,
+                                  const double time, const int step) {
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
@@ -307,6 +310,12 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
+      /* Update cooling properties. */
+      cooling_update_feedback_particle(xpj);
+
+      /* Mark this particle has having been heated by supernova feedback */
+      tracers_after_SNII_feedback(xpj, with_cosmology, cosmo->a, time);
+
       /* Write the event to the SNIII log file */
       event_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
 
@@ -353,6 +362,12 @@ runner_iact_nonsym_feedback_apply(
       /* Impose maximal viscosity */
       hydro_diffusive_feedback_reset(pj);
 
+      /* Update cooling properties. */
+      cooling_update_feedback_particle(xpj);
+
+      /* Mark this particle has having been heated by supernova feedback */
+      tracers_after_SNIa_feedback(xpj, with_cosmology, cosmo->a, time);
+
       /* Write the event to the SNIa log file */
       event_logger_SNIa_log_event(si, pj, xpj, cosmo);
 
@@ -392,6 +407,15 @@ runner_iact_nonsym_feedback_apply(
     /* Store how much physical momentum is received, so we don't care about
      * cosmology */
     xpj->tracers_data.momentum_received += delta_v * current_mass;
+
+    /* Mark this particle has having been heated by supernova feedback */
+    tracers_after_momentum_feedback(xpj, with_cosmology, cosmo->a, time);
+
+    /* Update the signal velocity of the particle based on the velocity kick */
+    hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, delta_v);
+
+    /* Synchronize the particle on the timeline */
+    timestep_sync_part(pj);
   }
 
   /* Put particles into HII regions */

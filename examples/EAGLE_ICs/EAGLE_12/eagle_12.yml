@@ -4,7 +4,7 @@ MetaData:
 
 # Define the system of units to use internally. 
 InternalUnitSystem:
-  UnitMass_in_cgs:     1.98848e43    # 10^10 M_sun in grams
+  UnitMass_in_cgs:     1.98841e43    # 10^10 M_sun in grams
   UnitLength_in_cgs:   3.08567758e24 # Mpc in centimeters
   UnitVelocity_in_cgs: 1e5           # km/s in centimeters per second
   UnitCurrent_in_cgs:  1             # Amperes
@@ -49,8 +49,8 @@ Gravity:
 # Parameters for the hydrodynamics scheme
 SPH:
   resolution_eta:                    1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
-  h_min_ratio:                       0.1      # Minimal smoothing in units of softening.
-  h_max:                             0.5      # Maximal softening in co-moving internal units.
+  h_min_ratio:                       0.1      # Minimal smoothing length in units of softening.
+  h_max:                             0.5      # Maximal smoothing length in co-moving internal units.
   CFL_condition:                     0.2      # Courant-Friedrich-Levy condition for time integration.
   minimal_temperature:               100.0    # (internal units)
   initial_temperature:               268.7    # (internal units)
@@ -150,7 +150,6 @@ EAGLEFeedback:
   SNII_min_mass_Msun:               8.0             # Minimal mass considered for SNII stars in solar masses.
   SNII_max_mass_Msun:             100.0             # Maximal mass considered for SNII stars in solar masses.
   SNII_sampled_delay:               1               # Sample the SNII lifetimes to do feedback.
-  SNII_wind_delay_Gyr:              dummy           # Time in Gyr between a star's birth and the SNII thermal feedback event when not sampling.
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
   SNII_energy_fraction_min:         0.3             # Minimal fraction of energy applied in a SNII feedback event.

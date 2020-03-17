@@ -1517,7 +1517,7 @@ AC_SUBST([SUNDIALS_INCS])
 # As an example for this, see the call to AC_ARG_WITH for cooling.
 AC_ARG_WITH([subgrid],
 	[AS_HELP_STRING([--with-subgrid=<subgrid>],
-		[Master switch for subgrid methods. Inexperienced users should start here @<:@none, GEAR, EAGLE, COLIBRE, COLIBRE-CHIMES default: none@:>@]
+		[Master switch for subgrid methods. Inexperienced user should start here. Options are: @<:@none, GEAR, QLA, EAGLE, COLIBRE, COLIBRE-CHIMES default: none@:>@]
 	)],
 	[with_subgrid="$withval"],
 	[with_subgrid=none]
@@ -1533,7 +1533,7 @@ with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
 with_subgrid_SNIa_DTD=power-law-beta-one
-with_subgrid_task_order=none
+with_subgrid_task_order=default
 
 case "$with_subgrid" in
    yes)
@@ -1550,9 +1550,20 @@ case "$with_subgrid" in
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
   # GEAR's order is not used anymore
-	with_subgrid_task_order=none
+	with_subgrid_task_order=default
 	enable_fof=no
-        with_subgrid_SNIa_DTD=power-law-beta-one
+   ;;
+   QLA)
+	with_subgrid_cooling=QLA
+	with_subgrid_chemistry=QLA
+	with_subgrid_tracers=none
+	with_subgrid_entropy_floor=QLA
+	with_subgrid_stars=none
+	with_subgrid_star_formation=QLA
+	with_subgrid_feedback=none
+	with_subgrid_black_holes=none
+	with_subgrid_task_order=default
+	enable_fof=no
    ;;
    EAGLE)
 	with_subgrid_cooling=EAGLE
@@ -1887,7 +1898,7 @@ esac
 #  Cooling function
 AC_ARG_WITH([cooling],
    [AS_HELP_STRING([--with-cooling=<function>],
-      [cooling function @<:@none, const-du, const-lambda, EAGLE, COLIBRE, CHIMES, CHIMES_* grackle_* default: none@:>@.
+      [cooling function @<:@none, const-du, const-lambda, QLA, EAGLE, COLIBRE, CHIMES, CHIMES_* grackle_* default: none@:>@.
       For Grackle, the primordial chemistry parameter needs to be provided (e.g. grackle_0).
       For CHIMES, the size of the network can be provided (e.g. CHIMES_157). Otherwise defaults to 10.]
    )],
@@ -1920,6 +1931,9 @@ case "$with_cooling" in
       AC_DEFINE([COOLING_GRACKLE], [1], [Cooling via the grackle library])
       primordial_chemistry=${with_cooling:8}
       AC_DEFINE_UNQUOTED([COOLING_GRACKLE_MODE], [$primordial_chemistry], [Grackle chemistry network])
+   ;;
+   QLA)
+      AC_DEFINE([COOLING_QLA], [1], [Cooling following the Quick-Lyman-alpha model])
    ;;
    EAGLE)
       AC_DEFINE([COOLING_EAGLE], [1], [Cooling following the EAGLE model])
@@ -1960,7 +1974,7 @@ esac
 #  chemistry function
 AC_ARG_WITH([chemistry],
    [AS_HELP_STRING([--with-chemistry=<function>],
-      [chemistry function @<:@none, GEAR_*, EAGLE, COLIBRE default: none@:>@
+      [chemistry function @<:@none, GEAR_*, QLA, EAGLE, COLIBRE default: none@:>@
       For GEAR, you need to provide the number of elements (e.g. GEAR_10)]
    )],
    [with_chemistry="$withval"],
@@ -1983,6 +1997,9 @@ case "$with_chemistry" in
       AC_DEFINE([CHEMISTRY_GEAR], [1], [Chemistry taken from the GEAR model])
       number_element=${with_chemistry:5}
       AC_DEFINE_UNQUOTED([GEAR_CHEMISTRY_ELEMENT_COUNT], [$number_element], [Number of element to follow])
+   ;;
+   QLA)
+      AC_DEFINE([CHEMISTRY_QLA], [1], [Chemistry taken from the Quick-Lyman-alpha model])
    ;;
    EAGLE)
       AC_DEFINE([CHEMISTRY_EAGLE], [1], [Chemistry taken from the EAGLE model])
@@ -2163,7 +2180,7 @@ EAGLE)
 AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
 ;;
 default)
-AC_DEFINE([TASK_ORDER_NONE], [1], [Default (i.e. EAGLE/OWLS) task order])
+AC_DEFINE([TASK_ORDER_DEFAULT], [1], [Default (i.e. EAGLE/OWLS) task order])
 ;;
 GEAR)
 AC_DEFINE([TASK_ORDER_GEAR], [1], [GEAR task order])
@@ -2223,7 +2240,7 @@ esac
 #  Entropy floor
 AC_ARG_WITH([entropy-floor], 
     [AS_HELP_STRING([--with-entropy-floor=<floor>],
-       [entropy floor @<:@none, EAGLE, COLIBRE, default: none@:>@] 
+       [entropy floor @<:@none, QLA, EAGLE, COLIBRE, default: none@:>@] 
     )],
     [with_entropy_floor="$withval"],
     [with_entropy_floor="none"]
@@ -2239,6 +2256,9 @@ fi
 case "$with_entropy_floor" in
    none)
       AC_DEFINE([ENTROPY_FLOOR_NONE], [1], [No entropy floor])
+   ;;
+   QLA)
+      AC_DEFINE([ENTROPY_FLOOR_QLA], [1], [Quick Lyman-alpha entropy floor])
    ;;
    EAGLE)
       AC_DEFINE([ENTROPY_FLOOR_EAGLE], [1], [EAGLE entropy floor])
@@ -2283,7 +2303,7 @@ esac
 #  Star formation
 AC_ARG_WITH([star-formation], 
     [AS_HELP_STRING([--with-star-formation=<sfm>],
-       [star formation @<:@none, EAGLE, GEAR, COLIBRE, default: none@:>@] 
+       [star formation @<:@none, QLA, EAGLE, GEAR, COLIBRE, default: none@:>@] 
     )],
     [with_star_formation="$withval"],
     [with_star_formation="none"]
@@ -2299,6 +2319,9 @@ fi
 case "$with_star_formation" in
    none)
       AC_DEFINE([STAR_FORMATION_NONE], [1], [No star formation])
+   ;;
+   QLA)
+      AC_DEFINE([STAR_FORMATION_QLA], [1], [Quick Lyman-alpha star formation model)])
    ;;
    EAGLE)
       AC_DEFINE([STAR_FORMATION_EAGLE], [1], [EAGLE star formation model (Schaye and Dalla Vecchia (2008))])
@@ -2389,6 +2412,11 @@ if test $with_black_holes = "EAGLE"; then
       AC_MSG_ERROR([The EAGLE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
    fi
 fi
+if test $with_black_holes = "COLIBRE"; then
+   if test $with_gravity == "basic"; then
+      AC_MSG_ERROR([The COLIBRE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
+   fi
+fi
 
 if test $with_black_holes = "COLIBRE"; then
    if test $with_gravity == "basic"; then
@@ -2400,6 +2428,8 @@ fi
 DX_INIT_DOXYGEN(libswift,doc/Doxyfile,doc/)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
+# Check if using QLA cooling
+AM_CONDITIONAL([HAVEQLACOOLING], [test $with_cooling = "QLA"])
 # Check if using EAGLE cooling
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling

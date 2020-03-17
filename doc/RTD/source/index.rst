@@ -25,6 +25,7 @@ difference is the parameter file that will need to be adapted for SWIFT.
    CHIMES/index
    eventLogging
    random
+   Planetary/index
    FriendsOfFriends/index
    EquationOfState/index
    ExternalPotentials/index

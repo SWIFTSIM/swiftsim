@@ -117,6 +117,10 @@ struct cooling_function_data {
    * temperature from the COLIBRE cooling tables. */
   int use_colibre_subgrid_EOS;
 
+  /* Flag to set particles to chemical equilibrium
+   * if they have been heated by feedback. */
+  int set_FB_particles_to_eqm;
+
   /* Threshold to switch between rapid and slow cooling regimes. */
   double rapid_cooling_threshold;
 
@@ -139,6 +143,9 @@ struct cooling_xpart_data {
 
   /* Cumulative energy radiated by the particle */
   float radiated_energy;
+
+  /* Flag to indicate when the particle has been heated by feedback. */
+  int heated_by_FB;
 };
 
 #endif /* SWIFT_COOLING_STRUCT_CHIMES_H */

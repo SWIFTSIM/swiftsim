@@ -13,7 +13,8 @@ be use as an empty canvas to be copied to create additional models.
    :maxdepth: 2
    :caption: Available models:
 	      
-   Basic/index	      
    EAGLE/index
+   QuickLymanAlpha/index
    GEAR/index
    COLIBRE/index
+   Basic/index	  
