@@ -270,14 +270,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     /* Do cluster formation */
     sp->gcflag = 1;
 
-    /* Retrieve tensor calculated when particle was gas */
-    sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
-    sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
-    sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
-    sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
-    sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
-    sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
-
     /* Go make clusters */
     mosaics_clform(sp, stars_properties, sf_props, phys_const, cosmo);
 
@@ -311,6 +303,10 @@ stars_mosaics_copy_extra_properties(
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
+
+  //TODO depends on cooling whether we have these properties
+  /* Store subgrid birth properties */
+  sp->birth_subgrid_temp = xp->tracers_data.subgrid_temp;
 
   /* Flag it for cluster formation */
   sp->new_star = 1;
