@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
     with_star_formation = 1;
     with_cooling = 1;
   }
-  if (with_eagle) {
+  if (with_eagle || with_colibre) {
     with_hydro = 1;
     with_timestep_limiter = 1;
     with_timestep_sync = 1;
@@ -335,16 +335,6 @@ int main(int argc, char *argv[]) {
     with_feedback = 1;
     with_black_holes = 1;
     with_fof = 1;
-  }
-  if (with_colibre) {
-    with_hydro = 1;
-    with_timestep_limiter = 1;
-    with_timestep_sync = 1;
-    with_self_gravity = 1;
-    with_stars = 1;
-    with_star_formation = 1;
-    with_cooling = 1;
-    with_feedback = 1;
   }
   if (with_gear) {
     with_hydro = 1;
