@@ -2440,6 +2440,8 @@ void engine_step(struct engine *e) {
 
   if (e->nodeID == 0) {
 
+    const ticks tic_files = getticks();
+
     /* Print some information to the screen */
     printf(
         "  %6d %14e %12.7f %12.7f %14e %4d %4d %12lld %12lld %12lld "
@@ -2453,6 +2455,7 @@ void engine_step(struct engine *e) {
 
     /* Write the star formation information to the file */
     if (e->policy & engine_policy_star_formation) {
+
       star_formation_logger_write_to_log_file(e->sfh_logger, e->time,
                                               e->cosmology->a, e->cosmology->z,
                                               e->sfh, e->step);
@@ -2480,6 +2483,10 @@ void engine_step(struct engine *e) {
 #ifdef SWIFT_DEBUG_CHECKS
     fflush(e->file_timesteps);
 #endif
+
+    if (e->verbose)
+      message("Writing step info to files took %.3f %s",
+              clocks_from_ticks(getticks() - tic_files), clocks_getunit());
   }
 
   /* We need some cells to exist but not the whole task stuff. */
@@ -2509,14 +2516,16 @@ void engine_step(struct engine *e) {
     e->time_step = (e->ti_current - e->ti_old) * e->time_base;
   }
 
+  /*****************************************************/
+  /* OK, we now know what the next end of time-step is */
+  /*****************************************************/
+
+  const ticks tic_updates = getticks();
+
   /* Update the cooling function */
   if ((e->policy & engine_policy_cooling) ||
       (e->policy & engine_policy_temperature))
     cooling_update(e->cosmology, e->cooling_func, e->s);
-
-  /*****************************************************/
-  /* OK, we now know what the next end of time-step is */
-  /*****************************************************/
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
@@ -2526,6 +2535,10 @@ void engine_step(struct engine *e) {
   if (e->policy & engine_policy_hydro)
     hydro_props_update(e->hydro_properties, e->gravity_properties,
                        e->cosmology);
+
+  if (e->verbose)
+    message("Updating general quantities took %.3f %s",
+            clocks_from_ticks(getticks() - tic_updates), clocks_getunit());
 
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
@@ -5076,6 +5089,12 @@ void engine_recompute_displacement_constraint(struct engine *e) {
   float min_mass[swift_type_count] = {
       e->s->min_part_mass,  e->s->min_gpart_mass, FLT_MAX, FLT_MAX,
       e->s->min_spart_mass, e->s->min_bpart_mass};
+
+#ifdef WITH_MPI
+  MPI_Allreduce(MPI_IN_PLACE, min_mass, swift_type_count, MPI_FLOAT, MPI_MIN,
+                MPI_COMM_WORLD);
+#endif
+
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that the minimal mass collection worked */
   float min_part_mass_check = FLT_MAX;
@@ -5084,13 +5103,8 @@ void engine_recompute_displacement_constraint(struct engine *e) {
     min_part_mass_check =
         min(min_part_mass_check, hydro_get_mass(&e->s->parts[i]));
   }
-  if (min_part_mass_check != min_mass[swift_type_gas])
+  if (min_part_mass_check < min_mass[swift_type_gas])
     error("Error collecting minimal mass of gas particles.");
-#endif
-
-#ifdef WITH_MPI
-  MPI_Allreduce(MPI_IN_PLACE, min_mass, swift_type_count, MPI_FLOAT, MPI_MIN,
-                MPI_COMM_WORLD);
 #endif
 
   /* Do the same for the velocity norm sum */
