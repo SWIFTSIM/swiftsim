@@ -214,7 +214,9 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
       p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
     }
   }
+    
   chemistry_init_part(p, data);
+    
   /* CC: Setting diffusion coefficient to zero initial value */
   p->chemistry_data.diffusion_coefficient = 0.0f;
 }
