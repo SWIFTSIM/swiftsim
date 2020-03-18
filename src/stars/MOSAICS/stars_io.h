@@ -353,7 +353,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
       units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
 
   sp->velocity_to_ms = 
-      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 0.01;
+      units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 0.01;
 
   /* TODO not sure if needed */
   //const double Msun_cgs = phys_const->const_solar_mass *
