@@ -367,6 +367,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 #ifdef STARS_MOSAICS
               /* Gather the extra info we need for star clusters */
               stars_mosaics_copy_extra_properties(p, sp, cosmo);
+              /* The run the formation */
+              stars_do_mosaics(sp, e, cosmo, with_cosmology);
 #endif
 
               /* Update the Star formation history */
@@ -850,7 +852,6 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
   } else {
     const int scount = c->stars.count;
     struct spart *restrict sparts = c->stars.parts;
-    const struct stars_props *stars_properties = e->stars_properties;
 
     /* Loop over the stars particles in this cell. */
     for (int k = 0; k < scount; k++) {
@@ -859,7 +860,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
       struct spart *restrict sp = &sparts[k];
 
       if (spart_is_active(sp, e))
-        stars_do_mosaics(sp, stars_properties, e, cosmo, with_cosmology);
+        stars_do_mosaics(sp, e, cosmo, with_cosmology);
     }
   }
 

@@ -225,9 +225,10 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
  * @param with_cosmology if we run with cosmology.
  */
 __attribute__((always_inline)) INLINE static void stars_do_mosaics(
-    struct spart* restrict sp, const struct stars_props* stars_properties,
-    const struct engine* e, const struct cosmology* cosmo, 
-    const int with_cosmology) {
+    struct spart* restrict sp, const struct engine* e, 
+    const struct cosmology* cosmo, const int with_cosmology) {
+
+  const struct stars_props *stars_properties = e->stars_properties;
 
   if (sp->calc_tensor) {
     /* Did we get a tensor for this particle? (regardless if have clusters) */
@@ -293,8 +294,6 @@ __attribute__((always_inline)) INLINE static void stars_mosaics_copy_extra_prope
 
   /* Flag it for cluster formation */
   sp->new_star = 1;
-
-  /* TODO might want to copy a tidal tensor accross too? */
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

@@ -1,6 +1,6 @@
 ./configure --with-gravity=with-potential --with-stars=MOSAICS
 
-Where neccessary at src/ level, tensors are within POTENTIAL_GRAVITY for now so its compilable without with-potential. 
+Need to make sure all SFing (or just all gas?) particles get tensors so they can be passed at star formation time
 
 Get the natal gas properties to pass to mosaics:
 * in Anarchy-style we want weighted density? Need to check what to do here
@@ -15,15 +15,9 @@ I/O:
 NOTES:
 ------
 
-Where neccessary at src/ level, tensors are within POTENTIAL_GRAVITY for now so its compilable without with-potential. 
-I guess eventually we want to move tensors to their own gravity version?
-
 Setting of the calc_tensor flag for gpart is done at start of timestep in stars_init_spart. Just want to make sure this happens before the gravity calc.
 
 I/O: 
   Hijacked "Stars" for our parameters
 
-  Load star props (need TidalTensor so far)
-  Also need to zero optional properties if they're not read in
-
-  Added Gravity:calculate_all_tensors to params. Presumably we want to also output all tensors to snapshots when this is set?
+  Added Gravity:calculate_all_tensors to params. Do we also want to output all tensors to snapshots when this is set?
