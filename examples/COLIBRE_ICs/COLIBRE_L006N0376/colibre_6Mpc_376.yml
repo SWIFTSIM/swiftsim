@@ -4,8 +4,8 @@ MetaData:
 
 # Define the system of units to use internally. 
 InternalUnitSystem:
-  UnitMass_in_cgs:     1.98848e43    # 10^10 M_sun
-  UnitLength_in_cgs:   3.08567758e24 # 1 Mpc
+  UnitMass_in_cgs:     1.98841e43    # 10^10 M_sun in grams
+  UnitLength_in_cgs:   3.08567758e24 # Mpc in centimeters
   UnitVelocity_in_cgs: 1e5           # 1 km/s
   UnitCurrent_in_cgs:  1             # Amperes
   UnitTemp_in_cgs:     1             # Kelvin
@@ -81,7 +81,7 @@ COLIBRECooling:
 
 # CHIMES cooling parameters
 CHIMESCooling: 
-  data_path:                  /path/to/chimes-data     # Path to chimes-data repository
+  data_path:                  ./chimes-data     # Path to chimes-data repository
   EqmAbundanceTable:          colibre_HHe              # Path to equilibrium abundance tables
   PhotoIonTable_UVB:          HM12_cross_sections      # Path to cross-sections tables; UVB 
   PhotoIonTable_ISRF:         cross_sections_B87.hdf5  # Path to cross-sections tables; ISRF
@@ -108,7 +108,7 @@ CHIMESCooling:
   set_FB_particles_to_eqm:    1           # Flag to set particles to eqm if they have been heated by feedback 
   use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
   rapid_cooling_threshold:    1.0         # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
-  colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
+  colibre_table_path:         ./UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
   H_reion_z:                  7.5         # Redshift of hydrogen reionisation
   S_over_Si_in_solar:         1.0         # S / Si relative to Solar 
   Ca_over_Si_in_solar:        1.0         # Ca / Si relative to Solar 
@@ -211,8 +211,8 @@ Event_logger:
   delta_time_SNII_Myr:        10
   delta_time_r_processes_Myr: 100
 
-# EAGLE AGN model
-EAGLEAGN:
+# COLIBRE AGN model
+COLIBREAGN:
   subgrid_seed_mass_Msun:           1e5        # Black hole subgrid mass at creation time in solar masses.
   max_eddington_fraction:           1.0        # Maximal allowed accretion rate in units of the Eddington rate.
   eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
