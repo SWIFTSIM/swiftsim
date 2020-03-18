@@ -42,6 +42,11 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     const int with_cosmology) {
 
   const double const_G = e->physical_constants->const_newton_G;
+  const double const_boltzmann_k = e->physical_constants->const_boltzmann_k;
+  const double const_proton_mass = e->physical_constants->const_proton_mass;
+
+  /* molecular weight of primordial gas (mu=1.22)*/
+  const double mu_neutral = e->hydro_properties->mu_neutral;
 
   /* TODO unit conversions into physical units */
 
@@ -62,10 +67,18 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* 1/sqrt(3) converts to 1D assuming isotropy */
   double sigmaloc = totalVelDisp/sqrt(3.f) * props->velocity_to_ms;
   double rholoc = sp->birth_density * props->density_to_kgm3;
-  const double csloc = props->Fixedcs;
+
+  //TODO We might want the subgrid T for this?
+  //double csloc = props->Fixedcs;
+  double csloc = sp->birth_subgrid_temp * const_boltzmann_k / 
+      (mu_neutral * const_proton_mass);
+  csloc = sqrt(csloc) * props->velocity_to_ms;
 
   /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
   sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
+
+  //TODO
+  printf("rho=%g, sig=%g, cs=%g; CFE=%g\n",rholoc,sigmaloc,csloc,sp->CFE);
 
   /* Get feedback timescale while we're here */
   double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);

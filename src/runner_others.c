@@ -366,7 +366,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
 #ifdef STARS_MOSAICS
               /* Gather the extra info we need for star clusters */
-              stars_mosaics_copy_extra_properties(p, sp, cosmo);
+              stars_mosaics_copy_extra_properties(p, xp, sp, cosmo);
               /* The run the formation */
               stars_do_mosaics(sp, e, cosmo, with_cosmology);
 #endif

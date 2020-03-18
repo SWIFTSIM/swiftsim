@@ -141,6 +141,9 @@ struct spart {
   /*! Birth pressure */
   float birth_pressure;
 
+  /*! Birth subgrid temperature */
+  float birth_subgrid_temp;
+
   /*! Cluster formation efficiency */
   float CFE;
 

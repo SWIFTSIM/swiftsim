@@ -269,20 +269,11 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
   if (sp->new_star) {
     /* Do cluster formation */
     sp->gcflag = 1;
-    sp->calc_tensor = 1;
 
     /* TODO need to calculate this beforehand */
     sp->gasVelDisp = 0.;
     sp->starVelDisp = 0.;
     sp->fgas = 1.;
-
-    /* Retrieve tensor calculated when particle was gas */
-    sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
-    sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
-    sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
-    sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
-    sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
-    sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
 
     /* Go make clusters */
     mosaics_clform(sp, stars_properties, e, cosmo, with_cosmology);
@@ -308,14 +299,21 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
  * @param cosmo the cosmological parameters and properties.
  */
 __attribute__((always_inline)) INLINE static void stars_mosaics_copy_extra_properties(
-    const struct part* p, struct spart* restrict sp,
+    const struct part* p, const struct xpart* xp, struct spart* restrict sp,
     const struct cosmology* cosmo) {
 
   /* Store the birth pressure in the star particle */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
 
+  //TODO depends on cooling whether we have these properties
+  /* Store subgrid birth properties */
+  sp->birth_subgrid_temp = xp->tracers_data.subgrid_temp;
+
   /* Flag it for cluster formation */
   sp->new_star = 1;
+
+  /* Retrieve tensor calculated when particle was gas */
+  sp->calc_tensor = 1;
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */
