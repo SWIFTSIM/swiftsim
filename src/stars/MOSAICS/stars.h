@@ -230,6 +230,20 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 
   const struct stars_props *stars_properties = e->stars_properties;
 
+  /* Have we already been here this timestep? */
+  /* This funcation can be called twice: once at SF, then again in star loop */
+  if (!sp->new_star) {
+    if (with_cosmology) {
+      if (sp->birth_scale_factor == (float)cosmo->a) {
+        return;
+      }
+    } else {
+      if (sp->birth_time == (float)e->time) {
+        return;
+      }
+    }
+  }
+
   if (sp->calc_tensor) {
     /* Did we get a tensor for this particle? (regardless if have clusters) */
 
@@ -261,6 +275,14 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->gasVelDisp = 0.;
     sp->starVelDisp = 0.;
     sp->fgas = 1.;
+
+    /* Retrieve tensor calculated when particle was gas */
+    sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
+    sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
+    sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
+    sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
+    sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
+    sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
 
     /* Go make clusters */
     mosaics_clform(sp, stars_properties, e, cosmo, with_cosmology);
