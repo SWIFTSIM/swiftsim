@@ -54,13 +54,13 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* TODO make this optional */
   /* Combined resolved and unresolved velocity dispersion */
-  // sp->totalVelDisp = sqrt( sp->gasVelDisp * sp->gasVelDisp + 
-  //                          turbVelDisp * turbVelDisp );
-  sp->totalVelDisp = turbVelDisp;
+  // totalVelDisp = sqrt( sp->gasVelDisp * sp->gasVelDisp + 
+  //                      turbVelDisp * turbVelDisp );
+  double totalVelDisp = turbVelDisp;
 
   /* In units of kg, m, s */
   /* 1/sqrt(3) converts to 1D assuming isotropy */
-  double sigmaloc = sp->totalVelDisp/sqrt(3.f) * props->velocity_to_ms;
+  double sigmaloc = totalVelDisp/sqrt(3.f) * props->velocity_to_ms;
   double rholoc = sp->birth_density * props->density_to_kgm3;
   const double csloc = props->Fixedcs;
 

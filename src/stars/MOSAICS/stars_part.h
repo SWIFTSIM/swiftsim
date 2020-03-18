@@ -138,9 +138,6 @@ struct spart {
    */
   float tidal_tensor[3][6];
 
-  /*! Birth weighted density (if it exists) */
-  float birth_weighted_density;
-
   /*! Birth pressure */
   float birth_pressure;
 
@@ -158,9 +155,6 @@ struct spart {
 
   /*! Gas fraction within that same region */
   float fgas;
-
-  /*! Combined resolved and unresolved gas velocity dispersion (potentially) */
-  float totalVelDisp;
 
   /*! Epicyclic frequency at formation */
   float kappa;
