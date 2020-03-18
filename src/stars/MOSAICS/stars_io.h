@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 27;
+  *num_fields = 26;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -214,46 +214,38 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "needed)");
 
   list[17] = io_make_output_field(
-      "BirthWeightedDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts, 
-      birth_weighted_density,
-      "Physical weighted densities at the time of birth of the gas particles that "
-      "turned into stars (note that "
-      "we store the physical density at the birth redshift, no conversion is "
-      "needed)");
-
-  list[18] = io_make_output_field(
       "ClusterFormationEfficiency", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       CFE, "Fraction of star formation which occurs in bound clusters");
 
-  list[19] = io_make_output_field(
+  list[18] = io_make_output_field(
       "Mcstar", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       Mcstar, "Exponential truncation of star cluster mass function");
 
-  list[20] = io_make_output_field(
+  list[19] = io_make_output_field(
       "GasVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
       gasVelDisp, "Local velocity dispersion of gas at the time of star formation");
 
-  list[21] = io_make_output_field(
+  list[20] = io_make_output_field(
       "StellarVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
       starVelDisp, "Local velocity dispersion of stars at the time of star formation");
 
-  list[22] = io_make_output_field(
+  list[21] = io_make_output_field(
       "GasFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       fgas, "Local gas fraction at time of star formation");
 
-  list[23] = io_make_output_field(
+  list[22] = io_make_output_field(
       "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts,
       kappa, "Epicyclic frequency at formation");
 
-  list[24] = io_make_output_field(
+  list[23] = io_make_output_field(
       "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts,
       Omega, "Circular frequency at formation");
 
-  list[25] = io_make_output_field(
+  list[24] = io_make_output_field(
       "ToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       Toomre_mass, "Local Toomre mass at formation");
 
-  list[26] = io_make_output_field(
+  list[25] = io_make_output_field(
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       fracCollapse, "Fraction of Toomre mass which can collapse to a GMC");
 }

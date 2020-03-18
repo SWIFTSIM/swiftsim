@@ -59,7 +59,8 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
 
-  sp->gpart->calc_tensor = sp->calc_tensor;
+  if (sp->gpart)
+    sp->gpart->calc_tensor = sp->calc_tensor;
 }
 
 /**
@@ -252,15 +253,19 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 
   if (sp->new_star) {
     /* Do cluster formation */
+    sp->gcflag = 1;
+    sp->calc_tensor = 1;
 
     /* TODO need to calculate this beforehand */
     sp->gasVelDisp = 0.;
     sp->starVelDisp = 0.;
     sp->fgas = 1.;
 
+    /* Go make clusters */
     mosaics_clform(sp, stars_properties, e, cosmo, with_cosmology);
+
+    /* We're done with cluster formation */
     sp->new_star = 0;
-    sp->gcflag = 1;
 
   } else if (sp->gcflag) {
     /* Do cluster evolution, if the particle has clusters */
@@ -286,17 +291,10 @@ __attribute__((always_inline)) INLINE static void stars_mosaics_copy_extra_prope
   /* Store the birth pressure in the star particle */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
 
-  /* TODO we also want the weighted density when that exists? */
-  /*
-  if (...) {
-  } else {
-    sp->birth_weighted_density = sp->birth_density;
-  }
-  */
-  sp->birth_weighted_density = sp->birth_density;
-
   /* Flag it for cluster formation */
   sp->new_star = 1;
+
+  /* TODO might want to copy a tidal tensor accross too? */
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

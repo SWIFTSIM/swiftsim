@@ -50,7 +50,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* Sub-particle turbulent velocity dispersion */
   /* sqrt(3) to convert to 3D */
   double turbVelDisp = 
-      sqrt(3.f * sp->birth_pressure / sp->birth_weighted_density);
+      sqrt(3.f * sp->birth_pressure / sp->birth_density);
 
   /* TODO make this optional */
   /* Combined resolved and unresolved velocity dispersion */
@@ -61,7 +61,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* In units of kg, m, s */
   /* 1/sqrt(3) converts to 1D assuming isotropy */
   double sigmaloc = sp->totalVelDisp/sqrt(3.f) * props->velocity_to_ms;
-  double rholoc = sp->birth_weighted_density * props->density_to_kgm3;
+  double rholoc = sp->birth_density * props->density_to_kgm3;
   const double csloc = props->Fixedcs;
 
   /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
@@ -104,9 +104,9 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   sp->Omega = sqrt(Omega2);
   sp->kappa = sqrt(kappa2);
 
-  const double PI2 = M_PI*M_PI;
-  sp->Toomre_mass = 4.f*PI2*PI2*M_PI*const_G*const_G*SigmaG*SigmaG*SigmaG / 
-      (kappa2*kappa2);
+  /* 4 * pi^5 * G^2 */
+  const double MTconst = 4.f * M_PI*M_PI*M_PI*M_PI*M_PI * const_G*const_G;
+  sp->Toomre_mass = MTconst*SigmaG*SigmaG*SigmaG / (kappa2*kappa2);
 
   /* Toomre collapse fraction (Reina-Campos & Kruijssen 2017) */
   double tff = sqrt(2.*M_PI / kappa2);
@@ -118,6 +118,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   double M_collapse = sp->Toomre_mass * sp->fracCollapse;
 
   /* Exponential truncation of cluster mass function */
+  /* TODO here we should use SFE = starform->star_formation_efficiency if it exists */
   sp->Mcstar = props->SFE * sp->CFE * M_collapse;
 
 
