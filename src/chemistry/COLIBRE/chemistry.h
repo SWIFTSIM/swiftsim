@@ -64,8 +64,6 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
 
   struct chemistry_part_data* cpd = &p->chemistry_data;
 
-  cpd->diffusion_coefficient = 0.0f;
-
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     cpd->diffusion_rate[elem] = 0.0f;
   }
@@ -74,6 +72,17 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->shear_tensor[0][k] = 0.0f;
     cpd->shear_tensor[1][k] = 0.0f;
     cpd->shear_tensor[2][k] = 0.0f;
+  }
+    
+  if (cpd->dmetal_mass_fraction_total != 0.0) {
+  /* CC. Updating metals & initializing dmetal array for calculation in force loop */
+    for (int elem = 0; elem < chemistry_element_count; ++elem) {
+        cpd->metal_mass_fraction[elem] += cpd->dmetal_mass_fraction[elem];
+        cpd->dmetal_mass_fraction[elem] = 0.0f;
+    }
+    cpd->metal_mass_fraction_total += cpd->dmetal_mass_fraction_total;
+    /* CC. Also have total metallicity ready for loop */
+    cpd->dmetal_mass_fraction_total = 0.0f;
   }
 }
 
@@ -143,13 +152,6 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
    * This is rho a^-3 * Norm tensor (physical already) * a^2 * h^2 */
   p->chemistry_data.diffusion_coefficient =
       cd->diffusion_constant * rho * NormTensor * h * h * cosmo->a_inv;
-
-  /* Getting ready for diffusion rate calculation in the force loop */
-  for (int elem = 0; elem < chemistry_element_count; ++elem) {
-    p->chemistry_data.diffusion_rate[elem] = 0.0f;
-    p->chemistry_data.dmetal_mass_fraction[elem] =
-        p->chemistry_data.metal_mass_fraction[elem];
-  }
 }
 
 /**
@@ -169,10 +171,18 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   /* Getting ready for diffusion rate calculation in the force loop */
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     p->chemistry_data.diffusion_rate[elem] = 0.0f;
-    p->chemistry_data.dmetal_mass_fraction[elem] =
-        p->chemistry_data.metal_mass_fraction[elem];
+    p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
+  }
+  /* CC. Also have total metallicity ready for loop */
+  p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
+    
+  for (int k = 0; k < 3; k++) {
+    p->chemistry_data.shear_tensor[0][k] = 0.0f;
+    p->chemistry_data.shear_tensor[1][k] = 0.0f;
+    p->chemistry_data.shear_tensor[2][k] = 0.0f;
   }
 }
+
 
 /**
  * @brief Sets the chemistry properties of the (x-)particles to a valid start
@@ -196,15 +206,17 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   if (data->initial_metal_mass_fraction_total != -1) {
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
+    p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
 
     for (int elem = 0; elem < chemistry_element_count; ++elem) {
       p->chemistry_data.metal_mass_fraction[elem] =
           data->initial_metal_mass_fraction[elem];
-      p->chemistry_data.dmetal_mass_fraction[elem] =
-          data->initial_metal_mass_fraction[elem];
+      p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
     }
   }
   chemistry_init_part(p, data);
+  /* CC: Setting diffusion coefficient to zero initial value */
+  p->chemistry_data.diffusion_coefficient = 0.0f;
 }
 
 /**
@@ -289,17 +301,19 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
     struct part* restrict p, const struct cosmology* cosmo) {
 
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
-    p->chemistry_data.metal_mass_fraction[elem] =
-        p->chemistry_data.dmetal_mass_fraction[elem];
+    p->chemistry_data.metal_mass_fraction[elem] +=
+    p->chemistry_data.dmetal_mass_fraction[elem];
+    p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
   }
-
-  /* Compute the new total metal mass fraction */
-  p->chemistry_data.metal_mass_fraction_total = 1.0f;
-  p->chemistry_data.metal_mass_fraction_total -=
-      p->chemistry_data.metal_mass_fraction[chemistry_element_H];
-  p->chemistry_data.metal_mass_fraction_total -=
-      p->chemistry_data.metal_mass_fraction[chemistry_element_He];
-
+    
+  /* CC. Here we are diffusing Z as well */
+  p->chemistry_data.metal_mass_fraction_total +=
+  p->chemistry_data.dmetal_mass_fraction_total;
+  p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
+    
+  /* Check the total metallicity is >= 0 */
+  if (p->chemistry_data.metal_mass_fraction_total < 0.0) message("Negative Z!");
+    
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);
