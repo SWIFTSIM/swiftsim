@@ -93,6 +93,7 @@ int space_extra_gparts = space_extra_gparts_default;
 /*! Maximum number of particles per ghost */
 int engine_max_parts_per_ghost = engine_max_parts_per_ghost_default;
 int engine_max_sparts_per_ghost = engine_max_sparts_per_ghost_default;
+int engine_max_parts_per_cooling = engine_max_parts_per_cooling_default;
 
 /*! Maximal depth at which the stars resort task can be pushed */
 int engine_star_resort_task_depth = engine_star_resort_task_depth_default;
@@ -202,6 +203,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->stars.dx_max_sort = 0.f;
     c->black_holes.dx_max_part = 0.f;
     c->hydro.sorted = 0;
+    c->hydro.sort_allocated = 0;
     c->stars.sorted = 0;
     c->hydro.count = 0;
     c->hydro.count_total = 0;
@@ -250,6 +252,8 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->black_holes.black_holes_out = NULL;
     c->grav.drift = NULL;
     c->grav.drift_out = NULL;
+    c->hydro.cooling_in = NULL;
+    c->hydro.cooling_out = NULL;
     c->hydro.cooling = NULL;
     c->grav.long_range = NULL;
     c->grav.down_in = NULL;
@@ -577,12 +581,14 @@ void space_regrid(struct space *s, int verbose) {
         error("Failed to init spinlock for gravity.");
       if (lock_init(&s->cells_top[k].grav.mlock) != 0)
         error("Failed to init spinlock for multipoles.");
+      if (lock_init(&s->cells_top[k].grav.star_formation_lock) != 0)
+        error("Failed to init spinlock for star formation (gpart).");
       if (lock_init(&s->cells_top[k].stars.lock) != 0)
         error("Failed to init spinlock for stars.");
       if (lock_init(&s->cells_top[k].black_holes.lock) != 0)
         error("Failed to init spinlock for black holes.");
       if (lock_init(&s->cells_top[k].stars.star_formation_lock) != 0)
-        error("Failed to init spinlock for star formation.");
+        error("Failed to init spinlock for star formation (spart).");
     }
 
     /* Set the cell location and sizes. */
@@ -781,7 +787,7 @@ void space_allocate_extras(struct space *s, int verbose) {
 
   /* Do we have enough space for the extra gparts (i.e. we haven't used up any)
    * ? */
-  if (nr_gparts + expected_num_extra_gparts > size_gparts) {
+  if (nr_actual_gparts + expected_num_extra_gparts > nr_gparts) {
 
     /* Ok... need to put some more in the game */
 
@@ -816,6 +822,10 @@ void space_allocate_extras(struct space *s, int verbose) {
       for (size_t i = 0; i < nr_sparts; ++i) {
         if (s->sparts[i].time_bin != time_bin_not_created)
           s->sparts[i].gpart += delta;
+      }
+      for (size_t i = 0; i < nr_bparts; ++i) {
+        if (s->bparts[i].time_bin != time_bin_not_created)
+          s->bparts[i].gpart += delta;
       }
     }
 
@@ -1321,6 +1331,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         "counter.");
 #endif
 
+  const ticks tic2 = getticks();
+
   /* Move non-local parts and inhibited parts to the end of the list. */
   if ((with_dithering || !repartitioned) &&
       (s->e->nr_nodes > 1 || count_inhibited_parts > 0)) {
@@ -1519,6 +1531,10 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
       }
     }
   }
+
+  if (verbose)
+    message("Moving non-local particles took %.3f %s.",
+            clocks_from_ticks(getticks() - tic2), clocks_getunit());
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that all gparts are in the correct place. */
@@ -1900,7 +1916,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 #endif
 
   /* Hook the cells up to the parts. Make list of local and non-empty cells */
-  ticks tic2 = getticks();
+  const ticks tic3 = getticks();
   struct part *finger = s->parts;
   struct xpart *xfinger = s->xparts;
   struct gpart *gfinger = s->gparts;
@@ -1966,7 +1982,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
     message("Have %d local top-level cells (total=%d)", s->nr_local_cells,
             s->nr_cells);
     message("hooking up cells took %.3f %s.",
-            clocks_from_ticks(getticks() - tic2), clocks_getunit());
+            clocks_from_ticks(getticks() - tic3), clocks_getunit());
   }
 
   /* Re-order the extra particles such that they are at the end of their cell's
@@ -3863,7 +3879,8 @@ void space_recycle(struct space *s, struct cell *c) {
   if (lock_destroy(&c->hydro.lock) != 0 || lock_destroy(&c->grav.plock) != 0 ||
       lock_destroy(&c->grav.mlock) != 0 || lock_destroy(&c->stars.lock) != 0 ||
       lock_destroy(&c->black_holes.lock) != 0 ||
-      lock_destroy(&c->stars.star_formation_lock))
+      lock_destroy(&c->grav.star_formation_lock) != 0 ||
+      lock_destroy(&c->stars.star_formation_lock) != 0)
     error("Failed to destroy spinlocks.");
 
   /* Lock the space. */
@@ -3916,7 +3933,8 @@ void space_recycle_list(struct space *s, struct cell *cell_list_begin,
         lock_destroy(&c->grav.mlock) != 0 ||
         lock_destroy(&c->stars.lock) != 0 ||
         lock_destroy(&c->black_holes.lock) != 0 ||
-        lock_destroy(&c->stars.star_formation_lock))
+        lock_destroy(&c->stars.star_formation_lock) != 0 ||
+        lock_destroy(&c->grav.star_formation_lock) != 0)
       error("Failed to destroy spinlocks.");
 
     /* Count this cell. */
@@ -4017,7 +4035,8 @@ void space_getcells(struct space *s, int nr_cells, struct cell **cells) {
         lock_init(&cells[j]->grav.mlock) != 0 ||
         lock_init(&cells[j]->stars.lock) != 0 ||
         lock_init(&cells[j]->black_holes.lock) != 0 ||
-        lock_init(&cells[j]->stars.star_formation_lock) != 0)
+        lock_init(&cells[j]->stars.star_formation_lock) != 0 ||
+        lock_init(&cells[j]->grav.star_formation_lock) != 0)
       error("Failed to initialize cell spinlocks.");
   }
 }
@@ -4971,6 +4990,9 @@ void space_init(struct space *s, struct swift_params *params,
   engine_max_sparts_per_ghost =
       parser_get_opt_param_int(params, "Scheduler:engine_max_sparts_per_ghost",
                                engine_max_sparts_per_ghost_default);
+  engine_max_parts_per_cooling =
+      parser_get_opt_param_int(params, "Scheduler:engine_max_parts_per_cooling",
+                               engine_max_parts_per_cooling_default);
 
   if (verbose) {
     message("max_size set to %d split_size set to %d", space_maxsize,
@@ -5108,7 +5130,8 @@ void space_init(struct space *s, struct swift_params *params,
 #endif
 
   /* Do we want any spare particles for on the fly creation? */
-  if (!star_formation) space_extra_sparts = 0;
+  if (!star_formation || !swift_star_formation_model_creates_stars)
+    space_extra_sparts = 0;
 
   /* Build the cells recursively. */
   if (!dry_run) space_regrid(s, verbose);
@@ -5810,6 +5833,9 @@ void space_struct_dump(struct space *s, FILE *stream) {
   restart_write_blocks(&engine_max_sparts_per_ghost, sizeof(int), 1, stream,
                        "engine_max_sparts_per_ghost",
                        "engine_max_sparts_per_ghost");
+  restart_write_blocks(&engine_max_parts_per_cooling, sizeof(int), 1, stream,
+                       "engine_max_parts_per_cooling",
+                       "engine_max_parts_per_cooling");
   restart_write_blocks(&engine_star_resort_task_depth, sizeof(int), 1, stream,
                        "engine_star_resort_task_depth",
                        "engine_star_resort_task_depth");
@@ -5877,6 +5903,8 @@ void space_struct_restore(struct space *s, FILE *stream) {
                       "engine_max_parts_per_ghost");
   restart_read_blocks(&engine_max_sparts_per_ghost, sizeof(int), 1, stream,
                       NULL, "engine_max_sparts_per_ghost");
+  restart_read_blocks(&engine_max_parts_per_cooling, sizeof(int), 1, stream,
+                      NULL, "engine_max_parts_per_cooling");
   restart_read_blocks(&engine_star_resort_task_depth, sizeof(int), 1, stream,
                       NULL, "engine_star_resort_task_depth");
 

@@ -81,6 +81,8 @@ const char *taskID_names[task_type_count] = {"none",
                                              "grav_mesh",
                                              "grav_end_force",
                                              "cooling",
+                                             "cooling_in",
+                                             "cooling_out",
                                              "star_formation",
                                              "star_formation_in",
                                              "star_formation_out",
@@ -915,6 +917,8 @@ void task_dump_all(struct engine *e, int step) {
 
 #ifdef SWIFT_DEBUG_TASKS
 
+  const ticks tic = getticks();
+
   /* Need this to convert ticks to seconds. */
   const unsigned long long cpufreq = clocks_get_cpufreq();
 
@@ -1008,6 +1012,10 @@ void task_dump_all(struct engine *e, int step) {
   }
   fclose(file_thread);
 #endif  // WITH_MPI
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 #endif  // SWIFT_DEBUG_TASKS
 }
 
@@ -1035,6 +1043,8 @@ void task_dump_all(struct engine *e, int step) {
  */
 void task_dump_stats(const char *dumpfile, struct engine *e, int header,
                      int allranks) {
+
+  const ticks function_tic = getticks();
 
   /* Need arrays for sum, min and max across all types and subtypes. */
   double sum[task_type_count][task_subtype_count];
@@ -1171,6 +1181,10 @@ void task_dump_stats(const char *dumpfile, struct engine *e, int header,
 #ifdef WITH_MPI
   }
 #endif
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - function_tic),
+            clocks_getunit());
 }
 
 /**
@@ -1187,6 +1201,8 @@ void task_dump_stats(const char *dumpfile, struct engine *e, int header,
  * @param e the #engine
  */
 void task_dump_active(struct engine *e) {
+
+  const ticks tic = getticks();
 
   /* Need this to convert ticks to seconds. */
   unsigned long long cpufreq = clocks_get_cpufreq();
@@ -1234,4 +1250,8 @@ void task_dump_active(struct engine *e) {
     count++;
   }
   fclose(file_thread);
+
+  if (e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 }

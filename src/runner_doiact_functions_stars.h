@@ -112,8 +112,9 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
         runner_iact_nonsym_feedback_density(r2, dx, hi, hj, si, pj, NULL, cosmo,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step);
+        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj,
+                                          with_cosmology, cosmo, ti_current,
+                                          e->time, e->step);
 #endif
       }
     } /* loop over the parts in ci. */
@@ -221,8 +222,9 @@ void DO_NONSYM_PAIR1_STARS_NAIVE(struct runner *r, struct cell *restrict ci,
         runner_iact_nonsym_feedback_density(r2, dx, hi, hj, si, pj, NULL, cosmo,
                                             ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj, cosmo,
-                                          ti_current, e->time, e->step);
+        runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, si, pj, xpj,
+                                          with_cosmology, cosmo, ti_current,
+                                          e->time, e->step);
 #endif
       }
     } /* loop over the parts in cj. */
@@ -272,8 +274,8 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
   if (do_ci_stars) {
 
     /* Pick-out the sorted lists. */
-    const struct sort_entry *restrict sort_j = cj->hydro.sort[sid];
-    const struct sort_entry *restrict sort_i = ci->stars.sort[sid];
+    const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
+    const struct sort_entry *restrict sort_i = cell_get_stars_sorts(ci, sid);
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Some constants used to checks that the parts are in the right frame */
@@ -393,8 +395,9 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
           runner_iact_nonsym_feedback_density(r2, dx, hi, hj, spi, pj, NULL,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-          runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj, cosmo,
-                                            ti_current, e->time, e->step);
+          runner_iact_nonsym_feedback_apply(r2, dx, hi, hj, spi, pj, xpj,
+                                            with_cosmology, cosmo, ti_current,
+                                            e->time, e->step);
 #endif
         }
       } /* loop over the parts in cj. */
@@ -403,8 +406,8 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
 
   if (do_cj_stars) {
     /* Pick-out the sorted lists. */
-    const struct sort_entry *restrict sort_i = ci->hydro.sort[sid];
-    const struct sort_entry *restrict sort_j = cj->stars.sort[sid];
+    const struct sort_entry *restrict sort_i = cell_get_hydro_sorts(ci, sid);
+    const struct sort_entry *restrict sort_j = cell_get_stars_sorts(cj, sid);
 
 #ifdef SWIFT_DEBUG_CHECKS
     /* Some constants used to checks that the parts are in the right frame */
@@ -521,8 +524,9 @@ void DO_SYM_PAIR1_STARS(struct runner *r, struct cell *ci, struct cell *cj,
           runner_iact_nonsym_feedback_density(r2, dx, hj, hi, spj, pi, xpi,
                                               cosmo, ti_current);
 #elif (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK)
-          runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi, cosmo,
-                                            ti_current, e->time, e->step);
+          runner_iact_nonsym_feedback_apply(r2, dx, hj, hi, spj, pi, xpi,
+                                            with_cosmology, cosmo, ti_current,
+                                            e->time, e->step);
 #endif
         }
       } /* loop over the parts in ci. */
@@ -588,7 +592,7 @@ void DOPAIR1_SUBSET_STARS(struct runner *r, struct cell *restrict ci,
   if (count_j == 0) return;
 
   /* Pick-out the sorted lists. */
-  const struct sort_entry *restrict sort_j = cj->hydro.sort[sid];
+  const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
   const float dxj = cj->hydro.dx_max_sort;
 
   /* Sparts are on the left? */
@@ -1072,7 +1076,8 @@ void DOSELF1_BRANCH_STARS(struct runner *r, struct cell *c) {
 
 #define RUNNER_CHECK_SORT(TYPE, PART, cj, ci, sid)                          \
   ({                                                                        \
-    const struct sort_entry *restrict sort_j = cj->TYPE.sort[sid];          \
+    const struct sort_entry *restrict sort_j =                              \
+        cell_get_##TYPE##_sorts(cj, sid);                                   \
                                                                             \
     for (int pjd = 0; pjd < cj->TYPE.count; pjd++) {                        \
       const struct PART *p = &cj->TYPE.parts[sort_j[pjd].i];                \

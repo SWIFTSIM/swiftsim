@@ -135,6 +135,7 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
+extern int engine_max_parts_per_cooling;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -264,9 +265,10 @@ void engine_repartition_trigger(struct engine *e) {
 
   /* Do nothing if there have not been enough steps since the last repartition
    * as we don't want to repeat this too often or immediately after a
-   * repartition step. We attempt all this even when we are not repartitioning
-   * as the balance logs can still be interesting. */
-  if (e->step - e->last_repartition >= 2) {
+   * repartition step, or also immediately on restart. We check all this
+   * even when we are not repartitioning as the balance logs can still be
+   * interesting. */
+  if (e->step - e->last_repartition >= 2 && !e->restarting) {
 
     /* If we have fixed costs available and this is step 2 or we are forcing
      * repartitioning then we do a forced fixed costs repartition regardless. */
@@ -377,9 +379,16 @@ void engine_repartition_trigger(struct engine *e) {
 
         } else {
           /* Not repartitioning, would that have been done otherwise? */
-          if (e->verbose)
-            message("trigger fraction %.3f > %.3f would have repartitioned",
-                    balance, abs_trigger);
+          if (e->verbose) {
+            if (balance > abs_trigger) {
+              message("trigger fraction %.3f > %.3f would have repartitioned",
+                      balance, abs_trigger);
+            } else {
+              message(
+                  "trigger fraction %.3f =< %.3f would not have repartitioned",
+                  balance, abs_trigger);
+            }
+          }
         }
 
         /* Keep logs of all CPU times and resident memory size for debugging
@@ -489,12 +498,13 @@ void engine_exchange_cells(struct engine *e) {
  * gparts, i.e. the received particles have correct linkeage.
  */
 void engine_exchange_strays(struct engine *e, const size_t offset_parts,
-                            const int *ind_part, size_t *Npart,
-                            const size_t offset_gparts, const int *ind_gpart,
-                            size_t *Ngpart, const size_t offset_sparts,
-                            const int *ind_spart, size_t *Nspart,
-                            const size_t offset_bparts, const int *ind_bpart,
-                            size_t *Nbpart) {
+                            const int *restrict ind_part, size_t *Npart,
+                            const size_t offset_gparts,
+                            const int *restrict ind_gpart, size_t *Ngpart,
+                            const size_t offset_sparts,
+                            const int *restrict ind_spart, size_t *Nspart,
+                            const size_t offset_bparts,
+                            const int *restrict ind_bpart, size_t *Nbpart) {
 
 #ifdef WITH_MPI
   struct space *s = e->s;
@@ -985,6 +995,11 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
         MPI_SUCCESS)
       error("MPI_Waitall on sends failed.");
 
+  /* Free the proxy memory */
+  for (int k = 0; k < e->nr_proxies; k++) {
+    proxy_free_particle_buffers(&e->proxies[k]);
+  }
+
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
@@ -1252,6 +1267,9 @@ void engine_allocate_foreign_particles(struct engine *e) {
 #ifdef WITH_MPI
 
   const int nr_proxies = e->nr_proxies;
+  const int with_hydro = e->policy & engine_policy_hydro;
+  const int with_stars = e->policy & engine_policy_stars;
+  const int with_black_holes = e->policy & engine_policy_black_holes;
   struct space *s = e->s;
   ticks tic = getticks();
 
@@ -1279,6 +1297,17 @@ void engine_allocate_foreign_particles(struct engine *e) {
       count_bparts_in += e->proxies[k].cells_in[j]->black_holes.count;
     }
   }
+
+  if (!with_hydro && count_parts_in)
+    error(
+        "Not running with hydro but about to receive gas particles in "
+        "proxies!");
+  if (!with_stars && count_sparts_in)
+    error("Not running with stars but about to receive stars in proxies!");
+  if (!with_black_holes && count_bparts_in)
+    error(
+        "Not running with black holes but about to receive black holes in "
+        "proxies!");
 
   if (e->verbose)
     message("Counting number of foreign particles took %.3f %s.",
@@ -1361,14 +1390,20 @@ void engine_allocate_foreign_particles(struct engine *e) {
         gparts = &gparts[count_gparts];
       }
 
-      /* For stars, we just use the numbers in the top-level cells */
-      cell_link_sparts(e->proxies[k].cells_in[j], sparts);
-      sparts =
-          &sparts[e->proxies[k].cells_in[j]->stars.count + space_extra_sparts];
+      if (with_stars) {
 
-      /* For black holes, we just use the numbers in the top-level cells */
-      cell_link_bparts(e->proxies[k].cells_in[j], bparts);
-      bparts = &bparts[e->proxies[k].cells_in[j]->black_holes.count];
+        /* For stars, we just use the numbers in the top-level cells */
+        cell_link_sparts(e->proxies[k].cells_in[j], sparts);
+        sparts = &sparts[e->proxies[k].cells_in[j]->stars.count +
+                         space_extra_sparts];
+      }
+
+      if (with_black_holes) {
+
+        /* For black holes, we just use the numbers in the top-level cells */
+        cell_link_bparts(e->proxies[k].cells_in[j], bparts);
+        bparts = &bparts[e->proxies[k].cells_in[j]->black_holes.count];
+      }
     }
   }
 
@@ -2368,6 +2403,10 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   e->forcerebuild = 1;
   e->wallclock_time = (float)clocks_diff(&time1, &time2);
 
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  e->force_checks_snapshot_flag = 0;
+#endif
+
   if (e->verbose) message("took %.3f %s.", e->wallclock_time, clocks_getunit());
 }
 
@@ -2402,6 +2441,8 @@ void engine_step(struct engine *e) {
 
   if (e->nodeID == 0) {
 
+    const ticks tic_files = getticks();
+
     /* Print some information to the screen */
     printf(
         "  %6d %14e %12.7f %12.7f %14e %4d %4d %12lld %12lld %12lld "
@@ -2415,6 +2456,7 @@ void engine_step(struct engine *e) {
 
     /* Write the star formation information to the file */
     if (e->policy & engine_policy_star_formation) {
+
       star_formation_logger_write_to_log_file(e->sfh_logger, e->time,
                                               e->cosmology->a, e->cosmology->z,
                                               e->sfh, e->step);
@@ -2442,6 +2484,10 @@ void engine_step(struct engine *e) {
 #ifdef SWIFT_DEBUG_CHECKS
     fflush(e->file_timesteps);
 #endif
+
+    if (e->verbose)
+      message("Writing step info to files took %.3f %s",
+              clocks_from_ticks(getticks() - tic_files), clocks_getunit());
   }
 
   /* We need some cells to exist but not the whole task stuff. */
@@ -2471,14 +2517,16 @@ void engine_step(struct engine *e) {
     e->time_step = (e->ti_current - e->ti_old) * e->time_base;
   }
 
+  /*****************************************************/
+  /* OK, we now know what the next end of time-step is */
+  /*****************************************************/
+
+  const ticks tic_updates = getticks();
+
   /* Update the cooling function */
   if ((e->policy & engine_policy_cooling) ||
       (e->policy & engine_policy_temperature))
     cooling_update(e->cosmology, e->cooling_func, e->s);
-
-  /*****************************************************/
-  /* OK, we now know what the next end of time-step is */
-  /*****************************************************/
 
   /* Update the softening lengths */
   if (e->policy & engine_policy_self_gravity)
@@ -2488,6 +2536,10 @@ void engine_step(struct engine *e) {
   if (e->policy & engine_policy_hydro)
     hydro_props_update(e->hydro_properties, e->gravity_properties,
                        e->cosmology);
+
+  if (e->verbose)
+    message("Updating general quantities took %.3f %s",
+            clocks_from_ticks(getticks() - tic_updates), clocks_getunit());
 
   /* Trigger a tree-rebuild if we passed the frequency threshold */
   if ((e->policy & engine_policy_self_gravity) &&
@@ -2556,9 +2608,38 @@ void engine_step(struct engine *e) {
 #endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
-  /* Run the brute-force gravity calculation for some gparts */
-  if (e->policy & engine_policy_self_gravity)
-    gravity_exact_force_compute(e->s, e);
+  /* Do we need to check if all gparts are active? */
+  if (e->force_checks_only_all_active) {
+    size_t nr_gparts = e->s->nr_gparts;
+    e->all_gparts_active = 1;
+
+    /* Look for inactive gparts */
+    for (size_t i = 0; i < nr_gparts; ++i) {
+      struct gpart *gp = &e->s->gparts[i];
+
+      /* If one gpart is inactive we can stop. */
+      if (!gpart_is_active(gp, e)) {
+        e->all_gparts_active = 0;
+        break;
+      }
+    }
+  }
+
+  /* Check if we want to run force checks this timestep. */
+  if (e->policy & engine_policy_self_gravity) {
+    /* Are all gparts active (and the option is selected)? */
+    if ((e->all_gparts_active && e->force_checks_only_all_active) ||
+        !e->force_checks_only_all_active) {
+      /* Is this a snapshot timestep (and the option is selected)? */
+      if ((e->force_checks_snapshot_flag &&
+           e->force_checks_only_at_snapshots) ||
+          !e->force_checks_only_at_snapshots) {
+
+        /* Do checks */
+        gravity_exact_force_compute(e->s, e);
+      }
+    }
+  }
 #endif
 
     /* Get current CPU times.*/
@@ -2595,9 +2676,24 @@ void engine_step(struct engine *e) {
   }
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
-  /* Check the accuracy of the gravity calculation */
-  if (e->policy & engine_policy_self_gravity)
-    gravity_exact_force_check(e->s, e, 1e-1);
+  /* Check if we want to run force checks this timestep. */
+  if (e->policy & engine_policy_self_gravity) {
+    /* Are all gparts active (and the option is selected)? */
+    if ((e->all_gparts_active && e->force_checks_only_all_active) ||
+        !e->force_checks_only_all_active) {
+      /* Is this a snapshot timestep (and the option is selected)? */
+      if ((e->force_checks_snapshot_flag &&
+           e->force_checks_only_at_snapshots) ||
+          !e->force_checks_only_at_snapshots) {
+
+        /* Do checks */
+        gravity_exact_force_check(e->s, e, 1e-1);
+
+        /* Reset flag waiting for next output time */
+        e->force_checks_snapshot_flag = 0;
+      }
+    }
+  }
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -2725,6 +2821,11 @@ void engine_check_for_dumps(struct engine *e) {
     switch (type) {
 
       case output_snapshot:
+
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+        /* Indicate we are allowed to do a brute force calculation now */
+        e->force_checks_snapshot_flag = 1;
+#endif
 
         /* Do we want a corresponding VELOCIraptor output? */
         if (with_stf && e->snapshot_invoke_stf && !e->stf_this_timestep) {
@@ -3829,6 +3930,13 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   }
 #endif
 
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  e->force_checks_only_all_active =
+      parser_get_opt_param_int(params, "ForceChecks:only_when_all_active", 0);
+  e->force_checks_only_at_snapshots =
+      parser_get_opt_param_int(params, "ForceChecks:only_at_snapshots", 0);
+#endif
+
   /* Make the space link back to the engine. */
   s->e = e;
 
@@ -4470,7 +4578,7 @@ void engine_config(int restart, int fof, struct engine *e,
 
   /* Estimated number of links per tasks */
   e->links_per_tasks =
-      parser_get_opt_param_int(params, "Scheduler:links_per_tasks", 25);
+      parser_get_opt_param_float(params, "Scheduler:links_per_tasks", 25.);
 
   /* Init the scheduler. */
   scheduler_init(&e->sched, e->s, maxtasks, nr_queues,
@@ -4520,6 +4628,9 @@ void engine_config(int restart, int fof, struct engine *e,
     engine_max_sparts_per_ghost = parser_get_opt_param_int(
         params, "Scheduler:engine_max_sparts_per_ghost",
         engine_max_sparts_per_ghost_default);
+    engine_max_parts_per_cooling = parser_get_opt_param_int(
+        params, "Scheduler:engine_max_parts_per_cooling",
+        engine_max_parts_per_cooling_default);
   }
 
   /* Allocate and init the threads. */
@@ -4981,6 +5092,12 @@ void engine_recompute_displacement_constraint(struct engine *e) {
   float min_mass[swift_type_count] = {
       e->s->min_part_mass,  e->s->min_gpart_mass, FLT_MAX, FLT_MAX,
       e->s->min_spart_mass, e->s->min_bpart_mass};
+
+#ifdef WITH_MPI
+  MPI_Allreduce(MPI_IN_PLACE, min_mass, swift_type_count, MPI_FLOAT, MPI_MIN,
+                MPI_COMM_WORLD);
+#endif
+
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that the minimal mass collection worked */
   float min_part_mass_check = FLT_MAX;
@@ -4989,13 +5106,8 @@ void engine_recompute_displacement_constraint(struct engine *e) {
     min_part_mass_check =
         min(min_part_mass_check, hydro_get_mass(&e->s->parts[i]));
   }
-  if (min_part_mass_check != min_mass[swift_type_gas])
+  if (min_part_mass_check < min_mass[swift_type_gas])
     error("Error collecting minimal mass of gas particles.");
-#endif
-
-#ifdef WITH_MPI
-  MPI_Allreduce(MPI_IN_PLACE, min_mass, swift_type_count, MPI_FLOAT, MPI_MIN,
-                MPI_COMM_WORLD);
 #endif
 
   /* Do the same for the velocity norm sum */

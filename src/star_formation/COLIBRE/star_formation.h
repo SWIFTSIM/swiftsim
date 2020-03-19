@@ -92,13 +92,11 @@ struct star_formation {
  *
  */
 INLINE static int star_formation_is_star_forming(
-    const struct part* restrict p, const struct xpart* restrict xp,
+    const struct part* p, const struct xpart* xp,
     const struct star_formation* starform, const struct phys_const* phys_const,
-    const struct cosmology* cosmo,
-    const struct hydro_props* restrict hydro_props,
-    const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
-    const struct entropy_floor_properties* restrict entropy_props) {
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    const struct unit_system* us, const struct cooling_function_data* cooling,
+    const struct entropy_floor_properties* entropy_props) {
 
   /* Minimal density (converted from critical density) for star formation */
   const double rho_crit_times_min_over_den =
@@ -146,7 +144,7 @@ INLINE static int star_formation_is_star_forming(
  * @param dt_star The time-step of this particle.
  */
 INLINE static void star_formation_compute_SFR(
-    const struct part* restrict p, struct xpart* restrict xp,
+    const struct part* p, struct xpart* xp,
     const struct star_formation* starform, const struct phys_const* phys_const,
     const struct hydro_props* hydro_props, const struct cosmology* cosmo,
     const double dt_star) {
@@ -172,6 +170,23 @@ INLINE static void star_formation_compute_SFR(
 
   /* Store the SFR */
   xp->sf_data.SFR = SFRpergasmass * hydro_get_mass(p);
+}
+
+/**
+ * @brief Decides whether a new particle should be created or if the hydro
+ * particle needs to be transformed.
+ *
+ * In COLIBRE, we always convert full particles --> return 0
+ *
+ * @param p The #part.
+ * @param xp The #xpart.
+ * @param starform The properties of the star formation model.
+ *
+ * @return 1 if a new spart needs to be created.
+ */
+INLINE static int star_formation_should_spawn_spart(
+    struct part* p, struct xpart* xp, const struct star_formation* starform) {
+  return 0;
 }
 
 /**
@@ -240,6 +255,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param starform the star formation law properties to use.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
+ * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -249,7 +265,8 @@ INLINE static void star_formation_copy_properties(
     const struct hydro_props* restrict hydro_props,
     const struct dustevo_props* restrict dp,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
+    const struct cooling_function_data* restrict cooling,
+    const int convert_part) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);
@@ -430,8 +447,7 @@ __attribute__((always_inline)) INLINE static void star_formation_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_part_has_no_neighbours(struct part* restrict p,
-                                      struct xpart* restrict xp,
+star_formation_part_has_no_neighbours(struct part* p, struct xpart* xp,
                                       const struct star_formation* cd,
                                       const struct cosmology* cosmo) {}
 
@@ -449,12 +465,11 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
  * @param xp Pointer to the extended particle data.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_first_init_part(const struct phys_const* restrict phys_const,
-                               const struct unit_system* restrict us,
-                               const struct cosmology* restrict cosmo,
+star_formation_first_init_part(const struct phys_const* phys_const,
+                               const struct unit_system* us,
+                               const struct cosmology* cosmo,
                                const struct star_formation* data,
-                               const struct part* restrict p,
-                               struct xpart* restrict xp) {}
+                               const struct part* p, struct xpart* xp) {}
 
 /**
  * @brief Sets the star_formation properties of the (x-)particles to a valid
@@ -467,7 +482,7 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
  * @param data The global star_formation information.
  */
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
-    struct part* restrict p, const struct star_formation* data) {}
+    struct part* p, const struct star_formation* data) {}
 
 /**
  * @brief Split the star formation content of a particle into n pieces
@@ -484,5 +499,33 @@ __attribute__((always_inline)) INLINE static void star_formation_split_part(
 
   if (xp->sf_data.SFR > 0.) xp->sf_data.SFR /= n;
 }
+
+/**
+ * @brief Deal with the case where no spart are available for star formation.
+ *
+ * @param e The #engine.
+ * @param p The #part.
+ * @param xp The #xpart.
+ */
+__attribute__((always_inline)) INLINE static void
+star_formation_no_spart_available(const struct engine* e, const struct part* p,
+                                  const struct xpart* xp) {
+  /* Nothing to do, we just skip it and deal with it next step */
+}
+
+/**
+ * @brief Compute some information for the star formation model based
+ * on all the particles that were read in.
+ *
+ * This is called once on start-up of the code.
+ *
+ * Nothing to do here for COLIBRE.
+ *
+ * @param star_form The #star_formation structure.
+ * @param e The #engine.
+ */
+__attribute__((always_inline)) INLINE static void
+star_formation_first_init_stats(struct star_formation* star_form,
+                                const struct engine* e) {}
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_H */
