@@ -81,6 +81,18 @@ extern int space_extra_gparts;
 extern int space_extra_sparts;
 extern int space_extra_bparts;
 
+
+/**
+ * @brief Slice of unique IDs for particle creation.
+ */
+struct unique_ids {
+  /*! Current free unique id */
+  long long current;
+
+  /*! Maximal unique id in this slice  (not included) */
+  long long max;
+}
+
 /**
  * @brief The space in which the cells and particles reside.
  */
@@ -276,6 +288,24 @@ struct space {
 
   /*! The group information returned by VELOCIraptor for each #gpart. */
   struct velociraptor_gpart_data *gpart_group_data;
+
+  /*! Structure dealing with the computation of a unique ID */
+  struct {
+    /*! Current slice of unique ids */
+    struct unique_ids current;
+
+    /*! Next slice of unique ids */
+    struct unique_ids next;
+
+    /* Global next slot available */
+    long long global_next_id;
+
+    /* Size of the slices */
+    size_t slice_size;
+
+    /* Lock for the unique ids */
+    swift_lock_type lock;
+  } unique_id;
 
 #ifdef WITH_MPI
 

@@ -4765,6 +4765,85 @@ void space_convert_quantities(struct space *s, int verbose) {
             clocks_getunit());
 }
 
+
+/**
+ * @brief Initialize the computation of unique IDs.
+ *
+ * @param s The #space.
+ */
+void space_init_unique_id(struct space *s) {
+  /* Set the counter to 0. */
+  s->unique_id.global_next_id = 0;
+
+  /* Check the parts for the max id. */
+  for(size_t i = 0; i < s->nr_parts; i++) {
+    if (s->parts[i].id > s->unique_id.global_next_id) {
+      s->unique_id.global_next_id = s->parts[i].id;
+    }
+  }
+
+  /* Check the gparts for the max id. */
+  for(size_t i = 0; i < s->nr_gparts; i++) {
+    if (s->gparts[i].id_or_neg_offset > s->unique_id.global_next_id) {
+      s->unique_id.global_next_id = s->gparts[i].id_or_neg_offset;
+    }
+  }
+
+  /* Check the sparts for the max id. */
+  for(size_t i = 0; i < s->nr_sparts; i++) {
+    if (s->sparts[i].id > s->unique_id.global_next_id) {
+      s->unique_id.global_next_id = s->sparts[i].id;
+    }
+  }
+
+  /* Check the bparts for the max id. */
+  for(size_t i = 0; i < s->nr_bparts; i++) {
+    if (s->bparts[i].id > s->unique_id.global_next_id) {
+      s->unique_id.global_next_id = s->bparts[i].id;
+    }
+  }
+
+#ifdef WITH_MPI
+  /* Find the global max. */
+  MPI_Allreduce(MPI_IN_PLACE, &s->unique_id.global_next_id, 1,
+                MPI_LONGLONG, MPI_MAX, MPI_COMM_WORLD);
+#endf
+
+  /* Get the first unique id. */
+  if (s->unique_id.global_next_id == LLONG_MAX) {
+    error("Overflow for the unique id.");
+  }
+  s->unique_id.global_next_id++;
+
+  /* Compute the size of the each slice. */
+  s->unique_id.slice_size = space_extra_parts + space_extra_sparts +
+    space_extra_gparts + space_extra_bparts;
+
+  /* Compute the initial slices. */
+  if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * s->unique_id.slice_size) {
+    error("Overflow for the unique id.");
+  }
+  long long init = s->unique_id.global_next_id + 2 * engine_rank * s->unique_id.slice_size;
+
+  /* Set the slices and check for overflows. */
+  s->unique_id.current.current = init;
+
+  if (init > LLONG_MAX - s->unique_id.slice_size) {
+    error("Overflow for the unique id.");
+  }
+  s->unique_id.current.max = init + s->unique_id.slice_size;
+  s->unique_id.next.current = s->unique_id.current.max;
+
+  if (s->unique_id.next.current > LLONG_MAX - s->unique_id.slice_size) {
+    error("Overflow for the unique id.");
+  }
+  s->unique_id.next.max = s->unique_id.next.current + s->unique_id.slice_size;
+
+  /* Initialize the lock. */
+  if (lock_init(&s->unique_id.lock) != 0)
+    error("Failed to init spinlock for the unique ids.");
+}
+
 /**
  * @brief Split the space into cells given the array of particles.
  *
@@ -5082,8 +5161,14 @@ void space_init(struct space *s, struct swift_params *params,
 #endif
 
   /* Do we want any spare particles for on the fly creation? */
-  if (!star_formation || !swift_star_formation_model_creates_stars)
+  if (!star_formation || !swift_star_formation_model_creates_stars) {
     space_extra_sparts = 0;
+  }
+
+  /* Compute the max id for the generation of unique id. */
+  if (star_formation && swift_star_formation_model_creates_stars) {
+    space_init_unique_id(s);
+  }
 
   /* Build the cells recursively. */
   if (!dry_run) space_regrid(s, verbose);
@@ -5735,12 +5820,15 @@ void space_clean(struct space *s) {
   swift_free("gparts_foreign", s->gparts_foreign);
   swift_free("bparts_foreign", s->bparts_foreign);
 #endif
+
+  if (lock_destroy(&s->unique_id.lock) != 0)
+    error("Failed to destroy spinlocks.");
 }
 
 /**
  * @brief Write the space struct and its contents to the given FILE as a
  * stream of bytes.
- *
+< *
  * @param s the space
  * @param stream the file stream
  */
@@ -6029,4 +6117,23 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
   /* Cleanup */
   fclose(f);
 #endif
+}
+
+
+/**
+ * @brief Get a new unique ID.
+ *
+ * @param s the #space.
+ *
+ * @return The new unique ID
+ */
+long long space_get_new_unique_id(struct space *s) {
+  /* Get the lock */
+  lock_lock(&s->unique_id.lock);
+
+
+  /* Release the lock */
+  if (lock_unlock(s->unique_id.lock) != 0) {
+    error("Impossible to unlock the unique id.");
+  }
 }
