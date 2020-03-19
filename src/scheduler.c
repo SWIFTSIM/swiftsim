@@ -2371,24 +2371,44 @@ void scheduler_dump_queues(struct engine *e) {
   fclose(file_thread);
 }
 
+void scheduler_report_task_times_mapper(void *map_data, int num_elements,
+                                        void *extra_data) {
+
+  struct task *tasks = (struct task *)map_data;
+  float time_local[task_category_count] = {0};
+  float *time_global = (float *)extra_data;
+
+  /* Gather the times spent in the different task categories */
+  for (int i = 0; i < num_elements; ++i) {
+
+    const struct task *t = &tasks[i];
+    const float total_time = clocks_from_ticks(t->total_ticks);
+    const enum task_categories cat = task_get_category(t);
+    time_local[cat] += total_time;
+  }
+
+  /* Update the global counters */
+  for (enum task_categories i = 0; i < task_category_count; ++i) {
+    atomic_add_f(&time_global[i], time_local[i]);
+  }
+}
+
+/**
+ * @brief Display the time spent in the different task categories.
+ *
+ * @param s The #scheduler.
+ * @param nr_threads The number of threads used in the engine.
+ */
 void scheduler_report_task_times(const struct scheduler *s,
                                  const int nr_threads) {
 
   const ticks tic = getticks();
 
-  struct task *tasks = s->tasks;
-  const int nr_tasks = s->nr_tasks;
-
   /* Initialise counters */
   float time[task_category_count] = {0};
-
-  for (int i = 0; i < nr_tasks; ++i) {
-
-    const struct task *t = &tasks[i];
-    const float total_time = clocks_from_ticks(t->total_ticks);
-    const enum task_categories cat = task_get_category(t);
-    time[cat] += total_time;
-  }
+  threadpool_map(s->threadpool, scheduler_report_task_times_mapper, s->tasks,
+                 s->nr_tasks, sizeof(struct task), threadpool_auto_chunk_size,
+                 time);
 
   /* Total CPU time spent in engine_launch() */
   const float total_tasks_time = clocks_from_ticks(s->total_ticks) * nr_threads;

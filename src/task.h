@@ -167,7 +167,7 @@ enum task_categories {
 };
 
 /**
- * @Brief Names of the task types.
+ * @brief Names of the task types.
  */
 extern const char *taskID_names[];
 

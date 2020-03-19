@@ -1260,7 +1260,7 @@ void task_dump_active(struct engine *e) {
 }
 
 /**
- * @param Return the #task_categories of a given #task.
+ * @brief Return the #task_categories of a given #task.
  *
  * @param t The #task.
  */
