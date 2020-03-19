@@ -162,6 +162,7 @@ enum task_categories {
   task_category_limiter,
   task_category_time_integration,
   task_category_mpi,
+  task_category_fof,
   task_category_others,
   task_category_count
 };

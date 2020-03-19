@@ -40,12 +40,12 @@ params = {
     "figure.subplot.right": 0.99,
     "figure.subplot.bottom": 0.06,
     "figure.subplot.top": 0.99,
-    "figure.subplot.wspace": 0.,
-    "figure.subplot.hspace": 0.,
+    "figure.subplot.wspace": 0.0,
+    "figure.subplot.hspace": 0.0,
     "lines.markersize": 6,
     "lines.linewidth": 3.0,
     "text.latex.unicode": True,
-    'hatch.linewidth': 4
+    "hatch.linewidth": 4,
 }
 rcParams.update(params)
 
@@ -141,10 +141,21 @@ cols = [
 
 tasks = [
     "drift",
-     "sort",    "hydro",          "gravity", "feedback",
-    "black holes", "cooling", "star formation", "limiter", "time integration",
-    "mpi",         "others", "dead time", "total"
-    ]
+    "sort",
+    "hydro",
+    "gravity",
+    "feedback",
+    "black holes",
+    "cooling",
+    "star formation",
+    "limiter",
+    "time integration",
+    "mpi",
+    "fof",
+    "others",
+    "dead time",
+    "total",
+]
 
 times_tasks = np.zeros(len(tasks))
 counts_tasks = np.zeros(len(tasks))
@@ -155,7 +166,7 @@ lastline = ""
 for i in range(num_files):
 
     # First analyse the code sections
-    
+
     filename = sys.argv[i + 1]
     print("Analysing %s" % filename)
 
@@ -183,15 +194,16 @@ for i in range(num_files):
             lastline = line
 
     # Total run time
-    total_time += float(re.findall(r"[+-]?(\[[0-9]\])?(\[[0-9]*[.][0-9]*\])+", lastline)[0][1][1:-1])
-
+    total_time += float(
+        re.findall(r"[+-]?(\[[0-9]\])?(\[[0-9]*[.][0-9]*\])+", lastline)[0][1][1:-1]
+    )
 
     file.close()
-    
+
     # Now analyse the task times
 
     file = open(filename, "r")
-    
+
     # Search the different phrases
     for line in file:
 
@@ -202,10 +214,12 @@ for i in range(num_files):
             if re.search("scheduler_report_task_times: \*\*\*  ", line):
                 if re.search("%s" % tasks[i], line):
                     counts_tasks[i] += 1.0
-                    times_tasks [i] += float(re.findall(r":[ ]*[-+]?\d*\.\d+|\d+ ms", line)[0][1:])
-                    
+                    times_tasks[i] += float(
+                        re.findall(r":[ ]*[-+]?\d*\.\d+|\d+ ms", line)[0][1:]
+                    )
+
     file.close()
-    
+
 # Conver to seconds
 times /= 1000.0
 times_tasks /= 1000.0
@@ -241,7 +255,7 @@ labels = [labels[i] for i in order]
 
 # Remove the regexp escapes to make the labels prettier
 for i in range(len(labels)):
-    labels[i][0] = labels[i][0].replace("\\","")
+    labels[i][0] = labels[i][0].replace("\\", "")
 
 # Keep only the important components
 important_times = [0.0]
@@ -267,7 +281,10 @@ for i in range(len(labels)):
         important_times[0] += times[i]
         important_ratios[0] += time_ratios[i]
 
-    print(" - '%-40s' (%5d calls, time: %.4fs): %.4f%%" % (labels[i][0], counts[i], times[i], time_ratios[i] * 100))
+    print(
+        " - '%-40s' (%5d calls, time: %.4fs): %.4f%%"
+        % (labels[i][0], counts[i], times[i], time_ratios[i] * 100)
+    )
 
 # Anything unaccounted for?
 print(
@@ -280,17 +297,22 @@ important_is_rebuild = np.array(important_is_rebuild)
 
 print("Time spent in the different task categories (i.e. inside engine_launch()):")
 
-for i in range(len(tasks)-1):
-    print(" - '%-40s' (%5d calls): %.4f%%" % (tasks[i], counts_tasks[i], 100. * times_tasks_ratios[i]))
+for i in range(len(tasks) - 1):
+    print(
+        " - '%-40s' (%5d calls): %.4f%%"
+        % (tasks[i], counts_tasks[i], 100.0 * times_tasks_ratios[i])
+    )
 print("")
-    
+
 figure()
 
 # Main code sections
 subplot(121)
 
+
 def func(pct):
     return "$%4.2f\\%%$" % pct
+
 
 code_pie, _, _ = pie(
     important_ratios,
@@ -305,13 +327,13 @@ code_pie, _, _ = pie(
 
 # Use hashing for the FOF and VR wedges
 for i in range(len(code_pie)):
-    if (important_is_fof[i]):
-        code_pie[i].set_hatch('o')
+    if important_is_fof[i]:
+        code_pie[i].set_hatch("o")
         code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
         code_pie[i].set_fill(False)
 for i in range(len(code_pie)):
-    if (important_is_VR[i]):
-        code_pie[i].set_hatch('+')
+    if important_is_VR[i]:
+        code_pie[i].set_hatch("+")
         code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
         code_pie[i].set_fill(False)
 
@@ -320,7 +342,7 @@ legend(code_pie, important_labels, title="SWIFT operations", loc="upper left")
 # Tasks
 subplot(122)
 
-tasks_pie,_,_ = pie(
+tasks_pie, _, _ = pie(
     times_tasks_ratios[:-1],
     autopct=lambda pct: func(pct),
     textprops=dict(color="0.1", fontsize=14),
