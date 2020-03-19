@@ -306,7 +306,11 @@ stars_mosaics_copy_extra_properties(
 
   //TODO depends on cooling whether we have these properties
   /* Store subgrid birth properties */
+#if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID)
   sp->birth_subgrid_temp = xp->tracers_data.subgrid_temp;
+#else
+  sp->birth_subgrid_temp = 10.f; // K
+#endif
 
   /* Flag it for cluster formation */
   sp->new_star = 1;
