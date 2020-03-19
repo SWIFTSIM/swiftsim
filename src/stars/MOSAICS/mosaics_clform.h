@@ -77,9 +77,6 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
   sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
 
-  //TODO
-  printf("rho=%g, sig=%g, cs=%g; CFE=%g\n",rholoc,sigmaloc,csloc,sp->CFE);
-
   /* Get feedback timescale while we're here */
   double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
 
