@@ -35,13 +35,13 @@ params = {
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
     "text.usetex": True,
-    "figure.figsize": (6.45, 6.45),
+    "figure.figsize": (12.45, 6.45),
     "figure.subplot.left": 0.06,
     "figure.subplot.right": 0.99,
     "figure.subplot.bottom": 0.06,
     "figure.subplot.top": 0.99,
-    "figure.subplot.wspace": 0.21,
-    "figure.subplot.hspace": 0.13,
+    "figure.subplot.wspace": 0.,
+    "figure.subplot.hspace": 0.,
     "lines.markersize": 6,
     "lines.linewidth": 3.0,
     "text.latex.unicode": True,
@@ -139,11 +139,23 @@ cols = [
     "#4477AA",
 ]
 
+tasks = [
+    "drift",
+     "sort",    "hydro",          "gravity", "feedback",
+    "black holes", "cooling", "star formation", "limiter", "time integration",
+    "mpi",         "others", "dead time", "total"
+    ]
+
+times_tasks = np.zeros(len(tasks))
+counts_tasks = np.zeros(len(tasks))
+
 total_time = 0
 lastline = ""
 
 for i in range(num_files):
 
+    # First analyse the code sections
+    
     filename = sys.argv[i + 1]
     print("Analysing %s" % filename)
 
@@ -173,8 +185,30 @@ for i in range(num_files):
     # Total run time
     total_time += float(re.findall(r"[+-]?(\[[0-9]\])?(\[[0-9]*[.][0-9]*\])+", lastline)[0][1][1:-1])
 
+
+    file.close()
+    
+    # Now analyse the task times
+
+    file = open(filename, "r")
+    
+    # Search the different phrases
+    for line in file:
+
+        # Loop over the possbile labels
+        for i in range(len(tasks)):
+
+            # Extract the different blocks
+            if re.search("scheduler_report_task_times: \*\*\*  ", line):
+                if re.search("%s" % tasks[i], line):
+                    counts_tasks[i] += 1.0
+                    times_tasks [i] += float(re.findall(r":[ ]*[-+]?\d*\.\d+|\d+ ms", line)[0][1:])
+                    
+    file.close()
+    
 # Conver to seconds
 times /= 1000.0
+times_tasks /= 1000.0
 
 # Total time
 total_measured_time = np.sum(times)
@@ -193,6 +227,10 @@ for i in range(len(labels)):
 
 times = np.array(times)
 time_ratios = np.array(time_ratios)
+times_tasks = np.array(times_tasks)
+
+times_tasks_ratios = times_tasks / times_tasks[-1]
+times_tasks_ratios = np.array(times_tasks_ratios)
 
 # Sort in order of importance
 order = np.argsort(-times)
@@ -240,14 +278,21 @@ print(
 important_ratios = np.array(important_ratios)
 important_is_rebuild = np.array(important_is_rebuild)
 
+print("Time spent in the different task categories (i.e. inside engine_launch()):")
 
+for i in range(len(tasks)-1):
+    print(" - '%-40s' (%5d calls): %.4f%%" % (tasks[i], counts_tasks[i], 100. * times_tasks_ratios[i]))
+print("")
+    
 figure()
+
+# Main code sections
+subplot(121)
 
 def func(pct):
     return "$%4.2f\\%%$" % pct
 
-
-pie, _, _ = pie(
+code_pie, _, _ = pie(
     important_ratios,
     explode=important_is_rebuild * 0.2,
     autopct=lambda pct: func(pct),
@@ -259,17 +304,32 @@ pie, _, _ = pie(
 )
 
 # Use hashing for the FOF and VR wedges
-for i in range(len(pie)):
+for i in range(len(code_pie)):
     if (important_is_fof[i]):
-        pie[i].set_hatch('o')
-        pie[i].set_edgecolor(pie[i].get_facecolor())
-        pie[i].set_fill(False)
-for i in range(len(pie)):
+        code_pie[i].set_hatch('o')
+        code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
+        code_pie[i].set_fill(False)
+for i in range(len(code_pie)):
     if (important_is_VR[i]):
-        pie[i].set_hatch('+')
-        pie[i].set_edgecolor(pie[i].get_facecolor())
-        pie[i].set_fill(False)
+        code_pie[i].set_hatch('+')
+        code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
+        code_pie[i].set_fill(False)
 
-legend(pie, important_labels, title="SWIFT operations", loc="upper left")
+legend(code_pie, important_labels, title="SWIFT operations", loc="upper left")
+
+# Tasks
+subplot(122)
+
+tasks_pie,_,_ = pie(
+    times_tasks_ratios[:-1],
+    autopct=lambda pct: func(pct),
+    textprops=dict(color="0.1", fontsize=14),
+    labeldistance=0.7,
+    pctdistance=0.85,
+    startangle=-15,
+    colors=cols[1:],
+)
+
+legend(tasks_pie, tasks, title="SWIFT task categories", loc="upper left")
 
 savefig("time_pie.pdf", dpi=150)
