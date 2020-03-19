@@ -73,12 +73,13 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->shear_tensor[1][k] = 0.0f;
     cpd->shear_tensor[2][k] = 0.0f;
   }
-    
+
   if (cpd->dmetal_mass_fraction_total != 0.0) {
-  /* CC. Updating metals & initializing dmetal array for calculation in force loop */
+    /* CC. Updating metals & initializing dmetal array for calculation in force
+     * loop */
     for (int elem = 0; elem < chemistry_element_count; ++elem) {
-        cpd->metal_mass_fraction[elem] += cpd->dmetal_mass_fraction[elem];
-        cpd->dmetal_mass_fraction[elem] = 0.0f;
+      cpd->metal_mass_fraction[elem] += cpd->dmetal_mass_fraction[elem];
+      cpd->dmetal_mass_fraction[elem] = 0.0f;
     }
     cpd->metal_mass_fraction_total += cpd->dmetal_mass_fraction_total;
     /* CC. Also have total metallicity ready for loop */
@@ -175,14 +176,13 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   }
   /* CC. Also have total metallicity ready for loop */
   p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
-    
+
   for (int k = 0; k < 3; k++) {
     p->chemistry_data.shear_tensor[0][k] = 0.0f;
     p->chemistry_data.shear_tensor[1][k] = 0.0f;
     p->chemistry_data.shear_tensor[2][k] = 0.0f;
   }
 }
-
 
 /**
  * @brief Sets the chemistry properties of the (x-)particles to a valid start
@@ -214,9 +214,9 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
       p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
     }
   }
-    
+
   chemistry_init_part(p, data);
-    
+
   /* CC: Setting diffusion coefficient to zero initial value */
   p->chemistry_data.diffusion_coefficient = 0.0f;
 }
@@ -304,18 +304,18 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
 
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     p->chemistry_data.metal_mass_fraction[elem] +=
-    p->chemistry_data.dmetal_mass_fraction[elem];
+        p->chemistry_data.dmetal_mass_fraction[elem];
     p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
   }
-    
+
   /* CC. Here we are diffusing Z as well */
   p->chemistry_data.metal_mass_fraction_total +=
-  p->chemistry_data.dmetal_mass_fraction_total;
+      p->chemistry_data.dmetal_mass_fraction_total;
   p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
-    
+
   /* Check the total metallicity is >= 0 */
   if (p->chemistry_data.metal_mass_fraction_total < 0.0) message("Negative Z!");
-    
+
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);
