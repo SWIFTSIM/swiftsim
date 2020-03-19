@@ -243,6 +243,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
       chj->diffusion_rate[i] +=
           K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]);
     }
+    /* CC. Diffusing Z as well */
+    chi->dmetal_mass_fraction_total +=
+        K_ij *
+        (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
+
+    chj->dmetal_mass_fraction_total +=
+        K_ji *
+        (chj->metal_mass_fraction_total - chi->metal_mass_fraction_total) * dt;
   }
 }
 
@@ -348,6 +356,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
       chi->diffusion_rate[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
     }
+    /* CC. Diffusing Z as well */
+    chi->dmetal_mass_fraction_total +=
+        K_ij *
+        (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
   }
 }
 
