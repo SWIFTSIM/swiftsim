@@ -264,6 +264,8 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
     sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
     sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
+
+    sp->potential = sp->gpart->potential;
   }
 
   if (sp->new_star) {

@@ -138,6 +138,10 @@ struct spart {
    */
   float tidal_tensor[3][6];
 
+  //TODO just temporary
+  /*! Gravitational potential */
+  float potential;
+
   /*! Birth pressure */
   float birth_pressure;
 

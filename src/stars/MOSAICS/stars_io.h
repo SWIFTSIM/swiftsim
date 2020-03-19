@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 26;
+  *num_fields = 27;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -248,6 +248,11 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   list[25] = io_make_output_field(
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       fracCollapse, "Fraction of Toomre mass which can collapse to a GMC");
+
+  //TODO just temporary
+  list[26] = io_make_output_field(
+      "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
+      "Co-moving gravitational potential at position of the particles");
 }
 
 /**
