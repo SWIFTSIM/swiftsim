@@ -2388,7 +2388,7 @@ void scheduler_report_task_times_mapper(void *map_data, int num_elements,
   }
 
   /* Update the global counters */
-  for (enum task_categories i = 0; i < task_category_count; ++i) {
+  for (int i = 0; i < task_category_count; ++i) {
     atomic_add_f(&time_global[i], time_local[i]);
   }
 }
@@ -2415,13 +2415,13 @@ void scheduler_report_task_times(const struct scheduler *s,
 
   /* Compute the dead time */
   float total_time = 0.;
-  for (enum task_categories i = 0; i < task_category_count; ++i) {
+  for (int i = 0; i < task_category_count; ++i) {
     total_time += time[i];
   }
   const float dead_time = total_tasks_time - total_time;
 
   message("*** CPU time spent in different task categories:");
-  for (enum task_categories i = 0; i < task_category_count; ++i) {
+  for (int i = 0; i < task_category_count; ++i) {
     message("*** %20s: %8.2f %s (%.2f %%)", task_category_names[i], time[i],
             clocks_getunit(), time[i] / total_tasks_time * 100.);
   }
