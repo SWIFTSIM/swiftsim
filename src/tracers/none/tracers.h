@@ -107,15 +107,15 @@ static INLINE void tracers_first_init_xpart(
     const struct hydro_props *hydro_props,
     const struct cooling_function_data *cooling) {}
 
-/**
- * @brief Update the particles' tracer data after a stellar feedback
- * event.
- *
- * Nothing to do here.
- *
- * @param xp The extended particle data.
- */
-static INLINE void tracers_after_feedback(struct xpart *xp) {}
+static INLINE void tracers_after_SNII_feedback(struct xpart *xp,
+                                               const int with_cosmology,
+                                               const float scale_factor,
+                                               const double time) {}
+
+static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,
+                                               const int with_cosmology,
+                                               const float scale_factor,
+                                               const double time) {}
 
 /**
  * @brief Update the particles' tracer data after an AGN feedback
@@ -125,7 +125,15 @@ static INLINE void tracers_after_feedback(struct xpart *xp) {}
  *
  * @param xp The extended particle data.
  */
-static INLINE void tracers_after_black_holes_feedback(struct xpart *xp) {}
+static INLINE void tracers_after_black_holes_feedback(struct xpart *xp,
+                                                      const int with_cosmology,
+                                                      const float scale_factor,
+                                                      const double time) {}
+
+static INLINE void tracers_after_momentum_feedback(struct xpart *xp,
+                                                   const int with_cosmology,
+                                                   const float scale_factor,
+                                                   const double time) {}
 
 /**
  * @brief Split the tracer content of a particle into n pieces
