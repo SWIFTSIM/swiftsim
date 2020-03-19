@@ -81,6 +81,7 @@ labels = [
     ["scheduler_reweight:", 1],
     ["space_list_useful_top_level_cells:", 1],
     ["space_rebuild:", 1],
+    ["scheduler_report_task_times:", 1],
     ["engine_drift_all:", 0],
     ["engine_unskip:", 0],
     ["engine_unskip_timestep_communications:", 0],
