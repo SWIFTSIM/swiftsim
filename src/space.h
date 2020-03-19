@@ -85,13 +85,13 @@ extern int space_extra_bparts;
 /**
  * @brief Slice of unique IDs for particle creation.
  */
-struct unique_ids {
+struct slice {
   /*! Current free unique id */
   long long current;
 
   /*! Maximal unique id in this slice  (not included) */
   long long max;
-}
+};
 
 /**
  * @brief The space in which the cells and particles reside.
@@ -292,16 +292,13 @@ struct space {
   /*! Structure dealing with the computation of a unique ID */
   struct {
     /*! Current slice of unique ids */
-    struct unique_ids current;
+    struct slice current;
 
     /*! Next slice of unique ids */
-    struct unique_ids next;
+    struct slice next;
 
     /* Global next slot available */
     long long global_next_id;
-
-    /* Size of the slices */
-    size_t slice_size;
 
     /* Lock for the unique ids */
     swift_lock_type lock;
@@ -417,4 +414,6 @@ void space_struct_restore(struct space *s, FILE *stream);
 void space_write_cell_hierarchy(const struct space *s, int j);
 void space_compute_star_formation_stats(const struct space *s,
                                         struct star_formation *star_form);
+void space_update_unique_id(struct space *s);
+long long space_get_new_unique_id(struct space *s);
 #endif /* SWIFT_SPACE_H */

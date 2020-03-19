@@ -2000,6 +2000,9 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
   /* Clean up any stray sort indices in the cell buffer. */
   space_free_buff_sort_indices(s);
 
+  /* Update the slice of unique IDs. */
+  space_update_unique_id(s);
+
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
@@ -4806,8 +4809,8 @@ void space_init_unique_id(struct space *s) {
 #ifdef WITH_MPI
   /* Find the global max. */
   MPI_Allreduce(MPI_IN_PLACE, &s->unique_id.global_next_id, 1,
-                MPI_LONGLONG, MPI_MAX, MPI_COMM_WORLD);
-#endf
+                MPI_LONG_LONG, MPI_MAX, MPI_COMM_WORLD);
+#endif // WITH_MPI
 
   /* Get the first unique id. */
   if (s->unique_id.global_next_id == LLONG_MAX) {
@@ -4816,28 +4819,29 @@ void space_init_unique_id(struct space *s) {
   s->unique_id.global_next_id++;
 
   /* Compute the size of the each slice. */
-  s->unique_id.slice_size = space_extra_parts + space_extra_sparts +
-    space_extra_gparts + space_extra_bparts;
+  const long long slice_size =
+    (space_extra_parts + space_extra_sparts +
+     space_extra_gparts + space_extra_bparts) * s->nr_cells;
 
   /* Compute the initial slices. */
-  if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * s->unique_id.slice_size) {
+  if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * slice_size) {
     error("Overflow for the unique id.");
   }
-  long long init = s->unique_id.global_next_id + 2 * engine_rank * s->unique_id.slice_size;
+  long long init = s->unique_id.global_next_id + 2 * engine_rank * slice_size;
 
   /* Set the slices and check for overflows. */
   s->unique_id.current.current = init;
 
-  if (init > LLONG_MAX - s->unique_id.slice_size) {
+  if (init > LLONG_MAX - slice_size) {
     error("Overflow for the unique id.");
   }
-  s->unique_id.current.max = init + s->unique_id.slice_size;
+  s->unique_id.current.max = init + slice_size;
   s->unique_id.next.current = s->unique_id.current.max;
 
-  if (s->unique_id.next.current > LLONG_MAX - s->unique_id.slice_size) {
+  if (s->unique_id.next.current > LLONG_MAX - slice_size) {
     error("Overflow for the unique id.");
   }
-  s->unique_id.next.max = s->unique_id.next.current + s->unique_id.slice_size;
+  s->unique_id.next.max = s->unique_id.next.current + slice_size;
 
   /* Initialize the lock. */
   if (lock_init(&s->unique_id.lock) != 0)
@@ -6119,6 +6123,71 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
 #endif
 }
 
+/**
+ * @brief Update the unique id structure by requesting a
+ * new slice if required.
+ *
+ * @param s The #space.
+ */
+void space_update_unique_id(struct space *s) {
+  const int require_new_slice = s->unique_id.next.current == 0;
+
+#ifdef WITH_MPI
+  const struct engine *e = s->e;
+
+  /* Check if the other ranks need a slices */
+  int *all_requires = (int *) malloc(sizeof(int) * e->nr_nodes);
+
+  /* Do the communication */
+  MPI_Allgather(&require_new_slice, 1, MPI_INT, all_requires, 1,
+                MPI_INT, MPI_COMM_WORLD);
+
+  /* Compute the position of this rank slice and the position of
+     the next free slice. */
+  int local_index = 0;
+  int total_shift = 0;
+  for(int i = 0; i < e->nr_nodes; i++) {
+    total_shift += 1;
+    if (i < engine_rank) {
+      local_index += 1;
+    }
+  }
+
+  /* Free the allocated resources. */
+  free(all_requires);
+
+#else
+
+  int local_index = 0;
+  int total_shift = require_new_slice;
+
+#endif // WITH_MPI
+
+  /* Compute the size of the each slice. */
+  const long long slice_size =
+    (space_extra_parts + space_extra_sparts +
+     space_extra_gparts + space_extra_bparts) * s->nr_cells;
+
+  /* Get a new slice. */
+  if (require_new_slice) {
+    /* First check against an overflow. */
+    const long long local_shift = local_index * slice_size;
+    if (s->unique_id.global_next_id > LLONG_MAX - (local_shift + slice_size)) {
+      error("Overflow for the unique IDs.");
+    }
+    /* Now assign it. */
+    s->unique_id.next.current = s->unique_id.global_next_id + local_shift;
+    s->unique_id.next.max = s->unique_id.global_next_id + local_shift + slice_size;
+  }
+
+  /* Shift the position of the next available slice. */
+  const long long shift = total_shift * slice_size;
+  if (s->unique_id.global_next_id > LLONG_MAX - shift) {
+    error("Overflow for the unique IDs.");
+  }
+  s->unique_id.global_next_id += shift;
+
+}
 
 /**
  * @brief Get a new unique ID.
@@ -6128,12 +6197,32 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
  * @return The new unique ID
  */
 long long space_get_new_unique_id(struct space *s) {
-  /* Get the lock */
+  /* Get the lock. */
   lock_lock(&s->unique_id.lock);
 
+  /* Get the current available id. */
+  const long long id = s->unique_id.current.current;
 
-  /* Release the lock */
-  if (lock_unlock(s->unique_id.lock) != 0) {
+  /* Update the counter. */
+  s->unique_id.current.current++;
+
+  /* Check if need to move to the next slice. */
+  if (s->unique_id.current.current == s->unique_id.current.max) {
+    /* Check if the next slice is already used */
+    if (s->unique_id.next.current == 0) {
+      error("Failed to obtain a new unique ID.");
+    }
+    s->unique_id.current = s->unique_id.next;
+
+    /* Reset the next slice. */
+    s->unique_id.next.current = 0;
+    s->unique_id.next.max = 0;
+  }
+
+  /* Release the lock. */
+  if (lock_unlock(&s->unique_id.lock) != 0) {
     error("Impossible to unlock the unique id.");
   }
+
+  return id;
 }
