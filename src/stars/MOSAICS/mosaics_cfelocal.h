@@ -110,9 +110,9 @@ INLINE static double f_xcrit(double qvir, double mach) {
 INLINE static double f_sfrff(double qvir, double mach, double beta0,
                              double ecore, int sflaw) {
   double xcrit, sigrho, f;
-  const double phit = 1.91;     // constant
-  xcrit = f_xcrit(qvir, mach);  // critical overdensity for star formation in
-                                // the KM05 model, see above
+  const double phit = 1.91;        // constant
+  xcrit = f_xcrit(qvir, mach);     // critical overdensity for star formation in
+                                   // the KM05 model, see above
   sigrho = f_sigrho(mach, beta0);  // overdensity PDF dispersion, see above
   if (sflaw == 1)
     f = .5 * ecore / phit *
@@ -314,8 +314,8 @@ INLINE static double f_xcce(double sigmaloc, double surfGMC, double qvir,
   xfit0 = xfit * accuracy;    // initialisation of previously fitted x
 
   while (fabs(log10(xfit / xfit0)) > accuracy &&
-         niter < itermax) {  // while iteration     does not give desired
-                             // convergence, do
+         niter < itermax) {        // while iteration     does not give desired
+                                   // convergence, do
     xfit0 = xfit;                  // previously fitted x
     for (ix = 0; ix < nx; ix++) {  // for all x
       xarr[ix] = pow(10., (ix - 1) / (nx - 1.) * log10(xmax / xmin) +
