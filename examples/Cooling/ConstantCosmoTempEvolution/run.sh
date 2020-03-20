@@ -6,11 +6,6 @@ then
     echo "Fetching initial gravity glass file for the constant cosmological box example..."
     ./getGlass.sh
 fi
-if [ ! -e coolingtables ]
-then
-    echo "Fetching EAGLE Cooling Tables"
-    ../getEagleCoolingTable.sh
-fi
 
 # Fetch the cooling tables
 if [ ! -e constantBox.hdf5 ]
