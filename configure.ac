@@ -2129,7 +2129,7 @@ esac
 # Black hole model.
 AC_ARG_WITH([black-holes],
    [AS_HELP_STRING([--with-black-holes=<model>],
-      [Black holes model to use @<:@none, EAGLE default, COLIBRE: none@:>@]
+      [Black holes model to use @<:@none, EAGLE default: none@:>@]
    )],
    [with_black_holes="$withval"],
    [with_black_holes="none"]
@@ -2412,12 +2412,6 @@ if test $with_black_holes = "EAGLE"; then
       AC_MSG_ERROR([The EAGLE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
    fi
 fi
-if test $with_black_holes = "COLIBRE"; then
-   if test $with_gravity == "basic"; then
-      AC_MSG_ERROR([The COLIBRE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])
-   fi
-fi
-
 if test $with_black_holes = "COLIBRE"; then
    if test $with_gravity == "basic"; then
       AC_MSG_ERROR([The COLIBRE BH model needs the gravity scheme to provide potentials. The code must be compile with --with-gravity=with-potential.])

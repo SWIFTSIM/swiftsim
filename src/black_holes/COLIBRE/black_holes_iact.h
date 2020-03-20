@@ -23,7 +23,6 @@
 #include "black_holes_parameters.h"
 #include "gravity.h"
 #include "hydro.h"
-#include "equation_of_state.h"
 #include "random.h"
 #include "space.h"
 #include "timestep_sync_part.h"
