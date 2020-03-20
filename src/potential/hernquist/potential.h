@@ -132,6 +132,8 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[2] += term * dz;
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+  g->potential += -potential->mass / (r + potential->al);
+
   const float r2 = r * r;
   /* 2GM / (r+a)^3 / r^2 */
   const float tt_term = -2.f * term * r_plus_a_inv / r;
