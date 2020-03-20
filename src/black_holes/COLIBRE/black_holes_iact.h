@@ -39,20 +39,24 @@
  * @param bi First particle (black hole).
  * @param pj Second particle (gas, not updated).
  * @param xpj The extended data of the second particle (not updated).
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
  * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
+ * @param time Current physical time in the simulation
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_density(const float r2, const float *dx,
                                   const float hi, const float hj,
                                   struct bpart *bi, const struct part *pj,
                                   const struct xpart *xpj,
-                                  const struct cosmology *cosmo,
+				  const int with_cosmology,
+				  const struct cosmology *cosmo,
                                   const struct gravity_props *grav_props,
 				  const struct black_holes_props *bh_props,
-				  const integertime_t ti_current) {
+				  const integertime_t ti_current,
+				  const double time) {
 
   float wi, wi_dx;
 
@@ -124,10 +128,12 @@ runner_iact_nonsym_bh_gas_density(const float r2, const float *dx,
  * @param bi First particle (black hole).
  * @param pj Second particle (gas)
  * @param xpj The extended data of the second particle.
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
  * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
+ * @param time Current physical time in the simulation
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
@@ -261,7 +267,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
                                  struct bpart *bi, struct bpart *bj,
                                  const struct cosmology *cosmo,
                                  const struct gravity_props *grav_props,
-				 const struct black_holes_props *bh_props,
+                                 const struct black_holes_props *bh_props,
                                  const integertime_t ti_current) {
 
   /* Compute relative peculiar velocity between the two BHs
@@ -282,7 +288,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This gas neighbour is close enough that we can consider its potential
+  /* This BH neighbour is close enough that we can consider its potential
      for repositioning */
   if (r2 < max_dist_repos2) {
 
@@ -420,7 +426,7 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
                                    const struct cosmology *cosmo,
                                    const struct gravity_props *grav_props,
                                    const struct black_holes_props *bh_props,
-				   const integertime_t ti_current,
+                                   const integertime_t ti_current,
                                    const double time) {
 
   /* Get the heating probability */
