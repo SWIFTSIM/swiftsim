@@ -1445,8 +1445,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-  # GEAR's order is not used anymore
-	with_subgrid_task_order=none
+	with_subgrid_task_order=GEAR
 	enable_fof=no
    ;;
    EAGLE)
