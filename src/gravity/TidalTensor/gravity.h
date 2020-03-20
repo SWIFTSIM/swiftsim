@@ -247,12 +247,13 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
  * @brief Returns the calc_tensor flag of a particle.
  *
  * Always returns true if calc_all_tensors is set in param file.
- * 
+ *
  * @param gp The particle of interest
  * @param grav_props The global gravity properties.
  */
-__attribute__((always_inline)) INLINE static int
-gravity_get_tensor_flag(const struct gpart* restrict gp, const struct gravity_props* restrict grav_props) {
+__attribute__((always_inline)) INLINE static int gravity_get_tensor_flag(
+    const struct gpart* restrict gp,
+    const struct gravity_props* restrict grav_props) {
 
   if (grav_props->calc_all_tensors)
     return 1;

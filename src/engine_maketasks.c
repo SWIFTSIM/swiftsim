@@ -901,7 +901,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
         scheduler_addunlock(s, kick2_or_logger, c->stars.mosaics);
         scheduler_addunlock(s, c->stars.mosaics, c->timestep);
         if (with_star_formation && c->hydro.count > 0)
-          scheduler_addunlock(s, c->top->hydro.star_formation, c->stars.mosaics);
+          scheduler_addunlock(s, c->top->hydro.star_formation,
+                              c->stars.mosaics);
       }
 
       /* Time-step limiter */

@@ -160,18 +160,18 @@ static INLINE void gravity_cache_init(struct gravity_cache *c,
   e += swift_memalign("gravity_cache", (void **)&c->pot, SWIFT_CACHE_ALIGNMENT,
                       sizeBytesF);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_xx, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_xy, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_xz, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_yy, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_yz, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
-  e += swift_memalign("gravity_cache", (void **)&c->tensor_zz, SWIFT_CACHE_ALIGNMENT,
-                      sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xx,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xy,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_xz,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_yy,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_yz,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->tensor_zz,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
   e += swift_memalign("gravity_cache", (void **)&c->calc_tensor,
                       SWIFT_CACHE_ALIGNMENT, sizeBytesI);
 #endif
@@ -206,12 +206,18 @@ __attribute__((always_inline)) INLINE static void gravity_cache_zero_output(
   swift_declare_aligned_ptr(float, a_z, c->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, c->pot, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz,
+                            SWIFT_CACHE_ALIGNMENT);
 #endif
   swift_assume_size(gcount_padded, VEC_SIZE);
 
@@ -276,7 +282,8 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
+                            SWIFT_CACHE_ALIGNMENT);
 #endif
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, c->use_mpole,
@@ -388,7 +395,8 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
+                            SWIFT_CACHE_ALIGNMENT);
 #endif
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_assume_size(gcount_padded, VEC_SIZE);
@@ -487,7 +495,8 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
+                            SWIFT_CACHE_ALIGNMENT);
 #endif
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, use_mpole, c->use_mpole,
@@ -576,13 +585,20 @@ __attribute__((always_inline)) INLINE static void gravity_cache_write_back(
   swift_declare_aligned_ptr(float, a_z, c->a_z, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, pot, c->pot, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz, SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor, SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xx, c->tensor_xx,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xy, c->tensor_xy,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_xz, c->tensor_xz,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yy, c->tensor_yy,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_yz, c->tensor_yz,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(float, tensor_zz, c->tensor_zz,
+                            SWIFT_CACHE_ALIGNMENT);
+  swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
+                            SWIFT_CACHE_ALIGNMENT);
 #endif
   swift_declare_aligned_ptr(int, active, c->active, SWIFT_CACHE_ALIGNMENT);
 

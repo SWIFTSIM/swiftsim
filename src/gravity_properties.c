@@ -162,7 +162,7 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
   }
 
   /* Flag for forcing tensor calculation */
-  p->calc_all_tensors = 
+  p->calc_all_tensors =
       parser_get_opt_param_int(params, "Gravity:calculate_all_tensors", 0);
 
   /* Copy over the gravitational constant */

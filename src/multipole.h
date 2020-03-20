@@ -2644,12 +2644,18 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
-    T_xx += X_100(dx) * lb->F_300 + X_010(dx) * lb->F_210 + X_001(dx) * lb->F_201;
-    T_xy += X_100(dx) * lb->F_210 + X_010(dx) * lb->F_120 + X_001(dx) * lb->F_111;
-    T_xz += X_100(dx) * lb->F_201 + X_010(dx) * lb->F_111 + X_001(dx) * lb->F_102;
-    T_yy += X_100(dx) * lb->F_120 + X_010(dx) * lb->F_030 + X_001(dx) * lb->F_021;
-    T_yz += X_100(dx) * lb->F_111 + X_010(dx) * lb->F_021 + X_001(dx) * lb->F_012;
-    T_zz += X_100(dx) * lb->F_102 + X_010(dx) * lb->F_012 + X_001(dx) * lb->F_003;
+    T_xx +=
+        X_100(dx) * lb->F_300 + X_010(dx) * lb->F_210 + X_001(dx) * lb->F_201;
+    T_xy +=
+        X_100(dx) * lb->F_210 + X_010(dx) * lb->F_120 + X_001(dx) * lb->F_111;
+    T_xz +=
+        X_100(dx) * lb->F_201 + X_010(dx) * lb->F_111 + X_001(dx) * lb->F_102;
+    T_yy +=
+        X_100(dx) * lb->F_120 + X_010(dx) * lb->F_030 + X_001(dx) * lb->F_021;
+    T_yz +=
+        X_100(dx) * lb->F_111 + X_010(dx) * lb->F_021 + X_001(dx) * lb->F_012;
+    T_zz +=
+        X_100(dx) * lb->F_102 + X_010(dx) * lb->F_012 + X_001(dx) * lb->F_003;
   }
 #endif
 #endif
@@ -2680,18 +2686,24 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
-    T_xx += X_002(dx) * lb->F_202 + X_011(dx) * lb->F_211 + X_020(dx) * lb->F_220 +
-            X_101(dx) * lb->F_301 + X_110(dx) * lb->F_310 + X_200(dx) * lb->F_400;
-    T_xy += X_002(dx) * lb->F_112 + X_011(dx) * lb->F_121 + X_020(dx) * lb->F_130 +
-            X_101(dx) * lb->F_211 + X_110(dx) * lb->F_220 + X_200(dx) * lb->F_310;
-    T_xz += X_002(dx) * lb->F_103 + X_011(dx) * lb->F_112 + X_020(dx) * lb->F_121 +
-            X_101(dx) * lb->F_202 + X_110(dx) * lb->F_211 + X_200(dx) * lb->F_301;
-    T_yy += X_002(dx) * lb->F_022 + X_011(dx) * lb->F_031 + X_020(dx) * lb->F_040 +
-            X_101(dx) * lb->F_121 + X_110(dx) * lb->F_130 + X_200(dx) * lb->F_220;
-    T_yz += X_002(dx) * lb->F_013 + X_011(dx) * lb->F_022 + X_020(dx) * lb->F_031 +
-            X_101(dx) * lb->F_112 + X_110(dx) * lb->F_121 + X_200(dx) * lb->F_211;
-    T_zz += X_002(dx) * lb->F_004 + X_011(dx) * lb->F_013 + X_020(dx) * lb->F_022 +
-            X_101(dx) * lb->F_103 + X_110(dx) * lb->F_112 + X_200(dx) * lb->F_202;
+    T_xx += X_002(dx) * lb->F_202 + X_011(dx) * lb->F_211 +
+            X_020(dx) * lb->F_220 + X_101(dx) * lb->F_301 +
+            X_110(dx) * lb->F_310 + X_200(dx) * lb->F_400;
+    T_xy += X_002(dx) * lb->F_112 + X_011(dx) * lb->F_121 +
+            X_020(dx) * lb->F_130 + X_101(dx) * lb->F_211 +
+            X_110(dx) * lb->F_220 + X_200(dx) * lb->F_310;
+    T_xz += X_002(dx) * lb->F_103 + X_011(dx) * lb->F_112 +
+            X_020(dx) * lb->F_121 + X_101(dx) * lb->F_202 +
+            X_110(dx) * lb->F_211 + X_200(dx) * lb->F_301;
+    T_yy += X_002(dx) * lb->F_022 + X_011(dx) * lb->F_031 +
+            X_020(dx) * lb->F_040 + X_101(dx) * lb->F_121 +
+            X_110(dx) * lb->F_130 + X_200(dx) * lb->F_220;
+    T_yz += X_002(dx) * lb->F_013 + X_011(dx) * lb->F_022 +
+            X_020(dx) * lb->F_031 + X_101(dx) * lb->F_112 +
+            X_110(dx) * lb->F_121 + X_200(dx) * lb->F_211;
+    T_zz += X_002(dx) * lb->F_004 + X_011(dx) * lb->F_013 +
+            X_020(dx) * lb->F_022 + X_101(dx) * lb->F_103 +
+            X_110(dx) * lb->F_112 + X_200(dx) * lb->F_202;
   }
 #endif
 #endif
@@ -2727,30 +2739,36 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   if (calc_tensor) {
-    T_xx += X_003(dx) * lb->F_203 + X_012(dx) * lb->F_212 + X_021(dx) * lb->F_221 +
-            X_030(dx) * lb->F_230 + X_102(dx) * lb->F_302 + X_111(dx) * lb->F_311 +
-            X_120(dx) * lb->F_320 + X_201(dx) * lb->F_401 + X_210(dx) * lb->F_410 +
-            X_300(dx) * lb->F_500;
-    T_xy += X_003(dx) * lb->F_113 + X_012(dx) * lb->F_122 + X_021(dx) * lb->F_131 +
-            X_030(dx) * lb->F_140 + X_102(dx) * lb->F_212 + X_111(dx) * lb->F_221 +
-            X_120(dx) * lb->F_230 + X_201(dx) * lb->F_311 + X_210(dx) * lb->F_320 +
-            X_300(dx) * lb->F_410;
-    T_xz += X_003(dx) * lb->F_104 + X_012(dx) * lb->F_113 + X_021(dx) * lb->F_122 +
-            X_030(dx) * lb->F_131 + X_102(dx) * lb->F_203 + X_111(dx) * lb->F_212 +
-            X_120(dx) * lb->F_221 + X_201(dx) * lb->F_302 + X_210(dx) * lb->F_311 +
-            X_300(dx) * lb->F_401;
-    T_yy += X_003(dx) * lb->F_023 + X_012(dx) * lb->F_032 + X_021(dx) * lb->F_041 +
-            X_030(dx) * lb->F_050 + X_102(dx) * lb->F_122 + X_111(dx) * lb->F_131 +
-            X_120(dx) * lb->F_140 + X_201(dx) * lb->F_221 + X_210(dx) * lb->F_230 +
-            X_300(dx) * lb->F_320;
-    T_yz += X_003(dx) * lb->F_014 + X_012(dx) * lb->F_023 + X_021(dx) * lb->F_032 +
-            X_030(dx) * lb->F_041 + X_102(dx) * lb->F_113 + X_111(dx) * lb->F_122 +
-            X_120(dx) * lb->F_131 + X_201(dx) * lb->F_212 + X_210(dx) * lb->F_221 +
-            X_300(dx) * lb->F_311;
-    T_zz += X_003(dx) * lb->F_005 + X_012(dx) * lb->F_014 + X_021(dx) * lb->F_023 +
-            X_030(dx) * lb->F_032 + X_102(dx) * lb->F_104 + X_111(dx) * lb->F_113 +
-            X_120(dx) * lb->F_122 + X_201(dx) * lb->F_203 + X_210(dx) * lb->F_212 +
-            X_300(dx) * lb->F_302;
+    T_xx += X_003(dx) * lb->F_203 + X_012(dx) * lb->F_212 +
+            X_021(dx) * lb->F_221 + X_030(dx) * lb->F_230 +
+            X_102(dx) * lb->F_302 + X_111(dx) * lb->F_311 +
+            X_120(dx) * lb->F_320 + X_201(dx) * lb->F_401 +
+            X_210(dx) * lb->F_410 + X_300(dx) * lb->F_500;
+    T_xy += X_003(dx) * lb->F_113 + X_012(dx) * lb->F_122 +
+            X_021(dx) * lb->F_131 + X_030(dx) * lb->F_140 +
+            X_102(dx) * lb->F_212 + X_111(dx) * lb->F_221 +
+            X_120(dx) * lb->F_230 + X_201(dx) * lb->F_311 +
+            X_210(dx) * lb->F_320 + X_300(dx) * lb->F_410;
+    T_xz += X_003(dx) * lb->F_104 + X_012(dx) * lb->F_113 +
+            X_021(dx) * lb->F_122 + X_030(dx) * lb->F_131 +
+            X_102(dx) * lb->F_203 + X_111(dx) * lb->F_212 +
+            X_120(dx) * lb->F_221 + X_201(dx) * lb->F_302 +
+            X_210(dx) * lb->F_311 + X_300(dx) * lb->F_401;
+    T_yy += X_003(dx) * lb->F_023 + X_012(dx) * lb->F_032 +
+            X_021(dx) * lb->F_041 + X_030(dx) * lb->F_050 +
+            X_102(dx) * lb->F_122 + X_111(dx) * lb->F_131 +
+            X_120(dx) * lb->F_140 + X_201(dx) * lb->F_221 +
+            X_210(dx) * lb->F_230 + X_300(dx) * lb->F_320;
+    T_yz += X_003(dx) * lb->F_014 + X_012(dx) * lb->F_023 +
+            X_021(dx) * lb->F_032 + X_030(dx) * lb->F_041 +
+            X_102(dx) * lb->F_113 + X_111(dx) * lb->F_122 +
+            X_120(dx) * lb->F_131 + X_201(dx) * lb->F_212 +
+            X_210(dx) * lb->F_221 + X_300(dx) * lb->F_311;
+    T_zz += X_003(dx) * lb->F_005 + X_012(dx) * lb->F_014 +
+            X_021(dx) * lb->F_023 + X_030(dx) * lb->F_032 +
+            X_102(dx) * lb->F_104 + X_111(dx) * lb->F_113 +
+            X_120(dx) * lb->F_122 + X_201(dx) * lb->F_203 +
+            X_210(dx) * lb->F_212 + X_300(dx) * lb->F_302;
   }
 #endif
 #endif

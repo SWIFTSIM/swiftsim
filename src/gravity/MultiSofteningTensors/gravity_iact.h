@@ -410,9 +410,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_truncated(
  * @param pot_ij (return) The potential.
  * @param tidFac2 (return) Third derivative factor for tensor.
  */
-__attribute__((always_inline)) INLINE static void runner_iact_grav_pp_full_tensors(
-    const float r2, const float h2, const float h_inv, const float h_inv3,
-    const float h_inv5, const float mass, float *f_ij, float *pot_ij, float *tidFac2) {
+__attribute__((always_inline)) INLINE static void
+runner_iact_grav_pp_full_tensors(const float r2, const float h2,
+                                 const float h_inv, const float h_inv3,
+                                 const float h_inv5, const float mass,
+                                 float *f_ij, float *pot_ij, float *tidFac2) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
@@ -466,10 +468,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pp_full_tenso
  * @param pot_ij (return) The potential.
  * @param tidFac2 (return) Third derivative factor for tensor.
  */
-__attribute__((always_inline)) INLINE static void runner_iact_grav_pp_truncated_tensors(
-    const float r2, const float h2, const float h_inv, const float h_inv3,
-    const float h_inv5, const float mass, const float r_s_inv, float *f_ij, float *pot_ij,
-    float *tidFac2) {
+__attribute__((always_inline)) INLINE static void
+runner_iact_grav_pp_truncated_tensors(const float r2, const float h2,
+                                      const float h_inv, const float h_inv3,
+                                      const float h_inv5, const float mass,
+                                      const float r_s_inv, float *f_ij,
+                                      float *pot_ij, float *tidFac2) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
@@ -540,12 +544,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pp_truncated_
  * @param T_yz (return) The yz-component of the tidal tensor.
  * @param T_zz (return) The zz-component of the tidal tensor.
  */
-__attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full_tensors(
-    const float r_x, const float r_y, const float r_z, const float r2,
-    const float h, const float h_inv, const struct multipole *m,
-    float *restrict f_x, float *restrict f_y, float *restrict f_z, float *restrict pot,
-    float *restrict T_xx, float *restrict T_xy, float *restrict T_xz,
-    float *restrict T_yy, float *restrict T_yz, float *restrict T_zz) {
+__attribute__((always_inline)) INLINE static void
+runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
+                                 const float r_z, const float r2, const float h,
+                                 const float h_inv, const struct multipole *m,
+                                 float *restrict f_x, float *restrict f_y,
+                                 float *restrict f_z, float *restrict pot,
+                                 float *restrict T_xx, float *restrict T_xy,
+                                 float *restrict T_xz, float *restrict T_yy,
+                                 float *restrict T_yz, float *restrict T_zz) {
 
 /* In the case where the order is < 3, then there is only a monopole term left.
  * We can default to the normal P-P interaction with the mass of the multipole
@@ -555,8 +562,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full_tenso
   float f_ij, pot_ij;
   float tidFac2;
   runner_iact_grav_pp_full_tensors(r2, h * h, h_inv, h_inv * h_inv * h_inv,
-                           h_inv * h_inv * h_inv * h_inv * h_inv, m->M_000,
-                           &f_ij, &pot_ij, &tidFac2);
+                                   h_inv * h_inv * h_inv * h_inv * h_inv,
+                                   m->M_000, &f_ij, &pot_ij, &tidFac2);
   *f_x = f_ij * r_x;
   *f_y = f_ij * r_y;
   *f_z = f_ij * r_z;
@@ -722,13 +729,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full_tenso
  * @param T_yz (return) The yz-component of the tidal tensor.
  * @param T_zz (return) The zz-component of the tidal tensor.
  */
-__attribute__((always_inline)) INLINE static void runner_iact_grav_pm_truncated_tensors(
+__attribute__((always_inline)) INLINE static void
+runner_iact_grav_pm_truncated_tensors(
     const float r_x, const float r_y, const float r_z, const float r2,
     const float h, const float h_inv, const float r_s_inv,
     const struct multipole *m, float *restrict f_x, float *restrict f_y,
-    float *restrict f_z, float *restrict pot,
-    float *restrict T_xx, float *restrict T_xy, float *restrict T_xz,
-    float *restrict T_yy, float *restrict T_yz, float *restrict T_zz) {
+    float *restrict f_z, float *restrict pot, float *restrict T_xx,
+    float *restrict T_xy, float *restrict T_xz, float *restrict T_yy,
+    float *restrict T_yz, float *restrict T_zz) {
 
 /* In the case where the order is < 3, then there is only a monopole term left.
  * We can default to the normal P-P interaction with the mass of the multipole
@@ -737,8 +745,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_truncated_
 
   float f_ij, pot_ij;
   float tidFac2;
-  runner_iact_grav_pp_truncated_tensors(r2, h * h, h_inv, h_inv * h_inv * h_inv, m->M_000,
-                                        r_s_inv, &f_ij, &pot_ij, &tidFac2);
+  runner_iact_grav_pp_truncated_tensors(r2, h * h, h_inv, h_inv * h_inv * h_inv,
+                                        m->M_000, r_s_inv, &f_ij, &pot_ij,
+                                        &tidFac2);
   *f_x = f_ij * r_x;
   *f_y = f_ij * r_y;
   *f_z = f_ij * r_z;

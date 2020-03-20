@@ -28,8 +28,8 @@
 #include "cosmology.h"
 #include "engine.h"
 #include "hydro.h"
-#include "mosaics_clform.h"
 #include "mosaics_clevo.h"
+#include "mosaics_clform.h"
 
 /**
  * @brief Computes the gravity time-step of a given star particle.
@@ -59,8 +59,7 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
 
-  if (sp->gpart)
-    sp->gpart->calc_tensor = sp->calc_tensor;
+  if (sp->gpart) sp->gpart->calc_tensor = sp->calc_tensor;
 }
 
 /**
@@ -225,10 +224,10 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
  * @param with_cosmology if we run with cosmology.
  */
 __attribute__((always_inline)) INLINE static void stars_do_mosaics(
-    struct spart* restrict sp, const struct engine* e, 
+    struct spart* restrict sp, const struct engine* e,
     const struct cosmology* cosmo, const int with_cosmology) {
 
-  const struct stars_props *stars_properties = e->stars_properties;
+  const struct stars_props* stars_properties = e->stars_properties;
 
   /* Have we already been here this timestep? */
   /* This funcation can be called twice: once at SF, then again in star loop */
@@ -248,13 +247,13 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     /* Did we get a tensor for this particle? (regardless if have clusters) */
 
     /* shift old tensors along */
-    for (int i=0; i<2; i++) {
-      sp->tidal_tensor[i][0] = sp->tidal_tensor[i+1][0];
-      sp->tidal_tensor[i][1] = sp->tidal_tensor[i+1][1];
-      sp->tidal_tensor[i][2] = sp->tidal_tensor[i+1][2];
-      sp->tidal_tensor[i][3] = sp->tidal_tensor[i+1][3];
-      sp->tidal_tensor[i][4] = sp->tidal_tensor[i+1][4];
-      sp->tidal_tensor[i][5] = sp->tidal_tensor[i+1][5];
+    for (int i = 0; i < 2; i++) {
+      sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
+      sp->tidal_tensor[i][1] = sp->tidal_tensor[i + 1][1];
+      sp->tidal_tensor[i][2] = sp->tidal_tensor[i + 1][2];
+      sp->tidal_tensor[i][3] = sp->tidal_tensor[i + 1][3];
+      sp->tidal_tensor[i][4] = sp->tidal_tensor[i + 1][4];
+      sp->tidal_tensor[i][5] = sp->tidal_tensor[i + 1][5];
     }
 
     /* Now retrieve the new ones from the gpart */
@@ -288,7 +287,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     mosaics_clevo(sp, stars_properties, e, cosmo, with_cosmology);
 
     /* Do we still need to calculate tensors for this particle */
-    if ( !stars_properties->calc_all_star_tensors && !sp->gcflag)
+    if (!stars_properties->calc_all_star_tensors && !sp->gcflag)
       sp->calc_tensor = 0;
   }
 }
@@ -300,19 +299,22 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
  * @param sp The star particle
  * @param cosmo the cosmological parameters and properties.
  */
-__attribute__((always_inline)) INLINE static void stars_mosaics_copy_extra_properties(
-    const struct part* p, const struct xpart* xp, struct spart* restrict sp,
-    const struct cosmology* cosmo) {
+__attribute__((always_inline)) INLINE static void
+stars_mosaics_copy_extra_properties(const struct part* p,
+                                    const struct xpart* xp,
+                                    struct spart* restrict sp,
+                                    const struct cosmology* cosmo) {
 
   /* Store the birth pressure in the star particle */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
 
-  //TODO depends on cooling whether we have these properties
+  // TODO depends on cooling whether we have these properties
   /* Store subgrid birth properties */
-#if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || defined(COOLING_CHIMES_HYBRID)
+#if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || \
+    defined(COOLING_CHIMES_HYBRID)
   sp->birth_subgrid_temp = xp->tracers_data.subgrid_temp;
 #else
-  sp->birth_subgrid_temp = 10.f; // K
+  sp->birth_subgrid_temp = 10.f;  // K
 #endif
 
   /* Flag it for cluster formation */

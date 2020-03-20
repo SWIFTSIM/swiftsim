@@ -145,15 +145,12 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float term_r2 = -term / r2;
 
   if (g->calc_tensor) {
-    g->tidal_tensor[0] += tt_term * dx * dx  + 
-        term_r2 * (dx * dx - r2);
+    g->tidal_tensor[0] += tt_term * dx * dx + term_r2 * (dx * dx - r2);
     g->tidal_tensor[1] += (tt_term + term_r2) * dx * dy;
     g->tidal_tensor[2] += (tt_term + term_r2) * dx * dz;
-    g->tidal_tensor[3] += tt_term * dy * dy  + 
-        term_r2 * (dy * dy - r2);
+    g->tidal_tensor[3] += tt_term * dy * dy + term_r2 * (dy * dy - r2);
     g->tidal_tensor[4] += (tt_term + term_r2) * dy * dz;
-    g->tidal_tensor[5] += tt_term * dz * dz  + 
-        term_r2 * (dz * dz - r2);
+    g->tidal_tensor[5] += tt_term * dz * dz + term_r2 * (dz * dz - r2);
   }
 #endif
 }

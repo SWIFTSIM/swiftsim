@@ -138,7 +138,7 @@ struct spart {
    */
   float tidal_tensor[3][6];
 
-  //TODO just temporary
+  // TODO just temporary
   /*! Gravitational potential */
   float potential;
 
@@ -290,7 +290,7 @@ struct stars_props {
 
   /* TODO not sure if needed? */
   /*! Conversion factor from internal mass unit to solar mass */
-  //double mass_to_solar_mass;
+  // double mass_to_solar_mass;
 };
 
 #endif /* SWIFT_MOSAICS_STAR_PART_H */
