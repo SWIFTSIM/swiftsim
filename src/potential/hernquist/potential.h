@@ -132,13 +132,18 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[2] += term * dz;
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  g->potential += -potential->mass / (r + potential->al);
+  /* We don't need the softened version here */
+  const float r2 = dx * dx + dy * dy + dz * dz;
+  const float r1 = sqrtf(r2);
 
-  const float r2 = r * r;
+  /* We also track potential in this gravity version */
+  g->potential += -potential->mass / (r1 + potential->al);
+
   /* 2GM / (r+a)^3 / r^2 */
-  const float tt_term = -2.f * term * r_plus_a_inv / r;
+  const float tt_term = -2.f * term * r_plus_a_inv / r1;
   /* GM / (r+a)^2 / r^3 */
   const float term_r2 = -term / r2;
+
   if (g->calc_tensor) {
     g->tidal_tensor[0] += tt_term * dx * dx  + 
         term_r2 * (dx * dx - r2);
