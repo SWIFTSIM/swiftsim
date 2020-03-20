@@ -94,6 +94,10 @@ void runner_do_grav_external(struct runner *r, struct cell *c, int timer) {
 
       /* Is this part within the time step? */
       if (gpart_is_active(gp, e)) {
+        if (gp->gcflag) {
+          printf("Getting potential for gid=%lld (step=%d)\n",gp->id_or_neg_offset,e->step); //TODO testing
+          fflush(stdout);
+        }
         external_gravity_acceleration(time, potential, constants, gp);
       }
     }
@@ -842,8 +846,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
   TIMER_TIC;
 
   /* Anything to do here? */
-  if (c->stars.count == 0) return;
-  if (!cell_is_active_stars(c, e)) return;
+  if (!cell_is_active_gravity(c, e)) return;
 
   /* Recurse? */
   if (c->split) {
@@ -859,7 +862,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
       /* Get a handle on the s-part. */
       struct spart *restrict sp = &sparts[k];
 
-      if (spart_is_active(sp, e))
+      if (gpart_is_active(sp->gpart, e))
         stars_do_mosaics(sp, e, cosmo, with_cosmology);
     }
   }
