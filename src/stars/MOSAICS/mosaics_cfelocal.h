@@ -1,6 +1,6 @@
 /*
-! FORTRAN MODULE FOR CALCULATING THE CLUSTER FORMATION EFFICIENCY (LOCAL VERSION)
-! Copyright (C) 2012  Diederik Kruijssen
+! FORTRAN MODULE FOR CALCULATING THE CLUSTER FORMATION EFFICIENCY (LOCAL
+VERSION) ! Copyright (C) 2012  Diederik Kruijssen
 !
 ! NAME:
 !       CFElocalmod (module)
@@ -30,10 +30,11 @@
 !       qvir - giant molecular cloud virial parameter (default=1.3)
 !       tsn - time of the first supernova (default=3.*Myr)
 !       tview - time at which CFE is determined (default=10.*Myr)
-!       surfGMC - giant molecular cloud surface density (default=100.*Msun/pc**2.)
-!       ecore - maximum (protostellar core) star formation efficiency (default=.5)
-!       beta0 - turbulent-to-magnetic pressure ratio (default=1.e10)
-!       radfb - feedback: 0=supernova, 1=radiative, 2=both (default=0)
+!       surfGMC - giant molecular cloud surface density
+(default=100.*Msun/pc**2.) !       ecore - maximum (protostellar core) star
+formation efficiency (default=.5) !       beta0 - turbulent-to-magnetic pressure
+ratio (default=1.e10) !       radfb - feedback: 0=supernova, 1=radiative, 2=both
+(default=0)
 !
 ! OUTPUT:
 !       cfe - fraction of star formation occurring in bound clusters

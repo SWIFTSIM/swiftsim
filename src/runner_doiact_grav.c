@@ -261,8 +261,8 @@ static INLINE void runner_dopair_grav_pp_full(
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
-        runner_iact_grav_pp_full_tensors(r2, h2, h_inv, h_inv_3, h_inv_5, mass_j, &f_ij, 
-                                         &pot_ij, &tidFac2);
+        runner_iact_grav_pp_full_tensors(r2, h2, h_inv, h_inv_3, h_inv_5,
+                                         mass_j, &f_ij, &pot_ij, &tidFac2);
 
         tensor_xx += -f_ij + dx * dx * tidFac2;
         tensor_xy += dx * dy * tidFac2;
@@ -270,10 +270,10 @@ static INLINE void runner_dopair_grav_pp_full(
         tensor_yy += -f_ij + dy * dy * tidFac2;
         tensor_yz += dy * dz * tidFac2;
         tensor_zz += -f_ij + dz * dz * tidFac2;
-      }
-      else
+      } else
 #endif
-        runner_iact_grav_pp_full(r2, h2, h_inv, h_inv_3, mass_j, &f_ij, &pot_ij);
+        runner_iact_grav_pp_full(r2, h2, h_inv, h_inv_3, mass_j, &f_ij,
+                                 &pot_ij);
 
       /* Store it back */
       a_x += f_ij * dx;
@@ -475,8 +475,9 @@ static INLINE void runner_dopair_grav_pp_truncated(
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
-        runner_iact_grav_pp_truncated_tensors(r2, h2, h_inv, h_inv_3, h_inv_5, mass_j, 
-                                              r_s_inv, &f_ij, &pot_ij, &tidFac2);
+        runner_iact_grav_pp_truncated_tensors(r2, h2, h_inv, h_inv_3, h_inv_5,
+                                              mass_j, r_s_inv, &f_ij, &pot_ij,
+                                              &tidFac2);
 
         tensor_xx += -f_ij + dx * dx * tidFac2;
         tensor_xy += dx * dy * tidFac2;
@@ -484,8 +485,7 @@ static INLINE void runner_dopair_grav_pp_truncated(
         tensor_yy += -f_ij + dy * dy * tidFac2;
         tensor_yz += dy * dz * tidFac2;
         tensor_zz += -f_ij + dz * dz * tidFac2;
-      }
-      else
+      } else
 #endif
         runner_iact_grav_pp_truncated(r2, h2, h_inv, h_inv_3, mass_j, r_s_inv,
                                       &f_ij, &pot_ij);
@@ -691,10 +691,11 @@ static INLINE void runner_dopair_grav_pm_full(
     float f_x, f_y, f_z, pot_ij;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
-      float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
-      runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_i, h_inv_i, multi_j, &f_x, &f_y,
-                                       &f_z, &pot_ij, &T_xx, &T_xy, &T_xz, &T_yy,
-                                       &T_yz, &T_zz);
+      float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f,
+            T_zz = 0.f;
+      runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_i, h_inv_i, multi_j,
+                                       &f_x, &f_y, &f_z, &pot_ij, &T_xx, &T_xy,
+                                       &T_xz, &T_yy, &T_yz, &T_zz);
 
       tensor_xx[pid] += T_xx;
       tensor_xy[pid] += T_xy;
@@ -702,11 +703,10 @@ static INLINE void runner_dopair_grav_pm_full(
       tensor_yy[pid] += T_yy;
       tensor_yz[pid] += T_yz;
       tensor_zz[pid] += T_zz;
-    }
-    else
+    } else
 #endif
-      runner_iact_grav_pm_full(dx, dy, dz, r2, h_i, h_inv_i, multi_j, &f_x, &f_y,
-                               &f_z, &pot_ij);
+      runner_iact_grav_pm_full(dx, dy, dz, r2, h_i, h_inv_i, multi_j, &f_x,
+                               &f_y, &f_z, &pot_ij);
 
     /* Store it back */
     a_x[pid] += f_x;
@@ -897,10 +897,11 @@ static INLINE void runner_dopair_grav_pm_truncated(
     float f_x, f_y, f_z, pot_ij;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
-      float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f, T_zz = 0.f;
-      runner_iact_grav_pm_truncated_tensors(dx, dy, dz, r2, h_i, h_inv_i, r_s_inv,
-                                            multi_j, &f_x, &f_y, &f_z, &pot_ij, &T_xx,
-                                            &T_xy, &T_xz, &T_yy, &T_yz, &T_zz);
+      float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f,
+            T_zz = 0.f;
+      runner_iact_grav_pm_truncated_tensors(
+          dx, dy, dz, r2, h_i, h_inv_i, r_s_inv, multi_j, &f_x, &f_y, &f_z,
+          &pot_ij, &T_xx, &T_xy, &T_xz, &T_yy, &T_yz, &T_zz);
 
       tensor_xx[pid] += T_xx;
       tensor_xy[pid] += T_xy;
@@ -908,8 +909,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
       tensor_yy[pid] += T_yy;
       tensor_yz[pid] += T_yz;
       tensor_zz[pid] += T_zz;
-    }
-    else
+    } else
 #endif
       runner_iact_grav_pm_truncated(dx, dy, dz, r2, h_i, h_inv_i, r_s_inv,
                                     multi_j, &f_x, &f_y, &f_z, &pot_ij);
@@ -1286,8 +1286,8 @@ static INLINE void runner_doself_grav_pp_full(
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
-        runner_iact_grav_pp_full_tensors(r2, h2, h_inv, h_inv_3, h_inv_5, mass_j, &f_ij, 
-                                         &pot_ij, &tidFac2);
+        runner_iact_grav_pp_full_tensors(r2, h2, h_inv, h_inv_3, h_inv_5,
+                                         mass_j, &f_ij, &pot_ij, &tidFac2);
 
         tensor_xx += -f_ij + dx * dx * tidFac2;
         tensor_xy += dx * dy * tidFac2;
@@ -1295,10 +1295,10 @@ static INLINE void runner_doself_grav_pp_full(
         tensor_yy += -f_ij + dy * dy * tidFac2;
         tensor_yz += dy * dz * tidFac2;
         tensor_zz += -f_ij + dz * dz * tidFac2;
-      }
-      else
+      } else
 #endif
-        runner_iact_grav_pp_full(r2, h2, h_inv, h_inv_3, mass_j, &f_ij, &pot_ij);
+        runner_iact_grav_pp_full(r2, h2, h_inv, h_inv_3, mass_j, &f_ij,
+                                 &pot_ij);
 
       /* Store it back */
       a_x += f_ij * dx;
@@ -1483,8 +1483,9 @@ static INLINE void runner_doself_grav_pp_truncated(
       if (ci_cache->calc_tensor[pid]) {
         float tidFac2;
         const float h_inv_5 = h_inv_3 * h_inv * h_inv;
-        runner_iact_grav_pp_truncated_tensors(r2, h2, h_inv, h_inv_3, h_inv_5, mass_j, 
-                                              r_s_inv, &f_ij, &pot_ij, &tidFac2);
+        runner_iact_grav_pp_truncated_tensors(r2, h2, h_inv, h_inv_3, h_inv_5,
+                                              mass_j, r_s_inv, &f_ij, &pot_ij,
+                                              &tidFac2);
 
         tensor_xx += -f_ij + dx * dx * tidFac2;
         tensor_xy += dx * dy * tidFac2;
@@ -1492,8 +1493,7 @@ static INLINE void runner_doself_grav_pp_truncated(
         tensor_yy += -f_ij + dy * dy * tidFac2;
         tensor_yz += dy * dz * tidFac2;
         tensor_zz += -f_ij + dz * dz * tidFac2;
-      }
-      else
+      } else
 #endif
         runner_iact_grav_pp_truncated(r2, h2, h_inv, h_inv_3, mass_j, r_s_inv,
                                       &f_ij, &pot_ij);
