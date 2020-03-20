@@ -185,6 +185,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
     case task_type_stars_ghost:
     case task_type_stars_sort:
     case task_type_stars_resort:
+    case task_type_stars_mosaics:
       return task_action_spart;
       break;
 
