@@ -107,7 +107,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   dsyevj3(tide, tidevec, tideval);
   sort3(tideval);
 
-  double Omega2 = fabs(-tideval[1] - tideval[1] - tideval[2]) / 3.;
+  double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
   double kappa2 = fabs(3 * Omega2 - tideval[2]);
 
   sp->Omega = sqrt(Omega2);
