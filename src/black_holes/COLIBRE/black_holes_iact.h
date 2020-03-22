@@ -23,6 +23,7 @@
 #include "black_holes_parameters.h"
 #include "gravity.h"
 #include "hydro.h"
+#include "equation_of_state.h"
 #include "random.h"
 #include "space.h"
 #include "timestep_sync_part.h"
@@ -77,8 +78,10 @@ runner_iact_nonsym_bh_gas_density(
   /* Contribution to the total neighbour mass */
   bi->ngb_mass += mj;
 
-  /* Neighbour sounds speed */
-  const float cj = hydro_get_comoving_soundspeed(pj);
+  /* Neighbour's sound speed */
+  const float pressure_j = hydro_get_comoving_pressure(pj);
+  const float cj = gas_soundspeed_from_pressure(xpj->tracers_data.subgrid_dens,
+                                                pressure_j);
 
   /* Contribution to the smoothed sound speed */
   bi->sound_speed_gas += mj * cj * wi;
