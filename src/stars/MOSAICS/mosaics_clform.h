@@ -105,6 +105,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   double tidevec[3][3] = {{0}}, tideval[3] = {0};
   dsyevj3(tide, tidevec, tideval);
+  /* sort eigenvalues, tideval[2] is largest eigenvalue */
   sort3(tideval);
 
   double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
