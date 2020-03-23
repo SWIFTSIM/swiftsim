@@ -142,7 +142,7 @@ COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
   temperature_threshold_K:          1000    # (Optional) Temperature threshold below which stars are allowed to form (Default set to infinity).
-  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Default set to infinity).
+  subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (default set to infinity)
 
 # Feedback parameter
 COLIBREFeedback:
