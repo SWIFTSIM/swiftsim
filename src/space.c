@@ -4818,7 +4818,7 @@ void space_init_unique_id(struct space *s) {
   }
   s->unique_id.global_next_id++;
 
-  /* Compute the size of the each slice. */
+  /* Compute the size of each slice. */
   const long long slice_size =
     (space_extra_parts + space_extra_sparts +
      space_extra_gparts + space_extra_bparts) * s->nr_cells;
