@@ -1817,6 +1817,9 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
   swift_free("b_index", b_index);
   swift_free("cell_bpart_counts", cell_bpart_counts);
 
+  /* Update the slice of unique IDs. */
+  space_update_unique_id(s);
+
 #ifdef WITH_MPI
 
   /* Re-allocate the index array for the gparts if needed.. */
@@ -1999,9 +2002,6 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
   /* Clean up any stray sort indices in the cell buffer. */
   space_free_buff_sort_indices(s);
-
-  /* Update the slice of unique IDs. */
-  space_update_unique_id(s);
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -5169,13 +5169,14 @@ void space_init(struct space *s, struct swift_params *params,
     space_extra_sparts = 0;
   }
 
+  /* Build the cells recursively. */
+  if (!dry_run) space_regrid(s, verbose);
+
+
   /* Compute the max id for the generation of unique id. */
   if (star_formation && swift_star_formation_model_creates_stars) {
     space_init_unique_id(s);
   }
-
-  /* Build the cells recursively. */
-  if (!dry_run) space_regrid(s, verbose);
 }
 
 /**
@@ -6206,8 +6207,14 @@ long long space_get_new_unique_id(struct space *s) {
   /* Update the counter. */
   s->unique_id.current.current++;
 
+  /* Check if everything is fine */
+  if (s->unique_id.current.current > s->unique_id.current.max) {
+    error("Failed to get a new ID");
+  }
+
   /* Check if need to move to the next slice. */
   if (s->unique_id.current.current == s->unique_id.current.max) {
+
     /* Check if the next slice is already used */
     if (s->unique_id.next.current == 0) {
       error("Failed to obtain a new unique ID.");
