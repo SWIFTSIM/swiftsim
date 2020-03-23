@@ -92,6 +92,12 @@ struct black_holes_props {
   /*! Minimum value of velocity repositioning threshold  */
   float min_reposition_velocity_threshold;
 
+  /*! Normalisation factor for repositioning velocity */
+  float reposition_coefficient_upsilon;
+
+  /*! Repositioning velocity scaling with black hole mass */
+  float reposition_exponent_xi;
+
 
   /* ---- Properties of the merger model ---------- */
 
@@ -210,11 +216,21 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 			     "COLIBREAGN:max_reposition_velocity_ratio");
 
   bp->min_reposition_velocity_threshold =
-    parser_get_param_float(params,
+      parser_get_param_float(params,
 			   "COLIBREAGN:min_reposition_velocity_threshold");
   /* Convert from km/s to internal units */
   bp->min_reposition_velocity_threshold *=
-    (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
+      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
+
+  bp->reposition_coefficient_upsilon =
+      parser_get_param_float(params, "COLIBREAGN:reposition_coefficient_upsilon");
+
+  /* Convert from km/s to internal units */
+  bp->reposition_coefficient_upsilon *=
+     (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
+  
+  bp->reposition_exponent_xi =
+      parser_get_param_float(params, "COLIBREAGN:reposition_exponent_xi");
 
   
   /* Merger parameters ------------------------------------- */

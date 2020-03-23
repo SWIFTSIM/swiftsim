@@ -31,6 +31,7 @@
 
 /* Standard includes */
 #include <float.h>
+#include <math.h>
 
 /**
  * @brief Computes the gravity time-step of a given black hole particle.
@@ -543,11 +544,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
  * @param props The properties of the black hole scheme.
  * @param constants The physical constants (in internal units).
  * @param cosmo The cosmological model.
+ * @param dt The black hole particle's time step.
  */
 __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     struct bpart* restrict bp, const struct black_holes_props* props,
     const struct phys_const* constants, const struct cosmology* cosmo,
-    const double time) {
+    const double dt) {
 
   const float potential = gravity_get_comoving_potential(bp->gpart);
 
@@ -561,6 +563,30 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     bp->reposition.delta_x[0] = -FLT_MAX;
     bp->reposition.delta_x[1] = -FLT_MAX;
     bp->reposition.delta_x[2] = -FLT_MAX;
+  } else if props->reposition_coefficient_upsilon >= 0 {
+
+    /* If we are re-positioning, move the BH a fraction of delta_x, so
+     * that we have a well-defined re-positioning velocity */
+    const float repos_vel = props->reposition_coefficient_upsilon *
+       pow(bp->subgrid_mass / constants->const_solar_mass,
+          props->reposition_exponent_xi);
+
+    const double dx = bp->reposition.delta_x[0];
+    const double dy = bp->reposition.delta_x[1];
+    const double dz = bp->reposition.delta_x[2];
+    const double d = sqrt(dx * dx + dy * dy + dz * dz);
+
+    /* Convert target reposition velocity to a fractional reposition
+     * along reposition.delta_x */
+    double repos_frac = repos_vel * dt / d;
+    if (repos_frac < 0)
+      repos_frac = 0.;
+    if (repos_frac > 1)
+      repos_frac = 1.;
+ 
+    bp->reposition.delta_x[0] *= repos_frac;
+    bp->reposition.delta_x[1] *= repos_frac;
+    bp->reposition.delta_x[2] *= repos_frac;    
   }
 }
 
