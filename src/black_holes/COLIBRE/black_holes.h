@@ -413,14 +413,6 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* Convert the quantities we gathered to physical frame (all internal units)
    * Note: for the velocities this means peculiar velocities */
   const double gas_c_phys = bp->sound_speed_gas * cosmo->a_factor_sound_speed;
-  const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                    bp->velocity_gas[1] * cosmo->a_inv,
-                                    bp->velocity_gas[2] * cosmo->a_inv};
-
-  const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
-                                   bp->v[1] * cosmo->a_inv,
-                                   bp->v[2] * cosmo->a_inv};
-
   const double gas_v_circular[3] = {
       bp->circular_velocity_gas[0] * cosmo->a_inv,
       bp->circular_velocity_gas[1] * cosmo->a_inv,
@@ -437,6 +429,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass);
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
+  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
   const double Bondi_radius = G * BH_mass / gas_c_phys2;
   const double Bondi_time = Bondi_radius / gas_c_phys;
   const double r_times_v_tang = Bondi_radius * tangential_velocity;
