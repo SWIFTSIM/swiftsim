@@ -563,7 +563,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     bp->reposition.delta_x[0] = -FLT_MAX;
     bp->reposition.delta_x[1] = -FLT_MAX;
     bp->reposition.delta_x[2] = -FLT_MAX;
-  } else if props->reposition_coefficient_upsilon >= 0 {
+  } else if (props->reposition_coefficient_upsilon >= 0) {
 
     /* If we are re-positioning, move the BH a fraction of delta_x, so
      * that we have a well-defined re-positioning velocity */
