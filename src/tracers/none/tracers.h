@@ -124,11 +124,15 @@ static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,
  * Nothing to do here.
  *
  * @param xp The extended particle data.
+ * @param with_cosmology Are we running with cosmology?
+ * @param scale_factor The current scale-factor (if running with cosmo)
+ * @param time The current time (if running without cosmo)
+ * @param Amount of energy injected in the feedback event (internal physical
+ * units)
  */
-static INLINE void tracers_after_black_holes_feedback(struct xpart *xp,
-                                                      const int with_cosmology,
-                                                      const float scale_factor,
-                                                      const double time) {}
+static INLINE void tracers_after_black_holes_feedback(
+    struct xpart *xp, const int with_cosmology, const float scale_factor,
+    const double time, const double delta_energy) {}
 
 static INLINE void tracers_after_momentum_feedback(struct xpart *xp,
                                                    const int with_cosmology,
