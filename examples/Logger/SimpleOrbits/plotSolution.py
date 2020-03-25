@@ -21,7 +21,6 @@ from h5py import File as HDF5File
 import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
 import makeIC
 import sys
 sys.path.append("../../../logger/.libs/")
@@ -32,9 +31,6 @@ plt.style.use("mpl_style")
 
 center = np.array([0.5 * makeIC.boxsize]*3)
 id_focus = 0
-# Plot the absolute positions (+vel) or the difference
-# to a solution computed with a RK solver.
-diff_to_sol = False
 
 # Defines the constants
 G = 1.189972e-04  # gravitational constant
@@ -67,23 +63,6 @@ def gravity(t, y):
     dy[2] = y[2] * a
     dy[3] = y[3] * a
     return dy
-
-
-def Evolve(y0, t):
-    """
-    Compute the solution to the gravitational problem.
-
-    Parameters
-    ----------
-
-    y0: np.array
-      Initial conditions [x, y, vx, vy]
-
-    t: np.array
-      Time of the outputs.
-    """
-    y = solve_ivp(gravity, (t[0], t[-1]), y0, t_eval=t)
-    return y.y
 
 
 def plotRelative(t, p, *args, **kwargs):
@@ -136,20 +115,15 @@ def doSnapshots():
     y0 = np.zeros(4)
     y0[:2] = p[0, :2]
     y0[2:] = v[0, :2]
-    y = Evolve(y0, t)
 
     # compute the plotting variables
     plt.figure(fig_1.number)
     plotRelative(t, E, ".", label="Snapshot")
 
     plt.figure(fig_2.number)
-    if diff_to_sol:
-        p[:, :2] = p[:, :2] - y[:2, :].transpose()
     plt.plot(p[:, 0], p[:, 1], "-", label="Snapshot", lw=1.)
 
     plt.figure(fig_3.number)
-    if diff_to_sol:
-        v[:, :2] = v[:, :2] - y[2:, :].transpose()
     plt.plot(v[:, 0], v[:, 1], "-", label="Snapshot", lw=1.)
 
 
@@ -230,32 +204,22 @@ def doLogger():
     y0[:2] = p[0, :2]
     y0[2:] = v[0, :2]
     t_parts, ind = np.unique(t_parts[:, 0], return_index=True)
-    y = Evolve(y0, t_parts)
-    if diff_to_sol:
-        p_parts = p_parts[ind, :2] - y[:2, :].transpose()
 
     # plot the solution
     plt.figure(fig_2.number)
     plt.plot(p_parts[:, 0], p_parts[:, 1], "x", label="Logger")
 
     plt.figure(fig_3.number)
-    if diff_to_sol:
-        v_parts = v_parts[ind, :2] - y[2:, :].transpose()
     plt.plot(v_parts[:, 0], v_parts[:, 1], "x", label="Logger")
 
     # Compute the solution
     y0 = np.zeros(4)
     y0[:2] = p[0, :2]
     y0[2:] = v[0, :2]
-    y = Evolve(y0, times)
-    if diff_to_sol:
-        p[:, :2] = p[:, :2] - y[:2, :].transpose()
     plt.figure(fig_2.number)
     plt.plot(p[:, 0], p[:, 1], ":r", label="Logger (Interpolation)")
 
     plt.figure(fig_3.number)
-    if diff_to_sol:
-        v[:, :2] = v[:, :2] - y[2:, :].transpose()
     plt.plot(v[:, 0], v[:, 1], ":r", label="Logger (Interpolation)")
 
 
