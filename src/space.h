@@ -403,6 +403,4 @@ void space_struct_restore(struct space *s, FILE *stream);
 void space_write_cell_hierarchy(const struct space *s, int j);
 void space_compute_star_formation_stats(const struct space *s,
                                         struct star_formation *star_form);
-void space_update_unique_id(struct space *s);
-long long space_get_new_unique_id(struct space *s);
 #endif /* SWIFT_SPACE_H */
