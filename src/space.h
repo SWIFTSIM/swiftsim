@@ -34,6 +34,7 @@
 #include "lock.h"
 #include "parser.h"
 #include "part.h"
+#include "space_unique_id.h"
 #include "velociraptor_struct.h"
 
 /* Avoid cyclic inclusions */
@@ -80,18 +81,6 @@ extern int space_extra_parts;
 extern int space_extra_gparts;
 extern int space_extra_sparts;
 extern int space_extra_bparts;
-
-
-/**
- * @brief Slice of unique IDs for particle creation.
- */
-struct slice {
-  /*! Current free unique id */
-  long long current;
-
-  /*! Maximal unique id in this slice  (not included) */
-  long long max;
-};
 
 /**
  * @brief The space in which the cells and particles reside.
