@@ -226,9 +226,9 @@ size_t logger_particle_read(struct logger_particle *part,
  *
  * @return The function evaluated at t.
  */
-double logger_particle_quintic_hermite_spline(
-      double t0, double x0, float v0, float a0,
-      double t1, double x1, float v1, float a1, double t) {
+double logger_particle_quintic_hermite_spline(double t0, double x0, float v0,
+                                              float a0, double t1, double x1,
+                                              float v1, float a1, double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -260,7 +260,8 @@ double logger_particle_quintic_hermite_spline(
   x += (3. * x0 - 3. * x1 + v1_dt + 2. * v0_dt + a0_dt2) * t_t0_3 * t_t1 / dt4;
 
   /* Quintic term */
-  x += (6. * x1 - 6. * x0 - 3. * v0_dt - 3. * v1_dt + a1_dt2 - a0_dt2) * t_t0_3 * t_t1_2 / dt5;
+  x += (6. * x1 - 6. * x0 - 3. * v0_dt - 3. * v1_dt + a1_dt2 - a0_dt2) *
+       t_t0_3 * t_t1_2 / dt5;
 
   return x;
 }
@@ -278,9 +279,9 @@ double logger_particle_quintic_hermite_spline(
  *
  * @return The function evaluated at t.
  */
-float logger_particle_cubic_hermite_spline(
-      double t0, float v0, float a0,
-      double t1, float v1, float a1, double t) {
+float logger_particle_cubic_hermite_spline(double t0, float v0, float a0,
+                                           double t1, float v1, float a1,
+                                           double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -348,13 +349,14 @@ void logger_particle_interpolate(struct logger_particle *part_curr,
   for (int i = 0; i < 3; i++) {
     /* Positions */
     part_curr->pos[i] = logger_particle_quintic_hermite_spline(
-      part_curr->time, part_curr->pos[i], part_curr->vel[i], part_curr->acc[i],
-      part_next->time, part_next->pos[i], part_next->vel[i], part_next->acc[i], time);
+        part_curr->time, part_curr->pos[i], part_curr->vel[i],
+        part_curr->acc[i], part_next->time, part_next->pos[i],
+        part_next->vel[i], part_next->acc[i], time);
 
     /* Velocities */
     part_curr->vel[i] = logger_particle_cubic_hermite_spline(
-      part_curr->time, part_curr->vel[i], part_curr->acc[i],
-      part_next->time, part_next->vel[i], part_next->acc[i], time);
+        part_curr->time, part_curr->vel[i], part_curr->acc[i], part_next->time,
+        part_next->vel[i], part_next->acc[i], time);
 
     /* Accelerations */
     ftmp = (part_next->acc[i] - part_curr->acc[i]);
