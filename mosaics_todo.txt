@@ -11,6 +11,23 @@ I/O:
   Load star props (need TidalTensor so far)
   Also need to zero optional properties if they're not read in
 
+Scheduling:
+  Still necessary to call mosaics from runner_do_star_formation() since occasionally SF happens but mosaics would not be called. Already scheduled after the star resort so not sure what the fix is?
+
+
+
+Correct sound speed:
+
+  /* Get the subgrid temperature from the tracers */
+  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
+
+  /* Calculate the sound speed */
+  const double sound_speed = hydro_get_physical_soundspeed(p, cosmo);
+
+  /* Get the subgrid sound speed */
+  const double sound_speed2_subgrid = sound_speed * sound_speed * subgrid_temperature / temperature; 
+
+
 
 NOTES:
 ------

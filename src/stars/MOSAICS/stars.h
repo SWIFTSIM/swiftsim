@@ -272,7 +272,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->gcflag = 1;
 
     /* TODO need to calculate this beforehand */
-    sp->gasVelDisp = 0.;
     sp->starVelDisp = 0.;
     sp->fgas = 1.;
 
@@ -305,8 +304,9 @@ stars_mosaics_copy_extra_properties(const struct part* p,
                                     struct spart* restrict sp,
                                     const struct cosmology* cosmo) {
 
-  /* Store the birth pressure in the star particle */
+  /* Store the birth properties in the star particle */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
+  sp->gasVelDisp = sqrt(p->sf_data.sigma_v2);
 
   // TODO depends on cooling whether we have these properties
   /* Store subgrid birth properties */

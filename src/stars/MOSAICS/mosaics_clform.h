@@ -54,13 +54,11 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Sub-particle turbulent velocity dispersion */
   /* sqrt(3) to convert to 3D */
-  double turbVelDisp = sqrt(3.f * sp->birth_pressure / sp->birth_density);
+  //double turbVelDisp = sqrt(3.f * sp->birth_pressure / sp->birth_density);
 
-  /* TODO make this optional */
-  /* Combined resolved and unresolved velocity dispersion */
-  // totalVelDisp = sqrt( sp->gasVelDisp * sp->gasVelDisp +
-  //                      turbVelDisp * turbVelDisp );
-  double totalVelDisp = turbVelDisp;
+  /* TODO make this optional? */
+  //double totalVelDisp = turbVelDisp;
+  double totalVelDisp = sp->gasVelDisp;
 
   /* In units of kg, m, s */
   /* 1/sqrt(3) converts to 1D assuming isotropy */
