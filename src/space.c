@@ -5833,7 +5833,7 @@ void space_clean(struct space *s) {
 /**
  * @brief Write the space struct and its contents to the given FILE as a
  * stream of bytes.
-< *
+ *
  * @param s the space
  * @param stream the file stream
  */
