@@ -70,7 +70,7 @@ const struct mask_data logger_mask_data[logger_count_mask] = {
     /* Particle's acceleration. */
     {3 * sizeof(float), 1 << logger_a, "accelerations"},
     /* Particle's entropy. */
-    {sizeof(int), 1 << logger_u, "entropy"},
+    {sizeof(float), 1 << logger_u, "entropy"},
     /* Particle's smoothing length. */
     {sizeof(float), 1 << logger_h, "smoothing length"},
     /* Particle's density. */

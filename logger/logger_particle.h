@@ -62,7 +62,7 @@ struct logger_particle {
   float acc[3];
 
   /* entropy. */
-  int entropy;
+  float entropy;
 
   /* smoothing length. */
   float h;
