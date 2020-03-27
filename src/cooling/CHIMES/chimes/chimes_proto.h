@@ -76,10 +76,11 @@ struct gasVariables {
                                  chemistry and cooling. Units: s. */
   int ForceEqOn; /*!< 0 - Evolve chemistry in non-eq; 1 - set abundances to eqm
                     from tables. */
-  int ThermEvolOn;  /*!< 0 - Hold temperature fixed; 1 - evolve temperature. */
-  int temp_floor_mode;   /*!< Flag to control how the temperature floor is implemented. */ 
-  int InitIonState; /*!< Sets initial ionisation state if using
-                       #initialise_gas_abundances(). */
+  int ThermEvolOn; /*!< 0 - Hold temperature fixed; 1 - evolve temperature. */
+  int temp_floor_mode; /*!< Flag to control how the temperature floor is
+                          implemented. */
+  int InitIonState;    /*!< Sets initial ionisation state if using
+                          #initialise_gas_abundances(). */
   ChimesFloat constant_heating_rate; /*!< Extra heating term to add to the
                                         radiative cooling rates (positive for
                                         heating). Units: erg s^-1 cm^-3. */
@@ -938,8 +939,10 @@ void update_cooling_rates(struct gasVariables *myGasVars,
 // chimes.c
 void chimes_network(struct gasVariables *myGasVars,
                     struct globalVariables *myGlobalVars);
-void chimes_err_handler_fn(int error_code, const char *module, const char *function, char *msg, void *eh_data);
-void cvErrHandler(int error_code, const char *module, const char *function, char *msg, void *data);
+void chimes_err_handler_fn(int error_code, const char *module,
+                           const char *function, char *msg, void *eh_data);
+void cvErrHandler(int error_code, const char *module, const char *function,
+                  char *msg, void *data);
 void set_equilibrium_abundances_from_tables(struct UserData data);
 void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars,
                            struct globalVariables *myGlobalVars);

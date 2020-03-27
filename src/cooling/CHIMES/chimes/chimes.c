@@ -120,37 +120,37 @@ void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars,
   fprintf(log_file, "++++++++++++++\n");
 }
 
-/** 
+/**
  * @brief Error handler function.
- * 
- * Error handler function for the 
- * CVODE error and warning messages. 
- * 
+ *
+ * Error handler function for the
+ * CVODE error and warning messages.
+ *
  * @param error_code The error code.
- * @param module CVODE module. 
- * @param function Function where the error occurred. 
- * @param msg The error message. 
- * @param eh_data Pointer to the user data. 
- */ 
-void chimes_err_handler_fn(int error_code, const char *module, const char *function, char *msg, void *eh_data)
-{
+ * @param module CVODE module.
+ * @param function Function where the error occurred.
+ * @param msg The error message.
+ * @param eh_data Pointer to the user data.
+ */
+void chimes_err_handler_fn(int error_code, const char *module,
+                           const char *function, char *msg, void *eh_data) {
   struct UserData *user_data;
 
-  user_data = (struct UserData *) eh_data;
+  user_data = (struct UserData *)eh_data;
 
-  if (user_data->myGlobalVars->chimes_debug != 0)
-    {
-      if (!((user_data->myGasVars->temp_floor_mode == 1) && (error_code == CV_RHSFUNC_FAIL)))
-	{
-	  cvErrHandler(error_code, module, function, msg, user_data->cvode_mem);
+  if (user_data->myGlobalVars->chimes_debug != 0) {
+    if (!((user_data->myGasVars->temp_floor_mode == 1) &&
+          (error_code == CV_RHSFUNC_FAIL))) {
+      cvErrHandler(error_code, module, function, msg, user_data->cvode_mem);
 
-	  if (user_data->myGlobalVars->chimes_debug == 2)
-	    {
-	      fprintf(stderr, "CHIMES CVode error occurred for the following particle: \n"); 
-	      chimes_print_gas_vars(stderr, user_data->myGasVars, user_data->myGlobalVars);
-	    }
-	}
+      if (user_data->myGlobalVars->chimes_debug == 2) {
+        fprintf(stderr,
+                "CHIMES CVode error occurred for the following particle: \n");
+        chimes_print_gas_vars(stderr, user_data->myGasVars,
+                              user_data->myGlobalVars);
+      }
     }
+  }
 
   return;
 }
@@ -432,8 +432,8 @@ void chimes_network(struct gasVariables *myGasVars,
      * of steps CVode takes. */
     CVodeSetMaxNumSteps(cvode_mem, MAXSTEPS);
 
-    /* Set the error handler function. */ 
-    CVodeSetErrHandlerFn(cvode_mem, chimes_err_handler_fn, &data); 
+    /* Set the error handler function. */
+    CVodeSetErrHandlerFn(cvode_mem, chimes_err_handler_fn, &data);
 
     /* Use CVodeInit to initialise the integrator
      * memory and specify the right hand side

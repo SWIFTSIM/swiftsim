@@ -536,16 +536,17 @@ void chimes_update_gas_vars(const double u_cgs,
       u_floor * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
   double u_actual_cgs, T_floor;
-  
-  /* Set the temperature floor to 
-   * either minimal_temperature or 
-   * according to the entropy floor, 
-   * whichever is greater. */ 
-  T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu / boltzmann_k_cgs;
-  T_floor = chimes_max(T_floor, hydro_properties->minimal_temperature); 
-  
-  ChimesGasVars->TempFloor = (ChimesFloat) T_floor;
-  ChimesGasVars->temp_floor_mode = 1; 
+
+  /* Set the temperature floor to
+   * either minimal_temperature or
+   * according to the entropy floor,
+   * whichever is greater. */
+  T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
+            boltzmann_k_cgs;
+  T_floor = chimes_max(T_floor, hydro_properties->minimal_temperature);
+
+  ChimesGasVars->TempFloor = (ChimesFloat)T_floor;
+  ChimesGasVars->temp_floor_mode = 1;
 
   if (u_cgs < u_floor_cgs) {
     /* Particle is below the entropy floor.
