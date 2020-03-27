@@ -572,10 +572,12 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
                      hence No. of eqns = network_size + 1 when ThermEvol is on
                    */
     else
-      NV_Ith_S(ydot, data->network_size) = (realtype)chimes_max(
-          -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars,
-                                        *data, 0),
-          0.0); /* Once T falls below T_floor, set T_dot >= 0 */
+	{
+	  if (data->myGasVars->temp_floor_mode == 0) 
+	    NV_Ith_S(ydot, data->network_size) = (realtype) chimes_max(-calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars, *data, 0), 0.0);  /* Once T falls below T_floor, set T_dot >= 0 */
+	  else
+	    return -1;
+	}
   }
 
   return 0;
