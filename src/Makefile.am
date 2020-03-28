@@ -58,7 +58,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
-    event_logger.h event_logger_struct.h
+    event_logger.h event_logger_struct.h event_logger_core.h
 
 # source files for EAGLE cooling
 QLA_COOLING_SOURCES =
