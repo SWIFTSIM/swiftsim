@@ -223,9 +223,9 @@ HDF5 support is being disabled.
         HDF5_SHOW=$(eval $H5CC -show)
 
         dnl Get the actual compiler used
-        HDF5_CC=$(eval $H5CC -show | $AWK '{print $[]1}')
+        HDF5_CC=$(eval $H5CC -show | $HEAD -n 1 | $AWK '{print $[]1}')
         if test "$HDF5_CC" = "ccache"; then
-            HDF5_CC=$(eval $H5CC -show | $AWK '{print $[]2}')
+            HDF5_CC=$(eval $H5CC -show | $HEAD -n 1 | $AWK '{print $[]2}')
         fi
 
         dnl h5cc provides both AM_ and non-AM_ options
