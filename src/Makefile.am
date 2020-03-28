@@ -243,7 +243,6 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 star_formation/GEAR/star_formation_io.h star_formation/GEAR/star_formation_iact.h \
 		 star_formation/COLIBRE/star_formation.h star_formation/COLIBRE/star_formation_struct.h \
 		 star_formation/COLIBRE/star_formation_io.h star_formation/COLIBRE/star_formation_iact.h \
-                 star_formation/QLA/star_formation_logger.h star_formation/QLA/star_formation_logger_struct.h \
                  star_formation/EAGLE/star_formation_logger.h star_formation/EAGLE/star_formation_logger_struct.h \
                  star_formation/GEAR/star_formation_logger.h star_formation/GEAR/star_formation_logger_struct.h \
                  star_formation/COLIBRE/star_formation_logger.h star_formation/COLIBRE/star_formation_logger_struct.h \
