@@ -1151,6 +1151,9 @@ void write_output_serial(struct engine* e, const char* baseName,
       hid_t h_err = H5Lcreate_soft(partTypeGroupName, h_grp, aliasName,
                                    H5P_DEFAULT, H5P_DEFAULT);
       if (h_err < 0) error("Error while creating alias for particle group.\n");
+
+      /* Write the number of particles as an attribute */
+      io_write_attribute_l(h_grp, "NumberOfParticles", N_total[ptype]);
     }
 
     /* Close file */

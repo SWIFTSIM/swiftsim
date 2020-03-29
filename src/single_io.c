@@ -1010,6 +1010,9 @@ void write_output_single(struct engine* e, const char* baseName,
                                  H5P_DEFAULT, H5P_DEFAULT);
     if (h_err < 0) error("Error while creating alias for particle group.\n");
 
+    /* Write the number of particles as an attribute */
+    io_write_attribute_l(h_grp, "NumberOfParticles", numParticles[ptype]);
+
     int num_fields = 0;
     struct io_props list[100];
     size_t N = 0;
