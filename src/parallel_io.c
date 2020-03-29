@@ -1247,7 +1247,15 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
     h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT,
                       H5P_DEFAULT);
     if (h_grp < 0)
-      error("Error while opening particle group %s.", partTypeGroupName);
+      error("Error while creating particle group %s.", partTypeGroupName);
+
+    /* Add an alias name for convenience */
+    char aliasName[PARTICLE_GROUP_BUFFER_SIZE];
+    snprintf(aliasName, PARTICLE_GROUP_BUFFER_SIZE, "/%s",
+             part_type_names[ptype]);
+    hid_t h_err = H5Lcreate_soft(partTypeGroupName, h_grp, aliasName,
+                                 H5P_DEFAULT, H5P_DEFAULT);
+    if (h_err < 0) error("Error while creating alias for particle group.\n");
 
     int num_fields = 0;
     struct io_props list[100];
