@@ -2430,7 +2430,7 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 # Check if using CHIMES cooling
-AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
+AM_CONDITIONAL([HAVECHIMESCOOLING], [test ${with_cooling:0:6} = "CHIMES"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
