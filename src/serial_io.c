@@ -1146,7 +1146,7 @@ void write_output_serial(struct engine* e, const char* baseName,
 
       /* Add an alias name for convenience */
       char aliasName[PARTICLE_GROUP_BUFFER_SIZE];
-      snprintf(aliasName, PARTICLE_GROUP_BUFFER_SIZE, "/Particles_%s",
+      snprintf(aliasName, PARTICLE_GROUP_BUFFER_SIZE, "/%sParticles",
                part_type_names[ptype]);
       hid_t h_err = H5Lcreate_soft(partTypeGroupName, h_grp, aliasName,
                                    H5P_DEFAULT, H5P_DEFAULT);
