@@ -105,21 +105,23 @@ Structure of the particle arrays
 There are several groups that contain 'auxiliary' information, such as
 ``Header``.  Particle data is placed in separate groups depending of the type of
 the particles. The type use the naming convention of Gadget-2 (with
-the OWLS and EAGLE extensions).
+the OWLS and EAGLE extensions). A more intuitive naming convention is
+given in the form of aliases within the file. The aliases are shown in
+the third column of the table.
 
-+---------------------+------------------------+----------------------------------------+
-| HDF5 Group Name     | Physical Particle Type | In code ``enum part_type``             |
-+=====================+========================+========================================+
-| ``/PartType0/``     | Gas                    | ``swift_type_gas``                     |
-+---------------------+------------------------+----------------------------------------+
-| ``/PartType1/``     | Dark Matter            | ``swift_type_dark_matter``             |
-+---------------------+------------------------+----------------------------------------+
-| ``/PartType2/``     | Background Dark Matter | ``swift_type_dark_matter_background``  |
-+---------------------+------------------------+----------------------------------------+
-| ``/PartType4/``     | Stars                  | ``swift_type_star``                    |
-+---------------------+------------------------+----------------------------------------+
-| ``/PartType5/``     | Black Holes            | ``swift_type_black_hole``              |
-+---------------------+------------------------+----------------------------------------+
++---------------------+------------------------+-----------------------------+----------------------------------------+
+| HDF5 Group Name     | Physical Particle Type | HDF5 alias                  | In code ``enum part_type``             |
++=====================+========================+=============================+========================================+
+| ``/PartType0/``     | Gas                    | ``/GasParticles/``          | ``swift_type_gas``                     |
++---------------------+------------------------+-----------------------------+----------------------------------------+
+| ``/PartType1/``     | Dark Matter            | ``/DMParticles/``           | ``swift_type_dark_matter``             |
++---------------------+------------------------+-----------------------------+----------------------------------------+
+| ``/PartType2/``     | Background Dark Matter | ``/DMBackgroundParticles/`` | ``swift_type_dark_matter_background``  |
++---------------------+------------------------+-----------------------------+----------------------------------------+
+| ``/PartType4/``     | Stars                  | ``/StarsParticles/``        | ``swift_type_star``                    |
++---------------------+------------------------+-----------------------------+----------------------------------------+
+| ``/PartType5/``     | Black Holes            | ``/BHParticles/``           | ``swift_type_black_hole``              |
++---------------------+------------------------+-----------------------------+----------------------------------------+
 
 The last column in the table gives the ``enum`` value from ``part_type.h``
 corresponding to a given entry in the files.
