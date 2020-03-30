@@ -1005,7 +1005,7 @@ void engine_redistribute(struct engine *e) {
       /* Log the stellar parts. */
       logger_log_sparts(
           e->logger, &sparts[spart_offset], s_counts[c_ind],
-          e, /* log_all */, flag);
+          e, /* log_all */ 1, flag);
 
       /* Log the gparts */
       logger_log_gparts(

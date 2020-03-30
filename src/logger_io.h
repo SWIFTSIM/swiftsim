@@ -34,9 +34,6 @@ struct mask_data {
   /* Number of bytes for a mask. */
   int size;
 
-  /* Offset to the field in the structure. */
-  size_t offset;
-
   /* Mask value. */
   unsigned int mask;
 
@@ -45,69 +42,65 @@ struct mask_data {
 
   /* Type of particle (follow part_type.h and -1 for timestamp). */
   int type;
-
-  /* function to generate the field */
-  void *function;
 };
 
-typedef void (*logger_conversion_part)(const struct engine*,
-                                       const struct part*,
-                                       const struct xpart*, char*);
-typedef void (*logger_conversion_gpart)(const struct engine*,
-                                       const struct gpart*, char*);
-typedef void (*logger_conversion_spart)(const struct engine*,
-                                       const struct spart*, char*);
-
-#define logger_io_make_output_field(name, part, field) \
-  logger_io_make_output_field_function(                \
-      name, ((char*)(&part[0].field) - (char*)part), sizeof(part[0].field));
 
 /**
- * @brief Create a #mask_data from the particle.
+ * @brief Initialize the mask_data with a given field.
  *
- * @param name The field name.
- * @param offset The offset of the field.
- * @param data_size The size of data to copy.
+ * @param name The name of the field.
+ * @param size The size of the field.
  *
- * @return The #mask_data created.
+ * @return The new mask_data.
  */
-INLINE static struct mask_data logger_io_make_output_field_function(
-    char* name, size_t offset, int data_size) {
-
+INLINE static struct mask_data logger_add_field_to_logger(char *name, int size) {
   struct mask_data mask;
+  /* Copy the fields */
   strcpy(mask.name, name);
-  mask.size = data_size;
-  mask.offset = offset;
+  mask.size = size;
   mask.mask = 0;
-  mask.function = NULL;
 
   return mask;
 }
 
-#define logger_io_make_output_field_conversion(name, size, func)      \
-  logger_io_make_output_field_conversion_function(                    \
-      name, (void *) func, size);
+/**
+ * @brief Add a given field to the current mask.
+ *
+ * @param mask_data The mask_data corresponding to the field that we wish to write.
+ * @param name The name of the field.
+ * @param buffer_size (in) The current size of the future buffer. (out) The updated size.
+ *
+ * @return The mask of the current field.
+ */
+INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data, char *name, size_t *buffer_size) {
+  /* Check that we are writing the requested field. */
+  if (strcmp(name, mask_data.name) != 0) {
+    error("Mismatch between the requested field (%s) and the mask (%s)", name, mask_data.name);
+  }
+
+  *buffer_size += mask_data.size;
+  return mask_data.mask;
+}
 
 /**
- * @brief Create a #mask_data from the particle.
+ * @brief Check if a field should be written according to the mask set in #logger_add_field_to_mask.
  *
- * @param name The field name.
- * @param func The function that write the field into a buffer.
- * @param data_size The size of data to copy.
- *
- * @return The #mask_data created.
+ * @param mask_data The mask_data corresponding to the current field.
+ * @param name The name of the field that we are checking.
+ * @param mask The mask used for the current record.
  */
-INLINE static struct mask_data logger_io_make_output_field_conversion_function(
-    char* name, void *func, int data_size) {
+INLINE static int logger_should_write_field(struct mask_data mask_data, unsigned int *mask, char *name) {
+  /* Check that we are writing the requested field. */
+  if (strcmp(name, mask_data.name) != 0) {
+    error("Mismatch between the requested field (%s) and the mask (%s)", name, mask_data.name);
+  }
 
-  struct mask_data mask;
-  strcpy(mask.name, name);
-  mask.size = data_size;
-  mask.offset = 0;
-  mask.mask = 0;
-  mask.function = func;
+  const int test = mask_data.mask & *mask;
+  if (test) {
+    *mask &= ~mask_data.mask;
+  }
 
-  return mask;
+  return test;
 }
 
 void logger_write_index_file(struct logger_writer* log, struct engine* e);

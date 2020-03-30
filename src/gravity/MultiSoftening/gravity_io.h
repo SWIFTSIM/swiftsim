@@ -137,34 +137,4 @@ INLINE static void darkmatter_write_particles(const struct gpart* gparts,
       "Co-moving Plummer-equivalent softening lengths of the particles.");
 }
 
-/**
- * @brief Specifies which g-particle fields to write to a dataset
- *
- * @param gparts The g-particle array.
- * @param list The list of logger i/o properties to write.
- *
- * @return The number of i/o fields to write.
- */
-INLINE static int darkmatter_logger_write_particles(const struct gpart* gparts,
-                                                     struct mask_data* list) {
-
-#ifdef WITH_LOGGER
-  /* List what we want to write */
-  list[0] = logger_io_make_output_field("Coordinates", gparts, x);
-
-  list[1] = logger_io_make_output_field("Velocities", gparts, v_full);
-
-  list[2] = logger_io_make_output_field("Accelerations", gparts, a_grav);
-
-  list[3] = logger_io_make_output_field("Masses", gparts, mass);
-
-  list[4] =
-    logger_io_make_output_field("ParticleIDs", gparts, id_or_neg_offset);
-
-  return 5;
-#else
-  error("Should not be called without the logger.");
-#endif
-}
-
 #endif /* SWIFT_MULTI_SOFTENING_GRAVITY_IO_H */
