@@ -124,6 +124,18 @@ struct logger_writer {
   /* Description of all the fields that can be written. */
   struct mask_data* logger_mask_data;
 
+  /* Shift in #logger_mask_data for each option. */
+  struct {
+    /* shift for the hydro */
+    struct mask_data *hydro;
+
+    /* shift for the gravity */
+    struct mask_data *gravity;
+
+    /* shift for the stars */
+    struct mask_data *stars;
+  } mask_data_pointers;
+
   /* Number of elements in logger_mask_data. */
   int logger_count_mask;
 
@@ -159,7 +171,8 @@ void logger_log_gpart(struct logger_writer *log, struct gpart *p,
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
                        const struct engine *e,
                        const int log_all, const uint32_t special_flags);
-void logger_init(struct logger_writer *log, struct swift_params *params);
+void logger_init(struct logger_writer *log, const struct engine *e,
+                 struct swift_params *params);
 void logger_free(struct logger_writer *log);
 void logger_log_timestamp(struct logger_writer *log, integertime_t t,
                           double time, size_t *offset);

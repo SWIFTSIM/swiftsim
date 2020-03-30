@@ -3946,7 +3946,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
 #if defined(WITH_LOGGER)
   if (e->policy & engine_policy_logger) {
     e->logger = (struct logger_writer *)malloc(sizeof(struct logger_writer));
-    logger_init(e->logger, params);
+    logger_init(e->logger, e, params);
   }
 #endif
 
