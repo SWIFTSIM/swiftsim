@@ -982,9 +982,14 @@ void write_output_serial(struct engine* e, const char* baseName,
     io_write_attribute(h_grp, "Redshift", DOUBLE, &e->cosmology->z, 1);
     io_write_attribute(h_grp, "Scale-factor", DOUBLE, &e->cosmology->a, 1);
     io_write_attribute_s(h_grp, "Code", "SWIFT");
-    time_t tm = time(NULL);
-    io_write_attribute_s(h_grp, "Snapshot date", ctime(&tm));
     io_write_attribute_s(h_grp, "RunName", e->run_name);
+
+    /* Store the time at which the snapshot was written */
+    time_t tm = time(NULL);
+    struct tm* timeinfo = localtime(&tm);
+    char snapshot_date[64];
+    strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
+    io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
 
     /* GADGET-2 legacy values */
     /* Number of particles of each type */
