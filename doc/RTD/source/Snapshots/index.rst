@@ -15,6 +15,24 @@ of the simulation volume.
 Header
 ------
 
+The header group (``/Header``) contains basic information about the simulation
+and the number of particles. For compatibility reasons, the SWIFT snapshot's
+header format is identical to the Gadget-2 one with small additions.
+
+In addition to the standard quantities, the header contains a field ``Code``
+that is always set to the string ``SWIFT``, which can be used to identify
+SWIFT-generated snapshots and hence make use of all the extensions to the file
+format described below.
+
+The most important quantity of the header is the array ``NumPart_ThisFile``
+which contains the number of particles of each type in this snapshot. This is an
+array of 6 numbers; one for each of the 5 supported types and a dummy "type 3"
+field only used for compatibility reasons but always containing a zero.
+
+The ``RunName`` field contains the name of the simulation that was specified as
+the ``run_name`` in the :ref:`Parameters_meta_data` section of the YAML
+parameter file.
+
 Meta-data about the code and run
 --------------------------------
 
@@ -160,7 +178,7 @@ we encourage users to use this meta-data directly in their automated
 tools.
 
 As an example, the fluid densities (which are written in the co-moving
-frame) have the following conversion factors:
+frame) have the following (non-zero) conversion factors:
 
  * ``U_L exponent``: -3
  * ``U_M exponent``: 1
