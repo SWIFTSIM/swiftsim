@@ -69,6 +69,13 @@ struct black_holes_props {
   /*! Eddington fraction threshold for recording */
   float f_Edd_recording;
 
+  /*! Calculate Bondi accretion rate based on subgrid properties? */
+  int subgrid_bondi;
+
+  /*! Calculate Bondi accretion rate for individual neighbours? */
+  int multi_phase_bondi;
+
+
   /* ---- Properties of the feedback model ------- */
 
   /*! Temperature increase induced by AGN feedback (Kelvin) */
@@ -191,6 +198,11 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->epsilon_f =
       parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
   bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
+  bp->subgrid_bondi = parser_get_param_int(params,
+      "COLIBREAGN:subgrid_bondi");
+  bp->multi_phase_bondi = parser_get_param_int(params,
+      "COLIBREAGN:multi_phase_bondi");
+
 
   /* Feedback parameters ---------------------------------- */
 
