@@ -427,7 +427,11 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
   /* We can now compute the Bondi accretion rate (internal units) */
   double Bondi_rate;
-  if (bh_props->multi_phase_bondi) {
+
+  if (bp->accretion_rate > 0) {
+
+    /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
+     * the accretion_rate is still zero (was initialised to this) */
     Bondi_rate =
       bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass);
   } else {
@@ -435,14 +439,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* Convert the quantities we gathered to physical frame (all internal units)
    * Note: for the velocities this means peculiar velocities */
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
+    const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+				      bp->velocity_gas[1] * cosmo->a_inv,
+				      bp->velocity_gas[2] * cosmo->a_inv};
     const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
-                                     bp->v[1] * cosmo->a_inv,
-                                     bp->v[2] * cosmo->a_inv};
-
-    const double gas_v_circular[3] = {
-      bp->circular_velocity_gas[0] * cosmo->a_inv,
-      bp->circular_velocity_gas[1] * cosmo->a_inv,
-      bp->circular_velocity_gas[2] * cosmo->a_inv};
+				     bp->v[1] * cosmo->a_inv,
+				     bp->v[2] * cosmo->a_inv};
 
     /* Difference in peculiar velocity between the gas and the BH
      * Note that there is no need for a Hubble flow term here. We are
