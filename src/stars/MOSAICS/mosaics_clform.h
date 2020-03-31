@@ -56,7 +56,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* sqrt(3) to convert to 3D */
   //double turbVelDisp = sqrt(3.f * sp->birth_pressure / sp->birth_density);
 
-  /* TODO make this optional? */
+  /* TODO Make this optional? */
   //double totalVelDisp = turbVelDisp;
   double totalVelDisp = sp->gasVelDisp;
 
@@ -75,17 +75,20 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
 
   /* Get feedback timescale while we're here */
-  double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
+  const double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
 
   /* -------- Get Mcstar -------- */
 
   /* Gas surface density (Krumholz & McKee 2005) */
   double phi_P = 1.f;
-  if (sp->starVelDisp > 0) {
+  if (sp->starVelDisp > 0 && sp->fgas < 1.f) {
     phi_P = 1.f + sp->gasVelDisp / sp->starVelDisp * (1.f / sp->fgas - 1.f);
   }
 
-  double SigmaG = sqrt(2. * sp->birth_pressure / (M_PI * const_G * phi_P));
+  /* Total pressure */
+  const double pressure = 
+      sp->birth_density * sp->gasVelDisp * sp->gasVelDisp / 3.f;
+  const double SigmaG = sqrt(2. * pressure / (M_PI * const_G * phi_P));
 
   /* Toomre mass via tidal tensors (Pfeffer+18) */
 
