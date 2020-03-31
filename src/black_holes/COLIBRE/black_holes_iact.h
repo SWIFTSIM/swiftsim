@@ -104,6 +104,48 @@ runner_iact_nonsym_bh_gas_density(const float r2, const float *dx,
   bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
   bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
 
+  /* Contribution to BH accretion rate
+   *  
+   * i) Peculiar speed of gas particle relative to BH                                               
+   *    [NB: don't need Hubble term, velocity is at BH location]
+   */
+  const double bh_v_peculiar[3] = {bi->v[0] * cosmo->a_inv,
+                                   bi->v[1] * cosmo->a_inv,
+                                   bi->v[2] * cosmo->a_inv};
+
+  const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv,
+                                    vj[1] * cosmo->a_inv,
+                                    vj[2] * cosmo->a_inv};
+
+  const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
+                                     gas_v_peculiar[1] - bh_v_peculiar[1],
+                                     gas_v_peculiar[2] - bh_v_peculiar[2]};
+
+  const double v_diff_norm2 =  v_diff_peculiar[0] * v_diff_peculiar[0] +
+                               v_diff_peculiar[1] * v_diff_peculiar[1] +
+                               v_diff_peculiar[2] * v_diff_peculiar[2];
+
+  /* ii) Calculate denominator in Bondi formula */
+  const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
+  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
+  const double denominator2 = v_diff_norm2 + gas_c_phys2;
+  double denominator_inv = 1. / sqrt(denominator2);
+
+  /*  --> Ad-hoc fix in case the denominator is zero -- ignore particle. */
+  if (denominator2 == 0)
+    denominator_inv = 0;
+
+  /* iii) Contribution of gas particle to the BH accretion rate *                                   
+   *      (without constant pre-factor)                                                             
+   *      [NB: rhoj is weighted contribution to BH gas density]                                     
+   */
+  const float hi_inv_dim = pow_dimension(hi_inv);   /* 1/h^d */
+  const float rhoj = mj * wi * cosmo->a3_inv * hi_inv_dim;
+  bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
+                         denominator_inv);
+
+  /* [End of accretion contribution calculation] */
+
 #ifdef DEBUG_INTERACTIONS_BH
   /* Update ngb counters */
   if (si->num_ngb_density < MAX_NUM_OF_NEIGHBOURS_BH)
