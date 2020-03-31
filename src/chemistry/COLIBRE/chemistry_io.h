@@ -278,7 +278,7 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns) {
                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, element_names[0]);
   H5Dclose(dset);
-  dset = H5Dcreate(h_grp_columns, "SmoothedElementMassFractions", type, space,
+  dset = H5Dcreate(h_grp_columns, "MetalDiffusionRates", type, space,
                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, element_names[0]);
   H5Dclose(dset);
