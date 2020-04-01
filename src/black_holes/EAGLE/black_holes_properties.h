@@ -77,6 +77,9 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
+  /*! Calculate Bondi accretion rate for individual neighbours? */
+  int multi_phase_bondi;
+
   
   /* ---- Properties of the repositioning model --- */
 
@@ -190,6 +193,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->epsilon_f =
       parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
   bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
+  bp->multi_phase_bondi = parser_get_param_int(params,
+      "EAGLEAGN:multi_phase_bondi");
 
   /* Feedback parameters ---------------------------------- */
 

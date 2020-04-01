@@ -38,10 +38,12 @@
  * @param bi First particle (black hole).
  * @param pj Second particle (gas, not updated).
  * @param xpj The extended data of the second particle (not updated).
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
  * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
+ * @param time Current physical time in the simulation.
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_density(
@@ -99,6 +101,49 @@ runner_iact_nonsym_bh_gas_density(
   bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
   bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
   bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+
+  if (bh_props->multi_phase_bondi) {
+    /* Contribution to BH accretion rate
+     *  
+     * i) Peculiar speed of gas particle relative to BH                                               
+     *    [NB: don't need Hubble term, velocity is at BH location]
+     */
+    const double bh_v_peculiar[3] = {bi->v[0] * cosmo->a_inv,
+                                     bi->v[1] * cosmo->a_inv,
+                                     bi->v[2] * cosmo->a_inv};
+
+    const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv,
+                                      vj[1] * cosmo->a_inv,
+                                      vj[2] * cosmo->a_inv};
+
+    const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
+                                       gas_v_peculiar[1] - bh_v_peculiar[1],
+                                       gas_v_peculiar[2] - bh_v_peculiar[2]};
+
+    const double v_diff_norm2 =  v_diff_peculiar[0] * v_diff_peculiar[0] +
+                                 v_diff_peculiar[1] * v_diff_peculiar[1] +
+                                 v_diff_peculiar[2] * v_diff_peculiar[2];
+
+    /* ii) Calculate denominator in Bondi formula */
+    const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
+    const double gas_c_phys2 = gas_c_phys * gas_c_phys;
+    const double denominator2 = v_diff_norm2 + gas_c_phys2;
+
+    /* Make sure that the denominator is strictly positive */
+    if (denominator2 <= 0)
+        error("Invalid denominator for gas particle %lld",
+              pj->id);
+
+    double denominator_inv = 1. / sqrt(denominator2);
+
+    /* iii) Contribution of gas particle to the BH accretion rate *                                   
+     *      (without constant pre-factor)                                                             
+     *      [NB: rhoj is weighted contribution to BH gas density]                                     
+     */
+    const float rhoj = mj * wi * cosmo->a3_inv;
+    bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
+                           denominator_inv);
+  } /* End of accretion contribution calculation */
 
 #ifdef DEBUG_INTERACTIONS_BH
   /* Update ngb counters */
