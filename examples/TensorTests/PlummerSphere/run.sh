@@ -13,6 +13,6 @@ then
 fi
 
 rm -rf output_*.hdf5
-../../swift --self-gravity --stars --threads=1 test.yml 2>&1 | tee output.log
+../../swift --self-gravity --stars --threads=1 params.yml 2>&1 | tee output.log
 
 #python plot.py
