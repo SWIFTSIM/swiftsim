@@ -92,7 +92,7 @@ size_t logger_particle_read(struct logger_particle *part,
   free(buff);
 
   /* Get the time of current record.
-     This check is required for the manipulating the file before
+     This check is required for the manipulation of the file before
      the initialization of the time_array. */
   if (times->size != 0) {
     part->time = time_array_get_time(times, offset);
@@ -198,7 +198,7 @@ size_t logger_gparticle_read(struct logger_gparticle *part,
   free(buff);
 
   /* Get the time of current record.
-     This check is required for the manipulating the file before
+     This check is required for the manipulation of the file before
      the initialization of the time_array. */
   if (times->size != 0) {
     part->time = time_array_get_time(times, offset);
@@ -304,7 +304,7 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
   free(buff);
 
   /* Get the time of current record.
-     This check is required for the manipulating the file before
+     This check is required for the manipulation of the file before
      the initialization of the time_array. */
   if (times->size != 0) {
     part->time = time_array_get_time(times, offset);

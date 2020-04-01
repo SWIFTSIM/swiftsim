@@ -73,29 +73,49 @@ logger_loader_python_field_function(char *name, size_t offset, int dimension,
   return ret;
 }
 
-#define CREATE_FIELD(fields, name, offset, type)                        \
-  ({                                                                    \
-    PyObject *tuple = PyTuple_New(2);                                   \
-    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type)); \
-    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));               \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);          \
-  })
+/**
+ * @brief Add a field in a numpy descriptor.
+ *
+ * @param fields The dictionary containing the fields.
+ * @param name The name of the field to add.
+ * @param offset The offset of the field in the data structure.
+ * @param type The data type of the field.
+ */
+__attribute__((always_inline)) INLINE static void create_field(
+    PyObject *fields, char *name, size_t offset, int type) {
 
-#define CREATE_FIELD_NDIM(fields, name, offset, type, dim)            \
-  ({                                                                  \
-    /* Create the N-D descriptor */                                   \
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);              \
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));               \
-    vec->subarray->base = PyArray_DescrFromType(type);                \
-    vec->subarray->shape = PyTuple_New(1);                            \
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(dim)); \
-                                                                      \
-    /* Create the field */                                            \
-    PyObject *tuple = PyTuple_New(2);                                 \
-    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                       \
-    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));             \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);        \
-  })
+  PyObject *tuple = PyTuple_New(2);
+  PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));
+  PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));
+  PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);
+
+}
+
+/**
+ * @brief Add a N-dimensional field in a numpy descriptor.
+ *
+ * @param fields The dictionary containing the fields.
+ * @param name The name of the field to add.
+ * @param offset The offset of the field in the data structure.
+ * @param type The data type of the field.
+ * @param dim The number of dimension for the field.
+ */
+__attribute__((always_inline)) INLINE static void create_field_ndim(
+    PyObject *fields, char *name, size_t offset, int type, int dim) {
+
+  /* Create the N-D descriptor */
+    PyArray_Descr *vec = PyArray_DescrNewFromType(type);
+    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));
+    vec->subarray->base = PyArray_DescrFromType(type);
+    vec->subarray->shape = PyTuple_New(1);
+    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(dim));
+
+    /* Create the field */
+    PyObject *tuple = PyTuple_New(2);
+    PyTuple_SetItem(tuple, 0, (PyObject *)vec);
+    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));
+    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);
+}
 
 #endif  // HAVE_PYTHON
 

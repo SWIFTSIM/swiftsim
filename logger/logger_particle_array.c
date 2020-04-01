@@ -119,8 +119,11 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
       memcpy(parts, array->hydro.parts,
              array->hydro.n * sizeof(struct logger_particle));
     }
+    free(array->hydro.parts);
     array->hydro.parts = parts;
   }
+
+  array->hydro.n = new_n_part;
 
   /* Dark matter */
   /* Check if need to free memory */
@@ -142,8 +145,11 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
       memcpy(parts, array->dark_matter.parts,
              array->dark_matter.n * sizeof(struct logger_gparticle));
     }
+    free(array->dark_matter.parts);
     array->dark_matter.parts = parts;
   }
+
+  array->dark_matter.n = new_n_gpart;
 
   /* Stars */
   /* Check if need to free memory */
@@ -165,6 +171,9 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
       memcpy(parts, array->stars.parts,
              array->stars.n * sizeof(struct logger_sparticle));
     }
+    free(array->stars.parts);
     array->stars.parts = parts;
   }
+
+  array->stars.n = new_n_spart;
 }

@@ -45,7 +45,7 @@ struct logger_particle {
   /* Particle position. */
   double x[3];
 
-  /* Particle predicted velocity. */
+  /* Particle velocity. */
   float v[3];
 
   /* Particle acceleration. */
@@ -256,40 +256,41 @@ __attribute__((always_inline)) INLINE static void logger_particle_interpolate(
 /**
  * @brief Specifies which particle fields to give access to in python
  *
- * @param parts The #logger_particle array (no need to be allocated).
  * @param list The list of structure used to store the information.
- * @param num_fields The number of i/o fields to give access to.
+ *
+ * @return The number of i/o fields to give access to.
  */
-INLINE static void logger_particles_generate_python(
-    const struct logger_particle *parts, struct logger_python_field *list,
-    int *num_fields) {
+INLINE static int logger_particles_generate_python(
+    struct logger_python_field *list) {
 #ifdef HAVE_PYTHON
 
-  *num_fields = 9;
+  struct logger_particle *part;
 
   /* List what we want to use in python */
-  list[0] = logger_loader_python_field("Coordinates", parts, x, 3, NPY_DOUBLE);
+  list[0] = logger_loader_python_field("Coordinates", part, x, 3, NPY_DOUBLE);
 
-  list[1] = logger_loader_python_field("Velocities", parts, v, 3, NPY_FLOAT32);
+  list[1] = logger_loader_python_field("Velocities", part, v, 3, NPY_FLOAT32);
 
   // TODO sum the grav + hydro accelerations
   list[2] =
-      logger_loader_python_field("Accelerations", parts, a, 3, NPY_FLOAT32);
+      logger_loader_python_field("Accelerations", part, a, 3, NPY_FLOAT32);
 
-  list[3] = logger_loader_python_field("Masses", parts, mass, 1, NPY_FLOAT32);
+  list[3] = logger_loader_python_field("Masses", part, mass, 1, NPY_FLOAT32);
 
   list[4] =
-      logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
+      logger_loader_python_field("SmoothingLengths", part, h, 1, NPY_FLOAT32);
 
   list[5] =
-      logger_loader_python_field("Entropies", parts, entropy, 1, NPY_FLOAT32);
+      logger_loader_python_field("Entropies", part, entropy, 1, NPY_FLOAT32);
 
   list[6] =
-      logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
+      logger_loader_python_field("ParticleIDs", part, id, 1, NPY_LONGLONG);
 
-  list[7] = logger_loader_python_field("Densities", parts, rho, 1, NPY_FLOAT32);
+  list[7] = logger_loader_python_field("Densities", part, rho, 1, NPY_FLOAT32);
 
-  list[8] = logger_loader_python_field("Times", parts, time, 1, NPY_DOUBLE);
+  list[8] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
+
+  return 9;
 #else
   error("Should not be called without python.");
 #endif /* WITH_LOGGER */

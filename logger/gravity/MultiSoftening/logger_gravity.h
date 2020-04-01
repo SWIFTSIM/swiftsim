@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_LOGGER_GRAVITY_H
-#define SWIFT_DEFAULT_LOGGER_GRAVITY_H
+#ifndef SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H
+#define SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H
 
 #include "../config.h"
 
@@ -105,8 +105,6 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_init(
  * @param buff The buffer containing the particle.
  * @param field field to read.
  * @param size number of bits to read.
- *
- * @return mapped data after the block read.
  */
 __attribute__((always_inline)) INLINE static void logger_gparticle_read_field(
     struct logger_gparticle *part, char *buff, const char *field,
@@ -215,6 +213,9 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_interpolate(
     part_curr->a[i] += ftmp * scaling;
   }
 
+  ftmp = (part_next->mass - part_curr->mass);
+  part_curr->mass += ftmp * scaling;
+
   /* set time. */
   part_curr->time = time;
 }
@@ -222,35 +223,36 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_interpolate(
 /**
  * @brief Specifies which particle fields to give access to in python
  *
- * @param parts The #logger_particle array (no need to be allocated).
  * @param list The list of structure used to store the information.
- * @param num_fields The number of i/o fields to give access to.
+ *
+ * @return The number of i/o fields to give access to.
  */
-INLINE static void logger_gparticles_generate_python(
-    const struct logger_gparticle *parts, struct logger_python_field *list,
-    int *num_fields) {
+INLINE static int logger_gparticles_generate_python(
+    struct logger_python_field *list) {
 #ifdef HAVE_PYTHON
 
-  *num_fields = 6;
+  struct logger_gparticle *part;
 
   /* List what we want to use in python */
-  list[0] = logger_loader_python_field("Coordinates", parts, x, 3, NPY_DOUBLE);
+  list[0] = logger_loader_python_field("Coordinates", part, x, 3, NPY_DOUBLE);
 
-  list[1] = logger_loader_python_field("Velocities", parts, v, 3, NPY_FLOAT32);
+  list[1] = logger_loader_python_field("Velocities", part, v, 3, NPY_FLOAT32);
 
   // TODO sum the grav + hydro accelerations
   list[2] =
-      logger_loader_python_field("Accelerations", parts, a, 3, NPY_FLOAT32);
+      logger_loader_python_field("Accelerations", part, a, 3, NPY_FLOAT32);
 
-  list[3] = logger_loader_python_field("Masses", parts, mass, 1, NPY_FLOAT32);
+  list[3] = logger_loader_python_field("Masses", part, mass, 1, NPY_FLOAT32);
 
   list[4] =
-      logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
+      logger_loader_python_field("ParticleIDs", part, id, 1, NPY_LONGLONG);
 
-  list[5] = logger_loader_python_field("Times", parts, time, 1, NPY_DOUBLE);
+  list[5] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
+
+  return 6;
 #else
   error("Should not be called without python.");
 #endif /* WITH_LOGGER */
 }
 
-#endif  // SWIFT_DEFAULT_LOGGER_GRAVITY_H
+#endif  // SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H

@@ -306,10 +306,8 @@ void pylogger_particle_define_descr(void) {
 
   /* Get the fields */
   struct logger_python_field list[100];
-  int num_fields = 0;
-  struct logger_particle part;
 
-  logger_particles_generate_python(&part, list, &num_fields);
+  int num_fields = logger_particles_generate_python(list);
 
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
@@ -318,9 +316,9 @@ void pylogger_particle_define_descr(void) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
-      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+      create_field(fields, list[i].name, list[i].offset, list[i].type);
     } else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+      create_field_ndim(fields, list[i].name, list[i].offset, list[i].type,
                         list[i].dimension);
     }
   }
@@ -366,10 +364,8 @@ void pylogger_gparticle_define_descr(void) {
 
   /* Get the fields */
   struct logger_python_field list[100];
-  int num_fields = 0;
-  struct logger_gparticle gpart;
 
-  logger_gparticles_generate_python(&gpart, list, &num_fields);
+  int num_fields = logger_gparticles_generate_python(list);
 
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
@@ -378,9 +374,9 @@ void pylogger_gparticle_define_descr(void) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
-      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+      create_field(fields, list[i].name, list[i].offset, list[i].type);
     } else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+      create_field_ndim(fields, list[i].name, list[i].offset, list[i].type,
                         list[i].dimension);
     }
   }
@@ -426,10 +422,8 @@ void pylogger_sparticle_define_descr(void) {
 
   /* Get the fields */
   struct logger_python_field list[100];
-  int num_fields = 0;
-  struct logger_particle part;
 
-  logger_sparticles_generate_python(&part, list, &num_fields);
+  int num_fields = logger_sparticles_generate_python(list);
 
   /* Generate list of field names and objects */
   PyObject *names = PyTuple_New(num_fields);
@@ -438,9 +432,9 @@ void pylogger_sparticle_define_descr(void) {
     PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
 
     if (list[i].dimension == 1) {
-      CREATE_FIELD(fields, list[i].name, list[i].offset, list[i].type);
+      create_field(fields, list[i].name, list[i].offset, list[i].type);
     } else {
-      CREATE_FIELD_NDIM(fields, list[i].name, list[i].offset, list[i].type,
+      create_field_ndim(fields, list[i].name, list[i].offset, list[i].type,
                         list[i].dimension);
     }
   }

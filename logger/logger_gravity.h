@@ -24,12 +24,12 @@
 
 /* Import the right functions */
 #if defined(DEFAULT_GRAVITY)
+#error TODO
 #include "./gravity/Default/logger_gravity.h"
 #elif defined(POTENTIAL_GRAVITY)
 #error TODO
 #include "./gravity/Potential/logger_gravity.h"
 #elif defined(MULTI_SOFTENING_GRAVITY)
-#error TODO
 #include "./gravity/MultiSoftening/logger_gravity.h"
 #else
 #error "Invalid choice of gravity variant"
