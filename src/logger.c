@@ -151,18 +151,17 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
  * @param e The #engine.
  * @param mask The mask for the fields to write.
  * @param offset The offset to the previous log.
- * @param offset_new The offset of the current record.
  * @param buff The buffer to use when writing.
  * @param special_flags The data for the special flags.
  */
 void logger_copy_part_fields(const struct logger_writer *log,
                              const struct part *p, const struct xpart *xp,
                              const struct engine *e, unsigned int mask,
-                             size_t *offset, size_t offset_new, char *buff,
+                             size_t *offset, char *buff,
                              const uint32_t special_flags) {
 
   /* Write the header. */
-  buff = logger_write_record_header(buff, &mask, offset, offset_new);
+  buff = logger_write_record_header(buff, &mask, offset, *offset);
 
   /* Write the hydro fields */
   buff = hydro_logger_write_particle(log->mask_data_pointers.hydro, p, xp, &mask, buff);
@@ -244,7 +243,7 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
 
     /* Copy everything into the buffer */
     logger_copy_part_fields(log, &p[i], &xp[i], e, mask, &xp[i].logger_data.last_offset,
-                            offset_new, buff, special_flags);
+                            buff, special_flags);
 
     /* Update the pointers */
     xp[i].logger_data.last_offset = offset_new;
@@ -262,18 +261,17 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
  * @param e The #engine.
  * @param mask The mask for the fields to write.
  * @param offset The offset to the previous log.
- * @param offset_new The offset of the current record.
  * @param buff The buffer to use when writing.
  * @param special_flags The data for the special flags.
  */
 void logger_copy_spart_fields(const struct logger_writer *log,
                               const struct spart *sp,
                               const struct engine *e, unsigned int mask,
-                              size_t *offset, size_t offset_new, char *buff,
+                              size_t *offset, char *buff,
                               const uint32_t special_flags) {
 
   /* Write the header. */
-  buff = logger_write_record_header(buff, &mask, offset, offset_new);
+  buff = logger_write_record_header(buff, &mask, offset, *offset);
 
   /* Write the stellar fields */
   buff = stars_logger_write_particle(log->mask_data_pointers.stars, sp, &mask, buff);
@@ -352,7 +350,7 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp,
 
     /* Copy everything into the buffer */
     logger_copy_spart_fields(log, &sp[i], e, mask, &sp[i].logger_data.last_offset,
-                             offset_new, buff, special_flags);
+                             buff, special_flags);
 
     /* Update the pointers */
     sp[i].logger_data.last_offset = offset_new;
@@ -370,18 +368,17 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp,
  * @param e The #engine.
  * @param mask The mask for the fields to write.
  * @param offset The offset to the previous log.
- * @param offset_new The offset of the current record.
  * @param buff The buffer to use when writing.
  * @param special_flags The data of the special flag.
  */
 void logger_copy_gpart_fields(
     const struct logger_writer *log, const struct gpart *gp,
     const struct engine *e, unsigned int mask,
-    size_t *offset, size_t offset_new, char *buff,
+    size_t *offset, char *buff,
     const uint32_t special_flags) {
 
   /* Write the header. */
-  buff = logger_write_record_header(buff, &mask, offset, offset_new);
+  buff = logger_write_record_header(buff, &mask, offset, *offset);
 
   /* Write the hydro fields */
   buff = gravity_logger_write_particle(log->mask_data_pointers.gravity, gp, &mask, buff);
@@ -463,7 +460,7 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
 
     /* Copy everything into the buffer */
     logger_copy_gpart_fields(log, &p[i], e, mask, &p[i].logger_data.last_offset,
-                             offset_new, buff, special_flags);
+                             buff, special_flags);
 
     /* Update the pointers */
     p[i].logger_data.last_offset = offset_new;
