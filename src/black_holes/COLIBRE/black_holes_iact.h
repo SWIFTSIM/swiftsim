@@ -129,8 +129,7 @@ runner_iact_nonsym_bh_gas_density(
 
   /* Make sure that the denominator is positive */
   if (denominator2 <= 0)
-    error("Invalid denominator for gas particle %lld",
-          pj->id);
+    error("Invalid denominator for gas particle %lld", pj->id);
 
   /* iii) Contribution of gas particle to the BH accretion rate *
    *      (without constant pre-factor)
