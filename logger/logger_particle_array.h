@@ -31,6 +31,11 @@
 /* Include local files */
 #include "logger_particle.h"
 
+/**
+ * @brief Structure containing all the particles.
+ *
+ * This is used for the interface with the user.
+ */
 struct logger_particle_array {
   /* Hydro */
   struct {
@@ -50,7 +55,7 @@ struct logger_particle_array {
     /* The number of particles */
     size_t n;
 
-  } dark_matter;
+  } grav;
 
   /* Stars */
   struct {
@@ -71,5 +76,38 @@ void logger_particle_array_free(struct logger_particle_array *array);
 void logger_particle_array_change_size(struct logger_particle_array *array,
                                        size_t new_n_part, size_t new_n_gpart,
                                        size_t new_n_spart);
+
+
+/**
+ * @brief Structure containing the temporary particles.
+ *
+ * This structure is used in the case of particle creation
+ * (either by creation or transformation of type).
+ */
+struct logger_dynamic_particle_array {
+
+  /* The array of particles */
+  struct logger_particle_array array;
+
+  /* The number of hydro particles used */
+  size_t n_hydro;
+
+  /* The number of stars used */
+  size_t n_stars;
+
+  /* The number of gravity particles used */
+  size_t n_grav;
+};
+
+void logger_dynamic_particle_array_init(
+  struct logger_dynamic_particle_array *array, int default_size);
+void logger_dynamic_particle_array_add_hydro(
+    struct logger_dynamic_particle_array *array, size_t offset);
+void logger_dynamic_particle_array_add_stars(
+    struct logger_dynamic_particle_array *array, size_t offset);
+void logger_dynamic_particle_array_add_gravity(
+  struct logger_dynamic_particle_array *array, size_t offset);
+void logger_dynamic_particle_array_free(
+  struct logger_dynamic_particle_array *array);
 
 #endif  // LOGGER_LOGGER_PARTICLE_ARRAY_H
