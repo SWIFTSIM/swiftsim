@@ -19,6 +19,7 @@
 #ifndef SWIFT_MULTISOFTENING_GRAVITY_LOGGER_H
 #define SWIFT_MULTISOFTENING_GRAVITY_LOGGER_H
 
+#include "logger_io.h"
 
 /**
  * @brief Initialize the logger.
