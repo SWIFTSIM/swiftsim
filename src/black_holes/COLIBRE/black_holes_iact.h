@@ -149,8 +149,7 @@ runner_iact_nonsym_bh_gas_density(const float r2, const float *dx,
      *      (without constant pre-factor)                                                             
      *      [NB: rhoj is weighted contribution to BH gas density]                                     
      */
-    const float hi_inv_dim = pow_dimension(hi_inv);   /* 1/h^d */
-    const float rhoj = mj * wi * cosmo->a3_inv * hi_inv_dim;
+    const float rhoj = mj * wi * cosmo->a3_inv;
     bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
                            denominator_inv);
   } /* End of accretion contribution calculation */

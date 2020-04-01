@@ -433,7 +433,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
      * the accretion_rate is still zero (was initialised to this) */
     Bondi_rate =
-      bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass);
+      bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {
 
   /* Convert the quantities we gathered to physical frame (all internal units)
