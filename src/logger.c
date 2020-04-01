@@ -127,26 +127,17 @@ void logger_log_all(struct logger_writer *log, const struct engine *e) {
   /* some constants. */
   const struct space *s = e->s;
 
-  /* loop over all parts. */
-  for (size_t i = 0; i < s->nr_parts; i++) {
-    logger_log_part(log, &s->parts[i], &s->xparts[i], e, /* log_all */ 1,
-                    /* Special flags */ 0);
-  }
+  /* log the parts. */
+  logger_log_parts(log, s->parts, s->xparts, s->nr_parts, e,
+                   /* log_all */ 1, /* Special flags */ 0);
 
-  /* loop over all gparts */
-  for (size_t i = 0; i < s->nr_gparts; i++) {
-    /* Log only the dark matter */
-    if (s->gparts[i].type != swift_type_dark_matter) continue;
+  /* log the gparts */
+  logger_log_gparts(log, s->gparts, s->nr_gparts, e,
+                    /* log_all */ 1, /* Special flags */ 0);
 
-    logger_log_gpart(log, &s->gparts[i], e, /* log_all */ 1,
-                     /* Special flags */ 0);
-  }
-
-  /* loop over all sparts */
-  for (size_t i = 0; i < s->nr_sparts; i++) {
-    logger_log_spart(log, &s->sparts[i], e, /* log_all */ 1,
-                     /* Special flags */ 0);
-  }
+  /* log the parts */
+  logger_log_sparts(log, s->sparts, s->nr_sparts, e,
+                    /* log_all */ 1, /* Special flags */ 0);
 
   if (e->total_nr_bparts > 0) error("Not implemented");
 }
