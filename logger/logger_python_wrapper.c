@@ -117,8 +117,8 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   n = n_parts[swift_type_dark_matter];
   PyArrayObject *gparts = (PyArrayObject *)PyArray_SimpleNewFromDescr(
       1, &n, logger_gparticle_descr);
-  array.dark_matter.parts = PyArray_DATA(gparts);
-  array.dark_matter.n = n_parts[swift_type_dark_matter];
+  array.grav.parts = PyArray_DATA(gparts);
+  array.grav.n = n_parts[swift_type_dark_matter];
 
   /* stars */
   n = n_parts[swift_type_stars];

@@ -310,7 +310,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   data = logger_index_get_data(index, swift_type_dark_matter);
 
   /* Read the dark matter particles */
-  for (size_t i = 0; i < array->dark_matter.n; i++) {
+  for (size_t i = 0; i < array->grav.n; i++) {
     /* Get the offset */
     size_t prev_offset = data[i].offset;
     size_t next_offset = prev_offset;
@@ -353,7 +353,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
 
     /* Read the particle */
-    logger_gparticle_read(&array->dark_matter.parts[i], reader, prev_offset,
+    logger_gparticle_read(&array->grav.parts[i], reader, prev_offset,
                           reader->time.time, interp_type);
   }
 
@@ -464,37 +464,140 @@ void logger_reader_move_forward(struct logger_reader *reader,
                                 size_t time_offset) {
 
   /* Ensure to have enough place in the next */
-  logger_particle_array_change_size(next, prev->hydro.n, prev->dark_matter.n,
+  logger_particle_array_change_size(next, prev->hydro.n, prev->grav.n,
                                     prev->stars.n);
 
+  /* Create a temporary array for storing the
+     new particles or the changes of type. */
+  struct logger_dynamic_particle_array tmp_array;
+  logger_dynamic_particle_array_init(&tmp_array, /* n_default */ 512);
+
+  /* Create the variables for the new / deleted particles */
+  int n_deleted_hydro = 0;
+
   // TODO make it parallel
+  /* Move forward the hydro particles */
   for (size_t i = 0; i < prev->hydro.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_particle(
         reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
 
-    if (event != logger_reader_event_null) {
-      error("TODO");
+    switch(event) {
+      /* Nothing happened */
+      case logger_reader_event_null:
+        break;
+
+      /* The particle has been deleted */
+      case logger_reader_event_deleted:
+        n_deleted_hydro++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->hydro.parts[i].flag = logger_flag_delete;
+        break;
+
+      /* The particle has been transformed into a star */
+      case logger_reader_event_stars:
+        /* Delete the hydro particle */
+        n_deleted_hydro++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->hydro.parts[i].flag = logger_flag_delete;
+
+        /* Save the offset of the new star. */
+        logger_dynamic_particle_array_add_stars(
+          &tmp_array, prev->hydro.parts[i].offset);
+        break;
+
+      default:
+        error("Not implemented");
     }
   }
 
-  for (size_t i = 0; i < prev->dark_matter.n; i++) {
+  /* Move forward the gravity particles */
+  for (size_t i = 0; i < prev->grav.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_gparticle(
-        reader, &prev->dark_matter.parts[i], &next->dark_matter.parts[i],
+        reader, &prev->grav.parts[i], &next->grav.parts[i],
         time_offset);
 
-    if (event != logger_reader_event_null) {
-      error("TODO");
+    switch(event) {
+      /* Nothing happened */
+      case logger_reader_event_null:
+        break;
+
+      default:
+        error("Not implemented");
     }
   }
 
+  /* Move forward the stars particles */
   for (size_t i = 0; i < prev->stars.n; i++) {
     enum logger_reader_event event = logger_reader_get_next_sparticle(
         reader, &prev->stars.parts[i], &next->stars.parts[i], time_offset);
 
-    if (event != logger_reader_event_null) {
-      error("TODO");
+    switch(event) {
+      /* Nothing happened */
+    case logger_reader_event_null:
+      break;
+
+    default:
+      error("Not implemented");
     }
   }
+
+  /* Deal with the deleted particles */
+  for(size_t i = 0; i < prev->hydro.n && n_deleted_hydro != 0; i++) {
+    if (prev->hydro.parts[i].flag == logger_flag_delete) {
+      /* Ensure that we do not have a deleted particle
+         at the end of the array. */
+      while(prev->hydro.parts[prev->hydro.n - 1].flag == logger_flag_delete) {
+        prev->hydro.n--;
+        next->hydro.n--;
+        n_deleted_hydro--;
+      }
+
+      /* Move the particle from the end to the current one. */
+      memcpy(&prev->hydro.parts[i], &prev->hydro.parts[prev->hydro.n - 1],
+             sizeof(struct logger_particle));
+      memcpy(&next->hydro.parts[i], &next->hydro.parts[next->hydro.n - 1],
+             sizeof(struct logger_particle));
+      prev->hydro.n--;
+      next->hydro.n--;
+      n_deleted_hydro--;
+    }
+  }
+
+  if (n_deleted_hydro != 0) {
+    error("Something went wrong during the deletion of particles.");
+  }
+
+  /* Reallocate the memory */
+  logger_particle_array_change_size(prev, prev->hydro.n, prev->grav.n, prev->stars.n);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (prev->hydro.n != next->hydro.n) {
+    error("The previous and next arrays are not compatible anymore.");
+  }
+  for(size_t i = 0; i < prev->hydro.n; i++) {
+    if (prev->hydro.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+    if (next->hydro.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+  }
+#endif
+
+  if (tmp_array.n_hydro != 0) {
+    error("TODO");
+  }
+  if (tmp_array.n_stars != 0) {
+    error("TODO");
+  }
+  if (tmp_array.n_grav != 0) {
+    error("TODO");
+  }
+
 }
 
 /**
