@@ -20,7 +20,6 @@
 #define SWIFT_DEFAULT_GRAVITY_IO_H
 
 #include "io_properties.h"
-#include "logger_io.h"
 
 INLINE static void convert_gpart_pos(const struct engine* e,
                                      const struct gpart* gp, double* ret) {

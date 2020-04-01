@@ -77,7 +77,7 @@ struct engine;
  * The offset refers to the relative location of the previous message for the
  * same particle or for the previous timestamp (if mask bit 7 is set). I.e.
  * the previous log entry will be at the address of the current mask byte minus
- * the unsigned value stored in the offset. An offset equal to the chunk offset
+ * the unsigned value stored in the offset. An offset equal to the record offset
  * indicated that this is the first message for the given particle/timestamp.
  */
 
@@ -94,7 +94,7 @@ enum logger_special_flags {
  * @brief structure containing global data for the particle logger.
  */
 struct logger_writer {
-  /* Number of particle steps between dumping a chunk of data. */
+  /* Number of particle steps between dumping a record. */
   short int delta_step;
 
   /* Logger basename. */
@@ -118,8 +118,8 @@ struct logger_writer {
   /* scaling factor when buffer is too small. */
   float buffer_scale;
 
-  /* Size of a chunk if every mask are activated. */
-  int max_chunk_size;
+  /* Size of a record if every mask are activated. */
+  int max_record_size;
 
   /* Description of all the fields that can be written. */
   struct mask_data* logger_mask_data;
@@ -151,7 +151,6 @@ struct logger_part_data {
 };
 
 /* Function prototypes. */
-int logger_compute_chunk_size(const struct logger_writer *log, unsigned int mask, int type);
 void logger_log_all(struct logger_writer *log, const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e, const int log_all,
