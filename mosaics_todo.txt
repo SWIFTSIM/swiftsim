@@ -1,9 +1,13 @@
-./configure --with-gravity=with-potential --with-stars=MOSAICS
+Configure options:
+  Tensor tests:
+  ./configure --with-gravity=with-tidal-tensors --with-stars=MOSAICS
+
+  Isolated disc tests:
+  ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-gravity=with-multi-softening-tensors
+
 
 Need to make sure all SFing (or just all gas?) particles get tensors so they can be passed at star formation time
-
-Get the natal gas properties to pass to mosaics:
-* in Anarchy-style we want weighted density? Need to check what to do here
+  Maybe a "calculate_gas_tensors" property in Gravity
 
 At the end of mosaics_clevo we'll want to update gcflag depending if clusters survive or not
 
@@ -15,20 +19,6 @@ Scheduling:
   Still necessary to call mosaics from runner_do_star_formation() since occasionally SF happens but mosaics would not be called. Already scheduled after the star resort so not sure what the fix is?
 
 
-
-Correct sound speed:
-
-  /* Get the subgrid temperature from the tracers */
-  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
-
-  /* Calculate the sound speed */
-  const double sound_speed = hydro_get_physical_soundspeed(p, cosmo);
-
-  /* Get the subgrid sound speed */
-  const double sound_speed2_subgrid = sound_speed * sound_speed * subgrid_temperature / temperature; 
-
-
-
 NOTES:
 ------
 
@@ -38,3 +28,6 @@ I/O:
   Hijacked "Stars" for our parameters
 
   Added Gravity:calculate_all_tensors to params. Do we also want to output all tensors to snapshots when this is set?
+
+Have implemented a local 'GMC SFE'. But I think the subgrid density might be the wrong choice for tff
+

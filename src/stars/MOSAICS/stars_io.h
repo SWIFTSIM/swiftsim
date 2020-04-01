@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 27;
+  *num_fields = 28;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -223,37 +223,42 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "Exponential truncation of star cluster mass function");
 
   list[19] = io_make_output_field(
-      "GasVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
-      gasVelDisp,
-      "Local velocity dispersion of gas at the time of star formation");
+      "BirthSoundSpeed", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
+      sound_speed_subgrid,
+      "Hydro or subgrid sound speed, depending on cooling model");
 
   list[20] = io_make_output_field(
-      "StellarVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
-      starVelDisp,
-      "Local velocity dispersion of stars at the time of star formation");
+      "GasVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
+      gas_vel_disp,
+      "Local velocity dispersion of gas at the time of star formation");
 
   list[21] = io_make_output_field(
+      "StellarVelocityDispersion", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
+      star_vel_disp,
+      "Local velocity dispersion of stars at the time of star formation");
+
+  list[22] = io_make_output_field(
       "GasFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, fgas,
       "Local gas fraction at time of star formation");
 
-  list[22] = io_make_output_field("EpicyclicFrequency", FLOAT, 1,
-                                  UNIT_CONV_FREQUENCY, 0.f, sparts, kappa,
-                                  "Epicyclic frequency at formation");
+  list[23] = io_make_output_field(
+      "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, kappa,
+      "Epicyclic frequency at formation");
 
-  list[23] = io_make_output_field("CircularFrequency", FLOAT, 1,
-                                  UNIT_CONV_FREQUENCY, 0.f, sparts, Omega,
-                                  "Circular frequency at formation");
-
-  list[24] =
-      io_make_output_field("ToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
-                           Toomre_mass, "Local Toomre mass at formation");
+  list[24] = io_make_output_field(
+      "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, Omega,
+      "Circular frequency at formation");
 
   list[25] = io_make_output_field(
+      "ToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      Toomre_mass, "Local Toomre mass at formation");
+
+  list[26] = io_make_output_field(
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
-      fracCollapse, "Fraction of Toomre mass which can collapse to a GMC");
+      frac_collapse, "Fraction of Toomre mass which can collapse to a GMC");
 
   // TODO just temporary
-  list[26] = io_make_output_field(
+  list[27] = io_make_output_field(
       "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
       "Co-moving gravitational potential at position of the particles");
 }
@@ -323,15 +328,19 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* King parameter */
   sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
 
-  /* Star formation efficiency for Mcstar */
-  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", 0.1);
+  /* Integrated star formation efficiency in collapse of GMC (for Mcstar) */
+  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", -1.0);
+
+  /* Use the subgrid turbulent velocity dispersion for CFE */
+  sp->subgrid_gas_vel_disp = 
+      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
+
+  /* Sound speed of cold ISM (m/s) */
+  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:Fixedcs", -1.0);
 
   /* Cluster formation efficiency parameters -------------------------------- */
 
-  /* Sound speed of cold ISM (m/s) */
-  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:Fixedcs", 300.);
-
-  /* star formation law */
+  /* star formation law. 0: Elmegreen 02; 1: Krumholz & McKee 05 */
   sp->sflaw = parser_get_opt_param_int(params, "Stars:sflaw", 0);
 
   /* GMC virial parameter */
@@ -362,6 +371,8 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   sp->velocity_to_ms =
       units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 0.01;
+
+  sp->time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* TODO not sure if needed */
   // const double Msun_cgs = phys_const->const_solar_mass *

@@ -32,7 +32,7 @@
 #include "part.h"
 #include "physical_constants.h"
 #include "random.h"
-#include "stars.h"
+//#include "stars.h"
 #include "units.h"
 
 /**

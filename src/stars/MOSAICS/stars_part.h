@@ -125,7 +125,7 @@ struct spart {
   /*! Number of time-steps since the last enrichment step */
   char count_since_last_enrichment;
 
-  /*** Now the MOSAICS data ***/
+  /* -------------- Now the MOSAICS data ---------------- */
 
   /*! Second derivative of gravitational potential */
   /* upper symmetric 3*3 matrix:
@@ -138,15 +138,18 @@ struct spart {
    */
   float tidal_tensor[3][6];
 
-  // TODO just temporary
+  // TODO just temporary for testing
   /*! Gravitational potential */
   float potential;
 
   /*! Birth pressure */
   float birth_pressure;
 
-  /*! Birth subgrid temperature */
-  float birth_subgrid_temp;
+  /*! Birth subgrid density */
+  float birth_subgrid_dens;
+
+  /*! Birth subgrid sound speed */
+  float sound_speed_subgrid;
 
   /*! Cluster formation efficiency */
   float CFE;
@@ -155,10 +158,10 @@ struct spart {
   float Mcstar;
 
   /*! The local gas velocity dispersion at formation */
-  float gasVelDisp;
+  float gas_vel_disp;
 
   /*! The local stellar velocity dispersion at formation */
-  float starVelDisp;
+  float star_vel_disp;
 
   /*! Gas fraction within that same region */
   float fgas;
@@ -173,7 +176,7 @@ struct spart {
   float Toomre_mass;
 
   /*! Fraction of Mtoomre that may collapse to a GMC */
-  float fracCollapse;
+  float frac_collapse;
 
   /*! Flag denoting whether we need to run cluster formation  */
   int new_star;
@@ -251,10 +254,13 @@ struct stars_props {
   /*! Star formation efficiency for Mcstar */
   float SFE;
 
-  /* ----- Cluster formation efficiency parameters ------ */
+  /*! Use the subgrid turbulent velocity dispersion for CFE */
+  int subgrid_gas_vel_disp;
 
   /*! Sound speed of cold ISM (m/s) */
   float Fixedcs;
+
+  /* ----- Cluster formation efficiency parameters ------ */
 
   /*! star formation law */
   int sflaw;
@@ -287,6 +293,9 @@ struct stars_props {
 
   /*! Conversion factor from internal velocity unit to m/s */
   double velocity_to_ms;
+
+  /*! Conversion factor from internal time unit to s */
+  double time_to_cgs;
 
   /* TODO not sure if needed? */
   /*! Conversion factor from internal mass unit to solar mass */

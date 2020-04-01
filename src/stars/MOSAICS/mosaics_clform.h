@@ -22,9 +22,9 @@
 #include <math.h>
 
 /* Local includes */
-#include "cosmology.h"
+#include "star_formation.h"
+#include "physical_constants.h"
 #include "dsyevj3.h"
-#include "engine.h"
 #include "mosaics_cfelocal.h"
 
 /**
@@ -32,67 +32,66 @@
  *
  * @param sp The particle to act upon
  * @param stars_properties Properties of the stars model.
- * @param e The #engine
- * @param cosmo the cosmological parameters and properties.
- * @param with_cosmology if we run with cosmology.
+ * @param sf_props the star formation law properties to use
+ * @param phys_const the physical constants in internal units.
  */
 __attribute__((always_inline)) INLINE static void mosaics_clform(
     struct spart* restrict sp, const struct stars_props* props,
-    const struct engine* e, const struct cosmology* cosmo,
-    const int with_cosmology) {
-
-  const double const_G = e->physical_constants->const_newton_G;
-  const double const_boltzmann_k = e->physical_constants->const_boltzmann_k;
-  const double const_proton_mass = e->physical_constants->const_proton_mass;
-
-  /* molecular weight of primordial gas (mu=1.22)*/
-  const double mu_neutral = e->hydro_properties->mu_neutral;
+    const struct star_formation* sf_props, 
+    const struct phys_const* phys_const) {
 
   /* TODO unit conversions into physical units */
 
+  const double const_G = phys_const->const_newton_G;
+
   /* -------- Get CFE -------- */
-
-  /* Sub-particle turbulent velocity dispersion */
-  /* sqrt(3) to convert to 3D */
-  //double turbVelDisp = sqrt(3.f * sp->birth_pressure / sp->birth_density);
-
-  /* TODO Make this optional? */
-  //double totalVelDisp = turbVelDisp;
-  double totalVelDisp = sp->gasVelDisp;
-
   /* In units of kg, m, s */
-  /* 1/sqrt(3) converts to 1D assuming isotropy */
-  double sigmaloc = totalVelDisp / sqrt(3.f) * props->velocity_to_ms;
+
   double rholoc = sp->birth_density * props->density_to_kgm3;
 
-  // TODO We might want the subgrid T for this?
-  // double csloc = props->Fixedcs;
-  double csloc = sp->birth_subgrid_temp * const_boltzmann_k /
-                 (mu_neutral * const_proton_mass);
-  csloc = sqrt(csloc) * props->velocity_to_ms;
+  double sigmaloc;
+  if (props->subgrid_gas_vel_disp) {
+    /* Sub-particle turbulent velocity dispersion */
+    sigmaloc = sqrt(sp->birth_pressure / sp->birth_density);
+  } else {
+    /* The resolved velocity dispersion */
+    /* 1/sqrt(3) converts to 1D assuming isotropy */
+    sigmaloc = sp->gas_vel_disp / sqrt(3.f);
+  }
+  sigmaloc *= props->velocity_to_ms;
+
+  /* Sound speed of cold ISM */
+  double csloc;
+  if (props->Fixedcs > 0) {
+    csloc = props->Fixedcs;
+  } else {
+    csloc = sp->sound_speed_subgrid * props->velocity_to_ms;
+  }
 
   /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
   sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
 
-  /* Get feedback timescale while we're here */
-  const double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
+  /* Get feedback timescale while we're here and convert to internal units */
+  double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
+  tfb /= props->time_to_cgs;
 
   /* -------- Get Mcstar -------- */
 
   /* Gas surface density (Krumholz & McKee 2005) */
   double phi_P = 1.f;
-  if (sp->starVelDisp > 0 && sp->fgas < 1.f) {
-    phi_P = 1.f + sp->gasVelDisp / sp->starVelDisp * (1.f / sp->fgas - 1.f);
+  if ( (sp->fgas < 1.f) && (sp->star_vel_disp > 0) ) {
+    phi_P = 1.f + sp->gas_vel_disp / sp->star_vel_disp * (1.f / sp->fgas - 1.f);
   }
 
-  /* Total pressure */
   const double pressure = 
-      sp->birth_density * sp->gasVelDisp * sp->gasVelDisp / 3.f;
+      sp->birth_density * sp->gas_vel_disp * sp->gas_vel_disp / 3.f;
+
   const double SigmaG = sqrt(2. * pressure / (M_PI * const_G * phi_P));
 
   /* Toomre mass via tidal tensors (Pfeffer+18) */
 
   /* Temporary array for eigvec/val calculation */
+  double tidevec[3][3] = {{0}}, tideval[3] = {0};
   double tide[3][3] = {{0}};
   tide[0][0] = sp->tidal_tensor[2][0];
   tide[0][1] = sp->tidal_tensor[2][1];
@@ -104,11 +103,13 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   tide[2][1] = sp->tidal_tensor[2][4];
   tide[2][2] = sp->tidal_tensor[2][5];
 
-  double tidevec[3][3] = {{0}}, tideval[3] = {0};
+  /* Get the eigenvectors */
   dsyevj3(tide, tidevec, tideval);
+
   /* sort eigenvalues, tideval[2] is largest eigenvalue */
   sort3(tideval);
 
+  /* Circular and epicyclic frequencies */
   double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
   double kappa2 = fabs(3 * Omega2 - tideval[2]);
 
@@ -121,18 +122,53 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   sp->Toomre_mass = MTconst * SigmaG * SigmaG * SigmaG / (kappa2 * kappa2);
 
   /* Toomre collapse fraction (Reina-Campos & Kruijssen 2017) */
-  double tff = sqrt(2. * M_PI / kappa2);
-  sp->fracCollapse = fmin(1., tfb / tff);
-  sp->fracCollapse *= sp->fracCollapse; /* f^2 */
-  sp->fracCollapse *= sp->fracCollapse; /* f^4 */
+  /* Total collapse time of Toomre volume */
+  const double tcollapse = sqrt(2. * M_PI / kappa2);
+  sp->frac_collapse = fmin(1., tfb / tcollapse);
+  sp->frac_collapse *= sp->frac_collapse; /* f^2 */
+  sp->frac_collapse *= sp->frac_collapse; /* f^4 */
 
   /* The 'GMC' mass */
-  double M_collapse = sp->Toomre_mass * sp->fracCollapse;
+  const double M_collapse = sp->Toomre_mass * sp->frac_collapse;
 
   /* Exponential truncation of cluster mass function */
-  /* TODO here we should use SFE = starform->star_formation_efficiency if it
-   * exists */
-  sp->Mcstar = props->SFE * sp->CFE * M_collapse;
+  if (props->SFE > 0) {
+
+    sp->Mcstar = props->SFE * sp->CFE * M_collapse;
+
+  } else {
+
+#if defined(STAR_FORMATION_COLIBRE)
+    const double sfe_ff = sf_props->sfe;
+#elif defined(STAR_FORMATION_GEAR)
+    const double sfe_ff = sf_props->star_formation_efficiency;
+#else
+    /* No SFE defined for star formation model */
+    /* Elmegreen 2002 */
+    const double sfe_ff = 0.012;
+#endif
+
+    //TODO I'm not sure which density we want here? Same as for tfb?
+    /* Free-fall time */
+    const double tff = sqrt(3.0 * M_PI / (32.0 * const_G * sp->birth_density));
+    //const double tff = sqrt(3.0 * M_PI / (32.0 * const_G * sp->birth_subgrid_dens));
+
+    /* Integrated SFE. End of collapse defined by shortest of Toomre collapse
+     * timescale and feedback timescale */
+    double SFE_int = sfe_ff * fmin(tcollapse, tfb) / tff;
+
+    if ((SFE_int < 0.0) || (SFE_int > 1.0)) {
+      error("Integrated SFE unphysical! SFE_int=%g, sfe_ff=%g, tff=%g,"
+            "tfb=%g, tcoll=%g.",SFE_int, sfe_ff, tff, tfb, tcollapse);
+    }
+
+    sp->Mcstar = SFE_int * sp->CFE * M_collapse;
+  }
+
+
+  /* TODO Now set up the cluster population */
+
+
 
   /* TODO if no clusters above mass limit were formed, set gcflag=0 */
 }

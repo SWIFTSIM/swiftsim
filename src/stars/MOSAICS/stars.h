@@ -22,12 +22,12 @@
 
 #include <float.h>
 
-#include <float.h>
-
 /* Local includes */
 #include "cosmology.h"
-#include "engine.h"
 #include "hydro.h"
+#include "cooling.h"
+#include "star_formation.h"
+#include "physical_constants.h"
 #include "mosaics_clevo.h"
 #include "mosaics_clform.h"
 
@@ -219,15 +219,21 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
  *
  * @param sp The particle to act upon
  * @param stars_properties Properties of the stars model.
- * @param e The #engine
+ * @param sf_props the star formation law properties to use
+ * @param phys_const the physical constants in internal units.
  * @param cosmo the cosmological parameters and properties.
- * @param with_cosmology if we run with cosmology.
+ * @param with_cosmology Are we running with cosmological time integration.
+ * cosmology).
+ * @param time The current time (used if running without cosmology).
  */
 __attribute__((always_inline)) INLINE static void stars_do_mosaics(
-    struct spart* restrict sp, const struct engine* e,
-    const struct cosmology* cosmo, const int with_cosmology) {
+    struct spart* restrict sp, const struct stars_props* stars_properties,
+    const struct star_formation* sf_props, const struct phys_const* phys_const,
+    const struct cosmology* cosmo, const int with_cosmology, const float time) {
 
-  const struct stars_props* stars_properties = e->stars_properties;
+  /* TODO Probably don't need to pass the engine all the way here. Need to
+   * work out the relevant info that is actually needed.
+   */
 
   /* Have we already been here this timestep? */
   /* This funcation can be called twice: once at SF, then again in star loop */
@@ -237,7 +243,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
         return;
       }
     } else {
-      if (sp->birth_time == (float)e->time) {
+      if (sp->birth_time == time) {
         return;
       }
     }
@@ -272,18 +278,18 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->gcflag = 1;
 
     /* TODO need to calculate this beforehand */
-    sp->starVelDisp = 0.;
+    sp->star_vel_disp = 0.;
     sp->fgas = 1.;
 
     /* Go make clusters */
-    mosaics_clform(sp, stars_properties, e, cosmo, with_cosmology);
+    mosaics_clform(sp, stars_properties, sf_props, phys_const);
 
     /* We're done with cluster formation */
     sp->new_star = 0;
 
   } else if (sp->gcflag) {
     /* Do cluster evolution, if the particle has clusters */
-    mosaics_clevo(sp, stars_properties, e, cosmo, with_cosmology);
+    mosaics_clevo(sp, stars_properties);
 
     /* Do we still need to calculate tensors for this particle */
     if (!stars_properties->calc_all_star_tensors && !sp->gcflag)
@@ -294,27 +300,54 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 /**
  * @brief Gather some extra props needed at star formation time for mosaics
  *
- * @param sp The gas particle
+ * @param p The gas particle
+ * @param xp The additional properties of the gas particles.
  * @param sp The star particle
  * @param cosmo the cosmological parameters and properties.
+ * @param phys_const The physical constants in internal units.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param us The internal system of units.
+ * @param cooling The cooling data struct.
+ * cosmology).
  */
 __attribute__((always_inline)) INLINE static void
-stars_mosaics_copy_extra_properties(const struct part* p,
-                                    const struct xpart* xp,
-                                    struct spart* restrict sp,
-                                    const struct cosmology* cosmo) {
+stars_mosaics_copy_extra_properties(
+    const struct part* p, const struct xpart* xp, struct spart* restrict sp,
+    const struct cosmology* cosmo, const struct phys_const* phys_const,
+    const struct hydro_props* restrict hydro_props,
+    const struct unit_system* restrict us,
+    const struct cooling_function_data* restrict cooling) {
 
   /* Store the birth properties in the star particle */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
-  sp->gasVelDisp = sqrt(p->sf_data.sigma_v2);
+  sp->gas_vel_disp = sqrt(p->sf_data.sigma_v2);
 
-  // TODO depends on cooling whether we have these properties
-  /* Store subgrid birth properties */
+  /* Calculate the hydro sound speed */
+  sp->sound_speed_subgrid = hydro_get_physical_soundspeed(p, cosmo);
+
 #if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || \
     defined(COOLING_CHIMES_HYBRID)
-  sp->birth_subgrid_temp = xp->tracers_data.subgrid_temp;
+
+  /* Correction for subgrid ISM */
+
+  /* Calculate the temperature */
+  const double temperature = cooling_get_temperature(phys_const, hydro_props,
+                                                     us, cosmo, cooling, p, xp);
+
+  /* Get the subgrid temperature from the tracers */
+  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
+
+  /* Get the subgrid sound speed */
+  sp->sound_speed_subgrid *= sqrt(subgrid_temperature / temperature);
+
+  /* Get the subgrid density */
+  sp->birth_subgrid_dens = xp->tracers_data.subgrid_dens;
+
 #else
-  sp->birth_subgrid_temp = 10.f;  // K
+
+  /* Get the hydro density */
+  sp->birth_subgrid_dens = sp->birth_density;
+
 #endif
 
   /* Flag it for cluster formation */

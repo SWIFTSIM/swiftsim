@@ -20,8 +20,6 @@
 #define SWIFT_MOSAICS_CLEVO_H
 
 __attribute__((always_inline)) INLINE static void mosaics_clevo(
-    struct spart* restrict sp, const struct stars_props* stars_properties,
-    const struct engine* e, const struct cosmology* cosmo,
-    const int with_cosmology) {}
+    struct spart* restrict sp, const struct stars_props* stars_properties) {}
 
 #endif /* SWIFT_MOSAICS_CLEVO_H */
