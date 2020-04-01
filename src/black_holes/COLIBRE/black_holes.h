@@ -424,6 +424,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double tangential_velocity = sqrt(tangential_velocity2);
 
   /* We can now compute the Bondi accretion rate (internal units) */
+  const float hi_inv = 1.f / bp->h;
   const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */;
   double Bondi_rate =
       bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
