@@ -60,7 +60,7 @@ endif
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = logger_hydro.h hydro/Gadget2/logger_hydro.h \
 	logger_stars.h stars/Default/logger_stars.h \
-	logger_gravity.h gravity/Default/logger_gravity.h
+	logger_gravity.h gravity/MultiSoftening/logger_gravity.h
 
 # Sources and flags for regular library
 liblogger_la_SOURCES = $(AM_SOURCES)

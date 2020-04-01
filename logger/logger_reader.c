@@ -560,7 +560,7 @@ enum logger_reader_event logger_reader_get_next_particle(
           return logger_reader_event_deleted;
 
         default:
-          error("Failed");
+          error("This case should never happen.");
       }
     }
 

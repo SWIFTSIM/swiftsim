@@ -54,6 +54,9 @@ struct logger_sparticle {
   /* Particle mass. */
   float mass;
 
+  /* Particle cutoff radius. */
+  float h;
+
   /* time of the record. */
   double time;
 
@@ -71,12 +74,13 @@ struct logger_sparticle {
  */
 __attribute__((always_inline)) INLINE static void logger_sparticle_print(
     const struct logger_sparticle *p) {
-  message("ID:            %lli.", p->id);
-  message("Mass:          %g", p->mass);
-  message("Time:          %g.", p->time);
-  message("Positions:     (%g, %g, %g).", p->x[0], p->x[1], p->x[2]);
-  message("Velocities:    (%g, %g, %g).", p->v[0], p->v[1], p->v[2]);
-  message("Accelerations: (%g, %g, %g).", p->a[0], p->a[1], p->a[2]);
+  message("ID:              %lli.", p->id);
+  message("Mass:            %g", p->mass);
+  message("SmoothingLength: %g", p->h);
+  message("Time:            %g.", p->time);
+  message("Positions:       (%g, %g, %g).", p->x[0], p->x[1], p->x[2]);
+  message("Velocities:      (%g, %g, %g).", p->v[0], p->v[1], p->v[2]);
+  message("Accelerations:   (%g, %g, %g).", p->a[0], p->a[1], p->a[2]);
 }
 
 /**
@@ -93,6 +97,7 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_init(
   }
 
   part->mass = -1;
+  part->h = -1;
   part->id = SIZE_MAX;
 
   part->flag = 0;
@@ -122,6 +127,8 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_read_field(
     // TODO link mass and ids together?
   } else if (strcmp("Masses", field) == 0) {
     memcpy(&part->mass, buff, size);
+  } else if (strcmp("SmoothingLengths", field) == 0) {
+    memcpy(&part->h, buff, size);
   } else if (strcmp("ParticleIDs", field) == 0) {
     memcpy(&part->id, buff, size);
   } else if (strcmp("SpecialFlags", field) == 0) {
@@ -153,6 +160,9 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_check_fields(
     }
     else if (strcmp(head->masks[i].name, "Masses") == 0) {
       size = sizeof(part.mass);
+    }
+    else if (strcmp(head->masks[i].name, "SmoothingLengths") == 0) {
+      size = sizeof(part.h);
     }
     else if (strcmp(head->masks[i].name, "ParticleIDs") == 0) {
       size = sizeof(part.id);
@@ -215,6 +225,12 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
     part_curr->a[i] += ftmp * scaling;
   }
 
+  ftmp = (part_next->mass - part_curr->mass);
+  part_curr->mass += ftmp * scaling;
+
+  ftmp = (part_next->h - part_curr->h);
+  part_curr->h += ftmp * scaling;
+
   /* set time. */
   part_curr->time = time;
 }
@@ -222,33 +238,33 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
 /**
  * @brief Specifies which particle fields to give access to in python
  *
- * @param parts The #logger_sparticle array (no need to be allocated).
  * @param list The list of structure used to store the information.
+ *
  * @param num_fields The number of i/o fields to give access to.
  */
-INLINE static void logger_sparticles_generate_python(
-    const struct logger_particle *parts, struct logger_python_field *list,
-    int *num_fields) {
+INLINE static int logger_sparticles_generate_python(
+    struct logger_python_field *list) {
 #ifdef HAVE_PYTHON
-
-  *num_fields = 7;
+  struct logger_sparticle *part;
 
   /* List what we want to use in python */
-  list[0] = logger_loader_python_field("Coordinates", parts, x, 3, NPY_DOUBLE);
+  list[0] = logger_loader_python_field("Coordinates", part, x, 3, NPY_DOUBLE);
 
-  list[1] = logger_loader_python_field("Velocities", parts, v, 3, NPY_FLOAT32);
+  list[1] = logger_loader_python_field("Velocities", part, v, 3, NPY_FLOAT32);
 
-  list[2] = logger_loader_python_field("Accelerations", parts, a, 3, NPY_FLOAT32);
+  list[2] = logger_loader_python_field("Accelerations", part, a, 3, NPY_FLOAT32);
 
-  list[3] = logger_loader_python_field("Masses", parts, mass, 1, NPY_FLOAT32);
+  list[3] = logger_loader_python_field("Masses", part, mass, 1, NPY_FLOAT32);
 
   list[4] =
-      logger_loader_python_field("SmoothingLengths", parts, h, 1, NPY_FLOAT32);
+      logger_loader_python_field("SmoothingLengths", part, h, 1, NPY_FLOAT32);
 
   list[5] =
-      logger_loader_python_field("ParticleIDs", parts, id, 1, NPY_LONGLONG);
+      logger_loader_python_field("ParticleIDs", part, id, 1, NPY_LONGLONG);
 
-  list[6] = logger_loader_python_field("Times", parts, time, 1, NPY_DOUBLE);
+  list[6] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
+
+  return 7;
 #else
   error("Should not be called without python.");
 #endif /* WITH_LOGGER */
