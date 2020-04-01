@@ -421,7 +421,9 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* Cluster mass function power-law index M^(-alpha) */
   sp->clMF_slope = parser_get_opt_param_float(params, "Stars:clMF_slope", 2.0);
 
-  /* Cluster formation efficiency parameters -------------------------------- */
+  /* Use the subgrid turbulent velocity dispersion for CFE */
+  sp->subgrid_gas_vel_disp = 
+      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
 
   /* Value of fixed cluster formation efficiency */
   sp->FixedCFE = parser_get_opt_param_float(params, "Stars:fixed_CFE", -1.0);
