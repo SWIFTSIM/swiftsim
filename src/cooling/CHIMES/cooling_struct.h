@@ -130,6 +130,11 @@ struct cooling_function_data {
   /* Temperature of gas particles tagged as HII regions */
   float HIIregion_temp;
 
+  /* Array of species names in the reduced
+   * CHIMES network. */
+  char chimes_species_names_reduced[CHIMES_NETWORK_SIZE]
+                                   [CHIMES_NAME_STR_LENGTH];
+
   /* Colibre cooling table */
   struct colibre_cooling_tables colibre_table;
 };
