@@ -37,8 +37,13 @@ int main(int argc, char *argv[]) {
   /* Read parameters. */
   parser_read_file(filename, &params);
 
+  /* Initialize the engine */
+  struct engine e;
+  e.policy = engine_policy_hydro | engine_policy_stars
+    | engine_policy_self_gravity;
+
   /* Initialize the logger. */
-  logger_init(&log, &params);
+  logger_init(&log, &e, &params);
 
   /* get dump filename. */
   char dump_filename[PARSER_MAX_LINE_SIZE];

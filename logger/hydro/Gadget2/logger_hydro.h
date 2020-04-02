@@ -253,6 +253,7 @@ __attribute__((always_inline)) INLINE static void logger_particle_interpolate(
   part_curr->time = time;
 }
 
+#ifdef HAVE_PYTHON
 /**
  * @brief Specifies which particle fields to give access to in python
  *
@@ -262,7 +263,6 @@ __attribute__((always_inline)) INLINE static void logger_particle_interpolate(
  */
 INLINE static int logger_particles_generate_python(
     struct logger_python_field *list) {
-#ifdef HAVE_PYTHON
 
   struct logger_particle *part;
 
@@ -291,9 +291,7 @@ INLINE static int logger_particles_generate_python(
   list[8] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
 
   return 9;
-#else
-  error("Should not be called without python.");
-#endif /* WITH_LOGGER */
 }
+#endif /* HAVE_PYTHON */
 
 #endif /* SWIFT_GADGET2_LOGGER_HYDRO_H */

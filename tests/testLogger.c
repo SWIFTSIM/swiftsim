@@ -175,7 +175,7 @@ void test_log_timestamps(struct logger_writer *log) {
   struct dump *d = &log->dump;
 
   /* The timestamp to log. */
-  unsigned long long int t = 10;
+  integertime_t t = 10;
   double time = 0.1;
 
   /* Start with an offset at the end of the dump. */
@@ -198,14 +198,14 @@ void test_log_timestamps(struct logger_writer *log) {
   t = 0;
   time = 0;
   int mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu at offset %#016zx with mask %#04x.\n", t,
-         offset_old, mask);
+  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
+         time, offset_old, mask);
   if (t != 30) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();
   }
   if (time != 0.3) {
-    printf("FAIL: could not recover correct time %g.\n", time);
+    printf("FAIL: could not recover correct time.\n");
     abort();
   }
 
@@ -213,8 +213,8 @@ void test_log_timestamps(struct logger_writer *log) {
   t = 0;
   time = 0;
   mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu at offset %#016zx with mask %#04x.\n", t,
-         offset_old, mask);
+  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
+         time, offset_old, mask);
   if (t != 20) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();
@@ -228,8 +228,8 @@ void test_log_timestamps(struct logger_writer *log) {
   t = 0;
   time = 0;
   mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu at offset %#016zx with mask %#04x.\n", t,
-         offset_old, mask);
+  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
+         time, offset_old, mask);
   if (t != 10) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();
@@ -245,8 +245,11 @@ int main(int argc, char *argv[]) {
   /* Prepare a logger. */
   struct logger_writer log;
   struct swift_params params;
+  struct engine e;
+  e.policy = engine_policy_hydro | engine_policy_self_gravity;
+
   parser_read_file("logger.yml", &params);
-  logger_init(&log, &params);
+  logger_init(&log, &e, &params);
 
   /* Test writing/reading parts. */
   test_log_parts(&log);

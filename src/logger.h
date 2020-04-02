@@ -184,7 +184,7 @@ int logger_read_part(const struct logger_writer *log, struct part *p,
 int logger_read_gpart(const struct logger_writer *log, struct gpart *p,
                       size_t *offset, const char *buff);
 int logger_read_timestamp(const struct logger_writer *log,
-                          unsigned long long int *t, double *time,
+                          integertime_t *t, double *time,
                           size_t *offset, const char *buff);
 void logger_struct_dump(const struct logger_writer *log, FILE *stream);
 void logger_struct_restore(struct logger_writer *log, FILE *stream);

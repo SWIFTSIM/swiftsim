@@ -64,7 +64,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
   /* Number of particle found during this time step. */
   int count = 0;
   /* Set it to an impossible value in order to flag it. */
-  const size_t id_flag = 5 * number_parts;
+  const long long id_flag = 5 * number_parts;
   long long previous_id = id_flag;
 
   /* Loop over each record. */

@@ -59,7 +59,7 @@ INLINE static void hydro_logger_prepare_to_write_particle(
     const struct xpart *xpart, const int write_all,
     size_t *buffer_size, unsigned int *mask) {
 
-  /* Here you can decide you own writing logic */
+  /* Here you can decide your own writing logic */
 
   /* Add the coordinates. */
   *mask |= logger_add_field_to_mask(masks[0], "Coordinates", buffer_size);
