@@ -220,6 +220,7 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_interpolate(
   part_curr->time = time;
 }
 
+#ifdef HAVE_PYTHON
 /**
  * @brief Specifies which particle fields to give access to in python
  *
@@ -229,7 +230,6 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_interpolate(
  */
 INLINE static int logger_gparticles_generate_python(
     struct logger_python_field *list) {
-#ifdef HAVE_PYTHON
 
   struct logger_gparticle *part;
 
@@ -250,9 +250,7 @@ INLINE static int logger_gparticles_generate_python(
   list[5] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
 
   return 6;
-#else
-  error("Should not be called without python.");
-#endif /* WITH_LOGGER */
 }
+#endif /* HAVE_PYTHON */
 
 #endif  // SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H

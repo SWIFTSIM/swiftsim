@@ -132,23 +132,18 @@ void generate_log(struct swift_params *params, struct part *parts,
   /* Initialize the particles */
   generate_particles(parts, xparts, nparts);
 
-  /* Initialize the writer */
-  struct logger_writer log;
-  logger_init(&log, params);
-
   /* initialize the engine */
   struct engine e;
+  e.policy = engine_policy_hydro;
   e.total_nr_parts = nparts;
   e.total_nr_gparts = 0;
   e.total_nr_sparts = 0;
   e.total_nr_bparts = 0;
   e.verbose = 1;
-  e.policy = 0;
   e.ti_current = 0;
   e.time = 0;
   e.time_base = const_time_base;
   e.time_begin = 0;
-  e.logger = &log;
   threadpool_init(&e.threadpool, 1);
   struct space s;
   e.s = &s;
@@ -167,6 +162,11 @@ void generate_log(struct swift_params *params, struct part *parts,
   s.nr_extra_parts = 0;
   s.nr_extra_sparts = 0;
   s.nr_extra_bparts = 0;
+  struct logger_writer log;
+  e.logger = &log;
+
+  /* Initialize the writer */
+  logger_init(&log, &e, params);
 
   /* Write file header */
   logger_write_file_header(&log);

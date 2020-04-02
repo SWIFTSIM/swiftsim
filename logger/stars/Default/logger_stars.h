@@ -235,6 +235,7 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
   part_curr->time = time;
 }
 
+#ifdef HAVE_PYTHON
 /**
  * @brief Specifies which particle fields to give access to in python
  *
@@ -244,7 +245,6 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
  */
 INLINE static int logger_sparticles_generate_python(
     struct logger_python_field *list) {
-#ifdef HAVE_PYTHON
   struct logger_sparticle *part;
 
   /* List what we want to use in python */
@@ -265,9 +265,7 @@ INLINE static int logger_sparticles_generate_python(
   list[6] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
 
   return 7;
-#else
-  error("Should not be called without python.");
-#endif /* WITH_LOGGER */
 }
+#endif /* HAVE_PYTHON */
 
 #endif  // SWIFT_DEFAULT_LOGGER_GRAVITY_H
