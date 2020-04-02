@@ -48,6 +48,7 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
  * @param parameter_file The parsed parameter file
  * @param phys_const Physical constants in internal units
  * @param us The current internal system of units
+ * @param hydro_props The #hydro_props.
  * @param starform the star formation law properties to initialize
  *
  */
