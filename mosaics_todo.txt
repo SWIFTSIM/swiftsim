@@ -15,6 +15,8 @@ I/O:
   Load star props (need TidalTensor so far)
   Also need to zero optional properties if they're not read in
 
+  Dump some info when nClust > MOSAICS_MAX_CLUSTERS
+
 Scheduling:
   Still necessary to call mosaics from runner_do_star_formation() since occasionally SF happens but mosaics would not be called. Already scheduled after the star resort so not sure what the fix is?
 

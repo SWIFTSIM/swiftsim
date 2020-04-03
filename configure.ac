@@ -2133,6 +2133,14 @@ if test "$with_subgrid" != "none"; then
    fi
 fi
 
+AC_ARG_WITH([mosaics-max-clusters],
+   [AS_HELP_STRING([--with-mosaics-max-clusters=SHORT INT],
+      [Set the maximum number of star clusters for MOSAICS.]
+   )],
+   [with_mosaics_max_clusters="$withval"],
+   [with_mosaics_max_clusters="200"]
+)
+
 case "$with_stars" in
    EAGLE)
       AC_DEFINE([STARS_EAGLE], [1], [EAGLE stellar model])
@@ -2145,6 +2153,7 @@ case "$with_stars" in
    ;;
    MOSAICS)
       AC_DEFINE([STARS_MOSAICS], [1], [MOSAICS stellar model])
+      AC_DEFINE_UNQUOTED([MOSAICS_MAX_CLUSTERS], [$with_mosaics_max_clusters],[Value of the maximum number of clusters. ])
    ;;
    none)
       AC_DEFINE([STARS_NONE], [1], [Basic stellar model])

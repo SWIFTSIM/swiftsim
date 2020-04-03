@@ -30,6 +30,37 @@
 #include "tracers_struct.h"
 
 /**
+ * @brief Star cluster fields for the star particles.
+ */
+struct mosaics_cluster_data
+{
+  /*! Unique cluster ID within particle */
+  int id[MOSAICS_MAX_CLUSTERS];
+
+  /*! Current star cluster mass */
+  float mass[MOSAICS_MAX_CLUSTERS];
+
+  /*! Initial star cluster mass */
+  float initial_mass[MOSAICS_MAX_CLUSTERS];
+
+  /*! mass loss from evaporation */
+  float dmevap[MOSAICS_MAX_CLUSTERS];
+
+  /*! mass loss from tidal shocks */
+  float dmshock[MOSAICS_MAX_CLUSTERS];
+
+  /* NB: stellar evolution makes up rest of mass loss */
+
+/*
+  // Current star cluster size
+  float rh[MOSAICS_MAX_CLUSTERS];
+
+  // Initial star cluster size
+  float rh_init[MOSAICS_MAX_CLUSTERS];
+*/
+};
+
+/**
  * @brief Particle fields for the star particles.
  *
  * All quantities related to gravity are stored in the associate #gpart.
@@ -126,6 +157,27 @@ struct spart {
   char count_since_last_enrichment;
 
   /* -------------- Now the MOSAICS data ---------------- */
+
+  /*! Star cluster structure */
+  struct mosaics_cluster_data clusters;
+
+  /*! Current surviving number of clusters */
+  int num_clusters;
+
+  /*! Number of clusters tried to form */
+  int initial_num_clusters;
+
+  /*! Number of clusters formed above mass limit */
+  int initial_num_clusters_evo;
+
+  /*! Sum of initial cluster masses */
+  float initial_cluster_mass_total;
+
+  /*! Sum of initial cluster masses above evolution mass limit */
+  float initial_cluster_mass_evo;
+
+  /*! Field mass component of star */
+  float field_mass;
 
   /*! Second derivative of gravitational potential */
   /* upper symmetric 3*3 matrix:
@@ -260,6 +312,21 @@ struct stars_props {
   /*! Sound speed of cold ISM (m/s) */
   float Fixedcs;
 
+  /*! Use a power-law mass function (default Schechter)  */
+  int power_law_clMF ;
+
+  /*! Cluster mass function minimum (Msun) */
+  float clMF_min;
+
+  /*! Initial lowest cluster mass to evolve (Msun) */
+  float clMF_min_evolve;
+
+  /*! Cluster mass function maximum (Msun) */
+  float clMF_max;
+
+  /*! Cluster mass function power-law index */
+  float clMF_slope;
+
   /* ----- Cluster formation efficiency parameters ------ */
 
   /*! star formation law */
@@ -297,9 +364,11 @@ struct stars_props {
   /*! Conversion factor from internal time unit to s */
   double time_to_cgs;
 
-  /* TODO not sure if needed? */
   /*! Conversion factor from internal mass unit to solar mass */
-  // double mass_to_solar_mass;
+  double mass_to_solar_mass;
+
+  /*! Conversion factor from solar mass to internal mass unit */
+  double solar_mass_to_mass;
 };
 
 #endif /* SWIFT_MOSAICS_STAR_PART_H */

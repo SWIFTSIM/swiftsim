@@ -273,6 +273,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->potential = sp->gpart->potential;
   }
 
+  /* Do formation or evolution */
   if (sp->new_star) {
     /* Do cluster formation */
     sp->gcflag = 1;
@@ -290,10 +291,11 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
   } else if (sp->gcflag) {
     /* Do cluster evolution, if the particle has clusters */
     mosaics_clevo(sp, stars_properties);
+  }
 
-    /* Do we still need to calculate tensors for this particle */
-    if (!stars_properties->calc_all_star_tensors && !sp->gcflag)
-      sp->calc_tensor = 0;
+  /* Do we still need to calculate tensors for this particle */
+  if (!stars_properties->calc_all_star_tensors && !sp->gcflag) {
+    sp->calc_tensor = 0;
   }
 }
 
