@@ -21,6 +21,7 @@
 
 /* Local includes */
 #include "black_holes_parameters.h"
+#include "equation_of_state.h"
 #include "gravity.h"
 #include "hydro.h"
 #include "equation_of_state.h"
@@ -492,7 +493,7 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
     /* Are we lucky? */
     if (rand < prob) {
 
-      /* Compute new energy of this particle */
+      /* Compute new energy per unit mass of this particle */
       const double u_init = hydro_get_physical_internal_energy(pj, xpj, cosmo);
       const float delta_u = bi->to_distribute.AGN_delta_u;
       const double u_new = u_init + delta_u;
@@ -506,8 +507,10 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
       /* Update cooling properties. */
       cooling_update_feedback_particle(xpj);
 
-      /* Mark this particle has having been heated by AGN feedback */
-      tracers_after_black_holes_feedback(xpj, with_cosmology, cosmo->a, time);
+      /* Store the feedback energy */
+      const double delta_energy = delta_u * hydro_get_mass(pj);
+      tracers_after_black_holes_feedback(xpj, with_cosmology, cosmo->a, time,
+                                         delta_energy);
 
       /* message( */
       /*     "We did some AGN heating! id %llu BH id %llu probability " */

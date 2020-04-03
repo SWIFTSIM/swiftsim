@@ -466,6 +466,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
+  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
   const double Bondi_radius = G * BH_mass / gas_c_phys2;
   const double Bondi_time = Bondi_radius / gas_c_phys;
   const double r_times_v_tang = Bondi_radius * tangential_velocity;

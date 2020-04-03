@@ -31,12 +31,28 @@
 /**
  * @brief Writes the current model of SPH to the file
  * @param h_grp The HDF5 group in which to write
+ * @param h_grp_columns The HDF5 group containing named columns
  * @param cooling the parameters of the cooling function.
  */
 __attribute__((always_inline)) INLINE static void cooling_write_flavour(
-    hid_t h_grp, const struct cooling_function_data* cooling) {
+    hid_t h_grp, hid_t h_grp_columns,
+    const struct cooling_function_data* cooling) {
 
   io_write_attribute_s(h_grp, "Cooling Model", "CHIMES");
+
+  /* Add the species names to the named columns */
+  hsize_t dims[1] = {CHIMES_NETWORK_SIZE};
+  hid_t type = H5Tcopy(H5T_C_S1);
+  H5Tset_size(type, CHIMES_NAME_STR_LENGTH);
+  hid_t space = H5Screate_simple(1, dims, NULL);
+  hid_t dset = H5Dcreate(h_grp_columns, "ChimesAbundances", type, space,
+                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+           cooling->chimes_species_names_reduced[0]);
+  H5Dclose(dset);
+
+  H5Tclose(type);
+  H5Sclose(space);
 }
 #endif
 

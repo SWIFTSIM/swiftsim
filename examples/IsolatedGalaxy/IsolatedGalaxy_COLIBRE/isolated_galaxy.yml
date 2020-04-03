@@ -119,8 +119,7 @@ COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
   temperature_threshold_K:          1000    # (Optional) Subgrid temperature threshold below which stars are allowed to form (Default set to infinity).
-  threshold_max_density_H_p_cm3:    1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Default set to infinity).
-  subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (defualt set to infinity)
+  subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (default set to infinity)
 
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
@@ -186,17 +185,15 @@ HernquistPotential:
   bulgefraction:   0.014  # Bulge mass fraction
   timestep_mult:   0.01     # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
   epsilon:         0.8      # Softening size (internal units)
- 
-# Parameters for the EAGLE "equation of state"
-EAGLEEntropyFloor:
-  Jeans_density_threshold_H_p_cm3: 0.1       # Physical density above which the COLIBRE Jeans limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
-  Jeans_over_density_threshold:    10.       # Overdensity above which the COLIBRE Jeans limiter entropy floor can kick in.
-  Jeans_temperature_norm_K:        10.      # Temperature of the COLIBRE Jeans limiter entropy floor at the density threshold expressed in Kelvin.
-  Jeans_gamma_effective:           1.3333333 # Slope the of the COLIBRE Jeans limiter entropy floor
-  Cool_density_threshold_H_p_cm3: 1e-5       # Physical density above which the COLIBRE Cool limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
-  Cool_over_density_threshold:    10.        # Overdensity above which the COLIBRE Cool limiter entropy floor can kick in.
-  Cool_temperature_norm_K:        10.       # Temperature of the COLIBRE Cool limiter entropy floor at the density threshold expressed in Kelvin.
-  Cool_gamma_effective:           1.         # Slope the of the COLIBRE Cool limiter entropy floor
+
+# Parameters for the COLIBRE "equation of state"
+COLIBREEntropyFloor:
+  Jeans_density_norm_H_p_cm3: 0.1        # Physical density above which the COLIBRE Jeans limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Jeans_temperature_norm_K:   10.        # Temperature of the COLIBRE Jeans limiter entropy floor at the density normalisation expressed in Kelvin.
+  Jeans_gamma_effective:      1.3333333  # Slope the of the COLIBRE Jeans limiter entropy floor
+  Cool_density_norm_H_p_cm3:  1e-5       # Physical density above which the COLIBRE Cool limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Cool_temperature_norm_K:    -1.        # Temperature of the COLIBRE Cool limiter entropy floor at the density normalisation expressed in Kelvin.
+  Cool_gamma_effective:       1.         # Slope the of the COLIBRE Cool limiter entropy floor
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:

@@ -346,22 +346,19 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
           if (bp->id == BH_id) {
 
-            /* Lock the space as we are going to work directly on the bpart list
-             */
-            lock_lock(&s->lock);
+            /* Is the swallowing BH itself flagged for swallowing by
+               another BH? */
+            if (black_holes_get_bpart_swallow_id(&bp->merger_data) != -1) {
 
-            /* If bpart is inhibited, it cannot do any swallowing */
-            if (bpart_is_inhibited(bp, e)) {
-              message("BH %lld inhibited -- DOES NOT swallow BH %lld", bp->id,
-                      cell_bp->id);
-
-              /* Pretend it was found */
+              /* Pretend it was found and abort */
+              black_holes_mark_bpart_as_not_swallowed(&cell_bp->merger_data);
               found = 1;
-
-              if (lock_unlock(&s->lock) != 0)
-                error("Failed to unlock the space.");
               break;
             }
+
+            /* Lock the space as we are going to work directly on the
+             * space's bpart list */
+            lock_lock(&s->lock);
 
             /* Swallow the BH particle (i.e. update the swallowing BH
              * properties with the properties of cell_bp) */
@@ -395,31 +392,41 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
         } /* Loop over local BHs */
 
 #ifdef WITH_MPI
-	
-	/* We could also be in the case of a local BH particle being
-	 * swallowed by a foreign BH. In this case, we won't update the
-	 * foreign BH but just remove the particle from the local list. */
-	if (c->nodeID == e->nodeID && !found) {
-	  
-	  /* Let's look for the foreign hungry black hole */
-	  for (size_t i = 0; i < nr_bparts_foreign; ++i) {
-	    
-	    /* Get a handle on the bpart. */
-	    struct bpart *bp = &bparts_foreign[i];
-	    
-	    if (bp->id == BH_id) {
-	      
-	      message("BH %lld removing BH particle %lld (foreign BH case)",
-		      bp->id, cell_bp->id);
-	      
-	      /* Finally, remove the gas particle from the system */
-	      cell_remove_bpart(e, c, cell_bp);
-	      
-	      found = 1;
-	      break;
-	    }
-	  } /* Loop over foreign BHs */
-	}   /* Is the cell local? */
+
+        /* We could also be in the case of a local BH particle being
+         * swallowed by a foreign BH. In this case, we won't update the
+         * foreign BH but just remove the particle from the local list. */
+        if (c->nodeID == e->nodeID && !found) {
+
+          /* Let's look for the foreign hungry black hole */
+          for (size_t i = 0; i < nr_bparts_foreign; ++i) {
+
+            /* Get a handle on the bpart. */
+            struct bpart *bp = &bparts_foreign[i];
+
+            if (bp->id == BH_id) {
+
+              /* Is the swallowing BH itself flagged for swallowing by
+                 another BH? */
+              if (black_holes_get_bpart_swallow_id(&bp->merger_data) != -1) {
+
+                /* Pretend it was found and abort */
+                black_holes_mark_bpart_as_not_swallowed(&cell_bp->merger_data);
+                found = 1;
+                break;
+              }
+
+              message("BH %lld removing BH particle %lld (foreign BH case)",
+                      bp->id, cell_bp->id);
+
+              /* Finally, remove the gas particle from the system */
+              cell_remove_bpart(e, c, cell_bp);
+
+              found = 1;
+              break;
+            }
+          } /* Loop over foreign BHs */
+        }   /* Is the cell local? */
 #endif
         /* If we have a local particle, we must have found the BH in one
          * of our list of black holes. */
