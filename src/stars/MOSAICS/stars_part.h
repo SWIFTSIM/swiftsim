@@ -329,7 +329,6 @@ struct stars_props {
   /*! Star formation efficiency for Mcstar */
   float SFE;
 
-<<<<<<< HEAD
   /*! Cluster mass function minimum (Msun) */
   float clMF_min;
 
@@ -347,13 +346,26 @@ struct stars_props {
   /*! Value for a fixed CFE */
   float FixedCFE;
 
-=======
->>>>>>> Correct sound speed. Implemented a local SFE_GMC. Cleaned up code
   /*! Use the subgrid turbulent velocity dispersion for CFE */
   int subgrid_gas_vel_disp;
 
   /*! Sound speed of cold ISM (m/s) */
   float Fixedcs;
+
+  /*! Use a power-law mass function (default Schechter)  */
+  int power_law_clMF ;
+
+  /*! Cluster mass function minimum (Msun) */
+  float clMF_min;
+
+  /*! Initial lowest cluster mass to evolve (Msun) */
+  float clMF_min_evolve;
+
+  /*! Cluster mass function maximum (Msun) */
+  float clMF_max;
+
+  /*! Cluster mass function power-law index */
+  float clMF_slope;
 
   /* ----- Cluster formation efficiency parameters ------ */
 
@@ -392,10 +404,6 @@ struct stars_props {
   /*! Conversion factor from internal time unit to s */
   double time_to_cgs;
 
-<<<<<<< HEAD
-=======
-  /* TODO not sure if needed? */
->>>>>>> Correct sound speed. Implemented a local SFE_GMC. Cleaned up code
   /*! Conversion factor from internal mass unit to solar mass */
   double mass_to_solar_mass;
 

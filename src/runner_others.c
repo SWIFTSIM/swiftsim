@@ -370,6 +370,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   hydro_props, us, cooling, !spawn_spart);
 
 #ifdef STARS_MOSAICS
+              /*TODO we haven't accounted for timing here */
+
               /* Gather the extra info we need for star clusters */
               stars_mosaics_copy_extra_properties(p, xp, sp, cosmo, phys_const,
                   hydro_props, us, cooling);

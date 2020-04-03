@@ -393,6 +393,14 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* MOSAICS parameters ----------------------------------------------------- */
 
+  /* Use the subgrid turbulent velocity dispersion for CFE */
+  sp->subgrid_gas_vel_disp = 
+      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
+
+  /* Use a power-law mass function (default Schechter) */
+  sp->power_law_clMF =
+      parser_get_opt_param_int(params, "Stars:power_law_clMF", 0);
+
   /* King parameter */
   sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
 
