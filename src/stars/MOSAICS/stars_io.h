@@ -374,7 +374,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
 
   /* Integrated star formation efficiency in collapse of GMC (for Mcstar) */
-  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", -1.0);
+  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", 0.1);
 
   /* Sound speed of cold ISM (m/s) */
   sp->Fixedcs = parser_get_opt_param_float(params, "Stars:Fixedcs", -1.0);
