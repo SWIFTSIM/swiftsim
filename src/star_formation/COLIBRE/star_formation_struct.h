@@ -35,7 +35,7 @@ struct star_formation_xpart_data {
 
 struct star_formation_part_data {
 
-  /*! Velocity dispersion */
+  /*! Velocity dispersion squared in physical units */
   float sigma_v2;
 };
 

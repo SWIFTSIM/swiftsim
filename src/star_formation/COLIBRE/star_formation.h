@@ -138,11 +138,18 @@ INLINE static int star_formation_is_star_forming(
   /* Get the gas mass */
   const double gas_mass = hydro_get_mass(p);
 
+  /* Get the gas_mass to the power 2/3 */
+  const double gas_mass_to_1_3th = cbrt(gas_mass);
+  const double gas_mass_to_2_3th = gas_mass_to_1_3th * gas_mass_to_1_3th;
+
+  /* Get the subgrid density to the power 1/3 */
+  const double subgrid_density_to_1_3th = cbrt(subgrid_density);
+
   /* Check if we satisfy the subgrid virial criteria */
   const double alpha =
       starform->virial_const *
       (p->sf_data.sigma_v2 / 3. + sound_speed2_subgrid) /
-      (pow(subgrid_density, 1.f / 3.f) * pow(gas_mass, 2.f / 3.f));
+      (subgrid_density_to_1_3th * gas_mass_to_2_3th);
 
   /* Check if the virial critiria is below one */
   return (alpha < 1.f);
@@ -376,8 +383,8 @@ INLINE static void starformation_init_backend(
                               number_density_from_cgs * hydro_props->mu_neutral;
 
   /* Store a variable for the virial criteria */
-  const double virial_numb = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:virial_coefficient", 8. * M_PI);
+  const double virial_numb = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:virial_coefficient");
 
   starform->virial_const = 1. / (virial_numb * phys_const->const_newton_G);
 
@@ -451,7 +458,7 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
                                       const struct star_formation* cd,
                                       const struct cosmology* cosmo) {
 
-  p->sf_data.sigma_v2 = 1e10;
+  p->sf_data.sigma_v2 = FLT_MAX;
 }
 
 /**
