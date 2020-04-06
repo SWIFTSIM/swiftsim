@@ -69,7 +69,7 @@ struct star_formation {
   /*! Virial constant used in the calculation */
   double virial_const;
 
-  /*! Store the maximal subgrid density*/
+  /*! subgrid density threshold in internal units */
   double maximal_subgrid_density;
 };
 
@@ -88,13 +88,11 @@ struct star_formation {
  *
  */
 INLINE static int star_formation_is_star_forming(
-    const struct part* restrict p, const struct xpart* restrict xp,
+    const struct part* p, const struct xpart* xp,
     const struct star_formation* starform, const struct phys_const* phys_const,
-    const struct cosmology* cosmo,
-    const struct hydro_props* restrict hydro_props,
-    const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
-    const struct entropy_floor_properties* restrict entropy_props) {
+    const struct cosmology* cosmo, const struct hydro_props* hydro_props,
+    const struct unit_system* us, const struct cooling_function_data* cooling,
+    const struct entropy_floor_properties* entropy_props) {
 
   /* Physical density of the particle */
   const double physical_density = hydro_get_physical_density(p, cosmo);
@@ -160,7 +158,7 @@ INLINE static int star_formation_is_star_forming(
  * @param dt_star The time-step of this particle.
  */
 INLINE static void star_formation_compute_SFR(
-    const struct part* restrict p, struct xpart* restrict xp,
+    const struct part* p, struct xpart* xp,
     const struct star_formation* starform, const struct phys_const* phys_const,
     const struct hydro_props* hydro_props, const struct cosmology* cosmo,
     const double dt_star) {
@@ -276,10 +274,8 @@ INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
     const struct cosmology* cosmo, const int with_cosmology,
-    const struct phys_const* phys_const,
-    const struct hydro_props* restrict hydro_props,
-    const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
+    const struct phys_const* phys_const, const struct hydro_props* hydro_props,
+    const struct unit_system* us, const struct cooling_function_data* cooling,
     const int convert_part) {
 
   /* Store the current mass */
@@ -463,8 +459,7 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
                                const struct unit_system* restrict us,
                                const struct cosmology* restrict cosmo,
                                const struct star_formation* data,
-                               const struct part* restrict p,
-                               struct xpart* restrict xp) {}
+                               const struct part* p, struct xpart* xp) {}
 
 /**
  * @brief Sets the star_formation properties of the (x-)particles to a valid
@@ -477,7 +472,7 @@ star_formation_first_init_part(const struct phys_const* restrict phys_const,
  * @param data The global star_formation information.
  */
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
-    struct part* restrict p, const struct star_formation* data) {
+    struct part* p, const struct star_formation* data) {
 
   /* Set the first velocity to zero */
   p->sf_data.sigma_v2 = 0.f;
