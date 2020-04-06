@@ -310,26 +310,26 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
      * Note that the cell (and hence the bparts) may be local or foreign. */
     const size_t nr_cell_bparts = c->black_holes.count;
     for (size_t k = 0; k < nr_cell_bparts; k++) {
-	
+
       /* Get a handle on the part. */
       struct bpart *const cell_bp = &cell_bparts[k];
-      
+
       /* Ignore inhibited particles (they have already been removed!) */
       if (bpart_is_inhibited(cell_bp, e)) continue;
-      
+
       /* Get the ID of the black holes that will swallow this bpart */
       const long long swallow_id =
-	black_holes_get_bpart_swallow_id(&cell_bp->merger_data);
-      
+          black_holes_get_bpart_swallow_id(&cell_bp->merger_data);
+
       /* message("OO id=%lld swallow_id = %lld", cell_bp->id, */
       /* 	      swallow_id); */
-      
+
       /* Has this particle been flagged for swallowing? */
       if (swallow_id >= 0) {
-	
+
 #ifdef SWIFT_DEBUG_CHECKS
-	if (cell_bp->ti_drift != e->ti_current)
-	  error("Trying to swallow an un-drifted particle.");
+        if (cell_bp->ti_drift != e->ti_current)
+          error("Trying to swallow an un-drifted particle.");
 #endif
 
         /* ID of the BH swallowing this particle */
@@ -437,7 +437,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
       } /* Part was flagged for swallowing */
     }   /* Loop over the parts */
-  } /* Cell is not split */
+  }     /* Cell is not split */
 }
 
 /**

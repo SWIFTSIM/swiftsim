@@ -169,7 +169,7 @@ __attribute__((always_inline)) INLINE static void drift_spart(
  */
 __attribute__((always_inline)) INLINE static void drift_bpart(
     struct bpart *restrict bp, double dt_drift, integertime_t ti_old,
-    integertime_t ti_current, const struct black_holes_props* props) {
+    integertime_t ti_current, const struct black_holes_props *props) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (bp->ti_drift != ti_old)

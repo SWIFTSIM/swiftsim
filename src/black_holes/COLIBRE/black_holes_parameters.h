@@ -26,7 +26,7 @@
  * @file EAGLE/black_holes_parameters.h
  * @brief Parameters of the EAGLE black holes
  *        model that need to be defined at compile time.
- * 
+ *
  * @note In this branch, these properties are not used anywhere!
  */
 
@@ -39,4 +39,3 @@
 #define const_max_repositioning_distance_ratio 3.f
 
 #endif /* SWIFT_COLIBRE_BLACK_HOLES_PARAMETERS_H */
-

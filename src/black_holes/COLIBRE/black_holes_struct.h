@@ -132,4 +132,3 @@ black_holes_get_bpart_swallow_id(struct black_holes_bpart_data* p_data) {
 }
 
 #endif /* SWIFT_BLACK_HOLES_STRUCT_COLIBRE_H */
-

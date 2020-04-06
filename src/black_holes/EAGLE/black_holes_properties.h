@@ -80,7 +80,6 @@ struct black_holes_props {
   /*! Calculate Bondi accretion rate for individual neighbours? */
   int multi_phase_bondi;
 
-  
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -101,7 +100,6 @@ struct black_holes_props {
   /*! Repositioning velocity scaling with black hole mass */
   float reposition_exponent_xi;
 
-  
   /* ---- Properties of the merger model ---------- */
 
   /*! Mass ratio above which a merger is considered 'minor' */
@@ -116,7 +114,6 @@ struct black_holes_props {
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
 
-  
   /* ---- Common conversion factors --------------- */
 
   /*! Conversion factor from temperature to internal energy */
@@ -193,8 +190,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->epsilon_f =
       parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
   bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
-  bp->multi_phase_bondi = parser_get_param_int(params,
-      "EAGLEAGN:multi_phase_bondi");
+  bp->multi_phase_bondi =
+      parser_get_param_int(params, "EAGLEAGN:multi_phase_bondi");
 
   /* Feedback parameters ---------------------------------- */
 
@@ -218,24 +215,22 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->max_reposition_velocity_ratio =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_velocity_ratio");
 
-  bp->min_reposition_velocity_threshold =
-      parser_get_param_float(params,
-			   "EAGLEAGN:min_reposition_velocity_threshold");
+  bp->min_reposition_velocity_threshold = parser_get_param_float(
+      params, "EAGLEAGN:min_reposition_velocity_threshold");
   /* Convert from km/s to internal units */
   bp->min_reposition_velocity_threshold *=
-      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
+      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
 
   bp->reposition_coefficient_upsilon =
       parser_get_param_float(params, "EAGLEAGN:reposition_coefficient_upsilon");
 
   /* Convert from km/s to internal units */
   bp->reposition_coefficient_upsilon *=
-     (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
-  
+      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+
   bp->reposition_exponent_xi =
       parser_get_param_float(params, "EAGLEAGN:reposition_exponent_xi");
 
-  
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -250,7 +245,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:merger_max_distance_ratio");
 
-  
   /* Common conversion factors ----------------------------- */
 
   /* Calculate temperature to internal energy conversion factor (all internal

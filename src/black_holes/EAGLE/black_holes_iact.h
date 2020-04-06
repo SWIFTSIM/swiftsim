@@ -51,8 +51,7 @@ runner_iact_nonsym_bh_gas_density(
     struct bpart *bi, const struct part *pj, const struct xpart *xpj,
     const int with_cosmology, const struct cosmology *cosmo,
     const struct gravity_props *grav_props,
-    const struct black_holes_props *bh_props,
-    const integertime_t ti_current,
+    const struct black_holes_props *bh_props, const integertime_t ti_current,
     const double time) {
 
   float wi, wi_dx;
@@ -104,25 +103,24 @@ runner_iact_nonsym_bh_gas_density(
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate
-     *  
-     * i) Peculiar speed of gas particle relative to BH                                               
+     *
+     * i) Peculiar speed of gas particle relative to BH
      *    [NB: don't need Hubble term, velocity is at BH location]
      */
     const double bh_v_peculiar[3] = {bi->v[0] * cosmo->a_inv,
                                      bi->v[1] * cosmo->a_inv,
                                      bi->v[2] * cosmo->a_inv};
 
-    const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv,
-                                      vj[1] * cosmo->a_inv,
-                                      vj[2] * cosmo->a_inv};
+    const double gas_v_peculiar[3] = {
+        vj[0] * cosmo->a_inv, vj[1] * cosmo->a_inv, vj[2] * cosmo->a_inv};
 
     const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
                                        gas_v_peculiar[1] - bh_v_peculiar[1],
                                        gas_v_peculiar[2] - bh_v_peculiar[2]};
 
-    const double v_diff_norm2 =  v_diff_peculiar[0] * v_diff_peculiar[0] +
-                                 v_diff_peculiar[1] * v_diff_peculiar[1] +
-                                 v_diff_peculiar[2] * v_diff_peculiar[2];
+    const double v_diff_norm2 = v_diff_peculiar[0] * v_diff_peculiar[0] +
+                                v_diff_peculiar[1] * v_diff_peculiar[1] +
+                                v_diff_peculiar[2] * v_diff_peculiar[2];
 
     /* ii) Calculate denominator in Bondi formula */
     const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
@@ -131,18 +129,17 @@ runner_iact_nonsym_bh_gas_density(
 
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-        error("Invalid denominator for gas particle %lld",
-              pj->id);
+      error("Invalid denominator for gas particle %lld", pj->id);
 
     double denominator_inv = 1. / sqrt(denominator2);
 
-    /* iii) Contribution of gas particle to the BH accretion rate *                                   
-     *      (without constant pre-factor)                                                             
-     *      [NB: rhoj is weighted contribution to BH gas density]                                     
+    /* iii) Contribution of gas particle to the BH accretion rate *
+     *      (without constant pre-factor)
+     *      [NB: rhoj is weighted contribution to BH gas density]
      */
     const float rhoj = mj * wi * cosmo->a3_inv;
-    bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
-                           denominator_inv);
+    bi->accretion_rate +=
+        (rhoj * denominator_inv * denominator_inv * denominator_inv);
   } /* End of accretion contribution calculation */
 
 #ifdef DEBUG_INTERACTIONS_BH
@@ -181,8 +178,8 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
                                   const struct cosmology *cosmo,
                                   const struct gravity_props *grav_props,
                                   const struct black_holes_props *bh_props,
-				  const integertime_t ti_current,
-				  const double time) {
+                                  const integertime_t ti_current,
+                                  const double time) {
 
   float wi;
 
@@ -197,14 +194,13 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   kernel_eval(ui, &wi);
 
   /* Start by checking the repositioning criteria */
-    
+
   /* (Square of) Max repositioning distance allowed based on the softening */
   const float max_dist_repos2 =
       kernel_gravity_softening_plummer_equivalent_inv *
       kernel_gravity_softening_plummer_equivalent_inv *
       bh_props->max_reposition_distance_ratio *
-      bh_props->max_reposition_distance_ratio *
-      grav_props->epsilon_baryon_cur *
+      bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
   /* This gas neighbour is close enough that we can consider its potential
@@ -219,16 +215,15 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
       /* Compute relative peculiar velocity between the two BHs
        * Recall that in SWIFT v is (v_pec * a) */
       const float delta_v[3] = {bi->v[0] - pj->v[0], bi->v[1] - pj->v[1],
-				bi->v[2] - pj->v[2]};
+                                bi->v[2] - pj->v[2]};
       const float v2 = delta_v[0] * delta_v[0] + delta_v[1] * delta_v[1] +
                        delta_v[2] * delta_v[2];
-      
+
       const float v2_pec = v2 * cosmo->a2_inv;
       const float v2_max = bh_props->max_reposition_velocity_ratio *
-	                   bh_props->max_reposition_velocity_ratio *
+                           bh_props->max_reposition_velocity_ratio *
                            bi->sound_speed_gas * bi->sound_speed_gas;
-      if (v2_pec >= v2_max)
-	neighbour_is_slow_enough = 0;
+      if (v2_pec >= v2_max) neighbour_is_slow_enough = 0;
     }
 
     if (neighbour_is_slow_enough) {
@@ -236,12 +231,12 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
-      
-	/* Store this as our new best */
-	bi->reposition.min_potential = potential;
-	bi->reposition.delta_x[0] = -dx[0];
-	bi->reposition.delta_x[1] = -dx[1];
-	bi->reposition.delta_x[2] = -dx[2];
+
+        /* Store this as our new best */
+        bi->reposition.min_potential = potential;
+        bi->reposition.delta_x[0] = -dx[0];
+        bi->reposition.delta_x[1] = -dx[1];
+        bi->reposition.delta_x[2] = -dx[2];
       }
     }
   }
@@ -304,7 +299,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
                                  struct bpart *bi, struct bpart *bj,
                                  const struct cosmology *cosmo,
                                  const struct gravity_props *grav_props,
-				 const struct black_holes_props *bh_props,
+                                 const struct black_holes_props *bh_props,
                                  const integertime_t ti_current) {
 
   /* Compute relative peculiar velocity between the two BHs
@@ -321,8 +316,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       kernel_gravity_softening_plummer_equivalent_inv *
       kernel_gravity_softening_plummer_equivalent_inv *
       bh_props->max_reposition_distance_ratio *
-      bh_props->max_reposition_distance_ratio *
-      grav_props->epsilon_baryon_cur *
+      bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
   /* This gas neighbour is close enough that we can consider its potential
@@ -335,10 +329,9 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     if (bh_props->max_reposition_velocity_ratio > 0) {
 
       const float v2_max = bh_props->max_reposition_velocity_ratio *
-	                   bh_props->max_reposition_velocity_ratio *
+                           bh_props->max_reposition_velocity_ratio *
                            bi->sound_speed_gas * bi->sound_speed_gas;
-      if (v2_pec >= v2_max)
-	neighbour_is_slow_enough = 0;
+      if (v2_pec >= v2_max) neighbour_is_slow_enough = 0;
     }
 
     if (neighbour_is_slow_enough) {
@@ -347,12 +340,12 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
 
       /* Is the potential lower? */
       if (potential < bi->reposition.min_potential) {
-	
-	/* Store this as our new best */
-	bi->reposition.min_potential = potential;
-	bi->reposition.delta_x[0] = -dx[0];
-	bi->reposition.delta_x[1] = -dx[1];
-	bi->reposition.delta_x[2] = -dx[2];
+
+        /* Store this as our new best */
+        bi->reposition.min_potential = potential;
+        bi->reposition.delta_x[0] = -dx[0];
+        bi->reposition.delta_x[1] = -dx[1];
+        bi->reposition.delta_x[2] = -dx[2];
       }
     }
   }
@@ -370,8 +363,8 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       kernel_gravity_softening_plummer_equivalent_inv *
       kernel_gravity_softening_plummer_equivalent_inv *
       bh_props->max_merging_distance_ratio *
-      bh_props->max_merging_distance_ratio *
-      grav_props->epsilon_baryon_cur * grav_props->epsilon_baryon_cur;
+      bh_props->max_merging_distance_ratio * grav_props->epsilon_baryon_cur *
+      grav_props->epsilon_baryon_cur;
 
   const float G_Newton = grav_props->G_Newton;
 
@@ -401,17 +394,17 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       const float r_12 = sqrt(r2);
 
       if ((bh_props->merger_threshold_type == 1) &&
-	  (r_12 < grav_props->epsilon_baryon_cur)) {
+          (r_12 < grav_props->epsilon_baryon_cur)) {
 
-	/* If BHs are within softening range, take this into account */
-	float w_grav;
-	kernel_grav_pot_eval(r_12/grav_props->epsilon_baryon_cur, &w_grav);
-	const float r_mod = w_grav / grav_props->epsilon_baryon_cur;
-	v2_threshold = 2 * G_Newton * M / (r_mod);
+        /* If BHs are within softening range, take this into account */
+        float w_grav;
+        kernel_grav_pot_eval(r_12 / grav_props->epsilon_baryon_cur, &w_grav);
+        const float r_mod = w_grav / grav_props->epsilon_baryon_cur;
+        v2_threshold = 2 * G_Newton * M / (r_mod);
 
       } else {
-	/* Standard formula if BH interactions are not softened */
-	v2_threshold = 2 * G_Newton * M / (r_12);
+        /* Standard formula if BH interactions are not softened */
+        v2_threshold = 2 * G_Newton * M / (r_12);
       }
     }
 
@@ -464,8 +457,8 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
                                    const struct cosmology *cosmo,
                                    const struct gravity_props *grav_props,
                                    const struct black_holes_props *bh_props,
-				   const integertime_t ti_current,
-				   const double time) {
+                                   const integertime_t ti_current,
+                                   const double time) {
 
   /* Get the heating probability */
   const float prob = bi->to_distribute.AGN_heating_probability;

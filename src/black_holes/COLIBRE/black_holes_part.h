@@ -202,4 +202,3 @@ struct bpart {
 } SWIFT_STRUCT_ALIGN;
 
 #endif /* SWIFT_COLIBRE_BLACK_HOLE_PART_H */
-

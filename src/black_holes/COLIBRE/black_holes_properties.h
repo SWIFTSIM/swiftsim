@@ -75,7 +75,6 @@ struct black_holes_props {
   /*! Calculate Bondi accretion rate for individual neighbours? */
   int multi_phase_bondi;
 
-
   /* ---- Properties of the feedback model ------- */
 
   /*! Temperature increase induced by AGN feedback (Kelvin) */
@@ -83,7 +82,6 @@ struct black_holes_props {
 
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
-
 
   /* ---- Properties of the repositioning model --- */
 
@@ -105,7 +103,6 @@ struct black_holes_props {
   /*! Repositioning velocity scaling with black hole mass */
   float reposition_exponent_xi;
 
-
   /* ---- Properties of the merger model ---------- */
 
   /*! Mass ratio above which a merger is considered 'minor' */
@@ -119,7 +116,6 @@ struct black_holes_props {
 
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
-
 
   /* ---- Common conversion factors --------------- */
 
@@ -198,11 +194,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->epsilon_f =
       parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
   bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
-  bp->subgrid_bondi = parser_get_param_int(params,
-      "COLIBREAGN:subgrid_bondi");
-  bp->multi_phase_bondi = parser_get_param_int(params,
-      "COLIBREAGN:multi_phase_bondi");
-
+  bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
+  bp->multi_phase_bondi =
+      parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
 
   /* Feedback parameters ---------------------------------- */
 
@@ -219,32 +213,28 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->max_reposition_mass *= phys_const->const_solar_mass;
 
-  bp->max_reposition_distance_ratio =
-      parser_get_param_float(params,
-			     "COLIBREAGN:max_reposition_distance_ratio");
+  bp->max_reposition_distance_ratio = parser_get_param_float(
+      params, "COLIBREAGN:max_reposition_distance_ratio");
 
-  bp->max_reposition_velocity_ratio =
-      parser_get_param_float(params,
-			     "COLIBREAGN:max_reposition_velocity_ratio");
+  bp->max_reposition_velocity_ratio = parser_get_param_float(
+      params, "COLIBREAGN:max_reposition_velocity_ratio");
 
-  bp->min_reposition_velocity_threshold =
-      parser_get_param_float(params,
-			   "COLIBREAGN:min_reposition_velocity_threshold");
+  bp->min_reposition_velocity_threshold = parser_get_param_float(
+      params, "COLIBREAGN:min_reposition_velocity_threshold");
   /* Convert from km/s to internal units */
   bp->min_reposition_velocity_threshold *=
-      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
+      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
 
-  bp->reposition_coefficient_upsilon =
-      parser_get_param_float(params, "COLIBREAGN:reposition_coefficient_upsilon");
+  bp->reposition_coefficient_upsilon = parser_get_param_float(
+      params, "COLIBREAGN:reposition_coefficient_upsilon");
 
   /* Convert from km/s to internal units */
   bp->reposition_coefficient_upsilon *=
-     (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs)); 
-  
+      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+
   bp->reposition_exponent_xi =
       parser_get_param_float(params, "COLIBREAGN:reposition_exponent_xi");
 
-  
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -259,7 +249,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "COLIBREAGN:merger_max_distance_ratio");
 
-  
   /* Common conversion factors ----------------------------- */
 
   /* Calculate temperature to internal energy conversion factor (all internal
@@ -297,4 +286,3 @@ INLINE static void black_holes_struct_restore(
 }
 
 #endif /* SWIFT_COLIBRE_BLACK_HOLES_PROPERTIES_H */
-

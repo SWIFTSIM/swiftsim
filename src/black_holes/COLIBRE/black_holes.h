@@ -105,7 +105,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.delta_x[2] = -FLT_MAX;
   bp->reposition.min_potential = FLT_MAX;
   bp->reposition.potential = FLT_MAX;
-  bp->accretion_rate = 0.f;  /* Accumulated ngb-by-ngb */
+  bp->accretion_rate = 0.f; /* Accumulated ngb-by-ngb */
 }
 
 /**
@@ -434,20 +434,21 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
      * the accretion_rate is still zero (was initialised to this) */
     const float hi_inv = 1.f / bp->h;
-    const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */;
-    Bondi_rate =
-      bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
+    const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
+    ;
+    Bondi_rate = bp->accretion_rate *
+                 (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {
 
-  /* Convert the quantities we gathered to physical frame (all internal units)
-   * Note: for the velocities this means peculiar velocities */
+    /* Convert the quantities we gathered to physical frame (all internal units)
+     * Note: for the velocities this means peculiar velocities */
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
     const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-				      bp->velocity_gas[1] * cosmo->a_inv,
-				      bp->velocity_gas[2] * cosmo->a_inv};
+                                      bp->velocity_gas[1] * cosmo->a_inv,
+                                      bp->velocity_gas[2] * cosmo->a_inv};
     const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
-				     bp->v[1] * cosmo->a_inv,
-				     bp->v[2] * cosmo->a_inv};
+                                     bp->v[1] * cosmo->a_inv,
+                                     bp->v[2] * cosmo->a_inv};
 
     /* Difference in peculiar velocity between the gas and the BH
      * Note that there is no need for a Hubble flow term here. We are
@@ -585,8 +586,8 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     /* If we are re-positioning, move the BH a fraction of delta_x, so
      * that we have a well-defined re-positioning velocity */
     const float repos_vel = props->reposition_coefficient_upsilon *
-       pow(bp->subgrid_mass / constants->const_solar_mass,
-          props->reposition_exponent_xi);
+                            pow(bp->subgrid_mass / constants->const_solar_mass,
+                                props->reposition_exponent_xi);
 
     const double dx = bp->reposition.delta_x[0];
     const double dy = bp->reposition.delta_x[1];
@@ -596,14 +597,12 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     /* Convert target reposition velocity to a fractional reposition
      * along reposition.delta_x */
     double repos_frac = repos_vel * dt / d;
-    if (repos_frac < 0)
-      repos_frac = 0.;
-    if (repos_frac > 1) 
-      repos_frac = 1.;
- 
+    if (repos_frac < 0) repos_frac = 0.;
+    if (repos_frac > 1) repos_frac = 1.;
+
     bp->reposition.delta_x[0] *= repos_frac;
     bp->reposition.delta_x[1] *= repos_frac;
-    bp->reposition.delta_x[2] *= repos_frac;    
+    bp->reposition.delta_x[2] *= repos_frac;
   }
 }
 
