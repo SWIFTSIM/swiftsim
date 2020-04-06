@@ -51,8 +51,10 @@ __attribute__((always_inline)) INLINE static double schechternorm(
   double mc = mmin;
   double norm = 0.f;
 
+  /* Constant integration step in log space */
+  const double dm = pow(mmax/mmin, 1.f/(double)nintsteps) - 1.f;
+
   /* integrate to determine norm (total number) */
-  double dm = pow(mmax/mmin, 1.0/(double)nintsteps) - 1.0;
   for (int n=0; n<nintsteps; n++) {
     /* dm */
     double dmc = mc*dm;
@@ -83,8 +85,10 @@ __attribute__((always_inline)) INLINE static double meanmass(
   double mc = mmin;
   double meanm = 0.f;
 
+  /* Constant integration step in log space */
+  const double dm = pow(mmax/mmin, 1.f/(double)nintsteps) - 1.f;
+
   /* integrate to determine norm (total number) */
-  double dm = pow(mmax/mmin, 1.f/(double)nintsteps) - 1.f;
   for (int n=0; n<nintsteps; n++) {
     /* dm */
     double dmc = mc*dm;
@@ -116,16 +120,19 @@ __attribute__((always_inline)) INLINE static double schechtergen (
   double mc = mmin;
   double mcnorm = 0.f;
 
+  /* Constant integration step in log space */
+  const double dm = pow(mmax/mmin, 1.f/(double)nintsteps)-1.f;
+
   /* integrate until we reach the random number */
   double diff = 0.f;
   double dmc = 0.f;
   while (mcnorm/norm < x) {
     /* dm */
-    dmc = mc*(pow(mmax/mmin,1./(double)nintsteps)-1.);
+    dmc = mc*dm;
 
     /* leapfrog */
     diff = pow(mc,-slope) * exp(-mc/mstar) * dmc - 
-        0.5 * (pow(mc,-slope) / mstar + slope * pow(mc,-slope- 1.)) * 
+        0.5 * (pow(mc,-slope) / mstar + slope * pow(mc,-slope-1.f)) * 
         exp(-mc/mstar) * (dmc*dmc);
 
     mcnorm += diff;
