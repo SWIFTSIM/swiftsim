@@ -468,9 +468,9 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
  * @param xp Pointer to the extended particle data.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_first_init_part(const struct phys_const* restrict phys_const,
-                               const struct unit_system* restrict us,
-                               const struct cosmology* restrict cosmo,
+star_formation_first_init_part(const struct phys_const* phys_const,
+                               const struct unit_system* us,
+                               const struct cosmology* cosmo,
                                const struct star_formation* data,
                                const struct part* p, struct xpart* xp) {}
 
