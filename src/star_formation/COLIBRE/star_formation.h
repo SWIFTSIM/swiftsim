@@ -403,7 +403,8 @@ INLINE static void starformation_print_backend(
     const struct star_formation* starform) {
 
   /* Print the star formation properties */
-  message("Star formation law is COLIBRE with only virial criteria");
+  message("Star formation law is COLIBRE");
+  message("A Schmidt law + a virial criteria");
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
       "%e maximal density = %e subgrid density criteria = %e",
