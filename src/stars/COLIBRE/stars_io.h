@@ -180,9 +180,11 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
 
-  list[14] = io_make_output_field("BirthVelocityDispersions", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS,
-                           0.f, sparts, birth_velocity_dispersion,
-                           "Velocity dispersion (3D) squared at the time of birth of the gas particles that turned into stars");
+  list[14] = io_make_output_field(
+      "BirthVelocityDispersions", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS, 0.f,
+      sparts, birth_velocity_dispersion,
+      "Velocity dispersion (3D) squared at the time of birth of the gas "
+      "particles that turned into stars");
 }
 
 /**

@@ -59,4 +59,3 @@ struct star_formation_spart_data {
 };
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */
-

@@ -65,7 +65,7 @@ struct star_formation {
   /*! Maximal physical density (internal units), particles with a higher density
    * instantaneously turn into stars */
   double maximal_density;
-  
+
   /*! Virial constant used in the calculation */
   double virial_const;
 
@@ -130,13 +130,17 @@ INLINE static int star_formation_is_star_forming(
   const double sound_speed = hydro_get_physical_soundspeed(p, cosmo);
 
   /* Get the subgrid sound speed */
-  const double sound_speed2_subgrid = sound_speed * sound_speed * subgrid_temperature / temperature; 
+  const double sound_speed2_subgrid =
+      sound_speed * sound_speed * subgrid_temperature / temperature;
 
   /* Get the gas mass */
   const double gas_mass = hydro_get_mass(p);
 
   /* Check if we satisfy the subgrid virial criteria */
-  const double alpha = starform->virial_const * (p->sf_data.sigma_v2/3. + sound_speed2_subgrid) / (pow(subgrid_density, 1.f/3.f) * pow(gas_mass, 2.f/3.f));
+  const double alpha =
+      starform->virial_const *
+      (p->sf_data.sigma_v2 / 3. + sound_speed2_subgrid) /
+      (pow(subgrid_density, 1.f / 3.f) * pow(gas_mass, 2.f / 3.f));
 
   /* Check if the virial critiria is below one */
   return (alpha < 1.f);
@@ -371,17 +375,16 @@ INLINE static void starformation_init_backend(
 
   /* Store a variable for the virial criteria */
   const double virial_numb = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:virial_coefficient",
-      8. * M_PI);
+      parameter_file, "COLIBREStarFormation:virial_coefficient", 8. * M_PI);
 
   starform->virial_const = 1. / (virial_numb * phys_const->const_newton_G);
 
   const double maximal_subgrid_density_HpCM3 = parser_get_opt_param_double(
-      parameter_file, "COLIBREStarFormation:threshold_max_subgrid_density_H_p_cm3",
-      FLT_MAX);
-  starform->maximal_subgrid_density = maximal_subgrid_density_HpCM3 *
-                                       phys_const->const_proton_mass *
-                                       number_density_from_cgs * hydro_props->mu_neutral;
+      parameter_file,
+      "COLIBREStarFormation:threshold_max_subgrid_density_H_p_cm3", FLT_MAX);
+  starform->maximal_subgrid_density =
+      maximal_subgrid_density_HpCM3 * phys_const->const_proton_mass *
+      number_density_from_cgs * hydro_props->mu_neutral;
 }
 
 /**
@@ -395,9 +398,9 @@ INLINE static void starformation_print_backend(
   /* Print the star formation properties */
   message("Star formation law is COLIBRE with only virial criteria");
   message(
-      "With properties: Star formation efficiency = %e minimum over density = %e maximal density = %e",
-      starform->sfe, starform->min_over_den,
-      starform->maximal_density_HpCM3);
+      "With properties: Star formation efficiency = %e minimum over density = "
+      "%e maximal density = %e",
+      starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3);
 }
 
 /**
@@ -415,12 +418,11 @@ __attribute__((always_inline)) INLINE static void star_formation_end_density(
     const struct cosmology* cosmo) {
 
   /* Calculate some things before hand */
-  const float rho_inv = 1.f/p->rho;
+  const float rho_inv = 1.f / p->rho;
   const float h_inv = 1.f / p->h;
   const float h_inv2 = h_inv * h_inv;
 
   p->sf_data.sigma_v2 *= rho_inv * h_inv * h_inv2 * cosmo->a2_inv;
-
 }
 
 /**
@@ -441,7 +443,6 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
                                       const struct cosmology* cosmo) {
 
   p->sf_data.sigma_v2 = 1e10;
-
 }
 
 /**
@@ -480,7 +481,6 @@ __attribute__((always_inline)) INLINE static void star_formation_init_part(
 
   /* Set the first velocity to zero */
   p->sf_data.sigma_v2 = 0.f;
-
 }
 
 /**
@@ -528,4 +528,3 @@ star_formation_first_init_stats(struct star_formation* star_form,
                                 const struct engine* e) {}
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_H */
-
