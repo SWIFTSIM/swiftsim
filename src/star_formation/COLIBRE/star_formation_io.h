@@ -45,7 +45,7 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
       "If zero, the particle was never star-forming.");
 
   list[1] = io_make_output_field(
-      "VelocityDispersions", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS, 0.f,
+      "VelocityDispersions", FLOAT, 1, UNIT_CONV_VELOCITY_SQUARED, 0.f,
       parts, sf_data.sigma_v2, "Velocity dispersion (3D) squared");
 
   return 2;
