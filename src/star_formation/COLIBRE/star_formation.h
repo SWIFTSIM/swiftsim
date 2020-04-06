@@ -66,11 +66,14 @@ struct star_formation {
    * instantaneously turn into stars */
   double maximal_density;
 
-  /*! Virial constant used in the calculation */
+  /*! Virial constant used in the calculation (no units)*/
   double virial_const;
 
+  /*! subgrid density threshold in user units */
+  double subgrid_density_threshold_HpCM3;
+
   /*! subgrid density threshold in internal units */
-  double maximal_subgrid_density;
+  double subgrid_density_threshold;
 };
 
 /**
@@ -112,14 +115,15 @@ INLINE static int star_formation_is_star_forming(
    * temperature is appropriate */
   if (physical_density < rho_crit_times_min_over_den) return 0;
 
-  /* Calculate the temperature */
-  const double temperature = cooling_get_temperature(phys_const, hydro_props,
-                                                     us, cosmo, cooling, p, xp);
-
   /* Get the subgrid density */
   const double subgrid_density = xp->tracers_data.subgrid_dens;
 
-  if (subgrid_density > starform->maximal_subgrid_density) return 1;
+  /* Check if the subgrid density criteria is satisfied */
+  if (subgrid_density > starform->subgrid_density_threshold) return 1;
+
+  /* Calculate the temperature */
+  const double temperature = cooling_get_temperature(phys_const, hydro_props,
+                                                     us, cosmo, cooling, p, xp);
 
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
@@ -154,6 +158,7 @@ INLINE static int star_formation_is_star_forming(
  * @param xp the #xpart.
  * @param starform the star formation law properties to use
  * @param phys_const the physical constants in internal units.
+ * @param hydro_props The properties of the hydro scheme.
  * @param cosmo the cosmological parameters and properties.
  * @param dt_star The time-step of this particle.
  */
@@ -269,6 +274,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param starform the star formation law properties to use.
  * @param cosmo the cosmological parameters and properties.
  * @param with_cosmology if we run with cosmology.
+ * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
@@ -316,7 +322,7 @@ INLINE static void star_formation_copy_properties(
   /* Flag that this particle has not done feedback yet */
   sp->SNII_f_E = -1.f;
 
-  /*  And also no enrichment */
+  /* And also no enrichment */
   sp->last_enrichment_time = sp->birth_time;
   sp->count_since_last_enrichment = -1;
 
@@ -375,11 +381,15 @@ INLINE static void starformation_init_backend(
 
   starform->virial_const = 1. / (virial_numb * phys_const->const_newton_G);
 
-  const double maximal_subgrid_density_HpCM3 = parser_get_opt_param_double(
-      parameter_file,
-      "COLIBREStarFormation:threshold_max_subgrid_density_H_p_cm3", FLT_MAX);
-  starform->maximal_subgrid_density =
-      maximal_subgrid_density_HpCM3 * phys_const->const_proton_mass *
+  /* Get the subgrid density threshold */
+  starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
+      parameter_file, "COLIBREStarFormation:subgrid_density_threshold_H_p_CM3",
+      FLT_MAX);
+
+  /* Calculate the subgrid density threshold using primordial gas mean molecular
+   * weights assuming neutral gas */
+  starform->subgrid_density_threshold =
+      starform->subgrid_density_threshold_HpCM3 * phys_const->const_proton_mass *
       number_density_from_cgs * hydro_props->mu_neutral;
 }
 
@@ -410,7 +420,7 @@ INLINE static void starformation_print_backend(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
-    struct part* restrict p, struct xpart* xp, const struct star_formation* cd,
+    struct part* p, struct xpart* xp, const struct star_formation* cd,
     const struct cosmology* cosmo) {
 
   /* Calculate some things before hand */
