@@ -443,6 +443,16 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* Sound speed of cold ISM (m/s) */
   sp->Fixedcs = parser_get_opt_param_float(params, "Stars:fixed_sound_speed", -1.0);
 
+  /* Value of fixed cluster formation efficiency */
+  sp->FixedCFE = parser_get_opt_param_float(params, "Stars:FixedCFE", -1.0);
+
+  /* Use the subgrid turbulent velocity dispersion for CFE */
+  sp->subgrid_gas_vel_disp = 
+      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
+
+  /* Sound speed of cold ISM (m/s) */
+  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:FixedSoundSpeed", -1.0);
+
   /* star formation law. 0: Elmegreen 02; 1: Krumholz & McKee 05 */
   sp->sflaw = parser_get_opt_param_int(params, "Stars:CFE_sflaw", 0);
 

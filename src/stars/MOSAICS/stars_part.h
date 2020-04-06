@@ -352,23 +352,6 @@ struct stars_props {
   /*! Sound speed of cold ISM (m/s) */
   float Fixedcs;
 
-  /*! Use a power-law mass function (default Schechter)  */
-  int power_law_clMF ;
-
-  /*! Cluster mass function minimum (Msun) */
-  float clMF_min;
-
-  /*! Initial lowest cluster mass to evolve (Msun) */
-  float clMF_min_evolve;
-
-  /*! Cluster mass function maximum (Msun) */
-  float clMF_max;
-
-  /*! Cluster mass function power-law index */
-  float clMF_slope;
-
-  /* ----- Cluster formation efficiency parameters ------ */
-
   /*! star formation law */
   int sflaw;
 
