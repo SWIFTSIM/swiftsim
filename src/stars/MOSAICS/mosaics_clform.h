@@ -287,14 +287,21 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     csloc = sp->sound_speed_subgrid * props->velocity_to_ms;
   }
 
-  /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
-  sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
+  if (props->FixedCFE > 0) {
+    /* Use a fixed value */
+    sp->CFE = props->FixedCFE;
+  } else {
+    /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
+    sp->CFE = f_cfelocal(rholoc, sigmaloc, csloc, props);
+  }
 
   /* Get feedback timescale while we're here and convert to internal units */
   double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
   tfb /= props->time_to_cgs;
 
   /* -------- Get Mcstar -------- */
+
+  /*TODO this is all unneccessary if we have a power law ICMF */
 
   /* Gas surface density (Krumholz & McKee 2005) */
   double phi_P = 1.f;
@@ -386,20 +393,36 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* ----- Set up the star cluster population for this particle ----- */
 
+  /* TODO Where's the best place to initialise everything? */
+  sp->initial_num_clusters = 0;
+  sp->initial_num_clusters_evo = 0;
+  sp->num_clusters = 0;
+  sp->initial_cluster_mass_total = 0.f;
+  sp->initial_cluster_mass_evo = 0.f;
+  sp->cluster_mass_total = 0.f;
+  for (int i = 0; i < MOSAICS_MAX_CLUSTERS; i++) {
+    sp->clusters.id[i] = -1;
+    sp->clusters.mass[i] = 0.f;
+    sp->clusters.initial_mass[i] = 0.f;
+    sp->clusters.dmevap[i] = 0.f;
+    sp->clusters.dmshock[i] = 0.f;
+  }
+
   /* Cluster and field masses if we were conserving mass within particles */
   const double part_clust_mass = sp->mass_init * sp->CFE;
   sp->field_mass = sp->mass_init - part_clust_mass;
 
-  /* Determine mean cluster mass by integrating mass function
-   * Which mass function are we using? */
-  double mean_mass=0.f, norm=0.f;
+  /* Determine mean cluster mass by integrating mass function,
+   * along with the integral normalisation */
+  double mean_mass = 0.f;
+  double norm = 0.f;
   if (props->power_law_clMF) {
     /* Treat some special cases first */
-    if (props->clMF_slope==1) {
+    if (props->clMF_slope == 1) {
       norm = log(props->clMF_max)-log(props->clMF_min);
       mean_mass = props->clMF_max - props->clMF_min;
 
-    } else if (props->clMF_slope==2) {
+    } else if (props->clMF_slope == 2) {
       norm = 1./props->clMF_min - 1./props->clMF_max;
       mean_mass = log(props->clMF_max)-log(props->clMF_min);
 
@@ -415,41 +438,31 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   } else {
     /* Schechter cluster mass function */
-    norm = schechternorm(props->clMF_min, props->clMF_max, props->clMF_slope, 
-        sp->Mcstar);
 
-    if (norm == 0.) {
-      mean_mass = 0.f;
-    } else {
+    /* If Mcstar < clMFmin we have undefined behaviour and just form all
+     * clusters at M=clMFmin */
+    if (sp->Mcstar > props->clMF_min) {
+      /* Get the normalisation of the integral */
+      norm = schechternorm(props->clMF_min, props->clMF_max, props->clMF_slope,
+          sp->Mcstar);
+    }
+
+    if (norm > 0) {
       mean_mass = meanmass(props->clMF_min, props->clMF_max, props->clMF_slope, 
           sp->Mcstar, norm);
     }
   }
 
   /* Number of clusters to try and form */
-  sp->initial_num_clusters = 0;
   if (mean_mass > 0) {
     /* Draw from Poisson distribution, so we can be resolution independent */
     sp->initial_num_clusters = poidev( (int)round(part_clust_mass/mean_mass),
         random_generator);
   }
 
-  /* TODO Where's the best place to initialise everything? */
-  sp->initial_cluster_mass_total = 0.f;
-  sp->initial_cluster_mass_evo = 0.f;
-  sp->num_clusters = 0;
-  sp->initial_num_clusters_evo = 0;
-  for (int i=0; i < MOSAICS_MAX_CLUSTERS; i++) {
-    sp->clusters.id[i] = -1;
-    sp->clusters.mass[i] = 0.f;
-    sp->clusters.initial_mass[i] = 0.f;
-    sp->clusters.dmevap[i] = 0.f;
-    sp->clusters.dmshock[i] = 0.f;
-  }
-
   /* draw cluster masses from mass function */
-  int iMax = 0;
-  for (int i=0; i < sp->initial_num_clusters; i++) {
+  int iArr = 0;
+  for (int i = 0; i < sp->initial_num_clusters; i++) {
     /* Form a cluster */
     double mTry;
     if (props->power_law_clMF) {
@@ -479,15 +492,25 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     sp->initial_cluster_mass_evo += mTry;
 
     /* Check if we've run out of space... */
-    if (iMax < MOSAICS_MAX_CLUSTERS) {
-      sp->clusters.id[iMax] = iMax;
-      sp->clusters.mass[iMax] = mTry;
-      sp->clusters.initial_mass[iMax] = mTry;
+    if (iArr < MOSAICS_MAX_CLUSTERS) {
+      sp->clusters.id[iArr] = iArr;
+      sp->clusters.mass[iArr] = mTry;
+      sp->clusters.initial_mass[iArr] = mTry;
+
+    } else {
+      /* Ran out of space... just add to field */
+      sp->field_mass += mTry;
     }
-    iMax++;
+    iArr++;
   }
-  sp->num_clusters = min(iMax, MOSAICS_MAX_CLUSTERS);
-  sp->initial_num_clusters_evo = iMax;
+  /* Current number of clusters */
+  sp->num_clusters = min(iArr, MOSAICS_MAX_CLUSTERS);
+  /* Number of clusters above the evolution mass limit */
+  sp->initial_num_clusters_evo = iArr;
+
+  for (int i = 0; i < sp->num_clusters; i++) {
+    sp->cluster_mass_total = sp->clusters.mass[i];
+  }
 
 /*
   printf("sp->id = %lld\n", sp->id);
@@ -507,7 +530,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
         sp->id, sp->initial_num_clusters_evo, MOSAICS_MAX_CLUSTERS, 
         sp->mass_init, part_clust_mass, mean_mass);
 
-    /* TODO need to dump some info */
+    /* TODO need to dump some info to a file */
   }
 
   /* No clusters above mass limit were formed */

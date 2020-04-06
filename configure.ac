@@ -2138,7 +2138,7 @@ AC_ARG_WITH([mosaics-max-clusters],
       [Set the maximum number of star clusters for MOSAICS.]
    )],
    [with_mosaics_max_clusters="$withval"],
-   [with_mosaics_max_clusters="200"]
+   [with_mosaics_max_clusters="100"]
 )
 
 case "$with_stars" in

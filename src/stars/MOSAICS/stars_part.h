@@ -176,6 +176,9 @@ struct spart {
   /*! Sum of initial cluster masses above evolution mass limit */
   float initial_cluster_mass_evo;
 
+  /*! Sum of surviving cluster masses */
+  float cluster_mass_total;
+
   /*! Field mass component of star */
   float field_mass;
 
@@ -295,7 +298,7 @@ struct stars_props {
   /*! Value to set birth time of stars read from ICs */
   float spart_first_init_birth_time;
 
-  /* ---------------- MOSAICS parameters ---------------- */
+  /* ---------------- Global MOSAICS parameters ---------------- */
 
   /*! Flag to force tensor calculation for all stars */
   int calc_all_star_tensors;
@@ -303,17 +306,13 @@ struct stars_props {
   /*! King '66 density profile parameter */
   float W0;
 
-  /*! Star formation efficiency for Mcstar */
-  float SFE;
-
-  /*! Use the subgrid turbulent velocity dispersion for CFE */
-  int subgrid_gas_vel_disp;
-
-  /*! Sound speed of cold ISM (m/s) */
-  float Fixedcs;
+  /* --- Initial cluster mass function parameters --- */
 
   /*! Use a power-law mass function (default Schechter)  */
   int power_law_clMF ;
+
+  /*! Star formation efficiency for Mcstar */
+  float SFE;
 
   /*! Cluster mass function minimum (Msun) */
   float clMF_min;
@@ -327,7 +326,16 @@ struct stars_props {
   /*! Cluster mass function power-law index */
   float clMF_slope;
 
-  /* ----- Cluster formation efficiency parameters ------ */
+  /* --- Cluster formation efficiency parameters --- */
+
+  /*! Value for a fixed CFE */
+  float FixedCFE;
+
+  /*! Use the subgrid turbulent velocity dispersion for CFE */
+  int subgrid_gas_vel_disp;
+
+  /*! Sound speed of cold ISM (m/s) */
+  float Fixedcs;
 
   /*! star formation law */
   int sflaw;
