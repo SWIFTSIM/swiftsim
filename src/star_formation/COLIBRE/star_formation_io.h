@@ -44,7 +44,11 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
       "the last time/scale-factor at which the gas particle was star-forming. "
       "If zero, the particle was never star-forming.");
 
-  return 1;
+  list[1] = io_make_output_field(
+      "VelocityDispersions", FLOAT, 1, UNIT_CONV_ENERGY_PER_UNIT_MASS, 0.f, parts, sf_data.sigma_v2,
+      "Velocity dispersion (3D) squared");
+
+  return 2;
 }
 
 /**

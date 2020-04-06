@@ -86,6 +86,9 @@ struct spart {
   /*! Initial star mass */
   float mass_init;
 
+  /*! Birth velocity dispersion */
+  float birth_velocity_dispersion;
+
   /*! SNII Feedback energy fraction */
   float SNII_f_E;
 

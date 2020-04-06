@@ -33,10 +33,11 @@ struct star_formation_xpart_data {
   float SFR;
 };
 
-/**
- * @brief Star-formation-related properties stored in the particle data.
- */
-struct star_formation_part_data {};
+struct star_formation_part_data {
+
+  /*! Velocity dispersion */
+  float sigma_v2;
+};
 
 /**
  * @brief Star-formation-related properties stored in the star particle
@@ -58,3 +59,4 @@ struct star_formation_spart_data {
 };
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */
+
