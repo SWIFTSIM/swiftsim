@@ -43,8 +43,10 @@ __attribute__((always_inline)) INLINE static void cooling_write_flavour(
 
   const int number_of_species = 3;
   const int species_name_length = 4;
-  const char species_names[number_of_species][species_name_length] = {
-      "HI", "HII", "H2"};
+  char species_names[number_of_species][species_name_length];
+  sprintf(species_names[0], "%s", "HI");
+  sprintf(species_names[1], "%s", "HII");
+  sprintf(species_names[2], "%s", "H2");
 
   /* Add the species names to the named columns */
   hsize_t dims[1] = {number_of_species};
