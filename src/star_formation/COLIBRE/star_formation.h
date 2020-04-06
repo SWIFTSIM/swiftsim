@@ -389,8 +389,9 @@ INLINE static void starformation_init_backend(
   /* Calculate the subgrid density threshold using primordial gas mean molecular
    * weights assuming neutral gas */
   starform->subgrid_density_threshold =
-      starform->subgrid_density_threshold_HpCM3 * phys_const->const_proton_mass *
-      number_density_from_cgs * hydro_props->mu_neutral;
+      starform->subgrid_density_threshold_HpCM3 *
+      phys_const->const_proton_mass * number_density_from_cgs *
+      hydro_props->mu_neutral;
 }
 
 /**
@@ -405,8 +406,9 @@ INLINE static void starformation_print_backend(
   message("Star formation law is COLIBRE with only virial criteria");
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
-      "%e maximal density = %e",
-      starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3);
+      "%e maximal density = %e subgrid density criteria = %e",
+      starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
+      starform->subgrid_density_threshold_HpCM3);
 }
 
 /**
