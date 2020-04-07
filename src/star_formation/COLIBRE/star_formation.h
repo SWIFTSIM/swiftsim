@@ -67,7 +67,10 @@ struct star_formation {
   double maximal_density;
 
   /*! Virial constant used in the calculation (no units)*/
-  double virial_const;
+  double alpha_virial;
+
+  /*! Inverse of the virial constant used in the calculation (no units)*/
+  double alpha_virial_inv;
 
   /*! subgrid density threshold in user units */
   double subgrid_density_threshold_HpCM3;
@@ -145,10 +148,10 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid density to the power 1/3 */
   const double subgrid_density_to_1_3th = cbrt(subgrid_density);
 
-  /* Check if we satisfy the subgrid virial criteria */
+  /* Check if we satisfy the subgrid virial criteria by calculation alpha/alpha_virial */
   const double alpha =
-      starform->virial_const *
-      (p->sf_data.sigma_v2 / 3. + sound_speed2_subgrid) /
+      starform->alpha_virial_inv *
+      (p->sf_data.sigma_v2 + sound_speed2_subgrid) /
       (subgrid_density_to_1_3th * gas_mass_to_2_3th);
 
   /* Check if the virial critiria is below one */
@@ -383,10 +386,10 @@ INLINE static void starformation_init_backend(
                               number_density_from_cgs * hydro_props->mu_neutral;
 
   /* Store a variable for the virial criteria */
-  const double virial_numb = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:virial_coefficient");
+  starform->alpha_virial = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:alpha_virial");
 
-  starform->virial_const = 1. / (virial_numb * phys_const->const_newton_G);
+  starform->alpha_virial_inv = 1./starform->alpha_virial;
 
   /* Get the subgrid density threshold */
   starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
@@ -414,9 +417,9 @@ INLINE static void starformation_print_backend(
   message("A Schmidt law + a virial criteria");
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
-      "%e maximal density = %e subgrid density criteria = %e",
+      "%e maximal density = %e subgrid density criteria = %e alpha_virial = %e",
       starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
-      starform->subgrid_density_threshold_HpCM3);
+      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial);
 }
 
 /**
