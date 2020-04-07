@@ -449,32 +449,19 @@ size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
 }
 
 /**
- * @brief Get the two particle records around the requested time.
+ * @brief Move forward in time the particles and deal with the special cases.
  *
  * @param reader The #logger_reader.
- * @param prev (in) A record before the requested time. (out) The last record
- * before the time.
- * @param next (out) The first record after the requested time.
- * @param time_offset The offset of the requested time.
+ * @param prev The list of particles before the time offset (to update).
+ * @param next The list of particles after the time offset (to update).
+ * @param new_parts The list of new particles.
+ * @param n_deleted The number of particles deleted.
+ * @param time_offset The offset (in the logfile) of the time requested.
  */
-void logger_reader_move_forward(struct logger_reader *reader,
-                                struct logger_particle_array *prev,
-                                struct logger_particle_array *next,
-                                size_t time_offset) {
-
-  /* Ensure to have enough place in the next */
-  logger_particle_array_change_size(next, prev->hydro.n, prev->grav.n,
-                                    prev->stars.n);
-
-  /* Create a temporary array for storing the
-     new particles or the changes of type. */
-  struct logger_dynamic_particle_array tmp_array;
-  logger_dynamic_particle_array_init(&tmp_array, /* n_default */ 512);
-
-  /* Create the variables for the new / deleted particles */
-  size_t n_deleted_hydro = 0;
-  size_t n_deleted_grav = 0;
-  size_t n_deleted_stars = 0;
+void logger_reader_move_forward_internal(
+    struct logger_reader *reader, struct logger_particle_array *prev,
+    struct logger_particle_array *next, struct logger_particle_array *new_parts,
+    size_t *n_deleted, size_t time_offset) {
 
   // TODO make it parallel
   /* Move forward the hydro particles */
@@ -489,7 +476,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
 
       /* The particle has been deleted */
       case logger_reader_event_deleted:
-        n_deleted_hydro++;
+        n_deleted[swift_type_gas]++;
         /* Mark the particle as deleted. */
         /* This flag is not possible otherwise as it should contain some data
            in the most significant byte. */
@@ -499,15 +486,15 @@ void logger_reader_move_forward(struct logger_reader *reader,
       /* The particle has been transformed into a star */
       case logger_reader_event_stars:
         /* Delete the hydro particle */
-        n_deleted_hydro++;
+        n_deleted[swift_type_gas]++;
         /* Mark the particle as deleted. */
         /* This flag is not possible otherwise as it should contain some data
            in the most significant byte. */
         prev->hydro.parts[i].flag = logger_flag_delete;
 
         /* Save the offset of the new star. */
-        logger_dynamic_particle_array_add_stars(
-          &tmp_array, prev->hydro.parts[i].offset);
+        logger_particle_array_add_stars(
+          new_parts, prev->hydro.parts[i].offset);
         break;
 
       default:
@@ -528,7 +515,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
 
         /* The particle has been deleted */
       case logger_reader_event_deleted:
-        n_deleted_grav++;
+        n_deleted[swift_type_dark_matter]++;
         /* Mark the particle as deleted. */
         /* This flag is not possible otherwise as it should contain some data
            in the most significant byte. */
@@ -552,7 +539,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
 
       /* The particle has been deleted */
     case logger_reader_event_deleted:
-      n_deleted_stars++;
+      n_deleted[swift_type_stars]++;
       /* Mark the particle as deleted. */
       /* This flag is not possible otherwise as it should contain some data
          in the most significant byte. */
@@ -563,11 +550,49 @@ void logger_reader_move_forward(struct logger_reader *reader,
       error("Not implemented");
     }
   }
+}
+
+/**
+ * @brief Get the two particle records around the requested time.
+ *
+ * @param reader The #logger_reader.
+ * @param prev (in) A record before the requested time. (out) The last record
+ * before the time.
+ * @param next (out) The first record after the requested time.
+ * @param time_offset The offset of the requested time.
+ */
+void logger_reader_move_forward(struct logger_reader *reader,
+                                struct logger_particle_array *prev,
+                                struct logger_particle_array *next,
+                                size_t time_offset) {
+
+  /* Ensure to have enough place in the next */
+  logger_particle_array_change_size(next, prev->hydro.n, prev->grav.n,
+                                    prev->stars.n);
+
+  /* Create a temporary array for storing the
+     new particles or the changes of type. */
+  struct logger_particle_array new_parts;
+  logger_particle_array_allocate(
+    &new_parts, /* n_part */ 512, /* n_gpart */ 512, /* n_spart */ 512);
+
+  /* Create the variables for the new / deleted particles */
+  size_t n_deleted[swift_type_count];
+
+  /* Update the particles */
+  do {
+    logger_reader_move_forward_internal(
+      reader, prev, next, &new_parts, n_deleted, time_offset);
+  }
+  while (n_deleted[swift_type_gas] != 0 &&
+         n_deleted[swift_type_stars] != 0 &&
+         n_deleted[swift_type_dark_matter] != 0);
 
   /* Remove the particles that should be deleted and
      update the particles types */
   logger_particle_array_update(
-    prev, next, &tmp_array, n_deleted_hydro, n_deleted_grav, n_deleted_stars);
+    prev, next, &new_parts, n_deleted[swift_type_gas],
+    n_deleted[swift_type_dark_matter], n_deleted[swift_type_stars]);
 }
 
 /**
