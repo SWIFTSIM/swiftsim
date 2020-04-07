@@ -484,6 +484,7 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
             sp->spart_first_init_birth_time);
 
   message("Calculate tensors for all stars: %d", sp->calc_all_star_tensors);
+  message("MOSAICS maximum clusters: %d", MOSAICS_MAX_CLUSTERS);
 }
 
 #if defined(HAVE_HDF5)
@@ -503,6 +504,8 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
                        pow_dimension(expf(sp->log_max_h_change)));
   io_write_attribute_i(h_grpstars, "Max ghost iterations",
                        sp->max_smoothing_iterations);
+  io_write_attribute_i(h_grpstars, "MOSAICS_MAX_CLUSTERS",
+                       MOSAICS_MAX_CLUSTERS);
 }
 #endif
 
