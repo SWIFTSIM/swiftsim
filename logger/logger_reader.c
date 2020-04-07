@@ -189,7 +189,6 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
     }
   }
 
-  message("Found time");
   /* Generate the filename */
   char filename[STRING_SIZE + 50];
   sprintf(filename, "%s_%04u.index", reader->basename, left);
@@ -473,7 +472,9 @@ void logger_reader_move_forward(struct logger_reader *reader,
   logger_dynamic_particle_array_init(&tmp_array, /* n_default */ 512);
 
   /* Create the variables for the new / deleted particles */
-  int n_deleted_hydro = 0;
+  size_t n_deleted_hydro = 0;
+  size_t n_deleted_grav = 0;
+  size_t n_deleted_stars = 0;
 
   // TODO make it parallel
   /* Move forward the hydro particles */
@@ -525,7 +526,16 @@ void logger_reader_move_forward(struct logger_reader *reader,
       case logger_reader_event_null:
         break;
 
-      default:
+        /* The particle has been deleted */
+      case logger_reader_event_deleted:
+        n_deleted_grav++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->grav.parts[i].flag = logger_flag_delete;
+        break;
+
+    default:
         error("Not implemented");
     }
   }
@@ -540,64 +550,24 @@ void logger_reader_move_forward(struct logger_reader *reader,
     case logger_reader_event_null:
       break;
 
+      /* The particle has been deleted */
+    case logger_reader_event_deleted:
+      n_deleted_stars++;
+      /* Mark the particle as deleted. */
+      /* This flag is not possible otherwise as it should contain some data
+         in the most significant byte. */
+      prev->stars.parts[i].flag = logger_flag_delete;
+      break;
+
     default:
       error("Not implemented");
     }
   }
 
-  /* Deal with the deleted particles */
-  for(size_t i = 0; i < prev->hydro.n && n_deleted_hydro != 0; i++) {
-    if (prev->hydro.parts[i].flag == logger_flag_delete) {
-      /* Ensure that we do not have a deleted particle
-         at the end of the array. */
-      while(prev->hydro.parts[prev->hydro.n - 1].flag == logger_flag_delete) {
-        prev->hydro.n--;
-        next->hydro.n--;
-        n_deleted_hydro--;
-      }
-
-      /* Move the particle from the end to the current one. */
-      memcpy(&prev->hydro.parts[i], &prev->hydro.parts[prev->hydro.n - 1],
-             sizeof(struct logger_particle));
-      memcpy(&next->hydro.parts[i], &next->hydro.parts[next->hydro.n - 1],
-             sizeof(struct logger_particle));
-      prev->hydro.n--;
-      next->hydro.n--;
-      n_deleted_hydro--;
-    }
-  }
-
-  if (n_deleted_hydro != 0) {
-    error("Something went wrong during the deletion of particles.");
-  }
-
-  /* Reallocate the memory */
-  logger_particle_array_change_size(prev, prev->hydro.n, prev->grav.n, prev->stars.n);
-
-#ifdef SWIFT_DEBUG_CHECKS
-  if (prev->hydro.n != next->hydro.n) {
-    error("The previous and next arrays are not compatible anymore.");
-  }
-  for(size_t i = 0; i < prev->hydro.n; i++) {
-    if (prev->hydro.parts[i].flag == logger_flag_delete) {
-      error("Failed to delete a particle.");
-    }
-    if (next->hydro.parts[i].flag == logger_flag_delete) {
-      error("Failed to delete a particle.");
-    }
-  }
-#endif
-
-  if (tmp_array.n_hydro != 0) {
-    error("TODO");
-  }
-  if (tmp_array.n_stars != 0) {
-    error("TODO");
-  }
-  if (tmp_array.n_grav != 0) {
-    error("TODO");
-  }
-
+  /* Remove the particles that should be deleted and
+     update the particles types */
+  logger_particle_array_update(
+    prev, next, &tmp_array, n_deleted_hydro, n_deleted_grav, n_deleted_stars);
 }
 
 /**

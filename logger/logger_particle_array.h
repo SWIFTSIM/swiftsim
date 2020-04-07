@@ -77,7 +77,6 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
                                        size_t new_n_part, size_t new_n_gpart,
                                        size_t new_n_spart);
 
-
 /**
  * @brief Structure containing the temporary particles.
  *
@@ -109,5 +108,12 @@ void logger_dynamic_particle_array_add_gravity(
   struct logger_dynamic_particle_array *array, size_t offset);
 void logger_dynamic_particle_array_free(
   struct logger_dynamic_particle_array *array);
+
+
+
+void logger_particle_array_update(
+  struct logger_particle_array *prev, struct logger_particle_array *next,
+  struct logger_dynamic_particle_array *tmp,
+  size_t n_deleted_hydro, size_t n_deleted_grav, size_t n_deleted_stars);
 
 #endif  // LOGGER_LOGGER_PARTICLE_ARRAY_H

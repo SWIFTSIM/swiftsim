@@ -279,3 +279,156 @@ void logger_dynamic_particle_array_free(
   array->n_stars = 0;
   array->n_hydro = 0;
 }
+
+/**
+ * @brief Remove the flagged particles from the arrays and add the particles from the dynamic array.
+ *
+ * @param prev The array containing the particles before the required time.
+ * @param next The array containing the particles after the required time.
+ * @param new The new particles.
+ * @param n_deleted_hydro The number of flagged particles (hydro).
+ * @param n_deleted_grav The number of flagged particles (gravity).
+ * @param n_deleted_stars The number of flagged particles (stars).
+ */
+void logger_particle_array_update(
+    struct logger_particle_array *prev, struct logger_particle_array *next,
+    struct logger_dynamic_particle_array *tmp,
+    size_t n_deleted_hydro, size_t n_deleted_grav, size_t n_deleted_stars) {
+
+  if (prev->hydro.n != next->hydro.n) {
+    error("The previous and next arrays are not compatible.");
+  }
+  if (prev->grav.n != next->grav.n) {
+    error("The previous and next arrays are not compatible.");
+  }
+  if (prev->stars.n != next->stars.n) {
+    error("The previous and next arrays are not compatible.");
+  }
+
+  /* Number of particles without the deleted particles */
+  size_t n_hydro = prev->hydro.n;
+  size_t n_grav = prev->grav.n;
+  size_t n_stars = prev->stars.n;
+
+  /* Remove the hydro particles */
+  for(size_t i = 0; i < n_hydro && n_deleted_hydro != 0; i++) {
+    if (prev->hydro.parts[i].flag == logger_flag_delete) {
+      /* Ensure that we do not have a deleted particle
+         at the end of the array. */
+      while(prev->hydro.parts[prev->hydro.n - 1].flag == logger_flag_delete) {
+        n_hydro--;
+        n_deleted_hydro--;
+      }
+
+      /* Copy the particle from the end to the current one. */
+      prev->hydro.parts[i] = prev->hydro.parts[n_hydro - 1];
+      next->hydro.parts[i] = next->hydro.parts[n_hydro - 1];
+      n_hydro--;
+      n_deleted_hydro--;
+    }
+  }
+
+  /* Remove the gravity particles */
+  for(size_t i = 0; i < n_grav && n_deleted_grav != 0; i++) {
+    if (prev->grav.parts[i].flag == logger_flag_delete) {
+      /* Ensure that we do not have a deleted particle
+         at the end of the array. */
+      while(prev->grav.parts[prev->grav.n - 1].flag == logger_flag_delete) {
+        n_grav--;
+        n_deleted_grav--;
+      }
+
+      /* Copy the particle from the end to the current one. */
+      prev->grav.parts[i] = prev->grav.parts[n_grav - 1];
+      next->grav.parts[i] = next->grav.parts[n_grav - 1];
+      n_grav--;
+      n_deleted_grav--;
+    }
+  }
+
+  /* Remove the stars particles */
+  for(size_t i = 0; i < n_stars && n_deleted_stars != 0; i++) {
+    if (prev->stars.parts[i].flag == logger_flag_delete) {
+      /* Ensure that we do not have a deleted particle
+         at the end of the array. */
+      while(prev->stars.parts[prev->stars.n - 1].flag == logger_flag_delete) {
+        n_stars--;
+        n_deleted_stars--;
+      }
+
+      /* Copy the particle from the end to the current one. */
+      prev->stars.parts[i] = prev->stars.parts[n_stars - 1];
+      next->stars.parts[i] = next->stars.parts[n_stars - 1];
+      n_stars--;
+      n_deleted_stars--;
+    }
+  }
+
+  /* Check that we have deleted all the particles */
+  if (n_deleted_hydro != 0) {
+    error("Something went wrong during the deletion of hydro particles.");
+  }
+
+  if (n_deleted_grav != 0) {
+    error("Something went wrong during the deletion of gravity particles.");
+  }
+
+  if (n_deleted_stars != 0) {
+    error("Something went wrong during the deletion of stars particles.");
+  }
+
+  /* Number of particles at the end of this function */
+  const size_t new_n_hydro = n_hydro + tmp->n_hydro;
+  const size_t new_n_grav = n_grav + tmp->n_grav;
+  const size_t new_n_stars = n_stars + tmp->n_stars;
+
+  /* Reallocate the memory */
+  logger_particle_array_change_size(prev, new_n_hydro, new_n_grav, new_n_stars);
+  logger_particle_array_change_size(next, new_n_hydro, new_n_grav, new_n_stars);
+
+  /* Copy the new particles at the end of the arrays */
+  if (tmp->n_hydro != 0) {
+    memcpy(prev->hydro.parts + n_hydro, tmp->array.hydro.parts, tmp->n_hydro * sizeof(struct logger_particle));
+  }
+  if (tmp->n_grav != 0) {
+    memcpy(prev->grav.parts + n_grav, tmp->array.grav.parts, tmp->n_grav * sizeof(struct logger_gparticle));
+  }
+  if (tmp->n_stars != 0) {
+    memcpy(prev->stars.parts + n_stars, tmp->array.stars.parts, tmp->n_stars * sizeof(struct logger_sparticle));
+  }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check that we removed all the required particles */
+  for(size_t i = 0; i < prev->hydro.n; i++) {
+    if (prev->hydro.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+    /* Only the offset is correctly set for the next particles */
+    if (i > n_hydro && next->hydro.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+  }
+
+  /* Check that we removed all the required particles */
+  for(size_t i = 0; i < prev->grav.n; i++) {
+    if (prev->grav.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+    /* Only the offset is correctly set for the next particles */
+    if (i > n_grav && next->grav.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+  }
+
+  /* Check that we removed all the required particles */
+  for(size_t i = 0; i < prev->stars.n; i++) {
+    if (prev->stars.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+    /* Only the offset is correctly set for the next particles */
+    if (i > n_stars && next->stars.parts[i].flag == logger_flag_delete) {
+      error("Failed to delete a particle.");
+    }
+  }
+#endif
+}
