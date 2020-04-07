@@ -107,6 +107,9 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
   }
   /* Check if need to change the size */
   else if (new_n_part != array->hydro.n) {
+
+    array->hydro.allocated_size = new_n_part;
+
     /* Allocate the new array */
     struct logger_particle *parts = (struct logger_particle *)malloc(
         new_n_part * sizeof(struct logger_particle));
@@ -133,6 +136,9 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
   }
   /* Check if need to change the size */
   else if (new_n_gpart != array->grav.n) {
+
+    array->grav.allocated_size = new_n_gpart;
+
     /* Allocate the new array */
     struct logger_gparticle *parts = (struct logger_gparticle *)malloc(
         new_n_gpart * sizeof(struct logger_gparticle));
@@ -159,6 +165,9 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
   }
   /* Check if need to change the size */
   else if (new_n_spart != array->stars.n) {
+
+    array->stars.allocated_size = new_n_spart;
+
     /* Allocate the new array */
     struct logger_sparticle *parts = (struct logger_sparticle *)malloc(
         new_n_spart * sizeof(struct logger_sparticle));
@@ -179,64 +188,46 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
 }
 
 /**
- * @brief Initialize a dynamic array with the default initial size.
- *
- * @param array The #logger_dynamic_particle_array.
- * @param default_size The initial size of all the particle arrays.
- */
-void logger_dynamic_particle_array_init(
-    struct logger_dynamic_particle_array *array, int default_size) {
-  /* We do not have any particles yet */
-  array->n_grav = 0;
-  array->n_hydro = 0;
-  array->n_stars = 0;
-
-  /* Allocate the array */
-  logger_particle_array_init(&array->array);
-  logger_particle_array_allocate(&array->array, default_size, default_size, default_size);
-}
-
-/**
  * @brief Add an hydro particle (save only the offset).
  *
- * @param array The #logger_dynamic_particle_array.
+ * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_dynamic_particle_array_add_hydro(
-    struct logger_dynamic_particle_array *array, size_t offset) {
+void logger_particle_array_add_hydro(
+    struct logger_particle_array *array, size_t offset) {
   /* Save the offset */
-  array->array.hydro.parts[array->n_hydro].offset = offset;
+  array->hydro.parts[array->hydro.n].offset = offset;
 
   /* Update the number of particles */
-  array->n_hydro++;
+  array->hydro.n++;
 
   /* Increase the size if required */
-  if (array->n_hydro == array->array.hydro.n) {
+  if (array->hydro.n == array->hydro.allocated_size) {
     logger_particle_array_change_size(
-      &array->array, 2 * array->array.hydro.n,
-      array->array.grav.n, array->array.stars.n);
+      array, 2 * array->hydro.allocated_size,
+      array->grav.allocated_size, array->stars.allocated_size);
   }
 }
 
 /**
  * @brief Add a star (save only the offset).
  *
- * @param array The #logger_dynamic_particle_array.
+ * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_dynamic_particle_array_add_stars(
-    struct logger_dynamic_particle_array *array, size_t offset) {
+void logger_particle_array_add_stars(
+    struct logger_particle_array *array, size_t offset) {
   /* Save the offset */
-  array->array.stars.parts[array->n_stars].offset = offset;
+  array->stars.parts[array->stars.n].offset = offset;
 
   /* Update the number of particles */
-  array->n_stars++;
+  array->stars.n++;
 
   /* Increase the size if required */
-  if (array->n_stars == array->array.stars.n) {
+  if (array->stars.n == array->stars.allocated_size) {
     logger_particle_array_change_size(
-      &array->array, array->array.hydro.n,
-      array->array.grav.n, 2 * array->array.stars.n);
+      array, array->hydro.allocated_size,
+      array->grav.allocated_size, 2 * array->stars.allocated_size);
   }
 
 }
@@ -244,40 +235,25 @@ void logger_dynamic_particle_array_add_stars(
 /**
  * @brief Add a gravity particle (save only the offset).
  *
- * @param array The #logger_dynamic_particle_array.
+ * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_dynamic_particle_array_add_gravity(
-    struct logger_dynamic_particle_array *array, size_t offset) {
+void logger_particle_array_add_gravity(
+    struct logger_particle_array *array, size_t offset) {
 
   /* Save the offset */
-  array->array.grav.parts[array->n_grav].offset = offset;
+  array->grav.parts[array->grav.n].offset = offset;
 
   /* Update the number of particles */
-  array->n_grav++;
+  array->grav.n++;
 
   /* Increase the size if required */
-  if (array->n_grav == array->array.grav.n) {
+  if (array->grav.n == array->grav.allocated_size) {
     logger_particle_array_change_size(
-      &array->array, 2 * array->array.hydro.n,
-      array->array.grav.n, array->array.stars.n);
+      array, array->hydro.allocated_size,
+      2 * array->grav.allocated_size, array->stars.allocated_size);
   }
 
-}
-
-/**
- * @brief Free the allocated memory.
- *
- * @param array The #logger_dynamic_particle_array.
- */
-void logger_dynamic_particle_array_free(
-    struct logger_dynamic_particle_array *array) {
-
-  logger_particle_array_free(&array->array);
-  /* Reset the counters */
-  array->n_grav = 0;
-  array->n_stars = 0;
-  array->n_hydro = 0;
 }
 
 /**
@@ -292,7 +268,7 @@ void logger_dynamic_particle_array_free(
  */
 void logger_particle_array_update(
     struct logger_particle_array *prev, struct logger_particle_array *next,
-    struct logger_dynamic_particle_array *tmp,
+    struct logger_particle_array *tmp,
     size_t n_deleted_hydro, size_t n_deleted_grav, size_t n_deleted_stars) {
 
   if (prev->hydro.n != next->hydro.n) {
@@ -378,23 +354,23 @@ void logger_particle_array_update(
   }
 
   /* Number of particles at the end of this function */
-  const size_t new_n_hydro = n_hydro + tmp->n_hydro;
-  const size_t new_n_grav = n_grav + tmp->n_grav;
-  const size_t new_n_stars = n_stars + tmp->n_stars;
+  const size_t new_n_hydro = n_hydro + tmp->hydro.n;
+  const size_t new_n_grav = n_grav + tmp->grav.n;
+  const size_t new_n_stars = n_stars + tmp->stars.n;
 
   /* Reallocate the memory */
   logger_particle_array_change_size(prev, new_n_hydro, new_n_grav, new_n_stars);
   logger_particle_array_change_size(next, new_n_hydro, new_n_grav, new_n_stars);
 
   /* Copy the new particles at the end of the arrays */
-  if (tmp->n_hydro != 0) {
-    memcpy(prev->hydro.parts + n_hydro, tmp->array.hydro.parts, tmp->n_hydro * sizeof(struct logger_particle));
+  if (tmp->hydro.n != 0) {
+    memcpy(prev->hydro.parts + n_hydro, tmp->hydro.parts, tmp->hydro.n * sizeof(struct logger_particle));
   }
-  if (tmp->n_grav != 0) {
-    memcpy(prev->grav.parts + n_grav, tmp->array.grav.parts, tmp->n_grav * sizeof(struct logger_gparticle));
+  if (tmp->grav.n != 0) {
+    memcpy(prev->grav.parts + n_grav, tmp->grav.parts, tmp->grav.n * sizeof(struct logger_gparticle));
   }
-  if (tmp->n_stars != 0) {
-    memcpy(prev->stars.parts + n_stars, tmp->array.stars.parts, tmp->n_stars * sizeof(struct logger_sparticle));
+  if (tmp->stars.n != 0) {
+    memcpy(prev->stars.parts + n_stars, tmp->stars.parts, tmp->stars.n * sizeof(struct logger_sparticle));
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
