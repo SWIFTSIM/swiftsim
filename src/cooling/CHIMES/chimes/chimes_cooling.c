@@ -17,6 +17,12 @@
  *
  ***************************************************************************/
 
+#ifdef CHIMES_USE_GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,7 +100,8 @@ ChimesFloat calculate_mean_molecular_weight(
  */
 ChimesFloat compton_cooling(ChimesFloat T, ChimesFloat Tcmb, ChimesFloat xe,
                             ChimesFloat nH) {
-  return 1.017e-37 * pow(Tcmb, 4) * (T - Tcmb) * xe / nH; /* Lambda/nH^2 */
+  return 1.017e-37 * chimes_pow(Tcmb, 4) * (T - Tcmb) * xe /
+         nH; /* Lambda/nH^2 */
 }
 
 /**
@@ -118,7 +125,7 @@ ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars,
   ChimesFloat dv, N_tau, tau_T, c_tau, n_cr, ym;
 
   // Thermal velocity dispersion in cgs
-  dv = sqrt(
+  dv = chimes_sqrt(
       3.0 * BOLTZMANNCGS * myGasVars->temperature /
       (PROTON_MASS * calculate_mean_molecular_weight(myGasVars, myGlobalVars)));
 
@@ -126,24 +133,30 @@ ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars,
   tau_T = 4.0 * data.OH_column /
           (10.0 * (myGasVars->temperature / 27.0) * 6.8e-4 * N_tau);
 
-  c_tau = tau_T *
-          pow(2 * PI * log(2.13 + pow(tau_T / 2.718281828459, 2.0)), 0.5) /
-          ((exp(-data.extinction) / (1.0 + pow(data.extinction, 2.0))) +
-           2.0 * data.extinction * pow(log(1 + (tau_T / 2.718281828459)), 0.5) *
-               pow(log(tau_T / (data.extinction * 2.718281828459)), 0.5));
+  c_tau =
+      tau_T *
+      chimes_pow(
+          2 * PI * chimes_log(2.13 + chimes_pow(tau_T / 2.718281828459, 2.0)),
+          0.5) /
+      ((chimes_exp(-data.extinction) /
+        (1.0 + chimes_pow(data.extinction, 2.0))) +
+       2.0 * data.extinction *
+           chimes_pow(chimes_log(1 + (tau_T / 2.718281828459)), 0.5) *
+           chimes_pow(chimes_log(tau_T / (data.extinction * 2.718281828459)),
+                      0.5));
 
   if (isnan(c_tau) != 0) c_tau = 0.0;
 
-  n_cr = 1.5e10 * pow(myGasVars->temperature / 1.0e3, 0.5);
-  ym = log(1.0 + (c_tau / (1.0 + 10.0 * (n_cr / myGasVars->nH_tot))));
+  n_cr = 1.5e10 * chimes_pow(myGasVars->temperature / 1.0e3, 0.5);
+  ym = chimes_log(1.0 + (c_tau / (1.0 + 10.0 * (n_cr / myGasVars->nH_tot))));
 
   // Lambda / nH^2 (erg cm^3 s^-1)
   return myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] *
-         (2.0 * pow(BOLTZMANNCGS * myGasVars->temperature, 2.0) * 2.3e-2 /
-          (myGasVars->nH_tot * 27.0 * BOLTZMANNCGS)) *
-         ((2.0 + ym + 0.6 * pow(ym, 2.0)) /
+         (2.0 * chimes_pow(BOLTZMANNCGS * myGasVars->temperature, 2.0) *
+          2.3e-2 / (myGasVars->nH_tot * 27.0 * BOLTZMANNCGS)) *
+         ((2.0 + ym + 0.6 * chimes_pow(ym, 2.0)) /
           (1.0 + c_tau + (n_cr / myGasVars->nH_tot) +
-           1.5 * pow(n_cr / myGasVars->nH_tot, 0.5)));
+           1.5 * chimes_pow(n_cr / myGasVars->nH_tot, 0.5)));
 }
 
 /**
@@ -165,45 +178,46 @@ void update_cooling_rates(struct gasVariables *myGasVars,
   ChimesFloat dT, dnHI, dne, dnHII;
   ChimesFloat log_T, log_nHI, log_ne, log_nHII;
 
-  log_T = (ChimesFloat)log10(myGasVars->temperature);
-  chimes_get_table_index(chimes_table_bins.Temperatures,
-                         chimes_table_bins.N_Temperatures, log_T, &T_index,
+  const int N_T = chimes_table_bins.N_Temperatures;
+  log_T = (ChimesFloat)chimes_log10(myGasVars->temperature);
+  chimes_get_table_index(chimes_table_bins.Temperatures, N_T, log_T, &T_index,
                          &dT);
 
   for (i = 0; i < chimes_table_cooling.N_coolants; i++)
-    data.chimes_current_rates->cooling_rate[i] = pow(
-        10.0, chimes_interpol_1d(chimes_table_cooling.rates[i], T_index, dT));
+    data.chimes_current_rates->cooling_rate[i] =
+        chimes_exp10(chimes_interpol_2d_fix_x(chimes_table_cooling.rates, i,
+                                              T_index, dT, N_T));
 
   if (chimes_table_cooling.N_coolants_2d > 0) {
     if (log_T <
         chimes_table_bins
             .cool_2d_Temperatures[chimes_table_bins.N_cool_2d_Temperatures -
                                   1]) {
-      chimes_get_table_index(chimes_table_bins.cool_2d_Temperatures,
-                             chimes_table_bins.N_cool_2d_Temperatures, log_T,
-                             &T_index, &dT);
+      const int N_Tcool_2d = chimes_table_bins.N_cool_2d_Temperatures;
+      const int N_ne_2d = chimes_table_bins.N_cool_2d_ElectronDensities;
 
-      log_ne = (ChimesFloat)log10(chimes_max(
+      log_ne = (ChimesFloat)chimes_log10(chimes_max(
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] *
               myGasVars->nH_tot,
-          1.0e-100));
-      chimes_get_table_index(chimes_table_bins.cool_2d_ElectronDensities,
-                             chimes_table_bins.N_cool_2d_ElectronDensities,
-                             log_ne, &ne_index, &dne);
-
-      for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++)
-        data.chimes_current_rates->cooling_rate_2d[i] =
-            pow(10.0, chimes_interpol_2d(chimes_table_cooling.rates_2d[i],
-                                         T_index, ne_index, dT, dne));
-    } else {
-      chimes_get_table_index(chimes_table_bins.cool_hiT_2d_Temperatures,
-                             chimes_table_bins.N_cool_hiT_2d_Temperatures,
+          CHIMES_FLT_MIN));
+      chimes_get_table_index(chimes_table_bins.cool_2d_Temperatures, N_Tcool_2d,
                              log_T, &T_index, &dT);
+      chimes_get_table_index(chimes_table_bins.cool_2d_ElectronDensities,
+                             N_ne_2d, log_ne, &ne_index, &dne);
 
       for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++)
-        data.chimes_current_rates->cooling_rate_2d[i] =
-            pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_2d[i],
-                                         T_index, dT));
+        data.chimes_current_rates->cooling_rate_2d[i] = chimes_exp10(
+            chimes_interpol_3d_fix_x(chimes_table_cooling.rates_2d, i, T_index,
+                                     ne_index, dT, dne, N_Tcool_2d, N_ne_2d));
+    } else {
+      const int N_Tcool_hiT_2d = chimes_table_bins.N_cool_hiT_2d_Temperatures;
+      chimes_get_table_index(chimes_table_bins.cool_hiT_2d_Temperatures,
+                             N_Tcool_hiT_2d, log_T, &T_index, &dT);
+
+      for (i = 0; i < chimes_table_cooling.N_coolants_2d; i++)
+        data.chimes_current_rates->cooling_rate_2d[i] = chimes_exp10(
+            chimes_interpol_2d_fix_x(chimes_table_cooling.rates_hiT_2d, i,
+                                     T_index, dT, N_Tcool_hiT_2d));
     }
   }
 
@@ -212,47 +226,47 @@ void update_cooling_rates(struct gasVariables *myGasVars,
         chimes_table_bins
             .cool_4d_Temperatures[chimes_table_bins.N_cool_4d_Temperatures -
                                   1]) {
-      chimes_get_table_index(chimes_table_bins.cool_4d_Temperatures,
-                             chimes_table_bins.N_cool_4d_Temperatures, log_T,
-                             &T_index, &dT);
-
-      log_nHI = (ChimesFloat)log10(chimes_max(
+      const int N_Tcool_4d = chimes_table_bins.N_cool_4d_Temperatures;
+      const int N_nHI_4d = chimes_table_bins.N_cool_4d_HIDensities;
+      const int N_ne_4d = chimes_table_bins.N_cool_4d_ElectronDensities;
+      const int N_nHII_4d = chimes_table_bins.N_cool_4d_HIIDensities;
+      log_nHI = (ChimesFloat)chimes_log10(chimes_max(
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] *
               myGasVars->nH_tot,
-          1.0e-100));
-      log_ne = (ChimesFloat)log10(chimes_max(
+          CHIMES_FLT_MIN));
+      log_ne = (ChimesFloat)chimes_log10(chimes_max(
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] *
               myGasVars->nH_tot,
-          1.0e-100));
-      log_nHII = (ChimesFloat)log10(chimes_max(
+          CHIMES_FLT_MIN));
+      log_nHII = (ChimesFloat)chimes_log10(chimes_max(
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]] *
               myGasVars->nH_tot,
-          1.0e-100));
+          CHIMES_FLT_MIN));
 
-      chimes_get_table_index(chimes_table_bins.cool_4d_HIDensities,
-                             chimes_table_bins.N_cool_4d_HIDensities, log_nHI,
-                             &nHI_index, &dnHI);
-      chimes_get_table_index(chimes_table_bins.cool_4d_ElectronDensities,
-                             chimes_table_bins.N_cool_4d_ElectronDensities,
-                             log_ne, &ne_index, &dne);
-      chimes_get_table_index(chimes_table_bins.cool_4d_HIIDensities,
-                             chimes_table_bins.N_cool_4d_HIIDensities, log_nHII,
-                             &nHII_index, &dnHII);
-
-      for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++)
-        data.chimes_current_rates->cooling_rate_4d[i] =
-            pow(10.0, chimes_interpol_4d(chimes_table_cooling.rates_4d[i],
-                                         T_index, nHI_index, ne_index,
-                                         nHII_index, dT, dnHI, dne, dnHII));
-    } else {
-      chimes_get_table_index(chimes_table_bins.cool_hiT_4d_Temperatures,
-                             chimes_table_bins.N_cool_hiT_4d_Temperatures,
+      chimes_get_table_index(chimes_table_bins.cool_4d_Temperatures, N_Tcool_4d,
                              log_T, &T_index, &dT);
+      chimes_get_table_index(chimes_table_bins.cool_4d_HIDensities, N_nHI_4d,
+                             log_nHI, &nHI_index, &dnHI);
+      chimes_get_table_index(chimes_table_bins.cool_4d_ElectronDensities,
+                             N_ne_4d, log_ne, &ne_index, &dne);
+      chimes_get_table_index(chimes_table_bins.cool_4d_HIIDensities, N_nHII_4d,
+                             log_nHII, &nHII_index, &dnHII);
 
       for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++)
         data.chimes_current_rates->cooling_rate_4d[i] =
-            pow(10.0, chimes_interpol_1d(chimes_table_cooling.rates_hiT_4d[i],
-                                         T_index, dT));
+            chimes_exp10(chimes_interpol_5d_fix_x(
+                chimes_table_cooling.rates_4d, i, T_index, nHI_index, ne_index,
+                nHII_index, dT, dnHI, dne, dnHII, N_Tcool_4d, N_nHI_4d, N_ne_4d,
+                N_nHII_4d));
+    } else {
+      const int N_Tcool_hiT_4d = chimes_table_bins.N_cool_hiT_4d_Temperatures;
+      chimes_get_table_index(chimes_table_bins.cool_hiT_4d_Temperatures,
+                             N_Tcool_hiT_4d, log_T, &T_index, &dT);
+
+      for (i = 0; i < chimes_table_cooling.N_coolants_4d; i++)
+        data.chimes_current_rates->cooling_rate_4d[i] = chimes_exp10(
+            chimes_interpol_2d_fix_x(chimes_table_cooling.rates_hiT_4d, i,
+                                     T_index, dT, N_Tcool_hiT_4d));
     }
   }
 
@@ -339,15 +353,16 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
                      myGasVars->nH_tot;
 
   // Correct for secondary cosmic rays
-  log_xHII = (ChimesFloat)log10(chimes_max(
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]], 1.0e-100));
-  chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII,
-                         chimes_table_bins.N_secondary_cosmic_ray_xHII,
+  log_xHII = (ChimesFloat)chimes_log10(
+      chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]],
+                 CHIMES_FLT_MIN));
+  const int N_xHII = chimes_table_bins.N_secondary_cosmic_ray_xHII;
+  chimes_get_table_index(chimes_table_bins.secondary_cosmic_ray_xHII, N_xHII,
                          log_xHII, &xHII_index, &d_xHII);
   for (i = 0; i < 2; i++) {
-    cr_secondary =
-        pow(10.0, chimes_interpol_1d(chimes_table_cosmic_ray.secondary_ratio[i],
-                                     xHII_index, d_xHII));
+    cr_secondary = chimes_exp10(
+        chimes_interpol_2d_fix_x(chimes_table_cosmic_ray.secondary_ratio, i,
+                                 xHII_index, d_xHII, N_xHII));
     total_heating -= 3.2e-11 *
                      data.chimes_current_rates->cosmic_ray_rate
                          [chimes_table_cosmic_ray.secondary_base_reaction[i]] *
@@ -362,35 +377,35 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
 
   if (data.mol_flag_index == 1) {
     // H2 rovibrational cooling
-    log_T = (ChimesFloat)log10(myGasVars->temperature);
+    log_T = (ChimesFloat)chimes_log10(myGasVars->temperature);
     chimes_get_table_index(chimes_table_bins.mol_cool_Temperatures,
                            chimes_table_bins.N_mol_cool_Temperatures, log_T,
                            &T_mol_index, &dT_mol);
     H2_lowDens =
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_H2,
-                                     T_mol_index, dT_mol)) *
+        chimes_exp10(chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_H2,
+                                        T_mol_index, dT_mol)) *
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]];
     H2_lowDens +=
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_HI,
-                                     T_mol_index, dT_mol)) *
+        chimes_exp10(chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_HI,
+                                        T_mol_index, dT_mol)) *
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]];
     H2_lowDens +=
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_HII,
-                                     T_mol_index, dT_mol)) *
+        chimes_exp10(chimes_interpol_1d(
+            chimes_table_cooling.H2_cool_lowDens_HII, T_mol_index, dT_mol)) *
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]];
     H2_lowDens +=
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_HeI,
-                                     T_mol_index, dT_mol)) *
+        chimes_exp10(chimes_interpol_1d(
+            chimes_table_cooling.H2_cool_lowDens_HeI, T_mol_index, dT_mol)) *
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI]];
     H2_lowDens +=
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_lowDens_elec,
-                                     T_mol_index, dT_mol)) *
+        chimes_exp10(chimes_interpol_1d(
+            chimes_table_cooling.H2_cool_lowDens_elec, T_mol_index, dT_mol)) *
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]];
     H2_lowDens *= myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]];
 
     if (H2_lowDens > 0.0) {
-      H2_LTE = pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2_cool_LTE,
-                                            T_mol_index, dT_mol)) *
+      H2_LTE = chimes_exp10(chimes_interpol_1d(chimes_table_cooling.H2_cool_LTE,
+                                               T_mol_index, dT_mol)) *
                myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] /
                myGasVars->nH_tot;
       total_cooling += H2_LTE / (1.0 + (H2_LTE / H2_lowDens));
@@ -409,7 +424,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
         7.2e-12 *
         data.chimes_current_rates->T_dependent_rate_coefficient
             [chimes_table_T_dependent.H2_collis_dissoc_heating_reaction_index] *
-        pow(xH2, 2.0);
+        chimes_pow(xH2, 2.0);
 
     // Gas-phase H2 formation
     if (xHI + xH2 == 0)
@@ -441,65 +456,68 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
         (myGlobalVars->element_included[2] == 1)) {
       // N_eff units: cm^-2 per km s^-1
       if (myGlobalVars->StaticMolCooling == 1)
-        log_N_eff = (ChimesFloat)log10(
-            chimes_max(1.0e5 * data.CO_column /
-                           (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature /
-                                 (PROTON_MASS * calculate_mean_molecular_weight(
-                                                    myGasVars, myGlobalVars)))),
-                       1.0e-100));
+        log_N_eff = (ChimesFloat)chimes_log10(chimes_max(
+            1.0e5 * data.CO_column /
+                (chimes_sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature /
+                             (PROTON_MASS * calculate_mean_molecular_weight(
+                                                myGasVars, myGlobalVars)))),
+            CHIMES_FLT_MIN));
       else
-        log_N_eff = (ChimesFloat)log10(chimes_max(
+        log_N_eff = (ChimesFloat)chimes_log10(chimes_max(
             1.0e5 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] *
                 myGasVars->nH_tot /
-                chimes_max(fabs(myGasVars->divVel), 1.0e-100),
-            1.0e-100));
+                chimes_max(fabs(myGasVars->divVel), CHIMES_FLT_MIN),
+            CHIMES_FLT_MIN));
 
+      const int N_COcool_rot_ColDens =
+          chimes_table_bins.N_CO_cool_rot_ColumnDensities;
+      const int N_COcool_vib_ColDens =
+          chimes_table_bins.N_CO_cool_vib_ColumnDensities;
       chimes_get_table_index(chimes_table_bins.CO_cool_rot_ColumnDensities,
-                             chimes_table_bins.N_CO_cool_rot_ColumnDensities,
-                             log_N_eff, &N_CO_rot_index, &dN_CO_rot);
+                             N_COcool_rot_ColDens, log_N_eff, &N_CO_rot_index,
+                             &dN_CO_rot);
       chimes_get_table_index(chimes_table_bins.CO_cool_vib_ColumnDensities,
-                             chimes_table_bins.N_CO_cool_vib_ColumnDensities,
-                             log_N_eff, &N_CO_vib_index, &dN_CO_vib);
+                             N_COcool_vib_ColDens, log_N_eff, &N_CO_vib_index,
+                             &dN_CO_vib);
 
-      CO_rot_L0 =
-          pow(10.0, chimes_interpol_1d(chimes_table_cooling.CO_cool_rot_L0,
-                                       T_mol_index, dT_mol));
-      CO_rot_Llte =
-          pow(10.0, chimes_interpol_2d(chimes_table_cooling.CO_cool_rot_Llte,
-                                       T_mol_index, N_CO_rot_index, dT_mol,
-                                       dN_CO_rot));
-      CO_rot_nhalf =
-          pow(10.0, chimes_interpol_2d(chimes_table_cooling.CO_cool_rot_nhalf,
-                                       T_mol_index, N_CO_rot_index, dT_mol,
-                                       dN_CO_rot));
-      CO_rot_a = pow(10.0, chimes_interpol_2d(
-                               chimes_table_cooling.CO_cool_rot_a, T_mol_index,
-                               N_CO_rot_index, dT_mol, dN_CO_rot));
+      CO_rot_L0 = chimes_exp10(chimes_interpol_1d(
+          chimes_table_cooling.CO_cool_rot_L0, T_mol_index, dT_mol));
+      CO_rot_Llte = chimes_exp10(chimes_interpol_2d(
+          chimes_table_cooling.CO_cool_rot_Llte, T_mol_index, N_CO_rot_index,
+          dT_mol, dN_CO_rot, N_COcool_rot_ColDens));
+      CO_rot_nhalf = chimes_exp10(chimes_interpol_2d(
+          chimes_table_cooling.CO_cool_rot_nhalf, T_mol_index, N_CO_rot_index,
+          dT_mol, dN_CO_rot, N_COcool_rot_ColDens));
+      CO_rot_a = chimes_exp10(chimes_interpol_2d(
+          chimes_table_cooling.CO_cool_rot_a, T_mol_index, N_CO_rot_index,
+          dT_mol, dN_CO_rot, N_COcool_rot_ColDens));
 
       CO_rot_neff =
           myGasVars->nH_tot *
-          (xH2 + 9.857 * pow((myGasVars->temperature / 1.0e3), 0.25) * xHI +
-           680.13 * pow(myGasVars->temperature, -0.25) * x_elec);
+          (xH2 +
+           9.857 * chimes_pow((myGasVars->temperature / 1.0e3), 0.25) * xHI +
+           680.13 * chimes_pow(myGasVars->temperature, -0.25) * x_elec);
 
       total_cooling +=
           xH2 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] /
           ((1.0 / CO_rot_L0) + (CO_rot_neff / CO_rot_Llte) +
-           (1.0 / CO_rot_L0) * pow((CO_rot_neff / CO_rot_nhalf), CO_rot_a) *
+           (1.0 / CO_rot_L0) *
+               chimes_pow((CO_rot_neff / CO_rot_nhalf), CO_rot_a) *
                (1.0 - (CO_rot_nhalf * CO_rot_L0 / CO_rot_Llte)));
 
-      CO_vib_L0 =
-          pow(10.0, chimes_interpol_1d(chimes_table_cooling.CO_cool_vib_L0,
-                                       T_mol_index, dT_mol));
-      CO_vib_Llte =
-          pow(10.0, chimes_interpol_2d(chimes_table_cooling.CO_cool_vib_Llte,
-                                       T_mol_index, N_CO_vib_index, dT_mol,
-                                       dN_CO_vib));
+      CO_vib_L0 = chimes_exp10(chimes_interpol_1d(
+          chimes_table_cooling.CO_cool_vib_L0, T_mol_index, dT_mol));
+      CO_vib_Llte = chimes_exp10(chimes_interpol_2d(
+          chimes_table_cooling.CO_cool_vib_Llte, T_mol_index, N_CO_vib_index,
+          dT_mol, dN_CO_vib, N_COcool_vib_ColDens));
 
       CO_vib_neff =
           myGasVars->nH_tot *
           (xH2 + 50.0 * xHI +
-           9035.09 * exp(68.0 / pow(myGasVars->temperature, 1.0 / 3.0)) *
-               pow(myGasVars->temperature / 300.0, 0.938) * x_elec);
+           9035.09 *
+               chimes_exp(68.0 /
+                          chimes_pow(myGasVars->temperature, 1.0 / 3.0)) *
+               chimes_pow(myGasVars->temperature / 300.0, 0.938) * x_elec);
 
       total_cooling +=
           xH2 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] /
@@ -509,135 +527,127 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
     // H2O and OH cooling
     if (myGlobalVars->element_included[2] == 1) {
       if (myGlobalVars->StaticMolCooling == 1)
-        log_N_eff = (ChimesFloat)log10(
-            chimes_max(1.0e5 * data.H2O_column /
-                           (sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature /
-                                 (PROTON_MASS * calculate_mean_molecular_weight(
-                                                    myGasVars, myGlobalVars)))),
-                       1.0e-100));
+        log_N_eff = (ChimesFloat)chimes_log10(chimes_max(
+            1.0e5 * data.H2O_column /
+                (chimes_sqrt(3.0 * BOLTZMANNCGS * myGasVars->temperature /
+                             (PROTON_MASS * calculate_mean_molecular_weight(
+                                                myGasVars, myGlobalVars)))),
+            CHIMES_FLT_MIN));
       else
-        log_N_eff = (ChimesFloat)log10(chimes_max(
+        log_N_eff = (ChimesFloat)chimes_log10(chimes_max(
             1.0e5 *
                 myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] *
                 myGasVars->nH_tot /
-                chimes_max(fabs(myGasVars->divVel), 1.0e-100),
-            1.0e-100));
+                chimes_max(fabs(myGasVars->divVel), CHIMES_FLT_MIN),
+            CHIMES_FLT_MIN));
 
       // rotational cooling
+      const int N_H2Ocool_rot_ColDens =
+          chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
       chimes_get_table_index(chimes_table_bins.H2O_cool_rot_ColumnDensities,
-                             chimes_table_bins.N_H2O_cool_rot_ColumnDensities,
-                             log_N_eff, &N_H2O_rot_index, &dN_H2O_rot);
+                             N_H2Ocool_rot_ColDens, log_N_eff, &N_H2O_rot_index,
+                             &dN_H2O_rot);
 
       H2O_rot_neff =
           myGasVars->nH_tot *
           (xH2 + 10.0 * xHI +
-           pow(10.0,
-               (-8.02 + (15.749 / pow(myGasVars->temperature, 1.0 / 6.0)) -
-                (47.137 / pow(myGasVars->temperature, 1.0 / 3.0)) +
-                (76.648 / pow(myGasVars->temperature, 0.5)) -
-                (60.191 / pow(myGasVars->temperature, 2.0 / 3.0)))) *
-               x_elec / (7.4e-12 * pow(myGasVars->temperature, 0.5)));
+           chimes_exp10(
+               (-8.02 +
+                (15.749 / chimes_pow(myGasVars->temperature, 1.0 / 6.0)) -
+                (47.137 / chimes_pow(myGasVars->temperature, 1.0 / 3.0)) +
+                (76.648 / chimes_pow(myGasVars->temperature, 0.5)) -
+                (60.191 / chimes_pow(myGasVars->temperature, 2.0 / 3.0)))) *
+               x_elec / (7.4e-12 * chimes_pow(myGasVars->temperature, 0.5)));
       if (log_T >= 2.0) {
         chimes_get_table_index(chimes_table_bins.H2O_cool_hiT_Temperatures,
                                chimes_table_bins.N_H2O_cool_hiT_Temperatures,
                                log_T, &T_H2O_index, &dT_H2O);
 
-        H2O_rot_L0 = pow(
-            10.0, chimes_interpol_1d(chimes_table_cooling.H2O_cool_rot_hiT_L0,
-                                     T_H2O_index, dT_H2O));
-        H2O_rot_Llte =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2O_cool_rot_hiT_Llte,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_nhalf =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2O_cool_rot_hiT_nhalf,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_a =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2O_cool_rot_hiT_a, T_H2O_index,
-                          N_H2O_rot_index, dT_H2O, dN_H2O_rot));
+        H2O_rot_L0 = chimes_exp10(chimes_interpol_1d(
+            chimes_table_cooling.H2O_cool_rot_hiT_L0, T_H2O_index, dT_H2O));
+        H2O_rot_Llte = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2O_cool_rot_hiT_Llte, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_nhalf = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2O_cool_rot_hiT_nhalf, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_a = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2O_cool_rot_hiT_a, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
 
         total_cooling +=
             myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] * xH2 /
             ((1.0 / H2O_rot_L0) + (H2O_rot_neff / H2O_rot_Llte) +
              (1.0 / H2O_rot_L0) *
-                 pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
+                 chimes_pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
                  (1.0 - (H2O_rot_nhalf * H2O_rot_L0 / H2O_rot_Llte)));
       } else {
         chimes_get_table_index(chimes_table_bins.H2O_cool_lowT_Temperatures,
                                chimes_table_bins.N_H2O_cool_lowT_Temperatures,
                                log_T, &T_H2O_index, &dT_H2O);
 
-        H2O_rot_L0 = pow(
-            10.0,
+        H2O_rot_L0 = chimes_exp10(
             chimes_interpol_1d(chimes_table_cooling.H2Oortho_cool_rot_lowT_L0,
                                T_H2O_index, dT_H2O));
-        H2O_rot_Llte =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Oortho_cool_rot_lowT_Llte,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_nhalf =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Oortho_cool_rot_lowT_nhalf,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_a =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Oortho_cool_rot_lowT_a,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
+        H2O_rot_Llte = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Oortho_cool_rot_lowT_Llte, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_nhalf = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Oortho_cool_rot_lowT_nhalf, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_a = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Oortho_cool_rot_lowT_a, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
 
         total_cooling +=
             0.75 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] *
             xH2 /
             ((1.0 / H2O_rot_L0) + (H2O_rot_neff / H2O_rot_Llte) +
              (1.0 / H2O_rot_L0) *
-                 pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
+                 chimes_pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
                  (1.0 - (H2O_rot_nhalf * H2O_rot_L0 / H2O_rot_Llte)));
 
-        H2O_rot_L0 = pow(
-            10.0,
+        H2O_rot_L0 = chimes_exp10(
             chimes_interpol_1d(chimes_table_cooling.H2Opara_cool_rot_lowT_L0,
                                T_H2O_index, dT_H2O));
-        H2O_rot_Llte =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Opara_cool_rot_lowT_Llte,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_nhalf =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Opara_cool_rot_lowT_nhalf,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
-        H2O_rot_a =
-            pow(10.0, chimes_interpol_2d(
-                          chimes_table_cooling.H2Opara_cool_rot_lowT_a,
-                          T_H2O_index, N_H2O_rot_index, dT_H2O, dN_H2O_rot));
+        H2O_rot_Llte = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Opara_cool_rot_lowT_Llte, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_nhalf = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Opara_cool_rot_lowT_nhalf, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
+        H2O_rot_a = chimes_exp10(chimes_interpol_2d(
+            chimes_table_cooling.H2Opara_cool_rot_lowT_a, T_H2O_index,
+            N_H2O_rot_index, dT_H2O, dN_H2O_rot, N_H2Ocool_rot_ColDens));
 
         total_cooling +=
             0.25 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] *
             xH2 /
             ((1.0 / H2O_rot_L0) + (H2O_rot_neff / H2O_rot_Llte) +
              (1.0 / H2O_rot_L0) *
-                 pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
+                 chimes_pow((H2O_rot_neff / H2O_rot_nhalf), H2O_rot_a) *
                  (1.0 - (H2O_rot_nhalf * H2O_rot_L0 / H2O_rot_Llte)));
       }
 
       // vibrational cooling
+      const int N_H2Ocool_vib_ColDens =
+          chimes_table_bins.N_H2O_cool_vib_ColumnDensities;
       chimes_get_table_index(chimes_table_bins.H2O_cool_vib_ColumnDensities,
                              chimes_table_bins.N_H2O_cool_vib_ColumnDensities,
                              log_N_eff, &N_H2O_vib_index, &dN_H2O_vib);
 
-      H2O_vib_L0 =
-          pow(10.0, chimes_interpol_1d(chimes_table_cooling.H2O_cool_vib_L0,
-                                       T_H2O_index, dT_H2O));
-      H2O_vib_Llte =
-          pow(10.0, chimes_interpol_2d(chimes_table_cooling.H2O_cool_vib_Llte,
-                                       T_H2O_index, N_H2O_vib_index, dT_H2O,
-                                       dN_H2O_vib));
+      H2O_vib_L0 = chimes_exp10(chimes_interpol_1d(
+          chimes_table_cooling.H2O_cool_vib_L0, T_H2O_index, dT_H2O));
+      H2O_vib_Llte = chimes_exp10(chimes_interpol_2d(
+          chimes_table_cooling.H2O_cool_vib_Llte, T_H2O_index, N_H2O_vib_index,
+          dT_H2O, dN_H2O_vib, N_H2Ocool_vib_ColDens));
 
-      H2O_vib_neff =
-          myGasVars->nH_tot *
-          (xH2 + 10.0 * xHI +
-           4.0625e8 * exp(47.5 / pow(myGasVars->temperature, 1.0 / 3.0)) *
-               pow(myGasVars->temperature, -0.5) * x_elec);
+      H2O_vib_neff = myGasVars->nH_tot *
+                     (xH2 + 10.0 * xHI +
+                      4.0625e8 *
+                          chimes_exp(47.5 / chimes_pow(myGasVars->temperature,
+                                                       1.0 / 3.0)) *
+                          chimes_pow(myGasVars->temperature, -0.5) * x_elec);
 
       total_cooling +=
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] * xH2 /
@@ -669,27 +679,27 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
         G0 += myGasVars->isotropic_photon_density[i] * LIGHTSPEED *
               myGasVars->G0_parameter[i];
 
-      G0 *= exp(-data.extinction * G0_GAMMA);
+      G0 *= chimes_exp(-data.extinction * G0_GAMMA);
 
       if ((G0 > 0.0) && (x_elec > 0.0)) {
         // Include a factor phi_pah = 0.5 in the denominator
-        log_Psi = (ChimesFloat)log10(chimes_max(
-            G0 * pow(myGasVars->temperature, 0.5) /
-                chimes_max(myGasVars->nH_tot * x_elec * 0.5, 1.0e-100),
-            1.0e-100));
+        log_Psi = (ChimesFloat)chimes_log10(chimes_max(
+            G0 * chimes_pow(myGasVars->temperature, 0.5) /
+                chimes_max(myGasVars->nH_tot * x_elec * 0.5, CHIMES_FLT_MIN),
+            CHIMES_FLT_MIN));
 
         chimes_get_table_index(chimes_table_bins.Psi, chimes_table_bins.N_Psi,
                                log_Psi, &Psi_index, &dPsi);
 
         total_heating +=
-            pow(10.0,
-                chimes_interpol_2d(chimes_table_cooling.photoelectric_heating,
-                                   T_index, Psi_index, dT, dPsi)) *
+            chimes_exp10(chimes_interpol_2d(
+                chimes_table_cooling.photoelectric_heating, T_index, Psi_index,
+                dT, dPsi, chimes_table_bins.N_Psi)) *
             G0 * myGasVars->dust_ratio / myGasVars->nH_tot;
         total_cooling +=
-            pow(10.0,
-                chimes_interpol_2d(chimes_table_cooling.grain_recombination,
-                                   T_index, Psi_index, dT, dPsi)) *
+            chimes_exp10(chimes_interpol_2d(
+                chimes_table_cooling.grain_recombination, T_index, Psi_index,
+                dT, dPsi, chimes_table_bins.N_Psi)) *
             myGasVars->dust_ratio *
             myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]];
       }
@@ -697,8 +707,8 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
 
     // Gas-grain energy transfer
     total_cooling +=
-        pow(10.0, chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer,
-                                     T_index, dT)) *
+        chimes_exp10(chimes_interpol_1d(chimes_table_cooling.gas_grain_transfer,
+                                        T_index, dT)) *
         myGasVars->dust_ratio *
         (myGasVars->temperature - myGlobalVars->grain_temperature);
   }
@@ -717,8 +727,8 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
   }
 
   // Convert units to erg/cm3/s
-  total_cooling *= pow(myGasVars->nH_tot, 2.0);
-  total_heating *= pow(myGasVars->nH_tot, 2.0);
+  total_cooling *= chimes_pow(myGasVars->nH_tot, 2.0);
+  total_heating *= chimes_pow(myGasVars->nH_tot, 2.0);
   total_heating += myGasVars->constant_heating_rate;
 
   if (mode == 0)
@@ -824,8 +834,8 @@ void do_equilibrium_cooling(struct UserData data) {
   /* Bracketing */
   if (u - u_old - LambdaNet * dt < 0.0) /* heating */
   {
-    u_upper *= sqrt(1.2);
-    u_lower /= sqrt(1.2);
+    u_upper *= chimes_sqrt(1.2);
+    u_lower /= chimes_sqrt(1.2);
 
     data.myGasVars->temperature =
         u_upper / (1.5 *
@@ -868,8 +878,8 @@ void do_equilibrium_cooling(struct UserData data) {
       printf("WARNING: Problem with eqm cooling finding the upper bound.\n");
   } else /* cooling */
   {
-    u_upper *= sqrt(1.2);
-    u_lower /= sqrt(1.2);
+    u_upper *= chimes_sqrt(1.2);
+    u_lower /= chimes_sqrt(1.2);
 
     data.myGasVars->temperature =
         u_lower / (1.5 *

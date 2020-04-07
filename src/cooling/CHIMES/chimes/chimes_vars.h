@@ -17,8 +17,116 @@
  *
  ***************************************************************************/
 
+#include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "chimes_interpol.h"
+
+/* Define CHIMES-specific maths operations, depending
+ * on whether we are using single or double precision.
+ * Also, the chimes_exp10() function may use the
+ * exp10() or exp10f() function if the GNU extensions
+ * are enabled, otherwise we will need to use our
+ * own definition. */
+#ifdef CHIMES_USE_SINGLE_PRECISION
+#define CHIMES_FLT_MIN FLT_MIN
+
+#ifdef CHIMES_USE_GNU_SOURCE
+__attribute__((always_inline, const)) inline static float chimes_exp10(
+    const float x) {
+  return exp10f(x);
+}
+#else
+__attribute__((always_inline, const)) inline static float chimes_exp10(
+    const float x) {
+  return expf(x * (float)M_LN10);
+}
+#endif
+
+__attribute__((always_inline, const)) inline static float chimes_exp(
+    const float x) {
+  return expf(x);
+}
+
+__attribute__((always_inline, const)) inline static float chimes_pow(
+    const float x, const float y) {
+  return powf(x, y);
+}
+
+__attribute__((always_inline, const)) inline static float chimes_log10(
+    const float x) {
+  return log10f(x);
+}
+
+__attribute__((always_inline, const)) inline static float chimes_log(
+    const float x) {
+  return logf(x);
+}
+
+__attribute__((always_inline, const)) inline static float chimes_sqrt(
+    const float x) {
+  return sqrtf(x);
+}
+
+#else
+#define CHIMES_FLT_MIN DBL_MIN
+
+#ifdef CHIMES_USE_GNU_SOURCE
+__attribute__((always_inline, const)) inline static double chimes_exp10(
+    const double x) {
+  return exp10(x);
+}
+#else
+__attribute__((always_inline, const)) inline static double chimes_exp10(
+    const double x) {
+  return exp(x * M_LN10);
+}
+#endif
+
+__attribute__((always_inline, const)) inline static double chimes_exp(
+    const double x) {
+  return exp(x);
+}
+
+__attribute__((always_inline, const)) inline static double chimes_pow(
+    const double x, const double y) {
+  return pow(x, y);
+}
+
+__attribute__((always_inline, const)) inline static double chimes_log10(
+    const double x) {
+  return log10(x);
+}
+
+__attribute__((always_inline, const)) inline static double chimes_log(
+    const double x) {
+  return log(x);
+}
+
+__attribute__((always_inline, const)) inline static double chimes_sqrt(
+    const double x) {
+  return sqrt(x);
+}
+#endif
+
+/* In some cases, we need an exp10() function
+ * that is always in double precision, even
+ * when we are running the rest of CHIMES
+ * in single precision. This is used in the
+ * photoheating shielding functions. */
+#ifdef CHIMES_USE_GNU_SOURCE
+__attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
+    const double x) {
+  return exp10(x);
+}
+#else
+__attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
+    const double x) {
+  return exp(x * M_LN10);
+}
+#endif
 
 /*!< Electron mass. Units: g. */
 #define ELECTRON_MASS 9.10938356e-28

@@ -17,6 +17,12 @@
  *
  ***************************************************************************/
 
+#ifdef CHIMES_USE_GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include <cvode/cvode.h>
 #include <math.h>
 #include <nvector/nvector_serial.h>
@@ -43,16 +49,18 @@ void set_equilibrium_abundances_from_tables(struct UserData data) {
   int T_index, nH_index, Z_index, i;
   ChimesFloat dT, dnH, dZ;
 
-  chimes_get_table_index(chimes_table_eqm_abundances.Temperatures,
-                         chimes_table_eqm_abundances.N_Temperatures,
-                         log10(data.myGasVars->temperature), &T_index, &dT);
-  chimes_get_table_index(chimes_table_eqm_abundances.Densities,
-                         chimes_table_eqm_abundances.N_Densities,
-                         log10(data.myGasVars->nH_tot), &nH_index, &dnH);
+  const int N_T = chimes_table_eqm_abundances.N_Temperatures;
+  const int N_nH = chimes_table_eqm_abundances.N_Densities;
+  const int N_Z = chimes_table_eqm_abundances.N_Metallicities;
+  chimes_get_table_index(chimes_table_eqm_abundances.Temperatures, N_T,
+                         chimes_log10(data.myGasVars->temperature), &T_index,
+                         &dT);
+  chimes_get_table_index(chimes_table_eqm_abundances.Densities, N_nH,
+                         chimes_log10(data.myGasVars->nH_tot), &nH_index, &dnH);
   chimes_get_table_index(
-      chimes_table_eqm_abundances.Metallicities,
-      chimes_table_eqm_abundances.N_Metallicities,
-      log10(chimes_max(data.myGasVars->metallicity, 1.0e-100)), &Z_index, &dZ);
+      chimes_table_eqm_abundances.Metallicities, N_Z,
+      chimes_log10(chimes_max(data.myGasVars->metallicity, CHIMES_FLT_MIN)),
+      &Z_index, &dZ);
 
   /* Note that the equilibrium tables tabulate
    * ionisation (or molecular) fraction, and
@@ -60,8 +68,9 @@ void set_equilibrium_abundances_from_tables(struct UserData data) {
    * multiply by the appropriate element abundance. */
   for (i = 0; i < data.myGlobalVars->totalNumberOfSpecies; i++)
     data.myGasVars->abundances[i] =
-        pow(10.0, chimes_interpol_3d(chimes_table_eqm_abundances.Abundances[i],
-                                     T_index, nH_index, Z_index, dT, dnH, dZ)) *
+        chimes_exp10(chimes_interpol_4d_fix_x(
+            chimes_table_eqm_abundances.Abundances, i, T_index, nH_index,
+            Z_index, dT, dnH, dZ, N_T, N_nH, N_Z)) *
         data.species[i].element_abundance;
 
   return;
@@ -140,7 +149,8 @@ void chimes_err_handler_fn(int error_code, const char *module,
 
   if (user_data->myGlobalVars->chimes_debug != 0) {
     if (!((user_data->myGasVars->temp_floor_mode == 1) &&
-          (error_code == CV_RHSFUNC_FAIL))) {
+          ((error_code == CV_RHSFUNC_FAIL) ||
+           (error_code == CV_LSETUP_FAIL)))) {
       cvErrHandler(error_code, module, function, msg, user_data->cvode_mem);
 
       if (user_data->myGlobalVars->chimes_debug == 2) {
@@ -327,7 +337,7 @@ void chimes_network(struct gasVariables *myGasVars,
         (myGasVars->abundances[indices[i]] > this_absolute_tolerance)) {
       relative_change =
           fabs(new_abundances[indices[i]] - myGasVars->abundances[indices[i]]) /
-          chimes_max(myGasVars->abundances[indices[i]], 1.0e-100);
+          chimes_max(myGasVars->abundances[indices[i]], CHIMES_FLT_MIN);
       if (relative_change > max_relative_change)
         max_relative_change = relative_change;
     }
@@ -350,7 +360,7 @@ void chimes_network(struct gasVariables *myGasVars,
     new_energy = old_energy - (cool_rate * myGasVars->hydro_timestep);
 
     relative_change =
-        fabs(new_energy - old_energy) / chimes_max(old_energy, 1.0e-100);
+        fabs(new_energy - old_energy) / chimes_max(old_energy, CHIMES_FLT_MIN);
     if (relative_change > max_relative_change)
       max_relative_change = relative_change;
   }
@@ -421,7 +431,8 @@ void chimes_network(struct gasVariables *myGasVars,
 
     /* Use CVodeCreate to create the solver
      * memory and specify the Backward Differentiation
-     * Formula and Newton iteration. */
+     * Formula. Note that CVODE now uses Newton iteration
+     * iteration by default, so no need to specify this. */
     cvode_mem = CVodeCreate(CV_BDF);
     data.cvode_mem = cvode_mem;
 

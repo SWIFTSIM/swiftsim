@@ -93,7 +93,7 @@ endif
 # source files for CHIMES cooling
 CHIMES_COOLING_SOURCES =
 if HAVECHIMESCOOLING 
-CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/interpol.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c cooling/CHIMES/colibre_tables.c
+CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c cooling/CHIMES/colibre_tables.c
 endif
 
 # source files for GRACKLE cooling
@@ -269,6 +269,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 cooling/CHIMES/colibre_tables_restrict.h \
 		 cooling/CHIMES/colibre_subgrid.h \
 		 cooling/CHIMES/chimes/chimes_vars.h cooling/CHIMES/chimes/chimes_proto.h \
+		 cooling/CHIMES/chimes/chimes_interpol.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \

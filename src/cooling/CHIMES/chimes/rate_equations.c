@@ -17,6 +17,12 @@
  *
  ***************************************************************************/
 
+#ifdef CHIMES_USE_GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include <cvode/cvode.h>
 #include <math.h>
 #include <nvector/nvector_serial.h>
@@ -490,7 +496,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   if (fabs((x - myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]]) /
            chimes_max(
                myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]],
-               1.0e-100)) > 0.01)
+               CHIMES_FLT_MIN)) > 0.01)
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] =
         chimes_max(x, 0.0);
 }
