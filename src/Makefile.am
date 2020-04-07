@@ -97,6 +97,9 @@ CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/c
 if HAVE_CHIMES_GNU_SOURCE
 AM_CFLAGS += -DCHIMES_ENABLE_GNU_SOURCE
 endif 
+if HAVE_CHIMES_SINGLE_PRECISION 
+AM_CFLAGS += -DCHIMES_USE_SINGLE_PRECISION 
+endif 
 endif
 
 # source files for GRACKLE cooling

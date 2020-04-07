@@ -1533,6 +1533,17 @@ fi
 
 AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test $enable_chimes_gnu_source = "yes"])
 
+# Use single precision in the CHIMES module. 
+AC_ARG_ENABLE([chimes-single-precision],
+   [AS_HELP_STRING([--enable-chimes-single-precision],
+     [Use single precision in CHIMES @<:@yes/no@:>@]
+   )],
+   [enable_chimes_single_precision="$enableval"],
+   [enable_chimes_single_precision="no"]
+)
+
+AM_CONDITIONAL(HAVE_CHIMES_SINGLE_PRECISION, [test $enable_chimes_single_precision = "yes"])
+
 # Various package configuration options.
 
 # Master subgrid options
