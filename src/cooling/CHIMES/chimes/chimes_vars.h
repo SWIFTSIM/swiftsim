@@ -33,7 +33,7 @@
 #ifdef CHIMES_USE_SINGLE_PRECISION
 #define CHIMES_FLT_MIN FLT_MIN
 
-#ifdef CHIMES_USE_GNU_SOURCE
+#ifdef CHIMES_ENABLE_GNU_SOURCE
 __attribute__((always_inline, const)) inline static float chimes_exp10(
     const float x) {
   return exp10f(x);
@@ -73,7 +73,7 @@ __attribute__((always_inline, const)) inline static float chimes_sqrt(
 #else
 #define CHIMES_FLT_MIN DBL_MIN
 
-#ifdef CHIMES_USE_GNU_SOURCE
+#ifdef CHIMES_ENABLE_GNU_SOURCE
 __attribute__((always_inline, const)) inline static double chimes_exp10(
     const double x) {
   return exp10(x);
@@ -116,7 +116,7 @@ __attribute__((always_inline, const)) inline static double chimes_sqrt(
  * when we are running the rest of CHIMES
  * in single precision. This is used in the
  * photoheating shielding functions. */
-#ifdef CHIMES_USE_GNU_SOURCE
+#ifdef CHIMES_ENABLE_GNU_SOURCE
 __attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
     const double x) {
   return exp10(x);

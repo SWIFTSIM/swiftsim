@@ -17,7 +17,7 @@
  *
  ***************************************************************************/
 
-#ifdef CHIMES_USE_GNU_SOURCE
+#ifdef CHIMES_ENABLE_GNU_SOURCE
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

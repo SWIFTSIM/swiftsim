@@ -94,6 +94,9 @@ endif
 CHIMES_COOLING_SOURCES =
 if HAVECHIMESCOOLING 
 CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c cooling/CHIMES/colibre_tables.c
+if HAVE_CHIMES_GNU_SOURCE
+AM_CFLAGS += -DCHIMES_ENABLE_GNU_SOURCE
+endif 
 endif
 
 # source files for GRACKLE cooling

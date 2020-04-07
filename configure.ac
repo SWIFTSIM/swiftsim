@@ -1508,6 +1508,30 @@ if test "x$with_sundials" != "xno"; then
 fi 
 AC_SUBST([SUNDIALS_INCS])
 
+# CHIMES configuration options. 
+
+# Enable GNU extensions in CHIMES. 
+# If this is switched on, CHIMES 
+# will use the exp10() function 
+# from the GNU extensions, otherwise 
+# we will use our own definition. 
+AC_ARG_ENABLE([chimes-gnu-source],
+   [AS_HELP_STRING([--enable-chimes-gnu-source],
+     [Enable GNU extensions in CHIMES @<:@yes/no@:>@]
+   )],
+   [enable_chimes_gnu_source="$enableval"],
+   [enable_chimes_gnu_source="no"]
+)
+
+# If using CHIMES GNU source, check that 
+# exp10 is available in the math library. 
+if test "$enable_chimes_gnu_source" = "yes"; then 
+   if test "$ac_cv_lib_m_exp10" = "no"; then 
+      AC_MSG_ERROR(The exp10 function is not available in the math library. Cannot compile with the --enable-chimes-gnu-source option.)
+   fi
+fi
+
+AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test $enable_chimes_gnu_source = "yes"])
 
 # Various package configuration options.
 
