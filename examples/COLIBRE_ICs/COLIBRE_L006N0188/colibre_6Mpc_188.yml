@@ -140,7 +140,7 @@ COLIBREChemistry:
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  virial_coefficient:               25.1327 # set the virial coefficient alpha \propto 1./virial_coefficient
+  alpha_virial:                     25.1327 # set the alpha virial for star forming gas.
 
 # Feedback parameter
 COLIBREFeedback:
