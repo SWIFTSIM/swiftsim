@@ -28,6 +28,9 @@
 /*!< The total number of species in the full network. */
 #define CHIMES_TOTSIZE 157
 
+/*!< String length for species names. */
+#define CHIMES_NAME_STR_LENGTH 8
+
 #ifndef chimes_max
 #define chimes_max(a, b) ((a) > (b) ? (a) : (b))
 #endif
@@ -1022,6 +1025,12 @@ void update_rates(struct gasVariables *myGasVars,
 void redshift_dependent_UVB_copy_lowz_to_hiz(
     struct globalVariables *myGlobalVars);
 void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars);
+
+/**
+ * Array of species names
+ * for the full network.
+ */
+extern const char chimes_species_names[CHIMES_TOTSIZE][CHIMES_NAME_STR_LENGTH];
 
 /**
  * Enumeration of the indices for

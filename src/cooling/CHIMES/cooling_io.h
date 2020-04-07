@@ -31,12 +31,28 @@
 /**
  * @brief Writes the current model of SPH to the file
  * @param h_grp The HDF5 group in which to write
+ * @param h_grp_columns The HDF5 group containing named columns
  * @param cooling the parameters of the cooling function.
  */
 __attribute__((always_inline)) INLINE static void cooling_write_flavour(
-    hid_t h_grp, const struct cooling_function_data* cooling) {
+    hid_t h_grp, hid_t h_grp_columns,
+    const struct cooling_function_data* cooling) {
 
   io_write_attribute_s(h_grp, "Cooling Model", "CHIMES");
+
+  /* Add the species names to the named columns */
+  hsize_t dims[1] = {CHIMES_NETWORK_SIZE};
+  hid_t type = H5Tcopy(H5T_C_S1);
+  H5Tset_size(type, CHIMES_NAME_STR_LENGTH);
+  hid_t space = H5Screate_simple(1, dims, NULL);
+  hid_t dset = H5Dcreate(h_grp_columns, "SpeciesFractions", type, space,
+                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+           cooling->chimes_species_names_reduced[0]);
+  H5Dclose(dset);
+
+  H5Tclose(type);
+  H5Sclose(space);
 }
 #endif
 
@@ -69,7 +85,7 @@ INLINE static void convert_part_sub_rho(const struct engine* e,
 INLINE static void convert_part_chimes_abundances(const struct engine* e,
                                                   const struct part* p,
                                                   const struct xpart* xp,
-                                                  double* ret) {
+                                                  float* ret) {
   /* Create dummy part and xpart
    * structures that we can use to
    * temporarily update the CHIMES
@@ -86,7 +102,7 @@ INLINE static void convert_part_chimes_abundances(const struct engine* e,
 
   int i;
   for (i = 0; i < CHIMES_NETWORK_SIZE; i++)
-    ret[i] = (double)dummy_xp.cooling_data.chimes_abundances[i];
+    ret[i] = (float)dummy_xp.cooling_data.chimes_abundances[i];
 }
 
 /**
@@ -104,9 +120,10 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
     const struct cooling_function_data* cooling) {
 
   list[0] = io_make_output_field_convert_part(
-      "ChimesAbundances", DOUBLE, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f,
+      "SpeciesFractions", FLOAT, CHIMES_NETWORK_SIZE, UNIT_CONV_NO_UNITS, 0.f,
       parts, xparts, convert_part_chimes_abundances,
-      "CHIMES abundance array. The abundance of species i is defined in terms "
+      "Species fractions array for all ions and molecules in the CHIMES "
+      "network. The fraction of species i is defined in terms "
       "of its number density relative to hydrogen, i.e. n_i / n_H_tot.");
 
   list[1] = io_make_output_field_convert_part(
