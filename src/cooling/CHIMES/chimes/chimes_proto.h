@@ -134,9 +134,6 @@ struct globalVariables {
                                     integration. */
   ChimesFloat absoluteTolerance; /*!< Absolute tolerance used in the CVODE
                                     integration. */
-  ChimesFloat thermalAbsoluteTolerance; /*!< Absolute tolerance used for
-                                           integrating the temperature in CVODE.
-                                         */
   ChimesFloat explicitTolerance; /*!< Tolerance below which we will use the
                                     explicit solution. */
   int element_included[9]; /*!< Array of flags to exclude (0) or include (1)

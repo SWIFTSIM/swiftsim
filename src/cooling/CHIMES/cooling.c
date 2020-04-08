@@ -220,9 +220,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->ChimesGlobalVars.absoluteTolerance =
       (ChimesFloat)parser_get_param_double(parameter_file,
                                            "CHIMESCooling:absoluteTolerance");
-  cooling->ChimesGlobalVars.thermalAbsoluteTolerance =
-      (ChimesFloat)parser_get_param_double(
-          parameter_file, "CHIMESCooling:thermalAbsoluteTolerance");
   cooling->ChimesGlobalVars.explicitTolerance =
       (ChimesFloat)parser_get_param_double(parameter_file,
                                            "CHIMESCooling:explicitTolerance");

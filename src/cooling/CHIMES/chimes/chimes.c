@@ -405,7 +405,7 @@ void chimes_network(struct gasVariables *myGasVars,
       NV_Ith_S(y, data.network_size) = (realtype)internal_energy;
       abstol_vector = N_VNew_Serial(data.network_size + 1);
       NV_Ith_S(abstol_vector, data.network_size) =
-          (realtype)myGlobalVars->thermalAbsoluteTolerance;
+	(realtype) CHIMES_FLT_MIN; 
     }
 
     i = 0;
