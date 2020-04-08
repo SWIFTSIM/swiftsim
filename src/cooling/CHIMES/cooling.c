@@ -586,36 +586,10 @@ void chimes_update_gas_vars(const double u_cgs,
       chemistry_get_metal_mass_fraction_for_cooling(p);
   ChimesFloat XH = (ChimesFloat)metal_fraction[chemistry_element_H];
 
-  ChimesGasVars->metallicity = 0.0;
-  float totmass = 0.0, metalmass = 0.0;
-  for (enum colibre_cooling_element elem = element_H; elem < element_OA;
-       elem++) {
-    if ((elem != element_S) && (elem != element_Ca)) {
-      totmass += metal_fraction[element_from_table_to_code(elem)];
-      if ((elem != element_H) && (elem != element_He))
-        metalmass += metal_fraction[element_from_table_to_code(elem)];
-    } else if (elem == element_S) {
-      totmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                 cooling->S_over_Si_ratio_in_solar *
-                 cooling->S_solar_mass_fraction /
-                 cooling->Si_solar_mass_fraction;
-      metalmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                   cooling->S_over_Si_ratio_in_solar *
-                   cooling->S_solar_mass_fraction /
-                   cooling->Si_solar_mass_fraction;
-    } else if (elem == element_Ca) {
-      totmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                 cooling->Ca_over_Si_ratio_in_solar *
-                 cooling->Ca_solar_mass_fraction /
-                 cooling->Si_solar_mass_fraction;
-      metalmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                   cooling->Ca_over_Si_ratio_in_solar *
-                   cooling->Ca_solar_mass_fraction /
-                   cooling->Si_solar_mass_fraction;
-    }
-  }
-  ChimesGasVars->metallicity =
-      (ChimesFloat)(metalmass / totmass) / cooling->Zsol;
+  ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p); 
+  ChimesGasVars->metallicity /= cooling->Zsol; 
+  if (ChimesGasVars->metallicity <= 0.0) 
+    ChimesGasVars->metallicity = FLT_MIN; 
 #else
   /* Without COLIBRE or EAGLE chemistry,
    * the metal abundances are unavailable.
