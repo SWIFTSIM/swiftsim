@@ -26,6 +26,25 @@
 struct star_formation_xpart_data {
   /*! Particle velocity divergence. */
   float div_v;
+}
+
+/**
+ * @brief Star-formation-related properties stored in the star particle
+ * data.
+ */
+struct star_formation_spart_data {
+  
+  /*! The birth density */
+  float birth_density;
+
+  /*! The birth temperature */
+  float birth_temperature;
+
+  /*! The birth mass */
+  float birth_mass;
+
+  /*! The progenitor ID */
+  long long progenitor_id;
 };
 
 /**
