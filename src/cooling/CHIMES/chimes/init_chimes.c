@@ -275,7 +275,7 @@ void load_eqm_table(char *filename,
           my_eqm_abundances->Abundances[chimes_flatten_index_4d(
               k, l, i, j, my_eqm_abundances->N_Temperatures,
               my_eqm_abundances->N_Densities,
-              my_eqm_abundances->N_Metallicities)] = (ChimesFloat)array1D[l];
+              my_eqm_abundances->N_Metallicities)] = chimes_max((ChimesFloat)array1D[l], chimes_log10(CHIMES_FLT_MIN)); 
       }
     }
   }
@@ -5828,23 +5828,27 @@ int set_species_index_array(struct globalVariables *myGlobalVars) {
 void init_chimes(struct globalVariables *myGlobalVars) {
   char fname[520];
 
+  /* Print the float precision used in CHIMES 
+   * and in the Sundials library. */ 
+  if (sizeof(ChimesFloat) == sizeof(float)) 
+    printf("CHIMES built in single precision.\n"); 
+  else if (sizeof(ChimesFloat) == sizeof(double)) 
+    printf("CHIMES built in double precision.\n"); 
+  else
+    printf("CHIMES precision not recognised.\n"); 
+
+  if (sizeof(realtype) == sizeof(float)) 
+    printf("Sundials built in single precision.\n"); 
+  else if (sizeof(realtype) == sizeof(double)) 
+    printf("Sundials built in double precision.\n"); 
+  else 
+    printf("Sundials precision not recognised.\n"); 
+
   /* Check that both CHIMES and the Sundials
    * library have been built with the same
    * float precision. */
   if (sizeof(ChimesFloat) != sizeof(realtype)) {
-    if (sizeof(ChimesFloat) > sizeof(realtype))
-      printf(
-          "CHIMES ERROR: The CHIMES module has been built in double precision, "
-          "but the Sundials library has been built in single precision. You "
-          "can re-build CHIMES in single precision by adding the "
-          "-DCHIMES_USE_SINGLE_PRECISION compiler flag to the Makefile.\n");
-    else
-      printf(
-          "CHIMES ERROR: The CHIMES module has been built in single precision, "
-          "but the Sundials library has been built in double precision. You "
-          "can re-build CHIMES in double precision by removing the "
-          "-DCHIMES_USE_SINGLE_PRECISION compiler flag from the Makefile.\n");
-
+    printf("CHIMES ERROR: CHIMES and Sundials have to use the same float precision.\n"); 
     exit(EXIT_FAILURE);
   }
 
