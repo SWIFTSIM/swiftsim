@@ -210,26 +210,25 @@ __attribute__((always_inline)) INLINE static void logger_sparticle_interpolate(
 
   scaling = (time - part_curr->time) / scaling;
 
-  double tmp;
-  float ftmp;
-
   /* interpolate vectors. */
   for (size_t i = 0; i < 3; i++) {
-    tmp = (part_next->x[i] - part_curr->x[i]);
-    part_curr->x[i] += tmp * scaling;
+    part_curr->x[i] = logger_tools_quintic_hermite_spline(
+      part_curr->time, part_curr->x[i], part_curr->v[i], part_curr->a[i],
+      part_next->time, part_next->x[i], part_next->v[i], part_next->a[i], time);
 
-    ftmp = (part_next->v[i] - part_curr->v[i]);
-    part_curr->v[i] += ftmp * scaling;
+    part_curr->v[i] = logger_tools_cubic_hermite_spline(
+      part_curr->time, part_curr->v[i], part_curr->a[i],
+      part_next->time, part_next->v[i], part_next->a[i], time);
 
-    ftmp = (part_next->a[i] - part_curr->a[i]);
-    part_curr->a[i] += ftmp * scaling;
+    const float tmp = (part_next->a[i] - part_curr->a[i]);
+    part_curr->a[i] += tmp * scaling;
   }
 
-  ftmp = (part_next->mass - part_curr->mass);
-  part_curr->mass += ftmp * scaling;
+  float tmp = (part_next->mass - part_curr->mass);
+  part_curr->mass += tmp * scaling;
 
-  ftmp = (part_next->h - part_curr->h);
-  part_curr->h += ftmp * scaling;
+  tmp = (part_next->h - part_curr->h);
+  part_curr->h += tmp * scaling;
 
   /* set time. */
   part_curr->time = time;
