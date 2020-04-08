@@ -58,7 +58,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
-    event_logger.h event_logger_struct.h
+    event_logger.h event_logger_struct.h event_logger_core.h
 
 # source files for EAGLE cooling
 QLA_COOLING_SOURCES =
@@ -137,7 +137,7 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
-		 gravity_iact.h kernel_long_gravity.h vector.h cache.h \
+		 gravity_iact.h kernel_long_gravity.h vector.h accumulate.h cache.h \
 	         runner_doiact_nosort.h runner_doiact_hydro.h runner_doiact_stars.h runner_doiact_black_holes.h runner_doiact_grav.h \
                  runner_doiact_functions_hydro.h runner_doiact_functions_stars.h runner_doiact_functions_black_holes.h \
 		 runner_doiact_functions_limiter.h runner_doiact_limiter.h units.h intrinsics.h minmax.h \
@@ -171,11 +171,11 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 hydro/PressureEnergyMorrisMonaghanAV/hydro.h hydro/PressureEnergyMorrisMonaghanAV/hydro_iact.h hydro/PressureEnergyMorrisMonaghanAV/hydro_io.h \
                  hydro/PressureEnergyMorrisMonaghanAV/hydro_debug.h hydro/PressureEnergyMorrisMonaghanAV/hydro_part.h \
 		 hydro/PressureEnergyMorrisMonaghanAV/hydro_parameters.h \
-		 hydro/AnarchyPU/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
-                 hydro/AnarchyPU/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
+		 hydro/AnarchyPU/hydro.h hydro/AnarchyPU/hydro_iact.h hydro/AnarchyPU/hydro_io.h \
+                 hydro/AnarchyPU/hydro_debug.h hydro/AnarchyPU/hydro_part.h \
 		 hydro/AnarchyPU/hydro_parameters.h \
-		 hydro/SPHENIX/hydro.h hydro/PressureEnergy/hydro_iact.h hydro/PressureEnergy/hydro_io.h \
-                 hydro/SPHENIX/hydro_debug.h hydro/PressureEnergy/hydro_part.h \
+		 hydro/SPHENIX/hydro.h hydro/SPHENIX/hydro_iact.h hydro/SPHENIX/hydro_io.h \
+                 hydro/SPHENIX/hydro_debug.h hydro/SPHENIX/hydro_part.h \
 		 hydro/SPHENIX/hydro_parameters.h \
 		 hydro/Gizmo/hydro_parameters.h \
                  hydro/Gizmo/hydro_io.h hydro/Gizmo/hydro_debug.h \
@@ -241,8 +241,11 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 star_formation/EAGLE/star_formation_io.h star_formation/EAGLE/star_formation_iact.h \
 		 star_formation/GEAR/star_formation.h star_formation/GEAR/star_formation_struct.h \
 		 star_formation/GEAR/star_formation_io.h star_formation/GEAR/star_formation_iact.h \
+		 star_formation/COLIBRE/star_formation.h star_formation/COLIBRE/star_formation_struct.h \
+		 star_formation/COLIBRE/star_formation_io.h star_formation/COLIBRE/star_formation_iact.h \
                  star_formation/EAGLE/star_formation_logger.h star_formation/EAGLE/star_formation_logger_struct.h \
                  star_formation/GEAR/star_formation_logger.h star_formation/GEAR/star_formation_logger_struct.h \
+                 star_formation/COLIBRE/star_formation_logger.h star_formation/COLIBRE/star_formation_logger_struct.h \
                  star_formation/none/star_formation_logger.h star_formation/none/star_formation_logger_struct.h \
                  cooling/none/cooling.h cooling/none/cooling_struct.h \
                  cooling/none/cooling_io.h \
@@ -260,6 +263,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/QLA/cooling_io.h cooling/QLA/interpolate.h cooling/QLA/cooling_rates.h \
 		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h cooling/COLIBRE/cooling_subgrid.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
+	         cooling/COLIBRE/cooling_tables.h cooling/COLIBRE/cooling_subgrid.h \
                  cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
                  cooling/CHIMES/cooling_io.h cooling/CHIMES/colibre_tables.h \
 		 cooling/CHIMES/colibre_tables_restrict.h \
@@ -303,6 +307,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
                  feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
                  feedback/COLIBRE/yield_tables.h feedback/COLIBRE/SNIa_DTD.h feedback/COLIBRE/SNIa_DTD_struct.h \
+		 feedback/COLIBRE/feedback_tables.h \
 		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution.h \
 		 feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
 		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
@@ -324,6 +329,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 pressure_floor/GEAR/pressure_floor_iact.h pressure_floor/none/pressure_floor_iact.h \
 		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h \
 	         task_order/GEAR/task_order.h task_order/EAGLE/task_order.h task_order/default/task_order.h \
+		 event_logger/none/event_logger.h event_logger/none/event_logger_struct.h \
+		 event_logger/EAGLE/event_logger.h event_logger/EAGLE/event_logger_struct.h \
 		 event_logger/COLIBRE/event_logger.h event_logger/COLIBRE/event_logger_struct.h \
 		 event_logger/COLIBRE/event_logger_SNIa.h event_logger/COLIBRE/event_logger_SNII.h event_logger/COLIBRE/event_logger_r_processes.h
 

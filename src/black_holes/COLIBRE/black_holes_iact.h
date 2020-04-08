@@ -21,6 +21,7 @@
 
 /* Local includes */
 #include "black_holes_parameters.h"
+#include "equation_of_state.h"
 #include "gravity.h"
 #include "hydro.h"
 #include "random.h"
@@ -77,8 +78,11 @@ runner_iact_nonsym_bh_gas_density(
   /* Contribution to the total neighbour mass */
   bi->ngb_mass += mj;
 
-  /* Neighbour sounds speed */
-  const float cj = hydro_get_comoving_soundspeed(pj);
+  /* Neighbour's sound speed */
+  const float pressure_j = hydro_get_comoving_pressure(pj);
+  const float cj = gas_soundspeed_from_pressure(
+      xpj->tracers_data.subgrid_dens * cosmo->a * cosmo->a * cosmo->a,
+      pressure_j);
 
   /* Contribution to the smoothed sound speed */
   bi->sound_speed_gas += mj * cj * wi;
@@ -96,6 +100,46 @@ runner_iact_nonsym_bh_gas_density(
   bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
   bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
   bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+
+  /* Contribution to BH accretion rate
+   *
+   * i) Peculiar speed of gas particle relative to BH
+   *    [NB: don't need Hubble term, velocity is at BH location]
+   */
+  const double bh_v_peculiar[3] = {bi->v[0] * cosmo->a_inv,
+                                   bi->v[1] * cosmo->a_inv,
+                                   bi->v[2] * cosmo->a_inv};
+
+  const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv, vj[1] * cosmo->a_inv,
+                                    vj[2] * cosmo->a_inv};
+
+  const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
+                                     gas_v_peculiar[1] - bh_v_peculiar[1],
+                                     gas_v_peculiar[2] - bh_v_peculiar[2]};
+
+  const double v_diff_norm2 = v_diff_peculiar[0] * v_diff_peculiar[0] +
+                              v_diff_peculiar[1] * v_diff_peculiar[1] +
+                              v_diff_peculiar[2] * v_diff_peculiar[2];
+
+  /* ii) Calculate denominator in Bondi formula */
+  const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
+  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
+  const double denominator2 = v_diff_norm2 + gas_c_phys2;
+  double denominator_inv = 1. / sqrt(denominator2);
+
+  /* Make sure that the denominator is positive */
+  if (denominator2 <= 0)
+    error("Invalid denominator for gas particle %lld", pj->id);
+
+  /* iii) Contribution of gas particle to the BH accretion rate *
+   *      (without constant pre-factor)
+   *      [NB: rhoj is weighted contribution to BH gas density]
+   */
+  const float rhoj = mj * wi * cosmo->a3_inv;
+  bi->accretion_rate +=
+      (rhoj * denominator_inv * denominator_inv * denominator_inv);
+
+  /* [End of accretion contribution calculation] */
 
 #ifdef DEBUG_INTERACTIONS_BH
   /* Update ngb counters */
@@ -372,7 +416,7 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
     /* Are we lucky? */
     if (rand < prob) {
 
-      /* Compute new energy of this particle */
+      /* Compute new energy per unit mass of this particle */
       const double u_init = hydro_get_physical_internal_energy(pj, xpj, cosmo);
       const float delta_u = bi->to_distribute.AGN_delta_u;
       const double u_new = u_init + delta_u;
@@ -386,8 +430,10 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
       /* Update cooling properties. */
       cooling_update_feedback_particle(xpj);
 
-      /* Mark this particle has having been heated by AGN feedback */
-      tracers_after_black_holes_feedback(xpj, with_cosmology, cosmo->a, time);
+      /* Store the feedback energy */
+      const double delta_energy = delta_u * hydro_get_mass(pj);
+      tracers_after_black_holes_feedback(xpj, with_cosmology, cosmo->a, time,
+                                         delta_energy);
 
       /* message( */
       /*     "We did some AGN heating! id %llu BH id %llu probability " */

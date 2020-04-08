@@ -239,6 +239,23 @@ if test "x$enable_debug" = "xyes"; then
    fi
 fi
 
+# Are we using the regular tasks (with atomics and no task conflicts) or
+# are we using the atomic-free task-conflicting (slower) version?
+AC_ARG_ENABLE([atomics-within-tasks],
+   [AS_HELP_STRING([--disable-atomics-within-tasks],
+     [Disable the use of atomic operations within tasks. This creates more task conflicts
+      but allows for atomic-free and lock-free code within the tasks. This likely slows down
+      the code @<:@yes/no@:>@]
+   )],
+   [enable_atomics_within_tasks="$enableval"],
+   [enable_atomics_within_tasks="yes"]
+)
+AS_IF([test "x$enable_atomics_within_tasks" != "xno"],
+   , # Note: atomics are allowed by default, we define the macro if we don't want them.
+   [AC_DEFINE([SWIFT_TASKS_WITHOUT_ATOMICS],1,[Makes SWIFT use atomic-free and lock-free tasks.])
+])
+
+
 # Check if task debugging is on.
 AC_ARG_ENABLE([task-debugging],
    [AS_HELP_STRING([--enable-task-debugging],
@@ -1582,7 +1599,7 @@ case "$with_subgrid" in
 	with_subgrid_cooling=COLIBRE
 	with_subgrid_chemistry=COLIBRE
 	with_subgrid_tracers=COLIBRE
-	with_subgrid_entropy_floor=EAGLE
+	with_subgrid_entropy_floor=COLIBRE
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
@@ -1595,7 +1612,7 @@ case "$with_subgrid" in
 	with_subgrid_cooling=CHIMES
 	with_subgrid_chemistry=COLIBRE
 	with_subgrid_tracers=COLIBRE
-	with_subgrid_entropy_floor=EAGLE
+	with_subgrid_entropy_floor=COLIBRE
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
@@ -2419,7 +2436,8 @@ if test $with_black_holes = "COLIBRE"; then
 fi
 
 # Make the documentation. Add conditional to handle disable option.
-DX_INIT_DOXYGEN(libswift,doc/Doxyfile,doc/)
+DX_DOXYGEN_FEATURE(OFF)
+DX_INIT_DOXYGEN(SWIFT, doc/Doxyfile, doc/)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
 # Check if using QLA cooling
@@ -2525,6 +2543,7 @@ AC_MSG_RESULT([
    SNIa DTD model       : $with_SNIa_DTD
    Task dependencies    : $with_task_order
 
+   Atomic operations in tasks  : $enable_atomics_within_tasks
    Individual timers           : $enable_timers
    Task debugging              : $enable_task_debugging
    Threadpool debugging        : $enable_threadpool_debugging

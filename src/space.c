@@ -1204,7 +1204,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (s->e->nodeID == 0 || verbose) message("(re)building space");
   fflush(stdout);
-
+#endif
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   /* Reset the cell counter */
   last_cell_id = 1;
 #endif
@@ -2207,9 +2208,16 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2340,9 +2348,16 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2479,9 +2494,16 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2614,9 +2636,16 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =

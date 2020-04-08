@@ -261,12 +261,9 @@ INLINE static void star_formation_copy_properties(
     const struct part* p, const struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
     const struct cosmology* cosmo, const int with_cosmology,
-    const struct phys_const* phys_const,
-    const struct hydro_props* restrict hydro_props,
-    const struct dustevo_props* restrict dp,
-    const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling,
-    const int convert_part) {
+    const struct phys_const* phys_const, const struct hydro_props* hydro_props,
+    const struct dustevo_props* restrict dp, const struct unit_system* us, 
+    const struct cooling_function_data* cooling, const int convert_part) {
 
   /* Store the current mass */
   sp->mass = hydro_get_mass(p);

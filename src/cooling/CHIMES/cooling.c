@@ -435,6 +435,15 @@ void cooling_init_backend(struct swift_params *parameter_file,
         cooling->ChimesGlobalVars.totalNumberOfSpecies, CHIMES_NETWORK_SIZE,
         cooling->ChimesGlobalVars.totalNumberOfSpecies);
 
+  /* Construct the array of species names
+   * for the reduced network. */
+  for (int idx = 0; idx < CHIMES_TOTSIZE; idx++) {
+    if (cooling->ChimesGlobalVars.speciesIndices[idx] >= 0)
+      strcpy(cooling->chimes_species_names_reduced[cooling->ChimesGlobalVars
+                                                       .speciesIndices[idx]],
+             chimes_species_names[idx]);
+  }
+
   if (cooling->ChimesGlobalVars.hybrid_cooling_mode == 1) {
     /* Create data structure for hybrid cooling,
      * and store pointer to the Colibre table. */
@@ -1688,7 +1697,7 @@ void cooling_set_subgrid_properties(
           (ChimesFloat)xp->cooling_data.chimes_abundances[i];
 
     // Update element abundances
-    chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
+    chimes_update_element_abundances(phys_const, us, cosmo, cooling, dp, p, xp,
                                      &ChimesGasVars, 1);
 
     // Update ChimesGasVars

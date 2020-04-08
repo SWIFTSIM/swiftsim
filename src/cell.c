@@ -1228,7 +1228,7 @@ int cell_unpack_sf_counts(struct cell *restrict c,
  * @return 0 on success, 1 on failure
  */
 int cell_locktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to lock this cell. */
   if (c->hydro.hold || lock_trylock(&c->hydro.lock) != 0) {
@@ -1288,7 +1288,7 @@ int cell_locktree(struct cell *c) {
  * @return 0 on success, 1 on failure
  */
 int cell_glocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to lock this cell. */
   if (c->grav.phold || lock_trylock(&c->grav.plock) != 0) {
@@ -1348,7 +1348,7 @@ int cell_glocktree(struct cell *c) {
  * @return 0 on success, 1 on failure
  */
 int cell_mlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to lock this cell. */
   if (c->grav.mhold || lock_trylock(&c->grav.mlock) != 0) {
@@ -1408,7 +1408,7 @@ int cell_mlocktree(struct cell *c) {
  * @return 0 on success, 1 on failure
  */
 int cell_slocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to lock this cell. */
   if (c->stars.hold || lock_trylock(&c->stars.lock) != 0) {
@@ -1468,7 +1468,7 @@ int cell_slocktree(struct cell *c) {
  * @return 0 on success, 1 on failure
  */
 int cell_blocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to lock this cell. */
   if (c->black_holes.hold || lock_trylock(&c->black_holes.lock) != 0) {
@@ -1528,7 +1528,7 @@ int cell_blocktree(struct cell *c) {
  * @param c The #cell.
  */
 void cell_unlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to unlock this cell. */
   if (lock_unlock(&c->hydro.lock) != 0) error("Failed to unlock cell.");
@@ -1546,7 +1546,7 @@ void cell_unlocktree(struct cell *c) {
  * @param c The #cell.
  */
 void cell_gunlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to unlock this cell. */
   if (lock_unlock(&c->grav.plock) != 0) error("Failed to unlock cell.");
@@ -1564,7 +1564,7 @@ void cell_gunlocktree(struct cell *c) {
  * @param c The #cell.
  */
 void cell_munlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to unlock this cell. */
   if (lock_unlock(&c->grav.mlock) != 0) error("Failed to unlock cell.");
@@ -1582,7 +1582,7 @@ void cell_munlocktree(struct cell *c) {
  * @param c The #cell.
  */
 void cell_sunlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to unlock this cell. */
   if (lock_unlock(&c->stars.lock) != 0) error("Failed to unlock cell.");
@@ -1600,7 +1600,7 @@ void cell_sunlocktree(struct cell *c) {
  * @param c The #cell.
  */
 void cell_bunlocktree(struct cell *c) {
-  TIMER_TIC
+  TIMER_TIC;
 
   /* First of all, try to unlock this cell. */
   if (lock_unlock(&c->black_holes.lock) != 0) error("Failed to unlock cell.");
@@ -3219,9 +3219,11 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
  * @param ci The first #cell we recurse in.
  * @param cj The second #cell we recurse in.
  * @param s The task #scheduler.
+ * @param with_timestep_sync Are we running with time-step synchronization on?
  */
 void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
-                                             struct scheduler *s) {
+                                             struct scheduler *s,
+                                             const int with_timestep_sync) {
   const struct engine *e = s->space->e;
 
   /* Store the current dx_max and h_max values. */
@@ -3249,11 +3251,12 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
       /* Loop over all progenies and pairs of progenies */
       for (int j = 0; j < 8; j++) {
         if (ci->progeny[j] != NULL) {
-          cell_activate_subcell_black_holes_tasks(ci->progeny[j], NULL, s);
+          cell_activate_subcell_black_holes_tasks(ci->progeny[j], NULL, s,
+                                                  with_timestep_sync);
           for (int k = j + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
-              cell_activate_subcell_black_holes_tasks(ci->progeny[j],
-                                                      ci->progeny[k], s);
+              cell_activate_subcell_black_holes_tasks(
+                  ci->progeny[j], ci->progeny[k], s, with_timestep_sync);
         }
       }
     } else {
@@ -3282,8 +3285,8 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
         const int pid = csp->pairs[k].pid;
         const int pjd = csp->pairs[k].pjd;
         if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
-          cell_activate_subcell_black_holes_tasks(ci->progeny[pid],
-                                                  cj->progeny[pjd], s);
+          cell_activate_subcell_black_holes_tasks(
+              ci->progeny[pid], cj->progeny[pjd], s, with_timestep_sync);
       }
     }
 
@@ -3294,10 +3297,14 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
       /* Activate the drifts if the cells are local. */
       if (ci->nodeID == engine_rank) cell_activate_drift_bpart(ci, s);
       if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+      if (cj->nodeID == engine_rank && with_timestep_sync)
+        cell_activate_sync_part(cj, s);
 
       /* Activate the drifts if the cells are local. */
       if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
       if (cj->nodeID == engine_rank) cell_activate_drift_bpart(cj, s);
+      if (ci->nodeID == engine_rank && with_timestep_sync)
+        cell_activate_sync_part(ci, s);
     }
   } /* Otherwise, pair interation */
 }
@@ -4134,6 +4141,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
   struct engine *e = s->space->e;
+  const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int nodeID = e->nodeID;
   int rebuild = 0;
 
@@ -4181,12 +4189,13 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
       /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_self) {
-        cell_activate_subcell_black_holes_tasks(ci, NULL, s);
+        cell_activate_subcell_black_holes_tasks(ci, NULL, s,
+                                                with_timestep_sync);
       }
 
       /* Store current values of dx_max and h_max. */
       else if (t->type == task_type_sub_pair) {
-        cell_activate_subcell_black_holes_tasks(ci, cj, s);
+        cell_activate_subcell_black_holes_tasks(ci, cj, s, with_timestep_sync);
       }
     }
 
@@ -5393,16 +5402,31 @@ void cell_check_timesteps(const struct cell *c, const integertime_t ti_current,
   /* Only check cells that have at least one non-inhibited particle */
   if (count > 0) {
 
-    if (ti_end_min != c->hydro.ti_end_min)
-      error(
-          "Non-matching ti_end_min. Cell=%lld true=%lld ti_current=%lld "
-          "depth=%d",
-          c->hydro.ti_end_min, ti_end_min, ti_current, c->depth);
+    if (count != c->hydro.count) {
+
+      /* Note that we use a < as the particle with the smallest time-bin
+         might have been swallowed. This means we will run this cell with
+         0 active particles but that's not wrong */
+      if (ti_end_min < c->hydro.ti_end_min)
+        error(
+            "Non-matching ti_end_min. Cell=%lld true=%lld ti_current=%lld "
+            "depth=%d",
+            c->hydro.ti_end_min, ti_end_min, ti_current, c->depth);
+
+    } else /* Normal case: nothing was swallowed/converted */ {
+      if (ti_end_min != c->hydro.ti_end_min)
+        error(
+            "Non-matching ti_end_min. Cell=%lld true=%lld ti_current=%lld "
+            "depth=%d",
+            c->hydro.ti_end_min, ti_end_min, ti_current, c->depth);
+    }
+
     if (ti_end_max > c->hydro.ti_end_max)
       error(
           "Non-matching ti_end_max. Cell=%lld true=%lld ti_current=%lld "
           "depth=%d",
           c->hydro.ti_end_max, ti_end_max, ti_current, c->depth);
+
     if (ti_beg_max != c->hydro.ti_beg_max)
       error(
           "Non-matching ti_beg_max. Cell=%lld true=%lld ti_current=%lld "

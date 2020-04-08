@@ -188,8 +188,16 @@ __attribute__((always_inline)) INLINE static float abundance_ratio_to_solar(
   }
 
   /* Compute metallicity (Z / Z_sun) of the elements we explicitly track. */
-  const float ZZsol = (metalmass / totmass) * cooling->Zsol_inv[0];
-  const float logZZsol = log10f(ZZsol + FLT_MIN);
+  /* float ZZsol = (metalmass / totmass) * cooling->Zsol_inv[0];
+  if (ZZsol <= 0.0f) ZZsol = FLT_MIN;
+  const float logZZsol = log10f(ZZsol); */
+
+  /* Get total metallicity [Z/Z_sun] from the particle data */
+  const float Z_total =
+      (float)chemistry_get_total_metal_mass_fraction_for_star_formation(p);
+  float ZZsol = Z_total * cooling->Zsol_inv[0];
+  if (ZZsol <= 0.0f) ZZsol = FLT_MIN;
+  const float logZZsol = log10f(ZZsol);
 
   /* All other elements (element_OA): scale with metallicity */
   ratio_solar[element_OA] = ZZsol;

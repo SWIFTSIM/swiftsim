@@ -141,6 +141,7 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.last_momentum_kick_scale_factor = -1.f;
   xp->tracers_data.last_SNII_injection_scale_factor = -1.f;
   xp->tracers_data.last_AGN_injection_scale_factor = -1.f;
+  xp->tracers_data.AGN_feedback_energy = 0.f;
 }
 
 static INLINE void tracers_after_SNII_feedback(struct xpart *xp,
@@ -165,14 +166,16 @@ static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,
     xp->tracers_data.last_SNIa_injection_time = time;
 }
 
-static INLINE void tracers_after_black_holes_feedback(struct xpart *xp,
-                                                      const int with_cosmology,
-                                                      const float scale_factor,
-                                                      const double time) {
+static INLINE void tracers_after_black_holes_feedback(
+    struct xpart *xp, const int with_cosmology, const float scale_factor,
+    const double time, const double delta_energy) {
+
   if (with_cosmology)
     xp->tracers_data.last_AGN_injection_scale_factor = scale_factor;
   else
     xp->tracers_data.last_AGN_injection_time = time;
+
+  xp->tracers_data.AGN_feedback_energy += delta_energy;
 }
 
 static INLINE void tracers_after_momentum_feedback(struct xpart *xp,
@@ -188,13 +191,14 @@ static INLINE void tracers_after_momentum_feedback(struct xpart *xp,
 /**
  * @brief Split the tracer content of a particle into n pieces
  *
- * Nothing to do here.
- *
  * @param p The #part.
  * @param xp The #xpart.
  * @param n The number of pieces to split into.
  */
 __attribute__((always_inline)) INLINE static void tracers_split_part(
-    struct part *p, struct xpart *xp, const double n) {}
+    struct part *p, struct xpart *xp, const double n) {
+
+  xp->tracers_data.AGN_feedback_energy /= n;
+}
 
 #endif /* SWIFT_TRACERS_COLIBRE_H */

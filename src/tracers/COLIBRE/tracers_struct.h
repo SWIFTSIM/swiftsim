@@ -97,6 +97,10 @@ struct tracers_xpart_data {
     /*! Time at which the particle last received energy from AGN */
     float last_AGN_injection_time;
   };
+
+  /*! Total amount of AGN feedback energy received by this particle
+   * (physical units) */
+  float AGN_feedback_energy;
 };
 
 #endif /* SWIFT_TRACERS_STRUCT_COLIBRE_H */

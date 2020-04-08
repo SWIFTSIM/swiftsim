@@ -213,6 +213,9 @@ void engine_repartition(struct engine *e) {
   /* Sorting indices. */
   if (e->s->cells_top != NULL) space_free_cells(e->s);
 
+  /* Report the time spent in the different task categories */
+  if (e->verbose) scheduler_report_task_times(&e->sched, e->nr_threads);
+
   /* Task arrays. */
   scheduler_free_tasks(&e->sched);
 
@@ -1673,6 +1676,13 @@ void engine_rebuild(struct engine *e, int repartitioned,
   e->forcerebuild = 0;
   e->restarting = 0;
 
+  /* Report the time spent in the different task categories */
+  if (e->verbose && !repartitioned)
+    scheduler_report_task_times(&e->sched, e->nr_threads);
+
+  /* Give some breathing space */
+  scheduler_free_tasks(&e->sched);
+
   /* Re-build the space. */
   space_rebuild(e->s, repartitioned, e->verbose);
 
@@ -2116,6 +2126,9 @@ void engine_launch(struct engine *e, const char *call) {
 
   /* Sit back and wait for the runners to come home. */
   swift_barrier_wait(&e->wait_barrier);
+
+  /* Store the wallclock time */
+  e->sched.total_ticks += getticks() - tic;
 
   if (e->verbose)
     message("(%s) took %.3f %s.", call, clocks_from_ticks(getticks() - tic),
@@ -2587,8 +2600,10 @@ void engine_step(struct engine *e) {
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
 
-  /* Print the number of active tasks ? */
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Print the number of active tasks */
   if (e->verbose) engine_print_task_counts(e);
+#endif
 
     /* Dump local cells and active particle counts. */
     // dumpCells("cells", 1, 0, 0, 0, e->s, e->nodeID, e->step);
