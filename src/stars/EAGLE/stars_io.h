@@ -158,7 +158,6 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "FeedbackEnergyFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, f_E,
       "Fractions of the canonical feedback energy that was used for the stars' "
       "SNII feedback events");
-
 }
 
 /**

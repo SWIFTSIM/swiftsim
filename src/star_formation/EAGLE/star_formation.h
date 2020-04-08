@@ -459,8 +459,8 @@ INLINE static void star_formation_copy_properties(
   sp->sf_data.birth_density = hydro_get_physical_density(p, cosmo);
 
   /* Store the birth temperature in the star particle */
-  sp->sf_data.birth_temperature = cooling_get_temperature(phys_const, hydro_props, us,
-                                                  cosmo, cooling, p, xp);
+  sp->sf_data.birth_temperature = cooling_get_temperature(
+      phys_const, hydro_props, us, cosmo, cooling, p, xp);
 
   /* Flag that this particle has not done feedback yet */
   sp->f_E = -1.f;

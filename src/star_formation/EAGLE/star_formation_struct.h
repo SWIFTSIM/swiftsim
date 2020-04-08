@@ -43,6 +43,4 @@ struct star_formation_spart_data {
   float birth_temperature;
 };
 
-
-
 #endif /* SWIFT_EAGLE_STAR_FORMATION_STRUCT_H */

@@ -51,8 +51,9 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
  *
  * @return Returns the number of fields to write.
  */
-__attribute__((always_inline)) INLINE static int star_formation_write_sparticles(
-    const struct spart* sparts, struct io_props* list) {
+__attribute__((always_inline)) INLINE static int
+star_formation_write_sparticles(const struct spart* sparts,
+                                struct io_props* list) {
 
   /* No SF-related fields in the Quick Lyman-alpha model */
 
