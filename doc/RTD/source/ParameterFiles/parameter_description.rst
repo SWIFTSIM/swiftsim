@@ -65,6 +65,15 @@ The rest of this page describes all the SWIFT parameters, split by
 section. A list of all the possible parameters is kept in the file
 ``examples/parameter_examples.yml``.
 
+.. _Parameters_meta_data:
+
+Meta Data
+---------
+
+The ``MetaData`` section contains basic information about the simulation. It
+currently only contains one parameter: ``run_name``. This is a string of
+characters describing the simulation. It is written to the snapshots' headers.
+
 .. _Parameters_units:
 
 Internal Unit System
@@ -73,7 +82,7 @@ Internal Unit System
 The ``InternalUnitSystem`` section describes the units used internally by the
 code. This is the system of units in which all the equations are solved. All
 physical constants are converted to this system and if the ICs use a different
-system (see the snapshots' ref:`ICs_units_label` section of the documentation)
+system (see the snapshots' :ref:`ICs_units_label` section of the documentation)
 the particle quantities will be converted when read in.
 
 The system of units is described using the value of the 5 basic units
@@ -1263,3 +1272,23 @@ Showing all the parameters for a basic cosmologica test-case, one would have:
 	 snapshots. Snapshots at a given time would always have the same set of
 	 digits irrespective of the number of snapshots produced before.
 
+Gravity Force Checks
+--------------------
+
+By default, when the code is configured with ``--enable-gravity-force-checks``,
+the "exact" forces of all active gparts are computed during each timestep.
+
+To give a bit more control over this, you can select to only perform the exact
+force computation during the timesteps that all gparts are active, and/or only
+at the timesteps when a snapshot is being dumped, i.e.,
+
+.. code:: YAML
+
+  ForceChecks:
+    only_when_all_active:   1    # Only compute exact forces during timesteps when all gparts are active.
+    only_at_snapshots:      1    # Only compute exact forces during timesteps when a snapshot is being dumped.
+
+If ``only_when_all_active:1`` and ``only_at_snapshots:1`` are enabled together,
+and all the gparts are not active during the timestep of the snapshot dump, the
+exact forces computation is performed on the first timestep at which all the
+gparts are active after that snapshot output timestep.

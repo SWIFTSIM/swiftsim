@@ -155,7 +155,13 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
         "particle has never been hit by feedback");
   }
 
-  return 9;
+  list[9] = io_make_output_field("EnergiesReceivedFromAGNFeedback", FLOAT, 1,
+                                 UNIT_CONV_ENERGY, 0.f, xparts,
+                                 tracers_data.AGN_feedback_energy,
+                                 "Total amount of thermal energy from AGN "
+                                 "feedback events received by the particles.");
+
+  return 10;
 }
 
 __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
@@ -264,7 +270,13 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
                              "-1 if a particle has never been hit by feedback");
   }
 
-  return 7;
+  list[7] = io_make_output_field(
+      "EnergiesReceivedFromAGNFeedback", FLOAT, 1, UNIT_CONV_ENERGY, 0.f,
+      sparts, tracers_data.AGN_feedback_energy,
+      "Total amount of thermal energy from AGN feedback events received by the "
+      "particles when the particle was still a gas particle.");
+
+  return 8;
 }
 
 #endif /* SWIFT_TRACERS_COLIBRE_IO_H */

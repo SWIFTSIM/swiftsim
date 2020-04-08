@@ -65,7 +65,7 @@ __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                   const float hi, const float hj,
                                   const struct spart *si, struct part *pj,
-                                  struct xpart *xp,
+                                  struct xpart *xp, const int with_cosmology,
                                   const struct cosmology *cosmo,
                                   const integertime_t ti_current,
                                   const double time, const int step) {}

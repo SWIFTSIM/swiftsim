@@ -92,8 +92,16 @@ struct grav_tensor {
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 5
 #error "Missing implementation for order >5"
 #endif
-#ifdef SWIFT_DEBUG_CHECKS
 
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  /* Number of gparts interacted through the tree. */
+  long long num_interacted_tree;
+
+  /* Number of gparts interacted through the FFT mesh */
+  long long num_interacted_pm;
+#endif
+
+#ifdef SWIFT_DEBUG_CHECKS
   /* Total number of gpart this field tensor interacted with */
   long long num_interacted;
 
@@ -168,7 +176,7 @@ struct multipole {
 #error "Missing implementation for order >5"
 #endif
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
 
   /* Total number of gpart in this multipole */
   long long num_gpart;
@@ -308,7 +316,12 @@ INLINE static void gravity_field_tensors_add(
     struct grav_tensor *restrict la, const struct grav_tensor *restrict lb) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (lb->num_interacted == 0) error("Adding tensors that did not interact");
+
   la->num_interacted += lb->num_interacted;
+#endif
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  la->num_interacted_tree += lb->num_interacted_tree;
+  la->num_interacted_pm += lb->num_interacted_pm;
 #endif
 
   la->interacted = 1;
@@ -597,7 +610,7 @@ INLINE static void gravity_multipole_add(struct multipole *restrict ma,
 #error "Missing implementation for order >5"
 #endif
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
   ma->num_gpart += mb->num_gpart;
 #endif
 }
@@ -1319,7 +1332,7 @@ INLINE static void gravity_P2M(struct gravity_tensors *multi,
 #error "Missing implementation for order >5"
 #endif
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
   multi->m_pole.num_gpart = gcount;
 #endif
 }
@@ -1576,7 +1589,7 @@ INLINE static void gravity_M2M(struct multipole *restrict m_a,
 #error "Missing implementation for order >5"
 #endif
 
-#ifdef SWIFT_DEBUG_CHECKS
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
   m_a->num_gpart = m_b->num_gpart;
 #endif
 }
@@ -1595,8 +1608,19 @@ INLINE static void gravity_M2L_apply(
     const struct potential_derivatives_M2L *pot) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Count interactions */
-  l_b->num_interacted += m_a->num_gpart;
+  /* Count all interactions
+   * Note that despite being in a section of the code protected by locks,
+   * we must use atomics here as the long-range task may update this
+   * counter in a lock-free section of code. */
+  accumulate_add_ll(&l_b->num_interacted, m_a->num_gpart);
+#endif
+
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  /* Count tree interactions
+   * Note that despite being in a section of the code protected by locks,
+   * we must use atomics here as the long-range task may update this
+   * counter in a lock-free section of code. */
+  accumulate_add_ll(&l_b->num_interacted_tree, m_a->num_gpart);
 #endif
 
   /* Record that this tensor has received contributions */
@@ -2091,7 +2115,12 @@ INLINE static void gravity_L2L(struct grav_tensor *restrict la,
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (lb->num_interacted == 0) error("Shifting tensors that did not interact");
+
   la->num_interacted = lb->num_interacted;
+#endif
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  la->num_interacted_tree = lb->num_interacted_tree;
+  la->num_interacted_pm = lb->num_interacted_pm;
 #endif
 
   /* Distance to shift by */
@@ -2444,7 +2473,13 @@ INLINE static void gravity_L2P(const struct grav_tensor *lb,
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (lb->num_interacted == 0) error("Interacting with empty field tensor");
-  gp->num_interacted += lb->num_interacted;
+
+  accumulate_add_ll(&gp->num_interacted, lb->num_interacted);
+#endif
+
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  accumulate_add_ll(&gp->num_interacted_m2l, lb->num_interacted_tree);
+  accumulate_add_ll(&gp->num_interacted_pm, lb->num_interacted_pm);
 #endif
 
   /* Local accumulator */
@@ -2561,10 +2596,16 @@ INLINE static void gravity_L2P(const struct grav_tensor *lb,
 #endif
 
   /* Update the particle */
-  gp->a_grav[0] += a_grav[0];
-  gp->a_grav[1] += a_grav[1];
-  gp->a_grav[2] += a_grav[2];
+  accumulate_add_f(&gp->a_grav[0], a_grav[0]);
+  accumulate_add_f(&gp->a_grav[1], a_grav[1]);
+  accumulate_add_f(&gp->a_grav[2], a_grav[2]);
   gravity_add_comoving_potential(gp, pot);
+
+#ifdef SWIFT_GRAVITY_FORCE_CHECKS
+  accumulate_add_f(&gp->a_grav_m2l[0], a_grav[0]);
+  accumulate_add_f(&gp->a_grav_m2l[1], a_grav[1]);
+  accumulate_add_f(&gp->a_grav_m2l[2], a_grav[2]);
+#endif
 }
 
 /**

@@ -14,6 +14,7 @@ difference is the parameter file that will need to be adapted for SWIFT.
 .. toctree::
    :maxdepth: 2
 
+   CitingSWIFT/index
    GettingStarted/index
    CommandLineOptions/index
    ParameterFiles/index
@@ -25,6 +26,7 @@ difference is the parameter file that will need to be adapted for SWIFT.
    CHIMES/index
    eventLogging
    random
+   Planetary/index
    FriendsOfFriends/index
    EquationOfState/index
    ExternalPotentials/index

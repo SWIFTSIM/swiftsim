@@ -94,6 +94,7 @@ struct chemistry_part_data {
   /*! Fraction of the particle mass in a given element */
   /*! This array is duplicated to be used after the diffusion routine */
   float dmetal_mass_fraction[chemistry_element_count];
+  float dmetal_mass_fraction_total;
 
   /*! Tensor of the velocity shear */
   /* (Calculated in physical coordinates) */

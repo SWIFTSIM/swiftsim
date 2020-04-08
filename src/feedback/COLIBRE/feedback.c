@@ -1142,6 +1142,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Compute ionizing photons for HII regions only if needed*/
   if (feedback_props->with_HIIRegions &&
       star_age_Myr <= feedback_props->HIIregion_max_age_Myr) {
+
     /* only rebuild every HIIregion_dtMyr and at the first timestep the star was
      * formed*/
     if ((((sp->HIIregion_last_rebuild + feedback_props->HIIregion_dt_Myr) >=
@@ -1216,10 +1217,13 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
           time_beg_of_step + HIIregion_dt;
       sp->feedback_data.to_distribute.HIIregion_starid = sp->id;
 
+      /* Energy to distribute */
+      sp->feedback_data.to_distribute.HII_u = feedback_props->HII_u;
     } else {
       sp->feedback_data.to_distribute.HIIregion_probability = -1.;
       sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
       sp->feedback_data.to_distribute.HIIregion_starid = -1;
+      sp->feedback_data.to_distribute.HII_u = 0.f;
     }
 
   } else if (feedback_props->HIIregion_max_age_Myr > 0.) {
@@ -1227,6 +1231,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     sp->feedback_data.to_distribute.HIIregion_probability = -1.;
     sp->feedback_data.to_distribute.HIIregion_endtime = -1.;
     sp->feedback_data.to_distribute.HIIregion_starid = -1;
+    sp->feedback_data.to_distribute.HII_u = 0.f;
     sp->HIIregion_mass_to_ionize = 0.f;
     sp->HIIregion_mass_in_kernel = -1.f;
   }
@@ -1303,9 +1308,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Star age in Myr to store in case an SNII event occurs */
   sp->feedback_data.to_distribute.SNII_star_age_Myr = (float)star_age_Myr;
-
-  /* HII region energy to distribute (will be used only if the star is young) */
-  sp->feedback_data.to_distribute.HII_u = feedback_props->HII_u;
 
   TIMER_TOC(timer_do_star_evol);
 }
