@@ -1697,7 +1697,7 @@ void cooling_set_subgrid_properties(
           (ChimesFloat)xp->cooling_data.chimes_abundances[i];
 
     // Update element abundances
-    chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
+    chimes_update_element_abundances(phys_const, us, cosmo, cooling, dp, p, xp,
                                      &ChimesGasVars, 1);
 
     // Update ChimesGasVars
