@@ -552,6 +552,13 @@ void logger_reader_move_forward_internal(
   }
 }
 
+/** @brief Check if still need to update some particles (internal function of move forward) */
+int logger_reader_check_need_update_parts(const size_t *not_updated) {
+  return not_updated[swift_type_gas] != 0 &&
+    not_updated[swift_type_stars] != 0 &&
+    not_updated[swift_type_dark_matter] != 0;
+}
+
 /**
  * @brief Get the two particle records around the requested time.
  *
@@ -572,27 +579,69 @@ void logger_reader_move_forward(struct logger_reader *reader,
 
   /* Create a temporary array for storing the
      new particles or the changes of type. */
-  struct logger_particle_array new_parts;
+  struct logger_particle_array new_prev;
   logger_particle_array_allocate(
-    &new_parts, /* n_part */ 512, /* n_gpart */ 512, /* n_spart */ 512);
+    &new_prev, /* n_part */ 512, /* n_gpart */ 512, /* n_spart */ 512);
 
   /* Create the variables for the new / deleted particles */
   size_t n_deleted[swift_type_count];
 
-  /* Update the particles */
-  do {
-    logger_reader_move_forward_internal(
-      reader, prev, next, &new_parts, n_deleted, time_offset);
+  /* Update the particles.
+     We do it in two part in order to avoid to modify too often the full array. */
+  logger_reader_move_forward_internal(
+     reader, prev, next, &new_prev, n_deleted, time_offset);
+
+  /* Get the number of particles not updated */
+  size_t new_deleted[swift_type_count];
+  new_deleted[swift_type_gas] = new_prev.hydro.n;
+  new_deleted[swift_type_dark_matter] = new_prev.grav.n;
+  new_deleted[swift_type_stars] = new_prev.stars.n;
+
+  /* Check if some particles have changed type */
+  const int changed_type = logger_reader_check_need_update_parts(new_deleted);
+
+  /* Allocate a temporary array for the next particles */
+  struct logger_particle_array new_next;
+  if (changed_type) {
+    logger_particle_array_allocate(
+      &new_next, new_prev.hydro.allocated_size, new_prev.grav.allocated_size,
+      new_prev.stars.allocated_size);
   }
-  while (n_deleted[swift_type_gas] != 0 &&
-         n_deleted[swift_type_stars] != 0 &&
-         n_deleted[swift_type_dark_matter] != 0);
+
+  /* Evolve the particle with special events (should be a tiny fraction of the array). */
+  while (logger_reader_check_need_update_parts(new_deleted)) {
+
+    /* Read the particles */
+    logger_reader_read_particles_at_offset(reader, &new_prev);
+
+    /* Move them forward */
+    struct logger_particle_array tmp;
+    logger_particle_array_allocate(
+      &new_prev, /* n_part */ 16, /* n_gpart */ 16, /* n_spart */ 16);
+
+    logger_reader_move_forward_internal(reader, &new_prev, &new_next, &tmp,
+                                        new_deleted, time_offset);
+
+    /* Delete the required particles and add the new ones */
+    logger_particle_array_update(
+      &new_prev, &new_next, &tmp, new_deleted[swift_type_gas],
+      new_deleted[swift_type_dark_matter], new_deleted[swift_type_stars]);
+
+    /* Free the memory */
+    logger_particle_array_free(&tmp);
+  }
 
   /* Remove the particles that should be deleted and
      update the particles types */
   logger_particle_array_update(
-    prev, next, &new_parts, n_deleted[swift_type_gas],
+    prev, next, &new_prev, n_deleted[swift_type_gas],
     n_deleted[swift_type_dark_matter], n_deleted[swift_type_stars]);
+
+  /* Free the memory */
+  logger_particle_array_free(&new_prev);
+  if (changed_type) {
+    logger_particle_array_free(&new_next);
+  }
 }
 
 /**
@@ -731,4 +780,33 @@ enum logger_reader_event logger_reader_get_next_sparticle(
     struct logger_sparticle *next, size_t time_offset) {
 
   error("TODO");
+}
+
+/**
+ * @brief Read the particles at a given offset.
+ *
+ * @param reader The #logger_reader.
+ * @param array The array of particles. (in) Contains the offset of each records.
+ * (out) Contains the full particles.
+ */
+void logger_reader_read_particles_at_offset(struct logger_reader *reader,
+                                            struct logger_particle_array *array) {
+
+  /* Read the hydro */
+  for(size_t i = 0; i < array->hydro.n; i++) {
+    logger_particle_read(&array->hydro.parts[i], reader, array->hydro.parts[i].offset,
+                         /* time */ -1, logger_reader_const);
+  }
+
+  /* Read the gravity */
+  for(size_t i = 0; i < array->grav.n; i++) {
+    logger_gparticle_read(&array->grav.parts[i], reader, array->grav.parts[i].offset,
+                         /* time */ -1, logger_reader_const);
+  }
+
+  /* Read the stars */
+  for(size_t i = 0; i < array->stars.n; i++) {
+    logger_sparticle_read(&array->stars.parts[i], reader, array->stars.parts[i].offset,
+                         /* time */ -1, logger_reader_const);
+  }
 }

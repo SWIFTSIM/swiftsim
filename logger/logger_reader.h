@@ -142,5 +142,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type inter_type,
                                       struct logger_particle_array *array,
                                       size_t n_tot);
+void logger_reader_read_particles_at_offset(struct logger_reader *reader,
+                                            struct logger_particle_array *array);
 
 #endif  // LOGGER_LOGGER_READER_H
