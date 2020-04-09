@@ -157,7 +157,7 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
   const double Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
 
   /* Physical density of the gas at the star's birth time */
-  const double rho_birth = sp->birth_density;
+  const double rho_birth = sp->sf_data.birth_density;
   const double n_birth = rho_birth * props->rho_to_n_cgs;
 
   /* Calculate f_E */
@@ -1161,7 +1161,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
       sp->HIIregion_last_rebuild = star_age_Myr;
 
-      const double rho_birth = (double)sp->birth_density;
+      const double rho_birth = (double)sp->sf_data.birth_density;
       const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
       const double alpha_B = (double)feedback_props->alpha_caseb_recomb;
       const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;

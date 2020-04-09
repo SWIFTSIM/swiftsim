@@ -115,7 +115,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 14;
+  *num_fields = 12;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -140,55 +140,42 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "SmoothingLengths", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, sparts, h,
       "Co-moving smoothing lengths (FWHM of the kernel) of the particles");
 
-  list[5] = io_make_output_field(
-      "BirthDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts, birth_density,
-      "Physical densities at the time of birth of the gas particles that "
-      "turned into stars (note that "
-      "we store the physical density at the birth redshift, no conversion is "
-      "needed)");
-
-  list[6] = io_make_output_field("InitialMasses", FLOAT, 1, UNIT_CONV_MASS, 0.f,
+  list[5] = io_make_output_field("InitialMasses", FLOAT, 1, UNIT_CONV_MASS, 0.f,
                                  sparts, mass_init,
                                  "Masses of the star particles at birth time");
 
   if (with_cosmology) {
-    list[7] = io_make_output_field(
+    list[6] = io_make_output_field(
         "BirthScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
         birth_scale_factor, "Scale-factors at which the stars were born");
   } else {
-    list[7] = io_make_output_field("BirthTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f,
+    list[6] = io_make_output_field("BirthTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f,
                                    sparts, birth_time,
                                    "Times at which the stars were born");
   }
 
-  list[8] = io_make_output_field(
+  list[7] = io_make_output_field(
       "FeedbackEnergyFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       SNII_f_E,
       "Fractions of the canonical feedback energy that was used for the stars' "
       "SNII feedback events");
 
-  list[9] =
-      io_make_output_field("BirthTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE,
-                           0.f, sparts, birth_temperature,
-                           "Temperatures at the time of birth of the gas "
-                           "particles that turned into stars");
-
-  list[10] = io_make_output_field(
+  list[8] = io_make_output_field(
       "HIIregions_last_rebuild", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       HIIregion_last_rebuild,
       "Age of star in Myr when HII region was last rebuilt");
 
-  list[11] = io_make_output_field(
+  list[9] = io_make_output_field(
       "HIIregions_mass_to_ionize", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       HIIregion_mass_to_ionize,
       "Masses of the HII regions at the current point "
       "in time");
 
-  list[12] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
+  list[10] = io_make_output_field("Timestep", FLOAT, 1, UNIT_CONV_TIME, 0.f,
                                   sparts, star_timestep,
                                   "Current timestep of the star particle");
 
-  list[13] = io_make_output_field(
+  list[11] = io_make_output_field(
       "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
