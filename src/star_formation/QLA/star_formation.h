@@ -29,6 +29,10 @@
 #include "stars.h"
 #include "units.h"
 
+/* Do we need unique IDs (only useful when spawning
+   new particles, conversion gas->stars does not need unique IDs) */
+#define star_formation_need_unique_id 0
+
 /**
  * @file src/star_formation/EAGLE/star_formation.h
  * @brief Star formation model used in the EAGLE model

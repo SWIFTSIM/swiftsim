@@ -23,18 +23,36 @@
 /* Config parameters. */
 #include "../config.h"
 
+/* Local includes */
+#include "lock.h"
+
 /* Predefine the space structure */
 struct space;
 
 /**
- * @brief Slice of unique IDs for particle creation.
+ * @brief Batch of unique IDs for particle creation.
  */
-struct slice {
+struct batch {
   /*! Current free unique id */
   long long current;
 
-  /*! Maximal unique id in this slice  (not included) */
+  /*! Maximal unique id in this batch  (not included) */
   long long max;
+};
+
+/*! Structure dealing with the computation of a unique ID */
+struct unique_id {
+  /*! Current batch of unique ids */
+  struct batch current_batch;
+
+  /*! Next batch of unique ids */
+  struct batch next_batch;
+
+  /* Global next slot available */
+  long long global_next_id;
+
+  /* Lock for the unique ids */
+  swift_lock_type lock;
 };
 
 void space_update_unique_id(struct space *s);

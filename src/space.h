@@ -279,19 +279,7 @@ struct space {
   struct velociraptor_gpart_data *gpart_group_data;
 
   /*! Structure dealing with the computation of a unique ID */
-  struct {
-    /*! Current slice of unique ids */
-    struct slice current;
-
-    /*! Next slice of unique ids */
-    struct slice next;
-
-    /* Global next slot available */
-    long long global_next_id;
-
-    /* Lock for the unique ids */
-    swift_lock_type lock;
-  } unique_id;
+  struct unique_id unique_id;
 
 #ifdef WITH_MPI
 

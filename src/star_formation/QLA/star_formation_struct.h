@@ -19,6 +19,10 @@
 #ifndef SWIFT_QLA_STAR_FORMATION_STRUCT_H
 #define SWIFT_QLA_STAR_FORMATION_STRUCT_H
 
+/* Can the star formation spawn new star
+   (in opposition to simply convert gas particles)? */
+#define star_formation_can_spawn_stars 0
+
 /**
  * @brief Star-formation-related properties stored in the extended particle
  * data.

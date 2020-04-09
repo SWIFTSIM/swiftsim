@@ -21,9 +21,7 @@
 #include "../config.h"
 
 /* Some standard headers. */
-#include <float.h>
 #include <limits.h>
-#include <math.h>
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -40,30 +38,35 @@
 
 /**
  * @brief Update the unique id structure by requesting a
- * new slice if required.
+ * new batch if required.
  *
  * @param s The #space.
  */
 void space_update_unique_id(struct space *s) {
-  const int require_new_slice = s->unique_id.next.current == 0;
+  /* Do we need unique IDs? */
+  if (!star_formation_need_unique_id) {
+    return;
+  }
+
+  const int require_new_batch = s->unique_id.next_batch.current == 0;
 
 #ifdef WITH_MPI
   const struct engine *e = s->e;
 
-  /* Check if the other ranks need a slice. */
+  /* Check if the other ranks need a batch. */
   int *all_requires = (int *)malloc(sizeof(int) * e->nr_nodes);
 
   /* Do the communication */
-  MPI_Allgather(&require_new_slice, 1, MPI_INT, all_requires, 1, MPI_INT,
+  MPI_Allgather(&require_new_batch, 1, MPI_INT, all_requires, 1, MPI_INT,
                 MPI_COMM_WORLD);
 
-  /* Compute the position of this rank slice and the position of
-     the next free slice. */
+  /* Compute the position of this rank batch and the position of
+     the next free batch. */
   int local_index = 0;
   int total_shift = 0;
   for (int i = 0; i < e->nr_nodes; i++) {
     total_shift += all_requires[i];
-    if (i < engine_rank) {
+    if (i < e->nodeID) {
       local_index += all_requires[i];
     }
   }
@@ -74,30 +77,30 @@ void space_update_unique_id(struct space *s) {
 #else
 
   int local_index = 0;
-  int total_shift = require_new_slice;
+  int total_shift = require_new_batch;
 
 #endif  // WITH_MPI
 
-  /* Compute the size of each slice. */
-  const long long slice_size = (space_extra_parts + space_extra_sparts +
+  /* Compute the size of each batch. */
+  const long long batch_size = (space_extra_parts + space_extra_sparts +
                                 space_extra_gparts + space_extra_bparts) *
                                s->nr_cells;
 
-  /* Get a new slice. */
-  if (require_new_slice) {
+  /* Get a new batch. */
+  if (require_new_batch) {
     /* First check against an overflow. */
-    const long long local_shift = local_index * slice_size;
-    if (s->unique_id.global_next_id > LLONG_MAX - (local_shift + slice_size)) {
+    const long long local_shift = local_index * batch_size;
+    if (s->unique_id.global_next_id > LLONG_MAX - (local_shift + batch_size)) {
       error("Overflow for the unique IDs.");
     }
     /* Now assign it. */
-    s->unique_id.next.current = s->unique_id.global_next_id + local_shift;
-    s->unique_id.next.max =
-        s->unique_id.global_next_id + local_shift + slice_size;
+    s->unique_id.next_batch.current = s->unique_id.global_next_id + local_shift;
+    s->unique_id.next_batch.max =
+        s->unique_id.global_next_id + local_shift + batch_size;
   }
 
-  /* Shift the position of the next available slice. */
-  const long long shift = total_shift * slice_size;
+  /* Shift the position of the next available batch. */
+  const long long shift = total_shift * batch_size;
   if (s->unique_id.global_next_id > LLONG_MAX - shift) {
     error("Overflow for the unique IDs.");
   }
@@ -112,33 +115,39 @@ void space_update_unique_id(struct space *s) {
  * @return The new unique ID
  */
 long long space_get_new_unique_id(struct space *s) {
+  /* Do we need unique IDs? */
+  if (!star_formation_need_unique_id) {
+    error("The scheme selected does not seem to use unique ID.");
+  }
+
   /* Get the lock. */
   lock_lock(&s->unique_id.lock);
 
   /* Get the current available id. */
-  const long long id = s->unique_id.current.current;
+  const long long id = s->unique_id.current_batch.current;
 
   /* Update the counter. */
-  s->unique_id.current.current++;
+  s->unique_id.current_batch.current++;
 
   /* Check if everything is fine */
-  if (s->unique_id.current.current > s->unique_id.current.max) {
+  if (s->unique_id.current_batch.current > s->unique_id.current_batch.max) {
     error("Failed to get a new ID");
   }
 
-  /* Check if need to move to the next slice. */
-  if (s->unique_id.current.current == s->unique_id.current.max) {
+  /* Check if need to move to the next batch. */
+  else if (s->unique_id.current_batch.current ==
+           s->unique_id.current_batch.max) {
 
-    /* Check if the next slice is already used */
-    if (s->unique_id.next.current == 0) {
+    /* Check if the next batch is already used */
+    if (s->unique_id.next_batch.current == 0) {
       error("Failed to obtain a new unique ID.");
     }
 
-    s->unique_id.current = s->unique_id.next;
+    s->unique_id.current_batch = s->unique_id.next_batch;
 
-    /* Reset the next slice. */
-    s->unique_id.next.current = 0;
-    s->unique_id.next.max = 0;
+    /* Reset the next batch. */
+    s->unique_id.next_batch.current = 0;
+    s->unique_id.next_batch.max = 0;
   }
 
   /* Release the lock. */
@@ -156,6 +165,11 @@ long long space_get_new_unique_id(struct space *s) {
  * @param nr_nodes The number of MPI ranks.
  */
 void space_init_unique_id(struct space *s, int nr_nodes) {
+  /* Do we need unique IDs? */
+  if (!star_formation_need_unique_id) {
+    return;
+  }
+
   /* Set the counter to 0. */
   s->unique_id.global_next_id = 0;
 
@@ -195,36 +209,37 @@ void space_init_unique_id(struct space *s, int nr_nodes) {
   }
   s->unique_id.global_next_id++;
 
-  /* Compute the size of each slice. */
-  const long long slice_size = (space_extra_parts + space_extra_sparts +
+  /* Compute the size of each batch. */
+  const long long batch_size = (space_extra_parts + space_extra_sparts +
                                 space_extra_gparts + space_extra_bparts) *
                                s->nr_cells;
 
-  /* Compute the initial slices (each rank has 2 slices). */
-  if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * slice_size) {
+  /* Compute the initial batchs (each rank has 2 batchs). */
+  if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * batch_size) {
     error("Overflow for the unique id.");
   }
-  long long init = s->unique_id.global_next_id + 2 * engine_rank * slice_size;
+  const long long init =
+      s->unique_id.global_next_id + 2 * engine_rank * batch_size;
 
-  /* Set the slices and check for overflows. */
-  s->unique_id.current.current = init;
+  /* Set the batchs and check for overflows. */
+  s->unique_id.current_batch.current = init;
 
-  if (init > LLONG_MAX - slice_size) {
+  if (init > LLONG_MAX - batch_size) {
     error("Overflow for the unique id.");
   }
-  s->unique_id.current.max = init + slice_size;
-  s->unique_id.next.current = s->unique_id.current.max;
+  s->unique_id.current_batch.max = init + batch_size;
+  s->unique_id.next_batch.current = s->unique_id.current_batch.max;
 
-  if (s->unique_id.next.current > LLONG_MAX - slice_size) {
+  if (s->unique_id.next_batch.current > LLONG_MAX - batch_size) {
     error("Overflow for the unique id.");
   }
-  s->unique_id.next.max = s->unique_id.next.current + slice_size;
+  s->unique_id.next_batch.max = s->unique_id.next_batch.current + batch_size;
 
   /* Update the next available id */
-  if (s->unique_id.global_next_id > LLONG_MAX - 2 * slice_size * nr_nodes) {
+  if (s->unique_id.global_next_id > LLONG_MAX - 2 * batch_size * nr_nodes) {
     error("Overflow for the unique id.");
   }
-  s->unique_id.global_next_id += 2 * slice_size * nr_nodes;
+  s->unique_id.global_next_id += 2 * batch_size * nr_nodes;
 
   /* Initialize the lock. */
   if (lock_init(&s->unique_id.lock) != 0)
