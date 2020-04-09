@@ -1161,7 +1161,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
       sp->HIIregion_last_rebuild = star_age_Myr;
 
-      const double rho_birth = (double)sp->birth_density;
+      const double rho_birth = (double)sp->sf_data.birth_density;
       const double n_birth = rho_birth * feedback_props->rho_to_n_cgs;
       const double alpha_B = (double)feedback_props->alpha_caseb_recomb;
       const double t_half = age * time_to_cgs + 0.5 * dt_Myr * Myr_in_cgs;

@@ -51,7 +51,7 @@ INLINE static void stars_read_particles(struct spart *sparts,
   list[5] = io_make_input_field("Masses", FLOAT, 1, COMPULSORY, UNIT_CONV_MASS,
                                 sparts, mass_init);
   list[6] = io_make_input_field("StellarFormationTime", FLOAT, 1, OPTIONAL,
-                                UNIT_CONV_NO_UNITS, sparts, sf_data.birth_time);
+                                UNIT_CONV_NO_UNITS, sparts, birth_time);
 }
 
 INLINE static void convert_spart_pos(const struct engine *e,
