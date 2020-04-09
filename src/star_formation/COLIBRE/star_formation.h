@@ -132,11 +132,11 @@ INLINE static int star_formation_is_star_forming(
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
   /* Calculate the sound speed */
-  const double sound_speed = hydro_get_physical_soundspeed(p, cosmo);
+  const double sigma_sound_squared = 3. * hydro_get_physical_pressure(p, cosmo)/physical_density;
 
   /* Get the subgrid sound speed */
-  const double sound_speed2_subgrid =
-      sound_speed * sound_speed * subgrid_temperature / temperature;
+  const double sigma_sound2_subgrid =
+      sigma_sound_squared * subgrid_temperature / temperature;
 
   /* Get the gas mass */
   const double gas_mass = hydro_get_mass(p);
@@ -151,7 +151,7 @@ INLINE static int star_formation_is_star_forming(
   /* Check if we satisfy the subgrid virial criteria by calculation
    * alpha/alpha_virial */
   const double alpha = starform->alpha_virial_inv *
-                       (p->sf_data.sigma_v2 + sound_speed2_subgrid) /
+                       (p->sf_data.sigma_v2 + sigma_sound2_subgrid) /
                        (subgrid_density_to_1_3th * gas_mass_to_2_3th);
 
   /* Check if the virial critiria is below one */
