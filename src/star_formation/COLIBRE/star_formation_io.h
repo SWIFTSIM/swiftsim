@@ -73,22 +73,23 @@ star_formation_write_sparticles(const struct spart* sparts,
                            "Temperatures at the time of birth of the gas "
                            "particles that turned into stars");
 
-  list[2] = io_make_output_field(
-      "BirthSubgridDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts,
-      sf_data.birth_subgrid_density,
-      "Physical subgrid densities at the time of birth of the gas particles that "
-      "turned into stars (note that "
-      "we store the physical subgrid density at the birth redshift, no conversion is "
-      "needed)");
+  list[2] =
+      io_make_output_field("BirthSubgridDensities", FLOAT, 1, UNIT_CONV_DENSITY,
+                           0.f, sparts, sf_data.birth_subgrid_density,
+                           "Physical subgrid densities at the time of birth of "
+                           "the gas particles that "
+                           "turned into stars (note that "
+                           "we store the physical subgrid density at the birth "
+                           "redshift, no conversion is "
+                           "needed)");
 
-  list[3] =
-      io_make_output_field("BirthSubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE,
-                           0.f, sparts, sf_data.birth_subgrid_temperature,
-                           "Subgrid temperatures at the time of birth of the gas "
-                           "particles that turned into stars");
+  list[3] = io_make_output_field(
+      "BirthSubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, sparts,
+      sf_data.birth_subgrid_temperature,
+      "Subgrid temperatures at the time of birth of the gas "
+      "particles that turned into stars");
 
   return 4;
 }
-
 
 #endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */

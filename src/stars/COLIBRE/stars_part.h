@@ -26,8 +26,8 @@
 /* Read additional aubgrid models */
 #include "chemistry_struct.h"
 #include "feedback_struct.h"
-#include "tracers_struct.h"
 #include "star_formation_struct.h"
+#include "tracers_struct.h"
 
 /**
  * @brief Particle fields for the star particles.
