@@ -86,7 +86,6 @@ star_formation_write_sparticles(const struct spart* sparts,
                            0.f, sparts, sf_data.birth_subgrid_temperature,
                            "Subgrid temperatures at the time of birth of the gas "
                            "particles that turned into stars");
-  message("write spart");
 
   return 4;
 }
