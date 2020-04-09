@@ -39,6 +39,6 @@ struct slice {
 
 void space_update_unique_id(struct space *s);
 long long space_get_new_unique_id(struct space *s);
-void space_init_unique_id(struct space *s);
+void space_init_unique_id(struct space *s, int nr_nodes);
 
 #endif  // SWIFT_SPACE_UNIQUE_ID_H

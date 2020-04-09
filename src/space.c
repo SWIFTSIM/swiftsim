@@ -4793,6 +4793,7 @@ void space_convert_quantities(struct space *s, int verbose) {
  * @param DM_background Are we running with some DM background particles?
  * @param verbose Print messages to stdout or not.
  * @param dry_run If 1, just initialise stuff, don't do anything with the parts.
+ * @param nr_nodes The number of MPI rank.
  *
  * Makes a grid of edge length > r_max and fills the particles
  * into the respective cells. Cells containing more than #space_splitsize
@@ -4805,8 +4806,8 @@ void space_init(struct space *s, struct swift_params *params,
                 struct bpart *bparts, size_t Npart, size_t Ngpart,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int generate_gas_in_ics, int hydro, int self_gravity,
-                int star_formation, int DM_background, int verbose,
-                int dry_run) {
+                int star_formation, int DM_background, int verbose, int dry_run,
+                int nr_nodes) {
 
   /* Clean-up everything */
   bzero(s, sizeof(struct space));
@@ -5095,7 +5096,7 @@ void space_init(struct space *s, struct swift_params *params,
 
   /* Compute the max id for the generation of unique id. */
   if (star_formation && swift_star_formation_model_creates_stars) {
-    space_init_unique_id(s);
+    space_init_unique_id(s, nr_nodes);
   }
 }
 

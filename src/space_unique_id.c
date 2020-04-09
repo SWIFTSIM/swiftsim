@@ -50,7 +50,7 @@ void space_update_unique_id(struct space *s) {
 #ifdef WITH_MPI
   const struct engine *e = s->e;
 
-  /* Check if the other ranks need a slices */
+  /* Check if the other ranks need a slice. */
   int *all_requires = (int *)malloc(sizeof(int) * e->nr_nodes);
 
   /* Do the communication */
@@ -62,9 +62,9 @@ void space_update_unique_id(struct space *s) {
   int local_index = 0;
   int total_shift = 0;
   for (int i = 0; i < e->nr_nodes; i++) {
-    total_shift += 1;
+    total_shift += all_requires[i];
     if (i < engine_rank) {
-      local_index += 1;
+      local_index += all_requires[i];
     }
   }
 
@@ -78,7 +78,7 @@ void space_update_unique_id(struct space *s) {
 
 #endif  // WITH_MPI
 
-  /* Compute the size of the each slice. */
+  /* Compute the size of each slice. */
   const long long slice_size = (space_extra_parts + space_extra_sparts +
                                 space_extra_gparts + space_extra_bparts) *
                                s->nr_cells;
@@ -133,6 +133,7 @@ long long space_get_new_unique_id(struct space *s) {
     if (s->unique_id.next.current == 0) {
       error("Failed to obtain a new unique ID.");
     }
+
     s->unique_id.current = s->unique_id.next;
 
     /* Reset the next slice. */
@@ -152,37 +153,34 @@ long long space_get_new_unique_id(struct space *s) {
  * @brief Initialize the computation of unique IDs.
  *
  * @param s The #space.
+ * @param nr_nodes The number of MPI ranks.
  */
-void space_init_unique_id(struct space *s) {
+void space_init_unique_id(struct space *s, int nr_nodes) {
   /* Set the counter to 0. */
   s->unique_id.global_next_id = 0;
 
   /* Check the parts for the max id. */
   for (size_t i = 0; i < s->nr_parts; i++) {
-    if (s->parts[i].id > s->unique_id.global_next_id) {
-      s->unique_id.global_next_id = s->parts[i].id;
-    }
+    s->unique_id.global_next_id =
+        max(s->unique_id.global_next_id, s->parts[i].id);
   }
 
   /* Check the gparts for the max id. */
   for (size_t i = 0; i < s->nr_gparts; i++) {
-    if (s->gparts[i].id_or_neg_offset > s->unique_id.global_next_id) {
-      s->unique_id.global_next_id = s->gparts[i].id_or_neg_offset;
-    }
+    s->unique_id.global_next_id =
+        max(s->unique_id.global_next_id, s->gparts[i].id_or_neg_offset);
   }
 
   /* Check the sparts for the max id. */
   for (size_t i = 0; i < s->nr_sparts; i++) {
-    if (s->sparts[i].id > s->unique_id.global_next_id) {
-      s->unique_id.global_next_id = s->sparts[i].id;
-    }
+    s->unique_id.global_next_id =
+        max(s->unique_id.global_next_id, s->sparts[i].id);
   }
 
   /* Check the bparts for the max id. */
   for (size_t i = 0; i < s->nr_bparts; i++) {
-    if (s->bparts[i].id > s->unique_id.global_next_id) {
-      s->unique_id.global_next_id = s->bparts[i].id;
-    }
+    s->unique_id.global_next_id =
+        max(s->unique_id.global_next_id, s->bparts[i].id);
   }
 
 #ifdef WITH_MPI
@@ -202,7 +200,7 @@ void space_init_unique_id(struct space *s) {
                                 space_extra_gparts + space_extra_bparts) *
                                s->nr_cells;
 
-  /* Compute the initial slices. */
+  /* Compute the initial slices (each rank has 2 slices). */
   if (s->unique_id.global_next_id > LLONG_MAX - 2 * engine_rank * slice_size) {
     error("Overflow for the unique id.");
   }
@@ -221,6 +219,12 @@ void space_init_unique_id(struct space *s) {
     error("Overflow for the unique id.");
   }
   s->unique_id.next.max = s->unique_id.next.current + slice_size;
+
+  /* Update the next available id */
+  if (s->unique_id.global_next_id > LLONG_MAX - 2 * slice_size * nr_nodes) {
+    error("Overflow for the unique id.");
+  }
+  s->unique_id.global_next_id += 2 * slice_size * nr_nodes;
 
   /* Initialize the lock. */
   if (lock_init(&s->unique_id.lock) != 0)
