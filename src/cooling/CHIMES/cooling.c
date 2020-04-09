@@ -574,19 +574,19 @@ void chimes_update_gas_vars(const double u_cgs,
     ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode;
   }
 
-  ChimesGasVars->temperature = (ChimesFloat) (u_actual_cgs *
-					      hydro_gamma_minus_one * proton_mass_cgs * mu /
-					      boltzmann_k_cgs);
+  ChimesGasVars->temperature =
+      (ChimesFloat)(u_actual_cgs * hydro_gamma_minus_one * proton_mass_cgs *
+                    mu / boltzmann_k_cgs);
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
   ChimesFloat XH = (ChimesFloat)metal_fraction[chemistry_element_H];
 
-  ChimesGasVars->metallicity = (ChimesFloat) chemistry_get_total_metal_mass_fraction_for_cooling(p); 
-  ChimesGasVars->metallicity /= cooling->Zsol; 
-  if (ChimesGasVars->metallicity <= 0.0) 
-    ChimesGasVars->metallicity = FLT_MIN; 
+  ChimesGasVars->metallicity =
+      (ChimesFloat)chemistry_get_total_metal_mass_fraction_for_cooling(p);
+  ChimesGasVars->metallicity /= cooling->Zsol;
+  if (ChimesGasVars->metallicity <= 0.0) ChimesGasVars->metallicity = FLT_MIN;
 #else
   /* Without COLIBRE or EAGLE chemistry,
    * the metal abundances are unavailable.
@@ -597,9 +597,10 @@ void chimes_update_gas_vars(const double u_cgs,
 
   ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
 
-  const double nH = hydro_get_physical_density(p, cosmo) * XH /
-    phys_const->const_proton_mass;
-  ChimesGasVars->nH_tot = (ChimesFloat) (nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY));
+  const double nH =
+      hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
+  ChimesGasVars->nH_tot = (ChimesFloat)(
+      nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY));
 
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate;
   ChimesGasVars->hydro_timestep = (ChimesFloat)dt_cgs;
@@ -621,7 +622,7 @@ void chimes_update_gas_vars(const double u_cgs,
     /* Scale dust_ratio by N_ref, but
      * only if N_ref < N_H0 */
     if (N_ref < cooling->N_H0)
-      ChimesGasVars->dust_ratio *= (ChimesFloat) pow(N_ref / cooling->N_H0, 1.4);
+      ChimesGasVars->dust_ratio *= (ChimesFloat)pow(N_ref / cooling->N_H0, 1.4);
   }
 
   if (cooling->UV_field_flag == 1) {
@@ -657,7 +658,9 @@ void chimes_update_gas_vars(const double u_cgs,
     if ((cooling->ChimesGlobalVars.redshift >
          cooling->ChimesGlobalVars.reionisation_redshift) &&
         (J_over_J0 > 0.0))
-      ChimesGasVars->isotropic_photon_density[1] *= exp10(-20.0 - ((-20.0 - log10(J_over_J0)) / (1.0 + exp(-2.0 * (log10(ChimesGasVars->nH_tot) + 4.0)))));
+      ChimesGasVars->isotropic_photon_density[1] *= exp10(
+          -20.0 - ((-20.0 - log10(J_over_J0)) /
+                   (1.0 + exp(-2.0 * (log10(ChimesGasVars->nH_tot) + 4.0)))));
     else
       ChimesGasVars->isotropic_photon_density[1] *= J_over_J0;
 
@@ -670,7 +673,12 @@ void chimes_update_gas_vars(const double u_cgs,
     ChimesGasVars->cell_size = 0;
   else if (cooling->Shielding_flag == 1) {
     /* Jeans length */
-    ChimesGasVars->cell_size = (ChimesFloat) sqrt(M_PI * hydro_gamma * boltzmann_k_cgs * ((double) ChimesGasVars->temperature) / (mu * newton_G_cgs * (proton_mass_cgs * ((double) ChimesGasVars->nH_tot) / XH) * proton_mass_cgs));
+    ChimesGasVars->cell_size = (ChimesFloat)sqrt(
+        M_PI * hydro_gamma * boltzmann_k_cgs *
+        ((double)ChimesGasVars->temperature) /
+        (mu * newton_G_cgs *
+         (proton_mass_cgs * ((double)ChimesGasVars->nH_tot) / XH) *
+         proton_mass_cgs));
     ChimesGasVars->cell_size *= cooling->shielding_length_factor;
 
     if (cooling->max_shielding_length > 0.0) {
@@ -678,10 +686,12 @@ void chimes_update_gas_vars(const double u_cgs,
           cooling->max_shielding_length *
           units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
       if (ChimesGasVars->cell_size > max_shielding_length_cgs)
-        ChimesGasVars->cell_size = (ChimesFloat) max_shielding_length_cgs;
+        ChimesGasVars->cell_size = (ChimesFloat)max_shielding_length_cgs;
     }
   } else if (cooling->Shielding_flag == 2)
-    ChimesGasVars->cell_size = (ChimesFloat) (cooling->shielding_length_factor * N_ref / ((double) ChimesGasVars->nH_tot));
+    ChimesGasVars->cell_size =
+        (ChimesFloat)(cooling->shielding_length_factor * N_ref /
+                      ((double)ChimesGasVars->nH_tot));
 
   /* Doppler broadening parameter, for
    * H2 self-shielding, is hard-coded
@@ -796,17 +806,17 @@ void chimes_update_element_abundances(
     /* Reduce gas-phase metal abundances
      * due to dust depletion. */
     ChimesGasVars->element_abundances[1] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_C * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_C * factor));
     ChimesGasVars->element_abundances[3] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_O * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_O * factor));
     ChimesGasVars->element_abundances[5] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_Mg * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Mg * factor));
     ChimesGasVars->element_abundances[6] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_Si * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Si * factor));
     ChimesGasVars->element_abundances[8] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_Ca * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Ca * factor));
     ChimesGasVars->element_abundances[9] *=
-        (ChimesFloat) (1.0 - (cooling->f_dust0_Fe * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Fe * factor));
   }
 
   /* Zero the abundances of any elements
@@ -1134,7 +1144,7 @@ double chimes_mu(const struct cooling_function_data *cooling,
   double denominator = 0.0;
 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-    denominator += (double) xp->cooling_data.chimes_abundances[i];
+    denominator += (double)xp->cooling_data.chimes_abundances[i];
 
   return numerator / denominator;
 }
@@ -1178,7 +1188,8 @@ float cooling_get_temperature(
       u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
   /* Return particle temperature */
-  return (float) (hydro_gamma_minus_one * u_cgs * mu * (proton_mass_cgs / boltzmann_k_cgs));
+  return (float)(hydro_gamma_minus_one * u_cgs * mu *
+                 (proton_mass_cgs / boltzmann_k_cgs));
 }
 
 /**
@@ -1261,11 +1272,10 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
   if (l_max_cgs > 0.0)
     N_ref_prime = chimes_min(N_ref_prime, l_max_cgs * nH_cgs);
 
-  double N_ref =
-    exp10(log10(N_ref_prime) -
-                    ((log10(N_ref_prime) - log10(N_min)) /
-                     (1.0 + exp(-5.0 * (log10(temperature) -
-                                        ((log_T_min + log_T_max) / 2.0))))));
+  double N_ref = exp10(log10(N_ref_prime) -
+                       ((log10(N_ref_prime) - log10(N_min)) /
+                        (1.0 + exp(-5.0 * (log10(temperature) -
+                                           ((log_T_min + log_T_max) / 2.0))))));
 
   return N_ref;
 }

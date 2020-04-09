@@ -404,8 +404,7 @@ void chimes_network(struct gasVariables *myGasVars,
           BOLTZMANNCGS;
       NV_Ith_S(y, data.network_size) = (realtype)internal_energy;
       abstol_vector = N_VNew_Serial(data.network_size + 1);
-      NV_Ith_S(abstol_vector, data.network_size) =
-	(realtype) CHIMES_FLT_MIN; 
+      NV_Ith_S(abstol_vector, data.network_size) = (realtype)CHIMES_FLT_MIN;
     }
 
     i = 0;
