@@ -42,6 +42,12 @@ struct star_formation_spart_data {
 
   /*! The birth temperature */
   float birth_temperature;
+
+  /*! The subgrid birth density */
+  float birth_subgrid_density;
+
+  /*! The subgrid birth temperature */
+  float birth_subgrid_temperature;
 };
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */

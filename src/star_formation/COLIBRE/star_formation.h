@@ -290,6 +290,14 @@ INLINE static void star_formation_copy_properties(
   sp->sf_data.birth_temperature = cooling_get_temperature(phys_const, hydro_props, us,
                                                   cosmo, cooling, p, xp);
 
+  /* Store the birth subgrid density in the star particle */
+  sp->sf_data.birth_subgrid_density = xp->tracers_data.subgrid_dens;
+ 
+  /* Store the birth subgrid temperature in the star particle */
+  sp->sf_data.birth_subgrid_temperature = xp->tracers_data.subgrid_temp;
+
+  message("%e %e %e %e", sp->sf_data.birth_density, sp->sf_data.birth_subgrid_density, sp->sf_data.birth_temperature, sp->sf_data.birth_subgrid_temperature);
+
   /* Flag that this particle has not done feedback yet */
   sp->SNII_f_E = -1.f;
 
