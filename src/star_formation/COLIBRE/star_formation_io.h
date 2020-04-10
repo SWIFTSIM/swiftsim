@@ -88,8 +88,14 @@ star_formation_write_sparticles(const struct spart* sparts,
                                  sf_data.birth_subgrid_temperature,
                                  "Subgrid temperatures at the time of birth of "
                                  "the gas particles that turned into stars");
+  
+  list[4] = io_make_output_field(
+      "BirthVelocityDispersions", FLOAT, 1, UNIT_CONV_VELOCITY_SQUARED, 0.f,
+      sparts, sf_data.birth_velocity_dispersion,
+      "Velocity dispersion (3D) squared at the time of birth of the gas "
+      "particles that turned into stars");
 
-  return 4;
+  return 5;
 }
 
 #endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */

@@ -56,6 +56,9 @@ struct star_formation_spart_data {
 
   /*! The subgrid birth temperature */
   float birth_subgrid_temperature;
+
+  /*! The velocity dispersion at birth time */
+  float birth_velocity_dispersion;
 };
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */

@@ -327,7 +327,7 @@ INLINE static void star_formation_copy_properties(
   sp->sf_data.birth_subgrid_temperature = xp->tracers_data.subgrid_temp;
 
   /* Store the birth velocity dispersion in the star particle */
-  sp->birth_velocity_dispersion = p->sf_data.sigma_v2;
+  sp->sf_data.birth_velocity_dispersion = p->sf_data.sigma_v2;
 
   /* Flag that this particle has not done feedback yet */
   sp->SNII_f_E = -1.f;
