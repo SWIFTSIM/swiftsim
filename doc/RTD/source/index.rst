@@ -32,4 +32,4 @@ difference is the parameter file that will need to be adapted for SWIFT.
    VELOCIraptorInterface/index
    AnalysisTools/index
    Logger/index
-   SpecialBehavior/index
+   ImplementationDetails/index
