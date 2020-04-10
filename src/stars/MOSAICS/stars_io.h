@@ -251,7 +251,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       field_mass, "Subgrid field mass component of star particle");
 
   list[27] = io_make_output_field(
-      "TidalTensor", FLOAT, 18, UNIT_CONV_TIDAL_TENSOR, 0.f, sparts,
+      "TidalTensor", FLOAT, 18, UNIT_CONV_TIDAL_TENSOR, -3.f, sparts,
       tidal_tensor,
       "Second derivative of gravitational potential at the last 3 snapshots. We"
       "store the upper components of the symmeteric matrix (i.e. 6 values per"
@@ -293,11 +293,11 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "Local gas fraction at time of star formation");
 
   list[35] = io_make_output_field(
-      "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, kappa,
+      "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, kappa,
       "Epicyclic frequency at formation");
 
   list[36] = io_make_output_field(
-      "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, Omega,
+      "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, Omega,
       "Circular frequency at formation");
 
   list[37] = io_make_output_field(

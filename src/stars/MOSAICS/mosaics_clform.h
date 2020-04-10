@@ -250,8 +250,8 @@ __attribute__((always_inline)) INLINE static double poidev(
  */
 __attribute__((always_inline)) INLINE static void mosaics_clform(
     struct spart* restrict sp, const struct stars_props* props,
-    const struct star_formation* sf_props, 
-    const struct phys_const* phys_const) {
+    const struct star_formation* sf_props, const struct phys_const* phys_const,
+    const struct cosmology* cosmo) {
 
   /* TODO unit conversions into physical units for clevo */
 
@@ -341,6 +341,10 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   sp->Omega = sqrt(Omega2);
   sp->kappa = sqrt(kappa2);
+
+  /* Factor out cosmology */
+  Omega2 *= cosmo->a3_inv;
+  kappa2 *= cosmo->a3_inv;
 
   /* 4 * pi^5 * G^2 */
   const double MTconst =

@@ -283,7 +283,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->fgas = 1.;
 
     /* Go make clusters */
-    mosaics_clform(sp, stars_properties, sf_props, phys_const);
+    mosaics_clform(sp, stars_properties, sf_props, phys_const, cosmo);
 
     /* We're done with cluster formation */
     sp->new_star = 0;
