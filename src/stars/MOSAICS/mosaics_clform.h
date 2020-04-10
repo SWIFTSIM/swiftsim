@@ -336,8 +336,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   sort3(tideval);
 
   /* Circular and epicyclic frequencies */
-  const double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
-  const double kappa2 = fabs(3 * Omega2 - tideval[2]);
+  double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
+  double kappa2 = fabs(3 * Omega2 - tideval[2]);
 
   sp->Omega = sqrt(Omega2);
   sp->kappa = sqrt(kappa2);
