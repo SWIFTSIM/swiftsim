@@ -60,6 +60,7 @@
 #include "proxy.h"
 #include "restart.h"
 #include "sort_part.h"
+#include "space_unique_id.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
 #include "stars.h"
@@ -1818,6 +1819,9 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
   swift_free("b_index", b_index);
   swift_free("cell_bpart_counts", cell_bpart_counts);
 
+  /* Update the slice of unique IDs. */
+  space_update_unique_id(s);
+
 #ifdef WITH_MPI
 
   /* Re-allocate the index array for the gparts if needed.. */
@@ -2205,9 +2209,16 @@ void space_parts_get_cell_index_mapper(void *map_data, int nr_parts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2338,9 +2349,16 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2477,9 +2495,16 @@ void space_sparts_get_cell_index_mapper(void *map_data, int nr_sparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -2612,9 +2637,16 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
 #endif
 
     /* Put it back into the simulation volume */
-    const double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
-    const double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
-    const double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+    double pos_x = box_wrap(old_pos_x, 0.0, dim_x);
+    double pos_y = box_wrap(old_pos_y, 0.0, dim_y);
+    double pos_z = box_wrap(old_pos_z, 0.0, dim_z);
+
+    /* Treat the case where a particle was wrapped back exactly onto
+     * the edge because of rounding issues (more accuracy around 0
+     * than around dim) */
+    if (pos_x == dim_x) pos_x = 0.0;
+    if (pos_y == dim_y) pos_y = 0.0;
+    if (pos_z == dim_z) pos_z = 0.0;
 
     /* Get its cell index */
     const int index =
@@ -4790,6 +4822,7 @@ void space_convert_quantities(struct space *s, int verbose) {
  * @param DM_background Are we running with some DM background particles?
  * @param verbose Print messages to stdout or not.
  * @param dry_run If 1, just initialise stuff, don't do anything with the parts.
+ * @param nr_nodes The number of MPI rank.
  *
  * Makes a grid of edge length > r_max and fills the particles
  * into the respective cells. Cells containing more than #space_splitsize
@@ -4802,8 +4835,8 @@ void space_init(struct space *s, struct swift_params *params,
                 struct bpart *bparts, size_t Npart, size_t Ngpart,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int generate_gas_in_ics, int hydro, int self_gravity,
-                int star_formation, int DM_background, int verbose,
-                int dry_run) {
+                int star_formation, int DM_background, int verbose, int dry_run,
+                int nr_nodes) {
 
   /* Clean-up everything */
   bzero(s, sizeof(struct space));
@@ -5083,11 +5116,17 @@ void space_init(struct space *s, struct swift_params *params,
 #endif
 
   /* Do we want any spare particles for on the fly creation? */
-  if (!star_formation || !swift_star_formation_model_creates_stars)
+  if (!star_formation || !swift_star_formation_model_creates_stars) {
     space_extra_sparts = 0;
+  }
 
   /* Build the cells recursively. */
   if (!dry_run) space_regrid(s, verbose);
+
+  /* Compute the max id for the generation of unique id. */
+  if (star_formation && swift_star_formation_model_creates_stars) {
+    space_init_unique_id(s, nr_nodes);
+  }
 }
 
 /**
@@ -5736,6 +5775,9 @@ void space_clean(struct space *s) {
   swift_free("gparts_foreign", s->gparts_foreign);
   swift_free("bparts_foreign", s->bparts_foreign);
 #endif
+
+  if (lock_destroy(&s->unique_id.lock) != 0)
+    error("Failed to destroy spinlocks.");
 }
 
 /**
