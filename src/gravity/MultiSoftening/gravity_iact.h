@@ -345,6 +345,42 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
            M_301 * D_401 + M_310 * D_410 + M_400 * D_500;
 
 #endif
+#if SELF_GRAVITY_MULTIPOLE_ORDER > 4
+
+  const float M_500 = m->M_500;
+  const float M_050 = m->M_050;
+  const float M_005 = m->M_005;
+  const float M_410 = m->M_410;
+  const float M_401 = m->M_401;
+  const float M_041 = m->M_041;
+  const float M_140 = m->M_140;
+  const float M_014 = m->M_014;
+  const float M_104 = m->M_104;
+  const float M_320 = m->M_320;
+  const float M_302 = m->M_302;
+  const float M_230 = m->M_230;
+  const float M_032 = m->M_032;
+  const float M_203 = m->M_203;
+  const float M_023 = m->M_023;
+  const float M_122 = m->M_122;
+  const float M_212 = m->M_212;
+  const float M_221 = m->M_221;
+  const float M_311 = m->M_311;
+  const float M_131 = m->M_131;
+  const float M_113 = m->M_113;
+
+  /* Compute 5th order field tensor terms (addition to rank 0) */
+  F_000 += M_005 * D_005 + M_014 * D_014 + M_023 * D_023 + M_032 * D_032 +
+           M_041 * D_041 + M_050 * D_050 + M_104 * D_104 + M_113 * D_113 +
+           M_122 * D_122 + M_131 * D_131 + M_140 * D_140 + M_203 * D_203 +
+           M_212 * D_212 + M_221 * D_221 + M_230 * D_230 + M_302 * D_302 +
+           M_311 * D_311 + M_320 * D_320 + M_401 * D_401 + M_410 * D_410 +
+           M_500 * D_500;
+
+#endif
+#if SELF_GRAVITY_MULTIPOLE_ORDER > 5
+#error "Missing implementation for orders >5"
+#endif
 
   *f_x = F_100;
   *f_y = F_010;
