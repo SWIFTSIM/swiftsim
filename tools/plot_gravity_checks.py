@@ -365,7 +365,7 @@ for i in range(num_order):
     plt.text(
         min_error * 1.5,
         1.5 - count / 10.0,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_x, per99_x),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_x, per99_x),
         ha="left",
         va="top",
         color=cols[i],
@@ -377,7 +377,7 @@ for i in range(num_order):
     plt.text(
         min_error * 1.5,
         1.5 - count / 10.0,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_y, per99_y),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_y, per99_y),
         ha="left",
         va="top",
         color=cols[i],
@@ -389,7 +389,7 @@ for i in range(num_order):
     plt.text(
         min_error * 1.5,
         1.5 - count / 10.0,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_z, per99_z),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_z, per99_z),
         ha="left",
         va="top",
         color=cols[i],
@@ -401,7 +401,7 @@ for i in range(num_order):
     plt.text(
         min_error * 1.5,
         1.5 - count / 10.0,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (norm_median, norm_per99),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (norm_median, norm_per99),
         ha="left",
         va="top",
         color=cols[i],
@@ -413,7 +413,7 @@ for i in range(num_order):
     plt.text(
         min_error * 1.5,
         1.5 - count / 10.0,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_pot, per99_pot),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_pot, per99_pot),
         ha="left",
         va="top",
         color=cols[i],
