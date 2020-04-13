@@ -32,6 +32,7 @@
 #include "runner_doiact_hydro_vec.h"
 #include "space_getsid.h"
 #include "star_formation_iact.h"
+#include "stars.h"
 #include "timers.h"
 #include "timestep_limiter_iact.h"
 

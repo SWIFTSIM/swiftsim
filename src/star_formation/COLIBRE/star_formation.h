@@ -662,6 +662,10 @@ __attribute__((always_inline)) INLINE static void star_formation_end_density(
   const float h_inv2 = h_inv * h_inv;
 
   p->sf_data.sigma_v2 *= rho_inv * h_inv * h_inv2 * cosmo->a2_inv;
+
+  p->sf_data.stars_rho *= h_inv * h_inv2;
+  p->sf_data.stars_sigma_v2 *= (1.f/p->sf_data.stars_rho) * 
+      h_inv * h_inv2 * cosmo->a2_inv;
 }
 
 /**
@@ -723,6 +727,9 @@ __attribute__((always_inline)) INLINE static void star_formation_init_part(
   /* Initialize the velocity dispersion as 0 before we do the SPH calculation of
    * the velocity dispersion */
   p->sf_data.sigma_v2 = 0.f;
+  p->sf_data.scount = 0;
+  p->sf_data.stars_rho = 0.f;
+  p->sf_data.stars_sigma_v2 = 0.f;
 }
 
 /**

@@ -278,10 +278,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     /* Do cluster formation */
     sp->gcflag = 1;
 
-    /* TODO need to calculate this beforehand */
-    sp->star_vel_disp = 0.;
-    sp->fgas = 1.;
-
     /* Go make clusters */
     mosaics_clform(sp, stars_properties, sf_props, phys_const, cosmo);
 
@@ -321,8 +317,13 @@ stars_mosaics_copy_extra_properties(
     const struct cooling_function_data* restrict cooling) {
 
   /* Store the birth properties in the star particle */
-  sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
   sp->gas_vel_disp = sqrt(p->sf_data.sigma_v2);
+  sp->star_vel_disp = sqrt(p->sf_data.stars_sigma_v2);
+  sp->fgas = p->rho / (p->rho + p->sf_data.stars_rho);
+  sp->scount = p->sf_data.scount;
+
+  /* Hydro pressure */
+  sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
 
   /* Calculate the hydro sound speed */
   sp->sound_speed_subgrid = hydro_get_physical_soundspeed(p, cosmo);

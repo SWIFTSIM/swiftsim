@@ -305,7 +305,9 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Gas surface density (Krumholz & McKee 2005) */
   double phi_P = 1.f;
-  if ( (sp->fgas < 1.f) && (sp->star_vel_disp > 0) ) {
+  /*TODO work out the minimum number we need */
+  /* Make sure we have enough stars for a resolved dispersion */
+  if ( sp->scount > 5 ) {
     phi_P = 1.f + sp->gas_vel_disp / sp->star_vel_disp * (1.f / sp->fgas - 1.f);
   }
 
@@ -351,9 +353,10 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
       4.f * M_PI * M_PI * M_PI * M_PI * M_PI * const_G * const_G;
   sp->Toomre_mass = MTconst * SigmaG * SigmaG * SigmaG / (kappa2 * kappa2);
 
-  /* Toomre collapse fraction (Reina-Campos & Kruijssen 2017) */
   /* Total collapse time of Toomre volume */
   const double tcollapse = sqrt(2. * M_PI / kappa2);
+
+  /* Toomre collapse fraction (Reina-Campos & Kruijssen 2017) */
   sp->frac_collapse = fmin(1., tfb / tcollapse);
   sp->frac_collapse *= sp->frac_collapse; /* f^2 */
   sp->frac_collapse *= sp->frac_collapse; /* f^4 */

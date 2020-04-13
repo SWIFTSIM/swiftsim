@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 40;
+  *num_fields = 41;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -293,23 +293,28 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "Local gas fraction at time of star formation");
 
   list[35] = io_make_output_field(
+      "KernelStarCount", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, scount,
+      "Number of stars (non-weighted) within gas smoothing kernel at time of"
+      "star formation");
+
+  list[36] = io_make_output_field(
       "EpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, kappa,
       "Epicyclic frequency at formation");
 
-  list[36] = io_make_output_field(
+  list[37] = io_make_output_field(
       "CircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, Omega,
       "Circular frequency at formation");
 
-  list[37] = io_make_output_field(
+  list[38] = io_make_output_field(
       "ToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       Toomre_mass, "Local Toomre mass at formation");
 
-  list[38] = io_make_output_field(
+  list[39] = io_make_output_field(
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       frac_collapse, "Fraction of Toomre mass which can collapse to a GMC");
 
   // TODO just temporary
-  list[39] = io_make_output_field(
+  list[40] = io_make_output_field(
       "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
       "Co-moving gravitational potential at position of the particles");
 }

@@ -3,7 +3,7 @@ Configure options:
   ./configure --with-gravity=with-tidal-tensors --with-stars=MOSAICS
 
   Isolated disc tests:
-  ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-gravity=with-multi-softening-tensors
+  ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist --with-gravity=with-multi-softening-tensors --with-mosaics-max-clusters=100
 
 
 Need to make sure all SFing (or just all gas?) particles get tensors so they can be passed at star formation time
@@ -20,6 +20,8 @@ I/O:
 Scheduling:
   Still necessary to call mosaics from runner_do_star_formation() since occasionally SF happens but mosaics would not be called. Already scheduled after the star resort so not sure what the fix is?
 
+Double check new parts in runner_doiact_functions_hydro.h
+
 
 NOTES:
 ------
@@ -31,5 +33,5 @@ I/O:
 
   Added Gravity:calculate_all_tensors to params. Do we also want to output all tensors to snapshots when this is set?
 
-Have implemented a local 'GMC SFE'. But I think the subgrid density might be the wrong choice for tff
+Have implemented a local 'GMC SFE'. Not sure it works as expected though
 

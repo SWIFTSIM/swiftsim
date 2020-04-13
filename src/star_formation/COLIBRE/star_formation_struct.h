@@ -40,6 +40,15 @@ struct star_formation_part_data {
 
   /*! Velocity dispersion squared in physical internal units */
   float sigma_v2;
+
+  /*! Star neighbour count */
+  int scount;
+
+  /*! Stellar density */
+  float stars_rho;
+
+  /*! Stellar velocity dispersion */
+  float stars_sigma_v2;
 };
 
 /**

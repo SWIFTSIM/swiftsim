@@ -218,8 +218,11 @@ struct spart {
   /*! The local stellar velocity dispersion at formation */
   float star_vel_disp;
 
-  /*! Gas fraction within that same region */
+  /*! Gas fraction within the kernel */
   float fgas;
+
+  /*! Number of stars within the kernel */
+  int scount;
 
   /*! Epicyclic frequency at formation */
   float kappa;
