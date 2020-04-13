@@ -154,8 +154,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float r_inv = 1.f / sqrtf(r2);
 
   /* Compute the derivatives of the potential */
-  struct potential_derivatives_M2L d;
-  potential_derivatives_compute_M2L(r_x, r_y, r_z, r2, r_inv, h,
+  struct potential_derivatives_M2P d;
+  potential_derivatives_compute_M2P(r_x, r_y, r_z, r2, r_inv, h,
                                     /*periodic=*/0, /*r_s_inv=*/0.f, &d);
 
   float F_000 = 0.f;
@@ -166,8 +166,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float M_000 = m->M_000;
   const float D_000 = d.D_000;
 
+  const float D_100 = d.D_100;
+  const float D_010 = d.D_010;
+  const float D_001 = d.D_001;
+
   /*  0th order term */
   F_000 -= M_000 * D_000;
+
+  /*  1st order multipole term (addition to rank 1) */
+  F_100 -= M_000 * D_100;
+  F_010 -= M_000 * D_010;
+  F_001 -= M_000 * D_001;
 
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
@@ -178,17 +187,20 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float M_010 = 0.f;
   const float M_001 = 0.f;
 
-  const float D_100 = d.D_100;
-  const float D_010 = d.D_010;
-  const float D_001 = d.D_001;
+  const float D_200 = d.D_200;
+  const float D_020 = d.D_020;
+  const float D_002 = d.D_002;
+  const float D_110 = d.D_110;
+  const float D_101 = d.D_101;
+  const float D_011 = d.D_011;
 
   /*  1st order multipole term (addition to rank 0) */
   F_000 += M_100 * D_100 + M_010 * D_010 + M_001 * D_001;
 
-  /*  1st order multipole term (addition to rank 1) */
-  F_100 -= M_000 * D_100;
-  F_010 -= M_000 * D_010;
-  F_001 -= M_000 * D_001;
+  /*  2nd order multipole term (addition to rank 1)*/
+  F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101;
+  F_010 += M_100 * D_110 + M_010 * D_020 + M_001 * D_011;
+  F_001 += M_100 * D_101 + M_010 * D_011 + M_001 * D_002;
 
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 1
@@ -200,21 +212,28 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float M_101 = m->M_101;
   const float M_011 = m->M_011;
 
-  const float D_200 = d.D_200;
-  const float D_020 = d.D_020;
-  const float D_002 = d.D_002;
-  const float D_110 = d.D_110;
-  const float D_101 = d.D_101;
-  const float D_011 = d.D_011;
+  const float D_300 = d.D_300;
+  const float D_030 = d.D_030;
+  const float D_003 = d.D_003;
+  const float D_210 = d.D_210;
+  const float D_201 = d.D_201;
+  const float D_021 = d.D_021;
+  const float D_120 = d.D_120;
+  const float D_012 = d.D_012;
+  const float D_102 = d.D_102;
+  const float D_111 = d.D_111;
 
   /*  2nd order multipole term (addition to rank 0)*/
   F_000 -= M_200 * D_200 + M_020 * D_020 + M_002 * D_002;
   F_000 -= M_110 * D_110 + M_101 * D_101 + M_011 * D_011;
 
-  /*  2nd order multipole term (addition to rank 1)*/
-  F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101;
-  F_010 += M_100 * D_110 + M_010 * D_020 + M_001 * D_011;
-  F_001 += M_100 * D_101 + M_010 * D_011 + M_001 * D_002;
+  /*  3rd order multipole term (addition to rank 1)*/
+  F_100 -= M_200 * D_300 + M_020 * D_120 + M_002 * D_102;
+  F_100 -= M_110 * D_210 + M_101 * D_201 + M_011 * D_111;
+  F_010 -= M_200 * D_210 + M_020 * D_030 + M_002 * D_012;
+  F_010 -= M_110 * D_120 + M_101 * D_111 + M_011 * D_021;
+  F_001 -= M_200 * D_201 + M_020 * D_021 + M_002 * D_003;
+  F_001 -= M_110 * D_111 + M_101 * D_102 + M_011 * D_012;
 
 #endif
 
@@ -231,16 +250,21 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float M_102 = m->M_102;
   const float M_111 = m->M_111;
 
-  const float D_300 = d.D_300;
-  const float D_030 = d.D_030;
-  const float D_003 = d.D_003;
-  const float D_210 = d.D_210;
-  const float D_201 = d.D_201;
-  const float D_021 = d.D_021;
-  const float D_120 = d.D_120;
-  const float D_012 = d.D_012;
-  const float D_102 = d.D_102;
-  const float D_111 = d.D_111;
+  const float D_400 = d.D_400;
+  const float D_040 = d.D_040;
+  const float D_004 = d.D_004;
+  const float D_310 = d.D_310;
+  const float D_301 = d.D_301;
+  const float D_031 = d.D_031;
+  const float D_130 = d.D_130;
+  const float D_013 = d.D_013;
+  const float D_103 = d.D_103;
+  const float D_220 = d.D_220;
+  const float D_202 = d.D_202;
+  const float D_022 = d.D_022;
+  const float D_211 = d.D_211;
+  const float D_121 = d.D_121;
+  const float D_112 = d.D_112;
 
   /*  3rd order multipole term (addition to rank 0)*/
   F_000 += M_300 * D_300 + M_030 * D_030 + M_003 * D_003;
@@ -248,13 +272,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   F_000 += M_021 * D_021 + M_102 * D_102 + M_012 * D_012;
   F_000 += M_111 * D_111;
 
-  /*  3rd order multipole term (addition to rank 1)*/
-  F_100 -= M_200 * D_300 + M_020 * D_120 + M_002 * D_102;
-  F_100 -= M_110 * D_210 + M_101 * D_201 + M_011 * D_111;
-  F_010 -= M_200 * D_210 + M_020 * D_030 + M_002 * D_012;
-  F_010 -= M_110 * D_120 + M_101 * D_111 + M_011 * D_021;
-  F_001 -= M_200 * D_201 + M_020 * D_021 + M_002 * D_003;
-  F_001 -= M_110 * D_111 + M_101 * D_102 + M_011 * D_012;
+  /* Compute 4th order field tensor terms (addition to rank 1) */
+  F_001 += M_003 * D_004 + M_012 * D_013 + M_021 * D_022 + M_030 * D_031 +
+           M_102 * D_103 + M_111 * D_112 + M_120 * D_121 + M_201 * D_202 +
+           M_210 * D_211 + M_300 * D_301;
+  F_010 += M_003 * D_013 + M_012 * D_022 + M_021 * D_031 + M_030 * D_040 +
+           M_102 * D_112 + M_111 * D_121 + M_120 * D_130 + M_201 * D_211 +
+           M_210 * D_220 + M_300 * D_310;
+  F_100 += M_003 * D_103 + M_012 * D_112 + M_021 * D_121 + M_030 * D_130 +
+           M_102 * D_202 + M_111 * D_211 + M_120 * D_220 + M_201 * D_301 +
+           M_210 * D_310 + M_300 * D_400;
 
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 3
@@ -275,21 +302,27 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float M_121 = m->M_121;
   const float M_112 = m->M_112;
 
-  const float D_400 = d.D_400;
-  const float D_040 = d.D_040;
-  const float D_004 = d.D_004;
-  const float D_310 = d.D_310;
-  const float D_301 = d.D_301;
-  const float D_031 = d.D_031;
-  const float D_130 = d.D_130;
-  const float D_013 = d.D_013;
-  const float D_103 = d.D_103;
-  const float D_220 = d.D_220;
-  const float D_202 = d.D_202;
-  const float D_022 = d.D_022;
-  const float D_211 = d.D_211;
-  const float D_121 = d.D_121;
-  const float D_112 = d.D_112;
+  const float D_500 = d.D_500;
+  const float D_050 = d.D_050;
+  const float D_005 = d.D_005;
+  const float D_410 = d.D_410;
+  const float D_401 = d.D_401;
+  const float D_041 = d.D_041;
+  const float D_140 = d.D_140;
+  const float D_014 = d.D_014;
+  const float D_104 = d.D_104;
+  const float D_320 = d.D_320;
+  const float D_302 = d.D_302;
+  const float D_230 = d.D_230;
+  const float D_032 = d.D_032;
+  const float D_203 = d.D_203;
+  const float D_023 = d.D_023;
+  const float D_122 = d.D_122;
+  const float D_212 = d.D_212;
+  const float D_221 = d.D_221;
+  const float D_311 = d.D_311;
+  const float D_131 = d.D_131;
+  const float D_113 = d.D_113;
 
   /* Compute 4th order field tensor terms (addition to rank 0) */
   F_000 -= M_004 * D_004 + M_013 * D_013 + M_022 * D_022 + M_031 * D_031 +
@@ -297,16 +330,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
            M_130 * D_130 + M_202 * D_202 + M_211 * D_211 + M_220 * D_220 +
            M_301 * D_301 + M_310 * D_310 + M_400 * D_400;
 
-  /* Compute 4th order field tensor terms (addition to rank 1) */
-  F_001 += M_003 * D_004 + M_012 * D_013 + M_021 * D_022 + M_030 * D_031 +
-           M_102 * D_103 + M_111 * D_112 + M_120 * D_121 + M_201 * D_202 +
-           M_210 * D_211 + M_300 * D_301;
-  F_010 += M_003 * D_013 + M_012 * D_022 + M_021 * D_031 + M_030 * D_040 +
-           M_102 * D_112 + M_111 * D_121 + M_120 * D_130 + M_201 * D_211 +
-           M_210 * D_220 + M_300 * D_310;
-  F_100 += M_003 * D_103 + M_012 * D_112 + M_021 * D_121 + M_030 * D_130 +
-           M_102 * D_202 + M_111 * D_211 + M_120 * D_220 + M_201 * D_301 +
-           M_210 * D_310 + M_300 * D_400;
+  /* Compute 5th order field tensor terms (addition to rank 1) */
+  F_001 -= M_004 * D_005 + M_013 * D_014 + M_022 * D_023 + M_031 * D_032 +
+           M_040 * D_041 + M_103 * D_104 + M_112 * D_113 + M_121 * D_122 +
+           M_130 * D_131 + M_202 * D_203 + M_211 * D_212 + M_220 * D_221 +
+           M_301 * D_302 + M_310 * D_311 + M_400 * D_401;
+  F_010 -= M_004 * D_014 + M_013 * D_023 + M_022 * D_032 + M_031 * D_041 +
+           M_040 * D_050 + M_103 * D_113 + M_112 * D_122 + M_121 * D_131 +
+           M_130 * D_140 + M_202 * D_212 + M_211 * D_221 + M_220 * D_230 +
+           M_301 * D_311 + M_310 * D_320 + M_400 * D_410;
+  F_100 -= M_004 * D_104 + M_013 * D_113 + M_022 * D_122 + M_031 * D_131 +
+           M_040 * D_140 + M_103 * D_203 + M_112 * D_212 + M_121 * D_221 +
+           M_130 * D_230 + M_202 * D_302 + M_211 * D_311 + M_220 * D_320 +
+           M_301 * D_401 + M_310 * D_410 + M_400 * D_500;
 
 #endif
 
