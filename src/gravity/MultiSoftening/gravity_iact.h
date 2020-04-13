@@ -167,7 +167,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float D_000 = d.D_000;
 
   /*  0th order term */
-  F_000 += M_000 * D_000;
+  F_000 -= M_000 * D_000;
 
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
@@ -183,7 +183,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float D_001 = d.D_001;
 
   /*  1st order multipole term (addition to rank 0) */
-  F_000 -= M_100 * D_100 + M_010 * D_010 + M_001 * D_001;
+  F_000 += M_100 * D_100 + M_010 * D_010 + M_001 * D_001;
 
   /*  1st order multipole term (addition to rank 1) */
   F_100 -= M_000 * D_100;
@@ -208,8 +208,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float D_011 = d.D_011;
 
   /*  2nd order multipole term (addition to rank 0)*/
-  F_000 += M_200 * D_200 + M_020 * D_020 + M_002 * D_002;
-  F_000 += M_110 * D_110 + M_101 * D_101 + M_011 * D_011;
+  F_000 -= M_200 * D_200 + M_020 * D_020 + M_002 * D_002;
+  F_000 -= M_110 * D_110 + M_101 * D_101 + M_011 * D_011;
 
   /*  2nd order multipole term (addition to rank 1)*/
   F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101;
@@ -243,10 +243,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float D_111 = d.D_111;
 
   /*  3rd order multipole term (addition to rank 0)*/
-  F_000 -= M_300 * D_300 + M_030 * D_030 + M_003 * D_003;
-  F_000 -= M_210 * D_210 + M_201 * D_201 + M_120 * D_120;
-  F_000 -= M_021 * D_021 + M_102 * D_102 + M_012 * D_012;
-  F_000 -= M_111 * D_111;
+  F_000 += M_300 * D_300 + M_030 * D_030 + M_003 * D_003;
+  F_000 += M_210 * D_210 + M_201 * D_201 + M_120 * D_120;
+  F_000 += M_021 * D_021 + M_102 * D_102 + M_012 * D_012;
+  F_000 += M_111 * D_111;
 
   /*  3rd order multipole term (addition to rank 1)*/
   F_100 -= M_200 * D_300 + M_020 * D_120 + M_002 * D_102;
@@ -292,7 +292,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
   const float D_112 = d.D_112;
 
   /* Compute 4th order field tensor terms (addition to rank 0) */
-  F_000 += M_004 * D_004 + M_013 * D_013 + M_022 * D_022 + M_031 * D_031 +
+  F_000 -= M_004 * D_004 + M_013 * D_013 + M_022 * D_022 + M_031 * D_031 +
            M_040 * D_040 + M_103 * D_103 + M_112 * D_112 + M_121 * D_121 +
            M_130 * D_130 + M_202 * D_202 + M_211 * D_211 + M_220 * D_220 +
            M_301 * D_301 + M_310 * D_310 + M_400 * D_400;
