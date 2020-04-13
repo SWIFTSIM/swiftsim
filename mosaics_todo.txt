@@ -21,6 +21,8 @@ I/O:
 Scheduling:
   MPI for veldisp tasks (cell.c, engine_maketasks.c)
 
+Double check new parts in runner_doiact_functions_hydro.h
+
 
 NOTES:
 ------
