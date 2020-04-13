@@ -633,6 +633,7 @@ void gravity_exact_force_compute(struct space *s, const struct engine *e) {
   /* Let's start by checking whether we already computed these forces */
   if (gravity_exact_force_file_exits(e)) {
     message("Exact accelerations already computed. Skipping calculation.");
+    fflush(stdout);
     return;
   }
 
