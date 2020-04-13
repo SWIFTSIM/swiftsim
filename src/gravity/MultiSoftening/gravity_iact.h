@@ -150,112 +150,170 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_full(
     float *restrict f_x, float *restrict f_y, float *restrict f_z,
     float *restrict pot) {
 
-/* In the case where the order is < 2, then there is only a monopole term left.
- * We can default to the normal P-P interaction with the mass of the multipole
- * and its CoM as the "particle" property */
-#if SELF_GRAVITY_MULTIPOLE_ORDER < 2
-
-  float f_ij, pot_ij;
-  runner_iact_grav_pp_full(r2, h * h, h_inv, h_inv * h_inv * h_inv, m->M_000,
-                           &f_ij, &pot_ij);
-  *f_x = f_ij * r_x;
-  *f_y = f_ij * r_y;
-  *f_z = f_ij * r_z;
-  *pot = pot_ij;
-
-#else
-
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2);
 
   /* Compute the derivatives of the potential */
-  struct potential_derivatives_M2P d;
-  potential_derivatives_compute_M2P(r_x, r_y, r_z, r2, r_inv, h,
+  struct potential_derivatives_M2L d;
+  potential_derivatives_compute_M2L(r_x, r_y, r_z, r2, r_inv, h,
                                     /*periodic=*/0, /*r_s_inv=*/0.f, &d);
 
-  /* 0th order contributions */
-  *f_x = m->M_000 * d.D_100;
-  *f_y = m->M_000 * d.D_010;
-  *f_z = m->M_000 * d.D_001;
-  *pot = m->M_000 * d.D_000;
+  float F_000 = 0.f;
+  float F_100 = 0.f;
+  float F_010 = 0.f;
+  float F_001 = 0.f;
+
+  const float M_000 = m->M_000;
+  const float D_000 = d.D_000;
+
+  /*  0th order term */
+  F_000 += M_000 * D_000;
 
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
-  /* 1st order contributions */
+  /* The dipole term is zero when using the CoM */
+  /* The compiler will optimize out the terms in the equations */
+  /* below. We keep them written to maintain the logical structure. */
+  const float M_100 = 0.f;
+  const float M_010 = 0.f;
+  const float M_001 = 0.f;
 
-  /* 1st order contributions are all 0 since the dipole is 0 */
+  const float D_100 = d.D_100;
+  const float D_010 = d.D_010;
+  const float D_001 = d.D_001;
 
-  /* *f_x = m->M_001 * d.D_101 + m->M_010 * d.D_110 + m->M_100 * d.D_200 ; */
-  /* *f_y = m->M_001 * d.D_011 + m->M_010 * d.D_020 + m->M_100 * d.D_110 ; */
-  /* *f_z = m->M_001 * d.D_002 + m->M_010 * d.D_011 + m->M_100 * d.D_101 ; */
-  /* *pot = m->M_001 * d.D_001 + m->M_010 * d.D_010 + m->M_100 * d.D_100 ; */
+  /*  1st order multipole term (addition to rank 0) */
+  F_000 -= M_100 * D_100 + M_010 * D_010 + M_001 * D_001;
+
+  /*  1st order multipole term (addition to rank 1) */
+  F_100 -= M_000 * D_100;
+  F_010 -= M_000 * D_010;
+  F_001 -= M_000 * D_001;
 
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 1
 
-  /* 2nd order contributions */
-  *f_x += m->M_002 * d.D_102 + m->M_011 * d.D_111 + m->M_020 * d.D_120 +
-          m->M_101 * d.D_201 + m->M_110 * d.D_210 + m->M_200 * d.D_300;
-  *f_y += m->M_002 * d.D_012 + m->M_011 * d.D_021 + m->M_020 * d.D_030 +
-          m->M_101 * d.D_111 + m->M_110 * d.D_120 + m->M_200 * d.D_210;
-  *f_z += m->M_002 * d.D_003 + m->M_011 * d.D_012 + m->M_020 * d.D_021 +
-          m->M_101 * d.D_102 + m->M_110 * d.D_111 + m->M_200 * d.D_201;
-  *pot += m->M_002 * d.D_002 + m->M_011 * d.D_011 + m->M_020 * d.D_020 +
-          m->M_101 * d.D_101 + m->M_110 * d.D_110 + m->M_200 * d.D_200;
+  const float M_200 = m->M_200;
+  const float M_020 = m->M_020;
+  const float M_002 = m->M_002;
+  const float M_110 = m->M_110;
+  const float M_101 = m->M_101;
+  const float M_011 = m->M_011;
+
+  const float D_200 = d.D_200;
+  const float D_020 = d.D_020;
+  const float D_002 = d.D_002;
+  const float D_110 = d.D_110;
+  const float D_101 = d.D_101;
+  const float D_011 = d.D_011;
+
+  /*  2nd order multipole term (addition to rank 0)*/
+  F_000 += M_200 * D_200 + M_020 * D_020 + M_002 * D_002;
+  F_000 += M_110 * D_110 + M_101 * D_101 + M_011 * D_011;
+
+  /*  2nd order multipole term (addition to rank 1)*/
+  F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101;
+  F_010 += M_100 * D_110 + M_010 * D_020 + M_001 * D_011;
+  F_001 += M_100 * D_101 + M_010 * D_011 + M_001 * D_002;
 
 #endif
+
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 2
 
-  /* 3rd order contributions */
-  *f_x += m->M_003 * d.D_103 + m->M_012 * d.D_112 + m->M_021 * d.D_121 +
-          m->M_030 * d.D_130 + m->M_102 * d.D_202 + m->M_111 * d.D_211 +
-          m->M_120 * d.D_220 + m->M_201 * d.D_301 + m->M_210 * d.D_310 +
-          m->M_300 * d.D_400;
-  *f_y += m->M_003 * d.D_013 + m->M_012 * d.D_022 + m->M_021 * d.D_031 +
-          m->M_030 * d.D_040 + m->M_102 * d.D_112 + m->M_111 * d.D_121 +
-          m->M_120 * d.D_130 + m->M_201 * d.D_211 + m->M_210 * d.D_220 +
-          m->M_300 * d.D_310;
-  *f_z += m->M_003 * d.D_004 + m->M_012 * d.D_013 + m->M_021 * d.D_022 +
-          m->M_030 * d.D_031 + m->M_102 * d.D_103 + m->M_111 * d.D_112 +
-          m->M_120 * d.D_121 + m->M_201 * d.D_202 + m->M_210 * d.D_211 +
-          m->M_300 * d.D_301;
-  *pot += m->M_003 * d.D_003 + m->M_012 * d.D_012 + m->M_021 * d.D_021 +
-          m->M_030 * d.D_030 + m->M_102 * d.D_102 + m->M_111 * d.D_111 +
-          m->M_120 * d.D_120 + m->M_201 * d.D_201 + m->M_210 * d.D_210 +
-          m->M_300 * d.D_300;
+  const float M_300 = m->M_300;
+  const float M_030 = m->M_030;
+  const float M_003 = m->M_003;
+  const float M_210 = m->M_210;
+  const float M_201 = m->M_201;
+  const float M_021 = m->M_021;
+  const float M_120 = m->M_120;
+  const float M_012 = m->M_012;
+  const float M_102 = m->M_102;
+  const float M_111 = m->M_111;
+
+  const float D_300 = d.D_300;
+  const float D_030 = d.D_030;
+  const float D_003 = d.D_003;
+  const float D_210 = d.D_210;
+  const float D_201 = d.D_201;
+  const float D_021 = d.D_021;
+  const float D_120 = d.D_120;
+  const float D_012 = d.D_012;
+  const float D_102 = d.D_102;
+  const float D_111 = d.D_111;
+
+  /*  3rd order multipole term (addition to rank 0)*/
+  F_000 -= M_300 * D_300 + M_030 * D_030 + M_003 * D_003;
+  F_000 -= M_210 * D_210 + M_201 * D_201 + M_120 * D_120;
+  F_000 -= M_021 * D_021 + M_102 * D_102 + M_012 * D_012;
+  F_000 -= M_111 * D_111;
+
+  /*  3rd order multipole term (addition to rank 1)*/
+  F_100 -= M_200 * D_300 + M_020 * D_120 + M_002 * D_102;
+  F_100 -= M_110 * D_210 + M_101 * D_201 + M_011 * D_111;
+  F_010 -= M_200 * D_210 + M_020 * D_030 + M_002 * D_012;
+  F_010 -= M_110 * D_120 + M_101 * D_111 + M_011 * D_021;
+  F_001 -= M_200 * D_201 + M_020 * D_021 + M_002 * D_003;
+  F_001 -= M_110 * D_111 + M_101 * D_102 + M_011 * D_012;
 
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 3
 
-  /* 4th order contributions */
-  *f_x += m->M_004 * d.D_104 + m->M_013 * d.D_113 + m->M_022 * d.D_122 +
-          m->M_031 * d.D_131 + m->M_040 * d.D_140 + m->M_103 * d.D_203 +
-          m->M_112 * d.D_212 + m->M_121 * d.D_221 + m->M_130 * d.D_230 +
-          m->M_202 * d.D_302 + m->M_211 * d.D_311 + m->M_220 * d.D_320 +
-          m->M_301 * d.D_401 + m->M_310 * d.D_410 + m->M_400 * d.D_500;
-  *f_y += m->M_004 * d.D_014 + m->M_013 * d.D_023 + m->M_022 * d.D_032 +
-          m->M_031 * d.D_041 + m->M_040 * d.D_050 + m->M_103 * d.D_113 +
-          m->M_112 * d.D_122 + m->M_121 * d.D_131 + m->M_130 * d.D_140 +
-          m->M_202 * d.D_212 + m->M_211 * d.D_221 + m->M_220 * d.D_230 +
-          m->M_301 * d.D_311 + m->M_310 * d.D_320 + m->M_400 * d.D_410;
-  *f_z += m->M_004 * d.D_005 + m->M_013 * d.D_014 + m->M_022 * d.D_023 +
-          m->M_031 * d.D_032 + m->M_040 * d.D_041 + m->M_103 * d.D_104 +
-          m->M_112 * d.D_113 + m->M_121 * d.D_122 + m->M_130 * d.D_131 +
-          m->M_202 * d.D_203 + m->M_211 * d.D_212 + m->M_220 * d.D_221 +
-          m->M_301 * d.D_302 + m->M_310 * d.D_311 + m->M_400 * d.D_401;
-  *pot += m->M_004 * d.D_004 + m->M_013 * d.D_013 + m->M_022 * d.D_022 +
-          m->M_031 * d.D_031 + m->M_040 * d.D_040 + m->M_103 * d.D_103 +
-          m->M_112 * d.D_112 + m->M_121 * d.D_121 + m->M_130 * d.D_130 +
-          m->M_202 * d.D_202 + m->M_211 * d.D_211 + m->M_220 * d.D_220 +
-          m->M_301 * d.D_301 + m->M_310 * d.D_310 + m->M_400 * d.D_400;
+  const float M_400 = m->M_400;
+  const float M_040 = m->M_040;
+  const float M_004 = m->M_004;
+  const float M_310 = m->M_310;
+  const float M_301 = m->M_301;
+  const float M_031 = m->M_031;
+  const float M_130 = m->M_130;
+  const float M_013 = m->M_013;
+  const float M_103 = m->M_103;
+  const float M_220 = m->M_220;
+  const float M_202 = m->M_202;
+  const float M_022 = m->M_022;
+  const float M_211 = m->M_211;
+  const float M_121 = m->M_121;
+  const float M_112 = m->M_112;
+
+  const float D_400 = d.D_400;
+  const float D_040 = d.D_040;
+  const float D_004 = d.D_004;
+  const float D_310 = d.D_310;
+  const float D_301 = d.D_301;
+  const float D_031 = d.D_031;
+  const float D_130 = d.D_130;
+  const float D_013 = d.D_013;
+  const float D_103 = d.D_103;
+  const float D_220 = d.D_220;
+  const float D_202 = d.D_202;
+  const float D_022 = d.D_022;
+  const float D_211 = d.D_211;
+  const float D_121 = d.D_121;
+  const float D_112 = d.D_112;
+
+  /* Compute 4th order field tensor terms (addition to rank 0) */
+  F_000 += M_004 * D_004 + M_013 * D_013 + M_022 * D_022 + M_031 * D_031 +
+           M_040 * D_040 + M_103 * D_103 + M_112 * D_112 + M_121 * D_121 +
+           M_130 * D_130 + M_202 * D_202 + M_211 * D_211 + M_220 * D_220 +
+           M_301 * D_301 + M_310 * D_310 + M_400 * D_400;
+
+  /* Compute 4th order field tensor terms (addition to rank 1) */
+  F_001 += M_003 * D_004 + M_012 * D_013 + M_021 * D_022 + M_030 * D_031 +
+           M_102 * D_103 + M_111 * D_112 + M_120 * D_121 + M_201 * D_202 +
+           M_210 * D_211 + M_300 * D_301;
+  F_010 += M_003 * D_013 + M_012 * D_022 + M_021 * D_031 + M_030 * D_040 +
+           M_102 * D_112 + M_111 * D_121 + M_120 * D_130 + M_201 * D_211 +
+           M_210 * D_220 + M_300 * D_310;
+  F_100 += M_003 * D_103 + M_012 * D_112 + M_021 * D_121 + M_030 * D_130 +
+           M_102 * D_202 + M_111 * D_211 + M_120 * D_220 + M_201 * D_301 +
+           M_210 * D_310 + M_300 * D_400;
 
 #endif
-  /* Take care of the the sign convention */
-  *f_x *= -1.f;
-  *f_y *= -1.f;
-  *f_z *= -1.f;
-  *pot *= -1.f;
-#endif
+
+  *f_x = F_100;
+  *f_y = F_010;
+  *f_z = F_001;
+  *pot = F_000;
 }
 
 /**
