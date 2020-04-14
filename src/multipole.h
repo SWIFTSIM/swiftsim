@@ -1948,6 +1948,11 @@ INLINE static void gravity_M2P(const struct multipole *const m, const float r_x,
   potential_derivatives_compute_M2P(r_x, r_y, r_z, r2, r_inv, eps, periodic,
                                     rs_inv, &d);
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (l->F_000 != 0. || l->F_100 != 0. || l->F_010 != 0. || l->F_001 != 0.)
+    error("Working on uninitialised reduced tensor!");
+#endif
+
   const float M_000 = m->M_000;
   const float D_000 = d.D_000;
 
