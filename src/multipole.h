@@ -56,7 +56,8 @@ void multipole_free_mpi_types(void);
  *
  * @param m The #multipole.
  */
-INLINE static void gravity_reset(struct gravity_tensors *m) {
+__attribute__((nonnull)) INLINE static void gravity_reset(
+    struct gravity_tensors *m) {
 
   /* Just bzero the struct. */
   bzero(m, sizeof(struct gravity_tensors));
@@ -71,7 +72,8 @@ INLINE static void gravity_reset(struct gravity_tensors *m) {
  * @param m The #multipole.
  * @param dt The drift time-step.
  */
-INLINE static void gravity_drift(struct gravity_tensors *m, double dt) {
+__attribute__((nonnull)) INLINE static void gravity_drift(
+    struct gravity_tensors *m, double dt) {
 
   /* Motion of the centre of mass */
   const double dx = m->m_pole.vel[0] * dt;
@@ -121,8 +123,8 @@ INLINE static void gravity_drift(struct gravity_tensors *m, double dt) {
  * @param l The field tensor.
  * @param ti_current The current (integer) time (for debugging only).
  */
-INLINE static void gravity_field_tensors_init(struct grav_tensor *l,
-                                              integertime_t ti_current) {
+__attribute__((nonnull)) INLINE static void gravity_field_tensors_init(
+    struct grav_tensor *l, integertime_t ti_current) {
 
   bzero(l, sizeof(struct grav_tensor));
 
@@ -137,7 +139,7 @@ INLINE static void gravity_field_tensors_init(struct grav_tensor *l,
  * @param la The gravity tensors to add to.
  * @param lb The gravity tensors to add.
  */
-INLINE static void gravity_field_tensors_add(
+__attribute__((nonnull)) INLINE static void gravity_field_tensors_add(
     struct grav_tensor *restrict la, const struct grav_tensor *restrict lb) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (lb->num_interacted == 0) error("Adding tensors that did not interact");
@@ -236,7 +238,8 @@ INLINE static void gravity_field_tensors_add(
  *
  * @param l The #grav_tensor to print.
  */
-INLINE static void gravity_field_tensors_print(const struct grav_tensor *l) {
+__attribute__((nonnull)) INLINE static void gravity_field_tensors_print(
+    const struct grav_tensor *l) {
 
   printf("-------------------------\n");
   printf("Interacted: %d\n", l->interacted);
@@ -287,7 +290,8 @@ INLINE static void gravity_field_tensors_print(const struct grav_tensor *l) {
  *
  * @param m The multipole
  */
-INLINE static void gravity_multipole_init(struct multipole *m) {
+__attribute__((nonnull)) INLINE static void gravity_multipole_init(
+    struct multipole *m) {
 
   bzero(m, sizeof(struct multipole));
 }
@@ -299,7 +303,8 @@ INLINE static void gravity_multipole_init(struct multipole *m) {
  *
  * @param m The #multipole to print.
  */
-INLINE static void gravity_multipole_print(const struct multipole *m) {
+__attribute__((nonnull)) INLINE static void gravity_multipole_print(
+    const struct multipole *m) {
 
   printf("eps_max = %12.5e\n", m->max_softening);
   printf("Vel= [%12.5e %12.5e %12.5e]\n", m->vel[0], m->vel[1], m->vel[2]);
@@ -352,8 +357,8 @@ INLINE static void gravity_multipole_print(const struct multipole *m) {
  * @param ma The multipole to add to.
  * @param mb The multipole to add.
  */
-INLINE static void gravity_multipole_add(struct multipole *restrict ma,
-                                         const struct multipole *restrict mb) {
+__attribute__((nonnull)) INLINE static void gravity_multipole_add(
+    struct multipole *restrict ma, const struct multipole *restrict mb) {
 
   /* Maximum of both softenings */
   ma->max_softening = max(ma->max_softening, mb->max_softening);
@@ -448,9 +453,9 @@ INLINE static void gravity_multipole_add(struct multipole *restrict ma,
  * @param tolerance The maximal allowed relative difference for the fields.
  * @return 1 if the multipoles are equal, 0 otherwise
  */
-INLINE static int gravity_multipole_equal(const struct gravity_tensors *ga,
-                                          const struct gravity_tensors *gb,
-                                          double tolerance) {
+__attribute__((nonnull)) INLINE static int gravity_multipole_equal(
+    const struct gravity_tensors *ga, const struct gravity_tensors *gb,
+    double tolerance) {
 
   /* Check CoM */
   if (fabs(ga->CoM[0] - gb->CoM[0]) / fabs(ga->CoM[0] + gb->CoM[0]) >
@@ -878,9 +883,9 @@ INLINE static int gravity_multipole_equal(const struct gravity_tensors *ga,
  * @param gcount The number of particles.
  * @param grav_props The properties of the gravity scheme.
  */
-INLINE static void gravity_P2M(struct gravity_tensors *multi,
-                               const struct gpart *gparts, const int gcount,
-                               const struct gravity_props *const grav_props) {
+__attribute__((nonnull)) INLINE static void gravity_P2M(
+    struct gravity_tensors *multi, const struct gpart *gparts, const int gcount,
+    const struct gravity_props *const grav_props) {
 
   /* Temporary variables */
   float epsilon_max = 0.f;
@@ -1172,9 +1177,9 @@ INLINE static void gravity_P2M(struct gravity_tensors *multi,
  * @param pos_a The position to which m_b will be shifted.
  * @param pos_b The current postion of the multipole to shift.
  */
-INLINE static void gravity_M2M(struct multipole *restrict m_a,
-                               const struct multipole *restrict m_b,
-                               const double pos_a[3], const double pos_b[3]) {
+__attribute__((nonnull)) INLINE static void gravity_M2M(
+    struct multipole *restrict m_a, const struct multipole *restrict m_b,
+    const double pos_a[3], const double pos_b[3]) {
 
   /* "shift" the softening */
   m_a->max_softening = m_b->max_softening;
@@ -1428,7 +1433,7 @@ INLINE static void gravity_M2M(struct multipole *restrict m_a,
  * @param m_a The multipole creating the field.
  * @param pot The derivatives of the potential.
  */
-INLINE static void gravity_M2L_apply(
+__attribute__((nonnull)) INLINE static void gravity_M2L_apply(
     struct grav_tensor *restrict l_b, const struct multipole *restrict m_a,
     const struct potential_derivatives_M2L *pot) {
 
@@ -1832,7 +1837,7 @@ INLINE static void gravity_M2L_apply(
  * @param dim The size of the simulation box.
  * @param rs_inv The inverse of the gravity mesh-smoothing scale.
  */
-INLINE static void gravity_M2L_nonsym(
+__attribute__((nonnull)) INLINE static void gravity_M2L_nonsym(
     struct grav_tensor *l_b, const struct multipole *m_a, const double pos_b[3],
     const double pos_a[3], const struct gravity_props *props,
     const int periodic, const double dim[3], const float rs_inv) {
@@ -1880,7 +1885,7 @@ INLINE static void gravity_M2L_nonsym(
  * @param dim The size of the simulation box.
  * @param rs_inv The inverse of the gravity mesh-smoothing scale.
  */
-INLINE static void gravity_M2L_symmetric(
+__attribute__((nonnull)) INLINE static void gravity_M2L_symmetric(
     struct grav_tensor *restrict l_a, struct grav_tensor *restrict l_b,
     const struct multipole *restrict m_a, const struct multipole *restrict m_b,
     const double pos_a[3], const double pos_b[3],
@@ -1937,11 +1942,10 @@ INLINE static void gravity_M2L_symmetric(
  * @param rs_inv The inverse of the gravity mesh-smoothing scale.
  * @param l (return) The #reduced_grav_tensor to compute.
  */
-INLINE static void gravity_M2P(const struct multipole *const m, const float r_x,
-                               const float r_y, const float r_z, const float r2,
-                               const float eps, const int periodic,
-                               const float rs_inv,
-                               struct reduced_grav_tensor *const l) {
+__attribute__((nonnull)) INLINE static void gravity_M2P(
+    const struct multipole *const m, const float r_x, const float r_y,
+    const float r_z, const float r2, const float eps, const int periodic,
+    const float rs_inv, struct reduced_grav_tensor *const l) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2);
@@ -2194,9 +2198,9 @@ INLINE static void gravity_M2P(const struct multipole *const m, const float r_x,
  * @param pos_a The position to which m_b will be shifted.
  * @param pos_b The current postion of the multipole to shift.
  */
-INLINE static void gravity_L2L(struct grav_tensor *restrict la,
-                               const struct grav_tensor *restrict lb,
-                               const double pos_a[3], const double pos_b[3]) {
+__attribute__((nonnull)) INLINE static void gravity_L2L(
+    struct grav_tensor *restrict la, const struct grav_tensor *restrict lb,
+    const double pos_a[3], const double pos_b[3]) {
 
   /* Initialise everything to zero */
   gravity_field_tensors_init(la, 0);
@@ -2556,8 +2560,8 @@ INLINE static void gravity_L2L(struct grav_tensor *restrict la,
  * @param loc The position of the gravity field tensor.
  * @param gp The #gpart to update.
  */
-INLINE static void gravity_L2P(const struct grav_tensor *lb,
-                               const double loc[3], struct gpart *gp) {
+__attribute__((nonnull)) INLINE static void gravity_L2P(
+    const struct grav_tensor *lb, const double loc[3], struct gpart *gp) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (lb->num_interacted == 0) error("Interacting with empty field tensor");
