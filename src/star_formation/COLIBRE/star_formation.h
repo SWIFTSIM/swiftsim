@@ -496,7 +496,7 @@ star_formation_first_init_part(const struct phys_const* phys_const,
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
     struct part* p, const struct star_formation* data) {
 
-  /* Set the first velocity to zero */
+  /* Initialize the velocity dispersion as 0 before we do the SPH calculation of the velocity dispersion */
   p->sf_data.sigma_v2 = 0.f;
 }
 

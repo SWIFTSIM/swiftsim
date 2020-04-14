@@ -35,7 +35,7 @@ struct star_formation_xpart_data {
 
 struct star_formation_part_data {
 
-  /*! Velocity dispersion squared in physical units */
+  /*! Velocity dispersion squared in physical internal units */
   float sigma_v2;
 };
 
@@ -57,7 +57,7 @@ struct star_formation_spart_data {
   /*! The subgrid birth temperature */
   float birth_subgrid_temperature;
 
-  /*! The velocity dispersion at birth time */
+  /*! The velocity dispersion at birth time in physical internal units */
   float birth_velocity_dispersion;
 };
 

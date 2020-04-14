@@ -113,7 +113,7 @@ COLIBREChemistry:
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
-# COLIBRE star formation model (Following a density Schmidt law with virial criteria)
+# COLIBRE star formation model (Following a density Schmidt law with virial criterion)
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
