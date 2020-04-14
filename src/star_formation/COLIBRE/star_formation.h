@@ -121,7 +121,7 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid density */
   const double subgrid_density = xp->tracers_data.subgrid_dens;
 
-  /* Check if the subgrid density criteria is satisfied */
+  /* Check if the subgrid density criterion is satisfied */
   if (subgrid_density > starform->subgrid_density_threshold) return 1;
 
   /* Calculate the temperature */
@@ -149,7 +149,7 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid density to the power 1/3 */
   const double subgrid_density_to_1_3th = cbrt(subgrid_density);
 
-  /* Check if we satisfy the subgrid virial criteria by calculation
+  /* Check if we satisfy the subgrid virial criterion by calculation
    * alpha/alpha_virial */
   const double alpha = starform->alpha_virial_inv *
                        (p->sf_data.sigma_v2 + sigma_sound2_subgrid) /
@@ -386,7 +386,7 @@ INLINE static void starformation_init_backend(
                               phys_const->const_proton_mass *
                               number_density_from_cgs * hydro_props->mu_neutral;
 
-  /* Store a variable for the virial criteria */
+  /* Store a variable for the virial criterion */
   starform->alpha_virial = parser_get_param_double(
       parameter_file, "COLIBREStarFormation:alpha_virial");
 
@@ -415,10 +415,10 @@ INLINE static void starformation_print_backend(
 
   /* Print the star formation properties */
   message("Star formation law is COLIBRE");
-  message("A Schmidt law + a virial criteria");
+  message("A Schmidt law + a virial criterion");
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
-      "%e maximal density = %e subgrid density criteria = %e alpha_virial = %e",
+      "%e maximal density = %e subgrid density criterion = %e alpha_virial = %e",
       starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
       starform->subgrid_density_threshold_HpCM3, starform->alpha_virial);
 }
