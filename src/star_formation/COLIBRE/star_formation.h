@@ -234,7 +234,7 @@ INLINE static int star_formation_should_convert_to_star(
     const struct star_formation* starform, const struct engine* e,
     const double dt_star) {
 
-  /* Calculate the propability of forming a star */
+  /* Calculate the probability of forming a star */
   const double prob = xp->sf_data.SFR * dt_star / hydro_get_mass(p);
 
   /* Get a unique random number between 0 and 1 for star formation */
