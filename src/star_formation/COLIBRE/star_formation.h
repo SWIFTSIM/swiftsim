@@ -66,7 +66,8 @@ struct star_formation {
   /*! Virial constant used in the calculation (no units)*/
   double alpha_virial;
 
-  /*! Inverse of the virial constant including the constants (G) used in the calculation (no units)*/
+  /*! Inverse of the virial constant including the constants (G) used in the
+   * calculation (no units)*/
   double alpha_virial_inv;
 
   /*! subgrid density threshold in user units */
@@ -147,7 +148,8 @@ INLINE static int star_formation_is_star_forming(
   const double subgrid_density_to_1_3th = cbrt(subgrid_density);
 
   /* Check if we satisfy the subgrid virial criterion by calculation
-   * alpha/alpha_virial, in which starform->alpha_virial_inv already includes the gravitational constant */
+   * alpha/alpha_virial, in which starform->alpha_virial_inv already includes
+   * the gravitational constant */
   const double alpha = starform->alpha_virial_inv *
                        (p->sf_data.sigma_v2 + sigma_thermal2_subgrid) /
                        (subgrid_density_to_1_3th * gas_mass_to_2_3th);
@@ -415,7 +417,8 @@ INLINE static void starformation_print_backend(
   message("A Schmidt law + a virial criterion");
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
-      "%e maximal density = %e subgrid density criterion = %e alpha_virial = %e",
+      "%e maximal density = %e subgrid density criterion = %e alpha_virial = "
+      "%e",
       starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
       starform->subgrid_density_threshold_HpCM3, starform->alpha_virial);
 }
@@ -459,7 +462,9 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
                                       const struct star_formation* cd,
                                       const struct cosmology* cosmo) {
 
-  /* If gas particles do not have neighbours they should not be able to form stars if we set the velocity dispersion to infinity or FLT_MAX this prevents this gas to form stars in any way. */
+  /* If gas particles do not have neighbours they should not be able to form
+   * stars if we set the velocity dispersion to infinity or FLT_MAX this
+   * prevents this gas to form stars in any way. */
   p->sf_data.sigma_v2 = FLT_MAX;
 }
 
@@ -496,7 +501,8 @@ star_formation_first_init_part(const struct phys_const* phys_const,
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
     struct part* p, const struct star_formation* data) {
 
-  /* Initialize the velocity dispersion as 0 before we do the SPH calculation of the velocity dispersion */
+  /* Initialize the velocity dispersion as 0 before we do the SPH calculation of
+   * the velocity dispersion */
   p->sf_data.sigma_v2 = 0.f;
 }
 
