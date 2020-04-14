@@ -51,9 +51,6 @@ struct star_formation {
   /*! Star formation efficiency */
   double sfe;
 
-  /*! free fall time constant sqrt(3 pi/ 32G) (cm^-1.5 g^.5 s^1) */
-  double ff_const;
-
   /*! star formation efficiency over free fall time constant (cm^1.5 g^-.5 s^-1)
    */
   double mdot_const;
@@ -131,11 +128,11 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
-  /* Calculate the thermal speed */
+  /* Calculate the thermal velocity dispersion */
   const double sigma_thermal_squared =
       3. * hydro_get_physical_pressure(p, cosmo) / physical_density;
 
-  /* Get the subgrid thermal speed */
+  /* Get the subgrid thermal velocity dispersion */
   const double sigma_thermal2_subgrid =
       sigma_thermal_squared * subgrid_temperature / temperature;
 
@@ -367,10 +364,10 @@ INLINE static void starformation_init_backend(
       parameter_file, "COLIBREStarFormation:star_formation_efficiency");
 
   /* Calculate the ff constant */
-  starform->ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
+  const double ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
 
   /* Calculate the constant */
-  starform->mdot_const = starform->sfe / starform->ff_const;
+  starform->mdot_const = starform->sfe / ff_const;
 
   starform->maximal_density_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",

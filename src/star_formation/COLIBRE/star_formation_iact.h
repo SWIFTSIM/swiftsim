@@ -76,7 +76,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_star_formation(
   kernel_eval(ui, &wi);
   kernel_eval(uj, &wj);
 
-  /* Finalize the calculatio nof the velocity dispersion squared */
+  /* Finalize the calculation of the velocity dispersion squared */
   pi->sf_data.sigma_v2 += norm_v2 * wi * pj->mass;
   pj->sf_data.sigma_v2 += norm_v2 * wj * pi->mass;
 }
