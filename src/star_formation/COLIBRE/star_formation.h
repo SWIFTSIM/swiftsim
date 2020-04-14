@@ -402,8 +402,6 @@ INLINE static void starformation_init_backend(
       starform->subgrid_density_threshold_HpCM3 *
       phys_const->const_proton_mass * number_density_from_cgs *
       hydro_props->mu_neutral;
-
-  message("%e %e", starform->alpha_virial, starform->alpha_virial_inv);
 }
 
 /**
