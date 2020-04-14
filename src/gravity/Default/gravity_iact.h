@@ -45,7 +45,7 @@
  */
 __attribute__((always_inline)) INLINE static void runner_iact_grav_pp_full(
     const float r2, const float h2, const float h_inv, const float h_inv3,
-    const float mass, float *f_ij, float *pot_ij) {
+    const float mass, float *restrict f_ij, float *restrict pot_ij) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
@@ -90,7 +90,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pp_full(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_grav_pp_truncated(
     const float r2, const float h2, const float h_inv, const float h_inv3,
-    const float mass, const float r_s_inv, float *f_ij, float *pot_ij) {
+    const float mass, const float r_s_inv, float *restrict f_ij,
+    float *restrict pot_ij) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
