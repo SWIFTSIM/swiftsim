@@ -69,7 +69,7 @@ struct star_formation {
   /*! Virial constant used in the calculation (no units)*/
   double alpha_virial;
 
-  /*! Inverse of the virial constant used in the calculation (no units)*/
+  /*! Inverse of the virial constant including the constants (G) used in the calculation (no units)*/
   double alpha_virial_inv;
 
   /*! subgrid density threshold in user units */
@@ -131,13 +131,13 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
-  /* Calculate the sound speed */
-  const double sigma_sound_squared =
+  /* Calculate the thermal speed */
+  const double sigma_thermal_squared =
       3. * hydro_get_physical_pressure(p, cosmo) / physical_density;
 
-  /* Get the subgrid sound speed */
-  const double sigma_sound2_subgrid =
-      sigma_sound_squared * subgrid_temperature / temperature;
+  /* Get the subgrid thermal speed */
+  const double sigma_thermal2_subgrid =
+      sigma_thermal_squared * subgrid_temperature / temperature;
 
   /* Get the gas mass */
   const double gas_mass = hydro_get_mass(p);
@@ -150,13 +150,13 @@ INLINE static int star_formation_is_star_forming(
   const double subgrid_density_to_1_3th = cbrt(subgrid_density);
 
   /* Check if we satisfy the subgrid virial criterion by calculation
-   * alpha/alpha_virial */
+   * alpha/alpha_virial, in which starform->alpha_virial_inv already includes the gravitational constant */
   const double alpha = starform->alpha_virial_inv *
-                       (p->sf_data.sigma_v2 + sigma_sound2_subgrid) /
+                       (p->sf_data.sigma_v2 + sigma_thermal2_subgrid) /
                        (subgrid_density_to_1_3th * gas_mass_to_2_3th);
 
   /* Check if the virial critiria is below one */
-  return (alpha < 1.f);
+  return (alpha < 1.);
 }
 
 /**
@@ -462,6 +462,7 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
                                       const struct star_formation* cd,
                                       const struct cosmology* cosmo) {
 
+  /* If gas particles do not have neighbours they should not be able to form stars if we set the velocity dispersion to infinity or FLT_MAX this prevents this gas to form stars in any way. */
   p->sf_data.sigma_v2 = FLT_MAX;
 }
 
