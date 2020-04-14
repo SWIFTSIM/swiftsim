@@ -132,7 +132,8 @@ INLINE static int star_formation_is_star_forming(
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
   /* Calculate the sound speed */
-  const double sigma_sound_squared = 3. * hydro_get_physical_pressure(p, cosmo)/physical_density;
+  const double sigma_sound_squared =
+      3. * hydro_get_physical_pressure(p, cosmo) / physical_density;
 
   /* Get the subgrid sound speed */
   const double sigma_sound2_subgrid =
