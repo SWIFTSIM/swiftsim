@@ -49,6 +49,12 @@ struct star_formation_part_data {
 
   /*! Stellar velocity dispersion */
   float stars_sigma_v2;
+
+  /*! Unweighted gas mass */
+  float gas_mass_unweighted;
+
+  /*! Unweighted stellar mass */
+  float stars_mass_unweighted;
 };
 
 /**

@@ -221,6 +221,9 @@ struct spart {
   /*! Gas fraction within the kernel */
   float fgas;
 
+  /*! Unweighted gas fraction within the kernel */
+  float fgas_unweighted;
+
   /*! Number of stars within the kernel */
   int scount;
 

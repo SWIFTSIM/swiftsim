@@ -689,6 +689,7 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
    * stars if we set the velocity dispersion to infinity or FLT_MAX this
    * prevents this gas to form stars in any way. */
   p->sf_data.sigma_v2 = FLT_MAX;
+  p->sf_data.gas_mass_unweighted = p->mass;
 }
 
 /**
@@ -730,6 +731,8 @@ __attribute__((always_inline)) INLINE static void star_formation_init_part(
   p->sf_data.scount = 0;
   p->sf_data.stars_rho = 0.f;
   p->sf_data.stars_sigma_v2 = 0.f;
+  p->sf_data.gas_mass_unweighted = 0.f;
+  p->sf_data.stars_mass_unweighted = 0.f;
 }
 
 /**

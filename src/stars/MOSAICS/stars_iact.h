@@ -127,6 +127,7 @@ runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
 
   /* Compute contribution to stellar density */
   pi->sf_data.stars_rho += wi * sj->mass;
+  pi->sf_data.stars_mass_unweighted += sj->mass;
 
   /* Calculation of the velocity dispersion */
 

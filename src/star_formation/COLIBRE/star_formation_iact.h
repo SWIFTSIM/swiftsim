@@ -80,6 +80,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_star_formation(
   /* Finalize the calculation of the velocity dispersion squared */
   pi->sf_data.sigma_v2 += norm_v2 * wi * pj->mass;
   pj->sf_data.sigma_v2 += norm_v2 * wj * pi->mass;
+
+  pi->sf_data.gas_mass_unweighted += pj->mass;
+  pj->sf_data.gas_mass_unweighted += pi->mass;
 }
 
 /**
@@ -131,6 +134,8 @@ runner_iact_nonsym_star_formation(float r2, const float *dx, float hi, float hj,
   kernel_eval(ui, &wi);
 
   pi->sf_data.sigma_v2 += norm_v2 * wi * pj->mass;
+
+  pi->sf_data.gas_mass_unweighted += pj->mass;
 }
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_IACT_H */

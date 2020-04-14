@@ -319,7 +319,9 @@ stars_mosaics_copy_extra_properties(
   /* Store the birth properties in the star particle */
   sp->gas_vel_disp = sqrt(p->sf_data.sigma_v2);
   sp->star_vel_disp = sqrt(p->sf_data.stars_sigma_v2);
-  sp->fgas = p->rho / (p->rho + p->sf_data.stars_rho);
+  //sp->fgas = p->rho / (p->rho + p->sf_data.stars_rho);
+  sp->fgas = p->sf_data.gas_mass_unweighted / 
+      (p->sf_data.gas_mass_unweighted + p->sf_data.stars_mass_unweighted);
   sp->scount = p->sf_data.scount;
 
   /* Hydro pressure */
