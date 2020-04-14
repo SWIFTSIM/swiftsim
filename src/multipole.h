@@ -1924,6 +1924,9 @@ INLINE static void gravity_M2L_symmetric(
 /**
  * @brief Compute the reduced field tensor due to a multipole
  *
+ * Corresponds to equation (3g) but written in the notation of
+ * appendix A.
+ *
  * @param m The #multipole.
  * @param r_x x-component of the distance vector to the multipole.
  * @param r_y y-component of the distance vector to the multipole.
@@ -1971,29 +1974,38 @@ INLINE static void gravity_M2P(const struct multipole *const m, const float r_x,
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
   /* The dipole term is zero when using the CoM */
-  /* The compiler will optimize out the terms in the equations */
-  /* below. We keep them written to maintain the logical structure. */
-  const float M_100 = 0.f;
-  const float M_010 = 0.f;
-  const float M_001 = 0.f;
+  /* We keep them written to maintain the logical structure. */
 
+  /* const float M_100 = 0.f; */
+  /* const float M_010 = 0.f; */
+  /* const float M_001 = 0.f; */
+
+  /* const float D_200 = d.D_200; */
+  /* const float D_020 = d.D_020; */
+  /* const float D_002 = d.D_002; */
+  /* const float D_110 = d.D_110; */
+  /* const float D_101 = d.D_101; */
+  /* const float D_011 = d.D_011; */
+
+  /*  1st order multipole term (addition to rank 0) */
+  /* l->F_000 += M_100 * D_100 + M_010 * D_010 + M_001 * D_001; */
+
+  /*  2nd order multipole term (addition to rank 1) */
+  /* l->F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101; */
+  /* l->F_010 += M_100 * D_110 + M_010 * D_020 + M_001 * D_011; */
+  /* l->F_001 += M_100 * D_101 + M_010 * D_011 + M_001 * D_002; */
+
+#endif
+#if SELF_GRAVITY_MULTIPOLE_ORDER > 1
+
+  /* To keep the logic these would be defined at order 1 but
+     since all the M terms are 0 we did not define them above */
   const float D_200 = d.D_200;
   const float D_020 = d.D_020;
   const float D_002 = d.D_002;
   const float D_110 = d.D_110;
   const float D_101 = d.D_101;
   const float D_011 = d.D_011;
-
-  /*  1st order multipole term (addition to rank 0) */
-  l->F_000 += M_100 * D_100 + M_010 * D_010 + M_001 * D_001;
-
-  /*  2nd order multipole term (addition to rank 1)*/
-  l->F_100 += M_100 * D_200 + M_010 * D_110 + M_001 * D_101;
-  l->F_010 += M_100 * D_110 + M_010 * D_020 + M_001 * D_011;
-  l->F_001 += M_100 * D_101 + M_010 * D_011 + M_001 * D_002;
-
-#endif
-#if SELF_GRAVITY_MULTIPOLE_ORDER > 1
 
   const float M_200 = m->M_200;
   const float M_020 = m->M_020;
@@ -2026,7 +2038,6 @@ INLINE static void gravity_M2P(const struct multipole *const m, const float r_x,
   l->F_001 -= M_110 * D_111 + M_101 * D_102 + M_011 * D_012;
 
 #endif
-
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 2
 
   const float M_300 = m->M_300;
