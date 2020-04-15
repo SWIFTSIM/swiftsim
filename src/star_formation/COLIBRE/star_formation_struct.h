@@ -31,4 +31,23 @@ struct star_formation_xpart_data {
 
 struct star_formation_part_data {};
 
+/**
+ * @brief Star-formation-related properties stored in the star particle
+ * data.
+ */
+struct star_formation_spart_data {
+
+  /*! The physical birth density */
+  float birth_density;
+
+  /*! The birth temperature */
+  float birth_temperature;
+
+  /*! The physical subgrid birth density */
+  float birth_subgrid_density;
+
+  /*! The subgrid birth temperature */
+  float birth_subgrid_temperature;
+};
+
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */
