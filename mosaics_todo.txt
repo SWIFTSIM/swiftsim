@@ -23,6 +23,8 @@ Scheduling:
 
 Double check new parts in runner_doiact_functions_hydro.h
 
+Remove p->sf_data.stars_rho as not needed
+
 
 NOTES:
 ------

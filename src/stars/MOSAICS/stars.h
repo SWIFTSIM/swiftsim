@@ -58,8 +58,6 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
 
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
-
-  if (sp->gpart) sp->gpart->calc_tensor = sp->calc_tensor;
 }
 
 /**
