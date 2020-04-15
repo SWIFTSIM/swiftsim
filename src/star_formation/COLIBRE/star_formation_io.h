@@ -47,7 +47,7 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
   list[1] = io_make_output_field(
       "VelocityDispersions", FLOAT, 1, UNIT_CONV_VELOCITY_SQUARED, 0.f, parts,
       sf_data.sigma_v2,
-      "Physical velocity dispersion (3D) squared, this is the velocity "
+      "Physical velocity dispersions (3D) squared, this is the velocity "
       "dispersion of the total velocity (peculiar velocity + Hubble flow, a H "
       "x + a (dx/dt) ). Values of the Velocity dispersion that have the value "
       "of FLT_MAX are particles that do not have neighbours and therefore the "
@@ -97,8 +97,10 @@ star_formation_write_sparticles(const struct spart* sparts,
   list[4] = io_make_output_field(
       "BirthVelocityDispersions", FLOAT, 1, UNIT_CONV_VELOCITY_SQUARED, 0.f,
       sparts, sf_data.birth_velocity_dispersion,
-      "Velocity dispersion (3D) squared at the time of birth of the gas "
-      "particles that turned into stars");
+      "Physical velocity dispersions (3D) squared at the birth time of the gas "
+      "particles that turned into stars, this is the velocity dispersion of "
+      "the total velocity (peculiar velocity + Hubble flow, a H x + a (dx/dt) "
+      ").");
 
   return 5;
 }
