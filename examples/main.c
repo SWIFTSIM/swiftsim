@@ -768,6 +768,9 @@ int main(int argc, char *argv[]) {
       /* Keep local file. */
       strcpy(restart_file, restart_files[0]);
 
+      /* Finished with the list. */
+      restart_locate_free(restart_nfiles, restart_files);
+
     } else {
       MPI_Recv(restart_file, 200, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
@@ -777,10 +780,10 @@ int main(int argc, char *argv[]) {
 
     /* Just one restart file. */
     strcpy(restart_file, restart_files[0]);
-#endif
 
     /* Finished with the list. */
-    restart_locate_free(restart_nfiles, restart_files);
+    restart_locate_free(1, restart_files);
+#endif
 
     /* Now read it. */
     restart_read(&e, restart_file);
