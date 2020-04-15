@@ -58,8 +58,6 @@ __attribute__((always_inline)) INLINE static void stars_init_spart(
 
   sp->density.wcount = 0.f;
   sp->density.wcount_dh = 0.f;
-
-  if (sp->gpart) sp->gpart->calc_tensor = sp->calc_tensor;
 }
 
 /**
@@ -100,10 +98,6 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
   /* TODO temporary until we read gc props from ICs */
   /* i.e. does this particle have any clusters with M>0? */
   sp->gcflag = 0;
-
-  /* Redundant if grav_props->calc_all_tensors=1 */
-  if (stars_properties->calc_all_star_tensors || sp->gcflag)
-    sp->calc_tensor = 1;
 
   stars_init_spart(sp);
 }
@@ -231,10 +225,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     const struct star_formation* sf_props, const struct phys_const* phys_const,
     const struct cosmology* cosmo, const int with_cosmology, const float time) {
 
-  /* TODO Probably don't need to pass the engine all the way here. Need to
-   * work out the relevant info that is actually needed.
-   */
-
   /* Have we already been here this timestep? */
   /* This funcation can be called twice: once at SF, then again in star loop */
   if (!sp->new_star) {
@@ -249,31 +239,28 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     }
   }
 
-  if (sp->calc_tensor) {
-    /* Did we get a tensor for this particle? (regardless if have clusters) */
-
-    /* shift old tensors along */
-    for (int i = 0; i < 2; i++) {
-      sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
-      sp->tidal_tensor[i][1] = sp->tidal_tensor[i + 1][1];
-      sp->tidal_tensor[i][2] = sp->tidal_tensor[i + 1][2];
-      sp->tidal_tensor[i][3] = sp->tidal_tensor[i + 1][3];
-      sp->tidal_tensor[i][4] = sp->tidal_tensor[i + 1][4];
-      sp->tidal_tensor[i][5] = sp->tidal_tensor[i + 1][5];
-    }
-
-    /* Now retrieve the new ones from the gpart */
-    sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
-    sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
-    sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
-    sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
-    sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
-    sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
-
-    sp->potential = sp->gpart->potential;
+  /* shift old tensors along, regardless if have clusters */
+  for (int i = 0; i < 2; i++) {
+    sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
+    sp->tidal_tensor[i][1] = sp->tidal_tensor[i + 1][1];
+    sp->tidal_tensor[i][2] = sp->tidal_tensor[i + 1][2];
+    sp->tidal_tensor[i][3] = sp->tidal_tensor[i + 1][3];
+    sp->tidal_tensor[i][4] = sp->tidal_tensor[i + 1][4];
+    sp->tidal_tensor[i][5] = sp->tidal_tensor[i + 1][5];
   }
 
-  /* Do formation or evolution */
+  /* Now retrieve the new ones from the gpart */
+  sp->tidal_tensor[2][0] = sp->gpart->tidal_tensor[0];
+  sp->tidal_tensor[2][1] = sp->gpart->tidal_tensor[1];
+  sp->tidal_tensor[2][2] = sp->gpart->tidal_tensor[2];
+  sp->tidal_tensor[2][3] = sp->gpart->tidal_tensor[3];
+  sp->tidal_tensor[2][4] = sp->gpart->tidal_tensor[4];
+  sp->tidal_tensor[2][5] = sp->gpart->tidal_tensor[5];
+
+  /* TODO just temporary */
+  sp->potential = sp->gpart->potential;
+
+  /* Formation or evolution? */
   if (sp->new_star) {
     /* Do cluster formation */
     sp->gcflag = 1;
@@ -289,10 +276,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     mosaics_clevo(sp, stars_properties);
   }
 
-  /* Do we still need to calculate tensors for this particle */
-  if (!stars_properties->calc_all_star_tensors && !sp->gcflag) {
-    sp->calc_tensor = 0;
-  }
 }
 
 /**
@@ -357,9 +340,6 @@ stars_mosaics_copy_extra_properties(
 
   /* Flag it for cluster formation */
   sp->new_star = 1;
-
-  /* Retrieve tensor calculated when particle was gas */
-  sp->calc_tensor = 1;
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

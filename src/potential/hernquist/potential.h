@@ -32,6 +32,7 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
+#include "gravity.h"
 
 /**
  * @brief External Potential Properties - Hernquist potential
@@ -132,19 +133,19 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   g->a_grav[2] += term * dz;
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  /* We don't need the softened version here */
-  const float r2 = dx * dx + dy * dy + dz * dz;
-  const float r1 = sqrtf(r2);
+  if (gravity_get_tensor_flag(g)) {
+    /* We don't need the softened version here */
+    const float r2 = dx * dx + dy * dy + dz * dz;
+    const float r1 = sqrtf(r2);
 
-  /* We also track potential in this gravity version */
-  g->potential += -potential->mass / (r1 + potential->al);
+    /* We also track potential in this gravity version */
+    g->potential += -potential->mass / (r1 + potential->al);
 
-  /* 2GM / (r+a)^3 / r^2 */
-  const float tt_term = -2.f * term * r_plus_a_inv / r1;
-  /* GM / (r+a)^2 / r^3 */
-  const float term_r2 = -term / r2;
+    /* 2GM / (r+a)^3 / r^2 */
+    const float tt_term = -2.f * term * r_plus_a_inv / r1;
+    /* GM / (r+a)^2 / r^3 */
+    const float term_r2 = -term / r2;
 
-  if (g->calc_tensor) {
     g->tidal_tensor[0] += tt_term * dx * dx + term_r2 * (dx * dx - r2);
     g->tidal_tensor[1] += (tt_term + term_r2) * dx * dy;
     g->tidal_tensor[2] += (tt_term + term_r2) * dx * dz;

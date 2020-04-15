@@ -404,17 +404,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_grav_pm_truncated(
  * @param h2 Square of the softening length.
  * @param h_inv Inverse of the softening length.
  * @param h_inv3 Cube of the inverse of the softening length.
- * @param h_inv5 Inverse of the softening length to fifth power.
  * @param mass Mass of the point-mass.
  * @param f_ij (return) The force intensity.
- * @param pot_ij (return) The potential.
  * @param tidFac2 (return) Third derivative factor for tensor.
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_grav_pp_full_tensors(const float r2, const float h2,
                                  const float h_inv, const float h_inv3,
-                                 const float h_inv5, const float mass,
-                                 float *f_ij, float *pot_ij, float *tidFac2) {
+                                 const float mass, float *f_ij, 
+                                 float *tidFac2) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
@@ -422,31 +420,24 @@ runner_iact_grav_pp_full_tensors(const float r2, const float h2,
   /* Should we soften ? */
   if (r2 >= h2) {
 
-    /* Get Newtonian gravity */
-    *f_ij = mass * r_inv * r_inv * r_inv;
-    *pot_ij = -mass * r_inv;
+    const float r_inv3 = r_inv * r_inv * r_inv;
 
-    /* And the constant factors for tidal tensors */
-    /* tidFac1 is just f_ij */
-    *tidFac2 = 3.0 * mass * r_inv * r_inv * r_inv * r_inv * r_inv;
+    /* Get Newtonian gravity */
+    *f_ij = mass * r_inv3;
+    *tidFac2 = 3.0 * mass * r_inv3 * r_inv * r_inv;
 
   } else {
 
     const float r = r2 * r_inv;
     const float ui = r * h_inv;
 
-    float W_f_ij, W_pot_ij, W_t_ij;
+    float W_f_ij, W_t_ij;
     kernel_grav_force_eval(ui, &W_f_ij);
-    kernel_grav_pot_eval(ui, &W_pot_ij);
     kernel_grav_tensor_eval(ui, &W_t_ij);
 
     /* Get softened gravity */
     *f_ij = mass * h_inv3 * W_f_ij;
-    *pot_ij = mass * h_inv * W_pot_ij;
-
-    /* And the constant factors for tidal tensors */
-    /* tidFac1 is just f_ij */
-    *tidFac2 = mass * h_inv5 * W_t_ij;
+    *tidFac2 = mass * h_inv3 * h_inv * h_inv * W_t_ij;
   }
 }
 
@@ -461,19 +452,16 @@ runner_iact_grav_pp_full_tensors(const float r2, const float h2,
  * @param h2 Square of the softening length.
  * @param h_inv Inverse of the softening length.
  * @param h_inv3 Cube of the inverse of the softening length.
- * @param h_inv5 Inverse of the softening length to fifth power.
  * @param mass Mass of the point-mass.
  * @param r_s_inv Inverse of the mesh smoothing scale.
  * @param f_ij (return) The force intensity.
- * @param pot_ij (return) The potential.
  * @param tidFac2 (return) Third derivative factor for tensor.
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_grav_pp_truncated_tensors(const float r2, const float h2,
                                       const float h_inv, const float h_inv3,
-                                      const float h_inv5, const float mass,
-                                      const float r_s_inv, float *f_ij,
-                                      float *pot_ij, float *tidFac2) {
+                                      const float mass, const float r_s_inv,
+                                      float *f_ij, float *tidFac2) {
 
   /* Get the inverse distance */
   const float r_inv = 1.f / sqrtf(r2 + FLT_MIN);
@@ -482,41 +470,32 @@ runner_iact_grav_pp_truncated_tensors(const float r2, const float h2,
   /* Should we soften ? */
   if (r2 >= h2) {
 
-    /* Get Newtonian gravity */
-    *f_ij = mass * r_inv * r_inv * r_inv;
-    *pot_ij = -mass * r_inv;
+    const float r_inv3 = r_inv * r_inv * r_inv;
 
-    /* And the constant factors for tidal tensors */
-    /* tidFac1 is just f_ij */
-    *tidFac2 = 3.0 * mass * r_inv * r_inv * r_inv * r_inv * r_inv;
+    /* Get Newtonian gravity */
+    *f_ij = mass * r_inv3;
+    *tidFac2 = 3.0 * mass * r_inv3 * r_inv * r_inv;
 
   } else {
 
     const float ui = r * h_inv;
-    float W_f_ij, W_pot_ij, W_t_ij;
+    float W_f_ij, W_t_ij;
 
     kernel_grav_force_eval(ui, &W_f_ij);
-    kernel_grav_pot_eval(ui, &W_pot_ij);
     kernel_grav_tensor_eval(ui, &W_t_ij);
 
     /* Get softened gravity */
     *f_ij = mass * h_inv3 * W_f_ij;
-    *pot_ij = mass * h_inv * W_pot_ij;
-
-    /* And the constant factors for tidal tensors */
-    /* tidFac1 is just f_ij */
-    *tidFac2 = mass * h_inv5 * W_t_ij;
+    *tidFac2 = mass * h_inv3 * h_inv * h_inv * W_t_ij;
   }
 
   /* Get long-range correction */
   const float u_lr = r * r_s_inv;
-  float corr_f_lr, corr_pot_lr, corr_T_lr;
+  float corr_f_lr, corr_T_lr;
   kernel_long_grav_force_eval(u_lr, &corr_f_lr);
-  kernel_long_grav_pot_eval(u_lr, &corr_pot_lr);
   kernel_long_grav_tensor_eval(u_lr, &corr_T_lr);
   *f_ij *= corr_f_lr;
-  *pot_ij *= corr_pot_lr;
-  *tidFac2 = *tidFac2 * corr_f_lr + *tidFac2 * corr_T_lr / 3.f;
+  *tidFac2 *= corr_f_lr + *tidFac2 * corr_T_lr / 3.f;
 }
 
 /**
@@ -536,7 +515,6 @@ runner_iact_grav_pp_truncated_tensors(const float r2, const float h2,
  * @param f_x (return) The x-component of the acceleration.
  * @param f_y (return) The y-component of the acceleration.
  * @param f_z (return) The z-component of the acceleration.
- * @param pot (return) The potential.
  * @param T_xx (return) The xx-component of the tidal tensor.
  * @param T_xy (return) The xy-component of the tidal tensor.
  * @param T_xz (return) The xz-component of the tidal tensor.
@@ -546,10 +524,10 @@ runner_iact_grav_pp_truncated_tensors(const float r2, const float h2,
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
-                                 const float r_z, const float r2, const float h,
-                                 const float h_inv, const struct multipole *m,
-                                 float *restrict f_x, float *restrict f_y,
-                                 float *restrict f_z, float *restrict pot,
+                                 const float r_z, const float r2,
+                                 const float h, const float h_inv,
+                                 const struct multipole *m, float *restrict f_x,
+                                 float *restrict f_y, float *restrict f_z,
                                  float *restrict T_xx, float *restrict T_xy,
                                  float *restrict T_xz, float *restrict T_yy,
                                  float *restrict T_yz, float *restrict T_zz) {
@@ -559,15 +537,12 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
  * and its CoM as the "particle" property */
 #if SELF_GRAVITY_MULTIPOLE_ORDER < 3
 
-  float f_ij, pot_ij;
-  float tidFac2;
+  float f_ij, tidFac2;
   runner_iact_grav_pp_full_tensors(r2, h * h, h_inv, h_inv * h_inv * h_inv,
-                                   h_inv * h_inv * h_inv * h_inv * h_inv,
-                                   m->M_000, &f_ij, &pot_ij, &tidFac2);
+                                   m->M_000, &f_ij, &tidFac2);
   *f_x = f_ij * r_x;
   *f_y = f_ij * r_y;
   *f_z = f_ij * r_z;
-  *pot = pot_ij;
 
   *T_xx = -f_ij + r_x * r_x * tidFac2;
   *T_xy = r_x * r_y * tidFac2;
@@ -590,7 +565,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
   *f_x = m->M_000 * d.D_100;
   *f_y = m->M_000 * d.D_010;
   *f_z = m->M_000 * d.D_001;
-  *pot = m->M_000 * d.D_000;
 
   /* each component of tidal tensor */
   *T_xx = m->M_000 * d.D_200;
@@ -609,7 +583,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
   /* *f_x = m->M_001 * d.D_101 + m->M_010 * d.D_110 + m->M_100 * d.D_200 ; */
   /* *f_y = m->M_001 * d.D_011 + m->M_010 * d.D_020 + m->M_100 * d.D_110 ; */
   /* *f_z = m->M_001 * d.D_002 + m->M_010 * d.D_011 + m->M_100 * d.D_101 ; */
-  /* *pot = m->M_001 * d.D_001 + m->M_010 * d.D_010 + m->M_100 * d.D_100 ; */
 
   /* *T_xx += m->M_001 * d.D_201 + m->M_010 * d.D_210 + m->M_100 * d.D_300 ; */
   /* *T_xy += m->M_001 * d.D_111 + m->M_010 * d.D_120 + m->M_100 * d.D_210 ; */
@@ -628,8 +601,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
           m->M_101 * d.D_111 + m->M_110 * d.D_120 + m->M_200 * d.D_210;
   *f_z += m->M_002 * d.D_003 + m->M_011 * d.D_012 + m->M_020 * d.D_021 +
           m->M_101 * d.D_102 + m->M_110 * d.D_111 + m->M_200 * d.D_201;
-  *pot += m->M_002 * d.D_002 + m->M_011 * d.D_011 + m->M_020 * d.D_020 +
-          m->M_101 * d.D_101 + m->M_110 * d.D_110 + m->M_200 * d.D_200;
 
   *T_xx += m->M_002 * d.D_202 + m->M_011 * d.D_211 + m->M_020 * d.D_220 +
            m->M_101 * d.D_301 + m->M_110 * d.D_310 + m->M_200 * d.D_400;
@@ -661,10 +632,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
           m->M_030 * d.D_031 + m->M_102 * d.D_103 + m->M_111 * d.D_112 +
           m->M_120 * d.D_121 + m->M_201 * d.D_202 + m->M_210 * d.D_211 +
           m->M_300 * d.D_301;
-  *pot += m->M_003 * d.D_003 + m->M_012 * d.D_012 + m->M_021 * d.D_021 +
-          m->M_030 * d.D_030 + m->M_102 * d.D_102 + m->M_111 * d.D_111 +
-          m->M_120 * d.D_120 + m->M_201 * d.D_201 + m->M_210 * d.D_210 +
-          m->M_300 * d.D_300;
 
   *T_xx += m->M_003 * d.D_203 + m->M_012 * d.D_212 + m->M_021 * d.D_221 +
            m->M_030 * d.D_230 + m->M_102 * d.D_302 + m->M_111 * d.D_311 +
@@ -697,7 +664,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
   *f_x *= -1.f;
   *f_y *= -1.f;
   *f_z *= -1.f;
-  *pot *= -1.f;
 
 #endif
 }
@@ -721,7 +687,6 @@ runner_iact_grav_pm_full_tensors(const float r_x, const float r_y,
  * @param f_x (return) The x-component of the acceleration.
  * @param f_y (return) The y-component of the acceleration.
  * @param f_z (return) The z-component of the acceleration.
- * @param pot (return) The potential.
  * @param T_xx (return) The xx-component of the tidal tensor.
  * @param T_xy (return) The xy-component of the tidal tensor.
  * @param T_xz (return) The xz-component of the tidal tensor.
@@ -734,24 +699,21 @@ runner_iact_grav_pm_truncated_tensors(
     const float r_x, const float r_y, const float r_z, const float r2,
     const float h, const float h_inv, const float r_s_inv,
     const struct multipole *m, float *restrict f_x, float *restrict f_y,
-    float *restrict f_z, float *restrict pot, float *restrict T_xx,
-    float *restrict T_xy, float *restrict T_xz, float *restrict T_yy,
-    float *restrict T_yz, float *restrict T_zz) {
+    float *restrict f_z, float *restrict T_xx, float *restrict T_xy,
+    float *restrict T_xz, float *restrict T_yy, float *restrict T_yz,
+    float *restrict T_zz) {
 
 /* In the case where the order is < 3, then there is only a monopole term left.
  * We can default to the normal P-P interaction with the mass of the multipole
  * and its CoM as the "particle" property */
 #if SELF_GRAVITY_MULTIPOLE_ORDER < 3
 
-  float f_ij, pot_ij;
-  float tidFac2;
+  float f_ij, tidFac2;
   runner_iact_grav_pp_truncated_tensors(r2, h * h, h_inv, h_inv * h_inv * h_inv,
-                                        m->M_000, r_s_inv, &f_ij, &pot_ij,
-                                        &tidFac2);
+                                        m->M_000, r_s_inv, &f_ij, &tidFac2);
   *f_x = f_ij * r_x;
   *f_y = f_ij * r_y;
   *f_z = f_ij * r_z;
-  *pot = -pot_ij;
 
   *T_xx = -f_ij + r_x * r_x * tidFac2;
   *T_xy = r_x * r_y * tidFac2;
@@ -774,7 +736,6 @@ runner_iact_grav_pm_truncated_tensors(
   *f_x = m->M_000 * d.D_100;
   *f_y = m->M_000 * d.D_010;
   *f_z = m->M_000 * d.D_001;
-  *pot = m->M_000 * d.D_000;
 
   /* each component of tidal tensor */
   *T_xx = m->M_000 * d.D_200;
@@ -793,7 +754,6 @@ runner_iact_grav_pm_truncated_tensors(
   /* *f_x = m->M_001 * d.D_101 + m->M_010 * d.D_110 + m->M_100 * d.D_200 ; */
   /* *f_y = m->M_001 * d.D_011 + m->M_010 * d.D_020 + m->M_100 * d.D_110 ; */
   /* *f_z = m->M_001 * d.D_002 + m->M_010 * d.D_011 + m->M_100 * d.D_101 ; */
-  /* *pot = m->M_001 * d.D_001 + m->M_010 * d.D_010 + m->M_100 * d.D_100 ; */
 
   /* *T_xx += m->M_001 * d.D_201 + m->M_010 * d.D_210 + m->M_100 * d.D_300 ; */
   /* *T_xy += m->M_001 * d.D_111 + m->M_010 * d.D_120 + m->M_100 * d.D_210 ; */
@@ -813,8 +773,6 @@ runner_iact_grav_pm_truncated_tensors(
           m->M_101 * d.D_111 + m->M_110 * d.D_120 + m->M_200 * d.D_210;
   *f_z += m->M_002 * d.D_003 + m->M_011 * d.D_012 + m->M_020 * d.D_021 +
           m->M_101 * d.D_102 + m->M_110 * d.D_111 + m->M_200 * d.D_201;
-  *pot += m->M_002 * d.D_002 + m->M_011 * d.D_011 + m->M_020 * d.D_020 +
-          m->M_101 * d.D_101 + m->M_110 * d.D_110 + m->M_200 * d.D_200;
 
   *T_xx += m->M_002 * d.D_202 + m->M_011 * d.D_211 + m->M_020 * d.D_220 +
            m->M_101 * d.D_301 + m->M_110 * d.D_310 + m->M_200 * d.D_400;
@@ -846,10 +804,6 @@ runner_iact_grav_pm_truncated_tensors(
           m->M_030 * d.D_031 + m->M_102 * d.D_103 + m->M_111 * d.D_112 +
           m->M_120 * d.D_121 + m->M_201 * d.D_202 + m->M_210 * d.D_211 +
           m->M_300 * d.D_301;
-  *pot += m->M_003 * d.D_003 + m->M_012 * d.D_012 + m->M_021 * d.D_021 +
-          m->M_030 * d.D_030 + m->M_102 * d.D_102 + m->M_111 * d.D_111 +
-          m->M_120 * d.D_120 + m->M_201 * d.D_201 + m->M_210 * d.D_210 +
-          m->M_300 * d.D_300;
 
   *T_xx += m->M_003 * d.D_203 + m->M_012 * d.D_212 + m->M_021 * d.D_221 +
            m->M_030 * d.D_230 + m->M_102 * d.D_302 + m->M_111 * d.D_311 +
@@ -882,7 +836,6 @@ runner_iact_grav_pm_truncated_tensors(
   *f_x *= -1.f;
   *f_y *= -1.f;
   *f_z *= -1.f;
-  *pot *= -1.f;
 
 #endif
 }

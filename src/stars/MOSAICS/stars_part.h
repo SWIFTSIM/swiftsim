@@ -245,9 +245,6 @@ struct spart {
   /*! Flag denoting whether particle has GCs */
   int gcflag;
 
-  /*! In case we want tensors for particles without GCs */
-  int calc_tensor;
-
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Time of the last drift */

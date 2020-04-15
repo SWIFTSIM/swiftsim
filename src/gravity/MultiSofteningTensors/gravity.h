@@ -262,21 +262,23 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
 }
 
 /**
- * @brief Returns the calc_tensor flag of a particle.
+ * @brief Do we need to calculate a tensor for this particle?
  *
- * Always returns true if calc_all_tensors is set in param file.
+ * Only need tensors for gas and stars.
  *
  * @param gp The particle of interest
  * @param grav_props The global gravity properties.
  */
 __attribute__((always_inline)) INLINE static int gravity_get_tensor_flag(
-    const struct gpart* restrict gp,
-    const struct gravity_props* restrict grav_props) {
+    const struct gpart* restrict gp) {
 
-  if (grav_props->calc_all_tensors)
-    return 1;
-  else
-    return gp->calc_tensor;
+  switch (gp->type) {
+    case swift_type_gas:
+    case swift_type_stars:
+      return 1;
+    default:
+      return 0;
+  }
 }
 
 #endif /* SWIFT_MULTI_SOFTENING_TENSORS_GRAVITY_H */

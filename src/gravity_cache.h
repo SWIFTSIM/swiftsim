@@ -73,6 +73,9 @@ struct gravity_cache {
   float *restrict tensor_yz SWIFT_CACHE_ALIGN;
   float *restrict tensor_zz SWIFT_CACHE_ALIGN;
 
+  /*! Smoothing length for gas particles */
+  float *restrict hsml SWIFT_CACHE_ALIGN;
+
   /*! Do we need to calculate the tidal tensor for this #gpart? */
   int *restrict calc_tensor SWIFT_CACHE_ALIGN;
 #endif
@@ -111,6 +114,7 @@ static INLINE void gravity_cache_clean(struct gravity_cache *c) {
     swift_free("gravity_cache", c->tensor_yy);
     swift_free("gravity_cache", c->tensor_yz);
     swift_free("gravity_cache", c->tensor_zz);
+    swift_free("gravity_cache", c->hsml);
     swift_free("gravity_cache", c->calc_tensor);
 #endif
     swift_free("gravity_cache", c->active);
@@ -171,6 +175,8 @@ static INLINE void gravity_cache_init(struct gravity_cache *c,
   e += swift_memalign("gravity_cache", (void **)&c->tensor_yz,
                       SWIFT_CACHE_ALIGNMENT, sizeBytesF);
   e += swift_memalign("gravity_cache", (void **)&c->tensor_zz,
+                      SWIFT_CACHE_ALIGNMENT, sizeBytesF);
+  e += swift_memalign("gravity_cache", (void **)&c->hsml,
                       SWIFT_CACHE_ALIGNMENT, sizeBytesF);
   e += swift_memalign("gravity_cache", (void **)&c->calc_tensor,
                       SWIFT_CACHE_ALIGNMENT, sizeBytesI);
@@ -282,6 +288,8 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+  swift_declare_aligned_ptr(float, hsml, c->hsml,
+                            SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
 #endif
@@ -325,8 +333,20 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
         allow_mpole && gravity_M2P_accept(r_max2, theta_crit2, r2, epsilon[i]);
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    if (grav_props->gas_tensors_max_h) {
+      /* Gas uses maximum of hsoft and hsml */
+      switch (gparts[i].type) {
+        case swift_type_gas:
+          hsml[i] = gparts[i].hsml;
+        default:
+          hsml[i] = 0.f;
+      }
+    } else {
+      hsml[i] = 0.f;
+    }
+
     /* Are we calculating tidal tensor for this particle? */
-    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i]);
 #endif
   }
 
@@ -351,6 +371,7 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
     active[i] = 0;
     use_mpole[i] = 0;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    hsml[i] = 0.f;
     calc_tensor[i] = 0;
 #endif
   }
@@ -395,6 +416,8 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+  swift_declare_aligned_ptr(float, hsml, c->hsml,
+                            SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
 #endif
@@ -418,8 +441,20 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
     }
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    if (grav_props->gas_tensors_max_h) {
+      /* Gas uses maximum of hsoft and hsml */
+      switch (gparts[i].type) {
+        case swift_type_gas:
+          hsml[i] = gparts[i].hsml;
+        default:
+          hsml[i] = 0.f;
+      }
+    } else {
+      hsml[i] = 0.f;
+    }
+
     /* Are we calculating tidal tensor for this particle? */
-    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i]);
 #endif
   }
 
@@ -443,6 +478,7 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
     m[i] = 0.f;
     active[i] = 0;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    hsml[i] = 0.f;
     calc_tensor[i] = 0;
 #endif
   }
@@ -495,6 +531,8 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
   swift_declare_aligned_ptr(float, epsilon, c->epsilon, SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, m, c->m, SWIFT_CACHE_ALIGNMENT);
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+  swift_declare_aligned_ptr(float, hsml, c->hsml,
+                            SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, c->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
 #endif
@@ -514,8 +552,20 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
     use_mpole[i] = 1;
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    if (grav_props->gas_tensors_max_h) {
+      /* Gas uses maximum of hsoft and hsml */
+      switch (gparts[i].type) {
+        case swift_type_gas:
+          hsml[i] = gparts[i].hsml;
+        default:
+          hsml[i] = 0.f;
+      }
+    } else {
+      hsml[i] = 0.f;
+    }
+
     /* Are we calculating tidal tensor for this particle? */
-    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i], grav_props);
+    calc_tensor[i] = gravity_get_tensor_flag(&gparts[i]);
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -558,6 +608,7 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
     active[i] = 0;
     use_mpole[i] = 0;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+    hsml[i] = 0.f;
     calc_tensor[i] = 0;
 #endif
   }

@@ -161,9 +161,9 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
     p->epsilon_baryon_comoving = p->epsilon_baryon_max_physical;
   }
 
-  /* Flag for forcing tensor calculation */
-  p->calc_all_tensors =
-      parser_get_opt_param_int(params, "Gravity:calculate_all_tensors", 0);
+  /* Use the maximum of softening and smoothing for gas tensors? */
+  p->gas_tensors_max_h =
+      parser_get_opt_param_int(params, "Gravity:gas_tensors_max_h", 0);
 
   /* Copy over the gravitational constant */
   p->G_Newton = phys_const->const_newton_G;
@@ -252,7 +252,7 @@ void gravity_props_print(const struct gravity_props *p) {
 
   message("Self-gravity tree update frequency: f=%f", p->rebuild_frequency);
 
-  message("Calculate all tensors: %d", p->calc_all_tensors);
+  message("Use max(hsoft,hsml) for gas tensors: %d", p->gas_tensors_max_h);
 }
 
 #if defined(HAVE_HDF5)

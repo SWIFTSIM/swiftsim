@@ -2579,7 +2579,7 @@ __attribute__((nonnull)) INLINE static void gravity_L2P(
   double pot = 0.;
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
   double T_xx = 0., T_xy = 0., T_xz = 0., T_yy = 0., T_yz = 0., T_zz = 0.;
-  const int calc_tensor = gp->calc_tensor;
+  const int calc_tensor = gravity_get_tensor_flag(gp);
 #endif
 
   /* Distance to the multipole */

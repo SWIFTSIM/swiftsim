@@ -6,9 +6,6 @@ Configure options:
   ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist --with-gravity=with-multi-softening-tensors --with-mosaics-max-clusters=100
 
 
-Need to make sure all SFing (or just all gas?) particles get tensors so they can be passed at star formation time
-  Maybe a "calculate_gas_tensors" property in Gravity
-
 At the end of mosaics_clevo we'll want to update gcflag depending if clusters survive or not
 
 I/O: 
@@ -22,16 +19,14 @@ Scheduling:
 
 Double check new parts in runner_doiact_functions_hydro.h
 
+Remove p->sf_data.stars_rho as not needed
+
 
 NOTES:
 ------
 
-Setting of the calc_tensor flag for gpart is done at start of timestep in stars_init_spart. Just want to make sure this happens before the gravity calc.
-
 I/O: 
   Hijacked "Stars" for our parameters
-
-  Added Gravity:calculate_all_tensors to params. Do we also want to output all tensors to snapshots when this is set?
 
 Have implemented a local 'GMC SFE'. Not sure it works as expected though
 
