@@ -1878,7 +1878,7 @@ void engine_prepare(struct engine *e) {
 
   /* Perform particle splitting. Only if there is a rebuild coming and no
      repartitioning. */
-  if (e->forcerebuild && !e->forcerepart && e->step > 1) {
+  if (!e->restarting && e->forcerebuild && !e->forcerepart && e->step > 1) {
 
     /* Let's start by drifting everybody to the current time */
     if (!drifted_all) engine_drift_all(e, /*drift_mpole=*/0);
