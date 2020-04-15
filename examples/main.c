@@ -768,9 +768,6 @@ int main(int argc, char *argv[]) {
       /* Keep local file. */
       strcpy(restart_file, restart_files[0]);
 
-      /* Finished with the list. */
-      restart_locate_free(restart_nfiles, restart_files);
-
     } else {
       MPI_Recv(restart_file, 200, MPI_BYTE, 0, 0, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
@@ -781,6 +778,9 @@ int main(int argc, char *argv[]) {
     /* Just one restart file. */
     strcpy(restart_file, restart_files[0]);
 #endif
+
+    /* Finished with the list. */
+    restart_locate_free(restart_nfiles, restart_files);
 
     /* Now read it. */
     restart_read(&e, restart_file);
@@ -1235,7 +1235,7 @@ int main(int argc, char *argv[]) {
 #endif
     if (myrank == 0)
       message("Time integration ready to start. End of dry-run.");
-    engine_clean(&e, /*fof=*/0);
+    engine_clean(&e, /*fof=*/0, /*restart=*/0);
     free(params);
     return 0;
   }
@@ -1524,7 +1524,7 @@ int main(int argc, char *argv[]) {
   if (with_self_gravity) pm_mesh_clean(e.mesh);
   if (with_cooling || with_temperature) cooling_clean(e.cooling_func);
   if (with_feedback) feedback_clean(e.feedback_props);
-  engine_clean(&e, /*fof=*/0);
+  engine_clean(&e, /*fof=*/0, restart);
   free(params);
 
 #ifdef WITH_MPI
