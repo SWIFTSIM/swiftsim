@@ -276,6 +276,22 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /* Dust fraction (temperature) */
+  if (posix_memalign(
+          (void **)&table->log10fD, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+	  colibre_cooling_N_metallicity * colibre_cooling_N_density *
+	  (colibre_cooling_N_elementtypes - 1) * sizeof(float)) != 0)
+    error("Failed to allocate depletion array\n");
+
+
+  dataset = H5Dopen(tempfile_id, "/Tdep/Depletion", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   table->log10fD);
+  if (status < 0) error("error reading dust depletion (temperature)\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing cooling dataset");
+
   /* Thermal equilibrium temperature */
   if (posix_memalign((void **)&table->logTeq, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
@@ -554,4 +570,45 @@ void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars) {
  */
 void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars) {
   free(myGasVars->hybrid_data);
+}
+
+/**
+ * @brief rescales the gas phase heating and cooling rates for each
+ * element to correspond to element abundances that are gas phase
+ * only, rather than gas+dust. This is for the case where we run with
+ * explicit dust, where the dust is counted separately from the gas
+ * phase elements. this avoids including the implicit dust in the
+ * Colibre tables.
+ * @param table Colibre cooling table structure.
+ */
+void scale_out_colibre_depletion(struct colibre_cooling_tables *table){
+
+  /* initialise variable to store (log) gas-phase element fraction */
+  float logfgas;
+  /* initialise index for 5D array */
+  int idx = 0;
+
+  /* iterate through cooling and heating table dimensions */
+  for (int i = 0; i < colibre_cooling_N_redshifts; i++) {
+    for (int j = 0; j < colibre_cooling_N_temperature; j++) {
+      for (int k = 0; k < colibre_cooling_N_metallicity; k++) {
+	for (int l = 0; l < colibre_cooling_N_density; l++) {
+	  for (int m = 0; m < (colibre_cooling_N_elementtypes-1); m++) {
+
+	    /* For each cooling and heating rate we divide out by the
+	       fraction of element m in the gas phase to remove
+	       implicit depletion */
+	    logfgas = log10(1-pow(10, table->log10fD[idx]));
+
+	    table->Theating[idx] =
+	      table->Theating[idx] - logfgas;
+	    table->Tcooling[idx] =
+	      table->Tcooling[idx] - logfgas;
+
+	    idx = idx + 1;
+	  }
+	}
+      }
+    }
+  }
 }

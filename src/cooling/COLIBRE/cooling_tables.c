@@ -369,6 +369,37 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /* Dust fraction (temperature) */
+  if (posix_memalign(
+          (void **)&cooling->table.Tdepletion, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_temperature *
+	  colibre_cooling_N_metallicity * colibre_cooling_N_density *
+	  (colibre_cooling_N_elementtypes - 1) * sizeof(float)) != 0)
+    error("Failed to allocate Tdepletion array\n");
+
+  dataset = H5Dopen(tempfile_id, "/Tdep/Depletion", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Tdepletion);
+  if (status < 0) error("error reading dust depletion (temperature)\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing cooling dataset");
+
+  /* Dust fraction (internal energy) */
+  if (posix_memalign(
+          (void **)&cooling->table.Udepletion, SWIFT_STRUCT_ALIGNMENT,
+          colibre_cooling_N_redshifts * colibre_cooling_N_internalenergy *
+	  colibre_cooling_N_metallicity * colibre_cooling_N_density *
+	  (colibre_cooling_N_elementtypes - 1) * sizeof(float)) != 0)
+    error("Failed to allocate Udepletion array\n");
+
+  dataset = H5Dopen(tempfile_id, "/Udep/Depletion", H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                   cooling->table.Udepletion);
+  if (status < 0) error("error reading dust depletion (internal energy)\n");
+  status = H5Dclose(dataset);
+  if (status < 0) error("error closing cooling dataset");
+
+
   /* Internal energy from temperature */
   if (posix_memalign((void **)&cooling->table.U_from_T, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
@@ -498,4 +529,72 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
 #else
   error("Need HDF5 to read cooling tables");
 #endif
+}
+
+/**
+ * @brief rescales the gas phase heating and cooling rates for each
+ * element to correspond to element abundances that are gas phase
+ * only, rather than gas+dust. This is for the case where we run with
+ * explicit dust, where the dust is counted separately from the gas
+ * phase elements. this avoids including the implicit dust in the
+ * Colibre tables.
+ * @param table Colibre cooling table structure.
+ */
+void scale_out_colibre_depletion(struct cooling_function_data *cooling){
+
+  /* initialise variable to store (log) gas-phase element fraction */
+  float logfgas;
+  /* initialise index for 5D array */
+  int idx = 0;
+
+  /* iterate through cooling and heating table dimensions (temperature) */
+  for (int i = 0; i < colibre_cooling_N_redshifts; i++) {
+    for (int j = 0; j < colibre_cooling_N_temperature; j++) {
+      for (int k = 0; k < colibre_cooling_N_metallicity; k++) {
+	for (int l = 0; l < colibre_cooling_N_density; l++) {
+	  for (int m = 0; m < (colibre_cooling_N_elementtypes-1); m++) {
+
+	    /* For each cooling and heating rate we divide out by the
+	       fraction of element m in the gas phase to remove
+	       implicit depletion */
+	    logfgas = log10(1-pow(10, cooling->table.Tdepletion[idx]));
+
+	    cooling->table.Theating[idx] =
+	      cooling->table.Theating[idx] - logfgas;
+	    cooling->table.Tcooling[idx] =
+	      cooling->table.Tcooling[idx] - logfgas;
+
+	    idx = idx + 1;
+	  }
+	}
+      }
+    }
+  }
+
+  /* reset index for 5D array */
+  idx = 0;
+
+  /* iterate through cooling and heating table dimensions (internal energy) */
+  for (int i = 0; i < colibre_cooling_N_redshifts; i++) {
+    for (int j = 0; j < colibre_cooling_N_internalenergy; j++) {
+      for (int k = 0; k < colibre_cooling_N_metallicity; k++) {
+	for (int l = 0; l < colibre_cooling_N_density; l++) {
+	  for (int m = 0; m < (colibre_cooling_N_elementtypes-1); m++) {
+
+	    /* For each cooling and heating rate we divide out by the
+	       fraction of element m in the gas phase to remove
+	       implicit depletion */
+	    logfgas = log10(1-pow(10, cooling->table.Udepletion[idx]));
+
+	    cooling->table.Uheating[idx] =
+	      cooling->table.Uheating[idx] - logfgas;
+	    cooling->table.Ucooling[idx] =
+	      cooling->table.Ucooling[idx] - logfgas;
+
+	    idx = idx + 1;
+	  }
+	}
+      }
+    }
+  }
 }

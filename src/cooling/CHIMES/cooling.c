@@ -59,10 +59,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           const struct hydro_props *hydro_props,
-                          struct cooling_function_data *cooling) {
+                          struct cooling_function_data *cooling,
+			  const struct dustevo_props *dp) {
 
   char chimes_data_dir[256];
   char string_buffer[196];
+
 
   /* read the parameters */
 
@@ -409,8 +411,15 @@ void cooling_init_backend(struct swift_params *parameter_file,
     read_cooling_header(&(cooling->colibre_table));
     read_cooling_tables(&(cooling->colibre_table));
   }
-
-  /* Set redshift to a very high value, just
+  
+  if (dp->pair_to_cooling){
+    /* force turning off colibre-style depletion if paring to dust module. ASK MATTHIEU: better to throw up an error here? */
+    cooling->colibre_metal_depletion = 0;
+    message("Rescaling COLIBRE table to remove implicit dust "
+	    "depletion, as we are running with explicit dust");
+    scale_out_colibre_depletion(&(cooling->colibre_table));
+  }
+  /* Set redshift to a very high value][ just
    * while we initialise the CHIMES module.
    * It will be set to the correct redshift in
    * the cooling_update() routine. */
@@ -1697,7 +1706,7 @@ void cooling_set_subgrid_properties(
           (ChimesFloat)xp->cooling_data.chimes_abundances[i];
 
     // Update element abundances
-    chimes_update_element_abundances(phys_const, us, cosmo, cooling, dp, p, xp,
+    chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
                                      &ChimesGasVars, 1);
 
     // Update ChimesGasVars
@@ -1705,7 +1714,7 @@ void cooling_set_subgrid_properties(
         u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
     chimes_update_gas_vars(u_cgs, phys_const, us, cosmo, hydro_props,
-                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+                           floor_props, cooling, dp, p, xp, &ChimesGasVars, 1.0);
 
     // Set abundances to equilibrium
     cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling);

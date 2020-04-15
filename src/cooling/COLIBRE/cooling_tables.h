@@ -114,5 +114,6 @@ struct cooling_function_data;
 void get_cooling_redshifts(struct cooling_function_data *cooling);
 void read_cooling_header(struct cooling_function_data *cooling);
 void read_cooling_tables(struct cooling_function_data *cooling);
+void scale_out_colibre_depletion(struct cooling_function_data *cooling);
 
 #endif

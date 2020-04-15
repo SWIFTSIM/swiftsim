@@ -111,6 +111,9 @@ struct colibre_cooling_tables {
 
   /* array of pressures at equilibrium temperatures */
   float *logPeq;
+
+  /* array of implicit dust fractions in log base 10 */
+  float *log10fD;
 };
 
 /*! Number of different bins along the temperature axis of the tables */
@@ -596,4 +599,5 @@ double colibre_metal_cooling_rate_temperature(
     struct gasVariables *myGasVars, struct globalVariables *myGlobalVars);
 void chimes_allocate_gas_hybrid_data(struct gasVariables *myGasVars);
 void chimes_free_gas_hybrid_data(struct gasVariables *myGasVars);
+void scale_out_colibre_depletion(struct colibre_cooling_tables *table);
 #endif

@@ -1045,7 +1045,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           const struct hydro_props *hydro_props,
-                          struct cooling_function_data *cooling) {
+                          struct cooling_function_data *cooling,
+			  const struct dustevo_props *dp) {
 
   /* read some parameters */
 
@@ -1181,6 +1182,12 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Finally, read the tables */
   read_cooling_header(cooling);
   read_cooling_tables(cooling);
+
+  if (dp->pair_to_cooling){
+    message("Rescaling COLIBRE table to remove implicit dust "
+	    "depletion, as we are running with explicit dust");
+    scale_out_colibre_depletion(cooling);
+  }
 }
 
 /**

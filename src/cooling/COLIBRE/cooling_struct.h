@@ -70,6 +70,12 @@ struct cooling_tables {
 
   /* array of all hydrogen fractions */
   float *logHfracs_all;
+
+  /* array of the (log10) fraction of element in the dust phase (temperature) */
+  float *Tdepletion;
+
+  /* array of the (log10) fraction of element in the dust phase (internal energy) */
+  float *Udepletion;
 };
 
 /**

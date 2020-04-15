@@ -899,6 +899,10 @@ int main(int argc, char *argv[]) {
     } else
       bzero(&black_holes_properties, sizeof(struct black_holes_props));
 
+    /* Initialise the dust evolution properties */
+    bzero(&dustevo_properties, sizeof(struct dustevo_props));
+    dustevo_props_init(&dustevo_properties, params, &prog_const, &us);
+
       /* Initialise the cooling function properties */
 #ifdef COOLING_NONE
     if (with_cooling) {
@@ -915,7 +919,8 @@ int main(int argc, char *argv[]) {
 #endif
     bzero(&cooling_func, sizeof(struct cooling_function_data));
     if (with_cooling || with_temperature) {
-      cooling_init(params, &us, &prog_const, &hydro_properties, &cooling_func);
+      cooling_init(params, &us, &prog_const, &hydro_properties, &cooling_func,
+		   &dustevo_properties);
     }
     if (myrank == 0) cooling_print(&cooling_func);
 
@@ -934,10 +939,6 @@ int main(int argc, char *argv[]) {
     bzero(&chemistry, sizeof(struct chemistry_global_data));
     chemistry_init(params, &us, &prog_const, &chemistry);
     if (myrank == 0) chemistry_print(&chemistry);
-
-    /* Initialise the dust evolution properties */
-    bzero(&dustevo_properties, sizeof(struct dustevo_props));
-    dustevo_props_init(&dustevo_properties, params, &prog_const, &us);
 
 
     /* Initialise the FOF properties */
