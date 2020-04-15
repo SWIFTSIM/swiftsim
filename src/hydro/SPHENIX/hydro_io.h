@@ -213,7 +213,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
 
   list[11] = io_make_output_field(
       "LaplacianInternalEnergies", FLOAT, 1, UNIT_CONV_FREQUENCY_SQUARED,
-      5.f - 3.f * hydro_gamma, parts, diffusion.laplace_u,
+      1.f - 3.f * hydro_gamma, parts, diffusion.laplace_u,
       "Laplacian (del squared) of the Internal Energy per "
       "unit mass of the particles");
 
@@ -221,14 +221,16 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "VelocityDivergences", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
       viscosity.div_v,
       "Local velocity divergence field around the particles. Provided without "
-      "cosmology, as this includes the Hubble flow.");
+      "cosmology, as this includes the Hubble flow. To return to a peculiar "
+      "velocity divergence, div . v_pec = a^2 (div . v - n_D H)");
 
   list[13] = io_make_output_field(
       "VelocityDivergenceTimeDifferentials", FLOAT, 1,
       UNIT_CONV_FREQUENCY_SQUARED, 0.f, parts, viscosity.div_v_dt,
       "Time differential (over the previous step) of the "
       "velocity divergence field around the particles. Again, provided without "
-      "cosmology as this includes a Hubble flow term.");
+      "cosmology as this includes a Hubble flow term. To get back to a peculiar
+      velocity divergence time differential, x_pec = a^4 (x - a^{-2} n_D dH / dt)");
 }
 
 /**
