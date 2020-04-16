@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 params = {
     "axes.labelsize": 14,
     "axes.titlesize": 18,
-    "font.size": 12,
+    "font.size": 11,
     "legend.fontsize": 12,
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
     "text.usetex": True,
-    "figure.figsize": (12, 10),
+    "figure.figsize": (12, 9),
     "figure.subplot.left": 0.06,
     "figure.subplot.right": 0.99,
     "figure.subplot.bottom": 0.06,
@@ -27,7 +27,7 @@ params = {
 plt.rcParams.update(params)
 plt.rc("font", **{"family": "sans-serif", "sans-serif": ["Times"]})
 
-min_error = 3e-7
+min_error = 1e-7
 max_error = 3e-1
 num_bins = 64
 
@@ -216,7 +216,7 @@ if len(gadget2_file_list) != 0:
     ax4.text(
         min_error * 1.5,
         1.55,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (norm_median, norm_per99),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (norm_median, norm_per99),
         ha="left",
         va="top",
         alpha=0.8,
@@ -227,7 +227,7 @@ if len(gadget2_file_list) != 0:
     ax1.text(
         min_error * 1.5,
         1.55,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_x, per99_x),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_x, per99_x),
         ha="left",
         va="top",
         alpha=0.8,
@@ -237,7 +237,7 @@ if len(gadget2_file_list) != 0:
     ax2.text(
         min_error * 1.5,
         1.55,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_y, per99_y),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_y, per99_y),
         ha="left",
         va="top",
         alpha=0.8,
@@ -247,7 +247,7 @@ if len(gadget2_file_list) != 0:
     ax3.text(
         min_error * 1.5,
         1.55,
-        "$50\\%%\\rightarrow%.4f~~ 99\\%%\\rightarrow%.4f$" % (median_z, per99_z),
+        "$50\\%%\\rightarrow%.5f~~ 99\\%%\\rightarrow%.5f$" % (median_z, per99_z),
         ha="left",
         va="top",
         alpha=0.8,
@@ -442,7 +442,7 @@ ax4.set_xlabel("$|\delta \overrightarrow{a}|/|\overrightarrow{a}_{exact}|$")
 # plt.ylabel("Density")
 ax4.set_xlim(min_error, max_error)
 ax4.set_ylim(0, 2.5)
-ax4.legend(loc="upper left")
+ax4.legend(loc="upper left", fontsize=8)
 
 ax5.set_xlabel("$\delta \phi/\phi_{exact}$")
 # plt.ylabel("Density")
