@@ -17,10 +17,6 @@ I/O:
 Scheduling:
   Still necessary to call mosaics from runner_do_star_formation() since occasionally SF happens but mosaics would not be called. Already scheduled after the star resort so not sure what the fix is?
 
-Double check new parts in runner_doiact_functions_hydro.h
-
-Test the stellar neighbour search
-
 
 NOTES:
 ------
