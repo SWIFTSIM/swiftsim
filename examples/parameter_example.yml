@@ -295,13 +295,13 @@ NFW_MNPotential:
   Zdisk:            0.4704911  # Scale-height of the disk (internal units)
 
 
-# Disk-patch potential parameters
+# Disk-patch potential parameters. The potential is along the x-axis.
 DiscPatchPotential:
   surface_density: 10.      # Surface density of the disc (internal units)
   scale_height:    100.     # Scale height of the disc (internal units)
-  z_disc:          400.     # Position of the disc along the z-axis (internal units)
-  z_trunc:         300.     # (Optional) Distance from the disc along z-axis above which the potential gets truncated.
-  z_max:           380.     # (Optional) Distance from the disc along z-axis above which the potential is set to 0.
+  x_disc:          400.     # Position of the disc along the z-axis (internal units)
+  x_trunc:         300.     # (Optional) Distance from the disc along z-axis above which the potential gets truncated.
+  x_max:           380.     # (Optional) Distance from the disc along z-axis above which the potential is set to 0.
   timestep_mult:   0.03     # Dimensionless pre-factor for the time-step condition
   growth_time:     5.       # (Optional) Time for the disc to grow to its final size (multiple of the dynamical time)
 
@@ -366,10 +366,10 @@ EAGLECooling:
   H_reion_eV_p_H:            2.0               # Energy inject by Hydrogen re-ionization in electron-volt per Hydrogen atom
   He_reion_z_centre:         3.5               # Redshift of the centre of the Helium re-ionization Gaussian
   He_reion_z_sigma:          0.5               # Spread in redshift of the  Helium re-ionization Gaussian
-  He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom               # (Optional) Set to 1 to use the Newton-Raphson method to solve the xplicit cooling problem.
+  He_reion_eV_p_H:           2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0, i.e. Ca/Si = 0.0941736.
   S_over_Si_in_solar:        1.                # (Optional) Ratio of S/Si to use in units of solar. If set to 1, the code uses [S/Si] = 0, i.e. S/Si = 0.6054160.
- 
+
 # Quick Lyman-alpha cooling (EAGLE with fixed primoridal Z)
 QLACooling:
   dir_name:                ./coolingtables/   # Location of the Wiersma+08 cooling tables
@@ -524,6 +524,8 @@ COLIBREStarFormation:
 GEARStarFormation:
   star_formation_efficiency: 0.01   # star formation efficiency (c_*)
   maximal_temperature:  3e4         # Upper limit to the temperature of a star forming particle
+  n_stars_per_particle: 4           # Number of stars that an hydro particle can generate
+  min_mass_frac: 0.5                # Minimal mass for a stellar particle as a fraction of the average mass for the stellar particles.
 
 
 # Parameters related to feedback models  -----------------------------------------------
