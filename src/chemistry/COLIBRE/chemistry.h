@@ -74,17 +74,22 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->shear_tensor[2][k] = 0.0f;
   }
 
-  if (cpd->dmetal_mass_fraction_total != 0.0) {
-    /* CC. Updating metals & initializing dmetal array for calculation in force
-     * loop */
-    for (int elem = 0; elem < chemistry_element_count; ++elem) {
-      cpd->metal_mass_fraction[elem] += cpd->dmetal_mass_fraction[elem];
+  /*Initializing dmetal arrays for calculation in force loop */
+  for (int elem = 0; elem < chemistry_element_count; ++elem) {
       cpd->dmetal_mass_fraction[elem] = 0.0f;
-    }
-    cpd->metal_mass_fraction_total += cpd->dmetal_mass_fraction_total;
-    /* CC. Also have total metallicity ready for loop */
-    cpd->dmetal_mass_fraction_total = 0.0f;
   }
+    
+  /* CC. Also have total metallicity ready for loop */
+  cpd->dmetal_mass_fraction_total = 0.0f;
+      
+  /* CC. We will be also diffusing metal_mass_fraction_from_SNIa, */
+  /* metal_mass_fraction_from_AGB, metal_mass_fraction_from_SNII & */
+  /* iron_mass_fraction_from_SNIa */
+  cpd->dmetal_mass_fraction_from_SNIa = 0.0f;
+  cpd->dmetal_mass_fraction_from_AGB = 0.0f;
+  cpd->dmetal_mass_fraction_from_SNII = 0.0f;
+  cpd->diron_mass_fraction_from_SNIa = 0.0f;
+
 }
 
 /**
@@ -206,12 +211,10 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   if (data->initial_metal_mass_fraction_total != -1) {
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
-    p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
 
     for (int elem = 0; elem < chemistry_element_count; ++elem) {
       p->chemistry_data.metal_mass_fraction[elem] =
           data->initial_metal_mass_fraction[elem];
-      p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
     }
   }
 
@@ -340,17 +343,39 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     p->chemistry_data.metal_mass_fraction[elem] +=
         p->chemistry_data.dmetal_mass_fraction[elem];
-    p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
   }
 
   /* CC. Here we are diffusing Z as well */
   p->chemistry_data.metal_mass_fraction_total +=
       p->chemistry_data.dmetal_mass_fraction_total;
-  p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
-
-  /* Check the total metallicity is >= 0 */
-  if (p->chemistry_data.metal_mass_fraction_total < 0.0) message("Negative Z!");
-
+    
+  /* CC. And here we are diffusing trackers of metal fractions from stellar FB*/
+  p->chemistry_data.metal_mass_fraction_from_SNIa +=
+    p->chemistry_data.dmetal_mass_fraction_from_SNIa;
+    
+  p->chemistry_data.metal_mass_fraction_from_AGB +=
+    p->chemistry_data.dmetal_mass_fraction_from_AGB;
+    
+  p->chemistry_data.metal_mass_fraction_from_SNII +=
+    p->chemistry_data.dmetal_mass_fraction_from_SNII;
+    
+  p->chemistry_data.iron_mass_fraction_from_SNIa +=
+    p->chemistry_data.diron_mass_fraction_from_SNIa
+    
+  const double current_mass = hydro_get_mass(p);
+    
+  /* Update metal mass from SNIa for consistency */
+  p->chemistry_data.mass_from_SNIa =
+    p->chemistry_data.metal_mass_fraction_from_SNIa * current_mass;
+    
+  /* Update metal mass from SNII  */
+  p->chemistry_data.mass_from_SNII =
+    p->chemistry_data.metal_mass_fraction_from_SNII * current_mass;
+    
+  /* Update metal mass from AGB  */
+  p->chemistry_data.mass_from_AGB =
+    p->chemistry_data.metal_mass_fraction_from_AGB * current_mass;
+    
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);

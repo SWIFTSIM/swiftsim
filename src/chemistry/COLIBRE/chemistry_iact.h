@@ -243,14 +243,37 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
       chj->diffusion_rate[i] +=
           K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]);
     }
-    /* CC. Diffusing Z as well */
+      
+    /* CC. Diffusing Z & other fraction tracers as well */
     chi->dmetal_mass_fraction_total +=
-        K_ij *
-        (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
+        K_ij * (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
 
     chj->dmetal_mass_fraction_total +=
-        K_ji *
-        (chj->metal_mass_fraction_total - chi->metal_mass_fraction_total) * dt;
+        K_ji * (chj->metal_mass_fraction_total - chi->metal_mass_fraction_total) * dt;
+      
+    chi->dmetal_mass_fraction_from_SNIa +=
+        K_ij * (chi->metal_mass_fraction_from_SNIa - chj->metal_mass_fraction_from_SNIa) * dt;
+      
+    chj->dmetal_mass_fraction_from_SNIa +=
+        K_ji * (chj->metal_mass_fraction_from_SNIa - chi->metal_mass_fraction_from_SNIa) * dt;
+      
+    chi->dmetal_mass_fraction_from_AGB +=
+        K_ij * (chi->metal_mass_fraction_from_AGB - chj->metal_mass_fraction_from_AGB) * dt;
+      
+    chj->dmetal_mass_fraction_from_AGB +=
+        K_ji * (chj->metal_mass_fraction_from_AGB - chi->metal_mass_fraction_from_AGB) * dt;
+      
+    chi->dmetal_mass_fraction_from_SNII +=
+        K_ij * (chi->metal_mass_fraction_from_SNII - chj->metal_mass_fraction_from_SNII) * dt;
+      
+    chj->dmetal_mass_fraction_from_SNII +=
+        K_ji * (chj->metal_mass_fraction_from_SNII - chi->metal_mass_fraction_from_SNII) * dt;
+      
+    chi->diron_mass_fraction_from_SNIa +=
+        K_ij * (chi->iron_mass_fraction_from_SNIa - chj->iron_mass_fraction_from_SNIa) * dt;
+      
+    chj->diron_mass_fraction_from_SNIa +=
+        K_ji * (chj->iron_mass_fraction_from_SNIa - chi->iron_mass_fraction_from_SNIa) * dt;
   }
 }
 
@@ -356,10 +379,23 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
       chi->diffusion_rate[i] +=
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
     }
-    /* CC. Diffusing Z as well */
+      
+    /* CC. Diffusing Z & other fraction tracers as well */
     chi->dmetal_mass_fraction_total +=
-        K_ij *
-        (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
+        K_ij * (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
+      
+    chi->dmetal_mass_fraction_from_SNIa +=
+      K_ij * (chi->metal_mass_fraction_from_SNIa - chj->metal_mass_fraction_from_SNIa) * dt;
+      
+    chi->dmetal_mass_fraction_from_AGB +=
+      K_ij * (chi->metal_mass_fraction_from_AGB - chj->metal_mass_fraction_from_AGB) * dt;
+      
+    chi->dmetal_mass_fraction_from_SNII +=
+      K_ij * (chi->metal_mass_fraction_from_SNII - chj->metal_mass_fraction_from_SNII) * dt;
+      
+    chi->diron_mass_fraction_from_SNIa +=
+      K_ij * (chi->iron_mass_fraction_from_SNIa - chj->iron_mass_fraction_from_SNIa) * dt;
+
   }
 }
 

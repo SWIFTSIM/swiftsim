@@ -87,9 +87,13 @@ struct chemistry_part_data {
   float iron_mass_fraction_from_SNIa;
 
   /*! Fraction of the particle mass in a given element */
-  /*! This array is duplicated to be used after the diffusion routine */
+  /*! These arrays are duplicated to be used after the diffusion routine */
   float dmetal_mass_fraction[chemistry_element_count];
   float dmetal_mass_fraction_total;
+  float dmetal_mass_fraction_from_SNIa;
+  float dmetal_mass_fraction_from_AGB;
+  float dmetal_mass_fraction_from_SNII;
+  float diron_mass_fraction_from_SNIa;
 
   /*! Tensor of the velocity shear */
   /* (Calculated in physical coordinates) */
