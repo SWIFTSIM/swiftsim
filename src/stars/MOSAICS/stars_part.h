@@ -303,9 +303,6 @@ struct stars_props {
 
   /* ---------------- Global MOSAICS parameters ---------------- */
 
-  /*! Flag to force tensor calculation for all stars */
-  int calc_all_star_tensors;
-
   /*! King '66 density profile parameter */
   float W0;
 

@@ -393,10 +393,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* MOSAICS parameters ----------------------------------------------------- */
 
-  /* Flag for forcing the tensor calculation */
-  sp->calc_all_star_tensors =
-      parser_get_opt_param_int(params, "Stars:calculate_all_star_tensors", 0);
-
   /* King parameter */
   sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
 
@@ -488,7 +484,6 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
     message("Stars' birth time read from the ICs will be overwritten to %f",
             sp->spart_first_init_birth_time);
 
-  message("Calculate tensors for all stars: %d", sp->calc_all_star_tensors);
   message("MOSAICS maximum clusters: %d", MOSAICS_MAX_CLUSTERS);
 }
 
