@@ -385,16 +385,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
         K_ij * (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
       
     chi->dmetal_mass_fraction_from_SNIa +=
-      K_ij * (chi->metal_mass_fraction_from_SNIa - chj->metal_mass_fraction_from_SNIa) * dt;
+        K_ij * (chi->metal_mass_fraction_from_SNIa - chj->metal_mass_fraction_from_SNIa) * dt;
       
     chi->dmetal_mass_fraction_from_AGB +=
-      K_ij * (chi->metal_mass_fraction_from_AGB - chj->metal_mass_fraction_from_AGB) * dt;
+        K_ij * (chi->metal_mass_fraction_from_AGB - chj->metal_mass_fraction_from_AGB) * dt;
       
     chi->dmetal_mass_fraction_from_SNII +=
-      K_ij * (chi->metal_mass_fraction_from_SNII - chj->metal_mass_fraction_from_SNII) * dt;
+        K_ij * (chi->metal_mass_fraction_from_SNII - chj->metal_mass_fraction_from_SNII) * dt;
       
     chi->diron_mass_fraction_from_SNIa +=
-      K_ij * (chi->iron_mass_fraction_from_SNIa - chj->iron_mass_fraction_from_SNIa) * dt;
+        K_ij * (chi->iron_mass_fraction_from_SNIa - chj->iron_mass_fraction_from_SNIa) * dt;
 
   }
 }
