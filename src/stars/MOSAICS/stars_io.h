@@ -487,7 +487,7 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
   message("MOSAICS maximum clusters: %d", MOSAICS_MAX_CLUSTERS);
 
   if (sp->FixedCFE > 0)
-    message("MOSAICS using fixed CFE: %d", sp->FixedCFE);
+    message("MOSAICS using fixed CFE: %f", sp->FixedCFE);
 
   if (sp->power_law_clMF)
     message("MOSAICS using power-law mass function");
