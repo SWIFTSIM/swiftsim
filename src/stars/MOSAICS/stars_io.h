@@ -403,7 +403,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
       parser_get_opt_param_int(params, "Stars:power_law_clMF", 0);
 
   /* Integrated star formation efficiency in collapse of GMC (for Mcstar) */
-  sp->SFE = parser_get_opt_param_float(params, "Stars:SFE", 0.1);
+  sp->SFE = parser_get_opt_param_float(params, "Stars:GMC_SFE", 0.1);
 
   /* Cluster mass function minimum (Msun) */
   sp->clMF_min = parser_get_opt_param_float(params, "Stars:clMF_min", 100.0);
@@ -424,38 +424,38 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* Cluster formation efficiency parameters -------------------------------- */
 
   /* Value of fixed cluster formation efficiency */
-  sp->FixedCFE = parser_get_opt_param_float(params, "Stars:FixedCFE", -1.0);
+  sp->FixedCFE = parser_get_opt_param_float(params, "Stars:fixed_CFE", -1.0);
 
   /* Use the subgrid turbulent velocity dispersion for CFE */
   sp->subgrid_gas_vel_disp = 
       parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
 
   /* Sound speed of cold ISM (m/s) */
-  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:FixedSoundSpeed", -1.0);
+  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:fixed_sound_speed", -1.0);
 
   /* star formation law. 0: Elmegreen 02; 1: Krumholz & McKee 05 */
-  sp->sflaw = parser_get_opt_param_int(params, "Stars:sflaw", 0);
+  sp->sflaw = parser_get_opt_param_int(params, "Stars:CFE_sflaw", 0);
 
   /* GMC virial parameter */
-  sp->qvir = parser_get_opt_param_float(params, "Stars:qvir", 1.3);
+  sp->qvir = parser_get_opt_param_float(params, "Stars:CFE_qvir", 1.3);
 
   /* time of first SN (Myr) */
-  sp->tsn = parser_get_opt_param_float(params, "Stars:tsn", 3.0);
+  sp->tsn = parser_get_opt_param_float(params, "Stars:CFE_tsn", 3.0);
 
   /* time of determining the CFE (Myr) */
-  sp->tview = parser_get_opt_param_float(params, "Stars:tview", 10.0);
+  sp->tview = parser_get_opt_param_float(params, "Stars:CFE_tview", 10.0);
 
   /* GMC surface density (Msun/pc^2) */
-  sp->surfGMC = parser_get_opt_param_float(params, "Stars:surfGMC", 100.0);
+  sp->surfGMC = parser_get_opt_param_float(params, "Stars:CFE_surfGMC", 100.0);
 
   /* maximum (protostellar core) SFE */
-  sp->ecore = parser_get_opt_param_float(params, "Stars:ecore", 0.5);
+  sp->ecore = parser_get_opt_param_float(params, "Stars:CFE_ecore", 0.5);
 
   /* turbulent/magnetic pressure ratio */
-  sp->beta0 = parser_get_opt_param_float(params, "Stars:beta0", 1.0e10);
+  sp->beta0 = parser_get_opt_param_float(params, "Stars:CFE_beta0", 1.0e10);
 
   /* SN/radiative feedback mode */
-  sp->radfb = parser_get_opt_param_int(params, "Stars:radfb", 0);
+  sp->radfb = parser_get_opt_param_int(params, "Stars:CFE_radfb", 0);
 }
 
 /**
@@ -485,6 +485,12 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
             sp->spart_first_init_birth_time);
 
   message("MOSAICS maximum clusters: %d", MOSAICS_MAX_CLUSTERS);
+
+  if (sp->FixedCFE > 0)
+    message("MOSAICS using fixed CFE: %d", sp->FixedCFE);
+
+  if (sp->power_law_clMF)
+    message("MOSAICS using power-law mass function");
 }
 
 #if defined(HAVE_HDF5)
