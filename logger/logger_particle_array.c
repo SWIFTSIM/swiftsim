@@ -49,12 +49,13 @@ void logger_particle_array_init(struct logger_particle_array *array) {
  * @param n_part The number of #logger_particle.
  * @param n_gpart The number of #logger_gparticle.
  * @param n_spart The number of #logger_sparticle.
+ * @param empty Are we considering that the array is empty?
  */
 void logger_particle_array_allocate(struct logger_particle_array *array,
                                     size_t n_part, size_t n_gpart,
-                                    size_t n_spart) {
+                                    size_t n_spart, const int empty) {
   /* Hydro */
-  array->hydro.n = n_part;
+  array->hydro.n = empty? 0 : n_part;
   array->hydro.allocated_size = n_part;
   array->hydro.parts =
       (struct logger_particle *)malloc(n_part * sizeof(struct logger_particle));
@@ -63,7 +64,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Gravity */
-  array->grav.n = n_gpart;
+  array->grav.n = empty? 0 : n_gpart;
   array->grav.allocated_size = n_gpart;
   array->grav.parts = (struct logger_gparticle *)malloc(
       n_gpart * sizeof(struct logger_gparticle));
@@ -72,7 +73,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Stars */
-  array->stars.n = n_spart;
+  array->stars.n = empty? 0 : n_spart;
   array->stars.allocated_size = n_spart;
   array->stars.parts = (struct logger_sparticle *)malloc(
       n_spart * sizeof(struct logger_sparticle));

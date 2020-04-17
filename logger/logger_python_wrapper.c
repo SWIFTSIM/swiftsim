@@ -258,7 +258,7 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   struct logger_particle_array array;
   logger_particle_array_allocate(
     &array, n_parts[swift_type_gas], n_parts[swift_type_dark_matter],
-    n_parts[swift_type_stars]);
+    n_parts[swift_type_stars], /* empty */0);
 
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
@@ -375,7 +375,7 @@ static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
   /* Create the next array. */
   struct logger_particle_array next;
   logger_particle_array_allocate(&next, array.hydro.n, array.grav.n,
-                                 array.stars.n);
+                                 array.stars.n, /* empty */ 0);
 
   /* initialize the reader. */
   struct logger_reader reader;

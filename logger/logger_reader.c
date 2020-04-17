@@ -472,7 +472,7 @@ void logger_reader_move_forward_internal(
             prev->hydro.parts[i].offset, time_offset);
     }
 
-      enum logger_reader_event event = logger_reader_get_next_particle(
+    enum logger_reader_event event = logger_reader_get_next_particle(
         reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
 
     switch(event) {
@@ -609,10 +609,11 @@ void logger_reader_move_forward(struct logger_reader *reader,
      new particles or the changes of type. */
   struct logger_particle_array new_prev;
   logger_particle_array_allocate(
-    &new_prev, /* n_part */ 512, /* n_gpart */ 512, /* n_spart */ 512);
+    &new_prev, /* n_part */ 512, /* n_gpart */ 512, /* n_spart */ 512,
+    /* empty */ 1);
 
   /* Create the variables for the new / deleted particles */
-  size_t n_deleted[swift_type_count];
+  size_t n_deleted[swift_type_count] = {0, 0, 0, 0, 0, 0};
 
   /* Update the particles.
      We do it in two part in order to avoid to modify too often the full array. */
@@ -633,7 +634,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
   if (changed_type) {
     logger_particle_array_allocate(
       &new_next, new_prev.hydro.allocated_size, new_prev.grav.allocated_size,
-      new_prev.stars.allocated_size);
+      new_prev.stars.allocated_size, /* empty */ 1);
   }
 
   /* Evolve the particle with special events (should be a tiny fraction of the array). */
@@ -645,7 +646,8 @@ void logger_reader_move_forward(struct logger_reader *reader,
     /* Move them forward */
     struct logger_particle_array tmp;
     logger_particle_array_allocate(
-      &new_prev, /* n_part */ 16, /* n_gpart */ 16, /* n_spart */ 16);
+        &new_prev, /* n_part */ 16, /* n_gpart */ 16, /* n_spart */ 16,
+        /* empty */ 1);
 
     logger_reader_move_forward_internal(reader, &new_prev, &new_next, &tmp,
                                         new_deleted, time_offset, time, should_interpolate);
@@ -694,8 +696,8 @@ enum logger_reader_event logger_reader_get_next_particle(
 
   /* Get the mask index of the special flags */
   const int spec_flag_ind =
-      header_get_field_index(&reader->log.header, "special flags");
-  if (spec_flag_ind < -1) {
+      header_get_field_index(&reader->log.header, "SpecialFlags");
+  if (spec_flag_ind < 0) {
     error("The logfile does not contain the special flags field.");
   }
 
@@ -735,7 +737,7 @@ enum logger_reader_event logger_reader_get_next_particle(
           return logger_reader_event_deleted;
 
         default:
-          error("This case should never happen.");
+          error("This case should never happen %i.", data);
       }
     }
 

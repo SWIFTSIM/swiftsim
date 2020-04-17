@@ -78,7 +78,7 @@ struct logger_particle_array {
 void logger_particle_array_init(struct logger_particle_array *array);
 void logger_particle_array_allocate(struct logger_particle_array *array,
                                     size_t n_part, size_t n_gpart,
-                                    size_t n_spart);
+                                    size_t n_spart, const int empty);
 void logger_particle_array_free(struct logger_particle_array *array);
 void logger_particle_array_change_size(struct logger_particle_array *array,
                                        size_t new_n_part, size_t new_n_gpart,
