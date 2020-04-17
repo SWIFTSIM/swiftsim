@@ -26,13 +26,12 @@
 #endif
 
 /* This object's header. */
-#include "multipole.h"
+#include "part.h"
 
 /* Local headers */
 #include "error.h"
 #include "hydro.h"
 #include "line_of_sight.h"
-#include "part.h"
 #include "threadpool.h"
 
 /**
