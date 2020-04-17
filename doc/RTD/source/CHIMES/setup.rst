@@ -32,13 +32,15 @@ Once you have downloaded Sundials from the above website, you can then untar it 
   cd sundials-5.1.0 
   mkdir build 
   cd build 
-  cmake -DCMAKE_INSTALL_PREFIX=/path/to/install/dir/ -DBUILD_ARKODE=OFF -DBUILD_CVODE=ON -DBUILD_CVODES=OFF -DBUILD_IDA=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=ON -DCMAKE_C_FLAGS="-O2" -DEXAMPLES_ENABLE_C=OFF ../
+  cmake -DCMAKE_INSTALL_PREFIX=/path/to/install/dir/ -DBUILD_ARKODE=OFF -DBUILD_CVODE=ON -DBUILD_CVODES=OFF -DBUILD_IDA=OFF -DBUILD_IDAS=OFF -DBUILD_KINSOL=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=ON -DCMAKE_C_FLAGS="-O2" -DEXAMPLES_ENABLE_C=OFF -DSUNDIALS_PRECISION=single ../
   make
   make install
 
 In the above example, after untar'ing the sundials download we create a new ``build`` directory inside ``sundials-5.1.0``, and then ``cd build`` before running ``cmake``. This is needed because the build directory has to be different from the source directory. 
 
 Also, we only need the CVODE library, so I have switched off building the various other libraries that are included in the Sundials package, as these are not required by CHIMES. 
+
+You will need to ensure that both the Sundials library and CHIMES are built with the same precision. By default, CHIMES uses single precision, so in this example we use the ``-DSUNDIALS_PRECISION=single`` option to build Sundials in single precision as well. For double precision, you can use ``-DSUNDIALS_PRECISION=double``.
 
 Finally, you will need to set the ``-DCMAKE_INSTALL_PREFIX`` path to a directory where you have write access. This is where the libraries will be installed. 
 

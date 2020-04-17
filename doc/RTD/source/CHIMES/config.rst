@@ -35,5 +35,11 @@ To build SWIFT with the CHIMES module, you will need the following configuration
 |                                    | | libraries are installed.                                    |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
+| | ``--enable-chimes-``             | | Use this configure option to build CHIMES in double         |
+| | ``double-precision``             | | precision. If this option is not used, CHIMES will default  |
+|                                    | | to single precision. Note that the Sundials library must    |
+|                                    | | be built with the same precision as CHIMES.                 |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
 
 
