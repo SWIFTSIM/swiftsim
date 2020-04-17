@@ -19,6 +19,10 @@
 #ifndef SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H
 #define SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H
 
+/* Do we need unique IDs (only useful when spawning
+   new particles, conversion gas->stars does not need unique IDs) */
+#define star_formation_need_unique_id 0
+
 /**
  * @brief Star-formation-related properties stored in the extended particle
  * data.
@@ -29,6 +33,28 @@ struct star_formation_xpart_data {
   float SFR;
 };
 
+/**
+ * @brief Star-formation-related properties stored in the particle data.
+ */
 struct star_formation_part_data {};
+
+/**
+ * @brief Star-formation-related properties stored in the star particle
+ * data.
+ */
+struct star_formation_spart_data {
+
+  /*! The physical birth density */
+  float birth_density;
+
+  /*! The birth temperature */
+  float birth_temperature;
+
+  /*! The physical subgrid birth density */
+  float birth_subgrid_density;
+
+  /*! The subgrid birth temperature */
+  float birth_subgrid_temperature;
+};
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */
