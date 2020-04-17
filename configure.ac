@@ -1527,29 +1527,6 @@ AC_SUBST([SUNDIALS_INCS])
 
 # CHIMES configuration options. 
 
-# Enable GNU extensions in CHIMES. 
-# If this is switched on, CHIMES 
-# will use the exp10() function 
-# from the GNU extensions, otherwise 
-# we will use our own definition. 
-AC_ARG_ENABLE([chimes-gnu-source],
-   [AS_HELP_STRING([--enable-chimes-gnu-source],
-     [Enable GNU extensions in CHIMES @<:@yes/no@:>@]
-   )],
-   [enable_chimes_gnu_source="$enableval"],
-   [enable_chimes_gnu_source="no"]
-)
-
-# If using CHIMES GNU source, check that 
-# exp10 is available in the math library. 
-if test "$enable_chimes_gnu_source" = "yes"; then 
-   if test "$ac_cv_lib_m_exp10" = "no"; then 
-      AC_MSG_ERROR(The exp10 function is not available in the math library. Cannot compile with the --enable-chimes-gnu-source option.)
-   fi
-fi
-
-AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test $enable_chimes_gnu_source = "yes"])
-
 # Use double precision in the CHIMES module. 
 AC_ARG_ENABLE([chimes-double-precision],
    [AS_HELP_STRING([--enable-chimes-double-precision],
@@ -2004,6 +1981,12 @@ case "$with_cooling" in
 
       # The default CHIMEs netowkr size is 10
       AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [10], [Chimes network size])	
+
+      # If the exp10 function is present in the 
+      # math library we can enable GNU extensions 
+      # in CHIMES, so that it will use the native
+      # exp10 function.       
+      AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
    ;; 
    CHIMES_*)
       AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
@@ -2017,6 +2000,12 @@ case "$with_cooling" in
       # Extract the CHIMES network size
       chimes_network_size=${with_cooling:7}
       AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [$chimes_network_size], [Chimes network size]) 
+
+      # If the exp10 function is present in the 
+      # math library we can enable GNU extensions 
+      # in CHIMES, so that it will use the native
+      # exp10 function.       
+      AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
    ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
