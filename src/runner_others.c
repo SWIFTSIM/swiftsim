@@ -432,6 +432,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
   } else {
 
     const struct cosmology *cosmo = e->cosmology;
+    const int with_cosmology = (e->policy & engine_policy_cosmology);
     const int count = c->hydro.count;
     struct part *restrict parts = c->hydro.parts;
 
@@ -446,7 +447,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
         /* Finish the force loop */
         hydro_end_force(p, cosmo);
         timestep_limiter_end_force(p);
-        chemistry_end_force(p, cosmo);
+        chemistry_end_force(p, cosmo, with_cosmology, cosmo->a, e->time);
 
 #ifdef SWIFT_BOUNDARY_PARTICLES
 

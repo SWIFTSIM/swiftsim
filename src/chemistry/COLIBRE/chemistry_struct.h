@@ -89,9 +89,13 @@ struct chemistry_part_data {
   /*! Metal weighted redshift (defined in Wiersma+ 2010, eq. 3) */
   float metal_weighted_redshift;
     
+  /*! Metal weighted redshift */
+  float iron_weighted_redshift;
+    
   /*! Tracker of the metal mass received by each enrichment event times time */
   float metal_mass_tracker;
   float metal_mass_received_by_enrichment;
+  float iron_mass_tracker;
   float iron_mass_received_by_SNIa;
 
   /*! Fraction of the particle mass in a given element */
