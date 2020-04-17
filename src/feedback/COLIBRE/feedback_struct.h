@@ -76,6 +76,12 @@ struct feedback_spart_data {
 
       /*! Total mass released due to SNII */
       float mass_from_SNII;
+        
+      /* Number of r-process events in dt */
+      float num_r_processes;
+
+      /* Mass released by r processes */
+      float mass_from_r_processes;
 
       /*! Total metal mass released due to SNII */
       float metal_mass_from_SNII;

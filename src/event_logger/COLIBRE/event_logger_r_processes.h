@@ -270,15 +270,12 @@ INLINE static void event_logger_r_processes_log_data_end(
 /**
  * @brief log a r-process event
  *
- * @param si the spart of the feedback event pair
- * @param pj the part of the feedback event pair
- * @param xpj the xpart of the part of the feedback event pair
+ * @param si the spart of the enrichment event
  * @param cosmo the cosmology struct
  * @param delta_mass the enrichment mass of the r-processes
  */
 INLINE static void event_logger_r_processes_log_event(
-    const struct spart *si, const struct part *pj, const struct xpart *xpj,
-    const struct cosmology *cosmo, const double delta_mass) {
+    const struct spart *si, const struct cosmology *cosmo, const double delta_mass) {
 
   if (lock_lock(&log_r_processes.core.lock) == 0) {
 

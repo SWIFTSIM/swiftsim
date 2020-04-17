@@ -23,6 +23,7 @@
 /**
  * @brief The individual elements traced in the COLIBRE model.
  */
+
 enum chemistry_element {
   chemistry_element_H = 0,
   chemistry_element_He,
@@ -33,6 +34,7 @@ enum chemistry_element {
   chemistry_element_Mg,
   chemistry_element_Si,
   chemistry_element_Fe,
+  chemistry_element_Eu,
   chemistry_element_count
 };
 
