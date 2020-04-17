@@ -40,10 +40,10 @@
 
 /*!< Defines whether to use single or double precision throughout the chemistry
  * solver. */
-#ifdef CHIMES_USE_SINGLE_PRECISION
-typedef float ChimesFloat;
-#else
+#ifdef CHIMES_USE_DOUBLE_PRECISION
 typedef double ChimesFloat;
+#else
+typedef float ChimesFloat;
 #endif
 
 /**
