@@ -70,7 +70,7 @@ __attribute__((always_inline, const)) inline static double chimes_sqrt(
   return sqrt(x);
 }
 
-#else // CHIMES_USE_DOUBLE_PRECISION
+#else  // CHIMES_USE_DOUBLE_PRECISION
 #define CHIMES_FLT_MIN FLT_MIN
 
 #ifdef CHIMES_ENABLE_GNU_SOURCE
@@ -78,12 +78,12 @@ __attribute__((always_inline, const)) inline static float chimes_exp10(
     const float x) {
   return exp10f(x);
 }
-#else // CHIMES_ENABLE_GNU_SOURCE
+#else   // CHIMES_ENABLE_GNU_SOURCE
 __attribute__((always_inline, const)) inline static float chimes_exp10(
     const float x) {
   return expf(x * (float)M_LN10);
 }
-#endif // CHIMES_ENABLE_GNU_SOURCE
+#endif  // CHIMES_ENABLE_GNU_SOURCE
 
 __attribute__((always_inline, const)) inline static float chimes_exp(
     const float x) {
@@ -109,7 +109,7 @@ __attribute__((always_inline, const)) inline static float chimes_sqrt(
     const float x) {
   return sqrtf(x);
 }
-#endif // CHIMES_USE_DOUBLE_PRECISION 
+#endif  // CHIMES_USE_DOUBLE_PRECISION
 
 /* In some cases, we need an exp10() function
  * that is always in double precision, even
@@ -121,7 +121,7 @@ __attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
     const double x) {
   return exp10(x);
 }
-#else // CHIMES_ENABLE_GNU_SOURCE
+#else   // CHIMES_ENABLE_GNU_SOURCE
 __attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
     const double x) {
   return exp(x * M_LN10);

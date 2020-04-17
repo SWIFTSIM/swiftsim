@@ -299,12 +299,14 @@ void load_eqm_table(char *filename,
  * elements are included, this routine returns 1,
  * otherwise it returns 0.
  *
- * @param reaction_array Array of all element_incl flags for each reaction in the reaction group.
+ * @param reaction_array Array of all element_incl flags for each reaction in
+ * the reaction group.
  * @param reaction_idx Position of the given reaction in the reaction group.
- * @param network_array Array of flags specifying the elements included in the network.
+ * @param network_array Array of flags specifying the elements included in the
+ * network.
  */
 int compare_element_incl_arrays(int *reaction_array, int reaction_idx,
-				int *network_array) {
+                                int *network_array) {
   int i, include_reaction;
 
   include_reaction = 1;
@@ -3836,9 +3838,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_T_dependent.N_reactions[0] = 0;
   chimes_table_T_dependent.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_T_dependent.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_T_dependent.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_T_dependent.element_incl, i,
+                                    myGlobalVars->element_included)) {
       chimes_table_T_dependent.N_reactions[1] += 1;
       if (chimes_master_T_dependent.molecular_flag[i] == 0)
         chimes_table_T_dependent.N_reactions[0] += 1;
@@ -3862,9 +3863,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_T_dependent.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_T_dependent.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_T_dependent.element_incl, i,
+                                    myGlobalVars->element_included)) {
       for (j = 0; j < 3; j++) {
         /* The reactants and products arrays need to be translated into
          * the indices in the reduced network, as given by
@@ -3930,9 +3930,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_constant.N_reactions[0] = 0;
   chimes_table_constant.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_constant.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(chimes_master_constant.element_incl,
-                                            i,
-                                            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_constant.element_incl, i,
+                                    myGlobalVars->element_included)) {
       chimes_table_constant.N_reactions[1] += 1;
       if (chimes_master_constant.molecular_flag[i] == 0)
         chimes_table_constant.N_reactions[0] += 1;
@@ -3956,9 +3955,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_constant.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(chimes_master_constant.element_incl,
-                                            i,
-                                            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_constant.element_incl, i,
+                                    myGlobalVars->element_included)) {
       /* The reactants and products arrays need to be translated into
        * the indices in the reduced network, as given by
        * myGlobalVars->speciesIndices. However, an index of -1 should be left as
@@ -4015,9 +4013,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_recombination_AB.N_reactions[0] = 0;
   chimes_table_recombination_AB.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_recombination_AB.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_recombination_AB.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_recombination_AB.element_incl,
+                                    i, myGlobalVars->element_included)) {
       chimes_table_recombination_AB.N_reactions[1] += 1;
       if (chimes_master_recombination_AB.molecular_flag[i] == 0)
         chimes_table_recombination_AB.N_reactions[0] += 1;
@@ -4042,9 +4039,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_recombination_AB.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_recombination_AB.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_recombination_AB.element_incl,
+                                    i, myGlobalVars->element_included)) {
       for (j = 0; j < 2; j++) {
         /* The reactants and products arrays need to be translated into
          * the indices in the reduced network, as given by
@@ -4166,9 +4162,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_cosmic_ray.N_reactions[0] = 0;
   chimes_table_cosmic_ray.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_cosmic_ray.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_cosmic_ray.element_incl, i,
+                                    myGlobalVars->element_included)) {
       chimes_table_cosmic_ray.N_reactions[1] += 1;
       if (chimes_master_cosmic_ray.molecular_flag[i] == 0)
         chimes_table_cosmic_ray.N_reactions[0] += 1;
@@ -4196,9 +4191,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_cosmic_ray.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_cosmic_ray.element_incl, i,
+                                    myGlobalVars->element_included)) {
       chimes_table_cosmic_ray.reactants[incl_index] =
           myGlobalVars->speciesIndices[chimes_master_cosmic_ray.reactants[i]];
 
@@ -4251,9 +4245,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_CO_cosmic_ray.N_reactions[0] = 0;
   chimes_table_CO_cosmic_ray.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_CO_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_CO_cosmic_ray.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_CO_cosmic_ray.element_incl, i,
+                                    myGlobalVars->element_included)) {
       // Only molecular reactions in this group.
       chimes_table_CO_cosmic_ray.N_reactions[1] += 1;
     }
@@ -4274,9 +4267,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_CO_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays(
-            chimes_master_CO_cosmic_ray.element_incl, i,
-            myGlobalVars->element_included)) {
+    if (compare_element_incl_arrays(chimes_master_CO_cosmic_ray.element_incl, i,
+                                    myGlobalVars->element_included)) {
       chimes_table_CO_cosmic_ray.reactants[incl_index] =
           myGlobalVars
               ->speciesIndices[chimes_master_CO_cosmic_ray.reactants[i]];
@@ -4311,9 +4303,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_fuv.N_reactions[0] = 0;
     chimes_table_photoion_fuv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_photoion_fuv.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_photoion_fuv.element_incl,
+                                      i, myGlobalVars->element_included)) {
         // No molecular reactions in this group
         chimes_table_photoion_fuv.N_reactions[0] += 1;
         chimes_table_photoion_fuv.N_reactions[1] += 1;
@@ -4339,9 +4330,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_photoion_fuv.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_photoion_fuv.element_incl,
+                                      i, myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
          * the indices in the reduced network, as given by
          * myGlobalVars->speciesIndices. */
@@ -4385,9 +4375,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_euv.N_reactions[0] = 0;
     chimes_table_photoion_euv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_photoion_euv.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_photoion_euv.element_incl,
+                                      i, myGlobalVars->element_included)) {
         chimes_table_photoion_euv.N_reactions[1] += 1;
         if (chimes_master_photoion_euv.molecular_flag[i] == 0)
           chimes_table_photoion_euv.N_reactions[0] += 1;
@@ -4420,9 +4409,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_photoion_euv.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_photoion_euv.element_incl,
+                                      i, myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
          * the indices in the reduced network, as given by
          * myGlobalVars->speciesIndices. */
@@ -4830,9 +4818,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_CO_photodissoc.N_reactions[0] = 0;
     chimes_table_CO_photodissoc.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_CO_photodissoc.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_CO_photodissoc.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_CO_photodissoc.element_incl,
+                                      i, myGlobalVars->element_included)) {
         // Only molecular reactions.
         chimes_table_CO_photodissoc.N_reactions[1] += 1;
       }
@@ -4858,9 +4845,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_CO_photodissoc.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays(
-              chimes_master_CO_photodissoc.element_incl, i,
-              myGlobalVars->element_included)) {
+      if (compare_element_incl_arrays(chimes_master_CO_photodissoc.element_incl,
+                                      i, myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
          * the indices in the reduced network, as given by
          * myGlobalVars->speciesIndices. */

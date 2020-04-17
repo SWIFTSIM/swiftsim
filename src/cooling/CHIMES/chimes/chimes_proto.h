@@ -953,7 +953,7 @@ void allocate_gas_abundances_memory(struct gasVariables *myGasVars,
 void free_gas_abundances_memory(struct gasVariables *myGasVars,
                                 struct globalVariables *myGlobalVars);
 int compare_element_incl_arrays(int *reaction_array, int reaction_idx,
-				int *network_array);
+                                int *network_array);
 void allocate_eqm_table_memory(
     char *filename, struct chimes_eqm_abundances_struct *my_eqm_abundances,
     struct globalVariables *myGlobalVars);
