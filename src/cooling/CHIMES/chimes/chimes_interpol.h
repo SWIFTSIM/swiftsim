@@ -35,14 +35,14 @@ __attribute__((always_inline)) inline void chimes_get_table_index(
     ChimesFloat *table, int ntable, ChimesFloat x, int *i, ChimesFloat *dx) {
   ChimesFloat denominator;
 
-  denominator = (table[ntable - 1] - table[0]) / (ntable - 1.0);
+  denominator = (table[ntable - 1] - table[0]) / (ntable - 1.0f);
 
   if (x <= table[0]) {
     *i = 0;
-    *dx = 0.0;
+    *dx = 0.0f;
   } else if (x >= table[ntable - 1]) {
     *i = ntable - 2;
-    *dx = 1.0;
+    *dx = 1.0f;
   } else {
     *i = (int)floor((x - table[0]) / denominator);
     *dx = (x - table[*i]) / denominator;
@@ -136,7 +136,7 @@ __attribute__((always_inline)) inline int chimes_flatten_index_5d(
  */
 __attribute__((always_inline)) inline ChimesFloat chimes_interpol_1d(
     const ChimesFloat *table, const int x, const ChimesFloat dx) {
-  return (1 - dx) * table[x] + dx * table[x + 1];
+  return (1.0f - dx) * table[x] + dx * table[x + 1];
 }
 
 /*
@@ -158,8 +158,8 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_2d(
     const ChimesFloat dy, const int Ny) {
   ChimesFloat output;
 
-  const ChimesFloat dx_m = 1.0 - dx;
-  const ChimesFloat dy_m = 1.0 - dy;
+  const ChimesFloat dx_m = 1.0f - dx;
+  const ChimesFloat dy_m = 1.0f - dy;
 
   output = dx_m * dy_m * table[chimes_flatten_index_2d(x, y, Ny)];
   output += dx_m * dy * table[chimes_flatten_index_2d(x, y + 1, Ny)];
@@ -187,7 +187,7 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_2d_fix_x(
     const int Ny) {
   ChimesFloat output;
 
-  const ChimesFloat dy_m = (1.0 - dy);
+  const ChimesFloat dy_m = (1.0f - dy);
 
   output = dy_m * table[chimes_flatten_index_2d(x, y, Ny)];
   output += dy * table[chimes_flatten_index_2d(x, y + 1, Ny)];
@@ -216,8 +216,8 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_3d_fix_x(
     const ChimesFloat dy, const ChimesFloat dz, const int Ny, const int Nz) {
   ChimesFloat output;
 
-  const ChimesFloat dy_m = (1.0 - dy);
-  const ChimesFloat dz_m = (1.0 - dz);
+  const ChimesFloat dy_m = (1.0f - dy);
+  const ChimesFloat dz_m = (1.0f - dz);
 
   output = dy_m * dz_m * table[chimes_flatten_index_3d(x, y, z, Ny, Nz)];
   output += dy_m * dz * table[chimes_flatten_index_3d(x, y, z + 1, Ny, Nz)];
@@ -247,7 +247,7 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_3d_fix_xy(
     const ChimesFloat dz, const int Ny, const int Nz) {
   ChimesFloat output;
 
-  const ChimesFloat dz_m = (1.0 - dz);
+  const ChimesFloat dz_m = (1.0f - dz);
 
   output = dz_m * table[chimes_flatten_index_3d(x, y, z, Ny, Nz)];
   output += dz * table[chimes_flatten_index_3d(x, y, z + 1, Ny, Nz)];
@@ -280,9 +280,9 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_4d_fix_x(
     const ChimesFloat dv, const int Ny, const int Nz, const int Nv) {
   ChimesFloat output;
 
-  const ChimesFloat dy_m = (1.0 - dy);
-  const ChimesFloat dz_m = (1.0 - dz);
-  const ChimesFloat dv_m = (1.0 - dv);
+  const ChimesFloat dy_m = (1.0f - dy);
+  const ChimesFloat dz_m = (1.0f - dz);
+  const ChimesFloat dv_m = (1.0f - dv);
 
   output = dy_m * dz_m * dv_m *
            table[chimes_flatten_index_4d(x, y, z, v, Ny, Nz, Nv)];
@@ -327,7 +327,7 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_4d_fix_xyz(
     const int Nv) {
   ChimesFloat output;
 
-  const ChimesFloat dv_m = (1.0 - dv);
+  const ChimesFloat dv_m = (1.0f - dv);
 
   output = dv_m * table[chimes_flatten_index_4d(x, y, z, v, Ny, Nz, Nv)];
   output += dv * table[chimes_flatten_index_4d(x, y, z, v + 1, Ny, Nz, Nv)];
@@ -364,10 +364,10 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_5d_fix_x(
     const int Nv, const int Nw) {
   ChimesFloat output;
 
-  const ChimesFloat dy_m = (1.0 - dy);
-  const ChimesFloat dz_m = (1.0 - dz);
-  const ChimesFloat dv_m = (1.0 - dv);
-  const ChimesFloat dw_m = (1.0 - dw);
+  const ChimesFloat dy_m = (1.0f - dy);
+  const ChimesFloat dz_m = (1.0f - dz);
+  const ChimesFloat dv_m = (1.0f - dv);
+  const ChimesFloat dw_m = (1.0f - dw);
 
   output = dy_m * dz_m * dv_m * dw_m *
            table[chimes_flatten_index_5d(x, y, z, v, w, Ny, Nz, Nv, Nw)];
@@ -442,8 +442,8 @@ __attribute__((always_inline)) inline ChimesFloat chimes_interpol_5d_fix_xyz(
     const int Ny, const int Nz, const int Nv, const int Nw) {
   ChimesFloat output;
 
-  const ChimesFloat dv_m = (1.0 - dv);
-  const ChimesFloat dw_m = (1.0 - dw);
+  const ChimesFloat dv_m = (1.0f - dv);
+  const ChimesFloat dw_m = (1.0f - dw);
 
   output = dv_m * dw_m *
            table[chimes_flatten_index_5d(x, y, z, v, w, Ny, Nz, Nv, Nw)];

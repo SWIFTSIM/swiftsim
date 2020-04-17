@@ -33,17 +33,19 @@
 #include "chimes_vars.h"
 
 // CHIMES data tables.
-struct chimes_table_bins_struct
-    chimes_table_bins; /*!< Structure containing table bins for all of the
-                          rate tables. */
+struct
+    chimes_table_bins_struct
+        chimes_table_bins; /*!< Structure containing table bins for all of the
+                              rate tables. */
 struct chimes_T_dependent_struct chimes_table_T_dependent; /*!< Structure
                                                               containing the
                                                               rates for the
                                                               T-dependent
                                                               reaction group. */
-struct chimes_constant_struct
-    chimes_table_constant; /*!< Structure containing the rates for the
-                              constant reaction group. */
+struct
+    chimes_constant_struct
+        chimes_table_constant; /*!< Structure containing the rates for the
+                                  constant reaction group. */
 struct chimes_recombination_AB_struct
     chimes_table_recombination_AB; /*!< Structure containing the rates for the
                                       reacombination_AB group. */
@@ -5960,12 +5962,12 @@ void initialise_gas_abundances(struct gasVariables *myGasVars,
 
   /* First, set all abundances to zero */
   for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++)
-    myGasVars->abundances[i] = 0.0;
+    myGasVars->abundances[i] = 0.0f;
 
   /* Now set the abundances of the initial
    * species.  */
   myGasVars->abundances[myGlobalVars->speciesIndices[chimes_min(
-      sp_HI + init_ion_state, sp_HII)]] = 1.0;
+      sp_HI + init_ion_state, sp_HII)]] = 1.0f;
   myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] =
       myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]];
 
@@ -6053,10 +6055,10 @@ void initialise_gas_abundances(struct gasVariables *myGasVars,
    * not included are set to zero. */
   for (i = 0; i < 9; i++)
     if (myGlobalVars->element_included[i] != 1)
-      myGasVars->element_abundances[i + 1] = 0.0;
+      myGasVars->element_abundances[i + 1] = 0.0f;
 
   // Set constant heating rate to zero.
-  myGasVars->constant_heating_rate = 0.0;
+  myGasVars->constant_heating_rate = 0.0f;
 }
 
 /**

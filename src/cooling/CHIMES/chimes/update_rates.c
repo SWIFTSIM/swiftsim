@@ -80,7 +80,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
           &dNHI);
       chimes_get_table_index(
           chimes_table_bins.Column_densities, N_ColDens,
-          chimes_log10(chimes_max(data.HI_column + (3.0 * data.H2_column),
+          chimes_log10(chimes_max(data.HI_column + (3.0f * data.H2_column),
                                   CHIMES_FLT_MIN)),
           &NH_eff_index, &dNH_eff);
       chimes_get_table_index(
@@ -89,7 +89,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
           &NHeI_index, &dNHeI);
       chimes_get_table_index(
           chimes_table_bins.Column_densities, N_ColDens,
-          chimes_log10(chimes_max(data.HeI_column + (0.75 * data.HeII_column),
+          chimes_log10(chimes_max(data.HeI_column + (0.75f * data.HeII_column),
                                   CHIMES_FLT_MIN)),
           &NHe_eff_index, &dNHe_eff);
 
@@ -97,14 +97,14 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
            i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index];
            i++) {
         for (j = 0; j < myGlobalVars->N_spectra; j++) {
-          if (chimes_table_photoion_euv.E_thresh[i] < 15.4)
+          if (chimes_table_photoion_euv.E_thresh[i] < 15.4f)
             S1 = chimes_exp10(chimes_interpol_4d_fix_xyz(
                 chimes_table_photoion_euv.shieldFactor_1D, i, j, 0, NHI_index,
                 dNHI, N_spec, 3, N_ColDens));
           else
             S1 = 0.0;
 
-          if (chimes_table_photoion_euv.E_thresh[i] < 54.42)
+          if (chimes_table_photoion_euv.E_thresh[i] < 54.42f)
             S2 = chimes_exp10(chimes_interpol_5d_fix_xyz(
                 chimes_table_photoion_euv.shieldFactor_2D, i, j, 0,
                 NH_eff_index, NHeI_index, dNH_eff, dNHeI, N_spec, 6, N_ColDens,
@@ -129,7 +129,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
              i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index];
              i++) {
           for (j = 0; j < myGlobalVars->N_spectra; j++) {
-            if (chimes_table_photoion_euv.E_thresh[i] < 15.4) {
+            if (chimes_table_photoion_euv.E_thresh[i] < 15.4f) {
               E1 = chimes_exp10_dbl((double)chimes_interpol_4d_fix_xyz(
                   chimes_table_photoion_euv.shieldFactor_1D, i, j, 1, NHI_index,
                   dNHI, N_spec, 3, N_ColDens));
@@ -141,7 +141,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
               E4 = 0.0;
             }
 
-            if (chimes_table_photoion_euv.E_thresh[i] < 54.42) {
+            if (chimes_table_photoion_euv.E_thresh[i] < 54.42f) {
               E2 = chimes_exp10_dbl((double)chimes_interpol_5d_fix_xyz(
                   chimes_table_photoion_euv.shieldFactor_2D, i, j, 2,
                   NH_eff_index, NHeI_index, dNH_eff, dNHeI, N_spec, 6,
@@ -183,7 +183,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
       if (data.mol_flag_index == 1) {
         // photodissoc_group2
         // All reactions use the same shield_factor
-        if (data.extinction > 15)
+        if (data.extinction > 15.0f)
           data.chimes_current_rates->photodissoc_group2_shield_factor =
               chimes_exp(-(chimes_table_photodissoc_group2.gamma_coeff[0] *
                            data.extinction));
@@ -192,17 +192,15 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
               chimes_exp(-(chimes_table_photodissoc_group2.gamma_coeff[1] *
                            data.extinction) +
                          (chimes_table_photodissoc_group2.gamma_coeff[2] *
-                          chimes_pow(data.extinction, 2.0)));
+                          data.extinction * data.extinction));
 
         // CO_photodissoc
         const int N_COself_ColDens =
             chimes_table_bins.N_COself_column_densities;
         const int N_H2CO_ColDens = chimes_table_bins.N_H2CO_column_densities;
 
-        log_NCO = (ChimesFloat)chimes_log10(
-            chimes_max(data.CO_column, CHIMES_FLT_MIN));
-        log_NH2 = (ChimesFloat)chimes_log10(
-            chimes_max(data.H2_column, CHIMES_FLT_MIN));
+        log_NCO = chimes_log10(chimes_max(data.CO_column, CHIMES_FLT_MIN));
+        log_NH2 = chimes_log10(chimes_max(data.H2_column, CHIMES_FLT_MIN));
         chimes_get_table_index(chimes_table_bins.COself_column_densities,
                                N_COself_ColDens, log_NCO, &NCO_index, &dNCO);
         chimes_get_table_index(chimes_table_bins.H2CO_column_densities,
@@ -223,7 +221,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
     } else {
       for (i = 0;
            i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-        data.chimes_current_rates->photoion_fuv_shield_factor[i] = 1.0;
+        data.chimes_current_rates->photoion_fuv_shield_factor[i] = 1.0f;
 
       for (i = 0;
            i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index];
@@ -231,7 +229,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
         for (j = 0; j < myGlobalVars->N_spectra; j++)
           data.chimes_current_rates
               ->photoion_euv_shield_factor[chimes_flatten_index_2d(
-                  j, i, chimes_table_photoion_euv.N_reactions[1])] = 1.0;
+                  j, i, chimes_table_photoion_euv.N_reactions[1])] = 1.0f;
       }
 
       if (myGasVars->ThermEvolOn) {
@@ -243,7 +241,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
             /* self-shielding is switched off, so
              * take epsilon from the zeroth entry
              * of the shieldFactor tables. */
-            if (chimes_table_photoion_euv.E_thresh[i] < 15.4) {
+            if (chimes_table_photoion_euv.E_thresh[i] < 15.4f) {
               E1 =
                   chimes_exp10_dbl((double)chimes_table_photoion_euv
                                        .shieldFactor_1D[chimes_flatten_index_4d(
@@ -257,7 +255,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
               E4 = 0.0;
             }
 
-            if (chimes_table_photoion_euv.E_thresh[i] < 54.42) {
+            if (chimes_table_photoion_euv.E_thresh[i] < 54.42f) {
               E2 = chimes_exp10_dbl(
                   (double)chimes_table_photoion_euv
                       .shieldFactor_2D[chimes_flatten_index_5d(
@@ -291,60 +289,60 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
       for (i = 0;
            i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index];
            i++)
-        data.chimes_current_rates->photodissoc_group1_shield_factor[i] = 1.0;
+        data.chimes_current_rates->photodissoc_group1_shield_factor[i] = 1.0f;
 
       if (data.mol_flag_index == 1) {
-        data.chimes_current_rates->photodissoc_group2_shield_factor = 1.0;
+        data.chimes_current_rates->photodissoc_group2_shield_factor = 1.0f;
 
         for (i = 0;
              i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index];
              i++)
-          data.chimes_current_rates->CO_photodissoc_shield_factor[i] = 1.0;
+          data.chimes_current_rates->CO_photodissoc_shield_factor[i] = 1.0f;
       }
     }
 
     // Zero the rate coefficients
     for (i = 0; i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photoion_fuv_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photoion_fuv_rate_coefficient[i] = 0.0f;
 
     for (i = 0; i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photoion_euv_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photoion_euv_rate_coefficient[i] = 0.0f;
 
     if (myGasVars->ThermEvolOn) {
       for (i = 0;
            i < chimes_table_photoion_fuv.N_reactions[data.mol_flag_index]; i++)
-        data.chimes_current_rates->photoion_fuv_heat_rate[i] = 0.0;
+        data.chimes_current_rates->photoion_fuv_heat_rate[i] = 0.0f;
 
       for (i = 0;
            i < chimes_table_photoion_euv.N_reactions[data.mol_flag_index]; i++)
-        data.chimes_current_rates->photoion_euv_heat_rate[i] = 0.0;
+        data.chimes_current_rates->photoion_euv_heat_rate[i] = 0.0f;
     }
 
     for (i = 0;
          i < chimes_table_photoion_auger_fuv.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photoion_auger_fuv_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photoion_auger_fuv_rate_coefficient[i] = 0.0f;
 
     for (i = 0;
          i < chimes_table_photoion_auger_euv.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photoion_auger_euv_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photoion_auger_euv_rate_coefficient[i] = 0.0f;
 
     for (i = 0;
          i < chimes_table_photodissoc_group1.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photodissoc_group1_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photodissoc_group1_rate_coefficient[i] = 0.0f;
 
     for (i = 0;
          i < chimes_table_photodissoc_group2.N_reactions[data.mol_flag_index];
          i++)
-      data.chimes_current_rates->photodissoc_group2_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->photodissoc_group2_rate_coefficient[i] = 0.0f;
 
     for (i = 0;
          i < chimes_table_CO_photodissoc.N_reactions[data.mol_flag_index]; i++)
-      data.chimes_current_rates->CO_photodissoc_rate_coefficient[i] = 0.0;
+      data.chimes_current_rates->CO_photodissoc_rate_coefficient[i] = 0.0f;
 
     // Sum over all spectra
     for (j = 0; j < myGlobalVars->N_spectra; j++) {
@@ -473,7 +471,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
                          &dT);
 
   if (myGlobalVars->N_spectra > 0) {
-    G0 = 0.0;
+    G0 = 0.0f;
     for (i = 0; i < myGlobalVars->N_spectra; i++)
       G0 += myGasVars->isotropic_photon_density[i] * LIGHTSPEED *
             myGasVars->G0_parameter[i];
@@ -482,7 +480,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
     // against taking log(0).
     log_Psi = (ChimesFloat)chimes_log10(chimes_max(
         G0 * chimes_exp(-data.extinction * G0_GAMMA) *
-            chimes_pow(myGasVars->temperature, 0.5) /
+            chimes_sqrt(myGasVars->temperature) /
             chimes_max(
                 myGasVars->nH_tot *
                     myGasVars
@@ -549,10 +547,9 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
       if (myGlobalVars->cellSelfShieldingOn > 0) {
         const int N_H2selfColDens = chimes_table_bins.N_H2self_column_densities;
         const int N_b = chimes_table_bins.N_b_turbulence;
-        log_NH2 = (ChimesFloat)chimes_log10(
-            chimes_max(data.H2_column, CHIMES_FLT_MIN));
-        log_b = (ChimesFloat)chimes_log10(
-            chimes_max(myGasVars->doppler_broad, CHIMES_FLT_MIN));
+        log_NH2 = chimes_log10(chimes_max(data.H2_column, CHIMES_FLT_MIN));
+        log_b =
+            chimes_log10(chimes_max(myGasVars->doppler_broad, CHIMES_FLT_MIN));
         chimes_get_table_index(chimes_table_bins.H2self_column_densities,
                                N_H2selfColDens, log_NH2, &NH2_index, &dNH2);
         chimes_get_table_index(chimes_table_bins.b_turbulence, N_b, log_b,
@@ -573,14 +570,14 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
         for (i = 0;
              i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index];
              i++)
-          data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0;
+          data.chimes_current_rates->H2_photodissoc_shield_factor[i] = 1.0f;
       }
 
       // Zero the rate coefficients
       for (i = 0;
            i < chimes_table_H2_photodissoc.N_reactions[data.mol_flag_index];
            i++)
-        data.chimes_current_rates->H2_photodissoc_rate_coefficient[i] = 0.0;
+        data.chimes_current_rates->H2_photodissoc_rate_coefficient[i] = 0.0f;
 
       // Sum over all spectra
       for (j = 0; j < myGlobalVars->N_spectra; j++) {
@@ -630,7 +627,7 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
      * on the abundances of HI, H2 and HeI */
     n_over_cr = myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] /
                 data.chimes_current_rates->H2_collis_dissoc_crit_H;
-    n_over_cr += 2.0 *
+    n_over_cr += 2.0f *
                  myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] /
                  data.chimes_current_rates->H2_collis_dissoc_crit_H2;
     n_over_cr += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI]] /
@@ -642,9 +639,9 @@ void update_rate_coefficients(struct gasVariables *myGasVars,
          i++)
       data.chimes_current_rates->H2_collis_dissoc_rate_coefficient[i] =
           chimes_exp10(
-              (((n_over_cr / (1.0 + n_over_cr)) *
+              (((n_over_cr / (1.0f + n_over_cr)) *
                 data.chimes_current_rates->H2_collis_dissoc_log_kLTE[i]) +
-               ((1.0 / (1.0 + n_over_cr)) *
+               ((1.0f / (1.0f + n_over_cr)) *
                 data.chimes_current_rates->H2_collis_dissoc_log_k0[i])));
 
     // CO_cosmic_ray
@@ -757,7 +754,7 @@ void update_rates(struct gasVariables *myGasVars,
           myGasVars->cr_rate * chimes_table_cosmic_ray.rates[i] *
           myGasVars->abundances[chimes_table_cosmic_ray.reactants[i]];
     // secondary cosmic ray ionisation
-    log_xHII = (ChimesFloat)chimes_log10(
+    log_xHII = chimes_log10(
         chimes_max(myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]],
                    CHIMES_FLT_MIN));
     const int N_xHII = chimes_table_bins.N_secondary_cosmic_ray_xHII;
@@ -767,9 +764,9 @@ void update_rates(struct gasVariables *myGasVars,
     for (i = 0; i < 2; i++)
       data.chimes_current_rates->cosmic_ray_rate
           [chimes_table_cosmic_ray.secondary_base_reaction[i]] *=
-          1.0 + chimes_exp10(chimes_interpol_2d_fix_x(
-                    chimes_table_cosmic_ray.secondary_ratio, i, xHII_index,
-                    d_xHII, N_xHII));
+          1.0f + chimes_exp10(chimes_interpol_2d_fix_x(
+                     chimes_table_cosmic_ray.secondary_ratio, i, xHII_index,
+                     d_xHII, N_xHII));
   }
 
   if (data.mol_flag_index) {
@@ -805,7 +802,7 @@ void update_rates(struct gasVariables *myGasVars,
           data.chimes_current_rates->CO_cosmic_ray_rate_coefficient[i] *
           chimes_sqrt(chimes_max(
               myGasVars->abundances[chimes_table_CO_cosmic_ray.reactants[i]],
-              0.0));
+              0.0f));
   }
 
   if (myGlobalVars->N_spectra > 0) {
@@ -1214,7 +1211,7 @@ void set_species_structures(struct Species_Structure *mySpecies,
   for (i = myGlobalVars->speciesIndices[sp_elec];
        i <= myGlobalVars->speciesIndices[sp_Hm]; i++) {
     mySpecies[i].include_species = 1;
-    mySpecies[i].element_abundance = 1.0;
+    mySpecies[i].element_abundance = 1.0f;
   }
 
   for (i = myGlobalVars->speciesIndices[sp_HeI];
@@ -1299,9 +1296,9 @@ void set_species_structures(struct Species_Structure *mySpecies,
   mySpecies[myGlobalVars->speciesIndices[sp_H2p]].include_species = 1;
   mySpecies[myGlobalVars->speciesIndices[sp_H3p]].include_species = 1;
 
-  mySpecies[myGlobalVars->speciesIndices[sp_H2]].element_abundance = 1.0;
-  mySpecies[myGlobalVars->speciesIndices[sp_H2p]].element_abundance = 1.0;
-  mySpecies[myGlobalVars->speciesIndices[sp_H3p]].element_abundance = 1.0;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2]].element_abundance = 1.0f;
+  mySpecies[myGlobalVars->speciesIndices[sp_H2p]].element_abundance = 1.0f;
+  mySpecies[myGlobalVars->speciesIndices[sp_H3p]].element_abundance = 1.0f;
 
   if (myGlobalVars->element_included[2] == 1) {
     mySpecies[myGlobalVars->speciesIndices[sp_OH]].include_species =
@@ -1628,7 +1625,7 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars) {
 
   // Interpolate tables to current redshift
   if (z_index_low == z_index_hi)
-    dz = 0.0;
+    dz = 0.0f;
   else if ((low_z < myGlobalVars->reionisation_redshift) &&
            (hi_z > myGlobalVars->reionisation_redshift)) {
     /* Reionisation occurs in between the
@@ -1638,13 +1635,13 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars) {
      * depending on whether the current
      * redshift is before or after reionisation. */
     if (redshift <= myGlobalVars->reionisation_redshift)
-      dz = 0.0;
+      dz = 0.0f;
     else
-      dz = 1.0;
+      dz = 1.0f;
   } else
     dz = (redshift - low_z) / (hi_z - low_z);
 
-  dz_m = 1.0 - dz;
+  dz_m = 1.0f - dz;
 
   /* Before reionisation, the UVB is zero,
    * so the following aren't changing over
@@ -1780,7 +1777,7 @@ void interpolate_redshift_dependent_UVB(struct globalVariables *myGlobalVars) {
                dz));
 
     if (redshift > myGlobalVars->reionisation_redshift)
-      chimes_table_spectra.isotropic_photon_density[spectrum_index] = 0.0;
+      chimes_table_spectra.isotropic_photon_density[spectrum_index] = 0.0f;
     else
       chimes_table_spectra.isotropic_photon_density[spectrum_index] =
           chimes_exp10((chimes_log10(chimes_table_redshift_dependent_UVB
