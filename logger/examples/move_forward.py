@@ -15,6 +15,7 @@ import liblogger as logger
 
 resolution = 1024
 
+
 def plot3D(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
@@ -80,9 +81,7 @@ A = np.zeros(N)
 times = np.linspace(t[0], t[1], N)
 for i, time in enumerate(times):
     verbose = 0
-    new_array = 1  # Do we wish a new array or interpolate in place
-    interp = logger.moveForwardInTime(basename, data, time, verbose,
-                                      new_array)
+    interp = logger.moveForwardInTime(basename, data, time, verbose)
     # Get the arrays
     pos = interp["gas"]["Coordinates"]
     h = interp["gas"]["SmoothingLengths"]

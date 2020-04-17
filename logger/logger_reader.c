@@ -237,13 +237,11 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
  * @param reader The #logger_reader.
  * @param time The requested time for the particle.
  * @param interp_type The type of interpolation.
- * @param parts The array of particles to use.
- * @param n_tot The total number of particles
+ * @param array The array of particles to use.
  */
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type interp_type,
-                                      struct logger_particle_array *array,
-                                      size_t n_tot) {
+                                      struct logger_particle_array *array) {
 
   /* Shortcut to some structures */
   struct logger_index *index = &reader->index.index;
@@ -457,21 +455,32 @@ size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
  * @param new_parts The list of new particles.
  * @param n_deleted The number of particles deleted.
  * @param time_offset The offset (in the logfile) of the time requested.
+ * @param time The time requested.
+ * @param should_interpolate Should the function interpolate the particle at
+ * the required time or simply return the two records around the requested time?
  */
 void logger_reader_move_forward_internal(
     struct logger_reader *reader, struct logger_particle_array *prev,
     struct logger_particle_array *next, struct logger_particle_array *new_parts,
-    size_t *n_deleted, size_t time_offset) {
+    size_t *n_deleted, size_t time_offset, double time, const int should_interpolate) {
 
   // TODO make it parallel
   /* Move forward the hydro particles */
   for (size_t i = 0; i < prev->hydro.n; i++) {
-    enum logger_reader_event event = logger_reader_get_next_particle(
+    if (prev->hydro.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->hydro.parts[i].offset, time_offset);
+    }
+
+      enum logger_reader_event event = logger_reader_get_next_particle(
         reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
 
     switch(event) {
       /* Nothing happened */
       case logger_reader_event_null:
+        if (should_interpolate) {
+          logger_particle_interpolate(&prev->hydro.parts[i], &next->hydro.parts[i], time);
+        }
         break;
 
       /* The particle has been deleted */
@@ -504,6 +513,10 @@ void logger_reader_move_forward_internal(
 
   /* Move forward the gravity particles */
   for (size_t i = 0; i < prev->grav.n; i++) {
+    if (prev->grav.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->grav.parts[i].offset, time_offset);
+    }
     enum logger_reader_event event = logger_reader_get_next_gparticle(
         reader, &prev->grav.parts[i], &next->grav.parts[i],
         time_offset);
@@ -511,6 +524,9 @@ void logger_reader_move_forward_internal(
     switch(event) {
       /* Nothing happened */
       case logger_reader_event_null:
+        if (should_interpolate) {
+          logger_gparticle_interpolate(&prev->grav.parts[i], &next->grav.parts[i], time);
+        }
         break;
 
         /* The particle has been deleted */
@@ -529,12 +545,19 @@ void logger_reader_move_forward_internal(
 
   /* Move forward the stars particles */
   for (size_t i = 0; i < prev->stars.n; i++) {
+    if (prev->stars.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->stars.parts[i].offset, time_offset);
+    }
     enum logger_reader_event event = logger_reader_get_next_sparticle(
         reader, &prev->stars.parts[i], &next->stars.parts[i], time_offset);
 
     switch(event) {
       /* Nothing happened */
     case logger_reader_event_null:
+      if (should_interpolate) {
+        logger_sparticle_interpolate(&prev->stars.parts[i], &next->stars.parts[i], time);
+      }
       break;
 
       /* The particle has been deleted */
@@ -566,12 +589,17 @@ int logger_reader_check_need_update_parts(const size_t *not_updated) {
  * @param prev (in) A record before the requested time. (out) The last record
  * before the time.
  * @param next (out) The first record after the requested time.
- * @param time_offset The offset of the requested time.
+ * @param time The requested time.
+ * @param should_interpolate Should the function interpolate the particle at
+ * the required time or simply return the two records around the requested time?
  */
 void logger_reader_move_forward(struct logger_reader *reader,
                                 struct logger_particle_array *prev,
                                 struct logger_particle_array *next,
-                                size_t time_offset) {
+                                double time, const int should_interpolate) {
+
+  /* Get the offset of the requested time. */
+  size_t time_offset = logger_reader_get_next_offset_from_time(reader, time);
 
   /* Ensure to have enough place in the next */
   logger_particle_array_change_size(next, prev->hydro.n, prev->grav.n,
@@ -589,7 +617,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
   /* Update the particles.
      We do it in two part in order to avoid to modify too often the full array. */
   logger_reader_move_forward_internal(
-     reader, prev, next, &new_prev, n_deleted, time_offset);
+    reader, prev, next, &new_prev, n_deleted, time_offset, time, should_interpolate);
 
   /* Get the number of particles not updated */
   size_t new_deleted[swift_type_count];
@@ -620,7 +648,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
       &new_prev, /* n_part */ 16, /* n_gpart */ 16, /* n_spart */ 16);
 
     logger_reader_move_forward_internal(reader, &new_prev, &new_next, &tmp,
-                                        new_deleted, time_offset);
+                                        new_deleted, time_offset, time, should_interpolate);
 
     /* Delete the required particles and add the new ones */
     logger_particle_array_update(
@@ -650,7 +678,7 @@ void logger_reader_move_forward(struct logger_reader *reader,
  * @param reader The #logger_reader.
  * @param prev (in) A record before the requested time. (out) The last record
  * before the time.
- * @param next (out) The first record after the requested time.
+ * @param next (out) The interpolated particle.
  * @param time_offset The offset of the requested time.
  *
  * @return The event encountered (update also the offset of the previous

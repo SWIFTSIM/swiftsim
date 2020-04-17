@@ -28,14 +28,17 @@
 void logger_particle_array_init(struct logger_particle_array *array) {
   /* Hydro */
   array->hydro.n = 0;
+  array->hydro.allocated_size = 0;
   array->hydro.parts = NULL;
 
   /* Dark matter */
   array->grav.n = 0;
+  array->grav.allocated_size = 0;
   array->grav.parts = NULL;
 
   /* Stars */
   array->stars.n = 0;
+  array->stars.allocated_size = 0;
   array->stars.parts = NULL;
 }
 
@@ -52,6 +55,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
                                     size_t n_spart) {
   /* Hydro */
   array->hydro.n = n_part;
+  array->hydro.allocated_size = n_part;
   array->hydro.parts =
       (struct logger_particle *)malloc(n_part * sizeof(struct logger_particle));
   if (array->hydro.parts == NULL) {
@@ -59,7 +63,8 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Gravity */
-  array->grav.n = n_part;
+  array->grav.n = n_gpart;
+  array->grav.allocated_size = n_gpart;
   array->grav.parts = (struct logger_gparticle *)malloc(
       n_gpart * sizeof(struct logger_gparticle));
   if (array->grav.parts == NULL) {
@@ -67,7 +72,8 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Stars */
-  array->stars.n = n_part;
+  array->stars.n = n_spart;
+  array->stars.allocated_size = n_spart;
   array->stars.parts = (struct logger_sparticle *)malloc(
       n_spart * sizeof(struct logger_sparticle));
   if (array->stars.parts == NULL) {

@@ -24,12 +24,14 @@ def plot3D(data):
                 color="k")
 
 
-def plot2D():
+def plot2D(data):
+    pos = data["gas"]["Coordinates"]
+
     center = np.array([0.5]*3)
     r2 = np.sum((pos - center)**2, axis=1)
 
     # plot entropy vs distance
-    plt.plot(np.sqrt(r2), data["Entropies"], '.',
+    plt.plot(np.sqrt(r2), data["gas"]["Entropies"], '.',
              markersize=0.2)
 
     plt.xlim(0., 0.5)
@@ -69,7 +71,6 @@ if "stars" in data:
     print("The data contains the following elements for the stars:")
     print(data["stars"].dtype.names)
 
-pos = data["gas"]["Coordinates"]
-
 plot3D(data)
+# plot2D(data)
 plt.show()

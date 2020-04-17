@@ -24,9 +24,16 @@
 /* Include the tools */
 #include "logger_tools.h"
 
+/* Local includes */
+#include "logger_particle_array.h"
+
 #if HAVE_PYTHON
 /* Include numpy */
 #include <numpy/arrayobject.h>
+
+extern PyArray_Descr *logger_particle_descr;
+extern PyArray_Descr *logger_gparticle_descr;
+extern PyArray_Descr *logger_sparticle_descr;
 
 /* Structure that allows the user to easily define the
    fields in a numpy array. */
@@ -39,15 +46,12 @@ struct logger_python_field {
   size_t offset;
 
   /* The type of data (following numpy definition) */
-  int type;
-
-  /* The number of dimension for a field */
-  int dimension;
+  char type[STRING_SIZE];
 };
 
-#define logger_loader_python_field(name, parts, field, dim, type) \
+#define logger_loader_python_field(name, parts, field, type) \
   logger_loader_python_field_function(                            \
-      name, ((char *)(&parts[0].field) - (char *)parts), dim, type)
+      name, ((char *)(&parts[0].field) - (char *)parts), type)
 
 /**
  * @brief Generate a #logger_python_field structure.
@@ -61,60 +65,14 @@ struct logger_python_field {
  * @return The initialized structure.
  */
 __attribute__((always_inline)) INLINE static struct logger_python_field
-logger_loader_python_field_function(char *name, size_t offset, int dimension,
-                                    int type) {
+logger_loader_python_field_function(char *name, size_t offset, const char *numpy_type) {
   struct logger_python_field ret;
 
   strcpy(ret.name, name);
   ret.offset = offset;
-  ret.type = type;
-  ret.dimension = dimension;
+  strcpy(ret.type, numpy_type);
 
   return ret;
-}
-
-/**
- * @brief Add a field in a numpy descriptor.
- *
- * @param fields The dictionary containing the fields.
- * @param name The name of the field to add.
- * @param offset The offset of the field in the data structure.
- * @param type The data type of the field.
- */
-__attribute__((always_inline)) INLINE static void create_field(
-    PyObject *fields, char *name, size_t offset, int type) {
-
-  PyObject *tuple = PyTuple_New(2);
-  PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));
-  PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));
-  PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);
-
-}
-
-/**
- * @brief Add a N-dimensional field in a numpy descriptor.
- *
- * @param fields The dictionary containing the fields.
- * @param name The name of the field to add.
- * @param offset The offset of the field in the data structure.
- * @param type The data type of the field.
- * @param dim The number of dimension for the field.
- */
-__attribute__((always_inline)) INLINE static void create_field_ndim(
-    PyObject *fields, char *name, size_t offset, int type, int dim) {
-
-  /* Create the N-D descriptor */
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));
-    vec->subarray->base = PyArray_DescrFromType(type);
-    vec->subarray->shape = PyTuple_New(1);
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(dim));
-
-    /* Create the field */
-    PyObject *tuple = PyTuple_New(2);
-    PyTuple_SetItem(tuple, 0, (PyObject *)vec);
-    PyTuple_SetItem(tuple, 1, PyLong_FromSize_t(offset));
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);
 }
 
 #endif  // HAVE_PYTHON

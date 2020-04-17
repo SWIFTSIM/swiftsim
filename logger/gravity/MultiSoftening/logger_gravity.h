@@ -233,20 +233,20 @@ INLINE static int logger_gparticles_generate_python(
   struct logger_gparticle *part;
 
   /* List what we want to use in python */
-  list[0] = logger_loader_python_field("Coordinates", part, x, 3, NPY_DOUBLE);
+  list[0] = logger_loader_python_field("Coordinates", part, x, "3f8");
 
-  list[1] = logger_loader_python_field("Velocities", part, v, 3, NPY_FLOAT32);
+  list[1] = logger_loader_python_field("Velocities", part, v, "3f4");
 
   // TODO sum the grav + hydro accelerations
   list[2] =
-      logger_loader_python_field("Accelerations", part, a, 3, NPY_FLOAT32);
+      logger_loader_python_field("Accelerations", part, a, "3f4");
 
-  list[3] = logger_loader_python_field("Masses", part, mass, 1, NPY_FLOAT32);
+  list[3] = logger_loader_python_field("Masses", part, mass, "f4");
 
   list[4] =
-      logger_loader_python_field("ParticleIDs", part, id, 1, NPY_LONGLONG);
+      logger_loader_python_field("ParticleIDs", part, id, "i8");
 
-  list[5] = logger_loader_python_field("Times", part, time, 1, NPY_DOUBLE);
+  list[5] = logger_loader_python_field("Times", part, time, "f8");
 
   return 6;
 }
