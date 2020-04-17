@@ -418,7 +418,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);
     
-  /* Clean after used in this time-step*/
+  /* Clean after used in this time-step */
   p->chemistry_data.metal_mass_received_by_enrichment = 0.0f;
   p->chemistry_data.iron_mass_received_by_SNIa = 0.0f;
 }

@@ -55,7 +55,8 @@ INLINE static int chemistry_read_particles(struct part* parts,
  * @return Returns the number of fields to write.
  */
 INLINE static int chemistry_write_particles(const struct part* parts,
-                                            struct io_props* list) {
+                                            struct io_props* list,
+                                            const int with_cosmology) {
 
   /* List what we want to write */
   list[0] = io_make_output_field(
@@ -119,16 +120,31 @@ INLINE static int chemistry_write_particles(const struct part* parts,
       "MetalDiffusionRates", FLOAT, chemistry_element_count,
       UNIT_CONV_DIFF_RATE, 0.f, parts, chemistry_data.diffusion_rate,
       "Metal diffusion rates for each element in physical co-ordinates");
-    
-  list[11] = io_make_output_field(
+
+  if (with_cosmology) {
+      
+      list[11] = io_make_output_field(
       "MeanMetalWeightedRedshift", FLOAT, 1,
       UNIT_CONV_NO_UNITS, 0.f, parts, chemistry_data.metal_weighted_redshift,
       "Mean redshift of enrichment events weighted by the metal mass imparted by each event");
-    
-  list[12] = io_make_output_field(
+      
+      list[12] = io_make_output_field(
        "MeanIronWeightedRedshift", FLOAT, 1,
        UNIT_CONV_NO_UNITS, 0.f, parts, chemistry_data.iron_weighted_redshift,
        "Mean redshift of SNIa events weighted by the iron mass imparted by each event");
+      
+  } else {
+      
+      list[11] = io_make_output_field(
+       "MeanMetalWeightedTime", FLOAT, 1,
+       UNIT_CONV_TIME, 0.f, parts, chemistry_data.metal_weighted_redshift,
+       "Mean time of enrichment events weighted by the metal mass imparted by each event");
+      
+      list[12] = io_make_output_field(
+       "MeanIronWeightedTime", FLOAT, 1,
+       UNIT_CONV_TIME, 0.f, parts, chemistry_data.iron_weighted_redshift,
+       "Mean time of SNIa events weighted by the iron mass imparted by each event");
+  }
 
   return 13;
 }

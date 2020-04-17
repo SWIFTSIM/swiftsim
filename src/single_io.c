@@ -1038,7 +1038,7 @@ void write_output_single(struct engine* e, const char* baseName,
           /* No inhibted particles: easy case */
           N = Ngas;
           hydro_write_particles(parts, xparts, list, &num_fields);
-          num_fields += chemistry_write_particles(parts, list + num_fields);
+          num_fields += chemistry_write_particles(parts, list + num_fields, with_cosmology);
           if (with_cooling || with_temperature) {
             num_fields += cooling_write_particles(
                 parts, xparts, list + num_fields, e->cooling_func);
@@ -1078,7 +1078,7 @@ void write_output_single(struct engine* e, const char* baseName,
           hydro_write_particles(parts_written, xparts_written, list,
                                 &num_fields);
           num_fields +=
-              chemistry_write_particles(parts_written, list + num_fields);
+              chemistry_write_particles(parts_written, list + num_fields, with_cosmology);
           if (with_cooling || with_temperature) {
             num_fields +=
                 cooling_write_particles(parts_written, xparts_written,
