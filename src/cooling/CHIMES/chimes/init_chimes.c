@@ -299,27 +299,12 @@ void load_eqm_table(char *filename,
  * elements are included, this routine returns 1,
  * otherwise it returns 0.
  *
- * @param reaction_array Array of 9 integer flags specifying the elements needed
- * for the reaction.
- * @param network_array Array of 9 integer flags specifying the elements
- * included in the network.
+ * @param reaction_array Array of all element_incl flags for each reaction in the reaction group.
+ * @param reaction_idx Position of the given reaction in the reaction group.
+ * @param network_array Array of flags specifying the elements included in the network.
  */
-int compare_element_incl_arrays(int *reaction_array, int *network_array) {
-  int i, include_reaction;
-
-  include_reaction = 1;
-  for (i = 0; i < 9; i++) {
-    if ((reaction_array[i] == 1) && (network_array[i] == 0)) {
-      include_reaction = 0;
-      break;
-    }
-  }
-
-  return include_reaction;
-}
-
-int compare_element_incl_arrays_flatten(int *reaction_array, int reaction_idx,
-                                        int *network_array) {
+int compare_element_incl_arrays(int *reaction_array, int reaction_idx,
+				int *network_array) {
   int i, include_reaction;
 
   include_reaction = 1;
@@ -3851,7 +3836,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_T_dependent.N_reactions[0] = 0;
   chimes_table_T_dependent.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_T_dependent.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_T_dependent.element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_T_dependent.N_reactions[1] += 1;
@@ -3877,7 +3862,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_T_dependent.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_T_dependent.element_incl, i,
             myGlobalVars->element_included)) {
       for (j = 0; j < 3; j++) {
@@ -3945,7 +3930,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_constant.N_reactions[0] = 0;
   chimes_table_constant.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_constant.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(chimes_master_constant.element_incl,
+    if (compare_element_incl_arrays(chimes_master_constant.element_incl,
                                             i,
                                             myGlobalVars->element_included)) {
       chimes_table_constant.N_reactions[1] += 1;
@@ -3971,7 +3956,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_constant.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(chimes_master_constant.element_incl,
+    if (compare_element_incl_arrays(chimes_master_constant.element_incl,
                                             i,
                                             myGlobalVars->element_included)) {
       /* The reactants and products arrays need to be translated into
@@ -4030,7 +4015,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_recombination_AB.N_reactions[0] = 0;
   chimes_table_recombination_AB.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_recombination_AB.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_recombination_AB.element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_recombination_AB.N_reactions[1] += 1;
@@ -4057,7 +4042,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_recombination_AB.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_recombination_AB.element_incl, i,
             myGlobalVars->element_included)) {
       for (j = 0; j < 2; j++) {
@@ -4116,7 +4101,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_grain_recombination.N_reactions[0] = 0;
   chimes_table_grain_recombination.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_grain_recombination.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_grain_recombination.element_incl, i,
             myGlobalVars->element_included)) {
       // All reactions are non-molecular
@@ -4141,7 +4126,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_grain_recombination.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_grain_recombination.element_incl, i,
             myGlobalVars->element_included)) {
       for (j = 0; j < 2; j++)
@@ -4181,7 +4166,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_cosmic_ray.N_reactions[0] = 0;
   chimes_table_cosmic_ray.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_cosmic_ray.element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_cosmic_ray.N_reactions[1] += 1;
@@ -4211,7 +4196,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_cosmic_ray.element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_cosmic_ray.reactants[incl_index] =
@@ -4266,7 +4251,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_table_CO_cosmic_ray.N_reactions[0] = 0;
   chimes_table_CO_cosmic_ray.N_reactions[1] = 0;
   for (i = 0; i < chimes_master_CO_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_CO_cosmic_ray.element_incl, i,
             myGlobalVars->element_included)) {
       // Only molecular reactions in this group.
@@ -4289,7 +4274,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Copy table data
   incl_index = 0;
   for (i = 0; i < chimes_master_CO_cosmic_ray.N_reactions[1]; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_master_CO_cosmic_ray.element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_CO_cosmic_ray.reactants[incl_index] =
@@ -4326,7 +4311,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_fuv.N_reactions[0] = 0;
     chimes_table_photoion_fuv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_fuv.element_incl, i,
               myGlobalVars->element_included)) {
         // No molecular reactions in this group
@@ -4354,7 +4339,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_fuv.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4400,7 +4385,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_euv.N_reactions[0] = 0;
     chimes_table_photoion_euv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_euv.element_incl, i,
               myGlobalVars->element_included)) {
         chimes_table_photoion_euv.N_reactions[1] += 1;
@@ -4435,7 +4420,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_euv.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4506,7 +4491,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_auger_fuv.N_reactions[0] = 0;
     chimes_table_photoion_auger_fuv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_auger_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_auger_fuv.element_incl, i,
               myGlobalVars->element_included)) {
         // No molecular reactions in this group
@@ -4534,7 +4519,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_auger_fuv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_auger_fuv.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4569,7 +4554,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
         for (base_index = 0;
              base_index < chimes_master_photoion_fuv.N_reactions[1];
              base_index++) {
-          if (compare_element_incl_arrays_flatten(
+          if (compare_element_incl_arrays(
                   chimes_master_photoion_fuv.element_incl, base_index,
                   myGlobalVars->element_included)) {
             if (base_index ==
@@ -4610,7 +4595,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photoion_auger_euv.N_reactions[0] = 0;
     chimes_table_photoion_auger_euv.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photoion_auger_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_auger_euv.element_incl, i,
               myGlobalVars->element_included)) {
         // No molecular reactions in this group
@@ -4638,7 +4623,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photoion_auger_euv.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photoion_auger_euv.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4673,7 +4658,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
         for (base_index = 0;
              base_index < chimes_master_photoion_euv.N_reactions[1];
              base_index++) {
-          if (compare_element_incl_arrays_flatten(
+          if (compare_element_incl_arrays(
                   chimes_master_photoion_euv.element_incl, base_index,
                   myGlobalVars->element_included)) {
             if (base_index ==
@@ -4714,7 +4699,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photodissoc_group1.N_reactions[0] = 0;
     chimes_table_photodissoc_group1.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photodissoc_group1.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photodissoc_group1.element_incl, i,
               myGlobalVars->element_included)) {
         chimes_table_photodissoc_group1.N_reactions[1] += 1;
@@ -4742,7 +4727,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photodissoc_group1.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photodissoc_group1.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4781,7 +4766,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_photodissoc_group2.N_reactions[0] = 0;
     chimes_table_photodissoc_group2.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_photodissoc_group2.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photodissoc_group2.element_incl, i,
               myGlobalVars->element_included)) {
         // Only molecular reactions
@@ -4806,7 +4791,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_photodissoc_group2.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_photodissoc_group2.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -4845,7 +4830,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_table_CO_photodissoc.N_reactions[0] = 0;
     chimes_table_CO_photodissoc.N_reactions[1] = 0;
     for (i = 0; i < chimes_master_CO_photodissoc.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_CO_photodissoc.element_incl, i,
               myGlobalVars->element_included)) {
         // Only molecular reactions.
@@ -4873,7 +4858,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     // Copy table data
     incl_index = 0;
     for (i = 0; i < chimes_master_CO_photodissoc.N_reactions[1]; i++) {
-      if (compare_element_incl_arrays_flatten(
+      if (compare_element_incl_arrays(
               chimes_master_CO_photodissoc.element_incl, i,
               myGlobalVars->element_included)) {
         /* The reactants and products arrays need to be translated into
@@ -6506,7 +6491,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   incl_index = 0;
   for (i = 0; i < N_reactions_all; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_redshift_dependent_UVB
@@ -6525,7 +6510,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   incl_index = 0;
   for (i = 0; i < N_reactions_all; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_table_redshift_dependent_UVB.photoion_fuv_element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_redshift_dependent_UVB
@@ -6554,7 +6539,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   incl_index = 0;
   for (i = 0; i < N_reactions_all; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_table_redshift_dependent_UVB.photoion_euv_element_incl, i,
             myGlobalVars->element_included)) {
       chimes_table_redshift_dependent_UVB
@@ -6591,7 +6576,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
       incl_index = 0;
       for (i = 0; i < N_reactions_all; i++) {
-        if (compare_element_incl_arrays_flatten(
+        if (compare_element_incl_arrays(
                 chimes_table_redshift_dependent_UVB.photoion_euv_element_incl,
                 i, myGlobalVars->element_included)) {
           chimes_table_redshift_dependent_UVB
@@ -6637,7 +6622,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
         incl_index = 0;
         for (i = 0; i < N_reactions_all; i++) {
-          if (compare_element_incl_arrays_flatten(
+          if (compare_element_incl_arrays(
                   chimes_table_redshift_dependent_UVB.photoion_euv_element_incl,
                   i, myGlobalVars->element_included)) {
             chimes_table_redshift_dependent_UVB
@@ -6673,7 +6658,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   incl_index = 0;
   for (i = 0; i < N_reactions_all; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_table_redshift_dependent_UVB.photoion_auger_fuv_element_incl,
             i, myGlobalVars->element_included)) {
       chimes_table_redshift_dependent_UVB
@@ -6702,7 +6687,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   incl_index = 0;
   for (i = 0; i < N_reactions_all; i++) {
-    if (compare_element_incl_arrays_flatten(
+    if (compare_element_incl_arrays(
             chimes_table_redshift_dependent_UVB.photoion_auger_euv_element_incl,
             i, myGlobalVars->element_included)) {
       chimes_table_redshift_dependent_UVB
