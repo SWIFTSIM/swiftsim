@@ -76,12 +76,12 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
 
   /*Initializing dmetal arrays for calculation in force loop */
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
-      cpd->dmetal_mass_fraction[elem] = 0.0f;
+    cpd->dmetal_mass_fraction[elem] = 0.0f;
   }
-    
+
   /* CC. Also have total metallicity ready for loop */
   cpd->dmetal_mass_fraction_total = 0.0f;
-      
+
   /* CC. We will be also diffusing metal_mass_fraction_from_SNIa, */
   /* metal_mass_fraction_from_AGB, metal_mass_fraction_from_SNII & */
   /* iron_mass_fraction_from_SNIa */
@@ -89,7 +89,6 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   cpd->dmetal_mass_fraction_from_AGB = 0.0f;
   cpd->dmetal_mass_fraction_from_SNII = 0.0f;
   cpd->diron_mass_fraction_from_SNIa = 0.0f;
-    
 }
 
 /**
@@ -222,13 +221,13 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 
   /* CC: Setting diffusion coefficient to zero initial value */
   p->chemistry_data.diffusion_coefficient = 0.0f;
-    
+
   // Add initialization of some metal trackers.
   p->chemistry_data.metal_mass_tracker = 0.0f;
   p->chemistry_data.iron_mass_tracker = 0.0f;
   p->chemistry_data.metal_mass_received_by_enrichment = 0.0f;
   p->chemistry_data.iron_mass_received_by_SNIa = 0.0f;
-    
+
   // Dummy initial values to weighted redshits
   p->chemistry_data.metal_weighted_redshift = -1.f;
   p->chemistry_data.iron_weighted_redshift = -1.f;
@@ -348,7 +347,7 @@ static INLINE void chemistry_print_backend(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* restrict p, const struct cosmology* cosmo, 
+    struct part* restrict p, const struct cosmology* cosmo,
     const int with_cosmology, const double scale_factor, const double time) {
 
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
@@ -359,45 +358,48 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   /* CC. Here we are diffusing Z as well */
   p->chemistry_data.metal_mass_fraction_total +=
       p->chemistry_data.dmetal_mass_fraction_total;
-    
+
   /* CC. And here we are diffusing trackers of metal fractions from stellar FB*/
   p->chemistry_data.metal_mass_fraction_from_SNIa +=
-    p->chemistry_data.dmetal_mass_fraction_from_SNIa;
-    
+      p->chemistry_data.dmetal_mass_fraction_from_SNIa;
+
   p->chemistry_data.metal_mass_fraction_from_AGB +=
-    p->chemistry_data.dmetal_mass_fraction_from_AGB;
-    
+      p->chemistry_data.dmetal_mass_fraction_from_AGB;
+
   p->chemistry_data.metal_mass_fraction_from_SNII +=
-    p->chemistry_data.dmetal_mass_fraction_from_SNII;
-    
+      p->chemistry_data.dmetal_mass_fraction_from_SNII;
+
   p->chemistry_data.iron_mass_fraction_from_SNIa +=
-    p->chemistry_data.diron_mass_fraction_from_SNIa;
-    
+      p->chemistry_data.diron_mass_fraction_from_SNIa;
+
   const double current_mass = hydro_get_mass(p);
   float current_metal_mass =
-    p->chemistry_data.metal_mass_fraction_total * current_mass;
+      p->chemistry_data.metal_mass_fraction_total * current_mass;
   float current_iron_mass =
-    p->chemistry_data.metal_mass_fraction[chemistry_element_Fe] * current_mass;
-    
+      p->chemistry_data.metal_mass_fraction[chemistry_element_Fe] *
+      current_mass;
+
   /* Update metal mass from SNIa for consistency */
   p->chemistry_data.mass_from_SNIa =
-    p->chemistry_data.metal_mass_fraction_from_SNIa * current_mass;
-    
+      p->chemistry_data.metal_mass_fraction_from_SNIa * current_mass;
+
   /* Update metal mass from SNII  */
   p->chemistry_data.mass_from_SNII =
-    p->chemistry_data.metal_mass_fraction_from_SNII * current_mass;
-    
+      p->chemistry_data.metal_mass_fraction_from_SNII * current_mass;
+
   /* Update metal mass from AGB  */
   p->chemistry_data.mass_from_AGB =
-    p->chemistry_data.metal_mass_fraction_from_AGB * current_mass;
-    
+      p->chemistry_data.metal_mass_fraction_from_AGB * current_mass;
+
   /* Update metal mass tracker */
-  float delta_mass_times_time = p->chemistry_data.metal_mass_received_by_enrichment;
-  float delta_iron_mass_times_time = p->chemistry_data.iron_mass_received_by_SNIa;
-    
+  float delta_mass_times_time =
+      p->chemistry_data.metal_mass_received_by_enrichment;
+  float delta_iron_mass_times_time =
+      p->chemistry_data.iron_mass_received_by_SNIa;
+
   if (with_cosmology) {
-    delta_mass_times_time *= 1.f/scale_factor-1.f;
-    delta_iron_mass_times_time *= 1.f/scale_factor-1.f;
+    delta_mass_times_time *= 1.f / scale_factor - 1.f;
+    delta_iron_mass_times_time *= 1.f / scale_factor - 1.f;
   } else {
     delta_mass_times_time *= time;
     delta_iron_mass_times_time *= time;
@@ -407,17 +409,16 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
 
   /* Recalculate metal weighted redshift */
   p->chemistry_data.metal_weighted_redshift =
-    p->chemistry_data.metal_mass_tracker/current_metal_mass;
-    
+      p->chemistry_data.metal_mass_tracker / current_metal_mass;
+
   /* Recalculate iron weighted redshift */
   p->chemistry_data.iron_weighted_redshift =
-    p->chemistry_data.iron_mass_tracker/current_iron_mass;
+      p->chemistry_data.iron_mass_tracker / current_iron_mass;
 
-    
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);
-    
+
   /* Clean after used in this time-step */
   p->chemistry_data.metal_mass_received_by_enrichment = 0.0f;
   p->chemistry_data.iron_mass_received_by_SNIa = 0.0f;

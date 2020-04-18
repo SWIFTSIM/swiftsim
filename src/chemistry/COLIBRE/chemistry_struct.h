@@ -85,13 +85,13 @@ struct chemistry_part_data {
 
   /*! Fraction of total gas mass in Iron coming from SNIa */
   float iron_mass_fraction_from_SNIa;
-    
+
   /*! Metal weighted redshift (defined in Wiersma+ 2010, eq. 3) */
   float metal_weighted_redshift;
-    
+
   /*! Metal weighted redshift */
   float iron_weighted_redshift;
-    
+
   /*! Tracker of the metal mass received by each enrichment event times time */
   float metal_mass_tracker;
   float metal_mass_received_by_enrichment;
@@ -101,15 +101,15 @@ struct chemistry_part_data {
   /*! Fraction of the particle mass in a given element */
   /*! These arrays are duplicated to be used after the diffusion routine */
   float dmetal_mass_fraction[chemistry_element_count];
-  
+
   float dmetal_mass_fraction_total;
-  
+
   float dmetal_mass_fraction_from_SNIa;
-  
+
   float dmetal_mass_fraction_from_AGB;
 
   float dmetal_mass_fraction_from_SNII;
-  
+
   float diron_mass_fraction_from_SNIa;
 
   /*! Tensor of the velocity shear */

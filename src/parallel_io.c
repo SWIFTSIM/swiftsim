@@ -1273,7 +1273,8 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
 
       case swift_type_gas:
         hydro_write_particles(parts, xparts, list, &num_fields);
-        num_fields += chemistry_write_particles(parts, list + num_fields, with_cosmology);
+        num_fields +=
+            chemistry_write_particles(parts, list + num_fields, with_cosmology);
         if (with_cooling || with_temperature) {
           num_fields += cooling_write_particles(
               parts, xparts, list + num_fields, e->cooling_func);
@@ -1643,7 +1644,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
           /* No inhibted particles: easy case */
           Nparticles = Ngas;
           hydro_write_particles(parts, xparts, list, &num_fields);
-          num_fields += chemistry_write_particles(parts, list + num_fields, with_cosmology);
+          num_fields += chemistry_write_particles(parts, list + num_fields,
+                                                  with_cosmology);
           if (with_cooling || with_temperature) {
             num_fields += cooling_write_particles(
                 parts, xparts, list + num_fields, e->cooling_func);
@@ -1682,8 +1684,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
           /* Select the fields to write */
           hydro_write_particles(parts_written, xparts_written, list,
                                 &num_fields);
-          num_fields +=
-              chemistry_write_particles(parts_written, list + num_fields, with_cosmology);
+          num_fields += chemistry_write_particles(
+              parts_written, list + num_fields, with_cosmology);
           if (with_cooling || with_temperature) {
             num_fields +=
                 cooling_write_particles(parts_written, xparts_written,

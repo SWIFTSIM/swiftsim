@@ -141,8 +141,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       si->feedback_data.to_distribute.total_metal_mass * Omega_frac;
   const double new_metal_mass_total =
       current_metal_mass_total + delta_metal_mass_total;
-    
-  pj->chemistry_data.metal_mass_received_by_enrichment += delta_metal_mass_total;
+
+  pj->chemistry_data.metal_mass_received_by_enrichment +=
+      delta_metal_mass_total;
 
   pj->chemistry_data.metal_mass_fraction_total =
       new_metal_mass_total * new_mass_inv;
@@ -166,7 +167,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       si->feedback_data.to_distribute.Fe_mass_from_SNIa * Omega_frac;
   const double new_iron_from_SNIa_mass =
       current_iron_from_SNIa_mass + delta_iron_from_SNIa_mass;
-    
+
   pj->chemistry_data.iron_mass_received_by_SNIa += delta_iron_from_SNIa_mass;
 
   pj->chemistry_data.iron_mass_fraction_from_SNIa =
