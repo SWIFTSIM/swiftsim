@@ -124,12 +124,12 @@ INLINE static int chemistry_write_particles(const struct part* parts,
   if (with_cosmology) {
 
     list[11] = io_make_output_field(
-        "MeanMetalWeightedRedshift", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
+        "MeanMetalWeightedRedshifts", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
         chemistry_data.metal_weighted_redshift,
         "Mean redshift of enrichment events weighted by the metal mass "
         "imparted by each event");
 
-    list[12] = io_make_output_field("MeanIronWeightedRedshift", FLOAT, 1,
+    list[12] = io_make_output_field("MeanIronWeightedRedshifts", FLOAT, 1,
                                     UNIT_CONV_NO_UNITS, 0.f, parts,
                                     chemistry_data.iron_weighted_redshift,
                                     "Mean redshift of SNIa events weighted by "
@@ -138,13 +138,13 @@ INLINE static int chemistry_write_particles(const struct part* parts,
   } else {
 
     list[11] =
-        io_make_output_field("MeanMetalWeightedTime", FLOAT, 1, UNIT_CONV_TIME,
+        io_make_output_field("MeanMetalWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
                              0.f, parts, chemistry_data.metal_weighted_redshift,
                              "Mean time of enrichment events weighted by the "
                              "metal mass imparted by each event");
 
     list[12] =
-        io_make_output_field("MeanIronWeightedTime", FLOAT, 1, UNIT_CONV_TIME,
+        io_make_output_field("MeanIronWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
                              0.f, parts, chemistry_data.iron_weighted_redshift,
                              "Mean time of SNIa events weighted by the iron "
                              "mass imparted by each event");

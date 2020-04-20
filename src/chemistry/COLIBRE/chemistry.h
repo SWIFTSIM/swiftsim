@@ -348,7 +348,7 @@ static INLINE void chemistry_print_backend(
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
     struct part* restrict p, const struct cosmology* cosmo,
-    const int with_cosmology, const double scale_factor, const double time) {
+    const int with_cosmology, const double time) {
 
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     p->chemistry_data.metal_mass_fraction[elem] +=
@@ -398,8 +398,8 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
       p->chemistry_data.iron_mass_received_by_SNIa;
 
   if (with_cosmology) {
-    delta_mass_times_time *= 1.f / scale_factor - 1.f;
-    delta_iron_mass_times_time *= 1.f / scale_factor - 1.f;
+    delta_mass_times_time *= cosmo->z;
+    delta_iron_mass_times_time *= cosmo->z;
   } else {
     delta_mass_times_time *= time;
     delta_iron_mass_times_time *= time;

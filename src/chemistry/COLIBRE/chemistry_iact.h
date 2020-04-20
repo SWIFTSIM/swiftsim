@@ -77,9 +77,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
     di->shear_tensor[k][1] += (pj->v[1] - pi->v[1]) * dx[k] * mj_dwi_r;
     di->shear_tensor[k][2] += (pj->v[2] - pi->v[2]) * dx[k] * mj_dwi_r;
 
-    dj->shear_tensor[k][0] += (pi->v[0] - pj->v[0]) * dx[k] * mi_dwj_r;
-    dj->shear_tensor[k][1] += (pi->v[1] - pj->v[1]) * dx[k] * mi_dwj_r;
-    dj->shear_tensor[k][2] += (pi->v[2] - pj->v[2]) * dx[k] * mi_dwj_r;
+    dj->shear_tensor[k][0] -= (pi->v[0] - pj->v[0]) * dx[k] * mi_dwj_r;
+    dj->shear_tensor[k][1] -= (pi->v[1] - pj->v[1]) * dx[k] * mi_dwj_r;
+    dj->shear_tensor[k][2] -= (pi->v[2] - pj->v[2]) * dx[k] * mi_dwj_r;
   }
 }
 
