@@ -33,19 +33,17 @@
 #include "chimes_vars.h"
 
 // CHIMES data tables.
-struct
-    chimes_table_bins_struct
-        chimes_table_bins; /*!< Structure containing table bins for all of the
-                              rate tables. */
+struct chimes_table_bins_struct
+    chimes_table_bins; /*!< Structure containing table bins for all of the
+                          rate tables. */
 struct chimes_T_dependent_struct chimes_table_T_dependent; /*!< Structure
                                                               containing the
                                                               rates for the
                                                               T-dependent
                                                               reaction group. */
-struct
-    chimes_constant_struct
-        chimes_table_constant; /*!< Structure containing the rates for the
-                                  constant reaction group. */
+struct chimes_constant_struct
+    chimes_table_constant; /*!< Structure containing the rates for the
+                              constant reaction group. */
 struct chimes_recombination_AB_struct
     chimes_table_recombination_AB; /*!< Structure containing the rates for the
                                       reacombination_AB group. */
