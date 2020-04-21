@@ -26,7 +26,7 @@ In order to implement it, you need equation 12 in `Hopkins 2013 <https://arxiv.o
 .. math::
    m_i \frac{\mathrm{d}v_i}{\mathrm{d}t} = - \sum_j x_i x_j \left[ \frac{P_i}{y_i^2} f_{ij} \nabla_i W_{ij}(h_i) + \frac{P_j}{y_j^2} f_{ji} \nabla_j W_{ji}(h_j) \right]
 
-and simply replace the :math:`P_i, P_j` by the pressure with the floor.
+and simply replace the :math:`P_i, P_j` by the pressure with the floor (when the pressure is below to floor).
 Here the :math:`x, y` are simple weights that should never have the pressure floor included even if they are related to the pressure (e.g. pressure-entropy).
 
 .. code:: YAML
@@ -67,7 +67,7 @@ If you encounter any problem, you can look at the `Grackle documentation <https:
 You can now provide the path given for ``MACH_INSTALL_PREFIX`` to ``with-grackle``.
 
 In the parameters file, a few different parameters are available.
-``GrackleCooling:redshift`` defines the redshift to use for the UV background (must be set to -1 in order to use the current redshift in cosmological simulations) and ``GrackleCooling:provide_*_heating_rates`` can enable the computation of user provided heating rates (such as with the radiative transfer) in either volumetric or specific units.
+``GrackleCooling:redshift`` defines the redshift to use for the UV background (for cosmological simulation, it must be set to -1 in order to use the simulation's redshift) and ``GrackleCooling:provide_*_heating_rates`` can enable the computation of user provided heating rates (such as with the radiative transfer) in either volumetric or specific units.
 
 For the feedback, it can be made more efficient by turning off the cooling during a few Myr (``GrackleCooling:thermal_time_myr``) for the particles touched by a supernovae.
 
@@ -180,7 +180,7 @@ The supernovae rate is simply given by the number of stars massive enough that e
 
 where :math:`M_l` and :math:`M_u` are the lower and upper mass limits for a star exploding in SNII, :math:`\delta` is the Dirac function and :math:`\phi` is the initial mass function (in mass).
 
-The yields for SNII cannot be written in an analytical form, they repose on a few different tables that are based on the work of `Kobayashi et al. (2000) <https://ui.adsabs.harvard.edu/abs/2000ApJ...539...26K/abstract>`_ and `Tsujimoto et al. (1995) <https://ui.adsabs.harvard.edu/abs/1995MNRAS.277..945T/abstract>`_.
+The yields for SNII cannot be written in an analytical form, they depend on a few different tables that are based on the work of `Kobayashi et al. (2000) <https://ui.adsabs.harvard.edu/abs/2000ApJ...539...26K/abstract>`_ and `Tsujimoto et al. (1995) <https://ui.adsabs.harvard.edu/abs/1995MNRAS.277..945T/abstract>`_.
 
 Supernovae Ia
 ^^^^^^^^^^^^^
@@ -196,7 +196,7 @@ The supernovae Ia are a bit more complicated as they involve two different stars
 
 where :math:`M_{p,l}` and :math:`M_{p,u}` are the mass limits for a progenitor of a white dwarf, :math:`b_i` is the probability to have a companion and
 :math:`M_{d,l,i}` and :math:`M_{d,u,i}` are the mass limits for each type of companion.
-The first parenthesis represents the number of white dwarf and the second one the probability to form a binary.
+The first parenthesis represents the number of white dwarfs and the second one the probability to form a binary.
 
 +------------------+--------------------+-------------------+------------------+
 | Companion        |  :math:`M_{d,l,i}` | :math:`M_{d,u,i}` | :math:`b_i`      |
