@@ -1525,6 +1525,18 @@ if test "x$with_sundials" != "xno"; then
 fi 
 AC_SUBST([SUNDIALS_INCS])
 
+# CHIMES configuration options. 
+
+# Use double precision in the CHIMES module. 
+AC_ARG_ENABLE([chimes-double-precision],
+   [AS_HELP_STRING([--enable-chimes-double-precision],
+     [Use double precision in CHIMES @<:@yes/no@:>@]
+   )],
+   [enable_chimes_double_precision="$enableval"],
+   [enable_chimes_double_precision="no"]
+)
+
+AM_CONDITIONAL(HAVE_CHIMES_DOUBLE_PRECISION, [test $enable_chimes_double_precision = "yes"])
 
 # Various package configuration options.
 
@@ -1968,6 +1980,12 @@ case "$with_cooling" in
 
       # The default CHIMEs netowkr size is 10
       AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [10], [Chimes network size])	
+
+      # If the exp10 function is present in the 
+      # math library we can enable GNU extensions 
+      # in CHIMES, so that it will use the native
+      # exp10 function.       
+      AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
    ;; 
    CHIMES_*)
       AC_DEFINE([COOLING_CHIMES], [1], [Cooling using the CHIMES module])
@@ -1981,6 +1999,12 @@ case "$with_cooling" in
       # Extract the CHIMES network size
       chimes_network_size=${with_cooling:7}
       AC_DEFINE_UNQUOTED([CHIMES_NETWORK_SIZE], [$chimes_network_size], [Chimes network size]) 
+
+      # If the exp10 function is present in the 
+      # math library we can enable GNU extensions 
+      # in CHIMES, so that it will use the native
+      # exp10 function.       
+      AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
    ;;
    *)
       AC_MSG_ERROR([Unknown cooling function: $with_cooling])
@@ -2446,7 +2470,7 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 # Check if using CHIMES cooling
-AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
+AM_CONDITIONAL([HAVECHIMESCOOLING], [test ${with_cooling:0:6} = "CHIMES"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])

@@ -70,10 +70,9 @@ CHIMESCooling:
   rad_field_norm_factor:      0.1         # Multiplicative factor to scale ISRF
   init_abundance_mode:        1           # Flag to specify how to set initial CHIMES abundances
   colibre_metal_depletion:    1           # Flag to specify metal depletion model
-  relativeTolerance:          1e-4        # Relative tolerance for CHIMES intergration
+  relativeTolerance:          1e-3        # Relative tolerance for CHIMES intergration
   absoluteTolerance:          1e-10       # Absolute tolerance for CHIMES chemistry integration
-  thermalAbsoluteTolerance:   1e-40       # Absolute tolerance for CHIMES cooling integration
-  explicitTolerance:          0.05        # Tolerance below which we use the explicit solution in CHIMES
+  explicitTolerance:          0.1         # Tolerance below which we use the explicit solution in CHIMES
   scale_metal_tolerances:     1           # Flag to scale absolute tolerances by element abundance
   T_mol:                      1.0e5       # Maximum temperature for the molecular network
   ChemistryEqmMode:           0           # Flag to use pre-computed equilibrium abundances throughout
