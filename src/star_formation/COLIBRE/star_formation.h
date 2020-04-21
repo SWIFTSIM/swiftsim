@@ -75,6 +75,9 @@ struct star_formation {
 
   /*! subgrid density threshold in internal units */
   double subgrid_density_threshold;
+
+  /*! Absolute subgrid temperature threshold */
+  double temperature_threshold;
 };
 
 /**
@@ -128,6 +131,9 @@ INLINE static int star_formation_is_star_forming(
 
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
+
+  /* Check if we satisfy the subgrid temperature criteria */
+  if (subgrid_temperature < starform->temperature_threshold) return 1;
 
   /* Calculate the thermal velocity dispersion */
   const double sigma_thermal_squared =
@@ -402,6 +408,10 @@ INLINE static void starformation_init_backend(
       starform->subgrid_density_threshold_HpCM3 *
       phys_const->const_proton_mass * number_density_from_cgs *
       hydro_props->mu_neutral;
+
+  /* Get the subgrid temperature criteria */
+  starform->temperature_threshold = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:temperature_threshold_K");
 }
 
 /**
@@ -418,9 +428,9 @@ INLINE static void starformation_print_backend(
   message(
       "With properties: Star formation efficiency = %e minimum over density = "
       "%e maximal density = %e subgrid density criterion = %e alpha_virial = "
-      "%e",
+      "%e temperature threshold = %e",
       starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
-      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial);
+      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial, starform->temperature_threshold);
 }
 
 /**
