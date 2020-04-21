@@ -135,14 +135,14 @@ ChimesFloat OH_rotational_cooling(struct gasVariables *myGasVars,
 
   c_tau = tau_T *
           chimes_sqrt(2.0f * PI *
-                      chimes_log(2.13f + ((tau_T / 2.718281828459f) *
-                                          (tau_T / 2.718281828459f)))) /
+                      chimes_log(2.13f + ((tau_T / EULERS_CONST) *
+                                          (tau_T / EULERS_CONST)))) /
           ((chimes_exp(-data.extinction) /
             (1.0f + (data.extinction * data.extinction))) +
            2.0f * data.extinction *
-               chimes_sqrt(chimes_log(1.0f + (tau_T / 2.718281828459f))) *
+               chimes_sqrt(chimes_log(1.0f + (tau_T / EULERS_CONST))) *
                chimes_sqrt(
-                   chimes_log(tau_T / (data.extinction * 2.718281828459f))));
+                   chimes_log(tau_T / (data.extinction * EULERS_CONST))));
 
   if (isnan(c_tau) != 0) c_tau = 0.0f;
 
