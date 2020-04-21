@@ -144,7 +144,7 @@ struct cooling_function_data {
  */
 struct cooling_xpart_data {
   /* CHIMES abundance array */
-  double chimes_abundances[CHIMES_NETWORK_SIZE];
+  ChimesFloat chimes_abundances[CHIMES_NETWORK_SIZE];
 
   /* Cumulative energy radiated by the particle */
   float radiated_energy;

@@ -17,6 +17,12 @@
  *
  ***************************************************************************/
 
+#ifdef CHIMES_ENABLE_GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include <cvode/cvode.h>
 #include <math.h>
 #include <nvector/nvector_serial.h>
@@ -50,7 +56,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   int i;
 
   for (i = 0; i < myGlobalVars->totalNumberOfSpecies; i++)
-    myGasVars->abundances[i] = chimes_max(myGasVars->abundances[i], 0.0);
+    myGasVars->abundances[i] = chimes_max(myGasVars->abundances[i], 0.0f);
 
   /* Helium */
   if (myGasVars->element_abundances[0] > METALS_MINIMUM_THRESHOLD) {
@@ -62,20 +68,20 @@ void check_constraint_equations(struct gasVariables *myGasVars,
       myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI]] =
           myGasVars->element_abundances[0];
     else if (fabs((x - myGasVars->element_abundances[0]) /
-                  myGasVars->element_abundances[0]) > 0.01) {
+                  myGasVars->element_abundances[0]) > 0.01f) {
       for (i = 0; i < 3; i++)
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI + i]] *=
             myGasVars->element_abundances[0] / x;
     }
   } else {
     for (i = 0; i < 3; i++)
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI + i]] = 0.0;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeI + i]] = 0.0f;
   }
 
   /* Nitrogen */
   if (myGlobalVars->element_included[1] == 1) {
     if (myGasVars->element_abundances[2] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 8; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_NI + i]];
 
@@ -83,21 +89,21 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_NI]] =
             myGasVars->element_abundances[2];
       else if (fabs((x - myGasVars->element_abundances[2]) /
-                    myGasVars->element_abundances[2]) > 0.01) {
+                    myGasVars->element_abundances[2]) > 0.01f) {
         for (i = 0; i < 8; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_NI + i]] *=
               myGasVars->element_abundances[2] / x;
       }
     } else {
       for (i = 0; i < 8; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_NI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_NI + i]] = 0.0f;
     }
   }
 
   /* Neon */
   if (myGlobalVars->element_included[3] == 1) {
     if (myGasVars->element_abundances[4] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 11; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_NeI + i]];
 
@@ -105,21 +111,21 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_NeI]] =
             myGasVars->element_abundances[4];
       else if (fabs((x - myGasVars->element_abundances[4]) /
-                    myGasVars->element_abundances[4]) > 0.01) {
+                    myGasVars->element_abundances[4]) > 0.01f) {
         for (i = 0; i < 11; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_NeI + i]] *=
               myGasVars->element_abundances[4] / x;
       }
     } else {
       for (i = 0; i < 11; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_NeI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_NeI + i]] = 0.0f;
     }
   }
 
   /* Magnesium */
   if (myGlobalVars->element_included[4] == 1) {
     if (myGasVars->element_abundances[5] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 13; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_MgI + i]];
 
@@ -127,21 +133,21 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_MgI]] =
             myGasVars->element_abundances[5];
       else if (fabs((x - myGasVars->element_abundances[5]) /
-                    myGasVars->element_abundances[5]) > 0.01) {
+                    myGasVars->element_abundances[5]) > 0.01f) {
         for (i = 0; i < 13; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_MgI + i]] *=
               myGasVars->element_abundances[5] / x;
       }
     } else {
       for (i = 0; i < 13; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_MgI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_MgI + i]] = 0.0f;
     }
   }
 
   /* Silicon */
   if (myGlobalVars->element_included[5] == 1) {
     if (myGasVars->element_abundances[6] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 15; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_SiI + i]];
 
@@ -149,20 +155,20 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_SiI]] =
             myGasVars->element_abundances[6];
       else if (fabs((x - myGasVars->element_abundances[6]) /
-                    myGasVars->element_abundances[6]) > 0.01) {
+                    myGasVars->element_abundances[6]) > 0.01f) {
         for (i = 0; i < 15; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_SiI + i]] *=
               myGasVars->element_abundances[6] / x;
       }
     } else {
       for (i = 0; i < 15; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_SiI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_SiI + i]] = 0.0f;
     }
   }
   /* Sulphur */
   if (myGlobalVars->element_included[6] == 1) {
     if (myGasVars->element_abundances[7] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 17; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_SI + i]];
 
@@ -170,14 +176,14 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_SI]] =
             myGasVars->element_abundances[7];
       else if (fabs((x - myGasVars->element_abundances[7]) /
-                    myGasVars->element_abundances[7]) > 0.01) {
+                    myGasVars->element_abundances[7]) > 0.01f) {
         for (i = 0; i < 17; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_SI + i]] *=
               myGasVars->element_abundances[7] / x;
       }
     } else {
       for (i = 0; i < 17; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_SI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_SI + i]] = 0.0f;
     }
   }
 
@@ -192,21 +198,21 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_CaI]] =
             myGasVars->element_abundances[8];
       else if (fabs((x - myGasVars->element_abundances[8]) /
-                    myGasVars->element_abundances[8]) > 0.01) {
+                    myGasVars->element_abundances[8]) > 0.01f) {
         for (i = 0; i < 21; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_CaI + i]] *=
               myGasVars->element_abundances[8] / x;
       }
     } else {
       for (i = 0; i < 21; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CaI + i]] = 0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CaI + i]] = 0.0f;
     }
   }
 
   /* Iron */
   if (myGlobalVars->element_included[8] == 1) {
     if (myGasVars->element_abundances[9] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 27; i++)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_FeI + i]];
 
@@ -214,24 +220,24 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_FeI]] =
             myGasVars->element_abundances[9];
       else if (fabs((x - myGasVars->element_abundances[9]) /
-                    myGasVars->element_abundances[9]) > 0.01) {
+                    myGasVars->element_abundances[9]) > 0.01f) {
         for (i = 0; i < 27; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_FeI + i]] *=
               myGasVars->element_abundances[9] / x;
       }
     } else {
       for (i = 0; i < 27; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_FeI + i]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_FeI + i]] = 0.0f;
     }
   }
 
   /* Carbon */
   if (myGlobalVars->element_included[0] == 1) {
     if (myGasVars->element_abundances[1] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 8; i++) /* Includes Cm */
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI + i]];
-      x += 2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] +
+      x += 2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] +
@@ -247,7 +253,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] =
             myGasVars->element_abundances[1];
       else if (fabs((x - myGasVars->element_abundances[1]) /
-                    myGasVars->element_abundances[1]) > 0.01) {
+                    myGasVars->element_abundances[1]) > 0.01f) {
         for (i = 0; i < 8; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI + i]] *=
               myGasVars->element_abundances[1] / x;
@@ -276,18 +282,18 @@ void check_constraint_equations(struct gasVariables *myGasVars,
       }
     } else {
       for (i = 0; i < 8; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI + i]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI + i]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]] = 0.0f;
       if (myGlobalVars->element_included[2] == 1) {
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] = 0.0f;
       }
     }
   }
@@ -295,15 +301,15 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   /* Oxygen */
   if (myGlobalVars->element_included[2] == 1) {
     if (myGasVars->element_abundances[3] > METALS_MINIMUM_THRESHOLD) {
-      x = 0.0;
+      x = 0.0f;
       for (i = 0; i < 10; i++) /* Includes Om */
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI + i]];
       x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] +
-           2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] +
+           2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] +
-           2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] +
+           2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] +
            myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
       if (myGlobalVars->element_included[0] == 1)
         x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] +
@@ -315,7 +321,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
         myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] =
             myGasVars->element_abundances[3];
       else if (fabs((x - myGasVars->element_abundances[3]) /
-                    myGasVars->element_abundances[3]) > 0.01) {
+                    myGasVars->element_abundances[3]) > 0.01f) {
         for (i = 0; i < 10; i++)
           myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI + i]] *=
               myGasVars->element_abundances[3] / x;
@@ -346,19 +352,19 @@ void check_constraint_equations(struct gasVariables *myGasVars,
       }
     } else {
       for (i = 0; i < 10; i++)
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI + i]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] = 0.0;
-      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI + i]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] = 0.0f;
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]] = 0.0f;
       if (myGlobalVars->element_included[0] == 1) {
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] = 0.0;
-        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] = 0.0;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] = 0.0f;
+        myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] = 0.0f;
       }
     }
   }
@@ -367,30 +373,30 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   x = myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +
       myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]] +
       myGasVars->abundances[myGlobalVars->speciesIndices[sp_Hm]] +
-      2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] +
-      2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]] +
-      3.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]];
+      2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] +
+      2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]] +
+      3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]];
 
   if (myGlobalVars->element_included[0] == 1)
     x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] +
-         2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] +
-         3.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] +
+         2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] +
+         3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] +
          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]] +
-         2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]];
+         2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]];
   if (myGlobalVars->element_included[2] == 1)
     x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] +
-         2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] +
+         2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] +
          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] +
-         2.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] +
-         3.0 * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
+         2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] +
+         3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
   if (myGlobalVars->element_included[0] == 1 &&
       myGlobalVars->element_included[2] == 1)
     x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] +
          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]];
 
   if (x <= METALS_MINIMUM_THRESHOLD)
-    myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] = 1.0;
-  else if (fabs(x - 1.0) > 0.01) {
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] = 1.0f;
+  else if (fabs(x - 1.0) > 0.01f) {
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] /= x;
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]] /= x;
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_Hm]] /= x;
@@ -422,7 +428,7 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   x = myGasVars->abundances[myGlobalVars->speciesIndices[sp_HII]];
   x -= myGasVars->abundances[myGlobalVars->speciesIndices[sp_Hm]];
   x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeII]];
-  x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeIII]] * 2.0;
+  x += myGasVars->abundances[myGlobalVars->speciesIndices[sp_HeIII]] * 2.0f;
 
   if (myGlobalVars->element_included[0] == 1) {
     for (i = 1; i <= 6; i++)
@@ -490,9 +496,9 @@ void check_constraint_equations(struct gasVariables *myGasVars,
   if (fabs((x - myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]]) /
            chimes_max(
                myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]],
-               1.0e-100)) > 0.01)
+               CHIMES_FLT_MIN)) > 0.01f)
     myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] =
-        chimes_max(x, 0.0);
+        chimes_max(x, 0.0f);
 }
 
 /**
@@ -536,12 +542,12 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
   if (data->myGasVars->ThermEvolOn == 1)
     data->myGasVars->temperature =
         chimes_max(((ChimesFloat)NV_Ith_S(y, data->network_size)) /
-                       (1.5 *
+                       (1.5f *
                         calculate_total_number_density(
                             data->myGasVars->abundances,
                             data->myGasVars->nH_tot, data->myGlobalVars) *
                         BOLTZMANNCGS),
-                   10.1); /* The rates are not defined below ~10 K */
+                   10.1f); /* The rates are not defined below ~10 K */
 
   // Update rates
   update_rate_coefficients(data->myGasVars, data->myGlobalVars, *data,
@@ -550,8 +556,8 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
   // Zero all species rates
   for (i = 0; i < data->network_size; i++) {
-    data->species[indices[i]].creation_rate = 0.0;
-    data->species[indices[i]].destruction_rate = 0.0;
+    data->species[indices[i]].creation_rate = 0.0f;
+    data->species[indices[i]].destruction_rate = 0.0f;
   }
 
   // Compute creation and destruction rates
@@ -571,11 +577,15 @@ int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
               0); /* Note that network_size is the number of chemcial species,
                      hence No. of eqns = network_size + 1 when ThermEvol is on
                    */
-    else
-      NV_Ith_S(ydot, data->network_size) = (realtype)chimes_max(
-          -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars,
-                                        *data, 0),
-          0.0); /* Once T falls below T_floor, set T_dot >= 0 */
+    else {
+      if (data->myGasVars->temp_floor_mode == 0)
+        NV_Ith_S(ydot, data->network_size) = (realtype)chimes_max(
+            -calculate_total_cooling_rate(data->myGasVars, data->myGlobalVars,
+                                          *data, 0),
+            0.0f); /* Once T falls below T_floor, set T_dot >= 0 */
+      else
+        return -1;
+    }
   }
 
   return 0;
