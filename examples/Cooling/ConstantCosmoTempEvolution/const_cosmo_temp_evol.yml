@@ -105,3 +105,14 @@ COLIBRECooling:
 COLIBREFeedback:
   HIIregion_ionization_fraction: 1.0
   HIIregion_temperature: 1.e4
+
+# Parameters for the COLIBRE "equation of state"
+COLIBREEntropyFloor:
+  Jeans_density_norm_H_p_cm3: 0.1        # Physical density above which the COLIBRE Jeans limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Jeans_temperature_norm_K:   10.        # Temperature of the COLIBRE Jeans limiter entropy floor at the density normalisation expressed in Kelvin.
+  Jeans_gamma_effective:      1.3333333  # Slope the of the COLIBRE Jeans limiter entropy floor
+  Cool_density_norm_H_p_cm3:  1e-5       # Physical density above which the COLIBRE Cool limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
+  Cool_temperature_norm_K:    -1.        # Temperature of the COLIBRE Cool limiter entropy floor at the density normalisation expressed in Kelvin.
+  Cool_gamma_effective:       1.         # Slope the of the COLIBRE Cool limiter entropy floor
+
+
