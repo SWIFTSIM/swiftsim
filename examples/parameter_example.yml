@@ -390,7 +390,7 @@ COLIBRECooling:
   Ca_over_Si_in_solar:       1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   S_over_Si_in_solar:        1.                # (Optional) Ratio of Ca/Si to use in units of solar. If set to 1, the code uses [Ca/Si] = 0 (Grevesse, Asplund, Sauval, and Scott, 2010)
   delta_logTEOS_subgrid_properties: 0.2        # delta log T above the EOS below which the subgrid properties use Teq assumption
-  rapid_cooling_threshold:          1.0        # Switch to rapid cooling regime for dt / t_cool above this threshold.
+  rapid_cooling_threshold:          1.0        # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes. Negative value prevents the use of rapid cooling.
 
 # Cooling with CHIMES (Richings et al. 2014a, b) 
 CHIMESCooling: 
@@ -421,7 +421,7 @@ CHIMESCooling:
   delta_logTEOS_subgrid_properties:  0.2       # delta logT above the EOS below which set CHIMES to eqm and use subgrid properties
   use_colibre_subgrid_EOS:    1                # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
   use_hybrid_cooling:         1                # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
-  rapid_cooling_threshold:    1.0              # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
+  rapid_cooling_threshold:    1.0              # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes. Negative value prevents the use of rapid cooling.
   colibre_table_path:         ../UV_dust1_CR1_G1_shield1.hdf5   # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
   H_reion_z:                  7.5              # Redshift of hydrogen reionisation
   S_over_Si_in_solar:         1.0              # S / Si relative to Solar 
