@@ -136,8 +136,8 @@ __attribute__((always_inline, const)) inline static double chimes_exp10_dbl(
 /*!< Pi. */
 #define PI 3.1415927f
 
-/*!< Euler's constant. */ 
-#define EULERS_CONST 2.718281828459f 
+/*!< Euler's constant. */
+#define EULERS_CONST 2.718281828459f
 
 /*!< Speed of light. Units: cm / s. */
 #define LIGHTSPEED 2.99792458e10f
