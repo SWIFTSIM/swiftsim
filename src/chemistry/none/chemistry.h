@@ -94,8 +94,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* restrict p, const struct cosmology* cosmo,
-    const int with_cosmology, const double time) {}
+    struct part* restrict p) {}
 
 /**
  * @brief Computes the chemistry-related time-step constraint.

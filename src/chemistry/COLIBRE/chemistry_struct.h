@@ -92,11 +92,11 @@ struct chemistry_part_data {
   /*! Metal weighted redshift */
   float iron_weighted_redshift;
 
-  /*! Tracker of the metal mass received by each enrichment event times time */
+  /*! Tracker of metal mass received by enrichment events times time */
   float metal_mass_tracker;
-  float metal_mass_received_by_enrichment;
+    
+  /*! Tracker of iron mass received by SNIa events times time */
   float iron_mass_tracker;
-  float iron_mass_received_by_SNIa;
 
   /*! Fraction of the particle mass in a given element */
   /*! These arrays are duplicated to be used after the diffusion routine */
