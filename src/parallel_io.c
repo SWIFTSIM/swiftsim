@@ -1179,7 +1179,7 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
   if (h_grp_columns < 0) error("Error while creating named columns group");
   entropy_floor_write_flavour(h_grp);
   cooling_write_flavour(h_grp, h_grp_columns, e->cooling_func);
-  chemistry_write_flavour(h_grp, h_grp_columns);
+  chemistry_write_flavour(h_grp, h_grp_columns, e);
   tracers_write_flavour(h_grp);
   feedback_write_flavour(e->feedback_props, h_grp);
   H5Gclose(h_grp_columns);
@@ -1318,6 +1318,8 @@ void prepare_file(struct engine* e, const char* baseName, long long N_total[6],
         num_fields += chemistry_write_sparticles(sparts, list + num_fields);
         num_fields +=
             tracers_write_sparticles(sparts, list + num_fields, with_cosmology);
+        num_fields +=
+            star_formation_write_sparticles(sparts, list + num_fields);
         if (with_fof) {
           num_fields += fof_write_sparts(sparts, list + num_fields);
         }
@@ -1799,6 +1801,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
           num_fields += chemistry_write_sparticles(sparts, list + num_fields);
           num_fields += tracers_write_sparticles(sparts, list + num_fields,
                                                  with_cosmology);
+          num_fields +=
+              star_formation_write_sparticles(sparts, list + num_fields);
           if (with_fof) {
             num_fields += fof_write_sparts(sparts, list + num_fields);
           }
@@ -1827,6 +1831,8 @@ void write_output_parallel(struct engine* e, const char* baseName,
               chemistry_write_sparticles(sparts_written, list + num_fields);
           num_fields += tracers_write_sparticles(
               sparts_written, list + num_fields, with_cosmology);
+          num_fields += star_formation_write_sparticles(sparts_written,
+                                                        list + num_fields);
           if (with_fof) {
             num_fields += fof_write_sparts(sparts_written, list + num_fields);
           }

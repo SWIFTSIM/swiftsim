@@ -47,4 +47,45 @@ __attribute__((always_inline)) INLINE static int star_formation_write_particles(
   return 1;
 }
 
+/**
+ * @brief Specifies which sparticle fields to write to a dataset
+ *
+ * @param sparts The star particle array.
+ * @param list The list of i/o properties to write.
+ *
+ * @return Returns the number of fields to write.
+ */
+__attribute__((always_inline)) INLINE static int
+star_formation_write_sparticles(const struct spart* sparts,
+                                struct io_props* list) {
+
+  list[0] = io_make_output_field(
+      "BirthDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts,
+      sf_data.birth_density,
+      "Physical densities at the time of birth of the gas particles that "
+      "turned into stars (note that we store the physical density at the birth "
+      "redshift, no conversion is needed)");
+
+  list[1] =
+      io_make_output_field("BirthTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE,
+                           0.f, sparts, sf_data.birth_temperature,
+                           "Temperatures at the time of birth of the gas "
+                           "particles that turned into stars");
+
+  list[2] = io_make_output_field(
+      "SubgridBirthDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts,
+      sf_data.birth_subgrid_density,
+      "Physical subgrid densities at the time of birth of the gas particles "
+      "that turned into stars (note that we store the physical subgrid density "
+      "at the birth redshift, no conversion is needed)");
+
+  list[3] = io_make_output_field("SubgridBirthTemperatures", FLOAT, 1,
+                                 UNIT_CONV_TEMPERATURE, 0.f, sparts,
+                                 sf_data.birth_subgrid_temperature,
+                                 "Subgrid temperatures at the time of birth of "
+                                 "the gas particles that turned into stars");
+
+  return 4;
+}
+
 #endif /* SWIFT_STAR_FORMATION_COLIBRE_IO_H */
