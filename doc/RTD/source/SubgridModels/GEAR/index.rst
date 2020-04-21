@@ -18,7 +18,7 @@ This additional pressure can be seen as the pressure due to unresolved hydrodyna
     P_\textrm{Jeans} = \frac{\rho}{\gamma} \frac{4}{\pi} G h^2 \rho N_\textrm{Jeans}^{2/3}
 
 where :math:`\rho` is the density, :math:`\gamma` the adiabatic index, :math:`G` is the gravitational constant,
-:math:`h` the smoothing length and :math:`N_\textrm{Jeans}` (``GEARPressureFloor:jeans_factor`` in the parameter file) is the number of particle required in order to resolve a clump.
+:math:`h` the kernel support and :math:`N_\textrm{Jeans}` (``GEARPressureFloor:jeans_factor`` in the parameter file) is the number of particle required in order to resolve a clump.
 
 
 This must be directly implemented into the hydro schemes, therefore only a subset of schemes (Gadget-2, SPHENIX and Pressure-Energy) have the floor available.
@@ -27,7 +27,7 @@ In order to implement it, you need equation 12 in `Hopkins 2013 <https://arxiv.o
 .. math::
    m_i \frac{\mathrm{d}v_i}{\mathrm{d}t} = - \sum_j x_i x_j \left[ \frac{P_i}{y_i^2} f_{ij} \nabla_i W_{ij}(h_i) + \frac{P_j}{y_j^2} f_{ji} \nabla_j W_{ji}(h_j) \right]
 
-and simply replace the :math:`P_i, P_j` by the pressure with the floor (when the pressure is below to floor).
+and simply replace the :math:`P_i, P_j` by the pressure with the floor (when the pressure is below the floor).
 Here the :math:`x, y` are simple weights that should never have the pressure floor included even if they are related to the pressure (e.g. pressure-entropy).
 
 .. code:: YAML
@@ -51,7 +51,7 @@ and ``grackle_3`` (the numbers correspond to the value of
 methods and UV background (on/off with ``GrackleCooling:with_UV_background``).  In order to use the Grackle cooling, you will need
 to provide an HDF5 table computed by Cloudy (``GrackleCooling:cloudy_table``).
 
-When starting a simulation without providing the different fractions for the elements in the non equilibrium mdoe, the code supposes an equilibrium and computes the fractions automatically.
+When starting a simulation without providing the different fractions for the elements in the non equilibrium mode, the code supposes an equilibrium and computes the fractions automatically.
 The code uses an iterative method in order to find the correct initial composition and this method can be tuned with two parameters. ``GrackleCooling:max_steps`` defines the maximal number of steps to reach the convergence and ``GrackleCooling:convergence_limit`` defines the tolerance in the relative error.
 
 In order to compile SWIFT with Grackle, you need to provide the options ``with-chemistry=GEAR`` and ``with-grackle=$GRACKLE_ROOT``
@@ -72,7 +72,7 @@ In the parameters file, a few different parameters are available.
 
 For the feedback, it can be made more efficient by turning off the cooling during a few Myr (``GrackleCooling:thermal_time_myr``) for the particles touched by a supernovae.
 
-The self shielding method is defined by ``GrackleCooling:self_shielding_method`` where 0 means no self shielding, > 0 means a method defined in Grackle (see Grackle documentation for more informations) and -1 means the GEAR self shielding that simply turn off the UV background when reaching a given density (``GrackleCooling:self_shielding_threshold_atom_per_cm3``).
+The self shielding method is defined by ``GrackleCooling:self_shielding_method`` where 0 means no self shielding, > 0 means a method defined in Grackle (see Grackle documentation for more information) and -1 means the GEAR self shielding that simply turn off the UV background when reaching a given density (``GrackleCooling:self_shielding_threshold_atom_per_cm3``).
 
 .. code:: YAML
 
