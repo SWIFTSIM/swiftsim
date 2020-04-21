@@ -127,13 +127,13 @@ INLINE static int chemistry_write_particles(const struct part* parts,
         "MeanMetalWeightedRedshifts", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
         chemistry_data.metal_weighted_redshift,
         "Mean redshift of enrichment events weighted by the metal mass "
-        "imparted by each event");
+        "imparted by each event. -1 if a particle has never been enriched.");
 
     list[12] = io_make_output_field("MeanIronWeightedRedshifts", FLOAT, 1,
                                     UNIT_CONV_NO_UNITS, 0.f, parts,
                                     chemistry_data.iron_weighted_redshift,
                                     "Mean redshift of SNIa events weighted by "
-                                    "the iron mass imparted by each event");
+                                    "the iron mass imparted by each event. -1 if a particle has never been enriched by SNIa.");
 
   } else {
 
@@ -141,13 +141,13 @@ INLINE static int chemistry_write_particles(const struct part* parts,
         io_make_output_field("MeanMetalWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
                              0.f, parts, chemistry_data.metal_weighted_redshift,
                              "Mean time of enrichment events weighted by the "
-                             "metal mass imparted by each event");
+                             "metal mass imparted by each event. -1 if a particle has never been enriched.");
 
     list[12] =
         io_make_output_field("MeanIronWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
                              0.f, parts, chemistry_data.iron_weighted_redshift,
                              "Mean time of SNIa events weighted by the iron "
-                             "mass imparted by each event");
+                             "mass imparted by each event. -1 if a particle has never been enriched by SNIa.");
   }
 
   return 13;
