@@ -109,10 +109,6 @@ for snap in snaplist:
         HIIfrac = Hfracs[:,1]
         H2frac  = Hfracs[:,2]
 
-        #HIfrac = f["PartType0/HydrogenNeutralFractions"][:]
-        #HIIfrac = f["PartType0/HydrogenIonizedFractions"][:]
-        #H2frac = f["PartType0/HydrogenMolecularFractions"][:]
-
         logHI = np.log10(HIfrac)
         logHII = np.log10(HIIfrac)
         logH2 = np.log10(2.0 * H2frac)
