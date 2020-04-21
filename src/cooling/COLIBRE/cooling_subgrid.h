@@ -63,9 +63,9 @@ double compute_subgrid_HI_fraction(
   /* Get index along the different table axis for this particle */
   int ired, imet, iden, item;
   float dred, dmet, dden, dtem;
-  
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &ired, &dred);
+
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &ired,
+               &dred);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &iden,
@@ -251,9 +251,9 @@ double compute_subgrid_HII_fraction(
   /* Get index along the different table axis for this particle */
   int ired, imet, iden, item;
   float dred, dmet, dden, dtem;
- 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &ired, &dred);
+
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &ired,
+               &dred);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &iden,
@@ -440,8 +440,8 @@ double compute_subgrid_H2_fraction(
   int ired, imet, iden, item;
   float dred, dmet, dden, dtem;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &ired, &dred);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &ired,
+               &dred);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &iden,
@@ -627,8 +627,8 @@ double compute_subgrid_temperature(
   int ired, imet, iden, item;
   float dred, dmet, dden, dtem;
 
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &ired, &dred);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &ired,
+               &dred);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &iden,
@@ -808,8 +808,8 @@ double compute_subgrid_density(
   /* Get index along the different table axis for this particle */
   int ired, imet, iden, item;
   float dred, dmet, dden, dtem;
-  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-               &ired, &dred);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z, &ired,
+               &dred);
   get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
                &imet, &dmet);
   get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs), &iden,
