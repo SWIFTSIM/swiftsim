@@ -31,6 +31,9 @@ struct dustevo_props {
 
   /* ------------ Main operation modes ------------- */
 
+  /*! Are we actually evolving dust? This flag can be turned off to emulate the master branch */
+  int with_dust_evolution;
+
   /*! What dust model implementation are we using? */
   int model_type;
 

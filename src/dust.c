@@ -36,6 +36,9 @@ void dustevo_props_init(struct dustevo_props *dustevo_properties,
 			const struct unit_system *us) {
   message("Initialising dust parameter values");
 
+  dustevo_properties->with_dust_evolution =
+      parser_get_param_int(params, "COLIBREDustEvolution:evolve_dust");
+
   dustevo_properties->with_sputtering =
       parser_get_param_int(params, "COLIBREDustEvolution:use_sputtering");
 

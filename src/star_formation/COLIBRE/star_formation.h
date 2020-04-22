@@ -282,8 +282,9 @@ INLINE static void star_formation_copy_properties(
   sp->chemistry_data = p->chemistry_data;
 
   /* ---- dust grains destroyed at star formation (astration) ---- */
-  redistribute_dust_to_element_abundances(sp, dp);
-
+  if (dp->with_dust_evolution) {
+    redistribute_dust_to_element_abundances(sp, dp);
+  }
   /* return mass from dust to individual elements according to assumed grain composition */
   /* sp->chemistry_data.metal_mass_fraction[chemistry_element_C] +=  */
   /*   sp->chemistry_data.metal_mass_fraction[chemistry_element_Gra]; */

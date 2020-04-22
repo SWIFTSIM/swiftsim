@@ -211,24 +211,25 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 			    p, xp, dt_cool, dt_therm, time);
 	}
 	
-	if (dustevo_props->model_type == 0){
-	  evolve_dust_part(constants, us, cosmo, hydro_props,
-			   entropy_floor_props, cooling_func, 
-			   dustevo_props,  p, xp, dt_cool,
-			   dt_therm, e->time);
+	if (dustevo_props->with_dust_evolution){
+	  if (dustevo_props->model_type == 0){
+	    evolve_dust_part(constants, us, cosmo, hydro_props,
+			     entropy_floor_props, cooling_func, 
+			     dustevo_props,  p, xp, dt_cool,
+			     dt_therm, e->time);
+	  }
+	  if (dustevo_props->model_type == 1){
+	    evolve_dust_part_m16(constants, us, cosmo, hydro_props,
+				 entropy_floor_props, cooling_func, 
+				 dustevo_props,  p, xp, dt_cool,
+				 dt_therm, e->time);
+	  }
 	}
-	if (dustevo_props->model_type == 1){
-	  evolve_dust_part_m16(constants, us, cosmo, hydro_props,
-			   entropy_floor_props, cooling_func, 
-			   dustevo_props,  p, xp, dt_cool,
-			   dt_therm, e->time);
-	}
-
         /* Apply the effects of feedback on this particle
          * (Note: Only used in schemes that have a delayed feedback mechanism
          * otherwise just an empty function) */
         feedback_update_part(p, xp, e);
-
+	
       }
     }
   }
