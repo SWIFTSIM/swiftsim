@@ -234,6 +234,10 @@ black_holes_bpart_has_no_neighbours(struct bpart* bp,
   /* Re-set problematic values */
   bp->density.wcount = kernel_root * h_inv_dim;
   bp->density.wcount_dh = 0.f;
+
+  bp->velocity_gas[0] = bp->v[0];
+  bp->velocity_gas[1] = bp->v[1];
+  bp->velocity_gas[2] = bp->v[2];
 }
 
 /**
