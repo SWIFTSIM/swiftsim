@@ -2494,7 +2494,6 @@ void engine_step(struct engine *e) {
       /* Log data */
       event_logger_log_data(e);
     }
-      
 
     if (!e->restarting)
       fprintf(
@@ -4081,7 +4080,6 @@ void engine_config(int restart, int fof, struct engine *e,
   e->file_stats = NULL;
   e->file_timesteps = NULL;
   e->sfh_logger = NULL;
- /* e->NSM_logger = NULL;*/
   e->verbose = verbose;
   e->wallclock_time = 0.f;
   e->restart_dump = 0;
@@ -5283,9 +5281,7 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
     if (e->policy & engine_policy_star_formation) {
       fclose(e->sfh_logger);
     }
-/*      if (e->policy & engine_policy_feedback) {
-          fclose(e->NSM_logger);
-      }*/
+
     if (e->policy & engine_policy_feedback) {
       event_logger_close(e);
     }

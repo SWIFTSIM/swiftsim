@@ -32,7 +32,6 @@
 #include "error.h"
 #include "exp10.h"
 #include "inline.h"
-#include "exp10.h"
 
 /**
  * @brief Returns the 1d index of element with 2d indices x,y
