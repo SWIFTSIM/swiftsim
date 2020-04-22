@@ -58,6 +58,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
+    space_unique_id.h \
     event_logger.h event_logger_struct.h event_logger_core.h
 
 # source files for EAGLE cooling
@@ -93,7 +94,13 @@ endif
 # source files for CHIMES cooling
 CHIMES_COOLING_SOURCES =
 if HAVECHIMESCOOLING 
-CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/interpol.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c cooling/CHIMES/colibre_tables.c
+CHIMES_COOLING_SOURCES += cooling/CHIMES/chimes/chimes.c cooling/CHIMES/chimes/chimes_cooling.c cooling/CHIMES/chimes/init_chimes.c cooling/CHIMES/chimes/rate_equations.c cooling/CHIMES/chimes/update_rates.c cooling/CHIMES/cooling.c cooling/CHIMES/colibre_tables.c
+if HAVE_CHIMES_GNU_SOURCE
+AM_CFLAGS += -DCHIMES_ENABLE_GNU_SOURCE
+endif 
+if HAVE_CHIMES_DOUBLE_PRECISION 
+AM_CFLAGS += -DCHIMES_USE_DOUBLE_PRECISION 
+endif 
 endif
 
 # source files for GRACKLE cooling
@@ -108,8 +115,6 @@ if HAVEGEARFEEDBACK
 GEAR_FEEDBACK_SOURCES += feedback/GEAR/stellar_evolution.c feedback/GEAR/feedback.c \
 	feedback/GEAR/initial_mass_function.c feedback/GEAR/supernovae_ia.c feedback/GEAR/supernovae_ii.c
 endif
-
-
 
 # Common source files
 AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c \
@@ -128,7 +133,7 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
-    hashmap.c pressure_floor.c \
+    hashmap.c pressure_floor.c space_unique_id.c \
     $(QLA_COOLING_SOURCES) \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
     $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
@@ -137,7 +142,7 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \
-		 gravity_iact.h kernel_long_gravity.h vector.h cache.h \
+		 gravity_iact.h kernel_long_gravity.h vector.h accumulate.h cache.h \
 	         runner_doiact_nosort.h runner_doiact_hydro.h runner_doiact_stars.h runner_doiact_black_holes.h runner_doiact_grav.h \
                  runner_doiact_functions_hydro.h runner_doiact_functions_stars.h runner_doiact_functions_black_holes.h \
 		 runner_doiact_functions_limiter.h runner_doiact_limiter.h units.h intrinsics.h minmax.h \
@@ -269,6 +274,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 cooling/CHIMES/colibre_tables_restrict.h \
 		 cooling/CHIMES/colibre_subgrid.h \
 		 cooling/CHIMES/chimes/chimes_vars.h cooling/CHIMES/chimes/chimes_proto.h \
+		 cooling/CHIMES/chimes/chimes_interpol.h \
                  chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \
@@ -329,6 +335,8 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 pressure_floor/GEAR/pressure_floor_iact.h pressure_floor/none/pressure_floor_iact.h \
 		 pressure_floor/GEAR/pressure_floor_struct.h pressure_floor/none/pressure_floor_struct.h \
 	         task_order/GEAR/task_order.h task_order/EAGLE/task_order.h task_order/default/task_order.h \
+		 event_logger/none/event_logger.h event_logger/none/event_logger_struct.h \
+		 event_logger/EAGLE/event_logger.h event_logger/EAGLE/event_logger_struct.h \
 		 event_logger/COLIBRE/event_logger.h event_logger/COLIBRE/event_logger_struct.h \
 		 event_logger/COLIBRE/event_logger_SNIa.h event_logger/COLIBRE/event_logger_SNII.h event_logger/COLIBRE/event_logger_r_processes.h
 

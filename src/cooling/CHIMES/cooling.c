@@ -220,9 +220,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->ChimesGlobalVars.absoluteTolerance =
       (ChimesFloat)parser_get_param_double(parameter_file,
                                            "CHIMESCooling:absoluteTolerance");
-  cooling->ChimesGlobalVars.thermalAbsoluteTolerance =
-      (ChimesFloat)parser_get_param_double(
-          parameter_file, "CHIMESCooling:thermalAbsoluteTolerance");
   cooling->ChimesGlobalVars.explicitTolerance =
       (ChimesFloat)parser_get_param_double(parameter_file,
                                            "CHIMESCooling:explicitTolerance");
@@ -546,76 +543,50 @@ void chimes_update_gas_vars(const double u_cgs,
 
   double u_actual_cgs, T_floor;
 
+  /* Set the temperature floor to
+   * either minimal_temperature or
+   * according to the entropy floor,
+   * whichever is greater. */
+  T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
+            boltzmann_k_cgs;
+  T_floor = chimes_max(T_floor, hydro_properties->minimal_temperature);
+
+  ChimesGasVars->TempFloor = (ChimesFloat)T_floor;
+  ChimesGasVars->temp_floor_mode = 1;
+
   if (u_cgs < u_floor_cgs) {
     /* Particle is below the entropy floor.
      * Set internal energy to the floor.
      * Chemistry will be evolved in equilibrium. */
     u_actual_cgs = u_floor_cgs;
     ChimesGasVars->ForceEqOn = 1;
-    T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
-              boltzmann_k_cgs;
   } else if (u_cgs < pow(10.0, cooling->dlogT_EOS) * u_floor_cgs) {
     /* Particle is above the entropy floor, but
      * close enough that we will need to evolve
      * the chemistry in equilibrium. */
     u_actual_cgs = u_cgs;
     ChimesGasVars->ForceEqOn = 1;
-    T_floor = u_floor_cgs * hydro_gamma_minus_one * proton_mass_cgs * mu /
-              boltzmann_k_cgs;
   } else {
     /* Particle is well above the entropy floor.
      * Evolve chemistry as usual, according to the
      * user-provided parameter. */
     u_actual_cgs = u_cgs;
     ChimesGasVars->ForceEqOn = cooling->ChemistryEqmMode;
-
-    /* Set T_floor to minimal_temperature, not the
-     * entropy floor. When evolving chemistry in
-     * non-eq, a high T_floor can slow down the
-     * integration. Safer to evolve without and
-     * then re-impose entropy floor afterwards. */
-    T_floor = hydro_properties->minimal_temperature;
   }
 
-  ChimesGasVars->temperature = (ChimesFloat)u_actual_cgs *
-                               hydro_gamma_minus_one * proton_mass_cgs * mu /
-                               boltzmann_k_cgs;
+  ChimesGasVars->temperature =
+      (ChimesFloat)(u_actual_cgs * hydro_gamma_minus_one * proton_mass_cgs *
+                    mu / boltzmann_k_cgs);
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
   ChimesFloat XH = (ChimesFloat)metal_fraction[chemistry_element_H];
 
-  ChimesGasVars->metallicity = 0.0;
-  float totmass = 0.0, metalmass = 0.0;
-  for (enum colibre_cooling_element elem = element_H; elem < element_OA;
-       elem++) {
-    if ((elem != element_S) && (elem != element_Ca)) {
-      totmass += metal_fraction[element_from_table_to_code(elem)];
-      if ((elem != element_H) && (elem != element_He))
-        metalmass += metal_fraction[element_from_table_to_code(elem)];
-    } else if (elem == element_S) {
-      totmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                 cooling->S_over_Si_ratio_in_solar *
-                 cooling->S_solar_mass_fraction /
-                 cooling->Si_solar_mass_fraction;
-      metalmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                   cooling->S_over_Si_ratio_in_solar *
-                   cooling->S_solar_mass_fraction /
-                   cooling->Si_solar_mass_fraction;
-    } else if (elem == element_Ca) {
-      totmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                 cooling->Ca_over_Si_ratio_in_solar *
-                 cooling->Ca_solar_mass_fraction /
-                 cooling->Si_solar_mass_fraction;
-      metalmass += metal_fraction[element_from_table_to_code(element_Si)] *
-                   cooling->Ca_over_Si_ratio_in_solar *
-                   cooling->Ca_solar_mass_fraction /
-                   cooling->Si_solar_mass_fraction;
-    }
-  }
   ChimesGasVars->metallicity =
-      (ChimesFloat)(metalmass / totmass) / cooling->Zsol;
+      (ChimesFloat)chemistry_get_total_metal_mass_fraction_for_cooling(p);
+  ChimesGasVars->metallicity /= cooling->Zsol;
+  if (ChimesGasVars->metallicity <= 0.0) ChimesGasVars->metallicity = FLT_MIN;
 #else
   /* Without COLIBRE or EAGLE chemistry,
    * the metal abundances are unavailable.
@@ -626,12 +597,11 @@ void chimes_update_gas_vars(const double u_cgs,
 
   ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
 
-  ChimesFloat nH = (ChimesFloat)hydro_get_physical_density(p, cosmo) * XH /
-                   phys_const->const_proton_mass;
-  ChimesGasVars->nH_tot =
-      nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+  const double nH =
+      hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
+  ChimesGasVars->nH_tot = (ChimesFloat)(
+      nH * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY));
 
-  ChimesGasVars->TempFloor = (ChimesFloat)T_floor;
   ChimesGasVars->cr_rate = cooling->cosmic_ray_rate;
   ChimesGasVars->hydro_timestep = (ChimesFloat)dt_cgs;
 
@@ -652,7 +622,7 @@ void chimes_update_gas_vars(const double u_cgs,
     /* Scale dust_ratio by N_ref, but
      * only if N_ref < N_H0 */
     if (N_ref < cooling->N_H0)
-      ChimesGasVars->dust_ratio *= pow(N_ref / cooling->N_H0, 1.4);
+      ChimesGasVars->dust_ratio *= (ChimesFloat)pow(N_ref / cooling->N_H0, 1.4);
   }
 
   if (cooling->UV_field_flag == 1) {
@@ -688,8 +658,7 @@ void chimes_update_gas_vars(const double u_cgs,
     if ((cooling->ChimesGlobalVars.redshift >
          cooling->ChimesGlobalVars.reionisation_redshift) &&
         (J_over_J0 > 0.0))
-      ChimesGasVars->isotropic_photon_density[1] *= pow(
-          10.0,
+      ChimesGasVars->isotropic_photon_density[1] *= exp10(
           -20.0 - ((-20.0 - log10(J_over_J0)) /
                    (1.0 + exp(-2.0 * (log10(ChimesGasVars->nH_tot) + 4.0)))));
     else
@@ -704,9 +673,11 @@ void chimes_update_gas_vars(const double u_cgs,
     ChimesGasVars->cell_size = 0;
   else if (cooling->Shielding_flag == 1) {
     /* Jeans length */
-    ChimesGasVars->cell_size = sqrt(
-        M_PI * hydro_gamma * boltzmann_k_cgs * ChimesGasVars->temperature /
-        (mu * newton_G_cgs * (proton_mass_cgs * ChimesGasVars->nH_tot / XH) *
+    ChimesGasVars->cell_size = (ChimesFloat)sqrt(
+        M_PI * hydro_gamma * boltzmann_k_cgs *
+        ((double)ChimesGasVars->temperature) /
+        (mu * newton_G_cgs *
+         (proton_mass_cgs * ((double)ChimesGasVars->nH_tot) / XH) *
          proton_mass_cgs));
     ChimesGasVars->cell_size *= cooling->shielding_length_factor;
 
@@ -715,11 +686,12 @@ void chimes_update_gas_vars(const double u_cgs,
           cooling->max_shielding_length *
           units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
       if (ChimesGasVars->cell_size > max_shielding_length_cgs)
-        ChimesGasVars->cell_size = max_shielding_length_cgs;
+        ChimesGasVars->cell_size = (ChimesFloat)max_shielding_length_cgs;
     }
   } else if (cooling->Shielding_flag == 2)
     ChimesGasVars->cell_size =
-        cooling->shielding_length_factor * N_ref / ChimesGasVars->nH_tot;
+        (ChimesFloat)(cooling->shielding_length_factor * N_ref /
+                      ((double)ChimesGasVars->nH_tot));
 
   /* Doppler broadening parameter, for
    * H2 self-shielding, is hard-coded
@@ -834,17 +806,17 @@ void chimes_update_element_abundances(
     /* Reduce gas-phase metal abundances
      * due to dust depletion. */
     ChimesGasVars->element_abundances[1] *=
-        (1.0 - (cooling->f_dust0_C * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_C * factor));
     ChimesGasVars->element_abundances[3] *=
-        (1.0 - (cooling->f_dust0_O * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_O * factor));
     ChimesGasVars->element_abundances[5] *=
-        (1.0 - (cooling->f_dust0_Mg * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Mg * factor));
     ChimesGasVars->element_abundances[6] *=
-        (1.0 - (cooling->f_dust0_Si * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Si * factor));
     ChimesGasVars->element_abundances[8] *=
-        (1.0 - (cooling->f_dust0_Ca * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Ca * factor));
     ChimesGasVars->element_abundances[9] *=
-        (1.0 - (cooling->f_dust0_Fe * factor));
+        (ChimesFloat)(1.0 - (cooling->f_dust0_Fe * factor));
   }
 
   /* Zero the abundances of any elements
@@ -905,8 +877,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Copy abundances over from xp to ChimesGasVars. */
   int i;
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-    ChimesGasVars.abundances[i] =
-        (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+    ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i];
 
   /* Update element abundances from metal mass
    * fractions. We need to do this here, and not
@@ -1072,7 +1043,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* Copy abundances from ChimesGasVars back to xp. */
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-    xp->cooling_data.chimes_abundances[i] = (double)ChimesGasVars.abundances[i];
+    xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
 
   /* Free CHIMES memory. */
   free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
@@ -1173,7 +1144,7 @@ double chimes_mu(const struct cooling_function_data *cooling,
   double denominator = 0.0;
 
   for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-    denominator += xp->cooling_data.chimes_abundances[i];
+    denominator += (double)xp->cooling_data.chimes_abundances[i];
 
   return numerator / denominator;
 }
@@ -1217,8 +1188,8 @@ float cooling_get_temperature(
       u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
   /* Return particle temperature */
-  return (float)hydro_gamma_minus_one * u_cgs * mu *
-         (proton_mass_cgs / boltzmann_k_cgs);
+  return (float)(hydro_gamma_minus_one * u_cgs * mu *
+                 (proton_mass_cgs / boltzmann_k_cgs));
 }
 
 /**
@@ -1267,12 +1238,12 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
-  ChimesFloat XH = (ChimesFloat)metal_fraction[chemistry_element_H];
+  double XH = (double)metal_fraction[chemistry_element_H];
 #else
   /* Without COLIBRE or EAGLE chemistry,
    * the metal abundances are unavailable.
    * Set to primordial abundances. */
-  ChimesFloat XH = 0.75;
+  double XH = 0.75;
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE
 
   /* Density*/
@@ -1301,11 +1272,10 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
   if (l_max_cgs > 0.0)
     N_ref_prime = chimes_min(N_ref_prime, l_max_cgs * nH_cgs);
 
-  double N_ref =
-      pow(10.0, log10(N_ref_prime) -
-                    ((log10(N_ref_prime) - log10(N_min)) /
-                     (1.0 + exp(-5.0 * (log10(temperature) -
-                                        ((log_T_min + log_T_max) / 2.0))))));
+  double N_ref = exp10(log10(N_ref_prime) -
+                       ((log10(N_ref_prime) - log10(N_min)) /
+                        (1.0 + exp(-5.0 * (log10(temperature) -
+                                           ((log_T_min + log_T_max) / 2.0))))));
 
   return N_ref;
 }
@@ -1462,14 +1432,12 @@ void cooling_convert_quantities(
   if (cooling->init_abundance_mode == 0) {
     // Copy abundances over to xp.
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
   } else if ((cooling->init_abundance_mode == 1) ||
              (cooling->init_abundance_mode == 2)) {
     // Copy initial abundances over to xp.
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
 
     /* Get the particle's internal energy */
     double u_0 = hydro_get_physical_internal_energy(p, xp, cosmo);
@@ -1520,8 +1488,7 @@ void cooling_convert_quantities(
 
     // Copy final abundances over to xp.
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
   } else
     error("CHIMESCooling: init_abundance_mode %d not recognised.",
           cooling->init_abundance_mode);
@@ -1585,8 +1552,7 @@ void cooling_set_subgrid_properties(
     // Copy abundances over from xp to ChimesGasVars
     int i;
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      ChimesGasVars.abundances[i] =
-          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+      ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i];
 
     // Update element abundances
     chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
@@ -1597,8 +1563,7 @@ void cooling_set_subgrid_properties(
 
     // Copy abundances from ChimesGasVars to xp.
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
 
     // Free CHIMES memory.
     free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
@@ -1618,8 +1583,7 @@ void cooling_set_subgrid_properties(
 
     int i;
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      ChimesGasVars.abundances[i] =
-          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+      ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i];
     chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
                                      &ChimesGasVars, 1);
 
@@ -1654,8 +1618,7 @@ void cooling_set_subgrid_properties(
 
     /* Copy abundances from ChimesGasVars back to xp. */
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
 
     /* Free CHIMES memory. */
     free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);
@@ -1675,8 +1638,7 @@ void cooling_set_subgrid_properties(
     // Copy abundances over from xp to ChimesGasVars
     int i;
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      ChimesGasVars.abundances[i] =
-          (ChimesFloat)xp->cooling_data.chimes_abundances[i];
+      ChimesGasVars.abundances[i] = xp->cooling_data.chimes_abundances[i];
 
     // Update element abundances
     chimes_update_element_abundances(phys_const, us, cosmo, cooling, p, xp,
@@ -1694,8 +1656,7 @@ void cooling_set_subgrid_properties(
 
     // Copy abundances from ChimesGasVars to xp.
     for (i = 0; i < ChimesGlobalVars.totalNumberOfSpecies; i++)
-      xp->cooling_data.chimes_abundances[i] =
-          (double)ChimesGasVars.abundances[i];
+      xp->cooling_data.chimes_abundances[i] = ChimesGasVars.abundances[i];
 
     // Free CHIMES memory.
     free_gas_abundances_memory(&ChimesGasVars, &ChimesGlobalVars);

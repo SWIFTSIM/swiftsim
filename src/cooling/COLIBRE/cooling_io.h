@@ -40,6 +40,26 @@ __attribute__((always_inline)) INLINE static void cooling_write_flavour(
     const struct cooling_function_data* cooling) {
 
   io_write_attribute_s(h_grp, "Cooling Model", "COLIBRE");
+
+  const int number_of_species = 3;
+  const int species_name_length = 4;
+  char species_names[number_of_species][species_name_length];
+  sprintf(species_names[0], "%s", "HI");
+  sprintf(species_names[1], "%s", "HII");
+  sprintf(species_names[2], "%s", "H2");
+
+  /* Add the species names to the named columns */
+  hsize_t dims[1] = {number_of_species};
+  hid_t type = H5Tcopy(H5T_C_S1);
+  H5Tset_size(type, species_name_length);
+  hid_t space = H5Screate_simple(1, dims, NULL);
+  hid_t dset = H5Dcreate(h_grp_columns, "SpeciesFractions", type, space,
+                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, species_names[0]);
+  H5Dclose(dset);
+
+  H5Tclose(type);
+  H5Sclose(space);
 }
 #endif
 
@@ -69,32 +89,20 @@ INLINE static void convert_part_sub_rho(const struct engine* e,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
 }
 
-INLINE static void convert_part_sub_HI_frac(const struct engine* e,
-                                            const struct part* p,
-                                            const struct xpart* xp,
-                                            float* ret) {
+INLINE static void convert_part_sub_species_frac(const struct engine* e,
+                                                 const struct part* p,
+                                                 const struct xpart* xp,
+                                                 float* ret) {
 
   ret[0] = cooling_get_subgrid_HI_fraction(
       e->internal_units, e->physical_constants, e->cosmology,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-}
 
-INLINE static void convert_part_sub_HII_frac(const struct engine* e,
-                                             const struct part* p,
-                                             const struct xpart* xp,
-                                             float* ret) {
-
-  ret[0] = cooling_get_subgrid_HII_fraction(
+  ret[1] = cooling_get_subgrid_HII_fraction(
       e->internal_units, e->physical_constants, e->cosmology,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-}
 
-INLINE static void convert_part_sub_H2_frac(const struct engine* e,
-                                            const struct part* p,
-                                            const struct xpart* xp,
-                                            float* ret) {
-
-  ret[0] = cooling_get_subgrid_H2_fraction(
+  ret[2] = cooling_get_subgrid_H2_fraction(
       e->internal_units, e->physical_constants, e->cosmology,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
 }
@@ -136,36 +144,17 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "physical SPH density.");
 
   list[3] = io_make_output_field_convert_part(
-      "HydrogenNeutralFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
-      xparts, convert_part_sub_HI_frac,
-      "Fractions of neutral hydrogen atoms, nHI/nH, assuming equilibrium "
+      "SpeciesFractions", FLOAT, 3, UNIT_CONV_NO_UNITS, 0.f, parts, xparts,
+      convert_part_sub_species_frac,
+      "Fractions of neutral, ionized and molecular hydrogen: [nHI/nH, nHII/nH, "
+      "nH2/nH], assuming equilibrium "
       "tables. If the particles are within deltaT of the entropy floor the "
       "fractions are calculated using the subgrid quantities, i.e. assuming a "
       "pressure equilibrium on the entropy floor. If the particles are "
       "above deltaT of the entropy floor, the normal hydro quantities are "
       "used.");
 
-  list[4] = io_make_output_field_convert_part(
-      "HydrogenIonizedFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
-      xparts, convert_part_sub_HII_frac,
-      "Fractions of ionized hydrogen atoms, nHII/nH, assuming equilibrium "
-      "tables. If the particles are within deltaT of the entropy floor the "
-      "fractions are calculated using the subgrid quantities, i.e. assuming a "
-      "pressure equilibrium on the entropy floor. If the particles are "
-      "above deltaT of the entropy floor, the normal hydro quantities are "
-      "used.");
-
-  list[5] = io_make_output_field_convert_part(
-      "HydrogenMolecularFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
-      xparts, convert_part_sub_H2_frac,
-      "Fractions of hydrogen molecules, nH2/nH, assuming equilibrium tables. "
-      "If the particles are within deltaT of the entropy floor the "
-      "fractions are calculated using the subgrid quantities, i.e. assuming a "
-      "pressure equilibrium on the entropy floor. If the particles are "
-      "above deltaT of the entropy floor, the normal hydro quantities are "
-      "used.");
-
-  return 6;
+  return 4;
 }
 
 #endif /* SWIFT_COOLING_COLIBRE_IO_H */

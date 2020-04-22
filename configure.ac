@@ -239,6 +239,23 @@ if test "x$enable_debug" = "xyes"; then
    fi
 fi
 
+# Are we using the regular tasks (with atomics and no task conflicts) or
+# are we using the atomic-free task-conflicting (slower) version?
+AC_ARG_ENABLE([atomics-within-tasks],
+   [AS_HELP_STRING([--disable-atomics-within-tasks],
+     [Disable the use of atomic operations within tasks. This creates more task conflicts
+      but allows for atomic-free and lock-free code within the tasks. This likely slows down
+      the code @<:@yes/no@:>@]
+   )],
+   [enable_atomics_within_tasks="$enableval"],
+   [enable_atomics_within_tasks="yes"]
+)
+AS_IF([test "x$enable_atomics_within_tasks" != "xno"],
+   , # Note: atomics are allowed by default, we define the macro if we don't want them.
+   [AC_DEFINE([SWIFT_TASKS_WITHOUT_ATOMICS],1,[Makes SWIFT use atomic-free and lock-free tasks.])
+])
+
+
 # Check if task debugging is on.
 AC_ARG_ENABLE([task-debugging],
    [AS_HELP_STRING([--enable-task-debugging],
@@ -1508,6 +1525,18 @@ if test "x$with_sundials" != "xno"; then
 fi 
 AC_SUBST([SUNDIALS_INCS])
 
+# CHIMES configuration options. 
+
+# Use double precision in the CHIMES module. 
+AC_ARG_ENABLE([chimes-double-precision],
+   [AS_HELP_STRING([--enable-chimes-double-precision],
+     [Use double precision in CHIMES @<:@yes/no@:>@]
+   )],
+   [enable_chimes_double_precision="$enableval"],
+   [enable_chimes_double_precision="no"]
+)
+
+AM_CONDITIONAL(HAVE_CHIMES_DOUBLE_PRECISION, [test $enable_chimes_double_precision = "yes"])
 
 # Various package configuration options.
 
@@ -1549,8 +1578,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-  # GEAR's order is not used anymore
-	with_subgrid_task_order=default
+	with_subgrid_task_order=GEAR
 	enable_fof=no
    ;;
    QLA)
@@ -2423,6 +2451,11 @@ DX_DOXYGEN_FEATURE(OFF)
 DX_INIT_DOXYGEN(SWIFT, doc/Doxyfile, doc/)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
+# If the exp10 function is present in the
+# math library we can enable GNU extensions
+# in CHIMES, so that it will use the native exp10 function.
+AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
+
 # Check if using QLA cooling
 AM_CONDITIONAL([HAVEQLACOOLING], [test $with_cooling = "QLA"])
 # Check if using EAGLE cooling
@@ -2430,7 +2463,7 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 # Check if using CHIMES cooling
-AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
+AM_CONDITIONAL([HAVECHIMESCOOLING], [test ${with_cooling:0:6} = "CHIMES"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
@@ -2526,6 +2559,7 @@ AC_MSG_RESULT([
    SNIa DTD model       : $with_SNIa_DTD
    Task dependencies    : $with_task_order
 
+   Atomic operations in tasks  : $enable_atomics_within_tasks
    Individual timers           : $enable_timers
    Task debugging              : $enable_task_debugging
    Threadpool debugging        : $enable_threadpool_debugging
