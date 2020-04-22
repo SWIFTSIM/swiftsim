@@ -101,6 +101,26 @@ struct chemistry_part_data {
 
   /*! Fraction of the particle mass in a given element accumulated via diffusion
    * diffusion since the last active step */
+  float dmetal_mass_fraction[chemistry_element_count];
+
+  /*! Fraction of the particle mass in metals accumulated via diffusion
+   * diffusion since the last active step */
+  float dmetal_mass_fraction_total;
+
+  /*! Fraction of the particle mass in metals from SNIa accumulated via
+   * diffusion diffusion since the last active step */
+  float dmetal_mass_fraction_from_SNIa;
+
+  /*! Fraction of the particle mass in metals from AGB accumulated via diffusion
+   * diffusion since the last active step */
+  float dmetal_mass_fraction_from_AGB;
+
+  /*! Fraction of the particle mass in metals from SNII accumulated via
+   * diffusion diffusion since the last active step */
+  float dmetal_mass_fraction_from_SNII;
+
+  /*! Fraction of the particle mass in iron from SNIa accumulated via diffusion
+   * diffusion since the last active step */
   float diron_mass_fraction_from_SNIa;
 
   /*! Tensor of the velocity shear */
