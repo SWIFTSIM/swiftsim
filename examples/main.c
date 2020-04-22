@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
           0, "colibre", &with_colibre,
           "Run with all the options needed for the COLIBRE model. This is "
           "equivalent to --hydro --limiter --sync --self-gravity --stars "
-          "--star-formation --cooling --feedback.",
+          "--star-formation --cooling --feedback --black-holes --fof.",
           NULL, 0, 0),
       OPT_BOOLEAN(
           0, "gear", &with_gear,
