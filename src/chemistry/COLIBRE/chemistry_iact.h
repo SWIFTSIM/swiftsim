@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2018 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2019 Matthieu Schaller (schaller@strw.leidenunuiv.nl)
+ *               2020 Camila Correa (c.a.correa@uva.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -244,7 +245,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
           K_ji * (chj->metal_mass_fraction[i] - chi->metal_mass_fraction[i]);
     }
 
-    /* CC. Diffusing Z & other fraction tracers as well */
+    /* Diffusing the total metal mass */
     chi->dmetal_mass_fraction_total +=
         K_ij *
         (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
@@ -253,6 +254,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
         K_ji *
         (chj->metal_mass_fraction_total - chi->metal_mass_fraction_total) * dt;
 
+    /* And diffuse the individual feedback tracers */
     chi->dmetal_mass_fraction_from_SNIa +=
         K_ij *
         (chi->metal_mass_fraction_from_SNIa -
@@ -402,11 +404,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
           K_ij * (chi->metal_mass_fraction[i] - chj->metal_mass_fraction[i]);
     }
 
-    /* CC. Diffusing Z & other fraction tracers as well */
+    /* Diffusing the total metal mass */
     chi->dmetal_mass_fraction_total +=
         K_ij *
         (chi->metal_mass_fraction_total - chj->metal_mass_fraction_total) * dt;
 
+    /* And diffuse the individual feedback tracers */
     chi->dmetal_mass_fraction_from_SNIa +=
         K_ij *
         (chi->metal_mass_fraction_from_SNIa -

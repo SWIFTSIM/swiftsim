@@ -446,7 +446,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
         /* Finish the force loop */
         hydro_end_force(p, cosmo);
         timestep_limiter_end_force(p);
-        chemistry_end_force(p);
+        chemistry_end_force(p, cosmo);
 
 #ifdef SWIFT_BOUNDARY_PARTICLES
 

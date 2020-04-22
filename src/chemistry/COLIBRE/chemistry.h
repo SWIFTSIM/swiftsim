@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2019 Matthieu Schaller (schaller@strw.leidenunuiv.nl)
+ *               2020 Camila Correa (c.a.correa@uva.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -74,17 +75,15 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->shear_tensor[2][k] = 0.0f;
   }
 
-  /*Initializing dmetal arrays for calculation in force loop */
+  /* Initializing dmetal arrays for calculation in force loop */
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     cpd->dmetal_mass_fraction[elem] = 0.0f;
   }
 
-  /* CC. Also have total metallicity ready for loop */
+  /* Also have total metallicity ready for loop */
   cpd->dmetal_mass_fraction_total = 0.0f;
 
-  /* CC. We will be also diffusing metal_mass_fraction_from_SNIa, */
-  /* metal_mass_fraction_from_AGB, metal_mass_fraction_from_SNII & */
-  /* iron_mass_fraction_from_SNIa */
+  /* and the metals from the different channels */
   cpd->dmetal_mass_fraction_from_SNIa = 0.0f;
   cpd->dmetal_mass_fraction_from_AGB = 0.0f;
   cpd->dmetal_mass_fraction_from_SNII = 0.0f;
@@ -162,6 +161,8 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
  *
+ * Set all the fields such that no diffusion occurs.
+ *
  * @param p The particle to act upon
  * @param xp The extended particle data to act upon
  * @param cd #chemistry_global_data containing chemistry informations.
@@ -178,8 +179,15 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
     p->chemistry_data.diffusion_rate[elem] = 0.0f;
     p->chemistry_data.dmetal_mass_fraction[elem] = 0.0f;
   }
-  /* CC. Also have total metallicity ready for loop */
+
+  /* Also have total metallicity ready for loop */
   p->chemistry_data.dmetal_mass_fraction_total = 0.0f;
+
+  /* and the metals from the different channels */
+  p->chemistry_data.dmetal_mass_fraction_from_SNIa = 0.0f;
+  p->chemistry_data.dmetal_mass_fraction_from_AGB = 0.0f;
+  p->chemistry_data.dmetal_mass_fraction_from_SNII = 0.0f;
+  p->chemistry_data.diron_mass_fraction_from_SNIa = 0.0f;
 
   for (int k = 0; k < 3; k++) {
     p->chemistry_data.shear_tensor[0][k] = 0.0f;
@@ -219,14 +227,14 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
 
   chemistry_init_part(p, data);
 
-  /* CC: Setting diffusion coefficient to zero initial value */
+  /* Setting diffusion coefficient to zero initial value */
   p->chemistry_data.diffusion_coefficient = 0.0f;
 
-  // Add initialization of some metal trackers.
+  /* Initial value of the trackers */
   p->chemistry_data.metal_mass_tracker = 0.0f;
   p->chemistry_data.iron_mass_tracker = 0.0f;
 
-  // Dummy initial values to weighted redshits
+  /* Dummy initial values to weighted redshits */
   p->chemistry_data.metal_weighted_redshift = -1.f;
   p->chemistry_data.iron_weighted_redshift = -1.f;
 }
@@ -345,18 +353,19 @@ static INLINE void chemistry_print_backend(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* restrict p) {
+    struct part* p, const struct cosmology* cosmo) {
 
+  /* Diffuse each element individually */
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     p->chemistry_data.metal_mass_fraction[elem] +=
         p->chemistry_data.dmetal_mass_fraction[elem];
   }
 
-  /* CC. Here we are diffusing Z as well */
+  /* Diffuse the total metal mass fraction */
   p->chemistry_data.metal_mass_fraction_total +=
       p->chemistry_data.dmetal_mass_fraction_total;
 
-  /* CC. And here we are diffusing trackers of metal fractions from stellar FB*/
+  /* And diffuse the various trackers of metal fractions from stellar FB */
   p->chemistry_data.metal_mass_fraction_from_SNIa +=
       p->chemistry_data.dmetal_mass_fraction_from_SNIa;
 

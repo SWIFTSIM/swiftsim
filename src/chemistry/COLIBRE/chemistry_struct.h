@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2019 Matthieu Schaller (schaller@strw.leidenunuiv.nl)
+ *               2020 Camila Correa (c.a.correa@uva.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -94,22 +95,12 @@ struct chemistry_part_data {
 
   /*! Tracker of metal mass received by enrichment events times time */
   float metal_mass_tracker;
-    
+
   /*! Tracker of iron mass received by SNIa events times time */
   float iron_mass_tracker;
 
-  /*! Fraction of the particle mass in a given element */
-  /*! These arrays are duplicated to be used after the diffusion routine */
-  float dmetal_mass_fraction[chemistry_element_count];
-
-  float dmetal_mass_fraction_total;
-
-  float dmetal_mass_fraction_from_SNIa;
-
-  float dmetal_mass_fraction_from_AGB;
-
-  float dmetal_mass_fraction_from_SNII;
-
+  /*! Fraction of the particle mass in a given element accumulated via diffusion
+   * diffusion since the last active step */
   float diron_mass_fraction_from_SNIa;
 
   /*! Tensor of the velocity shear */
