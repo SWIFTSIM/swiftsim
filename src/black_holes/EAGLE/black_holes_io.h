@@ -100,6 +100,26 @@ INLINE static void convert_bpart_vel(const struct engine* e,
   ret[2] *= cosmo->a_inv;
 }
 
+INLINE static void convert_bpart_gas_vel(const struct engine* e,
+                                         const struct bpart* bp, float* ret) {
+
+  const struct cosmology* cosmo = e->cosmology;
+
+  /* Convert velocities to peculiar velocities */
+  const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                    bp->velocity_gas[1] * cosmo->a_inv,
+                                    bp->velocity_gas[2] * cosmo->a_inv};
+
+  const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
+                                   bp->v[1] * cosmo->a_inv,
+                                   bp->v[2] * cosmo->a_inv};
+
+  /* Conversion from internal units to peculiar velocities */
+  ret[0] = gas_v_peculiar[0] - bh_v_peculiar[0];
+  ret[1] = gas_v_peculiar[1] - bh_v_peculiar[1];
+  ret[2] = gas_v_peculiar[2] - bh_v_peculiar[2];
+}
+
 /**
  * @brief Specifies which b-particle fields to write to a dataset
  *
@@ -114,7 +134,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 18;
+  *num_fields = 19;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -231,6 +251,13 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       bparts, swallowed_angular_momentum,
       "Physical angular momenta that the black holes have accumulated by "
       "swallowing gas particles.");
+
+  list[18] = io_make_output_field_convert_bpart(
+      "GasRelativeVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
+      convert_bpart_gas_vel,
+      "Peculiar relative velocities of the gas particles around the black "
+      "holes. This is a * dx/dt where x is the co-moving position of the "
+      "particles.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
