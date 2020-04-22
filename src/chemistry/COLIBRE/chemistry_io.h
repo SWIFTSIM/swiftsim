@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2019 Matthieu Schaller (schaller@strw.leidenunuiv.nl)
+ *               2020 Camila Correa (c.a.correa@uva.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -55,7 +56,8 @@ INLINE static int chemistry_read_particles(struct part* parts,
  * @return Returns the number of fields to write.
  */
 INLINE static int chemistry_write_particles(const struct part* parts,
-                                            struct io_props* list) {
+                                            struct io_props* list,
+                                            const int with_cosmology) {
 
   /* List what we want to write */
   list[0] = io_make_output_field(
@@ -120,7 +122,39 @@ INLINE static int chemistry_write_particles(const struct part* parts,
       UNIT_CONV_DIFF_RATE, 0.f, parts, chemistry_data.diffusion_rate,
       "Metal diffusion rates for each element in physical co-ordinates");
 
-  return 11;
+  if (with_cosmology) {
+
+    list[11] = io_make_output_field(
+        "MeanMetalWeightedRedshifts", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
+        chemistry_data.metal_weighted_redshift,
+        "Mean redshift of enrichment events weighted by the metal mass "
+        "imparted by each event. -1 if a particle has never been enriched.");
+
+    list[12] = io_make_output_field(
+        "MeanIronWeightedRedshifts", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
+        chemistry_data.iron_weighted_redshift,
+        "Mean redshift of SNIa events weighted by "
+        "the iron mass imparted by each event. -1 if a particle has never been "
+        "enriched by SNIa.");
+
+  } else {
+
+    list[11] =
+        io_make_output_field("MeanMetalWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
+                             0.f, parts, chemistry_data.metal_weighted_redshift,
+                             "Mean time of enrichment events weighted by the "
+                             "metal mass imparted by each event. -1 if a "
+                             "particle has never been enriched.");
+
+    list[12] =
+        io_make_output_field("MeanIronWeightedTimes", FLOAT, 1, UNIT_CONV_TIME,
+                             0.f, parts, chemistry_data.iron_weighted_redshift,
+                             "Mean time of SNIa events weighted by the iron "
+                             "mass imparted by each event. -1 if a particle "
+                             "has never been enriched by SNIa.");
+  }
+
+  return 13;
 }
 
 /**

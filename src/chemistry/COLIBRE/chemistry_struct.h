@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Copyright (c) 2019 Matthieu Schaller (schaller@strw.leidenunuiv.nl)
+ *               2020 Camila Correa (c.a.correa@uva.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -86,10 +87,41 @@ struct chemistry_part_data {
   /*! Fraction of total gas mass in Iron coming from SNIa */
   float iron_mass_fraction_from_SNIa;
 
-  /*! Fraction of the particle mass in a given element */
-  /*! This array is duplicated to be used after the diffusion routine */
+  /*! Metal weighted redshift (defined in Wiersma+ 2010, eq. 3) */
+  float metal_weighted_redshift;
+
+  /*! Metal weighted redshift */
+  float iron_weighted_redshift;
+
+  /*! Tracker of metal mass received by enrichment events times time */
+  float metal_mass_tracker;
+
+  /*! Tracker of iron mass received by SNIa events times time */
+  float iron_mass_tracker;
+
+  /*! Fraction of the particle mass in a given element accumulated via diffusion
+   * diffusion since the last active step */
   float dmetal_mass_fraction[chemistry_element_count];
+
+  /*! Fraction of the particle mass in metals accumulated via diffusion
+   * diffusion since the last active step */
   float dmetal_mass_fraction_total;
+
+  /*! Fraction of the particle mass in metals from SNIa accumulated via
+   * diffusion diffusion since the last active step */
+  float dmetal_mass_fraction_from_SNIa;
+
+  /*! Fraction of the particle mass in metals from AGB accumulated via diffusion
+   * diffusion since the last active step */
+  float dmetal_mass_fraction_from_AGB;
+
+  /*! Fraction of the particle mass in metals from SNII accumulated via
+   * diffusion diffusion since the last active step */
+  float dmetal_mass_fraction_from_SNII;
+
+  /*! Fraction of the particle mass in iron from SNIa accumulated via diffusion
+   * diffusion since the last active step */
+  float diron_mass_fraction_from_SNIa;
 
   /*! Tensor of the velocity shear */
   /* (Calculated in physical coordinates) */
