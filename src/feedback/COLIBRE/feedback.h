@@ -129,11 +129,13 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   /* Zero the energy to inject */
   sp->feedback_data.to_distribute.energy = 0.f;
 
-  /* Zero the SNII feedback probability */
+  /* Zero the SNII feedback heating and kick probabilites */
   sp->feedback_data.to_distribute.SNII_heating_probability = 0.f;
+  sp->feedback_data.to_distribute.SNII_kick_probability = 0.f;
 
-  /* Zero the SNII feedback energy */
+  /* Zero the SNII feedback energy and kick velocity */
   sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
+  sp->feedback_data.to_distribute.SNII_delta_v = 0.f;
 
   /* Zero the amount of momentum available */
   sp->feedback_data.to_distribute.momentum = 0.f;

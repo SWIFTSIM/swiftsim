@@ -92,8 +92,14 @@ struct feedback_spart_data {
       /*! Probability to heating neighbouring gas particle for SNII feedback */
       float SNII_heating_probability;
 
-      /*! Change in energy from SNII feedback energy injection */
+      /*! Probability to kick neighbouring gas particle for SNII feedback */
+      float SNII_kick_probability;
+
+      /*! Change in gas particle internal energy from SNII feedback */
       float SNII_delta_u;
+
+      /*! Change in gas particle velocity from SNII feedback */
+      float SNII_delta_v;
 
       /*! Probability to heating neighbouring gas particle for SNIa feedback */
       float SNIa_heating_probability;
