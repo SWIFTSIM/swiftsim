@@ -102,14 +102,14 @@ struct chemistry_part_data {
   /*! Metal weighted redshift (defined in Wiersma+ 2010, eq. 3) */
   float metal_weighted_redshift;
 
+  /*! Metal mass (gain/lost through diffusion) times redshift */
+  float metal_diffused_redshift;
+
   /*! Metal weighted redshift */
   float iron_weighted_redshift;
-
-  /*! Tracker of metal mass received by enrichment events times time */
-  float metal_mass_tracker;
-
-  /*! Tracker of iron mass received by SNIa events times time */
-  float iron_mass_tracker;
+    
+  /*! Iron mass (gain/lost through diffusion) times redshift */
+  float iron_diffused_redshift;
 
   /*! Fraction of the particle mass in a given element accumulated via diffusion
    * diffusion since the last active step */
