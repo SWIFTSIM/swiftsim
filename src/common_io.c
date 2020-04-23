@@ -2291,7 +2291,7 @@ void io_check_output_fields(const struct swift_params* params,
 
       case swift_type_gas:
         hydro_write_particles(NULL, NULL, list, &num_fields);
-        num_fields += chemistry_write_particles(NULL, list + num_fields);
+        num_fields += chemistry_write_particles(NULL, list + num_fields, 1);
         num_fields +=
             cooling_write_particles(NULL, NULL, list + num_fields, NULL);
         num_fields += tracers_write_particles(NULL, NULL, list + num_fields,
@@ -2411,7 +2411,7 @@ void io_write_output_field_parameter(const char* filename) {
 
       case swift_type_gas:
         hydro_write_particles(NULL, NULL, list, &num_fields);
-        num_fields += chemistry_write_particles(NULL, list + num_fields);
+        num_fields += chemistry_write_particles(NULL, list + num_fields, 1);
         num_fields +=
             cooling_write_particles(NULL, NULL, list + num_fields, NULL);
         num_fields += tracers_write_particles(NULL, NULL, list + num_fields,

@@ -47,7 +47,8 @@ INLINE static int chemistry_read_particles(struct part* parts,
  * @return Returns the number of fields to write.
  */
 INLINE static int chemistry_write_particles(const struct part* parts,
-                                            struct io_props* list) {
+                                            struct io_props* list,
+                                            const int with_cosmology) {
 
   /* update list according to hydro_io */
 
@@ -95,8 +96,10 @@ INLINE static int chemistry_write_bparticles(const struct bpart* bparts,
  * @brief Writes the current model of chemistry to the file
  * @param h_grp The HDF5 group in which to write
  * @param h_grp_columns The HDF5 group containing named columns
+ * @param e The #engine.
  */
-INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns) {
+INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
+                                           const struct engine* e) {
 
   io_write_attribute_s(h_grp, "Chemistry Model",
                        "Quick Lyman-alpha (constant primordial)");

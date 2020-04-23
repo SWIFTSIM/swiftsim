@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
           0, "colibre", &with_colibre,
           "Run with all the options needed for the COLIBRE model. This is "
           "equivalent to --hydro --limiter --sync --self-gravity --stars "
-          "--star-formation --cooling --feedback.",
+          "--star-formation --cooling --feedback --black-holes --fof.",
           NULL, 0, 0),
       OPT_BOOLEAN(
           0, "gear", &with_gear,
@@ -787,6 +787,9 @@ int main(int argc, char *argv[]) {
 
     /* Just one restart file. */
     strcpy(restart_file, restart_files[0]);
+
+    /* Finished with the list. */
+    restart_locate_free(1, restart_files);
 #endif
 
     /* Now read it. */
@@ -1065,7 +1068,7 @@ int main(int argc, char *argv[]) {
     space_init(&s, params, &cosmo, dim, parts, gparts, sparts, bparts, Ngas,
                Ngpart, Nspart, Nbpart, periodic, replicate, generate_gas_in_ics,
                with_hydro, with_self_gravity, with_star_formation,
-               with_DM_background_particles, talking, dry_run);
+               with_DM_background_particles, talking, dry_run, nr_nodes);
 
     if (myrank == 0) {
       clocks_gettime(&toc);
@@ -1237,7 +1240,7 @@ int main(int argc, char *argv[]) {
 #endif
     if (myrank == 0)
       message("Time integration ready to start. End of dry-run.");
-    engine_clean(&e, /*fof=*/0);
+    engine_clean(&e, /*fof=*/0, /*restart=*/0);
     free(params);
     return 0;
   }
@@ -1526,7 +1529,7 @@ int main(int argc, char *argv[]) {
   if (with_self_gravity) pm_mesh_clean(e.mesh);
   if (with_cooling || with_temperature) cooling_clean(e.cooling_func);
   if (with_feedback) feedback_clean(e.feedback_props);
-  engine_clean(&e, /*fof=*/0);
+  engine_clean(&e, /*fof=*/0, restart);
   free(params);
 
 #ifdef WITH_MPI

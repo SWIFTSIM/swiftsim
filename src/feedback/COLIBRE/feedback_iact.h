@@ -145,6 +145,22 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   pj->chemistry_data.metal_mass_fraction_total =
       new_metal_mass_total * new_mass_inv;
 
+  /* Calculate mean metal weighted redshift */
+  double delta_mass_times_time, delta_iron_mass_times_time;
+  if (with_cosmology) {
+    delta_mass_times_time = delta_metal_mass_total * cosmo->z;
+  } else {
+    delta_mass_times_time = delta_metal_mass_total * time;
+  }
+  /* Update metal mass tracker */
+  pj->chemistry_data.metal_mass_tracker += delta_mass_times_time;
+
+  /* Calculate mean metal weighted redshift */
+  if (new_metal_mass_total > 0.f) {
+    pj->chemistry_data.metal_weighted_redshift =
+        pj->chemistry_data.metal_mass_tracker / new_metal_mass_total;
+  }
+
   /* Update mass fraction of each tracked element  */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
     const double current_metal_mass =
@@ -167,6 +183,21 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   pj->chemistry_data.iron_mass_fraction_from_SNIa =
       new_iron_from_SNIa_mass * new_mass_inv;
+
+  /* Calculate mean iron weighted redshift */
+  if (with_cosmology) {
+    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * cosmo->z;
+  } else {
+    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * time;
+  }
+  /* Update iron mass tracker */
+  pj->chemistry_data.iron_mass_tracker += delta_iron_mass_times_time;
+
+  /* Calculate mean iron weighted redshift */
+  if (new_iron_from_SNIa_mass > 0.f) {
+    pj->chemistry_data.iron_weighted_redshift =
+        pj->chemistry_data.iron_mass_tracker / new_iron_from_SNIa_mass;
+  }
 
   /* Update mass from SNIa  */
   const double delta_mass_from_SNIa =

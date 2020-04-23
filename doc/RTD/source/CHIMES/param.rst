@@ -158,10 +158,6 @@ The parameters needed when running SWIFT with the CHIMES module are described in
 |                                    | | of the chemistry integration in CHIMES.                     |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
-| ``thermalAbsoluteTolerance``       | | Absolute tolerance parameter for the temperature, used to   |
-|                                    | | define the accuracy of the cooling integration in CHIMES.   |
-|                                    |                                                               |
-+------------------------------------+---------------------------------------------------------------+
 | ``explicitTolerance``              | | Tolerance parameter that determines when we just use the    |
 |                                    | | explicit solution for the chemistry and cooling integration |
 |                                    | | in CHIMES.                                                  |
@@ -311,10 +307,9 @@ The following set of CHIMES parameters are suitable for running a non-cosmologic
       rad_field_norm_factor:      0.1 
       init_abundance_mode:        1 
       colibre_metal_depletion:    1
-      relativeTolerance:          1e-4 
+      relativeTolerance:          1e-3 
       absoluteTolerance:          1e-10 
-      thermalAbsoluteTolerance:   1e-40 
-      explicitTolerance:          0.05 
+      explicitTolerance:          0.1 
       scale_metal_tolerances:     1 
       T_mol:                      1.0e5 
       ChemistryEqmMode:           0 
@@ -363,10 +358,9 @@ Compared to the isolated galaxy example above, this example uses a redshift-depe
       rad_field_norm_factor:      0.1 
       init_abundance_mode:        1 
       colibre_metal_depletion:    1
-      relativeTolerance:          1e-4 
+      relativeTolerance:          1e-3 
       absoluteTolerance:          1e-10 
-      thermalAbsoluteTolerance:   1e-40 
-      explicitTolerance:          0.05 
+      explicitTolerance:          0.1 
       scale_metal_tolerances:     1 
       T_mol:                      1.0e5 
       ChemistryEqmMode:           0 

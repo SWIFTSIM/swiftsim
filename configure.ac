@@ -1525,6 +1525,18 @@ if test "x$with_sundials" != "xno"; then
 fi 
 AC_SUBST([SUNDIALS_INCS])
 
+# CHIMES configuration options. 
+
+# Use double precision in the CHIMES module. 
+AC_ARG_ENABLE([chimes-double-precision],
+   [AS_HELP_STRING([--enable-chimes-double-precision],
+     [Use double precision in CHIMES @<:@yes/no@:>@]
+   )],
+   [enable_chimes_double_precision="$enableval"],
+   [enable_chimes_double_precision="no"]
+)
+
+AM_CONDITIONAL(HAVE_CHIMES_DOUBLE_PRECISION, [test $enable_chimes_double_precision = "yes"])
 
 # Various package configuration options.
 
@@ -1566,8 +1578,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-  # GEAR's order is not used anymore
-	with_subgrid_task_order=default
+	with_subgrid_task_order=GEAR
 	enable_fof=no
    ;;
    QLA)
@@ -2440,6 +2451,11 @@ DX_DOXYGEN_FEATURE(OFF)
 DX_INIT_DOXYGEN(SWIFT, doc/Doxyfile, doc/)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$ac_cv_path_ac_pt_DX_DOXYGEN" != ""])
 
+# If the exp10 function is present in the
+# math library we can enable GNU extensions
+# in CHIMES, so that it will use the native exp10 function.
+AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
+
 # Check if using QLA cooling
 AM_CONDITIONAL([HAVEQLACOOLING], [test $with_cooling = "QLA"])
 # Check if using EAGLE cooling
@@ -2447,7 +2463,7 @@ AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
 AM_CONDITIONAL([HAVECOLIBRECOOLING], [test $with_cooling = "COLIBRE"])
 # Check if using CHIMES cooling
-AM_CONDITIONAL([HAVECHIMESCOOLING], [test $with_cooling = "CHIMES"])
+AM_CONDITIONAL([HAVECHIMESCOOLING], [test ${with_cooling:0:6} = "CHIMES"])
 
 # Check if using EAGLE feedback
 AM_CONDITIONAL([HAVEEAGLEFEEDBACK], [test $with_feedback = "EAGLE"])
