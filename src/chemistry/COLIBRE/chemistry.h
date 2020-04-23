@@ -236,10 +236,6 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   /* Setting diffusion coefficient to zero initial value */
   p->chemistry_data.diffusion_coefficient = 0.0f;
 
-  /* Initial value of the trackers */
-  p->chemistry_data.metal_mass_tracker = 0.0f;
-  p->chemistry_data.iron_mass_tracker = 0.0f;
-
   /* Dummy initial values to weighted redshits */
   p->chemistry_data.metal_weighted_redshift = -1.f;
   p->chemistry_data.iron_weighted_redshift = -1.f;
@@ -247,6 +243,13 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   p->chemistry_data.mass_from_NSM = 0.0f;
   p->chemistry_data.mass_from_CEJSN = 0.0f;
   p->chemistry_data.mass_from_collapsar = 0.0f;
+    
+  /* Zero initial values for metal/iron mass times redshift trackers*/
+  p->chemistry_data.metal_diffused_redshift = 0.0f;
+  p->chemistry_data.iron_diffused_redshift = 0.0f;
+  p->chemistry_data.track_of_metal_mass_total = 0.0f;
+  p->chemistry_data.track_of_iron_from_SNIa_mass = 0.0f;
+
 }
 
 /**

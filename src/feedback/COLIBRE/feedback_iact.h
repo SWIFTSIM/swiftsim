@@ -196,8 +196,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Calculate mean iron weighted redshift */
   if (new_iron_from_SNIa_mass > 0.f) {
       pj->chemistry_data.iron_weighted_redshift = ztime * delta_iron_from_SNIa_mass +
-        pj->chemistry_data.iron_mass_tracker * current_iron_from_SNIa_mass +
-        p->chemistry_data.iron_diffused_redshift;
+        pj->chemistry_data.iron_weighted_redshift * current_iron_from_SNIa_mass +
+        pj->chemistry_data.iron_diffused_redshift;
       pj->chemistry_data.iron_weighted_redshift /= new_iron_from_SNIa_mass;
   }
 
