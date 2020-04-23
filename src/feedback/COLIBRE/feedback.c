@@ -243,7 +243,7 @@ INLINE static void compute_SNII_feedback(
     double prob_thermal = (1.0 - f_kin) * E_SN_total / (conv_factor * delta_T * ngb_gas_mass);
     double prob_kinetic = f_kin * E_SN_total / (0.5 * ngb_gas_mass * delta_v * delta_v);
 
-    /* Calculate the change in internal energy of the gas particles that gets
+    /* Calculate the change in internal energy of the gas particles that get
      * heated */
     double delta_u;
     if (prob_thermal <= 1.) {
@@ -254,7 +254,7 @@ INLINE static void compute_SNII_feedback(
     } else {
 
       /* Special case: we need to adjust the thermal energy per unit mass irrespective of the
-         desired deltaT to ensure we inject all the available energy. */
+         desired delta T to ensure we inject all the available SN energy. */
 
       prob_thermal = 1.;
       delta_u = (1.0 - f_kin) * E_SN_total / ngb_gas_mass;
@@ -263,7 +263,7 @@ INLINE static void compute_SNII_feedback(
     if (prob_kinetic > 1.) {
 
       /* Special case: we need to adjust the kick velocity irrespective of the
-         desired delta_v to ensure we inject all the available energy. */
+         desired delta v to ensure we inject all the available SN energy. */
 
       prob_kinetic = 1.;
       delta_v = sqrt( f_kin * E_SN_total / (0.5 * ngb_gas_mass) );

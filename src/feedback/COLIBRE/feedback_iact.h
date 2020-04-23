@@ -308,7 +308,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* SNII stochastic thermal feedback */
 
-  /* Get the SNII feedback properties */
+  /* Get the SNII thermal feedback properties */
   const float prob_SNII_thermal =
       si->feedback_data.to_distribute.SNII_heating_probability;
 
@@ -366,7 +366,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* SNII stochastic kinetic feedback */
 
-  /* Get the SNII feedback properties */
+  /* Get the SNII kinetic feedback properties */
   const float prob_SNII_kinetic =
       si->feedback_data.to_distribute.SNII_kick_probability;
 

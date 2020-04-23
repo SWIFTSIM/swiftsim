@@ -133,7 +133,7 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.SNII_heating_probability = 0.f;
   sp->feedback_data.to_distribute.SNII_kick_probability = 0.f;
 
-  /* Zero the SNII feedback energy and kick velocity */
+  /* Zero the SNII feedback thermal energy and kick velocity */
   sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
   sp->feedback_data.to_distribute.SNII_delta_v = 0.f;
 
