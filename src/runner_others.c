@@ -365,17 +365,17 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   hydro_props, us, cooling, !spawn_spart);
 
 #ifdef STARS_MOSAICS
-              /*TODO we haven't accounted for timing here */
-
               /* Gather the extra info we need for star clusters */
               stars_mosaics_copy_extra_properties(p, xp, sp, cosmo, phys_const,
                   hydro_props, us, cooling);
 
-              const struct stars_props* stars_properties = e->stars_properties;
+              //const struct stars_props* stars_properties = e->stars_properties;
 
               /* Then run the formation */
+              /* Not needed
               stars_do_mosaics(sp, stars_properties, sf_props, phys_const, 
                   cosmo, with_cosmology, (float)e->time);
+              */
 #endif
 
               /* Update the Star formation history */
@@ -853,7 +853,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
   TIMER_TIC;
 
   /* Anything to do here? */
-  if (!cell_is_active_stars(c, e)) return;
+  if (!cell_is_active_stars(c, e) && !cell_is_active_hydro(c, e)) return;
 
   /* Recurse? */
   if (c->split) {

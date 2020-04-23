@@ -227,6 +227,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 
   /* Have we already been here this timestep? */
   /* This funcation can be called twice: once at SF, then again in star loop */
+  /* Now fixed so not necessary
   if (!sp->new_star) {
     if (with_cosmology) {
       if (sp->birth_scale_factor == (float)cosmo->a) {
@@ -238,6 +239,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
       }
     }
   }
+  */
 
   /* shift old tensors along, regardless if have clusters */
   for (int i = 0; i < 2; i++) {

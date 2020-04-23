@@ -892,8 +892,7 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       }
 
       /* Subgrid tasks: star clusters */
-      /* should happen after star formation and */
-      /* after stellar evo in engine_make_hierarchical_tasks_hydro */
+      /* should happen after star formation and stellar evo */
       if (with_stars) {
         c->stars.mosaics = scheduler_addtask(s, task_type_stars_mosaics,
                                              task_subtype_none, 0, 0, c, NULL);
@@ -1143,9 +1142,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       scheduler_addunlock(s, c->top->hydro.star_formation,
                           c->hydro.stars_resort);
 
-      if (with_stars) {
-        scheduler_addunlock(s, c->hydro.stars_resort, c->super->stars.mosaics);
-      }
+      scheduler_addunlock(s, c->hydro.stars_resort, c->super->stars.mosaics);
     }
   }
 
@@ -1251,9 +1248,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #endif
         scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
 
-        if (with_stars) {
-          scheduler_addunlock(s, c->stars.ghost, c->super->stars.mosaics);
-        }
+        /* After stellar evolution */
+        scheduler_addunlock(s, c->stars.ghost, c->super->stars.mosaics);
 
         if (with_feedback && with_star_formation && c->hydro.count > 0) {
           task_order_addunlock_star_formation_feedback(s, c, star_resort_cell);
