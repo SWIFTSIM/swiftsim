@@ -153,6 +153,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     ztime = time;
   }
     
+  if (pj->chemistry_data.metal_weighted_redshift < 0.f) pj->chemistry_data.metal_weighted_redshift = 0.f;
   /* Calculate mean metal weighted redshift */
   if (new_metal_mass_total > 0.f) {
     pj->chemistry_data.metal_weighted_redshift = ztime * delta_metal_mass_total +
@@ -194,6 +195,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       new_iron_from_SNIa_mass * new_mass_inv;
 
   /* Calculate mean iron weighted redshift */
+  if (pj->chemistry_data.iron_weighted_redshift < 0.f) pj->chemistry_data.iron_weighted_redshift = 0.f;
   if (new_iron_from_SNIa_mass > 0.f) {
       pj->chemistry_data.iron_weighted_redshift = ztime * delta_iron_from_SNIa_mass +
         pj->chemistry_data.iron_weighted_redshift * current_iron_from_SNIa_mass +
