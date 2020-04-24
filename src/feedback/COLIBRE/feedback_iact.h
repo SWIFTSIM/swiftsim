@@ -153,8 +153,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     ztime = time;
   }
     
-  if (pj->chemistry_data.metal_weighted_redshift < 0.f) pj->chemistry_data.metal_weighted_redshift = 0.f;
   /* Calculate mean metal weighted redshift */
+  if (pj->chemistry_data.metal_weighted_redshift < 0.f) pj->chemistry_data.metal_weighted_redshift = 0.f;
   if (new_metal_mass_total > 0.f) {
     pj->chemistry_data.metal_weighted_redshift = ztime * delta_metal_mass_total +
       pj->chemistry_data.metal_weighted_redshift * pj->chemistry_data.track_of_metal_mass_total +
