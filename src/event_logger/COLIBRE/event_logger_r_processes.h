@@ -275,7 +275,8 @@ INLINE static void event_logger_r_processes_log_data_end(
  * @param delta_mass the enrichment mass of the r-processes
  */
 INLINE static void event_logger_r_processes_log_event(
-    const struct spart *si, const struct cosmology *cosmo, const double delta_mass) {
+    const struct spart *si, const struct cosmology *cosmo,
+    const double delta_mass) {
 
   if (lock_lock(&log_r_processes.core.lock) == 0) {
 

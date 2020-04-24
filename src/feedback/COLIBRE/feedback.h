@@ -19,6 +19,7 @@
 #ifndef SWIFT_FEEDBACK_COLIBRE_H
 #define SWIFT_FEEDBACK_COLIBRE_H
 
+#include <strings.h>
 #include "SNIa_DTD.h"
 #include "cooling.h"
 #include "cosmology.h"
@@ -27,7 +28,6 @@
 #include "hydro_properties.h"
 #include "part.h"
 #include "units.h"
-#include <strings.h>
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
@@ -112,7 +112,7 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 
   /* Zero the amount of mass that is distributed */
   sp->feedback_data.to_distribute.mass = 0.f;
-    
+
   sp->feedback_data.to_distribute.mass_from_r_processes = 0.f;
   /* Zero the number of events per time-step */
   sp->feedback_data.to_distribute.num_r_processes = 0.f;

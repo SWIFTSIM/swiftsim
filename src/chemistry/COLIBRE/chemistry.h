@@ -46,7 +46,7 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron", "Europium"};
+      "Neon",     "Magnesium", "Silicon", "Iron",     "Europium"};
   return chemistry_element_names[elem];
 }
 

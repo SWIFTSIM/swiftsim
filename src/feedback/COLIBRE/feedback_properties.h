@@ -93,13 +93,12 @@ struct feedback_props {
 
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
-    
+
   /*! Are we doing r-process enrichment? */
   int with_r_process_enrichment;
   int with_NSM;
   int with_CEJSN;
   int with_collapsar;
-
 
   /*! Are we doing HII regions? */
   int with_HIIRegions;
@@ -273,17 +272,17 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
-    
+
   /* ------------ r-process enrichment properties ------------ */
   /* slope of neutron star mergers (NSM) delay function */
   double NSM_t_slope;
-    
+
   /* delay since formation of neutron star merger */
   double NSM_t_delay_Gyr;
-    
+
   /* Number of neutron star mergers per unit of Msolar */
   double NSM_per_Msun_per_yr;
-    
+
   /* Amount of europium (in units of Msolar) relesed by NSM */
   double yield_Eu_from_NSM;
 
@@ -295,7 +294,7 @@ struct feedback_props {
 
   /* Number of collapsar per unit of Msolar */
   double collapsar_per_Msun;
-    
+
   /* Amount of europium (in units of Msolar) relesed by collapsar */
   double yield_Eu_from_collapsar;
 

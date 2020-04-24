@@ -343,7 +343,7 @@ struct engine {
 
   /* File handle for the SFH logger file */
   FILE *sfh_logger;
-    
+
   /* The current step number. */
   int step;
 

@@ -19,7 +19,6 @@
 #ifndef SWIFT_FEEDBACK_NONE_LOGGER_H
 #define SWIFT_FEEDBACK_NONE_LOGGER_H
 
-
 /**
  * @brief Initialize the neutron stars merger (NSM) logger file
  *
@@ -29,17 +28,10 @@
  */
 INLINE static void NSM_logger_init_log_file(
     FILE *fp, const struct unit_system *restrict us,
-    const struct phys_const *phys_const) {
-    
-}
+    const struct phys_const *phys_const) {}
 
 INLINE static void NSM_logger_write_to_log_file(
-    FILE *fp, const double time,
-    const struct cosmology *restrict cosmo,
-    const int step, struct spart *restrict si) {
-}
-
-
+    FILE *fp, const double time, const struct cosmology *restrict cosmo,
+    const int step, struct spart *restrict si) {}
 
 #endif /* SWIFT_FEEDBACK_NONE_LOGGER_H */
-
