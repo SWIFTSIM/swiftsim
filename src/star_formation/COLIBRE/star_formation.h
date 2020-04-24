@@ -430,7 +430,8 @@ INLINE static void starformation_print_backend(
       "%e maximal density = %e subgrid density criterion = %e alpha_virial = "
       "%e temperature threshold = %e",
       starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
-      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial, starform->temperature_threshold);
+      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial,
+      starform->temperature_threshold);
 }
 
 /**
