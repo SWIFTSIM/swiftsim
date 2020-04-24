@@ -308,6 +308,7 @@ void units_get_base_unit_exponents_array(float baseUnitsExp[5],
       break;
 
     case UNIT_CONV_ENERGY_PER_UNIT_MASS:
+    case UNIT_CONV_VELOCITY_SQUARED:
       baseUnitsExp[UNIT_LENGTH] = 2.f;
       baseUnitsExp[UNIT_TIME] = -2.f;
       break;

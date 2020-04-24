@@ -188,6 +188,9 @@ struct part {
   /* Chemistry information */
   struct chemistry_part_data chemistry_data;
 
+  /* Star formation variables that need SPH */
+  struct star_formation_part_data sf_data;
+
   /*! Black holes information (e.g. swallowing ID) */
   struct black_holes_part_data black_holes_data;
 
