@@ -56,11 +56,6 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
   struct part *restrict parts_i = ci->hydro.parts;
   struct part *restrict parts_j = cj->hydro.parts;
 
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
-
   /* Cosmological terms */
   const float a = cosmo->a;
   const float H = cosmo->H;
@@ -153,34 +148,6 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
       }
 
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (pi_active) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_j; pjd++) {
-  
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_j[pjd];
-  
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-  
-        /* Compute the pairwise distance. */
-        const float pjx[3] = {(float)(sj->x[0] - cj->loc[0]),
-                              (float)(sj->x[1] - cj->loc[1]),
-                              (float)(sj->x[2] - cj->loc[2])};
-        float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-  
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(TIMER_DOPAIR);
@@ -214,11 +181,6 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
   const int count_j = cj->hydro.count;
   struct part *restrict parts_i = ci->hydro.parts;
   struct part *restrict parts_j = cj->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -326,34 +288,6 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
         }
       }
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (pi_active) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_j; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_j[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        const float pjx[3] = {(float)(sj->x[0] - cj->loc[0]),
-                              (float)(sj->x[1] - cj->loc[1]),
-                              (float)(sj->x[2] - cj->loc[2])};
-        float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(TIMER_DOPAIR);
@@ -387,11 +321,6 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
 
   const int count = c->hydro.count;
   struct part *restrict parts = c->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount = c->stars.count;
-  struct spart *restrict sparts = c->stars.parts;
-#endif
 
   /* Loop over the parts in ci. */
   for (int pid = 0; pid < count; pid++) {
@@ -486,34 +415,6 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       }
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (pi_active) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        const float pjx[3] = {(float)(sj->x[0] - c->loc[0]),
-                              (float)(sj->x[1] - c->loc[1]),
-                              (float)(sj->x[2] - c->loc[2])};
-        float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(TIMER_DOSELF);
@@ -547,11 +448,6 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
 
   const int count = c->hydro.count;
   struct part *restrict parts = c->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount = c->stars.count;
-  struct spart *restrict sparts = c->stars.parts;
-#endif
 
   /* Loop over the parts in ci. */
   for (int pid = 0; pid < count; pid++) {
@@ -646,34 +542,6 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       }
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (pi_active) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        const float pjx[3] = {(float)(sj->x[0] - c->loc[0]),
-                              (float)(sj->x[1] - c->loc[1]),
-                              (float)(sj->x[2] - c->loc[2])};
-        float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(TIMER_DOSELF);
@@ -709,11 +577,6 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
 
   const int count_j = cj->hydro.count;
   struct part *restrict parts_j = cj->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -775,35 +638,6 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
       }
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (part_is_active(pi, e)) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_j; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_j[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        float r2 = 0.0f;
-        float dx[3];
-        for (int k = 0; k < 3; k++) {
-          dx[k] = pix[k] - sj->x[k];
-          r2 += dx[k] * dx[k];
-        }
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(timer_dopair_subset_naive);
@@ -839,11 +673,6 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
 
   const int count_j = cj->hydro.count;
   struct part *restrict parts_j = cj->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -912,36 +741,6 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
 #endif
         }
       } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Skip inactive parts. */
-      if (part_is_active(pi, e)) {
-        /* Loop over the sparts in cj. */
-        for (int pjd = 0; pjd < scount_j; pjd++) {
-  
-          /* Get a pointer to the jth s-part. */
-          struct spart *restrict sj = &sparts_j[pjd];
-  
-          /* Skip inhibited particles. */
-          if (spart_is_inhibited(sj, e)) continue;
-  
-          const double pjx = sj->x[0];
-          const double pjy = sj->x[1];
-          const double pjz = sj->x[2];
-  
-          /* Compute the pairwise distance. */
-          float dx[3] = {(float)(pix - pjx), (float)(piy - pjy),
-                         (float)(piz - pjz)};
-          const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-  
-          /* Hit or miss? */
-          if (r2 < hig2) {
-            runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-          }
-        } /* Loop over the sparts in cj. */
-      }
-#endif
-
     }   /* loop over the parts in ci. */
   }
 
@@ -1004,37 +803,6 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
 #endif
         }
       } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Skip inactive parts. */
-      if (part_is_active(pi, e)) {
-        /* Loop over the sparts in cj. */
-        for (int pjd = 0; pjd < scount_j; pjd++) {
-  
-          /* Get a pointer to the jth s-part. */
-          struct spart *restrict sj = &sparts_j[pjd];
-  
-          /* Skip inhibited particles. */
-          if (spart_is_inhibited(sj, e)) continue;
-  
-          const double pjx = sj->x[0];
-          const double pjy = sj->x[1];
-          const double pjz = sj->x[2];
-  
-          /* Compute the pairwise distance. */
-          float dx[3] = {(float)(pix - pjx), (float)(piy - pjy),
-                         (float)(piz - pjz)};
-          const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-  
-          /* Hit or miss? */
-          if (r2 < hig2) {
-            runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-          }
-        } /* Loop over the sparts in cj. */
-      }
-#endif
-
     }   /* loop over the parts in ci. */
   }
 
@@ -1130,12 +898,6 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
 
   const int count_i = ci->hydro.count;
   struct part *restrict parts_j = ci->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_i = ci->stars.count;
-  struct spart *restrict sparts_i = ci->stars.parts;
-#endif
-
   /* Loop over the parts in ci. */
   for (int pid = 0; pid < count; pid++) {
 
@@ -1193,34 +955,6 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
 #endif
       }
     } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-    /* Skip inactive parts. */
-    if (part_is_active(pi, e)) {
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_i; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_i[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        const float pjx[3] = {(float)(sj->x[0] - ci->loc[0]),
-                              (float)(sj->x[1] - ci->loc[1]),
-                              (float)(sj->x[2] - ci->loc[2])};
-        float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-    }
-#endif
-
   }   /* loop over the parts in ci. */
 
   TIMER_TOC(timer_doself_subset);
@@ -1300,13 +1034,6 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
   const double di_max = sort_i[count_i - 1].d - rshift;
   const double dj_min = sort_j[0].d;
   const float dx_max = (ci->hydro.dx_max_sort + cj->hydro.dx_max_sort);
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_i = ci->stars.count;
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_i = ci->stars.parts;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -1403,32 +1130,6 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 #endif
         }
       } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_j; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_j[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        const float pjx = sj->x[0] - cj->loc[0];
-        const float pjy = sj->x[1] - cj->loc[1];
-        const float pjz = sj->x[2] - cj->loc[2];
-
-        /* Compute the pairwise distance. */
-        float dx[3] = {pix - pjx, piy - pjy, piz - pjz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-#endif
-
     }   /* loop over the parts in ci. */
   }     /* Cell ci is active */
 
@@ -1523,32 +1224,6 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 #endif
         }
       } /* loop over the parts in ci. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in cj. */
-      for (int pid = 0; pid < scount_i; pid++) {
-
-        /* Get a pointer to the ith s-part. */
-        struct spart *restrict spi = &sparts_i[pid];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(spi, e)) continue;
-
-        const float pix = spi->x[0] - (cj->loc[0] + shift[0]);
-        const float piy = spi->x[1] - (cj->loc[1] + shift[1]);
-        const float piz = spi->x[2] - (cj->loc[2] + shift[2]);
-
-        /* Compute the pairwise distance. */
-        float dx[3] = {pjx - pix, pjy - piy, pjz - piz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hjg2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hj, spi->h, pj, spi, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-#endif
-
     }   /* loop over the parts in cj. */
   }     /* Cell cj is active */
 
@@ -1699,13 +1374,6 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
   const int count_j = cj->hydro.count;
   struct part *restrict parts_i = ci->hydro.parts;
   struct part *restrict parts_j = cj->hydro.parts;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount_i = ci->stars.count;
-  const int scount_j = cj->stars.count;
-  struct spart *restrict sparts_i = ci->stars.parts;
-  struct spart *restrict sparts_j = cj->stars.parts;
-#endif
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -1961,33 +1629,6 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           }
         }
       } /* loop over the parts in cj. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount_j; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts_j[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Get the position of pj in the right frame */
-        const float pjx = sj->x[0] - shift_j[0];
-        const float pjy = sj->x[1] - shift_j[1];
-        const float pjz = sj->x[2] - shift_j[2];
-
-        /* Compute the pairwise distance. */
-        const float dx[3] = {pix - pjx, piy - pjy, piz - pjz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-#endif
-
     }   /* Is pi active? */
   }     /* Loop over all ci */
 
@@ -2189,33 +1830,6 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
           }
         }
       } /* loop over the parts in ci. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in ci. */
-      for (int pid = 0; pid < scount_i; pid++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict spi = &sparts_i[pid];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(spi, e)) continue;
-
-        /* Get the position of pi in the right frame */
-        const float pix = spi->x[0] - shift_i[0];
-        const float piy = spi->x[1] - shift_i[1];
-        const float piz = spi->x[2] - shift_i[2];
-
-        /* Compute the pairwise distance. */
-        const float dx[3] = {pjx - pix, pjy - piy, pjz - piz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-        /* Hit or miss? */
-        if (r2 < hjg2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hj, spi->h, pj, spi, a, H);
-        }
-      } /* Loop over the sparts in ci. */
-#endif
-
     }   /* Is pj active? */
   }     /* Loop over all cj */
 
@@ -2340,11 +1954,6 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
 
   struct part *restrict parts = c->hydro.parts;
   const int count = c->hydro.count;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount = c->stars.count;
-  struct spart *restrict sparts = c->stars.parts;
-#endif
 
   /* Set up indt. */
   int *indt = NULL;
@@ -2509,32 +2118,6 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           }
         }
       } /* loop over all other particles. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        float r2 = 0.0f;
-        float dx[3];
-        for (int k = 0; k < 3; k++) {
-          dx[k] = pix[k] - sj->x[k];
-          r2 += dx[k] * dx[k];
-        }
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-#endif
-
     }
   } /* loop over all particles. */
 
@@ -2597,11 +2180,6 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
 
   struct part *restrict parts = c->hydro.parts;
   const int count = c->hydro.count;
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-  const int scount = c->stars.count;
-  struct spart *restrict sparts = c->stars.parts;
-#endif
 
   /* Set up indt. */
   int *indt = NULL;
@@ -2743,32 +2321,6 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
           }
         }
       } /* loop over all other particles. */
-
-#if defined(STARS_MOSAICS) && (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
-      /* Loop over the sparts in cj. */
-      for (int pjd = 0; pjd < scount; pjd++) {
-
-        /* Get a pointer to the jth s-part. */
-        struct spart *restrict sj = &sparts[pjd];
-
-        /* Skip inhibited particles. */
-        if (spart_is_inhibited(sj, e)) continue;
-
-        /* Compute the pairwise distance. */
-        float r2 = 0.0f;
-        float dx[3];
-        for (int k = 0; k < 3; k++) {
-          dx[k] = pix[k] - sj->x[k];
-          r2 += dx[k] * dx[k];
-        }
-
-        /* Hit or miss? */
-        if (r2 < hig2) {
-          runner_iact_nonsym_star_veldisp(r2, dx, hi, sj->h, pi, sj, a, H);
-        }
-      } /* Loop over the sparts in cj. */
-#endif
-
     }
   } /* loop over all particles. */
 
