@@ -23,6 +23,10 @@
 #endif
 #endif
 
+#ifdef H5_USE_16_API
+#undef H5_USE_16_API
+#endif
+
 #include <hdf5.h>
 #include <math.h>
 #include <stdio.h>
@@ -33,17 +37,19 @@
 #include "chimes_vars.h"
 
 // CHIMES data tables.
-struct chimes_table_bins_struct
-    chimes_table_bins; /*!< Structure containing table bins for all of the
-                          rate tables. */
+struct
+    chimes_table_bins_struct
+        chimes_table_bins; /*!< Structure containing table bins for all of the
+                              rate tables. */
 struct chimes_T_dependent_struct chimes_table_T_dependent; /*!< Structure
                                                               containing the
                                                               rates for the
                                                               T-dependent
                                                               reaction group. */
-struct chimes_constant_struct
-    chimes_table_constant; /*!< Structure containing the rates for the
-                              constant reaction group. */
+struct
+    chimes_constant_struct
+        chimes_table_constant; /*!< Structure containing the rates for the
+                                  constant reaction group. */
 struct chimes_recombination_AB_struct
     chimes_table_recombination_AB; /*!< Structure containing the rates for the
                                       reacombination_AB group. */
@@ -133,7 +139,7 @@ void allocate_eqm_table_memory(
    * in the equilibrium table matches
    * the size of the network. */
   int N_species;
-  dataset = H5Dopen1(file_id, "TableBins/N_species");
+  dataset = H5Dopen(file_id, "TableBins/N_species", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &N_species);
   H5Dclose(dataset);
 
@@ -146,17 +152,17 @@ void allocate_eqm_table_memory(
   }
 
   /* Read in size of each dimension */
-  dataset = H5Dopen1(file_id, "TableBins/N_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(my_eqm_abundances->N_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_Densities");
+  dataset = H5Dopen(file_id, "TableBins/N_Densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(my_eqm_abundances->N_Densities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_Metallicities");
+  dataset = H5Dopen(file_id, "TableBins/N_Metallicities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(my_eqm_abundances->N_Metallicities));
   H5Dclose(dataset);
@@ -180,26 +186,23 @@ void allocate_eqm_table_memory(
       sizeof(ChimesFloat));
 
   // Read in table bins
-  dataset = H5Dopen1(file_id, "TableBins/Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, T);
-  H5Dclose(dataset);
-
   for (i = 0; i < my_eqm_abundances->N_Temperatures; i++)
     my_eqm_abundances->Temperatures[i] = (ChimesFloat)T[i];
-
-  dataset = H5Dopen1(file_id, "TableBins/Densities");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, nH);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "TableBins/Densities", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, nH);
   for (i = 0; i < my_eqm_abundances->N_Densities; i++)
     my_eqm_abundances->Densities[i] = (ChimesFloat)nH[i];
-
-  dataset = H5Dopen1(file_id, "TableBins/Metallicities");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, Z);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "TableBins/Metallicities", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, Z);
   for (i = 0; i < my_eqm_abundances->N_Metallicities; i++)
     my_eqm_abundances->Metallicities[i] = (ChimesFloat)Z[i];
+  H5Dclose(dataset);
 
   H5Fclose(file_id);
 
@@ -223,11 +226,9 @@ void allocate_eqm_table_memory(
 void load_eqm_table(char *filename,
                     struct chimes_eqm_abundances_struct *my_eqm_abundances,
                     struct globalVariables *myGlobalVars) {
-  hid_t file_id, dataset, dataspace_id, memspace_id;
-  hsize_t dims[2];
-  hsize_t dims4D[4], count4D[4], offset4D[4];
-  int rank, i, j, k, l;
-  float *array1D;
+  hid_t file_id, dataset;
+  int i, j, k, l;
+  float *array_buffer_float;
 
   file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -237,57 +238,32 @@ void load_eqm_table(char *filename,
     exit(EXIT_FAILURE);
   }
 
-  // Allocate memory to buffers
-  array1D = (float *)malloc(my_eqm_abundances->N_Temperatures * sizeof(float));
-
   // Read in the abundance array.
-  dataset = H5Dopen1(file_id, "Abundances");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
-
-  dims[0] = my_eqm_abundances->N_Temperatures;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (i = 0; i < my_eqm_abundances->N_Densities; i++) {
-    for (j = 0; j < my_eqm_abundances->N_Metallicities; j++) {
-      for (k = 0; k < myGlobalVars->totalNumberOfSpecies; k++) {
-        /* Note that if we switch off individual
-         * elements, you will need to create a
-         * new EqAbundances table that does NOT
-         * include these excluded elements. */
-        offset4D[0] = 0;
-        offset4D[1] = i;
-        offset4D[2] = j;
-        offset4D[3] = k;
-        count4D[0] = my_eqm_abundances->N_Temperatures;
-        count4D[1] = 1;
-        count4D[2] = 1;
-        count4D[3] = 1;
-        H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset4D, NULL,
-                            count4D, NULL);
-
-        H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                H5P_DEFAULT, array1D);
-
-        for (l = 0; l < my_eqm_abundances->N_Temperatures; l++)
+  array_buffer_float = (float *)malloc(
+      my_eqm_abundances->N_Temperatures * my_eqm_abundances->N_Densities *
+      my_eqm_abundances->N_Metallicities * myGlobalVars->totalNumberOfSpecies *
+      sizeof(float));
+  dataset = H5Dopen(file_id, "Abundances", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < my_eqm_abundances->N_Temperatures; i++)
+    for (j = 0; j < my_eqm_abundances->N_Densities; j++)
+      for (k = 0; k < my_eqm_abundances->N_Metallicities; k++)
+        for (l = 0; l < myGlobalVars->totalNumberOfSpecies; l++)
           my_eqm_abundances->Abundances[chimes_flatten_index_4d(
-              k, l, i, j, my_eqm_abundances->N_Temperatures,
+              l, i, j, k, my_eqm_abundances->N_Temperatures,
               my_eqm_abundances->N_Densities,
               my_eqm_abundances->N_Metallicities)] =
-              chimes_max((ChimesFloat)array1D[l], chimes_log10(CHIMES_FLT_MIN));
-      }
-    }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+              chimes_max(
+                  (ChimesFloat)array_buffer_float[chimes_flatten_index_4d(
+                      i, j, k, l, my_eqm_abundances->N_Densities,
+                      my_eqm_abundances->N_Metallicities,
+                      myGlobalVars->totalNumberOfSpecies)],
+                  chimes_log10(CHIMES_FLT_MIN));
   H5Dclose(dataset);
+  free(array_buffer_float);
 
   H5Fclose(file_id);
-
-  // Free buffer memory
-  free(array1D);
 }
 
 /**
@@ -332,16 +308,11 @@ int compare_element_incl_arrays(int *reaction_array, int reaction_idx,
  */
 void initialise_main_data(struct globalVariables *myGlobalVars) {
   char fname[500];
-  int i, j, k, l, m, rank, N_reactions_all, incl_index;
+  int i, j, k, l, m, N_reactions_all, incl_index;
   int base_index, base_incl_index, found_base;
   int *array_buffer_int;
   float *array_buffer_float;
-  hid_t file_id, dataset, dataspace_id, memspace_id;
-  hsize_t dims[2];
-  hsize_t dims2D[2], count2D[2], offset2D[2];
-  hsize_t dims3D[3], count3D[3], offset3D[3];
-  hsize_t dims4D[4], count4D[4], offset4D[4];
-  hsize_t dims5D[5], count5D[5], offset5D[5];
+  hid_t file_id, dataset;
 
   /* When we read the main data file, we will first
    * read each reaction group in to a 'master'
@@ -380,121 +351,134 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
    ****************/
 
   // Read size of each table bin
-  dataset = H5Dopen1(file_id, "TableBins/N_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_Dust_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_Dust_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_Dust_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_Psi");
+  dataset = H5Dopen(file_id, "TableBins/N_Psi", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_Psi));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_secondary_cosmic_ray_xHII");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_secondary_cosmic_ray_xHII", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_secondary_cosmic_ray_xHII));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_H2self_column_densities");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_H2self_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_H2self_column_densities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_b_turbulence");
+  dataset = H5Dopen(file_id, "TableBins/N_b_turbulence", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_b_turbulence));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_COself_column_densities");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_COself_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_COself_column_densities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_H2CO_column_densities");
+  dataset = H5Dopen(file_id, "TableBins/N_H2CO_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_H2CO_column_densities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_mol_cool_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_mol_cool_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_mol_cool_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_2d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_cool_2d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_2d_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_hiT_2d_Temperatures");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_cool_hiT_2d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_hiT_2d_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_2d_ElectronDensities");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_cool_2d_ElectronDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_2d_ElectronDensities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_4d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/N_cool_4d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_4d_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_hiT_4d_Temperatures");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_cool_hiT_4d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_hiT_4d_Temperatures));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_4d_HIDensities");
+  dataset = H5Dopen(file_id, "TableBins/N_cool_4d_HIDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_4d_HIDensities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_4d_ElectronDensities");
+  dataset =
+      H5Dopen(file_id, "TableBins/N_cool_4d_ElectronDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_4d_ElectronDensities));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "TableBins/N_cool_4d_HIIDensities");
+  dataset = H5Dopen(file_id, "TableBins/N_cool_4d_HIIDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_bins.N_cool_4d_HIIDensities));
   H5Dclose(dataset);
 
   if ((myGlobalVars->element_included[0] == 1) &&
       (myGlobalVars->element_included[2] == 1)) {
-    dataset = H5Dopen1(file_id, "TableBins/N_CO_cool_rot_ColumnDensities");
+    dataset = H5Dopen(file_id, "TableBins/N_CO_cool_rot_ColumnDensities",
+                      H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_CO_cool_rot_ColumnDensities));
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "TableBins/N_CO_cool_vib_ColumnDensities");
+    dataset = H5Dopen(file_id, "TableBins/N_CO_cool_vib_ColumnDensities",
+                      H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_CO_cool_vib_ColumnDensities));
     H5Dclose(dataset);
   }
 
   if (myGlobalVars->element_included[2] == 1) {
-    dataset = H5Dopen1(file_id, "TableBins/N_H2O_cool_hiT_Temperatures");
+    dataset =
+        H5Dopen(file_id, "TableBins/N_H2O_cool_hiT_Temperatures", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_H2O_cool_hiT_Temperatures));
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "TableBins/N_H2O_cool_lowT_Temperatures");
+    dataset =
+        H5Dopen(file_id, "TableBins/N_H2O_cool_lowT_Temperatures", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_H2O_cool_lowT_Temperatures));
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "TableBins/N_H2O_cool_rot_ColumnDensities");
+    dataset = H5Dopen(file_id, "TableBins/N_H2O_cool_rot_ColumnDensities",
+                      H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_H2O_cool_rot_ColumnDensities));
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "TableBins/N_H2O_cool_vib_ColumnDensities");
+    dataset = H5Dopen(file_id, "TableBins/N_H2O_cool_vib_ColumnDensities",
+                      H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_bins.N_H2O_cool_vib_ColumnDensities));
     H5Dclose(dataset);
@@ -558,7 +542,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   // Read data arrays
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -570,7 +554,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_Dust_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/Dust_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/Dust_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -581,7 +565,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   free(array_buffer_float);
 
   array_buffer_float = (float *)malloc(chimes_table_bins.N_Psi * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/Psi");
+  dataset = H5Dopen(file_id, "TableBins/Psi", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -593,7 +577,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_secondary_cosmic_ray_xHII * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/secondary_cosmic_ray_xHII");
+  dataset =
+      H5Dopen(file_id, "TableBins/secondary_cosmic_ray_xHII", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -606,7 +591,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_H2self_column_densities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/H2self_column_densities");
+  dataset = H5Dopen(file_id, "TableBins/H2self_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -619,7 +604,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_b_turbulence * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/b_turbulence");
+  dataset = H5Dopen(file_id, "TableBins/b_turbulence", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -631,7 +616,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_COself_column_densities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/COself_column_densities");
+  dataset = H5Dopen(file_id, "TableBins/COself_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -644,7 +629,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_H2CO_column_densities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/H2CO_column_densities");
+  dataset = H5Dopen(file_id, "TableBins/H2CO_column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -657,7 +642,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_cool_2d_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_2d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/cool_2d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -670,7 +655,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_cool_2d_ElectronDensities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_2d_ElectronDensities");
+  dataset =
+      H5Dopen(file_id, "TableBins/cool_2d_ElectronDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -683,7 +669,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_cool_hiT_2d_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_hiT_2d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/cool_hiT_2d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -696,7 +682,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_cool_4d_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_4d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/cool_4d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -709,7 +695,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_cool_hiT_4d_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_hiT_4d_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/cool_hiT_4d_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -722,7 +708,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_cool_4d_HIDensities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_4d_HIDensities");
+  dataset = H5Dopen(file_id, "TableBins/cool_4d_HIDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -735,7 +721,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_cool_4d_ElectronDensities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_4d_ElectronDensities");
+  dataset =
+      H5Dopen(file_id, "TableBins/cool_4d_ElectronDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -748,7 +735,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_cool_4d_HIIDensities * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/cool_4d_HIIDensities");
+  dataset = H5Dopen(file_id, "TableBins/cool_4d_HIIDensities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -761,7 +748,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_mol_cool_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "TableBins/mol_cool_Temperatures");
+  dataset = H5Dopen(file_id, "TableBins/mol_cool_Temperatures", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -776,7 +763,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       (myGlobalVars->element_included[2] == 1)) {
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_CO_cool_rot_ColumnDensities * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/CO_cool_rot_ColumnDensities");
+    dataset =
+        H5Dopen(file_id, "TableBins/CO_cool_rot_ColumnDensities", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -789,7 +777,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_CO_cool_vib_ColumnDensities * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/CO_cool_vib_ColumnDensities");
+    dataset =
+        H5Dopen(file_id, "TableBins/CO_cool_vib_ColumnDensities", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -804,7 +793,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   if (myGlobalVars->element_included[2] == 1) {
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_hiT_Temperatures * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/H2O_cool_hiT_Temperatures");
+    dataset =
+        H5Dopen(file_id, "TableBins/H2O_cool_hiT_Temperatures", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -817,7 +807,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_lowT_Temperatures * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/H2O_cool_lowT_Temperatures");
+    dataset =
+        H5Dopen(file_id, "TableBins/H2O_cool_lowT_Temperatures", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -830,7 +821,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_rot_ColumnDensities * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/H2O_cool_rot_ColumnDensities");
+    dataset =
+        H5Dopen(file_id, "TableBins/H2O_cool_rot_ColumnDensities", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -843,7 +835,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_vib_ColumnDensities * sizeof(float));
-    dataset = H5Dopen1(file_id, "TableBins/H2O_cool_vib_ColumnDensities");
+    dataset =
+        H5Dopen(file_id, "TableBins/H2O_cool_vib_ColumnDensities", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
     H5Dclose(dataset);
@@ -860,7 +853,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
    ***************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "T_dependent/N_reactions");
+  dataset = H5Dopen(file_id, "T_dependent/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_T_dependent.N_reactions);
   H5Dclose(dataset);
@@ -879,149 +872,57 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_master_T_dependent.molecular_flag =
       (int *)malloc(N_reactions_all * sizeof(int));
 
-  array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "T_dependent/reactants");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 3; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_T_dependent.reactants[chimes_flatten_index_2d(i, j, 3)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "T_dependent/reactants", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_T_dependent.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "T_dependent/products");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 3; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_T_dependent.products[chimes_flatten_index_2d(i, j, 3)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "T_dependent/products", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_T_dependent.products);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "T_dependent/rates");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_T_dependent.rates[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "T_dependent/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_T_dependent.element_incl);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "T_dependent/element_incl");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_T_dependent.element_incl[chimes_flatten_index_2d(i, j, 9)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "T_dependent/molecular_flag");
+  dataset = H5Dopen(file_id, "T_dependent/molecular_flag", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_T_dependent.molecular_flag);
   H5Dclose(dataset);
 
   dataset =
-      H5Dopen1(file_id, "T_dependent/H2_collis_dissoc_heating_reaction_index");
+      H5Dopen(file_id, "T_dependent/H2_collis_dissoc_heating_reaction_index",
+              H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_T_dependent.H2_collis_dissoc_heating_reaction_index));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "T_dependent/H2_form_heating_reaction_index");
+  dataset = H5Dopen(file_id, "T_dependent/H2_form_heating_reaction_index",
+                    H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_T_dependent.H2_form_heating_reaction_index));
   H5Dclose(dataset);
 
-  // Free buffers
+  array_buffer_float = (float *)malloc(
+      N_reactions_all * chimes_table_bins.N_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "T_dependent/rates", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures; i++)
+    chimes_master_T_dependent.rates[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
   free(array_buffer_float);
-  free(array_buffer_int);
 
   /************************
    ** constant reactions **
    ************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "constant/N_reactions");
+  dataset = H5Dopen(file_id, "constant/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_constant.N_reactions);
   H5Dclose(dataset);
@@ -1040,122 +941,48 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_master_constant.rates =
       (ChimesFloat *)malloc(N_reactions_all * sizeof(ChimesFloat));
 
-  array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "constant/reactants");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 2; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_constant.reactants[chimes_flatten_index_2d(i, j, 2)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "constant/reactants", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_constant.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "constant/products");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 3; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_constant.products[chimes_flatten_index_2d(i, j, 3)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "constant/products", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_constant.products);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "constant/element_incl");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_constant.element_incl[chimes_flatten_index_2d(i, j, 9)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "constant/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_constant.element_incl);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "constant/molecular_flag");
+  dataset = H5Dopen(file_id, "constant/molecular_flag", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_constant.molecular_flag);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "constant/rates");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
-  H5Dclose(dataset);
-
-  for (i = 0; i < N_reactions_all; i++)
-    chimes_master_constant.rates[i] = (ChimesFloat)array_buffer_float[i];
-
-  dataset = H5Dopen1(file_id, "constant/H2_form_heating_reaction_index");
+  dataset =
+      H5Dopen(file_id, "constant/H2_form_heating_reaction_index", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_constant.H2_form_heating_reaction_index));
   H5Dclose(dataset);
 
-  // Free buffers
+  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+  dataset = H5Dopen(file_id, "constant/rates", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all; i++)
+    chimes_master_constant.rates[i] = (ChimesFloat)array_buffer_float[i];
+  H5Dclose(dataset);
   free(array_buffer_float);
-  free(array_buffer_int);
 
   /********************************
    ** recombination_AB reactions **
    ********************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "recombination_AB/N_reactions");
+  dataset = H5Dopen(file_id, "recombination_AB/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_recombination_AB.N_reactions);
   H5Dclose(dataset);
@@ -1175,144 +1002,62 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       N_reactions_all * 2 * chimes_table_bins.N_Temperatures *
       sizeof(ChimesFloat));
 
-  array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "recombination_AB/reactants");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 2; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_recombination_AB
-          .reactants[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "recombination_AB/reactants", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_recombination_AB.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "recombination_AB/rates_caseA");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_recombination_AB.rates[chimes_flatten_index_3d(
-          i, 0, j, 2, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "recombination_AB/rates_caseB");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_recombination_AB.rates[chimes_flatten_index_3d(
-          i, 1, j, 2, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "recombination_AB/element_incl");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_recombination_AB
-          .element_incl[chimes_flatten_index_2d(i, j, 9)] = array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "recombination_AB/products");
+  dataset = H5Dopen(file_id, "recombination_AB/products", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_recombination_AB.products);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "recombination_AB/molecular_flag");
+  dataset = H5Dopen(file_id, "recombination_AB/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_recombination_AB.element_incl);
+  H5Dclose(dataset);
+
+  dataset = H5Dopen(file_id, "recombination_AB/molecular_flag", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_recombination_AB.molecular_flag);
   H5Dclose(dataset);
 
-  // Free buffers
+  array_buffer_float = (float *)malloc(
+      N_reactions_all * chimes_table_bins.N_Temperatures * sizeof(float));
+
+  dataset = H5Dopen(file_id, "recombination_AB/rates_caseA", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all; i++)
+    for (j = 0; j < chimes_table_bins.N_Temperatures; j++)
+      chimes_master_recombination_AB.rates[chimes_flatten_index_3d(
+          i, 0, j, 2, chimes_table_bins.N_Temperatures)] =
+          chimes_max((ChimesFloat)array_buffer_float[chimes_flatten_index_2d(
+                         i, j, chimes_table_bins.N_Temperatures)],
+                     log_chimes_flt_min);
+  H5Dclose(dataset);
+
+  dataset = H5Dopen(file_id, "recombination_AB/rates_caseB", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all; i++)
+    for (j = 0; j < chimes_table_bins.N_Temperatures; j++)
+      chimes_master_recombination_AB.rates[chimes_flatten_index_3d(
+          i, 1, j, 2, chimes_table_bins.N_Temperatures)] =
+          chimes_max((ChimesFloat)array_buffer_float[chimes_flatten_index_2d(
+                         i, j, chimes_table_bins.N_Temperatures)],
+                     log_chimes_flt_min);
+  H5Dclose(dataset);
+
   free(array_buffer_float);
-  free(array_buffer_int);
 
   /********************************
    ** grain_recombination reactions **
    ********************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "grain_recombination/N_reactions");
+  dataset = H5Dopen(file_id, "grain_recombination/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_grain_recombination.N_reactions);
   H5Dclose(dataset);
@@ -1330,114 +1075,42 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       (ChimesFloat *)malloc(N_reactions_all * chimes_table_bins.N_Temperatures *
                             chimes_table_bins.N_Psi * sizeof(ChimesFloat));
 
-  array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "grain_recombination/reactants");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 2; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_grain_recombination
-          .reactants[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "grain_recombination/reactants", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_grain_recombination.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "grain_recombination/rates");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
-  dims3D[0] = N_reactions_all;
-  dims3D[1] = 1;
-  dims3D[2] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims3D, NULL);
-
-  for (i = 0; i < chimes_table_bins.N_Temperatures; i++) {
-    for (j = 0; j < chimes_table_bins.N_Psi; j++) {
-      offset3D[0] = 0;
-      offset3D[1] = i;
-      offset3D[2] = j;
-      count3D[0] = N_reactions_all;
-      count3D[1] = 1;
-      count3D[2] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL, count3D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (k = 0; k < N_reactions_all; k++)
-        chimes_master_grain_recombination.rates[chimes_flatten_index_3d(
-            k, i, j, chimes_table_bins.N_Temperatures,
-            chimes_table_bins.N_Psi)] =
-            chimes_max((ChimesFloat)array_buffer_float[k], log_chimes_flt_min);
-    }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "grain_recombination/element_incl");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_grain_recombination
-          .element_incl[chimes_flatten_index_2d(i, j, 9)] = array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "grain_recombination/products");
+  dataset = H5Dopen(file_id, "grain_recombination/products", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_grain_recombination.products);
   H5Dclose(dataset);
 
-  // Free buffers
+  dataset = H5Dopen(file_id, "grain_recombination/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_grain_recombination.element_incl);
+  H5Dclose(dataset);
+
+  array_buffer_float =
+      (float *)malloc(N_reactions_all * chimes_table_bins.N_Temperatures *
+                      chimes_table_bins.N_Psi * sizeof(float));
+  dataset = H5Dopen(file_id, "grain_recombination/rates", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures *
+                      chimes_table_bins.N_Psi;
+       i++)
+    chimes_master_grain_recombination.rates[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
   free(array_buffer_float);
-  free(array_buffer_int);
 
   /************************
    ** cosmic_ray reactions **
    ************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "cosmic_ray/N_reactions");
+  dataset = H5Dopen(file_id, "cosmic_ray/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cosmic_ray.N_reactions);
   H5Dclose(dataset);
@@ -1460,122 +1133,50 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   chimes_master_cosmic_ray.secondary_ratio = (ChimesFloat *)malloc(
       2 * chimes_table_bins.N_secondary_cosmic_ray_xHII * sizeof(ChimesFloat));
 
-  array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "cosmic_ray/reactants");
+  dataset = H5Dopen(file_id, "cosmic_ray/reactants", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cosmic_ray.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cosmic_ray/products");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 3; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_cosmic_ray.products[chimes_flatten_index_2d(i, j, 3)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "cosmic_ray/products", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_cosmic_ray.products);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cosmic_ray/element_incl");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_cosmic_ray.element_incl[chimes_flatten_index_2d(i, j, 9)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "cosmic_ray/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_cosmic_ray.element_incl);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cosmic_ray/molecular_flag");
+  dataset = H5Dopen(file_id, "cosmic_ray/molecular_flag", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cosmic_ray.molecular_flag);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cosmic_ray/rates");
+  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+  dataset = H5Dopen(file_id, "cosmic_ray/rates", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
-  H5Dclose(dataset);
-
   for (i = 0; i < N_reactions_all; i++)
     chimes_master_cosmic_ray.rates[i] = (ChimesFloat)array_buffer_float[i];
-
+  H5Dclose(dataset);
   free(array_buffer_float);
 
-  dataset = H5Dopen1(file_id, "cosmic_ray/secondary_base_reaction");
+  dataset = H5Dopen(file_id, "cosmic_ray/secondary_base_reaction", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cosmic_ray.secondary_base_reaction);
   H5Dclose(dataset);
 
-  array_buffer_float = (float *)malloc(2 * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cosmic_ray/secondary_ratio");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = 2;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_secondary_cosmic_ray_xHII; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = 2;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < 2; i++)
-      chimes_master_cosmic_ray.secondary_ratio[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_secondary_cosmic_ray_xHII)] =
-          (ChimesFloat)array_buffer_float[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  array_buffer_float = (float *)malloc(
+      2 * chimes_table_bins.N_secondary_cosmic_ray_xHII * sizeof(float));
+  dataset = H5Dopen(file_id, "cosmic_ray/secondary_ratio", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < 2 * chimes_table_bins.N_secondary_cosmic_ray_xHII; i++)
+    chimes_master_cosmic_ray.secondary_ratio[i] =
+        (ChimesFloat)array_buffer_float[i];
   H5Dclose(dataset);
-
-  // Free buffers
-  free(array_buffer_int);
   free(array_buffer_float);
 
   /*****************************
@@ -1583,7 +1184,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
    *****************************/
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "CO_cosmic_ray/N_reactions");
+  dataset = H5Dopen(file_id, "CO_cosmic_ray/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_CO_cosmic_ray.N_reactions);
   H5Dclose(dataset);
@@ -1601,99 +1202,32 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       N_reactions_all * chimes_table_bins.N_Temperatures * sizeof(ChimesFloat));
 
   array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
   // Read data arrays
-  dataset = H5Dopen1(file_id, "CO_cosmic_ray/reactants");
+  dataset = H5Dopen(file_id, "CO_cosmic_ray/reactants", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_CO_cosmic_ray.reactants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "CO_cosmic_ray/products");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 2; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_CO_cosmic_ray.products[chimes_flatten_index_2d(i, j, 2)] =
-          array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "CO_cosmic_ray/products", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_CO_cosmic_ray.products);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "CO_cosmic_ray/element_incl");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 9; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_CO_cosmic_ray
-          .element_incl[chimes_flatten_index_2d(i, j, 9)] = array_buffer_int[i];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  dataset = H5Dopen(file_id, "CO_cosmic_ray/element_incl", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          chimes_master_CO_cosmic_ray.element_incl);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "CO_cosmic_ray/rates");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_CO_cosmic_ray.rates[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  array_buffer_float = (float *)malloc(
+      N_reactions_all * chimes_table_bins.N_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "CO_cosmic_ray/rates", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures; i++)
+    chimes_master_CO_cosmic_ray.rates[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
   H5Dclose(dataset);
-
-  // Free buffers
-  free(array_buffer_int);
   free(array_buffer_float);
 
   if (myGlobalVars->N_spectra > 0) {
@@ -1702,7 +1236,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
      ***************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photoion_fuv/N_reactions");
+    dataset = H5Dopen(file_id, "photoion_fuv/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_fuv.N_reactions);
     H5Dclose(dataset);
@@ -1719,90 +1253,37 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photoion_fuv.gamma =
         (ChimesFloat *)malloc(N_reactions_all * sizeof(ChimesFloat));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photoion_fuv/reactants");
+    dataset = H5Dopen(file_id, "photoion_fuv/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_fuv.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_fuv/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_fuv.products[chimes_flatten_index_2d(i, j, 2)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_fuv/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_fuv.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_fuv/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_fuv
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_fuv/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_fuv.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_fuv/gamma");
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+    dataset = H5Dopen(file_id, "photoion_fuv/gamma", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_master_photoion_fuv.gamma[i] = (ChimesFloat)array_buffer_float[i];
-
-    // Free buffers
+    H5Dclose(dataset);
     free(array_buffer_float);
-    free(array_buffer_int);
 
     /***************************
      ** photoion_euv reactions **
      ***************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photoion_euv/N_reactions");
+    dataset = H5Dopen(file_id, "photoion_euv/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_euv.N_reactions);
     H5Dclose(dataset);
@@ -1821,88 +1302,35 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photoion_euv.molecular_flag =
         (int *)malloc(N_reactions_all * sizeof(int));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photoion_euv/reactants");
+    dataset = H5Dopen(file_id, "photoion_euv/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_euv.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_euv.products[chimes_flatten_index_2d(i, j, 2)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_euv/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_euv.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_euv
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_euv/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_euv.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/molecular_flag");
+    dataset = H5Dopen(file_id, "photoion_euv/molecular_flag", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_euv.molecular_flag);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/E_thresh");
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+    dataset = H5Dopen(file_id, "photoion_euv/E_thresh", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_master_photoion_euv.E_thresh[i] =
           (ChimesFloat)array_buffer_float[i];
-
-    // Free buffers
-    free(array_buffer_int);
+    H5Dclose(dataset);
     free(array_buffer_float);
 
     /**********************************
@@ -1910,7 +1338,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
      **********************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/N_reactions");
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_fuv.N_reactions);
     H5Dclose(dataset);
@@ -1927,73 +1355,23 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photoion_auger_fuv.base_reaction =
         (int *)malloc(N_reactions_all * sizeof(int));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/reactants");
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_fuv.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_auger_fuv
-            .products[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_auger_fuv.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_auger_fuv
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_auger_fuv.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/base_reaction");
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/base_reaction", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_fuv.base_reaction);
     H5Dclose(dataset);
@@ -2003,7 +1381,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
      **********************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/N_reactions");
+    dataset = H5Dopen(file_id, "photoion_auger_euv/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_euv.N_reactions);
     H5Dclose(dataset);
@@ -2020,87 +1398,33 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photoion_auger_euv.base_reaction =
         (int *)malloc(N_reactions_all * sizeof(int));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/reactants");
+    dataset = H5Dopen(file_id, "photoion_auger_euv/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_euv.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_auger_euv
-            .products[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_auger_euv/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_auger_euv.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photoion_auger_euv
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photoion_auger_euv/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photoion_auger_euv.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/base_reaction");
+    dataset = H5Dopen(file_id, "photoion_auger_euv/base_reaction", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photoion_auger_euv.base_reaction);
     H5Dclose(dataset);
-
-    // Free buffers
-    free(array_buffer_float);
-    free(array_buffer_int);
 
     /**********************************
      ** photodissoc_group1 reactions **
      **********************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photodissoc_group1/N_reactions");
+    dataset = H5Dopen(file_id, "photodissoc_group1/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photodissoc_group1.N_reactions);
     H5Dclose(dataset);
@@ -2121,105 +1445,54 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photodissoc_group1.molecular_flag =
         (int *)malloc(N_reactions_all * sizeof(int));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photodissoc_group1/reactants");
+    dataset = H5Dopen(file_id, "photodissoc_group1/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photodissoc_group1.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group1/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photodissoc_group1
-            .products[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photodissoc_group1/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photodissoc_group1.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group1/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photodissoc_group1
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photodissoc_group1/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photodissoc_group1.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group1/gamma");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
-    H5Dclose(dataset);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_photodissoc_group1.gamma[i] =
-          (ChimesFloat)array_buffer_float[i];
-
-    dataset = H5Dopen1(file_id, "photodissoc_group1/rates");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
-    H5Dclose(dataset);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_master_photodissoc_group1.rates[i] =
-          (ChimesFloat)array_buffer_float[i];
-
-    dataset = H5Dopen1(file_id, "photodissoc_group1/molecular_flag");
+    dataset =
+        H5Dopen(file_id, "photodissoc_group1/molecular_flag", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photodissoc_group1.molecular_flag);
     H5Dclose(dataset);
 
-    // Free buffers
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+
+    dataset = H5Dopen(file_id, "photodissoc_group1/gamma", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < N_reactions_all; i++)
+      chimes_master_photodissoc_group1.gamma[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+
+    dataset = H5Dopen(file_id, "photodissoc_group1/rates", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < N_reactions_all; i++)
+      chimes_master_photodissoc_group1.rates[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+
     free(array_buffer_float);
-    free(array_buffer_int);
 
     /**********************************
      ** photodissoc_group2 reactions **
      **********************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "photodissoc_group2/N_reactions");
+    dataset = H5Dopen(file_id, "photodissoc_group2/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photodissoc_group2.N_reactions);
     H5Dclose(dataset);
@@ -2238,96 +1511,41 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     chimes_master_photodissoc_group2.rates =
         (ChimesFloat *)malloc(N_reactions_all * sizeof(ChimesFloat));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "photodissoc_group2/reactants");
+    dataset = H5Dopen(file_id, "photodissoc_group2/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_photodissoc_group2.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group2/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photodissoc_group2
-            .products[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photodissoc_group2/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photodissoc_group2.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group2/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_photodissoc_group2
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "photodissoc_group2/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_photodissoc_group2.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "photodissoc_group2/rates");
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+    dataset = H5Dopen(file_id, "photodissoc_group2/rates", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_master_photodissoc_group2.rates[i] =
           (ChimesFloat)array_buffer_float[i];
-
+    H5Dclose(dataset);
     free(array_buffer_float);
 
     array_buffer_float = (float *)malloc(3 * sizeof(float));
-    dataset = H5Dopen1(file_id, "photodissoc_group2/gamma_coeff");
+    dataset = H5Dopen(file_id, "photodissoc_group2/gamma_coeff", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < 3; i++)
       chimes_master_photodissoc_group2.gamma_coeff[i] =
           (ChimesFloat)array_buffer_float[i];
-
-    // Free buffers
+    H5Dclose(dataset);
     free(array_buffer_float);
-    free(array_buffer_int);
 
     /*************************************
      ** H2_photodissoc reactions.       **
@@ -2337,7 +1555,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
      *************************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "H2_photodissoc/N_reactions");
+    dataset = H5Dopen(file_id, "H2_photodissoc/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_table_H2_photodissoc.N_reactions);
     H5Dclose(dataset);
@@ -2357,113 +1575,68 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
         N_reactions_all * chimes_table_bins.N_Temperatures *
         chimes_table_bins.N_H2self_column_densities *
         chimes_table_bins.N_b_turbulence * sizeof(ChimesFloat));
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
     // Read data arrays
-    dataset = H5Dopen1(file_id, "H2_photodissoc/reactants");
+    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
+    dataset = H5Dopen(file_id, "H2_photodissoc/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_int);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_table_H2_photodissoc.reactants[i] =
           myGlobalVars->speciesIndices[array_buffer_int[i]];
-
-    dataset = H5Dopen1(file_id, "H2_photodissoc/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_table_H2_photodissoc.products[chimes_flatten_index_2d(i, j, 2)] =
-            myGlobalVars->speciesIndices[array_buffer_int[i]];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
+    free(array_buffer_int);
 
-    dataset = H5Dopen1(file_id, "H2_photodissoc/gamma");
+    array_buffer_int = (int *)malloc(N_reactions_all * 2 * sizeof(int));
+    dataset = H5Dopen(file_id, "H2_photodissoc/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_int);
+    for (i = 0; i < N_reactions_all * 2; i++)
+      chimes_table_H2_photodissoc.products[i] =
+          myGlobalVars->speciesIndices[array_buffer_int[i]];
+    H5Dclose(dataset);
+    free(array_buffer_int);
+
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+
+    dataset = H5Dopen(file_id, "H2_photodissoc/gamma", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_table_H2_photodissoc.gamma[i] = (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "H2_photodissoc/rates");
+    dataset = H5Dopen(file_id, "H2_photodissoc/rates", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_table_H2_photodissoc.rates[i] = (ChimesFloat)array_buffer_float[i];
-
-    dataset = H5Dopen1(file_id, "H2_photodissoc/self_shielding");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
-    dims4D[0] = N_reactions_all;
-    dims4D[1] = 1;
-    dims4D[2] = 1;
-    dims4D[3] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims4D, NULL);
-
-    for (i = 0; i < chimes_table_bins.N_Temperatures; i++) {
-      for (j = 0; j < chimes_table_bins.N_H2self_column_densities; j++) {
-        for (k = 0; k < chimes_table_bins.N_b_turbulence; k++) {
-          offset4D[0] = 0;
-          offset4D[1] = i;
-          offset4D[2] = j;
-          offset4D[3] = k;
-          count4D[0] = N_reactions_all;
-          count4D[1] = 1;
-          count4D[2] = 1;
-          count4D[3] = 1;
-          H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset4D, NULL,
-                              count4D, NULL);
-
-          H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                  H5P_DEFAULT, array_buffer_float);
-
-          for (l = 0; l < N_reactions_all; l++)
-            chimes_table_H2_photodissoc.self_shielding[chimes_flatten_index_4d(
-                l, i, j, k, chimes_table_bins.N_Temperatures,
-                chimes_table_bins.N_H2self_column_densities,
-                chimes_table_bins.N_b_turbulence)] =
-                (ChimesFloat)array_buffer_float[l];
-        }
-      }
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
 
-    // Free buffers
     free(array_buffer_float);
-    free(array_buffer_int);
+
+    array_buffer_float =
+        (float *)malloc(N_reactions_all * chimes_table_bins.N_Temperatures *
+                        chimes_table_bins.N_H2self_column_densities *
+                        chimes_table_bins.N_b_turbulence * sizeof(float));
+    dataset = H5Dopen(file_id, "H2_photodissoc/self_shielding", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures *
+                        chimes_table_bins.N_H2self_column_densities *
+                        chimes_table_bins.N_b_turbulence;
+         i++)
+      chimes_table_H2_photodissoc.self_shielding[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+    free(array_buffer_float);
 
     /*******************************
      ** CO_photodissoc reactions. **
      *******************************/
 
     // Read number of reactions in group
-    dataset = H5Dopen1(file_id, "CO_photodissoc/N_reactions");
+    dataset = H5Dopen(file_id, "CO_photodissoc/N_reactions", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_CO_photodissoc.N_reactions);
     H5Dclose(dataset);
@@ -2485,127 +1658,56 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
         N_reactions_all * chimes_table_bins.N_COself_column_densities *
         chimes_table_bins.N_H2CO_column_densities * sizeof(ChimesFloat));
 
-    array_buffer_int = (int *)malloc(N_reactions_all * sizeof(int));
-    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-
     // Read data arrays
-    dataset = H5Dopen1(file_id, "CO_photodissoc/reactants");
+    dataset = H5Dopen(file_id, "CO_photodissoc/reactants", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             chimes_master_CO_photodissoc.reactants);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "CO_photodissoc/products");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 2; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_CO_photodissoc
-            .products[chimes_flatten_index_2d(i, j, 2)] = array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "CO_photodissoc/products", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_CO_photodissoc.products);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "CO_photodissoc/element_incl");
-
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = N_reactions_all;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < 9; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = N_reactions_all;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_int);
-
-      for (i = 0; i < N_reactions_all; i++)
-        chimes_master_CO_photodissoc
-            .element_incl[chimes_flatten_index_2d(i, j, 9)] =
-            array_buffer_int[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "CO_photodissoc/element_incl", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            chimes_master_CO_photodissoc.element_incl);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "CO_photodissoc/gamma");
+    array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
+
+    dataset = H5Dopen(file_id, "CO_photodissoc/gamma", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < N_reactions_all; i++)
       chimes_master_CO_photodissoc.gamma[i] =
           (ChimesFloat)array_buffer_float[i];
-
-    dataset = H5Dopen1(file_id, "CO_photodissoc/rates");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
     H5Dclose(dataset);
 
+    dataset = H5Dopen(file_id, "CO_photodissoc/rates", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
     for (i = 0; i < N_reactions_all; i++)
       chimes_master_CO_photodissoc.rates[i] =
           (ChimesFloat)array_buffer_float[i];
-
-    dataset = H5Dopen1(file_id, "CO_photodissoc/self_shielding");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
-    dims3D[0] = N_reactions_all;
-    dims3D[1] = 1;
-    dims3D[2] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims3D, NULL);
-
-    for (i = 0; i < chimes_table_bins.N_COself_column_densities; i++) {
-      for (j = 0; j < chimes_table_bins.N_H2CO_column_densities; j++) {
-        offset3D[0] = 0;
-        offset3D[1] = i;
-        offset3D[2] = j;
-        count3D[0] = N_reactions_all;
-        count3D[1] = 1;
-        count3D[2] = 1;
-        H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL,
-                            count3D, NULL);
-
-        H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                H5P_DEFAULT, array_buffer_float);
-
-        for (l = 0; l < N_reactions_all; l++)
-          chimes_master_CO_photodissoc.self_shielding[chimes_flatten_index_3d(
-              l, i, j, chimes_table_bins.N_COself_column_densities,
-              chimes_table_bins.N_H2CO_column_densities)] =
-              (ChimesFloat)array_buffer_float[l];
-      }
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
 
-    // Free buffers
     free(array_buffer_float);
-    free(array_buffer_int);
+
+    array_buffer_float = (float *)malloc(
+        N_reactions_all * chimes_table_bins.N_COself_column_densities *
+        chimes_table_bins.N_H2CO_column_densities * sizeof(float));
+    dataset = H5Dopen(file_id, "CO_photodissoc/self_shielding", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0;
+         i < N_reactions_all * chimes_table_bins.N_COself_column_densities *
+                 chimes_table_bins.N_H2CO_column_densities;
+         i++)
+      chimes_master_CO_photodissoc.self_shielding[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+    free(array_buffer_float);
   }
 
   /*********************************
@@ -2625,60 +1727,41 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       chimes_table_bins.N_Temperatures * chimes_table_bins.N_Dust_Temperatures *
       sizeof(ChimesFloat));
 
-  array_buffer_int = (int *)malloc(3 * sizeof(int));
-  array_buffer_float =
-      (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
-
   // Read data arrays
-  dataset = H5Dopen1(file_id, "H2_dust_formation/reactants");
+  array_buffer_int = (int *)malloc(3 * sizeof(int));
+
+  dataset = H5Dopen(file_id, "H2_dust_formation/reactants", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_int);
-  H5Dclose(dataset);
-
+  // Only store the first two indices.
   for (i = 0; i < 2; i++)
     chimes_table_H2_dust_formation.reactants[i] =
         myGlobalVars->speciesIndices[array_buffer_int[i]];
+  H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "H2_dust_formation/products");
+  dataset = H5Dopen(file_id, "H2_dust_formation/products", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_int);
-  H5Dclose(dataset);
-
+  // Only store the first index.
   chimes_table_H2_dust_formation.products[0] =
       myGlobalVars->speciesIndices[array_buffer_int[0]];
-
-  dataset = H5Dopen1(file_id, "H2_dust_formation/rates");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_table_bins.N_Temperatures;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Dust_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_table_bins.N_Temperatures;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
-      chimes_table_H2_dust_formation.rates[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Dust_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
   H5Dclose(dataset);
 
-  // Free buffers
-  free(array_buffer_float);
   free(array_buffer_int);
+
+  array_buffer_float =
+      (float *)malloc(chimes_table_bins.N_Temperatures *
+                      chimes_table_bins.N_Dust_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "H2_dust_formation/rates", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_table_bins.N_Temperatures *
+                      chimes_table_bins.N_Dust_Temperatures;
+       i++)
+    chimes_table_H2_dust_formation.rates[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
 
   /*********************************
    ** H2_collis_dissoc reactions **
@@ -2692,7 +1775,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
    * flag of 1). */
 
   // Read number of reactions in group
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/N_reactions");
+  dataset = H5Dopen(file_id, "H2_collis_dissoc/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_table_H2_collis_dissoc.N_reactions);
   H5Dclose(dataset);
@@ -2716,160 +1799,80 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       chimes_table_bins.N_Temperatures * sizeof(ChimesFloat));
 
   // Read data arrays
-  array_buffer_int = (int *)malloc(2 * sizeof(int));
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/reactants");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 2; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_table_H2_collis_dissoc
-          .reactants[chimes_flatten_index_2d(i, j, 2)] =
-          myGlobalVars->speciesIndices[array_buffer_int[i]];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  array_buffer_int = (int *)malloc(N_reactions_all * 2 * sizeof(int));
+  dataset = H5Dopen(file_id, "H2_collis_dissoc/reactants", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_int);
+  for (i = 0; i < N_reactions_all * 2; i++)
+    chimes_table_H2_collis_dissoc.reactants[i] =
+        myGlobalVars->speciesIndices[array_buffer_int[i]];
   H5Dclose(dataset);
   free(array_buffer_int);
 
-  array_buffer_int = (int *)malloc(3 * sizeof(int));
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/products");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < 3; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_int);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_table_H2_collis_dissoc.products[chimes_flatten_index_2d(i, j, 3)] =
-          myGlobalVars->speciesIndices[array_buffer_int[i]];
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+  array_buffer_int = (int *)malloc(N_reactions_all * 3 * sizeof(int));
+  dataset = H5Dopen(file_id, "H2_collis_dissoc/products", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_int);
+  for (i = 0; i < N_reactions_all * 3; i++)
+    chimes_table_H2_collis_dissoc.products[i] =
+        myGlobalVars->speciesIndices[array_buffer_int[i]];
   H5Dclose(dataset);
   free(array_buffer_int);
 
   array_buffer_float =
       (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/critical_density_H");
+  dataset =
+      H5Dopen(file_id, "H2_collis_dissoc/critical_density_H", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
-  H5Dclose(dataset);
-
   for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
     chimes_table_H2_collis_dissoc.critical_density_H[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/critical_density_H2");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset =
+      H5Dopen(file_id, "H2_collis_dissoc/critical_density_H2", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
     chimes_table_H2_collis_dissoc.critical_density_H2[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/critical_density_He");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset =
+      H5Dopen(file_id, "H2_collis_dissoc/critical_density_He", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
     chimes_table_H2_collis_dissoc.critical_density_He[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  free(array_buffer_float);
-
-  array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/k0");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_table_H2_collis_dissoc
-          .k0[chimes_flatten_index_2d(i, j, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/kLTE");
-
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = N_reactions_all;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = N_reactions_all;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < N_reactions_all; i++)
-      chimes_table_H2_collis_dissoc.kLTE[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
   H5Dclose(dataset);
 
   free(array_buffer_float);
 
-  dataset = H5Dopen1(file_id, "H2_collis_dissoc/Heating_reaction_index");
+  array_buffer_float = (float *)malloc(
+      N_reactions_all * chimes_table_bins.N_Temperatures * sizeof(float));
+
+  dataset = H5Dopen(file_id, "H2_collis_dissoc/k0", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures; i++)
+    chimes_table_H2_collis_dissoc.k0[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+
+  dataset = H5Dopen(file_id, "H2_collis_dissoc/kLTE", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < N_reactions_all * chimes_table_bins.N_Temperatures; i++)
+    chimes_table_H2_collis_dissoc.kLTE[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+
+  free(array_buffer_float);
+
+  dataset =
+      H5Dopen(file_id, "H2_collis_dissoc/Heating_reaction_index", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_table_H2_collis_dissoc.Heating_reaction_index));
   H5Dclose(dataset);
@@ -2879,17 +1882,17 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
    *************/
 
   // Read number of coolants
-  dataset = H5Dopen1(file_id, "cooling/N_coolants");
+  dataset = H5Dopen(file_id, "cooling/N_coolants", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_cooling.N_coolants));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cooling/N_coolants_2d");
+  dataset = H5Dopen(file_id, "cooling/N_coolants_2d", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_cooling.N_coolants_2d));
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cooling/N_coolants_4d");
+  dataset = H5Dopen(file_id, "cooling/N_coolants_4d", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(chimes_master_cooling.N_coolants_4d));
   H5Dclose(dataset);
@@ -3013,563 +2016,304 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
   }
 
   // Read data arrays
-  dataset = H5Dopen1(file_id, "cooling/coolants");
+  dataset = H5Dopen(file_id, "cooling/coolants", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cooling.coolants);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cooling/coolants_2d");
+  dataset = H5Dopen(file_id, "cooling/coolants_2d", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cooling.coolants_2d);
   H5Dclose(dataset);
 
-  dataset = H5Dopen1(file_id, "cooling/coolants_4d");
+  dataset = H5Dopen(file_id, "cooling/coolants_4d", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           chimes_master_cooling.coolants_4d);
   H5Dclose(dataset);
 
   array_buffer_float =
-      (float *)malloc(chimes_master_cooling.N_coolants * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cooling/rates");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_master_cooling.N_coolants;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_master_cooling.N_coolants;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_master_cooling.N_coolants; i++)
-      chimes_master_cooling.rates[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  free(array_buffer_float);
-
-  array_buffer_float =
-      (float *)malloc(chimes_master_cooling.N_coolants_2d * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cooling/rates_2d");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
-  dims3D[0] = chimes_master_cooling.N_coolants_2d;
-  dims3D[1] = 1;
-  dims3D[2] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims3D, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_cool_2d_Temperatures; j++) {
-    for (k = 0; k < chimes_table_bins.N_cool_2d_ElectronDensities; k++) {
-      offset3D[0] = 0;
-      offset3D[1] = j;
-      offset3D[2] = k;
-      count3D[0] = chimes_master_cooling.N_coolants_2d;
-      count3D[1] = 1;
-      count3D[2] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL, count3D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_master_cooling.N_coolants_2d; i++)
-        chimes_master_cooling.rates_2d[chimes_flatten_index_3d(
-            i, j, k, chimes_table_bins.N_cool_2d_Temperatures,
-            chimes_table_bins.N_cool_2d_ElectronDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "cooling/rates_hiT_2d");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_master_cooling.N_coolants_2d;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_cool_hiT_2d_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_master_cooling.N_coolants_2d;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_master_cooling.N_coolants_2d; i++)
-      chimes_master_cooling.rates_hiT_2d[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_cool_hiT_2d_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  free(array_buffer_float);
-
-  array_buffer_float =
-      (float *)malloc(chimes_master_cooling.N_coolants_4d * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cooling/rates_4d");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims5D, NULL);
-  dims5D[0] = chimes_master_cooling.N_coolants_4d;
-  dims5D[1] = 1;
-  dims5D[2] = 1;
-  dims5D[3] = 1;
-  dims5D[4] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims5D, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_cool_4d_Temperatures; j++) {
-    for (k = 0; k < chimes_table_bins.N_cool_4d_HIDensities; k++) {
-      for (l = 0; l < chimes_table_bins.N_cool_4d_ElectronDensities; l++) {
-        for (m = 0; m < chimes_table_bins.N_cool_4d_HIIDensities; m++) {
-          offset5D[0] = 0;
-          offset5D[1] = j;
-          offset5D[2] = k;
-          offset5D[3] = l;
-          offset5D[4] = l;
-          count5D[0] = chimes_master_cooling.N_coolants_4d;
-          count5D[1] = 1;
-          count5D[2] = 1;
-          count5D[3] = 1;
-          count5D[4] = 1;
-          H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset5D, NULL,
-                              count5D, NULL);
-
-          H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                  H5P_DEFAULT, array_buffer_float);
-
-          for (i = 0; i < chimes_master_cooling.N_coolants_4d; i++)
-            chimes_master_cooling.rates_4d[chimes_flatten_index_5d(
-                i, j, k, l, m, chimes_table_bins.N_cool_4d_Temperatures,
-                chimes_table_bins.N_cool_4d_HIDensities,
-                chimes_table_bins.N_cool_4d_ElectronDensities,
-                chimes_table_bins.N_cool_4d_HIIDensities)] =
-                chimes_max((ChimesFloat)array_buffer_float[i],
-                           log_chimes_flt_min);
-        }
-      }
-    }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "cooling/rates_hiT_4d");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_master_cooling.N_coolants_4d;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_cool_hiT_4d_Temperatures; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_master_cooling.N_coolants_4d;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_master_cooling.N_coolants_4d; i++)
-      chimes_master_cooling.rates_hiT_4d[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_cool_hiT_4d_Temperatures)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  free(array_buffer_float);
-
-  array_buffer_float =
-      (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cooling/photoelectric_heating");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_table_bins.N_Temperatures;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Psi; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_table_bins.N_Temperatures;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
-      chimes_master_cooling.photoelectric_heating[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Psi)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "cooling/grain_recombination");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-  dims[0] = chimes_table_bins.N_Temperatures;
-  dims[1] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims, NULL);
-
-  for (j = 0; j < chimes_table_bins.N_Psi; j++) {
-    offset2D[0] = 0;
-    offset2D[1] = j;
-    count2D[0] = chimes_table_bins.N_Temperatures;
-    count2D[1] = 1;
-    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                        NULL);
-
-    H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-            array_buffer_float);
-
-    for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
-      chimes_master_cooling.grain_recombination[chimes_flatten_index_2d(
-          i, j, chimes_table_bins.N_Psi)] =
-          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
-
-  free(array_buffer_float);
-
-  array_buffer_float =
-      (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "cooling/gas_grain_transfer");
+      (float *)malloc(chimes_master_cooling.N_coolants *
+                      chimes_table_bins.N_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/rates", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
+  for (i = 0;
+       i < chimes_master_cooling.N_coolants * chimes_table_bins.N_Temperatures;
+       i++)
+    chimes_master_cooling.rates[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
+
+  array_buffer_float = (float *)malloc(
+      chimes_master_cooling.N_coolants_2d *
+      chimes_table_bins.N_cool_2d_Temperatures *
+      chimes_table_bins.N_cool_2d_ElectronDensities * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/rates_2d", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_master_cooling.N_coolants_2d *
+                      chimes_table_bins.N_cool_2d_Temperatures *
+                      chimes_table_bins.N_cool_2d_ElectronDensities;
+       i++)
+    chimes_master_cooling.rates_2d[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
+
+  array_buffer_float = (float *)malloc(
+      chimes_master_cooling.N_coolants_2d *
+      chimes_table_bins.N_cool_hiT_2d_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/rates_hiT_2d", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_master_cooling.N_coolants_2d *
+                      chimes_table_bins.N_cool_hiT_2d_Temperatures;
+       i++)
+    chimes_master_cooling.rates_hiT_2d[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
+
+  array_buffer_float =
+      (float *)malloc(chimes_master_cooling.N_coolants_4d *
+                      chimes_table_bins.N_cool_4d_Temperatures *
+                      chimes_table_bins.N_cool_4d_HIDensities *
+                      chimes_table_bins.N_cool_4d_ElectronDensities *
+                      chimes_table_bins.N_cool_4d_HIIDensities * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/rates_4d", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_master_cooling.N_coolants_4d *
+                      chimes_table_bins.N_cool_4d_Temperatures *
+                      chimes_table_bins.N_cool_4d_HIDensities *
+                      chimes_table_bins.N_cool_4d_ElectronDensities *
+                      chimes_table_bins.N_cool_4d_HIIDensities;
+       i++)
+    chimes_master_cooling.rates_4d[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
+
+  array_buffer_float = (float *)malloc(
+      chimes_master_cooling.N_coolants_4d *
+      chimes_table_bins.N_cool_hiT_4d_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/rates_hiT_4d", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_master_cooling.N_coolants_4d *
+                      chimes_table_bins.N_cool_hiT_4d_Temperatures;
+       i++)
+    chimes_master_cooling.rates_hiT_4d[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+  free(array_buffer_float);
+
+  array_buffer_float = (float *)malloc(chimes_table_bins.N_Temperatures *
+                                       chimes_table_bins.N_Psi * sizeof(float));
+
+  dataset = H5Dopen(file_id, "cooling/photoelectric_heating", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_table_bins.N_Temperatures * chimes_table_bins.N_Psi;
+       i++)
+    chimes_master_cooling.photoelectric_heating[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/grain_recombination", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  for (i = 0; i < chimes_table_bins.N_Temperatures * chimes_table_bins.N_Psi;
+       i++)
+    chimes_master_cooling.grain_recombination[i] =
+        chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+
+  free(array_buffer_float);
+
+  array_buffer_float =
+      (float *)malloc(chimes_table_bins.N_Temperatures * sizeof(float));
+  dataset = H5Dopen(file_id, "cooling/gas_grain_transfer", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_Temperatures; i++)
     chimes_master_cooling.gas_grain_transfer[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
+  H5Dclose(dataset);
   free(array_buffer_float);
 
   array_buffer_float = (float *)malloc(
       chimes_table_bins.N_mol_cool_Temperatures * sizeof(float));
 
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_lowDens_H2");
+  dataset = H5Dopen(file_id, "cooling/H2_cool_lowDens_H2", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
-  H5Dclose(dataset);
-
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_lowDens_H2[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_lowDens_HI");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/H2_cool_lowDens_HI", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_lowDens_HI[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_lowDens_HII");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/H2_cool_lowDens_HII", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_lowDens_HII[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_lowDens_HeI");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/H2_cool_lowDens_HeI", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_lowDens_HeI[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_lowDens_elec");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/H2_cool_lowDens_elec", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_lowDens_elec[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-  dataset = H5Dopen1(file_id, "cooling/H2_cool_LTE");
-  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-          array_buffer_float);
   H5Dclose(dataset);
 
+  dataset = H5Dopen(file_id, "cooling/H2_cool_LTE", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
     chimes_master_cooling.H2_cool_LTE[i] =
         chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+  H5Dclose(dataset);
+
+  free(array_buffer_float);
 
   if ((myGlobalVars->element_included[0] == 1) &&
       (myGlobalVars->element_included[2] == 1)) {
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_rot_L0");
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_mol_cool_Temperatures * sizeof(float));
+
+    dataset = H5Dopen(file_id, "cooling/CO_cool_rot_L0", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
       chimes_table_cooling.CO_cool_rot_L0[i] =
           chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_vib_L0");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
     H5Dclose(dataset);
 
+    dataset = H5Dopen(file_id, "cooling/CO_cool_vib_L0", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
     for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
       chimes_table_cooling.CO_cool_vib_L0[i] =
           chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_rot_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_mol_cool_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_CO_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_mol_cool_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
-        chimes_table_cooling.CO_cool_rot_Llte[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_CO_cool_rot_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_rot_nhalf");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_mol_cool_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
+    free(array_buffer_float);
 
-    for (j = 0; j < chimes_table_bins.N_CO_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_mol_cool_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_mol_cool_Temperatures *
+        chimes_table_bins.N_CO_cool_rot_ColumnDensities * sizeof(float));
 
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
-        chimes_table_cooling.CO_cool_rot_nhalf[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_CO_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/CO_cool_rot_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures *
+                        chimes_table_bins.N_CO_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.CO_cool_rot_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_rot_a");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_mol_cool_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_CO_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_mol_cool_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
-        chimes_table_cooling.CO_cool_rot_a[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_CO_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/CO_cool_rot_nhalf", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures *
+                        chimes_table_bins.N_CO_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.CO_cool_rot_nhalf[i] =
+          (ChimesFloat)array_buffer_float[i];
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/CO_cool_vib_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_mol_cool_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_CO_cool_vib_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_mol_cool_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
-        chimes_table_cooling.CO_cool_vib_Llte[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_CO_cool_vib_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/CO_cool_rot_a", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures *
+                        chimes_table_bins.N_CO_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.CO_cool_rot_a[i] =
+          (ChimesFloat)array_buffer_float[i];
     H5Dclose(dataset);
+
+    free(array_buffer_float);
+
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_mol_cool_Temperatures *
+        chimes_table_bins.N_CO_cool_vib_ColumnDensities * sizeof(float));
+    dataset = H5Dopen(file_id, "cooling/CO_cool_vib_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures *
+                        chimes_table_bins.N_CO_cool_vib_ColumnDensities;
+         i++)
+      chimes_table_cooling.CO_cool_vib_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+    H5Dclose(dataset);
+    free(array_buffer_float);
   }
-
-  free(array_buffer_float);
 
   if (myGlobalVars->element_included[2] == 1) {
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_hiT_Temperatures * sizeof(float));
-
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_rot_hiT_L0");
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_rot_hiT_L0", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures; i++)
       chimes_table_cooling.H2O_cool_rot_hiT_L0[i] =
           chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+    H5Dclose(dataset);
+    free(array_buffer_float);
 
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_rot_hiT_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_H2O_cool_hiT_Temperatures *
+        chimes_table_bins.N_H2O_cool_rot_ColumnDensities * sizeof(float));
 
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures; i++)
-        chimes_table_cooling.H2O_cool_rot_hiT_Llte[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_rot_hiT_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2O_cool_rot_hiT_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_rot_hiT_nhalf");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures; i++)
-        chimes_table_cooling.H2O_cool_rot_hiT_nhalf[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_rot_hiT_nhalf", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2O_cool_rot_hiT_nhalf[i] =
+          (ChimesFloat)array_buffer_float[i];
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_rot_hiT_a");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_hiT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures; i++)
-        chimes_table_cooling.H2O_cool_rot_hiT_a[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_rot_hiT_a", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_hiT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2O_cool_rot_hiT_a[i] =
+          (ChimesFloat)array_buffer_float[i];
     H5Dclose(dataset);
 
     free(array_buffer_float);
@@ -3577,235 +2321,118 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_H2O_cool_lowT_Temperatures * sizeof(float));
 
-    dataset = H5Dopen1(file_id, "cooling/H2Oortho_cool_rot_lowT_L0");
+    dataset =
+        H5Dopen(file_id, "cooling/H2Oortho_cool_rot_lowT_L0", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
       chimes_table_cooling.H2Oortho_cool_rot_lowT_L0[i] =
           chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-    dataset = H5Dopen1(file_id, "cooling/H2Oortho_cool_rot_lowT_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling
-            .H2Oortho_cool_rot_lowT_Llte[chimes_flatten_index_2d(
-                i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/H2Oortho_cool_rot_lowT_nhalf");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling
-            .H2Oortho_cool_rot_lowT_nhalf[chimes_flatten_index_2d(
-                i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
-    H5Dclose(dataset);
-
-    dataset = H5Dopen1(file_id, "cooling/H2Oortho_cool_rot_lowT_a");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling.H2Oortho_cool_rot_lowT_a[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
-    H5Dclose(dataset);
-
-    dataset = H5Dopen1(file_id, "cooling/H2Opara_cool_rot_lowT_L0");
+    dataset = H5Dopen(file_id, "cooling/H2Opara_cool_rot_lowT_L0", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
       chimes_table_cooling.H2Opara_cool_rot_lowT_L0[i] =
           chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-
-    dataset = H5Dopen1(file_id, "cooling/H2Opara_cool_rot_lowT_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
-
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling.H2Opara_cool_rot_lowT_Llte[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/H2Opara_cool_rot_lowT_nhalf");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
+    free(array_buffer_float);
 
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+        chimes_table_bins.N_H2O_cool_rot_ColumnDensities * sizeof(float));
 
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling
-            .H2Opara_cool_rot_lowT_nhalf[chimes_flatten_index_2d(
-                i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset =
+        H5Dopen(file_id, "cooling/H2Oortho_cool_rot_lowT_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Oortho_cool_rot_lowT_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
     H5Dclose(dataset);
 
-    dataset = H5Dopen1(file_id, "cooling/H2Opara_cool_rot_lowT_a");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
+    dataset =
+        H5Dopen(file_id, "cooling/H2Oortho_cool_rot_lowT_nhalf", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Oortho_cool_rot_lowT_nhalf[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
 
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_rot_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_H2O_cool_lowT_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
+    dataset = H5Dopen(file_id, "cooling/H2Oortho_cool_rot_lowT_a", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Oortho_cool_rot_lowT_a[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
 
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
+    dataset =
+        H5Dopen(file_id, "cooling/H2Opara_cool_rot_lowT_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Opara_cool_rot_lowT_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
+    H5Dclose(dataset);
 
-      for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures; i++)
-        chimes_table_cooling.H2Opara_cool_rot_lowT_a[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_rot_ColumnDensities)] =
-            (ChimesFloat)array_buffer_float[i];
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset =
+        H5Dopen(file_id, "cooling/H2Opara_cool_rot_lowT_nhalf", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Opara_cool_rot_lowT_nhalf[i] =
+          (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+
+    dataset = H5Dopen(file_id, "cooling/H2Opara_cool_rot_lowT_a", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_H2O_cool_lowT_Temperatures *
+                        chimes_table_bins.N_H2O_cool_rot_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2Opara_cool_rot_lowT_a[i] =
+          (ChimesFloat)array_buffer_float[i];
     H5Dclose(dataset);
 
     free(array_buffer_float);
 
     array_buffer_float = (float *)malloc(
         chimes_table_bins.N_mol_cool_Temperatures * sizeof(float));
-
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_vib_L0");
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_vib_L0", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
       chimes_table_cooling.H2O_cool_vib_L0[i] =
           (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
+    free(array_buffer_float);
 
-    dataset = H5Dopen1(file_id, "cooling/H2O_cool_vib_Llte");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims2D, NULL);
-    dims[0] = chimes_table_bins.N_mol_cool_Temperatures;
-    dims[1] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims, NULL);
+    array_buffer_float = (float *)malloc(
+        chimes_table_bins.N_mol_cool_Temperatures *
+        chimes_table_bins.N_H2O_cool_vib_ColumnDensities * sizeof(float));
 
-    for (j = 0; j < chimes_table_bins.N_H2O_cool_vib_ColumnDensities; j++) {
-      offset2D[0] = 0;
-      offset2D[1] = j;
-      count2D[0] = chimes_table_bins.N_mol_cool_Temperatures;
-      count2D[1] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset2D, NULL, count2D,
-                          NULL);
-
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
-
-      for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures; i++)
-        chimes_table_cooling.H2O_cool_vib_Llte[chimes_flatten_index_2d(
-            i, j, chimes_table_bins.N_H2O_cool_vib_ColumnDensities)] =
-            chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+    dataset = H5Dopen(file_id, "cooling/H2O_cool_vib_Llte", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (i = 0; i < chimes_table_bins.N_mol_cool_Temperatures *
+                        chimes_table_bins.N_H2O_cool_vib_ColumnDensities;
+         i++)
+      chimes_table_cooling.H2O_cool_vib_Llte[i] =
+          chimes_max((ChimesFloat)array_buffer_float[i], log_chimes_flt_min);
     H5Dclose(dataset);
 
     free(array_buffer_float);
@@ -5274,10 +3901,8 @@ void read_cross_sections_tables(
     struct chimes_spectra_struct *my_spectra,
     struct globalVariables *myGlobalVars) {
   char fname[1000];
-  int i, j, k, l, m, rank;
-  hsize_t dims3D[3], count3D[3], offset3D[3];
-  hsize_t dims4D[4], count4D[4], offset4D[4];
-  hid_t file_id, dataset, dataspace_id, memspace_id;
+  int i, j, k, l, m;
+  hid_t file_id, dataset;
   float *array_buffer_float;
 
   /* If using a redshift-dependent UVB,
@@ -5289,24 +3914,23 @@ void read_cross_sections_tables(
             ->PhotoIonTablePath[myGlobalVars->redshift_dependent_UVB_index]);
     file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    dataset = H5Dopen1(file_id, "N_redshifts");
+    dataset = H5Dopen(file_id, "N_redshifts", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             &(chimes_table_redshift_dependent_UVB.N_redshifts));
     H5Dclose(dataset);
 
-    array_buffer_float = (float *)malloc(
-        chimes_table_redshift_dependent_UVB.N_redshifts * sizeof(float));
     chimes_table_redshift_dependent_UVB.redshift_bins = (ChimesFloat *)malloc(
         chimes_table_redshift_dependent_UVB.N_redshifts * sizeof(ChimesFloat));
 
-    dataset = H5Dopen1(file_id, "redshift_bins");
+    array_buffer_float = (float *)malloc(
+        chimes_table_redshift_dependent_UVB.N_redshifts * sizeof(float));
+    dataset = H5Dopen(file_id, "redshift_bins", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (i = 0; i < chimes_table_redshift_dependent_UVB.N_redshifts; i++)
       chimes_table_redshift_dependent_UVB.redshift_bins[i] =
           (ChimesFloat)array_buffer_float[i];
+    H5Dclose(dataset);
 
     free(array_buffer_float);
 
@@ -5331,24 +3955,22 @@ void read_cross_sections_tables(
     exit(EXIT_FAILURE);
   }
 
-  dataset = H5Dopen1(file_id, "TableBins/N_Column_densities");
+  dataset = H5Dopen(file_id, "TableBins/N_Column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &(my_table_bins->N_Column_densities));
   H5Dclose(dataset);
 
   my_table_bins->Column_densities = (ChimesFloat *)malloc(
       my_table_bins->N_Column_densities * sizeof(ChimesFloat));
+
   array_buffer_float =
       (float *)malloc(my_table_bins->N_Column_densities * sizeof(float));
-
-  dataset = H5Dopen1(file_id, "TableBins/Column_densities");
+  dataset = H5Dopen(file_id, "TableBins/Column_densities", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
-  H5Dclose(dataset);
-
   for (i = 0; i < my_table_bins->N_Column_densities; i++)
     my_table_bins->Column_densities[i] = (ChimesFloat)array_buffer_float[i];
-
+  H5Dclose(dataset);
   free(array_buffer_float);
 
   H5Fclose(file_id);
@@ -5408,146 +4030,101 @@ void read_cross_sections_tables(
     array_buffer_float =
         (float *)malloc(my_photoion_fuv->N_reactions[1] * sizeof(float));
 
-    dataset = H5Dopen1(file_id, "photoion_fuv/sigmaPhot");
+    dataset = H5Dopen(file_id, "photoion_fuv/sigmaPhot", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (j = 0; j < my_photoion_fuv->N_reactions[1]; j++)
       my_photoion_fuv->sigmaPhot[chimes_flatten_index_2d(
           i, j, my_photoion_fuv->N_reactions[1])] =
           (ChimesFloat)array_buffer_float[j];
-
-    dataset = H5Dopen1(file_id, "photoion_fuv/epsilonPhot");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
     H5Dclose(dataset);
 
+    dataset = H5Dopen(file_id, "photoion_fuv/epsilonPhot", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
     for (j = 0; j < my_photoion_fuv->N_reactions[1]; j++)
       my_photoion_fuv->epsilonPhot[chimes_flatten_index_2d(
           i, j, my_photoion_fuv->N_reactions[1])] =
           (ChimesFloat)array_buffer_float[j];
+    H5Dclose(dataset);
 
     free(array_buffer_float);
 
     // photoion_euv
     array_buffer_float =
         (float *)malloc(my_photoion_euv->N_reactions[1] * sizeof(float));
-
-    dataset = H5Dopen1(file_id, "photoion_euv/sigmaPhot");
+    dataset = H5Dopen(file_id, "photoion_euv/sigmaPhot", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (j = 0; j < my_photoion_euv->N_reactions[1]; j++)
       my_photoion_euv->sigmaPhot[chimes_flatten_index_2d(
           i, j, my_photoion_euv->N_reactions[1])] =
           (ChimesFloat)array_buffer_float[j];
+    H5Dclose(dataset);
+    free(array_buffer_float);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_1D");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
-    dims3D[0] = my_photoion_euv->N_reactions[1];
-    dims3D[1] = 1;
-    dims3D[2] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims3D, NULL);
-
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < my_table_bins->N_Column_densities; k++) {
-        offset3D[0] = 0;
-        offset3D[1] = j;
-        offset3D[2] = k;
-        count3D[0] = my_photoion_euv->N_reactions[1];
-        count3D[1] = 1;
-        count3D[2] = 1;
-        H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL,
-                            count3D, NULL);
-
-        H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                H5P_DEFAULT, array_buffer_float);
-
+    array_buffer_float =
+        (float *)malloc(my_photoion_euv->N_reactions[1] * 3 *
+                        my_table_bins->N_Column_densities * sizeof(float));
+    dataset = H5Dopen(file_id, "photoion_euv/shieldFactor_1D", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (j = 0; j < 3; j++)
+      for (k = 0; k < my_table_bins->N_Column_densities; k++)
         for (l = 0; l < my_photoion_euv->N_reactions[1]; l++)
           my_photoion_euv->shieldFactor_1D[chimes_flatten_index_4d(
               l, i, j, k, myGlobalVars->N_spectra, 3,
               chimes_table_bins.N_Column_densities)] =
-              (ChimesFloat)array_buffer_float[l];
-      }
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+              (ChimesFloat)array_buffer_float[chimes_flatten_index_3d(
+                  l, j, k, 3, chimes_table_bins.N_Column_densities)];
     H5Dclose(dataset);
+    free(array_buffer_float);
 
-    dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_2D");
-    dataspace_id = H5Dget_space(dataset);
-    H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
-    dims4D[0] = my_photoion_euv->N_reactions[1];
-    dims4D[1] = 1;
-    dims4D[2] = 1;
-    dims4D[3] = 1;
-    rank = 1;
-    memspace_id = H5Screate_simple(rank, dims4D, NULL);
-
-    for (j = 0; j < 6; j++) {
-      for (k = 0; k < my_table_bins->N_Column_densities; k++) {
-        for (l = 0; l < my_table_bins->N_Column_densities; l++) {
-          offset4D[0] = 0;
-          offset4D[1] = j;
-          offset4D[2] = k;
-          offset4D[3] = l;
-          count4D[0] = my_photoion_euv->N_reactions[1];
-          count4D[1] = 1;
-          count4D[2] = 1;
-          count4D[3] = 1;
-          H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset4D, NULL,
-                              count4D, NULL);
-
-          H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                  H5P_DEFAULT, array_buffer_float);
-
+    array_buffer_float =
+        (float *)malloc(my_photoion_euv->N_reactions[1] * 6 *
+                        my_table_bins->N_Column_densities *
+                        my_table_bins->N_Column_densities * sizeof(float));
+    dataset = H5Dopen(file_id, "photoion_euv/shieldFactor_2D", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
+    for (j = 0; j < 6; j++)
+      for (k = 0; k < my_table_bins->N_Column_densities; k++)
+        for (l = 0; l < my_table_bins->N_Column_densities; l++)
           for (m = 0; m < my_photoion_euv->N_reactions[1]; m++)
             my_photoion_euv->shieldFactor_2D[chimes_flatten_index_5d(
                 m, i, j, k, l, myGlobalVars->N_spectra, 6,
                 chimes_table_bins.N_Column_densities,
                 chimes_table_bins.N_Column_densities)] =
-                (ChimesFloat)array_buffer_float[m];
-        }
-      }
-    }
-    H5Sclose(memspace_id);
-    H5Sclose(dataspace_id);
+                (ChimesFloat)array_buffer_float[chimes_flatten_index_4d(
+                    m, j, k, l, 6, chimes_table_bins.N_Column_densities,
+                    chimes_table_bins.N_Column_densities)];
     H5Dclose(dataset);
-
     free(array_buffer_float);
 
     // photoion_auger_fuv
     array_buffer_float =
         (float *)malloc(my_photoion_auger_fuv->N_reactions[1] * sizeof(float));
-    dataset = H5Dopen1(file_id, "photoion_auger_fuv/sigmaPhot");
+    dataset = H5Dopen(file_id, "photoion_auger_fuv/sigmaPhot", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (j = 0; j < my_photoion_auger_fuv->N_reactions[1]; j++)
       my_photoion_auger_fuv->sigmaPhot[chimes_flatten_index_2d(
           i, j, my_photoion_auger_fuv->N_reactions[1])] =
           (ChimesFloat)array_buffer_float[j];
-
+    H5Dclose(dataset);
     free(array_buffer_float);
 
     // photoion_auger_euv
     array_buffer_float =
         (float *)malloc(my_photoion_auger_euv->N_reactions[1] * sizeof(float));
-    dataset = H5Dopen1(file_id, "photoion_auger_euv/sigmaPhot");
+    dataset = H5Dopen(file_id, "photoion_auger_euv/sigmaPhot", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     for (j = 0; j < my_photoion_auger_euv->N_reactions[1]; j++)
       my_photoion_auger_euv->sigmaPhot[chimes_flatten_index_2d(
           i, j, my_photoion_auger_euv->N_reactions[1])] =
           (ChimesFloat)array_buffer_float[j];
-
+    H5Dclose(dataset);
     free(array_buffer_float);
 
     /* We read in the isotropic_photon_density,
@@ -5559,27 +4136,24 @@ void read_cross_sections_tables(
      * myGasVars, as required. */
     array_buffer_float = (float *)malloc(sizeof(float));
 
-    dataset = H5Dopen1(file_id, "isotropic_photon_density");
+    dataset = H5Dopen(file_id, "isotropic_photon_density", H5P_DEFAULT);
     H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             array_buffer_float);
-    H5Dclose(dataset);
-
     my_spectra->isotropic_photon_density[i] =
         (ChimesFloat)array_buffer_float[0];
-
-    dataset = H5Dopen1(file_id, "G0_parameter");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
     H5Dclose(dataset);
 
+    dataset = H5Dopen(file_id, "G0_parameter", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
     my_spectra->G0_parameter[i] = (ChimesFloat)array_buffer_float[0];
-
-    dataset = H5Dopen1(file_id, "H2_dissocJ");
-    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            array_buffer_float);
     H5Dclose(dataset);
 
+    dataset = H5Dopen(file_id, "H2_dissocJ", H5P_DEFAULT);
+    H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            array_buffer_float);
     my_spectra->H2_dissocJ[i] = (ChimesFloat)array_buffer_float[0];
+    H5Dclose(dataset);
 
     free(array_buffer_float);
 
@@ -6435,10 +5009,8 @@ void allocate_redshift_dependent_UVB_memory(
 void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
                                  struct globalVariables *myGlobalVars) {
   char fname[520];
-  hid_t file_id, dataset, dataspace_id, memspace_id;
-  hsize_t dims3D[3], count3D[3], offset3D[3];
-  hsize_t dims4D[4], count4D[4], offset4D[4];
-  int i, j, k, l, rank, N_reactions_all, incl_index;
+  hid_t file_id, dataset;
+  int i, j, k, l, N_reactions_all, incl_index;
 
   float *array_buffer_float;
   int spectrum_index = myGlobalVars->redshift_dependent_UVB_index;
@@ -6463,14 +5035,14 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   }
 
   // photoion_fuv
-  dataset = H5Dopen1(file_id, "photoion_fuv/N_reactions");
+  dataset = H5Dopen(file_id, "photoion_fuv/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &N_reactions_all);
   H5Dclose(dataset);
 
   array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
-  dataset = H5Dopen1(file_id, "photoion_fuv/sigmaPhot");
+  dataset = H5Dopen(file_id, "photoion_fuv/sigmaPhot", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6489,7 +5061,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
     }
   }
 
-  dataset = H5Dopen1(file_id, "photoion_fuv/epsilonPhot");
+  dataset = H5Dopen(file_id, "photoion_fuv/epsilonPhot", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6511,14 +5083,14 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   free(array_buffer_float);
 
   // photoion_euv
-  dataset = H5Dopen1(file_id, "photoion_euv/N_reactions");
+  dataset = H5Dopen(file_id, "photoion_euv/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &N_reactions_all);
   H5Dclose(dataset);
 
   array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
-  dataset = H5Dopen1(file_id, "photoion_euv/sigmaPhot");
+  dataset = H5Dopen(file_id, "photoion_euv/sigmaPhot", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6537,107 +5109,73 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
     }
   }
 
-  dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_1D");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims3D, NULL);
-  dims3D[0] = N_reactions_all;
-  dims3D[1] = 1;
-  dims3D[2] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims3D, NULL);
+  free(array_buffer_float);
 
-  for (j = 0; j < 3; j++) {
-    for (k = 0; k < chimes_table_bins.N_Column_densities; k++) {
-      offset3D[0] = 0;
-      offset3D[1] = j;
-      offset3D[2] = k;
-      count3D[0] = N_reactions_all;
-      count3D[1] = 1;
-      count3D[2] = 1;
-      H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset3D, NULL, count3D,
-                          NULL);
+  array_buffer_float =
+      (float *)malloc(N_reactions_all * 3 *
+                      chimes_table_bins.N_Column_densities * sizeof(float));
 
-      H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT,
-              array_buffer_float);
+  dataset = H5Dopen(file_id, "photoion_euv/shieldFactor_1D", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
+  H5Dclose(dataset);
 
-      incl_index = 0;
-      for (i = 0; i < N_reactions_all; i++) {
-        if (compare_element_incl_arrays(
-                chimes_table_redshift_dependent_UVB.photoion_euv_element_incl,
-                i, myGlobalVars->element_included)) {
+  incl_index = 0;
+  for (i = 0; i < N_reactions_all; i++)
+    if (compare_element_incl_arrays(
+            chimes_table_redshift_dependent_UVB.photoion_euv_element_incl, i,
+            myGlobalVars->element_included)) {
+      for (j = 0; j < 3; j++)
+        for (k = 0; k < chimes_table_bins.N_Column_densities; k++)
           chimes_table_redshift_dependent_UVB
               .photoion_euv_shieldFactor_1D[chimes_flatten_index_4d(
                   incl_index, bin_index, j, k, 2, 3,
                   chimes_table_bins.N_Column_densities)] =
-              (ChimesFloat)array_buffer_float[i];
-          incl_index += 1;
-        }
-      }
+              (ChimesFloat)array_buffer_float[chimes_flatten_index_3d(
+                  i, j, k, 3, chimes_table_bins.N_Column_densities)];
+      incl_index += 1;
     }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
+
+  free(array_buffer_float);
+
+  array_buffer_float = (float *)malloc(
+      N_reactions_all * 6 * chimes_table_bins.N_Column_densities *
+      chimes_table_bins.N_Column_densities * sizeof(float));
+
+  dataset = H5Dopen(file_id, "photoion_euv/shieldFactor_2D", H5P_DEFAULT);
+  H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+          array_buffer_float);
   H5Dclose(dataset);
-
-  dataset = H5Dopen1(file_id, "photoion_euv/shieldFactor_2D");
-  dataspace_id = H5Dget_space(dataset);
-  H5Sget_simple_extent_dims(dataspace_id, dims4D, NULL);
-  dims4D[0] = N_reactions_all;
-  dims4D[1] = 1;
-  dims4D[2] = 1;
-  dims4D[3] = 1;
-  rank = 1;
-  memspace_id = H5Screate_simple(rank, dims4D, NULL);
-
-  for (j = 0; j < 6; j++) {
-    for (k = 0; k < chimes_table_bins.N_Column_densities; k++) {
-      for (l = 0; l < chimes_table_bins.N_Column_densities; l++) {
-        offset4D[0] = 0;
-        offset4D[1] = j;
-        offset4D[2] = k;
-        offset4D[3] = l;
-        count4D[0] = N_reactions_all;
-        count4D[1] = 1;
-        count4D[2] = 1;
-        count4D[3] = 1;
-        H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset4D, NULL,
-                            count4D, NULL);
-
-        H5Dread(dataset, H5T_NATIVE_FLOAT, memspace_id, dataspace_id,
-                H5P_DEFAULT, array_buffer_float);
-
-        incl_index = 0;
-        for (i = 0; i < N_reactions_all; i++) {
-          if (compare_element_incl_arrays(
-                  chimes_table_redshift_dependent_UVB.photoion_euv_element_incl,
-                  i, myGlobalVars->element_included)) {
+  incl_index = 0;
+  for (i = 0; i < N_reactions_all; i++)
+    if (compare_element_incl_arrays(
+            chimes_table_redshift_dependent_UVB.photoion_euv_element_incl, i,
+            myGlobalVars->element_included)) {
+      for (j = 0; j < 6; j++)
+        for (k = 0; k < chimes_table_bins.N_Column_densities; k++)
+          for (l = 0; l < chimes_table_bins.N_Column_densities; l++)
             chimes_table_redshift_dependent_UVB
                 .photoion_euv_shieldFactor_2D[chimes_flatten_index_5d(
                     incl_index, bin_index, j, k, l, 2, 6,
                     chimes_table_bins.N_Column_densities,
                     chimes_table_bins.N_Column_densities)] =
-                (ChimesFloat)array_buffer_float[i];
-            incl_index += 1;
-          }
-        }
-      }
+                (ChimesFloat)array_buffer_float[chimes_flatten_index_4d(
+                    i, j, k, l, 6, chimes_table_bins.N_Column_densities,
+                    chimes_table_bins.N_Column_densities)];
+      incl_index += 1;
     }
-  }
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset);
 
   free(array_buffer_float);
 
   // photoion_auger_fuv
-  dataset = H5Dopen1(file_id, "photoion_auger_fuv/N_reactions");
+  dataset = H5Dopen(file_id, "photoion_auger_fuv/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &N_reactions_all);
   H5Dclose(dataset);
 
   array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
-  dataset = H5Dopen1(file_id, "photoion_auger_fuv/sigmaPhot");
+  dataset = H5Dopen(file_id, "photoion_auger_fuv/sigmaPhot", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6659,14 +5197,14 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   free(array_buffer_float);
 
   // photoion_auger_euv
-  dataset = H5Dopen1(file_id, "photoion_auger_euv/N_reactions");
+  dataset = H5Dopen(file_id, "photoion_auger_euv/N_reactions", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           &N_reactions_all);
   H5Dclose(dataset);
 
   array_buffer_float = (float *)malloc(N_reactions_all * sizeof(float));
 
-  dataset = H5Dopen1(file_id, "photoion_auger_euv/sigmaPhot");
+  dataset = H5Dopen(file_id, "photoion_auger_euv/sigmaPhot", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6690,7 +5228,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   // General spectrum info
   array_buffer_float = (float *)malloc(sizeof(float));
 
-  dataset = H5Dopen1(file_id, "isotropic_photon_density");
+  dataset = H5Dopen(file_id, "isotropic_photon_density", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6698,7 +5236,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   chimes_table_redshift_dependent_UVB.isotropic_photon_density[bin_index] =
       (ChimesFloat)array_buffer_float[0];
 
-  dataset = H5Dopen1(file_id, "G0_parameter");
+  dataset = H5Dopen(file_id, "G0_parameter", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
@@ -6706,7 +5244,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
   chimes_table_redshift_dependent_UVB.G0_parameter[bin_index] =
       (ChimesFloat)array_buffer_float[0];
 
-  dataset = H5Dopen1(file_id, "H2_dissocJ");
+  dataset = H5Dopen(file_id, "H2_dissocJ", H5P_DEFAULT);
   H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
           array_buffer_float);
   H5Dclose(dataset);
