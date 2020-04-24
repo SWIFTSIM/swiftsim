@@ -301,18 +301,25 @@ stars_mosaics_copy_extra_properties(
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
 
+  /* Flag it for cluster formation */
+  sp->new_star = 1;
+
   /* Store the birth properties in the star particle */
+  sp->hbirth = p->h;
   sp->gas_vel_disp = sqrt(p->sf_data.sigma_v2);
-  sp->star_vel_disp = sqrt(p->sf_data.stars_sigma_v2);
-  sp->fgas = p->sf_data.gas_mass_unweighted / 
-      (p->sf_data.gas_mass_unweighted + p->sf_data.stars_mass_unweighted);
-  sp->scount = p->sf_data.scount;
+  sp->gas_mass_unweighted = p->sf_data.gas_mass_unweighted;
 
   /* Hydro pressure */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
 
   /* Calculate the hydro sound speed */
   sp->sound_speed_subgrid = hydro_get_physical_soundspeed(p, cosmo);
+
+  /* Set up for the stellar neighbour search */
+  sp->scount = 0;
+  sp->stars_rho = 0.f;
+  sp->stars_sigma_v2 = 0.f;
+  sp->stars_mass_unweighted = 0.f;
 
 #if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || \
     defined(COOLING_CHIMES_HYBRID)
@@ -338,9 +345,6 @@ stars_mosaics_copy_extra_properties(
   sp->birth_subgrid_dens = sp->birth_density;
 
 #endif
-
-  /* Flag it for cluster formation */
-  sp->new_star = 1;
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

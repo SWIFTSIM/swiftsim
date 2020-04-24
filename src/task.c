@@ -94,6 +94,8 @@ const char *taskID_names[task_type_count] = {"none",
                                              "stars_ghost_out",
                                              "stars_sort",
                                              "stars_resort",
+                                             "stars_veldisp_in",
+                                             "stars_veldisp_out",
                                              "stars_mosaics",
                                              "bh_in",
                                              "bh_out",
@@ -113,7 +115,7 @@ const char *subtaskID_names[task_subtype_count] = {
     "multipole",  "spart",        "stars_density",  "stars_feedback",
     "sf_count",   "bpart_rho",    "bpart_swallow",  "bpart_feedback",
     "bh_density", "bh_swallow",   "do_gas_swallow", "do_bh_swallow",
-    "bh_feedback"};
+    "bh_feedback", "veldisp"};
 
 const char *task_category_names[task_category_count] = {
     "drift",       "sort",    "hydro",          "gravity", "feedback",
@@ -211,6 +213,10 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
         case task_subtype_stars_density:
         case task_subtype_stars_feedback:
           return task_action_all;
+          break;
+
+        case task_subtype_stars_veldisp:
+          return task_action_spart;
           break;
 
         case task_subtype_bh_density:
@@ -454,6 +460,7 @@ void task_unlock(struct task *t) {
 
     case task_type_stars_sort:
     case task_type_stars_resort:
+    case task_type_stars_mosaics:
       cell_sunlocktree(ci);
       break;
 
@@ -468,6 +475,8 @@ void task_unlock(struct task *t) {
                  (subtype == task_subtype_stars_feedback)) {
         cell_sunlocktree(ci);
         cell_unlocktree(ci);
+      } else if (subtype == task_subtype_stars_veldisp) {
+        cell_sunlocktree(ci);
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
                  (subtype == task_subtype_bh_swallow) ||
@@ -500,6 +509,9 @@ void task_unlock(struct task *t) {
         cell_sunlocktree(cj);
         cell_unlocktree(ci);
         cell_unlocktree(cj);
+      } else if (subtype == task_subtype_stars_veldisp) {
+        cell_sunlocktree(ci);
+        cell_sunlocktree(cj);
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
                  (subtype == task_subtype_bh_swallow) ||
@@ -621,6 +633,7 @@ int task_lock(struct task *t) {
 
     case task_type_stars_sort:
     case task_type_stars_resort:
+    case task_type_stars_mosaics:
       if (ci->stars.hold) return 0;
       if (cell_slocktree(ci) != 0) return 0;
       break;
@@ -654,6 +667,9 @@ int task_lock(struct task *t) {
           cell_sunlocktree(ci);
           return 0;
         }
+      } else if (subtype == task_subtype_stars_veldisp) {
+        if (ci->stars.hold) return 0;
+        if (cell_slocktree(ci) != 0) return 0;
       } else if ((subtype == task_subtype_bh_density) ||
                  (subtype == task_subtype_bh_feedback) ||
                  (subtype == task_subtype_bh_swallow) ||
@@ -719,6 +735,13 @@ int task_lock(struct task *t) {
           cell_sunlocktree(ci);
           cell_sunlocktree(cj);
           cell_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_stars_veldisp) {
+        if (ci->stars.hold || cj->stars.hold) return 0;
+        if (cell_slocktree(ci) != 0) return 0;
+        if (cell_slocktree(cj) != 0) {
+          cell_sunlocktree(ci);
           return 0;
         }
       } else if ((subtype == task_subtype_bh_density) ||
@@ -886,6 +909,9 @@ void task_get_group_name(int type, int subtype, char *cluster) {
       break;
     case task_subtype_stars_feedback:
       strcpy(cluster, "StarsFeedback");
+      break;
+    case task_subtype_stars_veldisp:
+      strcpy(cluster, "StarsVelocityDispersion");
       break;
     case task_subtype_bh_density:
       strcpy(cluster, "BHDensity");

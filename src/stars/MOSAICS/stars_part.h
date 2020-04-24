@@ -212,6 +212,21 @@ struct spart {
   /*! Exponential truncation to mass function */
   float Mcstar;
 
+  /*! Birth smoothing length */
+  float hbirth;
+
+  /*! Stellar density */
+  float stars_rho;
+
+  /*! Stellar velocity dispersion */
+  float stars_sigma_v2;
+
+  /*! Unweighted gas mass */
+  float gas_mass_unweighted;
+
+  /*! Unweighted stellar mass */
+  float stars_mass_unweighted;
+
   /*! The local gas velocity dispersion at formation */
   float gas_vel_disp;
 

@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of SWIFT.
  * Copyright (c) 2018 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ *               2020 Joel Pfeffer (j.l.pfeffer@ljmu.ac.uk)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -92,14 +93,11 @@ runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
 }
 
 /**
- * @brief Stellar mass fraction computation after runner_iact_density 
- * (non-symmetric).
- * 
+ * @brief Stellar velocity dispersion/mass fraction computation (non-symmetric).
  *
  * @param r2 Comoving square distance between the two particles.
  * @param dx Comoving vector separating both particles (pi - pj).
  * @param hi Comoving smoothing-length of particle i.
- * @param hj Comoving smoothing-length of particle j.
  * @param pi First particle.
  * @param si Second sparticle (not updated).
  * @param a Current scale factor.
@@ -107,8 +105,7 @@ runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
-                                const float hi, const float hj,
-                                struct part *restrict pi, 
+                                const float hi, struct spart *restrict si, 
                                 const struct spart *restrict sj, const float a,
                                 const float H) {
 
@@ -123,27 +120,31 @@ runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
   kernel_eval(ui, &wi);
 
   /* Number of particles which contribute to the calculation */
-  pi->sf_data.scount += 1;
+  si->scount += 1;
 
   /* Compute contribution to stellar density */
-  pi->sf_data.stars_rho += wi * sj->mass;
-  pi->sf_data.stars_mass_unweighted += sj->mass;
+  si->stars_rho += wi * sj->mass;
+  si->stars_mass_unweighted += sj->mass;
 
   /* Calculation of the velocity dispersion */
 
   /* Calculate the velocity difference */
-  const float vi_min_vj[3] = {pi->v[0]-sj->v[0], pi->v[1]-sj->v[1], pi->v[2]-sj->v[2]};
+  const float vi_min_vj[3] = {si->v[0]-sj->v[0], si->v[1]-sj->v[1], 
+      si->v[2]-sj->v[2]};
 
   /* Calculate the constant for the position */
   const float a2H = a*a*H;
 
   /* Calculate the velocity with the Hubble flow */
-  const float v_plus_H_flow[3] = {a2H * dx[0] + vi_min_vj[0], a2H * dx[1] + vi_min_vj[1],  a2H * dx[2] + vi_min_vj[2]};
+  const float v_plus_H_flow[3] = {a2H * dx[0] + vi_min_vj[0], 
+      a2H * dx[1] + vi_min_vj[1], a2H * dx[2] + vi_min_vj[2]};
 
   /* Calculate the velocity dispersion */
-  const float norm_v2 = v_plus_H_flow[0] * v_plus_H_flow[0] + v_plus_H_flow[1] *           v_plus_H_flow[1] + v_plus_H_flow[2] * v_plus_H_flow[2];
+  const float norm_v2 = v_plus_H_flow[0] * v_plus_H_flow[0] + 
+      v_plus_H_flow[1] * v_plus_H_flow[1] + 
+      v_plus_H_flow[2] * v_plus_H_flow[2];
 
-  pi->sf_data.stars_sigma_v2 += norm_v2 * wi * sj->mass;
+  si->stars_sigma_v2 += norm_v2 * wi * sj->mass;
 }
 
 #endif /* SWIFT_MOSAICS_STARS_IACT_H */

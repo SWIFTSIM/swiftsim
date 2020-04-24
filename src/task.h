@@ -88,6 +88,8 @@ enum task_types {
   task_type_stars_ghost_out, /* Implicit */
   task_type_stars_sort,
   task_type_stars_resort,
+  task_type_stars_veldisp_in,  /* Implicit */
+  task_type_stars_veldisp_out, /* Implicit */
   task_type_stars_mosaics,
   task_type_bh_in,  /* Implicit */
   task_type_bh_out, /* Implicit */
@@ -133,6 +135,7 @@ enum task_subtypes {
   task_subtype_do_gas_swallow,
   task_subtype_do_bh_swallow,
   task_subtype_bh_feedback,
+  task_subtype_stars_veldisp,
   task_subtype_count
 } __attribute__((packed));
 

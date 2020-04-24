@@ -584,6 +584,9 @@ struct cell {
     /*! Linked list of the tasks computing this cell's star feedback. */
     struct link *feedback;
 
+    /*! Linked list of the tasks computing this cell's star velocity dispersion. */
+    struct link *veldisp;
+
     /*! The task computing this cell's sorts before the density. */
     struct task *sorts;
 
@@ -596,6 +599,13 @@ struct cell {
 
     /*! Implicit tasks marking the exit of the stellar physics block of tasks */
     struct task *stars_out;
+
+    /*! Implicit tasks marking the entry of the stellar vel. disp. block of tasks
+     */
+    struct task *stars_veldisp_in;
+
+    /*! Implicit tasks marking the exit of the stellar vel. disp. block of tasks */
+    struct task *stars_veldisp_out;
 
     /*! Task for subgrid star clusters */
     struct task *mosaics;
@@ -932,6 +942,10 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
 void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
                                       struct scheduler *s);
 void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
+                                       struct scheduler *s,
+                                       const int with_star_formation,
+                                       const int with_timestep_sync);
+void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
                                        const int with_star_formation,
                                        const int with_timestep_sync);

@@ -1153,7 +1153,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
     c->hydro.sorts =
         scheduler_addtask(s, task_type_sort, task_subtype_none, 0, 0, c, NULL);
 
-    if (with_feedback) {
+    //TODO with_star_formation only if with STARS_MOSAICS though?
+    if (with_feedback || with_star_formation) {
       c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
                                          task_subtype_none, 0, 0, c, NULL);
     }
@@ -1254,6 +1255,26 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         if (with_feedback && with_star_formation && c->hydro.count > 0) {
           task_order_addunlock_star_formation_feedback(s, c, star_resort_cell);
         }
+      }
+
+      /* Subgrid tasks: stellar velocity dispersion */
+      if (with_star_formation) {
+
+        c->stars.stars_veldisp_in =
+            scheduler_addtask(s, task_type_stars_veldisp_in, task_subtype_none,
+                              0, /* implicit = */ 1, c, NULL);
+
+        c->stars.stars_veldisp_out =
+            scheduler_addtask(s, task_type_stars_veldisp_out, task_subtype_none,
+                              0, /* implicit = */ 1, c, NULL);
+
+        if (c->hydro.count > 0) {
+          scheduler_addunlock(s, star_resort_cell->hydro.stars_resort, 
+                              c->stars.stars_veldisp_in);
+        }
+
+        scheduler_addunlock(s, c->stars.stars_veldisp_out, 
+                            c->super->stars.mosaics);
       }
 
       /* Subgrid tasks: black hole feedback */
@@ -1574,6 +1595,8 @@ void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.density, t);
       } else if (t->subtype == task_subtype_stars_feedback) {
         engine_addlink(e, &ci->stars.feedback, t);
+      } else if (t->subtype == task_subtype_stars_veldisp) {
+        engine_addlink(e, &ci->stars.veldisp, t);
       } else if (t->subtype == task_subtype_bh_density) {
         engine_addlink(e, &ci->black_holes.density, t);
       } else if (t->subtype == task_subtype_bh_feedback) {
@@ -1597,6 +1620,9 @@ void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
       } else if (t->subtype == task_subtype_stars_feedback) {
         engine_addlink(e, &ci->stars.feedback, t);
         engine_addlink(e, &cj->stars.feedback, t);
+      } else if (t->subtype == task_subtype_stars_veldisp) {
+        engine_addlink(e, &ci->stars.veldisp, t);
+        engine_addlink(e, &cj->stars.veldisp, t);
       } else if (t->subtype == task_subtype_bh_density) {
         engine_addlink(e, &ci->black_holes.density, t);
         engine_addlink(e, &cj->black_holes.density, t);
@@ -1624,6 +1650,8 @@ void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->stars.density, t);
       } else if (t->subtype == task_subtype_stars_feedback) {
         engine_addlink(e, &ci->stars.feedback, t);
+      } else if (t->subtype == task_subtype_stars_veldisp) {
+        engine_addlink(e, &ci->stars.veldisp, t);
       } else if (t->subtype == task_subtype_bh_density) {
         engine_addlink(e, &ci->black_holes.density, t);
       } else if (t->subtype == task_subtype_bh_feedback) {
@@ -1647,6 +1675,9 @@ void engine_count_and_link_tasks_mapper(void *map_data, int num_elements,
       } else if (t->subtype == task_subtype_stars_feedback) {
         engine_addlink(e, &ci->stars.feedback, t);
         engine_addlink(e, &cj->stars.feedback, t);
+      } else if (t->subtype == task_subtype_stars_veldisp) {
+        engine_addlink(e, &ci->stars.veldisp, t);
+        engine_addlink(e, &cj->stars.veldisp, t);
       } else if (t->subtype == task_subtype_bh_density) {
         engine_addlink(e, &ci->black_holes.density, t);
         engine_addlink(e, &cj->black_holes.density, t);
@@ -1910,6 +1941,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_feedback = (e->policy & engine_policy_feedback);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 #ifdef EXTRA_HYDRO_LOOP
   struct task *t_gradient = NULL;
 #endif
@@ -1917,6 +1949,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
   struct task *t_limiter = NULL;
   struct task *t_star_density = NULL;
   struct task *t_star_feedback = NULL;
+  struct task *t_star_veldisp = NULL;
   struct task *t_bh_density = NULL;
   struct task *t_bh_swallow = NULL;
   struct task *t_do_gas_swallow = NULL;
@@ -1975,6 +2008,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_stars_feedback, flags, 0, ci, NULL);
       }
 
+      /* The stellar velocity dispersion tasks */
+      if (with_star_formation) {
+        t_star_veldisp =
+            scheduler_addtask(sched, task_type_self, task_subtype_stars_veldisp,
+                              flags, 0, ci, NULL);
+      }
+
       /* The black hole feedback tasks */
       if (with_black_holes && bcount_i > 0) {
         t_bh_density = scheduler_addtask(
@@ -2000,6 +2040,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_feedback) {
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
+      }
+      if (with_star_formation) {
+        engine_addlink(e, &ci->stars.veldisp, t_star_veldisp);
       }
       if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2045,6 +2088,16 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, ci->hydro.super->stars.ghost,
                             t_star_feedback);
         scheduler_addunlock(sched, t_star_feedback,
+                            ci->hydro.super->stars.stars_out);
+      }
+
+      if (with_star_formation) {
+
+        scheduler_addunlock(sched, ci->hydro.super->stars.drift,
+                            t_star_veldisp);
+        scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
+                            t_star_veldisp);
+        scheduler_addunlock(sched, t_star_veldisp,
                             ci->hydro.super->stars.stars_out);
       }
 
@@ -2137,6 +2190,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_stars_feedback, flags, 0, ci, cj);
       }
 
+      /* The stellar velocity dispersion tasks */
+      if (with_star_formation) {
+        t_star_veldisp =
+            scheduler_addtask(sched, task_type_pair, task_subtype_stars_veldisp,
+                              flags, 0, ci, cj);
+      }
+
       /* The black hole feedback tasks */
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         t_bh_density = scheduler_addtask(
@@ -2164,6 +2224,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
+      }
+      if (with_star_formation) {
+        engine_addlink(e, &ci->stars.veldisp, t_star_veldisp);
+        engine_addlink(e, &cj->stars.veldisp, t_star_veldisp);
       }
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2247,6 +2311,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               ci->hydro.super->stars.stars_out);
         }
 
+        if (with_star_formation) {
+
+          scheduler_addunlock(sched, ci->hydro.super->stars.drift,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, t_star_veldisp,
+                              ci->hydro.super->stars.stars_veldisp_out);
+        }
+
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
@@ -2302,6 +2378,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_feedback);
         }
 
+        if (with_star_formation) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_veldisp);
+        }
+
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
           scheduler_addunlock(sched, t_bh_swallow,
                               ci->hydro.super->black_holes.swallow_ghost[0]);
@@ -2330,6 +2411,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_feedback);
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
+          }
+
+          if (with_star_formation) {
+
+            scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, cj->hydro.super->stars.drift,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, cj->hydro.super->stars.stars_veldisp_in,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, t_star_veldisp,
+                                cj->hydro.super->stars.stars_veldisp_out);
           }
 
           if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2398,6 +2491,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_feedback);
         }
 
+        if (with_star_formation) {
+          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                              t_star_veldisp);
+        }
+
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, t_bh_swallow,
@@ -2436,6 +2534,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_stars_feedback, flags, 0, ci, NULL);
       }
 
+      /* The stellar velocity dispersion tasks */
+      if (with_star_formation) {
+        t_star_veldisp =
+            scheduler_addtask(sched, task_type_sub_self,
+                              task_subtype_stars_veldisp, flags, 0, ci, NULL);
+      }
+
       /* The black hole feedback tasks */
       if (with_black_holes && bcount_i > 0) {
         t_bh_density =
@@ -2466,6 +2571,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_feedback) {
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
+      }
+      if (with_star_formation) {
+        engine_addlink(e, &ci->stars.veldisp, t_star_veldisp);
       }
       if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2518,6 +2626,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             t_star_feedback);
         scheduler_addunlock(sched, t_star_feedback,
                             ci->hydro.super->stars.stars_out);
+      }
+
+      if (with_star_formation) {
+
+        scheduler_addunlock(sched, ci->hydro.super->stars.drift,
+                            t_star_veldisp);
+        scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                            t_star_veldisp);
+        scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
+                            t_star_veldisp);
+        scheduler_addunlock(sched, t_star_veldisp,
+                            ci->hydro.super->stars.stars_veldisp_out);
       }
 
       if (with_black_holes && bcount_i > 0) {
@@ -2610,6 +2730,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_stars_feedback, flags, 0, ci, cj);
       }
 
+      /* The stellar velocity dispersion tasks */
+      if (with_star_formation) {
+        t_star_veldisp =
+            scheduler_addtask(sched, task_type_sub_pair,
+                              task_subtype_stars_veldisp, flags, 0, ci, cj);
+      }
+
       /* The black hole feedback tasks */
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         t_bh_density =
@@ -2640,6 +2767,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
+      }
+      if (with_star_formation) {
+        engine_addlink(e, &ci->stars.veldisp, t_star_veldisp);
+        engine_addlink(e, &cj->stars.veldisp, t_star_veldisp);
       }
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2722,6 +2853,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               ci->hydro.super->stars.stars_out);
         }
 
+        if (with_star_formation) {
+
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, ci->hydro.super->stars.drift,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
+                              t_star_veldisp);
+          scheduler_addunlock(sched, t_star_veldisp,
+                              ci->hydro.super->stars.stars_veldisp_out);
+        }
+
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, ci->hydro.super->black_holes.drift,
@@ -2777,6 +2920,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
         }
+        if (with_star_formation) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_veldisp);
+        }
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, t_bh_swallow,
@@ -2806,6 +2953,18 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_feedback);
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
+          }
+
+          if (with_star_formation) {
+
+            scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, cj->hydro.super->stars.drift,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, cj->hydro.super->stars.stars_veldisp_in,
+                                t_star_veldisp);
+            scheduler_addunlock(sched, t_star_veldisp,
+                                cj->hydro.super->stars.stars_veldisp_out);
           }
 
           if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2871,6 +3030,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
+        }
+
+        if (with_star_formation) {
+          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                              t_star_veldisp);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {

@@ -262,6 +262,19 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   gsl_rng *random_generator = gsl_rng_alloc(gsl_rng_ranlxd1);
   gsl_rng_set(random_generator, sp->id);
 
+  /* Finish the velocity dispersion/gas fraction calculation */
+
+  if (sp->scount > 0) {
+    const float h_inv = 1.f / sp->hbirth;
+    const float h_inv2 = h_inv * h_inv;
+    sp->stars_rho *= h_inv * h_inv2;
+    sp->stars_sigma_v2 *= (1.f/sp->stars_rho) * h_inv * h_inv2 * cosmo->a2_inv;
+  }
+
+  sp->star_vel_disp = sqrt(sp->stars_sigma_v2);
+  sp->fgas = sp->gas_mass_unweighted / 
+      (sp->gas_mass_unweighted + sp->stars_mass_unweighted);
+
   /* -------- Get CFE -------- */
   /* In units of kg, m, s */
 

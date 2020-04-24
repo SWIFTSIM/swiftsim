@@ -25,35 +25,15 @@
 /* Local headers. */
 #include "active.h"
 #include "cell.h"
-#include "chemistry.h"
 #include "engine.h"
-#include "pressure_floor_iact.h"
 #include "runner.h"
-#include "runner_doiact_hydro_vec.h"
 #include "space_getsid.h"
-#include "star_formation_iact.h"
+#include "stars.h"
 #include "timers.h"
-#include "timestep_limiter_iact.h"
 
-/* Import the density loop functions. */
-#define FUNCTION density
-#define FUNCTION_TASK_LOOP TASK_LOOP_DENSITY
-#include "runner_doiact_functions_hydro.h"
-#undef FUNCTION
+/* Import the stars density loop functions. */
+#define FUNCTION veldisp
+#define FUNCTION_TASK_LOOP TASK_LOOP_VELDISP
+#include "runner_doiact_functions_stars_veldisp.h"
 #undef FUNCTION_TASK_LOOP
-
-/* Import the gradient loop functions (if required). */
-#ifdef EXTRA_HYDRO_LOOP
-#define FUNCTION gradient
-#define FUNCTION_TASK_LOOP TASK_LOOP_GRADIENT
-#include "runner_doiact_functions_hydro.h"
 #undef FUNCTION
-#undef FUNCTION_TASK_LOOP
-#endif
-
-/* Import the force loop functions. */
-#define FUNCTION force
-#define FUNCTION_TASK_LOOP TASK_LOOP_FORCE
-#include "runner_doiact_functions_hydro.h"
-#undef FUNCTION
-#undef FUNCTION_TASK_LOOP

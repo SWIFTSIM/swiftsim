@@ -5,6 +5,10 @@ Configure options:
   Isolated disc tests:
   ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist --with-gravity=with-multi-softening-tensors --with-mosaics-max-clusters=100
 
+TODO:
+-----
+
+Stellar neighbour search needs testing
 
 At the end of mosaics_clevo we'll want to update gcflag depending if clusters survive or not
 
@@ -15,6 +19,12 @@ I/O:
   Dump some info when nClust > MOSAICS_MAX_CLUSTERS
 
 Scheduling:
+  MPI for veldisp tasks (cell.c, engine_maketasks.c)
+
+  Scheduling cost (currently scount_i*scount_j which is probably a huge overestimate)
+
+  In runner_doiact_functions_stars_veldisp.h we can probably be more agressive with cell checks
+  (with star formation and cell active hydro)
 
 
 NOTES:

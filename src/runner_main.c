@@ -83,6 +83,13 @@
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
 
+/* Import the stars velocity dispersion loop functions. */
+#define FUNCTION veldisp
+#define FUNCTION_TASK_LOOP TASK_LOOP_VELDISP
+#include "runner_doiact_stars_veldisp.h"
+#undef FUNCTION_TASK_LOOP
+#undef FUNCTION
+
 /* Import the black hole density loop functions. */
 #define FUNCTION density
 #define FUNCTION_TASK_LOOP TASK_LOOP_DENSITY
@@ -191,6 +198,8 @@ void *runner_main(void *data) {
             runner_doself_branch_stars_density(r, ci);
           else if (t->subtype == task_subtype_stars_feedback)
             runner_doself_branch_stars_feedback(r, ci);
+          else if (t->subtype == task_subtype_stars_veldisp)
+            runner_doself_branch_stars_veldisp(r, ci);
           else if (t->subtype == task_subtype_bh_density)
             runner_doself_branch_bh_density(r, ci);
           else if (t->subtype == task_subtype_bh_swallow)
@@ -223,6 +232,8 @@ void *runner_main(void *data) {
             runner_dopair_branch_stars_density(r, ci, cj);
           else if (t->subtype == task_subtype_stars_feedback)
             runner_dopair_branch_stars_feedback(r, ci, cj);
+          else if (t->subtype == task_subtype_stars_veldisp)
+            runner_dopair_branch_stars_veldisp(r, ci, cj);
           else if (t->subtype == task_subtype_bh_density)
             runner_dopair_branch_bh_density(r, ci, cj);
           else if (t->subtype == task_subtype_bh_swallow)
@@ -253,6 +264,8 @@ void *runner_main(void *data) {
             runner_dosub_self_stars_density(r, ci, 1);
           else if (t->subtype == task_subtype_stars_feedback)
             runner_dosub_self_stars_feedback(r, ci, 1);
+          else if (t->subtype == task_subtype_stars_veldisp)
+            runner_dosub_self_stars_veldisp(r, ci, 1);
           else if (t->subtype == task_subtype_bh_density)
             runner_dosub_self_bh_density(r, ci, 1);
           else if (t->subtype == task_subtype_bh_swallow)
@@ -283,6 +296,8 @@ void *runner_main(void *data) {
             runner_dosub_pair_stars_density(r, ci, cj, 1);
           else if (t->subtype == task_subtype_stars_feedback)
             runner_dosub_pair_stars_feedback(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_stars_veldisp)
+            runner_dosub_pair_stars_veldisp(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_density)
             runner_dosub_pair_bh_density(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_swallow)
