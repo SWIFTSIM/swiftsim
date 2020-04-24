@@ -117,8 +117,8 @@ COLIBREChemistry:
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  alpha_virial:                     10.0 # set the alpha virial for star forming gas.
-  temperature_threshold_K:          0
+  alpha_virial:                     2.      # set the alpha virial for star forming gas.
+  temperature_threshold_K:          0.      # set the temperature threshold to zero, so not temperature threshold
 
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
