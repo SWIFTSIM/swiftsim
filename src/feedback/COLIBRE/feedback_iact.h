@@ -386,14 +386,15 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       const float SNII_delta_v = si->feedback_data.to_distribute.SNII_delta_v;
 
       /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
-      * Therefore, a physical kick, dv, gets translated into a
-      * code velocity kick, a * dv */
+       * Therefore, a physical kick, dv, gets translated into a
+       * code velocity kick, a * dv */
 
       xpj->v_full[0] -= SNII_delta_v * dx[0] * r_inv * cosmo->a;
       xpj->v_full[1] -= SNII_delta_v * dx[1] * r_inv * cosmo->a;
       xpj->v_full[2] -= SNII_delta_v * dx[2] * r_inv * cosmo->a;
 
-      /* Update the signal velocity of the particle based on the velocity kick */
+      /* Update the signal velocity of the particle based on the velocity kick
+       */
       hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, SNII_delta_v);
 
       /* Synchronize the particle on the timeline */
