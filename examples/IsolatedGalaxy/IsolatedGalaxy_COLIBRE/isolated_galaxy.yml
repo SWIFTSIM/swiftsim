@@ -124,12 +124,12 @@ COLIBREChemistry:
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
-# COLIBRE star formation model (Following a density Schmidt law)
+# COLIBRE star formation model (Following a density Schmidt law with virial criterion)
 COLIBREStarFormation:
   min_over_density:                 57.7    # Minimum over density above which star formation is allowed
   star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  temperature_threshold_K:          1000    # (Optional) Subgrid temperature threshold below which stars are allowed to form (Default set to infinity).
-  subgrid_density_threshold_H_p_CM3: 1e2    # (Optional) subgrid density threshold, a particle above this density is always star forming (default set to infinity)
+  alpha_virial:                     2.      # set the alpha virial for star forming gas.
+  temperature_threshold_K:          0.      # set the temperature threshold to zero, so not temperature threshold
 
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
@@ -152,6 +152,8 @@ COLIBREFeedback:
   SNII_wind_delay_Gyr:              -1.           # Time in Gyr between a star's birth and the SNII thermal feedback event. (< 0. for continuous SNe)
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
+  SNII_delta_v_km_p_s:              25.0            # Change in the gas-particle velocity that is kicked in a SNII kinetic feedback event
+  SNII_f_kinetic:                   0.1             # Fraction of SNII energy injected into the gas in kinetic form (the remaining fraction is injected in thermal form)
   SNII_energy_fraction_min:         1.0             # Maximal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_max:         1.0             # Minimal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).

@@ -52,15 +52,9 @@ struct star_formation {
   /*! Star formation efficiency */
   double sfe;
 
-  /*! free fall time constant sqrt(3 pi/ 32G) (cm^-1.5 g^.5 s^1) */
-  double ff_const;
-
   /*! star formation efficiency over free fall time constant (cm^1.5 g^-.5 s^-1)
    */
   double mdot_const;
-
-  /*! Absolute temperature criteria */
-  double temperature_threshold;
 
   /*! Maximal physical density, particles with a higher density instantaneously
    * turn into stars */
@@ -70,11 +64,21 @@ struct star_formation {
    * instantaneously turn into stars */
   double maximal_density;
 
+  /*! Virial constant used in the calculation (no units)*/
+  double alpha_virial;
+
+  /*! Inverse of the virial constant including the constants (G) used in the
+   * calculation (no units)*/
+  double alpha_virial_inv;
+
   /*! subgrid density threshold in user units */
   double subgrid_density_threshold_HpCM3;
 
   /*! subgrid density threshold in internal units */
   double subgrid_density_threshold;
+
+  /*! Absolute subgrid temperature threshold */
+  double temperature_threshold;
 };
 
 /**
@@ -98,12 +102,16 @@ INLINE static int star_formation_is_star_forming(
     const struct unit_system* us, const struct cooling_function_data* cooling,
     const struct entropy_floor_properties* entropy_props) {
 
+  /* Physical density of the particle */
+  const double physical_density = hydro_get_physical_density(p, cosmo);
+
+  /* Did we reach the maximal physical density in which we need to be turned
+   * instantaneously into a star?*/
+  if (physical_density > starform->maximal_density) return 1;
+
   /* Minimal density (converted from critical density) for star formation */
   const double rho_crit_times_min_over_den =
       cosmo->critical_density * starform->min_over_den;
-
-  /* Physical density of the particle */
-  const double physical_density = hydro_get_physical_density(p, cosmo);
 
   /* Deside whether we should form stars or not,
    * first we deterime if we have the correct over density
@@ -112,21 +120,49 @@ INLINE static int star_formation_is_star_forming(
    * temperature is appropriate */
   if (physical_density < rho_crit_times_min_over_den) return 0;
 
-  /* Did we reach the maximal physical density in which we need to be turned
-   * instantaneously into a star?*/
-  if (physical_density > starform->maximal_density) return 1;
-
-  /* Check if we are above the subgrid density criteria */
+  /* Get the subgrid density */
   const double subgrid_density = xp->tracers_data.subgrid_dens;
 
-  /* Check if the subgrid density criteria is satisfied */
+  /* Check if the subgrid density criterion is satisfied */
   if (subgrid_density > starform->subgrid_density_threshold) return 1;
+
+  /* Calculate the temperature */
+  const double temperature = cooling_get_temperature(phys_const, hydro_props,
+                                                     us, cosmo, cooling, p, xp);
 
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = xp->tracers_data.subgrid_temp;
 
-  /* Check if the subgrid temperature criteria is satisfied */
-  return (subgrid_temperature < starform->temperature_threshold);
+  /* Check if we satisfy the subgrid temperature criteria */
+  if (subgrid_temperature < starform->temperature_threshold) return 1;
+
+  /* Calculate the thermal velocity dispersion */
+  const double sigma_thermal_squared =
+      3. * hydro_get_physical_pressure(p, cosmo) / physical_density;
+
+  /* Get the subgrid thermal velocity dispersion */
+  const double sigma_thermal2_subgrid =
+      sigma_thermal_squared * subgrid_temperature / temperature;
+
+  /* Get the gas mass */
+  const double gas_mass = hydro_get_mass(p);
+
+  /* Get the gas_mass to the power 2/3 */
+  const double gas_mass_to_1_3th = cbrt(gas_mass);
+  const double gas_mass_to_2_3th = gas_mass_to_1_3th * gas_mass_to_1_3th;
+
+  /* Get the subgrid density to the power 1/3 */
+  const double subgrid_density_to_1_3th = cbrt(subgrid_density);
+
+  /* Check if we satisfy the subgrid virial criterion by calculation
+   * alpha/alpha_virial, in which starform->alpha_virial_inv already includes
+   * the gravitational constant */
+  const double alpha = starform->alpha_virial_inv *
+                       (p->sf_data.sigma_v2 + sigma_thermal2_subgrid) /
+                       (subgrid_density_to_1_3th * gas_mass_to_2_3th);
+
+  /* Check if the virial critiria is below one */
+  return (alpha < 1.);
 }
 
 /**
@@ -207,7 +243,7 @@ INLINE static int star_formation_should_convert_to_star(
     const struct star_formation* starform, const struct engine* e,
     const double dt_star) {
 
-  /* Calculate the propability of forming a star */
+  /* Calculate the probability of forming a star */
   const double prob = xp->sf_data.SFR * dt_star / hydro_get_mass(p);
 
   /* Get a unique random number between 0 and 1 for star formation */
@@ -332,6 +368,9 @@ INLINE static void star_formation_copy_properties(
   /* Store the birth subgrid temperature in the star particle */
   sp->sf_data.birth_subgrid_temperature = xp->tracers_data.subgrid_temp;
 
+  /* Store the birth velocity dispersion in the star particle */
+  sp->sf_data.birth_velocity_dispersion = p->sf_data.sigma_v2;
+
   /* Flag that this particle has not done feedback yet */
   sp->SNII_f_E = -1.f;
 
@@ -369,14 +408,10 @@ INLINE static void starformation_init_backend(
       parameter_file, "COLIBREStarFormation:star_formation_efficiency");
 
   /* Calculate the ff constant */
-  starform->ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
+  const double ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
 
   /* Calculate the constant */
-  starform->mdot_const = starform->sfe / starform->ff_const;
-
-  /* Get the temperature threshold */
-  starform->temperature_threshold = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:temperature_threshold_K");
+  starform->mdot_const = starform->sfe / ff_const;
 
   starform->maximal_density_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",
@@ -392,6 +427,12 @@ INLINE static void starformation_init_backend(
                               phys_const->const_proton_mass *
                               number_density_from_cgs * hydro_props->mu_neutral;
 
+  /* Store a variable for the virial criterion */
+  starform->alpha_virial = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:alpha_virial");
+
+  starform->alpha_virial_inv = 1. / (starform->alpha_virial * G_newton);
+
   /* Get the subgrid density threshold */
   starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:subgrid_density_threshold_H_p_CM3",
@@ -403,6 +444,10 @@ INLINE static void starformation_init_backend(
       starform->subgrid_density_threshold_HpCM3 *
       phys_const->const_proton_mass * number_density_from_cgs *
       hydro_props->mu_neutral;
+
+  /* Get the subgrid temperature criteria */
+  starform->temperature_threshold = parser_get_param_double(
+      parameter_file, "COLIBREStarFormation:temperature_threshold_K");
 }
 
 /**
@@ -415,13 +460,14 @@ INLINE static void starformation_print_backend(
 
   /* Print the star formation properties */
   message("Star formation law is COLIBRE");
+  message("A Schmidt law + a virial criterion");
   message(
-      "With properties: Star formation efficiency = %e, temperature "
-      "threshold = %e, minimum over density = %e maximal "
-      "density = %e subgrid density threshold = %e",
-      starform->sfe, starform->temperature_threshold, starform->min_over_den,
-      starform->maximal_density_HpCM3,
-      starform->subgrid_density_threshold_HpCM3);
+      "With properties: Star formation efficiency = %e minimum over density = "
+      "%e maximal density = %e subgrid density criterion = %e alpha_virial = "
+      "%e temperature threshold = %e",
+      starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
+      starform->subgrid_density_threshold_HpCM3, starform->alpha_virial,
+      starform->temperature_threshold);
 }
 
 /**
@@ -431,13 +477,20 @@ INLINE static void starformation_print_backend(
  * density loop for the COLIBRE star formation model.
  *
  * @param p The particle to act upon
- * @param xp The extra particle data to act upon
  * @param cd The global star_formation information.
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void star_formation_end_density(
     struct part* p, struct xpart* xp, const struct star_formation* cd,
-    const struct cosmology* cosmo) {}
+    const struct cosmology* cosmo) {
+
+  /* Calculate some things before hand */
+  const float rho_inv = 1.f / p->rho;
+  const float h_inv = 1.f / p->h;
+  const float h_inv2 = h_inv * h_inv;
+
+  p->sf_data.sigma_v2 *= rho_inv * h_inv * h_inv2 * cosmo->a2_inv;
+}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -451,9 +504,16 @@ __attribute__((always_inline)) INLINE static void star_formation_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void
-star_formation_part_has_no_neighbours(struct part* p, struct xpart* xp,
+star_formation_part_has_no_neighbours(struct part* restrict p,
+                                      struct xpart* restrict xp,
                                       const struct star_formation* cd,
-                                      const struct cosmology* cosmo) {}
+                                      const struct cosmology* cosmo) {
+
+  /* If gas particles do not have neighbours they should not be able to form
+   * stars if we set the velocity dispersion to infinity or FLT_MAX this
+   * prevents this gas to form stars in any way. */
+  p->sf_data.sigma_v2 = FLT_MAX;
+}
 
 /**
  * @brief Sets the star_formation properties of the (x-)particles to a valid
@@ -486,7 +546,12 @@ star_formation_first_init_part(const struct phys_const* phys_const,
  * @param data The global star_formation information.
  */
 __attribute__((always_inline)) INLINE static void star_formation_init_part(
-    struct part* p, const struct star_formation* data) {}
+    struct part* p, const struct star_formation* data) {
+
+  /* Initialize the velocity dispersion as 0 before we do the SPH calculation of
+   * the velocity dispersion */
+  p->sf_data.sigma_v2 = 0.f;
+}
 
 /**
  * @brief Split the star formation content of a particle into n pieces

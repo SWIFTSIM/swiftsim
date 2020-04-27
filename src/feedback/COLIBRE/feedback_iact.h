@@ -145,6 +145,22 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   pj->chemistry_data.metal_mass_fraction_total =
       new_metal_mass_total * new_mass_inv;
 
+  /* Calculate mean metal weighted redshift */
+  double delta_mass_times_time, delta_iron_mass_times_time;
+  if (with_cosmology) {
+    delta_mass_times_time = delta_metal_mass_total * cosmo->z;
+  } else {
+    delta_mass_times_time = delta_metal_mass_total * time;
+  }
+  /* Update metal mass tracker */
+  pj->chemistry_data.metal_mass_tracker += delta_mass_times_time;
+
+  /* Calculate mean metal weighted redshift */
+  if (new_metal_mass_total > 0.f) {
+    pj->chemistry_data.metal_weighted_redshift =
+        pj->chemistry_data.metal_mass_tracker / new_metal_mass_total;
+  }
+
   /* Update mass fraction of each tracked element  */
   for (int elem = 0; elem < chemistry_element_count; elem++) {
     const double current_metal_mass =
@@ -167,6 +183,21 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   pj->chemistry_data.iron_mass_fraction_from_SNIa =
       new_iron_from_SNIa_mass * new_mass_inv;
+
+  /* Calculate mean iron weighted redshift */
+  if (with_cosmology) {
+    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * cosmo->z;
+  } else {
+    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * time;
+  }
+  /* Update iron mass tracker */
+  pj->chemistry_data.iron_mass_tracker += delta_iron_mass_times_time;
+
+  /* Calculate mean iron weighted redshift */
+  if (new_iron_from_SNIa_mass > 0.f) {
+    pj->chemistry_data.iron_weighted_redshift =
+        pj->chemistry_data.iron_mass_tracker / new_iron_from_SNIa_mass;
+  }
 
   /* Update mass from SNIa  */
   const double delta_mass_from_SNIa =
@@ -271,26 +302,27 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   /* Apply the different sources of energy and momentum feedback */
 
-  int do_SNII = 0;
+  int do_SNII_thermal = 0;
+  int do_SNII_kinetic = 0;
   int do_SNIa = 0;
 
-  /* SNII stochastic feedback */
+  /* SNII stochastic thermal feedback */
 
-  /* Get the SNII feedback properties */
-  const float prob_SNII =
+  /* Get the SNII thermal feedback properties */
+  const float prob_SNII_thermal =
       si->feedback_data.to_distribute.SNII_heating_probability;
 
-  /* Are we doing some SNII (big boys) feedback? */
-  if (prob_SNII > 0.f) {
+  /* Are we doing some SNII (big boys) thermal feedback? */
+  if (prob_SNII_thermal > 0.f) {
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNII = random_unit_interval_two_IDs(
         si->id, pj->id, ti_current, random_number_stellar_feedback_1);
 
     /* Are we lucky? */
-    do_SNII = (rand_SNII < prob_SNII);
+    do_SNII_thermal = (rand_SNII < prob_SNII_thermal);
 
-    if (do_SNII) {
+    if (do_SNII_thermal) {
 
       /* Compute new energy of this particle */
       const double u_init_SNII =
@@ -332,7 +364,45 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     }
   }
 
-  /* SNIa stochastic feedback */
+  /* SNII stochastic kinetic feedback */
+
+  /* Get the SNII kinetic feedback properties */
+  const float prob_SNII_kinetic =
+      si->feedback_data.to_distribute.SNII_kick_probability;
+
+  /* Are we doing some SNII (big boys) kinetic feedback? */
+  if (prob_SNII_kinetic > 0.f) {
+
+    /* Draw a random number (Note mixing both IDs) */
+    const float rand_SNII = random_unit_interval_two_IDs(
+        si->id, pj->id, ti_current, random_number_stellar_feedback_3);
+
+    /* Are we lucky? */
+    do_SNII_kinetic = (rand_SNII < prob_SNII_kinetic);
+
+    if (do_SNII_kinetic) {
+
+      /* Get the SNII feedback kick velocity */
+      const float SNII_delta_v = si->feedback_data.to_distribute.SNII_delta_v;
+
+      /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
+       * Therefore, a physical kick, dv, gets translated into a
+       * code velocity kick, a * dv */
+
+      xpj->v_full[0] -= SNII_delta_v * dx[0] * r_inv * cosmo->a;
+      xpj->v_full[1] -= SNII_delta_v * dx[1] * r_inv * cosmo->a;
+      xpj->v_full[2] -= SNII_delta_v * dx[2] * r_inv * cosmo->a;
+
+      /* Update the signal velocity of the particle based on the velocity kick
+       */
+      hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, SNII_delta_v);
+
+      /* Synchronize the particle on the timeline */
+      timestep_sync_part(pj);
+    }
+  }
+
+  /* SNIa stochastic thermal feedback */
 
   /* Get the SNIa feedback properties */
   const float prob_SNIa =
@@ -438,7 +508,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
     /* If the particle hasn't received feedback from other
        sources, heat it up to the HII region energy level */
-    if (!do_SNII && !do_SNIa) {
+    if (!do_SNII_thermal && !do_SNIa) {
 
       /* Compute new energy of this particle */
       const double u_init_HII =
