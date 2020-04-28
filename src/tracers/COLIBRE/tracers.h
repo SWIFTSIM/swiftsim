@@ -141,10 +141,12 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.last_momentum_kick_scale_factor = -1.f;
   xp->tracers_data.last_SNII_injection_scale_factor = -1.f;
   xp->tracers_data.last_AGN_injection_scale_factor = -1.f;
+  xp->tracers_data.density_at_last_SNII_feedback_event = -1.;
   xp->tracers_data.AGN_feedback_energy = 0.f;
 }
 
-static INLINE void tracers_after_SNII_feedback(struct xpart *xp,
+static INLINE void tracers_after_SNII_feedback(const struct part *p,
+                                               struct xpart *xp,
                                                const int with_cosmology,
                                                const float scale_factor,
                                                const double time) {
@@ -153,6 +155,10 @@ static INLINE void tracers_after_SNII_feedback(struct xpart *xp,
     xp->tracers_data.last_SNII_injection_scale_factor = scale_factor;
   else
     xp->tracers_data.last_SNII_injection_time = time;
+
+  xp->tracers_data.density_at_last_SNII_feedback_event =
+      hydro_get_comoving_density(p) * scale_factor * scale_factor *
+      scale_factor;
 }
 
 static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,

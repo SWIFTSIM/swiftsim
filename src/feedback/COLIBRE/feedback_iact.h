@@ -346,7 +346,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       cooling_update_feedback_particle(xpj);
 
       /* Mark this particle has having been heated by supernova feedback */
-      tracers_after_SNII_feedback(xpj, with_cosmology, cosmo->a, time);
+      tracers_after_SNII_feedback(pj, xpj, with_cosmology, cosmo->a, time);
 
       /* Write the event to the SNIII log file */
       event_logger_SNII_log_event(si, pj, xpj, cosmo, si->SNII_f_E);
