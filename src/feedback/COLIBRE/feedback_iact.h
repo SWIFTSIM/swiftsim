@@ -262,6 +262,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       current_mass * hydro_get_physical_internal_energy(pj, xpj, cosmo);
 
   /* Apply conservation of momentum */
+
   /* Update velocity following change in gas mass */
   xpj->v_full[0] *= current_mass * new_mass_inv;
   xpj->v_full[1] *= current_mass * new_mass_inv;
