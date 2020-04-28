@@ -929,9 +929,9 @@ void cooling_set_subgrid_properties(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
   xp->tracers_data.nH2_over_nH = compute_subgrid_H2_fraction(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-  xp->tracers_data.subgrid_temp = compute_subgrid_temperature(
+  p->cooling_data.subgrid_temp = compute_subgrid_temperature(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-  xp->tracers_data.subgrid_dens = compute_subgrid_density(
+  p->cooling_data.subgrid_dens = compute_subgrid_density(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
 }
 
