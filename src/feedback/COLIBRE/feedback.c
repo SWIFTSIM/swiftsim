@@ -727,7 +727,7 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
       dtd_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
-  for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++) {
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
     sp->feedback_data.to_distribute.metal_mass[i] +=
         num_SNIa * props->yield_SNIa_IMF_resampled[i] *
         props->solar_mass_to_mass;
@@ -805,17 +805,17 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   determine_bin_yield_SNII(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
-  float metal_mass_released[chemistry_N_elements_from_yield_tables],
+  float metal_mass_released[enrichment_of_N_elements_from_yield_tables],
       metal_mass_released_total;
-  for (int elem = 0; elem < chemistry_N_elements_from_yield_tables; elem++) {
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables; elem++) {
     for (mass_bin_index = low_imf_mass_bin_index;
          mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
       low_index_3d = row_major_index_3d(
           iz_low, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
       high_index_3d = row_major_index_3d(
           iz_high, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
       low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
                                         eagle_feedback_SNII_N_metals,
                                         eagle_feedback_N_imf_bins);
@@ -863,7 +863,7 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   float mass_ejected, mass_released;
 
   /* zero all negative values */
-  for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++)
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
@@ -897,11 +897,11 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
      * initial mass as tables are per initial mass */
     const float norm_factor = sp->mass_init * mass_ejected / mass_released;
 
-    for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.metal_mass[i] +=
           metal_mass_released[i] * norm_factor;
     }
-    for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.mass_from_SNII +=
           sp->feedback_data.to_distribute.metal_mass[i];
     }
@@ -958,17 +958,17 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   determine_bin_yield_AGB(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
-  float metal_mass_released[chemistry_N_elements_from_yield_tables],
+  float metal_mass_released[enrichment_of_N_elements_from_yield_tables],
       metal_mass_released_total;
-  for (int elem = 0; elem < chemistry_N_elements_from_yield_tables; elem++) {
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables; elem++) {
     for (mass_bin_index = low_imf_mass_bin_index;
          mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
       low_index_3d = row_major_index_3d(
           iz_low, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
-          chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
       high_index_3d = row_major_index_3d(
           iz_high, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
-          chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
       low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
                                         eagle_feedback_AGB_N_metals,
                                         eagle_feedback_N_imf_bins);
@@ -1015,7 +1015,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   float mass_ejected, mass_released;
 
   /* zero all negative values */
-  for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++)
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
@@ -1050,7 +1050,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
      * initial mass as tables are per initial mass */
     const float norm_factor = sp->mass_init * mass_ejected / mass_released;
 
-    for (int i = 0; i < chemistry_N_elements_from_yield_tables; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.metal_mass[i] +=
           metal_mass_released[i] * norm_factor;
       sp->feedback_data.to_distribute.mass_from_AGB +=
@@ -1702,7 +1702,7 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of the SNII enrichment model -------------------------------- */
 
   /* Set factors for each element adjusting SNII yield */
-  for (int elem = 0; elem < chemistry_N_elements_from_yield_tables; ++elem) {
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables; ++elem) {
     char buffer[50];
     sprintf(buffer, "COLIBREFeedback:SNII_yield_factor_%s",
             chemistry_get_element_name((enum chemistry_element)elem));

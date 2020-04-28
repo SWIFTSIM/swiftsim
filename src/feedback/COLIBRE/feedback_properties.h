@@ -24,7 +24,7 @@
 #include "hydro_properties.h"
 
 /*! CC: Number of elements to be read from the yield tables */
-#define chemistry_N_elements_from_yield_tables 9
+#define enrichment_of_N_elements_from_yield_tables 9
 
 /**
  * @brief Stores AGB and SNII yield tables
@@ -136,7 +136,7 @@ struct feedback_props {
   /* ------------- SNII parameters    --------------- */
 
   /* Array of adjustment factors for SNII  */
-  float SNII_yield_factor[chemistry_N_elements_from_yield_tables];
+  float SNII_yield_factor[enrichment_of_N_elements_from_yield_tables];
 
   /* ------------- SNIa parameters    --------------- */
 

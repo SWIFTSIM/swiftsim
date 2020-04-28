@@ -26,7 +26,7 @@
 static const float log10_min_metallicity = -20;
 
 /*! CC: Number of elements to be read from the yield tables */
-#define chemistry_N_elements_from_yield_tables 9
+#define enrichment_of_N_elements_from_yield_tables 9
 
 /*! Length of the name fields in the yields tables */
 #define eagle_feedback_element_name_length 15
@@ -509,7 +509,7 @@ INLINE static void allocate_yield_tables(
                      (void **)&feedback_props->yield_AGB.yield_IMF_resampled,
                      SWIFT_STRUCT_ALIGNMENT,
                      eagle_feedback_AGB_N_metals * eagle_feedback_N_imf_bins *
-                         chemistry_N_elements_from_yield_tables *
+                         enrichment_of_N_elements_from_yield_tables *
                          sizeof(double)) != 0) {
     error("Failed to allocate AGB IMF resampled array");
   }
@@ -582,7 +582,7 @@ INLINE static void allocate_yield_tables(
                      (void **)&feedback_props->yield_SNII.yield_IMF_resampled,
                      SWIFT_STRUCT_ALIGNMENT,
                      eagle_feedback_SNII_N_metals * eagle_feedback_N_imf_bins *
-                         chemistry_N_elements_from_yield_tables *
+                         enrichment_of_N_elements_from_yield_tables *
                          sizeof(double)) != 0) {
     error("Failed to allocate SNII IMF resampled array");
   }
@@ -729,7 +729,7 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
   /* Resample yields for each element tracked in COLIBRE */
   int element_index = 0;
   for (enum chemistry_element elem = chemistry_element_H;
-       elem < chemistry_N_elements_from_yield_tables; elem++) {
+       elem < enrichment_of_N_elements_from_yield_tables; elem++) {
     /* SNIa  */
     element_index = get_element_index(chemistry_get_element_name(elem),
                                       feedback_props->SNIa_element_names,
@@ -766,7 +766,7 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
 
         flat_index_3d = row_major_index_3d(
             i, elem, k, eagle_feedback_SNII_N_metals,
-            chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+            enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
         feedback_props->yield_SNII.yield_IMF_resampled[flat_index_3d] =
             exp(M_LN10 * feedback_props->yield_mass_bins[k]) * result;
       }
@@ -778,7 +778,7 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
                                            eagle_feedback_N_imf_bins);
         flat_index_3d = row_major_index_3d(
             i, elem, k, eagle_feedback_SNII_N_metals,
-            chemistry_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+            enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
         if (strcmp(chemistry_get_element_name(elem), "Hydrogen") != 0 ||
             strcmp(chemistry_get_element_name(elem), "Helium") != 0) {
           feedback_props->yield_SNII
@@ -825,7 +825,7 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
 
           flat_index_3d =
               row_major_index_3d(i, elem, j, eagle_feedback_AGB_N_metals,
-                                 chemistry_N_elements_from_yield_tables,
+                                 enrichment_of_N_elements_from_yield_tables,
                                  eagle_feedback_N_imf_bins);
           feedback_props->yield_AGB.yield_IMF_resampled[flat_index_3d] =
               exp(M_LN10 * feedback_props->yield_mass_bins[j]) * result;
