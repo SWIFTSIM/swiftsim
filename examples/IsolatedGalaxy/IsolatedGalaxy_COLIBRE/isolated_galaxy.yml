@@ -110,6 +110,7 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
+  init_abundance_Europium:  0.0            # Inital fraction of particle mass in Europium
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
@@ -170,8 +171,20 @@ COLIBREFeedback:
   HIIregion_temperature:            1.e4            # Temperature of gas particles tagged as HII regions
   HIIregion_rebuild_dt_Myr:         2.0             # Time between rebuilding the HII region in Myr 
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
-#  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table
-                                    
+  with_r_process_enrichment:        1               # Global switch for r process enrichment from neutron star mergers and rare CC SN.
+  with_NSM:                         1               # Global switch to include NSM events
+  NSM_t_slope:                      -1.0            # Slope of delay function of neutron star mergers model.
+  NSM_t_delay_Gyr:                  3e-2            # Delay time to be used in delay function of neutron star mergers model.
+  NSM_per_Msun_per_yr:              1.54e-5         # Number of neutron star mergers per Msolar.
+  yield_Eu_from_NSM:                1.5e-5          # Amount of europium (in units of Msolar) relesed by NSM. 
+  with_CEJSN:                       1               # Global switch to include rare core-collapse SN (CEJSN)
+  CEJSN_per_Msun:                   7.05e-5         # Number of rare core-collapse SN per Msolar.
+  yield_Eu_from_CEJSN:              1e-5            # Amount of europium (in units of Msolar) relesed by CEJSN.
+  with_collapsar:                   1               # Global switch to include rare core-collapse SN (collapsars or hypernovae)
+  collapsar_per_Msun:               2.6e-7          # Number of rare core-collapse SN per Msolar.
+  yield_Eu_from_collapsar:          1e-4            # Amount of europium (in units of Msolar) relesed by collapsars.
+
+#  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table                                    
 # HIIregion_maxage_Myr:             0 # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
 
 # Hernquist potential parameters
@@ -205,4 +218,4 @@ SNIaDTD:
 Event_logger:
   delta_time_SNIa_Myr:        10
   delta_time_SNII_Myr:        1
-  delta_time_r_processes_Myr: 20
+  delta_time_r_processes_Myr: 10

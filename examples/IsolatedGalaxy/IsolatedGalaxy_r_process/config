@@ -1,1 +1,0 @@
-./configure --with-subgrid=COLIBRE --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist

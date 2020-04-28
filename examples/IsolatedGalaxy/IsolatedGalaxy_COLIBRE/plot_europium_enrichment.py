@@ -28,15 +28,6 @@ import numpy as np
 import glob
 import os.path
 
-
-def find_indices(a, b):
-    result = np.zeros(len(b))
-    for i in range(len(b)):
-        result[i] = ((np.where(a == b[i]))[0])[0]
-
-    return result
-
-
 # Plot parameters
 params = {
     "axes.labelsize": 10,
@@ -133,4 +124,4 @@ ylabel("Cumulative injected mass of Europium [M$_{\odot}$]", labelpad=2)
 ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
 
-savefig("box_evolution.png", dpi=200)
+savefig("Europium_enrichment.png", dpi=200)
