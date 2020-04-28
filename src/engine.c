@@ -5281,7 +5281,6 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
     if (e->policy & engine_policy_star_formation) {
       fclose(e->sfh_logger);
     }
-
     if (e->policy & engine_policy_feedback) {
       event_logger_close(e);
     }
