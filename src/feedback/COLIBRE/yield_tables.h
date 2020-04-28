@@ -764,9 +764,10 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
               eagle_feedback_SNII_N_masses, feedback_props->yield_mass_bins[k]);
         }
 
-        flat_index_3d = row_major_index_3d(
-            i, elem, k, eagle_feedback_SNII_N_metals,
-            enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+        flat_index_3d =
+            row_major_index_3d(i, elem, k, eagle_feedback_SNII_N_metals,
+                               enrichment_of_N_elements_from_yield_tables,
+                               eagle_feedback_N_imf_bins);
         feedback_props->yield_SNII.yield_IMF_resampled[flat_index_3d] =
             exp(M_LN10 * feedback_props->yield_mass_bins[k]) * result;
       }
@@ -776,9 +777,10 @@ INLINE static void compute_yields(struct feedback_props *feedback_props) {
       for (int k = 0; k < eagle_feedback_N_imf_bins; k++) {
         flat_index_2d = row_major_index_2d(i, k, eagle_feedback_SNII_N_metals,
                                            eagle_feedback_N_imf_bins);
-        flat_index_3d = row_major_index_3d(
-            i, elem, k, eagle_feedback_SNII_N_metals,
-            enrichment_of_N_elements_from_yield_tables, eagle_feedback_N_imf_bins);
+        flat_index_3d =
+            row_major_index_3d(i, elem, k, eagle_feedback_SNII_N_metals,
+                               enrichment_of_N_elements_from_yield_tables,
+                               eagle_feedback_N_imf_bins);
         if (strcmp(chemistry_get_element_name(elem), "Hydrogen") != 0 ||
             strcmp(chemistry_get_element_name(elem), "Helium") != 0) {
           feedback_props->yield_SNII
