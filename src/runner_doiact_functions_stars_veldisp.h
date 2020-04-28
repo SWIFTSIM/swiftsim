@@ -650,8 +650,8 @@ void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
   const int sid = space_getsid(s, &ci, &cj, shift);
 
   /* Recurse? */
-  if (cell_can_recurse_in_pair_stars_task(ci, cj) &&
-      cell_can_recurse_in_pair_stars_task(cj, ci)) {
+  if (cell_can_recurse_in_pair_hydro_task(ci) &&
+      cell_can_recurse_in_pair_hydro_task(cj)) {
     struct cell_split_pair *csp = &cell_split_pairs[sid];
     for (int k = 0; k < csp->count; k++) {
       const int pid = csp->pairs[k].pid;
@@ -742,7 +742,7 @@ void DOSUB_SELF1_SVD(struct runner *r, struct cell *ci, int gettimer) {
     return;
 
   /* Recurse? */
-  if (cell_can_recurse_in_self_stars_task(ci)) {
+  if (cell_can_recurse_in_self_hydro_task(ci)) {
 
     /* Loop over all progeny. */
     for (int k = 0; k < 8; k++)

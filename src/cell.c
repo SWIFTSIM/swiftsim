@@ -4299,7 +4299,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
           ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
           /* stars for cj */
-          atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+          atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
           cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
           /* Activate the drift tasks. */
