@@ -19,7 +19,6 @@
 #ifndef SWIFT_FEEDBACK_COLIBRE_H
 #define SWIFT_FEEDBACK_COLIBRE_H
 
-#include <strings.h>
 #include "SNIa_DTD.h"
 #include "cooling.h"
 #include "cosmology.h"

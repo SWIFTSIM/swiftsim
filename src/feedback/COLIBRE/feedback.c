@@ -135,8 +135,6 @@ double integrate_rate_of_NSM(const struct spart* sp, const double t0,
   /* The calculation is written as the integral between t0 and t1 */
   double num_NSM_per_Msun;
 
-  num_NSM_per_Msun = props->NSM_per_Msun_per_yr * log(t1 / t0);
-
   if (props->NSM_t_slope == -1.0) {
     num_NSM_per_Msun = props->NSM_per_Msun_per_yr * log(t1 / t0);
   } else {
