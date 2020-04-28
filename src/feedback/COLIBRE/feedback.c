@@ -1308,8 +1308,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
  * @param age age of spart at beginning of step
  * @param dt length of current timestep
  * @param time_beg_of_step time at the beginning of timestep
- * @param ti_begin The integer time at the beginning of the step.
-
+ * @param ti_begin The integer time at the beginning of the step (for random
+ * numbers).
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
