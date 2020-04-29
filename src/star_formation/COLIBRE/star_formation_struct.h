@@ -36,7 +36,11 @@ struct star_formation_xpart_data {
 /**
  * @brief Star-formation-related properties stored in the particle data.
  */
-struct star_formation_part_data {};
+struct star_formation_part_data {
+
+  /*! Velocity dispersion squared in physical internal units */
+  float sigma_v2;
+};
 
 /**
  * @brief Star-formation-related properties stored in the star particle
@@ -55,6 +59,9 @@ struct star_formation_spart_data {
 
   /*! The subgrid birth temperature */
   float birth_subgrid_temperature;
+
+  /*! The velocity dispersion at birth time in physical internal units */
+  float birth_velocity_dispersion;
 };
 
 #endif /* SWIFT_COLIBRE_STAR_FORMATION_STRUCT_H */
