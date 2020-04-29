@@ -151,7 +151,7 @@ COLIBREChemistry:
   init_abundance_Magnesium:  0.0
   init_abundance_Silicon:    0.0
   init_abundance_Iron:       0.0
-  init_abundance_Europium:   0.0            # Inital fraction of particle mass in Europium
+  init_abundance_Europium:   0.0
   metal_diffusion_constant:         0.   # No diffusion
   metal_diffusion_timestep_mult:    100. # No diffusion
 
@@ -174,6 +174,8 @@ COLIBREFeedback:
   SNII_wind_delay_Gyr:              0.03            # Time in Gyr between a star's birth and the SNII thermal feedback event.
   SNII_delta_T_K:                   3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                  1.0e51          # Energy of one SNII explosion in ergs.
+  SNII_delta_v_km_p_s:              25.0            # Change in the gas-particle velocity that is kicked in a SNII kinetic feedback event
+  SNII_f_kinetic:                   0.1             # Fraction of SNII energy injected into the gas in kinetic form (the remaining fraction is injected in thermal form).
   SNII_energy_fraction_min:         0.3             # Maximal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_max:         3.0             # Minimal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:         0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
