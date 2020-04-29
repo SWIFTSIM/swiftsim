@@ -60,7 +60,9 @@ print("reading snapshot " + str(i))
 sim = h5py.File("output_%04d.hdf5" % i, "r")
 star_abundances = sim["/PartType4/ElementMassFractions"][:][:]
 
-mp_in_cgs = 1.6737236e-24
+PhysicalConstants = sim["/PhysicalConstants/CGS/"]
+mp_in_cgs = float(PhysicalConstants.attrs["proton_mass"])
+
 mH_in_cgs = 1.00784*mp_in_cgs
 mEu_in_cgs = 151.964*mp_in_cgs
 mFe_in_cgs = 55.845*mp_in_cgs

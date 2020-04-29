@@ -132,7 +132,7 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
-  with_r_process_enrichment:        1               # Global switch for r process enrichment from neutron star mergers and rare CC SN.
+  with_r_process_enrichment:        1               # Global switch for r process enrichment from neutron star mergers and rare core-collapse SN (collapsars and common envelop jets SN).
   with_HIIRegions:                  1               # Switch for early feedback (HII regions).
   with_StellarWinds:                1               # Switch for early feedback (Stellar winds).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.

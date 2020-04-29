@@ -272,22 +272,22 @@ struct feedback_props {
 
   /* ------------ r-process enrichment properties ------------ */
   /* Number of neutron star mergers per unit of Msolar */
-  double num_of_NSM_per_Msun;
+  double NSM_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by NSM */
-  double yield_Eu_from_NSM_event_Msun;
+  double yield_Eu_from_NSM;
 
   /* Number of CEJSN per unit of Msolar */
-  double num_of_CEJSN_per_Msun;
+  double CEJSN_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by CEJSN */
-  double yield_Eu_from_CEJSN_event_Msun;
+  double yield_Eu_from_CEJSN;
 
   /* Number of collapsar per unit of Msolar */
-  double num_of_collapsar_per_Msun;
+  double collapsar_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by collapsar */
-  double yield_Eu_from_collapsar_event_Msun;
+  double yield_Eu_from_collapsar;
 
   /* ------------ Early feedback properties ------------ */
 
