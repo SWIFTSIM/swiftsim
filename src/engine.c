@@ -1767,9 +1767,10 @@ void engine_rebuild(struct engine *e, const int repartitioned,
     engine_recompute_displacement_constraint(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
-  part_verify_links(e->s->parts, e->s->gparts, e->s->sparts, e->s->bparts,
-                    e->s->nr_parts, e->s->nr_gparts, e->s->nr_sparts,
-                    e->s->nr_bparts, e->verbose);
+  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts,
+                    e->s->sparts, e->s->bparts,
+                    e->s->nr_parts, e->s->nr_gparts, e->s->sinks.nr_parts,
+                    e->s->nr_sparts, e->s->nr_bparts, e->verbose);
 #endif
 
   /* Initial cleaning up session ? */
@@ -2159,6 +2160,7 @@ void engine_first_init_particles(struct engine *e) {
   space_first_init_gparts(e->s, e->verbose);
   space_first_init_sparts(e->s, e->verbose);
   space_first_init_bparts(e->s, e->verbose);
+  space_first_init_sinks(e->s, e->verbose);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -2211,6 +2213,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_gparts(s, e->verbose);
   space_init_sparts(s, e->verbose);
   space_init_bparts(s, e->verbose);
+  space_init_sinks(s, e->verbose);
 
   /* Update the cooling function */
   if ((e->policy & engine_policy_cooling) ||
@@ -2278,6 +2281,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   space_init_gparts(e->s, e->verbose);
   space_init_sparts(e->s, e->verbose);
   space_init_bparts(e->s, e->verbose);
+  space_init_sinks(e->s, e->verbose);
 
   /* Print the number of active tasks ? */
   if (e->verbose) engine_print_task_counts(e);
@@ -2413,9 +2417,10 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
 #ifdef SWIFT_DEBUG_CHECKS
   space_check_timesteps(e->s);
-  part_verify_links(e->s->parts, e->s->gparts, e->s->sparts, e->s->bparts,
-                    e->s->nr_parts, e->s->nr_gparts, e->s->nr_sparts,
-                    e->s->nr_bparts, e->verbose);
+  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts,
+                    e->s->sparts, e->s->bparts,
+                    e->s->nr_parts, e->s->nr_gparts, e->s->sinks.nr_parts,
+                    e->s->nr_sparts, e->s->nr_bparts, e->verbose);
 #endif
 
   /* Ready to go */
@@ -3464,8 +3469,9 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Verify that the links are correct */
-  part_verify_links(s->parts, s->gparts, s->sparts, s->bparts, s->nr_parts,
-                    s->nr_gparts, s->nr_sparts, s->nr_bparts, e->verbose);
+  part_verify_links(s->parts, s->gparts, s->sinks.parts, s->sparts, s->bparts,
+                    s->nr_parts, s->nr_gparts, s->sinks.nr_parts, s->nr_sparts,
+                    s->nr_bparts, e->verbose);
 #endif
 
   if (e->verbose)
