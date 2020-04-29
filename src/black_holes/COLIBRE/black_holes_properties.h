@@ -75,6 +75,10 @@ struct black_holes_props {
   /*! Calculate Bondi accretion rate for individual neighbours? */
   int multi_phase_bondi;
 
+  /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015)? */
+  int with_angmom_limiter;
+
+
   /* ---- Properties of the feedback model ------- */
 
   /*! Temperature increase induced by AGN feedback (Kelvin) */
@@ -197,6 +201,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
 
   /* Feedback parameters ---------------------------------- */
 
