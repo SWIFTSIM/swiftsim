@@ -911,7 +911,7 @@ void task_get_group_name(int type, int subtype, char *cluster) {
       strcpy(cluster, "StarsFeedback");
       break;
     case task_subtype_stars_veldisp:
-      strcpy(cluster, "StarsVelocityDispersion");
+      strcpy(cluster, "StarsVelDisp");
       break;
     case task_subtype_bh_density:
       strcpy(cluster, "BHDensity");
