@@ -80,8 +80,9 @@ enum engine_policy {
   engine_policy_timestep_sync = (1 << 22),
   engine_policy_logger = (1 << 23),
   engine_policy_line_of_sight = (1 << 24),
+  engine_policy_sink = (1 << 25),
 };
-#define engine_maxpolicy 25
+#define engine_maxpolicy 26
 extern const char *engine_policy_names[engine_maxpolicy + 1];
 
 /**
@@ -500,6 +501,14 @@ struct engine {
   integertime_t ti_next_los;
   int los_output_count;
 
+
+  /* Variables for the sink particles. */
+  struct {
+    /* Total number of particles in the system. */
+    long long total_nr_parts;
+
+  } sink;
+
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Run brute force checks only on steps when all gparts active? */
   int force_checks_only_all_active;
@@ -537,7 +546,7 @@ void engine_collect_end_of_step(struct engine *e, int apply);
 void engine_dump_snapshot(struct engine *e);
 void engine_init_output_lists(struct engine *e, struct swift_params *params);
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 long long Ngas, long long Ngparts, long long Nstars,
+                 long long Ngas, long long Ngparts, long long Nsinks, long long Nstars,
                  long long Nblackholes, long long Nbackground_gparts,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
