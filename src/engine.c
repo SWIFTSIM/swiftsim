@@ -128,7 +128,8 @@ const char *engine_policy_names[] = {"none",
                                      "time-step limiter",
                                      "time-step sync",
                                      "logger",
-                                     "line of sight"};
+                                     "line of sight",
+                                     "sink"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;
@@ -1513,6 +1514,7 @@ void engine_print_task_counts(const struct engine *e) {
   fflush(stdout);
   message("nr_parts = %zu.", e->s->nr_parts);
   message("nr_gparts = %zu.", e->s->nr_gparts);
+  message("nr_sink = %zu.", e->s->sinks.nr_parts);
   message("nr_sparts = %zu.", e->s->nr_sparts);
   message("nr_bparts = %zu.", e->s->nr_bparts);
 
@@ -3484,7 +3486,7 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   /* Re-link everything to the gparts. */
   if (s->nr_gparts > 0)
     part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts,
-                                    s->sparts, s->bparts, &e->threadpool);
+                                    s->sinks.parts, s->sparts, s->bparts, &e->threadpool);
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -3816,6 +3818,7 @@ static void engine_dumper_init(struct engine *e) {
  * @param output_options Output options for snapshots.
  * @param Ngas total number of gas particles in the simulation.
  * @param Ngparts total number of gravity particles in the simulation.
+ * @param Nsinks total number of sink particles in the simulation.
  * @param Nstars total number of star particles in the simulation.
  * @param Nblackholes total number of black holes in the simulation.
  * @param Nbackground_gparts Total number of background DM particles.
@@ -3840,10 +3843,10 @@ static void engine_dumper_init(struct engine *e) {
  * @param los_properties the #los_props of this run.
  */
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 struct output_options *output_options, long long Ngas,
-                 long long Ngparts, long long Nstars, long long Nblackholes,
-                 long long Nbackground_gparts, int policy, int verbose,
-                 struct repartition *reparttype,
+                 struct output_options *output_options,
+                 long long Ngas, long long Ngparts, long long Nsinks, long long Nstars,
+                 long long Nblackholes, long long Nbackground_gparts,
+                 int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,
                  const struct phys_const *physical_constants,
                  struct cosmology *cosmo, struct hydro_props *hydro,
@@ -3868,6 +3871,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->total_nr_parts = Ngas;
   e->total_nr_gparts = Ngparts;
   e->total_nr_sparts = Nstars;
+  e->total_nr_parts = Nsinks;
   e->total_nr_bparts = Nblackholes;
   e->total_nr_DM_background_gparts = Nbackground_gparts;
   e->proxy_ind = NULL;

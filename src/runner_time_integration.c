@@ -672,7 +672,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 
       /* If the g-particle has no counterpart */
       if (gp->type == swift_type_dark_matter ||
-          gp->type == swift_type_dark_matter_background) {
+          gp->type == swift_type_dark_matter_background ||
+          gp->type == swift_type_sink) {
 
         /* need to be updated ? */
         if (gpart_is_active(gp, e)) {

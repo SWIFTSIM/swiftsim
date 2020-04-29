@@ -1,0 +1,13 @@
+diff a/src/space.c b/src/space.c	(rejected hunks)
+@@ -5083,6 +5162,11 @@ void space_init(struct space *s, struct swift_params *params,
+   /* Do we want any spare particles for on the fly creation? */
+   if (!star_formation) space_extra_sparts = 0;
+ 
++  if (star_formation) {
++    /* Compute the max id for the generation of unique id. */
++    space_init_unique_id(s);
++  }
++
+   /* Build the cells recursively. */
+   if (!dry_run) space_regrid(s, verbose);
+ }
