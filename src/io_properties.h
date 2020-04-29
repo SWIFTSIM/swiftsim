@@ -85,8 +85,7 @@ typedef void (*conversion_func_sink_int)(const struct engine*,
 typedef void (*conversion_func_sink_double)(const struct engine*,
                                             const struct sink*, double*);
 typedef void (*conversion_func_sink_long_long)(const struct engine*,
-                                               const struct sink*,
-                                               long long*);
+                                               const struct sink*, long long*);
 
 /**
  * @brief The properties of a given dataset for i/o
@@ -1013,15 +1012,14 @@ INLINE static struct io_props io_make_output_field_convert_bpart_LONGLONG(
   return r;
 }
 
-
 /**
  * @brief Constructs an #io_props (with conversion) from its parameters
  */
-#define io_make_output_field_convert_sink(name, type, dim, units, a_exponent, \
-                                          sink, convert, desc)          \
-  io_make_output_field_convert_sink_##type(name, type, dim, units,      \
-                                           a_exponent, sizeof(sink[0]), \
-                                           sink, convert, desc)
+#define io_make_output_field_convert_sink(name, type, dim, units, a_exponent,  \
+                                          sink, convert, desc)                 \
+  io_make_output_field_convert_sink_##type(name, type, dim, units, a_exponent, \
+                                           sizeof(sink[0]), sink, convert,     \
+                                           desc)
 
 /**
  * @brief Construct an #io_props from its parameters

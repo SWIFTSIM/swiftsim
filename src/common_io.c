@@ -1011,8 +1011,7 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
       offset_spart[i] = local_offset_spart + global_offsets[swift_type_stars];
       offset_bpart[i] =
           local_offset_bpart + global_offsets[swift_type_black_hole];
-      offset_sink[i] =
-        local_offset_sink + global_offsets[swift_type_sink];
+      offset_sink[i] = local_offset_sink + global_offsets[swift_type_sink];
 
       local_offset_part += count_part[i];
       local_offset_gpart += count_gpart[i];
@@ -1590,7 +1589,6 @@ void io_convert_bpart_l_mapper(void* restrict temp, int N,
   for (int i = 0; i < N; i++)
     props.convert_bpart_l(e, bparts + delta + i, &temp_l[i * dim]);
 }
-
 
 /**
  * @brief Mapper function to copy #sink into a buffer of floats using a
@@ -2182,8 +2180,7 @@ void io_duplicate_stars_gparts(struct threadpool* tp,
                  sizeof(struct spart), threadpool_auto_chunk_size, &data);
 }
 
-void io_duplicate_sinks_gparts_mapper(void* restrict data,
-                                      int Nsinks,
+void io_duplicate_sinks_gparts_mapper(void* restrict data, int Nsinks,
                                       void* restrict extra_data) {
 
   struct duplication_data* temp = (struct duplication_data*)extra_data;
@@ -2228,19 +2225,17 @@ void io_duplicate_sinks_gparts_mapper(void* restrict data,
  * @param Nsinks The number of sink particles read in.
  * @param Ndm The number of DM, gas and star particles read in.
  */
-void io_duplicate_sinks_gparts(struct threadpool* tp,
-                               struct sink* const sinks,
-                               struct gpart* const gparts,
-                               size_t Nsinks, size_t Ndm) {
+void io_duplicate_sinks_gparts(struct threadpool* tp, struct sink* const sinks,
+                               struct gpart* const gparts, size_t Nsinks,
+                               size_t Ndm) {
 
   struct duplication_data data;
   data.gparts = gparts;
   data.sinks = sinks;
   data.Ndm = Ndm;
 
-  threadpool_map(tp, io_duplicate_sinks_gparts_mapper, sinks,
-                 Nsinks, sizeof(struct sink), threadpool_auto_chunk_size,
-                 &data);
+  threadpool_map(tp, io_duplicate_sinks_gparts_mapper, sinks, Nsinks,
+                 sizeof(struct sink), threadpool_auto_chunk_size, &data);
 }
 
 void io_duplicate_black_holes_gparts_mapper(void* restrict data,
@@ -2388,9 +2383,9 @@ void io_collect_sparts_to_write(const struct spart* restrict sparts,
  * @param Nsinks_written The total number of #sinks to write.
  */
 void io_collect_sinks_to_write(const struct sink* restrict sinks,
-                                struct sink* restrict sinks_written,
-                                const size_t Nsinks,
-                                const size_t Nsinks_written) {
+                               struct sink* restrict sinks_written,
+                               const size_t Nsinks,
+                               const size_t Nsinks_written) {
 
   size_t count = 0;
 

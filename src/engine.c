@@ -3486,7 +3486,8 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
   /* Re-link everything to the gparts. */
   if (s->nr_gparts > 0)
     part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts,
-                                    s->sinks.parts, s->sparts, s->bparts, &e->threadpool);
+                                    s->sinks.parts, s->sparts, s->bparts,
+                                    &e->threadpool);
 
 #ifdef SWIFT_DEBUG_CHECKS
 

@@ -410,13 +410,15 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
  */
 void read_ic_single(const char* fileName,
                     const struct unit_system* internal_units, double dim[3],
-                    struct part** parts, struct gpart** gparts, struct sink** sinks,
-                    struct spart** sparts, struct bpart** bparts, size_t* Ngas,
-                    size_t* Ngparts, size_t* Ngparts_background, size_t* Nsinks,
-                    size_t* Nstars, size_t* Nblackholes, int* flag_entropy, int with_hydro,
-                    int with_gravity, int with_sink, int with_stars, int with_black_holes,
-                    int with_cosmology, int cleanup_h, int cleanup_sqrt_a,
-                    double h, double a, int n_threads, int dry_run) {
+                    struct part** parts, struct gpart** gparts,
+                    struct sink** sinks, struct spart** sparts,
+                    struct bpart** bparts, size_t* Ngas, size_t* Ngparts,
+                    size_t* Ngparts_background, size_t* Nsinks, size_t* Nstars,
+                    size_t* Nblackholes, int* flag_entropy, int with_hydro,
+                    int with_gravity, int with_sink, int with_stars,
+                    int with_black_holes, int with_cosmology, int cleanup_h,
+                    int cleanup_sqrt_a, double h, double a, int n_threads,
+                    int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
@@ -717,8 +719,9 @@ void read_ic_single(const char* fileName,
 
     /* Duplicate the black hole particles into gparts */
     if (with_black_holes)
-      io_duplicate_black_holes_gparts(&tp, *bparts, *gparts, *Nblackholes,
-                                      Ndm + Ndm_background + *Ngas + *Nsinks + *Nstars);
+      io_duplicate_black_holes_gparts(
+          &tp, *bparts, *gparts, *Nblackholes,
+          Ndm + Ndm_background + *Ngas + *Nsinks + *Nstars);
 
     threadpool_clean(&tp);
   }
@@ -795,19 +798,20 @@ void write_output_single(struct engine* e,
       e->s->nr_parts - e->s->nr_inhibited_parts - e->s->nr_extra_parts;
   const size_t Nstars_written =
       e->s->nr_sparts - e->s->nr_inhibited_sparts - e->s->nr_extra_sparts;
-  const size_t Nsinks_written =
-    e->s->sinks.nr_parts - e->s->sinks.nr_inhibited_parts - e->s->sinks.nr_extra_parts;
+  const size_t Nsinks_written = e->s->sinks.nr_parts -
+                                e->s->sinks.nr_inhibited_parts -
+                                e->s->sinks.nr_extra_parts;
   const size_t Nblackholes_written =
       e->s->nr_bparts - e->s->nr_inhibited_bparts - e->s->nr_extra_bparts;
   const size_t Nbaryons_written =
       Ngas_written + Nstars_written + Nblackholes_written + Nsinks_written;
   const size_t Ndm_written =
-      Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background: 0;
+      Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background : 0;
 
   /* Format things in a Gadget-friendly array */
   long long N_total[swift_type_count] = {
       (long long)Ngas_written,   (long long)Ndm_written,
-      (long long)Ndm_background, (long long) Nsinks,
+      (long long)Ndm_background, (long long)Nsinks,
       (long long)Nstars_written, (long long)Nblackholes_written};
 
   /* File name */
@@ -1055,7 +1059,7 @@ void write_output_single(struct engine* e,
           /* Ok, we need to fish out the particles we want */
           N = Ndm_written;
 
-              /* Allocate temporary array */
+          /* Allocate temporary array */
           if (swift_memalign("gparts_written", (void**)&gparts_written,
                              gpart_align,
                              Ndm_written * sizeof(struct gpart)) != 0)

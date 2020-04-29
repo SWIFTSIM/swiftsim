@@ -153,7 +153,7 @@ void part_relink_bparts_to_gparts(struct gpart *gparts, const size_t N,
  * @param sinks The global #sink array in which to find the #gpart offsets.
  */
 void part_relink_sinks_to_gparts(struct gpart *gparts, const size_t N,
-                                  struct sink *sinks) {
+                                 struct sink *sinks) {
   for (size_t k = 0; k < N; k++) {
     if (gparts[k].type == swift_type_sink) {
       sinks[-gparts[k].id_or_neg_offset].gpart = &gparts[k];
@@ -231,8 +231,8 @@ void part_relink_all_parts_to_gparts(struct gpart *gparts, const size_t N,
 }
 
 /**
- * @brief Verifies that the #gpart, #part, #sink, #spart and #bpart are correctly linked
- * together and that the particle poisitions match.
+ * @brief Verifies that the #gpart, #part, #sink, #spart and #bpart are
+ * correctly linked together and that the particle poisitions match.
  *
  * This is a debugging function.
  *
@@ -249,9 +249,10 @@ void part_relink_all_parts_to_gparts(struct gpart *gparts, const size_t N,
  * @param verbose Do we report verbosely in case of success ?
  */
 void part_verify_links(struct part *parts, struct gpart *gparts,
-                       struct sink *sinks, struct spart *sparts, struct bpart *bparts,
-                       size_t nr_parts, size_t nr_gparts, size_t nr_sinks, size_t nr_sparts,
-                       size_t nr_bparts, int verbose) {
+                       struct sink *sinks, struct spart *sparts,
+                       struct bpart *bparts, size_t nr_parts, size_t nr_gparts,
+                       size_t nr_sinks, size_t nr_sparts, size_t nr_bparts,
+                       int verbose) {
 
   ticks tic = getticks();
 

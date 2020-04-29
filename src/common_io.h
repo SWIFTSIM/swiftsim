@@ -136,9 +136,9 @@ void io_collect_parts_to_write(const struct part* restrict parts,
                                const size_t Nparts,
                                const size_t Nparts_written);
 void io_collect_sinks_to_write(const struct sink* restrict sinks,
-                                struct sink* restrict sinks_written,
-                                const size_t Nsinks,
-                                const size_t Nsinks_written);
+                               struct sink* restrict sinks_written,
+                               const size_t Nsinks,
+                               const size_t Nsinks_written);
 void io_collect_sparts_to_write(const struct spart* restrict sparts,
                                 struct spart* restrict sparts_written,
                                 const size_t Nsparts,
@@ -172,8 +172,7 @@ void io_duplicate_stars_gparts(struct threadpool* tp,
                                struct spart* const sparts,
                                struct gpart* const gparts, size_t Nstars,
                                size_t Ndm);
-void io_duplicate_sinks_gparts(struct threadpool* tp,
-                               struct sink* const sinks,
+void io_duplicate_sinks_gparts(struct threadpool* tp, struct sink* const sinks,
                                struct gpart* const gparts, size_t Nsinks,
                                size_t Ndm);
 void io_duplicate_black_holes_gparts(struct threadpool* tp,

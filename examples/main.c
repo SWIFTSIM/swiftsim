@@ -223,8 +223,8 @@ int main(int argc, char *argv[]) {
       OPT_BOOLEAN('S', "stars", &with_stars, "Run with stars.", NULL, 0, 0),
       OPT_BOOLEAN('B', "black-holes", &with_black_holes,
                   "Run with black holes.", NULL, 0, 0),
-      OPT_BOOLEAN('k', "sinks", &with_sink,
-                  "Run with sink particles.", NULL, 0, 0),
+      OPT_BOOLEAN('k', "sinks", &with_sink, "Run with sink particles.", NULL, 0,
+                  0),
       OPT_BOOLEAN(
           'u', "fof", &with_fof,
           "Run Friends-of-Friends algorithm to perform black hole seeding.",
@@ -445,8 +445,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef WITH_MPI
   if (with_sink) {
-    printf(
-           "Error: sink particles are not available yet with MPI.\n");
+    printf("Error: sink particles are not available yet with MPI.\n");
     return 1;
   }
 #endif
@@ -1024,26 +1023,29 @@ int main(int argc, char *argv[]) {
 #if defined(HAVE_HDF5)
 #if defined(WITH_MPI)
 #if defined(HAVE_PARALLEL_HDF5)
-    read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts,
-                     &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart, &Nbpart,
-                     &flag_entropy_ICs, with_hydro, with_gravity, with_sink,
-                     with_stars, with_black_holes, with_cosmology, cleanup_h,
-                     cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
-                     MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run);
+    read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                     &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink,
+                     &Nspart, &Nbpart, &flag_entropy_ICs, with_hydro,
+                     with_gravity, with_sink, with_stars, with_black_holes,
+                     with_cosmology, cleanup_h, cleanup_sqrt_a, cosmo.h,
+                     cosmo.a, myrank, nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL,
+                     nr_threads, dry_run);
 #else
-    read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts,
-                   &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart, &Nbpart,
-                   &flag_entropy_ICs, with_hydro, with_gravity, with_sink, with_stars,
-                   with_black_holes, with_cosmology, cleanup_h, cleanup_sqrt_a,
-                   cosmo.h, cosmo.a, myrank, nr_nodes, MPI_COMM_WORLD,
-                   MPI_INFO_NULL, nr_threads, dry_run);
+    read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                   &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart,
+                   &Nbpart, &flag_entropy_ICs, with_hydro, with_gravity,
+                   with_sink, with_stars, with_black_holes, with_cosmology,
+                   cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, myrank,
+                   nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads,
+                   dry_run);
 #endif
 #else
-    read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts,
-                   &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart, &Nbpart,
-                   &flag_entropy_ICs, with_hydro, with_gravity, with_sink, with_stars,
-                   with_black_holes, with_cosmology, cleanup_h, cleanup_sqrt_a,
-                   cosmo.h, cosmo.a, nr_threads, dry_run);
+    read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                   &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart,
+                   &Nbpart, &flag_entropy_ICs, with_hydro, with_gravity,
+                   with_sink, with_stars, with_black_holes, with_cosmology,
+                   cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, nr_threads,
+                   dry_run);
 #endif
 #endif
 
@@ -1113,12 +1115,13 @@ int main(int argc, char *argv[]) {
 
     if (myrank == 0)
       message(
-          "Read %lld gas particles, %lld sink particles, %lld stars particles, %lld black hole "
+          "Read %lld gas particles, %lld sink particles, %lld stars particles, "
+          "%lld black hole "
           "particles, %lld DM particles and %lld DM background particles from "
           "the ICs.",
           N_total[swift_type_gas], N_total[swift_type_sink],
-          N_total[swift_type_stars],
-          N_total[swift_type_black_hole], N_total[swift_type_dark_matter],
+          N_total[swift_type_stars], N_total[swift_type_black_hole],
+          N_total[swift_type_dark_matter],
           N_total[swift_type_dark_matter_background]);
 
     const int with_DM_particles = N_total[swift_type_dark_matter] > 0;
@@ -1134,11 +1137,11 @@ int main(int argc, char *argv[]) {
 
     /* Initialize the space with these data. */
     if (myrank == 0) clocks_gettime(&tic);
-    space_init(&s, params, &cosmo, dim, &hydro_properties, parts, gparts,
-               sinks, sparts, bparts, Ngas,
-               Ngpart, Nsink, Nspart, Nbpart, periodic, replicate, generate_gas_in_ics,
-               with_hydro, with_self_gravity, with_star_formation,
-               with_DM_background_particles, talking, dry_run, nr_nodes);
+    space_init(&s, params, &cosmo, dim, &hydro_properties, parts, gparts, sinks, sparts, bparts,
+               Ngas, Ngpart, Nsink, Nspart, Nbpart, periodic, replicate,
+               generate_gas_in_ics, with_hydro, with_self_gravity,
+               with_star_formation, with_DM_background_particles, talking,
+               dry_run, nr_nodes);
 
     /* Initialise the line of sight properties. */
     if (with_line_of_sight) los_init(s.dim, &los_properties, params);
@@ -1303,10 +1306,13 @@ int main(int argc, char *argv[]) {
       const long long N_DM = N_total[swift_type_dark_matter] +
                              N_total[swift_type_dark_matter_background];
       message(
-          "Running on %lld gas particles, %lld sink particles, %lld stars particles,"
-          "%lld black hole particles and %lld DM particles (%lld gravity particles)",
-          N_total[swift_type_gas], N_total[swift_type_sink], N_total[swift_type_stars],
-          N_total[swift_type_black_hole], N_DM, N_total[swift_type_count]);
+          "Running on %lld gas particles, %lld sink particles, %lld stars "
+          "particles,"
+          "%lld black hole particles and %lld DM particles (%lld gravity "
+          "particles)",
+          N_total[swift_type_gas], N_total[swift_type_sink],
+          N_total[swift_type_stars], N_total[swift_type_black_hole], N_DM,
+          N_total[swift_type_count]);
       message(
           "from t=%.3e until t=%.3e with %d ranks, %d threads / rank and %d "
           "task queues / rank (dt_min=%.3e, dt_max=%.3e)...",

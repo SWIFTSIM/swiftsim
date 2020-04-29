@@ -1663,12 +1663,13 @@ void cell_bunlocktree(struct cell *c) {
  * entries, used for sorting indices for the sinks.
  */
 void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
-                ptrdiff_t bparts_offset, ptrdiff_t sinks_offset, struct cell_buff *buff,
-                struct cell_buff *sbuff, struct cell_buff *bbuff,
-                struct cell_buff *gbuff, struct cell_buff *sinkbuff) {
+                ptrdiff_t bparts_offset, ptrdiff_t sinks_offset,
+                struct cell_buff *buff, struct cell_buff *sbuff,
+                struct cell_buff *bbuff, struct cell_buff *gbuff,
+                struct cell_buff *sinkbuff) {
   const int count = c->hydro.count, gcount = c->grav.count,
-    scount = c->stars.count, bcount = c->black_holes.count,
-    sink_count = c->sinks.count;
+            scount = c->stars.count, bcount = c->black_holes.count,
+            sink_count = c->sinks.count;
   struct part *parts = c->hydro.parts;
   struct xpart *xparts = c->hydro.xparts;
   struct gpart *gparts = c->grav.parts;
@@ -1704,8 +1705,8 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
       error("Inconsistent bbuff contents.");
   }
   for (int k = 0; k < sink_count; k++) {
-    if (sinkbuff[k].x[0] != sinks[k].x[0] || sinkbuff[k].x[1] != sinks[k].x[1] ||
-        sinkbuff[k].x[2] != sinks[k].x[2])
+    if (sinkbuff[k].x[0] != sinks[k].x[0] ||
+        sinkbuff[k].x[1] != sinks[k].x[1] || sinkbuff[k].x[2] != sinks[k].x[2])
       error("Inconsistent sinkbuff contents.");
   }
 #endif /* SWIFT_DEBUG_CHECKS */
@@ -1943,7 +1944,8 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
   /* Fill the buffer with the indices. */
   for (int k = 0; k < sink_count; k++) {
     const int bid = (sinkbuff[k].x[0] > pivot[0]) * 4 +
-                    (sinkbuff[k].x[1] > pivot[1]) * 2 + (sinkbuff[k].x[2] > pivot[2]);
+                    (sinkbuff[k].x[1] > pivot[1]) * 2 +
+                    (sinkbuff[k].x[2] > pivot[2]);
     bucket_count[bid]++;
     sinkbuff[k].ind = bid;
   }

@@ -725,14 +725,15 @@ void write_array_parallel(struct engine* e, hid_t grp, char* fileName,
  */
 void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
                       double dim[3], struct part** parts, struct gpart** gparts,
-                      struct sink** sinks, struct spart** sparts, struct bpart** bparts,
-                      size_t* Ngas, size_t* Ngparts, size_t* Ngparts_background,
-                      size_t* Nsinks, size_t* Nstars, size_t* Nblackholes, int* flag_entropy,
-                      int with_hydro, int with_gravity, int with_sink, int with_stars,
-                      int with_black_holes, int with_cosmology, int cleanup_h,
-                      int cleanup_sqrt_a, double h, double a, int mpi_rank,
-                      int mpi_size, MPI_Comm comm, MPI_Info info, int n_threads,
-                      int dry_run) {
+                      struct sink** sinks, struct spart** sparts,
+                      struct bpart** bparts, size_t* Ngas, size_t* Ngparts,
+                      size_t* Ngparts_background, size_t* Nsinks,
+                      size_t* Nstars, size_t* Nblackholes, int* flag_entropy,
+                      int with_hydro, int with_gravity, int with_sink,
+                      int with_stars, int with_black_holes, int with_cosmology,
+                      int cleanup_h, int cleanup_sqrt_a, double h, double a,
+                      int mpi_rank, int mpi_size, MPI_Comm comm, MPI_Info info,
+                      int n_threads, int dry_run) {
 
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
@@ -1047,8 +1048,9 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
 
     /* Duplicate the stars particles into gparts */
     if (with_black_holes)
-      io_duplicate_black_holes_gparts(&tp, *bparts, *gparts, *Nblackholes,
-                                      Ndm + Ndm_background + *Ngas + *Nsinks + *Nstars);
+      io_duplicate_black_holes_gparts(
+          &tp, *bparts, *gparts, *Nblackholes,
+          Ndm + Ndm_background + *Ngas + *Nsinks + *Nstars);
 
     threadpool_clean(&tp);
   }
@@ -1400,8 +1402,9 @@ void write_output_parallel(struct engine* e,
       e->s->nr_gparts - e->s->nr_inhibited_gparts - e->s->nr_extra_gparts;
   const size_t Ngas_written =
       e->s->nr_parts - e->s->nr_inhibited_parts - e->s->nr_extra_parts;
-  const size_t Nsinks_written =
-    e->s->sinks.nr_parts - e->s->sinks.nr_inhibited_parts - e->s->sinks.nr_extra_parts;
+  const size_t Nsinks_written = e->s->sinks.nr_parts -
+                                e->s->sinks.nr_inhibited_parts -
+                                e->s->sinks.nr_extra_parts;
   const size_t Nstars_written =
       e->s->nr_sparts - e->s->nr_inhibited_sparts - e->s->nr_extra_sparts;
   const size_t Nblackholes_written =
@@ -1409,7 +1412,7 @@ void write_output_parallel(struct engine* e,
   const size_t Nbaryons_written =
       Ngas_written + Nstars_written + Nblackholes_written + Nsinks_written;
   const size_t Ndm_written =
-      Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background: 0;
+      Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background : 0;
 
   /* Compute offset in the file and total number of particles */
   size_t N[swift_type_count] = {Ngas_written,   Ndm_written,
@@ -1763,7 +1766,7 @@ void write_output_parallel(struct engine* e,
 
           /* Select the fields to write */
           sink_write_particles(sinks_written, list, &num_fields,
-                                with_cosmology);
+                               with_cosmology);
         }
       } break;
 
