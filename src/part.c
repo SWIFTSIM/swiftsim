@@ -232,7 +232,7 @@ void part_relink_all_parts_to_gparts(struct gpart *gparts, const size_t N,
 
 /**
  * @brief Verifies that the #gpart, #part, #sink, #spart and #bpart are
- * correctly linked together and that the particle poisitions match.
+ * correctly linked together and that the particle positions match.
  *
  * This is a debugging function.
  *
@@ -506,9 +506,9 @@ void part_verify_links(struct part *parts, struct gpart *gparts,
         error("Linking problem !");
 
         /* Check that the particles are at the same place */
-        if (sinks[k].x[0] != bparts[k].gpart->x[0] ||
-            sinks[k].x[1] != bparts[k].gpart->x[1] ||
-            sinks[k].x[2] != bparts[k].gpart->x[2])
+        if (sinks[k].x[0] != sinks[k].gpart->x[0] ||
+            sinks[k].x[1] != sinks[k].gpart->x[1] ||
+            sinks[k].x[2] != sinks[k].gpart->x[2])
           error("Linked particles are not at the same position !");
 
         /* Check that the particles have the same mass */

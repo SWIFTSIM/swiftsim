@@ -674,6 +674,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
       if (gp->type == swift_type_dark_matter ||
           gp->type == swift_type_dark_matter_background ||
           gp->type == swift_type_sink) {
+        // Loic TODO remove sink
 
         /* need to be updated ? */
         if (gpart_is_active(gp, e)) {
@@ -704,6 +705,13 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
 
           /* What is the next starting point for this cell ? */
           ti_gravity_beg_max = max(ti_current, ti_gravity_beg_max);
+
+          // Loic TODO remove this
+          /* Synchronize the time step */
+          if (gp->type == swift_type_sink) {
+            struct sink *sink = &e->s->sinks.parts[-gp->id_or_neg_offset];
+            sink->time_bin = gp->time_bin;
+          }
 
         } else { /* gpart is inactive */
 

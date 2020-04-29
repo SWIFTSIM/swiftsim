@@ -742,12 +742,14 @@ void space_allocate_extras(struct space *s, int verbose) {
   size_t nr_gparts = s->nr_gparts;
   size_t nr_sparts = s->nr_sparts;
   size_t nr_bparts = s->nr_bparts;
+  size_t nr_sinks = s->sinks.nr_parts;
 
   /* The current number of actual particles */
   size_t nr_actual_parts = nr_parts - s->nr_extra_parts;
   size_t nr_actual_gparts = nr_gparts - s->nr_extra_gparts;
   size_t nr_actual_sparts = nr_sparts - s->nr_extra_sparts;
   size_t nr_actual_bparts = nr_bparts - s->nr_extra_bparts;
+  size_t nr_actual_sinks = nr_sinks - s->sinks.nr_extra_parts;
 
   /* The number of particles we allocated memory for (MPI overhead) */
   size_t size_parts = s->size_parts;
@@ -773,17 +775,19 @@ void space_allocate_extras(struct space *s, int verbose) {
   const size_t expected_num_extra_gparts = nr_local_cells * space_extra_gparts;
   const size_t expected_num_extra_sparts = nr_local_cells * space_extra_sparts;
   const size_t expected_num_extra_bparts = nr_local_cells * space_extra_bparts;
+  const size_t expected_num_extra_sinks = nr_local_cells * space_extra_sinks;
 
   if (verbose) {
-    message("Currently have %zd/%zd/%zd/%zd real particles.", nr_actual_parts,
-            nr_actual_gparts, nr_actual_sparts, nr_actual_bparts);
-    message("Currently have %zd/%zd/%zd/%zd spaces for extra particles.",
-            s->nr_extra_parts, s->nr_extra_gparts, s->nr_extra_sparts,
-            s->nr_extra_bparts);
+    message("Currently have %zd/%zd/%zd/%zd/%zd real particles.", nr_actual_parts,
+            nr_actual_gparts, nr_actual_sinks, nr_actual_sparts, nr_actual_bparts);
+    message("Currently have %zd/%zd/%zd/%zd/%zd spaces for extra particles.",
+            s->nr_extra_parts, s->nr_extra_gparts, s->sinks.nr_extra_parts,
+            s->nr_extra_sparts, s->nr_extra_bparts);
     message(
-        "Requesting space for future %zd/%zd/%zd/%zd part/gpart/sparts/bparts.",
+        "Requesting space for future %zd/%zd/%zd/%zd/%zd part/gpart/sinks/sparts/bparts.",
         expected_num_extra_parts, expected_num_extra_gparts,
-        expected_num_extra_sparts, expected_num_extra_bparts);
+        expected_num_extra_sinks, expected_num_extra_sparts,
+        expected_num_extra_bparts);
   }
 
   if (expected_num_extra_parts < s->nr_extra_parts)
@@ -793,6 +797,8 @@ void space_allocate_extras(struct space *s, int verbose) {
   if (expected_num_extra_sparts < s->nr_extra_sparts)
     error("Reduction in top-level cells number not handled.");
   if (expected_num_extra_bparts < s->nr_extra_bparts)
+    error("Reduction in top-level cells number not handled.");
+  if (expected_num_extra_sinks < s->sinks.nr_extra_parts)
     error("Reduction in top-level cells number not handled.");
 
   /* Do we have enough space for the extra gparts (i.e. we haven't used up any)
@@ -985,6 +991,12 @@ void space_allocate_extras(struct space *s, int verbose) {
     s->nr_extra_parts = expected_num_extra_parts;
   }
 
+  /* Do we have enough space for the extra sinks (i.e. we haven't used up any)
+   * ? */
+  if (nr_actual_sinks + expected_num_extra_sinks > nr_sinks) {
+    error("Not implemented yet");
+  }
+
   /* Do we have enough space for the extra sparts (i.e. we haven't used up any)
    * ? */
   if (nr_actual_sparts + expected_num_extra_sparts > nr_sparts) {
@@ -1152,9 +1164,9 @@ void space_allocate_extras(struct space *s, int verbose) {
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that the links are correct */
   if ((nr_gparts > 0 && nr_parts > 0) || (nr_gparts > 0 && nr_sparts > 0) ||
-      (nr_gparts > 0 && nr_bparts > 0))
-    part_verify_links(s->parts, s->gparts, s->sparts, s->bparts, nr_parts,
-                      nr_gparts, nr_sparts, nr_bparts, verbose);
+      (nr_gparts > 0 && nr_bparts > 0) || (nr_gparts > 0 && nr_sinks > 0))
+    part_verify_links(s->parts, s->gparts, s->sinks.parts, s->sparts, s->bparts,
+                      nr_parts, nr_gparts, nr_sinks, nr_sparts, nr_bparts, verbose);
 #endif
 
   /* Free the list of local cells */
@@ -1548,7 +1560,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         }
 
         /* Swap the index */
-        memswap(&sink_index[k], &sink_index[nr_bparts], sizeof(int));
+        memswap(&sink_index[k], &sink_index[nr_sinks], sizeof(int));
 
       } else {
         /* Increment when not exchanging otherwise we need to retest "k".*/
@@ -1559,14 +1571,14 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that all sinks are in the correct place. */
-  size_t check_count_inhibited_bpart = 0;
+  size_t check_count_inhibited_sinks = 0;
   for (size_t k = 0; k < nr_sinks; k++) {
     if (sink_index[k] == -1 ||
-        cells_top[sinks_index[k]].nodeID != local_nodeID) {
+        cells_top[sink_index[k]].nodeID != local_nodeID) {
       error("Failed to move all non-local sinks to send list");
     }
   }
-  for (size_t k = nr_sinks; k < s->nr_sinks; k++) {
+  for (size_t k = nr_sinks; k < s->sinks.nr_parts; k++) {
     if (sink_index[k] != -1 &&
         cells_top[sink_index[k]].nodeID == local_nodeID) {
       error("Failed to remove local sinks from send list");
@@ -1884,7 +1896,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         cell_getid(s->cdim, sink->x[0] * s->iwidth[0],
                    sink->x[1] * s->iwidth[1], sink->x[2] * s->iwidth[2]);
 
-    /* New cell of this bpart */
+    /* New cell of this sink */
     const struct cell *c = &s->cells_top[new_bind];
 
     if (sink_index[k] != new_bind)
@@ -2001,8 +2013,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
   /* Sort the gparts according to their cells. */
   if (nr_gparts > 0)
-    space_gparts_sort(s->gparts, s->parts, s->sparts, s->bparts, g_index,
-                      cell_gpart_counts, s->nr_cells);
+    space_gparts_sort(s->gparts, s->parts, s->sinks.parts, s->sparts,
+                      s->bparts, g_index, cell_gpart_counts, s->nr_cells);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that the gpart have been sorted correctly. */
@@ -2857,8 +2869,8 @@ void space_bparts_get_cell_index_mapper(void *map_data, int nr_bparts,
 /**
  * @brief #threadpool mapper function to compute the sink-particle cell indices.
  *
- * @param map_data Pointer towards the b-particles.
- * @param nr_sinks The number of b-particles to treat.
+ * @param map_data Pointer towards the sink-particles.
+ * @param nr_sinks The number of sink-particles to treat.
  * @param extra_data Pointers to the space and index list
  */
 void space_sinks_get_cell_index_mapper(void *map_data, int nr_sinks,
@@ -3481,6 +3493,7 @@ void space_sinks_sort(struct sink *sinks, int *restrict ind,
  *
  * @param gparts The array of #gpart to sort.
  * @param parts Global #part array for re-linking.
+ * @param sinks Global #sink array for re-linking.
  * @param sparts Global #spart array for re-linking.
  * @param bparts Global #bpart array for re-linking.
  * @param ind The indices with respect to which the gparts are sorted.
@@ -3488,8 +3501,9 @@ void space_sinks_sort(struct sink *sinks, int *restrict ind,
  * @param num_bins Total number of bins (length of counts).
  */
 void space_gparts_sort(struct gpart *gparts, struct part *parts,
-                       struct spart *sparts, struct bpart *bparts,
-                       int *restrict ind, int *restrict counts, int num_bins) {
+                       struct sink *sinks, struct spart *sparts,
+                       struct bpart *bparts, int *restrict ind,
+                       int *restrict counts, int num_bins) {
   /* Create the offsets array. */
   size_t *offsets = NULL;
   if (swift_memalign("gparts_offsets", (void **)&offsets,
@@ -3525,6 +3539,8 @@ void space_gparts_sort(struct gpart *gparts, struct part *parts,
           sparts[-gparts[j].id_or_neg_offset].gpart = &gparts[j];
         } else if (gparts[j].type == swift_type_black_hole) {
           bparts[-gparts[j].id_or_neg_offset].gpart = &gparts[j];
+        } else if (gparts[j].type == swift_type_sink) {
+          sinks[-gparts[j].id_or_neg_offset].gpart = &gparts[j];
         }
       }
       gparts[k] = temp_gpart;
@@ -3535,6 +3551,8 @@ void space_gparts_sort(struct gpart *gparts, struct part *parts,
         sparts[-gparts[k].id_or_neg_offset].gpart = &gparts[k];
       } else if (gparts[k].type == swift_type_black_hole) {
         bparts[-gparts[k].id_or_neg_offset].gpart = &gparts[k];
+      } else if (gparts[k].type == swift_type_sink) {
+        sinks[-gparts[k].id_or_neg_offset].gpart = &gparts[k];
       }
     }
   }
@@ -3823,7 +3841,7 @@ void space_split_recursive(struct space *s, struct cell *c,
 #ifdef SWIFT_DEBUG_CHECKS
         if (sinks[k].time_bin == time_bin_inhibited)
           error("Inhibited particle present in space_split()");
-        if (sinkss[k].time_bin == time_bin_not_created)
+        if (sinks[k].time_bin == time_bin_not_created)
           error("Extra particle present in space_split()");
 #endif
         sink_buff[k].x[0] = sinks[k].x[0];
