@@ -98,8 +98,12 @@ struct tracers_xpart_data {
     float last_AGN_injection_time;
   };
 
+  /*! Density of the gas at the last SNII feedback event
+   * (physical internal units) */
+  float density_at_last_SNII_feedback_event;
+
   /*! Total amount of AGN feedback energy received by this particle
-   * (physical units) */
+   * (physical internal units) */
   float AGN_feedback_energy;
 };
 

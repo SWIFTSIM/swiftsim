@@ -33,6 +33,9 @@ struct star_formation_xpart_data {
   float SFR;
 };
 
+/**
+ * @brief Star-formation-related properties stored in the particle data.
+ */
 struct star_formation_part_data {
 
   /*! Velocity dispersion squared in physical internal units */

@@ -23,7 +23,7 @@
 #include "chemistry.h"
 #include "hydro_properties.h"
 
-/*! CC: Number of elements to be read from the yield tables */
+/*! Number of elements to be read from the yield tables */
 #define enrichment_of_N_elements_from_yield_tables 9
 
 /**
