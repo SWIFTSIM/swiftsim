@@ -228,7 +228,7 @@ In ``Data``, the attribute ``elts`` is an array of string with the element names
 and ``SolarMassAbundances`` is an array of float containing the mass fraction of the different element in the sun.
 In ``IMF``, ``n + 1`` is the number of part in the IMF, ``as`` are the exponent (``n+1`` elements), ``ms`` are the mass limits between each part (``n`` elements) and
 ``Mmin`` (``Mmax``) is the minimal (maximal) mass of a star.
-In ``LiveTimes``, the coefficient are given in the form of a single table (``coeff_z`` with a 3x3 shape).
+In ``LifeTimes``, the coefficient are given in the form of a single table (``coeff_z`` with a 3x3 shape).
 In ``SNIa``, ``a`` is the exponent of the distribution of binaries, ``bb1``  and ``bb2`` are the coefficient :math:`b_i` and the other attributes follow the same names than in the SNIa formulas.
 The ``Metals`` group from the ``SNIa`` contains the name of each elements (``elts``) and the metal mass fraction ejected by each supernovae (``data``) in the same order. They must contain the same elements than in ``Data``.
 Finally for the ``SNII``, the mass limits are given by ``Mmin`` and ``Mmax``. For the yields, the datasets required are ``Ej`` (mass fraction ejected [processed]), ``Ejnp`` (mass fraction ejected [non processed]) and one dataset for each element present in ``elts``. The datasets should all have the same size, be uniformly sampled in log and contains the attributes ``min`` (mass in log for the first element) and ``step`` (difference of mass in log between two elements).

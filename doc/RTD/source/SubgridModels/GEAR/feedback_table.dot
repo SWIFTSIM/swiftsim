@@ -40,8 +40,8 @@ digraph feedback {
         <td>Mmax</td>
       </tr></table>>];
    }
-   subgraph cluster_livetimes {
-      LiveTimes[label=<<u>LiveTimes</u>>,shape="none"];
+   subgraph cluster_lifetimes {
+      LifeTimes[label=<<u>LifeTimes</u>>,shape="none"];
    }
    subgraph cluster_snii {
       SNII[shape="none", label=<
@@ -163,12 +163,12 @@ digraph feedback {
       </table>>];
    }
 
-   Data->LiveTimes;
+   Data->LifeTimes;
    Data->IMF;
    Data->SNII;
    Data->SNIa;
 
-   LiveTimes->coeff_z;
+   LifeTimes->coeff_z;
 
    SNII->snii_all;
    SNII->snii_ej;
