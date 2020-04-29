@@ -47,6 +47,8 @@ chemistry_get_element_name(enum chemistry_element elem) {
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
       "Neon",     "Magnesium", "Silicon", "Iron",     "Europium"};
+    
+    
   return chemistry_element_names[elem];
 }
 
@@ -63,7 +65,7 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     struct part* restrict p, const struct chemistry_global_data* cd) {
 
   struct chemistry_part_data* cpd = &p->chemistry_data;
-
+    
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
     cpd->diffusion_rate[elem] = 0.0f;
   }
@@ -212,7 +214,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     const struct cosmology* restrict cosmo,
     const struct chemistry_global_data* data, struct part* restrict p,
     struct xpart* restrict xp) {
-
+    
   // Add initialization of all other fields in chemistry_part_data struct.
   if (data->initial_metal_mass_fraction_total != -1) {
     p->chemistry_data.metal_mass_fraction_total =

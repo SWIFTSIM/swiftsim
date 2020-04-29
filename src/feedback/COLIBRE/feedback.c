@@ -133,18 +133,8 @@ double integrate_rate_of_NSM(const struct spart* sp, const double t0,
                              const struct feedback_props* props) {
 
   /* The calculation is written as the integral between t0 and t1 */
-  double num_NSM_per_Msun;
-
-  if (props->NSM_t_slope == -1.0) {
-    num_NSM_per_Msun = props->NSM_per_Msun_per_yr * log(t1 / t0);
-  } else {
-    const double dt1 = pow(t1, 1.0 + props->NSM_t_slope);
-    const double dt0 = pow(t0, 1.0 + props->NSM_t_slope);
-
-    num_NSM_per_Msun =
-        props->NSM_per_Msun_per_yr * (dt1 - dt0) / (1.0 + props->NSM_t_slope);
-  }
-
+  double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
+    
   return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
 }
 
@@ -534,8 +524,8 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
 #endif
 
   /* First we check that the amount of time since star was formed
-   is larger than NSM_t_delay_Gyr */
-  if (star_age_Gyr < props->NSM_t_delay_Gyr) return;
+   is larger than NSM_t_delay_Gyr = 30Myr */
+  if (star_age_Gyr < 0.03) return;
 
   /* Compute the number of NS merger events in timestep by
    integrating the rate of NS merger events (number per yr) */
@@ -1521,18 +1511,12 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                stellar_yields, feedback_props, sp);
   }
   if (feedback_props->with_r_process_enrichment) {
-    if (feedback_props->with_NSM) {
       evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                             cosmo);
-    }
-    if (feedback_props->with_CEJSN) {
       evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
                               ti_begin, cosmo);
-    }
-    if (feedback_props->with_collapsar) {
       evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
                                   ti_begin, cosmo);
-    }
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1599,13 +1583,6 @@ void feedback_props_init(struct feedback_props* fp,
 
   fp->with_r_process_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:with_r_process_enrichment");
-
-  fp->with_NSM = parser_get_param_int(params, "COLIBREFeedback:with_NSM");
-
-  fp->with_CEJSN = parser_get_param_int(params, "COLIBREFeedback:with_CEJSN");
-
-  fp->with_collapsar =
-      parser_get_param_int(params, "COLIBREFeedback:with_collapsar");
 
   fp->with_HIIRegions =
       parser_get_param_int(params, "COLIBREFeedback:with_HIIRegions");
@@ -1731,27 +1708,20 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Properties of neutron star mergers model */
   if (fp->with_r_process_enrichment)
-    message("Running COLIBRE with r-process enrichment produced by:");
-  if (fp->with_NSM) message("-Neutron star mergers");
-  if (fp->with_CEJSN) message("-Common envelope jets SN");
-  if (fp->with_collapsar) message("-Collapsars");
+    message("Running COLIBRE with r-process enrichment produced by: Neutron star mergers, Common envelope jets SN and Collapsars");
 
-  fp->NSM_t_slope =
-      parser_get_param_double(params, "COLIBREFeedback:NSM_t_slope");
-  fp->NSM_t_delay_Gyr =
-      parser_get_param_double(params, "COLIBREFeedback:NSM_t_delay_Gyr");
-  fp->NSM_per_Msun_per_yr =
-      parser_get_param_double(params, "COLIBREFeedback:NSM_per_Msun_per_yr");
+  fp->NSM_per_Msun =
+      parser_get_param_double(params, "COLIBREFeedback:num_of_NSM_per_Msun");
   fp->yield_Eu_from_NSM =
-      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_NSM");
+      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_NSM_event_Msun");
   fp->CEJSN_per_Msun =
-      parser_get_param_double(params, "COLIBREFeedback:CEJSN_per_Msun");
+      parser_get_param_double(params, "COLIBREFeedback:num_of_CEJSN_per_Msun");
   fp->yield_Eu_from_CEJSN =
-      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_CEJSN");
+      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_CEJSN_event_Msun");
   fp->collapsar_per_Msun =
-      parser_get_param_double(params, "COLIBREFeedback:collapsar_per_Msun");
+      parser_get_param_double(params, "COLIBREFeedback:num_of_collapsar_per_Msun");
   fp->yield_Eu_from_collapsar = parser_get_param_double(
-      params, "COLIBREFeedback:yield_Eu_from_collapsar");
+      params,"COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
 
   /* Properties of the SNIa enrichment model -------------------------------- */
 

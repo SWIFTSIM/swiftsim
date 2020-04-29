@@ -88,7 +88,7 @@ INLINE static int get_element_index(const char *element_name,
  * @param feedback_props the #feedback_props data struct to read the table into.
  */
 INLINE static void read_yield_tables(struct feedback_props *feedback_props) {
-
+    
 #ifdef HAVE_HDF5
 
   /* filenames to read HDF5 files */

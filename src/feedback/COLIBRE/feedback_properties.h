@@ -96,9 +96,6 @@ struct feedback_props {
 
   /*! Are we doing r-process enrichment? */
   int with_r_process_enrichment;
-  int with_NSM;
-  int with_CEJSN;
-  int with_collapsar;
 
   /*! Are we doing HII regions? */
   int with_HIIRegions;
@@ -274,29 +271,23 @@ struct feedback_props {
   double delta_v;
 
   /* ------------ r-process enrichment properties ------------ */
-  /* slope of neutron star mergers (NSM) delay function */
-  double NSM_t_slope;
-
-  /* delay since formation of neutron star merger */
-  double NSM_t_delay_Gyr;
-
   /* Number of neutron star mergers per unit of Msolar */
-  double NSM_per_Msun_per_yr;
+  double num_of_NSM_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by NSM */
-  double yield_Eu_from_NSM;
+  double yield_Eu_from_NSM_event_Msun;
 
   /* Number of CEJSN per unit of Msolar */
-  double CEJSN_per_Msun;
+  double num_of_CEJSN_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by CEJSN */
-  double yield_Eu_from_CEJSN;
+  double yield_Eu_from_CEJSN_event_Msun;
 
   /* Number of collapsar per unit of Msolar */
-  double collapsar_per_Msun;
+  double num_of_collapsar_per_Msun;
 
   /* Amount of europium (in units of Msolar) relesed by collapsar */
-  double yield_Eu_from_collapsar;
+  double yield_Eu_from_collapsar_event_Msun;
 
   /* ------------ Early feedback properties ------------ */
 
