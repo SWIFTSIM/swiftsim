@@ -537,7 +537,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_stellar_feedback_2);
+                                          random_number_NSM_events);
 
   sp->feedback_data.to_distribute.num_r_processes = num_NSM;
 
@@ -581,12 +581,13 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
+    
+  /* First we check that the amount of time since star was formed */
+  /* is larger than 30 Myr */
+  if (star_age_Gyr < 0.03) return;
 
   /* Number of CEJSN events in timestep */
-  const double dt1 = pow(star_age_Gyr + dt_Gyr, 1.0);
-  const double dt0 = pow(star_age_Gyr, 1.0);
-
-  const float num_CEJSN = props->CEJSN_per_Msun * (dt1 - dt0) * sp->mass_init *
+  const float num_CEJSN = props->CEJSN_per_Msun * dt_Gyr * sp->mass_init *
                           props->mass_to_solar_mass;
 
   /* I define my probability as number of CEJSN per time step */
@@ -594,7 +595,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_stellar_feedback_2);
+                                          random_number_CEJSN_events);
 
   sp->feedback_data.to_distribute.num_r_processes = num_CEJSN;
 
@@ -637,13 +638,13 @@ INLINE static void evolve_collapsar_stochastic(
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-
-  /* Number of CEJSN events in timestep */
-  const double dt1 = pow(star_age_Gyr + dt_Gyr, 1.0);
-  const double dt0 = pow(star_age_Gyr, 1.0);
+    
+  /* First we check that the amount of time since star was formed */
+  /* is larger than 30 Myr */
+  if (star_age_Gyr < 0.03) return;
 
   /* Number of collapsar events in timestep */
-  const float num_collapsar = props->collapsar_per_Msun * (dt1 - dt0) *
+  const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
                               sp->mass_init * props->mass_to_solar_mass;
 
   /* I define my probability as number of collapsar per time step */
@@ -651,7 +652,7 @@ INLINE static void evolve_collapsar_stochastic(
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_stellar_feedback_2);
+                                          random_number_collapsar_events);
 
   sp->feedback_data.to_distribute.num_r_processes = num_collapsar;
 
