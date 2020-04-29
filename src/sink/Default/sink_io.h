@@ -19,8 +19,8 @@
 #ifndef SWIFT_DEFAULT_SINK_IO_H
 #define SWIFT_DEFAULT_SINK_IO_H
 
-#include "sink_part.h"
 #include "io_properties.h"
+#include "sink_part.h"
 
 /**
  * @brief Specifies which sink-particle fields to read from a dataset
@@ -30,8 +30,7 @@
  * @param num_fields The number of i/o fields to read.
  */
 INLINE static void sink_read_particles(struct sink* sinks,
-                                       struct io_props* list,
-                                       int* num_fields) {
+                                       struct io_props* list, int* num_fields) {
 
   /* Say how much we want to read */
   *num_fields = 4;
@@ -104,8 +103,7 @@ INLINE static void convert_sink_vel(const struct engine* e,
  * @param with_cosmology Are we running a cosmological simulation?
  */
 INLINE static void sink_write_particles(const struct sink* sinks,
-                                        struct io_props* list,
-                                        int* num_fields,
+                                        struct io_props* list, int* num_fields,
                                         int with_cosmology) {
 
   /* Say how much we want to write */
@@ -113,16 +111,16 @@ INLINE static void sink_write_particles(const struct sink* sinks,
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_sink(
-      "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, 1.f, sinks,
-      convert_sink_pos, "Co-moving position of the particles");
+      "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, 1.f, sinks, convert_sink_pos,
+      "Co-moving position of the particles");
 
   list[1] = io_make_output_field_convert_sink(
       "Velocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, sinks, convert_sink_vel,
       "Peculiar velocities of the particles. This is a * dx/dt where x is the "
       "co-moving position of the particles.");
 
-  list[2] = io_make_output_field("Masses", FLOAT, 1, UNIT_CONV_MASS, 0.f,
-                                 sinks, mass, "Masses of the particles");
+  list[2] = io_make_output_field("Masses", FLOAT, 1, UNIT_CONV_MASS, 0.f, sinks,
+                                 mass, "Masses of the particles");
 
   list[3] =
       io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f,

@@ -22,10 +22,10 @@
 #include <float.h>
 
 /* Local includes */
-#include "sink_part.h"
 #include "dimension.h"
 #include "kernel_hydro.h"
 #include "minmax.h"
+#include "sink_part.h"
 
 /**
  * @brief Computes the time-step of a given sink particle.
@@ -76,8 +76,8 @@ __attribute__((always_inline)) INLINE static void sink_predict_extra(
  *
  * @param sp The particle.
  */
-__attribute__((always_inline)) INLINE static void
-sink_reset_predicted_values(struct sink* restrict sp) {}
+__attribute__((always_inline)) INLINE static void sink_reset_predicted_values(
+    struct sink* restrict sp) {}
 
 /**
  * @brief Kick the additional variables
