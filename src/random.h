@@ -54,9 +54,9 @@ enum random_number_type {
   random_number_BH_swallow = 4947009007LL,
   random_number_stellar_winds = 5947309451LL,
   random_number_HII_regions = 8134165677LL,
-  random_number_NSM_events = 7245742351LL,
-  random_number_CEJSN_events = 6443482348LL,
-  random_number_collapsar_events = 2348768521LL
+  random_number_enrichment_1 = 7245742351LL,
+  random_number_enrichment_2 = 1156895281LL,
+  random_number_enrichment_3 = 2189989727LL
 };
 
 #ifndef __APPLE__

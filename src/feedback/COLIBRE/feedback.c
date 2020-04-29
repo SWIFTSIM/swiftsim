@@ -537,7 +537,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_NSM_events);
+                                          random_number_enrichment_1);
 
   sp->feedback_data.to_distribute.num_r_processes = num_NSM;
 
@@ -595,7 +595,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_CEJSN_events);
+                                          random_number_enrichment_2);
 
   sp->feedback_data.to_distribute.num_r_processes = num_CEJSN;
 
@@ -647,12 +647,12 @@ INLINE static void evolve_collapsar_stochastic(
   const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
                               sp->mass_init * props->mass_to_solar_mass;
 
-  /* I define my probability as number of collapsar per time step */
+  /* I define my probability as number of collapsars per time step */
   const float prob = num_collapsar;
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_collapsar_events);
+                                          random_number_enrichment_3);
 
   sp->feedback_data.to_distribute.num_r_processes = num_collapsar;
 
