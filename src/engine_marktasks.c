@@ -96,6 +96,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_black_holes = cell_is_active_black_holes(ci, e);
       const int ci_active_stars = cell_is_active_stars(ci, e) ||
                                   (with_star_formation && ci_active_hydro);
+      const int ci_active_star_form = with_star_formation && ci_active_hydro;
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
@@ -180,7 +181,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       /* Activate the star velocity dispersion */
       else if (t_type == task_type_self &&
                t_subtype == task_subtype_stars_veldisp) {
-        if (ci_active_stars) {
+        if (ci_active_star_form) {
           scheduler_activate(s, t);
           cell_activate_drift_spart(ci, s);
           if (with_timestep_sync) cell_activate_sync_part(ci, s);
@@ -189,7 +190,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       else if (t_type == task_type_sub_self &&
                t_subtype == task_subtype_stars_veldisp) {
-        if (ci_active_stars) {
+        if (ci_active_star_form) {
           scheduler_activate(s, t);
           cell_activate_subcell_stars_veldisp_tasks(ci, NULL, s, with_star_formation,
                                             with_timestep_sync);
@@ -314,6 +315,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && ci_active_hydro);
       const int cj_active_stars = cell_is_active_stars(cj, e) ||
                                   (with_star_formation && cj_active_hydro);
+
+      const int ci_active_star_form = with_star_formation && ci_active_hydro;
+      const int cj_active_star_form = with_star_formation && cj_active_hydro;
 
       /* Only activate tasks that involve a local active cell. */
       if ((t_subtype == task_subtype_density ||
@@ -445,7 +449,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       /* Stars velocity dispersion */
       else if ((t_subtype == task_subtype_stars_veldisp) &&
-               (ci_active_stars || cj_active_stars) &&
+               (ci_active_star_form || cj_active_star_form) &&
                (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
 
         scheduler_activate(s, t);
@@ -454,7 +458,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (t_type == task_type_pair) {
 
           /* Do ci */
-          if (ci_active_stars) {
+          if (ci_active_star_form) {
 
             /* stars for ci */
             atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
@@ -476,7 +480,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           /* Do cj */
-          if (cj_active_stars) {
+          if (cj_active_star_form) {
 
             /* stars for ci */
             atomic_or(&ci->stars.requires_sorts, 1 << t->flags);

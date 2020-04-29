@@ -21,11 +21,6 @@ I/O:
 Scheduling:
   MPI for veldisp tasks (cell.c, engine_maketasks.c)
 
-  Scheduling cost (currently scount_i*scount_j which is probably a huge overestimate)
-
-  In runner_doiact_functions_stars_veldisp.h we can probably be more agressive with cell checks
-  (with star formation and cell active hydro)
-
 
 NOTES:
 ------
@@ -35,3 +30,4 @@ I/O:
 
 Have implemented a local 'GMC SFE'. Not sure it works as expected though
 
+Have set 1 * scount for stars_veldisp scheduling (i.e. Nnew * scount)

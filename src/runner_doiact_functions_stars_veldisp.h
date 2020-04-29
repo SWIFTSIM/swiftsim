@@ -44,10 +44,11 @@ void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 
   /* Anything to do here? */
   if (c->stars.count == 0) return;
-  if (!cell_is_active_stars(c, e) && !cell_is_active_hydro(c, e)) return;
+  if (!(with_star_formation && cell_is_active_hydro(c, e))) return;
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -124,10 +125,11 @@ void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
 
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 
   /* Anything to do here? */
   if (ci->stars.count == 0 || cj->stars.count == 0) return;
-  if (!cell_is_active_stars(ci, e) && !cell_is_active_hydro(ci, e)) return;
+  if (!(with_star_formation && cell_is_active_hydro(ci, e))) return;
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -491,12 +493,13 @@ void DOPAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
 void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
 
   const struct engine *restrict e = r->e;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 
   /* Anything to do here? */
   if (c->stars.count == 0) return;
 
   /* Anything to do here? */
-  if (!cell_is_active_stars(c, e) && !cell_is_active_hydro(c, e)) return;
+  if (!(with_star_formation && cell_is_active_hydro(c, e))) return;
 
   /* Did we mess up the recursion? */
   if (c->stars.h_max_old * kernel_gamma > c->dmin)
@@ -548,15 +551,14 @@ void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
 void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *restrict e = r->e;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 
   /* Get the sort ID. */
   double shift[3] = {0.0, 0.0, 0.0};
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
-  const int ci_active = 
-      cell_is_active_stars(ci, e) || cell_is_active_hydro(ci, e);
-  const int cj_active = 
-      cell_is_active_stars(cj, e) || cell_is_active_hydro(cj, e);
+  const int ci_active = with_star_formation && cell_is_active_hydro(ci, e);
+  const int cj_active = with_star_formation && cell_is_active_hydro(cj, e);
   const int do_ci_stars = ci->nodeID == e->nodeID;
   const int do_cj_stars = cj->nodeID == e->nodeID;
   const int do_ci = (ci->stars.count != 0 && cj->stars.count != 0 &&
@@ -637,12 +639,13 @@ void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
 
   struct space *s = r->e->s;
   const struct engine *e = r->e;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
 
   /* Should we even bother? */
   const int should_do_ci = ci->stars.count != 0 && cj->stars.count != 0 &&
-      (cell_is_active_stars(ci, e) || cell_is_active_hydro(ci, e));
+      (with_star_formation && cell_is_active_hydro(ci, e));
   const int should_do_cj = cj->stars.count != 0 && ci->stars.count != 0 &&
-      (cell_is_active_stars(cj, e) || cell_is_active_hydro(cj, e));
+      (with_star_formation && cell_is_active_hydro(cj, e));
   if (!should_do_ci && !should_do_cj) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
@@ -666,12 +669,8 @@ void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
 
     const int do_ci_stars = ci->nodeID == e->nodeID;
     const int do_cj_stars = cj->nodeID == e->nodeID;
-    const int do_ci = ci->stars.count != 0 && cj->stars.count != 0 &&
-        (cell_is_active_stars(ci, e) || cell_is_active_hydro(ci, e)) && 
-        do_ci_stars;
-    const int do_cj = cj->stars.count != 0 && ci->stars.count != 0 &&
-        (cell_is_active_stars(cj, e) || cell_is_active_hydro(cj, e)) && 
-        do_cj_stars;
+    const int do_ci = should_do_ci && do_ci_stars;
+    const int do_cj = should_do_cj && do_cj_stars;
 
     if (do_ci) {
 
@@ -736,9 +735,12 @@ void DOSUB_SELF1_SVD(struct runner *r, struct cell *ci, int gettimer) {
     error("This function should not be called on foreign cells");
 #endif
 
+  const struct engine *e = r->e;
+  const int with_star_formation = (e->policy & engine_policy_star_formation);
+
   /* Should we even bother? */
-  if (ci->stars.count == 0 ||
-      (!cell_is_active_stars(ci, r->e) && !cell_is_active_hydro(ci, r->e)))
+  if (ci->stars.count == 0 || 
+      !(with_star_formation && cell_is_active_hydro(ci, r->e)))
     return;
 
   /* Recurse? */
