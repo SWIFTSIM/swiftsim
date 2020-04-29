@@ -128,7 +128,6 @@ struct threadpool;
 #error "Invalid choice of sink particle"
 #endif
 
-
 void part_relink_gparts_to_parts(struct part *parts, const size_t N,
                                  const ptrdiff_t offset);
 void part_relink_gparts_to_sparts(struct spart *sparts, const size_t N,
@@ -151,10 +150,9 @@ void part_relink_all_parts_to_gparts(struct gpart *gparts, const size_t N,
                                      struct threadpool *tp);
 void part_verify_links(struct part *parts, struct gpart *gparts,
                        struct sink *sinks, struct spart *sparts,
-                       struct bpart *bparts,
-                       size_t nr_parts, size_t nr_gparts,
-                       size_t nr_sinks, size_t nr_sparts,
-                       size_t nr_bparts, int verbose);
+                       struct bpart *bparts, size_t nr_parts, size_t nr_gparts,
+                       size_t nr_sinks, size_t nr_sparts, size_t nr_bparts,
+                       int verbose);
 
 #ifdef WITH_MPI
 /* MPI data type for the particle transfers */
