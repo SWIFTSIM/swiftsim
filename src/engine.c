@@ -1772,10 +1772,10 @@ void engine_rebuild(struct engine *e, const int repartitioned,
     engine_recompute_displacement_constraint(e);
 
 #ifdef SWIFT_DEBUG_CHECKS
-  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts,
-                    e->s->sparts, e->s->bparts,
-                    e->s->nr_parts, e->s->nr_gparts, e->s->sinks.nr_parts,
-                    e->s->nr_sparts, e->s->nr_bparts, e->verbose);
+  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts, e->s->sparts,
+                    e->s->bparts, e->s->nr_parts, e->s->nr_gparts,
+                    e->s->sinks.nr_parts, e->s->nr_sparts, e->s->nr_bparts,
+                    e->verbose);
 #endif
 
   /* Initial cleaning up session ? */
@@ -2425,10 +2425,10 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 
 #ifdef SWIFT_DEBUG_CHECKS
   space_check_timesteps(e->s);
-  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts,
-                    e->s->sparts, e->s->bparts,
-                    e->s->nr_parts, e->s->nr_gparts, e->s->sinks.nr_parts,
-                    e->s->nr_sparts, e->s->nr_bparts, e->verbose);
+  part_verify_links(e->s->parts, e->s->gparts, e->s->sinks.parts, e->s->sparts,
+                    e->s->bparts, e->s->nr_parts, e->s->nr_gparts,
+                    e->s->sinks.nr_parts, e->s->nr_sparts, e->s->nr_bparts,
+                    e->verbose);
 #endif
 
   /* Ready to go */

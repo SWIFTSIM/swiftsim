@@ -778,13 +778,15 @@ void space_allocate_extras(struct space *s, int verbose) {
   const size_t expected_num_extra_sinks = nr_local_cells * space_extra_sinks;
 
   if (verbose) {
-    message("Currently have %zd/%zd/%zd/%zd/%zd real particles.", nr_actual_parts,
-            nr_actual_gparts, nr_actual_sinks, nr_actual_sparts, nr_actual_bparts);
+    message("Currently have %zd/%zd/%zd/%zd/%zd real particles.",
+            nr_actual_parts, nr_actual_gparts, nr_actual_sinks,
+            nr_actual_sparts, nr_actual_bparts);
     message("Currently have %zd/%zd/%zd/%zd/%zd spaces for extra particles.",
             s->nr_extra_parts, s->nr_extra_gparts, s->sinks.nr_extra_parts,
             s->nr_extra_sparts, s->nr_extra_bparts);
     message(
-        "Requesting space for future %zd/%zd/%zd/%zd/%zd part/gpart/sinks/sparts/bparts.",
+        "Requesting space for future %zd/%zd/%zd/%zd/%zd "
+        "part/gpart/sinks/sparts/bparts.",
         expected_num_extra_parts, expected_num_extra_gparts,
         expected_num_extra_sinks, expected_num_extra_sparts,
         expected_num_extra_bparts);
@@ -1166,7 +1168,8 @@ void space_allocate_extras(struct space *s, int verbose) {
   if ((nr_gparts > 0 && nr_parts > 0) || (nr_gparts > 0 && nr_sparts > 0) ||
       (nr_gparts > 0 && nr_bparts > 0) || (nr_gparts > 0 && nr_sinks > 0))
     part_verify_links(s->parts, s->gparts, s->sinks.parts, s->sparts, s->bparts,
-                      nr_parts, nr_gparts, nr_sinks, nr_sparts, nr_bparts, verbose);
+                      nr_parts, nr_gparts, nr_sinks, nr_sparts, nr_bparts,
+                      verbose);
 #endif
 
   /* Free the list of local cells */
@@ -2013,8 +2016,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
   /* Sort the gparts according to their cells. */
   if (nr_gparts > 0)
-    space_gparts_sort(s->gparts, s->parts, s->sinks.parts, s->sparts,
-                      s->bparts, g_index, cell_gpart_counts, s->nr_cells);
+    space_gparts_sort(s->gparts, s->parts, s->sinks.parts, s->sparts, s->bparts,
+                      g_index, cell_gpart_counts, s->nr_cells);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that the gpart have been sorted correctly. */

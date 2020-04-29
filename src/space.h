@@ -329,8 +329,8 @@ void space_parts_sort(struct part *parts, struct xpart *xparts, int *ind,
                       int *counts, int num_bins, ptrdiff_t parts_offset);
 void space_gparts_sort(struct gpart *gparts, struct part *parts,
                        struct sink *sinks, struct spart *sparts,
-                       struct bpart *bparts, int *ind,
-                       int *counts, int num_bins);
+                       struct bpart *bparts, int *ind, int *counts,
+                       int num_bins);
 void space_sparts_sort(struct spart *sparts, int *ind, int *counts,
                        int num_bins, ptrdiff_t sparts_offset);
 void space_bparts_sort(struct bpart *bparts, int *ind, int *counts,
