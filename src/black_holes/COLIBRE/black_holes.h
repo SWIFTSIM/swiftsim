@@ -237,6 +237,10 @@ black_holes_bpart_has_no_neighbours(struct bpart* bp,
   /* Re-set problematic values */
   bp->density.wcount = kernel_root * h_inv_dim;
   bp->density.wcount_dh = 0.f;
+
+  bp->velocity_gas[0] = FLT_MAX;
+  bp->velocity_gas[1] = FLT_MAX;
+  bp->velocity_gas[2] = FLT_MAX;
 }
 
 /**
@@ -390,7 +394,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double time, const int with_cosmology, const double dt) {
 
-  if (dt == 0.) return;
+  if (dt == 0. || bp->rho_gas == 0.) return;
 
   /* Gather some physical constants (all in internal units) */
   const double G = constants->const_newton_G;
@@ -467,7 +471,6 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
-  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
   const double Bondi_radius = G * BH_mass / gas_c_phys2;
   const double Bondi_time = Bondi_radius / gas_c_phys;
   const double r_times_v_tang = Bondi_radius * tangential_velocity;
