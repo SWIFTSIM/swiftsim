@@ -81,7 +81,7 @@ runner_iact_nonsym_bh_gas_density(
   /* Neighbour's sound speed */
   const float pressure_j = hydro_get_comoving_pressure(pj);
   const float cj = gas_soundspeed_from_pressure(
-      xpj->tracers_data.subgrid_dens * cosmo->a * cosmo->a * cosmo->a,
+      pj->cooling_data.subgrid_dens * cosmo->a * cosmo->a * cosmo->a,
       pressure_j);
 
   /* Contribution to the smoothed sound speed */
