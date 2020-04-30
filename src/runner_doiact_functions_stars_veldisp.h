@@ -35,6 +35,7 @@
  * @param timer 1 if the time is to be recorded.
  */
 void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
+#ifdef STARS_MOSAICS
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (c->nodeID != engine_rank) error("Should be run on a different node");
@@ -107,6 +108,7 @@ void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
   }   /* loop over the sparts in ci. */
 
   TIMER_TOC(TIMER_DOSELF_SVD);
+#endif
 }
 
 /**
@@ -118,6 +120,7 @@ void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
  */
 void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
                                  struct cell *restrict cj) {
+#ifdef STARS_MOSAICS
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (ci->nodeID != engine_rank) error("Should be run on a different node");
@@ -197,6 +200,7 @@ void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
       }
     } /* loop over the sparts in cj. */
   }   /* loop over the sparts in ci. */
+#endif
 }
 
 /**
@@ -210,6 +214,7 @@ void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
  */
 void DO_SYM_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
                         const int sid, const double *shift) {
+#ifdef STARS_MOSAICS
 
   TIMER_TIC;
 
@@ -465,10 +470,12 @@ void DO_SYM_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
   }     /* Cell cj is active */
 
   TIMER_TOC(TIMER_DOPAIR_SVD);
+#endif
 }
 
 void DOPAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
                          struct cell *restrict cj, int timer) {
+#ifdef STARS_MOSAICS
 
   TIMER_TIC;
 
@@ -480,6 +487,7 @@ void DOPAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
     DO_NONSYM_PAIR1_SVD_NAIVE(r, cj, ci);
 
   TIMER_TOC(TIMER_DOPAIR_SVD);
+#endif
 }
 
 /**
@@ -491,6 +499,7 @@ void DOPAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
  *
  */
 void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
+#ifdef STARS_MOSAICS
 
   const struct engine *restrict e = r->e;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
@@ -506,6 +515,7 @@ void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
     error("Cell smaller than smoothing length");
 
   DOSELF1_SVD(r, c, 1);
+#endif
 }
 
 #define RUNNER_CHECK_SORT(TYPE, PART, cj, ci, sid)                          \
@@ -549,6 +559,7 @@ void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
  *
  */
 void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj) {
+#ifdef STARS_MOSAICS
 
   const struct engine *restrict e = r->e;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
@@ -619,6 +630,7 @@ void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj) {
 #else
   DO_SYM_PAIR1_SVD(r, ci, cj, sid, shift);
 #endif
+#endif
 }
 
 /**
@@ -634,6 +646,7 @@ void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj) {
  */
 void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
                        int gettimer) {
+#ifdef STARS_MOSAICS
 
   TIMER_TIC;
 
@@ -717,6 +730,7 @@ void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
   }
 
   TIMER_TOC(TIMER_DOSUB_PAIR_SVD);
+#endif
 }
 
 /**
@@ -727,6 +741,7 @@ void DOSUB_PAIR1_SVD(struct runner *r, struct cell *ci, struct cell *cj,
  * @param gettimer Do we have a timer ?
  */
 void DOSUB_SELF1_SVD(struct runner *r, struct cell *ci, int gettimer) {
+#ifdef STARS_MOSAICS
 
   TIMER_TIC;
 
@@ -767,4 +782,5 @@ void DOSUB_SELF1_SVD(struct runner *r, struct cell *ci, int gettimer) {
   }
 
   TIMER_TOC(TIMER_DOSUB_SELF_SVD);
+#endif
 }
