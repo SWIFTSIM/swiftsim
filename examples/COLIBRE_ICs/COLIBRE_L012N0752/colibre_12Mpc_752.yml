@@ -138,10 +138,14 @@ COLIBREChemistry:
 
 # COLIBRE star formation model (Following a density Schmidt law)
 COLIBREStarFormation:
-  min_over_density:                 57.7    # Minimum over density above which star formation is allowed
-  star_formation_efficiency:        0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
-  alpha_virial:                     2.      # set the alpha virial for star forming gas.
-  temperature_threshold_K:          0.      # set the temperature threshold to zero, so not temperature threshold
+  min_over_density:                  57.7           # Minimum over density above which star formation is allowed
+  alpha_virial:                      2.             # set the alpha virial for star forming gas.
+  temperature_threshold_K:           0.             # set the subgrid temperature threshold to zero, so no temperature threshold
+  SF_model:                          SchmidtLaw     # star formation model to use (SchmidtLaw or PressureLaw)
+  star_formation_efficiency:         0.01           # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
+  KS_exponent:                       1.4            # Kennicutt-Schmidt slope for the pressure law.
+  KS_normalisation_Msun_p_yr_p_kpc2: 1.515e-4       # Normalization of the Kennicutt-Schmidt slope for the pressure law.
+  gas_fraction:                      1.0            # (Optional) gas fraction for pressure law, default to 1.0
 
 # Feedback parameter
 COLIBREFeedback:
