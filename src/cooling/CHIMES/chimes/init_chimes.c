@@ -2602,8 +2602,8 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       }
 
       for (j = 0; j < 3; j++) {
-        if (chimes_master_constant
-                .products[chimes_flatten_index_2d(incl_index, j, 3)] < 0)
+        if (chimes_master_constant.products[chimes_flatten_index_2d(i, j, 3)] <
+            0)
           chimes_table_constant
               .products[chimes_flatten_index_2d(incl_index, j, 3)] =
               chimes_master_constant.products[chimes_flatten_index_2d(i, j, 3)];

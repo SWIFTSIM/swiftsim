@@ -41,19 +41,22 @@
  */
 
 /**
+ * @brief Functional form of the star formation law
+ */
+enum star_formation_law {
+  colibre_star_formation_schmidt_law, /*< Schmidt law */
+  colibre_star_formation_pressure_law /*< Pressure law */
+};
+
+/**
  * @brief Properties of the COLIBRE star formation model.
  */
 struct star_formation {
 
+  /* Starting with the star forming gas criteria */
+
   /*! Critical overdensity */
   double min_over_den;
-
-  /*! Star formation efficiency */
-  double sfe;
-
-  /*! star formation efficiency over free fall time constant (cm^1.5 g^-.5 s^-1)
-   */
-  double mdot_const;
 
   /*! Maximal physical density, particles with a higher density instantaneously
    * turn into stars */
@@ -78,6 +81,46 @@ struct star_formation {
 
   /*! Absolute subgrid temperature threshold */
   double temperature_threshold;
+
+  /* Model dependent parameters */
+
+  /* Which model are we using */
+  enum star_formation_law SF_law;
+
+  /* The Schmidt model parameters */
+  struct {
+
+    /*! Star formation efficiency */
+    double sfe;
+
+    /*! star formation efficiency over free fall time constant (cm^1.5 g^-.5
+     * s^-1) */
+    double mdot_const;
+
+  } schmidt_law;
+
+  /* The pressure model parameters */
+  struct {
+
+    /*! gas fraction */
+    double fgas;
+
+    /*! Slope of the KS law */
+    double KS_power_law;
+
+    /*! Star formation law slope */
+    double SF_power_law;
+
+    /*! Normalization of the KS star formation law (Msun / kpc^2 / yr) */
+    double KS_normalization_MSUNpYRpKPC2;
+
+    /*! Normalization of the KS star formation law (internal units) */
+    double KS_normalization;
+
+    /*! star formation normalization (internal units) */
+    double SF_normalization;
+
+  } pressure_law;
 };
 
 /**
@@ -178,6 +221,72 @@ INLINE static int star_formation_is_star_forming(
  * @param cosmo the cosmological parameters and properties.
  * @param dt_star The time-step of this particle.
  */
+INLINE static void star_formation_compute_SFR_schmidt_law(
+    const struct part* p, struct xpart* xp,
+    const struct star_formation* starform, const struct phys_const* phys_const,
+    const struct hydro_props* hydro_props, const struct cosmology* cosmo,
+    const double dt_star) {
+
+  /* Mass density of this particle */
+  const double physical_density = hydro_get_physical_density(p, cosmo);
+
+  /* Calculate the SFR per gas mass */
+  const double SFRpergasmass =
+      starform->schmidt_law.mdot_const * sqrt(physical_density);
+
+  /* Store the SFR */
+  xp->sf_data.SFR = SFRpergasmass * hydro_get_mass(p);
+}
+
+/**
+ * @brief Compute the star-formation rate of a given particle and store
+ * it into the #xpart. The star formation is calculated using a pressure
+ * law based on Schaye and Dalla Vecchia (2008), the star formation
+ * rate is calculated as:
+ *
+ * \dot{m}_\star = A (1 Msun / pc^-2)^-n m_gas (\gamma/G * f_g *
+ *                 pressure)**((n-1)/2)
+ *
+ * @param p #part.
+ * @param xp the #xpart.
+ * @param starform the star formation law properties to use
+ * @param phys_const the physical constants in internal units.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param cosmo the cosmological parameters and properties.
+ * @param dt_star The time-step of this particle.
+ */
+INLINE static void star_formation_compute_SFR_pressure_law(
+    const struct part* p, struct xpart* xp,
+    const struct star_formation* starform, const struct phys_const* phys_const,
+    const struct hydro_props* hydro_props, const struct cosmology* cosmo,
+    const double dt_star) {
+
+  /* Get the pressure used for the star formation */
+  const double pressure = hydro_get_physical_pressure(p, cosmo);
+
+  /* Calculate the specific star formation rate */
+  const double SFRpergasmass =
+      starform->pressure_law.SF_normalization *
+      pow(pressure, starform->pressure_law.SF_power_law);
+
+  /* Store the SFR */
+  xp->sf_data.SFR = SFRpergasmass * hydro_get_mass(p);
+}
+
+/**
+ * @brief Determine which star formation model is used and call the star
+ * formation function either a pressure law or a Schmidt law to store the star
+ * formation rate in the xpart. If the star exceeded the maximal allowed density
+ * the gas particle is immediately converted to a star
+ *
+ * @param p #part.
+ * @param xp the #xpart.
+ * @param starform the star formation law properties to use
+ * @param phys_const the physical constants in internal units.
+ * @param hydro_props The properties of the hydro scheme.
+ * @param cosmo the cosmological parameters and properties.
+ * @param dt_star The time-step of this particle.
+ */
 INLINE static void star_formation_compute_SFR(
     const struct part* p, struct xpart* xp,
     const struct star_formation* starform, const struct phys_const* phys_const,
@@ -200,11 +309,20 @@ INLINE static void star_formation_compute_SFR(
     return;
   }
 
-  /* Calculate the SFR per gas mass */
-  double SFRpergasmass = starform->mdot_const * sqrt(physical_density);
+  /* Determine which star formation model to use */
+  switch (starform->SF_law) {
 
-  /* Store the SFR */
-  xp->sf_data.SFR = SFRpergasmass * hydro_get_mass(p);
+    case colibre_star_formation_schmidt_law:
+      star_formation_compute_SFR_schmidt_law(p, xp, starform, phys_const,
+                                             hydro_props, cosmo, dt_star);
+      break;
+    case colibre_star_formation_pressure_law:
+      star_formation_compute_SFR_pressure_law(p, xp, starform, phys_const,
+                                              hydro_props, cosmo, dt_star);
+      break;
+    default:
+      error("Invalid star formation model!!!");
+  }
 }
 
 /**
@@ -367,16 +485,7 @@ INLINE static void starformation_init_backend(
   starform->min_over_den = parser_get_param_double(
       parameter_file, "COLIBREStarFormation:min_over_density");
 
-  /* Get the star formation efficiency */
-  starform->sfe = parser_get_param_double(
-      parameter_file, "COLIBREStarFormation:star_formation_efficiency");
-
-  /* Calculate the ff constant */
-  const double ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
-
-  /* Calculate the constant */
-  starform->mdot_const = starform->sfe / ff_const;
-
+  /* Read the maximal density that we instantly turn into stars */
   starform->maximal_density_HpCM3 = parser_get_opt_param_double(
       parameter_file, "COLIBREStarFormation:threshold_max_density_H_p_cm3",
       FLT_MAX);
@@ -412,6 +521,72 @@ INLINE static void starformation_init_backend(
   /* Get the subgrid temperature criteria */
   starform->temperature_threshold = parser_get_param_double(
       parameter_file, "COLIBREStarFormation:temperature_threshold_K");
+
+  /* Read in the different star formation models */
+
+  char temp[32] = {0};
+  parser_get_param_string(parameter_file, "COLIBREStarFormation:SF_model",
+                          temp);
+
+  if (strcmp(temp, "SchmidtLaw") == 0) {
+    /* Schmidt model */
+    starform->SF_law = colibre_star_formation_schmidt_law;
+
+    /* Get the star formation efficiency */
+    starform->schmidt_law.sfe = parser_get_param_double(
+        parameter_file, "COLIBREStarFormation:star_formation_efficiency");
+
+    /* Calculate the ff constant */
+    const double ff_const = sqrt(3.0 * M_PI / (32.0 * G_newton));
+
+    /* Calculate the constant */
+    starform->schmidt_law.mdot_const = starform->schmidt_law.sfe / ff_const;
+  } else if (strcmp(temp, "PressureLaw") == 0) {
+    /* Pressure model */
+    starform->SF_law = colibre_star_formation_pressure_law;
+
+    /* Get the surface density unit Msun / pc^2 in internal units */
+    const double Msun_per_pc2 =
+        phys_const->const_solar_mass /
+        (phys_const->const_parsec * phys_const->const_parsec);
+
+    /* Get the SF surface density unit Msun / kpc^2 / yr in internal units */
+    const double kpc = 1000. * phys_const->const_parsec;
+    const double Msun_per_kpc2_per_year =
+        phys_const->const_solar_mass / (kpc * kpc) / phys_const->const_year;
+
+    /* Read the gas fraction from the file */
+    starform->pressure_law.fgas = parser_get_opt_param_double(
+        parameter_file, "COLIBREStarFormation:gas_fraction", 1.);
+
+    /* Read the Kennicutt-Schmidt power law exponent */
+    starform->pressure_law.KS_power_law = parser_get_param_double(
+        parameter_file, "COLIBREStarFormation:KS_exponent");
+
+    /* Calculate the power law of the corresponding star formation Schmidt law
+     */
+    starform->pressure_law.SF_power_law =
+        (starform->pressure_law.KS_power_law - 1.) / 2.;
+
+    /* Read the normalization of the KS law in KS law units */
+    starform->pressure_law.KS_normalization_MSUNpYRpKPC2 =
+        parser_get_param_double(
+            parameter_file,
+            "COLIBREStarFormation:KS_normalisation_Msun_p_yr_p_kpc2");
+
+    /* Convert to internal units */
+    starform->pressure_law.KS_normalization =
+        starform->pressure_law.KS_normalization_MSUNpYRpKPC2 *
+        Msun_per_kpc2_per_year;
+
+    /* Calculate the starformation pre-factor (eq. 12 of Schaye & Dalla Vecchia
+     * 2008) */
+    starform->pressure_law.SF_normalization =
+        starform->pressure_law.KS_normalization *
+        pow(Msun_per_pc2, -starform->pressure_law.KS_power_law) *
+        pow(hydro_gamma * starform->pressure_law.fgas / G_newton,
+            starform->pressure_law.SF_power_law);
+  }
 }
 
 /**
@@ -423,15 +598,32 @@ INLINE static void starformation_print_backend(
     const struct star_formation* starform) {
 
   /* Print the star formation properties */
-  message("Star formation law is COLIBRE");
-  message("A Schmidt law + a virial criterion");
+  message("Star formation model is COLIBRE");
   message(
-      "With properties: Star formation efficiency = %e minimum over density = "
-      "%e maximal density = %e subgrid density criterion = %e alpha_virial = "
-      "%e temperature threshold = %e",
-      starform->sfe, starform->min_over_den, starform->maximal_density_HpCM3,
+      "The star formation criteria are: minimum over density = %e maximal "
+      "density = %e subgrid density criterion = %e alpha_virial = %e "
+      "temperature threshold = %e",
+      starform->min_over_den, starform->maximal_density_HpCM3,
       starform->subgrid_density_threshold_HpCM3, starform->alpha_virial,
       starform->temperature_threshold);
+  switch (starform->SF_law) {
+    case colibre_star_formation_schmidt_law:
+      message(
+          "Star formation law is a Schmidt law: Star formation efficiency = %e",
+          starform->schmidt_law.sfe);
+      break;
+    case colibre_star_formation_pressure_law:
+      message(
+          "The star formation law is a pressure law (Schaye & Dalla Vecchia "
+          "2008): "
+          "Kennicutt-Schmidt law normalization = %e Msun/kpc^2/yr, slope of "
+          "the Kennicutt-Schmidt law = %e and gas fraction = %e",
+          starform->pressure_law.KS_normalization_MSUNpYRpKPC2,
+          starform->pressure_law.KS_power_law, starform->pressure_law.fgas);
+      break;
+    default:
+      error("Invalid star formation model!!!");
+  }
 }
 
 /**

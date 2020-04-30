@@ -133,7 +133,8 @@ Snapshots:
   time_first: 0.          # (Optional) Time of the first output if non-cosmological time-integration (in internal units)
   delta_time: 0.01        # Time difference between consecutive outputs (in internal units)
   invoke_stf: 0           # (Optional) Call VELOCIraptor every time a snapshot is written irrespective of the VELOCIraptor output strategy.
-  compression: 0          # (Optional) Set the level of compression of the HDF5 datasets [0-9]. 0 does no compression.
+  compression: 0          # (Optional) Set the level of GZIP compression of the HDF5 datasets [0-9]. 0 does no compression. The lossless compression is applied to *all* the fields.
+  distributed: 0          # (Optional) When running over MPI, should each rank write a partial snapshot or do we want a single file? 1 implies one file per MPI rank.
   int_time_label_on:   0  # (Optional) Enable to label the snapshots using the time rounded to an integer (in internal units)
   UnitMass_in_cgs:     1  # (Optional) Unit system for the outputs (Grams)
   UnitLength_in_cgs:   1  # (Optional) Unit system for the outputs (Centimeters)
@@ -148,7 +149,7 @@ Logger:
   delta_step:           10     # Update the particle log every this many updates
   basename:             index  # Common part of the filenames
   initial_buffer_size:  1      # (Optional) Buffer size in GB
-  buffer_scale:	        10     # (Optional) When buffer size is too small, update it with required memory times buffer_scale
+  buffer_scale:        10     # (Optional) When buffer size is too small, update it with required memory times buffer_scale
   
 # Parameters governing the conserved quantities statistics
 Statistics:
@@ -157,7 +158,7 @@ Statistics:
   time_first:             0.     # (Optional) Time of the first stats output if non-cosmological time-integration (in internal units)
   energy_file_name:    energy    # (Optional) File name for energy output
   timestep_file_name:  timesteps # (Optional) File name for timing information output. Note: No underscores "_" allowed in file name
-  output_list_on:      0   	 # (Optional) Enable the output list
+  output_list_on:      0         # (Optional) Enable the output list
   output_list:         statlist.txt # (Optional) File containing the output times (see documentation in "Parameter File" section)
 
 # Parameters related to the initial conditions
@@ -215,7 +216,7 @@ StructureFinding:
   scale_factor_first:   0.92          # (Optional) Scale-factor of the first snaphot (cosmological run)
   time_first:           0.01          # (Optional) Time of the first structure finding output (in internal units).
   delta_time:           1.10          # (Optional) Time difference between consecutive structure finding outputs (in internal units) in simulation time intervals.
-  output_list_on:       0   	      # (Optional) Enable the output list
+  output_list_on:       0             # (Optional) Enable the output list
   output_list:          stflist.txt   # (Optional) File containing the output times (see documentation in "Parameter File" section)
 
 # Parameters related to the equation of state ------------------------------------------
@@ -424,8 +425,8 @@ CHIMESCooling:
   rapid_cooling_threshold:    1.0              # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes. Negative value prevents the use of rapid cooling.
   colibre_table_path:         ../UV_dust1_CR1_G1_shield1.hdf5   # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
   H_reion_z:                  7.5              # Redshift of hydrogen reionisation
-  S_over_Si_in_solar:         1.0              # S / Si relative to Solar 
-  Ca_over_Si_in_solar:        1.0              # Ca / Si relative to Solar 
+  S_over_Si_in_solar:         1.0              # S / Si relative to Solar
+  Ca_over_Si_in_solar:        1.0              # Ca / Si relative to Solar
   IncludeCarbon:              0                # Include Carbon in the CHIMES network
   IncludeNitrogen:            0                # Include Nitrogen in the CHIMES network
   IncludeOxygen:              0                # Include Oxygen in the CHIMES network
@@ -435,7 +436,7 @@ CHIMESCooling:
   IncludeSulphur:             0                # Include Sulphur in the CHIMES network
   IncludeCalcium:             0                # Include Calcium in the CHIMES network
   IncludeIron:                0                # Include Iron in the CHIMES network
- 
+
 # Cooling with Grackle 3.0
 GrackleCooling:
   cloudy_table: CloudyData_UVB=HM2012.h5       # Name of the Cloudy Table (available on the grackle bitbucket repository)
@@ -513,12 +514,16 @@ QLAStarFormation:
 
 # COLIBRE star formation model
 COLIBREStarFormation:
-  min_over_density:                  57.7    # Minimum over density above which star formation is allowed.
-  star_formation_efficiency:         0.01    # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff/
-  alpha_virial:                      2.      # set the alpha virial for star forming gas, setting this variable to 0 corresponds to running without virial criterion.
-  temperature_threshold_K:           1000    # Subgrid temperature threshold below which stars are allowed to form. Setting the variable to 0 means running without temperature threshold.
-  threshold_max_density_H_p_cm3:     1e5     # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Defaults to infinity, i.e no threshold).
-  subgrid_density_threshold_H_p_CM3: 1e2     # (Optional) Subgrid density threshold, a particle above this density is always star forming (Defaults to infinity, i.e. no threshold).
+  min_over_density:                  57.7        # Minimum over density above which star formation is allowed.
+  alpha_virial:                      2.          # set the alpha virial for star forming gas, setting this variable to 0 corresponds to running without virial criterion.
+  temperature_threshold_K:           1000        # Subgrid temperature threshold below which stars are allowed to form. Setting the variable to 0 means running without temperature threshold.
+  threshold_max_density_H_p_cm3:     1e5         # (Optional) Density above which a gas particle gets automatically turned into a star in Hydrogen atoms per cm^3 (Defaults to infinity, i.e no threshold).
+  subgrid_density_threshold_H_p_CM3: 1e2         # (Optional) Subgrid density threshold, a particle above this density is always star forming (Defaults to infinity, i.e. no threshold).
+  SF_model:                          SchmidtLaw  # star formation model to use ('SchmidtLaw' or 'PressureLaw')
+  star_formation_efficiency:         0.01        # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff/
+  KS_exponent:                       1.4         # Kennicutt-Schmidt slope for the pressure law.
+  KS_normalisation_Msun_p_yr_p_kpc2: 1.515e-4    # Normalization of the Kennicutt-Schmidt slope for the pressure law.
+  gas_fraction:                      1.0         # (Optional) gas fraction for pressure law, default to 1.0
 
 # GEAR star formation model (Revaz and Jablonka 2018)
 GEARStarFormation:
