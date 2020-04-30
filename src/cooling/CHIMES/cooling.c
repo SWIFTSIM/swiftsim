@@ -1531,13 +1531,13 @@ void cooling_set_subgrid_properties(
 
   if (cooling->use_colibre_subgrid_EOS == 1) {
     /* Compute the subgrid properties */
-    xp->tracers_data.subgrid_temp = compute_subgrid_temperature(
+    p->cooling_data.subgrid_temp = compute_subgrid_temperature(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
-    xp->tracers_data.subgrid_dens = compute_subgrid_density(
+    p->cooling_data.subgrid_dens = compute_subgrid_density(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
   } else {
-    xp->tracers_data.subgrid_temp = T;
-    xp->tracers_data.subgrid_dens = rho;
+    p->cooling_data.subgrid_temp = T;
+    p->cooling_data.subgrid_dens = rho;
   }
 
   if (xp->tracers_data.HIIregion_timer_gas > 0.) {
