@@ -104,7 +104,7 @@ runner_iact_nonsym_bh_gas_density(
    * velocity contribution at the location of the black hole) */
   const float dv[3] = {vj[0] - bi->v[0], vj[1] - bi->v[1], vj[2] - bi->v[2]};
   
-  /* Contribution to the smoothed velocity */
+  /* Contribution to the smoothed velocity (gas w.r.t. black hole) */
   bi->velocity_gas[0] += mj * dv[0] * wi;
   bi->velocity_gas[1] += mj * dv[1] * wi;
   bi->velocity_gas[2] += mj * dv[2] * wi;
@@ -114,6 +114,11 @@ runner_iact_nonsym_bh_gas_density(
   bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
   bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
   bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+
+  /* Contribution to the smoothed squared relative velocity (for dispersion)
+   * We will convert this to actual dispersion later. */
+  bi->velocity_dispersion_gas += mj * wi * (dv[0] * dv[0] + dv[1] * dv[1]
+                                            + dv[2] * dv[2]);
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate */

@@ -638,6 +638,7 @@ COLIBREAGN:
   max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
   eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
   subgrid_bondi:                    1          # Use subgrid density for Bondi rate?
+  use_bondi:                        1          # Use standard Bondi rate (0) or Krumholz et al. (2006) formula (1)? 
   multi_phase_bondi:                1          # Compute Bondi rates per neighbour particle?
   with_angmom_limiter:              1          # Apply angular momentum limiter of Rosas-Guevara et al. (2015)? [1: yes, 0: no]
   viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term

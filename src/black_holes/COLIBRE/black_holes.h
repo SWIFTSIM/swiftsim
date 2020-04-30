@@ -98,6 +98,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->circular_velocity_gas[0] = 0.f;
   bp->circular_velocity_gas[1] = 0.f;
   bp->circular_velocity_gas[2] = 0.f;
+  bp->velocity_dispersion_gas = 0.f;
   bp->ngb_mass = 0.f;
   bp->num_ngbs = 0;
   bp->reposition.delta_x[0] = -FLT_MAX;
@@ -217,6 +218,14 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->circular_velocity_gas[0] *= rho_inv * h_inv;
   bp->circular_velocity_gas[1] *= rho_inv * h_inv;
   bp->circular_velocity_gas[2] *= rho_inv * h_inv;
+  bp->velocity_dispersion_gas *= rho_inv;
+
+  /* Calculate (actual) gas velocity dispersion. Currently, the variable
+   * 'velocity_dispersion_gas' holds <v^2> instead. */
+  const double speed_gas2 = bp->velocity_gas[0] * bp->velocity_gas[0]
+                            + bp->velocity_gas[1] * bp->velocity_gas[1]
+                            + bp->velocity_gas[2] * bp->velocity_gas[2];
+  bp->velocity_dispersion_gas -= speed_gas2;
 }
 
 /**
@@ -413,6 +422,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double delta_u = delta_T * props->temp_to_u_factor;
   const double alpha_visc = props->alpha_visc;
   const int with_angmom_limiter = props->with_angmom_limiter;
+  const int use_bondi = props->use_bondi;
 
   /* (Subgrid) mass of the BH (internal units) */
   const double BH_mass = bp->subgrid_mass;
@@ -425,6 +435,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       bp->circular_velocity_gas[0] * cosmo->a_inv,
       bp->circular_velocity_gas[1] * cosmo->a_inv,
       bp->circular_velocity_gas[2] * cosmo->a_inv};
+  const double gas_v_dispersion = bp->velocity_dispersion_gas * cosmo->a2_inv;
 
   /* Norm of the circular velocity of the gas around the BH */
   const double tangential_velocity2 = gas_v_circular[0] * gas_v_circular[0] +
@@ -432,8 +443,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                                       gas_v_circular[2] * gas_v_circular[2];
   const double tangential_velocity = sqrt(tangential_velocity2);
 
-  /* We can now compute the Bondi accretion rate (internal units) */
-  double Bondi_rate;
+  /* We can now compute the accretion rate (internal units) */
+  double accr_rate;
 
   if (bp->accretion_rate > 0) {
 
@@ -441,27 +452,47 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * the accretion_rate is still zero (was initialised to this) */
     const float hi_inv = 1.f / bp->h;
     const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
-    ;
-    Bondi_rate = bp->accretion_rate *
+    
+    accr_rate = bp->accretion_rate *
                  (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {
 
-    /* Convert the quantities we gathered to physical frame (all internal units)
-     * Note: for the velocities this means peculiar velocities */
+    /* Convert accretion rate for all gas simultaneously.
+     *
+     * Convert the quantities we gathered to physical frame (all internal
+     * units). Note: velocities are already in black hole frame. */
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
-    const double gas_v_physical[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                      bp->velocity_gas[1] * cosmo->a_inv,
-                                      bp->velocity_gas[2] * cosmo->a_inv};
+    const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                  bp->velocity_gas[1] * cosmo->a_inv,
+                                  bp->velocity_gas[2] * cosmo->a_inv};
 
-    const double gas_v_norm2 = gas_v_physical[0] * gas_v_physical[0] +
-                               gas_v_physical[1] * gas_v_physical[1] +
-                               gas_v_physical[2] * gas_v_physical[2];
+    const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                               gas_v_phys[1] * gas_v_phys[1] +
+                               gas_v_phys[2] * gas_v_phys[2];
 
     const double denominator2 = gas_v_norm2 + gas_c_phys2;
     const double denominator_inv = 1. / sqrt(denominator2);
-    Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
+    accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                  denominator_inv * denominator_inv * denominator_inv;
-  }
+
+    double mach_factor;
+    if (use_bondi)
+      mach_factor = 1.;
+
+    else {
+
+      /* Compute the additional correction factor from Krumholz+06 */
+      const double lambda = 1.1;
+      const double mach_turb = gas_v_dispersion / gas_c_phys;
+      const double mach_bulk = gas_v_dispersion / gas_c_phys;
+      const double mach2 = mach_turb*mach_turb + mach_bulk*mach_bulk;
+      const double m1 = 1. + mach2;
+      mach_factor = sqrt((lambda*lambda + mach2) / (m1*m1*m1*m1));
+    }
+
+    accr_rate *= mach_factor;
+
+  } /* ends section without multi-phase accretion */
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
   if (with_angmom_limiter) {
@@ -475,7 +506,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const double f_visc = max(Bondi_time / viscous_time, 1.);
 
     /* Limit the Bondi rate by the Bondi viscuous time ratio */
-    Bondi_rate *= f_visc;
+    accr_rate *= f_visc;
   }
 
   /* Compute the Eddington rate (internal units) */
@@ -483,7 +514,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       4. * M_PI * G * BH_mass * proton_mass / (epsilon_r * c * sigma_Thomson);
 
   /* Shall we record this high rate? */
-  if (Bondi_rate > f_Edd_recording * Eddington_rate) {
+  if (accr_rate > f_Edd_recording * Eddington_rate) {
     if (with_cosmology) {
       bp->last_high_Eddington_fraction_scale_factor = cosmo->a;
     } else {
@@ -492,7 +523,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Limit the accretion rate to the Eddington fraction */
-  const double accr_rate = min(Bondi_rate, f_Edd * Eddington_rate);
+  accr_rate = min(accr_rate, f_Edd * Eddington_rate);
   bp->accretion_rate = accr_rate;
 
   /* Factor in the radiative efficiency */

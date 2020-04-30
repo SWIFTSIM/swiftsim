@@ -78,6 +78,9 @@ struct black_holes_props {
   /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015)? */
   int with_angmom_limiter;
 
+  /*! Switch between Bondi or Krumholz accretion rates */
+  int use_bondi;
+
 
   /* ---- Properties of the feedback model ------- */
 
@@ -203,6 +206,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
   bp->with_angmom_limiter =
       parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
+  bp->use_bondi = 
+      parser_get_param_int(params, "COLIBREAGN:use_bondi");
 
   /* Feedback parameters ---------------------------------- */
 
