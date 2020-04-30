@@ -23,6 +23,7 @@
 #include <float.h>
 
 /* Local includes. */
+#include "accumulate.h"
 #include "cosmology.h"
 #include "error.h"
 #include "gravity_properties.h"
@@ -77,7 +78,7 @@ __attribute__((always_inline)) INLINE static float gravity_get_softening(
 __attribute__((always_inline)) INLINE static void
 gravity_add_comoving_potential(struct gpart* restrict gp, float pot) {
 
-  gp->potential += pot;
+  accumulate_add_f(&gp->potential, pot);
 }
 
 /**
@@ -169,9 +170,20 @@ __attribute__((always_inline)) INLINE static void gravity_init_gpart(
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM = 0.f;
-  gp->a_grav_PM[0] = 0.f;
-  gp->a_grav_PM[1] = 0.f;
-  gp->a_grav_PM[2] = 0.f;
+
+  /* Track accelerations of each component. */
+  for (int i = 0; i < 3; i++) {
+    gp->a_grav_PM[i] = 0.f;
+    gp->a_grav_p2p[i] = 0.f;
+    gp->a_grav_m2p[i] = 0.f;
+    gp->a_grav_m2l[i] = 0.f;
+  }
+
+  /* Interaction counters. */
+  gp->num_interacted_m2p = 0;
+  gp->num_interacted_m2l = 0;
+  gp->num_interacted_p2p = 0;
+  gp->num_interacted_pm = 0;
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -216,9 +228,12 @@ __attribute__((always_inline)) INLINE static void gravity_end_force(
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM *= const_G;
-  gp->a_grav_PM[0] *= const_G;
-  gp->a_grav_PM[1] *= const_G;
-  gp->a_grav_PM[2] *= const_G;
+  for (int i = 0; i < 3; i++) {
+    gp->a_grav_PM[i] *= const_G;
+    gp->a_grav_p2p[i] *= const_G;
+    gp->a_grav_m2p[i] *= const_G;
+    gp->a_grav_m2l[i] *= const_G;
+  }
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS

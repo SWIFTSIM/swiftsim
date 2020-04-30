@@ -8,7 +8,9 @@ Configure options:
 TODO:
 -----
 
-Stellar neighbour search needs testing
+MOSAICS stars requires tensor gravity
+
+Stellar neighbour search needs testing again
 
 At the end of mosaics_clevo we'll want to update gcflag depending if clusters survive or not
 
