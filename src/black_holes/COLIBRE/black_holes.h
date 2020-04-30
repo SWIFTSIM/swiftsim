@@ -208,7 +208,8 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
 
   const float rho_inv = 1.f / bp->rho_gas;
 
-  /* Finish the calculation by undoing the mass smoothing */
+  /* Finish the calculation by undoing the mass smoothing 
+   * (N.B.: bp->velocity_gas is in BH frame, in internal units) */
   bp->sound_speed_gas *= rho_inv;
   bp->velocity_gas[0] *= rho_inv;
   bp->velocity_gas[1] *= rho_inv;
@@ -448,24 +449,15 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     /* Convert the quantities we gathered to physical frame (all internal units)
      * Note: for the velocities this means peculiar velocities */
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
-    const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+    const double gas_v_physical[3] = {bp->velocity_gas[0] * cosmo->a_inv,
                                       bp->velocity_gas[1] * cosmo->a_inv,
                                       bp->velocity_gas[2] * cosmo->a_inv};
-    const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
-                                     bp->v[1] * cosmo->a_inv,
-                                     bp->v[2] * cosmo->a_inv};
 
-    /* Difference in peculiar velocity between the gas and the BH
-     * Note that there is no need for a Hubble flow term here. We are
-     * computing the gas velocity at the position of the black hole. */
-    const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
-                                       gas_v_peculiar[1] - bh_v_peculiar[1],
-                                       gas_v_peculiar[2] - bh_v_peculiar[2]};
-    const double v_diff_norm2 = v_diff_peculiar[0] * v_diff_peculiar[0] +
-                                v_diff_peculiar[1] * v_diff_peculiar[1] +
-                                v_diff_peculiar[2] * v_diff_peculiar[2];
+    const double gas_v_norm2 = gas_v_physical[0] * gas_v_physical[0] +
+                               gas_v_physical[1] * gas_v_physical[1] +
+                               gas_v_physical[2] * gas_v_physical[2];
 
-    const double denominator2 = v_diff_norm2 + gas_c_phys2;
+    const double denominator2 = gas_v_norm2 + gas_c_phys2;
     const double denominator_inv = 1. / sqrt(denominator2);
     Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                  denominator_inv * denominator_inv * denominator_inv;

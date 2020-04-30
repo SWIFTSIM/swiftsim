@@ -94,7 +94,7 @@ INLINE static void convert_bpart_vel(const struct engine* e,
   ret[1] = gp->v_full[1] + gp->a_grav[1] * dt_kick_grav;
   ret[2] = gp->v_full[2] + gp->a_grav[2] * dt_kick_grav;
 
-  /* Conversion from internal units to peculiar velocities */
+  /* Conversion from internal to physical units */
   ret[0] *= cosmo->a_inv;
   ret[1] *= cosmo->a_inv;
   ret[2] *= cosmo->a_inv;
@@ -105,18 +105,10 @@ INLINE static void convert_bpart_gas_vel(const struct engine* e,
 
   const struct cosmology* cosmo = e->cosmology;
 
-  /* Convert velocities to peculiar velocities */
-  const double gas_v_peculiar[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                    bp->velocity_gas[1] * cosmo->a_inv,
-                                    bp->velocity_gas[2] * cosmo->a_inv};
-
-  const double bh_v_peculiar[3] = {bp->v[0] * cosmo->a_inv,
-                                   bp->v[1] * cosmo->a_inv,
-                                   bp->v[2] * cosmo->a_inv};
-
-  ret[0] = gas_v_peculiar[0] - bh_v_peculiar[0];
-  ret[1] = gas_v_peculiar[1] - bh_v_peculiar[1];
-  ret[2] = gas_v_peculiar[2] - bh_v_peculiar[2];
+  /* Convert relative velocities to physical units */
+  ret[0] = bp->velocity_gas[0] * cosmo->a_inv;
+  ret[1] = bp->velocity_gas[1] * cosmo->a_inv;
+  ret[2] = bp->velocity_gas[2] * cosmo->a_inv;
 }
 
 INLINE static void convert_bpart_gas_circular_vel(const struct engine* e,
@@ -125,7 +117,7 @@ INLINE static void convert_bpart_gas_circular_vel(const struct engine* e,
 
   const struct cosmology* cosmo = e->cosmology;
 
-  /* Conversion from internal units to peculiar velocities */
+  /* Conversion from internal to physical units */
   ret[0] = bp->circular_velocity_gas[0] * cosmo->a_inv;
   ret[1] = bp->circular_velocity_gas[1] * cosmo->a_inv;
   ret[2] = bp->circular_velocity_gas[2] * cosmo->a_inv;
