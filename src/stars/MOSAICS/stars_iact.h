@@ -109,14 +109,13 @@ runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
                                 const struct spart *restrict sj, const float a,
                                 const float H) {
 
-  float wi;
-
-  /* Get r. */
-  const float r = sqrtf(r2);
+  /* Calculation of the density */
 
   /* Compute the kernel function */
+  const float r = sqrtf(r2);
   const float hi_inv = 1.0f / hi;
   const float ui = r * hi_inv;
+  float wi;
   kernel_eval(ui, &wi);
 
   /* Number of particles which contribute to the calculation */
@@ -130,19 +129,20 @@ runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
 
   /* Calculate the velocity difference */
   const float vi_min_vj[3] = {si->v[0]-sj->v[0], si->v[1]-sj->v[1], 
-      si->v[2]-sj->v[2]};
+                              si->v[2]-sj->v[2]};
 
   /* Calculate the constant for the position */
   const float a2H = a*a*H;
 
   /* Calculate the velocity with the Hubble flow */
-  const float v_plus_H_flow[3] = {a2H * dx[0] + vi_min_vj[0], 
-      a2H * dx[1] + vi_min_vj[1], a2H * dx[2] + vi_min_vj[2]};
+  const float v_plus_H_flow[3] = {a2H * dx[0] + vi_min_vj[0],
+                                  a2H * dx[1] + vi_min_vj[1],
+                                  a2H * dx[2] + vi_min_vj[2]};
 
   /* Calculate the velocity dispersion */
   const float norm_v2 = v_plus_H_flow[0] * v_plus_H_flow[0] + 
-      v_plus_H_flow[1] * v_plus_H_flow[1] + 
-      v_plus_H_flow[2] * v_plus_H_flow[2];
+                        v_plus_H_flow[1] * v_plus_H_flow[1] + 
+                        v_plus_H_flow[2] * v_plus_H_flow[2];
 
   si->stars_sigma_v2 += norm_v2 * wi * sj->mass;
 }

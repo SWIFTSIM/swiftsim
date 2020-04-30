@@ -94,11 +94,6 @@ void runner_do_grav_external(struct runner *r, struct cell *c, int timer) {
 
       /* Is this part within the time step? */
       if (gpart_is_active(gp, e)) {
-        if (gp->gcflag) {
-          printf("Getting potential for gid=%lld (step=%d)\n",
-                 gp->id_or_neg_offset, e->step);  // TODO testing
-          fflush(stdout);
-        }
         external_gravity_acceleration(time, potential, constants, gp);
       }
     }

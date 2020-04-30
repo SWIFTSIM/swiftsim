@@ -78,7 +78,7 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
     const int with_cosmology, const double scale_factor, const double time) {
 
   sp->time_bin = 0;
-  sp->birth_density = 0.f;
+  sp->sf_data.birth_density = 0.f;
   sp->SNII_f_E = -1.f;
   sp->count_since_last_enrichment = -1;
 
@@ -264,6 +264,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 
   /* Formation or evolution? */
   if (sp->new_star) {
+
     /* Do cluster formation */
     sp->gcflag = 1;
 
@@ -274,10 +275,11 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->new_star = 0;
 
   } else if (sp->gcflag) {
+
     /* Do cluster evolution, if the particle has clusters */
     mosaics_clevo(sp, stars_properties);
-  }
 
+  }
 }
 
 /**
@@ -301,12 +303,17 @@ stars_mosaics_copy_extra_properties(
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
 
-  /* Flag it for cluster formation */
+  /* Flag it for cluster formation and the stellar neighbour search */
   sp->new_star = 1;
+
+  /* Set up for the stellar neighbour search */
+  sp->scount = 0;
+  sp->stars_rho = 0.f;
+  sp->stars_sigma_v2 = 0.f;
+  sp->stars_mass_unweighted = 0.f;
 
   /* Store the birth properties in the star particle */
   sp->hbirth = p->h;
-  sp->gas_vel_disp = sqrt(p->sf_data.sigma_v2);
   sp->gas_mass_unweighted = p->sf_data.gas_mass_unweighted;
 
   /* Hydro pressure */
@@ -315,34 +322,12 @@ stars_mosaics_copy_extra_properties(
   /* Calculate the hydro sound speed */
   sp->sound_speed_subgrid = hydro_get_physical_soundspeed(p, cosmo);
 
-  /* Set up for the stellar neighbour search */
-  sp->scount = 0;
-  sp->stars_rho = 0.f;
-  sp->stars_sigma_v2 = 0.f;
-  sp->stars_mass_unweighted = 0.f;
-
 #if defined(COOLING_COLIBRE) || defined(COOLING_CHIMES) || \
     defined(COOLING_CHIMES_HYBRID)
 
   /* Correction for subgrid ISM */
-
-  /* Calculate the temperature */
-  const double temperature = cooling_get_temperature(phys_const, hydro_props,
-                                                     us, cosmo, cooling, p, xp);
-
-  /* Get the subgrid temperature from the tracers */
-  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
-
-  /* Get the subgrid sound speed */
-  sp->sound_speed_subgrid *= sqrt(subgrid_temperature / temperature);
-
-  /* Get the subgrid density */
-  sp->birth_subgrid_dens = xp->tracers_data.subgrid_dens;
-
-#else
-
-  /* Get the hydro density */
-  sp->birth_subgrid_dens = sp->birth_density;
+  sp->sound_speed_subgrid *= 
+      sqrt(sp->sf_data.birth_subgrid_temperature / sp->sf_data.birth_temperature);
 
 #endif
 }

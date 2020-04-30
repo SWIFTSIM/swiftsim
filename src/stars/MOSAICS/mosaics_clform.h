@@ -271,24 +271,26 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     sp->stars_sigma_v2 *= (1.f/sp->stars_rho) * h_inv * h_inv2 * cosmo->a2_inv;
   }
 
-  sp->star_vel_disp = sqrt(sp->stars_sigma_v2);
   sp->fgas = sp->gas_mass_unweighted / 
       (sp->gas_mass_unweighted + sp->stars_mass_unweighted);
+
+  const double star_vel_disp = sqrt(sp->stars_sigma_v2);
+  const double gas_vel_disp = sqrt(sp->sf_data.birth_velocity_dispersion);
 
   /* -------- Get CFE -------- */
   /* In units of kg, m, s */
 
-  double rholoc = sp->birth_density * props->density_to_kgm3;
+  double rholoc = sp->sf_data.birth_density * props->density_to_kgm3;
 
   /* The local gas density */
   double sigmaloc;
   if (props->subgrid_gas_vel_disp) {
-    /* Sub-particle turbulent velocity dispersion */
-    sigmaloc = sqrt(sp->birth_pressure / sp->birth_density);
+    /* "Sub-particle turbulent velocity dispersion" */
+    sigmaloc = sqrt(sp->birth_pressure / sp->sf_data.birth_density);
   } else {
     /* The resolved velocity dispersion */
     /* 1/sqrt(3) converts to 1D assuming isotropy */
-    sigmaloc = sp->gas_vel_disp / sqrt(3.f);
+    sigmaloc = gas_vel_disp / sqrt(3.f);
   }
   sigmaloc *= props->velocity_to_ms;
 
@@ -300,8 +302,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     csloc = sp->sound_speed_subgrid * props->velocity_to_ms;
   }
 
+  /* Use a fixed value for the CFE? */
   if (props->FixedCFE > 0) {
-    /* Use a fixed value */
     sp->CFE = props->FixedCFE;
   } else {
     /* Calculate CFE based on local conditions (Kruijssen 2012). units kg, m, s*/
@@ -321,11 +323,11 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /*TODO work out the minimum number we need */
   /* Make sure we have enough stars for a resolved dispersion */
   if ( sp->scount > 5 ) {
-    phi_P = 1.f + sp->gas_vel_disp / sp->star_vel_disp * (1.f / sp->fgas - 1.f);
+    phi_P = 1.f + gas_vel_disp / star_vel_disp * (1.f / sp->fgas - 1.f);
   }
 
   const double total_pressure = 
-      sp->birth_density * sp->gas_vel_disp * sp->gas_vel_disp / 3.f;
+      sp->sf_data.birth_density * sp->sf_data.birth_velocity_dispersion / 3.f;
 
   const double SigmaG = sqrt(2. * total_pressure / (M_PI * const_G * phi_P));
 
@@ -384,6 +386,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   } else {
 
+    /* TODO untested model... */
+
 #if defined(STAR_FORMATION_COLIBRE)
     const double sfe_ff = sf_props->sfe;
 #elif defined(STAR_FORMATION_GEAR)
@@ -395,12 +399,12 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 #endif
 
     /* Free-fall time */
-    const double tff = sqrt(3.0 * M_PI / (32.0 * const_G * sp->birth_subgrid_dens));
+    const double tff = 
+        sqrt(3.0 * M_PI / (32.0 * const_G * sp->sf_data.birth_subgrid_density));
 
     /* Integrated SFE. End of collapse defined by shortest of Toomre collapse
      * timescale and feedback timescale */
-    double SFE_int;
-    SFE_int = sfe_ff * fmin(tcollapse, tfb) / tff;
+    const double SFE_int = sfe_ff * fmin(tcollapse, tfb) / tff;
 
     if ((SFE_int < 0.0) || (SFE_int > 1.0)) {
       error("Integrated SFE unphysical! SFE_int=%g, sfe_ff=%g, tff=%g,"

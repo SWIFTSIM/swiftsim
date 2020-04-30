@@ -27,6 +27,7 @@
 /* Read additional aubgrid models */
 #include "chemistry_struct.h"
 #include "feedback_struct.h"
+#include "star_formation_struct.h"
 #include "tracers_struct.h"
 
 /**
@@ -117,12 +118,6 @@ struct spart {
   /*! Initial star mass */
   float mass_init;
 
-  /*! Birth density */
-  float birth_density;
-
-  /*! Birth temperature */
-  float birth_temperature;
-
   /*! SNII Feedback energy fraction */
   float SNII_f_E;
 
@@ -140,6 +135,9 @@ struct spart {
 
   /*! mass in kernel when HII region is built (for debugging) */
   float HIIregion_mass_in_kernel;
+
+  /*! Star formation struct */
+  struct star_formation_spart_data sf_data;
 
   /*! Feedback structure */
   struct feedback_spart_data feedback_data;
@@ -200,9 +198,6 @@ struct spart {
   /*! Birth pressure */
   float birth_pressure;
 
-  /*! Birth subgrid density */
-  float birth_subgrid_dens;
-
   /*! Birth subgrid sound speed */
   float sound_speed_subgrid;
 
@@ -227,17 +222,8 @@ struct spart {
   /*! Unweighted stellar mass */
   float stars_mass_unweighted;
 
-  /*! The local gas velocity dispersion at formation */
-  float gas_vel_disp;
-
-  /*! The local stellar velocity dispersion at formation */
-  float star_vel_disp;
-
   /*! Gas fraction within the kernel */
   float fgas;
-
-  /*! Unweighted gas fraction within the kernel */
-  float fgas_unweighted;
 
   /*! Number of stars within the kernel */
   int scount;
