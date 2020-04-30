@@ -338,6 +338,7 @@ __attribute__((always_inline)) INLINE static void gravity_cache_populate(
       switch (gparts[i].type) {
         case swift_type_gas:
           hsml[i] = gparts[i].hsml;
+	  break;
         default:
           hsml[i] = 0.f;
       }
@@ -446,6 +447,7 @@ gravity_cache_populate_no_mpole(const timebin_t max_active_bin,
       switch (gparts[i].type) {
         case swift_type_gas:
           hsml[i] = gparts[i].hsml;
+	  break;
         default:
           hsml[i] = 0.f;
       }
@@ -557,6 +559,7 @@ gravity_cache_populate_all_mpole(const timebin_t max_active_bin,
       switch (gparts[i].type) {
         case swift_type_gas:
           hsml[i] = gparts[i].hsml;
+	  break;
         default:
           hsml[i] = 0.f;
       }
