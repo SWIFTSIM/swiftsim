@@ -163,6 +163,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->f_Edd =
       parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
   bp->f_Edd_recording = parser_get_param_float(
       params, "COLIBREAGN:eddington_fraction_for_recording");
   bp->epsilon_r =
