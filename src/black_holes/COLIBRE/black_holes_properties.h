@@ -54,6 +54,9 @@ struct black_holes_props {
 
   /* ----- Properties of the accretion model ------ */
 
+  /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015) */
+  int with_angmom_limiter;
+
   /*! Maximal fraction of the Eddington rate allowed. */
   float f_Edd;
 
