@@ -204,6 +204,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->velocity_gas[0] *= h_inv_dim;
   bp->velocity_gas[1] *= h_inv_dim;
   bp->velocity_gas[2] *= h_inv_dim;
+  bp->velocity_dispersion_gas *= h_inv_dim;
   bp->circular_velocity_gas[0] *= h_inv_dim;
   bp->circular_velocity_gas[1] *= h_inv_dim;
   bp->circular_velocity_gas[2] *= h_inv_dim;
@@ -226,7 +227,10 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   const double speed_gas2 = bp->velocity_gas[0] * bp->velocity_gas[0]
                             + bp->velocity_gas[1] * bp->velocity_gas[1]
                             + bp->velocity_gas[2] * bp->velocity_gas[2];
+  message("vsq=%g, speedsq=%g",
+    bp->velocity_dispersion_gas, speed_gas2);
   bp->velocity_dispersion_gas -= speed_gas2;
+  bp->velocity_dispersion_gas = sqrt(bp->velocity_dispersion_gas);
 }
 
 /**
@@ -252,6 +256,8 @@ black_holes_bpart_has_no_neighbours(struct bpart* bp,
   bp->velocity_gas[0] = FLT_MAX;
   bp->velocity_gas[1] = FLT_MAX;
   bp->velocity_gas[2] = FLT_MAX;
+
+  bp->velocity_dispersion_gas = FLT_MAX;
 }
 
 /**
@@ -436,7 +442,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       bp->circular_velocity_gas[0] * cosmo->a_inv,
       bp->circular_velocity_gas[1] * cosmo->a_inv,
       bp->circular_velocity_gas[2] * cosmo->a_inv};
-  const double gas_v_dispersion = bp->velocity_dispersion_gas * cosmo->a2_inv;
+  const double gas_v_dispersion = bp->velocity_dispersion_gas * cosmo->a_inv;
 
   /* Norm of the circular velocity of the gas around the BH */
   const double tangential_velocity2 = gas_v_circular[0] * gas_v_circular[0] +
@@ -471,7 +477,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                                gas_v_phys[1] * gas_v_phys[1] +
                                gas_v_phys[2] * gas_v_phys[2];
 
-    const double denominator2 = gas_v_norm2 + gas_c_phys2;
+    const double denominator2 = use_bondi ? gas_v_norm2 + gas_c_phys2 : 
+                                gas_c_phys2;
     const double denominator_inv = 1. / sqrt(denominator2);
     accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                  denominator_inv * denominator_inv * denominator_inv;
@@ -485,7 +492,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       /* Compute the additional correction factor from Krumholz+06 */
       const double lambda = 1.1;
       const double mach_turb = gas_v_dispersion / gas_c_phys;
-      const double mach_bulk = gas_v_dispersion / gas_c_phys;
+      const double mach_bulk = sqrt(gas_v_norm2) / gas_c_phys;
       const double mach2 = mach_turb*mach_turb + mach_bulk*mach_bulk;
       const double m1 = 1. + mach2;
       mach_factor = sqrt((lambda*lambda + mach2) / (m1*m1*m1*m1));
