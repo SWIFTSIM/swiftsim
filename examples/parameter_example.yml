@@ -679,6 +679,22 @@ EAGLEAGN:
   merger_max_distance_ratio:       3.0         # Maximal distance over which two BHs can merge, in units of the softening length.
 
 
+# COLIBRE AGN model
+COLIBREAGN:
+  subgrid_seed_mass_Msun:           1.5e5      # Black hole subgrid mass at creation time in solar masses.
+  max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
+  eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
+  with_angmom_limiter:              1          # Apply angular momentum limiter of Rosas-Guevara et al. (2015) [1: yes, 0: no]
+  viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
+  radiative_efficiency:             0.1        # Fraction of the accreted mass that gets radiated.
+  coupling_efficiency:              0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
+  AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
+  AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
+  max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
+  threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
+  threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
+
+
 # Parameters related to logging
 
 # Event logging settings, this specifies how often we need to log a certain process

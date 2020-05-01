@@ -1531,13 +1531,13 @@ void cooling_set_subgrid_properties(
 
   if (cooling->use_colibre_subgrid_EOS == 1) {
     /* Compute the subgrid properties */
-    xp->tracers_data.subgrid_temp = compute_subgrid_temperature(
+    p->cooling_data.subgrid_temp = compute_subgrid_temperature(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
-    xp->tracers_data.subgrid_dens = compute_subgrid_density(
+    p->cooling_data.subgrid_dens = compute_subgrid_density(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
   } else {
-    xp->tracers_data.subgrid_temp = T;
-    xp->tracers_data.subgrid_dens = rho;
+    p->cooling_data.subgrid_temp = T;
+    p->cooling_data.subgrid_dens = rho;
   }
 
   if (xp->tracers_data.HIIregion_timer_gas > 0.) {
@@ -1588,7 +1588,7 @@ void cooling_set_subgrid_properties(
                                      &ChimesGasVars, 1);
 
     double mu = chimes_mu(cooling, p, xp);
-    double u_subgrid_cgs = xp->tracers_data.subgrid_temp;
+    double u_subgrid_cgs = p->cooling_data.subgrid_temp;
     u_subgrid_cgs *= hydro_one_over_gamma_minus_one;
     u_subgrid_cgs *=
         phys_const->const_boltzmann_k / phys_const->const_proton_mass;
@@ -1607,10 +1607,10 @@ void cooling_set_subgrid_properties(
     ChimesFloat XH = 0.75;
 #endif
     ChimesGasVars.nH_tot =
-        XH * xp->tracers_data.subgrid_dens *
+        XH * p->cooling_data.subgrid_dens *
         units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY) /
         phys_const->const_proton_mass;
-    ChimesGasVars.temperature = xp->tracers_data.subgrid_temp;
+    ChimesGasVars.temperature = p->cooling_data.subgrid_temp;
     ChimesGasVars.ForceEqOn = 1;
     ChimesGasVars.ThermEvolOn = 0;
 

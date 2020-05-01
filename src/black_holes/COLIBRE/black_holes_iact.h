@@ -87,7 +87,7 @@ runner_iact_nonsym_bh_gas_density(
   if (bh_props->subgrid_bondi) {
     const float pressure_j = hydro_get_comoving_pressure(pj);
     cj = gas_soundspeed_from_pressure(
-        xpj->tracers_data.subgrid_dens * cosmo->a * cosmo->a * cosmo->a,
+        pj->cooling_data.subgrid_dens * cosmo->a * cosmo->a * cosmo->a,
         pressure_j);
   } else {
     cj = hydro_get_comoving_soundspeed(pj);
