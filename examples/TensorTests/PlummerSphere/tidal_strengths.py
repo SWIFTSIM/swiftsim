@@ -28,8 +28,8 @@ print 'Unit time',U_t/SEC_PER_GIGAYEAR,'Gyr'
 
 pos = f['/PartType4/Coordinates'][:]
 mass = f['/PartType4/Masses'][:]
-tidal_tensor = f['/PartType4/TidalTensor'][:]
-tt_to_cgs = f["PartType4/TidalTensor"].attrs[
+tidal_tensor = f['/PartType4/TidalTensors'][:]
+tt_to_cgs = f["PartType4/TidalTensors"].attrs[
     "Conversion factor to physical CGS (including cosmological corrections)"
 ][0]
 tidal_tensor *= tt_to_cgs * (SEC_PER_GIGAYEAR)**2

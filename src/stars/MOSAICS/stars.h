@@ -78,7 +78,9 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
     const int with_cosmology, const double scale_factor, const double time) {
 
   sp->time_bin = 0;
+#if !defined(STAR_FORMATION_NONE)
   sp->sf_data.birth_density = 0.f;
+#endif
   sp->SNII_f_E = -1.f;
   sp->count_since_last_enrichment = -1;
 
@@ -225,22 +227,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     const struct star_formation* sf_props, const struct phys_const* phys_const,
     const struct cosmology* cosmo, const int with_cosmology, const float time) {
 
-  /* Have we already been here this timestep? */
-  /* This funcation can be called twice: once at SF, then again in star loop */
-  /* Now fixed so not necessary
-  if (!sp->new_star) {
-    if (with_cosmology) {
-      if (sp->birth_scale_factor == (float)cosmo->a) {
-        return;
-      }
-    } else {
-      if (sp->birth_time == time) {
-        return;
-      }
-    }
-  }
-  */
-
   /* shift old tensors along, regardless if have clusters */
   for (int i = 0; i < 2; i++) {
     sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
@@ -303,6 +289,8 @@ stars_mosaics_copy_extra_properties(
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
 
+#if !defined(STAR_FORMATION_NONE)
+
   /* Flag it for cluster formation and the stellar neighbour search */
   sp->new_star = 1;
 
@@ -329,7 +317,9 @@ stars_mosaics_copy_extra_properties(
   sp->sound_speed_subgrid *= 
       sqrt(sp->sf_data.birth_subgrid_temperature / sp->sf_data.birth_temperature);
 
-#endif
+#endif /* cooling model */
+
+#endif /* !defined(STAR_FORMATION_NONE) */
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

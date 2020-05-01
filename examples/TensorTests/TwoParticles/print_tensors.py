@@ -35,7 +35,7 @@ eps = float(f['/Parameters'].attrs['Gravity:max_physical_baryon_softening'])
 ids = f['/PartType4/ParticleIDs'][:]
 pos = f['/PartType4/Coordinates'][:] 
 mass = f['/PartType4/Masses'][:] 
-T = f['/PartType4/TidalTensor'][:] 
+T = f['/PartType4/TidalTensors'][:] 
 f.close()
 
 
@@ -51,7 +51,8 @@ dx = 1e-8 * eps
 for i in xrange(N):
   print 'Particle ',i
 
-  print 'snapshot', T[i][-6:] # Only print last one
+  print '  TT in snapshot (upper):'
+  print ' ', T[i][-6:] # Only print last one
 
   acc = eval_gravity(i, mass, pos[i], pos, eps)
   extraacc = np.zeros((3,3))
@@ -63,8 +64,8 @@ for i in xrange(N):
   tide[0] = (extraacc[:,0] - acc[0]) / (dx)
   tide[1] = (extraacc[:,1] - acc[1]) / (dx)
   tide[2] = (extraacc[:,2] - acc[2]) / (dx)
-  print 'tidal tensor:'
-  print tide
+  print '  Expected tidal tensor:'
+  print ' ', tide
 
   eigenval = LA.eigvalsh(tide)
-  print 'eigenvalues', eigenval
+  print '  eigenvalues:', eigenval

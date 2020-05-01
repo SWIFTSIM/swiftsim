@@ -225,4 +225,28 @@ struct reduced_grav_tensor {
   float F_001;
 };
 
+#if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
+/**
+ * @brief Values returned by the M2P_tidaltensors kernel.
+ */
+struct reduced_grav_tidaltensor {
+
+  /* 0th order terms */
+  float F_000;
+
+  /* 1st order terms */
+  float F_100;
+  float F_010;
+  float F_001;
+
+  /* 2nd order terms */
+  float F_200;
+  float F_110;
+  float F_101;
+  float F_020;
+  float F_011;
+  float F_002;
+};
+#endif
+
 #endif /* SWIFT_MULTIPOLE_STRUCT_H */

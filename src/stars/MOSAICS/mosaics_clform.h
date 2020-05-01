@@ -253,6 +253,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     const struct star_formation* sf_props, const struct phys_const* phys_const,
     const struct cosmology* cosmo) {
 
+#if !defined(STAR_FORMATION_NONE)
+
   /* TODO unit conversions into physical units for clevo */
 
   const double const_G = phys_const->const_newton_G;
@@ -389,7 +391,15 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     /* TODO untested model... */
 
 #if defined(STAR_FORMATION_COLIBRE)
-    const double sfe_ff = sf_props->sfe;
+    double sfe_ff;
+    switch (sf_props->SF_law) {
+      case colibre_star_formation_schmidt_law:
+        sfe_ff = sf_props->schmidt_law.sfe;
+        break;
+      default:
+        sfe_ff = 0.01;
+        break;
+    }
 #elif defined(STAR_FORMATION_GEAR)
     const double sfe_ff = sf_props->star_formation_efficiency;
 #else
@@ -561,6 +571,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   if (sp->num_clusters == 0) {
     sp->gcflag = 0;
   }
+
+#endif /* !defined(STAR_FORMATION_NONE) */
 }
 
 #endif /* SWIFT_MOSAICS_CLFORM_H */

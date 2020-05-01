@@ -1,6 +1,8 @@
 Configure options:
   Tensor tests:
-  ./configure --with-gravity=with-tidal-tensors --with-stars=MOSAICS
+  ./configure --with-stars=MOSAICS --with-gravity=with-tidaltensor
+  or
+  ./configure --with-stars=MOSAICS --with-gravity=with-multi-softening-tensors
 
   Isolated disc tests:
   ./configure --with-subgrid=COLIBRE-MOSAICS --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist --with-gravity=with-multi-softening-tensors --with-mosaics-max-clusters=100
@@ -23,6 +25,7 @@ I/O:
 Scheduling:
   MPI for veldisp tasks (cell.c, engine_maketasks.c)
 
+runner_doiact_functions_stars_veldisp.h has checks for STARS_MOSAICS (since requires new_star flag), in other cases we probably don't want to schedule the veldisp section
 
 NOTES:
 ------
