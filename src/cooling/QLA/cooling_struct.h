@@ -122,6 +122,8 @@ struct cooling_function_data {
   int previous_z_index;
 };
 
+struct cooling_part_data {};
+
 /**
  * @brief Properties of the cooling stored in the extended particle data.
  */
