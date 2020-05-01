@@ -52,10 +52,10 @@ struct black_holes_props {
   /*! Mass of a BH seed at creation time */
   float subgrid_seed_mass;
 
-  /* ----- Properties of the accretion model ------ */
+  /*! Should we use the subgrid mass specified in ICs? */
+  int use_subgrid_mass_from_ics;
 
-  /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015) */
-  int with_angmom_limiter;
+  /* ----- Properties of the accretion model ------ */
 
   /*! Maximal fraction of the Eddington rate allowed. */
   float f_Edd;
@@ -190,6 +190,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
+  bp->use_subgrid_mass_from_ics =
+      parser_get_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics");
+
   /* Accretion parameters ---------------------------------- */
 
   bp->f_Edd =
@@ -206,8 +209,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
-  bp->with_angmom_limiter =
-      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
 
   /* Feedback parameters ---------------------------------- */
 
