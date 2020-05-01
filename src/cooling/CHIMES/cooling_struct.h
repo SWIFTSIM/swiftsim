@@ -139,6 +139,15 @@ struct cooling_function_data {
   struct colibre_cooling_tables colibre_table;
 };
 
+struct cooling_part_data {
+
+  /*! Subgrid temperature */
+  float subgrid_temp;
+
+  /*! Subgrid density (internal units, physical frame) */
+  float subgrid_dens;
+};
+
 /**
  * @brief Properties of the cooling stored in the particle data
  */

@@ -193,6 +193,15 @@ struct cooling_function_data {
   double rapid_cooling_threshold;
 };
 
+struct cooling_part_data {
+
+  /*! Subgrid temperature */
+  float subgrid_temp;
+
+  /*! Subgrid density (internal units, physical frame) */
+  float subgrid_dens;
+};
+
 /**
  * @brief Properties of the cooling stored in the extended particle data.
  */

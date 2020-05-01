@@ -50,6 +50,8 @@ struct cooling_function_data {
   float cooling_tstep_mult;
 };
 
+struct cooling_part_data {};
+
 /**
  * @brief Properties of the cooling stored in the particle data.
  */
