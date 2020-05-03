@@ -67,6 +67,8 @@ SPH:
   initial_temperature: 268.7 
   minimal_temperature: 10.
   h_max:               0.5      # Maximal smoothing length in co-moving internal units.
+  particle_splitting:                1        # Particle splitting is ON
+  particle_splitting_mass_threshold: 9.0e-5   # (internal units, i.e. 9.0e5 Msun ~ 4x initial gas particle mass)
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
