@@ -518,7 +518,9 @@ static void engine_redistribute_relink_mapper(void *map_data, int num_elements,
 void engine_redistribute(struct engine *e) {
 
 #ifdef WITH_MPI
+#ifdef SWIFT_DEBUG_CHECKS
   const int nr_sinks_new = 0;
+#endif
   if (e->policy & engine_policy_sink) {
     error("Not implemented yet");
   }
