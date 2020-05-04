@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2019 Matthieu Schaller (schaller@strw.leidenuniv.nl)
+ * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,24 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_BLACK_HOLES_H
-#define SWIFT_BLACK_HOLES_H
+#ifndef SWIFT_SINK_IO_H
+#define SWIFT_SINK_IO_H
 
-/* Config parameters. */
 #include "../config.h"
 
-/* Select the correct star model */
-#if defined(BLACK_HOLES_NONE)
-#include "./black_holes/Default/black_holes.h"
-#include "./black_holes/Default/black_holes_iact.h"
-#elif defined(BLACK_HOLES_EAGLE)
-#include "./black_holes/EAGLE/black_holes.h"
-#include "./black_holes/EAGLE/black_holes_iact.h"
-#elif defined(BLACK_HOLES_COLIBRE)
-#include "./black_holes/COLIBRE/black_holes.h"
-#include "./black_holes/COLIBRE/black_holes_iact.h"
+/* Load the correct sink type */
+#if defined(SINK_NONE)
+#include "./sink/Default/sink_io.h"
 #else
-#error "Invalid choice of black hole model"
+#error "Invalid choice of sink model"
 #endif
 
-#endif
+#endif /* SWIFT_SINK_IO_H */
