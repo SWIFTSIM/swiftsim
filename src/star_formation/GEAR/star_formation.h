@@ -273,9 +273,10 @@ INLINE static void star_formation_copy_properties(
     sp->gpart->x[2] = sp->x[2];
 
     /* Do the gas particle. */
-    p->x[0] -= delta_x * max_displacement * p->h;
-    p->x[1] -= delta_y * max_displacement * p->h;
-    p->x[2] -= delta_z * max_displacement * p->h;
+    const double mass_ratio = mass_star / new_mass_gas;
+    p->x[0] -= mass_ratio * delta_x * max_displacement * p->h;
+    p->x[1] -= mass_ratio * delta_y * max_displacement * p->h;
+    p->x[2] -= mass_ratio * delta_z * max_displacement * p->h;
 
     /* Copy the position to the gpart */
     p->gpart->x[0] = p->x[0];
