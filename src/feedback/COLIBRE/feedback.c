@@ -515,7 +515,8 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
                                          struct spart* sp, double star_age_Gyr,
                                          double dt_Gyr,
                                          const integertime_t ti_current,
-                                         const struct cosmology* cosmo) {
+                                         const struct cosmology* cosmo,
+                                         double stellar_evolution_age_cut_Gyr) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -530,24 +531,27 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
    integrating the rate of NS merger events (number per yr) */
   const float num_NSM = integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
-  /* I define my probability as number of NS mergers per time step */
-  const float prob = num_NSM;
-
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
-
-  sp->feedback_data.to_distribute.num_r_processes = num_NSM;
-
+    
+  float sampling_limit = 1.;
+    
+  /* Ask if sampling rate is imposed */
+  if (star_age_Gyr > stellar_evolution_age_cut_Gyr) {
+      sampling_limit = props->stellar_evolution_sampling_rate;
+  }
+    
+  /* I define my probability as number of NSM events per time step */
+  float prob_num = num_NSM / sampling_limit;
+    
   /* Are we lucky? */
-  if (rand < prob) {
-
-    /* Compute the mass produced by NSM mergers */
-    const float delta_mass =
-        props->yield_Eu_from_NSM * props->solar_mass_to_mass;
+  if (prob_num > rand) {
+    
+    /* Compute the mass produced by NSM events */
+    const float delta_mass = sampling_limit * props->yield_Eu_from_NSM * props->solar_mass_to_mass;
 
     /* compute mass of Europium */
-    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
-        delta_mass;
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] += delta_mass;
 
     /* Mass to distribute */
     sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
@@ -572,7 +576,8 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
                                            struct spart* sp,
                                            double star_age_Gyr, double dt_Gyr,
                                            const integertime_t ti_current,
-                                           const struct cosmology* cosmo) {
+                                           const struct cosmology* cosmo,
+                                           double stellar_evolution_age_cut_Gyr) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -589,12 +594,17 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
                                           random_number_enrichment_2);
-
-  sp->feedback_data.to_distribute.num_r_processes = num_CEJSN;
-
-  /* I define my probability as number of CEJSN per time step */
-  const float prob_num = num_CEJSN * rand;
     
+  float sampling_limit = 1.;
+    
+  /* Ask if sampling rate is imposed */
+  if (star_age_Gyr > stellar_evolution_age_cut_Gyr) {
+      sampling_limit = props->stellar_evolution_sampling_rate;
+  }
+    
+  /* I define my probability as number of CEJSN per time step */
+  const float prob_num = num_CEJSN * rand / sampling_limit;
+
   /* Are we lucky? */
   if (prob_num > 1) {
 
@@ -627,7 +637,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
 INLINE static void evolve_collapsar_stochastic(
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo) {
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -645,11 +655,16 @@ INLINE static void evolve_collapsar_stochastic(
   const float rand = random_unit_interval(sp->id, ti_current,
                                           random_number_enrichment_3);
 
-  sp->feedback_data.to_distribute.num_r_processes = num_collapsar;
+  float sampling_limit = 1.;
     
+  /* Ask if sampling rate is imposed */
+  if (star_age_Gyr > stellar_evolution_age_cut_Gyr) {
+      sampling_limit = props->stellar_evolution_sampling_rate;
+  }
+  
   /* I define my probability as number of collapsar per time step */
-  const float prob_num = num_collapsar * rand;
-
+  const float prob_num = num_collapsar * rand / sampling_limit ;
+    
   /* Are we lucky? */
   if (prob_num > 1) {
 
@@ -1319,6 +1334,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
+  const double stellar_evolution_age_cut_Gyr = feedback_props->stellar_evolution_age_cut * units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
   /* Get the metallicity */
   const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
@@ -1512,11 +1528,11 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   }
   if (feedback_props->with_r_process_enrichment) {
       evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
-                            cosmo);
+                            cosmo, stellar_evolution_age_cut_Gyr);
       evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
-                              ti_begin, cosmo);
+                              ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
       evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
-                                  ti_begin, cosmo);
+                                  ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS

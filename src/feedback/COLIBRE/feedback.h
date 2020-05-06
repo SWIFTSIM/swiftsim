@@ -116,9 +116,6 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.mass_from_CEJSN = 0.f;
   sp->feedback_data.to_distribute.mass_from_collapsar = 0.f;
     
-  /* Zero the number of events per time-step */
-  sp->feedback_data.to_distribute.num_r_processes = 0.f;
-
   /* Zero the metal enrichment quantities */
   for (int i = 0; i < chemistry_element_count; i++) {
     sp->feedback_data.to_distribute.metal_mass[i] = 0.f;
