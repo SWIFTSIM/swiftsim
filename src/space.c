@@ -1376,7 +1376,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         "counter.");
   if (count_extra_sinks != s->sinks.nr_extra_parts)
     error(
-        "Number of extra sinks in the bpart array not matching the space "
+        "Number of extra sinks in the sink array not matching the space "
         "counter.");
 #endif
 
@@ -3131,6 +3131,7 @@ void space_sparts_get_cell_index(struct space *s, int *sind, int *cell_counts,
   data.count_inhibited_gpart = 0;
   data.count_inhibited_spart = 0;
   data.count_inhibited_sink = 0;
+  data.count_inhibited_bpart = 0;
   data.count_extra_part = 0;
   data.count_extra_gpart = 0;
   data.count_extra_spart = 0;
