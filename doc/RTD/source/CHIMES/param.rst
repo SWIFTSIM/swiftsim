@@ -1,4 +1,4 @@
-.. CHIMES parameters 
+1;5202;0c.. CHIMES parameters 
    Alexander Richings 28th January 2020 
 
 .. _CHIMES_param:
@@ -116,7 +116,11 @@ The parameters needed when running SWIFT with the CHIMES module are described in
 |                                    | | al. in prep).                                               |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
-| ``H_reion_z``                      | | Redshift of reionisation.                                   |
+| ``UVB_cutoff_z``                   | | Redshift above which the UVB is switched off.               |
+|                                    |                                                               |
++------------------------------------+---------------------------------------------------------------+
+| ``ISRF_low_dens_cutoff_z``         | | Redshift above which the ISRF is cut off at low densities   |
+|                                    | | (UV_field_flag == 2 only).                                  |
 |                                    |                                                               |
 +------------------------------------+---------------------------------------------------------------+
 | ``init_abundance_mode``            | | Integer flag that determines how the initial CHIMES         |
@@ -297,7 +301,7 @@ The following set of CHIMES parameters are suitable for running a non-cosmologic
     CHIMESCooling: 
       data_path:                  /path/to/chimes-data 
       EqmAbundanceTable:          colibre_HHe/z0.000_eqm.hdf5 
-      PhotoIonTable_UVB:          HM12_cross_sections/z0.000_cross_sections.hdf5 
+      PhotoIonTable_UVB:          SP20_cross_sections/z0.000_cross_sections.hdf5 
       PhotoIonTable_ISRF:         cross_sections_B87.hdf5 
       UV_field_flag:              2 
       Shielding_flag:             2
@@ -322,7 +326,8 @@ The following set of CHIMES parameters are suitable for running a non-cosmologic
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
-      H_reion_z:                  7.5 
+      UVB_cutoff_z:               127.0 
+      ISRF_low_dens_cutoff_z:     7.5 
       S_over_Si_in_solar:         1.0
       Ca_over_Si_in_solar:        1.0
       IncludeCarbon:              0 
@@ -348,7 +353,7 @@ Compared to the isolated galaxy example above, this example uses a redshift-depe
     CHIMESCooling: 
       data_path:                  /path/to/chimes-data 
       EqmAbundanceTable:          colibre_HHe 
-      PhotoIonTable_UVB:          HM12_cross_sections
+      PhotoIonTable_UVB:          SP20_cross_sections
       PhotoIonTable_ISRF:         cross_sections_B87.hdf5 
       UV_field_flag:              2 
       Shielding_flag:             2
@@ -373,7 +378,8 @@ Compared to the isolated galaxy example above, this example uses a redshift-depe
       use_hybrid_cooling:         1 
       rapid_cooling_threshold:    1.0 
       colibre_table_path:         /path/to/UV_dust1_CR1_G1_shield1.hdf5 
-      H_reion_z:                  7.5 
+      UVB_cutoff_z:               127.0 
+      ISRF_low_dens_cutoff_z:     7.5 
       S_over_Si_in_solar:         1.0
       Ca_over_Si_in_solar:        1.0
       IncludeCarbon:              0 

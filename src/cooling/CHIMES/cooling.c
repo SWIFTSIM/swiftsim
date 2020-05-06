@@ -173,13 +173,16 @@ void cooling_init_backend(struct swift_params *parameter_file,
         parameter_file, "CHIMESCooling:max_shielding_length", -1.0);
   }
 
-  /* The redshift of hydrogren reionisation
-   * will be needed if we use a redshift-dependent
-   * UVB, and by the COLIBRE cooling tables if
-   * we use hybrid cooling. */
+  /* In CHIMES, the UVB is switched off above
+   * the redshift of H-reionisation. */
   cooling->ChimesGlobalVars.reionisation_redshift =
       (ChimesFloat)parser_get_param_float(parameter_file,
-                                          "CHIMESCooling:H_reion_z");
+                                          "CHIMESCooling:UVB_cutoff_z");
+
+  /* The Colibre ISRF is cut off at low densities
+   * before reionisation. */
+  cooling->ISRF_low_dens_cutoff_z = parser_get_param_float(
+      parameter_file, "CHIMESCooling:ISRF_low_dens_cutoff_z");
 
   /* Parameters used for the COLIBRE ISRF and
    * shielding length. These have just been
@@ -379,13 +382,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
     /* Path to colibre cooling table */
     parser_get_param_string(parameter_file, "CHIMESCooling:colibre_table_path",
                             cooling->colibre_table.cooling_table_path);
-
-    /* Redshift of H-reionisation is
-     * needed by the Colibre table
-     * to determine when to use
-     * the high-redshift bin. */
-    cooling->colibre_table.H_reion_z =
-        (float)cooling->ChimesGlobalVars.reionisation_redshift;
 
     /* Set the S/Si and Ca/Si ratios to
      * the values already read in for CHIMES. */
@@ -656,7 +652,7 @@ void chimes_update_gas_vars(const double u_cgs,
 
     /* low-density cut-off before reionisation */
     if ((cooling->ChimesGlobalVars.redshift >
-         cooling->ChimesGlobalVars.reionisation_redshift) &&
+         cooling->ISRF_low_dens_cutoff_z) &&
         (J_over_J0 > 0.0))
       ChimesGasVars->isotropic_photon_density[1] *= exp10(
           -20.0 - ((-20.0 - log10(J_over_J0)) /
