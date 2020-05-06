@@ -132,10 +132,9 @@ double integrate_rate_of_NSM(const struct spart* sp, const double t0,
                              const double t1,
                              const struct feedback_props* props) {
 
-  /* The calculation is written as the integral between t0 and t1 */
-  double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
-    
-  return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
+    /* The calculation is written as the integral between t0 and t1 */
+    double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
+    return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
 }
 
 /**
@@ -529,15 +528,13 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
 
   /* Compute the number of NS merger events in timestep by
    integrating the rate of NS merger events (number per yr) */
-  const float num_NSM =
-      integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+  const float num_NSM = integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* I define my probability as number of NS mergers per time step */
   const float prob = num_NSM;
 
   /* Draw a random number */
-  const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_enrichment_1);
+  const float rand = random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
 
   sp->feedback_data.to_distribute.num_r_processes = num_NSM;
 
@@ -553,7 +550,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
         delta_mass;
 
     /* Mass to distribute */
-    sp->feedback_data.to_distribute.mass_from_r_processes += delta_mass;
+    sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
 
     /* Write the event to the r-process log file */
     event_logger_r_processes_log_event(sp, cosmo, delta_mass);
@@ -587,11 +584,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
   if (star_age_Gyr < 0.03) return;
 
   /* Number of CEJSN events in timestep */
-  const float num_CEJSN = props->CEJSN_per_Msun * dt_Gyr * sp->mass_init *
-                          props->mass_to_solar_mass;
-
-  /* I define my probability as number of CEJSN per time step */
-  const float prob = num_CEJSN;
+  const float num_CEJSN = props->CEJSN_per_Msun * (sp->mass_init / star_age_Gyr) * dt_Gyr * props->mass_to_solar_mass;
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
@@ -599,22 +592,24 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
 
   sp->feedback_data.to_distribute.num_r_processes = num_CEJSN;
 
+  /* I define my probability as number of CEJSN per time step */
+  const float prob_num = num_CEJSN * rand;
+    
   /* Are we lucky? */
-  if (rand < prob) {
+  if (prob_num > 1) {
 
-    /* Compute the mass produced by CEJSN */
-    const float delta_mass =
-        props->yield_Eu_from_CEJSN * props->solar_mass_to_mass;
-
-    /* compute mass of Europium */
-    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
-        delta_mass;
-
-    /* Mass to distribute */
-    sp->feedback_data.to_distribute.mass_from_r_processes += delta_mass;
-
-    /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass);
+       /* Compute the mass produced by CEJSN */
+       const float delta_mass = prob_num * props->yield_Eu_from_CEJSN * props->solar_mass_to_mass;
+        
+       /* compute mass of Europium */
+       sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] += delta_mass;
+        
+        /* Mass to distribute */
+        sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
+        
+        /* Write the event to the r-process log file */
+        event_logger_r_processes_log_event(sp, cosmo, delta_mass);
+      
   }
 }
 
@@ -644,31 +639,29 @@ INLINE static void evolve_collapsar_stochastic(
   if (star_age_Gyr < 0.03) return;
 
   /* Number of collapsar events in timestep */
-  const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
-                              sp->mass_init * props->mass_to_solar_mass;
-
-  /* I define my probability as number of collapsars per time step */
-  const float prob = num_collapsar;
+  const float num_collapsar = props->collapsar_per_Msun * dt_Gyr * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
                                           random_number_enrichment_3);
 
   sp->feedback_data.to_distribute.num_r_processes = num_collapsar;
+    
+  /* I define my probability as number of collapsar per time step */
+  const float prob_num = num_collapsar * rand;
 
   /* Are we lucky? */
-  if (rand < prob) {
+  if (prob_num > 1) {
 
     /* Compute the mass produced by collapsar */
-    const float delta_mass =
-        props->yield_Eu_from_collapsar * props->solar_mass_to_mass;
+    const float delta_mass = prob_num * props->yield_Eu_from_collapsar * props->solar_mass_to_mass;
 
     /* compute mass of Europium */
     sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
         delta_mass;
 
     /* Mass to distribute */
-    sp->feedback_data.to_distribute.mass_from_r_processes += delta_mass;
+    sp->feedback_data.to_distribute.mass_from_collapsar += delta_mass;
 
     /* Write the event to the r-process log file */
     event_logger_r_processes_log_event(sp, cosmo, delta_mass);
@@ -1717,7 +1710,7 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of neutron star mergers model */
   if (fp->with_r_process_enrichment)
     message("Running COLIBRE with r-process enrichment produced by: Neutron star mergers, Common envelope jets SN and Collapsars");
-
+    
   fp->NSM_per_Msun =
       parser_get_param_double(params, "COLIBREFeedback:num_of_NSM_per_Msun");
   fp->yield_Eu_from_NSM =

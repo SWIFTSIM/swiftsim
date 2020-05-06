@@ -112,7 +112,10 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   /* Zero the amount of mass that is distributed */
   sp->feedback_data.to_distribute.mass = 0.f;
 
-  sp->feedback_data.to_distribute.mass_from_r_processes = 0.f;
+  sp->feedback_data.to_distribute.mass_from_NSM = 0.f;
+  sp->feedback_data.to_distribute.mass_from_CEJSN = 0.f;
+  sp->feedback_data.to_distribute.mass_from_collapsar = 0.f;
+    
   /* Zero the number of events per time-step */
   sp->feedback_data.to_distribute.num_r_processes = 0.f;
 

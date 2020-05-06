@@ -153,8 +153,24 @@ INLINE static int chemistry_write_particles(const struct part* parts,
                              "mass imparted by each event. -1 if a particle "
                              "has never been enriched by SNIa.");
   }
+    
+    list[13] = io_make_output_field(
+                                   "MassesFromNSM", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts,
+                                   chemistry_data.mass_from_NSM,
+                                   "Mass of europium that have been produced by neutron star merger events");
 
-  return 13;
+    list[14] = io_make_output_field(
+                                    "MassesFromCEJSN", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts,
+                                    chemistry_data.mass_from_CEJSN,
+                                    "Mass of europium that have been produced by common-envelop jets SN events");
+
+    list[15] = io_make_output_field(
+                                    "MassesFromCollapsar", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts,
+                                    chemistry_data.mass_from_collapsar,
+                                    "Mass of europium that have been produced by collapsar events");
+
+
+  return 16;
 }
 
 /**

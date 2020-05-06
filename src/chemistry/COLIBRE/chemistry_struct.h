@@ -81,6 +81,10 @@ struct chemistry_part_data {
 
   /*! Mass coming from SNII */
   float mass_from_SNII;
+    
+  float mass_from_NSM;
+  float mass_from_CEJSN;
+  float mass_from_collapsar;
 
   /*! Fraction of total gas mass in metals coming from SNII */
   float metal_mass_fraction_from_SNII;

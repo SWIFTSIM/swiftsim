@@ -238,6 +238,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                     sp, with_cosmology, cosmo, e->time, dt_star);
                 const double star_age_beg_of_step =
                     star_age_end_of_step - dt_enrichment;
+                /*const integertime_t ti_current = e->ti_current;*/
 
                 /* Compute the stellar evolution  */
                 feedback_evolve_spart(sp, feedback_props, cosmo, us, phys_const,
@@ -381,6 +382,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                 sp, with_cosmology, cosmo, e->time, dt_star);
             const double star_age_beg_of_step =
                 star_age_end_of_step - dt_enrichment;
+            /*const integertime_t ti_current = e->ti_current;*/
 
             /* Compute the stellar evolution  */
             feedback_evolve_spart(sp, feedback_props, cosmo, us, phys_const,
