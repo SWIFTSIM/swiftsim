@@ -6,13 +6,18 @@ then
     echo "Fetching initial gravity glass file for the constant cosmological box example..."
     ./getGlass.sh
 fi
+# Fetch the cooling tables
 if [ ! -e coolingtables ]
 then
     echo "Fetching EAGLE Cooling Tables"
     ../getEagleCoolingTable.sh
 fi
+if [ ! -e UV_dust1_CR1_G1_shield1.hdf5 ]
+then
+    echo "Fetching COLIBRE Cooling Tables"
+    ../getColibreCoolingTables.sh
+fi
 
-# Fetch the cooling tables
 if [ ! -e constantBox.hdf5 ]
 then
     echo "Generating initial conditions for the uniform cosmo box example..."
