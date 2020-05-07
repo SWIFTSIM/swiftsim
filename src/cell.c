@@ -2034,7 +2034,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
                 &gparts[j];
           } else if (gparts[j].type == swift_type_sink) {
             sinks[-gparts[j].id_or_neg_offset - sinks_offset].gpart =
-              &gparts[j];
+                &gparts[j];
           } else if (gparts[j].type == swift_type_black_hole) {
             bparts[-gparts[j].id_or_neg_offset - bparts_offset].gpart =
                 &gparts[j];
@@ -2049,8 +2049,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
           sparts[-gparts[k].id_or_neg_offset - sparts_offset].gpart =
               &gparts[k];
         } else if (gparts[k].type == swift_type_sink) {
-          sinks[-gparts[k].id_or_neg_offset - sinks_offset].gpart =
-            &gparts[k];
+          sinks[-gparts[k].id_or_neg_offset - sinks_offset].gpart = &gparts[k];
         } else if (gparts[k].type == swift_type_black_hole) {
           bparts[-gparts[k].id_or_neg_offset - bparts_offset].gpart =
               &gparts[k];
