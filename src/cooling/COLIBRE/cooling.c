@@ -933,9 +933,9 @@ void cooling_set_subgrid_properties(
   const double nHsum_over_nH = nHI_over_nH + nHII_over_nH + 2. * nH2_over_nH;
 
   /* Compute the subgrid properties */
-  xp->tracers_data.nHI_over_nH  = nHI_over_nH  / nHsum_over_nH; 
+  xp->tracers_data.nHI_over_nH = nHI_over_nH / nHsum_over_nH;
   xp->tracers_data.nHII_over_nH = nHII_over_nH / nHsum_over_nH;
-  xp->tracers_data.nH2_over_nH  = nH2_over_nH  / nHsum_over_nH;
+  xp->tracers_data.nH2_over_nH = nH2_over_nH / nHsum_over_nH;
 
   p->cooling_data.subgrid_temp = compute_subgrid_temperature(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
