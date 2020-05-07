@@ -48,8 +48,7 @@ params = {'axes.labelsize': 10,
 'figure.subplot.wspace'  : 0.3,
 'figure.subplot.hspace'  : 0.2,
 'lines.markersize' : 6,
-'lines.linewidth' : 3.,
-'text.latex.unicode': True
+'lines.linewidth' : 3.
 }
 rcParams.update(params)
 rc('font',**{'family':'sans-serif','sans-serif':['Times']})
@@ -105,8 +104,8 @@ unit_density_in_cgs = unit_mass_in_cgs*unit_length_in_cgs**-3
 unit_pressure_in_cgs = unit_mass_in_cgs/unit_length_in_cgs*unit_time_in_cgs**-2
 unit_int_energy_in_cgs = unit_energy_in_cgs/unit_mass_in_cgs
 unit_entropy_in_cgs = unit_energy_in_cgs/unit_temp_in_cgs
-Gyr_in_cgs = 1e9 * 365. * 24 * 3600.
-Msun_in_cgs = 1.98848e33
+Gyr_in_cgs = sim["PhysicalConstants/CGS"].attrs["year"] * 1e9
+Msun_in_cgs = sim["PhysicalConstants/CGS"].attrs["solar_mass"]
 
 # Declare arrays to store SWIFT data
 swift_box_gas_mass = zeros(n_snapshots)
@@ -223,11 +222,6 @@ Eu_mass_NSM_Msun[mask] = Eu_N_NSM_p_Msun * (swift_box_star_mass[0] * unit_mass_i
 
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
 
-# print(Eu_mass_collapsar_Msun[-1])
-# print(Eu_mass_CEJSN_Msun[-1])
-# print(Eu_mass_NSM_Msun[-1])
-# print(t[-1] * unit_time_in_cgs / Gyr_in_cgs)
-
 # Plot the interesting quantities
 figure()
 
@@ -268,7 +262,6 @@ xlabel("${\\rm Time~[Gyr]}$", labelpad=0)
 ylabel("Change in element mass of gas particles ${[\\rm M_\\odot]}$", labelpad=2)
 xscale("log")
 yscale("log")
-#legend(bbox_to_anchor=(1.005, 1.), ncol=1, fontsize=8, handlelength=1)
 legend(bbox_to_anchor=(-0.135, 1.), ncol=1, fontsize=8, handlelength=1)
 
 subplot(234)
