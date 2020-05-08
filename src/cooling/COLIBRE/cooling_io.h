@@ -105,6 +105,12 @@ INLINE static void convert_part_sub_species_frac(const struct engine* e,
   ret[2] = cooling_get_subgrid_H2_fraction(
       e->internal_units, e->physical_constants, e->cosmology,
       e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
+
+  /* normalize the sum of the hydrogen fractions to 1 */
+  const float sum = ret[0] + ret[1] + 2. * ret[2];
+  ret[0] /= sum;
+  ret[1] /= sum;
+  ret[2] /= sum;
 }
 
 /**
