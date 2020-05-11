@@ -223,10 +223,9 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
-    struct part* p, struct xpart* xp, struct spart* sp,
-    const struct engine* e, const struct star_formation* starform,
-    const struct cosmology* cosmo, const int with_cosmology,
-    const struct phys_const* phys_const,
+    struct part* p, struct xpart* xp, struct spart* sp, const struct engine* e,
+    const struct star_formation* starform, const struct cosmology* cosmo,
+    const int with_cosmology, const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling,

@@ -83,9 +83,9 @@ void starformation_struct_restore(const struct star_formation* starform,
                       NULL, "star formation");
 }
 
-
 /**
- * @brief Move both p and sp in order to avoid a division by zero during the star formation.
+ * @brief Move both p and sp in order to avoid a division by zero during the
+ * star formation.
  *
  * @param e The #engine.
  * @param c The cell that is currently star forming.
@@ -93,13 +93,15 @@ void starformation_struct_restore(const struct star_formation* starform,
  * @param xp The #xpart generating a star.
  * @param sp The new #spart.
  */
-void starformation_avoid_divison_by_zero(
-    const struct engine *e, struct cell *c, struct part *p, struct xpart *xp, struct spart *sp) {
+void starformation_avoid_divison_by_zero(const struct engine* e, struct cell* c,
+                                         struct part* p, struct xpart* xp,
+                                         struct spart* sp) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (p->x[0] != sp->x[0] || p->x[1] != sp->x[1] || p->x[2] != sp->x[2]) {
-    error("Moving particles that are not at the same location."
-          " (%g, %g, %g) - (%g, %g, %g)", p->x[0], p->x[1], p->x[2],
-          sp->x[0], sp->x[1], sp->x[2]);
+    error(
+        "Moving particles that are not at the same location."
+        " (%g, %g, %g) - (%g, %g, %g)",
+        p->x[0], p->x[1], p->x[2], sp->x[0], sp->x[1], sp->x[2]);
   }
 #endif
 
@@ -108,17 +110,17 @@ void starformation_avoid_divison_by_zero(
   */
   const float max_displacement = 0.2;
   const double delta_x =
-    2.f * random_unit_interval(p->id, e->ti_current,
-                               (enum random_number_type)0) -
-    1.f;
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)0) -
+      1.f;
   const double delta_y =
-    2.f * random_unit_interval(p->id, e->ti_current,
-                               (enum random_number_type)1) -
-    1.f;
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)1) -
+      1.f;
   const double delta_z =
-    2.f * random_unit_interval(p->id, e->ti_current,
-                               (enum random_number_type)2) -
-    1.f;
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)2) -
+      1.f;
 
   sp->x[0] += delta_x * max_displacement * p->h;
   sp->x[1] += delta_y * max_displacement * p->h;
@@ -131,11 +133,9 @@ void starformation_avoid_divison_by_zero(
 
   /* Do the gas particle. */
   const double mass_ratio = sp->mass / hydro_get_mass(p);
-  const double dx[3] = {
-    mass_ratio * delta_x * max_displacement * p->h,
-    mass_ratio * delta_y * max_displacement * p->h,
-    mass_ratio * delta_z * max_displacement * p->h
-  };
+  const double dx[3] = {mass_ratio * delta_x * max_displacement * p->h,
+                        mass_ratio * delta_y * max_displacement * p->h,
+                        mass_ratio * delta_z * max_displacement * p->h};
 
   p->x[0] -= dx[0];
   p->x[1] -= dx[1];
@@ -155,35 +155,33 @@ void starformation_avoid_divison_by_zero(
   p->gpart->x[2] = p->x[2];
 
   const float dx2_part = xp->x_diff[0] * xp->x_diff[0] +
-    xp->x_diff[1] * xp->x_diff[1] +
-    xp->x_diff[2] * xp->x_diff[2];
+                         xp->x_diff[1] * xp->x_diff[1] +
+                         xp->x_diff[2] * xp->x_diff[2];
   const float dx2_sort = xp->x_diff_sort[0] * xp->x_diff_sort[0] +
-    xp->x_diff_sort[1] * xp->x_diff_sort[1] +
-    xp->x_diff_sort[2] * xp->x_diff_sort[2];
+                         xp->x_diff_sort[1] * xp->x_diff_sort[1] +
+                         xp->x_diff_sort[2] * xp->x_diff_sort[2];
 
   const float dx_part = sqrtf(dx2_part);
   const float dx_sort = sqrtf(dx2_sort);
 
-  for(struct cell *child = c;
-      (child->hydro.dx_max_part < dx_part || child->hydro.dx_max_sort < dx_sort);
-      /* NULL */) {
+  for (struct cell* child = c; (child->hydro.dx_max_part < dx_part ||
+                                child->hydro.dx_max_sort < dx_sort);
+       /* NULL */) {
     child->hydro.dx_max_part = max(child->hydro.dx_max_part, dx_part);
     child->hydro.dx_max_sort = max(child->hydro.dx_max_sort, dx_sort);
 
     /* Should we go below? */
-    if (child == child->hydro.super)
-      break;
+    if (child == child->hydro.super) break;
 
     /* Check that we can still go deeper */
-    if (!child->split)
-      error("Cannot go deeper");
+    if (!child->split) error("Cannot go deeper");
 
     /* Get the correct progeny */
     const double pivot[3] = {child->loc[0] + child->width[0] / 2,
                              child->loc[1] + child->width[1] / 2,
                              child->loc[2] + child->width[2] / 2};
-    const int bid = (p->x[0] >= pivot[0]) * 4 +
-      (p->x[1] >= pivot[1]) * 2 + (p->x[2] >= pivot[2]);
+    const int bid = (p->x[0] >= pivot[0]) * 4 + (p->x[1] >= pivot[1]) * 2 +
+                    (p->x[2] >= pivot[2]);
 
     c = child->progeny[bid];
 
