@@ -222,6 +222,12 @@ INLINE static void compute_SNII_feedback(
     double delta_v = feedback_props->SNII_delta_v;
     double N_SNe;
 
+    /* Total mass ejected at this time-step by the stellar particle sp */
+    const float M_ej = sp->feedback_data.to_distribute.mass;
+
+    /* Total un-weighted mass in the star's kernel including the ejecta mass */
+    const float ngb_gas_mass_new = ngb_gas_mass + M_ej;
+
     /* Number of SNe detonated during this time-step */
     if (SNII_wind_delay > 0.) {
       N_SNe = N_SNe_eagle;
@@ -242,9 +248,9 @@ INLINE static void compute_SNII_feedback(
 
     /* Calculate the default heating and kick probabilities */
     double prob_thermal =
-        (1.0 - f_kin) * E_SN_total / (conv_factor * delta_T * ngb_gas_mass);
+        (1.0 - f_kin) * E_SN_total / (conv_factor * delta_T * ngb_gas_mass_new);
     double prob_kinetic =
-        f_kin * E_SN_total / (0.5 * ngb_gas_mass * delta_v * delta_v);
+        f_kin * E_SN_total / (0.5 * ngb_gas_mass_new * delta_v * delta_v);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
@@ -261,7 +267,7 @@ INLINE static void compute_SNII_feedback(
          available SN energy. */
 
       prob_thermal = 1.;
-      delta_u = (1.0 - f_kin) * E_SN_total / ngb_gas_mass;
+      delta_u = (1.0 - f_kin) * E_SN_total / ngb_gas_mass_new;
     }
 
     if (prob_kinetic > 1.) {
@@ -270,7 +276,7 @@ INLINE static void compute_SNII_feedback(
          desired delta v to ensure we inject all the available SN energy. */
 
       prob_kinetic = 1.;
-      delta_v = sqrt(f_kin * E_SN_total / (0.5 * ngb_gas_mass));
+      delta_v = sqrt(f_kin * E_SN_total / (0.5 * ngb_gas_mass_new));
     }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -340,11 +346,18 @@ INLINE static void compute_SNIa_feedback(
   const double E_SNe = feedback_props->E_SNIa;
   const double f_E = eagle_SNIa_feedback_energy_fraction(sp, feedback_props);
 
+  /* Total mass ejected at this time-step by the stellar particle sp */
+  const float M_ej = sp->feedback_data.to_distribute.mass;
+
+  /* Total un-weighted mass in the star's kernel including the ejecta mass */
+  const float ngb_gas_mass_new = ngb_gas_mass + M_ej;
+
   /* Conversion factor from T to internal energy */
   const double conv_factor = feedback_props->temp_to_u_factor;
 
   /* Calculate the default heating probability */
-  double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+  double prob =
+      f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass_new);
 
   /* Calculate the change in internal energy of the gas particles that get
    * heated */
@@ -360,7 +373,7 @@ INLINE static void compute_SNIa_feedback(
        desired deltaT to ensure we inject all the available energy. */
 
     prob = 1.;
-    delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+    delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass_new;
   }
 
   /* Store all of this in the star for delivery onto the gas */
@@ -987,7 +1000,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   /* Unit conversion constant */
   const double Myr_in_s = 1.0e6 * 365 * 24 * 3600.;
 
-  /* Convert the times to the units used my the model */
+  /* Convert the times to the units used by the model */
   const double star_age_Myr = star_age_Gyr * 1e3;
   double dt_cgs = dt * us->UnitTime_in_cgs;
   const double dt_Myr = dt_cgs / Myr_in_s;
@@ -999,14 +1012,8 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
     dt_cgs = dt_new * us->UnitTime_in_cgs;
   }
 
-  /* Star too old to do any momentum injection or time-step is 0? */
-  if (star_age_Myr > tw || dt == 0.) {
-    sp->feedback_data.to_distribute.momentum = 0.0;
-    sp->feedback_data.to_distribute.momentum_probability = -1;
-    sp->feedback_data.to_distribute.momentum_weight = 0.0;
-    sp->feedback_data.to_distribute.momentum_delta_v = 0.0;
-    return;
-  }
+  /* Star too old to do any momentum injection or time-step is 0 */
+  if (star_age_Myr > tw || dt == 0.) return;
 
   /* Mass within the SPH kernel in grams */
   const double ngb_gas_mass_in_g = ngb_gas_mass * us->UnitMass_in_cgs;
@@ -1018,7 +1025,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   Z = max(Z, props->Zmin_early_fb);
   Z = min(Z, props->Zmax_early_fb);
 
-  /* get the average momentum input from stellar winds during this timestep
+  /* Get the average momentum input from stellar winds during this timestep
    * from the BPASS tables */
   const float t1_Myr = (float)star_age_Gyr * 1.e3;
   const float t2_Myr = t1_Myr + (float)dt_Myr;
@@ -1029,15 +1036,14 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
   /* Velocity kick */
   const double delta_v_cgs = delta_v_km_p_s * 1e5;
 
-  /* Get the momentum rate in code units and store it */
-  sp->feedback_data.to_distribute.momentum = P_cgs / props->Momentum_to_cgs;
-  sp->feedback_data.to_distribute.momentum_weight = ngb_gas_mass;
+  /* Get the available momentum in code units at the given dt and store it */
+  const double momentum = P_cgs / props->Momentum_to_cgs;
 
   /* Now compute the probability of kicking particle with given delta_v
    * in the current timestep.
    * Note that this could be prop > 1 if there are no enough particles in the
    * kernel to distribute the amount of momentum available in
-   * the timestep, but this is OK. */
+   * the timestep, but this is OK because we then adjust delta_v */
 
   double prob = 0.;
 
@@ -1049,14 +1055,13 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
     /* Kick velocity (in code units) needed so that we can inject
      * all the momentum inside the kernel */
-    delta_v = sp->feedback_data.to_distribute.momentum /
-              sp->feedback_data.to_distribute.momentum_weight;
+    delta_v = momentum / ngb_gas_mass;
 
     /* User decided velocity kick */
   } else {
 
     /* The probability of kicking a particle is given
-     * by the kicking velocity chosen in the parameter file
+     * by the kick velocity chosen in the parameter file
      * and is normalised by the mass available in the kernel */
     prob = (P_cgs / delta_v_cgs) / ngb_gas_mass_in_g;
 
@@ -1066,8 +1071,7 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
 
       /* Correct the kick (in code units) to be consistent with the mass within
        * the kernel and amount of momentum available */
-      delta_v = (sp->feedback_data.to_distribute.momentum /
-                 sp->feedback_data.to_distribute.momentum_weight);
+      delta_v = momentum / ngb_gas_mass;
 
       message("Wind speed set to delta_v = %e km/s",
               delta_v * units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) *
@@ -1268,18 +1272,8 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Integration interval is zero - this can happen if minimum and maximum
    * dying masses are above imf_max_mass_Msun. Return without doing any
-   * enrichment. */
+   * enrichment and SN feedback. */
   if (min_dying_mass_Msun == max_dying_mass_Msun) return;
-
-  /* Compute properties of the stochastic SNII feedback model. */
-  if (feedback_props->with_SNII_feedback) {
-    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props,
-                          min_dying_mass_Msun, max_dying_mass_Msun);
-  }
-  if (feedback_props->with_SNIa_feedback) {
-    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props, dt_Gyr,
-                          star_age_Gyr);
-  }
 
 #ifdef SWIFT_DEBUG_CHECK
   /* Sanity check. Worth investigating if necessary as functions for evaluating
@@ -1329,8 +1323,26 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       (sp->v[0] * sp->v[0] + sp->v[1] * sp->v[1] + sp->v[2] * sp->v[2]) *
       cosmo->a2_inv;
 
+  /* Compute properties of the stochastic SNII feedback model. */
+  if (feedback_props->with_SNII_feedback) {
+    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, feedback_props,
+                          min_dying_mass_Msun, max_dying_mass_Msun);
+  }
+
+  /* Compute properties of the stochastic SNIa feedback model. */
+  if (feedback_props->with_SNIa_feedback) {
+    compute_SNIa_feedback(sp, age, dt, ngb_gas_mass, feedback_props, dt_Gyr,
+                          star_age_Gyr);
+  }
+
   /* Star age in Myr to store in case an SNII event occurs */
   sp->feedback_data.to_distribute.SNII_star_age_Myr = (float)star_age_Myr;
+
+  /* Modify the HII-region probability to include the ejecta mass */
+  if (sp->feedback_data.to_distribute.HIIregion_probability != -1.) {
+    sp->feedback_data.to_distribute.HIIregion_probability /=
+        (1.f + sp->feedback_data.to_distribute.mass / ngb_gas_mass);
+  }
 
   TIMER_TOC(timer_do_star_evol);
 }
