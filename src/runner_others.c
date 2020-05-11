@@ -357,6 +357,10 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   p, xp, sp, e, sf_props, cosmo, with_cosmology, phys_const,
                   hydro_props, us, cooling, !spawn_spart);
 
+              if (spawn_spart) {
+                starformation_avoid_divison_by_zero(e, c, p, xp, sp);
+              }
+
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
 

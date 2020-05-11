@@ -63,4 +63,8 @@ void starformation_struct_dump(const struct star_formation* starform,
 void starformation_struct_restore(const struct star_formation* starform,
                                   FILE* stream);
 
+void starformation_avoid_divison_by_zero(
+    const struct engine *e, struct cell *c, struct part *p,
+    struct xpart *xp, struct spart *sp);
+
 #endif /* SWIFT_STAR_FORMATION_H */
