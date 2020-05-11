@@ -223,7 +223,7 @@ INLINE static void star_formation_update_part_not_SFR(
  * @param convert_part Did we convert a part (or spawned one)?
  */
 INLINE static void star_formation_copy_properties(
-    struct part* p, const struct xpart* xp, struct spart* sp,
+    struct part* p, struct xpart* xp, struct spart* sp,
     const struct engine* e, const struct star_formation* starform,
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
@@ -274,15 +274,28 @@ INLINE static void star_formation_copy_properties(
 
     /* Do the gas particle. */
     const double mass_ratio = mass_star / new_mass_gas;
-    p->x[0] -= mass_ratio * delta_x * max_displacement * p->h;
-    p->x[1] -= mass_ratio * delta_y * max_displacement * p->h;
-    p->x[2] -= mass_ratio * delta_z * max_displacement * p->h;
+    const double dx[3] = {
+      mass_ratio * delta_x * max_displacement * p->h,
+      mass_ratio * delta_y * max_displacement * p->h,
+      mass_ratio * delta_z * max_displacement * p->h
+    };
+
+    p->x[0] -= dx[0];
+    p->x[1] -= dx[1];
+    p->x[2] -= dx[2];
+
+    /* Compute offsets since last cell construction */
+    xp->x_diff[0] += dx[0];
+    xp->x_diff[1] += dx[1];
+    xp->x_diff[1] += dx[2];
+    xp->x_diff_sort[0] += dx[0];
+    xp->x_diff_sort[1] += dx[1];
+    xp->x_diff_sort[2] += dx[2];
 
     /* Copy the position to the gpart */
     p->gpart->x[0] = p->x[0];
     p->gpart->x[1] = p->x[1];
     p->gpart->x[2] = p->x[2];
-
   } else {
     sp->mass = mass_gas;
   }
