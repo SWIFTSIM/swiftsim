@@ -210,7 +210,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * internal units.
  * @param dt The time-step size of this star in internal units.
  * @param ti_begin The integer time at the beginning of the step.
- * @param time_beg_of_step Time at the beginning of the time step
+ * @param with_cosmology Are we running with cosmological time integration on?
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,

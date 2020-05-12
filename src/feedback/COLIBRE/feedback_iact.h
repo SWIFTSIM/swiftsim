@@ -632,7 +632,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Are we doing some SNII (big boys) thermal feedback? */
   if (prob_SNII_thermal > 0.f) {
 
-    /* Find out how many rays this gas particle is receving */
+    /* Find out how many rays this gas particle is receving.
+    Note that this loops goes in opposite direction compared to that
+    in SNII kicks (i.e. i-- in place of i++). That's because if we have many rays,
+    we want to avoid the situation in which a particle
+    that is kicked is also heated */
     for (unsigned int i=N_rays; i>N_rays-si->feedback_data.to_distribute.SNII_number_of_heating_events; i--){
       if (pj->id==si->feedback_data.part_id_with_min_arclength[i-1]) do_SNII_thermal ++;
     }
@@ -740,8 +744,6 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const float delta_v = si->feedback_data.to_distribute.momentum_delta_v;
   const float momentum_prob =
       si->feedback_data.to_distribute.momentum_probability;
-
-
 
   /* Draw a random number (Note mixing both IDs) */
   const float momentum_rand = random_unit_interval_two_IDs(

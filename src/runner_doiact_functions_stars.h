@@ -58,9 +58,7 @@ void DOSELF1_STARS(struct runner *r, struct cell *c, int timer) {
   const int count = c->hydro.count;
   struct spart *restrict sparts = c->stars.parts;
   struct part *restrict parts = c->hydro.parts;
-// #if (FUNCTION_TASK_LOOP == TASK_LOOP_FEEDBACK) HERE
   struct xpart *restrict xparts = c->hydro.xparts;
-// #endif                                         HERE
 
   /* Loop over the sparts in ci. */
   for (int sid = 0; sid < scount; sid++) {
