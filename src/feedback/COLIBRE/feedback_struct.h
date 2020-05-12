@@ -19,6 +19,9 @@
 #ifndef SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 #define SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 
+/* Define the maximum number of rays in the isotropic feedback at the precompile time */
+#define N_rays 1
+
 #include "chemistry_struct.h"
 
 /**
@@ -43,6 +46,17 @@ struct feedback_spart_data {
 
       /*! Total mass (unweighted) of neighbouring gas particles */
       float ngb_mass;
+
+      /*! Total number gas neighbours in the stellar kernel */
+      unsigned int ngb_N;
+      
+      /*! Arrays used in the SNII feedback to find the miminum arclength
+      between a given ray and the gas neighbours  */
+      float min_arclength[N_rays];
+
+      /*! Same as above but for the mirror particles used
+      in SNII kinetic feedback */
+      float min_arclength_mirror[N_rays];
 
     } to_collect;
 
@@ -98,8 +112,8 @@ struct feedback_spart_data {
       /*! Change in gas particle internal energy from SNII feedback */
       float SNII_delta_u;
 
-      /*! Change in gas particle velocity from SNII feedback */
-      float SNII_delta_v;
+      /*! Kinetic energy released in a SNII-feedback event */
+      float SNII_E_kinetic;
 
       /*! Probability to heating neighbouring gas particle for SNIa feedback */
       float SNIa_heating_probability;
@@ -109,6 +123,12 @@ struct feedback_spart_data {
 
       /*! Age of star particle in Myr when SNII goes off */
       float SNII_star_age_Myr;
+
+      /*! Number of SNII heating events per stellar particle per time-step */
+      unsigned int SNII_number_of_heating_events;
+
+      /*! Number of SNII kick events per stellar particle per time-step */
+      unsigned int SNII_number_of_kick_events;
 
       /*! HII region timer in SU (time since BB for cosmo runs)*/
       float HIIregion_endtime;
@@ -130,6 +150,24 @@ struct feedback_spart_data {
 
     } to_distribute;
   };
+
+  /*! Arrays used in SNII isotropic feedback */
+
+  /*! Arrays with particles ID that have the mimimal arclengths
+  with each of the N_rays rays !*/
+  long long part_id_with_min_arclength[N_rays];
+  long long part_id_with_min_arclength_mirror[N_rays];
+
+  /*! Arrays below are used to account for relative star-gas motion
+  in SNII kinetic feedback */
+  
+  /*! Particle masses in SNII isotropic feedback */
+  float mass_true[N_rays];
+  float mass_mirror[N_rays];
+
+  /*! Particle velocities in SNII isotropic feedback */
+  float v_true[N_rays][3];
+  float v_mirror[N_rays][3];
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_COLIBRE_H */

@@ -27,13 +27,14 @@
 #include "hydro_properties.h"
 #include "part.h"
 #include "units.h"
-
+#include "random.h"
+#include <string.h>
 #include <strings.h>
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt, const double time_beg_of_step);
+                               const double dt, const double time_beg_of_step, const integertime_t ti_begin);
 
 /**
  * @brief Update the properties of a particle fue to feedback effects after
@@ -74,6 +75,21 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 
   sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
+  sp->feedback_data.to_collect.ngb_N = 0;
+  for(unsigned int i = 0; i < N_rays; i++){
+    sp->feedback_data.to_collect.min_arclength[i] = -1.f;
+    sp->feedback_data.part_id_with_min_arclength[i] = 0;
+
+    sp->feedback_data.to_collect.min_arclength_mirror[i] = -1.f;
+    sp->feedback_data.part_id_with_min_arclength_mirror[i] = 0;
+
+    sp->feedback_data.mass_true[i] = 0.f;
+    sp->feedback_data.mass_mirror[i] = 0.f;
+    for(unsigned int j = 0; j < 3; j++){
+      sp->feedback_data.v_true[i][j] = 0.f;
+      sp->feedback_data.v_mirror[i][j] = 0.f;
+    }
+  }
 }
 
 /**
@@ -133,9 +149,11 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.SNII_heating_probability = 0.f;
   sp->feedback_data.to_distribute.SNII_kick_probability = 0.f;
 
-  /* Zero the SNII feedback thermal energy and kick velocity */
+  /* Zero the SNII feedback properties */
   sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
-  sp->feedback_data.to_distribute.SNII_delta_v = 0.f;
+  sp->feedback_data.to_distribute.SNII_E_kinetic = 0.f;
+  sp->feedback_data.to_distribute.SNII_number_of_heating_events = 0;
+  sp->feedback_data.to_distribute.SNII_number_of_kick_events = 0;
 
   /* Reset the kick velocity and probability in the early stellar feedback */
   sp->feedback_data.to_distribute.momentum_probability = -1.f;
@@ -208,7 +226,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
   compute_stellar_evolution(feedback_props, cosmo, sp, us, star_age_beg_step,
-                            dt, time - dt);
+                            dt, time - dt, ti_begin);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;
