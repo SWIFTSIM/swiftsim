@@ -150,10 +150,10 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   for (unsigned int i=0; i<N_rays; i++){
 
     /* Angular coordinates of the ith ray */
-    /* the (random) ray angular coordinates depend on both the ray number i and
-    the stellar particle id. Anything that depends on i will work for the second argument
-    of andom_unit_interval_two_IDs(...) 
-    Note that we first compute cos(\theta) and not \theta becasue the latter is not uniform in a sphere:
+    /* The (randomly chosen) ray angular coordinates depend on the ray number i, the current time ti_current, and
+    the stellar particle id.  In the second argument of the random number generator function, 
+    for now we take (long long)pow(i,2) but anything else that depends on i will work too.
+    Note that we first compute cos(\theta) and not \theta becasue the latter is not uniform on a sphere:
     a solid-angle element d\Omega = \sin(\theta) d\phi d\theta* = d cos(\theta) d\phi */ 
     const double cos_theta_random = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_1) - 1.0;
@@ -187,9 +187,10 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
 
     /* Repeat the above steps for the mirror particles present in the kinetic feedback. 
-    Each ray has a pair of two particles. For the ith ray has angular coodrinates (\theta_ray, \phi_ray),
-    in the loop above we sought for the particle with the same angular coordinates, 
-    but now we are looking for the "mirror" ones with coordinates (\pi-\theta_ray, -\phi_ray) */
+    Each ray has a pair of two particles. For the ith ray with angular coodrinates (\theta_ray, \phi_ray),
+    in the loop above we sought for the particle with the angular coordinates closest to that of the ray;
+    but now we are looking for the "mirror" particle with the coordinates closest to the "mirrored" coordinates
+    of the ray (\pi-\theta_ray, -\phi_ray) */
 
     /* Note the opposite direction of the ray compared to the case above.
     Hence the name "mirror" */
