@@ -103,31 +103,31 @@ struct feedback_spart_data {
       /*! Energy change due to thermal and kinetic energy of ejecta */
       float energy;
 
-      /*! Probability to heating neighbouring gas particle for SNII feedback */
+      /*! Probability to heat neighbouring gas particle in SNII feedback */
       float SNII_heating_probability;
 
-      /*! Probability to kick neighbouring gas particle for SNII feedback */
+      /*! Probability to kick a pair of two neighbouring gas particles in SNII feedback */
       float SNII_kick_probability;
 
-      /*! Change in gas particle internal energy from SNII feedback */
+      /*! Change in gas-particle internal energy from SNII feedback */
       float SNII_delta_u;
 
-      /*! Kinetic energy released in a SNII-feedback event */
+      /*! Total kinetic energy to distribute in SNII feedback per time step */
       float SNII_E_kinetic;
 
-      /*! Probability to heating neighbouring gas particle for SNIa feedback */
+      /*! Probability to heat neighbouring gas particle in SNIa feedback */
       float SNIa_heating_probability;
 
-      /*! Change in energy from SNIa feedback energy injection */
+      /*! Change in gas-particle internal energy from SNIa feedback */
       float SNIa_delta_u;
 
       /*! Age of star particle in Myr when SNII goes off */
       float SNII_star_age_Myr;
 
-      /*! Number of SNII heating events per stellar particle per time-step */
+      /*! Number of SNII heating events per time-step */
       unsigned int SNII_number_of_heating_events;
 
-      /*! Number of SNII kick events per stellar particle per time-step */
+      /*! Number of SNII kick events per time-step */
       unsigned int SNII_number_of_kick_events;
 
       /*! HII region timer in SU (time since BB for cosmo runs)*/

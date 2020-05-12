@@ -511,9 +511,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                  -sin(theta_random) * sin(phi_random),
                                  -cos(theta_random)};
 
-        
         const double mass_mirror = si->feedback_data.mass_true[i];
-        const double m_reduced = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
+        const double m_alpha = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
         const double mass_weight = sqrt(current_mass * mass_mirror)/current_mass;
 
         double v_gas_star[3] = {xpj->v_full[0]-si->v[0],
@@ -543,7 +542,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
 
         double alpha;
-        if (SNII_delta_v!=0.0) alpha = m_reduced * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
+        if (SNII_delta_v!=0.0) alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
         else alpha = 0.0;
 
         const double beta = sqrt(alpha*alpha+1.0) - alpha;
