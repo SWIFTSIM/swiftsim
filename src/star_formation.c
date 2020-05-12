@@ -154,6 +154,7 @@ void starformation_avoid_divison_by_zero(const struct engine* e, struct cell* c,
   p->gpart->x[1] = p->x[1];
   p->gpart->x[2] = p->x[2];
 
+  /* Update the displacement information */
   const float dx2_part = xp->x_diff[0] * xp->x_diff[0] +
                          xp->x_diff[1] * xp->x_diff[1] +
                          xp->x_diff[2] * xp->x_diff[2];
@@ -164,30 +165,8 @@ void starformation_avoid_divison_by_zero(const struct engine* e, struct cell* c,
   const float dx_part = sqrtf(dx2_part);
   const float dx_sort = sqrtf(dx2_sort);
 
-  for (struct cell* child = c; (child->hydro.dx_max_part < dx_part ||
-                                child->hydro.dx_max_sort < dx_sort);
-       /* NULL */) {
-    child->hydro.dx_max_part = max(child->hydro.dx_max_part, dx_part);
-    child->hydro.dx_max_sort = max(child->hydro.dx_max_sort, dx_sort);
-
-    /* Should we go below? */
-    if (child == child->hydro.super) break;
-
-    /* Check that we can still go deeper */
-    if (!child->split) error("Cannot go deeper");
-
-    /* Get the correct progeny */
-    const double pivot[3] = {child->loc[0] + child->width[0] / 2,
-                             child->loc[1] + child->width[1] / 2,
-                             child->loc[2] + child->width[2] / 2};
-    const int bid = (p->x[0] >= pivot[0]) * 4 + (p->x[1] >= pivot[1]) * 2 +
-                    (p->x[2] >= pivot[2]);
-
-    c = child->progeny[bid];
-
-    /* Check that we have a child */
-    if (c == NULL) {
-      error("No child found.");
-    }
-  }
+  /* No need to climb up the tree as the star formation starts higher
+     in the hierarchy than the hydro and goes to the bottom */
+  c->hydro.dx_max_part = max(c->hydro.dx_max_part, dx_part);
+  c->hydro.dx_max_sort = max(c->hydro.dx_max_sort, dx_sort);
 }

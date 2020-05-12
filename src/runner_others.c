@@ -268,6 +268,10 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
         /* Update current cell using child cells */
         star_formation_logger_add(&c->stars.sfh, &cp->stars.sfh);
+
+        /* Update the dx_max */
+        c->hydro.dx_max_part = max(cp->hydro.dx_max_part, c->hydro.dx_max_part);
+        c->hydro.dx_max_sort = max(cp->hydro.dx_max_sort, c->hydro.dx_max_sort);
       }
   } else {
 
@@ -358,6 +362,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   hydro_props, us, cooling, !spawn_spart);
 
               if (spawn_spart) {
+                /* Move the particles a bit as they are at the same position. */
                 starformation_avoid_divison_by_zero(e, c, p, xp, sp);
               }
 
