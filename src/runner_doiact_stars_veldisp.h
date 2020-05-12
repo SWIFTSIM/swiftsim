@@ -28,9 +28,6 @@
 #define _DOSELF1_SVD(f) PASTE(runner_doself_stars, f)
 #define DOSELF1_SVD _DOSELF1_SVD(FUNCTION)
 
-#define _DO_SYM_PAIR1_SVD(f) PASTE(runner_do_sym_pair_stars, f)
-#define DO_SYM_PAIR1_SVD _DO_SYM_PAIR1_SVD(FUNCTION)
-
 #define _DO_NONSYM_PAIR1_SVD_NAIVE(f) \
   PASTE(runner_do_nonsym_pair_stars_naive, f)
 #define DO_NONSYM_PAIR1_SVD_NAIVE _DO_NONSYM_PAIR1_SVD_NAIVE(FUNCTION)
@@ -61,9 +58,6 @@
 
 #define _TIMER_DOSUB_PAIR_SVD(f) PASTE(timer_dosub_pair_stars, f)
 #define TIMER_DOSUB_PAIR_SVD _TIMER_DOSUB_PAIR_SVD(FUNCTION)
-
-#define _IACT_SVD(f) PASTE(runner_iact_nonsym_stars, f)
-#define IACT_SVD _IACT_SVD(FUNCTION)
 
 void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c);
 void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj);

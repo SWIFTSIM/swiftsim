@@ -2315,8 +2315,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
           scheduler_addunlock(sched, ci->hydro.super->stars.drift,
                               t_star_veldisp);
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_veldisp);
           scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
                               t_star_veldisp);
           scheduler_addunlock(sched, t_star_veldisp,
@@ -2378,11 +2376,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_feedback);
         }
 
-        if (with_star_formation) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_veldisp);
-        }
-
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
           scheduler_addunlock(sched, t_bh_swallow,
                               ci->hydro.super->black_holes.swallow_ghost[0]);
@@ -2415,8 +2408,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
           if (with_star_formation) {
 
-            scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                                t_star_veldisp);
             scheduler_addunlock(sched, cj->hydro.super->stars.drift,
                                 t_star_veldisp);
             scheduler_addunlock(sched, cj->hydro.super->stars.stars_veldisp_in,
@@ -2489,11 +2480,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
-        }
-
-        if (with_star_formation) {
-          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                              t_star_veldisp);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2631,8 +2617,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_star_formation) {
 
         scheduler_addunlock(sched, ci->hydro.super->stars.drift,
-                            t_star_veldisp);
-        scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                             t_star_veldisp);
         scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
                             t_star_veldisp);
@@ -2855,8 +2839,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
         if (with_star_formation) {
 
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_veldisp);
           scheduler_addunlock(sched, ci->hydro.super->stars.drift,
                               t_star_veldisp);
           scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
@@ -2920,10 +2902,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
         }
-        if (with_star_formation) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_veldisp);
-        }
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
           scheduler_addunlock(sched, t_bh_swallow,
@@ -2957,8 +2935,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
           if (with_star_formation) {
 
-            scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                                t_star_veldisp);
             scheduler_addunlock(sched, cj->hydro.super->stars.drift,
                                 t_star_veldisp);
             scheduler_addunlock(sched, cj->hydro.super->stars.stars_veldisp_in,
@@ -3030,11 +3006,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
-        }
-
-        if (with_star_formation) {
-          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                              t_star_veldisp);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
