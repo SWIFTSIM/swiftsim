@@ -1153,8 +1153,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
     c->hydro.sorts =
         scheduler_addtask(s, task_type_sort, task_subtype_none, 0, 0, c, NULL);
 
-    //TODO with_star_formation only if with STARS_MOSAICS though?
-    if (with_feedback || with_star_formation) {
+    if (with_feedback) {
       c->stars.sorts = scheduler_addtask(s, task_type_stars_sort,
                                          task_subtype_none, 0, 0, c, NULL);
     }
@@ -2098,7 +2097,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, ci->hydro.super->stars.stars_veldisp_in,
                             t_star_veldisp);
         scheduler_addunlock(sched, t_star_veldisp,
-                            ci->hydro.super->stars.stars_out);
+                            ci->hydro.super->stars.stars_veldisp_out);
       }
 
       if (with_black_holes && bcount_i > 0) {
