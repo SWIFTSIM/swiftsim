@@ -289,6 +289,9 @@ struct engine {
   /* Integer time of the next snapshot */
   integertime_t ti_next_snapshot;
 
+  /* Type of the next snapshot */
+  int type_next_snapshot;
+
   char snapshot_base_name[PARSER_MAX_LINE_SIZE];
   char snapshot_subdir[PARSER_MAX_LINE_SIZE];
   int snapshot_distributed;

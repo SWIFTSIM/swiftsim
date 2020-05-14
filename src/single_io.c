@@ -1173,8 +1173,10 @@ void write_output_single(struct engine* e,
 
       /* Did the user cancel this field? */
       char field[PARSER_MAX_LINE_SIZE];
-      sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
+      sprintf(field, "SelectOutput%d:%.*s_%s",
+              e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
               part_type_names[ptype]);
+      message("Testing param %s...", field);
       int should_write = parser_get_opt_param_int(params, field, 1);
 
       if (should_write)

@@ -58,11 +58,18 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
   /* Return to start of file and initialize time array */
   fseek(file, 0, SEEK_SET);
   outputlist->times = (double *)malloc(sizeof(double) * outputlist->size);
+  outputlist->types = (int *)malloc(sizeof(int) * outputlist->size);
   if (!outputlist->times)
     error(
         "Unable to malloc output_list. "
         "Try reducing the number of lines in %s",
         filename);
+  if (!outputlist->types)
+    error(
+        "Unable to malloc output_list->types. "
+        "Try reducing the number of lines in %s",
+        filename);
+
 
   /* Read header */
   if (getline(&line, &len, file) == -1)
@@ -95,10 +102,11 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
   size_t ind = 0;
   while (getline(&line, &len, file) != -1) {
     double *time = &outputlist->times[ind];
+    int *snaptype = &outputlist->types[ind];
     /* Write data to outputlist */
-    if (sscanf(line, "%lf", time) != 1)
+    if (sscanf(line, "%lf %i", time, snaptype) != 2)
       error(
-          "Tried parsing double but found '%s' with illegal double "
+          "Tried parsing double+int but found '%s' with illegal double "
           "characters in file '%s'.",
           line, filename);
 
@@ -150,9 +158,11 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
  * @param e The #engine.
  * @param name The name of the output (e.g. 'stats', 'snapshots', 'stf')
  * @param ti_next updated to the next output time
+ * @param type_next updated to the next output type
  */
 void output_list_read_next_time(struct output_list *t, const struct engine *e,
-                                const char *name, integertime_t *ti_next) {
+                                const char *name, integertime_t *ti_next,
+                                int *type_next) {
   int is_cosmo = e->policy & engine_policy_cosmology;
 
   /* Find upper-bound on last output */
@@ -172,6 +182,9 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       *ti_next = log(time / e->cosmology->a_begin) / e->time_base;
     else
       *ti_next = (time - e->time_begin) / e->time_base;
+
+    /* Also record type of next output */
+    *type_next = t->types[ind];
 
     /* Found it? */
     if (*ti_next > e->ti_current) break;
@@ -207,11 +220,13 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       const double next_time =
           exp(*ti_next * e->time_base) * e->cosmology->a_begin;
       if (e->verbose)
-        message("Next output time for %s set to a=%e.", name, next_time);
+        message("Next output time for %s set to a=%e, type=%d.",
+                name, next_time, *type_next);
     } else {
       const double next_time = *ti_next * e->time_base + e->time_begin;
       if (e->verbose)
-        message("Next output time for %s set to t=%e.", name, next_time);
+        message("Next output time for %s set to t=%e, type=%d.",
+                name, next_time, *type_next);
     }
   }
 }
