@@ -1168,6 +1168,14 @@ void write_output_single(struct engine* e,
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
+    /* Check whether the user has cancelled (by default) the entire 
+     * particle type */
+    char field_all[PARSER_MAX_LINE_SIZE];
+    sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
+            e->type_next_snapshot, part_type_names[ptype]);
+    int ptype_default_should_write = parser_get_opt_param_int(params,
+      field_all, 1);
+
     /* Write everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
 
@@ -1176,8 +1184,8 @@ void write_output_single(struct engine* e,
       sprintf(field, "SelectOutput%d:%.*s_%s",
               e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
               part_type_names[ptype]);
-      message("Testing param %s...", field);
-      int should_write = parser_get_opt_param_int(params, field, 1);
+      int should_write = parser_get_opt_param_int(
+        params, field, ptype_default_should_write);
 
       if (should_write)
         write_array_single(e, h_grp, fileName, xmfFile, partTypeGroupName,
