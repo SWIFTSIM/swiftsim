@@ -39,9 +39,11 @@
  * @param outputlist The #output_list to fill.
  * @param filename The file to read.
  * @param cosmo The #cosmology model.
+ * @param use_multiple_levels Switch to enable multiple output levels
  */
 void output_list_read_file(struct output_list *outputlist, const char *filename,
-                           struct cosmology *cosmo) {
+                           struct cosmology *cosmo,
+                           const int use_multiple_levels) {
 
   /* Open file */
   FILE *file = fopen(filename, "r");
@@ -58,17 +60,22 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
   /* Return to start of file and initialize time array */
   fseek(file, 0, SEEK_SET);
   outputlist->times = (double *)malloc(sizeof(double) * outputlist->size);
-  outputlist->types = (int *)malloc(sizeof(int) * outputlist->size);
   if (!outputlist->times)
     error(
         "Unable to malloc output_list. "
         "Try reducing the number of lines in %s",
         filename);
-  if (!outputlist->types)
-    error(
-        "Unable to malloc output_list->types. "
-        "Try reducing the number of lines in %s",
-        filename);
+
+  if (use_multiple_levels) {
+    outputlist->types = (int *)malloc(sizeof(int) * outputlist->size);
+    if (!outputlist->types)
+      error(
+          "Unable to malloc output_list->types. "
+          "Try reducing the number of lines in %s",
+          filename);
+  } else {
+    outputlist->types = NULL;
+  }
 
 
   /* Read header */
@@ -102,13 +109,21 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
   size_t ind = 0;
   while (getline(&line, &len, file) != -1) {
     double *time = &outputlist->times[ind];
-    int *snaptype = &outputlist->types[ind];
+    int *snaptype = use_multiple_levels ? &outputlist->types[ind] : NULL;
     /* Write data to outputlist */
-    if (sscanf(line, "%lf %i", time, snaptype) != 2)
-      error(
-          "Tried parsing double+int but found '%s' with illegal double "
-          "characters in file '%s'.",
-          line, filename);
+    if (use_multiple_levels) {
+      if (sscanf(line, "%lf %i", time, snaptype) != 2)
+        error(
+            "Tried parsing double, int but found '%s' with unexpected "
+            "characters in file '%s'.",
+            line, filename);
+    } else {
+      if (sscanf(line, "%lf", time) != 1)
+        error(
+            "Tried parsing double but found '%s' with illegal double "
+            "characters in file '%s'.",
+            line, filename);      
+    }
 
     /* Transform input into correct time (e.g. ages or scale factor) */
     if (type == OUTPUT_LIST_REDSHIFT) *time = 1. / (1. + *time);
@@ -184,7 +199,10 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       *ti_next = (time - e->time_begin) / e->time_base;
 
     /* Also record type of next output */
-    *type_next = t->types[ind];
+    if (t->types)
+      *type_next = t->types[ind];
+    else
+      *type_next = 0;
 
     /* Found it? */
     if (*ti_next > e->ti_current) break;
@@ -261,13 +279,18 @@ void output_list_init(struct output_list **list, const struct engine *e,
   /* Read outputlist for snapshots */
   *list = (struct output_list *)malloc(sizeof(struct output_list));
 
+  /* Find out if we are using multiple output levels */
+  char switch_name[PARSER_MAX_LINE_SIZE];
+  sprintf(switch_name, "%s:multiple_output_levels", name);
+  int use_multiple_levels = parser_get_opt_param_int(params, switch_name, 0);
+
   /* Read filename */
   char filename[PARSER_MAX_LINE_SIZE];
   sprintf(param_name, "%s:output_list", name);
   parser_get_param_string(params, param_name, filename);
 
   if (e->verbose) message("Reading %s output file.", name);
-  output_list_read_file(*list, filename, cosmo);
+  output_list_read_file(*list, filename, cosmo, use_multiple_levels);
 
   if ((*list)->size < 2)
     error("You need to provide more snapshots in '%s'", filename);

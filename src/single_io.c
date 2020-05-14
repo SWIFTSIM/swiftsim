@@ -1170,20 +1170,28 @@ void write_output_single(struct engine* e,
 
     /* Check whether the user has cancelled (by default) the entire 
      * particle type */
-    char field_all[PARSER_MAX_LINE_SIZE];
-    sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
-            e->type_next_snapshot, part_type_names[ptype]);
-    int ptype_default_should_write = parser_get_opt_param_int(params,
-      field_all, 1);
+    int ptype_default_should_write = 1;
+    if (e->type_next_snapshot > 0) {
+      char field_all[PARSER_MAX_LINE_SIZE];
+      sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
+              e->type_next_snapshot, part_type_names[ptype]);
+      ptype_default_should_write = parser_get_opt_param_int(params,
+        field_all, 1);
+    } 
 
     /* Write everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
 
       /* Did the user cancel this field? */
       char field[PARSER_MAX_LINE_SIZE];
-      sprintf(field, "SelectOutput%d:%.*s_%s",
-              e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
-              part_type_names[ptype]);
+      if (e->type_next_snapshot > 0)
+        sprintf(field, "SelectOutput%d:%.*s_%s",
+                e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
+                part_type_names[ptype]);
+      else
+        sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
+                part_type_names[ptype]);
+
       int should_write = parser_get_opt_param_int(
         params, field, ptype_default_should_write);
 

@@ -58,7 +58,7 @@ struct output_list {
 };
 
 void output_list_read_file(struct output_list *outputlist, const char *filename,
-                           struct cosmology *cosmo);
+                           struct cosmology *cosmo, int use_multiple_levels);
 void output_list_read_next_time(struct output_list *t, const struct engine *e,
                                 const char *name, integertime_t *ti_next,
                                 int *type_next);
