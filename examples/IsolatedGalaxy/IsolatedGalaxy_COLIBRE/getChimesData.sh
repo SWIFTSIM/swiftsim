@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-export chimes_revision=be1e8777f83a9a7b08075763b608ffcdadddc987
+export chimes_revision=e39ca3ec811c24d88112accbacde9b0a9221d4ae
 
 mkdir chimes-data
 cd chimes-data 
