@@ -535,13 +535,6 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
     
-  /*float sampling_limit = 1.;*/
-    
-  /* Ask if sampling rate is imposed */
-  /*if (star_age_Gyr > stellar_evolution_age_cut_Gyr) {
-      sampling_limit = props->stellar_evolution_sampling_rate;
-  }*/
-    
   int num_events = 0;
     
   if (num_NSM > 1.f) {
@@ -600,7 +593,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
   if (star_age_Gyr > 0.1) return;
 
   /* Number of CEJSN events in timestep */
-  float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.1);
+  float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.07);
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,random_number_enrichment_2);
@@ -662,7 +655,7 @@ INLINE static void evolve_collapsar_stochastic(
 
   /* Number of collapsar events in timestep */
   /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
-  float num_collapsar = props->collapsar_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.1);
+  float num_collapsar = props->collapsar_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.07);
 
   /* Draw a random number */
   const float rand = random_unit_interval(sp->id, ti_current,
