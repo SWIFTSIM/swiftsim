@@ -560,7 +560,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
     sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
 
     /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass);
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 0);
   }
 }
 
@@ -622,7 +622,7 @@ INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
        sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
         
        /* Write the event to the r-process log file */
-       event_logger_r_processes_log_event(sp, cosmo, delta_mass);
+       event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 1);
       
   }
 }
@@ -686,7 +686,7 @@ INLINE static void evolve_collapsar_stochastic(
     sp->feedback_data.to_distribute.mass_from_collapsar += delta_mass;
 
     /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass);
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 2);
   }
 }
 

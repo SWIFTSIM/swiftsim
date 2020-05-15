@@ -39,7 +39,9 @@ struct feedback_history_r_processes {
   double enrichment_mass;
 
   /*! Number of r-processes events */
-  int events;
+  int NSM_events;
+  int CEJSN_events;
+  int collapsar_events;
 };
 
 /**
@@ -113,16 +115,30 @@ INLINE static void event_logger_r_processes_init_log_file(
           1. / us->UnitTime_in_cgs / pow(us->UnitLength_in_cgs, 3));
   fprintf(fp, "#      Unit = %e #/yr/Mpc^3\n",
           phys_const->const_year * pow(phys_const->const_parsec * 1e6, 3));
+  fprintf(fp,
+          "# (14) Number of NSM events (binned in time between current time "
+          "and previous time)\n");
+  fprintf(fp, "#      Unit = no unit\n");
+  fprintf(fp,
+          "# (15) Number of common-envelop jets SN events (binned in time between current time "
+          "and previous time)\n");
+  fprintf(fp, "#      Unit = no unit\n");
+  fprintf(fp,
+          "# (16) Number of collapsar events (binned in time between current time "
+          "and previous time)\n");
+  fprintf(fp, "#      Unit = no unit\n");
   fprintf(fp, "#\n");
   fprintf(
       fp,
       "#  (0)      (1)         (2)              (3)           (4)           "
       " (5)         (6)          (7)          (8)         (9)          "
-      "   (10)           (11)        (12)         (13)\n");
+      "   (10)           (11)        (12)         (13)            (14)   "
+      " (15)    (16)\n");
   fprintf(fp,
           "# step  prev. step      time          prev. time        a         "
           " prev a          z          prev z     Inj. mass     Inj. mass rate"
-          "  Inj.mass rate/V   N        N rate       N rate/V \n");
+          "  Inj.mass rate/V   N        N rate       N rate/V           N     "
+          " N       N \n");
   fflush(fp);
 }
 
@@ -154,7 +170,9 @@ INLINE static void event_logger_r_processes_init(const struct engine *e) {
   log_r_processes.enrichment_mass = 0.;
 
   /* Initialize the number of heating events to zero */
-  log_r_processes.events = 0;
+  log_r_processes.NSM_events = 0;
+  log_r_processes.CEJSN_events = 0;
+  log_r_processes.collapsar_events = 0;
 }
 
 /**
@@ -191,7 +209,12 @@ INLINE static void event_logger_r_processes_log_data_general(
   const double delta_time_inv = 1. / delta_time;
 
   /* Get the total number of r-process events */
-  const int N_r_processes = log_r_processes.events;
+  const int N_r_processes = log_r_processes.NSM_events + log_r_processes.CEJSN_events + log_r_processes.collapsar_events;
+
+  /* Get the number of NSM, CEJSN and collapsar events separately */
+  const int N_NSM_events = log_r_processes.NSM_events;
+  const int N_CEJSN_events = log_r_processes.CEJSN_events;
+  const int N_collapsar_events = log_r_processes.collapsar_events;
 
   /* Get the total number of r-processes per time */
   const double N_r_processes_p_time = (double)N_r_processes * delta_time_inv;
@@ -218,11 +241,11 @@ INLINE static void event_logger_r_processes_log_data_general(
   /* Print the data to the file */
   fprintf(core->fp,
           "%7d %7d %16e %16e %12.7f %12.7f %12.7f %12.7f  %12.7e  %12.7e  "
-          "%12.7e %7d      %12.7e %12.7e \n",
+          "%12.7e %7d      %12.7e %12.7e %7d %7d %7d\n",
           step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
           core->z_prev, delta_mass, delta_mass_p_time,
           delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
-          N_r_processes_p_time_p_volume);
+          N_r_processes_p_time_p_volume, N_NSM_events, N_CEJSN_events, N_collapsar_events);
   fflush(core->fp);
 }
 
@@ -247,7 +270,9 @@ INLINE static void event_logger_r_processes_log_data(const struct engine *e) {
   event_logger_core_update(e, core);
 
   /* Update the type specific variables */
-  log_r_processes.events = 0;
+  log_r_processes.NSM_events = 0;
+  log_r_processes.CEJSN_events = 0;
+  log_r_processes.collapsar_events = 0;
   log_r_processes.enrichment_mass = 0.;
 }
 
@@ -273,16 +298,20 @@ INLINE static void event_logger_r_processes_log_data_end(
  * @param si the spart of the enrichment event
  * @param cosmo the cosmology struct
  * @param delta_mass the enrichment mass of the r-processes
+ * @param num_events number of events per time step
+ * @param flag, indication of which event: neutron stars (flag==0), rare SN (flag==1), collapsars (flag==2)
  */
 INLINE static void event_logger_r_processes_log_event(
     const struct spart *si, const struct cosmology *cosmo,
-    const double delta_mass) {
+    const double delta_mass, const int num_events, const int flag) {
 
   if (lock_lock(&log_r_processes.core.lock) == 0) {
 
     /* Store the injected mass and add an event */
     log_r_processes.enrichment_mass += delta_mass;
-    log_r_processes.events += 1;
+    if (flag == 0) log_r_processes.NSM_events += num_events;
+    if (flag == 1) log_r_processes.CEJSN_events += num_events;
+    if (flag == 2) log_r_processes.collapsar_events += num_events;
   }
   if (lock_unlock(&log_r_processes.core.lock) != 0)
     error("Failed to unlock the lock");
@@ -303,7 +332,11 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
   int number_events_received;
   double total_mass;
 
-  MPI_Reduce(&log_r_processes.events, &number_events_received, 1, MPI_INT,
+  MPI_Reduce(&log_r_processes.NSM_events, &number_events_received, 1, MPI_INT,
+             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received, 1, MPI_INT,
+             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received, 1, MPI_INT,
              MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.enrichment_mass, &total_mass, 1, MPI_DOUBLE,
              MPI_SUM, 0, MPI_COMM_WORLD);
@@ -315,15 +348,19 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
     /* Update the core struct */
     event_logger_core_update(e, core);
 
-    /* Update the SNIa variables */
+    /* Update the r-process variables */
     log_r_processes.enrichment_mass = 0.;
-    log_r_processes.events = 0;
+    log_r_processes.NSM_events = 0;
+    log_r_processes.CEJSN_events = 0;
+    log_r_processes.collapsar_events = 0;
     return;
   }
 
   /* Update the variables for node 0 */
   log_r_processes.enrichment_mass = total_mass;
-  log_r_processes.events = number_events_received;
+  log_r_processes.NSM_events = number_events_received;
+  log_r_processes.CEJSN_events = number_events_received;
+  log_r_processes.collapsar_events = number_events_received;
 }
 #endif
 
