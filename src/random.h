@@ -49,6 +49,8 @@ enum random_number_type {
   random_number_stellar_feedback_1 = 3947008991LL,
   random_number_stellar_feedback_2 = 6977309513LL,
   random_number_stellar_feedback_3 = 3947008999LL,
+  random_number_isotropic_feedback_ray_theta = 3947119021LL,
+  random_number_isotropic_feedback_ray_phi = 3956119019LL,
   random_number_stellar_enrichment = 2936881973LL,
   random_number_BH_feedback = 1640531371LL,
   random_number_BH_swallow = 4947009007LL,
@@ -205,6 +207,31 @@ INLINE static double random_unit_interval_two_IDs(
                      INT64_MAX;
 
   return random_unit_interval(input_id, ti_current, type);
+}
+
+/**
+ * @brief Returns a pseudo-random number in the range [0, 1[.
+ *
+ * We generate numbers that are always reproducible for a given stellar particle
+ * ID, ray index and simulation time (on the integer time-line). If more than one
+ * number per time-step per particle is needed, additional randomness can be
+ * obtained by using the type argument.
+ *
+ * @param id_star The ID of the (stellar) particle for which to generate a number.
+ * @param ray_idx The index of the ray used in the isotropic feedback
+ * @param ti_current The time (on the time-line) for which to generate a number.
+ * @param type The #random_number_type to generate.
+ * @return a random number in the interval [0, 1.[.
+ */
+INLINE static double random_unit_interval_star_ID_and_ray_idx(
+    int64_t id_star, const int ray_idx, const integertime_t ti_current,
+    const enum random_number_type type) {
+
+    /* For better mixing, we apply a non-liner, y=x^3, mapping to ray_idx and
+    then cast (long long) on it to convert its type to that required
+    by the function we are calling */
+    return random_unit_interval_two_IDs(id_star, (long long)pow((double)ray_idx, 3.0),
+                                        ti_current, type);
 }
 
 #endif /* SWIFT_RANDOM_H */

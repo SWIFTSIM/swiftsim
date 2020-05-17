@@ -92,12 +92,12 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     for now we take (long long)pow(i,2) but anything else that depends on i will work too.
     Note that we first compute cos(\theta) and not \theta becasue the latter is not uniform on a sphere:
     a solid-angle element d\Omega = \sin(\theta) d\phi d\theta* = d cos(\theta) d\phi */ 
-    const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_1) - 1.0;
+    const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i, 
+                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
     const double theta_ray = acos(cos_theta_ray);
 
-    const double phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_2) - M_PI;
+    const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i, 
+                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
 
     /* Calculate the arclength on a unit sphere between the jth gas particle and ith ray,
     and then find the minimum between this arclength and the current (running) miminum arclegnth
@@ -347,11 +347,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Get \theta and \phi coordinates of the ray */
         /* theta \in (0,pi) */
-        const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_1) - 1.0;
+        const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
         /* phi \in (pi, pi) */
-        double const phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_2) - M_PI;
+        double const phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
         
         /* For the ith ray, compute sin and cos of \phi */
 	double sin_phi_ray, cos_phi_ray;
@@ -434,11 +434,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       if (pj->id==si->feedback_data.part_id_with_min_arclength_mirror[i]){
 
         /* theta \in (0,pi) */
-        const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_1) - 1.0;
+        const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
         /* phi \in (pi, pi) */
-        double const phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_2) - M_PI;
+        double const phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
 
         double sin_phi_ray, cos_phi_ray;
         sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);

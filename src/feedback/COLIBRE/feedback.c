@@ -282,7 +282,7 @@ INLINE static void compute_SNII_feedback(
       delta_u = delta_T * conv_factor;
 
       for (int i=0; i<ngb_gas_N; i++){
-        const float rand_thermal = random_unit_interval_two_IDs(sp->id, (long long)pow(i,3.0), ti_begin, random_number_stellar_winds);
+        const float rand_thermal = random_unit_interval_star_ID_and_ray_idx(sp->id, i, ti_begin, random_number_stellar_feedback_1);
         number_of_th_SN_events += rand_thermal < prob_thermal;
        }
     /* If the probability is larger than or equal to 1 then adjust the energy */
@@ -312,7 +312,7 @@ INLINE static void compute_SNII_feedback(
     if (prob_kinetic <= 1.) {
 
       for (int i=0; i<ngb_gas_N; i++){
-        const float rand_kinetic = random_unit_interval_two_IDs(sp->id, (long long)pow(i,3.0), ti_begin, random_number_stellar_feedback_3);
+        const float rand_kinetic = random_unit_interval_star_ID_and_ray_idx(sp->id, i, ti_begin, random_number_stellar_feedback_3);
         number_of_kin_SN_events += rand_kinetic < prob_kinetic;
       }
 
