@@ -188,7 +188,7 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
  */
 INLINE static void compute_SNII_feedback(
     struct spart* sp, const double star_age, const double dt,
-    const float ngb_gas_mass, const unsigned int ngb_gas_N, const struct feedback_props* feedback_props,
+    const float ngb_gas_mass, const int ngb_gas_N, const struct feedback_props* feedback_props,
     const float min_dying_mass_Msun, const float max_dying_mass_Msun, 
     const integertime_t ti_begin) {
 
@@ -270,8 +270,8 @@ INLINE static void compute_SNII_feedback(
     /* Numbers of heating and kick events at this time step
     for this stellar particle. In each kick event we kick two particles in the
     oposite directions */
-    unsigned int number_of_th_SN_events = 0;
-    unsigned int number_of_kin_SN_events = 0;
+    int number_of_th_SN_events = 0;
+    int number_of_kin_SN_events = 0;
 
     /* If the heating probability is less than 1, compute the number of heating
     events by drawing a random number ngb_gas_N times where ngb_gas_N
@@ -281,7 +281,7 @@ INLINE static void compute_SNII_feedback(
       /* Normal case */
       delta_u = delta_T * conv_factor;
 
-      for (unsigned int i=0; i<ngb_gas_N; i++){
+      for (int i=0; i<ngb_gas_N; i++){
         const float rand_thermal = random_unit_interval_two_IDs(sp->id, (long long)pow(i,3.0), ti_begin, random_number_stellar_winds);
         number_of_th_SN_events += rand_thermal < prob_thermal;
        }
@@ -299,19 +299,19 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* IMPORTANT. If we have more heating events than the maximum number of 
-    rays N_rays, then obviously we cannot distribute all of the heating events
+    rays (colibre_feedback_number_of_rays), then obviously we cannot distribute all of the heating events
     (since 1 event = 1 ray), so we need to increase the thermal 
     energy per ray and make the number of events equal to the number of rays */
-    if(number_of_th_SN_events > N_rays){
-      const double alpha_thermal = (float)number_of_th_SN_events / (float)N_rays;
+    if(number_of_th_SN_events > colibre_feedback_number_of_rays){
+      const double alpha_thermal = (float)number_of_th_SN_events / (float)colibre_feedback_number_of_rays;
       delta_u *= alpha_thermal;
-      number_of_th_SN_events = N_rays;
+      number_of_th_SN_events = colibre_feedback_number_of_rays;
     }
 
     /* Repeat the above steps for kick events in SNII feedback */
     if (prob_kinetic <= 1.) {
 
-      for (unsigned int i=0; i<ngb_gas_N; i++){
+      for (int i=0; i<ngb_gas_N; i++){
         const float rand_kinetic = random_unit_interval_two_IDs(sp->id, (long long)pow(i,3.0), ti_begin, random_number_stellar_feedback_3);
         number_of_kin_SN_events += rand_kinetic < prob_kinetic;
       }
@@ -332,7 +332,7 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* The number of kick events cannot be greater than the number of rays */
-    if (number_of_kin_SN_events > N_rays) number_of_kin_SN_events = N_rays;
+    if (number_of_kin_SN_events > colibre_feedback_number_of_rays) number_of_kin_SN_events = colibre_feedback_number_of_rays;
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
@@ -1183,7 +1183,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
-  const unsigned int ngb_Number = sp->feedback_data.to_collect.ngb_N;
+  const int ngb_Number = sp->feedback_data.to_collect.ngb_N;
 
   /* Check if there are neighbours, otherwise exit */
   if (ngb_gas_mass == 0.f || sp->density.wcount * pow_dimension(sp->h) < 1e-4) {

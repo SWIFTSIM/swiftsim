@@ -24,71 +24,8 @@
 #include "random.h"
 #include "timestep_sync_part.h"
 #include "tracers.h"
+#include "compute_arclength.h"
 
-/* Define the maximum number of rays in the isotropic feedback at the precompile time */
-#define N_rays 1
-
-/**
- * @brief Returns the arclength on a sphere of radius r_sphere
- * between two points with angular coordinates (theta_1, phi_1) and (theta_2, phi_2)
- *
- * @param theta_1 Polar angle of point 1; theta \in [-\pi/2, pi/2]
- * @param phi_1 Azimuthal angle of point 1; \phi \in [\pi, \pi)
- * @param theta_2 Polar angle of point 2; theta \in [-\pi/2, pi/2]
- * @param phi_2 Azimuthal angle of point 2; \phi \in [\pi, \pi)
- * @param r_sphere Radius of the sphere on which the arclength between the two points is computed
- */
-__attribute__((always_inline)) INLINE static float compute_arclength(const double theta_1, const double phi_1,
-                                                                     const double theta_2, const double phi_2, 
-                                                                     const float r_sphere){
-
-    const double delta_theta = theta_2-theta_1;
-    const double delta_phi   = phi_2-phi_1;
-
-    const float arc_length = 2.f * r_sphere * asin( sqrt( pow(sin(delta_theta/2.0),2.0) + 
-                                  cos(theta_1)*cos(theta_2)*pow(sin(delta_phi/2.0),2.0)));
-
-    return arc_length;
-}
-
-
-/**
- * @brief Calculates the arclength on a sphere of radius r_sphere between 
- * the ray with angular coordinates (theta_ray, phi_ray) and gas particle
- * with angular coordinates (theta_part, phi_part), and compares this calculated 
- * arclength with the currently existing arclength for the considered ray
- * Returns the new arclength if it is smaller than the older one or zero otherwise
- *
- * @param theta_ray Polar angle of point 1; theta \in [-\pi/2, pi/2]
- * @param phi_ray Azimuthal angle of point 1; \phi \in [\pi, \pi)
- * @param theta_part Polar angle of point 2; theta \in [-\pi/2, pi/2]
- * @param phi_part Azimuthal angle of point 2; \phi \in [\pi, \pi)
- * @param r_sphere Radius of the sphere on which the arclength between the two points is computed
- * @param current_archlength Current minimal value of arclength
- */
-__attribute__((always_inline)) INLINE static float find_min_arclength(const double theta_ray, const double phi_ray,
-                                                                      const double theta_part, const double phi_part, 
-                                                                      const float r_sphere, const float current_arclength){
-
-    /* We shift theta by -pi/2 becasue the equation we use to calculate arclengths
-    requires theta \in [-pi/2, pi/2] but we have \theta \in [0,\pi] */
-    const float new_arclength = compute_arclength( theta_ray - M_PI_2, 
-                                                   phi_ray,
-                                                   theta_part - M_PI_2, 
-                                                   phi_part,  
-                                                   r_sphere);
-    
-    /* Compare the arclength that has just been computed with what the ray already has.
-    If the new one is smaller or the ray does not have any arclength yet (current_arclength < 0.f),
-    then return the new one. */
-    if (new_arclength < current_arclength || current_arclength < 0.f){
-        return new_arclength;
-    }
-    /* In the new one is larger than the older one return zero */
-    else{
-        return 0.f;
-    }
-}
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -147,7 +84,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   need to get some information about the gas in advance. For example,
   in the to_distribute loop, we already need to know which gas particle
   is closest to the 1st ray, 2nd ray, etc */
-  for (unsigned int i=0; i<N_rays; i++){
+  for (int i=0; i<colibre_feedback_number_of_rays; i++){
 
     /* Angular coordinates of the ith ray */
     /* The (randomly chosen) ray angular coordinates depend on the ray number i, the current time ti_current, and
@@ -155,17 +92,17 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     for now we take (long long)pow(i,2) but anything else that depends on i will work too.
     Note that we first compute cos(\theta) and not \theta becasue the latter is not uniform on a sphere:
     a solid-angle element d\Omega = \sin(\theta) d\phi d\theta* = d cos(\theta) d\phi */ 
-    const double cos_theta_random = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+    const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_1) - 1.0;
-    const double theta_random = acos(cos_theta_random);
+    const double theta_ray = acos(cos_theta_ray);
 
-    const double phi_random = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+    const double phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_2) - M_PI;
 
     /* Calculate the arclength on a unit sphere between the jth gas particle and ith ray,
     and then find the minimum between this arclength and the current (running) miminum arclegnth
     of the ith ray */
-    const float new_arclength = find_min_arclength(theta_random, phi_random, 
+    const float new_arclength = find_min_arclength(theta_ray, phi_ray, 
        theta_j, phi_j, 1.f, si->feedback_data.to_collect.min_arclength[i] );
 
     /* If the new arclength is smaller than the older value, then store 
@@ -180,7 +117,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
         of two particles, the first one needs to know the properties of the other one,
         and vice versa */
         si->feedback_data.mass_true[i] = pj->mass;
-        for(unsigned int j=0; j<3; j++){
+        for(int j=0; j<3; j++){
             si->feedback_data.v_true[i][j] = xpj->v_full[j];
         }
     }
@@ -194,17 +131,17 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
     /* Note the opposite direction of the ray compared to the case above.
     Hence the name "mirror" */
-    const double theta_random_mirror = M_PI - theta_random;
-    const double phi_random_mirror = -phi_random;
+    const double theta_ray_mirror = M_PI - theta_ray;
+    const double phi_ray_mirror = -phi_ray;
 
-    const float new_arclength_mirror = find_min_arclength(theta_random_mirror, phi_random_mirror,
+    const float new_arclength_mirror = find_min_arclength(theta_ray_mirror, phi_ray_mirror,
       theta_j, phi_j, 1.f, si->feedback_data.to_collect.min_arclength_mirror[i] );
 
     if (new_arclength_mirror){
         si->feedback_data.to_collect.min_arclength_mirror[i] = new_arclength_mirror;
         si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
         si->feedback_data.mass_mirror[i] = pj->mass;
-        for(unsigned int j=0; j<3; j++){
+        for(int j=0; j<3; j++){
             si->feedback_data.v_mirror[i][j] = xpj->v_full[j];
         }
     }
@@ -403,25 +340,30 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     /* Loop over the number of SN kick events. In each event, a pair of two particles are kicked 
     in exactly opposide directions. The first kick happes in this loop, and the second one in the
     loop below. */
-    for (unsigned int i=0; i<si->feedback_data.to_distribute.SNII_number_of_kick_events; i++){
+    for (int i=0; i<si->feedback_data.to_distribute.SNII_number_of_kick_events; i++){
  
       /* Find the particle that is closest to the ith ray */
       if (pj->id==si->feedback_data.part_id_with_min_arclength[i]){
 
         /* Get \theta and \phi coordinates of the ray */
-        const double cos_theta_random = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
-                                            ti_current, random_number_stellar_feedback_1) - 1.0;
         /* theta \in (0,pi) */
-        const double theta_random = acos(cos_theta_random);
-
+        const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+                                            ti_current, random_number_stellar_feedback_1) - 1.0;
         /* phi \in (pi, pi) */
-        double const phi_random = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+        double const phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_2) - M_PI;
         
-        /* Compute normal vector of the ray */
-        const double n_ray[3] = {sin(theta_random) * cos(phi_random),
-                                 sin(theta_random) * sin(phi_random),
-                                 cos(theta_random)};
+        /* For the ith ray, compute sin and cos of \phi */
+	double sin_phi_ray, cos_phi_ray;
+	sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
+
+        /* We already have cos\theta, so we can compute sin\theta by using the trigonometic identit y*/
+        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray*cos_theta_ray);
+
+        /* Compute the normal vector of the ith ray */
+        const double n_ray[3] = {sin_theta_ray * cos_phi_ray,
+                                 sin_theta_ray * sin_phi_ray,
+                                 cos_theta_ray};
 
         /* Since we are kicking two particles, for each particle there is a "mirror" particle 
         Below we need to get the properties of the mirror particle to make our feedback
@@ -444,7 +386,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Dividing the velocities by the cosmic scale factor 
         to get physical (peculiar) velocities */
-        for(unsigned int j=0; j<3; j++){
+        for(int j=0; j<3; j++){
           v_gas_star[j] /= cosmo->a;
           v_gas_mirror_star[j] /= cosmo->a;
         }
@@ -465,16 +407,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                        si->feedback_data.to_distribute.SNII_number_of_kick_events;
         
         /* Compute the characteristic kick velocity corresponding to the kinetic energy per pair */
-        double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
+        const double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
 
         /* Compute the correction to the energy and momentum due to relative star-gas motion 
         If there is no correction then alpha = 0 and beta = 1 */
-        double alpha;
-
-        /* If SNII_delta_v is zero we obviously do not want to divide by it */
-        if (SNII_delta_v!=0.0) alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
-        else alpha = 0.0;
-
+        const double alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
         const double beta = sqrt(alpha*alpha+1.0) - alpha;
 
         /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
@@ -497,20 +434,23 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       if (pj->id==si->feedback_data.part_id_with_min_arclength_mirror[i]){
 
         /* theta \in (0,pi) */
-        const double cos_theta_random = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+        const double cos_theta_ray = 2.0  * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_1) - 1.0;
-        const double theta_random = acos(cos_theta_random);
-
         /* phi \in (pi, pi) */
-        double const phi_random = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
+        double const phi_ray = 2.0 * M_PI * random_unit_interval_two_IDs(si->id, (long long)pow(i,2), 
                                             ti_current, random_number_stellar_feedback_2) - M_PI;
-        
+
+        double sin_phi_ray, cos_phi_ray;
+        sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
+
+        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray*cos_theta_ray);
+
         /* Note the appearance of the minus sign. That is becasue 
         mirror particles are kicked in the direction opposite from the
         original one */
-        const double n_ray[3] = {-sin(theta_random) * cos(phi_random),
-                                 -sin(theta_random) * sin(phi_random),
-                                 -cos(theta_random)};
+        const double n_ray[3] = {-sin_theta_ray * cos_phi_ray,
+                                 -sin_theta_ray * sin_phi_ray,
+                                 -cos_theta_ray};
 
         const double mass_mirror = si->feedback_data.mass_true[i];
         const double m_alpha = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
@@ -524,7 +464,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                        si->feedback_data.v_true[i][1]-si->v[1],
                                        si->feedback_data.v_true[i][2]-si->v[2]};
 
-        for(unsigned int j=0; j<3; j++){
+        for(int j=0; j<3; j++){
           v_gas_star[j] /= cosmo->a;
           v_gas_mirror_star[j] /= cosmo->a;
         }
@@ -540,11 +480,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         const double energy_per_pair = si->feedback_data.to_distribute.SNII_E_kinetic /
                                        si->feedback_data.to_distribute.SNII_number_of_kick_events;
         
-        double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
-
-        double alpha;
-        if (SNII_delta_v!=0.0) alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
-        else alpha = 0.0;
+        const double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
+        const double alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
 
         const double beta = sqrt(alpha*alpha+1.0) - alpha;
 
@@ -637,7 +574,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     in SNII kicks (i.e. i-- in place of i++). That's because if we have many rays,
     we want to avoid the situation in which a particle
     that is kicked is also heated */
-    for (unsigned int i=N_rays; i>N_rays-si->feedback_data.to_distribute.SNII_number_of_heating_events; i--){
+    for (int i=colibre_feedback_number_of_rays; 
+             i>colibre_feedback_number_of_rays-si->feedback_data.to_distribute.SNII_number_of_heating_events; i--){
       if (pj->id==si->feedback_data.part_id_with_min_arclength[i-1]) do_SNII_thermal ++;
     }
 
