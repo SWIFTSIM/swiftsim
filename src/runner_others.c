@@ -361,13 +361,24 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                   p, xp, sp, e, sf_props, cosmo, with_cosmology, phys_const,
                   hydro_props, us, cooling, !spawn_spart);
 
-              if (spawn_spart) {
-                /* Move the particles a bit as they are at the same position. */
-                starformation_avoid_divison_by_zero(e, c, p, xp, sp);
-              }
-
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);
+
+              /* Update the displacement information */
+              const float dx2_part = xp->x_diff[0] * xp->x_diff[0] +
+                xp->x_diff[1] * xp->x_diff[1] +
+                xp->x_diff[2] * xp->x_diff[2];
+              const float dx2_sort = xp->x_diff_sort[0] * xp->x_diff_sort[0] +
+                xp->x_diff_sort[1] * xp->x_diff_sort[1] +
+                xp->x_diff_sort[2] * xp->x_diff_sort[2];
+
+              const float dx_part = sqrtf(dx2_part);
+              const float dx_sort = sqrtf(dx2_sort);
+
+              /* No need to climb up the tree as the star formation starts higher
+                 in the hierarchy than the hydro and goes to the bottom */
+              c->hydro.dx_max_part = max(c->hydro.dx_max_part, dx_part);
+              c->hydro.dx_max_sort = max(c->hydro.dx_max_sort, dx_sort);
 
 #ifdef WITH_LOGGER
               /* Copy the properties back to the stellar particle */

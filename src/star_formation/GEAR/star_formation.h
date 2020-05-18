@@ -208,6 +208,78 @@ INLINE static void star_formation_update_part_not_SFR(
     struct part* p, struct xpart* xp, const struct engine* e,
     const struct star_formation* starform, const int with_cosmology) {}
 
+
+/**
+ * @brief Separate the #spart and #part by randomly moving both of them.
+ *
+ * @param e The #engine.
+ * @param p The #part generating a star.
+ * @param xp The #xpart generating a star.
+ * @param sp The new #spart.
+ */
+void star_formation_separate_particles(const struct engine* e,
+                                       struct part* p, struct xpart* xp,
+                                       struct spart* sp) {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (p->x[0] != sp->x[0] || p->x[1] != sp->x[1] || p->x[2] != sp->x[2]) {
+    error(
+        "Moving particles that are not at the same location."
+        " (%g, %g, %g) - (%g, %g, %g)",
+        p->x[0], p->x[1], p->x[2], sp->x[0], sp->x[1], sp->x[2]);
+  }
+#endif
+
+  /* Move a bit the particle in order to avoid
+     division by 0.
+  */
+  const float max_displacement = 0.2;
+  const double delta_x =
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)0) -
+      1.f;
+  const double delta_y =
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)1) -
+      1.f;
+  const double delta_z =
+      2.f * random_unit_interval(p->id, e->ti_current,
+                                 (enum random_number_type)2) -
+      1.f;
+
+  sp->x[0] += delta_x * max_displacement * p->h;
+  sp->x[1] += delta_y * max_displacement * p->h;
+  sp->x[2] += delta_z * max_displacement * p->h;
+
+  /* Copy the position to the gpart */
+  sp->gpart->x[0] = sp->x[0];
+  sp->gpart->x[1] = sp->x[1];
+  sp->gpart->x[2] = sp->x[2];
+
+  /* Do the gas particle. */
+  const double mass_ratio = sp->mass / hydro_get_mass(p);
+  const double dx[3] = {mass_ratio * delta_x * max_displacement * p->h,
+                        mass_ratio * delta_y * max_displacement * p->h,
+                        mass_ratio * delta_z * max_displacement * p->h};
+
+  p->x[0] -= dx[0];
+  p->x[1] -= dx[1];
+  p->x[2] -= dx[2];
+
+  /* Compute offsets since last cell construction */
+  xp->x_diff[0] += dx[0];
+  xp->x_diff[1] += dx[1];
+  xp->x_diff[1] += dx[2];
+  xp->x_diff_sort[0] += dx[0];
+  xp->x_diff_sort[1] += dx[1];
+  xp->x_diff_sort[2] += dx[2];
+
+  /* Copy the position to the gpart */
+  p->gpart->x[0] = p->x[0];
+  p->gpart->x[1] = p->x[1];
+  p->gpart->x[2] = p->x[2];
+
+}
+
 /**
  * @brief Copies the properties of the gas particle over to the
  * star particle.
@@ -244,6 +316,8 @@ INLINE static void star_formation_copy_properties(
     /* Update the part */
     hydro_set_mass(p, new_mass_gas);
     p->gpart->mass = new_mass_gas;
+
+    star_formation_separate_particles(e, p, xp, sp);
   } else {
     sp->mass = mass_gas;
   }
