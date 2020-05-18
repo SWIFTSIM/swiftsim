@@ -89,6 +89,9 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   cpd->dmetal_mass_fraction_from_AGB = 0.0f;
   cpd->dmetal_mass_fraction_from_SNII = 0.0f;
   cpd->diron_mass_fraction_from_SNIa = 0.0f;
+  cpd->dEu_mass_fraction_from_NSM = 0.0f;
+  cpd->dEu_mass_fraction_from_CEJSN = 0.0f;
+  cpd->dEu_mass_fraction_from_collapsar = 0.0f;
 }
 
 /**
@@ -189,6 +192,9 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   p->chemistry_data.dmetal_mass_fraction_from_AGB = 0.0f;
   p->chemistry_data.dmetal_mass_fraction_from_SNII = 0.0f;
   p->chemistry_data.diron_mass_fraction_from_SNIa = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_NSM = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_CEJSN = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_collapsar = 0.0f;
 
   for (int k = 0; k < 3; k++) {
     p->chemistry_data.shear_tensor[0][k] = 0.0f;
@@ -392,6 +398,19 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   /* Update metal mass from AGB  */
   p->chemistry_data.mass_from_AGB =
       p->chemistry_data.metal_mass_fraction_from_AGB * current_mass;
+    
+  /* Update europium mass for channels NSM, CEJSN and collapsars  */
+  const double current_Eu_mass = current_mass * p->chemistry_data.metal_mass_fraction[chemistry_element_Eu];
+    
+  p->chemistry_data.mass_from_NSM +=
+    p->chemistry_data.dEu_mass_fraction_from_NSM * current_Eu_mass;
+    
+  p->chemistry_data.mass_from_CEJSN +=
+    p->chemistry_data.dEu_mass_fraction_from_CEJSN * current_Eu_mass;
+    
+  p->chemistry_data.mass_from_collapsar +=
+    p->chemistry_data.dEu_mass_fraction_from_collapsar * current_Eu_mass;
+
 
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
