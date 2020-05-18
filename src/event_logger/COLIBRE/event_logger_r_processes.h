@@ -130,15 +130,15 @@ INLINE static void event_logger_r_processes_init_log_file(
           "and previous time)\n");
   fprintf(fp, "#      Unit = no unit\n");
     
-  fprintf(fp, "# (17)  Injected mass by NSM events\n");
+  fprintf(fp, "# (17) Injected mass by NSM events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
             1. / phys_const->const_solar_mass);
-  fprintf(fp, "# (18)  Injected mass by CEJSN events\n");
+  fprintf(fp, "# (18) Injected mass by CEJSN events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
             1. / phys_const->const_solar_mass);
-  fprintf(fp, "# (19)  Injected mass by collapsar events\n");
+  fprintf(fp, "# (19) Injected mass by collapsar events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
             1. / phys_const->const_solar_mass);
@@ -148,12 +148,12 @@ INLINE static void event_logger_r_processes_init_log_file(
       "#  (0)      (1)         (2)              (3)           (4)           "
       " (5)         (6)          (7)          (8)         (9)          "
       "   (10)           (11)        (12)         (13)            (14)   "
-      " (15)    (16)    (17)     (18)     (19)\n");
+      " (15)    (16)    (17)          (18)          (19)\n");
   fprintf(fp,
           "# step  prev. step      time          prev. time        a         "
           " prev a          z          prev z     Inj. mass     Inj. mass rate"
           "  Inj.mass rate/V   N        N rate       N rate/V           N     "
-          " N       N   Inj. mass    Inj. mass    Inj. mass\n");
+          "  N       N   Inj. mass       Inj. mass       Inj. mass\n");
   fflush(fp);
 }
 
@@ -296,7 +296,9 @@ INLINE static void event_logger_r_processes_log_data(const struct engine *e) {
   log_r_processes.NSM_events = 0;
   log_r_processes.CEJSN_events = 0;
   log_r_processes.collapsar_events = 0;
-  log_r_processes.enrichment_mass = 0.;
+  log_r_processes.NSM_enrichment_mass = 0.;
+  log_r_processes.CEJSN_enrichment_mass = 0.;
+  log_r_processes.collapsar_enrichment_mass = 0.;
 }
 
 /**

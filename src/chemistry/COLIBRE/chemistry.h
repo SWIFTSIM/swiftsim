@@ -244,6 +244,11 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   /* Dummy initial values to weighted redshits */
   p->chemistry_data.metal_weighted_redshift = -1.f;
   p->chemistry_data.iron_weighted_redshift = -1.f;
+    
+  p->chemistry_data.mass_from_NSM = 0.0f;
+  p->chemistry_data.mass_from_CEJSN = 0.0f;
+  p->chemistry_data.mass_from_collapsar = 0.0f;
+    
 }
 
 /**
