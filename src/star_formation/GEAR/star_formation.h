@@ -34,6 +34,8 @@
 #include "star_formation_struct.h"
 #include "units.h"
 
+#define star_formation_need_update_dx_max 1
+
 /**
  * @brief Calculate if the gas has the potential of becoming
  * a star.
