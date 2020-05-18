@@ -39,7 +39,7 @@
  * @param outputlist The #output_list to fill.
  * @param filename The file to read.
  * @param cosmo The #cosmology model.
- * @param use_multiple_levels Switch to enable multiple output levels
+ * @param use_multiple_levels Switch to enable multiple output levels.
  */
 void output_list_read_file(struct output_list *outputlist, const char *filename,
                            struct cosmology *cosmo,
@@ -157,7 +157,8 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
       error("Output list not having monotonically increasing scale-factors.");
   }
 
-  /* set current indice to 0 */
+  /* Initialise current output index to zero. If this is already in the past,
+   * it will be updated during the next call of output_list_read_next_time() */
   outputlist->cur_ind = 0;
 
   /* We check if this is true later */
@@ -187,7 +188,7 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
   else
     time_end = e->time_end;
 
-  /* Find next snasphot above current time */
+  /* Find next output above current time */
   double time = t->times[t->cur_ind];
   size_t ind = t->cur_ind;
   while (time <= time_end) {
@@ -340,6 +341,8 @@ void output_list_struct_dump(struct output_list *list, FILE *stream) {
 
   restart_write_blocks(list->times, list->size, sizeof(double), stream,
                        "output_list", "times");
+  restart_write_blocks(list->types, list->size, sizeof(int), stream,
+                       "output_list", "types");
 }
 
 /**
@@ -352,4 +355,7 @@ void output_list_struct_restore(struct output_list *list, FILE *stream) {
   list->times = (double *)malloc(sizeof(double) * list->size);
   restart_read_blocks(list->times, list->size, sizeof(double), stream, NULL,
                       "times");
+  list->types = (int *)malloc(sizeof(int) * list->size);
+  restart_read_blocks(list->types, list->size, sizeof(int), stream, NULL,
+                      "types");
 }
