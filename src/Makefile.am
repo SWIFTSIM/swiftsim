@@ -339,7 +339,9 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 event_logger/none/event_logger.h event_logger/none/event_logger_struct.h \
 		 event_logger/EAGLE/event_logger.h event_logger/EAGLE/event_logger_struct.h \
 		 event_logger/COLIBRE/event_logger.h event_logger/COLIBRE/event_logger_struct.h \
-		 event_logger/COLIBRE/event_logger_SNIa.h event_logger/COLIBRE/event_logger_SNII.h event_logger/COLIBRE/event_logger_r_processes.h
+		 event_logger/COLIBRE/event_logger_SNIa.h event_logger/COLIBRE/event_logger_SNII.h event_logger/COLIBRE/event_logger_r_processes.h \
+                 sink/Default/sink.h sink/Default/sink_io.h sink/Default/sink_part.h \
+	         sink.h sink_io.h
 
 
 # Sources and special flags for the gravity library

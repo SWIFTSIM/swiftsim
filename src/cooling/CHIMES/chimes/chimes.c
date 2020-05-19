@@ -73,6 +73,9 @@ void set_equilibrium_abundances_from_tables(struct UserData data) {
             Z_index, dT, dnH, dZ, N_T, N_nH, N_Z)) *
         data.species[i].element_abundance;
 
+  /* Enforce constraint equations. */
+  check_constraint_equations(data.myGasVars, data.myGlobalVars);
+
   return;
 }
 

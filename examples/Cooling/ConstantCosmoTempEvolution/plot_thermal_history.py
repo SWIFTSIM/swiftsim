@@ -8,11 +8,6 @@ import glob
 import unyt
 import numpy as np
 
-try:
-    plt.style.use("../../../tools/stylesheets/mnras.mplstyle")
-except:
-    print("Can't find Matplotlib stylesheet.")
-
 ## read command line arguments
 snapshot_name = sys.argv[1]
 
@@ -25,6 +20,24 @@ data_walther = np.genfromtxt(
     "./datasets/walther_et_al_2019_thermal_history.dat", skip_header=2
 )
 
+obsdata_files = ["becker_2010_gamma_1.3.txt",
+                 "becker_2010_gamma_1.5.txt", 
+                 "boera_2014_gamma_1.3.txt",
+                 "boera_2014_gamma_1.5.txt",
+                 "boera_2018.txt",
+                 "boera_2019.txt",
+                 "bolton_2012.txt",
+                 "bolton_2012_with_HeII.txt",
+                 "bolton_2014.txt",
+                 "gaikwad_2020.txt",
+                 "hiss_2017.txt",
+                 "lidz_2010.txt",
+                 "rorai_2017.txt",
+                 "telikova_2019.txt",
+                 "walther_2018.txt" ]
+ 
+
+               
 data_schaye = data_schaye.T
 data_walther = data_walther.T
 
@@ -175,11 +188,46 @@ ax.errorbar(
     label="Walther et al. (2019)",
 )
 
+ifile = 0
+for filename in obsdata_files:
+        data_obs = np.genfromtxt("./datasets/%s"%(filename), skip_header = 10)
+        data_obs = data_obs.T
+        zmean    = data_obs[0]
+        z_lower  = data_obs[1]/2.
+        z_upper  = data_obs[1]/2.
+        logTmean = np.log10(data_obs[2])
+        logT_lower = logTmean - np.log10(data_obs[2] - data_obs[3])
+        logT_upper = np.log10(data_obs[2] + data_obs[4]) - logTmean
+        lab = '%s'%(filename[:-4])
+        if ifile < 10:
+                ax.errorbar(  zmean, logTmean, 
+                      xerr = [z_lower, z_upper],
+                      yerr = [logT_lower, logT_upper],
+                      fmt=".",
+                      markersize=7,
+                      markeredgewidth=0.5,
+                      linewidth=0.5,
+                      label=lab,
+                          )
+        else:
+                ax.errorbar(  zmean, logTmean,
+                      xerr = [z_lower, z_upper],
+                      yerr = [logT_lower, logT_upper],
+                      fmt=".",
+                      markersize=7,
+                      markeredgewidth=0.5,
+                      linewidth=0.5,
+                      mfc="w",
+                      label=lab,
+                          )
+
+        ifile += 1
+
 # Plot simulation
-ax.plot(z, np.log10(T_mean))
+ax.plot(z, np.log10(T_mean),  color = '#00CCCC', ls = 'solid')
 
 # Legend
-ax.legend(loc="upper right", frameon=True)
+ax.legend(loc="upper right", frameon=True, fontsize=7)
 ax.text(
     0.025,
     0.975,
@@ -192,11 +240,11 @@ ax.text(
     zorder=1,
 )
 
-ax.set_xlim(0, 12.2)
+ax.set_xlim(0, 13.5)
 ax.set_ylim(3.5, 4.85)
 ax.set_xlabel("Redshift", labelpad=-0.5)
 ax.set_ylabel(r"$\log_{10}(T/K)$", labelpad=0)
-fig.savefig("Temperature_evolution.png")
+fig.savefig("Temperature_evolution.png", dpi = 200)
 
 
 # Make plot of density evolution  --------------------------------
@@ -214,4 +262,4 @@ ax.set_ylabel(r"$\delta_b = \rho / \Omega_b\rho_{crit,0}$", labelpad=0.0)
 ax.set_ylim(0.988, 1.012)
 ax.set_yticks([0.99, 1.0, 1.01])
 ax.set_xlabel("Redshift", labelpad=-0.5)
-fig.savefig("Density_evolution.png")
+fig.savefig("Density_evolution.png", dpi = 200)

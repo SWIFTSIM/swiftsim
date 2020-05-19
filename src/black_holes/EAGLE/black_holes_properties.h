@@ -63,6 +63,12 @@ struct black_holes_props {
   /*! Feedback coupling efficiency of the black holes. */
   float epsilon_f;
 
+  /*! Calculate Bondi accretion rate for individual neighbours? */
+  int multi_phase_bondi;
+
+  /*! Are we using the Rosas-Guevara et al. (2015) term? */
+  int with_angmom_limiter;
+
   /*! Normalisation of the viscuous angular momentum accretion reduction */
   float alpha_visc;
 
@@ -75,10 +81,7 @@ struct black_holes_props {
   float AGN_delta_T_desired;
 
   /*! Number of gas neighbours to heat in a feedback event */
-  float num_ngbs_to_heat;
-
-  /*! Calculate Bondi accretion rate for individual neighbours? */
-  int multi_phase_bondi;
+  float num_ngbs_to_heat; 
 
   /* ---- Properties of the repositioning model --- */
 
@@ -189,9 +192,14 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
   bp->epsilon_f =
       parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
-  bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "EAGLEAGN:multi_phase_bondi");
+
+  /* Rosas-Guevara et al. (2015) model */
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "EAGLEAGN:with_angmom_limiter");
+  if (bp->with_angmom_limiter)
+    bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
 
   /* Feedback parameters ---------------------------------- */
 

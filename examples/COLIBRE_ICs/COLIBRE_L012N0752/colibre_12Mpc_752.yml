@@ -66,7 +66,9 @@ SPH:
   CFL_condition:       0.2
   initial_temperature: 268.7 
   minimal_temperature: 10.
-  h_max:               0.5      # Maximal smoothing length in co-moving internal units.
+  h_max:               0.125      # Maximal smoothing length in co-moving internal units.
+  particle_splitting:                1        # Particle splitting is ON
+  particle_splitting_mass_threshold: 1.1e-5   # (internal units, i.e. 1.1e5 Msun ~ 4x initial gas particle mass)
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
@@ -83,7 +85,7 @@ COLIBRECooling:
 CHIMESCooling: 
   data_path:                  ./chimes-data     # Path to chimes-data repository
   EqmAbundanceTable:          colibre_HHe              # Path to equilibrium abundance tables
-  PhotoIonTable_UVB:          HM12_cross_sections      # Path to cross-sections tables; UVB 
+  PhotoIonTable_UVB:          SP20_cross_sections      # Path to cross-sections tables; UVB 
   PhotoIonTable_ISRF:         cross_sections_B87.hdf5  # Path to cross-sections tables; ISRF
   UV_field_flag:              2           # Flag specifying radiation field model 
   Shielding_flag:             2           # Flag specifying local shielding model 
@@ -108,7 +110,8 @@ CHIMESCooling:
   use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
   rapid_cooling_threshold:    1.0         # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
   colibre_table_path:         ./UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
-  H_reion_z:                  7.5         # Redshift of hydrogen reionisation
+  UVB_cutoff_z:               127.0            # Redshift above which the UVB is switched off 
+  ISRF_low_dens_cutoff_z:     7.5              # Redshift above which the ISRF is cut off at low densities (UV_field_flag == 2 only)
   S_over_Si_in_solar:         1.0         # S / Si relative to Solar 
   Ca_over_Si_in_solar:        1.0         # Ca / Si relative to Solar 
   IncludeCarbon:              0           # Include Carbon in the CHIMES network

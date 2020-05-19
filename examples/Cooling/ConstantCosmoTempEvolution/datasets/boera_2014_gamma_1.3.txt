@@ -1,0 +1,17 @@
+# Reference -->> Boera+2014 (Curvature Statistics, gamma=1.5)
+# Column-00 -->> Redshift (zmean)
+# Column-01 -->> Redshift Interval (delta_z)
+# Column-02 -->> Mean IGM Temperature (T0)
+# Column-03 -->> Mean IGM Temperature Lower Error (delta_T0_lb)
+# Column-04 -->> Mean IGM Temperature Upper Error (delta_T0_ub)
+# Column-05 -->> Slope of TDR (gamma)
+# Column-06 -->> Slope of TDR Lower Error (delta_gamma_lb)
+# Column-07 -->> Slope of TDR Upper Error (delta_gamma_ub)
+
+1.63 0.1 20660 2030 2030 None None None
+1.82 0.1 17610 760  760  None None None
+2.00 0.1 18080 550  550  None None None
+2.18 0.1 19660 710  710  None None None
+2.38 0.1 18000 850  850  None None None
+2.60 0.1 16830 780  780  None None None
+2.80 0.1 16580 650  650  None None None

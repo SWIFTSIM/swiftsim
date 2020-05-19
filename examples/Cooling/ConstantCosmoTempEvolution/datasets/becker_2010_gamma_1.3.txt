@@ -1,0 +1,19 @@
+# Reference -->> Becker+2010 (Curvature Statistics, gamma=1.3)
+# Column-00 -->> Redshift (zmean)
+# Column-01 -->> Redshift Interval (delta_z)
+# Column-02 -->> Mean IGM Temperature (T0)
+# Column-03 -->> Mean IGM Temperature Lower Error (delta_T0_lb)
+# Column-04 -->> Mean IGM Temperature Upper Error (delta_T0_ub)
+# Column-05 -->> Slope of TDR (gamma)
+# Column-06 -->> Slope of TDR Lower Error (delta_gamma_lb)
+# Column-07 -->> Slope of TDR Upper Error (delta_gamma_ub)
+
+
+2.0 0.2 17020  1300 1300 None None None 
+2.4 0.2 16320  840  840  None None None
+2.8 0.2 15740  660  660  None None None
+3.2 0.2 13820  880  880  None None None
+3.6 0.2 11230  780  780  None None None
+4.0 0.2 9610   860  860  None None None
+4.4 0.2 8440   940  940  None None None
+4.8 0.2 8390   1900 1900 None None None

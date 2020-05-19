@@ -12,9 +12,9 @@ Before configuring SWIFT with the CHIMES module enabled, you will need to downlo
 CHIMES data files
 ^^^^^^^^^^^^^^^^^
 
-To run CHIMES, you will need the CHIMES data files that contain the various reaction rate coefficients, photoionisation cross sections etc. These can be downloaded from the `chimes-data <https://bitbucket.org/richings/chimes-data>`_ Bitbucket repository. 
+To run CHIMES, you will need the CHIMES data files that contain the various reaction rate coefficients, photoionisation cross sections etc. These can be downloaded from the `chimes-data <https://bitbucket.org/richings/chimes-data>`_ Bitbucket repository. To clone the repository, you will need to install ``git-lfs`` on your local machine. 
 
-In general, you will not need all of the data files in this repository. If you are only running CHIMES with the COLIBRE sub-grid physics models and only with the 'hybrid' cooling mode (i.e. only H and He in non-equilibrium), then you can use the ``getChimesData.sh`` script in the ``examples/COLIBRE_ICs/`` directory to download only the data files that you will need for such a run. 
+In general, you will not need all of the data files in this repository. If you are only running CHIMES with the COLIBRE sub-grid physics models and only with the 'hybrid' cooling mode (i.e. only H and He in non-equilibrium), then you can use the ``getChimesData.sh`` script in the ``examples/COLIBRE_ICs/`` directory to download only the data files that you will need for such a run. If you are using this script to download the data, you do not need ``git-lfs``. 
 
 You will need to make a note of the path to your local copy of chimes-data, as you will need to pass this as a parameter to SWIFT (see the CHIMES parameters section for more details). 
 

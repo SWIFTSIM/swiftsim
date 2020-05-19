@@ -89,7 +89,7 @@ FOF:
   delta_time:                      1.005       # Time between consecutive FoF black hole seeding calls.
   min_group_size:                  256         # The minimum no. of particles required for a group.
   linking_length_ratio:            0.2         # Linking length in units of the main inter-particle separation.
-  black_hole_seed_halo_mass_Msun:  1.5e10      # Minimal halo mass in which to seed a black hole (in solar masses).
+  black_hole_seed_halo_mass_Msun:  1e10        # Minimal halo mass in which to seed a black hole (in solar masses).
   absolute_linking_length:         -1.         # (Optional) Absolute linking length (in internal units). When not set to -1, this will overwrite the linking length computed from 'linking_length_ratio'.
   group_id_default:                2147483647  # (Optional) Sets the group ID of particles in groups below the minimum size. Defaults to 2^31 - 1 if unspecified. Has to be positive.
   group_id_offset:                 1           # (Optional) Sets the offset of group ID labeling. Defaults to 1 if unspecified.
@@ -382,7 +382,7 @@ QLACooling:
   
 # Parameters of the COLIBRE cooling model (Ploeckinger+?? cooling tables).
 COLIBRECooling:
-  dir_name:  UV_dust0_CR0_G0_shield0.hdf5      # Location of Ploeckinger+?? cooling tables
+  dir_name:  UV_dust1_CR1_G1_shield1.hdf5      # Location of Ploeckinger+?? cooling tables
   H_reion_z:                 8.5               # Redshift of Hydrogen re-ionization 
   H_reion_eV_p_H:            2.0               # Energy inject by Hydrogen re-ionization in electron-volt per Hydrogen atom
   He_reion_z_centre:         3.5               # Redshift of the centre of the Helium re-ionization Gaussian
@@ -398,7 +398,7 @@ CHIMESCooling:
   data_path:                  chimes-data      # Path to chimes-data repository 
   EqmAbundanceTable:          colibre_HHe      # Path to equilibrium abundance tables
   PhotoIonTable:              cross_sections_B87.hdf5   # Path to cross-sections table (UV_field_flag == 1 only)
-  PhotoIonTable_UVB:          HM12_cross_sections       # Path to cross-sections tables; UVB (UV_field_flag == 2 only)
+  PhotoIonTable_UVB:          SP20_cross_sections       # Path to cross-sections tables; UVB (UV_field_flag == 2 only)
   PhotoIonTable_ISRF:         cross_sections_B87.hdf5   # Path to cross-sections tables; ISRF (UV_field_flag == 2 only) 
   UV_field_flag:              2                # Flag specifying radiation field model 
   Shielding_flag:             2                # Flag specifying local shielding model 
@@ -424,7 +424,8 @@ CHIMESCooling:
   use_hybrid_cooling:         1                # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
   rapid_cooling_threshold:    1.0              # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes. Negative value prevents the use of rapid cooling.
   colibre_table_path:         ../UV_dust1_CR1_G1_shield1.hdf5   # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
-  H_reion_z:                  7.5              # Redshift of hydrogen reionisation
+  UVB_cutoff_z:               127.0            # Redshift above which the UVB is switched off 
+  ISRF_low_dens_cutoff_z:     7.5              # Redshift above which the ISRF is cut off at low densities (UV_field_flag == 2 only)
   S_over_Si_in_solar:         1.0              # S / Si relative to Solar
   Ca_over_Si_in_solar:        1.0              # Ca / Si relative to Solar
   IncludeCarbon:              0                # Include Carbon in the CHIMES network
@@ -634,7 +635,7 @@ GEARFeedback:
   
 # COLIBRE AGN model
 COLIBREAGN:
-  subgrid_seed_mass_Msun:           1.5e5      # Black hole subgrid mass at creation time in solar masses.
+  subgrid_seed_mass_Msun:           1e5      # Black hole subgrid mass at creation time in solar masses.
   use_subgrid_mass_from_ics:        1          # Use subgrid masses from ICs [1], or initialize them to particle masses [0]?
   max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
   eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.

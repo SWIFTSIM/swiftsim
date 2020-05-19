@@ -157,8 +157,8 @@ static INLINE void tracers_after_SNII_feedback(const struct part *p,
     xp->tracers_data.last_SNII_injection_time = time;
 
   xp->tracers_data.density_at_last_SNII_feedback_event =
-      hydro_get_comoving_density(p) * scale_factor * scale_factor *
-      scale_factor;
+      hydro_get_comoving_density(p) /
+      (scale_factor * scale_factor * scale_factor);
 }
 
 static INLINE void tracers_after_SNIa_feedback(struct xpart *xp,

@@ -1,0 +1,12 @@
+# Reference -->> Bolton+2012 (Proxymity)
+# Column-00 -->> Redshift (zmean)
+# Column-01 -->> Redshift Interval (delta_z)
+# Column-02 -->> Mean IGM Temperature (T0)
+# Column-03 -->> Mean IGM Temperature Lower Error (delta_T0_lb)
+# Column-04 -->> Mean IGM Temperature Upper Error (delta_T0_ub)
+# Column-05 -->> Slope of TDR (gamma)
+# Column-06 -->> Slope of TDR Lower Error (delta_gamma_lb)
+# Column-07 -->> Slope of TDR Upper Error (delta_gamma_ub)
+
+6.08 0.33 16218 2400 2400 None None None 
+6.08 0.33 16218 2400 2400 None None None 

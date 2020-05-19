@@ -122,16 +122,10 @@ struct feedback_spart_data {
       /*! Energy floor of the HII region for injection */
       float HII_u;
 
-      /*! momentum available at the given timestep */
-      float momentum;
-
-      /*! momentum weigth */
-      float momentum_weight;
-
-      /*! momentum probability */
+      /*! Probability to kick a particle in the early stellar feedback */
       float momentum_probability;
 
-      /*! momentum probability */
+      /*! Kick velocity in the early stellar feedback */
       float momentum_delta_v;
 
     } to_distribute;
