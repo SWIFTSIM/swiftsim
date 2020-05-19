@@ -515,7 +515,6 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
   bp_data->mass_from_NSM += p_data->mass_from_NSM;
   bp_data->mass_from_CEJSN += p_data->mass_from_CEJSN;
   bp_data->mass_from_collapsar += p_data->mass_from_collapsar;
-
 }
 
 /**

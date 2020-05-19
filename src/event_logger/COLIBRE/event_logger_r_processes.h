@@ -378,16 +378,16 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
   double total_mass_CEJSN;
   double total_mass_coll;
 
-  MPI_Reduce(&log_r_processes.NSM_events, &number_events_received_NSM, 1, MPI_INT,
-             MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received_CEJSN, 1, MPI_INT,
-             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.NSM_events, &number_events_received_NSM, 1,
+             MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received_CEJSN, 1,
+             MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received_coll, 1,
              MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.NSM_enrichment_mass, &total_mass_NSM, 1, MPI_DOUBLE,
-             MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.CEJSN_enrichment_mass, &total_mass_CEJSN, 1, MPI_DOUBLE,
-             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.NSM_enrichment_mass, &total_mass_NSM, 1,
+             MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.CEJSN_enrichment_mass, &total_mass_CEJSN, 1,
+             MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.collapsar_enrichment_mass, &total_mass_coll, 1,
              MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -409,12 +409,12 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
   }
 
   /* Update the variables for node 0 */
-  log_r_processes.NSM_enrichment_mass = total_mass;
-  log_r_processes.CEJSN_enrichment_mass = total_mass;
-  log_r_processes.collapsar_enrichment_mass = total_mass;
-  log_r_processes.NSM_events = number_events_received;
-  log_r_processes.CEJSN_events = number_events_received;
-  log_r_processes.collapsar_events = number_events_received;
+  log_r_processes.NSM_enrichment_mass = total_mass_NSM;
+  log_r_processes.CEJSN_enrichment_mass = total_mass_CEJSN;
+  log_r_processes.collapsar_enrichment_mass = total_mass_coll;
+  log_r_processes.NSM_events = number_events_received_NSM;
+  log_r_processes.CEJSN_events = number_events_received_CEJSN;
+  log_r_processes.collapsar_events = number_events_received_coll;
 }
 #endif
 
