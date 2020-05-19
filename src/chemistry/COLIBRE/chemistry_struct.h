@@ -81,8 +81,9 @@ struct chemistry_part_data {
 
   /*! Mass coming from SNII */
   float mass_from_SNII;
-    
-  /*! Mass coming from Neutron star mergers (NSM), common-envelop jets SN (CEJSN) and collapsars */
+
+  /*! Mass coming from Neutron star mergers (NSM), common-envelop jets SN
+   * (CEJSN) and collapsars */
   float mass_from_NSM;
   float mass_from_CEJSN;
   float mass_from_collapsar;

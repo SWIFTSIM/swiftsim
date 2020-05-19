@@ -122,26 +122,28 @@ INLINE static void event_logger_r_processes_init_log_file(
           "and previous time)\n");
   fprintf(fp, "#      Unit = no unit\n");
   fprintf(fp,
-          "# (15) Number of common-envelop jets SN events (binned in time between current time "
+          "# (15) Number of common-envelop jets SN events (binned in time "
+          "between current time "
           "and previous time)\n");
   fprintf(fp, "#      Unit = no unit\n");
-  fprintf(fp,
-          "# (16) Number of collapsar events (binned in time between current time "
-          "and previous time)\n");
+  fprintf(
+      fp,
+      "# (16) Number of collapsar events (binned in time between current time "
+      "and previous time)\n");
   fprintf(fp, "#      Unit = no unit\n");
-    
+
   fprintf(fp, "# (17) Injected mass by NSM events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
-            1. / phys_const->const_solar_mass);
+          1. / phys_const->const_solar_mass);
   fprintf(fp, "# (18) Injected mass by CEJSN events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
-            1. / phys_const->const_solar_mass);
+          1. / phys_const->const_solar_mass);
   fprintf(fp, "# (19) Injected mass by collapsar events\n");
   fprintf(fp, "#      Unit = %e g\n", us->UnitMass_in_cgs);
   fprintf(fp, "#      Unit = %e solar mass\n",
-            1. / phys_const->const_solar_mass);
+          1. / phys_const->const_solar_mass);
   fprintf(fp, "#\n");
   fprintf(
       fp,
@@ -226,7 +228,9 @@ INLINE static void event_logger_r_processes_log_data_general(
   const double delta_time_inv = 1. / delta_time;
 
   /* Get the total number of r-process events */
-  const int N_r_processes = log_r_processes.NSM_events + log_r_processes.CEJSN_events + log_r_processes.collapsar_events;
+  const int N_r_processes = log_r_processes.NSM_events +
+                            log_r_processes.CEJSN_events +
+                            log_r_processes.collapsar_events;
 
   /* Get the number of NSM, CEJSN and collapsar events separately */
   const int N_NSM_events = log_r_processes.NSM_events;
@@ -241,13 +245,15 @@ INLINE static void event_logger_r_processes_log_data_general(
       N_r_processes_p_time * volume_inv;
 
   /* Get the total enrichment mass */
-  const double delta_mass = log_r_processes.NSM_enrichment_mass + log_r_processes.CEJSN_enrichment_mass + log_r_processes.collapsar_enrichment_mass;
+  const double delta_mass = log_r_processes.NSM_enrichment_mass +
+                            log_r_processes.CEJSN_enrichment_mass +
+                            log_r_processes.collapsar_enrichment_mass;
 
   /* Get enrichment mass for each channel */
   const double NSM_delta_mass = log_r_processes.NSM_enrichment_mass;
   const double CEJSN_delta_mass = log_r_processes.CEJSN_enrichment_mass;
   const double collapsar_delta_mass = log_r_processes.collapsar_enrichment_mass;
-    
+
   /* Get the enrichment mass per time */
   const double delta_mass_p_time = delta_mass * delta_time_inv;
 
@@ -267,8 +273,9 @@ INLINE static void event_logger_r_processes_log_data_general(
           step, core->step_prev, time, core->time_prev, a, core->a_prev, z,
           core->z_prev, delta_mass, delta_mass_p_time,
           delta_mass_p_time_p_volume, N_r_processes, N_r_processes_p_time,
-          N_r_processes_p_time_p_volume, N_NSM_events, N_CEJSN_events, N_collapsar_events,
-          NSM_delta_mass, CEJSN_delta_mass, collapsar_delta_mass);
+          N_r_processes_p_time_p_volume, N_NSM_events, N_CEJSN_events,
+          N_collapsar_events, NSM_delta_mass, CEJSN_delta_mass,
+          collapsar_delta_mass);
   fflush(core->fp);
 }
 
@@ -324,7 +331,8 @@ INLINE static void event_logger_r_processes_log_data_end(
  * @param cosmo the cosmology struct
  * @param delta_mass the enrichment mass of the r-processes
  * @param num_events number of events per time step
- * @param flag, indication of which event: neutron stars (flag==0), rare SN (flag==1), collapsars (flag==2)
+ * @param flag, indication of which event: neutron stars (flag==0), rare SN
+ * (flag==1), collapsars (flag==2)
  */
 INLINE static void event_logger_r_processes_log_event(
     const struct spart *si, const struct cosmology *cosmo,
@@ -333,18 +341,18 @@ INLINE static void event_logger_r_processes_log_event(
   if (lock_lock(&log_r_processes.core.lock) == 0) {
 
     /* Store the injected mass and add an event */
-    
+
     if (flag == 0) {
-        log_r_processes.NSM_events += num_events;
-        log_r_processes.NSM_enrichment_mass += delta_mass;
+      log_r_processes.NSM_events += num_events;
+      log_r_processes.NSM_enrichment_mass += delta_mass;
     }
     if (flag == 1) {
-        log_r_processes.CEJSN_events += num_events;
-        log_r_processes.CEJSN_enrichment_mass += delta_mass;
+      log_r_processes.CEJSN_events += num_events;
+      log_r_processes.CEJSN_enrichment_mass += delta_mass;
     }
     if (flag == 2) {
-        log_r_processes.collapsar_events += num_events;
-        log_r_processes.collapsar_enrichment_mass += delta_mass;
+      log_r_processes.collapsar_events += num_events;
+      log_r_processes.collapsar_enrichment_mass += delta_mass;
     }
   }
   if (lock_unlock(&log_r_processes.core.lock) != 0)
@@ -370,14 +378,14 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
              MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received, 1, MPI_INT,
              MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received, 1, MPI_INT,
-             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received, 1,
+             MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.NSM_enrichment_mass, &total_mass, 1, MPI_DOUBLE,
              MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&log_r_processes.CEJSN_enrichment_mass, &total_mass, 1, MPI_DOUBLE,
-           MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.collapsar_enrichment_mass, &total_mass, 1, MPI_DOUBLE,
-           MPI_SUM, 0, MPI_COMM_WORLD);
+             MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&log_r_processes.collapsar_enrichment_mass, &total_mass, 1,
+             MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (e->nodeID != 0) {
     /* Get the core struct */

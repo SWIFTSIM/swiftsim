@@ -301,21 +301,29 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
 
     float chi_Eu_fraction_from_NSM = chi->mass_from_NSM / mi;
     float chj_Eu_fraction_from_NSM = chj->mass_from_NSM / mj;
-      chi->dEu_mass_fraction_from_NSM += K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
+    chi->dEu_mass_fraction_from_NSM +=
+        K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
 
-      chj->dEu_mass_fraction_from_NSM += K_ji * (chj_Eu_fraction_from_NSM - chi_Eu_fraction_from_NSM) * dt;
+    chj->dEu_mass_fraction_from_NSM +=
+        K_ji * (chj_Eu_fraction_from_NSM - chi_Eu_fraction_from_NSM) * dt;
 
     float chi_Eu_fraction_from_CEJSN = chi->mass_from_CEJSN / mi;
     float chj_Eu_fraction_from_CEJSN = chj->mass_from_CEJSN / mj;
-      chi->dEu_mass_fraction_from_CEJSN += K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
-      
-      chj->dEu_mass_fraction_from_CEJSN += K_ji * (chj_Eu_fraction_from_CEJSN - chi_Eu_fraction_from_CEJSN) * dt;
+    chi->dEu_mass_fraction_from_CEJSN +=
+        K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
+
+    chj->dEu_mass_fraction_from_CEJSN +=
+        K_ji * (chj_Eu_fraction_from_CEJSN - chi_Eu_fraction_from_CEJSN) * dt;
 
     float chi_Eu_fraction_from_collapsar = chi->mass_from_collapsar / mi;
     float chj_Eu_fraction_from_collapsar = chj->mass_from_collapsar / mj;
-      chi->dEu_mass_fraction_from_collapsar += K_ij * (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
-      
-      chj->dEu_mass_fraction_from_collapsar += K_ji * (chj_Eu_fraction_from_collapsar - chi_Eu_fraction_from_collapsar) * dt;
+    chi->dEu_mass_fraction_from_collapsar +=
+        K_ij *
+        (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
+
+    chj->dEu_mass_fraction_from_collapsar +=
+        K_ji *
+        (chj_Eu_fraction_from_collapsar - chi_Eu_fraction_from_collapsar) * dt;
   }
 }
 
@@ -450,18 +458,22 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
                                           (chi->iron_mass_fraction_from_SNIa -
                                            chj->iron_mass_fraction_from_SNIa) *
                                           dt;
-      
+
     float chi_Eu_fraction_from_NSM = chi->mass_from_NSM / mi;
     float chj_Eu_fraction_from_NSM = chj->mass_from_NSM / mj;
-    chi->dEu_mass_fraction_from_NSM += K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
-      
+    chi->dEu_mass_fraction_from_NSM +=
+        K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
+
     float chi_Eu_fraction_from_CEJSN = chi->mass_from_CEJSN / mi;
     float chj_Eu_fraction_from_CEJSN = chj->mass_from_CEJSN / mj;
-    chi->dEu_mass_fraction_from_CEJSN += K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
+    chi->dEu_mass_fraction_from_CEJSN +=
+        K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
 
     float chi_Eu_fraction_from_collapsar = chi->mass_from_collapsar / mi;
     float chj_Eu_fraction_from_collapsar = chj->mass_from_collapsar / mj;
-    chi->dEu_mass_fraction_from_collapsar += K_ij * (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
+    chi->dEu_mass_fraction_from_collapsar +=
+        K_ij *
+        (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
   }
 }
 

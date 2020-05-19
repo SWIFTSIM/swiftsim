@@ -119,7 +119,6 @@ INLINE static double colibre_feedback_number_of_SNII(
     return 0.;
 }
 
-
 /**
  * @brief Computes the number of supernovae of type Ia exploding for a given
  * star particle between time t and t+dt
@@ -495,10 +494,10 @@ INLINE static void determine_bin_yield_SNII(
 double integrate_rate_of_NSM(const struct spart* sp, const double t0,
                              const double t1,
                              const struct feedback_props* props) {
-    
-    /* The calculation is written as the integral between t0 and t1 */
-    double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
-    return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
+
+  /* The calculation is written as the integral between t0 and t1 */
+  double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
+  return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
 }
 
 /**
@@ -530,31 +529,35 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
 
   /* Compute the number of NS merger events in timestep by
    integrating the rate of NS merger events (number per yr) */
-  float num_NSM = integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+  float num_NSM =
+      integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* Draw a random number */
-  const float rand = random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
-    
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
+
   int num_events = 0;
-    
+
   if (num_NSM > 1.f) {
-      num_events = floor(num_NSM);
-      num_NSM -= num_events;
+    num_events = floor(num_NSM);
+    num_NSM -= num_events;
   }
 
   /* I define my probability as number of NSM events per time step */
   float prob_num = num_NSM;
-    
+
   /* Are we lucky? If so we have 1 more event */
   if (prob_num > rand) num_events += 1;
-    
+
   if (num_events > 0) {
 
     /* Compute the mass produced by NSM events */
-    const float delta_mass = num_events * props->yield_Eu_from_NSM * props->solar_mass_to_mass;
+    const float delta_mass =
+        num_events * props->yield_Eu_from_NSM * props->solar_mass_to_mass;
 
     /* compute mass of Europium */
-    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] += delta_mass;
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
+        delta_mass;
 
     /* Mass to distribute */
     sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
@@ -575,55 +578,56 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
  */
-INLINE static void evolve_CEJSN_stochastic(const struct feedback_props* props,
-                                           struct spart* sp,
-                                           double star_age_Gyr, double dt_Gyr,
-                                           const integertime_t ti_current,
-                                           const struct cosmology* cosmo,
-                                           double stellar_evolution_age_cut_Gyr) {
+INLINE static void evolve_CEJSN_stochastic(
+    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
+    double dt_Gyr, const integertime_t ti_current,
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-    
+
   /* First we check that the amount of time since star was formed */
   /* is larger than 30 Myr */
   if (star_age_Gyr < 0.03) return;
   if (star_age_Gyr > 0.1) return;
 
   /* Number of CEJSN events in timestep */
-  float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.07);
+  float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
+                    props->mass_to_solar_mass * (dt_Gyr / 0.07);
 
   /* Draw a random number */
-  const float rand = random_unit_interval(sp->id, ti_current,random_number_enrichment_2);
-    
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
+
   int num_events = 0;
   if (num_CEJSN > 1.f) {
     num_events = floor(num_CEJSN);
     num_CEJSN -= num_events;
   }
-    
+
   /* I define my probability as number of CEJSN per time step */
   const float prob_num = num_CEJSN;
-    
+
   /* Are we lucky? If so we have 1 more event */
   if (prob_num > rand) num_events += 1;
-    
+
   if (num_events > 0) {
 
-       /* Compute the mass produced by CEJSN */
-       const float delta_mass = num_events * props->yield_Eu_from_CEJSN * props->solar_mass_to_mass;
-        
-       /* compute mass of Europium */
-       sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] += delta_mass;
-        
-       /* Mass to distribute */
-       sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
-        
-       /* Write the event to the r-process log file */
-       event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 1);
-      
+    /* Compute the mass produced by CEJSN */
+    const float delta_mass =
+        num_events * props->yield_Eu_from_CEJSN * props->solar_mass_to_mass;
+
+    /* compute mass of Europium */
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
+        delta_mass;
+
+    /* Mass to distribute */
+    sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
+
+    /* Write the event to the r-process log file */
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 1);
   }
 }
 
@@ -647,36 +651,39 @@ INLINE static void evolve_collapsar_stochastic(
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-    
+
   /* First we check that the amount of time since star was formed */
   /* is larger than 30 Myr */
   if (star_age_Gyr < 0.03) return;
   if (star_age_Gyr > 0.1) return;
 
   /* Number of collapsar events in timestep */
-  /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
-  float num_collapsar = props->collapsar_per_Msun * sp->mass_init * props->mass_to_solar_mass * (dt_Gyr/0.07);
+  /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
+   * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
+  float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
+                        props->mass_to_solar_mass * (dt_Gyr / 0.07);
 
   /* Draw a random number */
-  const float rand = random_unit_interval(sp->id, ti_current,
-                                          random_number_enrichment_3);
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
 
   int num_events = 0;
   if (num_collapsar > 1.f) {
-     num_events = floor(num_collapsar);
-     num_collapsar -= num_events;
+    num_events = floor(num_collapsar);
+    num_collapsar -= num_events;
   }
-    
+
   /* I define my probability as number of collapsars per time step */
   const float prob_num = num_collapsar;
-  
+
   /* Are we lucky? If so we have 1 more event */
   if (prob_num > rand) num_events += 1;
-    
+
   if (num_events > 0) {
 
     /* Compute the mass produced by collapsar */
-    const float delta_mass = num_events * props->yield_Eu_from_collapsar * props->solar_mass_to_mass;
+    const float delta_mass =
+        num_events * props->yield_Eu_from_collapsar * props->solar_mass_to_mass;
 
     /* compute mass of Europium */
     sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
@@ -1341,7 +1348,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
-  const double stellar_evolution_age_cut_Gyr = feedback_props->stellar_evolution_age_cut * units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
+  const double stellar_evolution_age_cut_Gyr =
+      feedback_props->stellar_evolution_age_cut *
+      units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
   /* Get the metallicity */
   const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
@@ -1534,12 +1543,12 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                stellar_yields, feedback_props, sp);
   }
   if (feedback_props->with_r_process_enrichment) {
-      evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+    evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+                          cosmo, stellar_evolution_age_cut_Gyr);
+    evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                             cosmo, stellar_evolution_age_cut_Gyr);
-      evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
-                              ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
-      evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
-                                  ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
+    evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
+                                ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1732,20 +1741,22 @@ void feedback_props_init(struct feedback_props* fp,
 
   /* Properties of neutron star mergers model */
   if (fp->with_r_process_enrichment)
-    message("Running COLIBRE with r-process enrichment produced by: Neutron star mergers, Common envelope jets SN and Collapsars");
-    
+    message(
+        "Running COLIBRE with r-process enrichment produced by: Neutron star "
+        "mergers, Common envelope jets SN and Collapsars");
+
   fp->NSM_per_Msun =
       parser_get_param_double(params, "COLIBREFeedback:num_of_NSM_per_Msun");
-  fp->yield_Eu_from_NSM =
-      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_NSM_event_Msun");
+  fp->yield_Eu_from_NSM = parser_get_param_double(
+      params, "COLIBREFeedback:yield_Eu_from_NSM_event_Msun");
   fp->CEJSN_per_Msun =
       parser_get_param_double(params, "COLIBREFeedback:num_of_CEJSN_per_Msun");
-  fp->yield_Eu_from_CEJSN =
-      parser_get_param_double(params, "COLIBREFeedback:yield_Eu_from_CEJSN_event_Msun");
-  fp->collapsar_per_Msun =
-      parser_get_param_double(params, "COLIBREFeedback:num_of_collapsar_per_Msun");
+  fp->yield_Eu_from_CEJSN = parser_get_param_double(
+      params, "COLIBREFeedback:yield_Eu_from_CEJSN_event_Msun");
+  fp->collapsar_per_Msun = parser_get_param_double(
+      params, "COLIBREFeedback:num_of_collapsar_per_Msun");
   fp->yield_Eu_from_collapsar = parser_get_param_double(
-      params,"COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
+      params, "COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
 
   /* Properties of the SNIa enrichment model -------------------------------- */
 
