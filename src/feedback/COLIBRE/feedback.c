@@ -120,10 +120,8 @@ INLINE static double colibre_feedback_number_of_SNII(
 }
 
 /**
- * @brief Computes the number of supernovae of type Ia exploding for a given
- * star particle between time t and t+dt
- *
- * We follow Foerster et al. 2006, MNRAS, 368
+ * @brief Computes the number of supernovae of type II exploding for a given
+ * star particle.
  *
  * @param sp The #spart.
  * @param props The properties of the stellar model.
