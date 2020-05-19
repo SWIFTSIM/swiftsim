@@ -179,6 +179,12 @@ struct chemistry_bpart_data {
 
   /*! Iron mass coming from SNIa */
   float iron_mass_from_SNIa;
+    
+  /*! Mass coming from Neutron star mergers (NSM), common-envelop jets SN (CEJSN) and collapsars */
+  float mass_from_NSM;
+  float mass_from_CEJSN;
+  float mass_from_collapsar;
+
 };
 
 #endif /* SWIFT_CHEMISTRY_STRUCT_COLIBRE_H */

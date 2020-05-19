@@ -479,6 +479,9 @@ __attribute__((always_inline)) INLINE static void chemistry_bpart_from_part(
       p_data->metal_mass_fraction_from_AGB * gas_mass;
   bp_data->iron_mass_from_SNIa =
       p_data->iron_mass_fraction_from_SNIa * gas_mass;
+  bp_data->mass_from_NSM = p_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN = p_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar = p_data->mass_from_collapsar;
 }
 
 /**
@@ -509,6 +512,10 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
       p_data->metal_mass_fraction_from_AGB * gas_mass;
   bp_data->iron_mass_from_SNIa +=
       p_data->iron_mass_fraction_from_SNIa * gas_mass;
+  bp_data->mass_from_NSM += p_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN += p_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar += p_data->mass_from_collapsar;
+
 }
 
 /**
@@ -532,6 +539,9 @@ __attribute__((always_inline)) INLINE static void chemistry_add_bpart_to_bpart(
   bp_data->metal_mass_from_SNII += swallowed_data->metal_mass_from_SNII;
   bp_data->metal_mass_from_AGB += swallowed_data->metal_mass_from_AGB;
   bp_data->iron_mass_from_SNIa += swallowed_data->iron_mass_from_SNIa;
+  bp_data->mass_from_NSM += swallowed_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN += swallowed_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar += swallowed_data->mass_from_collapsar;
 }
 
 /**
@@ -547,6 +557,9 @@ __attribute__((always_inline)) INLINE static void chemistry_split_part(
   p->chemistry_data.mass_from_SNIa /= n;
   p->chemistry_data.mass_from_SNII /= n;
   p->chemistry_data.mass_from_AGB /= n;
+  p->chemistry_data.mass_from_NSM /= n;
+  p->chemistry_data.mass_from_CEJSN /= n;
+  p->chemistry_data.mass_from_collapsar /= n;
 }
 
 /**
