@@ -371,20 +371,24 @@ INLINE static void event_logger_r_processes_MPI_Reduce(const struct engine *e) {
   if (!event_logger_core_log(e, &log_r_processes.core)) return;
 
   /* Define empty variables for the MPI communication */
-  int number_events_received;
-  double total_mass;
+  int number_events_received_NSM;
+  int number_events_received_CEJSN;
+  int number_events_received_coll;
+  double total_mass_NSM;
+  double total_mass_CEJSN;
+  double total_mass_coll;
 
-  MPI_Reduce(&log_r_processes.NSM_events, &number_events_received, 1, MPI_INT,
+  MPI_Reduce(&log_r_processes.NSM_events, &number_events_received_NSM, 1, MPI_INT,
              MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received, 1, MPI_INT,
+  MPI_Reduce(&log_r_processes.CEJSN_events, &number_events_received_CEJSN, 1, MPI_INT,
              MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received, 1,
+  MPI_Reduce(&log_r_processes.collapsar_events, &number_events_received_coll, 1,
              MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.NSM_enrichment_mass, &total_mass, 1, MPI_DOUBLE,
+  MPI_Reduce(&log_r_processes.NSM_enrichment_mass, &total_mass_NSM, 1, MPI_DOUBLE,
              MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.CEJSN_enrichment_mass, &total_mass, 1, MPI_DOUBLE,
+  MPI_Reduce(&log_r_processes.CEJSN_enrichment_mass, &total_mass_CEJSN, 1, MPI_DOUBLE,
              MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce(&log_r_processes.collapsar_enrichment_mass, &total_mass, 1,
+  MPI_Reduce(&log_r_processes.collapsar_enrichment_mass, &total_mass_coll, 1,
              MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (e->nodeID != 0) {
