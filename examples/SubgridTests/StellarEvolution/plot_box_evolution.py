@@ -119,6 +119,9 @@ swift_box_gas_metal_mass_SNII = zeros(n_snapshots)
 swift_box_gas_metal_mass_SNIa = zeros(n_snapshots)
 swift_element_mass = zeros((n_snapshots,n_elements))
 swift_rprocess_mass = zeros(n_snapshots)
+swift_box_gas_Eu_mass_NSM = zeros(n_snapshots)
+swift_box_gas_Eu_mass_CEJSN = zeros(n_snapshots)
+swift_box_gas_Eu_mass_Collapsar = zeros(n_snapshots)
 swift_internal_energy = zeros(n_snapshots)
 swift_kinetic_energy = zeros(n_snapshots)
 swift_total_energy = zeros(n_snapshots)
@@ -163,8 +166,14 @@ for i in range(n_snapshots):
 
         try:
             swift_rprocess_mass[i] = np.sum(element_abundances[:,9] * masses)
+            swift_box_gas_Eu_mass_NSM[i] = np.sum(sim["/PartType0/MassesFromNSM"][:])
+            swift_box_gas_Eu_mass_CEJSN[i] = np.sum(sim["/PartType0/MassesFromCEJSN"][:])
+            swift_box_gas_Eu_mass_Collapsar[i] = np.sum(sim["/PartType0/MassesFromCollapsar"][:])
         except:
             swift_rprocess_mass[i] = 0.
+            swift_box_gas_Eu_mass_NSM[i] = 0.
+            swift_box_gas_Eu_mass_CEJSN[i] = 0.
+            swift_box_gas_Eu_mass_Collapsar[i] = 0.
             
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
@@ -210,15 +219,23 @@ eagle_total_metal_mass_SNIa = data[:,2] * stellar_mass / Msun_in_cgs * unit_mass
 
 
 # Construct Europium expectations
-Eu_mass_collapsar_Msun = zeros(n_snapshots)
-Eu_mass_CEJSN_Msun = zeros(n_snapshots)
-Eu_mass_NSM_Msun = zeros(n_snapshots)
+Eu_t = np.linspace(t[0], t[-1], 10000) * unit_time_in_cgs / Gyr_in_cgs
+Eu_mass_collapsar_Msun = zeros(np.size(Eu_t))
+Eu_mass_CEJSN_Msun = zeros(np.size(Eu_t))
+Eu_mass_NSM_Msun = zeros(np.size(Eu_t))
 
-t0 = 0.03 * Gyr_in_cgs / unit_time_in_cgs
-mask = t > t0
-Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun * t[mask] * unit_time_in_cgs / Gyr_in_cgs
-Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun * t[mask] * unit_time_in_cgs / Gyr_in_cgs
-Eu_mass_NSM_Msun[mask] = Eu_N_NSM_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs) * Eu_yield_NSM_Msun * np.log(t[mask] / t0)
+t0 = 0.03
+t1 = 0.1
+mask = Eu_t > t0
+Eu_mass_NSM_Msun[mask] = Eu_N_NSM_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs) * Eu_yield_NSM_Msun * np.log(Eu_t[mask] / t0)
+
+mask = np.logical_and(Eu_t > t0, Eu_t <= t1)
+Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun * (Eu_t[mask] - 0.03) / (0.1 - 0.03)
+Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun * (Eu_t[mask] - 0.03) / (0.1 - 0.03)
+
+mask = Eu_t > t1
+Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun
+Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun
 
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
 
@@ -264,12 +281,15 @@ xscale("log")
 yscale("log")
 legend(bbox_to_anchor=(-0.135, 1.), ncol=1, fontsize=8, handlelength=1)
 
-subplot(234)
-plot(t * unit_time_in_cgs / Gyr_in_cgs, swift_rprocess_mass* unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color='k', label='SWIFT')
-plot(t * unit_time_in_cgs / Gyr_in_cgs, Eu_mass_total_Msun, linewidth=0.5, color='k', ls='--', label='Total')
-plot(t * unit_time_in_cgs / Gyr_in_cgs, Eu_mass_collapsar_Msun, linewidth=0.5, color='C0', ls='--', label='Collapsars')
-plot(t * unit_time_in_cgs / Gyr_in_cgs, Eu_mass_CEJSN_Msun, linewidth=0.5, color='C1', ls='--', label='CEJSN')
-plot(t * unit_time_in_cgs / Gyr_in_cgs, Eu_mass_NSM_Msun, linewidth=0.5, color='C2', ls='--', label='NSM')
+subplot(234)#, xscale="log")
+plot(t * unit_time_in_cgs / Gyr_in_cgs, swift_rprocess_mass* unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color='k', label="Total")
+plot(t * unit_time_in_cgs / Gyr_in_cgs, swift_box_gas_Eu_mass_NSM * unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color='C2', label='NSM')
+plot(t * unit_time_in_cgs / Gyr_in_cgs, swift_box_gas_Eu_mass_CEJSN * unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color='C1', label='CEJSN')
+plot(t * unit_time_in_cgs / Gyr_in_cgs, swift_box_gas_Eu_mass_Collapsar * unit_mass_in_cgs / Msun_in_cgs, linewidth=0.5, color='C0', label='Collapsars')
+plot(Eu_t, Eu_mass_total_Msun, linewidth=0.5, color='k', ls='--')
+plot(Eu_t, Eu_mass_collapsar_Msun, linewidth=0.5, color='C0', ls='--')
+plot(Eu_t, Eu_mass_CEJSN_Msun, linewidth=0.5, color='C1', ls='--')
+plot(Eu_t, Eu_mass_NSM_Msun, linewidth=0.5, color='C2', ls='--')
 legend(loc="upper left", ncol=2, fontsize=8)
 xlabel("${\\rm Time~[Gyr]}$", labelpad=0)
 ylabel("Change in Europium mass of gas particles ${[\\rm M_\\odot]}$", labelpad=2)
