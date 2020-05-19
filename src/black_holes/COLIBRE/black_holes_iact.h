@@ -149,6 +149,24 @@ runner_iact_nonsym_bh_gas_density(
         (rhoj * denominator_inv * denominator_inv * denominator_inv);
   } /* End of accretion contribution calculation */
 
+  if (bh_props->use_krumholz_vorticity) {
+
+    /* Need to compute gas vorticity around the black hole, in analogy to
+     * calculation for Balsara switch in hydro part */
+
+    /* Factor to make sure we get curl, not angular momentum */
+    const float faci = mj * wi_dx * r_inv;
+
+    /* Compute dv cross r */
+    const float v_cross_r[3] = {dv[1] * dx[2] - dv[2] * dx[1],
+                                dv[2] * dx[0] - dv[0] * dx[2],
+                                dv[0] * dx[1] - dv[1] * dx[0]};
+    
+    bi->curl_v_gas[0] += faci * v_cross_r[0];
+    bi->curl_v_gas[1] += faci * v_cross_r[1];
+    bi->curl_v_gas[2] += faci * v_cross_r[2];
+  } /* End of vorticity contribution calculation */
+
 #ifdef DEBUG_INTERACTIONS_BH
   /* Update ngb counters */
   if (si->num_ngb_density < MAX_NUM_OF_NEIGHBOURS_BH)
