@@ -142,6 +142,7 @@ Snapshots:
   UnitCurrent_in_cgs:  1  # (Optional) Unit system for the outputs (Amperes)
   UnitTemp_in_cgs:     1  # (Optional) Unit system for the outputs (Kelvin)
   output_list_on:      0  # (Optional) Enable the output list
+  multiple_output_levels: 0 # (Optional) Enable multiple levels of outputs
   output_list:         snaplist.txt # (Optional) File containing the output times (see documentation in "Parameter File" section)
 
 # Parameters governing the logger snapshot system

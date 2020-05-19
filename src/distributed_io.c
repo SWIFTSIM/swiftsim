@@ -703,14 +703,32 @@ void write_output_distributed(struct engine* e,
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
+    /* Check whether the user has cancelled (by default) the entire 
+     * particle type */
+    char field_all[PARSER_MAX_LINE_SIZE];
+    if (e->type_next_snapshot > 0)
+      sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
+              e->type_next_snapshot, part_type_names[ptype]);
+    else
+      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);      
+    const int ptype_default_should_write = parser_get_opt_param_int(params,
+      field_all, 1);
+
     /* Write everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
 
       /* Did the user cancel this field? */
       char field[PARSER_MAX_LINE_SIZE];
-      sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
-              part_type_names[ptype]);
-      int should_write = parser_get_opt_param_int(params, field, 1);
+      if (e->type_next_snapshot > 0)
+        sprintf(field, "SelectOutput%d:%.*s_%s",
+                e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
+                part_type_names[ptype]);
+      else
+        sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
+                part_type_names[ptype]);
+
+      int should_write = parser_get_opt_param_int(
+        params, field, ptype_default_should_write);
 
       if (should_write)
         write_distributed_array(e, h_grp, fileName, partTypeGroupName, list[i],
