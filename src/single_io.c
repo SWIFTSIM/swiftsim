@@ -1170,14 +1170,14 @@ void write_output_single(struct engine* e,
 
     /* Check whether the user has cancelled (by default) the entire 
      * particle type */
-    int ptype_default_should_write = 1;
-    if (e->type_next_snapshot > 0) {
-      char field_all[PARSER_MAX_LINE_SIZE];
+    char field_all[PARSER_MAX_LINE_SIZE];
+    if (e->type_next_snapshot > 0)
       sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
               e->type_next_snapshot, part_type_names[ptype]);
-      ptype_default_should_write = parser_get_opt_param_int(params,
-        field_all, 1);
-    } 
+    else
+      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);      
+    const int ptype_default_should_write = parser_get_opt_param_int(params,
+      field_all, 1);
 
     /* Write everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
