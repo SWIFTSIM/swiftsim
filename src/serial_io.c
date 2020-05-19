@@ -1409,7 +1409,8 @@ void write_output_serial(struct engine* e,
             sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
                     part_type_names[ptype]);
 
-          int should_write = parser_get_opt_param_int(params, field, 1);
+          int should_write = parser_get_opt_param_int(params, field, 
+						      ptype_default_should_write);
 
           if (should_write)
             write_array_serial(e, h_grp, fileName, xmfFile, partTypeGroupName,
