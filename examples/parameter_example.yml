@@ -621,9 +621,9 @@ COLIBREFeedback:
   HIIregion_maxage_Myr:             0               # (Optional) same as stellarwind_maxage_Myr, but for HII regions. Set to 0 to disable HII regions.
   num_of_NSM_per_Msun:              1.54e-5         # Number of neutron star mergers per Msolar.
   yield_Eu_from_NSM_event_Msun:     1.5e-5          # Amount of europium (in units of Msolar) released by NSM.
-  num_of_CEJSN_per_Msun:            7.05e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
+  num_of_CEJSN_per_Msun:            1.22e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
   yield_Eu_from_CEJSN_event_Msun:   1e-5            # Amount of europium (in units of Msolar) released by CEJSN(=Common envelop jet SN).
-  num_of_collapsar_per_Msun:        2.6e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
+  num_of_collapsar_per_Msun:        4.53e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
   yield_Eu_from_collapsar_event_Msun: 1e-4          # Amount of europium (in units of Msolar) released by collapsars.
 
 # GEAR feedback model

@@ -174,9 +174,9 @@ COLIBREFeedback:
   earlyfb_filename:                 HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
   num_of_NSM_per_Msun:              1.54e-5         # Number of neutron star mergers per Msolar.
   yield_Eu_from_NSM_event_Msun:     1.5e-5          # Amount of europium (in units of Msolar) released by NSM.
-  num_of_CEJSN_per_Msun:            7.05e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
+  num_of_CEJSN_per_Msun:            1.22e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
   yield_Eu_from_CEJSN_event_Msun:   1e-5            # Amount of europium (in units of Msolar) released by CEJSN(=Common envelop jet SN).
-  num_of_collapsar_per_Msun:        2.6e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
+  num_of_collapsar_per_Msun:        4.53e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
   yield_Eu_from_collapsar_event_Msun: 1e-4          # Amount of europium (in units of Msolar) released by collapsars.
 
 #  stellarwind_maxage_Myr:           0 # (Optional) Maximum age in Myr of star particle to inject momentum by stellar winds. Set to 0 to disable stellar winds. If not defined it takes the maximum agebin from the the earlyfb_filename table                                    
