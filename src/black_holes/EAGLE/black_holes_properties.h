@@ -52,6 +52,8 @@ struct black_holes_props {
   /*! Mass of a BH seed at creation time */
   float subgrid_seed_mass;
 
+
+
   /* ----- Properties of the accretion model ------ */
 
   /*! Maximal fraction of the Eddington rate allowed. */
@@ -182,6 +184,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
+
+  bp->use_subgrid_mass_from_ics =
+      parser_get_opt_param_int(params, "EAGLEAGN:use_subgrid_mass_from_ics", 0);
 
   /* Accretion parameters ---------------------------------- */
 
