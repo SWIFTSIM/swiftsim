@@ -115,7 +115,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 12;
+  *num_fields = 13;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -179,6 +179,10 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "HIIregions_mass_in_kernel", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
+
+  list[12] =
+      io_make_output_field("TimeBins", CHAR, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+                           time_bin, "Time-bins of the particles");
 }
 
 /**

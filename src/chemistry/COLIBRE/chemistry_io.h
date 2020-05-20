@@ -154,7 +154,22 @@ INLINE static int chemistry_write_particles(const struct part* parts,
                              "has never been enriched by SNIa.");
   }
 
-  return 13;
+  list[13] = io_make_output_field(
+      "MassesFromNSM", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts,
+      chemistry_data.mass_from_NSM,
+      "Mass of europium that have been produced by neutron star merger events");
+
+  list[14] = io_make_output_field("MassesFromCEJSN", FLOAT, 1, UNIT_CONV_MASS,
+                                  0.f, parts, chemistry_data.mass_from_CEJSN,
+                                  "Mass of europium that have been produced by "
+                                  "common-envelop jets SN events");
+
+  list[15] = io_make_output_field(
+      "MassesFromCollapsar", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts,
+      chemistry_data.mass_from_collapsar,
+      "Mass of europium that have been produced by collapsar events");
+
+  return 16;
 }
 
 /**
@@ -218,7 +233,22 @@ INLINE static int chemistry_write_sparticles(const struct spart* sparts,
                                  "Fractions of the particles' masses that are "
                                  "in iron produced by SNIa stars");
 
-  return 9;
+  list[9] = io_make_output_field(
+      "MassesFromNSM", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      chemistry_data.mass_from_NSM,
+      "Masses of gas that have been produced by neutron star merger events");
+
+  list[10] = io_make_output_field("MassesFromCEJSN", FLOAT, 1, UNIT_CONV_MASS,
+                                  0.f, sparts, chemistry_data.mass_from_CEJSN,
+                                  "Masses of gas that have been produced by "
+                                  "common-envelop jets SN events");
+
+  list[11] = io_make_output_field(
+      "MassesFromCollapsar", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
+      chemistry_data.mass_from_collapsar,
+      "Masses of gas that have been produced by collapsar events");
+
+  return 12;
 }
 
 /**
@@ -282,7 +312,25 @@ INLINE static int chemistry_write_bparticles(const struct bpart* bparts,
                            "Masses of the BH particles in iron that have been "
                            "produced by SNIa stars");
 
-  return 9;
+  list[9] =
+      io_make_output_field("MassesFromNSM", FLOAT, 1, UNIT_CONV_MASS, 0.f,
+                           bparts, chemistry_data.mass_from_NSM,
+                           "Masses of the BH particles in europium that have "
+                           "been produced by neutron star merger events");
+
+  list[10] =
+      io_make_output_field("MassesFromCEJSN", FLOAT, 1, UNIT_CONV_MASS, 0.f,
+                           bparts, chemistry_data.mass_from_CEJSN,
+                           "Masses of the BH particles in europium that have "
+                           "been produced by common-envelop jets SN events");
+
+  list[11] =
+      io_make_output_field("MassesFromCollapsar", FLOAT, 1, UNIT_CONV_MASS, 0.f,
+                           bparts, chemistry_data.mass_from_collapsar,
+                           "Masses of the BH particles in europium that have "
+                           "been produced by collapsar events");
+
+  return 12;
 }
 
 #ifdef HAVE_HDF5

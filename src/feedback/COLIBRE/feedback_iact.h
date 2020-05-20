@@ -172,6 +172,14 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     pj->chemistry_data.metal_mass_fraction[elem] =
         new_metal_mass * new_mass_inv;
   }
+  /* Update europium masses from neutron star mergers (NSM), common-envelop jets
+   * SN (CEJSN) and collapsars */
+  pj->chemistry_data.mass_from_NSM +=
+      si->feedback_data.to_distribute.mass_from_NSM * Omega_frac;
+  pj->chemistry_data.mass_from_CEJSN +=
+      si->feedback_data.to_distribute.mass_from_CEJSN * Omega_frac;
+  pj->chemistry_data.mass_from_collapsar +=
+      si->feedback_data.to_distribute.mass_from_collapsar * Omega_frac;
 
   /* Update iron mass fraction from SNIa  */
   const double current_iron_from_SNIa_mass =

@@ -33,6 +33,7 @@ enum chemistry_element {
   chemistry_element_Mg,
   chemistry_element_Si,
   chemistry_element_Fe,
+  chemistry_element_Eu,
   chemistry_element_count
 };
 
@@ -80,6 +81,17 @@ struct chemistry_part_data {
 
   /*! Mass coming from SNII */
   float mass_from_SNII;
+
+  /*! Mass coming from Neutron star mergers (NSM), common-envelop jets SN
+   * (CEJSN) and collapsars */
+  float mass_from_NSM;
+  float mass_from_CEJSN;
+  float mass_from_collapsar;
+
+  /*! Fraction tracers of europium mass coming from NSM, CEJSN and collapsars */
+  float dEu_mass_fraction_from_NSM;
+  float dEu_mass_fraction_from_CEJSN;
+  float dEu_mass_fraction_from_collapsar;
 
   /*! Fraction of total gas mass in metals coming from SNII */
   float metal_mass_fraction_from_SNII;
@@ -167,6 +179,12 @@ struct chemistry_bpart_data {
 
   /*! Iron mass coming from SNIa */
   float iron_mass_from_SNIa;
+
+  /*! Mass coming from Neutron star mergers (NSM), common-envelop jets SN
+   * (CEJSN) and collapsars */
+  float mass_from_NSM;
+  float mass_from_CEJSN;
+  float mass_from_collapsar;
 };
 
 #endif /* SWIFT_CHEMISTRY_STRUCT_COLIBRE_H */
