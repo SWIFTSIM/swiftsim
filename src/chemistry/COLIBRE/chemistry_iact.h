@@ -369,7 +369,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     /* Get mass */
     const float mi = hydro_get_mass(pi);
     const float mj = hydro_get_mass(pj);
-    const float mi = hydro_get_mass(pi);
     const float rhoj = hydro_get_comoving_density(pj);
     const float rhoi = hydro_get_comoving_density(pi);
 

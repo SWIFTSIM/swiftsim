@@ -46,7 +46,7 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron",     "Europium"};
+      "Neon",     "Magnesium", "Silicon", "Iron", "Europium"};
 
   return chemistry_element_names[elem];
 }
@@ -84,15 +84,15 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   cpd->dmetal_mass_fraction_total = 0.0f;
 
   /* and the metals from the different channels */
-  cpd->dmetal_mass_fraction_from_SNIa = 0.0f;
   cpd->diron_mass_fraction_from_SNIa = 0.0f;
+  cpd->dmetal_mass_fraction_from_SNIa = 0.0f;
   cpd->dmetal_mass_fraction_from_AGB = 0.0f;
-  cpd->dH_He_mass_fraction_from_AGB = 0.0f;
   cpd->dmetal_mass_fraction_from_SNII = 0.0f;
+  cpd->dH_He_mass_fraction_from_AGB = 0.0f;
+  cpd->dH_He_mass_fraction_from_SNII = 0.0f;
   cpd->dEu_mass_fraction_from_NSM = 0.0f;
   cpd->dEu_mass_fraction_from_CEJSN = 0.0f;
   cpd->dEu_mass_fraction_from_collapsar = 0.0f;
-  cpd->dH_He_mass_fraction_from_SNII = 0.0f;
 }
 
 /**
