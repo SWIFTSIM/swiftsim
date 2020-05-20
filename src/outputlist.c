@@ -39,9 +39,11 @@
  * @param outputlist The #output_list to fill.
  * @param filename The file to read.
  * @param cosmo The #cosmology model.
+ * @param use_multiple_levels Switch to enable multiple output levels.
  */
 void output_list_read_file(struct output_list *outputlist, const char *filename,
-                           struct cosmology *cosmo) {
+                           struct cosmology *cosmo,
+                           const int use_multiple_levels) {
 
   /* Open file */
   FILE *file = fopen(filename, "r");
@@ -63,6 +65,18 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
         "Unable to malloc output_list. "
         "Try reducing the number of lines in %s",
         filename);
+
+  if (use_multiple_levels) {
+    outputlist->types = (int *)malloc(sizeof(int) * outputlist->size);
+    if (!outputlist->types)
+      error(
+          "Unable to malloc output_list->types. "
+          "Try reducing the number of lines in %s",
+          filename);
+  } else {
+    outputlist->types = NULL;
+  }
+
 
   /* Read header */
   if (getline(&line, &len, file) == -1)
@@ -95,12 +109,21 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
   size_t ind = 0;
   while (getline(&line, &len, file) != -1) {
     double *time = &outputlist->times[ind];
+    int *snaptype = use_multiple_levels ? &outputlist->types[ind] : NULL;
     /* Write data to outputlist */
-    if (sscanf(line, "%lf", time) != 1)
-      error(
-          "Tried parsing double but found '%s' with illegal double "
-          "characters in file '%s'.",
-          line, filename);
+    if (use_multiple_levels) {
+      if (sscanf(line, "%lf %i", time, snaptype) != 2)
+        error(
+            "Tried parsing double, int but found '%s' with unexpected "
+            "characters in file '%s'.",
+            line, filename);
+    } else {
+      if (sscanf(line, "%lf", time) != 1)
+        error(
+            "Tried parsing double but found '%s' with illegal double "
+            "characters in file '%s'.",
+            line, filename);      
+    }
 
     /* Transform input into correct time (e.g. ages or scale factor) */
     if (type == OUTPUT_LIST_REDSHIFT) *time = 1. / (1. + *time);
@@ -134,7 +157,8 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
       error("Output list not having monotonically increasing scale-factors.");
   }
 
-  /* set current indice to 0 */
+  /* Initialise current output index to zero. If this is already in the past,
+   * it will be updated during the next call of output_list_read_next_time() */
   outputlist->cur_ind = 0;
 
   /* We check if this is true later */
@@ -150,9 +174,11 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
  * @param e The #engine.
  * @param name The name of the output (e.g. 'stats', 'snapshots', 'stf')
  * @param ti_next updated to the next output time
+ * @param type_next updated to the next output type
  */
 void output_list_read_next_time(struct output_list *t, const struct engine *e,
-                                const char *name, integertime_t *ti_next) {
+                                const char *name, integertime_t *ti_next,
+                                int *type_next) {
   int is_cosmo = e->policy & engine_policy_cosmology;
 
   /* Find upper-bound on last output */
@@ -162,7 +188,7 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
   else
     time_end = e->time_end;
 
-  /* Find next snasphot above current time */
+  /* Find next output above current time */
   double time = t->times[t->cur_ind];
   size_t ind = t->cur_ind;
   while (time <= time_end) {
@@ -172,6 +198,12 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       *ti_next = log(time / e->cosmology->a_begin) / e->time_base;
     else
       *ti_next = (time - e->time_begin) / e->time_base;
+
+    /* Also record type of next output */
+    if (t->types)
+      *type_next = t->types[ind];
+    else
+      *type_next = 0;
 
     /* Found it? */
     if (*ti_next > e->ti_current) break;
@@ -207,11 +239,13 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       const double next_time =
           exp(*ti_next * e->time_base) * e->cosmology->a_begin;
       if (e->verbose)
-        message("Next output time for %s set to a=%e.", name, next_time);
+        message("Next output time for %s set to a=%e, type=%d.",
+                name, next_time, *type_next);
     } else {
       const double next_time = *ti_next * e->time_base + e->time_begin;
       if (e->verbose)
-        message("Next output time for %s set to t=%e.", name, next_time);
+        message("Next output time for %s set to t=%e, type=%d.",
+                name, next_time, *type_next);
     }
   }
 }
@@ -246,13 +280,18 @@ void output_list_init(struct output_list **list, const struct engine *e,
   /* Read outputlist for snapshots */
   *list = (struct output_list *)malloc(sizeof(struct output_list));
 
+  /* Find out if we are using multiple output levels */
+  char switch_name[PARSER_MAX_LINE_SIZE];
+  sprintf(switch_name, "%s:multiple_output_levels", name);
+  int use_multiple_levels = parser_get_opt_param_int(params, switch_name, 0);
+
   /* Read filename */
   char filename[PARSER_MAX_LINE_SIZE];
   sprintf(param_name, "%s:output_list", name);
   parser_get_param_string(params, param_name, filename);
 
   if (e->verbose) message("Reading %s output file.", name);
-  output_list_read_file(*list, filename, cosmo);
+  output_list_read_file(*list, filename, cosmo, use_multiple_levels);
 
   if ((*list)->size < 2)
     error("You need to provide more snapshots in '%s'", filename);
@@ -302,6 +341,9 @@ void output_list_struct_dump(struct output_list *list, FILE *stream) {
 
   restart_write_blocks(list->times, list->size, sizeof(double), stream,
                        "output_list", "times");
+  if (list->types)
+    restart_write_blocks(list->types, list->size, sizeof(int), stream,
+                         "output_list", "types");
 }
 
 /**
@@ -314,4 +356,12 @@ void output_list_struct_restore(struct output_list *list, FILE *stream) {
   list->times = (double *)malloc(sizeof(double) * list->size);
   restart_read_blocks(list->times, list->size, sizeof(double), stream, NULL,
                       "times");
+  
+  /* If we are in multiple-level-mode, list->types will point to a non-zero,
+   * albeit meaningless, memory address, otherwise, it's NULL. */
+  if (list->types) {
+    list->types = (int *)malloc(sizeof(int) * list->size);
+    restart_read_blocks(list->types, list->size, sizeof(int), stream, NULL,
+                        "types");
+  }
 }

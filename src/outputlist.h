@@ -44,6 +44,9 @@ struct output_list {
   /* Time array */
   double *times;
 
+  /* Output type array */
+  int *types;
+
   /* Size of the time array */
   size_t size;
 
@@ -55,9 +58,10 @@ struct output_list {
 };
 
 void output_list_read_file(struct output_list *outputlist, const char *filename,
-                           struct cosmology *cosmo);
+                           struct cosmology *cosmo, int use_multiple_levels);
 void output_list_read_next_time(struct output_list *t, const struct engine *e,
-                                const char *name, integertime_t *ti_next);
+                                const char *name, integertime_t *ti_next,
+                                int *type_next);
 void output_list_init(struct output_list **list, const struct engine *e,
                       const char *name, double *delta_time, double *time_first);
 void output_list_print(const struct output_list *outputlist);

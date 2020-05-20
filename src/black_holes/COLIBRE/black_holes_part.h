@@ -97,8 +97,16 @@ struct bpart {
    * in the frame of the black hole (internal units) */
   float velocity_gas[3];
 
-  /*! Curl of the velocity field around the black hole */
+  /*! Smoothed velocity dispersion (peculiar) of the gas around the
+   * black hole. Initially, this holds <v_gas^2> instead. */
+  float velocity_dispersion_gas;
+
+  /*! Circular velocity of the gas around the black hole at the smoothing
+   * radius (calculated as j_gas / h_BH, where j is specific ang. mom.) */
   float circular_velocity_gas[3];
+
+  /*! Curl of the gas velocity around the black hole. */
+  float curl_v_gas[3];
 
   /*! Total mass of the gas neighbours. */
   float ngb_mass;
