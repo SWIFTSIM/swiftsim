@@ -84,6 +84,8 @@ struct black_holes_props {
   /*! Switch between Bondi or Krumholz accretion rates */
   int use_bondi;
 
+  /*! In Krumholz mode, should we include the vorticity term? */
+  int use_krumholz_vorticity;
 
   /* ---- Properties of the feedback model ------- */
 
@@ -214,6 +216,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
   bp->use_bondi = 
       parser_get_param_int(params, "COLIBREAGN:use_bondi");
+  if (!bp->use_bondi)
+    bp->use_krumholz_vorticity =
+      parser_get_param_int(params, "COLIBREAGN:use_krumholz_vorticity");
 
   /* Feedback parameters ---------------------------------- */
 

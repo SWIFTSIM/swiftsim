@@ -134,6 +134,19 @@ INLINE static void convert_bpart_gas_velocity_dispersion(
   ret[0] = bp->velocity_dispersion_gas * cosmo->a_inv;
 }
 
+INLINE static void convert_bpart_gas_velocity_curl(
+  const struct engine* e, const struct bpart* bp, float* ret) {
+
+  const struct cosmology* cosmo = e->cosmology;
+
+  /* Conversion from internal to physical units */
+  ret[0] = bp->curl_v_gas[0] * cosmo->a2_inv;
+  ret[1] = bp->curl_v_gas[1] * cosmo->a2_inv;
+  ret[2] = bp->curl_v_gas[2] * cosmo->a2_inv;
+
+}
+
+
 /**
  * @brief Specifies which b-particle fields to write to a dataset
  *
@@ -286,6 +299,12 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Velocity dispersion (3D) of the gas particles around the black "
       "holes. This is a * sqrt(<|dx/dt|^2> - <|dx/dt|>^2) where x is the "
       "co-moving position of the particles relative to the black holes.");
+
+  list[21] = io_make_output_field_convert_bpart(
+      "GasCurlVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
+      convert_bpart_gas_velocity_curl,
+      "Velocity curl (3D) of the gas particles around the black holes.");
+
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
