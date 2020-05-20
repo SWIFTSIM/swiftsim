@@ -441,14 +441,8 @@ double colibre_metal_cooling_rate_temperature(
   float d_T, d_n_H, d_met, d_red;
   float logZZsol = log10((Z_absolute / table->Zsol[0]) + FLT_MIN);
 
-  if (redshift < table->H_reion_z) {
-    cooling_get_index_1d(table->Redshifts, colibre_cooling_N_redshifts,
-                         redshift, &red_index, &d_red);
-  } else {
-    red_index = colibre_cooling_N_redshifts - 2;
-    d_red = 1.0;
-  }
-
+  cooling_get_index_1d(table->Redshifts, colibre_cooling_N_redshifts, redshift,
+                       &red_index, &d_red);
   cooling_get_index_1d(table->Temp, colibre_cooling_N_temperature, log_T_cgs,
                        &T_index, &d_T);
   cooling_get_index_1d(table->Metallicity, colibre_cooling_N_metallicity,

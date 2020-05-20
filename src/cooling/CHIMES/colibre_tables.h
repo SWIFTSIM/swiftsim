@@ -97,9 +97,6 @@ struct colibre_cooling_tables {
   /*! S over Si abundance divided by the solar ratio for these elements */
   float S_over_Si_ratio_in_solar;
 
-  /*! Redshift of H reionization */
-  float H_reion_z;
-
   /*! Logarithm base 10 of the Boltzmann constant in CGS (for quick access) */
   double log10_kB_cgs;
 
@@ -117,7 +114,7 @@ struct colibre_cooling_tables {
 #define colibre_cooling_N_temperature 86
 
 /*! Number of different bins along the redshift axis of the tables */
-#define colibre_cooling_N_redshifts 10
+#define colibre_cooling_N_redshifts 46
 
 /*! Number of different bins along the density axis of the tables */
 #define colibre_cooling_N_density 71

@@ -163,7 +163,7 @@ INLINE static int star_formation_is_star_forming(
   if (physical_density < rho_crit_times_min_over_den) return 0;
 
   /* Get the subgrid density */
-  const double subgrid_density = xp->tracers_data.subgrid_dens;
+  const double subgrid_density = p->cooling_data.subgrid_dens;
 
   /* Check if the subgrid density criterion is satisfied */
   if (subgrid_density > starform->subgrid_density_threshold) return 1;
@@ -173,7 +173,7 @@ INLINE static int star_formation_is_star_forming(
                                                      us, cosmo, cooling, p, xp);
 
   /* Get the subgrid temperature from the tracers */
-  const double subgrid_temperature = xp->tracers_data.subgrid_temp;
+  const double subgrid_temperature = p->cooling_data.subgrid_temp;
 
   /* Check if we satisfy the subgrid temperature criteria */
   if (subgrid_temperature < starform->temperature_threshold) return 1;
@@ -445,10 +445,10 @@ INLINE static void star_formation_copy_properties(
       phys_const, hydro_props, us, cosmo, cooling, p, xp);
 
   /* Store the birth subgrid density in the star particle */
-  sp->sf_data.birth_subgrid_density = xp->tracers_data.subgrid_dens;
+  sp->sf_data.birth_subgrid_density = p->cooling_data.subgrid_dens;
 
   /* Store the birth subgrid temperature in the star particle */
-  sp->sf_data.birth_subgrid_temperature = xp->tracers_data.subgrid_temp;
+  sp->sf_data.birth_subgrid_temperature = p->cooling_data.subgrid_temp;
 
   /* Store the birth velocity dispersion in the star particle */
   sp->sf_data.birth_velocity_dispersion = p->sf_data.sigma_v2;

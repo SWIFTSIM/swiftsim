@@ -31,12 +31,6 @@ struct tracers_xpart_data {
    */
   float momentum_received;
 
-  /*! Subgrid temperature */
-  float subgrid_temp;
-
-  /*! Subgrid density (internal units, physical frame) */
-  float subgrid_dens;
-
 #if !defined(COOLING_CHIMES)
   /*! Hydrogen fractions */
   float nHI_over_nH;

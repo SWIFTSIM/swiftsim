@@ -61,6 +61,7 @@ struct cooling_function_data {
   /* Parameters used for the
    * COLIBRE ISRF. */
   double N_H0;
+  float ISRF_low_dens_cutoff_z;
 
   /* Flags to control eqm mode and
    * thermal evolution. */
@@ -137,6 +138,15 @@ struct cooling_function_data {
 
   /* Colibre cooling table */
   struct colibre_cooling_tables colibre_table;
+};
+
+struct cooling_part_data {
+
+  /*! Subgrid temperature */
+  float subgrid_temp;
+
+  /*! Subgrid density (internal units, physical frame) */
+  float subgrid_dens;
 };
 
 /**

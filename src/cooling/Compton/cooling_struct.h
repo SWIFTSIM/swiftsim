@@ -44,6 +44,8 @@ struct cooling_function_data {
   double proton_mass_cgs_inv;
 };
 
+struct cooling_part_data {};
+
 /**
  * @brief Properties of the cooling stored in the particle data.
  */

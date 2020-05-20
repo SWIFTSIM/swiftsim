@@ -173,13 +173,16 @@ void cooling_init_backend(struct swift_params *parameter_file,
         parameter_file, "CHIMESCooling:max_shielding_length", -1.0);
   }
 
-  /* The redshift of hydrogren reionisation
-   * will be needed if we use a redshift-dependent
-   * UVB, and by the COLIBRE cooling tables if
-   * we use hybrid cooling. */
+  /* In CHIMES, the UVB is switched off above
+   * the redshift of H-reionisation. */
   cooling->ChimesGlobalVars.reionisation_redshift =
       (ChimesFloat)parser_get_param_float(parameter_file,
-                                          "CHIMESCooling:H_reion_z");
+                                          "CHIMESCooling:UVB_cutoff_z");
+
+  /* The Colibre ISRF is cut off at low densities
+   * before reionisation. */
+  cooling->ISRF_low_dens_cutoff_z = parser_get_param_float(
+      parameter_file, "CHIMESCooling:ISRF_low_dens_cutoff_z");
 
   /* Parameters used for the COLIBRE ISRF and
    * shielding length. These have just been
@@ -379,13 +382,6 @@ void cooling_init_backend(struct swift_params *parameter_file,
     /* Path to colibre cooling table */
     parser_get_param_string(parameter_file, "CHIMESCooling:colibre_table_path",
                             cooling->colibre_table.cooling_table_path);
-
-    /* Redshift of H-reionisation is
-     * needed by the Colibre table
-     * to determine when to use
-     * the high-redshift bin. */
-    cooling->colibre_table.H_reion_z =
-        (float)cooling->ChimesGlobalVars.reionisation_redshift;
 
     /* Set the S/Si and Ca/Si ratios to
      * the values already read in for CHIMES. */
@@ -656,7 +652,7 @@ void chimes_update_gas_vars(const double u_cgs,
 
     /* low-density cut-off before reionisation */
     if ((cooling->ChimesGlobalVars.redshift >
-         cooling->ChimesGlobalVars.reionisation_redshift) &&
+         cooling->ISRF_low_dens_cutoff_z) &&
         (J_over_J0 > 0.0))
       ChimesGasVars->isotropic_photon_density[1] *= exp10(
           -20.0 - ((-20.0 - log10(J_over_J0)) /
@@ -1531,13 +1527,13 @@ void cooling_set_subgrid_properties(
 
   if (cooling->use_colibre_subgrid_EOS == 1) {
     /* Compute the subgrid properties */
-    xp->tracers_data.subgrid_temp = compute_subgrid_temperature(
+    p->cooling_data.subgrid_temp = compute_subgrid_temperature(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
-    xp->tracers_data.subgrid_dens = compute_subgrid_density(
+    p->cooling_data.subgrid_dens = compute_subgrid_density(
         cooling, us, phys_const, floor_props, hydro_props, cosmo, p, xp);
   } else {
-    xp->tracers_data.subgrid_temp = T;
-    xp->tracers_data.subgrid_dens = rho;
+    p->cooling_data.subgrid_temp = T;
+    p->cooling_data.subgrid_dens = rho;
   }
 
   if (xp->tracers_data.HIIregion_timer_gas > 0.) {
@@ -1588,7 +1584,7 @@ void cooling_set_subgrid_properties(
                                      &ChimesGasVars, 1);
 
     double mu = chimes_mu(cooling, p, xp);
-    double u_subgrid_cgs = xp->tracers_data.subgrid_temp;
+    double u_subgrid_cgs = p->cooling_data.subgrid_temp;
     u_subgrid_cgs *= hydro_one_over_gamma_minus_one;
     u_subgrid_cgs *=
         phys_const->const_boltzmann_k / phys_const->const_proton_mass;
@@ -1607,10 +1603,10 @@ void cooling_set_subgrid_properties(
     ChimesFloat XH = 0.75;
 #endif
     ChimesGasVars.nH_tot =
-        XH * xp->tracers_data.subgrid_dens *
+        XH * p->cooling_data.subgrid_dens *
         units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY) /
         phys_const->const_proton_mass;
-    ChimesGasVars.temperature = xp->tracers_data.subgrid_temp;
+    ChimesGasVars.temperature = p->cooling_data.subgrid_temp;
     ChimesGasVars.ForceEqOn = 1;
     ChimesGasVars.ThermEvolOn = 0;
 

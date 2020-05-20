@@ -52,6 +52,8 @@ struct black_holes_props {
   /*! Mass of a BH seed at creation time */
   float subgrid_seed_mass;
 
+
+
   /* ----- Properties of the accretion model ------ */
 
   /*! Maximal fraction of the Eddington rate allowed. */
@@ -62,6 +64,9 @@ struct black_holes_props {
 
   /*! Feedback coupling efficiency of the black holes. */
   float epsilon_f;
+
+  /*! Are we using the Rosas-Guevara et al. (2015) term? */
+  int with_angmom_limiter;
 
   /*! Normalisation of the viscuous angular momentum accretion reduction */
   float alpha_visc;
@@ -180,6 +185,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
+  bp->use_subgrid_mass_from_ics =
+      parser_get_opt_param_int(params, "EAGLEAGN:use_subgrid_mass_from_ics", 0);
+
   /* Accretion parameters ---------------------------------- */
 
   bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
@@ -189,9 +197,15 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
   bp->epsilon_f =
       parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
-  bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "EAGLEAGN:multi_phase_bondi");
+
+  /* Rosas-Guevara et al. (2015) model */
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "EAGLEAGN:with_angmom_limiter");
+  if (bp->with_angmom_limiter)
+    bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
+
 
   /* Feedback parameters ---------------------------------- */
 

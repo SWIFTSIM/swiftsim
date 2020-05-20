@@ -33,7 +33,7 @@
 #include "./black_holes/COLIBRE/black_holes.h"
 #include "./black_holes/COLIBRE/black_holes_iact.h"
 #else
-#error "Invalid choice of BH model"
+#error "Invalid choice of black hole model"
 #endif
 
 #endif
