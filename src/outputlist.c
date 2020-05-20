@@ -341,8 +341,9 @@ void output_list_struct_dump(struct output_list *list, FILE *stream) {
 
   restart_write_blocks(list->times, list->size, sizeof(double), stream,
                        "output_list", "times");
-  restart_write_blocks(list->types, list->size, sizeof(int), stream,
-                       "output_list", "types");
+  if (list->types)
+    restart_write_blocks(list->types, list->size, sizeof(int), stream,
+                         "output_list", "types");
 }
 
 /**
@@ -355,7 +356,12 @@ void output_list_struct_restore(struct output_list *list, FILE *stream) {
   list->times = (double *)malloc(sizeof(double) * list->size);
   restart_read_blocks(list->times, list->size, sizeof(double), stream, NULL,
                       "times");
-  list->types = (int *)malloc(sizeof(int) * list->size);
-  restart_read_blocks(list->types, list->size, sizeof(int), stream, NULL,
-                      "types");
+  
+  /* If we are in multiple-level-mode, list->types will point to a non-zero,
+   * albeit meaningless, memory address, otherwise, it's NULL. */
+  if (list->types) {
+    list->types = (int *)malloc(sizeof(int) * list->size);
+    restart_read_blocks(list->types, list->size, sizeof(int), stream, NULL,
+                        "types");
+  }
 }
