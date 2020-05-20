@@ -1,6 +1,6 @@
 # Define some meta-data about the simulation
 MetaData:
-  run_name:   COLIBRE-L006N0376
+  run_name:   COLIBRE-L025N0752-4xDM
 
 # Define the system of units to use internally. 
 InternalUnitSystem:
@@ -27,11 +27,11 @@ TimeIntegration:
 Gravity:
   eta:          0.025
   theta:        0.7
-  comoving_DM_softening:         0.00083     # New EAGLE-Ref values: 0.003320 # Comoving softening for DM (3.32 ckpc); scale with resolution
-  max_physical_DM_softening:     0.000325    # New EAGLE-Ref values: 0.001300 # Physical softening for DM (1.30 pkpc); scale with resolution
-  comoving_baryon_softening:     0.0004475   # New EAGLE-Ref values: 0.001790 # Comoving softening for baryons (1.79 ckpc); scale with resolution
-  max_physical_baryon_softening: 0.000175    # New EAGLE-Ref values: 0.000700 # Physical softening for baryons (0.70 pkpc); scale with resolution
-  mesh_side_length:       256    # use 128 for 188^3 particles and 256 for 376^3 particles
+  comoving_DM_softening:         0.001660   # New EAGLE-Ref values: 0.003320 # Comoving softening for DM (3.32 ckpc); scale with resolution
+  max_physical_DM_softening:     0.000650   # New EAGLE-Ref values: 0.001300 # Physical softening for DM (1.30 pkpc); scale with resolution
+  comoving_baryon_softening:     0.000895   # New EAGLE-Ref values: 0.001790 # Comoving softening for baryons (1.79 ckpc); scale with resolution
+  max_physical_baryon_softening: 0.000350   # New EAGLE-Ref values: 0.000700 # Physical softening for baryons (0.70 pkpc); scale with resolution
+  mesh_side_length:       512    # use 128 for 188^3 particles and 256 for 376^3 particles
   dithering: 0
 
 # Parameters governing the snapshots
@@ -46,17 +46,16 @@ Statistics:
   scale_factor_first:  0.05
 
 Scheduler:
-  max_top_level_cells: 16    # use 8 for 188^3, 16 for 376^3, 32 for 752^3 particles
+  max_top_level_cells: 32    # use 8 for 188^3, 16 for 376^3, 32 for 752^3 particles
   cell_split_size:     200  # should be fine for most systems, could use 50 for older system such as cosma5 and cosma6
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:           Eagle_06Mpc_376.hdf5
+  file_name:                   COLIBRE_L25N752_4xDM.hdf5
   periodic:                    1
   cleanup_h_factors:           1
   cleanup_velocity_factors:    1
-  generate_gas_in_ics:         1     # Generate gas particles from the DM-only ICs
-  cleanup_smoothing_lengths:   1     # Since we generate gas, make use of the (expensive) cleaning-up procedure.
+  generate_gas_in_ics:         0     # Generate gas particles from the DM-only ICs
 
 # Parameters of the hydro scheme
 SPH:
@@ -66,9 +65,9 @@ SPH:
   CFL_condition:       0.2
   initial_temperature: 268.7 
   minimal_temperature: 10.
-  h_max:               0.125      # Maximal smoothing length in co-moving internal units.
-  particle_splitting:                1        # Particle splitting is ON
-  particle_splitting_mass_threshold: 1.1e-5   # (internal units, i.e. 1.1e5 Msun ~ 4x initial gas particle mass)
+  h_max:               0.25      # Maximal smoothing length in co-moving internal units.
+  particle_splitting:                1      # Particle splitting is ON
+  particle_splitting_mass_threshold: 9e-5   # (internal units, i.e. 9e5 Msun ~ 4x initial gas particle mass)
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
@@ -136,7 +135,6 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.0    # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.0    # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.0    # Inital fraction of particle mass in Iron
-  init_abundance_Europium:  0.0            # Inital fraction of particle mass in Europium
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
@@ -158,7 +156,6 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
-  with_r_process_enrichment:        1               # Global switch for r process enrichment from neutron star mergers and rare core-collapse SN (collapsars and common envelop jets SN).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -202,8 +199,9 @@ COLIBREFeedback:
   yield_Eu_from_NSM_event_Msun:     1.5e-5          # Amount of europium (in units of Msolar) released by NSM.
   num_of_CEJSN_per_Msun:            1.22e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
   yield_Eu_from_CEJSN_event_Msun:   1e-5            # Amount of europium (in units of Msolar) released by CEJSN(=Common envelop jet SN).
-  num_of_collapsar_per_Msun:        4.53e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
+  num_of_collapsar_per_Msun:        4.53e-7         # Number of rare core-collapse SN (collapsars) per Msolar.
   yield_Eu_from_collapsar_event_Msun: 1e-4          # Amount of europium (in units of Msolar) released by collapsars.
+
 
 # Parameters for the COLIBRE "equation of state"
 COLIBREEntropyFloor:
@@ -212,6 +210,7 @@ COLIBREEntropyFloor:
   Jeans_gamma_effective:      1.3333333  # Slope the of the COLIBRE Jeans limiter entropy floor
   Cool_density_norm_H_p_cm3:  1e-5       # Physical density above which the COLIBRE Cool limiter entropy floor kicks in expressed in Hydrogen atoms per cm^3.
   Cool_temperature_norm_K:    -1.        # Temperature of the COLIBRE Cool limiter entropy floor at the density normalisation expressed in Kelvin.
+  Cool_gamma_effective:       1.         # Slope the of the COLIBRE Cool limiter entropy floor 
 
 # The SNIa DTD properties in the COLIBRE feedback
 SNIaDTD:

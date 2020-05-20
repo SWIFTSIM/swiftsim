@@ -34,7 +34,8 @@
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt, const double time_beg_of_step, const integertime_t ti_begin);
+                               const double dt, const double time_beg_of_step,
+                               const integertime_t ti_begin);
 
 /**
  * @brief Update the properties of a particle fue to feedback effects after
@@ -128,6 +129,10 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 
   /* Zero the amount of mass that is distributed */
   sp->feedback_data.to_distribute.mass = 0.f;
+
+  sp->feedback_data.to_distribute.mass_from_NSM = 0.f;
+  sp->feedback_data.to_distribute.mass_from_CEJSN = 0.f;
+  sp->feedback_data.to_distribute.mass_from_collapsar = 0.f;
 
   /* Zero the metal enrichment quantities */
   for (int i = 0; i < chemistry_element_count; i++) {

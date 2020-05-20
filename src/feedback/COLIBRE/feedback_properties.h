@@ -23,6 +23,9 @@
 #include "chemistry.h"
 #include "hydro_properties.h"
 
+/*! Number of elements to be read from the yield tables */
+#define enrichment_of_N_elements_from_yield_tables 9
+
 /**
  * @brief Stores AGB and SNII yield tables
  */
@@ -91,6 +94,9 @@ struct feedback_props {
   /*! Are we doing SNIa feedback? */
   int with_SNIa_feedback;
 
+  /*! Are we doing r-process enrichment? */
+  int with_r_process_enrichment;
+
   /*! Are we doing HII regions? */
   int with_HIIRegions;
 
@@ -127,7 +133,7 @@ struct feedback_props {
   /* ------------- SNII parameters    --------------- */
 
   /* Array of adjustment factors for SNII  */
-  float SNII_yield_factor[chemistry_element_count];
+  float SNII_yield_factor[enrichment_of_N_elements_from_yield_tables];
 
   /* ------------- SNIa parameters    --------------- */
 
@@ -263,6 +269,25 @@ struct feedback_props {
   /* Desired delta_v in km/s of particles suject to the wind. */
   /* higher values makes less likely to kick particles. */
   double delta_v;
+
+  /* ------------ r-process enrichment properties ------------ */
+  /* Number of neutron star mergers per unit of Msolar */
+  double NSM_per_Msun;
+
+  /* Amount of europium (in units of Msolar) relesed by NSM */
+  double yield_Eu_from_NSM;
+
+  /* Number of CEJSN per unit of Msolar */
+  double CEJSN_per_Msun;
+
+  /* Amount of europium (in units of Msolar) relesed by CEJSN */
+  double yield_Eu_from_CEJSN;
+
+  /* Number of collapsar per unit of Msolar */
+  double collapsar_per_Msun;
+
+  /* Amount of europium (in units of Msolar) relesed by collapsar */
+  double yield_Eu_from_collapsar;
 
   /* ------------ Early feedback properties ------------ */
 

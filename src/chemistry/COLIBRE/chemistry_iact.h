@@ -298,6 +298,32 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
                                           (chj->iron_mass_fraction_from_SNIa -
                                            chi->iron_mass_fraction_from_SNIa) *
                                           dt;
+
+    float chi_Eu_fraction_from_NSM = chi->mass_from_NSM / mi;
+    float chj_Eu_fraction_from_NSM = chj->mass_from_NSM / mj;
+    chi->dEu_mass_fraction_from_NSM +=
+        K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
+
+    chj->dEu_mass_fraction_from_NSM +=
+        K_ji * (chj_Eu_fraction_from_NSM - chi_Eu_fraction_from_NSM) * dt;
+
+    float chi_Eu_fraction_from_CEJSN = chi->mass_from_CEJSN / mi;
+    float chj_Eu_fraction_from_CEJSN = chj->mass_from_CEJSN / mj;
+    chi->dEu_mass_fraction_from_CEJSN +=
+        K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
+
+    chj->dEu_mass_fraction_from_CEJSN +=
+        K_ji * (chj_Eu_fraction_from_CEJSN - chi_Eu_fraction_from_CEJSN) * dt;
+
+    float chi_Eu_fraction_from_collapsar = chi->mass_from_collapsar / mi;
+    float chj_Eu_fraction_from_collapsar = chj->mass_from_collapsar / mj;
+    chi->dEu_mass_fraction_from_collapsar +=
+        K_ij *
+        (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
+
+    chj->dEu_mass_fraction_from_collapsar +=
+        K_ji *
+        (chj_Eu_fraction_from_collapsar - chi_Eu_fraction_from_collapsar) * dt;
   }
 }
 
@@ -326,6 +352,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
   if (chj->diffusion_coefficient > 0 || chi->diffusion_coefficient > 0) {
 
     /* Get mass */
+    const float mi = hydro_get_mass(pi);
     const float mj = hydro_get_mass(pj);
     const float rhoj = hydro_get_comoving_density(pj);
     const float rhoi = hydro_get_comoving_density(pi);
@@ -431,6 +458,22 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
                                           (chi->iron_mass_fraction_from_SNIa -
                                            chj->iron_mass_fraction_from_SNIa) *
                                           dt;
+
+    float chi_Eu_fraction_from_NSM = chi->mass_from_NSM / mi;
+    float chj_Eu_fraction_from_NSM = chj->mass_from_NSM / mj;
+    chi->dEu_mass_fraction_from_NSM +=
+        K_ij * (chi_Eu_fraction_from_NSM - chj_Eu_fraction_from_NSM) * dt;
+
+    float chi_Eu_fraction_from_CEJSN = chi->mass_from_CEJSN / mi;
+    float chj_Eu_fraction_from_CEJSN = chj->mass_from_CEJSN / mj;
+    chi->dEu_mass_fraction_from_CEJSN +=
+        K_ij * (chi_Eu_fraction_from_CEJSN - chj_Eu_fraction_from_CEJSN) * dt;
+
+    float chi_Eu_fraction_from_collapsar = chi->mass_from_collapsar / mi;
+    float chj_Eu_fraction_from_collapsar = chj->mass_from_collapsar / mj;
+    chi->dEu_mass_fraction_from_collapsar +=
+        K_ij *
+        (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
   }
 }
 

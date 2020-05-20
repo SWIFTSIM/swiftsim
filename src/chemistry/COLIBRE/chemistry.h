@@ -46,7 +46,7 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron"};
+      "Neon",     "Magnesium", "Silicon", "Iron",     "Europium"};
 
   return chemistry_element_names[elem];
 }
@@ -88,6 +88,9 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   cpd->dmetal_mass_fraction_from_AGB = 0.0f;
   cpd->dmetal_mass_fraction_from_SNII = 0.0f;
   cpd->diron_mass_fraction_from_SNIa = 0.0f;
+  cpd->dEu_mass_fraction_from_NSM = 0.0f;
+  cpd->dEu_mass_fraction_from_CEJSN = 0.0f;
+  cpd->dEu_mass_fraction_from_collapsar = 0.0f;
 }
 
 /**
@@ -188,6 +191,9 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   p->chemistry_data.dmetal_mass_fraction_from_AGB = 0.0f;
   p->chemistry_data.dmetal_mass_fraction_from_SNII = 0.0f;
   p->chemistry_data.diron_mass_fraction_from_SNIa = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_NSM = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_CEJSN = 0.0f;
+  p->chemistry_data.dEu_mass_fraction_from_collapsar = 0.0f;
 
   for (int k = 0; k < 3; k++) {
     p->chemistry_data.shear_tensor[0][k] = 0.0f;
@@ -237,6 +243,10 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   /* Dummy initial values to weighted redshits */
   p->chemistry_data.metal_weighted_redshift = -1.f;
   p->chemistry_data.iron_weighted_redshift = -1.f;
+
+  p->chemistry_data.mass_from_NSM = 0.0f;
+  p->chemistry_data.mass_from_CEJSN = 0.0f;
+  p->chemistry_data.mass_from_collapsar = 0.0f;
 }
 
 /**
@@ -392,6 +402,20 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   p->chemistry_data.mass_from_AGB =
       p->chemistry_data.metal_mass_fraction_from_AGB * current_mass;
 
+  /* Update europium mass for channels NSM, CEJSN and collapsars  */
+  const double current_Eu_mass =
+      current_mass *
+      p->chemistry_data.metal_mass_fraction[chemistry_element_Eu];
+
+  p->chemistry_data.mass_from_NSM +=
+      p->chemistry_data.dEu_mass_fraction_from_NSM * current_Eu_mass;
+
+  p->chemistry_data.mass_from_CEJSN +=
+      p->chemistry_data.dEu_mass_fraction_from_CEJSN * current_Eu_mass;
+
+  p->chemistry_data.mass_from_collapsar +=
+      p->chemistry_data.dEu_mass_fraction_from_collapsar * current_Eu_mass;
+
   /* Make sure the total metallicity is >= 0 */
   p->chemistry_data.metal_mass_fraction_total =
       max(p->chemistry_data.metal_mass_fraction_total, 0.f);
@@ -455,6 +479,9 @@ __attribute__((always_inline)) INLINE static void chemistry_bpart_from_part(
       p_data->metal_mass_fraction_from_AGB * gas_mass;
   bp_data->iron_mass_from_SNIa =
       p_data->iron_mass_fraction_from_SNIa * gas_mass;
+  bp_data->mass_from_NSM = p_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN = p_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar = p_data->mass_from_collapsar;
 }
 
 /**
@@ -485,6 +512,9 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
       p_data->metal_mass_fraction_from_AGB * gas_mass;
   bp_data->iron_mass_from_SNIa +=
       p_data->iron_mass_fraction_from_SNIa * gas_mass;
+  bp_data->mass_from_NSM += p_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN += p_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar += p_data->mass_from_collapsar;
 }
 
 /**
@@ -508,6 +538,9 @@ __attribute__((always_inline)) INLINE static void chemistry_add_bpart_to_bpart(
   bp_data->metal_mass_from_SNII += swallowed_data->metal_mass_from_SNII;
   bp_data->metal_mass_from_AGB += swallowed_data->metal_mass_from_AGB;
   bp_data->iron_mass_from_SNIa += swallowed_data->iron_mass_from_SNIa;
+  bp_data->mass_from_NSM += swallowed_data->mass_from_NSM;
+  bp_data->mass_from_CEJSN += swallowed_data->mass_from_CEJSN;
+  bp_data->mass_from_collapsar += swallowed_data->mass_from_collapsar;
 }
 
 /**
@@ -523,6 +556,9 @@ __attribute__((always_inline)) INLINE static void chemistry_split_part(
   p->chemistry_data.mass_from_SNIa /= n;
   p->chemistry_data.mass_from_SNII /= n;
   p->chemistry_data.mass_from_AGB /= n;
+  p->chemistry_data.mass_from_NSM /= n;
+  p->chemistry_data.mass_from_CEJSN /= n;
+  p->chemistry_data.mass_from_collapsar /= n;
 }
 
 /**

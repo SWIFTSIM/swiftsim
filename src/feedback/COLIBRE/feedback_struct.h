@@ -90,6 +90,11 @@ struct feedback_spart_data {
       /*! Total mass released due to SNII */
       float mass_from_SNII;
 
+      /* Mass released by r processes */
+      float mass_from_NSM;
+      float mass_from_collapsar;
+      float mass_from_CEJSN;
+
       /*! Total metal mass released due to SNII */
       float metal_mass_from_SNII;
 
