@@ -136,6 +136,7 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.0    # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.0    # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.0    # Inital fraction of particle mass in Iron
+  init_abundance_Europium:  0.0            # Inital fraction of particle mass in Europium
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 
@@ -157,6 +158,7 @@ COLIBREFeedback:
   use_AGB_enrichment:               1               # Global switch for enrichement from AGB stars.
   use_SNII_enrichment:              1               # Global switch for enrichement from SNII stars.
   use_SNIa_enrichment:              1               # Global switch for enrichement from SNIa stars.
+  with_r_process_enrichment:        1               # Global switch for r process enrichment from neutron star mergers and rare core-collapse SN (collapsars and common envelop jets SN).
   filename:                         ./yieldtables/  # Path to the directory containing the EAGLE yield tables.
   IMF_min_mass_Msun:                0.1             # Minimal stellar mass considered for the Chabrier IMF in solar masses.
   IMF_max_mass_Msun:              100.0             # Maximal stellar mass considered for the Chabrier IMF in solar masses.
@@ -196,6 +198,12 @@ COLIBREFeedback:
   earlyfb_filename:                 ./HIIregions_BPASS_binary.hdf5 # Location of file for early feedback, no needed if stellarwind_maxage_Myr = HIIregion_maxage_Myr = 0.
   stellar_evolution_age_cut_Gyr:    1.0             # Stellar age in Gyr above which the enrichment is down-sampled.
   stellar_evolution_sampling_rate:   10             # Number of time-steps in-between two enrichment events for a star above the age threshold.
+  num_of_NSM_per_Msun:              1.54e-5         # Number of neutron star mergers per Msolar.
+  yield_Eu_from_NSM_event_Msun:     1.5e-5          # Amount of europium (in units of Msolar) released by NSM.
+  num_of_CEJSN_per_Msun:            1.22e-5         # Number of rare core-collapse SN (CEJSN) per Msolar.
+  yield_Eu_from_CEJSN_event_Msun:   1e-5            # Amount of europium (in units of Msolar) released by CEJSN(=Common envelop jet SN).
+  num_of_collapsar_per_Msun:        4.53e-7          # Number of rare core-collapse SN (collapsars) per Msolar.
+  yield_Eu_from_collapsar_event_Msun: 1e-4          # Amount of europium (in units of Msolar) released by collapsars.
 
 # Parameters for the COLIBRE "equation of state"
 COLIBREEntropyFloor:

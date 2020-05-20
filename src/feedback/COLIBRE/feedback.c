@@ -23,13 +23,18 @@
 /* This file's header */
 #include "feedback.h"
 
+/* Some standard headers. */
+#include <math.h>
+
 /* Local includes. */
+#include "event_logger.h"
 #include "feedback_tables.h"
 #include "hydro_properties.h"
 #include "imf.h"
 #include "inline.h"
 #include "interpolate.h"
 #include "physical_constants.h"
+#include "random.h"
 #include "timers.h"
 #include "yield_tables.h"
 
@@ -489,6 +494,221 @@ INLINE static void determine_bin_yield_SNII(
 }
 
 /**
+ * @brief Computes the number of neutron star-neutron star mergers
+ * per yr for a given star particle since it was formed.
+ *
+ *
+ * @param sp The #spart.
+ * @param t Elapsed time (in Gyr).
+ * @param props The properties of the stellar model.
+ */
+double integrate_rate_of_NSM(const struct spart* sp, const double t0,
+                             const double t1,
+                             const struct feedback_props* props) {
+
+  /* The calculation is written as the integral between t0 and t1 */
+  double num_NSM_per_Msun = props->NSM_per_Msun * log(t1 / t0);
+  return num_NSM_per_Msun * sp->mass_init * props->mass_to_solar_mass;
+}
+
+/**
+ * @brief Stochastic implementation of enrichment of r-process elements
+ * due to neutron star mergers (NSM).
+ * To do this compute the number of NSM that occur during the timestep
+ * and multiply by constants.
+ *
+ * @param props properties of the feedback model
+ * @param sp #spart we are computing feedback from
+ * @param star_age_Gyr age of star in Gyr
+ * @param dt_Gyr timestep dt in Gyr
+ */
+INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
+                                         struct spart* sp, double star_age_Gyr,
+                                         double dt_Gyr,
+                                         const integertime_t ti_current,
+                                         const struct cosmology* cosmo,
+                                         double stellar_evolution_age_cut_Gyr) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dt_Gyr < 0.) error("Negative time-step length!");
+  if (star_age_Gyr < 0.) error("Negative age!");
+#endif
+
+  /* First we check that the amount of time since star was formed
+   is larger than NSM_t_delay_Gyr = 30Myr */
+  if (star_age_Gyr < 0.03) return;
+
+  /* Compute the number of NS merger events in timestep by
+   integrating the rate of NS merger events (number per yr) */
+  float num_NSM =
+      integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
+
+  /* Draw a random number */
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
+
+  int num_events = 0;
+
+  if (num_NSM > 1.f) {
+    num_events = floor(num_NSM);
+    num_NSM -= num_events;
+  }
+
+  /* I define my probability as number of NSM events per time step */
+  float prob_num = num_NSM;
+
+  /* Are we lucky? If so we have 1 more event */
+  if (prob_num > rand) num_events += 1;
+
+  if (num_events > 0) {
+
+    /* Compute the mass produced by NSM events */
+    const float delta_mass =
+        num_events * props->yield_Eu_from_NSM * props->solar_mass_to_mass;
+
+    /* compute mass of Europium */
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
+        delta_mass;
+
+    /* Mass to distribute */
+    sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
+
+    /* Write the event to the r-process log file */
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 0);
+  }
+}
+
+/**
+ * @brief Stochastic implementation of enrichment of r-process elements
+ * due to common envelope jets supernovae (CEJSN, type of rare core-collapse
+ * SN). To do this compute the number of CEJSN that occur during the timestep
+ * and multiply by constants.
+ *
+ * @param props properties of the feedback model
+ * @param sp #spart we are computing feedback from
+ * @param star_age_Gyr age of star in Gyr
+ * @param dt_Gyr timestep dt in Gyr
+ */
+INLINE static void evolve_CEJSN_stochastic(
+    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
+    double dt_Gyr, const integertime_t ti_current,
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dt_Gyr < 0.) error("Negative time-step length!");
+  if (star_age_Gyr < 0.) error("Negative age!");
+#endif
+
+  /* First we check that the amount of time since star was formed */
+  /* is larger than 30 Myr */
+  if (star_age_Gyr < 0.03) return;
+  if (star_age_Gyr > 0.1) return;
+
+  /* Number of CEJSN events in timestep */
+  float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
+                    props->mass_to_solar_mass * (dt_Gyr / 0.07);
+
+  /* Draw a random number */
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
+
+  int num_events = 0;
+  if (num_CEJSN > 1.f) {
+    num_events = floor(num_CEJSN);
+    num_CEJSN -= num_events;
+  }
+
+  /* I define my probability as number of CEJSN per time step */
+  const float prob_num = num_CEJSN;
+
+  /* Are we lucky? If so we have 1 more event */
+  if (prob_num > rand) num_events += 1;
+
+  if (num_events > 0) {
+
+    /* Compute the mass produced by CEJSN */
+    const float delta_mass =
+        num_events * props->yield_Eu_from_CEJSN * props->solar_mass_to_mass;
+
+    /* compute mass of Europium */
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
+        delta_mass;
+
+    /* Mass to distribute */
+    sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
+
+    /* Write the event to the r-process log file */
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 1);
+  }
+}
+
+/**
+ * @brief Stochastic implementation of enrichment of r-process elements
+ * due to collapsars (rare type core-collapse SN).
+ * To do this compute the number of collapsars that occur during the timestep
+ * and multiply by constants.
+ *
+ * @param props properties of the feedback model
+ * @param sp #spart we are computing feedback from
+ * @param star_age_Gyr age of star in Gyr
+ * @param dt_Gyr timestep dt in Gyr
+ */
+INLINE static void evolve_collapsar_stochastic(
+    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
+    double dt_Gyr, const integertime_t ti_current,
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (dt_Gyr < 0.) error("Negative time-step length!");
+  if (star_age_Gyr < 0.) error("Negative age!");
+#endif
+
+  /* First we check that the amount of time since star was formed */
+  /* is larger than 30 Myr */
+  if (star_age_Gyr < 0.03) return;
+  if (star_age_Gyr > 0.1) return;
+
+  /* Number of collapsar events in timestep */
+  /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
+   * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
+  float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
+                        props->mass_to_solar_mass * (dt_Gyr / 0.07);
+
+  /* Draw a random number */
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
+
+  int num_events = 0;
+  if (num_collapsar > 1.f) {
+    num_events = floor(num_collapsar);
+    num_collapsar -= num_events;
+  }
+
+  /* I define my probability as number of collapsars per time step */
+  const float prob_num = num_collapsar;
+
+  /* Are we lucky? If so we have 1 more event */
+  if (prob_num > rand) num_events += 1;
+
+  if (num_events > 0) {
+
+    /* Compute the mass produced by collapsar */
+    const float delta_mass =
+        num_events * props->yield_Eu_from_collapsar * props->solar_mass_to_mass;
+
+    /* compute mass of Europium */
+    sp->feedback_data.to_distribute.metal_mass[chemistry_element_Eu] +=
+        delta_mass;
+
+    /* Mass to distribute */
+    sp->feedback_data.to_distribute.mass_from_collapsar += delta_mass;
+
+    /* Write the event to the r-process log file */
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 2);
+  }
+}
+
+/**
  * @brief compute enrichment and feedback due to SNIa. To do this compute the
  * number of SNIa that occur during the timestep, multiply by constants read
  * from tables.
@@ -531,7 +751,7 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
       dtd_number_of_SNIa(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
   /* compute mass of each metal */
-  for (int i = 0; i < chemistry_element_count; i++) {
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
     sp->feedback_data.to_distribute.metal_mass[i] +=
         num_SNIa * props->yield_SNIa_IMF_resampled[i] *
         props->solar_mass_to_mass;
@@ -609,16 +829,20 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   determine_bin_yield_SNII(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
-  float metal_mass_released[chemistry_element_count], metal_mass_released_total;
-  for (int elem = 0; elem < chemistry_element_count; elem++) {
+  float metal_mass_released[enrichment_of_N_elements_from_yield_tables],
+      metal_mass_released_total;
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables;
+       elem++) {
     for (mass_bin_index = low_imf_mass_bin_index;
          mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
       low_index_3d = row_major_index_3d(
           iz_low, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables,
+          eagle_feedback_N_imf_bins);
       high_index_3d = row_major_index_3d(
           iz_high, elem, mass_bin_index, eagle_feedback_SNII_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables,
+          eagle_feedback_N_imf_bins);
       low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
                                         eagle_feedback_SNII_N_metals,
                                         eagle_feedback_N_imf_bins);
@@ -666,7 +890,7 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
   float mass_ejected, mass_released;
 
   /* zero all negative values */
-  for (int i = 0; i < chemistry_element_count; i++)
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
@@ -700,11 +924,11 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
      * initial mass as tables are per initial mass */
     const float norm_factor = sp->mass_init * mass_ejected / mass_released;
 
-    for (int i = 0; i < chemistry_element_count; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.metal_mass[i] +=
           metal_mass_released[i] * norm_factor;
     }
-    for (int i = 0; i < chemistry_element_count; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.mass_from_SNII +=
           sp->feedback_data.to_distribute.metal_mass[i];
     }
@@ -761,16 +985,20 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   determine_bin_yield_AGB(&iz_low, &iz_high, &dz, log10(Z), props);
 
   /* compute metals produced */
-  float metal_mass_released[chemistry_element_count], metal_mass_released_total;
-  for (int elem = 0; elem < chemistry_element_count; elem++) {
+  float metal_mass_released[enrichment_of_N_elements_from_yield_tables],
+      metal_mass_released_total;
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables;
+       elem++) {
     for (mass_bin_index = low_imf_mass_bin_index;
          mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
       low_index_3d = row_major_index_3d(
           iz_low, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables,
+          eagle_feedback_N_imf_bins);
       high_index_3d = row_major_index_3d(
           iz_high, elem, mass_bin_index, eagle_feedback_AGB_N_metals,
-          chemistry_element_count, eagle_feedback_N_imf_bins);
+          enrichment_of_N_elements_from_yield_tables,
+          eagle_feedback_N_imf_bins);
       low_index_2d = row_major_index_2d(iz_low, mass_bin_index,
                                         eagle_feedback_AGB_N_metals,
                                         eagle_feedback_N_imf_bins);
@@ -817,7 +1045,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
   float mass_ejected, mass_released;
 
   /* zero all negative values */
-  for (int i = 0; i < chemistry_element_count; i++)
+  for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++)
     metal_mass_released[i] = max(metal_mass_released[i], 0.f);
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
@@ -852,7 +1080,7 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
      * initial mass as tables are per initial mass */
     const float norm_factor = sp->mass_init * mass_ejected / mass_released;
 
-    for (int i = 0; i < chemistry_element_count; i++) {
+    for (int i = 0; i < enrichment_of_N_elements_from_yield_tables; i++) {
       sp->feedback_data.to_distribute.metal_mass[i] +=
           metal_mass_released[i] * norm_factor;
       sp->feedback_data.to_distribute.mass_from_AGB +=
@@ -1095,11 +1323,14 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
  * @param age age of spart at beginning of step
  * @param dt length of current timestep
  * @param time_beg_of_step time at the beginning of timestep
+ * @param ti_begin The integer time at the beginning of the step (for random
+ * numbers).
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
-                               const double dt, const double time_beg_of_step) {
+                               const double dt, const double time_beg_of_step,
+                               const integertime_t ti_begin) {
 
   TIMER_TIC;
 
@@ -1119,6 +1350,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
+  const double stellar_evolution_age_cut_Gyr =
+      feedback_props->stellar_evolution_age_cut *
+      units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
   /* Get the metallicity */
   const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
@@ -1300,13 +1534,21 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     evolve_AGB(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
                stellar_yields, feedback_props, sp);
   }
+  if (feedback_props->with_r_process_enrichment) {
+    evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+                          cosmo, stellar_evolution_age_cut_Gyr);
+    evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+                            cosmo, stellar_evolution_age_cut_Gyr);
+    evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
+                                ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->feedback_data.to_distribute.mass != 0.f)
     error("Injected mass will be lost");
 #endif
 
-  /* Compute the total mass to distribute (H + He  metals) */
+  /* Compute the total mass to distribute (H + He + metals) */
   sp->feedback_data.to_distribute.mass =
       sp->feedback_data.to_distribute.total_metal_mass +
       sp->feedback_data.to_distribute.metal_mass[chemistry_element_H] +
@@ -1380,6 +1622,9 @@ void feedback_props_init(struct feedback_props* fp,
 
   fp->with_SNIa_enrichment =
       parser_get_param_int(params, "COLIBREFeedback:use_SNIa_enrichment");
+
+  fp->with_r_process_enrichment =
+      parser_get_param_int(params, "COLIBREFeedback:with_r_process_enrichment");
 
   fp->with_HIIRegions =
       parser_get_param_int(params, "COLIBREFeedback:with_HIIRegions");
@@ -1476,7 +1721,8 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of the SNII enrichment model -------------------------------- */
 
   /* Set factors for each element adjusting SNII yield */
-  for (int elem = 0; elem < chemistry_element_count; ++elem) {
+  for (int elem = 0; elem < enrichment_of_N_elements_from_yield_tables;
+       ++elem) {
     char buffer[50];
     sprintf(buffer, "COLIBREFeedback:SNII_yield_factor_%s",
             chemistry_get_element_name((enum chemistry_element)elem));
@@ -1499,6 +1745,28 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "COLIBREFeedback:SNIa_energy_erg");
   fp->E_SNIa =
       fp->E_SNIa_cgs / units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
+
+  /* Properties of the r-process enrichment model
+   * -------------------------------- */
+
+  /* Properties of neutron star mergers model */
+  if (fp->with_r_process_enrichment)
+    message(
+        "Running COLIBRE with r-process enrichment produced by: Neutron star "
+        "mergers, Common envelope jets SN and Collapsars");
+
+  fp->NSM_per_Msun =
+      parser_get_param_double(params, "COLIBREFeedback:num_of_NSM_per_Msun");
+  fp->yield_Eu_from_NSM = parser_get_param_double(
+      params, "COLIBREFeedback:yield_Eu_from_NSM_event_Msun");
+  fp->CEJSN_per_Msun =
+      parser_get_param_double(params, "COLIBREFeedback:num_of_CEJSN_per_Msun");
+  fp->yield_Eu_from_CEJSN = parser_get_param_double(
+      params, "COLIBREFeedback:yield_Eu_from_CEJSN_event_Msun");
+  fp->collapsar_per_Msun = parser_get_param_double(
+      params, "COLIBREFeedback:num_of_collapsar_per_Msun");
+  fp->yield_Eu_from_collapsar = parser_get_param_double(
+      params, "COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
 
   /* Properties of the SNIa enrichment model -------------------------------- */
 
