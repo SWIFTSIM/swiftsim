@@ -305,6 +305,27 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       convert_bpart_gas_velocity_curl,
       "Velocity curl (3D) of the gas particles around the black holes.");
 
+  list[22] = io_make_output_field(
+      "NumberOfSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_gas_swallows,
+      "Number of gas particles the black holes have swallowed. "
+      "This includes the particles swallowed by any of the BHs that "
+      "merged into this one.");
+
+  list[23] = io_make_output_field(
+      "NumberOfDirectSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_direct_gas_swallows,
+      "Number of gas particles the black holes have swallowed. "
+      "This does not include any particles swallowed by any of the BHs that "
+      "merged into this one.");
+
+  list[24] = io_make_output_field(
+      "NumberOfRepositions", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_repositions,
+      "Number of repositioning events the black holes went through. This does "
+      "not include the number of reposition events accumulated by any merged "
+      "black hole.");
+
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
