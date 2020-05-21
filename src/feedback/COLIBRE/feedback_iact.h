@@ -351,11 +351,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       if (pj->id==si->feedback_data.part_id_with_min_arclength[i]){
 
         /* Get \theta and \phi coordinates of the ray */
-        /* theta \in (0,pi) */
+        /* theta \in (0, \pi) */
         const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
-        /* phi \in (pi, pi) */
-        double const phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+        /* phi \in (-\pi, \pi) */
+        const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
         
         /* For the ith ray, compute sin and cos of \phi */
@@ -438,10 +438,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       This can latter be merged with the first loop to reduce the number of lines of code */
       if (pj->id==si->feedback_data.part_id_with_min_arclength_mirror[i]){
 
-        /* theta \in (0,pi) */
+        /* theta \in (0, \pi) */
         const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
-        /* phi \in (pi, pi) */
+        /* phi \in (-\pi, \pi) */
         const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
 
@@ -450,7 +450,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         const double sin_theta_ray = sqrt(1.0 - cos_theta_ray*cos_theta_ray);
 
-        /* Note the appearance of the minus sign. That is becasue 
+        /* Note the appearance of the minus sign. That is becasue the
         mirror particles are kicked in the direction opposite from the
         original one */
         const double n_ray[3] = {-sin_theta_ray * cos_phi_ray,
