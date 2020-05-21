@@ -45,17 +45,17 @@
  * In case new numbers need to be added other possible
  * numbers could be (tested numbers):
  * 57931781LL, 3434345177LL, 7714389049LL, 2315180537LL,
- * 3298327511LL, 4312564057LL, 5165786851LL, 6311114273LL,
- * 8899891613LL, 10594523341LL, 11134675471LL
+ * 4312564057LL, 5165786851LL, 11134675471LL,
+ * 8899891613LL, 10594523341LL
  *
  */
 enum random_number_type {
   random_number_star_formation = 0LL,
   random_number_stellar_feedback_1 = 3947008991LL,
   random_number_stellar_feedback_2 = 6977309513LL,
-  random_number_stellar_feedback_3 = 3947008999LL,
-  random_number_isotropic_feedback_ray_theta = 3947119021LL,
-  random_number_isotropic_feedback_ray_phi = 3956119019LL,
+  random_number_stellar_feedback_3 = 9762399103LL,
+  random_number_isotropic_feedback_ray_theta = 3298327511LL,
+  random_number_isotropic_feedback_ray_phi = 6311114273LL,
   random_number_stellar_enrichment = 2936881973LL,
   random_number_BH_feedback = 1640531371LL,
   random_number_BH_swallow = 4947009007LL,

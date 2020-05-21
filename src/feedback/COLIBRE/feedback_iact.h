@@ -67,12 +67,10 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   /* Add contribution of pj to normalisation of density weighted fraction
    * which determines how much mass to distribute to neighbouring
    * gas particles */
-
   const float rho = hydro_get_comoving_density(pj);
   if (rho != 0.f)
     si->feedback_data.to_collect.enrichment_weight_inv += wi / rho;
 
-   
   /* Isotropic feedback stars */
 
   /* Angular coordinates of the particle with respect to the star */
@@ -109,41 +107,40 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     the new one. Also store the relevant properties of the particle
     that now has the miminum arclength with the ith ray */
     if (new_arclength){
-        si->feedback_data.to_collect.min_arclength[i] = new_arclength;
-        si->feedback_data.part_id_with_min_arclength[i] = pj->id;
+      si->feedback_data.to_collect.min_arclength[i] = new_arclength;
+      si->feedback_data.part_id_with_min_arclength[i] = pj->id;
 
-        /* Velocity and mass are needed for the mirror approach we adopt in kinetic
-        feedback to exactly conserve momentum and energy. That's because in a pair
-        of two particles, the first one needs to know the properties of the other one,
-        and vice versa */
-        si->feedback_data.mass_true[i] = pj->mass;
-        for(int j=0; j<3; j++){
-            si->feedback_data.v_true[i][j] = xpj->v_full[j];
-        }
+      /* Velocity and mass are needed for the mirror approach we adopt in kinetic
+      feedback to exactly conserve momentum and energy. That's because in a pair
+      of two particles, the first one needs to know the properties of the other one,
+      and vice versa */
+      si->feedback_data.mass_true[i] = pj->mass;
+      for(int j=0; j<3; j++){
+        si->feedback_data.v_true[i][j] = pj->v[j];
+      }
     }
-
 
     /* Repeat the above steps for the mirror particles present in the kinetic feedback. 
     Each ray has a pair of two particles. For the ith ray with angular coodrinates (\theta_ray, \phi_ray),
-    in the loop above we sought for the particle with the angular coordinates closest to that of the ray;
+    in the loop above we seek for the particle with the angular coordinates closest to that of the ray;
     but now we are looking for the "mirror" particle with the coordinates closest to the "mirrored" coordinates
-    of the ray (\pi-\theta_ray, -\phi_ray) */
+    of the ray (\pi-\theta_ray, \phi_ray-\pi * sgn(\phi_ray)) */
 
     /* Note the opposite direction of the ray compared to the case above.
     Hence the name "mirror" */
     const double theta_ray_mirror = M_PI - theta_ray;
-    const double phi_ray_mirror = -phi_ray;
+    const double phi_ray_mirror = phi_ray - M_PI * (double)((phi_ray>=0) ? 1 : -1);
 
     const float new_arclength_mirror = find_min_arclength(theta_ray_mirror, phi_ray_mirror,
       theta_j, phi_j, 1.f, si->feedback_data.to_collect.min_arclength_mirror[i] );
 
     if (new_arclength_mirror){
-        si->feedback_data.to_collect.min_arclength_mirror[i] = new_arclength_mirror;
-        si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
-        si->feedback_data.mass_mirror[i] = pj->mass;
-        for(int j=0; j<3; j++){
-            si->feedback_data.v_mirror[i][j] = xpj->v_full[j];
-        }
+      si->feedback_data.to_collect.min_arclength_mirror[i] = new_arclength_mirror;
+      si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
+      si->feedback_data.mass_mirror[i] = pj->mass;
+      for(int j=0; j<3; j++){
+        si->feedback_data.v_mirror[i][j] = pj->v[j];
+      }
     }
   }
 }
@@ -383,9 +380,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         const double mass_weight = sqrt(current_mass * mass_mirror)/current_mass;
 
         /* Relative velocity between the gas particle and the stellar particle */
-        double v_gas_star[3] = {xpj->v_full[0]-si->v[0],
-                                xpj->v_full[1]-si->v[1],
-                                xpj->v_full[2]-si->v[2]};
+        double v_gas_star[3] = {pj->v[0]-si->v[0],
+                                pj->v[1]-si->v[1],
+                                pj->v[2]-si->v[2]};
 
         /* Relative velocity between the mirror gas particle and the stellar particle */
         double v_gas_mirror_star[3] = {si->feedback_data.v_mirror[i][0]-si->v[0],
@@ -445,7 +442,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
         /* phi \in (pi, pi) */
-        double const phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
+        const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
                                             ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
 
         double sin_phi_ray, cos_phi_ray;
@@ -464,9 +461,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         const double m_alpha = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
         const double mass_weight = sqrt(current_mass * mass_mirror)/current_mass;
 
-        double v_gas_star[3] = {xpj->v_full[0]-si->v[0],
-                                xpj->v_full[1]-si->v[1],
-                                xpj->v_full[2]-si->v[2]};
+        double v_gas_star[3] = {pj->v[0]-si->v[0],
+                                pj->v[1]-si->v[1],
+                                pj->v[2]-si->v[2]};
 
         double v_gas_mirror_star[3] = {si->feedback_data.v_true[i][0]-si->v[0],
                                        si->feedback_data.v_true[i][1]-si->v[1],
