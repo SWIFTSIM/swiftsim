@@ -161,7 +161,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 26;
+  *num_fields = 29;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -224,7 +224,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Total mass accreted onto the particles since its birth");
 
   list[12] = io_make_output_field(
-      "CumulativeNumberSeeds", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      "CumulativeNumberOfSeeds", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       cumulative_number_seeds,
       "Total number of BH seeds that have merged into this black hole");
 
@@ -297,40 +297,28 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       io_make_output_field("TimeBins", CHAR, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
                            time_bin, "Time-bins of the particles");
 
-  list[21] = io_make_output_field_convert_bpart(
-      "GasVelocityDispersions", FLOAT, 1, UNIT_CONV_SPEED, 0.f, bparts,
-      convert_bpart_gas_velocity_dispersion,
-      "Velocity dispersion (3D) of the gas particles around the black "
-      "holes. This is a * sqrt(<|dx/dt|^2> - <|dx/dt|>^2) where x is the "
-      "co-moving position of the particles relative to the black holes.");
-
-  list[22] = io_make_output_field_convert_bpart(
-      "GasCurlVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
-      convert_bpart_gas_velocity_curl,
-      "Velocity curl (3D) of the gas particles around the black holes.");
-
-  list[23] = io_make_output_field(
+  list[21] = io_make_output_field(
       "NumberOfSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_gas_swallows,
       "Number of gas particles the black holes have swallowed. "
-      "This includes the particles swallowed by any of the BHs that "
+      "This includes the particles swallowed by any of the black holes that "
       "merged into this one.");
 
-  list[24] = io_make_output_field(
+  list[22] = io_make_output_field(
       "NumberOfDirectSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_direct_gas_swallows,
       "Number of gas particles the black holes have swallowed. "
-      "This does not include any particles swallowed by any of the BHs that "
-      "merged into this one.");
+      "This does not include any particles swallowed by any of the black holes "
+      "that merged into this one.");
 
-  list[25] = io_make_output_field(
+  list[23] = io_make_output_field(
       "NumberOfRepositions", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_repositions,
       "Number of repositioning events the black holes went through. This does "
       "not include the number of reposition events accumulated by any merged "
-      "black hole.");
+      "black holes.");
 
-  list[26] = io_make_output_field(
+  list[24] = io_make_output_field(
       "NumberOfRepositionAttempts", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_reposition_attempts,
       "Number of time steps in which the black holes had an eligible particle "
@@ -339,17 +327,29 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "potential than the black holes themselves. It does not include "
       "attempted repositioning events accumulated by any merged black holes.");
 
-  list[27] = io_make_output_field(
+  list[25] = io_make_output_field(
       "NumberOfTimeSteps", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_time_steps,
       "Total number of time steps at which the black holes were active.");
 
-  list[28] = io_make_output_field(
+  list[26] = io_make_output_field(
       "ViscosityFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       f_visc,
       "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
       "rates have been suppressed by the Rosas-Guevara et al. (2015) "
       "accretion disc model.");
+
+  list[27] = io_make_output_field_convert_bpart(
+      "GasVelocityDispersions", FLOAT, 1, UNIT_CONV_SPEED, 0.f, bparts,
+      convert_bpart_gas_velocity_dispersion,
+      "Velocity dispersion (3D) of the gas particles around the black "
+      "holes. This is a * sqrt(<|dx/dt|^2> - <|dx/dt|>^2) where x is the "
+      "co-moving position of the particles relative to the black holes.");
+
+  list[28] = io_make_output_field_convert_bpart(
+      "GasCurlVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
+      convert_bpart_gas_velocity_curl,
+      "Velocity curl (3D) of the gas particles around the black holes.");
 
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES

@@ -646,15 +646,15 @@ GEARFeedback:
 COLIBREAGN:
   subgrid_seed_mass_Msun:             1e5        # Black hole subgrid mass at creation time in solar masses.
   use_subgrid_mass_from_ics:          1          # Use subgrid masses from ICs [1], or initialize them to particle masses [0]?
-  max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
-  eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
+  multi_phase_bondi:                  1          # Compute Bondi rates per neighbour particle?
   subgrid_bondi:                      1          # Use subgrid density for Bondi rate?
   use_bondi:                          1          # Use standard Bondi rate [1] or Krumholz et al. (2006) formula [0] for black hole accretion rates?
   use_krumholz_vorticity:             1          # Include the vorticity term in Krumholz et al. formula?
-  multi_phase_bondi:                  1          # Compute Bondi rates per neighbour particle?
   with_angmom_limiter:                1          # Are we applying the Rosas-Guevara (2015) viscous time-scale reduction term?
   viscous_alpha:                      1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
   radiative_efficiency:               0.1        # Fraction of the accreted mass that gets radiated.
+  max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
+  eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
   coupling_efficiency:                0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
   AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_num_ngb_to_heat:                1.         # Target number of gas neighbours to heat in an AGN feedback event.
@@ -674,12 +674,12 @@ COLIBREAGN:
 EAGLEAGN:
   subgrid_seed_mass_Msun:             1.5e5      # Black hole subgrid mass at creation time in solar masses.
   use_subgrid_mass_from_ics:          1          # Use subgrid masses specified in ICs [1], or initialise them to particle masses [0]?
-  max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
-  eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
-  with_angmom_limiter:                1          # Are we applying the Rosas-Guevara (2015) viscous time-scale reduction term?
   multi_phase_bondi:                  1          # Compute Bondi rates per neighbour particle?
+  with_angmom_limiter:                1          # Are we applying the Rosas-Guevara (2015) viscous time-scale reduction term?
   viscous_alpha:                      1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
   radiative_efficiency:               0.1        # Fraction of the accreted mass that gets radiated.
+  max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
+  eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
   coupling_efficiency:                0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
   AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_num_ngb_to_heat:                1.         # Target number of gas neighbours to heat in an AGN feedback event.

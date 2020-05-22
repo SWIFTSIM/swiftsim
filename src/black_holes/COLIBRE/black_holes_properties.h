@@ -47,6 +47,7 @@ struct black_holes_props {
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
 
+
   /* ----- Initialisation properties  ------ */
 
   /*! Mass of a BH seed at creation time */
@@ -55,31 +56,14 @@ struct black_holes_props {
   /*! Should we use the subgrid mass specified in ICs? */
   int use_subgrid_mass_from_ics;
 
+
   /* ----- Properties of the accretion model ------ */
-
-  /*! Maximal fraction of the Eddington rate allowed. */
-  float f_Edd;
-
-  /*! Radiative efficiency of the black holes. */
-  float epsilon_r;
-
-  /*! Feedback coupling efficiency of the black holes. */
-  float epsilon_f;
-
-  /*! Normalisation of the viscuous angular momentum accretion reduction */
-  float alpha_visc;
-
-  /*! Eddington fraction threshold for recording */
-  float f_Edd_recording;
-
-  /*! Calculate Bondi accretion rate based on subgrid properties? */
-  int subgrid_bondi;
 
   /*! Calculate Bondi accretion rate for individual neighbours? */
   int multi_phase_bondi;
 
-  /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015)? */
-  int with_angmom_limiter;
+  /*! Calculate Bondi accretion rate based on subgrid properties? */
+  int subgrid_bondi;
 
   /*! Switch between Bondi or Krumholz accretion rates */
   int use_bondi;
@@ -87,13 +71,34 @@ struct black_holes_props {
   /*! In Krumholz mode, should we include the vorticity term? */
   int use_krumholz_vorticity;
 
+  /*! Are we applying the angular-momentum-based multiplicative term from
+   * Rosas-Guevara et al. (2015)? */
+  int with_angmom_limiter;
+
+  /*! Normalisation of the viscuous angular momentum accretion reduction */
+  float alpha_visc;
+
+  /*! Radiative efficiency of the black holes. */
+  float epsilon_r;
+
+  /*! Maximal fraction of the Eddington rate allowed. */
+  float f_Edd;
+
+  /*! Eddington fraction threshold for recording */
+  float f_Edd_recording;
+
+
   /* ---- Properties of the feedback model ------- */
+
+  /*! Feedback coupling efficiency of the black holes. */
+  float epsilon_f;
 
   /*! Temperature increase induced by AGN feedback (Kelvin) */
   float AGN_delta_T_desired;
 
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
+
 
   /* ---- Properties of the repositioning model --- */
 
@@ -103,10 +108,11 @@ struct black_holes_props {
   /*! Maximal distance to reposition, in units of softening length */
   float max_reposition_distance_ratio;
 
-  /*! Maximal velocity offset of repositioning targets [c_sound] */
+  /*! Maximal velocity offset of particles to which the black hole can
+   * reposition, in units of the ambient sound speed of the black hole */
   float max_reposition_velocity_ratio;
 
-  /*! Minimum value of velocity repositioning threshold  */
+  /*! Minimum value of the velocity repositioning threshold */
   float min_reposition_velocity_threshold;
 
   /*! Normalisation factor for repositioning velocity */
@@ -114,6 +120,7 @@ struct black_holes_props {
 
   /*! Repositioning velocity scaling with black hole mass */
   float reposition_exponent_xi;
+
 
   /* ---- Properties of the merger model ---------- */
 
@@ -128,6 +135,7 @@ struct black_holes_props {
 
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
+
 
   /* ---- Common conversion factors --------------- */
 
@@ -187,6 +195,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   else
     bp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
+
   /* Initialisation properties  ---------------------------- */
 
   bp->subgrid_seed_mass =
@@ -199,35 +208,41 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_opt_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics",
                                0);
 
+
   /* Accretion parameters ---------------------------------- */
 
-  bp->f_Edd =
-      parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
-  bp->with_angmom_limiter =
-      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
-  if (bp->with_angmom_limiter)
-    bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
-  bp->f_Edd_recording = parser_get_param_float(
-      params, "COLIBREAGN:eddington_fraction_for_recording");
-  bp->epsilon_r =
-      parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
-  bp->epsilon_f =
-      parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
-  bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
+  bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
   bp->use_bondi = 
       parser_get_param_int(params, "COLIBREAGN:use_bondi");
   if (!bp->use_bondi)
     bp->use_krumholz_vorticity =
       parser_get_param_int(params, "COLIBREAGN:use_krumholz_vorticity");
 
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
+  if (bp->with_angmom_limiter)
+    bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
+
+  bp->epsilon_r =
+      parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
+
+  bp->f_Edd =
+      parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
+  bp->f_Edd_recording = parser_get_param_float(
+      params, "COLIBREAGN:eddington_fraction_for_recording");
+
+
   /* Feedback parameters ---------------------------------- */
 
+  bp->epsilon_f =
+      parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
   bp->AGN_delta_T_desired =
       parser_get_param_float(params, "COLIBREAGN:AGN_delta_T_K");
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "COLIBREAGN:AGN_num_ngb_to_heat");
+
 
   /* Reposition parameters --------------------------------- */
 
@@ -259,6 +274,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->reposition_exponent_xi =
       parser_get_param_float(params, "COLIBREAGN:reposition_exponent_xi");
 
+
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -272,6 +288,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "COLIBREAGN:merger_max_distance_ratio");
+
 
   /* Common conversion factors ----------------------------- */
 
