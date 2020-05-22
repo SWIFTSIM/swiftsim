@@ -115,6 +115,8 @@ H_0 = H_0 * 3.241e-20 # s^-1
 a_begin = sim["/Cosmology"].attrs["a_beg"][0]
 t_begin = sim["/Cosmology"].attrs["time_beg [internal units]"][0] * unit_time_in_cgs
 
+###################################################################################################################
+
 # Declare arrays to store SWIFT data
 swift_box_gas_mass = zeros(n_snapshots)
 swift_box_gas_mass_AGB = zeros(n_snapshots)
@@ -205,6 +207,8 @@ for i in range(n_snapshots):
         
         sim.close()
 
+###################################################################################################################
+        
 # Read expected yields from EAGLE. Choose which file to use based on metallicity used when
 # running SWIFT (can be specified in yml file)
 filename = "./StellarEvolutionSolution/Z_%.4f/StellarEvolutionTotal.txt"%Z_star
@@ -242,6 +246,8 @@ def scale_factor_from_time(t_in_cgs):
 eagle_time_s = eagle_time_Gyr * 1e9 * 365.25 * 24. * 3600. + t_begin
 eagle_a = scale_factor_from_time(eagle_time_s)
 
+###################################################################################################################
+
 # Construct Europium expectations
 Eu_t = np.linspace(t[0], t[-1], 10000) * unit_time_in_cgs / Gyr_in_cgs
 Eu_a = scale_factor_from_time(Eu_t * Gyr_in_cgs + t_begin)
@@ -263,6 +269,24 @@ Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] *
 Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun
 
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
+
+###################################################################################################################
+
+m_Z = swift_box_gas_metal_mass - swift_box_gas_metal_mass[0]
+m_Z *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Z = m_Z[1:] - m_Z[:-1]
+
+m_Fe = swift_element_mass[:,8] - swift_element_mass[0,8]
+m_Fe *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Fe = m_Fe[1:] - m_Fe[:-1]
+
+theory_z_Z = np.zeros(np.size(z))
+theory_z_Fe = np.zeros(np.size(z))
+for i in range(np.size(z) - 1):
+    theory_z_Z[i] = np.sum(delta_m_Z[:i] * z[:i]) / m_Z[i]
+    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * z[:i]) / m_Fe[i]
+    
+###################################################################################################################
 
 # Plot the interesting quantities
 figure()
@@ -354,16 +378,18 @@ gca().tick_params(axis='x', which='minor', bottom=False)
 ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
 # Box mass-weighted redshift
-subplot(236, xscale="log")
+subplot(236, xscale="log", yscale="linear")
 plot(a, swift_box_mean_Z_z, linewidth=0.5, color='C0', label='Z')
+plot(a[:-1], theory_z_Z[:-1], linewidth=0.5, color='C0', ls='--')
 plot(a, swift_box_mean_Fe_z, linewidth=0.5, color='C1', label='Fe')
+plot(a[:-1], theory_z_Fe[:-1], linewidth=0.5, color='C1', ls='--')
 xlabel("${\\rm Redshift}$", labelpad=0)
 ylabel("Mean redshift of enrichment", labelpad=2)
 legend(loc="lower right", ncol=1, fontsize=8)
 xlim(0.08, 1.05)
+ylim(0, 11)
 xticks(a_ticks, redshift_labels)
 gca().tick_params(axis='x', which='minor', bottom=False)
-ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
 savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
 
