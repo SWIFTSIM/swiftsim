@@ -1248,7 +1248,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #endif
         scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
 
-        /* After stellar evolution */
+        /* MOSAICS after stellar evolution */
         scheduler_addunlock(s, c->stars.ghost, c->super->stars.mosaics);
 
         if (with_feedback && with_star_formation && c->hydro.count > 0) {
@@ -1267,7 +1267,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
             scheduler_addtask(s, task_type_stars_veldisp_out, task_subtype_none,
                               0, /* implicit = */ 1, c, NULL);
 
-        if (c->hydro.count > 0) {
+        if (with_feedback && c->hydro.count > 0) {
           scheduler_addunlock(s, star_resort_cell->hydro.stars_resort, 
                               c->stars.stars_veldisp_in);
         }

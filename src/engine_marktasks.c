@@ -184,7 +184,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (ci_active_star_form) {
           scheduler_activate(s, t);
           cell_activate_drift_spart(ci, s);
-          if (with_timestep_sync) cell_activate_sync_part(ci, s);
         }
       }
 
@@ -192,8 +191,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                t_subtype == task_subtype_stars_veldisp) {
         if (ci_active_star_form) {
           scheduler_activate(s, t);
-          cell_activate_subcell_stars_veldisp_tasks(ci, NULL, s, with_star_formation,
-                                            with_timestep_sync);
+          cell_activate_subcell_stars_veldisp_tasks(ci, NULL, s,
+                                            with_star_formation);
         }
       }
 
@@ -462,8 +461,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
-            if (cj_nodeID == nodeID && with_timestep_sync)
-              cell_activate_sync_part(cj, s);
           }
 
           /* Do cj */
@@ -471,16 +468,14 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
-            if (ci_nodeID == nodeID && with_timestep_sync)
-              cell_activate_sync_part(ci, s);
           }
         }
 
         /* Store current values of dx_max and h_max. */
         else if (t_type == task_type_sub_pair &&
                  t_subtype == task_subtype_stars_veldisp) {
-          cell_activate_subcell_stars_veldisp_tasks(ci, cj, s, with_star_formation,
-                                            with_timestep_sync);
+          cell_activate_subcell_stars_veldisp_tasks(ci, cj, s,
+                                            with_star_formation);
         }
       }
 

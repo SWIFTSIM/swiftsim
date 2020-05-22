@@ -947,8 +947,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
                                        const int with_timestep_sync);
 void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
-                                       const int with_star_formation,
-                                       const int with_timestep_sync);
+                                       const int with_star_formation);
 void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
                                              struct scheduler *s,
                                              const int with_timestep_sync);

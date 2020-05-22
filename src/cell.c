@@ -3248,11 +3248,20 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
  */
 void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
-                                       const int with_star_formation,
-                                       const int with_timestep_sync) {
+                                       const int with_star_formation) {
   const struct engine *e = s->space->e;
 
   /* NOTE: don't activate sorting in this routine */
+
+  /* Store the current dx_max and h_max values. */
+  /* These are needed for cell_can_recurse checks */
+  ci->hydro.dx_max_part_old = ci->hydro.dx_max_part;
+  ci->hydro.h_max_old = ci->hydro.h_max;
+
+  if (cj != NULL) {
+    cj->hydro.dx_max_part_old = cj->hydro.dx_max_part;
+    cj->hydro.h_max_old = cj->hydro.h_max;
+  }
 
   /* Self interaction? */
   if (cj == NULL) {
@@ -3260,8 +3269,7 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
     const int ci_active = with_star_formation && cell_is_active_hydro(ci, e);
 
     /* Do anything? */
-    if (!ci_active || ci->stars.count == 0 ||
-        (!with_star_formation && ci->stars.count == 0))
+    if (!ci_active || ci->stars.count == 0)
       return;
 
     /* Recurse? */
@@ -3270,18 +3278,17 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
       /* Loop over all progenies and pairs of progenies */
       for (int j = 0; j < 8; j++) {
         if (ci->progeny[j] != NULL) {
-          cell_activate_subcell_stars_veldisp_tasks(
-              ci->progeny[j], NULL, s, with_star_formation, with_timestep_sync);
+          cell_activate_subcell_stars_veldisp_tasks( ci->progeny[j], NULL, s,
+              with_star_formation);
           for (int k = j + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
               cell_activate_subcell_stars_veldisp_tasks(ci->progeny[j], 
-                  ci->progeny[k], s, with_star_formation, with_timestep_sync);
+                  ci->progeny[k], s, with_star_formation);
         }
       }
     } else {
       /* We have reached the bottom of the tree: activate drift */
       cell_activate_drift_spart(ci, s);
-      if (with_timestep_sync) cell_activate_sync_part(ci, s);
     }
   }
 
@@ -3309,7 +3316,7 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
         const int pjd = csp->pairs[k].pjd;
         if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
           cell_activate_subcell_stars_veldisp_tasks(ci->progeny[pid], 
-              cj->progeny[pjd], s, with_star_formation, with_timestep_sync);
+              cj->progeny[pjd], s, with_star_formation);
       }
     }
 
@@ -3321,8 +3328,6 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
-        if (cj->nodeID == engine_rank && with_timestep_sync)
-          cell_activate_sync_part(cj, s);
       }
 
       if (cj_active) {
@@ -3330,8 +3335,6 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
-        if (ci->nodeID == engine_rank && with_timestep_sync)
-          cell_activate_sync_part(ci, s);
       }
     }
   } /* Otherwise, pair interation */
@@ -4247,12 +4250,10 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
     const int cj_nodeID = nodeID;
 #endif
 
-    const int ci_active = cell_is_active_stars(ci, e) ||
-                          (with_star_formation && cell_is_active_hydro(ci, e));
+    const int ci_active = with_star_formation && cell_is_active_hydro(ci, e);
 
     const int cj_active =
-        (cj != NULL) && (cell_is_active_stars(cj, e) ||
-                         (with_star_formation && cell_is_active_hydro(cj, e)));
+        (cj != NULL) && (with_star_formation && cell_is_active_hydro(cj, e));
 
     /* Only activate tasks that involve a local active cell. */
     if ((ci_active || cj_active) &&
@@ -4265,8 +4266,6 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
           /* Activate the drift tasks. */
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
-          if (cj_nodeID == nodeID && with_timestep_sync)
-            cell_activate_sync_part(cj, s);
         }
 
         /* Do cj */
@@ -4274,19 +4273,17 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
           /* Activate the drift tasks. */
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
-          if (ci_nodeID == nodeID && with_timestep_sync)
-            cell_activate_sync_part(ci, s);
         }
       }
 
       else if (t->type == task_type_sub_self) {
-        cell_activate_subcell_stars_veldisp_tasks(ci, NULL, s, with_star_formation,
-                                          with_timestep_sync);
+        cell_activate_subcell_stars_veldisp_tasks(ci, NULL, s, 
+            with_star_formation);
       }
 
       else if (t->type == task_type_sub_pair) {
-        cell_activate_subcell_stars_veldisp_tasks(ci, cj, s, with_star_formation,
-                                          with_timestep_sync);
+        cell_activate_subcell_stars_veldisp_tasks(ci, cj, s, 
+            with_star_formation);
       }
     }
 

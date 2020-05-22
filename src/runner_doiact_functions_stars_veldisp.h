@@ -278,13 +278,11 @@ void DOPAIR1_BRANCH_SVD(struct runner *r, struct cell *ci, struct cell *cj) {
 
   /* Check that cells are drifted. */
   if (do_ci && 
-      ((!cell_are_spart_drifted(ci, e) && !cell_are_spart_drifted(ci, e)) || 
-      !cell_are_spart_drifted(cj, e)))
+      (!cell_are_spart_drifted(ci, e) || !cell_are_spart_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   if (do_cj &&
-      ((!cell_are_spart_drifted(ci, e) && !cell_are_spart_drifted(ci, e)) || 
-      !cell_are_spart_drifted(cj, e)))
+      (!cell_are_spart_drifted(ci, e) || !cell_are_spart_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   DOPAIR1_SVD_NAIVE(r, ci, cj, 1);
@@ -412,7 +410,7 @@ void DOSUB_SELF1_SVD(struct runner *r, struct cell *ci, int gettimer) {
   else {
 
     /* Drift the cell to the current timestep if needed. */
-    if (!cell_are_spart_drifted(ci, r->e) && !cell_are_spart_drifted(ci, r->e))
+    if (!cell_are_spart_drifted(ci, r->e))
         error("Interacting undrifted cell.");
 
     DOSELF1_BRANCH_SVD(r, ci);
