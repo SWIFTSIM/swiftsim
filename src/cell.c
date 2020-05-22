@@ -5132,8 +5132,7 @@ void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
       if (bpart_is_inhibited(bp, e)) continue;
 
       /* Drift... */
-      drift_bpart(bp, dt_drift, ti_old_bpart, ti_current,
-                  e->black_holes_properties);
+      drift_bpart(bp, dt_drift, ti_old_bpart, ti_current);
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure the particle does not drift by more than a box length. */

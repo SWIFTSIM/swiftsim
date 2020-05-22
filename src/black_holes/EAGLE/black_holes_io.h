@@ -35,7 +35,7 @@ INLINE static void black_holes_read_particles(struct bpart* bparts,
                                               int* num_fields) {
 
   /* Say how much we want to read */
-  *num_fields = 6;
+  *num_fields = 7;
 
   /* List what we want to read */
   list[0] = io_make_input_field("Coordinates", DOUBLE, 3, COMPULSORY,
@@ -50,6 +50,9 @@ INLINE static void black_holes_read_particles(struct bpart* bparts,
                                 UNIT_CONV_LENGTH, bparts, h);
   list[5] = io_make_input_field("EnergyReservoir", FLOAT, 1, OPTIONAL,
                                 UNIT_CONV_ENERGY, bparts, energy_reservoir);
+  list[6] = io_make_input_field("SubgridMasses", FLOAT, 1, OPTIONAL,
+                                UNIT_CONV_MASS, bparts, subgrid_mass);
+
 }
 
 INLINE static void convert_bpart_pos(const struct engine* e,
@@ -145,7 +148,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 22;
+  *num_fields = 26;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -281,15 +284,43 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "NumberOfSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_gas_swallows,
       "Number of gas particles the black holes have swallowed. "
-      "This includes the particles swallowed by any of the BHs that "
+      "This includes the particles swallowed by any of the black holes that "
       "merged into this one.");
 
   list[21] = io_make_output_field(
+      "NumberOfDirectSwallows", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_direct_gas_swallows,
+      "Number of gas particles the black holes have swallowed. "
+      "This does not include the particles swallowed by any of the black "
+      "holes that merged into this one.");
+
+  list[22] = io_make_output_field(
       "NumberOfRepositions", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       number_of_repositions,
       "Number of repositioning events the black holes went through. This does "
       "not include the number of reposition events accumulated by any merged "
-      "black hole.");
+      "black holes.");
+
+  list[23] = io_make_output_field(
+      "NumberOfRepositionAttempts", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_reposition_attempts,
+      "Number of time steps in which the black holes had an eligible particle "
+      "to reposition to. They may or may not have ended up moving there, "
+      "depending on whether these particles were at a lower or higher "
+      "potential than the black holes themselves. It does not include "
+      "attempted repositioning events accumulated by any merged black holes.");
+
+  list[24] = io_make_output_field(
+      "NumberOfTimeSteps", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_time_steps,
+      "Total number of time steps at which the black holes were active.");
+
+  list[25] = io_make_output_field(
+      "ViscosityFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      f_visc,
+      "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
+      "rates have been suppressed by the Rosas-Guevara et al. (2015) "
+      "accretion disc model.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 

@@ -47,35 +47,37 @@ struct black_holes_props {
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
 
+
   /* ----- Initialisation properties  ------ */
 
   /*! Mass of a BH seed at creation time */
   float subgrid_seed_mass;
 
+  /*! Should we use the subgrid mass specified in ICs? */
+  int use_subgrid_mass_from_ics;
 
 
   /* ----- Properties of the accretion model ------ */
 
-  /*! Maximal fraction of the Eddington rate allowed. */
-  float f_Edd;
-
-  /*! Radiative efficiency of the black holes. */
-  float epsilon_r;
-
-  /*! Feedback coupling efficiency of the black holes. */
-  float epsilon_f;
-
   /*! Calculate Bondi accretion rate for individual neighbours? */
   int multi_phase_bondi;
 
-  /*! Are we using the Rosas-Guevara et al. (2015) term? */
+  /*! Are we applying the angular-momentum-based multiplicative term from
+   * Rosas-Guevara et al. (2015)? */
   int with_angmom_limiter;
 
   /*! Normalisation of the viscuous angular momentum accretion reduction */
   float alpha_visc;
 
+  /*! Radiative efficiency of the black holes. */
+  float epsilon_r;
+
+  /*! Maximal fraction of the Eddington rate allowed. */
+  float f_Edd;
+
   /*! Eddington fraction threshold for recording */
   float f_Edd_recording;
+
 
   /* ---- Properties of the feedback model ------- */
 
@@ -85,6 +87,10 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat; 
 
+  /*! Feedback coupling efficiency of the black holes. */
+  float epsilon_f;
+
+ 
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -93,10 +99,11 @@ struct black_holes_props {
   /*! Maximal distance to reposition, in units of softening length */
   float max_reposition_distance_ratio;
 
-  /*! Maximal velocity offset of repositioning targets [c_sound] */
+  /*! Maximal velocity offset of particles to which the black hole can
+   * reposition, in units of the ambient sound speed of the black hole */
   float max_reposition_velocity_ratio;
 
-  /*! Minimum value of velocity repositioning threshold  */
+  /*! Minimum value of velocity repositioning threshold */
   float min_reposition_velocity_threshold;
 
   /*! Normalisation factor for repositioning velocity */
@@ -104,6 +111,7 @@ struct black_holes_props {
 
   /*! Repositioning velocity scaling with black hole mass */
   float reposition_exponent_xi;
+
 
   /* ---- Properties of the merger model ---------- */
 
@@ -118,6 +126,7 @@ struct black_holes_props {
 
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
+
 
   /* ---- Common conversion factors --------------- */
 
@@ -177,6 +186,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   else
     bp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
+
   /* Initialisation properties  ---------------------------- */
 
   bp->subgrid_seed_mass =
@@ -187,6 +197,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->use_subgrid_mass_from_ics =
       parser_get_opt_param_int(params, "EAGLEAGN:use_subgrid_mass_from_ics", 0);
+
 
   /* Accretion parameters ---------------------------------- */
 
@@ -206,6 +217,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   if (bp->with_angmom_limiter)
     bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
 
+
   /* Feedback parameters ---------------------------------- */
 
   bp->AGN_delta_T_desired =
@@ -213,6 +225,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "EAGLEAGN:AGN_num_ngb_to_heat");
+
 
   /* Reposition parameters --------------------------------- */
 
@@ -244,6 +257,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->reposition_exponent_xi =
       parser_get_param_float(params, "EAGLEAGN:reposition_exponent_xi");
 
+
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -257,6 +271,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:merger_max_distance_ratio");
+
 
   /* Common conversion factors ----------------------------- */
 

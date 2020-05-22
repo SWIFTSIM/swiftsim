@@ -111,16 +111,17 @@ runner_iact_nonsym_bh_gas_density(
                                      bi->v[1] * cosmo->a_inv,
                                      bi->v[2] * cosmo->a_inv};
 
-    const double gas_v_peculiar[3] = {
-        vj[0] * cosmo->a_inv, vj[1] * cosmo->a_inv, vj[2] * cosmo->a_inv};
+    const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv,
+                                      vj[1] * cosmo->a_inv,
+                                      vj[2] * cosmo->a_inv};
 
     const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
                                        gas_v_peculiar[1] - bh_v_peculiar[1],
                                        gas_v_peculiar[2] - bh_v_peculiar[2]};
 
-    const double v_diff_norm2 = v_diff_peculiar[0] * v_diff_peculiar[0] +
-                                v_diff_peculiar[1] * v_diff_peculiar[1] +
-                                v_diff_peculiar[2] * v_diff_peculiar[2];
+    const double v_diff_norm2 =  v_diff_peculiar[0] * v_diff_peculiar[0] +
+                                 v_diff_peculiar[1] * v_diff_peculiar[1] +
+                                 v_diff_peculiar[2] * v_diff_peculiar[2];
 
     /* ii) Calculate denominator in Bondi formula */
     const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
@@ -129,17 +130,18 @@ runner_iact_nonsym_bh_gas_density(
 
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-      error("Invalid denominator for gas particle %lld", pj->id);
+        error("Invalid denominator for gas particle %lld",
+              pj->id);
 
     double denominator_inv = 1. / sqrt(denominator2);
 
-    /* iii) Contribution of gas particle to the BH accretion rate *
+    /* iii) Contribution of gas particle to the BH accretion rate
      *      (without constant pre-factor)
      *      [NB: rhoj is weighted contribution to BH gas density]
      */
     const float rhoj = mj * wi * cosmo->a3_inv;
-    bi->accretion_rate +=
-        (rhoj * denominator_inv * denominator_inv * denominator_inv);
+    bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
+                           denominator_inv);
   } /* End of accretion contribution calculation */
 
 #ifdef DEBUG_INTERACTIONS_BH
@@ -218,7 +220,6 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
                                 bi->v[2] - pj->v[2]};
       const float v2 = delta_v[0] * delta_v[0] + delta_v[1] * delta_v[1] +
                        delta_v[2] * delta_v[2];
-
       const float v2_pec = v2 * cosmo->a2_inv;
       const float v2_max = bh_props->max_reposition_velocity_ratio *
                            bh_props->max_reposition_velocity_ratio *
@@ -319,7 +320,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This gas neighbour is close enough that we can consider its potential
+  /* This BH neighbour is close enough that we can consider its potential
      for repositioning */
   if (r2 < max_dist_repos2) {
 
@@ -335,7 +336,6 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     }
 
     if (neighbour_is_slow_enough) {
-
       const float potential = bj->reposition.potential;
 
       /* Is the potential lower? */
@@ -400,13 +400,13 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
         float w_grav;
         kernel_grav_pot_eval(r_12 / grav_props->epsilon_baryon_cur, &w_grav);
         const float r_mod = w_grav / grav_props->epsilon_baryon_cur;
-        v2_threshold = 2 * G_Newton * M / (r_mod);
+        v2_threshold = 2.f * G_Newton * M / (r_mod);
 
       } else {
         /* Standard formula if BH interactions are not softened */
-        v2_threshold = 2 * G_Newton * M / (r_12);
+        v2_threshold = 2.f * G_Newton * M / (r_12);
       }
-    }
+    } /* Ends sections for different merger thresholds */
 
     if ((v2_pec < v2_threshold) && (r2 < max_dist_merge2)) {
 

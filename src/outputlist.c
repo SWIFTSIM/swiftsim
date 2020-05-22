@@ -356,9 +356,9 @@ void output_list_struct_restore(struct output_list *list, FILE *stream) {
   list->times = (double *)malloc(sizeof(double) * list->size);
   restart_read_blocks(list->times, list->size, sizeof(double), stream, NULL,
                       "times");
-  
+
   /* If we are in multiple-level-mode, list->types will point to a non-zero,
-   * albeit meaningless, memory address, otherwise, it's NULL. */
+   * albeit meaningless, memory address. Otherwise, it's NULL. */
   if (list->types) {
     list->types = (int *)malloc(sizeof(int) * list->size);
     restart_read_blocks(list->types, list->size, sizeof(int), stream, NULL,

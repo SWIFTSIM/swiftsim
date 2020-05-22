@@ -1256,14 +1256,14 @@ void prepare_file(struct engine* e, const char* fileName,
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
-    /* Check whether the user has cancelled (by default) the entire 
+    /* Check whether the user has cancelled (by default) the entire
      * particle type */
     char field_all[PARSER_MAX_LINE_SIZE];
     if (e->type_next_snapshot > 0)
       sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
               e->type_next_snapshot, part_type_names[ptype]);
     else
-      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);      
+      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);
     const int ptype_default_should_write = parser_get_opt_param_int(params,
       field_all, 1);
 
@@ -1785,14 +1785,14 @@ void write_output_parallel(struct engine* e,
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
-    /* Check whether the user has cancelled (by default) the entire 
+    /* Check whether the user has cancelled (by default) the entire
      * particle type */
     char field_all[PARSER_MAX_LINE_SIZE];
     if (e->type_next_snapshot > 0)
       sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
               e->type_next_snapshot, part_type_names[ptype]);
     else
-      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);      
+      sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);
     const int ptype_default_should_write = parser_get_opt_param_int(params,
       field_all, 1);
 

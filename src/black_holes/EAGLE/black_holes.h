@@ -65,13 +65,16 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->cumulative_number_seeds = 1;
   bp->number_of_mergers = 0;
   bp->number_of_gas_swallows = 0;
+  bp->number_of_direct_gas_swallows = 0;
+  bp->number_of_repositions = 0;
+  bp->number_of_reposition_attempts = 0;
+  bp->number_of_time_steps = 0;
   bp->last_high_Eddington_fraction_scale_factor = -1.f;
   bp->last_minor_merger_time = -1.;
   bp->last_major_merger_time = -1.;
   bp->swallowed_angular_momentum[0] = 0.f;
   bp->swallowed_angular_momentum[1] = 0.f;
   bp->swallowed_angular_momentum[2] = 0.f;
-  bp->number_of_repositions = 0;
 
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 }
@@ -107,7 +110,11 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.delta_x[2] = -FLT_MAX;
   bp->reposition.min_potential = FLT_MAX;
   bp->reposition.potential = FLT_MAX;
-  bp->accretion_rate = 0.f; /* Optinally accumulated ngb-by-ngb */
+  bp->f_visc = FLT_MAX;
+
+  /* Record that the black hole has another active time step */
+  bp->number_of_time_steps++;
+  bp->accretion_rate = 0.f;  /* Optionally accumulated ngb-by-ngb */
 }
 
 /**
@@ -300,11 +307,12 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   bp->gpart->v_full[2] = bp->v[2];
 
   const float dr = sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
-  message(
-      "BH %lld swallowing gas particle %lld "
-      "(Delta_v = [%f, %f, %f] U_V, Delta_v_rad = %f)",
-      bp->id, p->id, dv[0], dv[1], dv[2],
-      (dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2]) / dr);
+  message("BH %lld swallowing gas particle %lld "
+          "(Delta_v = [%f, %f, %f] U_V, "
+          "Delta_x = [%f, %f, %f] U_L, "
+          "Delta_v_rad = %f)",
+          bp->id, p->id, -dv[0], -dv[1], -dv[2], -dx[0], -dx[1], -dx[2],
+          (dv[0]*dx[0] + dv[1]*dx[1] + dv[2]*dx[2]) / dr);
 
   /* Update the BH metal masses */
   struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
@@ -313,6 +321,7 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
 
   /* This BH swallowed a gas particle */
   bp->number_of_gas_swallows++;
+  bp->number_of_direct_gas_swallows++;
 
   /* This BH lost a neighbour */
   bp->num_ngbs--;
@@ -429,6 +438,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double delta_T = props->AGN_delta_T_desired;
   const double delta_u = delta_T * props->temp_to_u_factor;
   const double alpha_visc = props->alpha_visc;
+  const int with_angmom_limiter = props->with_angmom_limiter;
 
   /* (Subgrid) mass of the BH (internal units) */
   const double BH_mass = bp->subgrid_mass;
@@ -488,7 +498,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
-  if (props->with_angmom_limiter) {
+  if (with_angmom_limiter) {
     const double Bondi_radius = G * BH_mass / gas_c_phys2;
     const double Bondi_time = Bondi_radius / gas_c_phys;
     const double r_times_v_tang = Bondi_radius * tangential_velocity;
@@ -497,9 +507,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const double viscous_time = 2. * M_PI * r_times_v_tang_3 /
                                 (1e-6 * alpha_visc * G * G * BH_mass * BH_mass);
     const double f_visc = min(Bondi_time / viscous_time, 1.);
+    bp->f_visc = f_visc;
 
     /* Limit the Bondi rate by the Bondi viscuous time ratio */
     Bondi_rate *= f_visc;
+  } else {
+    bp->f_visc = 1.0;
   }
 
   /* Compute the Eddington rate (internal units) */
@@ -591,41 +604,50 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double dt) {
 
-  const float potential = gravity_get_comoving_potential(bp->gpart);
+  /* First check: did we find any eligible neighbour particle to jump to? */
+  if (bp->reposition.min_potential != FLT_MAX) {
 
-  /* Is the potential lower (i.e. the BH is at the bottom already)
-   * OR is the BH massive enough that we don't reposition? */
-  if (potential < bp->reposition.min_potential ||
-      bp->subgrid_mass > props->max_reposition_mass) {
+    /* Record that we have a (possible) repositioning situation */
+    bp->number_of_reposition_attempts++;
 
-    /* No need to reposition */
-    bp->reposition.min_potential = FLT_MAX;
-    bp->reposition.delta_x[0] = -FLT_MAX;
-    bp->reposition.delta_x[1] = -FLT_MAX;
-    bp->reposition.delta_x[2] = -FLT_MAX;
-  } else if (props->reposition_coefficient_upsilon >= 0) {
+    /* Is the potential lower (i.e. the BH is at the bottom already)
+     * OR is the BH massive enough that we don't reposition? */
+    const float potential = gravity_get_comoving_potential(bp->gpart);
+    if (potential < bp->reposition.min_potential ||
+        bp->subgrid_mass > props->max_reposition_mass) {
 
-    /* If we are re-positioning, move the BH a fraction of delta_x, so
-     * that we have a well-defined re-positioning velocity */
-    const float repos_vel = props->reposition_coefficient_upsilon *
-                            pow(bp->subgrid_mass / constants->const_solar_mass,
-                                props->reposition_exponent_xi);
+      /* No need to reposition */
+      bp->reposition.min_potential = FLT_MAX;
+      bp->reposition.delta_x[0] = -FLT_MAX;
+      bp->reposition.delta_x[1] = -FLT_MAX;
+      bp->reposition.delta_x[2] = -FLT_MAX;
+    } else if (props->reposition_coefficient_upsilon >= 0) {
 
-    const double dx = bp->reposition.delta_x[0];
-    const double dy = bp->reposition.delta_x[1];
-    const double dz = bp->reposition.delta_x[2];
-    const double d = sqrt(dx * dx + dy * dy + dz * dz);
+      /* If we are re-positioning, move the BH a fraction of delta_x, so
+       * that we have a well-defined re-positioning velocity */
+      const float repos_vel = props->reposition_coefficient_upsilon *
+         pow(bp->subgrid_mass / constants->const_solar_mass,
+            props->reposition_exponent_xi);
 
-    /* Convert target reposition velocity to a fractional reposition
-     * along reposition.delta_x */
-    double repos_frac = repos_vel * dt / d;
-    if (repos_frac < 0) repos_frac = 0.;
-    if (repos_frac > 1) repos_frac = 1.;
+      const double dx = bp->reposition.delta_x[0];
+      const double dy = bp->reposition.delta_x[1];
+      const double dz = bp->reposition.delta_x[2];
+      const double d = sqrt(dx * dx + dy * dy + dz * dz);
 
-    bp->reposition.delta_x[0] *= repos_frac;
-    bp->reposition.delta_x[1] *= repos_frac;
-    bp->reposition.delta_x[2] *= repos_frac;
-  }
+      /* Convert target reposition velocity to a fractional reposition
+       * along reposition.delta_x */
+      double repos_frac = repos_vel * dt / d;
+      if (repos_frac < 0)
+        repos_frac = 0.;
+      if (repos_frac > 1)
+        repos_frac = 1.;
+
+      bp->reposition.delta_x[0] *= repos_frac;
+      bp->reposition.delta_x[1] *= repos_frac;
+      bp->reposition.delta_x[2] *= repos_frac;   
+
+    } /* ends section for fractional repositioning */
+  } /* ends section if we found eligible repositioning target(s) */
 }
 
 /**
@@ -709,9 +731,12 @@ INLINE static void black_holes_create_from_gas(
   bp->cumulative_number_seeds = 1;
   bp->number_of_mergers = 0;
   bp->number_of_gas_swallows = 0;
+  bp->number_of_direct_gas_swallows = 0;
+  bp->number_of_time_steps = 0;
 
-  /* We haven't repositioned yet */
+  /* We haven't repositioned yet, nor attempted it */
   bp->number_of_repositions = 0;
+  bp->number_of_reposition_attempts = 0;
 
   /* Initial metal masses */
   const float gas_mass = hydro_get_mass(p);
