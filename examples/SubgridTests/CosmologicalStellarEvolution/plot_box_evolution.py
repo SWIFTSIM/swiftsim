@@ -130,6 +130,8 @@ swift_rprocess_mass = zeros(n_snapshots)
 swift_box_gas_Eu_mass_NSM = zeros(n_snapshots)
 swift_box_gas_Eu_mass_CEJSN = zeros(n_snapshots)
 swift_box_gas_Eu_mass_Collapsar = zeros(n_snapshots)
+swift_box_mean_Z_z = zeros(n_snapshots)
+swift_box_mean_Fe_z = zeros(n_snapshots)
 swift_internal_energy = zeros(n_snapshots)
 swift_kinetic_energy = zeros(n_snapshots)
 swift_total_energy = zeros(n_snapshots)
@@ -186,6 +188,10 @@ for i in range(n_snapshots):
             swift_box_gas_Eu_mass_NSM[i] = 0.
             swift_box_gas_Eu_mass_CEJSN[i] = 0.
             swift_box_gas_Eu_mass_Collapsar[i] = 0.
+
+        #temp = sim["/PartType0/MeanMetalWeightedRedshifts"][:]
+        swift_box_mean_Z_z[i] = np.max(sim["/PartType0/MeanMetalWeightedRedshifts"][:])
+        swift_box_mean_Fe_z[i] = np.max(sim["/PartType0/MeanIronWeightedRedshifts"][:])
             
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
@@ -342,6 +348,18 @@ plot(eagle_a[1:],eagle_total_metal_mass_SNIa[:-1],linewidth=0.5, color='C2', ls=
 legend(loc="center right", ncol=2, fontsize=8)
 xlabel("${\\rm Redshift}$", labelpad=0)
 ylabel("Change in total metal mass of gas particles ${[\\rm M_\\odot]}$", labelpad=2)
+xlim(0.08, 1.05)
+xticks(a_ticks, redshift_labels)
+gca().tick_params(axis='x', which='minor', bottom=False)
+ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+# Box mass-weighted redshift
+subplot(236, xscale="log")
+plot(a, swift_box_mean_Z_z, linewidth=0.5, color='C0', label='Z')
+plot(a, swift_box_mean_Fe_z, linewidth=0.5, color='C1', label='Fe')
+xlabel("${\\rm Redshift}$", labelpad=0)
+ylabel("Mean redshift of enrichment", labelpad=2)
+legend(loc="lower right", ncol=1, fontsize=8)
 xlim(0.08, 1.05)
 xticks(a_ticks, redshift_labels)
 gca().tick_params(axis='x', which='minor', bottom=False)
