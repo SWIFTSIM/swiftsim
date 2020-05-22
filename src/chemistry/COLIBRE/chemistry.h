@@ -46,7 +46,7 @@ chemistry_get_element_name(enum chemistry_element elem) {
 
   static const char* chemistry_element_names[chemistry_element_count] = {
       "Hydrogen", "Helium",    "Carbon",  "Nitrogen", "Oxygen",
-      "Neon",     "Magnesium", "Silicon", "Iron", "Europium"};
+      "Neon",     "Magnesium", "Silicon", "Iron",     "Europium"};
 
   return chemistry_element_names[elem];
 }
@@ -247,7 +247,7 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   p->chemistry_data.mass_from_NSM = 0.0f;
   p->chemistry_data.mass_from_CEJSN = 0.0f;
   p->chemistry_data.mass_from_collapsar = 0.0f;
-    
+
   /* Zero initial values for metal/iron mass times redshift trackers*/
   p->chemistry_data.metal_diffused_redshift = 0.0f;
   p->chemistry_data.iron_diffused_redshift = 0.0f;
@@ -369,8 +369,8 @@ static INLINE void chemistry_print_backend(
  * @param p The particle to act upon.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* p, const struct cosmology* cosmo,
-    const int with_cosmology, const double time) {
+    struct part* p, const struct cosmology* cosmo, const int with_cosmology,
+    const double time) {
 
   /* Diffuse each element individually */
   for (int elem = 0; elem < chemistry_element_count; ++elem) {
@@ -387,52 +387,61 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
       p->chemistry_data.dmetal_mass_fraction_from_SNIa;
 
   p->chemistry_data.iron_mass_fraction_from_SNIa +=
-    p->chemistry_data.diron_mass_fraction_from_SNIa;
+      p->chemistry_data.diron_mass_fraction_from_SNIa;
 
   const double current_mass = hydro_get_mass(p);
 
   /* Update metal mass from SNIa for consistency */
   p->chemistry_data.mass_from_SNIa =
-    p->chemistry_data.metal_mass_fraction_from_SNIa * current_mass;
+      p->chemistry_data.metal_mass_fraction_from_SNIa * current_mass;
 
   /* Update gas mass from AGN channel for consistency */
   float mass_fraction_from_AGB = p->chemistry_data.mass_from_AGB / current_mass;
-  float H_He_fraction_from_AGB = mass_fraction_from_AGB - p->chemistry_data.metal_mass_fraction_from_AGB;
-    
+  float H_He_fraction_from_AGB =
+      mass_fraction_from_AGB - p->chemistry_data.metal_mass_fraction_from_AGB;
+
   /* First let's update fractions after diffusion */
   H_He_fraction_from_AGB += p->chemistry_data.dH_He_mass_fraction_from_AGB;
-  p->chemistry_data.metal_mass_fraction_from_AGB += p->chemistry_data.dmetal_mass_fraction_from_AGB;
-  mass_fraction_from_AGB = H_He_fraction_from_AGB + p->chemistry_data.metal_mass_fraction_from_AGB;
-    
+  p->chemistry_data.metal_mass_fraction_from_AGB +=
+      p->chemistry_data.dmetal_mass_fraction_from_AGB;
+  mass_fraction_from_AGB =
+      H_He_fraction_from_AGB + p->chemistry_data.metal_mass_fraction_from_AGB;
+
   /* Update mass from AGB  */
   p->chemistry_data.mass_from_AGB = mass_fraction_from_AGB * current_mass;
 
   /* Update gas mass from SNII channel for consistency */
-  float mass_fraction_from_SNII = p->chemistry_data.mass_from_SNII / current_mass;
-  float H_He_fraction_from_SNII = mass_fraction_from_SNII - p->chemistry_data.metal_mass_fraction_from_SNII;
-    
+  float mass_fraction_from_SNII =
+      p->chemistry_data.mass_from_SNII / current_mass;
+  float H_He_fraction_from_SNII =
+      mass_fraction_from_SNII - p->chemistry_data.metal_mass_fraction_from_SNII;
+
   /* First let's update fractions after diffusion */
   H_He_fraction_from_SNII += p->chemistry_data.dH_He_mass_fraction_from_SNII;
-  p->chemistry_data.metal_mass_fraction_from_SNII += p->chemistry_data.dmetal_mass_fraction_from_SNII;
-  mass_fraction_from_SNII = H_He_fraction_from_SNII + p->chemistry_data.metal_mass_fraction_from_SNII;
+  p->chemistry_data.metal_mass_fraction_from_SNII +=
+      p->chemistry_data.dmetal_mass_fraction_from_SNII;
+  mass_fraction_from_SNII =
+      H_He_fraction_from_SNII + p->chemistry_data.metal_mass_fraction_from_SNII;
 
   /* Update mass from SNII  */
   p->chemistry_data.mass_from_SNII = mass_fraction_from_SNII * current_mass;
-    
+
   /* Take ztime, it is either redshift or time, depending on with_cosmology */
   double ztime;
   if (with_cosmology) {
-      ztime = cosmo->z;
+    ztime = cosmo->z;
   } else {
-      ztime = time;
+    ztime = time;
   }
-    
+
   /* Calculate metal mass (gain/lost through diffusion) times redshift */
-  double delta_metal_mass = p->chemistry_data.dmetal_mass_fraction_total * current_mass;
+  double delta_metal_mass =
+      p->chemistry_data.dmetal_mass_fraction_total * current_mass;
   p->chemistry_data.metal_diffused_redshift += delta_metal_mass * ztime;
 
   /* Calculate iron mass (gain/lost through diffusion) times redshift */
-  double delta_iron_mass_from_SNIa = p->chemistry_data.diron_mass_fraction_from_SNIa * current_mass;
+  double delta_iron_mass_from_SNIa =
+      p->chemistry_data.diron_mass_fraction_from_SNIa * current_mass;
   p->chemistry_data.iron_diffused_redshift += delta_iron_mass_from_SNIa * ztime;
 
   /* Update europium mass for channels NSM, CEJSN and collapsars  */

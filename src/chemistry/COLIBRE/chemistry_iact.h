@@ -324,21 +324,28 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     chj->dEu_mass_fraction_from_collapsar +=
         K_ji *
         (chj_Eu_fraction_from_collapsar - chi_Eu_fraction_from_collapsar) * dt;
-      
-    float i_H_He_fraction_from_SNII = chi->mass_from_SNII / mi - chi->metal_mass_fraction_from_SNII;
-    float j_H_He_fraction_from_SNII = chj->mass_from_SNII / mj - chj->metal_mass_fraction_from_SNII;
 
-    chi->dH_He_mass_fraction_from_SNII += K_ij * (i_H_He_fraction_from_SNII  - j_H_He_fraction_from_SNII) * dt;
-      
-    chj->dH_He_mass_fraction_from_SNII += K_ji * (j_H_He_fraction_from_SNII - i_H_He_fraction_from_SNII) * dt;
+    float i_H_He_fraction_from_SNII =
+        chi->mass_from_SNII / mi - chi->metal_mass_fraction_from_SNII;
+    float j_H_He_fraction_from_SNII =
+        chj->mass_from_SNII / mj - chj->metal_mass_fraction_from_SNII;
 
-    float i_H_He_fraction_from_AGB = chi->mass_from_AGB / mi - chi->metal_mass_fraction_from_AGB;
-    float j_H_He_fraction_from_AGB = chj->mass_from_AGB / mj - chj->metal_mass_fraction_from_AGB;
-  
-    chi->dH_He_mass_fraction_from_AGB += K_ij * (i_H_He_fraction_from_AGB  - j_H_He_fraction_from_AGB) * dt;
-  
-    chj->dH_He_mass_fraction_from_AGB += K_ji * (j_H_He_fraction_from_AGB - i_H_He_fraction_from_AGB) * dt;
+    chi->dH_He_mass_fraction_from_SNII +=
+        K_ij * (i_H_He_fraction_from_SNII - j_H_He_fraction_from_SNII) * dt;
 
+    chj->dH_He_mass_fraction_from_SNII +=
+        K_ji * (j_H_He_fraction_from_SNII - i_H_He_fraction_from_SNII) * dt;
+
+    float i_H_He_fraction_from_AGB =
+        chi->mass_from_AGB / mi - chi->metal_mass_fraction_from_AGB;
+    float j_H_He_fraction_from_AGB =
+        chj->mass_from_AGB / mj - chj->metal_mass_fraction_from_AGB;
+
+    chi->dH_He_mass_fraction_from_AGB +=
+        K_ij * (i_H_He_fraction_from_AGB - j_H_He_fraction_from_AGB) * dt;
+
+    chj->dH_He_mass_fraction_from_AGB +=
+        K_ji * (j_H_He_fraction_from_AGB - i_H_He_fraction_from_AGB) * dt;
   }
 }
 
@@ -489,17 +496,22 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     chi->dEu_mass_fraction_from_collapsar +=
         K_ij *
         (chi_Eu_fraction_from_collapsar - chj_Eu_fraction_from_collapsar) * dt;
-      
-    float i_H_He_fraction_from_SNII = chi->mass_from_SNII / mi - chi->metal_mass_fraction_from_SNII;
-    float j_H_He_fraction_from_SNII = chj->mass_from_SNII / mj - chj->metal_mass_fraction_from_SNII;
-      
-    chi->dH_He_mass_fraction_from_SNII += K_ij * (i_H_He_fraction_from_SNII  - j_H_He_fraction_from_SNII) * dt;
-      
-    float i_H_He_fraction_from_AGB = chi->mass_from_AGB / mi - chi->metal_mass_fraction_from_AGB;
-    float j_H_He_fraction_from_AGB = chj->mass_from_AGB / mj - chj->metal_mass_fraction_from_AGB;
-      
-    chi->dH_He_mass_fraction_from_AGB += K_ij * (i_H_He_fraction_from_AGB  - j_H_He_fraction_from_AGB) * dt;
 
+    float i_H_He_fraction_from_SNII =
+        chi->mass_from_SNII / mi - chi->metal_mass_fraction_from_SNII;
+    float j_H_He_fraction_from_SNII =
+        chj->mass_from_SNII / mj - chj->metal_mass_fraction_from_SNII;
+
+    chi->dH_He_mass_fraction_from_SNII +=
+        K_ij * (i_H_He_fraction_from_SNII - j_H_He_fraction_from_SNII) * dt;
+
+    float i_H_He_fraction_from_AGB =
+        chi->mass_from_AGB / mi - chi->metal_mass_fraction_from_AGB;
+    float j_H_He_fraction_from_AGB =
+        chj->mass_from_AGB / mj - chj->metal_mass_fraction_from_AGB;
+
+    chi->dH_He_mass_fraction_from_AGB +=
+        K_ij * (i_H_He_fraction_from_AGB - j_H_He_fraction_from_AGB) * dt;
   }
 }
 

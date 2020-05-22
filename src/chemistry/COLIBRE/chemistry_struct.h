@@ -107,13 +107,12 @@ struct chemistry_part_data {
 
   /*! Metal weighted redshift */
   float iron_weighted_redshift;
-    
+
   /*! Iron mass (gain/lost through diffusion) times redshift */
   float iron_diffused_redshift;
-    
+
   float track_of_metal_mass_total;
   float track_of_iron_from_SNIa_mass;
-    
 
   /*! Fraction of the particle mass in a given element accumulated via diffusion
    * diffusion since the last active step */
@@ -136,7 +135,7 @@ struct chemistry_part_data {
    * diffusion diffusion since the last active step */
   float dmetal_mass_fraction_from_SNII;
   float dH_He_mass_fraction_from_SNII;
-    
+
   /*! Fraction of the particle mass in iron from SNIa accumulated via diffusion
    * diffusion since the last active step */
   float diron_mass_fraction_from_SNIa;
