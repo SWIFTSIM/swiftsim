@@ -93,10 +93,12 @@ struct bpart {
   /*! Smoothed sound speed of the gas surrounding the black hole. */
   float sound_speed_gas;
 
-  /*! Smoothed velocity (peculiar) of the gas surrounding the black hole */
+  /*! Smoothed velocity of the gas surrounding the black hole,
+   * in the frame of the black hole (internal units) */
   float velocity_gas[3];
 
-  /*! Curl of the velocity field around the black hole */
+  /*! Circular velocity of the gas around the black hole at the smoothing
+   * radius (calculated as j_gas / h_BH, where j is specific ang. mom.) */
   float circular_velocity_gas[3];
 
   /*! Multiplicative factor for accretion rates, from Rosas-Guevara et al.

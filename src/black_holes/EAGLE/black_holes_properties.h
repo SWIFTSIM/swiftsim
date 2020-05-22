@@ -81,14 +81,14 @@ struct black_holes_props {
 
   /* ---- Properties of the feedback model ------- */
 
+  /*! Feedback coupling efficiency of the black holes. */
+  float epsilon_f;
+
   /*! Temperature increase induced by AGN feedback (Kelvin) */
   float AGN_delta_T_desired;
 
   /*! Number of gas neighbours to heat in a feedback event */
-  float num_ngbs_to_heat; 
-
-  /*! Feedback coupling efficiency of the black holes. */
-  float epsilon_f;
+  float num_ngbs_to_heat;
 
  
   /* ---- Properties of the repositioning model --- */
@@ -103,7 +103,7 @@ struct black_holes_props {
    * reposition, in units of the ambient sound speed of the black hole */
   float max_reposition_velocity_ratio;
 
-  /*! Minimum value of velocity repositioning threshold */
+  /*! Minimum value of the velocity repositioning threshold */
   float min_reposition_velocity_threshold;
 
   /*! Normalisation factor for repositioning velocity */
@@ -201,13 +201,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   /* Accretion parameters ---------------------------------- */
 
-  bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
-  bp->f_Edd_recording = parser_get_param_float(
-      params, "EAGLEAGN:eddington_fraction_for_recording");
-  bp->epsilon_r =
-      parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
-  bp->epsilon_f =
-      parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "EAGLEAGN:multi_phase_bondi");
 
@@ -217,8 +210,18 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   if (bp->with_angmom_limiter)
     bp->alpha_visc = parser_get_param_float(params, "EAGLEAGN:viscous_alpha");
 
+  bp->epsilon_r =
+      parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
+
+  bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
+  bp->f_Edd_recording = parser_get_param_float(
+      params, "EAGLEAGN:eddington_fraction_for_recording");
+
 
   /* Feedback parameters ---------------------------------- */
+
+  bp->epsilon_f =
+      parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
 
   bp->AGN_delta_T_desired =
       parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");
@@ -231,16 +234,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_reposition_mass =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_mass");
-
   /* Convert to internal units */
   bp->max_reposition_mass *= phys_const->const_solar_mass;
-
   bp->max_reposition_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_distance_ratio");
 
   bp->max_reposition_velocity_ratio =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_velocity_ratio");
-
   bp->min_reposition_velocity_threshold = parser_get_param_float(
       params, "EAGLEAGN:min_reposition_velocity_threshold");
   /* Convert from km/s to internal units */
@@ -249,11 +249,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->reposition_coefficient_upsilon =
       parser_get_param_float(params, "EAGLEAGN:reposition_coefficient_upsilon");
-
   /* Convert from km/s to internal units */
   bp->reposition_coefficient_upsilon *=
       (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
-
   bp->reposition_exponent_xi =
       parser_get_param_float(params, "EAGLEAGN:reposition_exponent_xi");
 

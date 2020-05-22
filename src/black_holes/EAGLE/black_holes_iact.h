@@ -87,61 +87,51 @@ runner_iact_nonsym_bh_gas_density(
   /* Contribution to the smoothed sound speed */
   bi->sound_speed_gas += mj * cj * wi;
 
-  /* Neighbour peculiar drifted velocity */
-  const float vj[3] = {pj->v[0], pj->v[1], pj->v[2]};
+  /* Neighbour's (drifted) velocity in the frame of the black hole
+   * (we don't include a Hubble term since we are interested in the
+   * velocity contribution at the location of the black hole) */
+  const float dv[3] = {pj->v[0] - bi->v[0], pj->v[1] - bi->v[1],
+                       pj->v[2] - bi->v[2]};
 
-  /* Contribution to the smoothed velocity */
-  bi->velocity_gas[0] += mj * vj[0] * wi;
-  bi->velocity_gas[1] += mj * vj[1] * wi;
-  bi->velocity_gas[2] += mj * vj[2] * wi;
+  /* Contribution to the smoothed velocity (gas w.r.t. black hole) */
+  bi->velocity_gas[0] += mj * dv[0] * wi;
+  bi->velocity_gas[1] += mj * dv[1] * wi;
+  bi->velocity_gas[2] += mj * dv[2] * wi;
 
-  /* Contribution to the circular valocity */
-  const float dv[3] = {bi->v[0] - vj[0], bi->v[1] - vj[1], bi->v[2] - vj[2]};
-  bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
-  bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
-  bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+  if (bh_props->with_angmom_limiter) {
+    /* Contribution to the specific angular momentum of gas, which is later
+     * converted to the circular velocity at the smoothing length */
+    bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
+    bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
+    bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+  }
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate
      *
-     * i) Peculiar speed of gas particle relative to BH
-     *    [NB: don't need Hubble term, velocity is at BH location]
-     */
-    const double bh_v_peculiar[3] = {bi->v[0] * cosmo->a_inv,
-                                     bi->v[1] * cosmo->a_inv,
-                                     bi->v[2] * cosmo->a_inv};
+     * i) Calculate denominator in Bondi formula */
+    const double gas_v_phys[3] = {dv[0] * cosmo->a_inv,
+                                  dv[1] * cosmo->a_inv,
+                                  dv[2] * cosmo->a_inv};
+    const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                               gas_v_phys[1] * gas_v_phys[1] +
+                               gas_v_phys[2] * gas_v_phys[2];
 
-    const double gas_v_peculiar[3] = {vj[0] * cosmo->a_inv,
-                                      vj[1] * cosmo->a_inv,
-                                      vj[2] * cosmo->a_inv};
-
-    const double v_diff_peculiar[3] = {gas_v_peculiar[0] - bh_v_peculiar[0],
-                                       gas_v_peculiar[1] - bh_v_peculiar[1],
-                                       gas_v_peculiar[2] - bh_v_peculiar[2]};
-
-    const double v_diff_norm2 =  v_diff_peculiar[0] * v_diff_peculiar[0] +
-                                 v_diff_peculiar[1] * v_diff_peculiar[1] +
-                                 v_diff_peculiar[2] * v_diff_peculiar[2];
-
-    /* ii) Calculate denominator in Bondi formula */
     const double gas_c_phys = cj * cosmo->a_factor_sound_speed;
     const double gas_c_phys2 = gas_c_phys * gas_c_phys;
-    const double denominator2 = v_diff_norm2 + gas_c_phys2;
+    const double denominator2 = gas_v_norm2 + gas_c_phys2;
 
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-        error("Invalid denominator for gas particle %lld",
-              pj->id);
-
+        error("Invalid denominator for gas particle %lld", pj->id);
     double denominator_inv = 1. / sqrt(denominator2);
 
-    /* iii) Contribution of gas particle to the BH accretion rate
-     *      (without constant pre-factor)
-     *      [NB: rhoj is weighted contribution to BH gas density]
-     */
+    /* ii) Contribution of gas particle to the BH accretion rate
+     *     (without constant pre-factor)
+     *     N.B.: rhoj is the weighted contribution to BH gas density. */
     const float rhoj = mj * wi * cosmo->a3_inv;
-    bi->accretion_rate += (rhoj * denominator_inv * denominator_inv *
-                           denominator_inv);
+    bi->accretion_rate += rhoj * denominator_inv * denominator_inv *
+                          denominator_inv;
   } /* End of accretion contribution calculation */
 
 #ifdef DEBUG_INTERACTIONS_BH
@@ -167,10 +157,12 @@ runner_iact_nonsym_bh_gas_density(
  * @param bi First particle (black hole).
  * @param pj Second particle (gas)
  * @param xpj The extended data of the second particle.
+ * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
  * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
+ * @param time Current physical time in the simulation.
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
@@ -210,7 +202,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   if (r2 < max_dist_repos2) {
 
     /* Flag to check whether neighbour is slow enough to be considered
-     * as repositioning target. Always true if velocity cut switched off */
+     * as repositioning target. Always true if velocity cut is switched off. */
     int neighbour_is_slow_enough = 1;
     if (bh_props->max_reposition_velocity_ratio > 0) {
 
@@ -406,7 +398,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
         /* Standard formula if BH interactions are not softened */
         v2_threshold = 2.f * G_Newton * M / (r_12);
       }
-    } /* Ends sections for different merger thresholds */
+    }  /* Ends sections for different merger thresholds */
 
     if ((v2_pec < v2_threshold) && (r2 < max_dist_merge2)) {
 
