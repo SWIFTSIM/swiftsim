@@ -20,7 +20,7 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
-#include "compute_arclength.h"
+#include "arclength.h"
 #include "event_logger.h"
 #include "random.h"
 #include "timestep_sync_part.h"
