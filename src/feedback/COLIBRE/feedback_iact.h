@@ -160,7 +160,6 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     }
   }
 }
-}
 
 /**
  * @brief Feedback interaction between two particles (non-symmetric).
