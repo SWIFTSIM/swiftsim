@@ -19,7 +19,8 @@
 #ifndef SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 #define SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 
-/* Define the maximum number of rays used in SNII isotropic thermal-kinetic feedback */
+/* Define the maximum number of rays used in SNII isotropic thermal-kinetic
+ * feedback */
 #define colibre_feedback_number_of_rays 1
 #include "chemistry_struct.h"
 
@@ -48,7 +49,7 @@ struct feedback_spart_data {
 
       /*! Total (unweighted) number gas neighbours in the stellar kernel */
       int ngb_N;
-      
+
       /*! Array of the miminum arclengths between the rays
       and the gas neighbours, used in SNII feedback  */
       float min_arclength[colibre_feedback_number_of_rays];
@@ -110,7 +111,8 @@ struct feedback_spart_data {
       /*! Probability to heat neighbouring gas particle in SNII feedback */
       float SNII_heating_probability;
 
-      /*! Probability to kick a pair of two neighbouring gas particles in SNII feedback */
+      /*! Probability to kick a pair of two neighbouring gas particles in SNII
+       * feedback */
       float SNII_kick_probability;
 
       /*! Change in gas-particle internal energy from SNII feedback */
@@ -164,7 +166,7 @@ struct feedback_spart_data {
 
   /*! Arrays used to account for relative star-gas motion
   in SNII kinetic feedback */
-  
+
   /*! Particle masses in SNII kinetic feedback */
   float mass_true[colibre_feedback_number_of_rays];
   float mass_mirror[colibre_feedback_number_of_rays];

@@ -183,7 +183,8 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
  * @param star_age Age of star at the beginning of the step in internal units.
  * @param dt Length of time-step in internal units.
  * @param ngb_gas_mass Total un-weighted mass in the star's kernel.
- * @param ngb_gas_N Total un-weighted number of gas particles in the star's kernel
+ * @param ngb_gas_N Total un-weighted number of gas particles in the star's
+ * kernel
  * @param feedback_props The properties of the feedback model.
  * @param age of star particle at the beginning of the timestep
  * @param timestep in Gyr
@@ -194,8 +195,9 @@ INLINE static double eagle_SNII_feedback_energy_fraction(
  */
 INLINE static void compute_SNII_feedback(
     struct spart* sp, const double star_age, const double dt,
-    const float ngb_gas_mass, const int ngb_gas_N, const struct feedback_props* feedback_props,
-    const float min_dying_mass_Msun, const float max_dying_mass_Msun, 
+    const float ngb_gas_mass, const int ngb_gas_N,
+    const struct feedback_props* feedback_props,
+    const float min_dying_mass_Msun, const float max_dying_mass_Msun,
     const integertime_t ti_begin) {
 
   /* Time after birth considered for SNII feedback (internal units) */
@@ -259,11 +261,12 @@ INLINE static void compute_SNII_feedback(
 
     /* Note that in the denominator we have ngb_gas_mass * delta_v * delta_v
     and not 0.5 ngb_gas_mass * delta_v * delta_v. That is because in our method,
-    if we have a kick event then we kick two particles instead of one. This implies
-    that we need twice as much energy and the probability must be lowered by a factor
-    of 2. Futhermore, unlike in the thermal feedback here we do not
-    take into account the ejecta mass becasue the kicks are done
-    before the mass transfer. That is, we take ngb_gas_mass and not ngb_gas_mass_new. */
+    if we have a kick event then we kick two particles instead of one. This
+    implies that we need twice as much energy and the probability must be
+    lowered by a factor of 2. Futhermore, unlike in the thermal feedback here we
+    do not take into account the ejecta mass becasue the kicks are done before
+    the mass transfer. That is, we take ngb_gas_mass and not ngb_gas_mass_new.
+  */
     double prob_kinetic =
         f_kin * E_SN_total / (ngb_gas_mass * delta_v * delta_v);
 
@@ -289,13 +292,15 @@ INLINE static void compute_SNII_feedback(
       /* Normal case */
       delta_u = delta_T * conv_factor;
 
-      for (int i=0; i<ngb_gas_N; i++){
-        const float rand_thermal = random_unit_interval_star_ID_and_ray_idx(sp->id, i, ti_begin, random_number_stellar_feedback_1);
+      for (int i = 0; i < ngb_gas_N; i++) {
+        const float rand_thermal = random_unit_interval_star_ID_and_ray_idx(
+            sp->id, i, ti_begin, random_number_stellar_feedback_1);
         number_of_th_SN_events += rand_thermal < prob_thermal;
-       }
-    /* If the probability is larger than or equal to 1 then adjust the energy */
+      }
+      /* If the probability is larger than or equal to 1 then adjust the energy
+       */
     } else {
- 
+
       /* Every gas neighbour is heated */
       number_of_th_SN_events = ngb_gas_N;
 
@@ -307,12 +312,14 @@ INLINE static void compute_SNII_feedback(
       delta_u = (1.0 - f_kin) * E_SN_total / ngb_gas_mass_new;
     }
 
-    /* IMPORTANT. If we have more heating events than the maximum number of 
-    rays (colibre_feedback_number_of_rays), then obviously we cannot distribute all of the heating events
-    (since 1 event = 1 ray), so we need to increase the thermal 
-    energy per ray and make the number of events equal to the number of rays */
-    if(number_of_th_SN_events > colibre_feedback_number_of_rays){
-      const double alpha_thermal = (double)number_of_th_SN_events / (double)colibre_feedback_number_of_rays;
+    /* IMPORTANT. If we have more heating events than the maximum number of
+    rays (colibre_feedback_number_of_rays), then obviously we cannot distribute
+    all of the heating events (since 1 event = 1 ray), so we need to increase
+    the thermal energy per ray and make the number of events equal to the number
+    of rays */
+    if (number_of_th_SN_events > colibre_feedback_number_of_rays) {
+      const double alpha_thermal = (double)number_of_th_SN_events /
+                                   (double)colibre_feedback_number_of_rays;
       delta_u *= alpha_thermal;
       number_of_th_SN_events = colibre_feedback_number_of_rays;
     }
@@ -320,17 +327,19 @@ INLINE static void compute_SNII_feedback(
     /* Repeat the above steps for kick events in SNII feedback */
     if (prob_kinetic <= 1.) {
 
-      for (int i=0; i<ngb_gas_N; i++){
-        const float rand_kinetic = random_unit_interval_star_ID_and_ray_idx(sp->id, i, ti_begin, random_number_stellar_feedback_3);
+      for (int i = 0; i < ngb_gas_N; i++) {
+        const float rand_kinetic = random_unit_interval_star_ID_and_ray_idx(
+            sp->id, i, ti_begin, random_number_stellar_feedback_3);
         number_of_kin_SN_events += rand_kinetic < prob_kinetic;
       }
 
-      /* Total kinetic energy needed = Kinetic energy to kick one pair of two particles, each of 
-      mean mass ngb_gas_mass_new/ngb_gas_N, with the kick velocity delta_v 
-      \times the number of kick events ( = the number of pairs ) */
-      E_kinetic = ngb_gas_mass / ngb_gas_N * delta_v * delta_v * number_of_kin_SN_events;
-    }
-    else {
+      /* Total kinetic energy needed = Kinetic energy to kick one pair of two
+      particles, each of mean mass ngb_gas_mass_new/ngb_gas_N, with the kick
+      velocity delta_v \times the number of kick events ( = the number of pairs
+      ) */
+      E_kinetic = ngb_gas_mass / ngb_gas_N * delta_v * delta_v *
+                  number_of_kin_SN_events;
+    } else {
 
       number_of_kin_SN_events = ngb_gas_N;
 
@@ -342,7 +351,8 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* The number of kick events cannot be greater than the number of rays */
-    if (number_of_kin_SN_events > colibre_feedback_number_of_rays) number_of_kin_SN_events = colibre_feedback_number_of_rays;
+    if (number_of_kin_SN_events > colibre_feedback_number_of_rays)
+      number_of_kin_SN_events = colibre_feedback_number_of_rays;
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
@@ -355,8 +365,10 @@ INLINE static void compute_SNII_feedback(
     sp->feedback_data.to_distribute.SNII_kick_probability = prob_kinetic;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
     sp->feedback_data.to_distribute.SNII_E_kinetic = E_kinetic;
-    sp->feedback_data.to_distribute.SNII_number_of_heating_events = number_of_th_SN_events;
-    sp->feedback_data.to_distribute.SNII_number_of_kick_events = number_of_kin_SN_events;
+    sp->feedback_data.to_distribute.SNII_number_of_heating_events =
+        number_of_th_SN_events;
+    sp->feedback_data.to_distribute.SNII_number_of_kick_events =
+        number_of_kin_SN_events;
   }
 }
 

@@ -20,12 +20,11 @@
 #define SWIFT_COLIBRE_FEEDBACK_IACT_H
 
 /* Local includes */
+#include "compute_arclength.h"
 #include "event_logger.h"
 #include "random.h"
 #include "timestep_sync_part.h"
 #include "tracers.h"
-#include "compute_arclength.h"
-
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -74,71 +73,85 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   /* Isotropic feedback stars */
 
   /* Angular coordinates of the particle with respect to the star */
-  const double theta_j = acos(-dx[2]/r);
-  const double phi_j = atan2(-dx[1],-dx[0]);
+  const double theta_j = acos(-dx[2] / r);
+  const double phi_j = atan2(-dx[1], -dx[0]);
 
   /* Loop over rays. This is not ideal. We always loop over all available rays
   even if there is no feedback. That's because if feedback does occur, we
   need to get some information about the gas in advance. For example,
   in the to_distribute loop, we already need to know which gas particle
   is closest to the 1st ray, 2nd ray, etc */
-  for (int i=0; i<colibre_feedback_number_of_rays; i++){
+  for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
 
     /* Angular coordinates of the ith ray */
-    /* The (randomly chosen) ray angular coordinates depend on the ray number i, the current time ti_current, and
-    the stellar particle id.  In the second argument of the random number generator function, 
-    for now we take (long long)pow(i,2) but anything else that depends on i will work too.
-    Note that we first compute cos(\theta) and not \theta becasue the latter is not uniform on a sphere:
-    a solid-angle element d\Omega = \sin(\theta) d\phi d\theta* = d cos(\theta) d\phi */ 
-    const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i, 
-                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
+    /* The (randomly chosen) ray angular coordinates depend on the ray number i,
+    the current time ti_current, and the stellar particle id.  In the second
+    argument of the random number generator function, for now we take (long
+    long)pow(i,2) but anything else that depends on i will work too. Note that
+    we first compute cos(\theta) and not \theta becasue the latter is not
+    uniform on a sphere: a solid-angle element d\Omega = \sin(\theta) d\phi
+    d\theta* = d cos(\theta) d\phi */
+    const double cos_theta_ray =
+        2.0 * random_unit_interval_star_ID_and_ray_idx(
+                  si->id, i, ti_current,
+                  random_number_isotropic_feedback_ray_theta) -
+        1.0;
     const double theta_ray = acos(cos_theta_ray);
 
-    const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i, 
-                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
+    const double phi_ray = 2.0 * M_PI *
+                               random_unit_interval_star_ID_and_ray_idx(
+                                   si->id, i, ti_current,
+                                   random_number_isotropic_feedback_ray_phi) -
+                           M_PI;
 
-    /* Calculate the arclength on a unit sphere between the jth gas particle and ith ray,
-    and then find the minimum between this arclength and the current (running) miminum arclegnth
-    of the ith ray */
-    const float new_arclength = find_min_arclength(theta_ray, phi_ray, 
-       theta_j, phi_j, 1.f, si->feedback_data.to_collect.min_arclength[i] );
+    /* Calculate the arclength on a unit sphere between the jth gas particle and
+    ith ray, and then find the minimum between this arclength and the current
+    (running) miminum arclegnth of the ith ray */
+    const float new_arclength =
+        find_min_arclength(theta_ray, phi_ray, theta_j, phi_j, 1.f,
+                           si->feedback_data.to_collect.min_arclength[i]);
 
-    /* If the new arclength is smaller than the older value, then store 
+    /* If the new arclength is smaller than the older value, then store
     the new one. Also store the relevant properties of the particle
     that now has the miminum arclength with the ith ray */
-    if (new_arclength){
+    if (new_arclength) {
       si->feedback_data.to_collect.min_arclength[i] = new_arclength;
       si->feedback_data.part_id_with_min_arclength[i] = pj->id;
 
-      /* Velocity and mass are needed for the mirror approach we adopt in kinetic
-      feedback to exactly conserve momentum and energy. That's because in a pair
-      of two particles, the first one needs to know the properties of the other one,
-      and vice versa */
+      /* Velocity and mass are needed for the mirror approach we adopt in
+      kinetic feedback to exactly conserve momentum and energy. That's because
+      in a pair of two particles, the first one needs to know the properties of
+      the other one, and vice versa */
       si->feedback_data.mass_true[i] = pj->mass;
-      for(int j=0; j<3; j++){
+      for (int j = 0; j < 3; j++) {
         si->feedback_data.v_true[i][j] = pj->v[j];
       }
     }
 
-    /* Repeat the above steps for the mirror particles present in the kinetic feedback. 
-    Each ray has a pair of two particles. For the ith ray with angular coodrinates (\theta_ray, \phi_ray),
-    in the loop above we seek for the particle with the angular coordinates closest to that of the ray;
-    but now we are looking for the "mirror" particle with the coordinates closest to the "mirrored" coordinates
-    of the ray (\pi-\theta_ray, \phi_ray-\pi * sgn(\phi_ray)) */
+    /* Repeat the above steps for the mirror particles present in the kinetic
+    feedback. Each ray has a pair of two particles. For the ith ray with angular
+    coodrinates (\theta_ray, \phi_ray), in the loop above we seek for the
+    particle with the angular coordinates closest to that of the ray; but now we
+    are looking for the "mirror" particle with the coordinates closest to the
+    "mirrored" coordinates of the ray (\pi-\theta_ray, \phi_ray-\pi *
+    sgn(\phi_ray)) */
 
     /* Note the opposite direction of the ray compared to the case above.
     Hence the name "mirror" */
     const double theta_ray_mirror = M_PI - theta_ray;
-    const double phi_ray_mirror = phi_ray - M_PI * (double)((phi_ray>=0) ? 1 : -1);
+    const double phi_ray_mirror =
+        phi_ray - M_PI * (double)((phi_ray >= 0) ? 1 : -1);
 
-    const float new_arclength_mirror = find_min_arclength(theta_ray_mirror, phi_ray_mirror,
-      theta_j, phi_j, 1.f, si->feedback_data.to_collect.min_arclength_mirror[i] );
+    const float new_arclength_mirror = find_min_arclength(
+        theta_ray_mirror, phi_ray_mirror, theta_j, phi_j, 1.f,
+        si->feedback_data.to_collect.min_arclength_mirror[i]);
 
-    if (new_arclength_mirror){
-      si->feedback_data.to_collect.min_arclength_mirror[i] = new_arclength_mirror;
+    if (new_arclength_mirror) {
+      si->feedback_data.to_collect.min_arclength_mirror[i] =
+          new_arclength_mirror;
       si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
       si->feedback_data.mass_mirror[i] = pj->mass;
-      for(int j=0; j<3; j++){
+      for (int j = 0; j < 3; j++) {
         si->feedback_data.v_mirror[i][j] = pj->v[j];
       }
     }
@@ -344,165 +357,202 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Are we doing some SNII (big boys) kinetic feedback? */
   if (prob_SNII_kinetic > 0.f) {
 
-    /* Loop over the number of SN kick events. In each event (=pair), two particles are kicked 
-    in exactly opposide directions. The first kick happes in this loop, and the second one in the
-    loop below. */
-    for (int i=0; i<si->feedback_data.to_distribute.SNII_number_of_kick_events; i++){
- 
+    /* Loop over the number of SN kick events. In each event (=pair), two
+    particles are kicked in exactly opposide directions. The first kick happes
+    in this loop, and the second one in the loop below. */
+    for (int i = 0;
+         i < si->feedback_data.to_distribute.SNII_number_of_kick_events; i++) {
+
       /* Find the particle that is closest to the ith ray */
-      if (pj->id==si->feedback_data.part_id_with_min_arclength[i]){
+      if (pj->id == si->feedback_data.part_id_with_min_arclength[i]) {
 
         /* Get \theta and \phi coordinates of the ray */
         /* theta \in (0, \pi) */
-        const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
-                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
+        const double cos_theta_ray =
+            2.0 * random_unit_interval_star_ID_and_ray_idx(
+                      si->id, i, ti_current,
+                      random_number_isotropic_feedback_ray_theta) -
+            1.0;
         /* phi \in (-\pi, \pi) */
-        const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
-                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
-        
+        const double phi_ray =
+            2.0 * M_PI *
+                random_unit_interval_star_ID_and_ray_idx(
+                    si->id, i, ti_current,
+                    random_number_isotropic_feedback_ray_phi) -
+            M_PI;
+
         /* For the ith ray, (simultaneously) compute sin and cosine of \phi */
         double sin_phi_ray, cos_phi_ray;
         sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
 
-        /* We already have cos\theta, so we can compute sin\theta by using the trigonometic identit y*/
-        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray*cos_theta_ray);
+        /* We already have cos\theta, so we can compute sin\theta by using the
+         * trigonometic identit y*/
+        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray * cos_theta_ray);
 
         /* Compute the normal vector of the ith ray */
         const double n_ray[3] = {sin_theta_ray * cos_phi_ray,
-                                 sin_theta_ray * sin_phi_ray,
-                                 cos_theta_ray};
+                                 sin_theta_ray * sin_phi_ray, cos_theta_ray};
 
-        /* Since we are kicking two particles, for each particle there is a "mirror" particle. 
-        Below we need to get the properties of the mirror particle to make our feedback
-        conserve energy and momentum */
+        /* Since we are kicking two particles, for each particle there is a
+        "mirror" particle. Below we need to get the properties of the mirror
+        particle to make our feedback conserve energy and momentum */
         const double mass_mirror = si->feedback_data.mass_mirror[i];
 
         /* Compute mass weights that are used below */
-        const double m_alpha = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
-        const double mass_weight = sqrt(current_mass * mass_mirror)/current_mass;
+        const double m_alpha =
+            sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
+        const double mass_weight =
+            sqrt(current_mass * mass_mirror) / current_mass;
 
-        /* Relative velocity between the gas particle and the stellar particle */
-        double v_gas_star[3] = {pj->v[0]-si->v[0],
-                                pj->v[1]-si->v[1],
-                                pj->v[2]-si->v[2]};
+        /* Relative velocity between the gas particle and the stellar particle
+         */
+        double v_gas_star[3] = {pj->v[0] - si->v[0], pj->v[1] - si->v[1],
+                                pj->v[2] - si->v[2]};
 
-        /* Relative velocity between the mirror gas particle and the stellar particle */
-        double v_gas_mirror_star[3] = {si->feedback_data.v_mirror[i][0]-si->v[0],
-                                       si->feedback_data.v_mirror[i][1]-si->v[1],
-                                       si->feedback_data.v_mirror[i][2]-si->v[2]};
+        /* Relative velocity between the mirror gas particle and the stellar
+         * particle */
+        double v_gas_mirror_star[3] = {
+            si->feedback_data.v_mirror[i][0] - si->v[0],
+            si->feedback_data.v_mirror[i][1] - si->v[1],
+            si->feedback_data.v_mirror[i][2] - si->v[2]};
 
-        /* Divide the velocities by the cosmic scale factor 
+        /* Divide the velocities by the cosmic scale factor
         to get peculiar velocities in proper coordinates */
-        for(int j=0; j<3; j++){
+        for (int j = 0; j < 3; j++) {
           v_gas_star[j] /= cosmo->a;
           v_gas_mirror_star[j] /= cosmo->a;
         }
- 
+
         /* Compute scalar product between v_gas_star and n */
-        const double v_cos_theta = (v_gas_star[0]*n_ray[0]+
-                                    v_gas_star[1]*n_ray[1]+
-                                    v_gas_star[2]*n_ray[2]);
+        const double v_cos_theta =
+            (v_gas_star[0] * n_ray[0] + v_gas_star[1] * n_ray[1] +
+             v_gas_star[2] * n_ray[2]);
 
         /* Compute scalar product between v_gas_mirror_star and n */
-        const double v_mirror_cos_theta = (v_gas_mirror_star[0]*n_ray[0]+
-                                           v_gas_mirror_star[1]*n_ray[1]+
-                                           v_gas_mirror_star[2]*n_ray[2]);
+        const double v_mirror_cos_theta =
+            (v_gas_mirror_star[0] * n_ray[0] + v_gas_mirror_star[1] * n_ray[1] +
+             v_gas_mirror_star[2] * n_ray[2]);
 
-        /* Get the SNII feedback kick energy per pair. We thus devide the total kinetic energy we have
-        from the *si stellar particle by the number of events (in each event two particles are kicked) */
-        const double energy_per_pair = si->feedback_data.to_distribute.SNII_E_kinetic / 
-                                       si->feedback_data.to_distribute.SNII_number_of_kick_events;
-        
-        /* Compute the characteristic kick velocity corresponding to the kinetic energy per pair */
-        const double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
+        /* Get the SNII feedback kick energy per pair. We thus devide the total
+        kinetic energy we have from the *si stellar particle by the number of
+        events (in each event two particles are kicked) */
+        const double energy_per_pair =
+            si->feedback_data.to_distribute.SNII_E_kinetic /
+            si->feedback_data.to_distribute.SNII_number_of_kick_events;
 
-        /* Compute the correction to the energy and momentum due to relative star-gas motion 
-        If there is no correction then alpha = 0 and beta = 1 */
-        const double alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
-        const double beta = sqrt(alpha*alpha+1.0) - alpha;
+        /* Compute the characteristic kick velocity corresponding to the kinetic
+         * energy per pair */
+        const double SNII_delta_v =
+            sqrt(2.0 * energy_per_pair / (current_mass + mass_mirror));
+
+        /* Compute the correction to the energy and momentum due to relative
+        star-gas motion If there is no correction then alpha = 0 and beta = 1 */
+        const double alpha =
+            m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
+        const double beta = sqrt(alpha * alpha + 1.0) - alpha;
 
         /* Do the kicks by updating the particle velocity.
         Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
         Therefore, a physical kick, dv, gets translated into a
         code velocity kick, a * dv */
-        xpj->v_full[0] += SNII_delta_v * n_ray[0] * mass_weight * beta * cosmo->a;
-        xpj->v_full[1] += SNII_delta_v * n_ray[1] * mass_weight * beta * cosmo->a;
-        xpj->v_full[2] += SNII_delta_v * n_ray[2] * mass_weight * beta * cosmo->a;
+        xpj->v_full[0] +=
+            SNII_delta_v * n_ray[0] * mass_weight * beta * cosmo->a;
+        xpj->v_full[1] +=
+            SNII_delta_v * n_ray[1] * mass_weight * beta * cosmo->a;
+        xpj->v_full[2] +=
+            SNII_delta_v * n_ray[2] * mass_weight * beta * cosmo->a;
 
         /* Update the signal velocity of the particle based on the velocity kick
          */
-        hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, SNII_delta_v * beta * mass_weight);
+        hydro_set_v_sig_based_on_velocity_kick(
+            pj, cosmo, SNII_delta_v * beta * mass_weight);
 
         /* Synchronize the particle on the timeline */
         timestep_sync_part(pj);
       }
 
       /* Do the same as in the above loop but now for the mirror particles.
-      (this can latter be merged with the first loop to reduce the number of lines of code) */
-      if (pj->id==si->feedback_data.part_id_with_min_arclength_mirror[i]){
+      (this can latter be merged with the first loop to reduce the number of
+      lines of code) */
+      if (pj->id == si->feedback_data.part_id_with_min_arclength_mirror[i]) {
 
         /* theta \in (0, \pi) */
-        const double cos_theta_ray = 2.0  * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
-                                            ti_current, random_number_isotropic_feedback_ray_theta) - 1.0;
+        const double cos_theta_ray =
+            2.0 * random_unit_interval_star_ID_and_ray_idx(
+                      si->id, i, ti_current,
+                      random_number_isotropic_feedback_ray_theta) -
+            1.0;
         /* phi \in (-\pi, \pi) */
-        const double phi_ray = 2.0 * M_PI * random_unit_interval_star_ID_and_ray_idx(si->id, i,                   
-                                            ti_current, random_number_isotropic_feedback_ray_phi) - M_PI;
+        const double phi_ray =
+            2.0 * M_PI *
+                random_unit_interval_star_ID_and_ray_idx(
+                    si->id, i, ti_current,
+                    random_number_isotropic_feedback_ray_phi) -
+            M_PI;
 
         double sin_phi_ray, cos_phi_ray;
         sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
 
-        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray*cos_theta_ray);
+        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray * cos_theta_ray);
 
         /* Note the appearance of the minus sign in the definition of n_ray.
         That is because mirror particles are kicked in the direction opposite
         from the original one */
         const double n_ray[3] = {-sin_theta_ray * cos_phi_ray,
-                                 -sin_theta_ray * sin_phi_ray,
-                                 -cos_theta_ray};
+                                 -sin_theta_ray * sin_phi_ray, -cos_theta_ray};
 
         const double mass_mirror = si->feedback_data.mass_true[i];
-        const double m_alpha = sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
-        const double mass_weight = sqrt(current_mass * mass_mirror)/current_mass;
+        const double m_alpha =
+            sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
+        const double mass_weight =
+            sqrt(current_mass * mass_mirror) / current_mass;
 
-        double v_gas_star[3] = {pj->v[0]-si->v[0],
-                                pj->v[1]-si->v[1],
-                                pj->v[2]-si->v[2]};
+        double v_gas_star[3] = {pj->v[0] - si->v[0], pj->v[1] - si->v[1],
+                                pj->v[2] - si->v[2]};
 
-        double v_gas_mirror_star[3] = {si->feedback_data.v_true[i][0]-si->v[0],
-                                       si->feedback_data.v_true[i][1]-si->v[1],
-                                       si->feedback_data.v_true[i][2]-si->v[2]};
+        double v_gas_mirror_star[3] = {
+            si->feedback_data.v_true[i][0] - si->v[0],
+            si->feedback_data.v_true[i][1] - si->v[1],
+            si->feedback_data.v_true[i][2] - si->v[2]};
 
-        for(int j=0; j<3; j++){
+        for (int j = 0; j < 3; j++) {
           v_gas_star[j] /= cosmo->a;
           v_gas_mirror_star[j] /= cosmo->a;
         }
 
-        const double v_cos_theta = (v_gas_star[0]*n_ray[0]+
-                                    v_gas_star[1]*n_ray[1]+
-                                    v_gas_star[2]*n_ray[2]);
+        const double v_cos_theta =
+            (v_gas_star[0] * n_ray[0] + v_gas_star[1] * n_ray[1] +
+             v_gas_star[2] * n_ray[2]);
 
-        const double v_mirror_cos_theta = (v_gas_mirror_star[0]*n_ray[0]+
-                                           v_gas_mirror_star[1]*n_ray[1]+
-                                           v_gas_mirror_star[2]*n_ray[2]);
+        const double v_mirror_cos_theta =
+            (v_gas_mirror_star[0] * n_ray[0] + v_gas_mirror_star[1] * n_ray[1] +
+             v_gas_mirror_star[2] * n_ray[2]);
 
-        const double energy_per_pair = si->feedback_data.to_distribute.SNII_E_kinetic /
-                                       si->feedback_data.to_distribute.SNII_number_of_kick_events;
-        
-        const double SNII_delta_v = sqrt(2.0 * energy_per_pair /(current_mass + mass_mirror));
-        const double alpha = m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
+        const double energy_per_pair =
+            si->feedback_data.to_distribute.SNII_E_kinetic /
+            si->feedback_data.to_distribute.SNII_number_of_kick_events;
 
-        const double beta = sqrt(alpha*alpha+1.0) - alpha;
+        const double SNII_delta_v =
+            sqrt(2.0 * energy_per_pair / (current_mass + mass_mirror));
+        const double alpha =
+            m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
+
+        const double beta = sqrt(alpha * alpha + 1.0) - alpha;
 
         /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
         Therefore, a physical kick, dv, gets translated into a
         code velocity kick, a * dv */
-        xpj->v_full[0] += SNII_delta_v * n_ray[0] * mass_weight * beta * cosmo->a;
-        xpj->v_full[1] += SNII_delta_v * n_ray[1] * mass_weight * beta * cosmo->a;
-        xpj->v_full[2] += SNII_delta_v * n_ray[2] * mass_weight * beta * cosmo->a;
+        xpj->v_full[0] +=
+            SNII_delta_v * n_ray[0] * mass_weight * beta * cosmo->a;
+        xpj->v_full[1] +=
+            SNII_delta_v * n_ray[1] * mass_weight * beta * cosmo->a;
+        xpj->v_full[2] +=
+            SNII_delta_v * n_ray[2] * mass_weight * beta * cosmo->a;
 
         /* Update the signal velocity of the particle based on the velocity kick
          */
-        hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, SNII_delta_v * beta * mass_weight);
+        hydro_set_v_sig_based_on_velocity_kick(
+            pj, cosmo, SNII_delta_v * beta * mass_weight);
 
         /* Synchronize the particle on the timeline */
         timestep_sync_part(pj);
@@ -511,11 +561,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
   /* SNII stochastic kinetic feedback ends */
 
-
   /* Now account in the fully energy and momentum conserving way
   for the change in gas particle mass, energy and momentum due to
-  ABG feedback energy and stellar ejecta (with the mass contributed at this time-step
-  by all available feedback channels) moving at the star's velocity */
+  ABG feedback energy and stellar ejecta (with the mass contributed at this
+  time-step by all available feedback channels) moving at the star's velocity */
 
   /* Compute the current kinetic energy */
   const double current_v2 = xpj->v_full[0] * xpj->v_full[0] +
@@ -567,7 +616,6 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_enrich);
   hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_enrich);
 
-
   /* Do SNIa and SNII stochastci thermal feedback */
 
   /* Number of stochastic heating events experienced by the gas particle */
@@ -585,12 +633,15 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
     /* Find out how many rays this gas particle is receiving.
     Note that this loops goes in the opposite direction compared to that
-    in SNII kicks (i.e. i-- in place of i++). That's because if we have more than one ray
-    per stellar particle per time-step, we then want to avoid the situation in which
-    the gas particle that is kicked is also heated */
-    for (int i=colibre_feedback_number_of_rays; 
-             i>colibre_feedback_number_of_rays-si->feedback_data.to_distribute.SNII_number_of_heating_events; i--){
-      if (pj->id==si->feedback_data.part_id_with_min_arclength[i-1]) do_SNII_thermal ++;
+    in SNII kicks (i.e. i-- in place of i++). That's because if we have more
+    than one ray per stellar particle per time-step, we then want to avoid the
+    situation in which the gas particle that is kicked is also heated */
+    for (int i = colibre_feedback_number_of_rays;
+         i > colibre_feedback_number_of_rays -
+                 si->feedback_data.to_distribute.SNII_number_of_heating_events;
+         i--) {
+      if (pj->id == si->feedback_data.part_id_with_min_arclength[i - 1])
+        do_SNII_thermal++;
     }
 
     /* If the number of rays do_SNII_thermal > 0, do feedback */
@@ -600,10 +651,11 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       const double u_init_SNII =
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
 
-      /* The energy the particle receives is proportional to the number of rays do_SNII_thermal 
-      Since the heating probability ~ 1e-4 for \Delta T=10^{7.5} K, 
-      in practice do_SNII_thermal is either 0 or 1 */
-      const float delta_u_SNII = si->feedback_data.to_distribute.SNII_delta_u * (float)do_SNII_thermal;
+      /* The energy the particle receives is proportional to the number of rays
+      do_SNII_thermal Since the heating probability ~ 1e-4 for \Delta T=10^{7.5}
+      K, in practice do_SNII_thermal is either 0 or 1 */
+      const float delta_u_SNII =
+          si->feedback_data.to_distribute.SNII_delta_u * (float)do_SNII_thermal;
       const double u_new_SNII = u_init_SNII + delta_u_SNII;
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -637,7 +689,6 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
       /* Synchronize the particle on the timeline */
       timestep_sync_part(pj);
-
     }
   }
 

@@ -26,8 +26,8 @@
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
-#include "units.h"
 #include "random.h"
+#include "units.h"
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,
@@ -75,7 +75,7 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
   sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
   sp->feedback_data.to_collect.ngb_N = 0;
-  for(int i = 0; i < colibre_feedback_number_of_rays; i++){
+  for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
     sp->feedback_data.to_collect.min_arclength[i] = -1.f;
     sp->feedback_data.part_id_with_min_arclength[i] = 0;
 
@@ -84,7 +84,7 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 
     sp->feedback_data.mass_true[i] = 0.f;
     sp->feedback_data.mass_mirror[i] = 0.f;
-    for(int j = 0; j < 3; j++){
+    for (int j = 0; j < 3; j++) {
       sp->feedback_data.v_true[i][j] = 0.f;
       sp->feedback_data.v_mirror[i][j] = 0.f;
     }

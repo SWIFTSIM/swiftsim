@@ -221,11 +221,12 @@ INLINE static double random_unit_interval_two_IDs(
  * @brief Returns a pseudo-random number in the range [0, 1[.
  *
  * We generate numbers that are always reproducible for a given stellar particle
- * ID, ray index and simulation time (on the integer time-line). If more than one
- * number per time-step per particle is needed, additional randomness can be
+ * ID, ray index and simulation time (on the integer time-line). If more than
+ * one number per time-step per particle is needed, additional randomness can be
  * obtained by using the type argument.
  *
- * @param id_star The ID of the (stellar) particle for which to generate a number.
+ * @param id_star The ID of the (stellar) particle for which to generate a
+ * number.
  * @param ray_idx The index of the ray used in the isotropic feedback
  * @param ti_current The time (on the time-line) for which to generate a number.
  * @param type The #random_number_type to generate.
@@ -235,11 +236,11 @@ INLINE static double random_unit_interval_star_ID_and_ray_idx(
     int64_t id_star, const int ray_idx, const integertime_t ti_current,
     const enum random_number_type type) {
 
-    /* For better mixing, we apply a non-liner, y=x^3, mapping to ray_idx and
-    then cast (long long) on it to convert its type to that required
-    by the function we are calling */
-    return random_unit_interval_two_IDs(id_star, (long long)pow((double)ray_idx, 3.0),
-                                        ti_current, type);
+  /* For better mixing, we apply a non-liner, y=x^3, mapping to ray_idx and
+  then cast (long long) on it to convert its type to that required
+  by the function we are calling */
+  return random_unit_interval_two_IDs(
+      id_star, (long long)pow((double)ray_idx, 3.0), ti_current, type);
 }
 
 #endif /* SWIFT_RANDOM_H */
