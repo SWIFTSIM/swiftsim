@@ -61,7 +61,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
   /* Add mass of pj to neighbour mass of si  */
   si->feedback_data.to_collect.ngb_mass += mj;
-  si->feedback_data.to_collect.ngb_N += 1;
+  si->feedback_data.to_collect.ngb_N++;
 
   /* Add contribution of pj to normalisation of density weighted fraction
    * which determines how much mass to distribute to neighbouring
@@ -77,85 +77,89 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   const double phi_j = atan2(-dx[1], -dx[0]);
 
   /* Loop over rays. This is not ideal. We always loop over all available rays
-  even if there is no feedback. That's because if feedback does occur, we
-  need to get some information about the gas in advance. For example,
-  in the to_distribute loop, we already need to know which gas particle
-  is closest to the 1st ray, 2nd ray, etc */
+   * even if there is no feedback. That's because if feedback does occur, we
+   * need to get some information about the gas in advance. For example,
+   * in the to_distribute loop, we already need to know which gas particle
+   * is closest to the 1st ray, 2nd ray, etc */
   for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
 
-    /* Angular coordinates of the ith ray */
-    /* The (randomly chosen) ray angular coordinates depend on the ray number i,
-    the current time ti_current, and the stellar particle id.  In the second
-    argument of the random number generator function, for now we take (long
-    long)pow(i,2) but anything else that depends on i will work too. Note that
-    we first compute cos(\theta) and not \theta becasue the latter is not
-    uniform on a sphere: a solid-angle element d\Omega = \sin(\theta) d\phi
-    d\theta* = d cos(\theta) d\phi */
-    const double cos_theta_ray =
-        2.0 * random_unit_interval_star_ID_and_ray_idx(
-                  si->id, i, ti_current,
-                  random_number_isotropic_feedback_ray_theta) -
-        1.0;
+    /* Angular coordinates of the ith ray
+     * The (randomly chosen) ray angular coordinates depend on the ray number i,
+     * the current time ti_current, and the stellar particle id.
+     * Note that we first compute cos(\theta) and not \theta becasue the latter
+     * is not uniform on a sphere: a solid-angle element d\Omega = \sin(\theta)
+     * d\phi d\theta* = d cos(\theta) d\phi */
+
+    /* Random number in [0, 1[ */
+    const double rand_theta = random_unit_interval_star_ID_and_ray_idx(
+        si->id, i, ti_current, random_number_isotropic_feedback_ray_theta);
+
+    /* Transform to random number in [-1, 1[ */
+    const double cos_theta_ray = 2. * rand_theta - 1.;
+
+    /* Get the angle */
     const double theta_ray = acos(cos_theta_ray);
 
-    const double phi_ray = 2.0 * M_PI *
-                               random_unit_interval_star_ID_and_ray_idx(
-                                   si->id, i, ti_current,
-                                   random_number_isotropic_feedback_ray_phi) -
-                           M_PI;
+    /* Random number in [0, 1[ */
+    const double rand_phi = random_unit_interval_star_ID_and_ray_idx(
+        si->id, i, ti_current, random_number_isotropic_feedback_ray_phi);
+
+    /* Transform to random number in [-pi, pi[ */
+    const double phi_ray = 2.0 * M_PI * rand_phi - M_PI;
 
     /* Calculate the arclength on a unit sphere between the jth gas particle and
-    ith ray, and then find the minimum between this arclength and the current
-    (running) miminum arclegnth of the ith ray */
+     * ith ray, and then find the minimum between this arclength and the current
+     *(running) miminum arclegnth of the ith ray */
     const float new_arclength =
-        find_min_arclength(theta_ray, phi_ray, theta_j, phi_j, 1.f,
+        find_min_arclength(theta_ray, phi_ray, theta_j, phi_j, /*r_sphere=*/1.f,
                            si->feedback_data.to_collect.min_arclength[i]);
 
     /* If the new arclength is smaller than the older value, then store
-    the new one. Also store the relevant properties of the particle
-    that now has the miminum arclength with the ith ray */
+     * the new one. Also store the relevant properties of the particle
+     * that now has the miminum arclength with the ith ray */
     if (new_arclength) {
       si->feedback_data.to_collect.min_arclength[i] = new_arclength;
       si->feedback_data.part_id_with_min_arclength[i] = pj->id;
 
       /* Velocity and mass are needed for the mirror approach we adopt in
-      kinetic feedback to exactly conserve momentum and energy. That's because
-      in a pair of two particles, the first one needs to know the properties of
-      the other one, and vice versa */
+       * kinetic feedback to exactly conserve momentum and energy. That's
+       * because in a pair of two particles, the first one needs to know the
+       * properties of the other one, and vice versa */
       si->feedback_data.mass_true[i] = pj->mass;
-      for (int j = 0; j < 3; j++) {
-        si->feedback_data.v_true[i][j] = pj->v[j];
-      }
+      si->feedback_data.v_true[i][0] = pj->v[0];
+      si->feedback_data.v_true[i][1] = pj->v[1];
+      si->feedback_data.v_true[i][2] = pj->v[2];
     }
 
     /* Repeat the above steps for the mirror particles present in the kinetic
-    feedback. Each ray has a pair of two particles. For the ith ray with angular
-    coodrinates (\theta_ray, \phi_ray), in the loop above we seek for the
-    particle with the angular coordinates closest to that of the ray; but now we
-    are looking for the "mirror" particle with the coordinates closest to the
-    "mirrored" coordinates of the ray (\pi-\theta_ray, \phi_ray-\pi *
-    sgn(\phi_ray)) */
-
-    /* Note the opposite direction of the ray compared to the case above.
-    Hence the name "mirror" */
+     * feedback. Each ray has a pair of two particles. For the ith ray with
+     * angular coodrinates (\theta_ray, \phi_ray), in the loop above we seek for
+     * the particle with the angular coordinates closest to that of the ray; but
+     * now we are looking for the "mirror" particle with the coordinates closest
+     * to the "mirrored" coordinates of the ray (\pi-\theta_ray, \phi_ray-\pi *
+     * sgn(\phi_ray))
+     * Note: the opposite direction of the ray compared to the case above.
+     * Hence the name "mirror" */
     const double theta_ray_mirror = M_PI - theta_ray;
-    const double phi_ray_mirror =
-        phi_ray - M_PI * (double)((phi_ray >= 0) ? 1 : -1);
+    const double phi_ray_mirror = phi_ray - copysign(M_PI, phi_ray);
 
     const float new_arclength_mirror = find_min_arclength(
-        theta_ray_mirror, phi_ray_mirror, theta_j, phi_j, 1.f,
+        theta_ray_mirror, phi_ray_mirror, theta_j, phi_j, /*r_sphere=*/1.f,
         si->feedback_data.to_collect.min_arclength_mirror[i]);
 
     if (new_arclength_mirror) {
+
+      /* Collect the mirror information */
       si->feedback_data.to_collect.min_arclength_mirror[i] =
           new_arclength_mirror;
       si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
       si->feedback_data.mass_mirror[i] = pj->mass;
-      for (int j = 0; j < 3; j++) {
-        si->feedback_data.v_mirror[i][j] = pj->v[j];
-      }
+      si->feedback_data.v_mirror[i][0] = pj->v[0];
+      si->feedback_data.v_mirror[i][1] = pj->v[1];
+      si->feedback_data.v_mirror[i][2] = pj->v[2];
     }
   }
+}
 }
 
 /**
