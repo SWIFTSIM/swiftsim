@@ -1810,7 +1810,7 @@ void write_output_parallel(struct engine* e,
                 part_type_names[ptype]);
 
       int should_write = parser_get_opt_param_int(params, field,
-        ptype_default_should_write);
+                                                  ptype_default_should_write);
 
       if (should_write)
         write_array_parallel(e, h_grp, fileName, partTypeGroupName, list[i],
