@@ -28,8 +28,6 @@
 #include "part.h"
 #include "units.h"
 #include "random.h"
-#include <string.h>
-#include <strings.h>
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
                                const struct cosmology* cosmo, struct spart* sp,

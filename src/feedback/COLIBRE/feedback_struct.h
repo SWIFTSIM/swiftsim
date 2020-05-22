@@ -46,7 +46,7 @@ struct feedback_spart_data {
       /*! Total mass (unweighted) of neighbouring gas particles */
       float ngb_mass;
 
-      /*! Total number gas neighbours in the stellar kernel */
+      /*! Total (unweighted) number gas neighbours in the stellar kernel */
       int ngb_N;
       
       /*! Array of the miminum arclengths between the rays
@@ -157,8 +157,8 @@ struct feedback_spart_data {
 
   /*! Arrays employed in SNII isotropic thermal-kinetic feedback */
 
-  /*! Arrays with particle IDs that have the mimimal arclengths
-  with each of the rays !*/
+  /*! Arrays containing gas  particle IDs that have the mimimal arclengths
+  with respect to each of the (colibre_feedback_number_of_rays) rays !*/
   long long part_id_with_min_arclength[colibre_feedback_number_of_rays];
   long long part_id_with_min_arclength_mirror[colibre_feedback_number_of_rays];
 

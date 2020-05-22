@@ -257,13 +257,15 @@ INLINE static void compute_SNII_feedback(
     double prob_thermal =
         (1.0 - f_kin) * E_SN_total / (conv_factor * delta_T * ngb_gas_mass_new);
 
-    /* Note that in the denominator we have ngb_gas_mass_new * delta_v * delta_v
-    and not 0.5 ngb_gas_mass_new * delta_v * delta_v. That is because in our method,
+    /* Note that in the denominator we have ngb_gas_mass * delta_v * delta_v
+    and not 0.5 ngb_gas_mass * delta_v * delta_v. That is because in our method,
     if we have a kick event then we kick two particles instead of one. This implies
     that we need twice as much energy and the probability must be lowered by a factor
-    of 2. */
+    of 2. Futhermore, unlike in the thermal feedback here we do not
+    take into account the ejecta mass becasue the kicks are done
+    before the mass transfer. That is, we take ngb_gas_mass and not ngb_gas_mass_new. */
     double prob_kinetic =
-        f_kin * E_SN_total / (ngb_gas_mass_new * delta_v * delta_v);
+        f_kin * E_SN_total / (ngb_gas_mass * delta_v * delta_v);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
@@ -310,7 +312,7 @@ INLINE static void compute_SNII_feedback(
     (since 1 event = 1 ray), so we need to increase the thermal 
     energy per ray and make the number of events equal to the number of rays */
     if(number_of_th_SN_events > colibre_feedback_number_of_rays){
-      const double alpha_thermal = (float)number_of_th_SN_events / (float)colibre_feedback_number_of_rays;
+      const double alpha_thermal = (double)number_of_th_SN_events / (double)colibre_feedback_number_of_rays;
       delta_u *= alpha_thermal;
       number_of_th_SN_events = colibre_feedback_number_of_rays;
     }
@@ -326,7 +328,7 @@ INLINE static void compute_SNII_feedback(
       /* Total kinetic energy needed = Kinetic energy to kick one pair of two particles, each of 
       mean mass ngb_gas_mass_new/ngb_gas_N, with the kick velocity delta_v 
       \times the number of kick events ( = the number of pairs ) */
-      E_kinetic = ngb_gas_mass_new/ngb_gas_N * delta_v * delta_v * number_of_kin_SN_events;
+      E_kinetic = ngb_gas_mass / ngb_gas_N * delta_v * delta_v * number_of_kin_SN_events;
     }
     else {
 
