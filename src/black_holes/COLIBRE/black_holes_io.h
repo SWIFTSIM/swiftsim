@@ -330,6 +330,27 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "not include the number of reposition events accumulated by any merged "
       "black hole.");
 
+  list[26] = io_make_output_field(
+      "NumberOfRepositionAttempts", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_reposition_attempts,
+      "Number of time steps in which the black holes had an eligible particle "
+      "to reposition to. They may or may not have ended up moving there, "
+      "depending on whether these particles were at a lower or higher "
+      "potential than the black holes themselves. It does not include "
+      "attempted repositioning events accumulated by any merged black holes.");
+
+  list[27] = io_make_output_field(
+      "NumberOfTimeSteps", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      number_of_time_steps,
+      "Total number of time steps at which the black holes were active.");
+
+  list[28] = io_make_output_field(
+      "ViscosityFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      f_visc,
+      "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
+      "rates have been suppressed by the Rosas-Guevara et al. (2015) "
+      "accretion disc model.");
+
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 

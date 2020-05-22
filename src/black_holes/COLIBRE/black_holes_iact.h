@@ -99,26 +99,29 @@ runner_iact_nonsym_bh_gas_density(
   /* Neighbour peculiar drifted velocity */
   const float vj[3] = {pj->v[0], pj->v[1], pj->v[2]};
   
-  /* Neighbour velocity in the frame of the black hole
-   * (we don't include a Hubble terms since we are interested in the 
+  /* Neighbour's velocity in the frame of the black hole
+   * (we don't include a Hubble term since we are interested in the
    * velocity contribution at the location of the black hole) */
   const float dv[3] = {vj[0] - bi->v[0], vj[1] - bi->v[1], vj[2] - bi->v[2]};
-  
+
   /* Contribution to the smoothed velocity (gas w.r.t. black hole) */
   bi->velocity_gas[0] += mj * dv[0] * wi;
   bi->velocity_gas[1] += mj * dv[1] * wi;
   bi->velocity_gas[2] += mj * dv[2] * wi;
 
-  /* Contribution to the specific angular momentum of gas, which is later
-   * converted to the circular velocity at the smoothing length */
-  bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
-  bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
-  bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+  if (bh_props->with_angmom_limiter) {
+    /* Contribution to the specific angular momentum of gas, which is later
+     * converted to the circular velocity at the smoothing length */
+    bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
+    bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
+    bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
+  }
 
-  /* Contribution to the smoothed squared relative velocity (for dispersion)
-   * We will convert this to actual dispersion later. */
-  bi->velocity_dispersion_gas += mj * wi * (dv[0] * dv[0] + dv[1] * dv[1]
-                                            + dv[2] * dv[2]);
+  if (!bh_props->use_bondi)
+   /* Contribution to the smoothed squared relative velocity (for dispersion)
+    * We will convert this to actual dispersion later. */
+    bi->velocity_dispersion_gas += mj * wi * (dv[0] * dv[0] + dv[1] * dv[1]
+                                              + dv[2] * dv[2]);
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate */
@@ -150,7 +153,6 @@ runner_iact_nonsym_bh_gas_density(
   } /* End of accretion contribution calculation */
 
   if (bh_props->use_krumholz_vorticity) {
-
     /* Need to compute gas vorticity around the black hole, in analogy to
      * calculation for Balsara switch in hydro part */
 
@@ -235,7 +237,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   if (r2 < max_dist_repos2) {
 
     /* Flag to check whether neighbour is slow enough to be considered
-     * as repositioning target. Always true if velocity cut switched off */
+     * as repositioning target. Always true if velocity cut is switched off */
     int neighbour_is_slow_enough = 1;
     if (bh_props->max_reposition_velocity_ratio > 0) {
 

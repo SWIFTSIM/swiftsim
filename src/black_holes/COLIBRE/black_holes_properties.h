@@ -196,7 +196,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
   bp->use_subgrid_mass_from_ics =
-      parser_get_opt_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics", 0);
+      parser_get_opt_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics",
+                               0);
 
   /* Accretion parameters ---------------------------------- */
 
@@ -204,13 +205,14 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
   bp->with_angmom_limiter =
       parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
+  if (bp->with_angmom_limiter)
+    bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
   bp->f_Edd_recording = parser_get_param_float(
       params, "COLIBREAGN:eddington_fraction_for_recording");
   bp->epsilon_r =
       parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
   bp->epsilon_f =
       parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
-  bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
   bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
