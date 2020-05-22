@@ -236,11 +236,9 @@ INLINE static double random_unit_interval_star_ID_and_ray_idx(
     int64_t id_star, const int ray_idx, const integertime_t ti_current,
     const enum random_number_type type) {
 
-  /* For better mixing, we apply a non-liner, y=x^3, mapping to ray_idx and
-  then cast (long long) on it to convert its type to that required
-  by the function we are calling */
-  return random_unit_interval_two_IDs(
-      id_star, (long long)pow((double)ray_idx, 3.0), ti_current, type);
+  /* For better mixing, we apply a non-linear transformation y=x^3 */
+  const long long ray_idx_3 = ray_idx * ray_idx * ray_idx;
+  return random_unit_interval_two_IDs(id_star, ray_idx_3, ti_current, type);
 }
 
 #endif /* SWIFT_RANDOM_H */
