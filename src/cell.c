@@ -3323,14 +3323,14 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
     /* Otherwise, activate the sorts and drifts. */
     else {
 
-      if (ci_active) {
+      if (ci_active && cj->stars.count != 0) {
 
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
       }
 
-      if (cj_active) {
+      if (cj_active && ci->stars.count != 0) {
 
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
