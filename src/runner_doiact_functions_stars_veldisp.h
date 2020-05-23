@@ -241,7 +241,7 @@ void DOSELF1_BRANCH_SVD(struct runner *r, struct cell *c) {
   if (!(with_star_formation && cell_is_active_hydro(c, e))) return;
 
   /* Did we mess up the recursion? */
-  if (c->stars.h_max_old * kernel_gamma > c->dmin)
+  if (c->hydro.h_max_old * kernel_gamma > c->dmin)
     error("Cell smaller than smoothing length");
 
   DOSELF1_SVD(r, c, 1);
