@@ -4262,14 +4262,14 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
       if (t->type == task_type_pair) {
         /* Do ci */
-        if (ci_active) {
+        if (ci_active && cj->stars.count != 0) {
           /* Activate the drift tasks. */
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
         }
 
         /* Do cj */
-        if (cj_active) {
+        if (cj_active && ci->stars.count != 0) {
           /* Activate the drift tasks. */
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
