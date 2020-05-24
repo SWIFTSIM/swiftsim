@@ -350,8 +350,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       new_metal_mass_from_AGB * new_mass_inv;
 
   /* SNII stochastic kinetic feedback begins.
-   * It is done before the particle velocity is recomputed
-   * due to the change in the particle mass to conserve momentum */
+   * To conserve linear momentum, it is done before the particle velocity 
+   * is recomputed due to the change in the particle mass */
 
   /* Get the SNII kinetic feedback properties */
   const float prob_SNII_kinetic =
@@ -413,10 +413,10 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 	 * use the "unaffected" mass, mass_true, because it does not change when
 	 * viewed from either of the particles in the pair. At the same time, in the 
 	 * definition of mass_weight, we do divide by current_mass and not by mass_true 
-	 * since this is the weight for the velocity v, which -- for the cosidered gas 
+	 * since this is the weight for the velocity v, which -- for the considered gas 
 	 * particle -- is related to the momentum p as p = current_mass * v and 
 	 * not via mass_true. The differences between current_mass and mass_true, 
-	 * if evevr exist, are obviously very minor. Nonetheless, these are not
+	 * if evev exist, are obviously very minor. Nonetheless, these are not
 	 * neglegible because we require the exact conservation of linear momentum. */
         const double m_alpha =
             sqrt(mass_true * mass_mirror) / (mass_true + mass_mirror);
@@ -454,7 +454,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Get the SNII feedback kick energy per pair. We thus devide the total
         kinetic energy we have from the *si stellar particle by the number of
-        events (in each event two particles are kicked) */
+        events (in each event, two particles are kicked) */
         const double energy_per_pair =
             si->feedback_data.to_distribute.SNII_E_kinetic /
             si->feedback_data.to_distribute.SNII_number_of_kick_events;
@@ -465,7 +465,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             sqrt(2.0 * energy_per_pair / (mass_true + mass_mirror));
 
         /* Compute the correction to the energy and momentum due to relative
-         * star-gas motion If there is no correction then alpha = 0 and beta = 1
+         * star-gas motioni. If there is no correction then alpha = 0 and beta = 1
          */
         const double alpha =
             m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
@@ -517,7 +517,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Note the appearance of the minus sign in the definition of n_ray.
          * That is because mirror particles are kicked in the direction opposite
-         * from the original one */
+         * to the original one */
         const double n_ray[3] = {-sin_theta_ray * cos_phi_ray,  // x
                                  -sin_theta_ray * sin_phi_ray,  // y
                                  -cos_theta_ray};               // z
@@ -640,7 +640,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_enrich);
   hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_enrich);
 
-  /* Do SNIa and SNII stochastci thermal feedback */
+  /* Do SNIa and SNII stochastic thermal feedback */
 
   /* Number of stochastic heating events experienced by the gas particle */
   int do_SNII_thermal = 0;
@@ -660,7 +660,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         si->feedback_data.to_distribute.SNII_number_of_heating_events;
 
     /* Find out how many rays this gas particle is receiving.
-     * Note that this loops goes in the opposite direction compared to that
+     * Note that this loop goes in the opposite direction compared to that
      * in SNII kicks (i.e. i-- in place of i++). That's because if we have more
      * than one ray per stellar particle per time-step, we then want to avoid
      * the situation in which the gas particle that is kicked is also heated */
@@ -677,7 +677,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
           hydro_get_physical_internal_energy(pj, xpj, cosmo);
 
       /* The energy the particle receives is proportional to the number of rays
-       * do_SNII_thermal Since the heating probability ~ 1e-4 for \Delta
+       * do_SNII_thermal. Since the heating probability ~ 1e-4 for \Delta
        * T=10^{7.5} K, in practice do_SNII_thermal is either 0 or 1 */
       const float delta_u_SNII =
           si->feedback_data.to_distribute.SNII_delta_u * (float)do_SNII_thermal;
@@ -728,7 +728,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
     /* Draw a random number (Note mixing both IDs) */
     const float rand_SNIa = random_unit_interval_two_IDs(
-        si->id, pj->id, ti_current, random_number_stellar_feedback_2);
+        si->id, pj->id, ti_current, random_number_stellar_feedback_3);
 
     /* Are we lucky? */
     do_SNIa = (rand_SNIa < prob_SNIa);

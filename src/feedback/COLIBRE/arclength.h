@@ -79,11 +79,11 @@ __attribute__((always_inline)) INLINE static float find_min_arclength(
 
   /* Compare the arclength that has just been computed with what the ray already
    *  has. If the new one is smaller or the ray does not have any arclength yet
-   * (current_arclength < 0.f), then return the new one. */
+   * (current_arclength < 0.f), then return the computed one. */
   if (new_arclength < current_arclength || current_arclength < 0.f) {
     return new_arclength;
   }
-  /* If the new one is larger than the older one return zero */
+  /* If the new arclength is larger than the current one return zero */
   else {
     return 0.f;
   }
