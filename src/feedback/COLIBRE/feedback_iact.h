@@ -398,16 +398,30 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                  sin_theta_ray * sin_phi_ray,  // y
                                  cos_theta_ray};               // z
 
-        /* Since we are kicking two particles, for each particle there is a
+        /* Get the particle mass before any feedback at this time-step  */
+        const double mass_true = si->feedback_data.mass_true[i];
+
+	/* Since we are kicking two particles, for each particle there is a
          * "mirror" particle. Below we need to get the properties of the mirror
          * particle to make our feedback conserve energy and momentum */
         const double mass_mirror = si->feedback_data.mass_mirror[i];
 
         /* Compute mass weights that are used below */
+	/* Note that mass_true and current_mass may differ if, for example,
+	 * at this time-step the considered here gas particle has already received
+	 * some ejecta mass from another star. To compute the weights, we need to
+	 * use the "unaffected" mass, mass_true, because it does not change when
+	 * viewed from either of the particles in the pair. At the same time, in the 
+	 * definition of mass_weight, we do divide by current_mass and not by mass_true 
+	 * since this is the weight for the velocity v, which -- for the cosidered gas 
+	 * particle -- is related to the momentum p as p = current_mass * v and 
+	 * not via mass_true. The differences between current_mass and mass_true, 
+	 * if evevr exist, are obviously very minor. Nonetheless, these are not
+	 * neglegible because we require the exact conservation of linear momentum. */
         const double m_alpha =
-            sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
+            sqrt(mass_true * mass_mirror) / (mass_true + mass_mirror);
         const double mass_weight =
-            sqrt(current_mass * mass_mirror) / current_mass;
+            sqrt(mass_true * mass_mirror) / current_mass;
 
         /* Relative velocity between the gas particle and the stellar particle
          */
@@ -448,7 +462,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         /* Compute the characteristic kick velocity corresponding to the kinetic
          * energy per pair */
         const double SNII_delta_v =
-            sqrt(2.0 * energy_per_pair / (current_mass + mass_mirror));
+            sqrt(2.0 * energy_per_pair / (mass_true + mass_mirror));
 
         /* Compute the correction to the energy and momentum due to relative
          * star-gas motion If there is no correction then alpha = 0 and beta = 1
@@ -477,9 +491,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         timestep_sync_part(pj);
       }
 
-      /* Do the same as in the above loop but now for the mirror particles.
-       * (this can latter be merged with the first loop to reduce the number of
-       * lines of code) */
+      /* Do the same as in the code above but now for the mirror particles */
       if (pj->id == si->feedback_data.part_id_with_min_arclength_mirror[i]) {
 
         /* Get \theta and \phi coordinates of the ray */
@@ -510,11 +522,13 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
                                  -sin_theta_ray * sin_phi_ray,  // y
                                  -cos_theta_ray};               // z
 
-        const double mass_mirror = si->feedback_data.mass_true[i];
+        const double mass_true = si->feedback_data.mass_true[i];
+        const double mass_mirror = si->feedback_data.mass_mirror[i];
+
         const double m_alpha =
-            sqrt(current_mass * mass_mirror) / (current_mass + mass_mirror);
+            sqrt(mass_true * mass_mirror) / (mass_true + mass_mirror);
         const double mass_weight =
-            sqrt(current_mass * mass_mirror) / current_mass;
+            sqrt(mass_true * mass_mirror) / current_mass;
 
         double v_gas_star[3] = {pj->v[0] - si->v[0], pj->v[1] - si->v[1],
                                 pj->v[2] - si->v[2]};
@@ -542,7 +556,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             si->feedback_data.to_distribute.SNII_number_of_kick_events;
 
         const double SNII_delta_v =
-            sqrt(2.0 * energy_per_pair / (current_mass + mass_mirror));
+            sqrt(2.0 * energy_per_pair / (mass_true + mass_mirror));
         const double alpha =
             m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
 
