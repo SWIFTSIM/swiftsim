@@ -333,7 +333,7 @@ INLINE static void compute_SNII_feedback(
         const float rand_kinetic = random_unit_interval_star_ID_and_ray_idx(
             sp->id, i, ti_begin, random_number_stellar_feedback_2);
 
-        if (rand_kinetic < prob_kinetic) number_of_th_SN_events++;
+        if (rand_kinetic < prob_kinetic) number_of_kin_SN_events++;
       }
 
       /* Total kinetic energy needed = Kinetic energy to kick one pair of two
@@ -354,7 +354,7 @@ INLINE static void compute_SNII_feedback(
 
     /* The number of kick events cannot be greater than the number of rays */
     number_of_kin_SN_events =
-        max(number_of_kin_SN_events, colibre_feedback_number_of_rays);
+        min(number_of_kin_SN_events, colibre_feedback_number_of_rays);
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
