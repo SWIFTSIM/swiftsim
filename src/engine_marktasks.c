@@ -457,14 +457,14 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (t_type == task_type_pair) {
 
           /* Do ci */
-          if (ci_active_star_form && cj->stars.count != 0) {
+          if (ci_active_star_form) {
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
           }
 
           /* Do cj */
-          if (cj_active_star_form && ci->stars.count != 0) {
+          if (cj_active_star_form) {
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);

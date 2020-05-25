@@ -3323,14 +3323,14 @@ void cell_activate_subcell_stars_veldisp_tasks(struct cell *ci, struct cell *cj,
     /* Otherwise, activate the sorts and drifts. */
     else {
 
-      if (ci_active && cj->stars.count != 0) {
+      if (ci_active) {
 
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
       }
 
-      if (cj_active && ci->stars.count != 0) {
+      if (cj_active) {
 
         /* Activate the drifts if the cells are local. */
         if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
@@ -4262,14 +4262,14 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
       if (t->type == task_type_pair) {
         /* Do ci */
-        if (ci_active && cj->stars.count != 0) {
+        if (ci_active) {
           /* Activate the drift tasks. */
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
         }
 
         /* Do cj */
-        if (cj_active && ci->stars.count != 0) {
+        if (cj_active) {
           /* Activate the drift tasks. */
           if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
@@ -5166,6 +5166,20 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
 
     /* Update the time of the last drift */
     c->stars.ti_old_part = ti_current;
+
+    /* Clear drift flags of progeny */
+    if (c->split && (force || cell_get_flag(c, cell_flag_do_stars_sub_drift))) {
+
+      /* Loop over the progeny. */
+      for (int k = 0; k < 8; k++) {
+        if (c->progeny[k] != NULL) {
+          struct cell *cp = c->progeny[k];
+
+          /* Recurse */
+          cell_drift_spart(cp, e, force);
+        }
+      }
+    }
 
     return;
   }
