@@ -314,7 +314,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
                  feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
                  feedback/COLIBRE/yield_tables.h feedback/COLIBRE/SNIa_DTD.h feedback/COLIBRE/SNIa_DTD_struct.h \
-		 feedback/COLIBRE/feedback_tables.h \
+		 feedback/COLIBRE/feedback_tables.h feedback/COLIBRE/arclength.h \
 		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution.h \
 		 feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
 		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
