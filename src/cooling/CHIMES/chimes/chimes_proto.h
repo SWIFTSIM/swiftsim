@@ -46,6 +46,10 @@ typedef double ChimesFloat;
 typedef float ChimesFloat;
 #endif
 
+/*!< Function pointer that allows the User to specify their own custom exit
+ * function. */
+void (*chimes_exit)(void);
+
 /**
  * Structure containing the variables that
  * are specific to each gas particle/cell.
@@ -93,8 +97,9 @@ struct gasVariables {
                                         heating). Units: erg s^-1 cm^-3. */
   ChimesFloat
       *abundances; /*!<  Abundance array, defined for species i as n_i / n_H. */
-  void *hybrid_data; /*!< Structure containing extra data for the hybrid cooling
-                        function. */
+  void *
+      hybrid_data; /*!< Structure containing extra data for the hybrid cooling
+                      function. */
 };
 
 /**
@@ -105,10 +110,10 @@ struct gasVariables {
 struct globalVariables {
   char MainDataTablePath
       [500]; /*!< Path to the chimes_main_data.hdf5 data file. */
-  char PhotoIonTablePath[CHIMES_MAX_UV_SPECTRA]
-                        [500]; /*!< Array of strings containing the paths
-                                  to the cross sections tables, one for
-                                  each UV spectrum. */
+  char PhotoIonTablePath
+      [CHIMES_MAX_UV_SPECTRA][500]; /*!< Array of strings containing the paths
+                                       to the cross sections tables, one for
+                                       each UV spectrum. */
   char EqAbundanceTablePath
       [500];               /*!< Path to the equilibrium abundance table. */
   int cellSelfShieldingOn; /*!< 0 - switch off self-shielding; 1 - switch on
@@ -138,8 +143,10 @@ struct globalVariables {
                                     explicit solution. */
   int element_included[9]; /*!< Array of flags to exclude (0) or include (1)
                               each metal element. */
-  int speciesIndices[CHIMES_TOTSIZE]; /*!< Maps the position of each species in
-                                         the abundance array. */
+  int
+      speciesIndices
+          [CHIMES_TOTSIZE];   /*!< Maps the position of each species in the
+                                 abundance array. */
   int totalNumberOfSpecies;   /*!< Total number of species included in the
                                  network. */
   int scale_metal_tolerances; /*!< Scale the absolute tolerances by the
@@ -148,8 +155,9 @@ struct globalVariables {
                        error or warning message. */
   int hybrid_cooling_mode; /*!< 0 - do not use hybrid cooling; 1 - use hybrid
                               cooling. */
-  void *hybrid_data; /*!< Structure containing extra data for the hybrid cooling
-                        function. */
+  void *
+      hybrid_data; /*!< Structure containing extra data for the hybrid cooling
+                      function. */
   double (*hybrid_cooling_fn)(
       struct gasVariables *myGasVars,
       struct globalVariables *myGlobalVars); /*!< Hybrid cooling function. */
@@ -200,19 +208,22 @@ extern struct chimes_table_bins_struct {
       *mol_cool_Temperatures; /*!< Temperature array for molecular cooling. */
   int N_CO_cool_rot_ColumnDensities; /*!< Number of CO column density bins for
                                         CO rotational cooling. */
-  ChimesFloat *CO_cool_rot_ColumnDensities; /*!< CO column density array for CO
-                                               rotational cooling. */
+  ChimesFloat
+      *CO_cool_rot_ColumnDensities;  /*!< CO column density array for CO
+                                        rotational cooling. */
   int N_CO_cool_vib_ColumnDensities; /*!< Number of CO column density bins for
                                         CO vibrational cooling. */
-  ChimesFloat *CO_cool_vib_ColumnDensities; /*!< CO column density array for CO
-                                               vibrational cooling. */
-  int N_H2O_cool_hiT_Temperatures; /*!< Number of temperature bins for H2O
-                                      cooling at high temperatures. */
   ChimesFloat
-      *H2O_cool_hiT_Temperatures;   /*!< Temperature array for H2O cooling at
-                                       high temperatures. */
-  int N_H2O_cool_lowT_Temperatures; /*!< Number of temperature bins for H2O
-                                       cooling at low temperatures. */
+      *CO_cool_vib_ColumnDensities; /*!< CO column density array for CO
+                                       vibrational cooling. */
+  int N_H2O_cool_hiT_Temperatures;  /*!< Number of temperature bins for H2O
+                                       cooling at high temperatures. */
+  ChimesFloat
+      *
+          H2O_cool_hiT_Temperatures; /*!< Temperature array for H2O cooling at
+                                        high temperatures. */
+  int N_H2O_cool_lowT_Temperatures;  /*!< Number of temperature bins for H2O
+                                        cooling at low temperatures. */
   ChimesFloat *H2O_cool_lowT_Temperatures; /*!< Temperature array for H2O
                                               cooling at low temperatures. */
   int N_H2O_cool_rot_ColumnDensities; /*!< Number of H2O column density bins for
@@ -223,12 +234,13 @@ extern struct chimes_table_bins_struct {
                                          H2O vibrational cooling. */
   ChimesFloat *H2O_cool_vib_ColumnDensities; /*!< H2O column density array for
                                                 H2O vibrational cooling. */
-  int N_cool_2d_Temperatures;        /*!< Number of temperature bins for the 2-d
-                                        cooling channels. */
-  ChimesFloat *cool_2d_Temperatures; /*!< Temperature array for the 2-d cooling
-                                        channels. */
-  int N_cool_hiT_2d_Temperatures;    /*!< Number of temperature bins for the 2-d
-                                        cooling channels at high temperature. */
+  int N_cool_2d_Temperatures; /*!< Number of temperature bins for the 2-d
+                                 cooling channels. */
+  ChimesFloat
+      *cool_2d_Temperatures;      /*!< Temperature array for the 2-d cooling
+                                     channels. */
+  int N_cool_hiT_2d_Temperatures; /*!< Number of temperature bins for the 2-d
+                                     cooling channels at high temperature. */
   ChimesFloat *cool_hiT_2d_Temperatures; /*!< Temperature array for the 2-d
                                             cooling channels at high
                                             temperature. */
@@ -236,12 +248,13 @@ extern struct chimes_table_bins_struct {
                                       2-d cooling channels. */
   ChimesFloat *cool_2d_ElectronDensities; /*!< Electron density array for the
                                              2-d cooling channels. */
-  int N_cool_4d_Temperatures;        /*!< Number of temperature bins for the 4-d
-                                        cooling channels. */
-  ChimesFloat *cool_4d_Temperatures; /*!< Temperature array for the 4-d cooling
-                                        channels. */
-  int N_cool_hiT_4d_Temperatures;    /*!< Number of temperature bins for the 4-d
-                                        cooling channels at high temperature. */
+  int N_cool_4d_Temperatures; /*!< Number of temperature bins for the 4-d
+                                 cooling channels. */
+  ChimesFloat
+      *cool_4d_Temperatures;      /*!< Temperature array for the 4-d cooling
+                                     channels. */
+  int N_cool_hiT_4d_Temperatures; /*!< Number of temperature bins for the 4-d
+                                     cooling channels at high temperature. */
   ChimesFloat *cool_hiT_4d_Temperatures; /*!< Temperature array for the 4-d
                                             cooling channels at high
                                             temperature. */
@@ -253,10 +266,11 @@ extern struct chimes_table_bins_struct {
                                        4-d cooling channels. */
   ChimesFloat *cool_4d_ElectronDensities; /*!< Electron density array for the
                                              4-d cooling channels. */
-  int N_cool_4d_HIIDensities;        /*!< Number of HII density bins for the 4-d
-                                        cooling channels. */
-  ChimesFloat *cool_4d_HIIDensities; /*!< HII density array for the 4-d cooling
-                                        channels. */
+  int N_cool_4d_HIIDensities; /*!< Number of HII density bins for the 4-d
+                                 cooling channels. */
+  ChimesFloat
+      *cool_4d_HIIDensities; /*!< HII density array for the 4-d cooling
+                                channels. */
 } chimes_table_bins;
 
 /**
@@ -268,8 +282,9 @@ extern struct chimes_T_dependent_struct {
                          molecules. */
   int *reactants;     /*!< Reactants for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag; /*!< Flags indicating whether each reaction involves
                           molecules. */
   int H2_collis_dissoc_heating_reaction_index; /*!< Index pointing to the H2
@@ -293,8 +308,9 @@ extern struct chimes_constant_struct {
                          molecules. */
   int *reactants;     /*!< Reactants for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag; /*!< Flags indicating whether each reaction involves
                           molecules. */
   int H2_form_heating_reaction_index; /*!< Index pointing to the H2 gas-phase
@@ -313,8 +329,9 @@ extern struct chimes_recombination_AB_struct {
                          molecules. */
   int *reactants;     /*!< Reactants for each reaction. */
   int *products;      /*!< Product for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag; /*!< Flags indicating whether each reaction involves
                           molecules. */
   ChimesFloat
@@ -331,8 +348,9 @@ extern struct chimes_grain_recombination_struct {
                          molecules. */
   int *reactants;     /*!< Reactants for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   ChimesFloat
       *rates; /*!< Arrays containing the rate coefficients as a function of
                  temperature and Psi for each reaction. */
@@ -347,8 +365,9 @@ extern struct chimes_cosmic_ray_struct {
                          molecules. */
   int *reactants;     /*!< Reactants for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag; /*!< Flags indicating whether each reaction involves
                           molecules. */
   int *secondary_base_reaction; /*!< Indices of the HI and HeI CR reactions.
@@ -356,8 +375,9 @@ extern struct chimes_cosmic_ray_struct {
   ChimesFloat
       *secondary_ratio; /*!< Ratio of secondary to primary CR ionisation of HI
                            and HeI, as a function of xHII. */
-  ChimesFloat *rates; /*!< Array containing the CR rates relative to HI for each
-                         reaction. */
+  ChimesFloat
+      *rates; /*!< Array containing the CR rates relative to HI for each
+                 reaction. */
 } chimes_table_cosmic_ray;
 
 /**
@@ -369,7 +389,8 @@ extern struct chimes_CO_cosmic_ray_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
+  int *
+      element_incl;   /*!< Flags indicating which elements are required for each
                          reaction. */
   ChimesFloat *rates; /*!< Arrays containing the rate as a function of
                          temperature for each reaction. */
@@ -406,8 +427,9 @@ extern struct chimes_H2_collis_dissoc_struct {
                                       collisions as a function of temperature.
                                     */
   ChimesFloat
-      *critical_density_H2; /*!< Array of the critical density for H2
-                               collisions as a function of temperature. */
+      *
+          critical_density_H2; /*!< Array of the critical density for H2
+                                  collisions as a function of temperature. */
   ChimesFloat
       *critical_density_He; /*!< Array of the critical density for HeI
                                collisions as a function of temperature. */
@@ -422,10 +444,12 @@ extern struct chimes_photoion_fuv_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
-  ChimesFloat *gamma; /*!< Array of the gamma dust-shielding parameter for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
+  ChimesFloat
+      *gamma; /*!< Array of the gamma dust-shielding parameter for each
+                 reaction. */
   ChimesFloat *sigmaPhot; /*!< Arrays of the cross sections for each reaction
                              and each spectrum. Units: cm^-2 */
   ChimesFloat
@@ -442,8 +466,9 @@ extern struct chimes_photoion_euv_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag;    /*!< Flags indicating whether each reaction involves
                              molecules. */
   ChimesFloat *E_thresh;  /*!< Ionisation energy for each reaction. */
@@ -452,9 +477,9 @@ extern struct chimes_photoion_euv_struct {
   ChimesFloat *shieldFactor_1D; /*!< Arrays of the shield factor components in
                                    1D (as a function of 1 column density) for
                                    each reaction. */
-  ChimesFloat
-      *shieldFactor_2D; /*!< Arrays of the shield factor components in 2D (as a
-                           function of 2 column densities) for each reaction. */
+  ChimesFloat *
+      shieldFactor_2D; /*!< Arrays of the shield factor components in 2D (as a
+                          function of 2 column densities) for each reaction. */
 } chimes_table_photoion_euv;
 
 /**
@@ -466,14 +491,17 @@ extern struct chimes_photoion_auger_fuv_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
+  int *
+      element_incl;   /*!< Flags indicating which elements are required for each
                          reaction. */
   int *base_reaction; /*!< Index of the corresponding base reaction, for each
                          auger reaction. */
-  int *number_of_electrons; /*!< Number of electrons released for each
-                               reaction. */
-  ChimesFloat *sigmaPhot;   /*!< Arrays of the cross sections for each reaction
-                               and each spectrum. Units: cm^-2 */
+  int
+      *
+          number_of_electrons; /*!< Number of electrons released for each
+                                  reaction. */
+  ChimesFloat *sigmaPhot; /*!< Arrays of the cross sections for each reaction
+                             and each spectrum. Units: cm^-2 */
 } chimes_table_photoion_auger_fuv;
 
 /**
@@ -485,14 +513,17 @@ extern struct chimes_photoion_auger_euv_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
+  int *
+      element_incl;   /*!< Flags indicating which elements are required for each
                          reaction. */
   int *base_reaction; /*!< Index of the corresponding base reaction, for each
                          auger reaction. */
-  int *number_of_electrons; /*!< Number of electrons released for each
-                               reaction. */
-  ChimesFloat *sigmaPhot;   /*!< Arrays of the cross sections for each reaction
-                               and each spectrum. Units: cm^-2 */
+  int
+      *
+          number_of_electrons; /*!< Number of electrons released for each
+                                  reaction. */
+  ChimesFloat *sigmaPhot; /*!< Arrays of the cross sections for each reaction
+                             and each spectrum. Units: cm^-2 */
 } chimes_table_photoion_auger_euv;
 
 /**
@@ -504,13 +535,15 @@ extern struct chimes_photodissoc_group1_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   int *molecular_flag; /*!< Flags indicating whether each reaction involves
                           molecules. */
-  ChimesFloat *gamma;  /*!< Array of the gamma dust-shielding parameter for each
-                          reaction. */
-  ChimesFloat *rates;  /*!< Array of the rates for each reaction. */
+  ChimesFloat
+      *gamma;         /*!< Array of the gamma dust-shielding parameter for each
+                         reaction. */
+  ChimesFloat *rates; /*!< Array of the rates for each reaction. */
 } chimes_table_photodissoc_group1;
 
 /**
@@ -522,12 +555,14 @@ extern struct chimes_photodissoc_group2_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
   ChimesFloat
-      *gamma_coeff;   /*!< Parameters to calculate gamma for all reactions in
-                         this group. */
-  ChimesFloat *rates; /*!< Array of the rates for each reaction. */
+      *
+          gamma_coeff; /*!< Parameters to calculate gamma for all reactions in
+                          this group. */
+  ChimesFloat *rates;  /*!< Array of the rates for each reaction. */
 } chimes_table_photodissoc_group2;
 
 /**
@@ -539,12 +574,15 @@ extern struct chimes_H2_photodissoc_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  ChimesFloat *gamma; /*!< Array of the gamma dust-shielding parameter for each
+  ChimesFloat
+      *gamma;         /*!< Array of the gamma dust-shielding parameter for each
                          reaction. */
   ChimesFloat *rates; /*!< Array of the rates for each reaction. */
-  ChimesFloat *self_shielding; /*!< Array of the H2 self-shielding factor as a
-                                  function of temperature, H2 column density and
-                                  turbulent doppler broadening parameter. */
+  ChimesFloat
+      *
+          self_shielding; /*!< Array of the H2 self-shielding factor as a
+                             function of temperature, H2 column density and
+                             turbulent doppler broadening parameter. */
 } chimes_table_H2_photodissoc;
 
 /**
@@ -556,9 +594,11 @@ extern struct chimes_CO_photodissoc_struct {
                          molecules. */
   int *reactants;     /*!< Reactant for each reaction. */
   int *products;      /*!< Products for each reaction. */
-  int *element_incl;  /*!< Flags indicating which elements are required for each
-                         reaction. */
-  ChimesFloat *gamma; /*!< Array of the gamma dust-shielding parameter for each
+  int *
+      element_incl; /*!< Flags indicating which elements are required for each
+                       reaction. */
+  ChimesFloat
+      *gamma;         /*!< Array of the gamma dust-shielding parameter for each
                          reaction. */
   ChimesFloat *rates; /*!< Array of the rates for each reaction. */
   ChimesFloat *self_shielding; /*!< Array of the CO self-shielding factor as a
@@ -591,10 +631,12 @@ extern struct chimes_cooling_struct {
   int N_coolants_4d; /*!< Number of 4-d cooling channels. */
   int *coolants;     /*!< The species corresponding to each standard cooling
                         channel. */
-  int *coolants_2d;  /*!< The species corresponding to each 2-d cooling channel.
-                      */
-  int *coolants_4d;  /*!< The species corresponding to each 4-d cooling channel.
-                      */
+  int *
+      coolants_2d; /*!< The species corresponding to each 2-d cooling channel.
+                    */
+  int *
+      coolants_4d; /*!< The species corresponding to each 4-d cooling channel.
+                    */
   ChimesFloat
       *rates; /*!< Arrays of the rates for each standard cooling channel as a
                  function of temperature. */
@@ -622,12 +664,12 @@ extern struct chimes_cooling_struct {
   ChimesFloat *H2_cool_lowDens_HI;    /*!< Low-density H2 rovibrational cooling
                                          rate from HI collisions as a function of
                                          temperature. */
-  ChimesFloat
-      *H2_cool_lowDens_HII; /*!< Low-density H2 rovibrational cooling rate from
-                               HII collisions as a function of temperature. */
-  ChimesFloat
-      *H2_cool_lowDens_HeI; /*!< Low-density H2 rovibrational cooling rate from
-                               HeI collisions as a function of temperature. */
+  ChimesFloat *
+      H2_cool_lowDens_HII; /*!< Low-density H2 rovibrational cooling rate from
+                              HII collisions as a function of temperature. */
+  ChimesFloat *
+      H2_cool_lowDens_HeI; /*!< Low-density H2 rovibrational cooling rate from
+                              HeI collisions as a function of temperature. */
   ChimesFloat *H2_cool_lowDens_elec; /*!< Low-density H2 rovibrational cooling
                                         rate from electron collisions as a
                                         function of temperature. */
@@ -649,12 +691,13 @@ extern struct chimes_cooling_struct {
       *CO_cool_vib_Llte; /*!< CO vibrational cooling Llte as a function of
                             temperature and CO column density. */
   ChimesFloat
-      *H2O_cool_rot_hiT_L0; /*!< H2O rotational cooling high-temperature L0
-                               as a function of temperature. */
-  ChimesFloat
-      *H2O_cool_rot_hiT_Llte; /*!< H2O rotational cooling high-temperature Llte
-                                 as a function of temperature and H2O column
-                                 density. */
+      *
+          H2O_cool_rot_hiT_L0; /*!< H2O rotational cooling high-temperature L0
+                                  as a function of temperature. */
+  ChimesFloat *
+      H2O_cool_rot_hiT_Llte; /*!< H2O rotational cooling high-temperature Llte
+                                as a function of temperature and H2O column
+                                density. */
   ChimesFloat
       *H2O_cool_rot_hiT_nhalf; /*!< H2O rotational cooling high-temperature
                                   nhalf as a function of temperature and H2O
@@ -662,7 +705,8 @@ extern struct chimes_cooling_struct {
   ChimesFloat
       *H2O_cool_rot_hiT_a; /*!< H2O rotational cooling high-temperature a as a
                               function of temperature and H2O column density. */
-  ChimesFloat *H2Oortho_cool_rot_lowT_L0;   /*!< ortho-H2O rotational cooling
+  ChimesFloat
+      *H2Oortho_cool_rot_lowT_L0;           /*!< ortho-H2O rotational cooling
                                                low-temperature L0 as a function of
                                                temperature. */
   ChimesFloat *H2Oortho_cool_rot_lowT_Llte; /*!< ortho-H2O rotational cooling
@@ -674,12 +718,13 @@ extern struct chimes_cooling_struct {
                                         low-temperature nhalf as a function of
                                         temperature and H2O column density. */
   ChimesFloat
-      *H2Oortho_cool_rot_lowT_a;         /*!< ortho-H2O rotational cooling
-                                            low-temperature a as a function of
-                                            temperature and H2O column density. */
-  ChimesFloat *H2Opara_cool_rot_lowT_L0; /*!< para-H2O rotational cooling
-                                            low-temperature L0 as a function of
-                                            temperature. */
+      *H2Oortho_cool_rot_lowT_a; /*!< ortho-H2O rotational cooling
+                                    low-temperature a as a function of
+                                    temperature and H2O column density. */
+  ChimesFloat
+      *H2Opara_cool_rot_lowT_L0; /*!< para-H2O rotational cooling
+                                    low-temperature L0 as a function of
+                                    temperature. */
   ChimesFloat
       *H2Opara_cool_rot_lowT_Llte;          /*!< para-H2O rotational cooling
                                                low-temperature Llte as a function of
@@ -692,8 +737,9 @@ extern struct chimes_cooling_struct {
                                                low-temperature a as a function of
                                                temperature and H2O column density.
                                              */
-  ChimesFloat *H2O_cool_vib_L0; /*!< H2O vibrational cooling L0 as a function of
-                                   temperature. */
+  ChimesFloat
+      *H2O_cool_vib_L0; /*!< H2O vibrational cooling L0 as a function of
+                           temperature. */
   ChimesFloat *H2O_cool_vib_Llte; /*!< H2O vibrational cooling Llte as a
                                      function of temperature and H2O column
                                      density. */
@@ -751,18 +797,20 @@ extern struct chimes_redshift_dependent_UVB_struct {
   ChimesFloat
       H2_dissocJ[2]; /*!< n[12.24-13.51 eV] / (isotropic_photon_density * c)
                         from the two redshift bins. */
-  int *photoion_fuv_element_incl;       /*!< Flags indicating which elements are
-                                           required for each reaction in the
-                                           photoion_fuv group. */
-  int *photoion_euv_element_incl;       /*!< Flags indicating which elements are
-                                           required for each reaction in the
-                                           photoion_euv group. */
-  int *photoion_auger_fuv_element_incl; /*!< Flags indicating which elements are
-                                           required for each reaction in the
-                                           photoion_auger_fuv group. */
-  int *photoion_auger_euv_element_incl; /*!< Flags indicating which elements are
-                                           required for each reaction in the
-                                           photoion_auger_euv group. */
+  int *photoion_fuv_element_incl; /*!< Flags indicating which elements are
+                                     required for each reaction in the
+                                     photoion_fuv group. */
+  int *photoion_euv_element_incl; /*!< Flags indicating which elements are
+                                     required for each reaction in the
+                                     photoion_euv group. */
+  int *
+      photoion_auger_fuv_element_incl; /*!< Flags indicating which elements are
+                                          required for each reaction in the
+                                          photoion_auger_fuv group. */
+  int *
+      photoion_auger_euv_element_incl; /*!< Flags indicating which elements are
+                                          required for each reaction in the
+                                          photoion_auger_euv group. */
   struct chimes_eqm_abundances_struct eqm_abundances[2]; /*!< Equilibrium
                                                             abundance tables
                                                             from the two
@@ -791,8 +839,9 @@ struct UserData {
   int network_size;          /*!< Size of the network. */
   int mol_flag_index;        /*!< Flag for whether to exclude (0) or include (1)
                                 molecules. */
-  int case_AB_index[2]; /*!< Flags to use Case A (0) or Case B (1) recombination
-                           for HI and HeI. */
+  int case_AB_index
+      [2]; /*!< Flags to use Case A (0) or Case B (1) recombination for HI and
+              HeI. */
 };
 
 /**
@@ -807,11 +856,11 @@ struct chimes_current_rates_struct {
   ChimesFloat
       *T_dependent_rate;      /*!< Current rates for the T_dependent group. */
   ChimesFloat *constant_rate; /*!< Current rates for the constant group. */
-  ChimesFloat
-      *recombination_AB_rate_coefficient; /*!< Current rate coefficients for the
-                                             recombination_AB group. */
-  ChimesFloat *recombination_AB_rate;     /*!< Current rates for the
-                                             recombination_AB group. */
+  ChimesFloat *
+      recombination_AB_rate_coefficient; /*!< Current rate coefficients for the
+                                            recombination_AB group. */
+  ChimesFloat *recombination_AB_rate;    /*!< Current rates for the
+                                            recombination_AB group. */
   ChimesFloat *grain_recombination_rate_coefficient; /*!< Current rate
                                                         coefficients for the
                                                         grain_recombination
@@ -829,14 +878,14 @@ struct chimes_current_rates_struct {
                                                      group. */
   ChimesFloat H2_dust_formation_rate;             /*!< Current rates for the
                                                      H2_dust_formation group. */
-  ChimesFloat
-      *H2_collis_dissoc_rate_coefficient; /*!< Current rate coefficients for the
-                                             H2_collis_dissoc group. */
-  ChimesFloat *H2_collis_dissoc_rate;     /*!< Current rates for the
-                                             H2_collis_dissoc group. */
-  ChimesFloat H2_collis_dissoc_crit_H; /*!< Current critical densities from HI
-                                          collisions for the H2_collis_dissoc
-                                          group. */
+  ChimesFloat *
+      H2_collis_dissoc_rate_coefficient; /*!< Current rate coefficients for the
+                                            H2_collis_dissoc group. */
+  ChimesFloat *H2_collis_dissoc_rate;    /*!< Current rates for the
+                                            H2_collis_dissoc group. */
+  ChimesFloat H2_collis_dissoc_crit_H;   /*!< Current critical densities from HI
+                                            collisions for the H2_collis_dissoc
+                                            group. */
   ChimesFloat
       H2_collis_dissoc_crit_H2; /*!< Current critical densities from H2
                                    collisions for the H2_collis_dissoc group. */
@@ -865,8 +914,9 @@ struct chimes_current_rates_struct {
                                          photoion_euv group. */
   ChimesFloat
       *photoion_euv_rate; /*!< Current rates for the photoion_euv group. */
-  ChimesFloat *photoion_euv_epsilon; /*!< Current excess photon energies for the
-                                        photoion_euv group. */
+  ChimesFloat
+      *photoion_euv_epsilon; /*!< Current excess photon energies for the
+                                photoion_euv group. */
   ChimesFloat *photoion_euv_heat_rate; /*!< Current heating rates for the
                                           photoion_euv group. */
   ChimesFloat
@@ -891,19 +941,21 @@ struct chimes_current_rates_struct {
       photodissoc_group2_shield_factor; /*!< Current shield factors for the
                                            photodissoc_group2 group. */
   ChimesFloat
-      *photodissoc_group2_rate_coefficient;  /*!< Current rate coefficients for
-                                                the photodissoc_group2 group. */
-  ChimesFloat *photodissoc_group2_rate;      /*!< Current rates for the
-                                                photodissoc_group2 group. */
-  ChimesFloat *H2_photodissoc_shield_factor; /*!< Current shield factors for the
-                                                H2_photodissoc group. */
+      *photodissoc_group2_rate_coefficient; /*!< Current rate coefficients for
+                                               the photodissoc_group2 group. */
+  ChimesFloat *photodissoc_group2_rate;     /*!< Current rates for the
+                                               photodissoc_group2 group. */
+  ChimesFloat
+      *H2_photodissoc_shield_factor; /*!< Current shield factors for the
+                                        H2_photodissoc group. */
   ChimesFloat
       *H2_photodissoc_rate_coefficient; /*!< Current rate coefficients for the
                                            H2_photodissoc group. */
   ChimesFloat
       *H2_photodissoc_rate; /*!< Current rates for the H2_photodissoc group. */
-  ChimesFloat *CO_photodissoc_shield_factor; /*!< Current shield factors for the
-                                                CO_photodissoc group. */
+  ChimesFloat
+      *CO_photodissoc_shield_factor; /*!< Current shield factors for the
+                                        CO_photodissoc group. */
   ChimesFloat
       *CO_photodissoc_rate_coefficient; /*!< Current rate coefficients for the
                                            CO_photodissoc group. */
@@ -948,6 +1000,7 @@ void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars,
                            struct globalVariables *myGlobalVars);
 
 // init_chimes.c
+void chimes_exit_default(void);
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars,
                                     struct globalVariables *myGlobalVars);
 void free_gas_abundances_memory(struct gasVariables *myGasVars,
@@ -999,6 +1052,9 @@ void set_species_structures(struct Species_Structure *mySpecies,
                             struct gasVariables *myGasVars, int *total_network,
                             int *nonmolecular_network,
                             struct globalVariables *myGlobalVars);
+void zero_molecular_abundances(struct Species_Structure *mySpecies,
+                               struct gasVariables *myGasVars,
+                               struct globalVariables *myGlobalVars);
 void update_rate_coefficients(struct gasVariables *myGasVars,
                               struct globalVariables *myGlobalVars,
                               struct UserData data, int mode);
