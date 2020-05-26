@@ -137,6 +137,7 @@ swift_box_mean_Fe_z = zeros(n_snapshots)
 swift_internal_energy = zeros(n_snapshots)
 swift_kinetic_energy = zeros(n_snapshots)
 swift_total_energy = zeros(n_snapshots)
+swift_IronMassFromSNIa = zeros(n_snapshots)
 swift_mean_u_start = 0.
 t = zeros(n_snapshots)
 z = zeros(n_snapshots)
@@ -156,6 +157,7 @@ for i in range(n_snapshots):
         AGB_mass = sim["/PartType0/MassesFromAGB"][:]
         SNII_mass = sim["/PartType0/MassesFromSNII"][:]
         SNIa_mass = sim["/PartType0/MassesFromSNIa"][:]
+        swift_IronMassFromSNIa[i] = np.sum(SNIa_mass)
 
         swift_box_gas_mass_AGB[i] = np.sum(AGB_mass)
         swift_box_gas_mass_SNII[i] = np.sum(SNII_mass)
@@ -191,9 +193,16 @@ for i in range(n_snapshots):
             swift_box_gas_Eu_mass_CEJSN[i] = 0.
             swift_box_gas_Eu_mass_Collapsar[i] = 0.
 
-        #temp = sim["/PartType0/MeanMetalWeightedRedshifts"][:]
-        swift_box_mean_Z_z[i] = np.max(sim["/PartType0/MeanMetalWeightedRedshifts"][:])
-        swift_box_mean_Fe_z[i] = np.max(sim["/PartType0/MeanIronWeightedRedshifts"][:])
+        WeightedTime = sim["/PartType0/MeanMetalWeightedRedshift"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Z_z[i] = np.sum(WeightedTime * metallicities) / np.sum(metallicities)
+        swift_box_mean_Z_z[i] *= unit_time_in_cgs / Gyr_in_cgs
+
+        IronFraction = sim["/PartType0/IronMassFractionsFromSNIa"][:]
+        WeightedTime = sim["/PartType0/MeanIronWeightedRedshift"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Fe_z[i] = np.sum(WeightedTime * IronFraction) / np.sum(IronFraction)
+        swift_box_mean_Fe_z[i] *= unit_time_in_cgs / Gyr_in_cgs
             
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
@@ -276,16 +285,16 @@ m_Z = swift_box_gas_metal_mass - swift_box_gas_metal_mass[0]
 m_Z *= unit_mass_in_cgs / Msun_in_cgs
 delta_m_Z = m_Z[1:] - m_Z[:-1]
 
-m_Fe = swift_element_mass[:,8] - swift_element_mass[0,8]
+m_Fe = swift_IronMassFromSNIa - swift_IronMassFromSNIa[0]
 m_Fe *= unit_mass_in_cgs / Msun_in_cgs
 delta_m_Fe = m_Fe[1:] - m_Fe[:-1]
 
-theory_z_Z = np.zeros(np.size(z))
-theory_z_Fe = np.zeros(np.size(z))
-for i in range(np.size(z) - 1):
-    theory_z_Z[i] = np.sum(delta_m_Z[:i] * z[:i]) / m_Z[i]
-    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * z[:i]) / m_Fe[i]
-    
+theory_z_Z = np.zeros(np.size(t))
+theory_z_Fe = np.zeros(np.size(t))
+for i in range(np.size(t) - 1):
+    theory_z_Z[i] = np.sum(delta_m_Z[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Z[i]
+    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Fe[i]
+
 ###################################################################################################################
 
 # Plot the interesting quantities
