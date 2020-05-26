@@ -47,13 +47,12 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
   int i, j, NHI_index, NH_eff_index, NHeI_index, NHe_eff_index, NCO_index,
       NH2_index;
   ChimesFloat dNHI, dNH_eff, dNHeI, dNHe_eff, dNCO, dNH2;
-  ChimesFloat flux, G0, S1, S2, S3, log_NCO, log_NH2;
+  ChimesFloat flux, G0, log_NCO, log_NH2;
 
-  // NOTE: the individual E factors can be <1e-38, so they need to
-  // be in double precision. However, when we take the ratio
-  // (E1 + E2 + E3) / (E4 + E5 + E6) we can cast back to
-  // ChimesFloat
-  double E1, E2, E3, E4, E5, E6;
+  // NOTE: individual shield factor components can be <1e-38,
+  // so they need to be in double precision. However, when we
+  // combine them at the end we can cast back to ChimesFloat.
+  double S1, S2, S3, E1, E2, E3, E4, E5, E6;
   update_rate_coefficients(myGasVars, myGlobalVars, data, 1);
 
   const int N_spec = myGlobalVars->N_spectra;
@@ -98,21 +97,21 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
            i++) {
         for (j = 0; j < myGlobalVars->N_spectra; j++) {
           if (chimes_table_photoion_euv.E_thresh[i] < 15.4f)
-            S1 = chimes_exp10(chimes_interpol_4d_fix_xyz(
+            S1 = chimes_exp10_dbl((double)chimes_interpol_4d_fix_xyz(
                 chimes_table_photoion_euv.shieldFactor_1D, i, j, 0, NHI_index,
                 dNHI, N_spec, 3, N_ColDens));
           else
             S1 = 0.0;
 
           if (chimes_table_photoion_euv.E_thresh[i] < 54.42f)
-            S2 = chimes_exp10(chimes_interpol_5d_fix_xyz(
+            S2 = chimes_exp10_dbl((double)chimes_interpol_5d_fix_xyz(
                 chimes_table_photoion_euv.shieldFactor_2D, i, j, 0,
                 NH_eff_index, NHeI_index, dNH_eff, dNHeI, N_spec, 6, N_ColDens,
                 N_ColDens));
           else
             S2 = 0.0;
 
-          S3 = chimes_exp10(chimes_interpol_5d_fix_xyz(
+          S3 = chimes_exp10_dbl((double)chimes_interpol_5d_fix_xyz(
               chimes_table_photoion_euv.shieldFactor_2D, i, j, 1, NH_eff_index,
               NHe_eff_index, dNH_eff, dNHe_eff, N_spec, 6, N_ColDens,
               N_ColDens));
@@ -120,7 +119,7 @@ void set_initial_rate_coefficients(struct gasVariables *myGasVars,
           data.chimes_current_rates
               ->photoion_euv_shield_factor[chimes_flatten_index_2d(
                   j, i, chimes_table_photoion_euv.N_reactions[1])] =
-              S1 + S2 + S3;
+              (ChimesFloat)(S1 + S2 + S3);
         }
       }
 
@@ -1396,6 +1395,278 @@ void set_species_structures(struct Species_Structure *mySpecies,
       if (mySpecies[myGlobalVars->speciesIndices[i]].include_species == 1)
         *nonmolecular_network -= 1;
     }
+  }
+}
+
+/**
+ * @brief Zeroes the molecular species.
+ *
+ * If the temperature is above T_mol, we need
+ * to zero the abundances of all molecules.
+ * Their constituent elements are set to the
+ * neutral ionisation state. This is necessary
+ * because the rates of many of the molecular
+ * reactions cannot be safely extrapolated to
+ * high temperatures.
+ *
+ * @param mySpecies The #Species_Structure struct.
+ * @param myGasVars The #gasVariables struct.
+ * @param myGlobalVars The #globalVariables struct.
+ */
+void zero_molecular_abundances(struct Species_Structure *mySpecies,
+                               struct gasVariables *myGasVars,
+                               struct globalVariables *myGlobalVars) {
+  if (myGlobalVars->speciesIndices[sp_H2] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H2]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] >
+        CHIMES_FLT_MIN)
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]];
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_H2p] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H2p]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2p]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_H3p] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H3p]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3p]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_OH] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_OH]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_OH]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_H2O] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H2O]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2O]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_C2] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_C2]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] >
+        CHIMES_FLT_MIN)
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]];
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_C2]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_O2] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_O2]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] >
+        CHIMES_FLT_MIN)
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]];
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_HCOp] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_HCOp]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_HCOp]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CH] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CH]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CH2] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CH2]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CH3p] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CH3p]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH3p]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CO] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CO]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CO]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CHp] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CHp]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CHp]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_CH2p] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_CH2p]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_CH2p]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_OHp] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_OHp]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_OHp]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_H2Op] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H2Op]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H2Op]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_H3Op] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_H3Op]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          3.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_H3Op]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_COp] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_COp]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_COp]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_HOCp] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_HOCp]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_CI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_HI]] +=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_HOCp]] = 0.0f;
+  }
+
+  if (myGlobalVars->speciesIndices[sp_O2p] > -1) {
+    mySpecies[myGlobalVars->speciesIndices[sp_O2p]].include_species = 0;
+    if (myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] >
+        CHIMES_FLT_MIN) {
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_OI]] +=
+          2.0f * myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]];
+      myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]] -=
+          myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]];
+    }
+    myGasVars->abundances[myGlobalVars->speciesIndices[sp_O2p]] = 0.0f;
   }
 }
 
