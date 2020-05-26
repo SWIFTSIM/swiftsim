@@ -27,6 +27,13 @@ Scheduling:
 
 runner_doiact_functions_stars_veldisp.h has checks for STARS_MOSAICS (since requires new_star flag), in other cases we probably don't want to schedule the veldisp section
 
+
+Restrict the number of MOSAICS/cluster properties in spart
+* Only need one of dmshock/dmevap
+* A number used only once at star formation timestep, check which we want to store
+* Remove the ones just used for testing
+
+
 NOTES:
 ------
 
