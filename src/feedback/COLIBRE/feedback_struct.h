@@ -19,6 +19,9 @@
 #ifndef SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 #define SWIFT_FEEDBACK_STRUCT_COLIBRE_H
 
+/* Define the maximum number of rays used in SNII isotropic thermal-kinetic
+ * feedback */
+#define colibre_feedback_number_of_rays 1
 #include "chemistry_struct.h"
 
 /**
@@ -43,6 +46,17 @@ struct feedback_spart_data {
 
       /*! Total mass (unweighted) of neighbouring gas particles */
       float ngb_mass;
+
+      /*! Total (unweighted) number gas neighbours in the stellar kernel */
+      int ngb_N;
+
+      /*! Array of the miminum arclengths between the rays
+      and the gas neighbours, used in SNII feedback  */
+      float min_arclength[colibre_feedback_number_of_rays];
+
+      /*! Same as above but for the mirror particles used
+      in SNII kinetic feedback */
+      float min_arclength_mirror[colibre_feedback_number_of_rays];
 
     } to_collect;
 
@@ -94,26 +108,33 @@ struct feedback_spart_data {
       /*! Energy change due to thermal and kinetic energy of ejecta */
       float energy;
 
-      /*! Probability to heating neighbouring gas particle for SNII feedback */
+      /*! Probability to heat neighbouring gas particle in SNII feedback */
       float SNII_heating_probability;
 
-      /*! Probability to kick neighbouring gas particle for SNII feedback */
+      /*! Probability to kick a pair of two neighbouring gas particles in SNII
+       * feedback */
       float SNII_kick_probability;
 
-      /*! Change in gas particle internal energy from SNII feedback */
+      /*! Change in gas-particle internal energy from SNII feedback */
       float SNII_delta_u;
 
-      /*! Change in gas particle velocity from SNII feedback */
-      float SNII_delta_v;
+      /*! Total kinetic energy to distribute in SNII feedback per time step */
+      float SNII_E_kinetic;
 
-      /*! Probability to heating neighbouring gas particle for SNIa feedback */
+      /*! Probability to heat neighbouring gas particle in SNIa feedback */
       float SNIa_heating_probability;
 
-      /*! Change in energy from SNIa feedback energy injection */
+      /*! Change in gas-particle internal energy from SNIa feedback */
       float SNIa_delta_u;
 
       /*! Age of star particle in Myr when SNII goes off */
       float SNII_star_age_Myr;
+
+      /*! Number of SNII heating events per time-step */
+      int SNII_number_of_heating_events;
+
+      /*! Number of SNII kick events per time-step */
+      int SNII_number_of_kick_events;
 
       /*! HII region timer in SU (time since BB for cosmo runs)*/
       float HIIregion_endtime;
@@ -135,6 +156,24 @@ struct feedback_spart_data {
 
     } to_distribute;
   };
+
+  /*! Arrays employed in SNII isotropic thermal-kinetic feedback */
+
+  /*! Arrays containing gas  particle IDs that have the mimimal arclengths
+  with respect to each of the (colibre_feedback_number_of_rays) rays !*/
+  long long part_id_with_min_arclength[colibre_feedback_number_of_rays];
+  long long part_id_with_min_arclength_mirror[colibre_feedback_number_of_rays];
+
+  /*! Arrays used to account for relative star-gas motion
+  in SNII kinetic feedback */
+
+  /*! Particle masses in SNII kinetic feedback */
+  float mass_true[colibre_feedback_number_of_rays];
+  float mass_mirror[colibre_feedback_number_of_rays];
+
+  /*! Particle velocities in SNII kinetic feedback */
+  float v_true[colibre_feedback_number_of_rays][3];
+  float v_mirror[colibre_feedback_number_of_rays][3];
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_COLIBRE_H */

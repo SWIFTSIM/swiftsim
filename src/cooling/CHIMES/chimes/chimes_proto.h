@@ -46,6 +46,10 @@ typedef double ChimesFloat;
 typedef float ChimesFloat;
 #endif
 
+/*!< Function pointer that allows the User to specify their own custom exit
+ * function. */
+void (*chimes_exit)(void);
+
 /**
  * Structure containing the variables that
  * are specific to each gas particle/cell.
@@ -948,6 +952,7 @@ void chimes_print_gas_vars(FILE *log_file, struct gasVariables *myGasVars,
                            struct globalVariables *myGlobalVars);
 
 // init_chimes.c
+void chimes_exit_default(void);
 void allocate_gas_abundances_memory(struct gasVariables *myGasVars,
                                     struct globalVariables *myGlobalVars);
 void free_gas_abundances_memory(struct gasVariables *myGasVars,
@@ -999,6 +1004,9 @@ void set_species_structures(struct Species_Structure *mySpecies,
                             struct gasVariables *myGasVars, int *total_network,
                             int *nonmolecular_network,
                             struct globalVariables *myGlobalVars);
+void zero_molecular_abundances(struct Species_Structure *mySpecies,
+                               struct gasVariables *myGasVars,
+                               struct globalVariables *myGlobalVars);
 void update_rate_coefficients(struct gasVariables *myGasVars,
                               struct globalVariables *myGlobalVars,
                               struct UserData data, int mode);

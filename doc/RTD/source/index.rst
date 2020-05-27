@@ -28,11 +28,12 @@ difference is the parameter file that will need to be adapted for SWIFT.
    random
    Planetary/index
    FriendsOfFriends/index
+   VELOCIraptorInterface/index
+   LineOfSights/index
    EquationOfState/index
    ExternalPotentials/index
    NewOption/index
    Task/index
-   VELOCIraptorInterface/index
    AnalysisTools/index
    Logger/index
    ImplementationDetails/index

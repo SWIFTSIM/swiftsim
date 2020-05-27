@@ -59,7 +59,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     velociraptor_struct.h velociraptor_io.h random.h memuse.h mpiuse.h memuse_rnodes.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
-    space_unique_id.h \
+    space_unique_id.h line_of_sight.h \
     event_logger.h event_logger_struct.h event_logger_core.h
 
 # source files for EAGLE cooling
@@ -134,7 +134,7 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     outputlist.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
-    hashmap.c pressure_floor.c space_unique_id.c \
+    hashmap.c pressure_floor.c space_unique_id.c line_of_sight.c \
     $(QLA_COOLING_SOURCES) \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
     $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
@@ -314,7 +314,7 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 	         feedback/COLIBRE/feedback.h feedback/COLIBRE/feedback_struct.h feedback/COLIBRE/feedback_iact.h \
                  feedback/COLIBRE/feedback_properties.h feedback/COLIBRE/imf.h feedback/COLIBRE/interpolate.h \
                  feedback/COLIBRE/yield_tables.h feedback/COLIBRE/SNIa_DTD.h feedback/COLIBRE/SNIa_DTD_struct.h \
-		 feedback/COLIBRE/feedback_tables.h \
+		 feedback/COLIBRE/feedback_tables.h feedback/COLIBRE/arclength.h \
 		 feedback/GEAR/stellar_evolution_struct.h feedback/GEAR/stellar_evolution.h \
 		 feedback/GEAR/feedback.h feedback/GEAR/feedback_iact.h \
 		 feedback/GEAR/feedback_properties.h feedback/GEAR/feedback_struct.h \
