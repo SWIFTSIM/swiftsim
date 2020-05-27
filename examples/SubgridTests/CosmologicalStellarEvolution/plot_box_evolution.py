@@ -193,12 +193,12 @@ for i in range(n_snapshots):
             swift_box_gas_Eu_mass_CEJSN[i] = 0.
             swift_box_gas_Eu_mass_Collapsar[i] = 0.
 
-        WeightedTime = sim["/PartType0/MeanMetalWeightedRedshift"][:]
+        WeightedTime = sim["/PartType0/MeanMetalWeightedRedshifts"][:]
         WeightedTime[WeightedTime<0] = 0
         swift_box_mean_Z_z[i] = np.sum(WeightedTime * (metallicities-Z_star)) / np.sum(metallicities-Z_star)
 
         IronFraction = sim["/PartType0/IronMassFractionsFromSNIa"][:]
-        WeightedTime = sim["/PartType0/MeanIronWeightedRedshift"][:]
+        WeightedTime = sim["/PartType0/MeanIronWeightedRedshifts"][:]
         WeightedTime[WeightedTime<0] = 0
         swift_box_mean_Fe_z[i] = np.sum(WeightedTime * IronFraction) / np.sum(IronFraction)
         
