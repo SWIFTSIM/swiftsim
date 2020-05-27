@@ -197,8 +197,8 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
       bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This gas neighbour is close enough that we can consider its potential
-     for repositioning */
+  /* Is this gas neighbour close enough that we can consider its potential
+     for repositioning? */
   if (r2 < max_dist_repos2) {
 
     /* Flag to check whether neighbour is slow enough to be considered
@@ -325,18 +325,30 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This BH neighbour is close enough that we can consider its potential
-     for repositioning */
+  /* Is this BH neighbour close enough that we can consider its potential
+     for repositioning? */
   if (r2 < max_dist_repos2) {
 
     /* Flag to check whether neighbour is slow enough to be considered
      * as repositioning target. Always true if velocity cut switched off */
     int neighbour_is_slow_enough = 1;
-    if (bh_props->max_reposition_velocity_ratio > 0) {
+    if (bh_props->with_reposition_velocity_threshold) {
 
-      const float v2_max = bh_props->max_reposition_velocity_ratio *
-                           bh_props->max_reposition_velocity_ratio *
-                           bi->sound_speed_gas * bi->sound_speed_gas;
+      /* Compute the maximum allowed velocity */
+      float v2_max = bh_props->max_reposition_velocity_ratio *
+                     bh_props->max_reposition_velocity_ratio *
+                     bi->sound_speed_gas * bi->sound_speed_gas;
+
+      /* If desired, limit the value of the threshold (v2_max) to be no
+       * smaller than a user-defined value */
+      if (bh_props->min_reposition_velocity_threshold > 0) {
+        const float v2_min_thresh =
+            bh_props->min_reposition_velocity_threshold *
+            bh_props->min_reposition_velocity_threshold;
+        v2_max = max(v2_max, v2_min_thresh);
+      }
+
+      /* Is the neighbour too fast to jump to? */
       if (v2_pec >= v2_max) neighbour_is_slow_enough = 0;
     }
 
