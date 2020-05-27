@@ -125,6 +125,9 @@ swift_box_gas_Eu_mass_Collapsar = zeros(n_snapshots)
 swift_internal_energy = zeros(n_snapshots)
 swift_kinetic_energy = zeros(n_snapshots)
 swift_total_energy = zeros(n_snapshots)
+swift_box_mean_Z_z = zeros(n_snapshots)
+swift_box_mean_Fe_z = zeros(n_snapshots)
+swift_IronMassFromSNIa = zeros(n_snapshots)
 swift_mean_u_start = 0.
 t = zeros(n_snapshots)
 
@@ -140,6 +143,7 @@ for i in range(n_snapshots):
         AGB_mass = sim["/PartType0/MassesFromAGB"][:]
         SNII_mass = sim["/PartType0/MassesFromSNII"][:]
         SNIa_mass = sim["/PartType0/MassesFromSNIa"][:]
+        swift_IronMassFromSNIa[i] = np.sum(SNIa_mass)
 
         swift_box_gas_mass_AGB[i] = np.sum(AGB_mass)
         swift_box_gas_mass_SNII[i] = np.sum(SNII_mass)
@@ -181,6 +185,17 @@ for i in range(n_snapshots):
         swift_internal_energy[i] = np.sum(masses * u)
         swift_kinetic_energy[i] = np.sum(0.5 * masses * v2)
         swift_total_energy[i] = swift_kinetic_energy[i] + swift_internal_energy[i]
+        
+        WeightedTime = sim["/PartType0/MeanMetalWeightedTimes"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Z_z[i] = np.sum(WeightedTime * (metallicities-Z_star)) / np.sum(metallicities-Z_star)
+        swift_box_mean_Z_z[i] *= unit_time_in_cgs / Gyr_in_cgs
+        
+        IronFraction = sim["/PartType0/IronMassFractionsFromSNIa"][:]
+        WeightedTime = sim["/PartType0/MeanIronWeightedTimes"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Fe_z[i] = np.sum(WeightedTime * IronFraction) / np.sum(IronFraction)
+        swift_box_mean_Fe_z[i] *= unit_time_in_cgs / Gyr_in_cgs
 
         if i == 0:
                 swift_mean_u_start = np.mean(u)
@@ -238,6 +253,25 @@ Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] *
 Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun
 
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
+
+
+##################
+
+m_Z = swift_box_gas_metal_mass - swift_box_gas_metal_mass[0]
+m_Z *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Z = m_Z[1:] - m_Z[:-1]
+
+m_Fe = swift_IronMassFromSNIa - swift_IronMassFromSNIa[0]
+m_Fe *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Fe = m_Fe[1:] - m_Fe[:-1]
+
+theory_z_Z = np.zeros(np.size(t))
+theory_z_Fe = np.zeros(np.size(t))
+for i in range(np.size(t) - 1):
+    theory_z_Z[i] = np.sum(delta_m_Z[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Z[i]
+    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Fe[i]
+
+###################
 
 # Plot the interesting quantities
 figure()
@@ -309,5 +343,14 @@ xlabel("${\\rm Time~[Gyr]}$", labelpad=0)
 ylabel("Change in total metal mass of gas particles ${[\\rm M_\\odot]}$", labelpad=2)
 ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
+# Box mass-weighted redshift --------------------------------
+subplot(236)
+plot(t[3:] * unit_time_in_cgs / Gyr_in_cgs, swift_box_mean_Fe_z[3:], linewidth=0.5, color='C1', label='Fe')
+plot(t[3:] * unit_time_in_cgs / Gyr_in_cgs, theory_z_Fe[3:], linewidth=0.5, color='C1', ls='--')
+plot(t[3:] * unit_time_in_cgs / Gyr_in_cgs, swift_box_mean_Z_z[3:], linewidth=0.5, color='C0', label='Z')
+plot(t[3:] * unit_time_in_cgs / Gyr_in_cgs, theory_z_Z[3:], linewidth=0.5, color='C0', ls='--')
+xlabel("${\\rm Time~[Gyr]}$", labelpad=0)
+ylabel("Mean time of enrichment~[Gyr]", labelpad=2)
+legend(loc="upper left", ncol=1, fontsize=8)
 savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
 

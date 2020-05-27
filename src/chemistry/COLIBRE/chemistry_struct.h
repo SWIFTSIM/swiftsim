@@ -60,6 +60,9 @@ struct chemistry_global_data {
  * @brief Chemical abundances traced by the #part in the COLIBRE model.
  */
 struct chemistry_part_data {
+  
+  /* Initial metal mass from params*/
+  float initial_metal_mass;
 
   /*! Fraction of the particle mass in a given element */
   float metal_mass_fraction[chemistry_element_count];

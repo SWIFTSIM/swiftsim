@@ -195,15 +195,13 @@ for i in range(n_snapshots):
 
         WeightedTime = sim["/PartType0/MeanMetalWeightedRedshift"][:]
         WeightedTime[WeightedTime<0] = 0
-        swift_box_mean_Z_z[i] = np.sum(WeightedTime * metallicities) / np.sum(metallicities)
-        swift_box_mean_Z_z[i] *= unit_time_in_cgs / Gyr_in_cgs
+        swift_box_mean_Z_z[i] = np.sum(WeightedTime * (metallicities-Z_star)) / np.sum(metallicities-Z_star)
 
         IronFraction = sim["/PartType0/IronMassFractionsFromSNIa"][:]
         WeightedTime = sim["/PartType0/MeanIronWeightedRedshift"][:]
         WeightedTime[WeightedTime<0] = 0
         swift_box_mean_Fe_z[i] = np.sum(WeightedTime * IronFraction) / np.sum(IronFraction)
-        swift_box_mean_Fe_z[i] *= unit_time_in_cgs / Gyr_in_cgs
-            
+        
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
         u = sim["/PartType0/InternalEnergies"][:]
@@ -289,11 +287,12 @@ m_Fe = swift_IronMassFromSNIa - swift_IronMassFromSNIa[0]
 m_Fe *= unit_mass_in_cgs / Msun_in_cgs
 delta_m_Fe = m_Fe[1:] - m_Fe[:-1]
 
-theory_z_Z = np.zeros(np.size(t))
-theory_z_Fe = np.zeros(np.size(t))
-for i in range(np.size(t) - 1):
-    theory_z_Z[i] = np.sum(delta_m_Z[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Z[i]
-    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * t[:i] * unit_time_in_cgs / Gyr_in_cgs) / m_Fe[i]
+theory_z_Z = np.zeros(np.size(z))
+theory_z_Fe = np.zeros(np.size(z))
+for i in range(np.size(z) - 1):
+    theory_z_Z[i] = np.sum(delta_m_Z[:i] * z[:i]) / m_Z[i]
+    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * z[:i]) / m_Fe[i]
+
 
 ###################################################################################################################
 
