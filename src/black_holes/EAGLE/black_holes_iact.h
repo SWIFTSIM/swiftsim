@@ -393,17 +393,14 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
   if ((bj->subgrid_mass < bi->subgrid_mass) ||
       (bj->subgrid_mass == bi->subgrid_mass && bj->id < bi->id)) {
 
-    /* Merge if gravitationally bound AND if within max distance
-     * Note that we use the kernel support here as the size and not just the
-     * smoothing length */
-
     /* Maximum velocity difference between BHs allowed to merge */
     float v2_threshold;
 
     if (bh_props->merger_threshold_type == 0) {
 
       /* 'Old-style' merger threshold using circular velocity at the
-       * edge of the more massive BH's kernel */
+       * edge of the more massive BH's kernel (note: we are using the kernel 
+       * support radius here and not just the smoothing length). */
       v2_threshold = G_Newton * M / (kernel_gamma * h);
     } else {
 
