@@ -27,7 +27,8 @@ A few functions really need this order and some other do not, but I will not do 
 Let's go over a simple example with the field ``new_field`` that is supposed to be already implemented in the ``gparts`` as a float.
 We will call it ``NewField`` in the logger and in python.
 
-For the writer, we will need to first declare the new field in order to correctly construct the masks:
+First let's take a look at the writer.
+When starting a simulation, the list of possible masks (value and data size) needs to be initialized:
 
 .. code-block:: c
 
@@ -38,15 +39,13 @@ For the writer, we will need to first declare the new field in order to correctl
     }
 
 Here n is the number of fields written before the addition of the new field.
-Before writing the particle inside the logfile, we need to compute the buffer size.
-As we need to decide which fields will be written, the mask is computed at the same time:
+The first step when writing a particle inside the logfile is to compute the size of the record.
+At the same time, we can compute the record's mask:
  
 .. code-block:: c
 
    INLINE static void gravity_logger_prepare_to_write_particle(...) {
      /* Previous code */
-
-     /* Add the mask to the list */
      *mask |= logger_add_field_to_mask(masks[1], "NewField", buffer_size);
    }
 
@@ -92,7 +91,7 @@ in the logfile and the code. This is done in the following function:
    }
 
 
-If you wish, you can update the print function and initialize the new fields in order
+If you wish, you can update the print function and initialize the new field in order
 to have a safe behavior when the field is not read.
 Then you will need to read the new field from the buffer:
 
