@@ -77,7 +77,6 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
     outputlist->types = NULL;
   }
 
-
   /* Read header */
   if (getline(&line, &len, file) == -1)
     error("Unable to read header in file '%s'", filename);
@@ -239,13 +238,13 @@ void output_list_read_next_time(struct output_list *t, const struct engine *e,
       const double next_time =
           exp(*ti_next * e->time_base) * e->cosmology->a_begin;
       if (e->verbose)
-        message("Next output time for %s set to a=%e, type=%d.",
-                name, next_time, *type_next);
+        message("Next output time for %s set to a=%e, type=%d.", name,
+                next_time, *type_next);
     } else {
       const double next_time = *ti_next * e->time_base + e->time_begin;
       if (e->verbose)
-        message("Next output time for %s set to t=%e, type=%d.",
-                name, next_time, *type_next);
+        message("Next output time for %s set to t=%e, type=%d.", name,
+                next_time, *type_next);
     }
   }
 }

@@ -1260,12 +1260,12 @@ void prepare_file(struct engine* e, const char* fileName,
      * particle type */
     char field_all[PARSER_MAX_LINE_SIZE];
     if (e->type_next_snapshot > 0)
-      sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
-              e->type_next_snapshot, part_type_names[ptype]);
+      sprintf(field_all, "SelectOutput%d:TypeDefault_%s", e->type_next_snapshot,
+              part_type_names[ptype]);
     else
       sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);
-    const int ptype_default_should_write = parser_get_opt_param_int(params,
-      field_all, 1);
+    const int ptype_default_should_write =
+        parser_get_opt_param_int(params, field_all, 1);
 
     /* Prepare everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
@@ -1273,15 +1273,14 @@ void prepare_file(struct engine* e, const char* fileName,
       /* Did the user cancel this field? */
       char field[PARSER_MAX_LINE_SIZE];
       if (e->type_next_snapshot > 0)
-        sprintf(field, "SelectOutput%d:%.*s_%s",
-                e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
-                part_type_names[ptype]);
+        sprintf(field, "SelectOutput%d:%.*s_%s", e->type_next_snapshot,
+                FIELD_BUFFER_SIZE, list[i].name, part_type_names[ptype]);
       else
         sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
                 part_type_names[ptype]);
 
-      int should_write = parser_get_opt_param_int(
-        params, field, ptype_default_should_write);
+      int should_write =
+          parser_get_opt_param_int(params, field, ptype_default_should_write);
 
       if (should_write)
         prepare_array_parallel(e, h_grp, fileName, xmfFile, partTypeGroupName,
@@ -1789,12 +1788,12 @@ void write_output_parallel(struct engine* e,
      * particle type */
     char field_all[PARSER_MAX_LINE_SIZE];
     if (e->type_next_snapshot > 0)
-      sprintf(field_all, "SelectOutput%d:TypeDefault_%s",
-              e->type_next_snapshot, part_type_names[ptype]);
+      sprintf(field_all, "SelectOutput%d:TypeDefault_%s", e->type_next_snapshot,
+              part_type_names[ptype]);
     else
       sprintf(field_all, "SelectOutput:TypeDefault_%s", part_type_names[ptype]);
-    const int ptype_default_should_write = parser_get_opt_param_int(params,
-      field_all, 1);
+    const int ptype_default_should_write =
+        parser_get_opt_param_int(params, field_all, 1);
 
     /* Write everything that is not cancelled */
     for (int i = 0; i < num_fields; ++i) {
@@ -1802,15 +1801,14 @@ void write_output_parallel(struct engine* e,
       /* Did the user cancel this field? */
       char field[PARSER_MAX_LINE_SIZE];
       if (e->type_next_snapshot > 0)
-        sprintf(field, "SelectOutput%d:%.*s_%s",
-                e->type_next_snapshot, FIELD_BUFFER_SIZE, list[i].name,
-                part_type_names[ptype]);
+        sprintf(field, "SelectOutput%d:%.*s_%s", e->type_next_snapshot,
+                FIELD_BUFFER_SIZE, list[i].name, part_type_names[ptype]);
       else
         sprintf(field, "SelectOutput:%.*s_%s", FIELD_BUFFER_SIZE, list[i].name,
                 part_type_names[ptype]);
 
-      int should_write = parser_get_opt_param_int(params, field,
-                                                  ptype_default_should_write);
+      int should_write =
+          parser_get_opt_param_int(params, field, ptype_default_should_write);
 
       if (should_write)
         write_array_parallel(e, h_grp, fileName, partTypeGroupName, list[i],

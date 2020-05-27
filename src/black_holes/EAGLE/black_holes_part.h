@@ -140,7 +140,6 @@ struct bpart {
   /*! Total (physical) angular momentum accumulated by swallowing particles */
   float swallowed_angular_momentum[3];
 
-
   /*! Union for the last high Eddington ratio point in time */
   union {
 

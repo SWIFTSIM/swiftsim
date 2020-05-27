@@ -3586,23 +3586,19 @@ void engine_dump_snapshot(struct engine *e) {
   /* Be verbose about this */
   if (e->nodeID == 0) {
     if (e->policy & engine_policy_cosmology)
-      message("Dumping snapshot (type=%d) at a=%e",
-              e->type_next_snapshot,
+      message("Dumping snapshot (type=%d) at a=%e", e->type_next_snapshot,
               exp(e->ti_current * e->time_base) * e->cosmology->a_begin);
     else
-      message("Dumping snapshot (type=%d) at t=%e",
-              e->type_next_snapshot,
+      message("Dumping snapshot (type=%d) at t=%e", e->type_next_snapshot,
               e->ti_current * e->time_base + e->time_begin);
   }
 #else
   if (e->verbose) {
     if (e->policy & engine_policy_cosmology)
-      message("Dumping snapshot (type=%d) at a=%e",
-              e->type_next_snapshot,
+      message("Dumping snapshot (type=%d) at a=%e", e->type_next_snapshot,
               exp(e->ti_current * e->time_base) * e->cosmology->a_begin);
     else
-      message("Dumping snapshot (type=%d) at t=%e",
-              e->type_next_snapshot,
+      message("Dumping snapshot (type=%d) at t=%e", e->type_next_snapshot,
               e->ti_current * e->time_base + e->time_begin);
   }
 #endif
@@ -3629,7 +3625,7 @@ void engine_dump_snapshot(struct engine *e) {
                         e->nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL);
 #endif /* HAVE_PARALLEL_HDF5 */
   }
-#else /* not WITH_MPI */
+#else  /* not WITH_MPI */
   write_output_single(e, e->internal_units, e->snapshot_units);
 #endif /* not WITH_MPI */
 #endif /* HAVE_HDF5 */
@@ -4931,7 +4927,7 @@ void engine_compute_next_stf_time(struct engine *e) {
   if (e->output_list_stf) {
     int dummy;
     output_list_read_next_time(e->output_list_stf, e, "stf", &e->ti_next_stf,
-      &dummy);
+                               &dummy);
     return;
   }
 

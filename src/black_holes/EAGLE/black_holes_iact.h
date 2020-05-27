@@ -98,20 +98,17 @@ runner_iact_nonsym_bh_gas_density(
   bi->velocity_gas[1] += mj * dv[1] * wi;
   bi->velocity_gas[2] += mj * dv[2] * wi;
 
-  if (bh_props->with_angmom_limiter) {
-    /* Contribution to the specific angular momentum of gas, which is later
-     * converted to the circular velocity at the smoothing length */
-    bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
-    bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
-    bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
-  }
+  /* Contribution to the specific angular momentum of gas, which is later
+   * converted to the circular velocity at the smoothing length */
+  bi->circular_velocity_gas[0] += mj * wi * (dx[1] * dv[2] - dx[2] * dv[1]);
+  bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
+  bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate
      *
      * i) Calculate denominator in Bondi formula */
-    const double gas_v_phys[3] = {dv[0] * cosmo->a_inv,
-                                  dv[1] * cosmo->a_inv,
+    const double gas_v_phys[3] = {dv[0] * cosmo->a_inv, dv[1] * cosmo->a_inv,
                                   dv[2] * cosmo->a_inv};
     const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
                                gas_v_phys[1] * gas_v_phys[1] +
@@ -121,17 +118,20 @@ runner_iact_nonsym_bh_gas_density(
     const double gas_c_phys2 = gas_c_phys * gas_c_phys;
     const double denominator2 = gas_v_norm2 + gas_c_phys2;
 
+#ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-        error("Invalid denominator for gas particle %lld", pj->id);
-    double denominator_inv = 1. / sqrt(denominator2);
+      error("Invalid denominator for gas particle %lld", pj->id);
+#endif
+    const double denominator_inv = 1. / sqrt(denominator2);
 
     /* ii) Contribution of gas particle to the BH accretion rate
      *     (without constant pre-factor)
      *     N.B.: rhoj is the weighted contribution to BH gas density. */
     const float rhoj = mj * wi * cosmo->a3_inv;
-    bi->accretion_rate += rhoj * denominator_inv * denominator_inv *
-                          denominator_inv;
+    bi->accretion_rate +=
+        rhoj * denominator_inv * denominator_inv * denominator_inv;
+
   } /* End of accretion contribution calculation */
 
 #ifdef DEBUG_INTERACTIONS_BH
@@ -204,7 +204,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     /* Flag to check whether neighbour is slow enough to be considered
      * as repositioning target. Always true if velocity cut is switched off. */
     int neighbour_is_slow_enough = 1;
-    if (bh_props->max_reposition_velocity_ratio > 0) {
+    if (bh_props->with_reposition_velocity_threshold) {
 
       /* Compute relative peculiar velocity between the two BHs
        * Recall that in SWIFT v is (v_pec * a) */
@@ -213,9 +213,22 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
       const float v2 = delta_v[0] * delta_v[0] + delta_v[1] * delta_v[1] +
                        delta_v[2] * delta_v[2];
       const float v2_pec = v2 * cosmo->a2_inv;
-      const float v2_max = bh_props->max_reposition_velocity_ratio *
-                           bh_props->max_reposition_velocity_ratio *
-                           bi->sound_speed_gas * bi->sound_speed_gas;
+
+      /* Compute the maximum allowed velocity */
+      float v2_max = bh_props->max_reposition_velocity_ratio *
+                     bh_props->max_reposition_velocity_ratio *
+                     bi->sound_speed_gas * bi->sound_speed_gas;
+
+      /* If desired, limit the value of the threshold (v2_max) to be no
+       * smaller than a user-defined value */
+      if (bh_props->min_reposition_velocity_threshold > 0) {
+        const float v2_min_thresh =
+            bh_props->min_reposition_velocity_threshold *
+            bh_props->min_reposition_velocity_threshold;
+        v2_max = max(v2_max, v2_min_thresh);
+      }
+
+      /* Is the neighbour too fast to jump to? */
       if (v2_pec >= v2_max) neighbour_is_slow_enough = 0;
     }
 

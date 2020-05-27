@@ -290,7 +290,8 @@ int main(int argc, char *argv[]) {
                  handle_cmdparam, (intptr_t)&cmdps, 0),
       OPT_BOOLEAN('r', "restart", &restart, "Continue using restart files.",
                   NULL, 0, 0),
-      OPT_BOOLEAN('u', "reload-output-lists", &reload_output_lists, "Re-load "
+      OPT_BOOLEAN('u', "reload-output-lists", &reload_output_lists,
+                  "Re-load "
                   "the output lists when restarting.",
                   NULL, 0, 0),
       OPT_INTEGER('t', "threads", &nr_threads,
