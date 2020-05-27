@@ -843,12 +843,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
 
 #ifdef STARS_MOSAICS
   const struct engine *e = r->e;
-  const struct stars_props* stars_properties = e->stars_properties;
-  const struct star_formation *sf_props = e->star_formation;
-  const struct phys_const *phys_const = e->physical_constants;
-  const struct cosmology *cosmo = e->cosmology;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
-  const float time = (float)e->time;
 
   TIMER_TIC;
 
@@ -870,8 +865,7 @@ void runner_do_mosaics(struct runner *r, struct cell *c, int timer) {
       struct spart *restrict sp = &sparts[k];
 
       if (spart_is_active(sp, e))
-        stars_do_mosaics(sp, stars_properties, sf_props, phys_const, cosmo,
-            with_cosmology, time);
+        stars_do_mosaics(sp, e, with_cosmology);
     }
   }
 

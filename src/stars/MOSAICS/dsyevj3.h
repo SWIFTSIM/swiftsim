@@ -41,7 +41,6 @@
 #include <math.h>
 
 __attribute__((always_inline)) INLINE static void dsyevj3(double A[][3],
-                                                          double Q[][3],
                                                           double W[]) {
 
   const int N = 3;
@@ -54,7 +53,7 @@ __attribute__((always_inline)) INLINE static void dsyevj3(double A[][3],
   int I, X, Y, R;
 
   /* Initialize Q to the identitity matrix */
-  /* --- This loop can be omitted if only the eigenvalues are desired --- */
+  /* --- This loop is omitted since only the eigenvalues are desired --- 
   for (X = 0; X < N; X++) {
     Q[X][X] = 1.0;
     for (Y = 0; Y < X; Y++) {
@@ -62,6 +61,7 @@ __attribute__((always_inline)) INLINE static void dsyevj3(double A[][3],
       Q[Y][X] = 0.0;
     }
   }
+  */
 
   /* Initialize W to diag(A) */
   for (X = 0; X < N; X++) W[X] = A[X][X];
@@ -129,17 +129,18 @@ __attribute__((always_inline)) INLINE static void dsyevj3(double A[][3],
           }
 
           /* Update eigenvectors */
-          /* --- This loop can be omitted if only the eigenvalues are desired
-           * --- */
+          /* --- Omitted since only the eigenvalues are desired ---
           for (R = 0; R < N; R++) {
             T = Q[R][X];
             Q[R][X] = U * T - S * Q[R][Y];
             Q[R][Y] = S * T + U * Q[R][Y];
           }
+          */
         }
       }
     }
   }
+  //TODO return with error
   /*!      PRINT *, "DSYEVJ3: No convergence." */
 }
 /* End of subroutine DSYEVJ3 */

@@ -255,8 +255,6 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
 #if !defined(STAR_FORMATION_NONE)
 
-  /* TODO unit conversions into physical units for clevo */
-
   const double const_G = phys_const->const_newton_G;
 
   /* TODO for now just use the particle ID as seed */
@@ -335,31 +333,29 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Toomre mass via tidal tensors (Pfeffer+18) */
 
-  /* Temporary array for eigvec/val calculation */
-  double tidevec[3][3] = {{0}}, tideval[3] = {0};
-  double tide[3][3] = {{0}};
-  tide[0][0] = sp->tidal_tensor[2][0];
-  tide[0][1] = sp->tidal_tensor[2][1];
-  tide[1][0] = sp->tidal_tensor[2][1];
-  tide[0][2] = sp->tidal_tensor[2][2];
-  tide[2][0] = sp->tidal_tensor[2][2];
-  tide[1][1] = sp->tidal_tensor[2][3];
-  tide[1][2] = sp->tidal_tensor[2][4];
-  tide[2][1] = sp->tidal_tensor[2][4];
-  tide[2][2] = sp->tidal_tensor[2][5];
+  /* Temporary array for eigvec/val calculation
+   * Note the lower elements are never referenced by dsyevj3 */
+  double tensor[3][3];
+  tensor[0][0] = sp->tidal_tensor[2][0];
+  tensor[0][1] = sp->tidal_tensor[2][1];
+  tensor[0][2] = sp->tidal_tensor[2][2];
+  tensor[1][1] = sp->tidal_tensor[2][3];
+  tensor[1][2] = sp->tidal_tensor[2][4];
+  tensor[2][2] = sp->tidal_tensor[2][5];
 
-  /* Get the eigenvalues/vectors */
-  dsyevj3(tide, tidevec, tideval);
+  /* Get the eigenvalues */
+  double tideval[3];
+  dsyevj3(tensor, tideval);
 
   /* sort eigenvalues, tideval[2] is largest eigenvalue */
   sort3(tideval);
 
   /* Circular and epicyclic frequencies */
   double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
-  double kappa2 = fabs(3 * Omega2 - tideval[2]);
+  double kappa2 = fabs(3. * Omega2 - tideval[2]);
 
-  sp->Omega = sqrt(Omega2);
-  sp->kappa = sqrt(kappa2);
+  sp->Omega_birth = sqrt(Omega2);
+  sp->kappa_birth = sqrt(kappa2);
 
   /* Factor out cosmology */
   Omega2 *= cosmo->a3_inv;
@@ -438,7 +434,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     sp->clusters.id[i] = -1;
     sp->clusters.mass[i] = 0.f;
     sp->clusters.initial_mass[i] = 0.f;
-    sp->clusters.dmevap[i] = 0.f;
+    //sp->clusters.dmevap[i] = 0.f;
     sp->clusters.dmshock[i] = 0.f;
   }
 
@@ -537,13 +533,15 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     }
     iArr++;
   }
+
   /* Current number of clusters */
   sp->num_clusters = min(iArr, MOSAICS_MAX_CLUSTERS);
+
   /* Number of clusters above the evolution mass limit */
   sp->initial_num_clusters_evo = iArr;
 
   for (int i = 0; i < sp->num_clusters; i++) {
-    sp->cluster_mass_total = sp->clusters.mass[i];
+    sp->cluster_mass_total += sp->clusters.mass[i];
   }
 
 /*
@@ -565,11 +563,6 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
         sp->mass_init, part_clust_mass, mean_mass);
 
     /* TODO need to dump some info to a file */
-  }
-
-  /* No clusters above mass limit were formed */
-  if (sp->num_clusters == 0) {
-    sp->gcflag = 0;
   }
 
 #endif /* !defined(STAR_FORMATION_NONE) */

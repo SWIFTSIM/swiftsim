@@ -44,13 +44,16 @@ struct mosaics_cluster_data
   /*! Initial star cluster mass */
   float initial_mass[MOSAICS_MAX_CLUSTERS];
 
-  /*! mass loss from evaporation */
-  float dmevap[MOSAICS_MAX_CLUSTERS];
-
   /*! mass loss from tidal shocks */
   float dmshock[MOSAICS_MAX_CLUSTERS];
 
-  /* NB: stellar evolution makes up rest of mass loss */
+  /* Removed to save space. Can be obtained from from the total mass loss
+   * (shocks + evap + stellar_evo) */
+  /*! mass loss from evaporation */
+  //float dmevap[MOSAICS_MAX_CLUSTERS];
+
+  //TODO
+  
 
 /*
   // Current star cluster size
@@ -162,23 +165,27 @@ struct spart {
   /*! Current surviving number of clusters */
   int num_clusters;
 
+  //TODO Not sure this is actually useful/needed
+  /*! Sum of surviving cluster masses */
+  float cluster_mass_total;
+
   /*! Number of clusters tried to form */
   int initial_num_clusters;
-
-  /*! Number of clusters formed above mass limit */
-  int initial_num_clusters_evo;
 
   /*! Sum of initial cluster masses */
   float initial_cluster_mass_total;
 
+  /*! Number of clusters formed above mass limit */
+  int initial_num_clusters_evo;
+
   /*! Sum of initial cluster masses above evolution mass limit */
   float initial_cluster_mass_evo;
 
-  /*! Sum of surviving cluster masses */
-  float cluster_mass_total;
-
   /*! Field mass component of star */
   float field_mass;
+
+  /*! Star mass at the previous timestep */
+  float mass_prev_timestep;
 
   /*! Second derivative of gravitational potential */
   /* upper symmetric 3*3 matrix:
@@ -191,48 +198,17 @@ struct spart {
    */
   float tidal_tensor[3][6];
 
-  // TODO just temporary for testing
-  /*! Gravitational potential */
-  float potential;
-
-  /*! Birth pressure */
-  float birth_pressure;
-
-  /*! Birth subgrid sound speed */
-  float sound_speed_subgrid;
-
   /*! Cluster formation efficiency */
   float CFE;
 
   /*! Exponential truncation to mass function */
   float Mcstar;
 
-  /*! Birth smoothing length */
-  float hbirth;
-
-  /*! Stellar density */
-  float stars_rho;
-
-  /*! Stellar velocity dispersion */
-  float stars_sigma_v2;
-
-  /*! Unweighted gas mass */
-  float gas_mass_unweighted;
-
-  /*! Unweighted stellar mass */
-  float stars_mass_unweighted;
-
-  /*! Gas fraction within the kernel */
-  float fgas;
-
-  /*! Number of stars within the kernel */
-  int scount;
-
   /*! Epicyclic frequency at formation */
-  float kappa;
+  float kappa_birth;
 
   /*! Circular frequency at formation */
-  float Omega;
+  float Omega_birth;
 
   /*! Local Toomre mass */
   float Toomre_mass;
@@ -240,11 +216,69 @@ struct spart {
   /*! Fraction of Mtoomre that may collapse to a GMC */
   float frac_collapse;
 
-  /*! Flag denoting whether we need to run cluster formation  */
-  int new_star;
+  /*! Gas fraction within the kernel */
+  float fgas;
 
-  /*! Flag denoting whether particle has GCs */
-  int gcflag;
+  /*! Stellar velocity dispersion */
+  float stars_sigma_v2;
+
+  /*! Did the star form at this timestep? */
+  char new_star;
+
+  /* TODO this stuff is needed only for one timestep (at formation) 
+   * and doesn't really need to be stored? */
+
+  /*! Birth subgrid sound speed */
+  float sound_speed_subgrid;
+
+  /*! Birth smoothing length */
+  float hbirth;
+
+  /*! Stellar density */
+  float stars_rho;
+
+  /*! Unweighted gas mass */
+  float gas_mass_unweighted;
+
+  /*! Unweighted stellar mass */
+  float stars_mass_unweighted;
+
+  /*! Number of stars within the kernel */
+  int scount;
+
+  // TODO just temporary for testing
+  /*! Gravitational potential */
+  float potential;
+
+  // TODO just temporary for testing
+  /*! Birth pressure */
+  float birth_pressure;
+
+  /* Tidal shock properties */
+
+  /*! Tidal shock duration */
+  float shock_duration[6];
+
+  /*! Tidal shock duration indicator */
+  char shock_indicator[6];
+
+  /*! Integral of tidal heating */
+  float heatsum[6];
+
+  /*! Time of last maximum */
+  float tmaxsh[6];
+
+  /*! Value of tidal tensor component at last maximum */
+  float tidmax[6];
+
+  /*! Time of last minimum for all tensor components */
+  float tminsh[6];
+
+  /*! Value of tidal tensor component at last minimum */
+  float tidmin[6];
+
+  /*! Indicates whether last extreme was maximum: true/false */
+  char extreme_max[6];
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -306,6 +340,21 @@ struct stars_props {
 
   /*! King '66 density profile parameter */
   float W0;
+
+  /*! Fixed cluster half-mass radii (pc) */
+  float rh;
+
+  /*! Fixed evaporation disruption time (Gyr) */
+  float fixed_t0evap;
+
+  /*! Turn on evaporation mass loss? */
+  int cluster_evap;
+
+  /*! Turn on tidal shock mass loss? */
+  int cluster_shocks;
+
+  /*! Add the Spitzer isolated term to evaporation? */
+  int spitzer_evap_term;
 
   /* --- Initial cluster mass function parameters --- */
 
@@ -372,6 +421,9 @@ struct stars_props {
 
   /*! Conversion factor from internal time unit to s */
   double time_to_cgs;
+
+  /*! Conversion factor from internal tensor unit to s^-2 */
+  double tidal_tensor_to_cgs;
 
   /*! Conversion factor from internal mass unit to solar mass */
   double mass_to_solar_mass;

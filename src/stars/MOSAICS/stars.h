@@ -23,6 +23,7 @@
 #include <float.h>
 
 /* Local includes */
+#include "engine.h"
 #include "cosmology.h"
 #include "hydro.h"
 #include "cooling.h"
@@ -96,10 +97,6 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
   sp->HIIregion_mass_to_ionize = 0.f;
   sp->HIIregion_mass_in_kernel = -1.f;
   sp->star_timestep = 0.f;
-
-  /* TODO temporary until we read gc props from ICs */
-  /* i.e. does this particle have any clusters with M>0? */
-  sp->gcflag = 0;
 
   stars_init_spart(sp);
 }
@@ -214,20 +211,19 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
  * @brief Do the mosaics subgrid star cluster model
  *
  * @param sp The particle to act upon
- * @param stars_properties Properties of the stars model.
- * @param sf_props the star formation law properties to use
- * @param phys_const the physical constants in internal units.
- * @param cosmo the cosmological parameters and properties.
+ * @param e The #engine.
  * @param with_cosmology Are we running with cosmological time integration.
- * cosmology).
- * @param time The current time (used if running without cosmology).
  */
 __attribute__((always_inline)) INLINE static void stars_do_mosaics(
-    struct spart* restrict sp, const struct stars_props* stars_properties,
-    const struct star_formation* sf_props, const struct phys_const* phys_const,
-    const struct cosmology* cosmo, const int with_cosmology, const float time) {
+    struct spart* restrict sp, const struct engine* e,
+    const int with_cosmology) {
 
-  /* shift old tensors along, regardless if have clusters */
+  const struct stars_props* stars_properties = e->stars_properties;
+  const struct star_formation *sf_props = e->star_formation;
+  const struct phys_const *phys_const = e->physical_constants;
+  const struct cosmology *cosmo = e->cosmology;
+
+  /* Shift the old tensors along */
   for (int i = 0; i < 2; i++) {
     sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
     sp->tidal_tensor[i][1] = sp->tidal_tensor[i + 1][1];
@@ -250,9 +246,10 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
 
   /* Formation or evolution? */
   if (sp->new_star) {
-
     /* Do cluster formation */
-    sp->gcflag = 1;
+
+    /* For applying stellar evolutionary mass loss */
+    sp->mass_prev_timestep = sp->mass;
 
     /* Go make clusters */
     mosaics_clform(sp, stars_properties, sf_props, phys_const, cosmo);
@@ -260,11 +257,10 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     /* We're done with cluster formation */
     sp->new_star = 0;
 
-  } else if (sp->gcflag) {
+  } else {
 
-    /* Do cluster evolution, if the particle has clusters */
-    mosaics_clevo(sp, stars_properties);
-
+    /* Do cluster evolution, and apply stellar evo. to field props */
+    mosaics_clevo(sp, e, with_cosmology);
   }
 }
 

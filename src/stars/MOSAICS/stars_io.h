@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 38;
+  *num_fields = 36;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -181,109 +181,105 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
 
-  /* MOSAICS data */
   list[12] = io_make_output_field(
-      "GCFlag", CHAR, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, gcflag,
-      "Flag denoting whether the star particle has star surviving clusters");
-
-  list[13] = io_make_output_field(
       "GCs_IDs", INT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_NO_UNITS, 0.f, sparts,
       clusters.id,
       "IDs of clusters tagged to particle (only unique to star particle)");
 
-  list[14] = io_make_output_field(
+  list[13] = io_make_output_field(
       "GCs_Masses", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.mass, "Masses of clusters tagged to particle");
 
-  list[15] = io_make_output_field(
+  list[14] = io_make_output_field(
       "GCs_InitialMasses", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.mass, "Initial masses of clusters tagged to particle");
 
-  list[16] = io_make_output_field(
-      "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
-      clusters.dmevap, "Cluster mass lost to evaporation");
+  //list[15] = io_make_output_field(
+  //    "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
+  //    clusters.dmevap, "Cluster mass lost to evaporation");
 
-  list[17] = io_make_output_field(
+  list[15] = io_make_output_field(
       "GCs_MassLossShocks", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.dmshock, "Cluster mass lost to tidal shocks");
 
-  list[18] = io_make_output_field(
+  list[16] = io_make_output_field(
       "NumberOfClusters", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       num_clusters, "Surviving number of subgrid star clusters");
 
-  list[19] = io_make_output_field(
+  list[17] = io_make_output_field(
       "InitialNumberOfClusters", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       initial_num_clusters, "Number of star clusters tried to form in total");
 
-  list[20] = io_make_output_field(
+  list[18] = io_make_output_field(
       "InitialNumberOfClustersEvoLim", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       initial_num_clusters_evo, 
       "Number of star clusters formed above evolution mass limit");
 
-  list[21] = io_make_output_field(
+  list[19] = io_make_output_field(
       "InitialClusterMassTotal", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       initial_cluster_mass_total, "Sum of initial star cluster masses");
 
-  list[22] = io_make_output_field(
+  list[20] = io_make_output_field(
       "InitialClusterMassEvoLim", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       initial_cluster_mass_evo,
       "Sum of initial star cluster masses above evolution mass limit");
 
-  list[23] = io_make_output_field(
+  list[21] = io_make_output_field(
       "ClusterMassTotal", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       cluster_mass_total, "Sum of surviving star cluster masses");
 
-  list[24] = io_make_output_field(
+  list[22] = io_make_output_field(
       "SubgridFieldMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       field_mass, "Subgrid field mass component of star particle");
 
-  list[25] = io_make_output_field(
+  list[23] = io_make_output_field(
       "TidalTensors", FLOAT, 18, UNIT_CONV_TIDAL_TENSOR, -3.f, sparts,
       tidal_tensor,
       "Second derivative of gravitational potential at the last 3 timesteps. "
       "We store the upper components of the symmeteric matrix (i.e. 6 values "
       "per tensor: xx, xy, xz, yy, yz, zz)");
 
-  list[26] = io_make_output_field(
+  list[24] = io_make_output_field(
       "ClusterFormationEfficiency", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       CFE, "Fraction of star formation which occurs in bound star clusters");
 
-  list[27] = io_make_output_field(
+  list[25] = io_make_output_field(
       "ClusterTruncationMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts, Mcstar,
       "Exponential truncation of star cluster initial mass function (Mcstar)");
 
-  list[28] = io_make_output_field(
+  list[26] = io_make_output_field(
       "BirthStarVelocityDispersions", FLOAT, 1, UNIT_CONV_VELOCITY_SQUARED, 
       0.f, sparts, stars_sigma_v2,
       "Local velocity dispersions (3D) squared of stars at the time of star "
       "formation within the gas smoothing length");
 
-  list[29] = io_make_output_field(
+  list[27] = io_make_output_field(
       "BirthGasFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, fgas,
       "Local gas fraction (within gas smoothing length) at time of star "
       "formation");
 
-  list[30] = io_make_output_field(
+  list[28] = io_make_output_field(
       "BirthKernelStarCount", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, scount,
       "Number of stars within gas smoothing length at time of star formation");
 
-  list[31] = io_make_output_field(
+  list[29] = io_make_output_field(
       "BirthEpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
-      kappa, "Epicyclic frequency at time of star formation");
+      kappa_birth, "Epicyclic frequency at time of star formation");
 
-  list[32] = io_make_output_field(
+  list[30] = io_make_output_field(
       "BirthCircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
-      Omega, "Circular frequency at time of star formation");
+      Omega_birth, "Circular frequency at time of star formation");
 
-  list[33] = io_make_output_field(
+  list[31] = io_make_output_field(
       "BirthToomreMass", FLOAT, 1, UNIT_CONV_MASS, 0.f, sparts,
       Toomre_mass, "Local Toomre mass at formation");
 
-  list[34] = io_make_output_field(
+  list[32] = io_make_output_field(
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       frac_collapse, "Fraction of Toomre mass which can collapse to a GMC");
 
-  list[35] = io_make_output_field(
+  // TODO just temporary
+  list[33] = io_make_output_field(
       "BirthPressures", FLOAT, 1, UNIT_CONV_PRESSURE, 0.f, sparts,
       birth_pressure,
       "Physical pressures at the time of birth of the gas particles that "
@@ -291,13 +287,14 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "we store the physical pressure at the birth redshift, no conversion is "
       "needed)");
 
-  list[36] = io_make_output_field(
+  // TODO temporary?
+  list[34] = io_make_output_field(
       "BirthSoundSpeed", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
       sound_speed_subgrid,
       "Hydro or subgrid sound speed, depending on cooling model");
 
   // TODO just temporary
-  list[37] = io_make_output_field(
+  list[35] = io_make_output_field(
       "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
       "Co-moving gravitational potential at position of the particles");
 }
@@ -368,6 +365,9 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   sp->time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
+  sp->tidal_tensor_to_cgs = 
+      units_cgs_conversion_factor(us, UNIT_CONV_TIDAL_TENSOR);
+
   const double Msun_cgs = phys_const->const_solar_mass *
                          units_cgs_conversion_factor(us, UNIT_CONV_MASS);
   const double unit_mass_cgs = units_cgs_conversion_factor(us, UNIT_CONV_MASS);
@@ -377,15 +377,34 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* MOSAICS parameters ----------------------------------------------------- */
 
   /* Use the subgrid turbulent velocity dispersion for CFE */
-  sp->subgrid_gas_vel_disp = 
-      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
+  sp->subgrid_gas_vel_disp = parser_get_opt_param_int(params, 
+      "Stars:use_subgrid_velocity_dispersion", 0);
 
   /* Use a power-law mass function (default Schechter) */
   sp->power_law_clMF =
       parser_get_opt_param_int(params, "Stars:power_law_clMF", 0);
 
   /* King parameter */
-  sp->W0 = parser_get_opt_param_float(params, "Stars:King_W0", 5.0);
+  sp->W0 = parser_get_opt_param_float(params, "Stars:clusters_King_W0", 5.0);
+
+  /* Half-mass radii */
+  sp->rh = parser_get_opt_param_float(params, "Stars:clusters_rh", 5.0);
+
+  /* Disruption timescale */
+  sp->fixed_t0evap = 
+      parser_get_opt_param_float(params, "Stars:fixed_evap_t0", -1.f);
+
+  /* Evaporation on by default */
+  sp->cluster_evap = 
+      parser_get_opt_param_int(params, "Stars:clusters_evaporation", 1);
+
+  /* Tidal shocks on by default */
+  sp->cluster_shocks = 
+      parser_get_opt_param_int(params, "Stars:clusters_tidal_shocks", 1);
+
+  /* Tidal shocks on by default */
+  sp->spitzer_evap_term = 
+      parser_get_opt_param_int(params, "Stars:Spitzer_evap_term", 1);
 
   /* Parameters of initial cluster mass function ---------------------------- */
 
