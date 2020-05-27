@@ -540,7 +540,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       /* Compute the additional correction factors from Krumholz+06,
        * accounting for bulk flow and turbulence of ambient gas. */
       const double lambda = 1.1;
-      const double gas_v_dispersion = 
+      const double gas_v_dispersion =
         bp->velocity_dispersion_gas * cosmo->a_inv;
       const double mach_turb = gas_v_dispersion / gas_c_phys;
       const double mach_bulk = sqrt(gas_v_norm2) / gas_c_phys;

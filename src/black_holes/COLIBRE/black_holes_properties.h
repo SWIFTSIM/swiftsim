@@ -220,7 +220,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
   bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
-  bp->use_bondi = 
+  bp->use_bondi =
       parser_get_param_int(params, "COLIBREAGN:use_bondi");
   if (!bp->use_bondi)
     bp->use_krumholz_vorticity =

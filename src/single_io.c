@@ -1169,7 +1169,7 @@ void write_output_single(struct engine* e,
         error("Particle Type %d not yet supported. Aborting", ptype);
     }
 
-    /* Check whether the user has cancelled (by default) the entire 
+    /* Check whether the user has cancelled (by default) the entire
      * particle type */
     char field_all[PARSER_MAX_LINE_SIZE];
     if (e->type_next_snapshot > 0)

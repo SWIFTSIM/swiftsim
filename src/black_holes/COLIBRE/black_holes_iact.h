@@ -157,7 +157,7 @@ runner_iact_nonsym_bh_gas_density(
   const float v_cross_r[3] = {dv[1] * dx[2] - dv[2] * dx[1],
                               dv[2] * dx[0] - dv[0] * dx[2],
                               dv[0] * dx[1] - dv[1] * dx[0]};
-  
+
   bi->curl_v_gas[0] += faci * v_cross_r[0];
   bi->curl_v_gas[1] += faci * v_cross_r[1];
   bi->curl_v_gas[2] += faci * v_cross_r[2];
@@ -408,17 +408,14 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
   if ((bj->subgrid_mass < bi->subgrid_mass) ||
       (bj->subgrid_mass == bi->subgrid_mass && bj->id < bi->id)) {
 
-    /* Merge if gravitationally bound AND if within max distance
-     * Note that we use the kernel support here as the size and not just the
-     * smoothing length */
-
     /* Maximum velocity difference between BHs allowed to merge */
     float v2_threshold;
 
     if (bh_props->merger_threshold_type == 0) {
 
       /* 'Old-style' merger threshold using circular velocity at the
-       * edge of the more massive BH's kernel */
+       * edge of the more massive BH's kernel (note: we are using the kernel 
+       * support radius here and not just the smoothing length). */
       v2_threshold = G_Newton * M / (kernel_gamma * h);
     } else {
 
