@@ -60,6 +60,17 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->time_bin = 0;
   if (props->use_subgrid_mass_from_ics == 0)
     bp->subgrid_mass = bp->mass;
+  else if (props->with_subgrid_mass_check && bp->subgrid_mass <= 0)
+    error(
+        "Black hole %lld has a subgrid mass of %f (internal units).\n"
+        "If this is because the ICs do not contain a 'SubgridMass' data "
+        "set, you should set the parameter "
+        "'EAGLEAGN:use_subgrid_mass_from_ics' to 0 to initialize the "
+        "black hole subgrid masses to the corresponding dynamical masses.\n"
+        "If the subgrid mass is intentionally set to this value, you can "
+        "disable this error by setting 'EAGLEAGN:with_subgrid_mass_check' "
+        "to 0.",
+        bp->id, bp->subgrid_mass);
   bp->total_accreted_mass = 0.f;
   bp->accretion_rate = 0.f;
   bp->formation_time = -1.f;
@@ -115,11 +126,9 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.delta_x[2] = -FLT_MAX;
   bp->reposition.min_potential = FLT_MAX;
   bp->reposition.potential = FLT_MAX;
-  bp->accretion_rate = 0.f;  /* Optionally accumulated ngb-by-ngb */
+  bp->accretion_rate = 0.f; /* Optionally accumulated ngb-by-ngb */
   bp->f_visc = FLT_MAX;
 
-  /* Record that the black hole has another active time step */
-  bp->number_of_time_steps++;
 }
 
 /**
@@ -217,7 +226,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->rho_gas *= h_inv_dim;
   const float rho_inv = 1.f / bp->rho_gas;
 
-  /* For the following, we also have to undo the mass smoothing 
+  /* For the following, we also have to undo the mass smoothing
    * (N.B.: bp->velocity_gas is in BH frame, in internal units). */
   bp->sound_speed_gas *= h_inv_dim * rho_inv;
   bp->velocity_gas[0] *= h_inv_dim * rho_inv;
@@ -329,12 +338,13 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   bp->gpart->v_full[2] = bp->v[2];
 
   const float dr = sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
-  message("BH %lld swallowing gas particle %lld "
-          "(Delta_v = [%f, %f, %f] U_V, "
-          "Delta_x = [%f, %f, %f] U_L, "
-          "Delta_v_rad = %f)",
-          bp->id, p->id, -dv[0], -dv[1], -dv[2], -dx[0], -dx[1], -dx[2],
-          (dv[0]*dx[0] + dv[1]*dx[1] + dv[2]*dx[2]) / dr);
+  message(
+      "BH %lld swallowing gas particle %lld "
+      "(Delta_v = [%f, %f, %f] U_V, "
+      "Delta_x = [%f, %f, %f] U_L, "
+      "Delta_v_rad = %f)",
+      bp->id, p->id, -dv[0], -dv[1], -dv[2], -dx[0], -dx[1], -dx[2],
+      (dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2]) / dr);
 
   /* Update the BH metal masses */
   struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
@@ -443,6 +453,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double time, const int with_cosmology, const double dt) {
 
+  /* Record that the black hole has another active time step */
+  bp->number_of_time_steps++;
+
   if (dt == 0. || bp->rho_gas == 0.) return;
 
   /* Gather some physical constants (all in internal units) */
@@ -485,7 +498,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* We can now compute the accretion rate (internal units) */
   double accr_rate;
 
-  if (bp->accretion_rate > 0) {
+  if (props->multi_phase_bondi) {
 
     /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
      * the accretion_rate is still zero (was initialised to this) */
@@ -513,7 +526,11 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * in the Krumholz et al. (2006) prescription */
     const double denominator2 = use_bondi ? gas_v_norm2 + gas_c_phys2 :
                                 gas_c_phys2;
-
+#ifdef SWIFT_DEBUG_CHECKS
+    /* Make sure that the denominator is strictly positive */
+    if (denominator2 <= 0)
+      error("Invalid denominator for BH particle %lld", bp->id);
+#endif
     const double denominator_inv = 1. / sqrt(denominator2);
     accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                 denominator_inv * denominator_inv * denominator_inv;
@@ -575,7 +592,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
     const double f_visc = min(Bondi_time / viscous_time, 1.);
     bp->f_visc = f_visc;
-    
+
     /* Limit the accretion rate by the Bondi-to-viscous time ratio */
     accr_rate *= f_visc;
   } else {
@@ -688,13 +705,15 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
       bp->reposition.delta_x[0] = -FLT_MAX;
       bp->reposition.delta_x[1] = -FLT_MAX;
       bp->reposition.delta_x[2] = -FLT_MAX;
-    } else if (props->reposition_coefficient_upsilon >= 0) {
+    } else if (props->set_reposition_speed) {
 
       /* If we are re-positioning, move the BH a fraction of delta_x, so
-       * that we have a well-defined re-positioning velocity */
-      const float repos_vel = props->reposition_coefficient_upsilon *
-                    pow(bp->subgrid_mass / constants->const_solar_mass,
-                        props->reposition_exponent_xi);
+       * that we have a well-defined re-positioning velocity. We have
+       * checked already that reposition_coefficient_upsilon is positive. */
+      const float repos_vel =
+          props->reposition_coefficient_upsilon *
+          pow(bp->subgrid_mass / constants->const_solar_mass,
+              props->reposition_exponent_xi);
 
       const double dx = bp->reposition.delta_x[0];
       const double dy = bp->reposition.delta_x[1];
@@ -710,8 +729,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
 
         /* We should never get negative repositioning fractions... */
         if (repos_frac < 0)
-          error("Wanting to reposition by negative fraction (%g)?",
-            repos_frac);
+          error("Wanting to reposition by negative fraction (%g)?", repos_frac);
 
         /* ... but fractions > 1 can occur if the target velocity is high.
          * We do not want this, because it could lead to overshooting the
@@ -723,7 +741,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
         bp->reposition.delta_x[2] *= repos_frac;
       }
     } /* ends section for fractional repositioning */
-  } /* ends section if we found eligible repositioning target(s) */
+  }   /* ends section if we found eligible repositioning target(s) */
 }
 
 /**

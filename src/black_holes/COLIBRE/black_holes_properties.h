@@ -47,7 +47,6 @@ struct black_holes_props {
   /*! Maximal change of h over one time-step */
   float log_max_h_change;
 
-
   /* ----- Initialisation properties  ------ */
 
   /*! Mass of a BH seed at creation time */
@@ -56,6 +55,8 @@ struct black_holes_props {
   /*! Should we use the subgrid mass specified in ICs? */
   int use_subgrid_mass_from_ics;
 
+  /*! Should we enforce positive subgrid masses initially? */
+  int with_subgrid_mass_check;
 
   /* ----- Properties of the accretion model ------ */
 
@@ -87,7 +88,6 @@ struct black_holes_props {
   /*! Eddington fraction threshold for recording */
   float f_Edd_recording;
 
-
   /* ---- Properties of the feedback model ------- */
 
   /*! Feedback coupling efficiency of the black holes. */
@@ -99,7 +99,6 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
-
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -108,6 +107,10 @@ struct black_holes_props {
   /*! Maximal distance to reposition, in units of softening length */
   float max_reposition_distance_ratio;
 
+  /*! Switch to enable a relative velocity limit for particles to which the
+   * black holes can reposition */
+  int with_reposition_velocity_threshold;
+
   /*! Maximal velocity offset of particles to which the black hole can
    * reposition, in units of the ambient sound speed of the black hole */
   float max_reposition_velocity_ratio;
@@ -115,12 +118,14 @@ struct black_holes_props {
   /*! Minimum value of the velocity repositioning threshold */
   float min_reposition_velocity_threshold;
 
+  /*! Switch to enable repositioning at fixed (maximum) speed */
+  int set_reposition_speed;
+
   /*! Normalisation factor for repositioning velocity */
   float reposition_coefficient_upsilon;
 
   /*! Repositioning velocity scaling with black hole mass */
   float reposition_exponent_xi;
-
 
   /* ---- Properties of the merger model ---------- */
 
@@ -135,7 +140,6 @@ struct black_holes_props {
 
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
-
 
   /* ---- Common conversion factors --------------- */
 
@@ -206,8 +210,10 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->use_subgrid_mass_from_ics =
       parser_get_opt_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics",
-                               0);
-
+                               1);
+  if (bp->use_subgrid_mass_from_ics)
+    bp->with_subgrid_mass_check =
+        parser_get_opt_param_int(params, "EAGLEAGN:with_subgrid_mass_check", 1);
 
   /* Accretion parameters ---------------------------------- */
 
@@ -255,24 +261,46 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->max_reposition_distance_ratio = parser_get_param_float(
       params, "COLIBREAGN:max_reposition_distance_ratio");
 
-  bp->max_reposition_velocity_ratio = parser_get_param_float(
-      params, "COLIBREAGN:max_reposition_velocity_ratio");
+  bp->with_reposition_velocity_threshold = parser_get_param_int(
+      params, "COLIBREAGN:with_reposition_velocity_threshold");
 
-  bp->min_reposition_velocity_threshold = parser_get_param_float(
-      params, "COLIBREAGN:min_reposition_velocity_threshold");
-  /* Convert from km/s to internal units */
-  bp->min_reposition_velocity_threshold *=
-      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+  if (bp->with_reposition_velocity_threshold) {
+    bp->max_reposition_velocity_ratio = parser_get_param_float(
+        params, "COLIBREAGN:max_reposition_velocity_ratio");
 
-  bp->reposition_coefficient_upsilon = parser_get_param_float(
-      params, "COLIBREAGN:reposition_coefficient_upsilon");
+    /* Prevent nonsensical input */
+    if (bp->max_reposition_velocity_ratio <= 0)
+      error("max_reposition_velocity_ratio must be positive, not %f.",
+            bp->max_reposition_velocity_ratio);
 
-  /* Convert from km/s to internal units */
-  bp->reposition_coefficient_upsilon *=
-      (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+    bp->min_reposition_velocity_threshold = parser_get_param_float(
+        params, "COLIBREAGN:min_reposition_velocity_threshold");
+    /* Convert from km/s to internal units */
+    bp->min_reposition_velocity_threshold *=
+        (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+  }
 
-  bp->reposition_exponent_xi =
-      parser_get_param_float(params, "COLIBREAGN:reposition_exponent_xi");
+  bp->set_reposition_speed =
+      parser_get_param_int(params, "COLIBREAGN:set_reposition_speed");
+
+  if (bp->set_reposition_speed) {
+    bp->reposition_coefficient_upsilon = parser_get_param_float(
+        params, "COLIBREAGN:reposition_coefficient_upsilon");
+
+    /* Prevent the user from making silly wishes */
+    if (bp->reposition_coefficient_upsilon <= 0)
+      error(
+          "reposition_coefficient_upsilon must be positive, not %f "
+          "km/s/M_sun.",
+          bp->reposition_coefficient_upsilon);
+
+    /* Convert from km/s to internal units */
+    bp->reposition_coefficient_upsilon *=
+        (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+
+    bp->reposition_exponent_xi = parser_get_opt_param_float(
+        params, "COLIBREAGN:reposition_exponent_xi", 1.0);
+  }
 
 
   /* Merger parameters ------------------------------------- */

@@ -333,8 +333,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Total number of time steps at which the black holes were active.");
 
   list[26] = io_make_output_field(
-      "ViscosityFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
-      f_visc,
+      "ViscosityFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts, f_visc,
       "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
       "rates have been suppressed by the Rosas-Guevara et al. (2015) "
       "accretion disc model.");
