@@ -494,6 +494,11 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                                gas_v_phys[2] * gas_v_phys[2];
 
     const double denominator2 = gas_v_norm2 + gas_c_phys2;
+#ifdef SWIFT_DEBUG_CHECKS
+    /* Make sure that the denominator is strictly positive */
+    if (denominator2 <= 0)
+      error("Invalid denominator for gas particle %lld", pj->id);
+#endif
     const double denominator_inv = 1. / sqrt(denominator2);
     Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                  denominator_inv * denominator_inv * denominator_inv;

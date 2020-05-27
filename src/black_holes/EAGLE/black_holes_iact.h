@@ -121,7 +121,7 @@ runner_iact_nonsym_bh_gas_density(
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-      error("Invalid denominator for gas particle %lld", pj->id);
+      error("Invalid denominator for BH particle %lld", bp->id);
 #endif
     const double denominator_inv = 1. / sqrt(denominator2);
 
