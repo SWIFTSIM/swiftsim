@@ -38,7 +38,7 @@ InitialConditions:
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
-  dir_name:                /cosma7/data/dp004/dc-ploe1/CoolingTables/2019_most_recent/UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
+  dir_name:                UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               11.5              # Redshift of Hydrogen re-ionization
   H_reion_eV_p_H:          2.0
   He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
@@ -47,7 +47,7 @@ COLIBRECooling:
   HIIregion_ionization_fraction:    1.0      # Ionization fraction for gas particles tagged as HII regions (between 0.5 and 1.)
   HIIregion_temperature:            1.e4     # Temperature of gas particles tagged as HII regions
   delta_logTEOS_subgrid_properties: 0.2      # delta log T above the EOS below which the subgrid properties use Teq assumption
-  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
+  rapid_cooling_threshold:          0.333333 # Switch to rapid cooling regime for dt / t_cool above this threshold.
 
 # Solar abundances
 COLIBREChemistry:
@@ -61,5 +61,6 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.00070797838  # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.00066495154  # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.00129199252  # Inital fraction of particle mass in Iron
-  metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
-  metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
+  init_abundance_Europium:  0.0            # Inital fraction of particle mass in Europium
+  metal_diffusion_constant:         0.01   # Metal diffusion constant (Smagorinsky constant)
+  metal_diffusion_timestep_mult:    0.2    # Run-time parameter to control the time-step condition based on the diffusion rate.

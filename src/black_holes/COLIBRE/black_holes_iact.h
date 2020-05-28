@@ -41,6 +41,7 @@
  * @param xpj The extended data of the second particle (not updated).
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
  */
 __attribute__((always_inline)) INLINE static void
@@ -48,7 +49,8 @@ runner_iact_nonsym_bh_gas_density(
     const float r2, const float *dx, const float hi, const float hj,
     struct bpart *bi, const struct part *pj, const struct xpart *xpj,
     const int with_cosmology, const struct cosmology *cosmo,
-    const struct gravity_props *grav_props, const integertime_t ti_current,
+    const struct gravity_props *grav_props,
+    const struct black_holes_props *bh_props, const integertime_t ti_current,
     const double time) {
 
   float wi, wi_dx;
@@ -166,6 +168,7 @@ runner_iact_nonsym_bh_gas_density(
  * @param xpj The extended data of the second particle.
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
  */
 __attribute__((always_inline)) INLINE static void
@@ -175,6 +178,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
                                   struct xpart *xpj, const int with_cosmology,
                                   const struct cosmology *cosmo,
                                   const struct gravity_props *grav_props,
+                                  const struct black_holes_props *bh_props,
                                   const integertime_t ti_current,
                                   const double time) {
 
@@ -279,6 +283,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
  * @param bj Second particle (black hole)
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
  */
 __attribute__((always_inline)) INLINE static void
@@ -287,6 +292,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
                                  struct bpart *bi, struct bpart *bj,
                                  const struct cosmology *cosmo,
                                  const struct gravity_props *grav_props,
+                                 const struct black_holes_props *bh_props,
                                  const integertime_t ti_current) {
 
   /* Compute relative peculiar velocity between the two BHs
@@ -390,6 +396,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
  * @param with_cosmology Are we doing a cosmological run?
  * @param cosmo The cosmological model.
  * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ * @param bh_props The properties of the BH scheme
  * @param ti_current Current integer time value (for random numbers).
  * @param time current physical time in the simulation
  */
@@ -400,6 +407,7 @@ runner_iact_nonsym_bh_gas_feedback(const float r2, const float *dx,
                                    struct xpart *xpj, const int with_cosmology,
                                    const struct cosmology *cosmo,
                                    const struct gravity_props *grav_props,
+                                   const struct black_holes_props *bh_props,
                                    const integertime_t ti_current,
                                    const double time) {
 

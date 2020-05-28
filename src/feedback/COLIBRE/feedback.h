@@ -26,6 +26,7 @@
 #include "feedback_properties.h"
 #include "hydro_properties.h"
 #include "part.h"
+#include "random.h"
 #include "units.h"
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
@@ -73,6 +74,21 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
 
   sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
+  sp->feedback_data.to_collect.ngb_N = 0;
+  for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
+    sp->feedback_data.to_collect.min_arclength[i] = -1.f;
+    sp->feedback_data.part_id_with_min_arclength[i] = 0;
+
+    sp->feedback_data.to_collect.min_arclength_mirror[i] = -1.f;
+    sp->feedback_data.part_id_with_min_arclength_mirror[i] = 0;
+
+    sp->feedback_data.mass_true[i] = 0.f;
+    sp->feedback_data.mass_mirror[i] = 0.f;
+    for (int j = 0; j < 3; j++) {
+      sp->feedback_data.v_true[i][j] = 0.f;
+      sp->feedback_data.v_mirror[i][j] = 0.f;
+    }
+  }
 }
 
 /**
@@ -136,9 +152,11 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.SNII_heating_probability = 0.f;
   sp->feedback_data.to_distribute.SNII_kick_probability = 0.f;
 
-  /* Zero the SNII feedback thermal energy and kick velocity */
+  /* Zero the SNII feedback properties */
   sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
-  sp->feedback_data.to_distribute.SNII_delta_v = 0.f;
+  sp->feedback_data.to_distribute.SNII_E_kinetic = 0.f;
+  sp->feedback_data.to_distribute.SNII_number_of_heating_events = 0;
+  sp->feedback_data.to_distribute.SNII_number_of_kick_events = 0;
 
   /* Reset the kick velocity and probability in the early stellar feedback */
   sp->feedback_data.to_distribute.momentum_probability = -1.f;
@@ -195,7 +213,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * internal units.
  * @param dt The time-step size of this star in internal units.
  * @param ti_begin The integer time at the beginning of the step.
- * @param time_beg_of_step Time at the beginning of the time step
+ * @param with_cosmology Are we running with cosmological time integration on?
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
