@@ -470,12 +470,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   double Bondi_rate;
 
   if (props->multi_phase_bondi) {
-
-    /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
-     * the accretion_rate is still zero (was initialised to this) */
     const float hi_inv = 1.f / bp->h;
     const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
-
     Bondi_rate = bp->accretion_rate *
                  (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {

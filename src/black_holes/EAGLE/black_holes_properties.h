@@ -205,7 +205,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
     bp->with_subgrid_mass_check =
         parser_get_opt_param_int(params, "EAGLEAGN:with_subgrid_mass_check", 1);
 
-
   /* Accretion parameters ---------------------------------- */
 
   bp->multi_phase_bondi =
