@@ -190,7 +190,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   else
     bp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
-
   /* Initialisation properties  ---------------------------- */
 
   bp->subgrid_seed_mass =
@@ -233,7 +232,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "EAGLEAGN:AGN_num_ngb_to_heat");
-
 
   /* Reposition parameters --------------------------------- */
 
