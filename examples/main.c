@@ -153,7 +153,6 @@ int main(int argc, char *argv[]) {
   int dump_threadpool = 0;
   int nsteps = -2;
   int restart = 0;
-  int reload_output_lists = 0;
   int with_cosmology = 0;
   int with_external_gravity = 0;
   int with_temperature = 0;
@@ -293,10 +292,6 @@ int main(int argc, char *argv[]) {
                  "parameter file. Can be used more than once {sec:par:value}.",
                  handle_cmdparam, (intptr_t)&cmdps, 0),
       OPT_BOOLEAN('r', "restart", &restart, "Continue using restart files.",
-                  NULL, 0, 0),
-      OPT_BOOLEAN('u', "reload-output-lists", &reload_output_lists,
-                  "Re-load "
-                  "the output lists when restarting.",
                   NULL, 0, 0),
       OPT_INTEGER('t', "threads", &nr_threads,
                   "The number of threads to use on each MPI rank. Defaults to "
@@ -826,11 +821,6 @@ int main(int argc, char *argv[]) {
     /* Now read it. */
     restart_read(&e, restart_file);
 
-    /* Re-load the output lists, if desired */
-    if (reload_output_lists) {
-      engine_init_output_lists(&e, params, /*restart=*/1);
-    }
-
     /* And initialize the engine with the space and policies. */
     if (myrank == 0) clocks_gettime(&tic);
     engine_config(/*restart=*/1, /*fof=*/0, &e, params, nr_nodes, myrank,
@@ -1270,7 +1260,7 @@ int main(int argc, char *argv[]) {
           e.dt_min, e.dt_max);
       fflush(stdout);
     }
-  } /* ends non-restart section */
+  }
 
   /* Time to say good-bye if this was not a serious run. */
   if (dry_run) {

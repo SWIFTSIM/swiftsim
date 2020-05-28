@@ -290,9 +290,6 @@ struct engine {
   /* Integer time of the next snapshot */
   integertime_t ti_next_snapshot;
 
-  /* Type of the next snapshot */
-  int type_next_snapshot;
-
   char snapshot_base_name[PARSER_MAX_LINE_SIZE];
   char snapshot_subdir[PARSER_MAX_LINE_SIZE];
   int snapshot_distributed;
@@ -539,8 +536,7 @@ void engine_check_for_dumps(struct engine *e);
 void engine_check_for_index_dump(struct engine *e);
 void engine_collect_end_of_step(struct engine *e, int apply);
 void engine_dump_snapshot(struct engine *e);
-void engine_init_output_lists(struct engine *e, struct swift_params *params,
-                              int restart);
+void engine_init_output_lists(struct engine *e, struct swift_params *params);
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  long long Ngas, long long Ngparts, long long Nstars,
                  long long Nblackholes, long long Nbackground_gparts,

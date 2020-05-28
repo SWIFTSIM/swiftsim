@@ -307,6 +307,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
     /* Loop over all the BH particles in the cell
      * Note that the cell (and hence the bparts) may be local or foreign. */
     const size_t nr_cell_bparts = c->black_holes.count;
+
     for (size_t k = 0; k < nr_cell_bparts; k++) {
 
       /* Get a handle on the part. */
@@ -423,6 +424,7 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
           } /* Loop over foreign BHs */
         }   /* Is the cell local? */
 #endif
+
         /* If we have a local particle, we must have found the BH in one
          * of our list of black holes. */
         if (c->nodeID == e->nodeID && !found) {
