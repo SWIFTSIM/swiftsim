@@ -267,9 +267,10 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
   list[19] = io_make_output_field_convert_bpart(
       "GasCircularVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
       convert_bpart_gas_circular_vel,
-      "Peculiar circular velocities of the gas particles around the black "
-      "holes. This is the curl of a * dx/dt where x is the co-moving position "
-      "of the particles.");
+      "Circular velocities of the gas around the black hole at the "
+      "smoothing radius. This is j / h_BH, where j is the smoothed, peculiar "
+      "specific angular momentum of gas around the black holes, and h_BH is "
+      "the smoothing length of each black hole.");
 
   list[20] =
       io_make_output_field("TimeBins", CHAR, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
@@ -301,9 +302,10 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       number_of_reposition_attempts,
       "Number of time steps in which the black holes had an eligible particle "
       "to reposition to. They may or may not have ended up moving there, "
-      "depending on whether these particles were at a lower or higher "
-      "potential than the black holes themselves. It does not include "
-      "attempted repositioning events accumulated by any merged black holes.");
+      "depending on their subgrid mass and on whether these particles were at "
+      "a lower or higher potential than the black holes themselves. It does "
+      "not include attempted repositioning events accumulated by any merged "
+      "black holes.");
 
   list[25] = io_make_output_field(
       "NumberOfTimeSteps", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,

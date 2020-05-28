@@ -121,7 +121,10 @@ runner_iact_nonsym_bh_gas_density(
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
-      error("Invalid denominator for gas particle %lld", pj->id);
+      error(
+          "Invalid denominator for BH particle %lld and gas particle "
+          "%lld in Bondi rate calculation.",
+          bp->id, pj->id);
 #endif
     const double denominator_inv = 1. / sqrt(denominator2);
 
@@ -197,8 +200,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
       bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This gas neighbour is close enough that we can consider its potential
-     for repositioning */
+
   if (r2 < max_dist_repos2) {
 
     /* Flag to check whether neighbour is slow enough to be considered
@@ -325,20 +327,10 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
       bh_props->max_reposition_distance_ratio * grav_props->epsilon_baryon_cur *
       grav_props->epsilon_baryon_cur;
 
-  /* This BH neighbour is close enough that we can consider its potential
-     for repositioning */
+
   if (r2 < max_dist_repos2) {
 
-    /* Flag to check whether neighbour is slow enough to be considered
-     * as repositioning target. Always true if velocity cut switched off */
-    int neighbour_is_slow_enough = 1;
-    if (bh_props->max_reposition_velocity_ratio > 0) {
 
-      const float v2_max = bh_props->max_reposition_velocity_ratio *
-                           bh_props->max_reposition_velocity_ratio *
-                           bi->sound_speed_gas * bi->sound_speed_gas;
-      if (v2_pec >= v2_max) neighbour_is_slow_enough = 0;
-    }
 
     if (neighbour_is_slow_enough) {
       const float potential = bj->reposition.potential;
@@ -385,33 +377,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
      * smoothing length */
 
     /* Maximum velocity difference between BHs allowed to merge */
-    float v2_threshold;
 
-    if (bh_props->merger_threshold_type == 0) {
-
-      /* 'Old-style' merger threshold using circular velocity at the
-       * edge of the more massive BH's kernel */
-      v2_threshold = G_Newton * M / (kernel_gamma * h);
-    } else {
-
-      /* Arguably better merger threshold using the escape velocity at
-       * the distance of the lower-mass BH */
-      const float r_12 = sqrt(r2);
-
-      if ((bh_props->merger_threshold_type == 1) &&
-          (r_12 < grav_props->epsilon_baryon_cur)) {
-
-        /* If BHs are within softening range, take this into account */
-        float w_grav;
-        kernel_grav_pot_eval(r_12 / grav_props->epsilon_baryon_cur, &w_grav);
-        const float r_mod = w_grav / grav_props->epsilon_baryon_cur;
-        v2_threshold = 2.f * G_Newton * M / (r_mod);
-
-      } else {
-        /* Standard formula if BH interactions are not softened */
-        v2_threshold = 2.f * G_Newton * M / (r_12);
-      }
-    }  /* Ends sections for different merger thresholds */
 
     if ((v2_pec < v2_threshold) && (r2 < max_dist_merge2)) {
 
