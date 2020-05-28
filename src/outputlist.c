@@ -121,7 +121,7 @@ void output_list_read_file(struct output_list *outputlist, const char *filename,
         error(
             "Tried parsing double but found '%s' with illegal double "
             "characters in file '%s'.",
-            line, filename);      
+            line, filename);
     }
 
     /* Transform input into correct time (e.g. ages or scale factor) */

@@ -429,7 +429,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
     if (bh_props->merger_threshold_type == 0) {
 
       /* 'Old-style' merger threshold using circular velocity at the
-       * edge of the more massive BH's kernel (note: we are using the kernel 
+       * edge of the more massive BH's kernel (note: we are using the kernel
        * support radius here and not just the smoothing length). */
       v2_threshold = G_Newton * M / (kernel_gamma * h);
     } else {
