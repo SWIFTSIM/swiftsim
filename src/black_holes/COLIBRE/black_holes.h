@@ -534,10 +534,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
  * @param props The properties of the black hole scheme.
  * @param constants The physical constants (in internal units).
  * @param cosmo The cosmological model.
+ * @param dt The black hole particle's time step.
  */
 __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     struct bpart* restrict bp, const struct black_holes_props* props,
-    const struct phys_const* constants, const struct cosmology* cosmo) {
+    const struct phys_const* constants, const struct cosmology* cosmo,
+    const double dt) {
 
   const float potential = gravity_get_comoving_potential(bp->gpart);
 
