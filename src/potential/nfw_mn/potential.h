@@ -203,7 +203,7 @@ external_gravity_get_potential_energy(
   const float term2 = logf(1.0f + r / potential->r_s);
 
   /* Now for the MN disk */
-  const float MN_term = (potential->Rdisk + sqrtf(potential->Zdisk + dz * dx));
+  const float MN_term = potential->Rdisk + sqrtf(potential->Zdisk + dz * dz);
   const float MN_pot = -potential->Mdisk / sqrtf(R2 + MN_term * MN_term);
 
   return term1 * term2 + MN_pot;
