@@ -63,6 +63,7 @@ struct chemistry_part_data {
   
   /* Initial metal mass from params*/
   float initial_metal_mass;
+  float initial_iron_mass;
 
   /*! Fraction of the particle mass in a given element */
   float metal_mass_fraction[chemistry_element_count];
@@ -115,7 +116,7 @@ struct chemistry_part_data {
   float iron_diffused_redshift;
 
   float track_of_metal_mass_total;
-  float track_of_iron_from_SNIa_mass;
+  float track_of_iron_mass;
 
   /*! Fraction of the particle mass in a given element accumulated via diffusion
    * diffusion since the last active step */
