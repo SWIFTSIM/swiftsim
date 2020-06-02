@@ -861,7 +861,14 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const double time) {
 
   /* No cooling happens over zero time */
-  if (dt == 0.) return;
+  if (dt == 0.) {
+
+    /* But we still set the subgrid properties to a valid state */
+    cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
+                                   floor_props, cooling, p, xp);
+
+    return;
+  }
 
   /* CHIMES structures. */
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
