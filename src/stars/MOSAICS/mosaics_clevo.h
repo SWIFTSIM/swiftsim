@@ -99,8 +99,12 @@ __attribute__((always_inline)) INLINE static void calc_heating(
     struct spart* restrict sp, const double age, const double dt, 
     const double time, const double tensors_in_Gyr, double* Mlheatsum) {
 
+  /* fraction of maximum at which duration is measured */
+  const double sigma1_width = 0.88;
+  const double sigma2_width = 0.61;
+
   /* Time at the previous step */
-  const double tlast = time - dt;
+  const float tlast = (float)(time - dt);
 
   /* loop over tidal tensor components, to determine minima, maxima, tshock 
    * and tidal heating for each component.
@@ -110,6 +114,8 @@ __attribute__((always_inline)) INLINE static void calc_heating(
     const double tide1 = (double)sp->tidal_tensor[0][i] * tensors_in_Gyr;
     const double tide2 = (double)sp->tidal_tensor[1][i] * tensors_in_Gyr;
     const double tide3 = (double)sp->tidal_tensor[2][i] * tensors_in_Gyr;
+
+    int apply_shock = 0;
 
     /* Is the first point for this particle is a maximum? */
     if (age == dt && fabs(tide3) < fabs(tide2)) {
@@ -135,6 +141,7 @@ __attribute__((always_inline)) INLINE static void calc_heating(
           sp->shock_duration[i] = 0.5 * (tlast - sp->tminsh[i]);
 
         /* Time of last minimum was previous time step */
+        apply_shock = 1;
         sp->tminsh[i] = tlast;
         sp->tidmin[i] = tide2;
         sp->extreme_max[i] = 0;
@@ -157,10 +164,6 @@ __attribute__((always_inline)) INLINE static void calc_heating(
         sp->shock_indicator[i] = 0;
       }
     }
-
-    /* fraction of maximum at which duration is measured */
-    const double sigma1_width = 0.88;
-    const double sigma2_width = 0.61;
 
     /* First order shock duration */
     if (sp->extreme_max[i] && sp->shock_indicator[i] == 0 &&
@@ -202,15 +205,16 @@ __attribute__((always_inline)) INLINE static void calc_heating(
 
     /* If a shock was completed during the previous time step and mass loss
      * should be applied */
-    if (sp->tminsh[i] == tlast) {
-      /* Tidal heating for the soon-to-occur application of mass loss */
+    if (apply_shock) {
+      /* Tidal heating for the soon-to-occur application of mass loss
+       * Note this could be negative, but is later applied as heatsum^2 */
       Mlheatsum[i] = sp->heatsum[i];
 
       /* reset and start integrating heating for next shock */
       sp->shock_indicator[i] = 0;
       sp->heatsum[i] = 0.5 * (tide2 + tide3) * dt;
     } else {
-
+      /* Keep summing tidal heating */
       sp->heatsum[i] += 0.5 * (tide2 + tide3) * dt;
     }
   } /* For each tensor component */
@@ -321,7 +325,7 @@ __attribute__((always_inline)) INLINE static double mass_loss_shocks(
     double Aw = adiabatic_correction(mass, rh, (double)sp->shock_duration[i], props->W0, 
         etapot);
 
-    /* Add the mirror for off-diagonal terms */
+    /* Add the mirror for off-diagonal tensor terms */
     double factor = 1.f;
     if (i==1 || i==2 || i==5)
       factor = 2.f;
@@ -520,8 +524,12 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
         sp->clusters.mass[i] = 0.f;
         sp->num_clusters--;
 
-        //TODO time of disruption?
-        //sp->clusters.disruption_time[i] = ...;
+        /* time of cluster disruption */
+        if (with_cosmology) {
+          sp->clusters.disruption_time[i] = cosmo->a;
+        } else {
+          sp->clusters.disruption_time[i] = e->time;
+        }
 
       } else {
   

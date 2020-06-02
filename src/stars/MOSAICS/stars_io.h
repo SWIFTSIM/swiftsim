@@ -181,18 +181,31 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       HIIregion_mass_in_kernel,
       "Masses in kernels at time of HII region formation");
 
-  list[12] = io_make_output_field(
-      "GCs_IDs", INT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_NO_UNITS, 0.f, sparts,
-      clusters.id,
-      "IDs of clusters tagged to particle (only unique to star particle)");
+  //list[12] = io_make_output_field(
+  //    "GCs_IDs", INT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_NO_UNITS, 0.f, sparts,
+  //    clusters.id,
+  //    "IDs of clusters tagged to particle (only unique to star particle)");
 
-  list[13] = io_make_output_field(
+  list[12] = io_make_output_field(
       "GCs_Masses", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.mass, "Masses of clusters tagged to particle");
 
-  list[14] = io_make_output_field(
-      "GCs_InitialMasses", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
-      clusters.mass, "Initial masses of clusters tagged to particle");
+  list[13] = io_make_output_field(
+      "GCs_InitialMasses", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f,
+      sparts, clusters.initial_mass,
+      "Initial masses of clusters tagged to particle");
+
+  if (with_cosmology) {
+    list[14] = io_make_output_field(
+        "GCs_DisruptionScaleFactors", FLOAT, MOSAICS_MAX_CLUSTERS, 
+        UNIT_CONV_NO_UNITS, 0.f, sparts, clusters.disruption_time,
+        "Scale-factors at which clusters became disrupted (-1 if surviving)");
+  } else {
+    list[14] = io_make_output_field(
+        "GCs_DisruptionTimes", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_TIME, 0.f,
+        sparts, clusters.disruption_time,
+        "Times at which clusters became disrupted (-1 if surviving)");
+  }
 
   //list[15] = io_make_output_field(
   //    "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
@@ -388,7 +401,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->W0 = parser_get_opt_param_float(params, "Stars:clusters_King_W0", 5.0);
 
   /* Half-mass radii */
-  sp->rh = parser_get_opt_param_float(params, "Stars:clusters_rh", 5.0);
+  sp->rh = parser_get_opt_param_float(params, "Stars:clusters_rh", 4.0);
 
   /* Disruption timescale */
   sp->fixed_t0evap = 

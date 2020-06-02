@@ -35,8 +35,9 @@
  */
 struct mosaics_cluster_data
 {
+  /* if we don't resort then we don't need IDs */
   /*! Unique cluster ID within particle */
-  int id[MOSAICS_MAX_CLUSTERS];
+  //int id[MOSAICS_MAX_CLUSTERS];
 
   /*! Current star cluster mass */
   float mass[MOSAICS_MAX_CLUSTERS];
@@ -52,8 +53,8 @@ struct mosaics_cluster_data
   /*! mass loss from evaporation */
   //float dmevap[MOSAICS_MAX_CLUSTERS];
 
-  //TODO
-  
+  /*! Time of cluster disruption */
+  float disruption_time[MOSAICS_MAX_CLUSTERS];
 
 /*
   // Current star cluster size

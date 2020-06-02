@@ -431,11 +431,12 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   sp->initial_cluster_mass_evo = 0.f;
   sp->cluster_mass_total = 0.f;
   for (int i = 0; i < MOSAICS_MAX_CLUSTERS; i++) {
-    sp->clusters.id[i] = -1;
+    //sp->clusters.id[i] = -1;
     sp->clusters.mass[i] = 0.f;
     sp->clusters.initial_mass[i] = 0.f;
     //sp->clusters.dmevap[i] = 0.f;
     sp->clusters.dmshock[i] = 0.f;
+    sp->clusters.disruption_time[i] = -1.f;
   }
 
   /* Cluster and field masses if we were conserving mass within particles */
@@ -490,8 +491,14 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
         random_generator);
   }
 
-  /* draw cluster masses from mass function */
+  /* Lowest mass cluster we've formed so far */
+  double min_formed_mass = FLT_MAX;
+  int min_mass_idx = -1;
+
+  /* Counter for our cluster arrays */
   int iArr = 0;
+
+  /* draw cluster masses from mass function */
   for (int i = 0; i < sp->initial_num_clusters; i++) {
     /* Form a cluster */
     double mTry;
@@ -506,7 +513,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
     sp->initial_cluster_mass_total += mTry;
 
-    /* TODO this should go within a debug statement */
+    /* TODO should this go within a debug statement? */
     if (!isfinite(mTry)) {
       error("mTry is not finite!! mTry=%g, Mcstar=%g, norm=%g",
           mTry, sp->Mcstar, norm);
@@ -523,13 +530,41 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
     /* Check if we've run out of space... */
     if (iArr < MOSAICS_MAX_CLUSTERS) {
-      sp->clusters.id[iArr] = iArr;
-      sp->clusters.mass[iArr] = mTry;
-      sp->clusters.initial_mass[iArr] = mTry;
+      /* Still space left */
+      //sp->clusters.id[iArr] = iArr;
+      sp->clusters.mass[iArr] = (float)mTry;
+      sp->clusters.initial_mass[iArr] = (float)mTry;
+
+      /* Lowest mass cluster we've formed so far */
+      if (mTry < min_formed_mass) {
+        min_formed_mass = mTry;
+        min_mass_idx = iArr;
+      }
 
     } else {
-      /* Ran out of space... just add to field */
-      sp->field_mass += mTry;
+      /* Ok we've run out of space. Replace the least massive
+       * cluster in the array so we at least track the most massive ones */
+      if (mTry > min_formed_mass) {
+        /* Add the previous one to field */
+        sp->field_mass += sp->clusters.mass[min_mass_idx];
+
+        sp->clusters.mass[min_mass_idx] = (float)mTry;
+        sp->clusters.initial_mass[min_mass_idx] = (float)mTry;
+
+        /* reset the counters */
+        min_formed_mass = FLT_MAX;
+        min_mass_idx = -1;
+        for (int j = 0; j < MOSAICS_MAX_CLUSTERS; j++) {
+          if (sp->clusters.mass[j] < min_formed_mass) {
+            min_formed_mass = sp->clusters.mass[j];
+            min_mass_idx = j;
+          }
+        }
+
+      } else {
+        /* We're out of space... just add to field */
+        sp->field_mass += mTry;
+      }
     }
     iArr++;
   }
@@ -544,17 +579,6 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     sp->cluster_mass_total += sp->clusters.mass[i];
   }
 
-/*
-  printf("sp->id = %lld\n", sp->id);
-  printf("  [%lld] CFE = %g\n", sp->id, sp->CFE);
-  printf("  [%lld] Mcstar = %g\n", sp->id, sp->Mcstar * props->mass_to_solar_mass);
-  printf("  [%lld] part_clust_mass = %g\n", sp->id, part_clust_mass * props->mass_to_solar_mass);
-  printf("  [%lld] mean_mass = %g\n", sp->id, mean_mass * props->mass_to_solar_mass);
-  printf("  [%lld] norm = %g\n", sp->id, norm);
-  printf("  [%lld] init_num_clust = %d\n", sp->id, sp->initial_num_clusters);
-  printf("  [%lld] init_num_clust_evo = %d\n", sp->id, sp->initial_num_clusters_evo);
-*/
-
   /* Warn when we hit the cluster array end */
   if (sp->initial_num_clusters_evo > MOSAICS_MAX_CLUSTERS) {
     message("sp->id=%lld: Trying to form more clusters (%d) than allowed (%d)\n"
@@ -562,7 +586,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
         sp->id, sp->initial_num_clusters_evo, MOSAICS_MAX_CLUSTERS, 
         sp->mass_init, part_clust_mass, mean_mass);
 
-    /* TODO need to dump some info to a file */
+    /* TODO should dump some info to a file */
   }
 
 #endif /* !defined(STAR_FORMATION_NONE) */
