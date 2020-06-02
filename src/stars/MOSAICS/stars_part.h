@@ -45,16 +45,17 @@ struct mosaics_cluster_data
   /*! Initial star cluster mass */
   float initial_mass[MOSAICS_MAX_CLUSTERS];
 
+  /*! Time of cluster disruption */
+  float disruption_time[MOSAICS_MAX_CLUSTERS];
+
   /*! mass loss from tidal shocks */
   float dmshock[MOSAICS_MAX_CLUSTERS];
 
+  //TODO Leaving in for testing
   /* Removed to save space. Can be obtained from from the total mass loss
    * (shocks + evap + stellar_evo) */
   /*! mass loss from evaporation */
-  //float dmevap[MOSAICS_MAX_CLUSTERS];
-
-  /*! Time of cluster disruption */
-  float disruption_time[MOSAICS_MAX_CLUSTERS];
+  float dmevap[MOSAICS_MAX_CLUSTERS];
 
 /*
   // Current star cluster size
@@ -166,7 +167,6 @@ struct spart {
   /*! Current surviving number of clusters */
   int num_clusters;
 
-  //TODO Not sure this is actually useful/needed
   /*! Sum of surviving cluster masses */
   float cluster_mass_total;
 

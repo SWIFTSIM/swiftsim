@@ -434,7 +434,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     //sp->clusters.id[i] = -1;
     sp->clusters.mass[i] = 0.f;
     sp->clusters.initial_mass[i] = 0.f;
-    //sp->clusters.dmevap[i] = 0.f;
+    sp->clusters.dmevap[i] = 0.f;
     sp->clusters.dmshock[i] = 0.f;
     sp->clusters.disruption_time[i] = -1.f;
   }
@@ -511,7 +511,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
           sp->Mcstar, norm, random_generator);
     }
 
-    sp->initial_cluster_mass_total += mTry;
+    sp->initial_cluster_mass_total += (float)mTry;
 
     /* TODO should this go within a debug statement? */
     if (!isfinite(mTry)) {
@@ -522,11 +522,11 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     /* Lower than our limit to evolve clusters */
     if (mTry < props->clMF_min_evolve) {
       /* Add destroyed clusters to field */
-      sp->field_mass += mTry;
+      sp->field_mass += (float)mTry;
       continue;
     }
 
-    sp->initial_cluster_mass_evo += mTry;
+    sp->initial_cluster_mass_evo += (float)mTry;
 
     /* Check if we've run out of space... */
     if (iArr < MOSAICS_MAX_CLUSTERS) {

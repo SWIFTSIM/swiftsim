@@ -29,9 +29,10 @@ runner_doiact_functions_stars_veldisp.h has checks for STARS_MOSAICS (since requ
 
 
 Restrict the number of MOSAICS/cluster properties in spart
-* Only need one of dmshock/dmevap
-* A number used only once at star formation timestep, check which we want to store
+* A number are used only once at star formation timestep, check which we want to store
 * Remove the ones just used for testing
+
+We don't care about cluster_mass_total on the fly, so in principle could just calculate it when snapshots are output?
 
 
 NOTES:
@@ -43,3 +44,8 @@ I/O:
 Have implemented a local 'GMC SFE'. Not sure it works as expected though
 
 Have set 1 * scount for stars_veldisp scheduling (i.e. Nnew * scount)
+
+Restricting data:
+* Not tracking IDs since not sorting
+* Not tracking dmEvap (know dmShock and dmStellarEvo)
+

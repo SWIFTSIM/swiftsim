@@ -416,6 +416,9 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
     struct spart* restrict sp, const struct engine* e, 
     const int with_cosmology) {
 
+  const struct stars_props* props = e->stars_properties;
+  const struct cosmology *cosmo = e->cosmology;
+
   /* Initial number of clusters, up to max array length */
   const int ninit = min(sp->initial_num_clusters_evo, MOSAICS_MAX_CLUSTERS);
 
@@ -423,17 +426,16 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
   const float stellar_evo_factor = sp->mass / sp->mass_prev_timestep;
 
   if (ninit == 0) {
-    /* No clusters, so just handle the field */
+    /* No clusters formed in this particle, so just handle the field */
     sp->field_mass *= stellar_evo_factor;
 
+    /* For stellar evo. mass loss at the next timestep */
+    sp->mass_prev_timestep = sp->mass;
     return;
   }
 
   /* Any surviving clusters? */
   if (sp->num_clusters > 0) {
-
-    const struct stars_props* props = e->stars_properties;
-    const struct cosmology *cosmo = e->cosmology;
 
     const integertime_t ti_step = get_integer_timestep(sp->time_bin);
     const integertime_t ti_begin =
@@ -489,7 +491,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
       if (sp->clusters.mass[i] == 0.f)
         continue;
 
-      const double mass = (double)sp->clusters.mass[i] * props->mass_to_solar_mass;
+      const double mass = 
+          (double)sp->clusters.mass[i] * props->mass_to_solar_mass;
 
       double dmevap = 0.f, dmsh = 0.f;
 
@@ -517,7 +520,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
         dmevap *= (double)(-sp->clusters.mass[i]) / dmdis;
         dmsh *= (double)(-sp->clusters.mass[i]) / dmdis;
   
-        /* new mass loss */
+        /* new mass loss (can't lose more than it has) */
         dmdis = (double)(-sp->clusters.mass[i]);
 
         /* We're done with this one */
@@ -537,17 +540,21 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
         sp->clusters.mass[i] += (float)dmdis;
       }
 
-      /* Stellar evolutionary mass loss for clusters */
-      sp->clusters.mass[i] *= stellar_evo_factor;
+      //TODO
+      if (dmevap > 0 || dmsh > 0) {
+        printf("Positive mass loss?? dmevp = %g; dmsh = %g\n", dmevap, dmsh);
+      }
 
       /* Cluster mass lost to field */
-      //sp->clusters.dmevap[i] += (float)dmevap;
+      sp->clusters.dmevap[i] += (float)dmevap;
       sp->clusters.dmshock[i] += (float)dmsh;
       sp->field_mass += (float)fabs(dmdis);
 
+      /* Stellar evolutionary mass loss for clusters */
+      sp->clusters.mass[i] *= stellar_evo_factor;
+
     } /* Cluster loop */
 
-    //TODO I'm not sure if this is useful/needed?
     /* Re-sum the cluster masses */
     sp->cluster_mass_total = 0.f;
     for (int i = 0; i < ninit; i++) {
@@ -558,9 +565,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
 
   /* Apply stellar evolution to the 'field' populations */
   sp->field_mass *= stellar_evo_factor;
-
   for (int i = 0; i < ninit; i++) {
-    //sp->clusters.dmevap[i] *= stellar_evo_factor;
+    sp->clusters.dmevap[i] *= stellar_evo_factor;
     sp->clusters.dmshock[i] *= stellar_evo_factor;
   }
 

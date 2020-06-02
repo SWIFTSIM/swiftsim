@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 36;
+  *num_fields = 37;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -310,6 +310,10 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   list[35] = io_make_output_field(
       "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
       "Co-moving gravitational potential at position of the particles");
+
+  list[36] = io_make_output_field(
+      "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
+      clusters.dmevap, "Cluster mass lost to evaporation");
 }
 
 /**
