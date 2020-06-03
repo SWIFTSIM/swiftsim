@@ -50,7 +50,7 @@ struct feedback_spart_data {
       /*! Total (unweighted) number gas neighbours in the stellar kernel */
       int ngb_N;
 
-      /*! Array of the miminum arclengths between the rays
+      /*! Array of the miminum arc lengths between the rays
       and the gas neighbours, used in SNII feedback  */
       float min_arclength[colibre_feedback_number_of_rays];
 
@@ -159,19 +159,24 @@ struct feedback_spart_data {
 
   /*! Arrays employed in SNII isotropic thermal-kinetic feedback */
 
-  /*! Arrays containing gas  particle IDs that have the mimimal arclengths
-  with respect to each of the (colibre_feedback_number_of_rays) rays !*/
+  /*! Arrays containing gas  particle IDs that have the mimimal arc lengths
+   * with respect to each of the (colibre_feedback_number_of_rays) rays !*/
   long long part_id_with_min_arclength[colibre_feedback_number_of_rays];
   long long part_id_with_min_arclength_mirror[colibre_feedback_number_of_rays];
 
   /*! Arrays used to account for relative star-gas motion
   in SNII kinetic feedback */
 
-  /*! Particle masses in SNII kinetic feedback */
+  /*! Particle masses in code units in SNII kinetic feedback */
   float mass_true[colibre_feedback_number_of_rays];
   float mass_mirror[colibre_feedback_number_of_rays];
 
-  /*! Particle velocities in SNII kinetic feedback */
+  /*! Particle comoving positions in code units with respect to the star
+   * in SNII kinetic feedback */
+  float x_true[colibre_feedback_number_of_rays][3];
+  float x_mirror[colibre_feedback_number_of_rays][3];
+
+  /*! Particle internal velocities in code units in SNII kinetic feedback */
   float v_true[colibre_feedback_number_of_rays][3];
   float v_mirror[colibre_feedback_number_of_rays][3];
 };
