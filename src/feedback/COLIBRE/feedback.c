@@ -665,7 +665,8 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
  */
-INLINE static void evolve_CEJSN_stochastic(
+INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
+                                           const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
     const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
@@ -674,12 +675,24 @@ INLINE static void evolve_CEJSN_stochastic(
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
+    
+  /* Update the star's age and timestep in this function using same
+   * progenitor masses as SNII */
+    if (log10_max_mass > props->log10_SNII_max_mass_msun) {
+        
+        const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+        const float max_mass = exp10f(props->log10_SNII_max_mass_msun);
+        const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
+        
+        dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
+        star_age_Gyr = lifetime_Gyr;
+    }
 
-  /* First we check that the amount of time since star was formed */
-  /* is larger than 30 Myr */
+  /* Then we check that the amount of time since star was formed
+   * is larger than 30 Myr */
   if (star_age_Gyr < 0.03) return;
   if (star_age_Gyr > 0.1) return;
-
+    
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
                     props->mass_to_solar_mass * (dt_Gyr / 0.07);
@@ -729,7 +742,8 @@ INLINE static void evolve_CEJSN_stochastic(
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
  */
-INLINE static void evolve_collapsar_stochastic(
+INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
+                                               const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
     const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
@@ -739,7 +753,19 @@ INLINE static void evolve_collapsar_stochastic(
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
 
-  /* First we check that the amount of time since star was formed */
+  /* Update the star's age and timestep in this function using
+   * 35 Msun as maximum progenitor mass */
+    if (log10_max_mass > log10_SNII_max_mass_msun) {
+        
+        const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+        const float max_mass = log10_SNII_max_mass_msun;
+        const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
+        
+        dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
+        star_age_Gyr = lifetime_Gyr;
+    }
+    
+  /* Then we check that the amount of time since star was formed */
   /* is larger than 30 Myr */
   if (star_age_Gyr < 0.03) return;
   if (star_age_Gyr > 0.1) return;
@@ -1612,11 +1638,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                stellar_yields, feedback_props, sp);
   }
   if (feedback_props->with_r_process_enrichment) {
-    evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+    evolve_NSM_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
+                          feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                           cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+    evolve_CEJSN_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
+                            feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                             cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
+    evolve_collapsar_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
+                                feedback_props, sp, star_age_Gyr, dt_Gyr,
                                 ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
   }
 
