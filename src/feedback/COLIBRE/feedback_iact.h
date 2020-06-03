@@ -98,7 +98,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     /* Transform to random number in [-1, 1[ */
     const double cos_theta_ray = 2. * rand_theta - 1.;
 
-    /* Get the angle */
+    /* Get the theta angle */
     const double theta_ray = acos(cos_theta_ray);
 
     /* Random number in [0, 1[ */
@@ -108,25 +108,30 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
     /* Transform to random number in [-pi, pi[ */
     const double phi_ray = 2.0 * M_PI * rand_phi - M_PI;
 
-    /* Calculate the arclength on a unit sphere between the jth gas particle and
-     * ith ray, and then find the minimum between this arclength and the current
-     *(running) miminum arclegnth of the ith ray */
+    /* Calculate the arc length on a unit sphere between the jth gas particle
+     *and ith ray, and then find the minimum between this arc length and the
+     *current (running) miminum arclegnth of the ith ray */
     const float new_arclength =
         find_min_arclength(theta_ray, phi_ray, theta_j, phi_j, /*r_sphere=*/1.f,
                            si->feedback_data.to_collect.min_arclength[i]);
 
-    /* If the new arclength is smaller than the older value, then store
+    /* If the new arc length is smaller than the older value, then store
      * the new one. Also store the relevant properties of the particle
-     * that now has the miminum arclength with the ith ray */
+     * that now has the miminum arc length with the ith ray */
     if (new_arclength) {
       si->feedback_data.to_collect.min_arclength[i] = new_arclength;
       si->feedback_data.part_id_with_min_arclength[i] = pj->id;
 
-      /* Velocity and mass are needed for the mirror approach we adopt in
-       * kinetic feedback to exactly conserve momentum and energy. That's
-       * because in a pair of two particles, the first one needs to know the
-       * properties of the other one, and vice versa */
+      /* Position, velocity and mass are needed for the mirrored-kick approach
+       * we adopt in kinetic feedback to exactly conserve momentum and energy.
+       * That's because in a pair of two particles, the first one needs to know
+       * the properties of the other one, and vice versa */
       si->feedback_data.mass_true[i] = pj->mass;
+
+      si->feedback_data.x_true[i][0] = -dx[0];
+      si->feedback_data.x_true[i][1] = -dx[1];
+      si->feedback_data.x_true[i][2] = -dx[2];
+
       si->feedback_data.v_true[i][0] = pj->v[0];
       si->feedback_data.v_true[i][1] = pj->v[1];
       si->feedback_data.v_true[i][2] = pj->v[2];
@@ -150,11 +155,16 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
     if (new_arclength_mirror) {
 
-      /* Collect the mirror information */
+      /* Collect the mirror-particle information */
       si->feedback_data.to_collect.min_arclength_mirror[i] =
           new_arclength_mirror;
       si->feedback_data.part_id_with_min_arclength_mirror[i] = pj->id;
       si->feedback_data.mass_mirror[i] = pj->mass;
+
+      si->feedback_data.x_mirror[i][0] = -dx[0];
+      si->feedback_data.x_mirror[i][1] = -dx[1];
+      si->feedback_data.x_mirror[i][2] = -dx[2];
+
       si->feedback_data.v_mirror[i][0] = pj->v[0];
       si->feedback_data.v_mirror[i][1] = pj->v[1];
       si->feedback_data.v_mirror[i][2] = pj->v[2];
@@ -367,8 +377,15 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     for (int i = 0;
          i < si->feedback_data.to_distribute.SNII_number_of_kick_events; i++) {
 
-      /* Find the particle that is closest to the ith ray */
-      if (pj->id == si->feedback_data.part_id_with_min_arclength[i]) {
+      /* Find the particle that is closest to the ith ray OR the ith mirror ray
+       */
+      if (pj->id == si->feedback_data.part_id_with_min_arclength[i] ||
+          pj->id == si->feedback_data.part_id_with_min_arclength_mirror[i]) {
+
+        /* Which particles have we cought: the original one or the mirror one?
+         */
+        const int mirror_particle_switch =
+            (pj->id == si->feedback_data.part_id_with_min_arclength_mirror[i]);
 
         /* Get \theta and \phi coordinates of the ray */
 
@@ -386,18 +403,158 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         /* Transform to random number in [-pi, pi[ */
         const double phi_ray = 2.0 * M_PI * rand_phi - M_PI;
 
-        /* For the ith ray, (simultaneously) compute sin and cosine of \phi */
-        double sin_phi_ray, cos_phi_ray;
-        sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
+        /* Normal vector definding the direction of the kick */
+        double n_ray[3];
 
-        /* We already have cos\theta, so we can compute sin\theta by using the
-         * trigonometic identity */
-        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray * cos_theta_ray);
+        /* To conserve angular momentum -- along with linear momentum and energy
+         * -- we need to kick the two particles in the pair along the line that
+         * connects these two particles. In the code below, we start with
+         * finding the equation difining this line. The line equation(-s) reads:
+         * (x-x_0)/a = (y-y_0)/b = (z-z_0)/c . We thus need to find the
+         * coefficients a, b and c. Since we already know two points on this
+         * line, which are the particles' positions, this is a straighforward
+         * exercise to do. */
 
-        /* Compute the normal vector of the ith ray */
-        const double n_ray[3] = {sin_theta_ray * cos_phi_ray,  // x
-                                 sin_theta_ray * sin_phi_ray,  // y
-                                 cos_theta_ray};               // z
+        /* Coeffitients defining the line connecting the two particles */
+        double a, b, c;
+
+        /* Modulus of the vector {a, b, c} that defines the line
+         * connecting the original particle with the mirror particle */
+        double normalisation;
+
+        /* The kick angles */
+        double phi_kick, theta_kick;
+
+        /* If we have no degeneracy along the x coordinate, we can divide
+         * by (x_2 - x_1) to compute the coefficients b and c */
+        if (si->feedback_data.x_true[i][0] !=
+            si->feedback_data.x_mirror[i][0]) {
+
+          /* Due to freedom in normalisation, the coefficient a can be
+           * set to 1 */
+          a = 1.0;
+
+          /* Compute b = b/1.0 = b/a = (y_2 - y_1) / (x_2 - x_1) */
+          b = (si->feedback_data.x_true[i][1] -
+               si->feedback_data.x_mirror[i][1]) /
+              (si->feedback_data.x_true[i][0] -
+               si->feedback_data.x_mirror[i][0]);
+
+          /* Compute c = c/1.0 = c/a = (z_2 - z_1) / (x_2 - x_1) */
+          c = (si->feedback_data.x_true[i][2] -
+               si->feedback_data.x_mirror[i][2]) /
+              (si->feedback_data.x_true[i][0] -
+               si->feedback_data.x_mirror[i][0]);
+
+          /* Compute the modulus of {a, b, c} and the kick angles */
+          normalisation = sqrt(1.0 + b * b + c * c);
+          phi_kick = atan2(b, 1.0);
+          theta_kick = acos(c / normalisation);
+        }
+
+        /* If x2 and x1 are the same, we cannot divide by (x_2 - x_1) */
+        /* If we have no degeneracy along the y coordinate, we can divide
+         * by (y_2 - y_1) to compute the coefficient c */
+        else if (si->feedback_data.x_true[i][1] !=
+                 si->feedback_data.x_mirror[i][1]) {
+
+          /* Since x_2 = x_1, the line is perpendicular to the x axis so
+           * that a = 0 and \phi_kick = \pi/2 */
+          a = 0.0;
+
+          /* Due to freedom in normalisation, the coefficient b can be
+           * set to 1 */
+          b = 1.0;
+
+          /* Compute c = c/1.0 = c/b = (z_2 - z_1) / (y_2 - y_1) */
+          c = (si->feedback_data.x_true[i][2] -
+               si->feedback_data.x_mirror[i][2]) /
+              (si->feedback_data.x_true[i][1] -
+               si->feedback_data.x_mirror[i][1]);
+
+          /* Compute the modulus of {a ,b ,c} and the kick angles */
+          normalisation = sqrt(1.0 + c * c);
+          phi_kick = M_PI_2;
+          theta_kick = acos(c / normalisation);
+        }
+
+        /* y_2 - y_1 = 0 as well as x_2 - x_1 = 0 */
+        else {
+
+          /* The line is parallel to the z axis, the coefficients a and b
+           * are zero. The angles \phi_kick = 0.0, and \theta_kick = 0.0 */
+          a = 0.0;
+          b = 0.0;
+
+          /* Due to freedom in normalisation, the coeffitient c can be
+           * set to 1.0 */
+          c = 1.0;
+
+          /* Compute the modulus of {a ,b ,c} and the kick angles */
+          normalisation = 1.0;
+          phi_kick = 0.0;
+          theta_kick = 0.0;
+        }
+
+        /* By now, by computing the equation of the line connecting the two
+         * particles in the pair, we have found the direction of the kick.
+         * However, for a given particle in the pair, we know this direction
+         * only up to a sign, i.e. we as of yet do not know whether we should
+         * kick the particle "up" or "down" the line. In order to get the sign
+         * right we need to do some additional calculations. Namely, we need
+         * to compare the direction of the line we found with that of the
+         * original and mirror rays. In total, we have four cases:
+         *
+         * 1 and 2: IF the (theta_kick, phi_kick) direction is closest to the
+         * direction of the original (mirror) ray AND we have cought the
+         * original (mirror) particle THEN KICK along the (theta_kick,
+         * phi_kick) direction. 3 and 4: IF the (theta_kick, phi_kick)
+         * direction is closest to the direction of the original (mirror) ray
+         * BUT we have cought the mirror (original) particle THEN KICK along
+         * the OPPOSITE
+         * (\pi - theta_kick, phi_kick - pi*sign(phi_kick)) direction */
+
+        /* Thus far we've only got cos\theta. But in order to compute arc
+        lengths used in the algorithm described above we need \theta */
+        const double theta_ray = acos(cos_theta_ray);
+
+        /* Compute the arc lengh between the original ray and the line
+         * defining the direction of the kicks. We shift theta coordinates by
+         * -pi/2 because we have \theta \in [0, \pi[ while the function wants
+         * \theta \in [-\pi/2, \pi/2[*/
+        const double arclength_true =
+            arclength(theta_kick - M_PI_2, phi_kick, theta_ray - M_PI_2,
+                      phi_ray, /*r_sphere=*/1.f);
+
+        /* \theta and \phi angles of the mirror ray, pointing in the
+         * direction opposite to the original one. We need those to compute
+         * the arc length below */
+        const double theta_ray_mirror = M_PI - theta_ray;
+        const double phi_ray_mirror = phi_ray - copysign(M_PI, phi_ray);
+
+        /* Compute the arc lengh between the mirror ray and the line defining
+         * the direction of the kicks */
+        const double arclength_mirror =
+            arclength(theta_kick - M_PI_2, phi_kick, theta_ray_mirror - M_PI_2,
+                      phi_ray_mirror, /*r_sphere=*/1.f);
+
+        /* Find the mimimum arc length between the two arc length computed
+         * above */
+        const double arclength_min = min(arclength_true, arclength_mirror);
+
+        /* Find out whether the minimal arc length is that with the original
+        ray or the mirror ray */
+        const int mirror_ray_switch = (arclength_min == arclength_mirror);
+
+        /* Compute the sign of the kick depending on which case we are in: 1,
+         * 2, 3 or 4 */
+        const double kick_sign =
+            (mirror_particle_switch == mirror_ray_switch) ? 1.0 : -1.0;
+
+        /* Compute the normal vector of the kick */
+        n_ray[0] = kick_sign * a / normalisation;  // x
+        n_ray[1] = kick_sign * b / normalisation;  // y
+        n_ray[2] = kick_sign * c / normalisation;  // z
 
         /* Get the particle mass before any feedback at this time-step  */
         const double mass_true = si->feedback_data.mass_true[i];
@@ -417,7 +574,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
          * current_mass and not by mass_true since this is the weight for the
          * velocity v, which -- for the considered gas particle -- is related to
          * the momentum p as p = current_mass * v and not via mass_true. The
-         * differences between current_mass and mass_true, if evev exist, are
+         * differences between current_mass and mass_true, if ever exist, are
          * obviously very minor. Nonetheless, these are not neglegible because
          * we require the exact conservation of linear momentum. */
         const double m_alpha =
@@ -426,8 +583,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Relative velocity between the gas particle and the stellar particle
          */
-        double v_gas_star[3] = {pj->v[0] - si->v[0], pj->v[1] - si->v[1],
-                                pj->v[2] - si->v[2]};
+        double v_gas_star[3] = {si->feedback_data.v_true[i][0] - si->v[0],
+                                si->feedback_data.v_true[i][1] - si->v[1],
+                                si->feedback_data.v_true[i][2] - si->v[2]};
 
         /* Relative velocity between the mirror gas particle and the stellar
          * particle */
@@ -461,108 +619,21 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             si->feedback_data.to_distribute.SNII_number_of_kick_events;
 
         /* Compute the characteristic kick velocity corresponding to the kinetic
-         * energy per pair */
+         * energy per pair. */
         const double SNII_delta_v =
             sqrt(2.0 * energy_per_pair / (mass_true + mass_mirror));
 
         /* Compute the correction to the energy and momentum due to relative
-         * star-gas motion. If there is no correction then
-         * alpha = 0 and beta = 1 */
-        const double alpha =
-            m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
+         * star-gas motion. If it is the mirror particle multiply by the minus
+         * sign. If there is no correction then alpha = 0 and beta = 1 */
+        const double correction_sign = (mirror_particle_switch) ? -1.0 : 1.0;
+
+        const double alpha = correction_sign * m_alpha *
+                             (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
         const double beta = sqrt(alpha * alpha + 1.0) - alpha;
 
         /* Do the kicks by updating the particle velocity.
          * Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
-         * Therefore, a physical kick, dv, gets translated into a
-         * code velocity kick, a * dv */
-        xpj->v_full[0] +=
-            SNII_delta_v * n_ray[0] * mass_weight * beta * cosmo->a;
-        xpj->v_full[1] +=
-            SNII_delta_v * n_ray[1] * mass_weight * beta * cosmo->a;
-        xpj->v_full[2] +=
-            SNII_delta_v * n_ray[2] * mass_weight * beta * cosmo->a;
-
-        /* Update the signal velocity of the particle based on the velocity kick
-         */
-        hydro_set_v_sig_based_on_velocity_kick(
-            pj, cosmo, SNII_delta_v * beta * mass_weight);
-
-        /* Synchronize the particle on the timeline */
-        timestep_sync_part(pj);
-      }
-
-      /* Do the same as in the code above but now for the mirror particles */
-      if (pj->id == si->feedback_data.part_id_with_min_arclength_mirror[i]) {
-
-        /* Get \theta and \phi coordinates of the ray */
-
-        /* Random number in [0, 1[ */
-        const double rand_theta = random_unit_interval_star_ID_and_ray_idx(
-            si->id, i, ti_current, random_number_isotropic_feedback_ray_theta);
-
-        /* Transform to random number in [-1, 1[ */
-        const double cos_theta_ray = 2. * rand_theta - 1.;
-
-        /* Random number in [0, 1[ */
-        const double rand_phi = random_unit_interval_star_ID_and_ray_idx(
-            si->id, i, ti_current, random_number_isotropic_feedback_ray_phi);
-
-        /* Transform to random number in [-pi, pi[ */
-        const double phi_ray = 2.0 * M_PI * rand_phi - M_PI;
-
-        double sin_phi_ray, cos_phi_ray;
-        sincos(phi_ray, &sin_phi_ray, &cos_phi_ray);
-
-        const double sin_theta_ray = sqrt(1.0 - cos_theta_ray * cos_theta_ray);
-
-        /* Note the appearance of the minus sign in the definition of n_ray.
-         * That is because mirror particles are kicked in the direction opposite
-         * to the original one */
-        const double n_ray[3] = {-sin_theta_ray * cos_phi_ray,  // x
-                                 -sin_theta_ray * sin_phi_ray,  // y
-                                 -cos_theta_ray};               // z
-
-        const double mass_true = si->feedback_data.mass_true[i];
-        const double mass_mirror = si->feedback_data.mass_mirror[i];
-
-        const double m_alpha =
-            sqrt(mass_true * mass_mirror) / (mass_true + mass_mirror);
-        const double mass_weight = sqrt(mass_true * mass_mirror) / current_mass;
-
-        double v_gas_star[3] = {pj->v[0] - si->v[0], pj->v[1] - si->v[1],
-                                pj->v[2] - si->v[2]};
-
-        double v_gas_mirror_star[3] = {
-            si->feedback_data.v_true[i][0] - si->v[0],
-            si->feedback_data.v_true[i][1] - si->v[1],
-            si->feedback_data.v_true[i][2] - si->v[2]};
-
-        for (int j = 0; j < 3; j++) {
-          v_gas_star[j] /= cosmo->a;
-          v_gas_mirror_star[j] /= cosmo->a;
-        }
-
-        const double v_cos_theta =
-            (v_gas_star[0] * n_ray[0] + v_gas_star[1] * n_ray[1] +
-             v_gas_star[2] * n_ray[2]);
-
-        const double v_mirror_cos_theta =
-            (v_gas_mirror_star[0] * n_ray[0] + v_gas_mirror_star[1] * n_ray[1] +
-             v_gas_mirror_star[2] * n_ray[2]);
-
-        const double energy_per_pair =
-            si->feedback_data.to_distribute.SNII_E_kinetic /
-            si->feedback_data.to_distribute.SNII_number_of_kick_events;
-
-        const double SNII_delta_v =
-            sqrt(2.0 * energy_per_pair / (mass_true + mass_mirror));
-        const double alpha =
-            m_alpha * (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
-
-        const double beta = sqrt(alpha * alpha + 1.0) - alpha;
-
-        /* Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
          * Therefore, a physical kick, dv, gets translated into a
          * code velocity kick, a * dv */
         xpj->v_full[0] +=
