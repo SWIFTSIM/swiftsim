@@ -137,13 +137,10 @@ struct feedback_props {
 
   /* ------------- SNIa parameters    --------------- */
 
-  /*! Log 10 of the maximal mass used for SNIa feedback (in solar masses) */
-  float log10_SNIa_max_mass_msun;
-
-  /*! Energy released by one supernova type II in cgs units */
+  /*! Energy released by one supernova type Ia in cgs units */
   double E_SNIa_cgs;
 
-  /*! Energy released by one supernova type II in internal units */
+  /*! Energy released by one supernova type Ia in internal units */
   float E_SNIa;
 
   /* SNIa DTD struct with information about the DTD */
