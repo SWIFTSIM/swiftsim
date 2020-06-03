@@ -98,6 +98,12 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
   sp->HIIregion_mass_in_kernel = -1.f;
   sp->star_timestep = 0.f;
 
+  /* Only MOSAICS task for this particle is stellar evo. for field */
+  sp->num_clusters = 0;
+  sp->initial_num_clusters = 0;
+  sp->initial_num_clusters_evo = 0;
+  sp->field_mass = sp->mass;
+
   stars_init_spart(sp);
 }
 
