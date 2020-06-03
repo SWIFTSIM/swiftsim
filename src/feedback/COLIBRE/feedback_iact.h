@@ -23,6 +23,7 @@
 #include "arclength.h"
 #include "event_logger.h"
 #include "random.h"
+#include "sincos.h"
 #include "timestep_sync_part.h"
 #include "tracers.h"
 
