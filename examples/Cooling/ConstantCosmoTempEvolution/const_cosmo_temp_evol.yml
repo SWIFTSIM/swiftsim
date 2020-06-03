@@ -88,6 +88,7 @@ COLIBREChemistry: 	     # Primordial abundances
   init_abundance_Magnesium:  0.
   init_abundance_Silicon:    0.
   init_abundance_Iron:       0.
+  init_abundance_Europium:   0.
   metal_diffusion_constant:         0.   # No diffusion
   metal_diffusion_timestep_mult:    1e10 # No time-step constraint
 
@@ -100,7 +101,7 @@ COLIBRECooling:
   He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
   He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   delta_logTEOS_subgrid_properties: 0.2
-  rapid_cooling_threshold:          1.0    
+  rapid_cooling_threshold:          0.333333    
 
 COLIBREFeedback:
   HIIregion_ionization_fraction: 1.0

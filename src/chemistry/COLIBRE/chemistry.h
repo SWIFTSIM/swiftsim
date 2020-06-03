@@ -242,7 +242,10 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
           data->initial_metal_mass_fraction[elem];
     }
   }
-    
+
+  const double mass = hydro_get_mass(p);
+  p->chemistry_data.initial_metal_mass =
+      data->initial_metal_mass_fraction_total * mass;
 
   chemistry_init_part(p, data);
 

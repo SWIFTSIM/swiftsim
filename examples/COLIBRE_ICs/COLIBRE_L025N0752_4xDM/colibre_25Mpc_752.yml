@@ -78,7 +78,7 @@ COLIBRECooling:
   He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
   He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   delta_logTEOS_subgrid_properties: 0.2      # delta log T above the EOS below which the subgrid properties use Teq assumption
-  rapid_cooling_threshold:          1.0      # Switch to rapid cooling regime for dt / t_cool above this threshold.
+  rapid_cooling_threshold:          0.333333 # Switch to rapid cooling regime for dt / t_cool above this threshold.
 
 # CHIMES cooling parameters
 CHIMESCooling: 
@@ -107,7 +107,7 @@ CHIMESCooling:
   use_colibre_subgrid_EOS:    1           # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
   set_FB_particles_to_eqm:    1           # Flag to set particles to eqm if they have been heated by feedback 
   use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
-  rapid_cooling_threshold:    1.0         # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
+  rapid_cooling_threshold:    0.333333    # Threshold in dt / t_cool to switch between rapid- and slow-cooling modes
   colibre_table_path:         ./UV_dust1_CR1_G1_shield1.hdf5  # Path to COLIBRE cooling tables (Ploeckinger et al. in prep)
   UVB_cutoff_z:               127.0            # Redshift above which the UVB is switched off 
   ISRF_low_dens_cutoff_z:     7.5              # Redshift above which the ISRF is cut off at low densities (UV_field_flag == 2 only)
@@ -135,6 +135,7 @@ COLIBREChemistry:
   init_abundance_Magnesium: 0.0    # Inital fraction of particle mass in Magnesium
   init_abundance_Silicon:   0.0    # Inital fraction of particle mass in Silicon
   init_abundance_Iron:      0.0    # Inital fraction of particle mass in Iron
+  init_abundance_Europium:  0.0    # Inital fraction of particle mass in Europium
   metal_diffusion_constant:         0.01           # Metal diffusion constant (Smagorinsky constant)
   metal_diffusion_timestep_mult:    0.2            # Run-time parameter to control the time-step condition based on the diffusion rate.
 

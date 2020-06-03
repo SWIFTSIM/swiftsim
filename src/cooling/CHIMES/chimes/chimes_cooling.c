@@ -309,6 +309,15 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
   ChimesFloat total_cooling = 0.0f;
   ChimesFloat total_heating = 0.0f;
 
+  // Check that mode is valid.
+  if (!((mode == 0) || (mode == 1) || (mode == 2))) {
+    printf(
+        "CHIMES error: calculate_total_cooling_rate() called with mode == %d. "
+        "Allowed modes: 0 (net cooling), 1 (cooling only), 2 (heating only).\n",
+        mode);
+    chimes_exit();
+  }
+
   update_cooling_rates(myGasVars, myGlobalVars, data);
 
   x_elec = myGasVars->abundances[myGlobalVars->speciesIndices[sp_elec]];
@@ -719,7 +728,7 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
           "CHIMES error: hybrid_cooling_mode == %d, but the hybrid_cooling_fn "
           "has not been set. \n",
           myGlobalVars->hybrid_cooling_mode);
-      exit(EXIT_FAILURE);
+      chimes_exit();
     }
 
     total_heating += (ChimesFloat)(*myGlobalVars->hybrid_cooling_fn)(
@@ -735,15 +744,8 @@ ChimesFloat calculate_total_cooling_rate(struct gasVariables *myGasVars,
     return total_cooling - total_heating;
   else if (mode == 1)
     return total_cooling;
-  else if (mode == 2)
+  else  // mode == 2
     return total_heating;
-  else {
-    printf(
-        "CHIMES error: calculate_total_cooling_rate() called with mode == %d. "
-        "Allowed modes: 0 (net cooling), 1 (cooling only), 2 (heating only).\n",
-        mode);
-    exit(EXIT_FAILURE);
-  }
 }
 
 /**

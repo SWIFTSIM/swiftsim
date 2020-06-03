@@ -107,6 +107,17 @@ struct chimes_eqm_abundances_struct
     chimes_table_eqm_abundances; /*!< Structure containing the equilibrium
                                     abundance tables. */
 
+void (*chimes_exit)(void) = NULL;
+
+/**
+ * @brief Default exit routine.
+ *
+ * If the User does not specify a custom
+ * chimes_exit() routine, use this routine
+ * as a default.
+ */
+void chimes_exit_default(void) { exit(EXIT_FAILURE); }
+
 /**
  * @brief Allocate memory to eqm tables.
  *
@@ -130,7 +141,7 @@ void allocate_eqm_table_memory(
   if (file_id < 0) {
     printf("CHIMES ERROR: unable to open equilibrium abundance data file: %s\n",
            filename);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   /* Check that the number of species
@@ -146,7 +157,7 @@ void allocate_eqm_table_memory(
         "CHIMES ERROR: equilibrium table %s contains %d species, but we are "
         "using a network with %d species.\n",
         filename, N_species, myGlobalVars->totalNumberOfSpecies);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   /* Read in size of each dimension */
@@ -233,7 +244,7 @@ void load_eqm_table(char *filename,
   if (file_id < 0) {
     printf("CHIMES ERROR: unable to open equilibrium abundance data file: %s\n",
            filename);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   // Read in the abundance array.
@@ -341,7 +352,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
 
   if (file_id < 0) {
     printf("CHIMES ERROR: unable to open main data file: %s\n", fname);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   /****************
@@ -3185,7 +3196,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
           printf(
               "CHIMES ERROR: In photoion_auger_fuv group, base reaction not "
               "found in reduced network.\n");
-          exit(EXIT_FAILURE);
+          chimes_exit();
         }
 
         /* Auger ionisations involve a single photon releasing
@@ -3289,7 +3300,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
           printf(
               "CHIMES ERROR: In photoion_auger_euv group, base reaction not "
               "found in reduced network.\n");
-          exit(EXIT_FAILURE);
+          chimes_exit();
         }
 
         /* Auger ionisations involve a single photon releasing
@@ -3704,7 +3715,7 @@ void initialise_main_data(struct globalVariables *myGlobalVars) {
       printf(
           "CHIMES ERROR: redshift_dependent_UVB_index = %d, N_spectra = %d.\n",
           myGlobalVars->redshift_dependent_UVB_index, myGlobalVars->N_spectra);
-      exit(EXIT_FAILURE);
+      chimes_exit();
     }
 
     allocate_redshift_dependent_UVB_memory(myGlobalVars);
@@ -3950,7 +3961,7 @@ void read_cross_sections_tables(
 
   if (file_id < 0) {
     printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   dataset = H5Dopen(file_id, "TableBins/N_Column_densities", H5P_DEFAULT);
@@ -4021,7 +4032,7 @@ void read_cross_sections_tables(
 
     if (file_id < 0) {
       printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname);
-      exit(EXIT_FAILURE);
+      chimes_exit();
     }
 
     // photoion_fuv
@@ -4372,6 +4383,8 @@ int set_species_index_array(struct globalVariables *myGlobalVars) {
 void init_chimes(struct globalVariables *myGlobalVars) {
   char fname[520];
 
+  if (chimes_exit == NULL) chimes_exit = &chimes_exit_default;
+
   /* Print the float precision used in CHIMES
    * and in the Sundials library. */
   if (sizeof(ChimesFloat) == sizeof(float))
@@ -4395,7 +4408,7 @@ void init_chimes(struct globalVariables *myGlobalVars) {
     printf(
         "CHIMES ERROR: CHIMES and Sundials have to use the same float "
         "precision.\n");
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   myGlobalVars->totalNumberOfSpecies = set_species_index_array(myGlobalVars);
@@ -4414,7 +4427,7 @@ void init_chimes(struct globalVariables *myGlobalVars) {
           "\n",
           myGlobalVars->use_redshift_dependent_eqm_tables,
           myGlobalVars->redshift_dependent_UVB_index);
-      exit(EXIT_FAILURE);
+      chimes_exit();
     }
     sprintf(fname, "%s/z%.3f_eqm.hdf5", myGlobalVars->EqAbundanceTablePath,
             chimes_table_redshift_dependent_UVB.redshift_bins[0]);
@@ -4922,7 +4935,7 @@ void allocate_current_rates_memory(
         "CHIMES ERROR: in allocate_current_rates_memory(), buffer_position = "
         "%d, buffer_size = %d. \n",
         buffer_position, buffer_size);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   return;
@@ -5018,7 +5031,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
         "CHIMES ERROR: load_redshift_dependent_UVB() called with bin_index == "
         "%d. Allowed values are 0 or 1.\n",
         bin_index);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   sprintf(fname, "%s/z%.3f_cross_sections.hdf5",
@@ -5029,7 +5042,7 @@ void load_redshift_dependent_UVB(ChimesFloat redshift, int bin_index,
 
   if (file_id < 0) {
     printf("CHIMES ERROR: unable to open cross sections file: %s\n", fname);
-    exit(EXIT_FAILURE);
+    chimes_exit();
   }
 
   // photoion_fuv
