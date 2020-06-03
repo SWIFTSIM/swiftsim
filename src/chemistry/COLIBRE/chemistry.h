@@ -223,12 +223,12 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     const struct cosmology* restrict cosmo,
     const struct chemistry_global_data* data, struct part* restrict p,
     struct xpart* restrict xp) {
-    
+
   // Add initialization of all other fields in chemistry_part_data struct.
   if (data->initial_metal_mass_fraction_total != -1) {
     p->chemistry_data.metal_mass_fraction_total =
         data->initial_metal_mass_fraction_total;
-      
+
     for (int elem = 0; elem < chemistry_element_count; ++elem) {
       p->chemistry_data.metal_mass_fraction[elem] =
           data->initial_metal_mass_fraction[elem];
@@ -253,7 +253,6 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
   p->chemistry_data.iron_diffused_redshift = 0.0f;
   p->chemistry_data.track_of_metal_mass_total = 0.0f;
   p->chemistry_data.track_of_iron_mass = 0.0f;
-    
 }
 
 /**
@@ -442,10 +441,12 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
 
   /* Calculate iron mass (gain/lost through diffusion) times redshift */
   double delta_iron_mass =
-      p->chemistry_data.dmetal_mass_fraction[chemistry_element_Fe] * current_mass;
+      p->chemistry_data.dmetal_mass_fraction[chemistry_element_Fe] *
+      current_mass;
   p->chemistry_data.iron_diffused_redshift += delta_iron_mass * ztime;
-    
-  /* Since you are gaining/losing metals let's update the tracking arrays used later in feedback_iact */
+
+  /* Since you are gaining/losing metals let's update the tracking arrays used
+   * later in feedback_iact */
   p->chemistry_data.track_of_metal_mass_total += delta_metal_mass;
   p->chemistry_data.track_of_iron_mass += delta_iron_mass;
 

@@ -258,7 +258,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
         pj->chemistry_data.metal_diffused_redshift;
 
     pj->chemistry_data.track_of_metal_mass_total += delta_metal_mass_total;
-    pj->chemistry_data.metal_weighted_redshift /= pj->chemistry_data.track_of_metal_mass_total;
+    pj->chemistry_data.metal_weighted_redshift /=
+        pj->chemistry_data.track_of_metal_mass_total;
 
     /* Reset values */
     pj->chemistry_data.metal_diffused_redshift = 0.f;
@@ -291,25 +292,32 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       si->feedback_data.to_distribute.Fe_mass_from_SNIa * Omega_frac;
   const double new_iron_from_SNIa_mass =
       current_iron_from_SNIa_mass + delta_iron_from_SNIa_mass;
-    
+
   pj->chemistry_data.iron_mass_fraction_from_SNIa =
       new_iron_from_SNIa_mass * new_mass_inv;
 
   /* Calculate mean iron weighted redshift */
   if (pj->chemistry_data.iron_weighted_redshift < 0.f)
     pj->chemistry_data.iron_weighted_redshift = 0.f;
-    
-  const double delta_iron_mass = si->feedback_data.to_distribute.metal_mass[chemistry_element_Fe] * Omega_frac;
+
+  const double delta_iron_mass =
+      si->feedback_data.to_distribute.metal_mass[chemistry_element_Fe] *
+      Omega_frac;
 
   if (delta_iron_mass > 0.f) {
-      
-      pj->chemistry_data.iron_weighted_redshift = ztime * delta_iron_mass + pj->chemistry_data.iron_weighted_redshift * pj->chemistry_data.track_of_iron_mass + pj->chemistry_data.iron_diffused_redshift;
-      
-      pj->chemistry_data.track_of_iron_mass += delta_iron_mass;
-      pj->chemistry_data.iron_weighted_redshift /= pj->chemistry_data.track_of_iron_mass;
-      pj->chemistry_data.iron_diffused_redshift = 0.f;
-    }
-    
+
+    pj->chemistry_data.iron_weighted_redshift =
+        ztime * delta_iron_mass +
+        pj->chemistry_data.iron_weighted_redshift *
+            pj->chemistry_data.track_of_iron_mass +
+        pj->chemistry_data.iron_diffused_redshift;
+
+    pj->chemistry_data.track_of_iron_mass += delta_iron_mass;
+    pj->chemistry_data.iron_weighted_redshift /=
+        pj->chemistry_data.track_of_iron_mass;
+    pj->chemistry_data.iron_diffused_redshift = 0.f;
+  }
+
   /* Update mass from SNIa  */
   const double delta_mass_from_SNIa =
       si->feedback_data.to_distribute.mass_from_SNIa * Omega_frac;
