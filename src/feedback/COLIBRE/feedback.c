@@ -802,25 +802,10 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
                                struct spart* sp, double star_age_Gyr,
                                double dt_Gyr) {
 
-  /* Check if we're outside the mass range for SNIa */
-  if (log10_min_mass >= props->log10_SNIa_max_mass_msun) return;
-
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-
-  /* If the max mass is outside the mass range update it to be the maximum
-   * and use updated values for the star's age and timestep in this function */
-  if (log10_max_mass > props->log10_SNIa_max_mass_msun) {
-
-    const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-    const float max_mass = exp10f(props->log10_SNIa_max_mass_msun);
-    const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
-
-    dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
-    star_age_Gyr = lifetime_Gyr;
-  }
 
   /* Compute the number of SNIa */
   const float num_SNIa =
@@ -1809,10 +1794,6 @@ void feedback_props_init(struct feedback_props* fp,
   }
 
   /* Properties of the SNIa enrichment model -------------------------------- */
-
-  const double SNIa_max_mass_msun =
-      parser_get_param_double(params, "COLIBREFeedback:SNIa_max_mass_Msun");
-  fp->log10_SNIa_max_mass_msun = log10(SNIa_max_mass_msun);
 
   /* Load the SNIa model */
   dtd_init(fp, phys_const, us, params);
