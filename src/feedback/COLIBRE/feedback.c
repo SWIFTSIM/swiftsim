@@ -753,17 +753,8 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
 
-  /* Update the star's age and timestep in this function using
-   * 35 Msun as maximum progenitor mass */
-    if (log10_max_mass > log10_SNII_max_mass_msun) {
-        
-        const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-        const float max_mass = log10_SNII_max_mass_msun;
-        const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
-        
-        dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
-        star_age_Gyr = lifetime_Gyr;
-    }
+  /* Let's calculate the dying stars lifetimes */
+  const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
     
   /* Then we check that the amount of time since star was formed */
   /* is larger than 30 Myr */
