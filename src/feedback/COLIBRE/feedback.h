@@ -75,16 +75,29 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
   sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
   sp->feedback_data.to_collect.ngb_N = 0;
-  for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
-    sp->feedback_data.to_collect.min_arclength[i] = -1.f;
-    sp->feedback_data.part_id_with_min_arclength[i] = 0;
 
-    sp->feedback_data.to_collect.min_arclength_mirror[i] = -1.f;
+  /* Loop over rays in SN feedback */
+  for (int i = 0; i < colibre_feedback_number_of_rays; i++) {
+
+    /* Reset particle arc lengths in SN feedback */
+    sp->feedback_data.to_collect.min_arclength[i] = FLT_MAX;
+    sp->feedback_data.to_collect.min_arclength_mirror[i] = FLT_MAX;
+
+    /* Reset particle IDs in SN feedback */
+    sp->feedback_data.part_id_with_min_arclength[i] = 0;
     sp->feedback_data.part_id_with_min_arclength_mirror[i] = 0;
 
+    /* Reset particle masses in SNII kinetic feedback */
     sp->feedback_data.mass_true[i] = 0.f;
     sp->feedback_data.mass_mirror[i] = 0.f;
+
     for (int j = 0; j < 3; j++) {
+
+      /* Reset particle relative comoving positions in SNII kinetic feedback */
+      sp->feedback_data.x_true[i][j] = 0.f;
+      sp->feedback_data.x_mirror[i][j] = 0.f;
+
+      /* Reset particle internal velocities in SNII kinetic feedback */
       sp->feedback_data.v_true[i][j] = 0.f;
       sp->feedback_data.v_mirror[i][j] = 0.f;
     }
