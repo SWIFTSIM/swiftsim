@@ -684,8 +684,9 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
   if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
     
   /* Here we calculate for how long CEJSN events will take place */
-  float max_mass = exp10f(props->log10_SNIa_max_mass_msun);
-  float min_mass = exp10f(props->log10_SNIa_min_mass_msun);
+  float max_mass = exp10f(props->log10_SNII_max_mass_msun);
+  float min_mass = exp10f(props->log10_SNII_min_mass_msun);
+  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
   const float lifetime_Gyr_min = lifetime_in_Gyr(max_mass, Z, props);
   const float lifetime_Gyr_max = lifetime_in_Gyr(min_mass, Z, props);
   float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
@@ -699,7 +700,7 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
       random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
 
   int num_events = 0;
-  if (num_CEJSN > 1.f) {
+  if (num_CEJSN > 1) {
     num_events = floor(num_CEJSN);
     num_CEJSN -= num_events;
   }
@@ -756,8 +757,9 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   if (log10_max_mass < 1.) return;
     
   /* Here we calculate for how long CEJSN events will take place */
-  const float lifetime_Gyr_min = lifetime_in_Gyr(100, Z, props);
-  const float lifetime_Gyr_max = lifetime_in_Gyr(10, Z, props);
+  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  const float lifetime_Gyr_min = lifetime_in_Gyr(100., Z, props);
+  const float lifetime_Gyr_max = lifetime_in_Gyr(10., Z, props);
   float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
 
   /* Number of collapsar events in timestep */
@@ -769,7 +771,7 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
       random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
 
   int num_events = 0;
-  if (num_collapsar > 1.f) {
+  if (num_collapsar > 1) {
     num_events = floor(num_collapsar);
     num_collapsar -= num_events;
   }
