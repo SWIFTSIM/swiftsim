@@ -61,10 +61,6 @@ struct chemistry_global_data {
  */
 struct chemistry_part_data {
 
-  /* Initial metal mass from params*/
-  float initial_metal_mass;
-  float initial_iron_mass;
-
   /*! Fraction of the particle mass in a given element */
   float metal_mass_fraction[chemistry_element_count];
 

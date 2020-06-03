@@ -251,20 +251,17 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
   if (delta_metal_mass_total > 0.f) {
 
-    /* Remove initial mass */
-    new_metal_mass_total -= pj->chemistry_data.initial_metal_mass;
-
     pj->chemistry_data.metal_weighted_redshift =
         ztime * delta_metal_mass_total +
         pj->chemistry_data.metal_weighted_redshift *
             pj->chemistry_data.track_of_metal_mass_total +
         pj->chemistry_data.metal_diffused_redshift;
 
-    pj->chemistry_data.metal_weighted_redshift /= new_metal_mass_total;
+    pj->chemistry_data.track_of_metal_mass_total += delta_metal_mass_total;
+    pj->chemistry_data.metal_weighted_redshift /= pj->chemistry_data.track_of_metal_mass_total;
 
     /* Reset values */
     pj->chemistry_data.metal_diffused_redshift = 0.f;
-    pj->chemistry_data.track_of_metal_mass_total = new_metal_mass_total;
   }
 
   /* Update mass fraction of each tracked element  */
@@ -302,19 +299,15 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   if (pj->chemistry_data.iron_weighted_redshift < 0.f)
     pj->chemistry_data.iron_weighted_redshift = 0.f;
     
-  const double new_iron_mass = pj->chemistry_data.metal_mass_fraction[chemistry_element_Fe] * current_mass;
   const double delta_iron_mass = si->feedback_data.to_distribute.metal_mass[chemistry_element_Fe] * Omega_frac;
 
-  if (new_iron_mass > 0.f) {
-      
-      /* Remove initial mass */
-      new_iron_mass -= pj->chemistry_data.initial_iron_mass;
+  if (delta_iron_mass > 0.f) {
       
       pj->chemistry_data.iron_weighted_redshift = ztime * delta_iron_mass + pj->chemistry_data.iron_weighted_redshift * pj->chemistry_data.track_of_iron_mass + pj->chemistry_data.iron_diffused_redshift;
-        
-      pj->chemistry_data.iron_weighted_redshift /= new_iron_mass;
+      
+      pj->chemistry_data.track_of_iron_mass += delta_iron_mass;
+      pj->chemistry_data.iron_weighted_redshift /= pj->chemistry_data.track_of_iron_mass;
       pj->chemistry_data.iron_diffused_redshift = 0.f;
-      pj->chemistry_data.track_of_iron_mass = new_iron_mass;
     }
     
   /* Update mass from SNIa  */
