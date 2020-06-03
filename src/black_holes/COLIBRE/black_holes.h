@@ -128,7 +128,6 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.potential = FLT_MAX;
   bp->accretion_rate = 0.f; /* Optionally accumulated ngb-by-ngb */
   bp->f_visc = FLT_MAX;
-
 }
 
 /**
@@ -241,15 +240,15 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->circular_velocity_gas[2] *= h_inv_dim_plus_one * rho_inv;
 
   /* ... and for the curl, we also need to divide by an extra h factor */
-  bp->curl_v_gas[0] *= h_inv_dim_plus_one * rho_inv ;
+  bp->curl_v_gas[0] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[1] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[2] *= h_inv_dim_plus_one * rho_inv;
 
   /* Calculate (actual) gas velocity dispersion. Currently, the variable
    * 'velocity_dispersion_gas' holds <v^2> instead. */
-  const double speed_gas2 = bp->velocity_gas[0] * bp->velocity_gas[0]
-                            + bp->velocity_gas[1] * bp->velocity_gas[1]
-                            + bp->velocity_gas[2] * bp->velocity_gas[2];
+  const double speed_gas2 = bp->velocity_gas[0] * bp->velocity_gas[0] +
+                            bp->velocity_gas[1] * bp->velocity_gas[1] +
+                            bp->velocity_gas[2] * bp->velocity_gas[2];
 
   bp->velocity_dispersion_gas -= speed_gas2;
   bp->velocity_dispersion_gas = sqrt(bp->velocity_dispersion_gas);
@@ -524,8 +523,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     /* In the Bondi-Hoyle-Lyttleton formula, the bulk flow of gas is
      * added to the sound speed in quadrature. Treated separately (below)
      * in the Krumholz et al. (2006) prescription */
-    const double denominator2 = use_bondi ? gas_v_norm2 + gas_c_phys2 :
-                                gas_c_phys2;
+    const double denominator2 =
+        use_bondi ? gas_v_norm2 + gas_c_phys2 : gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
@@ -544,12 +543,13 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
        * accounting for bulk flow and turbulence of ambient gas. */
       const double lambda = 1.1;
       const double gas_v_dispersion =
-        bp->velocity_dispersion_gas * cosmo->a_inv;
+          bp->velocity_dispersion_gas * cosmo->a_inv;
       const double mach_turb = gas_v_dispersion / gas_c_phys;
       const double mach_bulk = sqrt(gas_v_norm2) / gas_c_phys;
-      const double mach2 = mach_turb*mach_turb + mach_bulk*mach_bulk;
+      const double mach2 = mach_turb * mach_turb + mach_bulk * mach_bulk;
       const double m1 = 1. + mach2;
-      const double mach_factor = sqrt((lambda*lambda + mach2) / (m1*m1*m1*m1));
+      const double mach_factor =
+          sqrt((lambda * lambda + mach2) / (m1 * m1 * m1 * m1));
       accr_rate *= mach_factor;
 
       if (use_krumholz_vorticity) {
@@ -561,25 +561,24 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
         const double gas_curlv_phys[3] = {bp->curl_v_gas[0] * cosmo->a2_inv,
                                           bp->curl_v_gas[1] * cosmo->a2_inv,
                                           bp->curl_v_gas[2] * cosmo->a2_inv};
-        const double gas_vorticity = sqrt(gas_curlv_phys[0] * gas_curlv_phys[0]
-          + gas_curlv_phys[1] * gas_curlv_phys[1]
-          + gas_curlv_phys[2] * gas_curlv_phys[2]);
+        const double gas_vorticity =
+            sqrt(gas_curlv_phys[0] * gas_curlv_phys[0] +
+                 gas_curlv_phys[1] * gas_curlv_phys[1] +
+                 gas_curlv_phys[2] * gas_curlv_phys[2]);
 
         const double Bondi_radius = G * BH_mass / gas_c_phys2;
         const double omega_star = gas_vorticity * Bondi_radius / gas_c_phys;
         const double f_omega_star = 1.0 / (1.0 + pow(omega_star, 0.9));
-        const double mdot_omega = 4. * M_PI * gas_rho_phys * G * G *
-          BH_mass * BH_mass *
-          denominator_inv * denominator_inv * denominator_inv *
-          0.34 * f_omega_star;
+        const double mdot_omega = 4. * M_PI * gas_rho_phys * G * G * BH_mass *
+                                  BH_mass * denominator_inv * denominator_inv *
+                                  denominator_inv * 0.34 * f_omega_star;
 
         const double accr_rate_inv = 1. / accr_rate;
         const double mdot_omega_inv = 1. / mdot_omega;
         accr_rate = 1. / sqrt(accr_rate_inv * accr_rate_inv +
                               mdot_omega_inv * mdot_omega_inv);
       } /* ends calculation of vorticity addition to Krumholz prescription */
-   } /* ends Krumholz accretion formula calculation */
-
+    }   /* ends Krumholz accretion formula calculation */
 
   } /* ends section without multi-phase accretion */
 

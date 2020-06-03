@@ -199,7 +199,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   else
     bp->log_max_h_change = logf(powf(max_volume_change, hydro_dimension_inv));
 
-
   /* Initialisation properties  ---------------------------- */
 
   bp->subgrid_seed_mass =
@@ -208,9 +207,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
-  bp->use_subgrid_mass_from_ics =
-      parser_get_opt_param_int(params, "COLIBREAGN:use_subgrid_mass_from_ics",
-                               1);
+  bp->use_subgrid_mass_from_ics = parser_get_opt_param_int(
+      params, "COLIBREAGN:use_subgrid_mass_from_ics", 1);
   if (bp->use_subgrid_mass_from_ics)
     bp->with_subgrid_mass_check =
         parser_get_opt_param_int(params, "EAGLEAGN:with_subgrid_mass_check", 1);
@@ -220,11 +218,10 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
   bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
-  bp->use_bondi =
-      parser_get_param_int(params, "COLIBREAGN:use_bondi");
+  bp->use_bondi = parser_get_param_int(params, "COLIBREAGN:use_bondi");
   if (!bp->use_bondi)
     bp->use_krumholz_vorticity =
-      parser_get_param_int(params, "COLIBREAGN:use_krumholz_vorticity");
+        parser_get_param_int(params, "COLIBREAGN:use_krumholz_vorticity");
 
   bp->with_angmom_limiter =
       parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
@@ -239,7 +236,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->f_Edd_recording = parser_get_param_float(
       params, "COLIBREAGN:eddington_fraction_for_recording");
 
-
   /* Feedback parameters ---------------------------------- */
 
   bp->epsilon_f =
@@ -248,7 +244,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_float(params, "COLIBREAGN:AGN_delta_T_K");
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "COLIBREAGN:AGN_num_ngb_to_heat");
-
 
   /* Reposition parameters --------------------------------- */
 
@@ -302,7 +297,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         params, "COLIBREAGN:reposition_exponent_xi", 1.0);
   }
 
-
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -316,7 +310,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "COLIBREAGN:merger_max_distance_ratio");
-
 
   /* Common conversion factors ----------------------------- */
 

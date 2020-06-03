@@ -125,8 +125,9 @@ INLINE static void convert_bpart_gas_circular_vel(const struct engine* e,
   ret[2] = bp->circular_velocity_gas[2] * cosmo->a_inv;
 }
 
-INLINE static void convert_bpart_gas_velocity_dispersion(
-  const struct engine* e, const struct bpart* bp, float* ret) {
+INLINE static void convert_bpart_gas_velocity_dispersion(const struct engine* e,
+                                                         const struct bpart* bp,
+                                                         float* ret) {
 
   const struct cosmology* cosmo = e->cosmology;
 
@@ -134,8 +135,9 @@ INLINE static void convert_bpart_gas_velocity_dispersion(
   ret[0] = bp->velocity_dispersion_gas * cosmo->a_inv;
 }
 
-INLINE static void convert_bpart_gas_velocity_curl(
-  const struct engine* e, const struct bpart* bp, float* ret) {
+INLINE static void convert_bpart_gas_velocity_curl(const struct engine* e,
+                                                   const struct bpart* bp,
+                                                   float* ret) {
 
   const struct cosmology* cosmo = e->cosmology;
 
@@ -143,9 +145,7 @@ INLINE static void convert_bpart_gas_velocity_curl(
   ret[0] = bp->curl_v_gas[0] * cosmo->a2_inv;
   ret[1] = bp->curl_v_gas[1] * cosmo->a2_inv;
   ret[2] = bp->curl_v_gas[2] * cosmo->a2_inv;
-
 }
-
 
 /**
  * @brief Specifies which b-particle fields to write to a dataset
@@ -351,7 +351,6 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "GasCurlVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
       convert_bpart_gas_velocity_curl,
       "Velocity curl (3D) of the gas particles around the black holes.");
-
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 

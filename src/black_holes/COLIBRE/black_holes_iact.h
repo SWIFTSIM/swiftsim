@@ -115,8 +115,8 @@ runner_iact_nonsym_bh_gas_density(
 
   /* Contribution to the smoothed squared relative velocity (for dispersion)
    * We will convert this to actual dispersion later. */
-  bi->velocity_dispersion_gas += mj * wi * (dv[0] * dv[0] + dv[1] * dv[1]
-                                            + dv[2] * dv[2]);
+  bi->velocity_dispersion_gas +=
+      mj * wi * (dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]);
 
   if (bh_props->multi_phase_bondi) {
     /* Contribution to BH accretion rate
@@ -451,7 +451,7 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
         /* Standard formula if BH interactions are not softened */
         v2_threshold = 2.f * G_Newton * M / (r_12);
       }
-    }  /* Ends sections for different merger thresholds */
+    } /* Ends sections for different merger thresholds */
 
     if ((v2_pec < v2_threshold) && (r2 < max_dist_merge2)) {
 
