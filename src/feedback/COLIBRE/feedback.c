@@ -609,7 +609,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-
+    
   /* First we check that the amount of time since star was formed
    is larger than NSM_t_delay_Gyr = 30Myr */
   if (star_age_Gyr < 0.03) return;
@@ -676,26 +676,23 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
     
-  /* Update the star's age and timestep in this function using same
-   * progenitor masses as SNII */
-    if (log10_max_mass > props->log10_SNII_max_mass_msun) {
-        
-        const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-        const float max_mass = exp10f(props->log10_SNII_max_mass_msun);
-        const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
-        
-        dt_Gyr = max(star_age_Gyr + dt_Gyr - lifetime_Gyr, 0.);
-        star_age_Gyr = lifetime_Gyr;
-    }
-
-  /* Then we check that the amount of time since star was formed
-   * is larger than 30 Myr */
-  if (star_age_Gyr < 0.03) return;
-  if (star_age_Gyr > 0.1) return;
+ 
+  /* 1 - If stars more massive than 100 Msun have exploited, do nothing */
+  /* 2 - If stars less massive than 8 Msun have exploited, do nothing */
+  /* (Here we use SNII lifetimes because CEJSN are core-collapse SN) */
+  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
+  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
     
+  /* Here we calculate for how long CEJSN events will take place */
+  float max_mass = exp10f(props->log10_SNIa_max_mass_msun);
+  float min_mass = exp10f(props->log10_SNIa_min_mass_msun);
+  const float lifetime_Gyr_min = lifetime_in_Gyr(max_mass, Z, props);
+  const float lifetime_Gyr_max = lifetime_in_Gyr(min_mass, Z, props);
+  float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
+
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
-                    props->mass_to_solar_mass * (dt_Gyr / 0.07);
+                    props->mass_to_solar_mass * (dt_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
@@ -752,20 +749,20 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-
-  /* Let's calculate the dying stars lifetimes */
-  const float lifetime_Gyr = lifetime_in_Gyr(max_mass, Z, props);
     
-  /* Then we check that the amount of time since star was formed */
-  /* is larger than 30 Myr */
-  if (star_age_Gyr < 0.03) return;
-  if (star_age_Gyr > 0.1) return;
+  /* 1 - If stars more massive than 100 Msun have exploited, do nothing */
+  /* 2 - If stars less massive than 10 Msun have exploited, do nothing */
+  if (log10_min_mass > 2.) return;
+  if (log10_max_mass < 1.) return;
+    
+  /* Here we calculate for how long CEJSN events will take place */
+  const float lifetime_Gyr_min = lifetime_in_Gyr(100, Z, props);
+  const float lifetime_Gyr_max = lifetime_in_Gyr(10, Z, props);
+  float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
 
   /* Number of collapsar events in timestep */
-  /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
-   * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
   float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
-                        props->mass_to_solar_mass * (dt_Gyr / 0.07);
+                        props->mass_to_solar_mass * (dt_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
@@ -1447,8 +1444,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       feedback_props->stellar_evolution_age_cut *
       units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
-  /* Get the metallicity */
-  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  /* Get the total metallicity (metal mass fraction) at birth time and impose a
+   * minimum */
+  const float Z = max(chemistry_get_total_metal_mass_fraction_for_feedback(sp),
+                       exp10(log10_min_metallicity));
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
@@ -1629,8 +1628,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
                stellar_yields, feedback_props, sp);
   }
   if (feedback_props->with_r_process_enrichment) {
-    evolve_NSM_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-                          feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
+    evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                           cosmo, stellar_evolution_age_cut_Gyr);
     evolve_CEJSN_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
                             feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
