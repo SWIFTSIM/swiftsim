@@ -98,7 +98,7 @@ struct bpart {
   float velocity_gas[3];
 
   /*! Smoothed velocity dispersion (peculiar) of the gas around the
-   * black hole. Initially, this holds <v_gas^2> instead. */
+   * black hole */
   float velocity_dispersion_gas;
 
   /*! Circular velocity of the gas around the black hole at the smoothing
