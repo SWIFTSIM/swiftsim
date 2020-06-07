@@ -524,7 +524,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * added to the sound speed in quadrature. Treated separately (below)
      * in the Krumholz et al. (2006) prescription */
     const double denominator2 =
-        use_bondi ? gas_v_norm2 + gas_c_phys2 : gas_c_phys2;
+        use_krumholz_mach ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
@@ -537,7 +537,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                 denominator_inv * denominator_inv * denominator_inv;
 
-    if (!use_bondi) {
+    if (use_krumholz_mach) {
 
       /* Compute the additional correction factors from Krumholz+06,
        * accounting for bulk flow and turbulence of ambient gas. */
@@ -551,34 +551,34 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       const double mach_factor =
           sqrt((lambda * lambda + mach2) / (m1 * m1 * m1 * m1));
       accr_rate *= mach_factor;
+    }
 
-      if (use_krumholz_vorticity) {
+    if (use_krumholz_vorticity) {
 
-        /* Change the accretion rate to equation (3) of Krumholz et al. (2006)
-         * by adding a vorticity-dependent term in inverse quadrature */
+      /* Change the accretion rate to equation (3) of Krumholz et al. (2006)
+       * by adding a vorticity-dependent term in inverse quadrature */
 
-        /* Convert curl to vorticity in physical units */
-        const double gas_curlv_phys[3] = {bp->curl_v_gas[0] * cosmo->a2_inv,
-                                          bp->curl_v_gas[1] * cosmo->a2_inv,
-                                          bp->curl_v_gas[2] * cosmo->a2_inv};
-        const double gas_vorticity =
-            sqrt(gas_curlv_phys[0] * gas_curlv_phys[0] +
-                 gas_curlv_phys[1] * gas_curlv_phys[1] +
-                 gas_curlv_phys[2] * gas_curlv_phys[2]);
+      /* Convert curl to vorticity in physical units */
+      const double gas_curlv_phys[3] = {bp->curl_v_gas[0] * cosmo->a2_inv,
+                                        bp->curl_v_gas[1] * cosmo->a2_inv,
+                                        bp->curl_v_gas[2] * cosmo->a2_inv};
+      const double gas_vorticity =
+          sqrt(gas_curlv_phys[0] * gas_curlv_phys[0] +
+               gas_curlv_phys[1] * gas_curlv_phys[1] +
+               gas_curlv_phys[2] * gas_curlv_phys[2]);
 
-        const double Bondi_radius = G * BH_mass / gas_c_phys2;
-        const double omega_star = gas_vorticity * Bondi_radius / gas_c_phys;
-        const double f_omega_star = 1.0 / (1.0 + pow(omega_star, 0.9));
-        const double mdot_omega = 4. * M_PI * gas_rho_phys * G * G * BH_mass *
-                                  BH_mass * denominator_inv * denominator_inv *
-                                  denominator_inv * 0.34 * f_omega_star;
+      const double Bondi_radius = G * BH_mass / gas_c_phys2;
+      const double omega_star = gas_vorticity * Bondi_radius / gas_c_phys;
+      const double f_omega_star = 1.0 / (1.0 + pow(omega_star, 0.9));
+      const double mdot_omega = 4. * M_PI * gas_rho_phys * G * G * BH_mass *
+                                BH_mass * denominator_inv * denominator_inv *
+                                denominator_inv * 0.34 * f_omega_star;
 
-        const double accr_rate_inv = 1. / accr_rate;
-        const double mdot_omega_inv = 1. / mdot_omega;
-        accr_rate = 1. / sqrt(accr_rate_inv * accr_rate_inv +
-                              mdot_omega_inv * mdot_omega_inv);
-      } /* ends calculation of vorticity addition to Krumholz prescription */
-    }   /* ends Krumholz accretion formula calculation */
+      const double accr_rate_inv = 1. / accr_rate;
+      const double mdot_omega_inv = 1. / mdot_omega;
+      accr_rate = 1. / sqrt(accr_rate_inv * accr_rate_inv +
+                            mdot_omega_inv * mdot_omega_inv);
+    } /* ends calculation of vorticity addition to Krumholz prescription */
 
   } /* ends section without multi-phase accretion */
 
