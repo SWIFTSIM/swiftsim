@@ -473,7 +473,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double delta_u = delta_T * props->temp_to_u_factor;
   const double alpha_visc = props->alpha_visc;
   const int with_angmom_limiter = props->with_angmom_limiter;
-  const int use_bondi = props->use_bondi;
+  const int use_krumholz = props->use_krumholz;
   const int use_krumholz_vorticity = props->use_krumholz_vorticity;
 
   /* (Subgrid) mass of the BH (internal units) */
@@ -524,7 +524,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * added to the sound speed in quadrature. Treated separately (below)
      * in the Krumholz et al. (2006) prescription */
     const double denominator2 =
-        use_krumholz_mach ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
+        use_krumholz ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
@@ -537,7 +537,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                 denominator_inv * denominator_inv * denominator_inv;
 
-    if (use_krumholz_mach) {
+    if (use_krumholz) {
 
       /* Compute the additional correction factors from Krumholz+06,
        * accounting for bulk flow and turbulence of ambient gas. */

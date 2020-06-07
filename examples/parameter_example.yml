@@ -667,7 +667,7 @@ COLIBREAGN:
   with_subgrid_mass_check:            1          # (Optional) Verify that initial black hole subgrid masses are positive [1, default]. Only used if use_subgrid_mass_from_ics is 1.
   multi_phase_bondi:                  1          # Compute Bondi rates per neighbour particle [1] or for the smoothed ambient gas around the black hole [0]?
   subgrid_bondi:                      1          # Use subgrid density [1] or dynamical density [0] to calculate BH accretion rates?
-  use_bondi:                          1          # Use standard Bondi rate [1] or Krumholz et al. (2006) formula [0] for black hole accretion rates?
+  use_krumholz:                       1          # Use Krumholz et al. (2006) [1] or standard Bondi-Hoyle-Lyttleton formula [0] for black hole accretion rates?
   use_krumholz_vorticity:             1          # Include the vorticity term in Krumholz et al. formula? Only used if use_bondi is 0.
   with_angmom_limiter:                1          # Are we applying the Rosas-Guevara (2015) viscous time-scale reduction term?
   viscous_alpha:                      1e6        # Normalisation constant of the viscous time-scale in the accretion reduction term. Only used if with_angmom_limiter is 1.
