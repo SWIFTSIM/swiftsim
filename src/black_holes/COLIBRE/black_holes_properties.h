@@ -60,17 +60,17 @@ struct black_holes_props {
 
   /* ----- Properties of the accretion model ------ */
 
-  /*! Calculate Bondi accretion rate for individual neighbours? */
-  int multi_phase_bondi;
-
   /*! Calculate Bondi accretion rate based on subgrid properties? */
-  int subgrid_bondi;
+  int use_subgrid_gas_properties;
 
-  /*! Switch between Bondi or Krumholz accretion rates */
-  int use_bondi;
+  /*! Calculate Bondi accretion rate for individual neighbours? */
+  int use_multi_phase_bondi;
+
+  /*! Switch between Bondi [0] or Krumholz [1] accretion rates */
+  int use_krumholz;
 
   /*! In Krumholz mode, should we include the vorticity term? */
-  int use_krumholz_vorticity;
+  int with_krumholz_vorticity;
 
   /*! Are we applying the angular-momentum-based multiplicative term from
    * Rosas-Guevara et al. (2015)? */
@@ -215,13 +215,16 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   /* Accretion parameters ---------------------------------- */
 
-  bp->multi_phase_bondi =
-      parser_get_param_int(params, "COLIBREAGN:multi_phase_bondi");
-  bp->subgrid_bondi = parser_get_param_int(params, "COLIBREAGN:subgrid_bondi");
-  bp->use_bondi = parser_get_param_int(params, "COLIBREAGN:use_bondi");
-  if (!bp->use_bondi)
-    bp->use_krumholz_vorticity =
-        parser_get_param_int(params, "COLIBREAGN:use_krumholz_vorticity");
+  bp->use_subgrid_gas_properties = parser_get_param_int(
+      params, "COLIBREAGN:use_subgrid_gas_properties");
+  bp->use_multi_phase_bondi =
+      parser_get_param_int(params, "COLIBREAGN:use_multi_phase_bondi");
+  if (!use_multi_phase_bondi) {
+      bp->use_krumholz = parser_get_param_int(
+        params, "COLIBREAGN:use_krumholz");
+      bp->with_krumholz_vorticity =
+        parser_get_param_int(params, "COLIBREAGN:with_krumholz_vorticity");
+  }
 
   bp->with_angmom_limiter =
       parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");

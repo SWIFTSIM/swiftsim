@@ -463,19 +463,6 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double proton_mass = constants->const_proton_mass;
   const double sigma_Thomson = constants->const_thomson_cross_section;
 
-  /* Gather the parameters of the model */
-  const double f_Edd = props->f_Edd;
-  const double f_Edd_recording = props->f_Edd_recording;
-  const double epsilon_r = props->epsilon_r;
-  const double epsilon_f = props->epsilon_f;
-  const double num_ngbs_to_heat = props->num_ngbs_to_heat;
-  const double delta_T = props->AGN_delta_T_desired;
-  const double delta_u = delta_T * props->temp_to_u_factor;
-  const double alpha_visc = props->alpha_visc;
-  const int with_angmom_limiter = props->with_angmom_limiter;
-  const int use_krumholz = props->use_krumholz;
-  const int use_krumholz_vorticity = props->use_krumholz_vorticity;
-
   /* (Subgrid) mass of the BH (internal units) */
   const double BH_mass = bp->subgrid_mass;
 
@@ -497,7 +484,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* We can now compute the accretion rate (internal units) */
   double accr_rate;
 
-  if (props->multi_phase_bondi) {
+  if (props->use_multi_phase_bondi) {
 
     /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
      * the accretion_rate is still zero (was initialised to this) */
@@ -524,7 +511,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * added to the sound speed in quadrature. Treated separately (below)
      * in the Krumholz et al. (2006) prescription */
     const double denominator2 =
-        use_krumholz ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
+        props->use_krumholz ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
     /* Make sure that the denominator is strictly positive */
     if (denominator2 <= 0)
@@ -537,7 +524,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                 denominator_inv * denominator_inv * denominator_inv;
 
-    if (use_krumholz) {
+    if (props->use_krumholz) {
 
       /* Compute the additional correction factors from Krumholz+06,
        * accounting for bulk flow and turbulence of ambient gas. */
@@ -553,7 +540,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       accr_rate *= mach_factor;
     }
 
-    if (use_krumholz_vorticity) {
+    if (props->with_krumholz_vorticity) {
 
       /* Change the accretion rate to equation (3) of Krumholz et al. (2006)
        * by adding a vorticity-dependent term in inverse quadrature */
@@ -583,14 +570,15 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   } /* ends section without multi-phase accretion */
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
-  if (with_angmom_limiter) {
+  if (props->with_angmom_limiter) {
     const double Bondi_radius = G * BH_mass / gas_c_phys2;
     const double Bondi_time = Bondi_radius / gas_c_phys;
     const double r_times_v_tang = Bondi_radius * tangential_velocity;
     const double r_times_v_tang_3 =
         r_times_v_tang * r_times_v_tang * r_times_v_tang;
     const double viscous_time = 2. * M_PI * r_times_v_tang_3 /
-                                (1e-6 * alpha_visc * G * G * BH_mass * BH_mass);
+                                (1e-6 * props->alpha_visc * G * G *
+                                 BH_mass * BH_mass);
 
     const double f_visc = min(Bondi_time / viscous_time, 1.);
     bp->f_visc = f_visc;
@@ -602,11 +590,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Compute the Eddington rate (internal units) */
+  const double epsilon_r = props->epsilon_r;
   const double Eddington_rate =
       4. * M_PI * G * BH_mass * proton_mass / (epsilon_r * c * sigma_Thomson);
 
   /* Should we record this time as the most recent high accretion rate? */
-  if (accr_rate > f_Edd_recording * Eddington_rate) {
+  if (accr_rate > props->f_Edd_recording * Eddington_rate) {
     if (with_cosmology) {
       bp->last_high_Eddington_fraction_scale_factor = cosmo->a;
     } else {
@@ -615,7 +604,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Limit the accretion rate to a fraction of the Eddington rate */
-  accr_rate = min(accr_rate, f_Edd * Eddington_rate);
+  accr_rate = min(accr_rate, props->f_Edd * Eddington_rate);
   bp->accretion_rate = accr_rate;
 
   /* Factor in the radiative efficiency */
@@ -625,13 +614,15 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* Integrate forward in time */
   bp->subgrid_mass += mass_rate * dt;
   bp->total_accreted_mass += mass_rate * dt;
-  bp->energy_reservoir += luminosity * epsilon_f * dt;
+  bp->energy_reservoir += luminosity * props->epsilon_f * dt;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass
    * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
-  const double E_feedback_event = num_ngbs_to_heat * delta_u * mean_ngb_mass;
+  const double delta_u = props->AGN_delta_T_desired * props->temp_to_u_factor;
+  const double E_feedback_event = props->num_ngbs_to_heat * delta_u *
+                                  mean_ngb_mass;
 
   /* Are we doing some feedback? */
   if (bp->energy_reservoir > E_feedback_event) {
