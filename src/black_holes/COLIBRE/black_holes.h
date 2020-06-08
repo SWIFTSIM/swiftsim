@@ -87,6 +87,9 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->swallowed_angular_momentum[0] = 0.f;
   bp->swallowed_angular_momentum[1] = 0.f;
   bp->swallowed_angular_momentum[2] = 0.f;
+  bp->accreted_angular_momentum[0] = 0.f;
+  bp->accreted_angular_momentum[1] = 0.f;
+  bp->accreted_angular_momentum[2] = 0.f;
 
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 }
@@ -112,9 +115,9 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->velocity_gas[0] = 0.f;
   bp->velocity_gas[1] = 0.f;
   bp->velocity_gas[2] = 0.f;
-  bp->circular_velocity_gas[0] = 0.f;
-  bp->circular_velocity_gas[1] = 0.f;
-  bp->circular_velocity_gas[2] = 0.f;
+  bp->spec_angular_momentum_gas[0] = 0.f;
+  bp->spec_angular_momentum_gas[1] = 0.f;
+  bp->spec_angular_momentum_gas[2] = 0.f;
   bp->curl_v_gas[0] = 0.f;
   bp->curl_v_gas[1] = 0.f;
   bp->curl_v_gas[2] = 0.f;
@@ -232,17 +235,20 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->velocity_gas[1] *= h_inv_dim * rho_inv;
   bp->velocity_gas[2] *= h_inv_dim * rho_inv;
   bp->velocity_dispersion_gas *= h_inv_dim * rho_inv;
-
-  /* ... and for the circular velocity, convert from specifc angular
-   *     momentum to circular velocity at the smoothing radius (extra h_inv) */
-  bp->circular_velocity_gas[0] *= h_inv_dim_plus_one * rho_inv;
-  bp->circular_velocity_gas[1] *= h_inv_dim_plus_one * rho_inv;
-  bp->circular_velocity_gas[2] *= h_inv_dim_plus_one * rho_inv;
+  bp->spec_angular_momentum_gas[0] *= h_inv_dim * rho_inv;
+  bp->spec_angular_momentum_gas[1] *= h_inv_dim * rho_inv;
+  bp->spec_angular_momentum_gas[2] *= h_inv_dim * rho_inv;
 
   /* ... and for the curl, we also need to divide by an extra h factor */
   bp->curl_v_gas[0] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[1] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[2] *= h_inv_dim_plus_one * rho_inv;
+
+  /* Calculate circular velocity at the smoothing radius from specific
+   * angular momentum (extra h_inv) */
+  bp->circular_velocity_gas[0] = bp->spec_angular_momentum_gas[0] * h_inv_dim;
+  bp->circular_velocity_gas[1] = bp->spec_angular_momentum_gas[1] * h_inv_dim;
+  bp->circular_velocity_gas[2] = bp->spec_angular_momentum_gas[2] * h_inv_dim;
 
   /* Calculate (actual) gas velocity dispersion. Currently, the variable
    * 'velocity_dispersion_gas' holds <v^2> instead. */
@@ -614,6 +620,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   bp->subgrid_mass += mass_rate * dt;
   bp->total_accreted_mass += mass_rate * dt;
   bp->energy_reservoir += luminosity * props->epsilon_f * dt;
+
+  /* Increase the subgrid angular momentum according to what we accreted 
+   * (already in physical units, a factors from velocity and radius cancel) */
+  for (int k_dim = 0; k_dim < 3; k_dim++)
+    bp->accreted_angular_momentum[k_dim] += 
+        bp->spec_angular_momentum_gas[k_dim] * mass_rate * dt;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass
