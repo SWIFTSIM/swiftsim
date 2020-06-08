@@ -215,14 +215,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   /* Accretion parameters ---------------------------------- */
 
-  bp->use_subgrid_gas_properties = parser_get_param_int(
-      params, "COLIBREAGN:use_subgrid_gas_properties");
+  bp->use_subgrid_gas_properties =
+      parser_get_param_int(params, "COLIBREAGN:use_subgrid_gas_properties");
   bp->use_multi_phase_bondi =
       parser_get_param_int(params, "COLIBREAGN:use_multi_phase_bondi");
-  if (!use_multi_phase_bondi) {
-      bp->use_krumholz = parser_get_param_int(
-        params, "COLIBREAGN:use_krumholz");
-      bp->with_krumholz_vorticity =
+  if (!bp->use_multi_phase_bondi) {
+    bp->use_krumholz = parser_get_param_int(params, "COLIBREAGN:use_krumholz");
+    bp->with_krumholz_vorticity =
         parser_get_param_int(params, "COLIBREAGN:with_krumholz_vorticity");
   }
 

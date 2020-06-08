@@ -118,7 +118,7 @@ runner_iact_nonsym_bh_gas_density(
   bi->velocity_dispersion_gas +=
       mj * wi * (dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]);
 
-  if (bh_props->multi_phase_bondi) {
+  if (bh_props->use_multi_phase_bondi) {
     /* Contribution to BH accretion rate
      *
      * i) Calculate denominator in Bondi formula */

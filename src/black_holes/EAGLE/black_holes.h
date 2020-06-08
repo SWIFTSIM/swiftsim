@@ -499,9 +499,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const double r_times_v_tang = Bondi_radius * tangential_velocity;
     const double r_times_v_tang_3 =
         r_times_v_tang * r_times_v_tang * r_times_v_tang;
-    const double viscous_time = 2. * M_PI * r_times_v_tang_3 /
-                                (1e-6 * props->alpha_visc * G * G *
-                                 BH_mass * BH_mass);
+    const double viscous_time =
+        2. * M_PI * r_times_v_tang_3 /
+        (1e-6 * props->alpha_visc * G * G * BH_mass * BH_mass);
 
     const double f_visc = min(Bondi_time / viscous_time, 1.);
     bp->f_visc = f_visc;
@@ -544,8 +544,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
    * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
   const double delta_u = props->delta_T * props->temp_to_u_factor;
-  const double E_feedback_event = props->num_ngbs_to_heat * delta_u *
-                                  mean_ngb_mass;
+  const double E_feedback_event =
+      props->num_ngbs_to_heat * delta_u * mean_ngb_mass;
 
   /* Are we doing some feedback? */
   if (bp->energy_reservoir > E_feedback_event) {
