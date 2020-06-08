@@ -89,7 +89,7 @@ FOF:
   delta_time:                      1.005       # Time between consecutive FoF black hole seeding calls.
   min_group_size:                  256         # The minimum no. of particles required for a group.
   linking_length_ratio:            0.2         # Linking length in units of the main inter-particle separation.
-  black_hole_seed_halo_mass_Msun:  1.5e10      # Minimal halo mass in which to seed a black hole (in solar masses).
+  black_hole_seed_halo_mass_Msun:  1e10        # Minimal halo mass in which to seed a black hole (in solar masses).
   absolute_linking_length:         -1.         # (Optional) Absolute linking length (in internal units). When not set to -1, this will overwrite the linking length computed from 'linking_length_ratio'.
   group_id_default:                2147483647  # (Optional) Sets the group ID of particles in groups below the minimum size. Defaults to 2^31 - 1 if unspecified. Has to be positive.
   group_id_offset:                 1           # (Optional) Sets the offset of group ID labeling. Defaults to 1 if unspecified.
@@ -142,6 +142,7 @@ Snapshots:
   UnitCurrent_in_cgs:  1  # (Optional) Unit system for the outputs (Amperes)
   UnitTemp_in_cgs:     1  # (Optional) Unit system for the outputs (Kelvin)
   output_list_on:      0  # (Optional) Enable the output list
+  multiple_output_levels: 0 # (Optional) Enable multiple levels of outputs
   output_list:         snaplist.txt # (Optional) File containing the output times (see documentation in "Parameter File" section)
   select_output_on:    0  # (Optional) Enable the output selection behaviour
   select_output:       selectoutput.yml # (Optional) File containing information to select outputs with (see documentation in the "Output Selection" section)
@@ -401,7 +402,7 @@ QLACooling:
   
 # Parameters of the COLIBRE cooling model (Ploeckinger+?? cooling tables).
 COLIBRECooling:
-  dir_name:  UV_dust0_CR0_G0_shield0.hdf5      # Location of Ploeckinger+?? cooling tables
+  dir_name:  UV_dust1_CR1_G1_shield1.hdf5      # Location of Ploeckinger+?? cooling tables
   H_reion_z:                 8.5               # Redshift of Hydrogen re-ionization 
   H_reion_eV_p_H:            2.0               # Energy inject by Hydrogen re-ionization in electron-volt per Hydrogen atom
   He_reion_z_centre:         3.5               # Redshift of the centre of the Helium re-ionization Gaussian
@@ -659,14 +660,44 @@ GEARFeedback:
 
 # Parameters related to AGN models  -----------------------------------------------
   
+# COLIBRE AGN model
+COLIBREAGN:
+  subgrid_seed_mass_Msun:             1e5        # Black hole subgrid mass at creation time in solar masses.
+  use_subgrid_mass_from_ics:          1          # (Optional) Use subgrid masses specified in ICs [1, default], or initialise them to particle masses [0]?
+  with_subgrid_mass_check:            1          # (Optional) Verify that initial black hole subgrid masses are positive [1, default]. Only used if use_subgrid_mass_from_ics is 1.
+  use_multi_phase_bondi:              0          # Compute Bondi rates per neighbour particle [1] or for the smoothed ambient gas around the black hole [0]?
+  use_subgrid_gas_properties:         1          # Use subgrid density [1] or dynamical density [0] to calculate BH accretion rates?
+  use_krumholz:                       1          # Use Krumholz et al. (2006) [1] or standard Bondi-Hoyle-Lyttleton formula [0] for black hole accretion rates? Only used if multi_phase_bondi is 0.
+  with_krumholz_vorticity:            0          # Include the vorticity term in Krumholz et al. formula? Only used if use_multi_phase_bondi is 0.
+  with_angmom_limiter:                1          # Are we applying the Rosas-Guevara (2015) viscous time-scale reduction term?
+  viscous_alpha:                      1e6        # Normalisation constant of the viscous time-scale in the accretion reduction term. Only used if with_angmom_limiter is 1.
+  radiative_efficiency:               0.1        # Fraction of the accreted mass that gets radiated.
+  max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
+  eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
+  coupling_efficiency:                0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
+  AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
+  AGN_num_ngb_to_heat:                1.         # Target number of gas neighbours to heat in an AGN feedback event.
+  max_reposition_mass:                2e8        # Maximal BH mass considered for BH repositioning in solar masses.
+  max_reposition_distance_ratio:      3.0        # Maximal distance a BH can be repositioned, in units of the softening length.
+  with_reposition_velocity_threshold: 0          # Should we only reposition to particles that move slowly w.r.t. the black hole?
+  max_reposition_velocity_ratio:      0.25       # Maximal velocity offset of a particle to reposition a BH to, in units of the ambient sound speed of the BH. Only meaningful if with_reposition_velocity_ratio is 1.
+  min_reposition_velocity_threshold: -1.0        # Minimal value of the velocity threshold for repositioning [km/s], set to < 0 for no effect. Only meaningful if with_reposition_velocity_ratio is 1.
+  set_reposition_speed:               0          # Should we reposition black holes with (at most) a prescribed speed towards the potential minimum?
+  reposition_coefficient_upsilon:     0.001      # Repositioning speed normalisation [km/s/M_sun]. Only meaningful if set_reposition_speed is 1.
+  reposition_exponent_xi:             1.0        # (Optional) Scaling of repositioning velocity with BH subgrid mass (default: 1.0, linear). Only meaningful if set_reposition_speed is 1.
+  threshold_major_merger:             0.333      # Mass ratio threshold to consider a BH merger as 'major'
+  threshold_minor_merger:             0.1        # Mass ratio threshold to consider a BH merger as 'minor'
+  merger_threshold_type:              2          # Type of velocity threshold for BH mergers (0: v_circ at kernel edge, 1: v_esc at actual distance, with softening, 2: v_esc at actual distance, no softening).
+  merger_max_distance_ratio:          3.0        # Maximal distance over which two BHs can merge, in units of the softening length.
+
 # EAGLE AGN model
 EAGLEAGN:
   subgrid_seed_mass_Msun:             1.5e5      # Black hole subgrid mass at creation time in solar masses.
   use_subgrid_mass_from_ics:          1          # (Optional) Use subgrid masses specified in ICs [1, default], or initialise them to particle masses [0]?
   with_subgrid_mass_check:            1          # (Optional) Verify that initial black hole subgrid masses are positive [1, default]. Only used if use_subgrid_mass_from_ics is 1.
-  multi_phase_bondi:                  0          # Compute Bondi rates per neighbour particle?
+  use_multi_phase_bondi:              0          # Compute Bondi rates per neighbour particle?
   with_angmom_limiter:                1          # Are we applying the Rosas-Guevara et al. (2015) viscous time-scale reduction term?
-  viscous_alpha:                      1e6        # Normalisation constant of the viscous time-scale in the accretion reduction term
+  viscous_alpha:                      1e6        # Normalisation constant of the viscous time-scale in the accretion reduction term. Only used if with_angmom_limiter is 1.
   radiative_efficiency:               0.1        # Fraction of the accreted mass that gets radiated.
   max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
   eddington_fraction_for_recording:   0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
@@ -686,26 +717,10 @@ EAGLEAGN:
   merger_threshold_type:              2          # Type of velocity threshold for BH mergers (0: v_circ at kernel edge, 1: v_esc at actual distance, with softening, 2: v_esc at actual distance, no softening).
   merger_max_distance_ratio:          3.0        # Maximal distance over which two BHs can merge, in units of the softening length.
 
-# COLIBRE AGN model
-COLIBREAGN:
-  subgrid_seed_mass_Msun:           1.5e5      # Black hole subgrid mass at creation time in solar masses.
-  max_eddington_fraction:           1.         # Maximal allowed accretion rate in units of the Eddington rate.
-  eddington_fraction_for_recording: 0.1        # Record the last time BHs reached an Eddington ratio above this threshold.
-  with_angmom_limiter:              1          # Apply angular momentum limiter of Rosas-Guevara et al. (2015) [1: yes, 0: no]
-  viscous_alpha:                    1e6        # Normalisation constant of the Bondi viscuous time-scale accretion reduction term
-  radiative_efficiency:             0.1        # Fraction of the accreted mass that gets radiated.
-  coupling_efficiency:              0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
-  AGN_delta_T_K:                    3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
-  AGN_num_ngb_to_heat:              1.         # Target number of gas neighbours to heat in an AGN feedback event.
-  max_reposition_mass:              2e8        # Maximal BH mass considered for BH repositioning in solar masses.
-  threshold_major_merger:           0.333      # Mass ratio threshold to consider a BH merger as 'major'
-  threshold_minor_merger:           0.1        # Mass ratio threshold to consider a BH merger as 'minor'
-
-
-# Parameters related to logging
+# Parameters related to logging ------------------------------------------------------
 
 # Event logging settings, this specifies how often we need to log a certain process
 Event_logger:
-  delta_time_SNIa_Myr:        10 # The delta time interval to log SNIa events in Myr
-  delta_time_SNII_Myr:        1  # The delta time interval to log SNII events in Myr
-  delta_time_r_processes_Myr: 10 # The delta time interval to log R-process events in Myr
+  delta_time_SNIa_Myr:        10  # The delta time interval to log SNIa events in Myr
+  delta_time_SNII_Myr:         1  # The delta time interval to log SNII events in Myr
+  delta_time_r_processes_Myr: 10  # The delta time interval to log R-process events in Myr

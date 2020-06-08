@@ -37,7 +37,7 @@
 #elif defined(BLACK_HOLES_COLIBRE)
 #include "./black_holes/COLIBRE/black_holes_struct.h"
 #else
-#error "Invalid choice of black holes function."
+#error "Invalid choice of black holes model."
 #endif
 
 #endif /* SWIFT_BLACK_HOLES_STRUCT_H */

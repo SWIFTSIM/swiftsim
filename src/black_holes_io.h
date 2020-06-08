@@ -24,7 +24,7 @@
 /* Local includes */
 #include "engine.h"
 
-/* Load the correct star type */
+/* Load the correct BH model */
 #if defined(BLACK_HOLES_NONE)
 #include "./black_holes/Default/black_holes_io.h"
 #elif defined(BLACK_HOLES_EAGLE)
@@ -32,7 +32,7 @@
 #elif defined(BLACK_HOLES_COLIBRE)
 #include "./black_holes/COLIBRE/black_holes_io.h"
 #else
-#error "Invalid choice of star model"
+#error "Invalid choice of BH model"
 #endif
 
 #endif /* SWIFT_BLACK_HOLES_IO_H */

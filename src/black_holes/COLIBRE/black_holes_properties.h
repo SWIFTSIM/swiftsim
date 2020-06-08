@@ -52,27 +52,46 @@ struct black_holes_props {
   /*! Mass of a BH seed at creation time */
   float subgrid_seed_mass;
 
+  /*! Should we use the subgrid mass specified in ICs? */
+  int use_subgrid_mass_from_ics;
+
+  /*! Should we enforce positive subgrid masses initially? */
+  int with_subgrid_mass_check;
+
   /* ----- Properties of the accretion model ------ */
 
-  /*! Apply angular momentum limiter from Rosas-Guevara et al. (2015) */
+  /*! Calculate Bondi accretion rate based on subgrid properties? */
+  int use_subgrid_gas_properties;
+
+  /*! Calculate Bondi accretion rate for individual neighbours? */
+  int use_multi_phase_bondi;
+
+  /*! Switch between Bondi [0] or Krumholz [1] accretion rates */
+  int use_krumholz;
+
+  /*! In Krumholz mode, should we include the vorticity term? */
+  int with_krumholz_vorticity;
+
+  /*! Are we applying the angular-momentum-based multiplicative term from
+   * Rosas-Guevara et al. (2015)? */
   int with_angmom_limiter;
 
-  /*! Maximal fraction of the Eddington rate allowed. */
-  float f_Edd;
+  /*! Normalisation of the viscuous angular momentum accretion reduction */
+  float alpha_visc;
 
   /*! Radiative efficiency of the black holes. */
   float epsilon_r;
 
-  /*! Feedback coupling efficiency of the black holes. */
-  float epsilon_f;
-
-  /*! Normalisation of the viscuous angular momentum accretion reduction */
-  float alpha_visc;
+  /*! Maximal fraction of the Eddington rate allowed. */
+  float f_Edd;
 
   /*! Eddington fraction threshold for recording */
   float f_Edd_recording;
 
   /* ---- Properties of the feedback model ------- */
+
+  /*! Feedback coupling efficiency of the black holes. */
+  float epsilon_f;
 
   /*! Temperature increase induced by AGN feedback (Kelvin) */
   float AGN_delta_T_desired;
@@ -85,6 +104,29 @@ struct black_holes_props {
   /*! Maximal mass of BH to reposition */
   float max_reposition_mass;
 
+  /*! Maximal distance to reposition, in units of softening length */
+  float max_reposition_distance_ratio;
+
+  /*! Switch to enable a relative velocity limit for particles to which the
+   * black holes can reposition */
+  int with_reposition_velocity_threshold;
+
+  /*! Maximal velocity offset of particles to which the black hole can
+   * reposition, in units of the ambient sound speed of the black hole */
+  float max_reposition_velocity_ratio;
+
+  /*! Minimum value of the velocity repositioning threshold */
+  float min_reposition_velocity_threshold;
+
+  /*! Switch to enable repositioning at fixed (maximum) speed */
+  int set_reposition_speed;
+
+  /*! Normalisation factor for repositioning velocity */
+  float reposition_coefficient_upsilon;
+
+  /*! Repositioning velocity scaling with black hole mass */
+  float reposition_exponent_xi;
+
   /* ---- Properties of the merger model ---------- */
 
   /*! Mass ratio above which a merger is considered 'minor' */
@@ -92,6 +134,12 @@ struct black_holes_props {
 
   /*! Mass ratio above which a merger is considered 'major' */
   float major_merger_threshold;
+
+  /*! Type of merger threshold (0: standard, 1: improved) */
+  int merger_threshold_type;
+
+  /*! Maximal distance over which BHs merge, in units of softening length */
+  float max_merging_distance_ratio;
 
   /* ---- Common conversion factors --------------- */
 
@@ -159,25 +207,44 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->subgrid_seed_mass *= phys_const->const_solar_mass;
 
+  bp->use_subgrid_mass_from_ics = parser_get_opt_param_int(
+      params, "COLIBREAGN:use_subgrid_mass_from_ics", 1);
+  if (bp->use_subgrid_mass_from_ics)
+    bp->with_subgrid_mass_check =
+        parser_get_opt_param_int(params, "EAGLEAGN:with_subgrid_mass_check", 1);
+
   /* Accretion parameters ---------------------------------- */
+
+  bp->use_subgrid_gas_properties = parser_get_param_int(
+      params, "COLIBREAGN:use_subgrid_gas_properties");
+  bp->use_multi_phase_bondi =
+      parser_get_param_int(params, "COLIBREAGN:use_multi_phase_bondi");
+  if (!use_multi_phase_bondi) {
+      bp->use_krumholz = parser_get_param_int(
+        params, "COLIBREAGN:use_krumholz");
+      bp->with_krumholz_vorticity =
+        parser_get_param_int(params, "COLIBREAGN:with_krumholz_vorticity");
+  }
+
+  bp->with_angmom_limiter =
+      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
+  if (bp->with_angmom_limiter)
+    bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
+
+  bp->epsilon_r =
+      parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
 
   bp->f_Edd =
       parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
-  bp->with_angmom_limiter =
-      parser_get_param_int(params, "COLIBREAGN:with_angmom_limiter");
   bp->f_Edd_recording = parser_get_param_float(
       params, "COLIBREAGN:eddington_fraction_for_recording");
-  bp->epsilon_r =
-      parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
-  bp->epsilon_f =
-      parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
-  bp->alpha_visc = parser_get_param_float(params, "COLIBREAGN:viscous_alpha");
 
   /* Feedback parameters ---------------------------------- */
 
+  bp->epsilon_f =
+      parser_get_param_float(params, "COLIBREAGN:coupling_efficiency");
   bp->AGN_delta_T_desired =
       parser_get_param_float(params, "COLIBREAGN:AGN_delta_T_K");
-
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "COLIBREAGN:AGN_num_ngb_to_heat");
 
@@ -189,6 +256,50 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Convert to internal units */
   bp->max_reposition_mass *= phys_const->const_solar_mass;
 
+  bp->max_reposition_distance_ratio = parser_get_param_float(
+      params, "COLIBREAGN:max_reposition_distance_ratio");
+
+  bp->with_reposition_velocity_threshold = parser_get_param_int(
+      params, "COLIBREAGN:with_reposition_velocity_threshold");
+
+  if (bp->with_reposition_velocity_threshold) {
+    bp->max_reposition_velocity_ratio = parser_get_param_float(
+        params, "COLIBREAGN:max_reposition_velocity_ratio");
+
+    /* Prevent nonsensical input */
+    if (bp->max_reposition_velocity_ratio <= 0)
+      error("max_reposition_velocity_ratio must be positive, not %f.",
+            bp->max_reposition_velocity_ratio);
+
+    bp->min_reposition_velocity_threshold = parser_get_param_float(
+        params, "COLIBREAGN:min_reposition_velocity_threshold");
+    /* Convert from km/s to internal units */
+    bp->min_reposition_velocity_threshold *=
+        (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+  }
+
+  bp->set_reposition_speed =
+      parser_get_param_int(params, "COLIBREAGN:set_reposition_speed");
+
+  if (bp->set_reposition_speed) {
+    bp->reposition_coefficient_upsilon = parser_get_param_float(
+        params, "COLIBREAGN:reposition_coefficient_upsilon");
+
+    /* Prevent the user from making silly wishes */
+    if (bp->reposition_coefficient_upsilon <= 0)
+      error(
+          "reposition_coefficient_upsilon must be positive, not %f "
+          "km/s/M_sun.",
+          bp->reposition_coefficient_upsilon);
+
+    /* Convert from km/s to internal units */
+    bp->reposition_coefficient_upsilon *=
+        (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
+
+    bp->reposition_exponent_xi = parser_get_opt_param_float(
+        params, "COLIBREAGN:reposition_exponent_xi", 1.0);
+  }
+
   /* Merger parameters ------------------------------------- */
 
   bp->minor_merger_threshold =
@@ -196,6 +307,12 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->major_merger_threshold =
       parser_get_param_float(params, "COLIBREAGN:threshold_major_merger");
+
+  bp->merger_threshold_type =
+      parser_get_param_int(params, "COLIBREAGN:merger_threshold_type");
+
+  bp->max_merging_distance_ratio =
+      parser_get_param_float(params, "COLIBREAGN:merger_max_distance_ratio");
 
   /* Common conversion factors ----------------------------- */
 

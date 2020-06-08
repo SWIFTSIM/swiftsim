@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+
 #ifndef SWIFT_COLIBRE_BLACK_HOLES_H
 #define SWIFT_COLIBRE_BLACK_HOLES_H
 
@@ -31,6 +32,7 @@
 
 /* Standard includes */
 #include <float.h>
+#include <math.h>
 
 /**
  * @brief Computes the gravity time-step of a given black hole particle.
@@ -56,12 +58,29 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
     struct bpart* bp, const struct black_holes_props* props) {
 
   bp->time_bin = 0;
-  bp->subgrid_mass = bp->mass;
+  if (props->use_subgrid_mass_from_ics == 0)
+    bp->subgrid_mass = bp->mass;
+  else if (props->with_subgrid_mass_check && bp->subgrid_mass <= 0)
+    error(
+        "Black hole %lld has a subgrid mass of %f (internal units).\n"
+        "If this is because the ICs do not contain a 'SubgridMass' data "
+        "set, you should set the parameter "
+        "'EAGLEAGN:use_subgrid_mass_from_ics' to 0 to initialize the "
+        "black hole subgrid masses to the corresponding dynamical masses.\n"
+        "If the subgrid mass is intentionally set to this value, you can "
+        "disable this error by setting 'EAGLEAGN:with_subgrid_mass_check' "
+        "to 0.",
+        bp->id, bp->subgrid_mass);
   bp->total_accreted_mass = 0.f;
   bp->accretion_rate = 0.f;
   bp->formation_time = -1.f;
   bp->cumulative_number_seeds = 1;
   bp->number_of_mergers = 0;
+  bp->number_of_gas_swallows = 0;
+  bp->number_of_direct_gas_swallows = 0;
+  bp->number_of_repositions = 0;
+  bp->number_of_reposition_attempts = 0;
+  bp->number_of_time_steps = 0;
   bp->last_high_Eddington_fraction_scale_factor = -1.f;
   bp->last_minor_merger_time = -1.;
   bp->last_major_merger_time = -1.;
@@ -96,6 +115,10 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->circular_velocity_gas[0] = 0.f;
   bp->circular_velocity_gas[1] = 0.f;
   bp->circular_velocity_gas[2] = 0.f;
+  bp->curl_v_gas[0] = 0.f;
+  bp->curl_v_gas[1] = 0.f;
+  bp->curl_v_gas[2] = 0.f;
+  bp->velocity_dispersion_gas = 0.f;
   bp->ngb_mass = 0.f;
   bp->num_ngbs = 0;
   bp->reposition.delta_x[0] = -FLT_MAX;
@@ -103,7 +126,8 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.delta_x[2] = -FLT_MAX;
   bp->reposition.min_potential = FLT_MAX;
   bp->reposition.potential = FLT_MAX;
-  bp->accretion_rate = 0.f; /* Accumulated ngb-by-ngb */
+  bp->accretion_rate = 0.f; /* Optionally accumulated ngb-by-ngb */
+  bp->f_visc = FLT_MAX;
 }
 
 /**
@@ -156,6 +180,9 @@ __attribute__((always_inline)) INLINE static void black_holes_predict_extra(
     bp->reposition.delta_x[1] = -FLT_MAX;
     bp->reposition.delta_x[2] = -FLT_MAX;
     bp->reposition.min_potential = FLT_MAX;
+
+    /* Count the jump */
+    bp->number_of_repositions++;
   }
 }
 
@@ -192,28 +219,39 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
   const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
 
-  /* Finish the calculation by inserting the missing h-factors */
+  /* --- Finish the calculation by inserting the missing h factors --- */
   bp->density.wcount *= h_inv_dim;
   bp->density.wcount_dh *= h_inv_dim_plus_one;
   bp->rho_gas *= h_inv_dim;
-  bp->sound_speed_gas *= h_inv_dim;
-  bp->velocity_gas[0] *= h_inv_dim;
-  bp->velocity_gas[1] *= h_inv_dim;
-  bp->velocity_gas[2] *= h_inv_dim;
-  bp->circular_velocity_gas[0] *= h_inv_dim;
-  bp->circular_velocity_gas[1] *= h_inv_dim;
-  bp->circular_velocity_gas[2] *= h_inv_dim;
-
   const float rho_inv = 1.f / bp->rho_gas;
 
-  /* Finish the calculation by undoing the mass smoothing */
-  bp->sound_speed_gas *= rho_inv;
-  bp->velocity_gas[0] *= rho_inv;
-  bp->velocity_gas[1] *= rho_inv;
-  bp->velocity_gas[2] *= rho_inv;
-  bp->circular_velocity_gas[0] *= rho_inv * h_inv;
-  bp->circular_velocity_gas[1] *= rho_inv * h_inv;
-  bp->circular_velocity_gas[2] *= rho_inv * h_inv;
+  /* For the following, we also have to undo the mass smoothing
+   * (N.B.: bp->velocity_gas is in BH frame, in internal units). */
+  bp->sound_speed_gas *= h_inv_dim * rho_inv;
+  bp->velocity_gas[0] *= h_inv_dim * rho_inv;
+  bp->velocity_gas[1] *= h_inv_dim * rho_inv;
+  bp->velocity_gas[2] *= h_inv_dim * rho_inv;
+  bp->velocity_dispersion_gas *= h_inv_dim * rho_inv;
+
+  /* ... and for the circular velocity, convert from specifc angular
+   *     momentum to circular velocity at the smoothing radius (extra h_inv) */
+  bp->circular_velocity_gas[0] *= h_inv_dim_plus_one * rho_inv;
+  bp->circular_velocity_gas[1] *= h_inv_dim_plus_one * rho_inv;
+  bp->circular_velocity_gas[2] *= h_inv_dim_plus_one * rho_inv;
+
+  /* ... and for the curl, we also need to divide by an extra h factor */
+  bp->curl_v_gas[0] *= h_inv_dim_plus_one * rho_inv;
+  bp->curl_v_gas[1] *= h_inv_dim_plus_one * rho_inv;
+  bp->curl_v_gas[2] *= h_inv_dim_plus_one * rho_inv;
+
+  /* Calculate (actual) gas velocity dispersion. Currently, the variable
+   * 'velocity_dispersion_gas' holds <v^2> instead. */
+  const double speed_gas2 = bp->velocity_gas[0] * bp->velocity_gas[0] +
+                            bp->velocity_gas[1] * bp->velocity_gas[1] +
+                            bp->velocity_gas[2] * bp->velocity_gas[2];
+
+  bp->velocity_dispersion_gas -= speed_gas2;
+  bp->velocity_dispersion_gas = sqrt(bp->velocity_dispersion_gas);
 }
 
 /**
@@ -239,6 +277,12 @@ black_holes_bpart_has_no_neighbours(struct bpart* bp,
   bp->velocity_gas[0] = FLT_MAX;
   bp->velocity_gas[1] = FLT_MAX;
   bp->velocity_gas[2] = FLT_MAX;
+
+  bp->velocity_dispersion_gas = FLT_MAX;
+
+  bp->curl_v_gas[0] = FLT_MAX;
+  bp->curl_v_gas[1] = FLT_MAX;
+  bp->curl_v_gas[2] = FLT_MAX;
 }
 
 /**
@@ -269,8 +313,8 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
 
   /* Physical distance between the particles */
   const float dx[3] = {(bp->x[0] - p->x[0]) * cosmo->a,
-                       (bp->x[0] - p->x[0]) * cosmo->a,
-                       (bp->x[0] - p->x[0]) * cosmo->a};
+                       (bp->x[1] - p->x[1]) * cosmo->a,
+                       (bp->x[2] - p->x[2]) * cosmo->a};
 
   /* Collect the swallowed angular momentum */
   bp->swallowed_angular_momentum[0] +=
@@ -292,10 +336,23 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_part(
   bp->gpart->v_full[1] = bp->v[1];
   bp->gpart->v_full[2] = bp->v[2];
 
+  const float dr = sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
+  message(
+      "BH %lld swallowing gas particle %lld "
+      "(Delta_v = [%f, %f, %f] U_V, "
+      "Delta_x = [%f, %f, %f] U_L, "
+      "Delta_v_rad = %f)",
+      bp->id, p->id, -dv[0], -dv[1], -dv[2], -dx[0], -dx[1], -dx[2],
+      (dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2]) / dr);
+
   /* Update the BH metal masses */
   struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
   const struct chemistry_part_data* p_chem = &p->chemistry_data;
   chemistry_add_part_to_bpart(bp_chem, p_chem, gas_mass);
+
+  /* This BH swallowed a gas particle */
+  bp->number_of_gas_swallows++;
+  bp->number_of_direct_gas_swallows++;
 
   /* This BH lost a neighbour */
   bp->num_ngbs--;
@@ -371,6 +428,9 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
   /* Add up all the BH seeds */
   bpi->cumulative_number_seeds += bpj->cumulative_number_seeds;
 
+  /* Add up all the gas particles we swallowed */
+  bpi->number_of_gas_swallows += bpj->number_of_gas_swallows;
+
   /* We had another merger */
   bpi->number_of_mergers++;
 }
@@ -392,6 +452,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double time, const int with_cosmology, const double dt) {
 
+  /* Record that the black hole has another active time step */
+  bp->number_of_time_steps++;
+
   if (dt == 0. || bp->rho_gas == 0.) return;
 
   /* Gather some physical constants (all in internal units) */
@@ -400,23 +463,13 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double proton_mass = constants->const_proton_mass;
   const double sigma_Thomson = constants->const_thomson_cross_section;
 
-  /* Gather the parameters of the model */
-  const double f_Edd = props->f_Edd;
-  const double f_Edd_recording = props->f_Edd_recording;
-  const double epsilon_r = props->epsilon_r;
-  const double epsilon_f = props->epsilon_f;
-  const double num_ngbs_to_heat = props->num_ngbs_to_heat;
-  const double delta_T = props->AGN_delta_T_desired;
-  const double delta_u = delta_T * props->temp_to_u_factor;
-  const double alpha_visc = props->alpha_visc;
-  const int with_angmom_limiter = props->with_angmom_limiter;
-
   /* (Subgrid) mass of the BH (internal units) */
   const double BH_mass = bp->subgrid_mass;
 
-  /* Convert the quantities we gathered to physical frame (all internal units)
+  /* Convert the quantities we gathered to physical frame (all internal units).
    * Note: for the velocities this means peculiar velocities */
   const double gas_c_phys = bp->sound_speed_gas * cosmo->a_factor_sound_speed;
+  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
   const double gas_v_circular[3] = {
       bp->circular_velocity_gas[0] * cosmo->a_inv,
       bp->circular_velocity_gas[1] * cosmo->a_inv,
@@ -428,36 +481,121 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                                       gas_v_circular[2] * gas_v_circular[2];
   const double tangential_velocity = sqrt(tangential_velocity2);
 
-  /* We can now compute the Bondi accretion rate (internal units) */
-  const float hi_inv = 1.f / bp->h;
-  const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
-  ;
-  double Bondi_rate =
-      bp->accretion_rate * (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
+  /* We can now compute the accretion rate (internal units) */
+  double accr_rate;
+
+  if (props->use_multi_phase_bondi) {
+
+    /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
+     * the accretion_rate is still zero (was initialised to this) */
+    const float hi_inv = 1.f / bp->h;
+    const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
+    accr_rate = bp->accretion_rate *
+                (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
+  } else {
+
+    /* Standard approach: compute accretion rate for all gas simultaneously.
+     *
+     * Convert the quantities we gathered to physical frame (all internal
+     * units). Note: velocities are already in black hole frame. */
+    const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
+    const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                  bp->velocity_gas[1] * cosmo->a_inv,
+                                  bp->velocity_gas[2] * cosmo->a_inv};
+
+    const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                               gas_v_phys[1] * gas_v_phys[1] +
+                               gas_v_phys[2] * gas_v_phys[2];
+
+    /* In the Bondi-Hoyle-Lyttleton formula, the bulk flow of gas is
+     * added to the sound speed in quadrature. Treated separately (below)
+     * in the Krumholz et al. (2006) prescription */
+    const double denominator2 =
+        props->use_krumholz ? gas_c_phys2 : gas_v_norm2 + gas_c_phys2;
+#ifdef SWIFT_DEBUG_CHECKS
+    /* Make sure that the denominator is strictly positive */
+    if (denominator2 <= 0)
+      error(
+          "Invalid denominator for BH particle %lld in Bondi rate "
+          "calculation.",
+          bp->id);
+#endif
+    const double denominator_inv = 1. / sqrt(denominator2);
+    accr_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
+                denominator_inv * denominator_inv * denominator_inv;
+
+    if (props->use_krumholz) {
+
+      /* Compute the additional correction factors from Krumholz+06,
+       * accounting for bulk flow and turbulence of ambient gas. */
+      const double lambda = 1.1;
+      const double gas_v_dispersion =
+          bp->velocity_dispersion_gas * cosmo->a_inv;
+      const double mach_turb = gas_v_dispersion / gas_c_phys;
+      const double mach_bulk = sqrt(gas_v_norm2) / gas_c_phys;
+      const double mach2 = mach_turb * mach_turb + mach_bulk * mach_bulk;
+      const double m1 = 1. + mach2;
+      const double mach_factor =
+          sqrt((lambda * lambda + mach2) / (m1 * m1 * m1 * m1));
+      accr_rate *= mach_factor;
+    }
+
+    if (props->with_krumholz_vorticity) {
+
+      /* Change the accretion rate to equation (3) of Krumholz et al. (2006)
+       * by adding a vorticity-dependent term in inverse quadrature */
+
+      /* Convert curl to vorticity in physical units */
+      const double gas_curlv_phys[3] = {bp->curl_v_gas[0] * cosmo->a2_inv,
+                                        bp->curl_v_gas[1] * cosmo->a2_inv,
+                                        bp->curl_v_gas[2] * cosmo->a2_inv};
+      const double gas_vorticity =
+          sqrt(gas_curlv_phys[0] * gas_curlv_phys[0] +
+               gas_curlv_phys[1] * gas_curlv_phys[1] +
+               gas_curlv_phys[2] * gas_curlv_phys[2]);
+
+      const double Bondi_radius = G * BH_mass / gas_c_phys2;
+      const double omega_star = gas_vorticity * Bondi_radius / gas_c_phys;
+      const double f_omega_star = 1.0 / (1.0 + pow(omega_star, 0.9));
+      const double mdot_omega = 4. * M_PI * gas_rho_phys * G * G * BH_mass *
+                                BH_mass * denominator_inv * denominator_inv *
+                                denominator_inv * 0.34 * f_omega_star;
+
+      const double accr_rate_inv = 1. / accr_rate;
+      const double mdot_omega_inv = 1. / mdot_omega;
+      accr_rate = 1. / sqrt(accr_rate_inv * accr_rate_inv +
+                            mdot_omega_inv * mdot_omega_inv);
+    } /* ends calculation of vorticity addition to Krumholz prescription */
+
+  } /* ends section without multi-phase accretion */
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
-  if (with_angmom_limiter) {
-
-    const double gas_c_phys2 = gas_c_phys * gas_c_phys;
+  if (props->with_angmom_limiter) {
     const double Bondi_radius = G * BH_mass / gas_c_phys2;
     const double Bondi_time = Bondi_radius / gas_c_phys;
     const double r_times_v_tang = Bondi_radius * tangential_velocity;
     const double r_times_v_tang_3 =
         r_times_v_tang * r_times_v_tang * r_times_v_tang;
     const double viscous_time = 2. * M_PI * r_times_v_tang_3 /
-                                (1e-6 * alpha_visc * G * G * BH_mass * BH_mass);
-    const double f_visc = min(Bondi_time / viscous_time, 1.);
+                                (1e-6 * props->alpha_visc * G * G *
+                                 BH_mass * BH_mass);
 
-    /* Limit the Bondi rate by the Bondi viscuous time ratio */
-    Bondi_rate *= f_visc;
+    const double f_visc = min(Bondi_time / viscous_time, 1.);
+    bp->f_visc = f_visc;
+
+    /* Limit the accretion rate by the Bondi-to-viscous time ratio */
+    accr_rate *= f_visc;
+  } else {
+    bp->f_visc = 1.0;
   }
 
   /* Compute the Eddington rate (internal units) */
+  const double epsilon_r = props->epsilon_r;
   const double Eddington_rate =
       4. * M_PI * G * BH_mass * proton_mass / (epsilon_r * c * sigma_Thomson);
 
-  /* Shall we record this high rate? */
-  if (Bondi_rate > f_Edd_recording * Eddington_rate) {
+  /* Should we record this time as the most recent high accretion rate? */
+  if (accr_rate > props->f_Edd_recording * Eddington_rate) {
     if (with_cosmology) {
       bp->last_high_Eddington_fraction_scale_factor = cosmo->a;
     } else {
@@ -465,8 +603,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     }
   }
 
-  /* Limit the accretion rate to the Eddington fraction */
-  const double accr_rate = min(Bondi_rate, f_Edd * Eddington_rate);
+  /* Limit the accretion rate to a fraction of the Eddington rate */
+  accr_rate = min(accr_rate, props->f_Edd * Eddington_rate);
   bp->accretion_rate = accr_rate;
 
   /* Factor in the radiative efficiency */
@@ -476,13 +614,15 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* Integrate forward in time */
   bp->subgrid_mass += mass_rate * dt;
   bp->total_accreted_mass += mass_rate * dt;
-  bp->energy_reservoir += luminosity * epsilon_f * dt;
+  bp->energy_reservoir += luminosity * props->epsilon_f * dt;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass
    * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
-  const double E_feedback_event = num_ngbs_to_heat * delta_u * mean_ngb_mass;
+  const double delta_u = props->AGN_delta_T_desired * props->temp_to_u_factor;
+  const double E_feedback_event = props->num_ngbs_to_heat * delta_u *
+                                  mean_ngb_mass;
 
   /* Are we doing some feedback? */
   if (bp->energy_reservoir > E_feedback_event) {
@@ -541,19 +681,60 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     const struct phys_const* constants, const struct cosmology* cosmo,
     const double dt) {
 
-  const float potential = gravity_get_comoving_potential(bp->gpart);
+  /* First check: did we find any eligible neighbour particle to jump to? */
+  if (bp->reposition.min_potential != FLT_MAX) {
 
-  /* Is the potential lower (i.e. the BH is at the bottom already)
-   * OR is the BH massive enough that we don't reposition? */
-  if (potential < bp->reposition.min_potential ||
-      bp->subgrid_mass > props->max_reposition_mass) {
+    /* Record that we have a (possible) repositioning situation */
+    bp->number_of_reposition_attempts++;
 
-    /* No need to reposition */
-    bp->reposition.min_potential = FLT_MAX;
-    bp->reposition.delta_x[0] = -FLT_MAX;
-    bp->reposition.delta_x[1] = -FLT_MAX;
-    bp->reposition.delta_x[2] = -FLT_MAX;
-  }
+    /* Is the potential lower (i.e. the BH is at the bottom already)
+     * OR is the BH massive enough that we don't reposition? */
+    const float potential = gravity_get_comoving_potential(bp->gpart);
+    if (potential < bp->reposition.min_potential ||
+        bp->subgrid_mass > props->max_reposition_mass) {
+
+      /* No need to reposition */
+      bp->reposition.min_potential = FLT_MAX;
+      bp->reposition.delta_x[0] = -FLT_MAX;
+      bp->reposition.delta_x[1] = -FLT_MAX;
+      bp->reposition.delta_x[2] = -FLT_MAX;
+    } else if (props->set_reposition_speed) {
+
+      /* If we are re-positioning, move the BH a fraction of delta_x, so
+       * that we have a well-defined re-positioning velocity. We have
+       * checked already that reposition_coefficient_upsilon is positive. */
+      const float repos_vel =
+          props->reposition_coefficient_upsilon *
+          pow(bp->subgrid_mass / constants->const_solar_mass,
+              props->reposition_exponent_xi);
+
+      const double dx = bp->reposition.delta_x[0];
+      const double dy = bp->reposition.delta_x[1];
+      const double dz = bp->reposition.delta_x[2];
+      const double d = sqrt(dx * dx + dy * dy + dz * dz);
+
+      /* Convert target reposition velocity to a fractional reposition
+       * along reposition.delta_x */
+
+      /* Exclude the pathological case of repositioning by zero distance */
+      if (d > 0) {
+        double repos_frac = repos_vel * dt / d;
+
+        /* We should never get negative repositioning fractions... */
+        if (repos_frac < 0)
+          error("Wanting to reposition by negative fraction (%g)?", repos_frac);
+
+        /* ... but fractions > 1 can occur if the target velocity is high.
+         * We do not want this, because it could lead to overshooting the
+         * actual potential minimum. */
+        if (repos_frac > 1) repos_frac = 1.;
+
+        bp->reposition.delta_x[0] *= repos_frac;
+        bp->reposition.delta_x[1] *= repos_frac;
+        bp->reposition.delta_x[2] *= repos_frac;
+      }
+    } /* ends section for fractional repositioning */
+  }   /* ends section if we found eligible repositioning target(s) */
 }
 
 /**
@@ -636,6 +817,13 @@ INLINE static void black_holes_create_from_gas(
   bp->total_accreted_mass = 0.f;
   bp->cumulative_number_seeds = 1;
   bp->number_of_mergers = 0;
+  bp->number_of_gas_swallows = 0;
+  bp->number_of_direct_gas_swallows = 0;
+  bp->number_of_time_steps = 0;
+
+  /* We haven't repositioned yet, nor attempted it */
+  bp->number_of_repositions = 0;
+  bp->number_of_reposition_attempts = 0;
 
   /* Initial metal masses */
   const float gas_mass = hydro_get_mass(p);

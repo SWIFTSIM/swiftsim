@@ -104,7 +104,7 @@ runner_iact_nonsym_bh_gas_density(
   bi->circular_velocity_gas[1] += mj * wi * (dx[2] * dv[0] - dx[0] * dv[2]);
   bi->circular_velocity_gas[2] += mj * wi * (dx[0] * dv[1] - dx[1] * dv[0]);
 
-  if (bh_props->multi_phase_bondi) {
+  if (bh_props->use_multi_phase_bondi) {
     /* Contribution to BH accretion rate
      *
      * i) Calculate denominator in Bondi formula */
@@ -395,17 +395,14 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
   if ((bj->subgrid_mass < bi->subgrid_mass) ||
       (bj->subgrid_mass == bi->subgrid_mass && bj->id < bi->id)) {
 
-    /* Merge if gravitationally bound AND if within max distance
-     * Note that we use the kernel support here as the size and not just the
-     * smoothing length */
-
     /* Maximum velocity difference between BHs allowed to merge */
     float v2_threshold;
 
     if (bh_props->merger_threshold_type == 0) {
 
       /* 'Old-style' merger threshold using circular velocity at the
-       * edge of the more massive BH's kernel */
+       * edge of the more massive BH's kernel (note: we are using the kernel
+       * support radius here and not just the smoothing length). */
       v2_threshold = G_Newton * M / (kernel_gamma * h);
     } else {
 
@@ -423,7 +420,6 @@ runner_iact_nonsym_bh_bh_swallow(const float r2, const float *dx,
         v2_threshold = 2.f * G_Newton * M / (r_mod);
 
       } else {
-
         /* Standard formula if BH interactions are not softened */
         v2_threshold = 2.f * G_Newton * M / (r_12);
       }

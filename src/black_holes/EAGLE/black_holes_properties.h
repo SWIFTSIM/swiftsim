@@ -61,7 +61,7 @@ struct black_holes_props {
   /* ----- Properties of the accretion model ------ */
 
   /*! Calculate Bondi accretion rate for individual neighbours? */
-  int multi_phase_bondi;
+  int use_multi_phase_bondi;
 
   /*! Are we applying the angular-momentum-based multiplicative term from
    * Rosas-Guevara et al. (2015)? */
@@ -206,8 +206,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   /* Accretion parameters ---------------------------------- */
 
-  bp->multi_phase_bondi =
-      parser_get_param_int(params, "EAGLEAGN:multi_phase_bondi");
+  bp->use_multi_phase_bondi =
+      parser_get_param_int(params, "EAGLEAGN:use_multi_phase_bondi");
 
   /* Rosas-Guevara et al. (2015) model */
   bp->with_angmom_limiter =
