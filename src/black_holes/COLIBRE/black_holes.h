@@ -624,9 +624,12 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
   /* Increase the subgrid angular momentum according to what we accreted
    * (already in physical units, a factors from velocity and radius cancel) */
-  for (int k_dim = 0; k_dim < 3; k_dim++)
-    bp->accreted_angular_momentum[k_dim] +=
-        bp->spec_angular_momentum_gas[k_dim] * mass_rate * dt;
+  bp->accreted_angular_momentum[0] +=
+        bp->spec_angular_momentum_gas[0] * mass_rate * dt;
+  bp->accreted_angular_momentum[1] +=
+        bp->spec_angular_momentum_gas[1] * mass_rate * dt;
+  bp->accreted_angular_momentum[2] +=
+        bp->spec_angular_momentum_gas[2] * mass_rate * dt;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass
