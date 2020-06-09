@@ -288,6 +288,15 @@ struct feedback_props {
 
   /* Amount of europium (in units of Msolar) relesed by collapsar */
   double yield_Eu_from_collapsar;
+    
+  /*! Log 10 of the maximal stellar mass that will turn into a collapsar (in solar
+   * masses) */
+  float log10_collapsar_max_mass_msun;
+
+  /*! Log 10 of the minimal stellar mass that will turn into a collapsar (in solar
+   * masses) */
+  float log10_collapsar_min_mass_msun;
+
 
   /* ------------ Early feedback properties ------------ */
 

@@ -677,8 +677,8 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
 #endif
     
  
-  /* 1 - If stars more massive than 100 Msun have exploited, do nothing */
-  /* 2 - If stars less massive than 8 Msun have exploited, do nothing */
+  /* 1 - If stars more massive than 100 Msun have exploded, do nothing */
+  /* 2 - If stars less massive than 8 Msun have exploded, do nothing */
   /* (Here we use SNII lifetimes because CEJSN are core-collapse SN) */
   if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
   if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
@@ -751,15 +751,17 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
     
-  /* 1 - If stars more massive than 100 Msun have exploited, do nothing */
-  /* 2 - If stars less massive than 10 Msun have exploited, do nothing */
-  if (log10_min_mass > 2.) return;
-  if (log10_max_mass < 1.) return;
+  /* 1 - If stars more massive than 100 Msun have exploded, do nothing */
+  /* 2 - If stars less massive than 10 Msun have exploded, do nothing */
+  if (log10_min_mass > props->log10_collapsar_max_mass_msun) return;
+  if (log10_max_mass < props->log10_collapsar_min_mass_msun) return;
     
   /* Here we calculate for how long CEJSN events will take place */
+  float max_mass = exp10f(props->log10_collapsar_max_mass_msun);
+  float min_mass = exp10f(props->log10_collapsar_min_mass_msun);
   const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-  const float lifetime_Gyr_min = lifetime_in_Gyr(100., Z, props);
-  const float lifetime_Gyr_max = lifetime_in_Gyr(10., Z, props);
+  const float lifetime_Gyr_min = lifetime_in_Gyr(max_mass, Z, props);
+  const float lifetime_Gyr_max = lifetime_in_Gyr(min_mass, Z, props);
   float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
 
   /* Number of collapsar events in timestep */
@@ -771,7 +773,7 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
       random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
 
   int num_events = 0;
-  if (num_collapsar > 1) {
+  if (num_collapsar > 1.f) {
     num_events = floor(num_collapsar);
     num_collapsar -= num_events;
   }
@@ -1864,7 +1866,21 @@ void feedback_props_init(struct feedback_props* fp,
       params, "COLIBREFeedback:num_of_collapsar_per_Msun");
   fp->yield_Eu_from_collapsar = parser_get_param_double(
       params, "COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
+    
+  /* Stellar mass limits for collapsar events */
+  const double collapsar_min_mass_msun =
+    parser_get_param_double(params, "COLIBREFeedback:collapsar_min_mass_Msun");
+  const double collapsar_max_mass_msun =
+    parser_get_param_double(params, "COLIBREFeedback:collapsar_max_mass_Msun");
 
+    /* Check that it makes sense. */
+    if (collapsar_max_mass_msun < collapsar_min_mass_msun) {
+        error("Can't have the max collapsar mass smaller than the min collapsar mass!");
+    }
+    
+    fp->log10_collapsar_min_mass_msun = log10(collapsar_min_mass_msun);
+    fp->log10_collapsar_max_mass_msun = log10(collapsar_max_mass_msun);
+    
   /* Properties of the SNIa enrichment model -------------------------------- */
 
   /* Read AGB ejecta velocity */
