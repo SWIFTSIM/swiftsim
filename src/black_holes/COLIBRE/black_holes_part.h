@@ -48,6 +48,9 @@ struct bpart {
   /*! Black hole mass */
   float mass;
 
+  /*! Black hole mass at the start of each step, prior to any nibbling */
+  float mass_at_start_of_step;
+
   /* Particle cutoff radius. */
   float h;
 

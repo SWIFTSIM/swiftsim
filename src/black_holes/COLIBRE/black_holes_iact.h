@@ -278,9 +278,68 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     }
   }
 
-  /* Is the BH hungry? */
-  if (bi->subgrid_mass > bi->mass) {
+  /* Check if the BH needs to be fed. If not, we're done */
+  const float bh_mass_deficit = bi->subgrid_mass > bi->mass_start_of_step;
+  if (bh_mass_deficit <= 0) return;
 
+  if (bh_props->use_nibbling) {
+
+    /* If we do nibbling, things are quite straightforward. We transfer
+     * the mass and all associated quantities right here. */
+
+    /* Don't nibble from particles that are too small already */
+    if (pj->mass < props->min_gas_mass) return;
+
+    /* !!! THIS SHOULD DEFINITELY BE CHECKED FOR CORRECTNESS !!! */
+    const float nibble_mass = bh_mass_deficit * hi_inv_dim * wi / bi->rho_gas;
+    const double nibble_fraction = nibble_mass / pj->mass;
+
+    /* Transfer (dynamical) mass from the gas particle to the BH */
+    bi->mass += nibble_mass;
+    bi->gpart->mass += nibble_mass;
+    pj->mass -= nibble_mass;
+    pj->gpart->mass -= nibble_mass;
+
+    /* Increase the (dynamical) angular momentum of the BH */
+
+    /* Physical velocity difference between the particles */
+    const float dv[3] = {(bp->v[0] - p->v[0]) * cosmo->a_inv,
+                         (bp->v[1] - p->v[1]) * cosmo->a_inv,
+                         (bp->v[2] - p->v[2]) * cosmo->a_inv};
+
+    /* Physical distance between the particles */
+    const float dx[3] = {(bp->x[0] - p->x[0]) * cosmo->a,
+                         (bp->x[1] - p->x[1]) * cosmo->a,
+                         (bp->x[2] - p->x[2]) * cosmo->a};
+
+    /* Collect the gained angular momentum. Note no change to gas here. */
+    bp->swallowed_angular_momentum[0] +=
+        nibble_mass * (dx[1] * dv[2] - dx[2] * dv[1]);
+    bp->swallowed_angular_momentum[1] +=
+        nibble_mass * (dx[2] * dv[0] - dx[0] * dv[2]);
+    bp->swallowed_angular_momentum[2] +=
+        nibble_mass * (dx[0] * dv[1] - dx[1] * dv[0]);
+
+    /* Update the BH momentum and velocity. Again, no change to gas here. */
+    const float BH_mom[3] = {BH_mass * bp->v[0] + nibble_mass * p->v[0],
+                             BH_mass * bp->v[1] + nibble_mass * p->v[1],
+                             BH_mass * bp->v[2] + nibble_mass * p->v[2]};
+
+    bp->v[0] = BH_mom[0] / bp->mass;
+    bp->v[1] = BH_mom[1] / bp->mass;
+    bp->v[2] = BH_mom[2] / bp->mass;
+    bp->gpart->v_full[0] = bp->v[0];
+    bp->gpart->v_full[1] = bp->v[1];
+    bp->gpart->v_full[2] = bp->v[2];
+
+    /* Update the BH and also gas metal masses */
+    struct chemistry_bpart_data* bp_chem = &bp->chemistry_data;
+    const struct chemistry_part_data* p_chem = &p->chemistry_data;
+    chemistry_transfer_part_to_bpart(bp_chem, p_chem, nibble_mass,
+                                     nibble_fraction);
+    
+  } else { /* ends nibbling section, below comes swallowing */
+    
     /* Probability to swallow this particle
      * Recall that in SWIFT the SPH kernel is recovered by computing
      * kernel_eval() and muliplying by (1/h^d) */
@@ -310,7 +369,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
             bi->id, pj->id, pj->black_holes_data.swallow_id);
       }
     }
-  }
+  } /* ends section for swallowing */
 }
 
 /**

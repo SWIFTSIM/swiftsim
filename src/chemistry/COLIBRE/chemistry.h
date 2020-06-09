@@ -501,9 +501,11 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
   for (int i = 0; i < chemistry_element_count; ++i) {
     bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * gas_mass;
   }
+
   bp_data->mass_from_SNIa += p_data->mass_from_SNIa;
   bp_data->mass_from_SNII += p_data->mass_from_SNII;
   bp_data->mass_from_AGB += p_data->mass_from_AGB;
+
   bp_data->metal_mass_from_SNIa +=
       p_data->metal_mass_fraction_from_SNIa * gas_mass;
   bp_data->metal_mass_from_SNII +=
@@ -512,9 +514,65 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
       p_data->metal_mass_fraction_from_AGB * gas_mass;
   bp_data->iron_mass_from_SNIa +=
       p_data->iron_mass_fraction_from_SNIa * gas_mass;
+
   bp_data->mass_from_NSM += p_data->mass_from_NSM;
   bp_data->mass_from_CEJSN += p_data->mass_from_CEJSN;
   bp_data->mass_from_collapsar += p_data->mass_from_collapsar;
+}
+
+/**
+ * @brief Transfer chemistry data of a gas particle to a black hole.
+ *
+ * In contrast to `chemistry_add_part_to_bpart`, only a fraction of the
+ * masses stored in the gas particle are transferred here. Absolute masses
+ * of the gas particle are adjusted as well.
+ * Black holes don't store fractions so we need to add element masses.
+ *
+ * @param bp_data The black hole data to add to.
+ * @param p_data The gas data to use.
+ * @param nibble_mass The mass to be transferred from the gas to the black
+ *        hole particle. If nibbling is disabled, this is the entire mass of
+ *        the gas particle.
+ * @param nibble_fraction The fraction of the (original) mass of the gas
+ *        particle that is being transferred (1.0 if nibbling is disabled).
+ */
+__attribute__((always_inline)) INLINE static void
+chemistry_transfer_part_to_bpart(
+    struct chemistry_bpart_data* bp_data,
+    struct chemistry_part_data* p_data, const double nibble_mass,
+    const double nibble_fraction) {
+
+  bp_data->metal_mass_total += p_data->metal_mass_fraction_total * nibble_mass;
+  for (int i = 0; i < chemistry_element_count; ++i) {
+    bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * nibble_mass;
+  }
+
+  bp_data->mass_from_SNIa += p_data->mass_from_SNIa * nibble_fraction;
+  bp_data->mass_from_SNII += p_data->mass_from_SNII * nibble_fraction;
+  bp_data->mass_from_AGB += p_data->mass_from_AGB * nibble_fraction;
+
+  /* Absolute masses, so need to reduce the gas particle */
+  p_data->mass_from_SNIa -= p_data->mass_from_SNIa * nibble_fraction;
+  p_data->mass_from_SNII -= p_data->mass_from_SNII * nibble_fraction;
+  p_data->mass_from_AGB -= p_data->mass_from_AGB * nibble_fraction;
+
+  bp_data->metal_mass_from_SNIa +=
+      p_data->metal_mass_fraction_from_SNIa * nibble_mass;
+  bp_data->metal_mass_from_SNII +=
+      p_data->metal_mass_fraction_from_SNII * nibble_mass;
+  bp_data->metal_mass_from_AGB +=
+      p_data->metal_mass_fraction_from_AGB * nibble_mass;
+  bp_data->iron_mass_from_SNIa +=
+      p_data->iron_mass_fraction_from_SNIa * nibble_mass;
+
+  bp_data->mass_from_NSM += p_data->mass_from_NSM * nibble_fraction;
+  bp_data->mass_from_CEJSN += p_data->mass_from_CEJSN * nibble_fraction;
+  bp_data->mass_from_collapsar += p_data->mass_from_collapsar * nibble_fraction;
+
+  /* Again, these are absolute masses so we need to adjust the gas as well */
+  p_data->mass_from_NSM -= p_data->mass_from_NSM * nibble_fraction;
+  p_data->mass_from_CEJSN -= p_data->mass_from_CEJSN * nibble_fraction;
+  p_data->mass_from_collapsar -= p_data->mass_from_collapsar * nibble_fraction;
 }
 
 /**
