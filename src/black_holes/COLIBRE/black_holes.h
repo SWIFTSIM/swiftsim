@@ -622,6 +622,14 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   bp->total_accreted_mass += mass_rate * dt;
   bp->energy_reservoir += luminosity * props->epsilon_f * dt;
 
+  if (props->use_nibbling && bp->subgrid_mass < bp->mass)
+    /* In this case, the BH is still accreting from its (assumed) subgrid gas
+     * mass reservoir left over when it was formed. There is some loss in this
+     * due to radiative losses, so we must decrease the particle mass
+     * in proprtion to its current accretion rate. We do not account for this
+     * in the swallowing approach, however. */
+    bp->mass -= epsilon_r * accr_rate * dt;
+
   /* Increase the subgrid angular momentum according to what we accreted
    * (already in physical units, a factors from velocity and radius cancel) */
   bp->accreted_angular_momentum[0] +=

@@ -531,16 +531,20 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
  * @param bp_data The black hole data to add to.
  * @param p_data The gas data to use.
  * @param nibble_mass The mass to be transferred from the gas to the black
- *        hole particle. If nibbling is disabled, this is the entire mass of
- *        the gas particle.
+ *        hole particle.
  * @param nibble_fraction The fraction of the (original) mass of the gas
- *        particle that is being transferred (1.0 if nibbling is disabled).
+ *        particle that is given to the black hole.
+ * @param excess_fraction The ratio of mass taken from gas to that accreted
+ *        by the black hole (the rest is radiated away).
  */
 __attribute__((always_inline)) INLINE static void
 chemistry_transfer_part_to_bpart(
     struct chemistry_bpart_data* bp_data,
     struct chemistry_part_data* p_data, const double nibble_mass,
-    const double nibble_fraction) {
+    const double nibble_fraction, const double excess_fraction) {
+
+  /* By what fraction of the original gas particle mass is its mass reduced? */
+  const double f_reduce_gas = nibble_fraction * excess_fraction;
 
   bp_data->metal_mass_total += p_data->metal_mass_fraction_total * nibble_mass;
   for (int i = 0; i < chemistry_element_count; ++i) {
@@ -552,9 +556,9 @@ chemistry_transfer_part_to_bpart(
   bp_data->mass_from_AGB += p_data->mass_from_AGB * nibble_fraction;
 
   /* Absolute masses, so need to reduce the gas particle */
-  p_data->mass_from_SNIa -= p_data->mass_from_SNIa * nibble_fraction;
-  p_data->mass_from_SNII -= p_data->mass_from_SNII * nibble_fraction;
-  p_data->mass_from_AGB -= p_data->mass_from_AGB * nibble_fraction;
+  p_data->mass_from_SNIa -= p_data->mass_from_SNIa * f_reduce_gas;
+  p_data->mass_from_SNII -= p_data->mass_from_SNII * f_reduce_gas;
+  p_data->mass_from_AGB -= p_data->mass_from_AGB * f_reduce_gas;
 
   bp_data->metal_mass_from_SNIa +=
       p_data->metal_mass_fraction_from_SNIa * nibble_mass;
@@ -570,9 +574,9 @@ chemistry_transfer_part_to_bpart(
   bp_data->mass_from_collapsar += p_data->mass_from_collapsar * nibble_fraction;
 
   /* Again, these are absolute masses so we need to adjust the gas as well */
-  p_data->mass_from_NSM -= p_data->mass_from_NSM * nibble_fraction;
-  p_data->mass_from_CEJSN -= p_data->mass_from_CEJSN * nibble_fraction;
-  p_data->mass_from_collapsar -= p_data->mass_from_collapsar * nibble_fraction;
+  p_data->mass_from_NSM -= p_data->mass_from_NSM * f_reduce_gas;
+  p_data->mass_from_CEJSN -= p_data->mass_from_CEJSN * f_reduce_gas;
+  p_data->mass_from_collapsar -= p_data->mass_from_collapsar * f_reduce_gas;
 }
 
 /**

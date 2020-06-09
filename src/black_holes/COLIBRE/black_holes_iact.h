@@ -278,9 +278,10 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     }
   }
 
-  /* Check if the BH needs to be fed. If not, we're done */
+  /* Check if the BH needs to be fed. If not, we're done here */
   const float bh_mass_deficit = bi->subgrid_mass > bi->mass_at_start_of_step;
-  if (bh_mass_deficit <= 0) return;
+  if (bh_mass_deficit <= 0)
+    return;
 
   if (bh_props->use_nibbling) {
 
@@ -297,10 +298,14 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     const float nibble_mass = bh_mass_deficit * hi_inv_dim * wi / bi->rho_gas;
     const double nibble_fraction = nibble_mass / pj_mass_orig;
 
+    /* We radiated away some of the accreted mass, so need to take slightly
+     * more from the gas than the BH gained */ 
+    const float excess_fraction = 1.0 / (1.0 - bh_props->epsilon_r);
+
     /* Transfer (dynamical) mass from the gas particle to the BH */
     bi->mass += nibble_mass;
     bi->gpart->mass += nibble_mass;
-    hydro_set_mass(pj, pj_mass_orig - nibble_mass);
+    hydro_set_mass(pj, pj_mass_orig - nibble_mass * excess_fraction);
 
     /* Add the angular momentum of the accreted gas to the BH total.
      * Note no change to gas here. The cosmological conversion factors for
@@ -331,7 +336,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     struct chemistry_bpart_data* bi_chem = &bi->chemistry_data;
     struct chemistry_part_data* pj_chem = &pj->chemistry_data;
     chemistry_transfer_part_to_bpart(bi_chem, pj_chem, nibble_mass,
-                                     nibble_fraction);
+                                     nibble_fraction, excess_fraction);
     
   } else { /* ends nibbling section, below comes swallowing */
     

@@ -218,16 +218,17 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
  * @param bp_data The black hole data to add to.
  * @param p_data The gas data to use.
  * @param nibble_mass The mass to be transferred from the gas to the black
- *        hole particle. If nibbling is disabled, this is the entire mass of
- *        the gas particle.
+ *        hole particle.
  * @param nibble_fraction The fraction of the (original) mass of the gas
- *        particle that is being transferred (1.0 if nibbling is disabled).
+ *        particle that is given to the black hole.
+ * @param excess_fraction The ratio of mass taken from gas to that accreted
+ *        by the black hole (the rest is radiated away).
  */
 __attribute__((always_inline)) INLINE static void
 chemistry_transfer_part_to_bpart(
     struct chemistry_bpart_data* bp_data,
     struct chemistry_part_data* p_data, const double nibble_mass,
-    const double nibble_fraction) {}
+    const double nibble_fraction, const double excess_fraction) {}
 
 /**
  * @brief Add the chemistry data of a black hole to another one.
