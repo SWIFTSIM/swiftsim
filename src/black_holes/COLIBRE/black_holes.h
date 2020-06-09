@@ -621,10 +621,10 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   bp->total_accreted_mass += mass_rate * dt;
   bp->energy_reservoir += luminosity * props->epsilon_f * dt;
 
-  /* Increase the subgrid angular momentum according to what we accreted 
+  /* Increase the subgrid angular momentum according to what we accreted
    * (already in physical units, a factors from velocity and radius cancel) */
   for (int k_dim = 0; k_dim < 3; k_dim++)
-    bp->accreted_angular_momentum[k_dim] += 
+    bp->accreted_angular_momentum[k_dim] +=
         bp->spec_angular_momentum_gas[k_dim] * mass_rate * dt;
 
   /* Energy required to have a feedback event
