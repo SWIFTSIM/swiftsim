@@ -68,6 +68,9 @@ CGS. Entries in the file look like:
     SmoothingLengths_Gas: on  # Co-moving smoothing lengths (FWHM of the kernel) of the particles : a U_L  [ cm ]
     ...
 
+For cosmological simulations, users can optionally add the ``--cosmology`` flag
+to generate the field names appropriate for such a run.
+
 Users can select the particle fields to output in snapshot using a (separate)
 YAML parameter file. By default, you can define a section `Default` at the
 top level of this file (in the exact same way as the file dumped by using the
@@ -110,7 +113,7 @@ field for each particle type:
      Default_DM: off
      Default_DMBackground: off     
      Default_Stars: off
-     Default_BH: on  /* Not strictly necessary, on is already the default */
+     Default_BH: on  # Not strictly necessary, on is already the default
 
 
 Combining Output Lists and Output Selection
