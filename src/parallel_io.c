@@ -1282,7 +1282,7 @@ void prepare_file(struct engine* e, const char* fileName,
 
       /* Did the user cancel this field? */
       const int should_write = output_options_should_write_field(
-          output_options, current_selection_name, list[i].name,
+          output_options->select_output, current_selection_name, list[i].name,
           (enum part_type)ptype, compression_level_current_default);
 
       if (should_write)
@@ -1807,7 +1807,7 @@ void write_output_parallel(struct engine* e,
 
       /* Did the user cancel this field? */
       const int should_write = output_options_should_write_field(
-          output_options, current_selection_name, list[i].name,
+          output_options->select_output, current_selection_name, list[i].name,
           (enum part_type)ptype, compression_level_current_default);
 
       if (should_write)
