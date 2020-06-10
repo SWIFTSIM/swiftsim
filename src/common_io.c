@@ -2299,7 +2299,7 @@ void io_check_output_fields(struct swift_params* params,
     /* What is the default writing status for each ptype (on/off)? */
     int ptype_default_write_status[swift_type_count];
 
-    /* Collect I/O field props for all ptypes in one go */ 
+    /* Collect I/O field props for all ptypes in one go */
     struct io_props full_list[swift_type_count][100];
 
     for (int ptype = 0; ptype < swift_type_count; ptype++) {
@@ -2324,8 +2324,7 @@ void io_check_output_fields(struct swift_params* params,
           num_fields +=
               star_formation_write_particles(NULL, NULL, list + num_fields);
           num_fields += fof_write_parts(NULL, NULL, list + num_fields);
-          num_fields +=
-              velociraptor_write_parts(NULL, NULL, list + num_fields);
+          num_fields += velociraptor_write_parts(NULL, NULL, list + num_fields);
           break;
 
         case swift_type_dark_matter:
@@ -2343,8 +2342,8 @@ void io_check_output_fields(struct swift_params* params,
         case swift_type_stars:
           stars_write_particles(NULL, list, &num_fields, with_cosmology);
           num_fields += chemistry_write_sparticles(NULL, list + num_fields);
-          num_fields += tracers_write_sparticles(NULL, list + num_fields,
-                                                 with_cosmology);
+          num_fields +=
+              tracers_write_sparticles(NULL, list + num_fields, with_cosmology);
           num_fields +=
               star_formation_write_sparticles(NULL, list + num_fields);
           num_fields += fof_write_sparts(NULL, list + num_fields);
@@ -2352,8 +2351,7 @@ void io_check_output_fields(struct swift_params* params,
           break;
 
         case swift_type_black_hole:
-          black_holes_write_particles(NULL, list, &num_fields,
-                                      with_cosmology);
+          black_holes_write_particles(NULL, list, &num_fields, with_cosmology);
           num_fields += chemistry_write_bparticles(NULL, list + num_fields);
           num_fields += fof_write_bparts(NULL, list + num_fields);
           num_fields += velociraptor_write_bparts(NULL, list + num_fields);
@@ -2366,22 +2364,20 @@ void io_check_output_fields(struct swift_params* params,
       ptype_num_fields_total[ptype] = num_fields;
 
       /* Transcribe the ptype-specific list into a combined list */
-      for (int ii = 0; ii < num_fields; ii++)
-        full_list[ptype][ii] = list[ii];
+      for (int ii = 0; ii < num_fields; ii++) full_list[ptype][ii] = list[ii];
 
       /* If default is 'write', then we have to deduct any fields that
        * are switched off, and see whether we get down to zero. If the default
        * is 'off', we have to count upwards from zero for each field that is
        * switched back on. */
-      const enum compression_levels compression_level_current_default = 
-        output_options_get_ptype_default(params, section_name_no_colon,
-        (enum part_type) ptype);
+      const enum compression_levels compression_level_current_default =
+          output_options_get_ptype_default(params, section_name_no_colon,
+                                           (enum part_type)ptype);
 
       if (compression_level_current_default == compression_do_not_write) {
-        ptype_default_write_status[ptype] = 0; 
+        ptype_default_write_status[ptype] = 0;
         ptype_num_fields_to_write[ptype] = 0;
-      }
-      else {
+      } else {
         ptype_default_write_status[ptype] = 1;
         ptype_num_fields_to_write[ptype] = num_fields;
       }
@@ -2408,12 +2404,10 @@ void io_check_output_fields(struct swift_params* params,
 
       /* Skip if the parameter belongs to another output class */
       sprintf(comparison_section_name, "%s", section_name);
-      if (strstr(param_name, comparison_section_name) == NULL)
-        continue;
+      if (strstr(param_name, comparison_section_name) == NULL) continue;
 
       /* Skip if this is the 'Standard' parameter for its ptype */
-      if (strstr(param_name, ":Standard_") != NULL)
-        continue;
+      if (strstr(param_name, ":Standard_") != NULL) continue;
 
       /* Loop over all particle types to check the fields */
       int found = 0;
@@ -2465,12 +2459,12 @@ void io_check_output_fields(struct swift_params* params,
                * written for current ptype */
 
               /* Check whether value is 'on' (i.e. not 'off') */
-              const int is_on = strcmp(
-                 field_value,
-                 compression_level_names[compression_do_not_write]);
+              const int is_on =
+                  strcmp(field_value,
+                         compression_level_names[compression_do_not_write]);
 
               /* Check whether this parameter's behaviour is different from
-               * the default for its particle type. */ 
+               * the default for its particle type. */
 
               if (is_on && !ptype_default_write_status[ptype])
                 /* Particle should be written even though default is off:
@@ -2479,7 +2473,7 @@ void io_check_output_fields(struct swift_params* params,
 
               if (!is_on && ptype_default_write_status[ptype])
                 /* Particle should not be written, even though default is on:
-                 * decrease field count */ 
+                 * decrease field count */
                 ptype_num_fields_to_write[ptype] -= 1;
 
               /* Stop looking for comparison fields in current ptype.
@@ -2492,8 +2486,8 @@ void io_check_output_fields(struct swift_params* params,
                     field_name, field_value);
             }
           } /* ends section if we found the right ptype/field combo */
-        } /* ends loop through fields within current ptype */
-      } /* ends loop over ptypes, for current parameter */
+        }   /* ends loop through fields within current ptype */
+      }     /* ends loop over ptypes, for current parameter */
 
       if (!found)
         message(
@@ -2501,7 +2495,7 @@ void io_check_output_fields(struct swift_params* params,
             "'%s') that does not exist. This may be because you are not "
             "running with all of the physics that you compiled the code with.",
             param_name, params->fileName);
- 
+
     } /* ends loop over parameters */
 
     /* Quick second loop over ptypes, to add 'do we write any fields' param */
@@ -2510,9 +2504,10 @@ void io_check_output_fields(struct swift_params* params,
 #ifdef SWIFT_DEBUG_CHECKS
       /* Sanity check: is the number of fields to write non-negative? */
       if (ptype_num_fields_to_write[ptype] < 0)
-          error("We seem to have subtracted too many fields for particle "
-                "type %d in output class %s (total to write is %d)",
-                ptype, section_name, ptype_num_fields_to_write[ptype]);
+        error(
+            "We seem to have subtracted too many fields for particle "
+            "type %d in output class %s (total to write is %d)",
+            ptype, section_name, ptype_num_fields_to_write[ptype]);
 #endif
 
       /* Only care about whether the number of fields is 0 or more */
@@ -2520,7 +2515,7 @@ void io_check_output_fields(struct swift_params* params,
 
       char param_name_value[PARSER_MAX_LINE_SIZE];
       sprintf(param_name_value, "%.*sWriteAnyFields_%s:%d", FIELD_BUFFER_SIZE,
-          section_name, part_type_names[ptype], write_any_fields);
+              section_name, part_type_names[ptype], write_any_fields);
       parser_set_param(params, param_name_value);
     }
 

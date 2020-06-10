@@ -1274,9 +1274,9 @@ void prepare_file(struct engine* e, const char* fileName,
 
     /* Did the user specify a non-standard default for the entire particle
      * type? */
-    const enum compression_levels compression_level_current_default = 
+    const enum compression_levels compression_level_current_default =
         output_options_get_ptype_default(output_options, current_selection_name,
-          (enum part_type)ptype);
+                                         (enum part_type)ptype);
 
     for (int i = 0; i < num_fields; ++i) {
 
@@ -1799,9 +1799,9 @@ void write_output_parallel(struct engine* e,
 
     /* Did the user specify a non-standard default for the entire particle
      * type? */
-    const enum compression_levels compression_level_current_default = 
+    const enum compression_levels compression_level_current_default =
         output_options_get_ptype_default(output_options, current_selection_name,
-          (enum part_type)ptype);
+                                         (enum part_type)ptype);
 
     for (int i = 0; i < num_fields; ++i) {
 

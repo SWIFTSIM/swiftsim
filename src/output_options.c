@@ -129,11 +129,10 @@ void output_options_struct_restore(struct output_options* output_options,
  * @return should_write integer determining whether this field should be
  *         written
  **/
-int output_options_should_write_field(struct output_options* output_options,
-                                      char* snapshot_type, char* field_name,
-                                      enum part_type part_type,
-                                      enum compression_levels
-                                          compression_level_current_default) {
+int output_options_should_write_field(
+    struct output_options* output_options, char* snapshot_type,
+    char* field_name, enum part_type part_type,
+    enum compression_levels compression_level_current_default) {
   /* Full name for the field path */
   char field[PARSER_MAX_LINE_SIZE];
   sprintf(field, "%.*s:%.*s_%s", FIELD_BUFFER_SIZE, snapshot_type,
@@ -157,10 +156,9 @@ int output_options_should_write_field(struct output_options* output_options,
   return should_write;
 }
 
-
 enum compression_levels output_options_get_ptype_default(
-    struct swift_params* output_params,
-    char* snapshot_type, enum part_type part_type) {
+    struct swift_params* output_params, char* snapshot_type,
+    enum part_type part_type) {
 
   /* Full name for the default path */
   char field[PARSER_MAX_LINE_SIZE];
@@ -175,16 +173,16 @@ enum compression_levels output_options_get_ptype_default(
   /* Need to find out which of the entries this corresponds to... */
   enum compression_levels level_index;
   for (level_index = 0; level_index < compression_level_count; level_index++) {
-    if (!strcmp(compression_level_names[level_index], compression_level))
-      break;
+    if (!strcmp(compression_level_names[level_index], compression_level)) break;
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check whether we could translate the level string to a known entry. */
   if (level_index >= compression_level_count)
-    error("Could not resolve compression level \"%s\" as default compression "
-          "level of particle type %s in snapshot type %s.",
-          compression_level, part_type_names[part_type], snapshot_type);
+    error(
+        "Could not resolve compression level \"%s\" as default compression "
+        "level of particle type %s in snapshot type %s.",
+        compression_level, part_type_names[part_type], snapshot_type);
 
   message(
       "Determined default compression level of %s in snapshot type %s "

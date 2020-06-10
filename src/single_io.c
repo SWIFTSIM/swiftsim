@@ -850,19 +850,18 @@ void write_output_single(struct engine* e,
     numParticles[ptype] = (unsigned int)N_total[ptype];
     numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
 
-    /* Check whether all particle fields for this ptype are disabled 
-     * (parser access needs to be optional, since we might not have 
+    /* Check whether all particle fields for this ptype are disabled
+     * (parser access needs to be optional, since we might not have
      * initialised a Default section) */
     char param_name[PARSER_MAX_LINE_SIZE];
     sprintf(param_name, "%.*s:WriteAnyFields_%s", FIELD_BUFFER_SIZE,
-          current_selection_name, part_type_names[ptype]);
-    const int write_ptype = parser_get_opt_param_int(
-        output_options->select_output, param_name, 1);
+            current_selection_name, part_type_names[ptype]);
+    const int write_ptype =
+        parser_get_opt_param_int(output_options->select_output, param_name, 1);
 
     /* Don't feel like writing this ptype right now? That's ok. Just adjust
      * the particle number, and we'll take care of it. */
-    if (!write_ptype)
-      numParticles[ptype] = 0;
+    if (!write_ptype) numParticles[ptype] = 0;
   }
 
   io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N_total,
@@ -1201,9 +1200,10 @@ void write_output_single(struct engine* e,
 
     /* Did the user specify a non-standard default for the entire particle
      * type? */
-    const enum compression_levels compression_level_current_default = 
+    const enum compression_levels compression_level_current_default =
         output_options_get_ptype_default(output_options->select_output,
-          current_selection_name, (enum part_type) ptype);
+                                         current_selection_name,
+                                         (enum part_type)ptype);
 
     /* Write everything that is not cancelled */
 

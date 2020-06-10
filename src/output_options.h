@@ -69,14 +69,13 @@ void output_options_struct_restore(struct output_options* output_options,
                                    FILE* stream);
 
 /* Logic functions */
-int output_options_should_write_field(struct output_options* output_options,
-                                      char* snapshot_type, char* field_name,
-                                      enum part_type part_type,
-                                      enum compression_levels
-                                          comp_level_current_default);
+int output_options_should_write_field(
+    struct output_options* output_options, char* snapshot_type,
+    char* field_name, enum part_type part_type,
+    enum compression_levels comp_level_current_default);
 
 enum compression_levels output_options_get_ptype_default(
-    struct swift_params* output_params,
-    char* snapshot_type, enum part_type part_type);
+    struct swift_params* output_params, char* snapshot_type,
+    enum part_type part_type);
 
 #endif
