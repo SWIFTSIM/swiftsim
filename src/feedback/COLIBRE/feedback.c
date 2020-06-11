@@ -676,20 +676,41 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
     
- 
-  /* 1 - If stars more massive than 100 Msun have exploded, do nothing */
-  /* 2 - If stars less massive than 8 Msun have exploded, do nothing */
-  /* (Here we use SNII lifetimes because CEJSN are core-collapse SN) */
-  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
-  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
+    /* Here we calculate for how long collapsar events will take place */
+    float Z = sp->chemistry_data.metal_mass_fraction_total;
+    const float CEJSN_max_mass = exp10f(props->log10_SNII_max_mass_msun);
+    const float CEJSN_min_mass = exp10f(props->log10_SNII_min_mass_msun);
+    /* Lifetime of 100 Msun star (max mass allowed for core-collapse SN) */
+    const float lifetime_Gyr_max_mass = lifetime_in_Gyr(CEJSN_max_mass, Z, props);
+    /* Lifetime of 10 Msun star (min mass allowed for core-collapse SN) */
+    const float lifetime_Gyr_min_mass = lifetime_in_Gyr(CEJSN_min_mass, Z, props);
+    float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
     
-  /* Here we calculate for how long CEJSN events will take place */
-  float max_mass = exp10f(props->log10_SNII_max_mass_msun);
-  float min_mass = exp10f(props->log10_SNII_min_mass_msun);
-  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-  const float lifetime_Gyr_min = lifetime_in_Gyr(max_mass, Z, props);
-  const float lifetime_Gyr_max = lifetime_in_Gyr(min_mass, Z, props);
-  float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
+    /* If stars less massive than 8 Msun have exploded, do nothing */
+    if ( log10_max_mass < props->log10_SNII_min_mass_msun) return;  // no overlap
+    
+    if (log10_min_mass < props->log10_SNII_min_mass_msun && log10_max_mass > props->log10_SNII_min_mass_msun) { // some overlap
+        
+        /* modify dt_Gyr to be exactly the time from the start of the time-step
+         * to the time at which mass==8 */
+        const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
+        dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
+        
+    } // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
+    
+    
+    /* If stars more massive than 100 Msun have exploded, do nothing */
+    if ( log10_min_mass > props->log10_SNII_max_mass_msun) return;  // no overlap
+    
+    if (log10_min_mass < props->log10_SNII_max_mass_msun && log10_max_mass > props->log10_SNII_max_mass_msun) { // again some overlap
+        
+        /* modify dt_Gyr to be exactly the time since the star has mass=100 till the end of time step */
+        const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
+        dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
+        
+    } // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
+    
+    /* Compute probability based on dt_Gyr / lifetime */
 
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
@@ -750,19 +771,42 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
+
+  /* Here we calculate for how long collapsar events will take place */
+  float Z = sp->chemistry_data.metal_mass_fraction_total;
+  const float collapsar_max_mass = exp10f(props->log10_collapsar_max_mass_msun);
+  const float collapsar_min_mass = exp10f(props->log10_collapsar_min_mass_msun);
+  /* Lifetime of 100 Msun star (max mass allowed for collapsar) */
+  const float lifetime_Gyr_max_mass = lifetime_in_Gyr(collapsar_max_mass, Z, props);
+  /* Lifetime of 10 Msun star (min mass allowed for collapsar) */
+  const float lifetime_Gyr_min_mass = lifetime_in_Gyr(collapsar_min_mass, Z, props);
+  float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
+
+  /* If stars less massive than 10 Msun have exploded, do nothing */
+  if ( log10_max_mass < props->log10_collapsar_min_mass_msun) return;  // no overlap
     
-  /* 1 - If stars more massive than 100 Msun have exploded, do nothing */
-  /* 2 - If stars less massive than 10 Msun have exploded, do nothing */
-  if (log10_min_mass > props->log10_collapsar_max_mass_msun) return;
-  if (log10_max_mass < props->log10_collapsar_min_mass_msun) return;
-    
-  /* Here we calculate for how long CEJSN events will take place */
-  float max_mass = exp10f(props->log10_collapsar_max_mass_msun);
-  float min_mass = exp10f(props->log10_collapsar_min_mass_msun);
-  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
-  const float lifetime_Gyr_min = lifetime_in_Gyr(max_mass, Z, props);
-  const float lifetime_Gyr_max = lifetime_in_Gyr(min_mass, Z, props);
-  float delta_lifetime_Gyr = lifetime_Gyr_max - lifetime_Gyr_min;
+  if (log10_min_mass < props->log10_collapsar_min_mass_msun && log10_max_mass > props->log10_collapsar_min_mass_msun) { // some overlap
+          
+            /* modify dt_Gyr to be exactly the time from the start of the time-step
+             * to the time at which mass==10 */
+          const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
+          dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
+      
+  } // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
+
+
+  /* If stars more massive than 100 Msun have exploded, do nothing */
+  if ( log10_min_mass > props->log10_collapsar_max_mass_msun) return;  // no overlap
+
+  if (log10_min_mass < props->log10_collapsar_max_mass_msun && log10_max_mass > props->log10_collapsar_max_mass_msun) { // again some overlap
+            
+            /* modify dt_Gyr to be exactly the time since the star has mass=100 till the end of time step */
+            const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
+            dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
+      
+  } // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
+        
+  /* Compute probability based on dt_Gyr / lifetime */
 
   /* Number of collapsar events in timestep */
   float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
