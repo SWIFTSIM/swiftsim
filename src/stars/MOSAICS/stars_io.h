@@ -423,6 +423,14 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->spitzer_evap_term = 
       parser_get_opt_param_int(params, "Stars:Spitzer_evap_term", 1);
 
+  /* Calculate smoothed Omega and kappa over stellar neighbours? */
+  sp->smoothed_orbit_frequencies = 
+      parser_get_opt_param_int(params, "Stars:smoothed_orbit_frequencies", 0);
+
+  /* Use Omega^2 = -lambda_2, otherwise sum(-lambda/3) */
+  sp->Omega_is_lambda2 = 
+      parser_get_opt_param_int(params, "Stars:Omega_is_lambda2", 0);
+
   /* Parameters of initial cluster mass function ---------------------------- */
 
   /* Use a power-law mass function (default Schechter) */

@@ -263,10 +263,10 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   gsl_rng_set(random_generator, sp->id);
 
   /* Finish the velocity dispersion/gas fraction calculation */
+  const float h_inv = 1.f / sp->hbirth;
+  const float h_inv2 = h_inv * h_inv;
 
   if (sp->scount > 0) {
-    const float h_inv = 1.f / sp->hbirth;
-    const float h_inv2 = h_inv * h_inv;
     sp->stars_rho *= h_inv * h_inv2;
     sp->stars_sigma_v2 *= (1.f/sp->stars_rho) * h_inv * h_inv2 * cosmo->a2_inv;
   }
@@ -333,33 +333,52 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Toomre mass via tidal tensors (Pfeffer+18) */
 
-  /* Temporary array for eigvec/val calculation
-   * Note the lower elements are never referenced by dsyevj3 */
-  double tensor[3][3];
-  tensor[0][0] = sp->tidal_tensor[2][0];
-  tensor[0][1] = sp->tidal_tensor[2][1];
-  tensor[0][2] = sp->tidal_tensor[2][2];
-  tensor[1][1] = sp->tidal_tensor[2][3];
-  tensor[1][2] = sp->tidal_tensor[2][4];
-  tensor[2][2] = sp->tidal_tensor[2][5];
+  /* Orbital frequencies */
+  double kappa2;
 
-  /* Get the eigenvalues */
-  double tideval[3];
-  dsyevj3(tensor, tideval);
+  /* Are we using the smoothed version? And is there any stellar neighbours? */
+  if (props->smoothed_orbit_frequencies && sp->scount > 0) {
+    /* Finish the neighbour calculations */
+    sp->Omega_birth *= (1.f/sp->stars_rho) * h_inv * h_inv2;
+    sp->kappa_birth *= (1.f/sp->stars_rho) * h_inv * h_inv2;
 
-  /* sort eigenvalues, tideval[2] is largest eigenvalue */
-  sort3(tideval);
+  } else {
+    /* No neighbours, so revert to value from own tensor */
 
-  /* Circular and epicyclic frequencies */
-  double Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.;
-  double kappa2 = fabs(3. * Omega2 - tideval[2]);
+    /* Temporary array for eigvec/val calculation
+     * Note the lower elements are never referenced by dsyevj3 */
+    double tensor[3][3];
+    tensor[0][0] = sp->tidal_tensor[2][0];
+    tensor[0][1] = sp->tidal_tensor[2][1];
+    tensor[0][2] = sp->tidal_tensor[2][2];
+    tensor[1][1] = sp->tidal_tensor[2][3];
+    tensor[1][2] = sp->tidal_tensor[2][4];
+    tensor[2][2] = sp->tidal_tensor[2][5];
 
-  sp->Omega_birth = sqrt(Omega2);
-  sp->kappa_birth = sqrt(kappa2);
+    /* Get the eigenvalues */
+    double tideval[3];
+    dsyevj3(tensor, tideval);
+
+    /* sort eigenvalues, tideval[2] (=lambda_1) is largest eigenvalue */
+    sort3(tideval);
+
+    /* Circular and epicyclic frequencies */
+    double Omega2;
+    if (props->Omega_is_lambda2) {
+      /* Correct version (in principle) */
+      Omega2 = fabs(-tideval[1]) / 3.f;
+    } else {
+      /* Version in E-MOSAICS */
+      Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
+    }
+    kappa2 = fabs(3.f * Omega2 - tideval[2]);
+
+    sp->Omega_birth = sqrt(Omega2);
+    sp->kappa_birth = sqrt(kappa2);
+  }
 
   /* Factor out cosmology */
-  Omega2 *= cosmo->a3_inv;
-  kappa2 *= cosmo->a3_inv;
+  kappa2 = sp->kappa_birth * sp->kappa_birth * cosmo->a3_inv;
 
   /* 4 * pi^5 * G^2 */
   const double MTconst =

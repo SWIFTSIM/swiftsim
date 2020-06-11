@@ -21,6 +21,7 @@
 #define SWIFT_MOSAICS_STARS_IACT_H
 
 #include "random.h"
+#include "dsyevj3.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -105,9 +106,8 @@ runner_iact_nonsym_stars_feedback(const float r2, const float *dx,
  */
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
-                                const float hi, struct spart *restrict si, 
-                                const struct spart *restrict sj, const float a,
-                                const float H) {
+    const float hi, struct spart *restrict si, const struct spart *restrict sj,
+    const float a, const float H, const struct stars_props* props) {
 
   /* Calculation of the density */
 
@@ -145,6 +145,41 @@ runner_iact_nonsym_star_veldisp(const float r2, const float *dx,
                         v_plus_H_flow[2] * v_plus_H_flow[2];
 
   si->stars_sigma_v2 += norm_v2 * wi * sj->mass;
+
+  /* Calculate smoothed orbital frequencies */
+  if (props->smoothed_orbit_frequencies) {
+
+    /* Temporary array for eigvec/val calculation
+     * Note the lower elements are never referenced by dsyevj3 */
+    double tensor[3][3];
+    tensor[0][0] = sj->tidal_tensor[2][0];
+    tensor[0][1] = sj->tidal_tensor[2][1];
+    tensor[0][2] = sj->tidal_tensor[2][2];
+    tensor[1][1] = sj->tidal_tensor[2][3];
+    tensor[1][2] = sj->tidal_tensor[2][4];
+    tensor[2][2] = sj->tidal_tensor[2][5];
+
+    /* Get the eigenvalues */
+    double tideval[3];
+    dsyevj3(tensor, tideval);
+
+    /* sort eigenvalues, tideval[2] is largest eigenvalue */
+    sort3(tideval);
+
+    /* Circular and epicyclic frequencies */
+    double Omega2;
+    if (props->Omega_is_lambda2) {
+      /* Correct version (in principle) */
+      Omega2 = fabs(-tideval[1]) / 3.f;
+    } else {
+      /* Version in E-MOSAICS */
+      Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
+    }
+    double kappa2 = fabs(3.f * Omega2 - tideval[2]);
+
+    si->Omega_birth += sqrt(Omega2) * wi * sj->mass;
+    si->kappa_birth += sqrt(kappa2) * wi * sj->mass;
+  }
 }
 
 #endif /* SWIFT_MOSAICS_STARS_IACT_H */

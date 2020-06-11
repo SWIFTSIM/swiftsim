@@ -301,6 +301,8 @@ stars_mosaics_copy_extra_properties(
   sp->stars_rho = 0.f;
   sp->stars_sigma_v2 = 0.f;
   sp->stars_mass_unweighted = 0.f;
+  sp->Omega_birth = 0.f;
+  sp->kappa_birth = 0.f;
 
   /* Store the birth properties in the star particle */
   sp->hbirth = p->h;

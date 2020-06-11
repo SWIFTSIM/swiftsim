@@ -46,6 +46,7 @@ void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
+  const struct stars_props* props = e->stars_properties;
 
   /* Anything to do here? */
   if (c->stars.count == 0) return;
@@ -102,7 +103,7 @@ void DOSELF1_SVD(struct runner *r, struct cell *c, int timer) {
 #endif
 
       if (r2 < hig2) {
-        runner_iact_nonsym_star_veldisp(r2, dx, hi, si, sj, a, H);
+        runner_iact_nonsym_star_veldisp(r2, dx, hi, si, sj, a, H, props);
       }
     } /* loop over the sparts in ci. */
   }   /* loop over the sparts in ci. */
@@ -129,6 +130,7 @@ void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
   const struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const int with_star_formation = (e->policy & engine_policy_star_formation);
+  const struct stars_props* props = e->stars_properties;
 
   /* Anything to do here? */
   if (ci->stars.count == 0 || cj->stars.count == 0) return;
@@ -196,7 +198,7 @@ void DO_NONSYM_PAIR1_SVD_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
 
       if (r2 < hig2) {
-        runner_iact_nonsym_star_veldisp(r2, dx, hi, si, sj, a, H);
+        runner_iact_nonsym_star_veldisp(r2, dx, hi, si, sj, a, H, props);
       }
     } /* loop over the sparts in cj. */
   }   /* loop over the sparts in ci. */

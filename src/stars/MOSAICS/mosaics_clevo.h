@@ -50,10 +50,18 @@ __attribute__((always_inline)) INLINE static double get_local_evaporation_t0(
   dsyevj3(tensor, tide_val);
   sort3(tide_val);
 
+  double Omega2;
+  if (props->Omega_is_lambda2) {
+    /* Correct version (in principle) */
+    Omega2 = fabs(-tide_val[1]) / 3.f;
+  } else {
+    /* Version in E-MOSAICS */
+    Omega2 = fabs(-tide_val[0] - tide_val[1] - tide_val[2]) / 3.f;
+  }
+
   //TODO option to exclude Omega ?
   /* Strength of the tidal field, T + Omega^2 */
-  double tidal_strength = tide_val[2] +
-          fabs(-tide_val[2] - tide_val[1] - tide_val[0]) / 3.f;
+  double tidal_strength = tide_val[2] + Omega2;
 
   /* Timescale of evaporation in the tidal field */
   double t0evap;

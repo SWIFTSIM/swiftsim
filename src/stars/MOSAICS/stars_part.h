@@ -357,6 +357,12 @@ struct stars_props {
   /*! Add the Spitzer isolated term to evaporation? */
   int spitzer_evap_term;
 
+  /*! Calculate smoothed Omega and kappa over stellar neighbours? */
+  int smoothed_orbit_frequencies;
+
+  /*! Use Omega^2 = -lambda_2, otherwise sum(-lambda/3) */
+  int Omega_is_lambda2;
+
   /* --- Initial cluster mass function parameters --- */
 
   /*! Use a power-law mass function (default Schechter)  */
