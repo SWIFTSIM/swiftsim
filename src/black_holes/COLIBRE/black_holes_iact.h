@@ -279,7 +279,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
   }
 
   /* Check if the BH needs to be fed. If not, we're done here */
-  const float bh_mass_deficit = bi->subgrid_mass > bi->mass_at_start_of_step;
+  const float bh_mass_deficit = bi->subgrid_mass - bi->mass_at_start_of_step;
   if (bh_mass_deficit <= 0)
     return;
 
