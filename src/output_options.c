@@ -176,6 +176,14 @@ enum compression_levels output_options_get_ptype_default(
     if (!strcmp(compression_level_names[level_index], compression_level)) break;
   }
 
+  /* Make sure that the supplied default option is either on or off, not a 
+   * compression strategy (these should only be set on a per-field basis) */
+  if (level_index > compression_write_lossless)
+    error("A lossy default compression strategy was specified for snapshot "
+          "type %s and particle type %d. This is not allowed, lossy "
+          "compression must be set on a field-by-field basis.",
+          snapshot_type, part_type);
+
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check whether we could translate the level string to a known entry. */
   if (level_index >= compression_level_count)
