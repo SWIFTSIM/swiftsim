@@ -53,7 +53,7 @@ __attribute__((always_inline)) INLINE static double get_local_evaporation_t0(
   double Omega2;
   if (props->Omega_is_lambda2) {
     /* Correct version (in principle) */
-    Omega2 = fabs(-tide_val[1]) / 3.f;
+    Omega2 = fabs(-tide_val[1]);
   } else {
     /* Version in E-MOSAICS */
     Omega2 = fabs(-tide_val[0] - tide_val[1] - tide_val[2]) / 3.f;

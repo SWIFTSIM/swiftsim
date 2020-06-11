@@ -366,7 +366,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     double Omega2;
     if (props->Omega_is_lambda2) {
       /* Correct version (in principle) */
-      Omega2 = fabs(-tideval[1]) / 3.f;
+      Omega2 = fabs(-tideval[1]);
     } else {
       /* Version in E-MOSAICS */
       Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
