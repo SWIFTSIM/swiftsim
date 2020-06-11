@@ -438,6 +438,11 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
   /* Add up all the gas particles we swallowed */
   bpi->number_of_gas_swallows += bpj->number_of_gas_swallows;
 
+  /* Add the subgrid angular momentum that we swallowed */
+  bpi->accreted_angular_momentum[0] += bpj->accreted_angular_momentum[0];
+  bpi->accreted_angular_momentum[1] += bpj->accreted_angular_momentum[1];
+  bpi->accreted_angular_momentum[2] += bpj->accreted_angular_momentum[2];
+
   /* We had another merger */
   bpi->number_of_mergers++;
 }
