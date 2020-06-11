@@ -94,18 +94,28 @@ except:
     Eu_yield_collapsar_Msun = 0.
     
 # Units
-unit_length_in_cgs = sim["/Units"].attrs["Unit length in cgs (U_L)"]
-unit_mass_in_cgs = sim["/Units"].attrs["Unit mass in cgs (U_M)"]
-unit_time_in_cgs = sim["/Units"].attrs["Unit time in cgs (U_t)"]
-unit_temp_in_cgs = sim["/Units"].attrs["Unit temperature in cgs (U_T)"]
+unit_length_in_cgs = sim["/Units"].attrs["Unit length in cgs (U_L)"][0]
+unit_mass_in_cgs = sim["/Units"].attrs["Unit mass in cgs (U_M)"][0]
+unit_time_in_cgs = sim["/Units"].attrs["Unit time in cgs (U_t)"][0]
+unit_temp_in_cgs = sim["/Units"].attrs["Unit temperature in cgs (U_T)"][0]
 unit_vel_in_cgs = unit_length_in_cgs / unit_time_in_cgs
 unit_energy_in_cgs = unit_mass_in_cgs * unit_vel_in_cgs * unit_vel_in_cgs
 unit_density_in_cgs = unit_mass_in_cgs*unit_length_in_cgs**-3
 unit_pressure_in_cgs = unit_mass_in_cgs/unit_length_in_cgs*unit_time_in_cgs**-2
 unit_int_energy_in_cgs = unit_energy_in_cgs/unit_mass_in_cgs
 unit_entropy_in_cgs = unit_energy_in_cgs/unit_temp_in_cgs
-Gyr_in_cgs = sim["PhysicalConstants/CGS"].attrs["year"] * 1e9
-Msun_in_cgs = sim["PhysicalConstants/CGS"].attrs["solar_mass"]
+Gyr_in_cgs = sim["PhysicalConstants/CGS"].attrs["year"][0] * 1e9
+Msun_in_cgs = sim["PhysicalConstants/CGS"].attrs["solar_mass"][0]
+
+# Cosmology
+Omega_L = sim["/Cosmology"].attrs["Omega_lambda"][0]
+Omega_m = sim["/Cosmology"].attrs["Omega_m"][0]
+H_0 = sim["/Cosmology"].attrs["h"][0] * 100 # km / s / Mpc
+H_0 = H_0 * 3.241e-20 # s^-1
+a_begin = sim["/Cosmology"].attrs["a_beg"][0]
+t_begin = sim["/Cosmology"].attrs["time_beg [internal units]"][0] * unit_time_in_cgs
+
+###################################################################################################################
 
 # Declare arrays to store SWIFT data
 swift_box_gas_mass = zeros(n_snapshots)
@@ -122,6 +132,8 @@ swift_rprocess_mass = zeros(n_snapshots)
 swift_box_gas_Eu_mass_NSM = zeros(n_snapshots)
 swift_box_gas_Eu_mass_CEJSN = zeros(n_snapshots)
 swift_box_gas_Eu_mass_Collapsar = zeros(n_snapshots)
+swift_box_mean_Z_z = zeros(n_snapshots)
+swift_box_mean_Fe_z = zeros(n_snapshots)
 swift_internal_energy = zeros(n_snapshots)
 swift_kinetic_energy = zeros(n_snapshots)
 swift_total_energy = zeros(n_snapshots)
@@ -178,7 +190,16 @@ for i in range(n_snapshots):
             swift_box_gas_Eu_mass_NSM[i] = 0.
             swift_box_gas_Eu_mass_CEJSN[i] = 0.
             swift_box_gas_Eu_mass_Collapsar[i] = 0.
-            
+
+        WeightedTime = sim["/PartType0/MeanMetalWeightedRedshifts"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Z_z[i] = np.sum(WeightedTime * (metallicities-metallicities[0])) / np.sum(metallicities-metallicities[0])
+
+        IronFraction = element_abundances[:,8]-element_abundances[0,8]
+        WeightedTime = sim["/PartType0/MeanIronWeightedRedshifts"][:]
+        WeightedTime[WeightedTime<0] = 0
+        swift_box_mean_Fe_z[i] = np.sum(WeightedTime * IronFraction) / np.sum(IronFraction)
+        
         v = sim["/PartType0/Velocities"][:,:]
         v2 = v[:,0]**2 + v[:,1]**2 + v[:,2]**2
         u = sim["/PartType0/InternalEnergies"][:]
@@ -191,6 +212,8 @@ for i in range(n_snapshots):
         
         sim.close()
 
+###################################################################################################################
+        
 # Read expected yields from EAGLE. Choose which file to use based on metallicity used when
 # running SWIFT (can be specified in yml file)
 filename = "./StellarEvolutionSolution/Z_%.4f/StellarEvolutionTotal.txt"%Z_star
@@ -221,17 +244,18 @@ data = loadtxt(filename)
 eagle_total_mass_SNIa = data[:,1] * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
 eagle_total_metal_mass_SNIa = data[:,2] * stellar_mass / Msun_in_cgs * unit_mass_in_cgs
 
+def scale_factor_from_time(t_in_cgs):
+    return np.cbrt(np.sinh(1.5 * H_0 * t_in_cgs * np.sqrt(Omega_L))**2 * Omega_m / Omega_L)
+
 # Construct EAGLE scale-factors
-t_Gyr = t * unit_time_in_cgs / Gyr_in_cgs
-eagle_a = np.zeros(np.size(eagle_time_Gyr))
-for i in range(np.size(eagle_a)):
-    eagle_a[i] = np.interp(eagle_time_Gyr[i], t_Gyr, a)
+eagle_time_s = eagle_time_Gyr * 1e9 * 365.25 * 24. * 3600. + t_begin
+eagle_a = scale_factor_from_time(eagle_time_s)
+
+###################################################################################################################
 
 # Construct Europium expectations
 Eu_t = np.linspace(t[0], t[-1], 10000) * unit_time_in_cgs / Gyr_in_cgs
-Eu_a = np.zeros(np.size(Eu_t))
-for i in range(np.size(Eu_a)):
-    Eu_a[i] = np.interp(Eu_t[i], t_Gyr, a)
+Eu_a = scale_factor_from_time(Eu_t * Gyr_in_cgs + t_begin)
 Eu_mass_collapsar_Msun = zeros(np.size(Eu_t))
 Eu_mass_CEJSN_Msun = zeros(np.size(Eu_t))
 Eu_mass_NSM_Msun = zeros(np.size(Eu_t))
@@ -250,6 +274,25 @@ Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] *
 Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun
 
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
+
+###################################################################################################################
+
+m_Z = swift_box_gas_metal_mass - swift_box_gas_metal_mass[0]
+m_Z *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Z = m_Z[1:] - m_Z[:-1]
+
+m_Fe = swift_element_mass[:,8] - swift_element_mass[0,8]
+m_Fe *= unit_mass_in_cgs / Msun_in_cgs
+delta_m_Fe = m_Fe[1:] - m_Fe[:-1]
+
+theory_z_Z = np.zeros(np.size(z))
+theory_z_Fe = np.zeros(np.size(z))
+for i in range(np.size(z) - 1):
+    theory_z_Z[i] = np.sum(delta_m_Z[:i] * z[:i]) / m_Z[i]
+    theory_z_Fe[i] = np.sum(delta_m_Fe[:i] * z[:i]) / m_Fe[i]
+
+
+###################################################################################################################
 
 # Plot the interesting quantities
 figure()
@@ -339,6 +382,20 @@ xlim(0.08, 1.05)
 xticks(a_ticks, redshift_labels)
 gca().tick_params(axis='x', which='minor', bottom=False)
 ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+
+# Box mass-weighted redshift
+subplot(236, xscale="log", yscale="linear")
+plot(a, swift_box_mean_Z_z, linewidth=0.5, color='C0', label='Z')
+plot(a[:-1], theory_z_Z[:-1], linewidth=0.5, color='C0', ls='--')
+plot(a, swift_box_mean_Fe_z, linewidth=0.5, color='C1', label='Fe')
+plot(a[:-1], theory_z_Fe[:-1], linewidth=0.5, color='C1', ls='--')
+xlabel("${\\rm Redshift}$", labelpad=0)
+ylabel("Mean redshift of enrichment", labelpad=2)
+legend(loc="lower right", ncol=1, fontsize=8)
+xlim(0.08, 1.05)
+ylim(0, 11)
+xticks(a_ticks, redshift_labels)
+gca().tick_params(axis='x', which='minor', bottom=False)
 
 savefig("box_evolution_Z_%.4f.png"%(Z_star), dpi=200)
 

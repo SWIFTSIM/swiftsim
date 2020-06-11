@@ -102,14 +102,19 @@ struct chemistry_part_data {
   /*! Metal weighted redshift (defined in Wiersma+ 2010, eq. 3) */
   float metal_weighted_redshift;
 
+  /*! Metal mass (gain/lost through diffusion) times redshift */
+  float metal_diffused_redshift;
+
   /*! Metal weighted redshift */
   float iron_weighted_redshift;
 
-  /*! Tracker of metal mass received by enrichment events times time */
-  float metal_mass_tracker;
+  /*! Iron mass (gain/lost through diffusion) times redshift */
+  float iron_diffused_redshift;
 
-  /*! Tracker of iron mass received by SNIa events times time */
-  float iron_mass_tracker;
+  /*! Total metal mass and iron mass trackers, used in the calculation of
+   * weighted redshifts */
+  float track_of_metal_mass_total;
+  float track_of_iron_mass;
 
   /*! Fraction of the particle mass in a given element accumulated via diffusion
    * diffusion since the last active step */
@@ -127,9 +132,17 @@ struct chemistry_part_data {
    * diffusion since the last active step */
   float dmetal_mass_fraction_from_AGB;
 
+  /*! Fraction of the particle Hydrogen + Helium mass from AGB accumulated via
+   * diffusion diffusion since the last active step */
+  float dH_He_mass_fraction_from_AGB;
+
   /*! Fraction of the particle mass in metals from SNII accumulated via
    * diffusion diffusion since the last active step */
   float dmetal_mass_fraction_from_SNII;
+
+  /*! Fraction of the particle Hydrogen + Helium mass from SNII accumulated via
+   * diffusion diffusion since the last active step */
+  float dH_He_mass_fraction_from_SNII;
 
   /*! Fraction of the particle mass in iron from SNIa accumulated via diffusion
    * diffusion since the last active step */

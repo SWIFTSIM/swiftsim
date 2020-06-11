@@ -241,26 +241,38 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       pj->chemistry_data.metal_mass_fraction_total * current_mass;
   const double delta_metal_mass_total =
       si->feedback_data.to_distribute.total_metal_mass * Omega_frac;
-  const double new_metal_mass_total =
+  double new_metal_mass_total =
       current_metal_mass_total + delta_metal_mass_total;
 
   pj->chemistry_data.metal_mass_fraction_total =
       new_metal_mass_total * new_mass_inv;
 
-  /* Calculate mean metal weighted redshift */
-  double delta_mass_times_time, delta_iron_mass_times_time;
+  /* Take ztime, it is either redshift or time, depending on with_cosmology */
+  double ztime;
   if (with_cosmology) {
-    delta_mass_times_time = delta_metal_mass_total * cosmo->z;
+    ztime = cosmo->z;
   } else {
-    delta_mass_times_time = delta_metal_mass_total * time;
+    ztime = time;
   }
-  /* Update metal mass tracker */
-  pj->chemistry_data.metal_mass_tracker += delta_mass_times_time;
 
   /* Calculate mean metal weighted redshift */
-  if (new_metal_mass_total > 0.f) {
+  if (pj->chemistry_data.metal_weighted_redshift < 0.f)
+    pj->chemistry_data.metal_weighted_redshift = 0.f;
+
+  if (delta_metal_mass_total > 0.f) {
+
     pj->chemistry_data.metal_weighted_redshift =
-        pj->chemistry_data.metal_mass_tracker / new_metal_mass_total;
+        ztime * delta_metal_mass_total +
+        pj->chemistry_data.metal_weighted_redshift *
+            pj->chemistry_data.track_of_metal_mass_total +
+        pj->chemistry_data.metal_diffused_redshift;
+
+    pj->chemistry_data.track_of_metal_mass_total += delta_metal_mass_total;
+    pj->chemistry_data.metal_weighted_redshift /=
+        pj->chemistry_data.track_of_metal_mass_total;
+
+    /* Reset values */
+    pj->chemistry_data.metal_diffused_redshift = 0.f;
   }
 
   /* Update mass fraction of each tracked element  */
@@ -295,18 +307,25 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       new_iron_from_SNIa_mass * new_mass_inv;
 
   /* Calculate mean iron weighted redshift */
-  if (with_cosmology) {
-    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * cosmo->z;
-  } else {
-    delta_iron_mass_times_time = delta_iron_from_SNIa_mass * time;
-  }
-  /* Update iron mass tracker */
-  pj->chemistry_data.iron_mass_tracker += delta_iron_mass_times_time;
+  if (pj->chemistry_data.iron_weighted_redshift < 0.f)
+    pj->chemistry_data.iron_weighted_redshift = 0.f;
 
-  /* Calculate mean iron weighted redshift */
-  if (new_iron_from_SNIa_mass > 0.f) {
+  const double delta_iron_mass =
+      si->feedback_data.to_distribute.metal_mass[chemistry_element_Fe] *
+      Omega_frac;
+
+  if (delta_iron_mass > 0.f) {
+
     pj->chemistry_data.iron_weighted_redshift =
-        pj->chemistry_data.iron_mass_tracker / new_iron_from_SNIa_mass;
+        ztime * delta_iron_mass +
+        pj->chemistry_data.iron_weighted_redshift *
+            pj->chemistry_data.track_of_iron_mass +
+        pj->chemistry_data.iron_diffused_redshift;
+
+    pj->chemistry_data.track_of_iron_mass += delta_iron_mass;
+    pj->chemistry_data.iron_weighted_redshift /=
+        pj->chemistry_data.track_of_iron_mass;
+    pj->chemistry_data.iron_diffused_redshift = 0.f;
   }
 
   /* Update mass from SNIa  */
