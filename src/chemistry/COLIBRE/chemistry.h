@@ -577,6 +577,9 @@ chemistry_transfer_part_to_bpart(
   p_data->mass_from_NSM -= p_data->mass_from_NSM * f_reduce_gas;
   p_data->mass_from_CEJSN -= p_data->mass_from_CEJSN * f_reduce_gas;
   p_data->mass_from_collapsar -= p_data->mass_from_collapsar * f_reduce_gas;
+
+  /* TODO: Need to think about, and possibly implement, other transfers
+   * involving e.g. diffusion or mass-weighted redshift of Fe enrichment */
 }
 
 /**
