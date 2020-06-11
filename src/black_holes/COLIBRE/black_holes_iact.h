@@ -304,7 +304,6 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
 
     /* Transfer (dynamical) mass from the gas particle to the BH */
     bi->mass += nibble_mass;
-    bi->gpart->mass += nibble_mass;
     hydro_set_mass(pj, pj_mass_orig - nibble_mass * excess_fraction);
 
     /* Add the angular momentum of the accreted gas to the BH total.

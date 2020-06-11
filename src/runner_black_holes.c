@@ -313,6 +313,13 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
       /* Get a handle on the part. */
       struct bpart *const cell_bp = &cell_bparts[k];
 
+      /* Update mass of associated gpart, to reflect potential changes from 
+       * nibbling. In this case, we are already done. */
+      if (props->use_nibbling) {
+        cell_bp->gpart->mass = cell_bp->mass;
+        return;
+      }
+
       /* Ignore inhibited particles (they have already been removed!) */
       if (bpart_is_inhibited(cell_bp, e)) continue;
 
