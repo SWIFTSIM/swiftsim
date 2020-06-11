@@ -92,7 +92,7 @@ struct black_holes_props {
   int use_nibbling;
 
   /*! Minimum gas particle mass in nibbling mode */
-  float min_gas_mass;
+  float min_gas_mass_for_nibbling;
 
   /* ---- Properties of the feedback model ------- */
 
@@ -246,9 +246,9 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->use_nibbling = parser_get_param_int(params, "COLIBREAGN:use_nibbling");
   if (bp->use_nibbling)
-    bp->min_gas_mass = parser_get_param_float(
-        params, "COLIBREAGN:min_gas_mass");
-    bp->min_gas_mass *= phys_const->const_solar_mass;
+    bp->min_gas_mass_for_nibbling = parser_get_param_float(
+        params, "COLIBREAGN:min_gas_mass_for_nibbling");
+    bp->min_gas_mass_for_nibbling *= phys_const->const_solar_mass;
 
   /* Feedback parameters ---------------------------------- */
 
