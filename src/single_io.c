@@ -842,26 +842,18 @@ void write_output_single(struct engine* e,
   strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
   io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
 
-  /* GADGET-2 legacy values */
-  /* Number of particles of each type */
+  /* GADGET-2 legacy values: number of particles of each type */
   unsigned int numParticles[swift_type_count] = {0};
   unsigned int numParticlesHighWord[swift_type_count] = {0};
+
+  /* Total number of fields to write per ptype */
+  int numFields[swift_type_count] = {0};
   for (int ptype = 0; ptype < swift_type_count; ++ptype) {
     numParticles[ptype] = (unsigned int)N_total[ptype];
     numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
 
-    /* Check whether all particle fields for this ptype are disabled
-     * (parser access needs to be optional, since we might not have
-     * initialised a Default section) */
-    char param_name[PARSER_MAX_LINE_SIZE];
-    sprintf(param_name, "%.*s:WriteAnyFields_%s", FIELD_BUFFER_SIZE,
-            current_selection_name, part_type_names[ptype]);
-    const int write_ptype =
-        parser_get_opt_param_int(output_options->select_output, param_name, 1);
-
-    /* Don't feel like writing this ptype right now? That's ok. Just adjust
-     * the particle number, and we'll take care of it. */
-    if (!write_ptype) numParticles[ptype] = 0;
+    numFields[ptype] = output_options_get_num_fields_to_write(
+        output_options, current_selection_name, ptype);
   }
 
   io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N_total,
@@ -902,10 +894,10 @@ void write_output_single(struct engine* e,
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
-    /* Don't do anything if there are no particles of this kind, or
-     * if we have disabled the entire ptype (in which case we have set
-     * numParticles[ptype] to zero above) */
-    if (numParticles[ptype] == 0) continue;
+    /* Don't do anything if there are (a) no particles of this kind, or (b)
+     * if we have disabled every field of this particle type. */
+    if (numParticles[ptype] == 0 || numFields[ptype] == 0)
+      continue;
 
     /* Add the global information for that particle type to the XMF meta-file */
     xmf_write_groupheader(xmfFile, fileName, numParticles[ptype],
@@ -927,8 +919,9 @@ void write_output_single(struct engine* e,
                                  H5P_DEFAULT, H5P_DEFAULT);
     if (h_err < 0) error("Error while creating alias for particle group.\n");
 
-    /* Write the number of particles as an attribute */
+    /* Write the number of particles and fields as an attribute */
     io_write_attribute_l(h_grp, "NumberOfParticles", numParticles[ptype]);
+    io_write_attribute_i(h_grp, "NumberOfFields", numFields[ptype]);
 
     int num_fields = 0;
     struct io_props list[100];
@@ -1206,7 +1199,7 @@ void write_output_single(struct engine* e,
                                          (enum part_type)ptype);
 
     /* Write everything that is not cancelled */
-
+    int num_fields_written = 0;
     for (int i = 0; i < num_fields; ++i) {
 
       /* Did the user cancel this field? */
@@ -1217,8 +1210,14 @@ void write_output_single(struct engine* e,
       if (should_write) {
         write_array_single(e, h_grp, fileName, xmfFile, partTypeGroupName,
                            list[i], N, internal_units, snapshot_units);
+        num_fields_written++;
       }
     }
+#ifdef SWIFT_DEBUG_CHECKS
+    if (num_fields_written != numFields[ptype])
+      error("Wrote %d fields for particle type %s, but expected to write %d.",
+          num_fields_written, part_type_names[ptype], numFields[ptype]);
+#endif
 
     /* Free temporary arrays */
     if (parts_written) swift_free("parts_written", parts_written);
@@ -1234,7 +1233,7 @@ void write_output_single(struct engine* e,
 
     /* Close this particle group in the XMF file as well */
     xmf_write_groupfooter(xmfFile, (enum part_type)ptype);
-  }
+  } /* ends loop over particle types */
 
   /* Write LXMF file descriptor */
   xmf_write_outputfooter(xmfFile, e->snapshot_output_count, e->time);

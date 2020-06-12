@@ -167,7 +167,7 @@ void io_duplicate_black_holes_gparts(struct threadpool* tp,
                                      struct gpart* const gparts, size_t Nstars,
                                      size_t Ndm);
 
-void io_check_output_fields(struct swift_params* params,
+void io_check_output_fields(struct output_options* output_options,
                             const long long N_total[swift_type_count],
                             const int with_cosmology);
 
@@ -180,5 +180,8 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const int snapshots_invoke_stf, const double time,
                               const int stf_count, const int snap_count,
                               const char* subdir, const char* basename);
+
+int get_ptype_fields(int ptype, struct* io_props list);
+int get_param_ptype(char* name);
 
 #endif /* SWIFT_COMMON_IO_H */

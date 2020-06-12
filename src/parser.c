@@ -1270,3 +1270,19 @@ void parser_struct_restore(const struct swift_params *params, FILE *stream) {
   restart_read_blocks((void *)params, sizeof(struct swift_params), 1, stream,
                       NULL, "parameters");
 }
+
+/** 
+ * @brief Return the index of a given section name in a swift_params struct.
+ *
+ * If the section could not be found, -1 is returned.
+ *
+ * @param params The swift_params struct in which to locate the section.
+ * @param section_name The section name to locate.
+ */
+int parser_get_section_id(const struct swift_params *params, const char* name) {
+  for (int section_id = 0; section_id < params->sectionCount; section_id++) {
+    if (!strcmp(params->section[section_id].name, name))
+      return section_id;
+  }
+  return -1;
+}

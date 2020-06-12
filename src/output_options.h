@@ -56,7 +56,11 @@ struct output_options {
   /*! Select output file, parsed */
   struct swift_params* select_output;
 
-  /* Pass-through struct for now but may need more later. */
+  /* Number of fields to write for each output selection and ptype.
+   * We need one more than max num of output styles, in case the Default
+   * output style is used but not specified. */
+  int num_fields_to_write[OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES+1]
+                         [swift_type_count];
 };
 
 /* Create and destroy */
@@ -79,5 +83,9 @@ int output_options_should_write_field(
 enum compression_levels output_options_get_ptype_default(
     struct swift_params* output_params, const char* snapshot_type,
     const enum part_type part_type);
+
+int output_options_get_num_fields_to_write(
+    const struct output_options* output_options, const char* selection_name,
+    const int ptype);
 
 #endif

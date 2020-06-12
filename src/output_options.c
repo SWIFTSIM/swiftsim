@@ -125,6 +125,8 @@ void output_options_struct_restore(struct output_options* output_options,
  * @param field_name pointer to a char array containing the name of the
  *        relevant field.
  * @param part_type integer particle type
+ * @param compression_level_current_default The default output strategy
+ *.       based on the snapshot_type and part_type.
  *
  * @return should_write integer determining whether this field should be
  *         written
@@ -213,3 +215,38 @@ enum compression_levels output_options_get_ptype_default(
 
   return level_index;
 }
+
+/**
+ * @brief Return the number of fields to be written for a ptype.
+ * 
+ * @param output_options The output_options struct.
+ * @param selection_name The current output selection name.
+ * @param ptype The particle type index.
+ */
+int output_options_get_num_fields_to_write(
+    const struct output_options* output_options, const char* selection_name,
+    const int ptype) {
+
+  /* Get the ID of the output selection in the structure */
+  int selection_id = parser_get_section_id(output_options, section_name);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* The only situation where we might legitimately not find the selection
+   * name is if it is the default. Everything else means trouble. */
+  if (strcmp(selection_name, select_output_header_default_name) &&
+      selection_id < 0)
+    error("Output selection '%s' could not be located in output_options "
+          "structure. Please investigate.", selection_name);
+
+  /* While we're at it, make sure the selection ID is not impossibly high */
+  if (selection_id >= output_options->select_output->section_count)
+      error("Output selection '%s' was apparently located in index %d of the "
+            "output_options structure, but this only has %d sections.");
+#endif
+
+  /* Special treatment for absent `Default` section */
+  if (selection_id < 0)
+      selection_id = output_options->select_output->section_count;
+
+  return output_options->num_fields_to_write[selection_id][ptype];
+} 
