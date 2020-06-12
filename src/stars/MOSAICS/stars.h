@@ -343,6 +343,7 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
     return;
 
   const struct stars_props* stars_properties = e->stars_properties;
+  const struct gravity_props *grav_props = e->gravity_properties;
   const double const_G = e->physical_constants->const_newton_G;
 
   /* Gas properties */
@@ -388,11 +389,13 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
   double kappa2 = fabs(3.f * Omega2 - tideval[2]);
   kappa2 *= cosmo->a3_inv;
 
-  //TODO we might want to implement a maximum value?
-  // (min is softening length)
+  p->sf_data.toomre_length = 4.f * M_PI * M_PI * const_G * SigmaG / kappa2;
+
+  /* Maximum length */
+  if (p->sf_data.toomre_length > grav_props->max_toomre_length)
+    p->sf_data.toomre_length = grav_props->max_toomre_length;
 
   /* Back in comoving units */
-  p->sf_data.toomre_length = 4.f * M_PI * M_PI * const_G * SigmaG / kappa2;
   p->sf_data.toomre_length /= cosmo->a;
 
   //TODO

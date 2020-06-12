@@ -165,9 +165,17 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
   p->gas_tensors_max_h =
       parser_get_opt_param_int(params, "Gravity:gas_tensors_max_h", 0);
 
-  /* Use the maximum of softening and smoothing for gas tensors? */
+  /* Initial tensor softening length guess = factor * eps_baryon */
   p->init_toomre_length_softening_factor = parser_get_opt_param_float(params,
       "Gravity:init_toomre_length_softening_factor", 1.);
+
+  /* Maximum Toomre length for tensor softening, in kpc */
+  p->max_toomre_length = parser_get_opt_param_float(params,
+      "Gravity:max_toomre_length", 2.);
+
+  const double kpc_to_length = (1000. * phys_const.const_parsec) /
+      units_cgs_conversion_factor(swift_us, UNIT_CONV_LENGTH);
+  p->max_toomre_length *= kpc_to_length;
 
   /* Copy over the gravitational constant */
   p->G_Newton = phys_const->const_newton_G;
