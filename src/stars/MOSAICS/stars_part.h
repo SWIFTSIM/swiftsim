@@ -426,18 +426,6 @@ struct stars_props {
 
   /* --------------- Conversion factors ----------------- */
 
-  /*! Conversion factor from internal density unit to cgs */
-  double density_to_kgm3;
-
-  /*! Conversion factor from internal velocity unit to m/s */
-  double velocity_to_ms;
-
-  /*! Conversion factor from internal time unit to s */
-  double time_to_cgs;
-
-  /*! Conversion factor from internal tensor unit to s^-2 */
-  double tidal_tensor_to_cgs;
-
   /*! Conversion factor from internal mass unit to solar mass */
   double mass_to_solar_mass;
 

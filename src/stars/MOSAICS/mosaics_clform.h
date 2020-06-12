@@ -249,13 +249,24 @@ __attribute__((always_inline)) INLINE static double poidev(
  * @param phys_const the physical constants in internal units.
  */
 __attribute__((always_inline)) INLINE static void mosaics_clform(
-    struct spart* restrict sp, const struct stars_props* props,
-    const struct star_formation* sf_props, const struct phys_const* phys_const,
-    const struct cosmology* cosmo) {
+    struct spart* restrict sp, const struct engine* e,
+    const int with_cosmology) {
 
 #if !defined(STAR_FORMATION_NONE)
 
+  const struct stars_props* props = e->stars_properties;
+  const struct star_formation *sf_props = e->star_formation;
+  const struct phys_const *phys_const = e->physical_constants;
+  const struct cosmology *cosmo = e->cosmology;
+  const struct unit_system *us = e->internal_units;
+
+  /* Some constants */
   const double const_G = phys_const->const_newton_G;
+  const double density_to_kgm3 =
+      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
+  const double velocity_to_ms =
+      units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 0.01;
+  const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* TODO for now just use the particle ID as seed */
   /* Set up the random number generator */
@@ -280,7 +291,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* -------- Get CFE -------- */
   /* In units of kg, m, s */
 
-  double rholoc = sp->sf_data.birth_density * props->density_to_kgm3;
+  double rholoc = sp->sf_data.birth_density * density_to_kgm3;
 
   /* The local gas density */
   double sigmaloc;
@@ -292,14 +303,14 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     /* 1/sqrt(3) converts to 1D assuming isotropy */
     sigmaloc = gas_vel_disp / sqrt(3.f);
   }
-  sigmaloc *= props->velocity_to_ms;
+  sigmaloc *= velocity_to_ms;
 
   /* Sound speed of cold ISM */
   double csloc;
   if (props->Fixedcs > 0) {
     csloc = props->Fixedcs;
   } else {
-    csloc = sp->sound_speed_subgrid * props->velocity_to_ms;
+    csloc = sp->sound_speed_subgrid * velocity_to_ms;
   }
 
   /* Use a fixed value for the CFE? */
@@ -312,7 +323,7 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Get feedback timescale while we're here and convert to internal units */
   double tfb = feedback_timescale(rholoc, sigmaloc, csloc, props);
-  tfb /= props->time_to_cgs;
+  tfb /= time_to_cgs;
 
   /* -------- Get Mcstar -------- */
 

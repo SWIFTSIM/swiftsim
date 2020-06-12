@@ -426,6 +426,11 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
 
   const struct stars_props* props = e->stars_properties;
   const struct cosmology *cosmo = e->cosmology;
+  const struct unit_system *us = e->internal_units;
+
+  const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+  const double tidal_tensor_to_cgs =
+      units_cgs_conversion_factor(us, UNIT_CONV_TIDAL_TENSOR);
 
   /* Initial number of clusters, up to max array length */
   const int ninit = min(sp->initial_num_clusters_evo, MOSAICS_MAX_CLUSTERS);
@@ -469,14 +474,14 @@ __attribute__((always_inline)) INLINE static void mosaics_clevo(
 
     /* Convert dt and stellar age from internal units to Gyr. */
     const double Gyr_in_cgs = 1e9 * 365.25 * 24. * 3600.;
-    const double conversion_factor = props->time_to_cgs / Gyr_in_cgs;
+    const double conversion_factor = time_to_cgs / Gyr_in_cgs;
     const double dt_star_Gyr = dt_star * conversion_factor;
     const double star_age_Gyr = star_age * conversion_factor;
     const double time = e->time * conversion_factor;
 
     /* Unit conversion for tensors and factor out cosmology, in Gyr */
     const double tensors_in_Gyr = cosmo->a3_inv *
-        props->tidal_tensor_to_cgs * Gyr_in_cgs * Gyr_in_cgs;
+        tidal_tensor_to_cgs * Gyr_in_cgs * Gyr_in_cgs;
 
     /* Evaporation timescale constant */
     double t0_evap;

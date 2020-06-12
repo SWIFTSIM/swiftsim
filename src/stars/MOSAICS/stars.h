@@ -225,11 +225,6 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     struct spart* restrict sp, const struct engine* e,
     const int with_cosmology) {
 
-  const struct stars_props* stars_properties = e->stars_properties;
-  const struct star_formation *sf_props = e->star_formation;
-  const struct phys_const *phys_const = e->physical_constants;
-  const struct cosmology *cosmo = e->cosmology;
-
   /* Shift the old tensors along */
   for (int i = 0; i < 2; i++) {
     sp->tidal_tensor[i][0] = sp->tidal_tensor[i + 1][0];
@@ -259,7 +254,7 @@ __attribute__((always_inline)) INLINE static void stars_do_mosaics(
     sp->mass_prev_timestep = sp->mass;
 
     /* Go make clusters */
-    mosaics_clform(sp, stars_properties, sf_props, phys_const, cosmo);
+    mosaics_clform(sp, e, with_cosmology);
 
     /* We're done with cluster formation */
     sp->new_star = 0;

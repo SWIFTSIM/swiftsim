@@ -380,18 +380,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* Some useful conversion values ------------------------------------------ */
 
-  //TODO I'm not sure these should be here because of scale factor dependencies?
-  sp->density_to_kgm3 =
-      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
-
-  sp->velocity_to_ms =
-      units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 0.01;
-
-  sp->time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
-
-  sp->tidal_tensor_to_cgs = 
-      units_cgs_conversion_factor(us, UNIT_CONV_TIDAL_TENSOR);
-
   const double Msun_cgs = phys_const->const_solar_mass *
                          units_cgs_conversion_factor(us, UNIT_CONV_MASS);
   const double unit_mass_cgs = units_cgs_conversion_factor(us, UNIT_CONV_MASS);
