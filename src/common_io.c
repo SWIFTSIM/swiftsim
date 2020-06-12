@@ -2269,7 +2269,7 @@ void io_collect_gparts_background_to_write(
 }
 
 /**
- * @brief Verify the io parameter file
+ * @brief Verify that the output selection file is valid.
  *
  * @param params The #swift_params instance corresponding to the select_output
  *               file.
@@ -2278,10 +2278,11 @@ void io_collect_gparts_background_to_write(
  */
 void io_check_output_fields(struct swift_params* params,
                             const long long N_total[swift_type_count],
-                            int with_cosmology) {
+                            const int with_cosmology) {
 
   /* Loop over each section, i.e. different class of output */
   for (int section_id = 0; section_id < params->sectionCount; section_id++) {
+
     char section_name[FIELD_BUFFER_SIZE];
     sprintf(section_name, "%s", params->section[section_id].name);
 

@@ -156,9 +156,19 @@ int output_options_should_write_field(
   return should_write;
 }
 
+/**
+ * @brief Return the default output strategy of a given particle type.
+ *
+ * This can only be "on" or "off". No lossy compression strategy can be
+ * applied at the level of an entire particle type.
+ *
+ * @param output_params The parsed select output file.
+ * @param snapshot_type The type of snapshot we are writing
+ * @param part_type The #part_type we are considering.
+ */
 enum compression_levels output_options_get_ptype_default(
-    struct swift_params* output_params, char* snapshot_type,
-    enum part_type part_type) {
+    struct swift_params* output_params, const char* snapshot_type,
+    const enum part_type part_type) {
 
   /* Full name for the default path */
   char field[PARSER_MAX_LINE_SIZE];
@@ -176,13 +186,15 @@ enum compression_levels output_options_get_ptype_default(
     if (!strcmp(compression_level_names[level_index], compression_level)) break;
   }
 
-  /* Make sure that the supplied default option is either on or off, not a 
+  /* Make sure that the supplied default option is either on or off, not a
    * compression strategy (these should only be set on a per-field basis) */
-  if (level_index > compression_write_lossless)
-    error("A lossy default compression strategy was specified for snapshot "
-          "type %s and particle type %d. This is not allowed, lossy "
-          "compression must be set on a field-by-field basis.",
-          snapshot_type, part_type);
+  if ((!level_index == compression_do_not_write ||
+       level_index == compression_write_lossless))
+    error(
+        "A lossy default compression strategy was specified for snapshot "
+        "type %s and particle type %d. This is not allowed, lossy "
+        "compression must be set on a field-by-field basis.",
+        snapshot_type, part_type);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check whether we could translate the level string to a known entry. */

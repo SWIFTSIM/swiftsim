@@ -168,7 +168,8 @@ void io_duplicate_black_holes_gparts(struct threadpool* tp,
                                      size_t Ndm);
 
 void io_check_output_fields(struct swift_params* params,
-                            const long long N_total[3], int with_cosmology);
+                            const long long N_total[swift_type_count],
+                            const int with_cosmology);
 
 void io_write_output_field_parameter(const char* filename, int with_cosmology);
 

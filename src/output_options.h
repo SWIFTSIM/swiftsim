@@ -23,7 +23,9 @@
 #include "parser.h"
 #include "part_type.h"
 
-/* Compression level names */
+/**
+ * @brief Compression levels for snapshot fields
+ */
 enum compression_levels {
   compression_do_not_write = 0,
   compression_write_lossless,
@@ -75,7 +77,7 @@ int output_options_should_write_field(
     enum compression_levels comp_level_current_default);
 
 enum compression_levels output_options_get_ptype_default(
-    struct swift_params* output_params, char* snapshot_type,
-    enum part_type part_type);
+    struct swift_params* output_params, const char* snapshot_type,
+    const enum part_type part_type);
 
 #endif
