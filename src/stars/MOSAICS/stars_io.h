@@ -380,6 +380,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* Some useful conversion values ------------------------------------------ */
 
+  //TODO I'm not sure these should be here because of scale factor dependencies?
   sp->density_to_kgm3 =
       units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
 
@@ -441,9 +442,8 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->max_toomre_length = parser_get_opt_param_float(params,
       "Stars:max_toomre_length", 2.);
 
-  const double kpc_to_length = (1000. * phys_const->const_parsec) /
-      units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
-  sp->max_toomre_length *= kpc_to_length;
+  /* kpc in internal units */
+  sp->max_toomre_length *= 1000. * phys_const->const_parsec;
 
   /* Parameters of initial cluster mass function ---------------------------- */
 
