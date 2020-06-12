@@ -296,7 +296,6 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
 
     /* !!! THIS SHOULD DEFINITELY BE CHECKED FOR CORRECTNESS !!! */
     const float nibble_mass = bh_mass_deficit * hi_inv_dim * wi / bi->rho_gas;
-    const double nibble_fraction = nibble_mass / pj_mass_orig;
 
     /* We radiated away some of the accreted mass, so need to take slightly
      * more from the gas than the BH gained */ 
@@ -334,8 +333,9 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     /* Update the BH and also gas metal masses */
     struct chemistry_bpart_data* bi_chem = &bi->chemistry_data;
     struct chemistry_part_data* pj_chem = &pj->chemistry_data;
-    chemistry_transfer_part_to_bpart(bi_chem, pj_chem, nibble_mass,
-                                     nibble_fraction, excess_fraction);
+    chemistry_transfer_part_to_bpart(
+        bi_chem, pj_chem, nibble_mass * excess_fraction,
+        nibble_mass * excess_fraction / pj_mass_orig);
     
   } else { /* ends nibbling section, below comes swallowing */
     
