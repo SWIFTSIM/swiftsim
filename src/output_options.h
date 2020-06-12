@@ -22,6 +22,9 @@
 #include "config.h"
 #include "parser.h"
 #include "part_type.h"
+/*#include "output_list.h" */
+
+#define OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES 8
 
 /**
  * @brief Compression levels for snapshot fields
@@ -59,7 +62,7 @@ struct output_options {
   /* Number of fields to write for each output selection and ptype.
    * We need one more than max num of output styles, in case the Default
    * output style is used but not specified. */
-  int num_fields_to_write[OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES+1]
+  int num_fields_to_write[OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1]
                          [swift_type_count];
 };
 

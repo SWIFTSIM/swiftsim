@@ -190,8 +190,8 @@ enum compression_levels output_options_get_ptype_default(
 
   /* Make sure that the supplied default option is either on or off, not a
    * compression strategy (these should only be set on a per-field basis) */
-  if ((!level_index == compression_do_not_write ||
-       level_index == compression_write_lossless))
+  if (!(level_index == compression_do_not_write ||
+        level_index == compression_write_lossless))
     error(
         "A lossy default compression strategy was specified for snapshot "
         "type %s and particle type %d. This is not allowed, lossy "
@@ -228,7 +228,8 @@ int output_options_get_num_fields_to_write(
     const int ptype) {
 
   /* Get the ID of the output selection in the structure */
-  int selection_id = parser_get_section_id(output_options, section_name);
+  int selection_id = parser_get_section_id(output_options->select_output,
+                                           selection_name);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* The only situation where we might legitimately not find the selection
@@ -239,14 +240,14 @@ int output_options_get_num_fields_to_write(
           "structure. Please investigate.", selection_name);
 
   /* While we're at it, make sure the selection ID is not impossibly high */
-  if (selection_id >= output_options->select_output->section_count)
+  if (selection_id >= output_options->select_output->sectionCount)
       error("Output selection '%s' was apparently located in index %d of the "
             "output_options structure, but this only has %d sections.");
 #endif
 
   /* Special treatment for absent `Default` section */
   if (selection_id < 0)
-      selection_id = output_options->select_output->section_count;
+      selection_id = output_options->select_output->sectionCount;
 
   return output_options->num_fields_to_write[selection_id][ptype];
 } 
