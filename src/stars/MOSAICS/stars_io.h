@@ -437,6 +437,14 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->Omega_is_lambda2 = 
       parser_get_opt_param_int(params, "Stars:Omega_is_lambda2", 0);
 
+  /* Maximum Toomre length for tensor softening, in kpc */
+  sp->max_toomre_length = parser_get_opt_param_float(params,
+      "Stars:max_toomre_length", 2.);
+
+  const double kpc_to_length = (1000. * phys_const.const_parsec) /
+      units_cgs_conversion_factor(us, UNIT_CONV_LENGTH);
+  sp->max_toomre_length *= kpc_to_length;
+
   /* Parameters of initial cluster mass function ---------------------------- */
 
   /* Use a power-law mass function (default Schechter) */

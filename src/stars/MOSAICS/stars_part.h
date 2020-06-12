@@ -366,6 +366,9 @@ struct stars_props {
   /*! Use Omega^2 = -lambda_2, otherwise sum(-lambda/3) */
   int Omega_is_lambda2;
 
+  /*! Maximum Toomre length for tensor softening */
+  float max_toomre_length;
+
   /* --- Initial cluster mass function parameters --- */
 
   /*! Use a power-law mass function (default Schechter)  */

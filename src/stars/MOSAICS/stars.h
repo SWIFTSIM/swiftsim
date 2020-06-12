@@ -342,8 +342,7 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
   if (!p->gpart)
     return;
 
-  const struct stars_props* stars_properties = e->stars_properties;
-  const struct gravity_props *grav_props = e->gravity_properties;
+  const struct stars_props* star_props = e->stars_properties;
   const double const_G = e->physical_constants->const_newton_G;
 
   /* Gas properties */
@@ -379,7 +378,7 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
 
   /* Circular and epicyclic frequencies */
   double Omega2;
-  if (stars_properties->Omega_is_lambda2) {
+  if (star_props->Omega_is_lambda2) {
     /* Correct version (in principle) */
     Omega2 = fabs(-tideval[1]);
   } else {
@@ -392,8 +391,8 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
   p->sf_data.toomre_length = 4.f * M_PI * M_PI * const_G * SigmaG / kappa2;
 
   /* Maximum length */
-  if (p->sf_data.toomre_length > grav_props->max_toomre_length)
-    p->sf_data.toomre_length = grav_props->max_toomre_length;
+  if (p->sf_data.toomre_length > star_props->max_toomre_length)
+    p->sf_data.toomre_length = star_props->max_toomre_length;
 
   /* Back in comoving units */
   p->sf_data.toomre_length /= cosmo->a;

@@ -128,9 +128,6 @@ struct gravity_props {
 
   /*! Initial tensor softening length guess = factor * eps_baryon */
   float init_toomre_length_softening_factor;
-
-  /*! Maximum Toomre length for tensor softening */
-  float max_toomre_length;
 };
 
 void gravity_props_print(const struct gravity_props *p);
