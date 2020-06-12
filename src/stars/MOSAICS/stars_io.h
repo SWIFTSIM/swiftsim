@@ -116,7 +116,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 37;
+  *num_fields = 38;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -275,10 +275,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "BirthKernelStarCount", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, scount,
       "Number of stars within gas smoothing length at time of star formation");
 
+  //TODO Birth properties should not have a factors
   list[29] = io_make_output_field(
       "BirthEpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
       kappa_birth, "Epicyclic frequency at time of star formation");
 
+  //TODO Birth properties should not have a factors
   list[30] = io_make_output_field(
       "BirthCircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
       Omega_birth, "Circular frequency at time of star formation");
@@ -314,6 +316,10 @@ INLINE static void stars_write_particles(const struct spart *sparts,
   list[36] = io_make_output_field(
       "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.dmevap, "Cluster mass lost to evaporation");
+
+  list[37] = io_make_output_field(
+      "BirthToomreLength", FLOAT, 1, UNIT_CONV_LENGTH, 0.f, sparts, 
+      birth_toomre_length, "Toomre length at time of star formation");
 }
 
 /**

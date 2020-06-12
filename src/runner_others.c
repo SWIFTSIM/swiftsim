@@ -429,6 +429,11 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
         } /* Not Star-forming? */
 
+#ifdef STARS_MOSAICS
+        /* Calculation for next timestep */
+        mosaics_calc_toomre_length(p, e, cosmo);
+#endif
+
       } else { /* is active? */
 
         /* Check if the particle is not inhibited */

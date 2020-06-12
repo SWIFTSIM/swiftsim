@@ -4365,6 +4365,9 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
     /* Also initialise the star formation */
     star_formation_first_init_part(phys_const, us, cosmo, star_formation, &p[k],
                                    &xp[k]);
+#ifdef STARS_MOSAICS
+    mosaics_first_init_part(&p[k], grav_props);
+#endif
 
     /* And the cooling */
     cooling_first_init_part(phys_const, us, hydro_props, cosmo, cool_func,

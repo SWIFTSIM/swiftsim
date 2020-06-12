@@ -669,20 +669,9 @@ static INLINE void runner_dopair_grav_pm_full(
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
     if (calc_tensor[pid]) {
 
-        float h_tt, h_inv_tt;
-        if (hsml[pid] > h_i) {
-          /* Use the gas smoothing length */
-          h_tt = hsml[pid];
-          h_inv_tt = 1.f / h_tt;
-        } else {
-          /* Use normal softening */
-          h_tt = h_i;
-          h_inv_tt = h_inv_i;
-        }
-
       float T_xx = 0.f, T_xy = 0.f, T_xz = 0.f, T_yy = 0.f, T_yz = 0.f,
             T_zz = 0.f;
-      runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_tt, h_inv_tt, multi_j,
+      runner_iact_grav_pm_full_tensors(dx, dy, dz, r2, h_i, h_inv_i, multi_j,
                                        &f_x, &f_y, &f_z, &T_xx, &T_xy,
                                        &T_xz, &T_yy, &T_yz, &T_zz);
 

@@ -686,6 +686,9 @@ star_formation_part_has_no_neighbours(struct part* restrict p,
    * prevents this gas to form stars in any way. */
   p->sf_data.sigma_v2 = FLT_MAX;
   p->sf_data.gas_mass_unweighted = p->mass;
+
+  /* Just uses softening length in this case */
+  p->sf_data.toomre_length = 0.f;
 }
 
 /**
@@ -725,6 +728,7 @@ __attribute__((always_inline)) INLINE static void star_formation_init_part(
    * the velocity dispersion */
   p->sf_data.sigma_v2 = 0.f;
   p->sf_data.gas_mass_unweighted = 0.f;
+
 }
 
 /**

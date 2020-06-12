@@ -542,7 +542,10 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->diffusion.laplace_u = 0.f;
 
 #if defined(TIDALTENSOR_GRAVITY) || defined(MULTI_SOFTENING_TENSORS_GRAVITY)
-  if (p->gpart) p->gpart->hsml = p->h * kernel_gamma;
+  //if (p->gpart) p->gpart->hsml = p->h * kernel_gamma;
+
+  //TODO commandeered for toomre length testing
+  if (p->gpart) p->gpart->hsml = p->sf_data.toomre_length * kernel_gamma;
 #endif
 }
 

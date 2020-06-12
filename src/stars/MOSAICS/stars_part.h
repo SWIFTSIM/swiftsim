@@ -247,6 +247,9 @@ struct spart {
   /*! Number of stars within the kernel */
   int scount;
 
+  /*! Toomre length used for gas tidal tensors */
+  float birth_toomre_length;
+
   // TODO just temporary for testing
   /*! Gravitational potential */
   float potential;

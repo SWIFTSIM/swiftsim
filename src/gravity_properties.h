@@ -125,6 +125,9 @@ struct gravity_props {
 
   /*! Flag to force tidal tensor calculation for all particles */
   int gas_tensors_max_h;
+
+  /*! Initial tensor softening length guess = factor * eps_baryon */
+  float init_toomre_length_softening_factor;
 };
 
 void gravity_props_print(const struct gravity_props *p);

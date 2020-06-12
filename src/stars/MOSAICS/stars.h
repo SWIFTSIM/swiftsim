@@ -31,6 +31,7 @@
 #include "physical_constants.h"
 #include "mosaics_clevo.h"
 #include "mosaics_clform.h"
+#include "dsyevj3.h"
 
 /**
  * @brief Computes the gravity time-step of a given star particle.
@@ -307,6 +308,7 @@ stars_mosaics_copy_extra_properties(
   /* Store the birth properties in the star particle */
   sp->hbirth = p->h;
   sp->gas_mass_unweighted = p->sf_data.gas_mass_unweighted;
+  sp->birth_toomre_length = p->sf_data.toomre_length * cosmo->a;
 
   /* Hydro pressure */
   sp->birth_pressure = hydro_get_physical_pressure(p, cosmo);
@@ -324,6 +326,96 @@ stars_mosaics_copy_extra_properties(
 #endif /* cooling model */
 
 #endif /* !defined(STAR_FORMATION_NONE) */
+}
+
+/**
+ * @brief Finishes the density calculation.
+ *
+ * @param p The particle to act upon
+ * @param e The #engine
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
+    struct part* p, const struct engine* e, const struct cosmology* cosmo) {
+
+  /* Did it already become a star? */
+  if (!p->gpart)
+    return;
+
+  const struct stars_props* stars_properties = e->stars_properties;
+  const double const_G = e->physical_constants->const_newton_G;
+
+  /* Gas properties */
+  const double rho = hydro_get_physical_density(p, cosmo);
+  const double pressure = rho * p->sf_data.sigma_v2 / 3.f;
+
+  /* Gas surface density, assuming phi_P = 1 */
+  const double SigmaG = sqrt(2. * pressure / (M_PI * const_G));
+
+  /* Temporary array for eigvec/val calculation
+   * Note the lower elements are never referenced by dsyevj3 */
+  double tensor[3][3];
+  tensor[0][0] = p->gpart->tidal_tensor[0];
+  tensor[0][1] = p->gpart->tidal_tensor[1];
+  tensor[0][2] = p->gpart->tidal_tensor[2];
+  tensor[1][1] = p->gpart->tidal_tensor[3];
+  tensor[1][2] = p->gpart->tidal_tensor[4];
+  tensor[2][2] = p->gpart->tidal_tensor[5];
+
+  //TODO testing
+  double sum_tensor = 0.f;
+  for (int i = 0; i < 6; i++)
+    sum_tensor += p->gpart->tidal_tensor[i];
+  if (sum_tensor == 0)
+    error("Tidal tensor hasn't been calculated yet for this particle!");
+
+  /* Get the eigenvalues */
+  double tideval[3];
+  dsyevj3(tensor, tideval);
+
+  /* sort eigenvalues, tideval[2] (=lambda_1) is largest eigenvalue */
+  sort3(tideval);
+
+  /* Circular and epicyclic frequencies */
+  double Omega2;
+  if (stars_properties->Omega_is_lambda2) {
+    /* Correct version (in principle) */
+    Omega2 = fabs(-tideval[1]);
+  } else {
+    /* Version in E-MOSAICS */
+    Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
+  }
+  double kappa2 = fabs(3.f * Omega2 - tideval[2]);
+  kappa2 *= cosmo->a3_inv;
+
+  //TODO we might want to implement a maximum value?
+  // (min is softening length)
+
+  /* Back in comoving units */
+  p->sf_data.toomre_length = 4.f * M_PI * M_PI * const_G * SigmaG / kappa2;
+  p->sf_data.toomre_length /= cosmo->a;
+
+  //TODO
+  //if (p->id < 10) {
+  //  printf(" id=%lld, lambda_T = %g, lambda2 = %g\n", p->id, p->sf_data.toomre_length, tideval[1]);
+  //  fflush(stdout);
+  //}
+}
+
+/**
+ * @brief Sets the star_formation properties of the (x-)particles to a valid
+ * start state.
+ *
+ * @param p Pointer to the particle data.
+ * @param grav_props The properties of the gravity scheme (softening, G, ...).
+ */
+__attribute__((always_inline)) INLINE static void
+mosaics_first_init_part(struct part* restrict p, 
+                        const struct gravity_props* grav_props) {
+
+  //TODO
+  p->sf_data.toomre_length = grav_props->epsilon_baryon_cur * 
+      grav_props->init_toomre_length_softening_factor;
 }
 
 #endif /* SWIFT_MOSAICS_STARS_H */

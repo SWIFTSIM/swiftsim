@@ -377,6 +377,8 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
     sp->kappa_birth = sqrt(kappa2);
   }
 
+  //TODO Birth Omega and kappa should not have scale factors
+
   /* Factor out cosmology */
   kappa2 = sp->kappa_birth * sp->kappa_birth * cosmo->a3_inv;
 

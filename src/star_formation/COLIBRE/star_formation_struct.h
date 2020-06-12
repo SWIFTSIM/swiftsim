@@ -41,8 +41,13 @@ struct star_formation_part_data {
   /*! Velocity dispersion squared in physical internal units */
   float sigma_v2;
 
+  /* Properties for MOSAICS */
+
   /*! Unweighted gas mass */
   float gas_mass_unweighted;
+
+  /*! Estimate for Toomre length from tidal tensors */
+  float toomre_length;
 };
 
 /**

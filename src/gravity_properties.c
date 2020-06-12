@@ -165,6 +165,10 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
   p->gas_tensors_max_h =
       parser_get_opt_param_int(params, "Gravity:gas_tensors_max_h", 0);
 
+  /* Use the maximum of softening and smoothing for gas tensors? */
+  p->init_toomre_length_softening_factor = parser_get_opt_param_float(params,
+      "Gravity:init_toomre_length_softening_factor", 1.);
+
   /* Copy over the gravitational constant */
   p->G_Newton = phys_const->const_newton_G;
 

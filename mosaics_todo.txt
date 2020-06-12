@@ -10,6 +10,8 @@ Configure options:
 TODO:
 -----
 
+Make sure birth properties have scale factors factored out (Omega, kappa)
+
 MOSAICS stars requires tensor gravity
 
 At the end of mosaics_clevo we'll want to update gcflag depending if clusters survive or not
