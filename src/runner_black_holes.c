@@ -313,15 +313,15 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
       /* Get a handle on the part. */
       struct bpart *const cell_bp = &cell_bparts[k];
 
+      /* Ignore inhibited particles (they have already been removed!) */
+      if (bpart_is_inhibited(cell_bp, e)) continue;
+
       /* Update mass of associated gpart, to reflect potential changes from 
        * nibbling. In this case, we are already done. */
       if (props->use_nibbling) {
         cell_bp->gpart->mass = cell_bp->mass;
-        return;
+        continue;
       }
-
-      /* Ignore inhibited particles (they have already been removed!) */
-      if (bpart_is_inhibited(cell_bp, e)) continue;
 
       /* Get the ID of the black holes that will swallow this bpart */
       const long long swallow_id =
