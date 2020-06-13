@@ -292,7 +292,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     const float pj_mass_orig = hydro_get_mass(pj);
 
     /* Don't nibble from particles that are too small already */
-    if (pj_mass_orig < bh_props->min_gas_mass) return;
+    if (pj_mass_orig < bh_props->min_gas_mass_for_nibbling) return;
 
     /* Next line is equivalent to w_ij * m_j / Sum_j (w_ij * m_j) */
     const float particle_weight = hi_inv_dim * wi * pj_mass_orig / bi->rho_gas;

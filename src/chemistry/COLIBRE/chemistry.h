@@ -540,9 +540,6 @@ chemistry_transfer_part_to_bpart(
     struct chemistry_part_data* p_data, const double nibble_mass,
     const double nibble_fraction) {
 
-  /* By what fraction of the original gas particle mass is its mass reduced? */
-  const double f_reduce_gas = nibble_fraction * excess_fraction;
-
   bp_data->metal_mass_total += p_data->metal_mass_fraction_total * nibble_mass;
   for (int i = 0; i < chemistry_element_count; ++i)
     bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * nibble_mass;
