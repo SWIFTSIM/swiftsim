@@ -2645,6 +2645,9 @@ int get_ptype_fields(const int ptype, struct io_props* list,
       num_fields += velociraptor_write_gparts(NULL, list + num_fields);
       break;
 
+    case 3:
+      break;
+
     case swift_type_stars:
       stars_write_particles(NULL, list, &num_fields, with_cosmology);
       num_fields += chemistry_write_sparticles(NULL, list + num_fields);
@@ -2662,6 +2665,10 @@ int get_ptype_fields(const int ptype, struct io_props* list,
       num_fields += fof_write_bparts(NULL, list + num_fields);
       num_fields += velociraptor_write_bparts(NULL, list + num_fields);
       break;
+
+    default:
+      error("Particle Type %d not yet supported. Aborting", ptype);
+
   }
 
   return num_fields;
