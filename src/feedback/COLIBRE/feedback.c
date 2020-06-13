@@ -677,48 +677,41 @@ INLINE static void evolve_CEJSN_stochastic(
 #endif
 
   /* Here we calculate for how long collapsar events will take place */
-  float Z = sp->chemistry_data.metal_mass_fraction_total;
+  const float Z = sp->chemistry_data.metal_mass_fraction_total;
+
+  /* Abort early if the star is clearly too old or clearly too young */
+  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
+  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
+
+  /* Compute the lifetime of stars with the min and max SNII masses
+   * and metallicities */
   const float CEJSN_max_mass = exp10f(props->log10_SNII_max_mass_msun);
   const float CEJSN_min_mass = exp10f(props->log10_SNII_min_mass_msun);
-  /* Lifetime of 100 Msun star (max mass allowed for core-collapse SN) */
   const float lifetime_Gyr_max_mass = lifetime_in_Gyr(CEJSN_max_mass, Z, props);
-  /* Lifetime of 10 Msun star (min mass allowed for core-collapse SN) */
   const float lifetime_Gyr_min_mass = lifetime_in_Gyr(CEJSN_min_mass, Z, props);
-  float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
 
-  /* If stars less massive than 8 Msun have exploded, do nothing */
-  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;  // no overlap
+  /* Compute the age of the star at the beginning and end of step */
+  double t_start_Gyr = star_age_Gyr;
+  double t_end_Gyr = star_age_Gyr + dt_Gyr;
 
-  if (log10_min_mass < props->log10_SNII_min_mass_msun &&
-      log10_max_mass > props->log10_SNII_min_mass_msun) {  // some overlap
+  /* Do we need to correct because the age window overalps with the
+     minimal or maximal age? */
+  if (t_end_Gyr > lifetime_Gyr_min_mass) t_end_Gyr = lifetime_Gyr_min_mass;
+  if (t_start_Gyr < lifetime_Gyr_max_mass) t_start_Gyr = lifetime_Gyr_max_mass;
 
-    /* modify dt_Gyr to be exactly the time from the start of the time-step
-     * to the time at which mass==8 */
-    const float lifetime_Gyr =
-        lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
-    dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
+  /* The length of the step used to determine probabilities */
+  const double step_length_Gyr = t_end_Gyr - t_start_Gyr;
 
-  }  // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
+  /* Range over which the CEJSN are sampled */
+  const float delta_lifetime_Gyr =
+      lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
 
-  /* If stars more massive than 100 Msun have exploded, do nothing */
-  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;  // no overlap
-
-  if (log10_min_mass < props->log10_SNII_max_mass_msun &&
-      log10_max_mass > props->log10_SNII_max_mass_msun) {  // again some overlap
-
-    /* modify dt_Gyr to be exactly the time since the star has mass=100 till the
-     * end of time step */
-    const float lifetime_Gyr =
-        lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
-    dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
-
-  }  // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
-
-  /* Compute probability based on dt_Gyr / lifetime */
+  /* Compute probability based on step_length / lifetime */
 
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
-                    props->mass_to_solar_mass * (dt_Gyr / delta_lifetime_Gyr);
+                    props->mass_to_solar_mass *
+                    (step_length_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
