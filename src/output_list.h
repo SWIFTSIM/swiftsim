@@ -19,14 +19,15 @@
 #ifndef SWIFT_OUTPUT_LIST_H
 #define SWIFT_OUTPUT_LIST_H
 
+#define OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES 8
+#define FIELD_BUFFER_SIZE 64
+
 /* Config parameters. */
 #include "../config.h"
 
 /* Local includes */
 #include "common_io.h"
 #include "cosmology.h"
-
-#define OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES 8
 
 struct engine;
 

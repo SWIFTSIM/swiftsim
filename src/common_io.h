@@ -20,18 +20,20 @@
 #ifndef SWIFT_COMMON_IO_H
 #define SWIFT_COMMON_IO_H
 
+#define FIELD_BUFFER_SIZE 64
+#define DESCRIPTION_BUFFER_SIZE 512
+#define PARTICLE_GROUP_BUFFER_SIZE 50
+#define FILENAME_BUFFER_SIZE 150
+#define IO_BUFFER_ALIGNMENT 1024
+
 /* Config parameters. */
 #include "../config.h"
 
 /* Local includes. */
 #include "part_type.h"
 #include "units.h"
+#include "output_options.h"
 
-#define FIELD_BUFFER_SIZE 64
-#define DESCRIPTION_BUFFER_SIZE 512
-#define PARTICLE_GROUP_BUFFER_SIZE 50
-#define FILENAME_BUFFER_SIZE 150
-#define IO_BUFFER_ALIGNMENT 1024
 
 /* Avoid cyclic inclusion problems */
 struct cell;
@@ -181,7 +183,8 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const int stf_count, const int snap_count,
                               const char* subdir, const char* basename);
 
-int get_ptype_fields(int ptype, struct* io_props list);
-int get_param_ptype(char* name);
+int get_ptype_fields(const int ptype, struct io_props* list,
+                     const int with_cosmology);
+int get_param_ptype(const char* name);
 
 #endif /* SWIFT_COMMON_IO_H */

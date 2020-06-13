@@ -2283,15 +2283,15 @@ void io_check_output_fields(struct output_options* output_options,
   const int MAX_NUM_PTYPE_FIELDS = 100;
 
   /* Parameter struct for the output options */
-  const struct swift_params* params = output_options->select_output;
+  struct swift_params* params = output_options->select_output;
 
   /* Get all possible outputs per particle type */
-  int ptype_num_fields_total[swift_type_count] {0};
+  int ptype_num_fields_total[swift_type_count] = {0};
   struct io_props field_list[swift_type_count][MAX_NUM_PTYPE_FIELDS];
 
   for (int ptype = 0; ptype < swift_type_count; ptype++)
     ptype_num_fields_total[ptype] = get_ptype_fields(
-        ptype, field_list[swift_type_count])
+        ptype, field_list[ptype], with_cosmology);
 
   /* Check for whether we have a `Default` section */
   int have_default = 0;
@@ -2330,7 +2330,7 @@ void io_check_output_fields(struct output_options* output_options,
         ptype_num_fields_to_write[ptype] = 0;
       } else {
         ptype_default_write_status[ptype] = 1;
-        ptype_num_fields_to_write[ptype] = num_fields;
+        ptype_num_fields_to_write[ptype] = ptype_num_fields_total[ptype];
       }
 
     } /* ends loop over particle types */
@@ -2361,10 +2361,10 @@ void io_check_output_fields(struct output_options* output_options,
       /* Issue a warning if this parameter does not pertain to any of the
        * known fields from this ptype. */
       int field_id = 0;
+      char field_name[PARSER_MAX_LINE_SIZE];
       for (field_id = 0; field_id < ptype_num_fields_total[param_ptype];
            field_id++) {
 
-        char field_name[PARSER_MAX_LINE_SIZE];
         sprintf(field_name, "%s:%.*s_%s", section_name, FIELD_BUFFER_SIZE,
                 field_list[param_ptype][field_id].name,
                 part_type_names[param_ptype]);
@@ -2384,9 +2384,9 @@ void io_check_output_fields(struct output_options* output_options,
       char field_value[FIELD_BUFFER_SIZE];
       parser_get_param_string(params, field_name, field_value);
 
-      value_id = 0;
-      for (int value_id = 0; value_id < compression_level_count; value_id++)
-        if (!strcmp(field_value, compression_level_names[allowed_value_index]))
+      int value_id = 0;
+      for (value_id = 0; value_id < compression_level_count; value_id++)
+        if (!strcmp(field_value, compression_level_names[value_id]))
           break;
       if (value_id == compression_level_count)
         error("Choice of output selection parameter %s ('%s') is invalid.",
@@ -2426,7 +2426,7 @@ void io_check_output_fields(struct output_options* output_options,
 
   /* Add field numbers for (possible) implicit `Default` output class */
   if (!have_default) {
-    const int default_id = output_options->select_output->section_count];
+    const int default_id = output_options->select_output->sectionCount;
     for (int ptype = 0; ptype < swift_type_count; ptype++)
       output_options->num_fields_to_write[default_id][ptype] =
           ptype_num_fields_total[ptype];
@@ -2609,10 +2609,12 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
  *
  * @param ptype The index of the particle type under consideration.
  * @param list An io_props list that will hold the individual fields.
+ * @param with_cosmology Use cosmological name variant?
  *
  * @return The total number of fields that can be written for the ptype.
  */
-int get_ptype_fields(int ptype, struct* io_props list) {
+int get_ptype_fields(const int ptype, struct io_props* list,
+                     const int with_cosmology) {
 
   int num_fields = 0;
 
@@ -2660,9 +2662,6 @@ int get_ptype_fields(int ptype, struct* io_props list) {
       num_fields += fof_write_bparts(NULL, list + num_fields);
       num_fields += velociraptor_write_bparts(NULL, list + num_fields);
       break;
-
-    default:
-      error("Particle Type %d not yet supported. Aborting", ptype);
   }
 
   return num_fields;
@@ -2679,10 +2678,10 @@ int get_param_ptype(const char* name) {
   
   const int name_len = strlen(name);
 
-  for (int ptype = 0; ptype < swift_type_count; ii++) {
-    ptype_name_len = strlen(part_type_names[ptype]);
+  for (int ptype = 0; ptype < swift_type_count; ptype++) {
+    const int ptype_name_len = strlen(part_type_names[ptype]);
     if (name_len >= ptype_name_len &&
-        !strcmp(name[name_len - ptype_name_len], part_type_names[ptype]))
+        !strcmp(&name[name_len - ptype_name_len], part_type_names[ptype]))
       return ptype;
   }
 
