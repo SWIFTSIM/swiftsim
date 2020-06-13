@@ -294,8 +294,9 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     /* Don't nibble from particles that are too small already */
     if (pj_mass_orig < bh_props->min_gas_mass) return;
 
-    /* !!! THIS SHOULD DEFINITELY BE CHECKED FOR CORRECTNESS !!! */
-    const float nibble_mass = bh_mass_deficit * hi_inv_dim * wi / bi->rho_gas;
+    /* Next line is equivalent to w_ij * m_j / Sum_j (w_ij * m_j) */
+    const float particle_weight = hi_inv_dim * wi * pj_mass_orig / bi->rho_gas;
+    const float nibble_mass = bh_mass_deficit * particle_weight;
 
     /* We radiated away some of the accreted mass, so need to take slightly
      * more from the gas than the BH gained */ 
