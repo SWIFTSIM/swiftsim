@@ -247,9 +247,9 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
 
   /* Calculate circular velocity at the smoothing radius from specific
    * angular momentum (extra h_inv) */
-  bp->circular_velocity_gas[0] = bp->spec_angular_momentum_gas[0] * h_inv_dim;
-  bp->circular_velocity_gas[1] = bp->spec_angular_momentum_gas[1] * h_inv_dim;
-  bp->circular_velocity_gas[2] = bp->spec_angular_momentum_gas[2] * h_inv_dim;
+  bp->circular_velocity_gas[0] = bp->spec_angular_momentum_gas[0] * h_inv;
+  bp->circular_velocity_gas[1] = bp->spec_angular_momentum_gas[1] * h_inv;
+  bp->circular_velocity_gas[2] = bp->spec_angular_momentum_gas[2] * h_inv;
 
   /* Calculate (actual) gas velocity dispersion. Currently, the variable
    * 'velocity_dispersion_gas' holds <v^2> instead. */
