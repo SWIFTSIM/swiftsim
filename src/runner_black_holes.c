@@ -96,11 +96,11 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
       /* Ignore inhibited particles (they have already been removed!) */
       if (part_is_inhibited(p, e)) continue;
 
-      /* Update mass of associated gpart, to reflect potential changes from 
+      /* Update mass of associated gpart, to reflect potential changes from
        * nibbling. In this case, we are already done. */
       if (props->use_nibbling) {
-          p->gpart->mass = p->mass;
-          continue;
+        p->gpart->mass = p->mass;
+        continue;
       }
 
       /* Get the ID of the black holes that will swallow this part */
@@ -325,10 +325,9 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
       /* Ignore inhibited particles (they have already been removed!) */
       if (bpart_is_inhibited(cell_bp, e)) continue;
 
-      /* Update mass of associated gpart, to reflect potential changes from 
+      /* Update mass of associated gpart, to reflect potential changes from
        * nibbling. */
-      if (props->use_nibbling)
-        cell_bp->gpart->mass = cell_bp->mass;
+      if (props->use_nibbling) cell_bp->gpart->mass = cell_bp->mass;
 
       /* Get the ID of the black holes that will swallow this bpart */
       const long long swallow_id =

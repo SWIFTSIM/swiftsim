@@ -280,8 +280,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
 
   /* Check if the BH needs to be fed. If not, we're done here */
   const float bh_mass_deficit = bi->subgrid_mass - bi->mass_at_start_of_step;
-  if (bh_mass_deficit <= 0)
-    return;
+  if (bh_mass_deficit <= 0) return;
 
   if (bh_props->use_nibbling) {
 
@@ -299,7 +298,7 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     const float nibble_mass = bh_mass_deficit * particle_weight;
 
     /* We radiated away some of the accreted mass, so need to take slightly
-     * more from the gas than the BH gained */ 
+     * more from the gas than the BH gained */
     const float excess_fraction = 1.0 / (1.0 - bh_props->epsilon_r);
 
     /* Transfer (dynamical) mass from the gas particle to the BH */
@@ -332,14 +331,14 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
     bi->gpart->v_full[2] = bi->v[2];
 
     /* Update the BH and also gas metal masses */
-    struct chemistry_bpart_data* bi_chem = &bi->chemistry_data;
-    struct chemistry_part_data* pj_chem = &pj->chemistry_data;
+    struct chemistry_bpart_data *bi_chem = &bi->chemistry_data;
+    struct chemistry_part_data *pj_chem = &pj->chemistry_data;
     chemistry_transfer_part_to_bpart(
         bi_chem, pj_chem, nibble_mass * excess_fraction,
         nibble_mass * excess_fraction / pj_mass_orig);
-    
+
   } else { /* ends nibbling section, below comes swallowing */
-    
+
     /* Probability to swallow this particle
      * Recall that in SWIFT the SPH kernel is recovered by computing
      * kernel_eval() and muliplying by (1/h^d) */

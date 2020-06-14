@@ -399,10 +399,11 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
  *        by the black hole (the rest is radiated away).
  */
 __attribute__((always_inline)) INLINE static void
-chemistry_transfer_part_to_bpart(
-    struct chemistry_bpart_data* bp_data,
-    struct chemistry_part_data* p_data, const double nibble_mass,
-    const double nibble_fraction, const double excess_fraction) {
+chemistry_transfer_part_to_bpart(struct chemistry_bpart_data* bp_data,
+                                 struct chemistry_part_data* p_data,
+                                 const double nibble_mass,
+                                 const double nibble_fraction,
+                                 const double excess_fraction) {
 
   /* By what fraction of the original gas particle mass is its mass reduced? */
   const double f_reduce_gas = nibble_fraction * excess_fraction;

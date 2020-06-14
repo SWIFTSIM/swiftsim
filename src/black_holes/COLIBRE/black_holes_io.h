@@ -359,8 +359,8 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "subgrid accretion.");
 
   list[30] = io_make_output_field(
-      "NumberOfGasNeighbours", INT, 1, UNIT_CONV_NO_UNITS, 0.f,
-      bparts, num_ngbs,
+      "NumberOfGasNeighbours", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      num_ngbs,
       "Integer number of gas neighbour particles within the black hole "
       "kernels.");
 
