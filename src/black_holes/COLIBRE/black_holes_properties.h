@@ -245,10 +245,11 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       params, "COLIBREAGN:eddington_fraction_for_recording");
 
   bp->use_nibbling = parser_get_param_int(params, "COLIBREAGN:use_nibbling");
-  if (bp->use_nibbling)
+  if (bp->use_nibbling) {
     bp->min_gas_mass_for_nibbling = parser_get_param_float(
         params, "COLIBREAGN:min_gas_mass_for_nibbling");
     bp->min_gas_mass_for_nibbling *= phys_const->const_solar_mass;
+  }
 
   /* Feedback parameters ---------------------------------- */
 
