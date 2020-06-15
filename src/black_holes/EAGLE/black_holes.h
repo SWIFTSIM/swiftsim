@@ -543,7 +543,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
    * Note that we have subtracted the particles we swallowed from the ngb_mass
    * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
-  const double delta_u = props->delta_T * props->temp_to_u_factor;
+  const double delta_u = props->AGN_delta_T_desired * props->temp_to_u_factor;
   const double E_feedback_event =
       props->num_ngbs_to_heat * delta_u * mean_ngb_mass;
 
