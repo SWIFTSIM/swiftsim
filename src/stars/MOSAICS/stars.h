@@ -339,6 +339,7 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
 
   const struct stars_props* star_props = e->stars_properties;
   const double const_G = e->physical_constants->const_newton_G;
+  const struct unit_system *us = e->internal_units;
 
   /* Gas properties */
   const double rho = hydro_get_physical_density(p, cosmo);
@@ -389,14 +390,49 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
   if (p->sf_data.toomre_length > star_props->max_toomre_length)
     p->sf_data.toomre_length = star_props->max_toomre_length;
 
+  /* When L_Toomre is large, want to apply some downward pressure so is not
+   * stuck in a loop with large L_Toomre and small kappa. Average the Toomre
+   * length and "feedback" length when L_fb < L_Toomre */
+
+  const double density_to_kgm3 =
+      units_cgs_conversion_factor(us, UNIT_CONV_DENSITY) * 1e3;
+  const double velocity_to_ms =
+      units_cgs_conversion_factor(us, UNIT_CONV_VELOCITY) * 0.01;
+  const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+
+  const double rholoc = rho * density_to_kgm3;
+
+  double sigmaloc;
+  if (star_props->subgrid_gas_vel_disp) {
+    /* "Sub-particle turbulent velocity dispersion" */
+    sigmaloc = sqrt(hydro_get_physical_pressure(p, cosmo) / rho);
+  } else {
+    /* The resolved velocity dispersion */
+    /* 1/sqrt(3) converts to 1D assuming isotropy */
+    sigmaloc = sqrt(p->sf_data.sigma_v2) / sqrt(3.f);
+  }
+  sigmaloc *= velocity_to_ms;
+
+  double csloc;
+  if (star_props->Fixedcs > 0) {
+    csloc = star_props->Fixedcs;
+  } else {
+    csloc = hydro_get_physical_soundspeed(p, cosmo) * velocity_to_ms;
+  }
+
+  /* Feedback timescale */
+  const double tfb = feedback_timescale(rholoc, sigmaloc, csloc, star_props) /
+      time_to_cgs;
+
+  /* Feedback collapse length */
+  const double fb_length = 2.f * M_PI * const_G * SigmaG * tfb * tfb;
+
+  if (fb_length < p->sf_data.toomre_length) {
+    p->sf_data.toomre_length = 0.5 * (fb_length + p->sf_data.toomre_length);
+  }
+
   /* Back in comoving units */
   p->sf_data.toomre_length /= cosmo->a;
-
-  //TODO
-  //if (p->id < 10) {
-  //  printf(" id=%lld, lambda_T = %g, lambda2 = %g\n", p->id, p->sf_data.toomre_length, tideval[1]);
-  //  fflush(stdout);
-  //}
 }
 
 /**
@@ -410,7 +446,6 @@ __attribute__((always_inline)) INLINE static void
 mosaics_first_init_part(struct part* restrict p, 
                         const struct gravity_props* grav_props) {
 
-  //TODO
   p->sf_data.toomre_length = grav_props->epsilon_baryon_cur * 
       grav_props->init_toomre_length_softening_factor;
 }

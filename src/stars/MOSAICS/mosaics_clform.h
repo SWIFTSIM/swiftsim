@@ -291,9 +291,10 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
   /* -------- Get CFE -------- */
   /* In units of kg, m, s */
 
+  /* The local gas density */
   double rholoc = sp->sf_data.birth_density * density_to_kgm3;
 
-  /* The local gas density */
+  /* The local gas velocity dispersion */
   double sigmaloc;
   if (props->subgrid_gas_vel_disp) {
     /* "Sub-particle turbulent velocity dispersion" */
