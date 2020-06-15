@@ -874,7 +874,7 @@ void engine_redistribute(struct engine *e) {
 
   /* Sort the gparticles according to their cell index. */
   if (nr_gparts > 0)
-    space_gparts_sort(s->gparts, s->parts, s->sinks.parts, s->sparts, s->bparts,
+    space_gparts_sort(s->gparts, s->parts, s->sinks, s->sparts, s->bparts,
                       g_dest, &g_counts[nodeID * nr_nodes], nr_nodes);
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1200,7 +1200,7 @@ void engine_redistribute(struct engine *e) {
   }
 
   /* Verify that the links are correct */
-  part_verify_links(s->parts, s->gparts, s->sinks.parts, s->sparts, s->bparts,
+  part_verify_links(s->parts, s->gparts, s->sinks, s->sparts, s->bparts,
                     nr_parts_new, nr_gparts_new, nr_sinks_new, nr_sparts_new,
                     nr_bparts_new, e->verbose);
 
