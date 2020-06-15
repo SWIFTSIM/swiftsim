@@ -185,7 +185,7 @@ enum compression_levels output_options_get_ptype_default(
       compression_level_names[compression_level_default]);
 
   /* Need to find out which of the entries this corresponds to... */
-  enum compression_levels level_index;
+  int level_index;
   for (level_index = 0; level_index < compression_level_count; level_index++) {
     if (!strcmp(compression_level_names[level_index], compression_level)) break;
   }
@@ -215,7 +215,7 @@ enum compression_levels output_options_get_ptype_default(
       level_index);
 #endif
 
-  return level_index;
+  return (enum compression_levels)level_index;
 }
 
 /**
