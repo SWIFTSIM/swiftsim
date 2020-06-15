@@ -132,6 +132,11 @@ struct black_holes_props {
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
 
+  /* ---- Nibbling properties (not used in EAGLE) - */
+
+  /*! Are we using the BH nibbling model instead of swallowing? */
+  int use_nibbling;
+
   /* ---- Common conversion factors --------------- */
 
   /*! Conversion factor from temperature to internal energy */
@@ -296,6 +301,10 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:merger_max_distance_ratio");
+
+  /* Nibbling parameters ----------------------------------- */
+
+  bp->use_nibbling = 0;
 
   /* Common conversion factors ----------------------------- */
 
