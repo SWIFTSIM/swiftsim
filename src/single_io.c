@@ -896,8 +896,7 @@ void write_output_single(struct engine* e,
 
     /* Don't do anything if there are (a) no particles of this kind, or (b)
      * if we have disabled every field of this particle type. */
-    if (numParticles[ptype] == 0 || numFields[ptype] == 0)
-      continue;
+    if (numParticles[ptype] == 0 || numFields[ptype] == 0) continue;
 
     /* Add the global information for that particle type to the XMF meta-file */
     xmf_write_groupheader(xmfFile, fileName, numParticles[ptype],
@@ -1216,7 +1215,7 @@ void write_output_single(struct engine* e,
 #ifdef SWIFT_DEBUG_CHECKS
     if (num_fields_written != numFields[ptype])
       error("Wrote %d fields for particle type %s, but expected to write %d.",
-          num_fields_written, part_type_names[ptype], numFields[ptype]);
+            num_fields_written, part_type_names[ptype], numFields[ptype]);
 #endif
 
     /* Free temporary arrays */

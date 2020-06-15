@@ -30,10 +30,9 @@
 #include "../config.h"
 
 /* Local includes. */
+#include "output_options.h"
 #include "part_type.h"
 #include "units.h"
-#include "output_options.h"
-
 
 /* Avoid cyclic inclusion problems */
 struct cell;

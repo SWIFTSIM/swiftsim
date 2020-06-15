@@ -118,6 +118,6 @@ void parser_struct_dump(const struct swift_params *params, FILE *stream);
 void parser_struct_restore(const struct swift_params *params, FILE *stream);
 
 /* Lookup functions */
-int parser_get_section_id(const struct swift_params *params, const char* name);
+int parser_get_section_id(const struct swift_params *params, const char *name);
 
 #endif /* SWIFT_PARSER_H */

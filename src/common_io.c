@@ -2290,8 +2290,8 @@ void io_check_output_fields(struct output_options* output_options,
   struct io_props field_list[swift_type_count][MAX_NUM_PTYPE_FIELDS];
 
   for (int ptype = 0; ptype < swift_type_count; ptype++)
-    ptype_num_fields_total[ptype] = get_ptype_fields(
-        ptype, field_list[ptype], with_cosmology);
+    ptype_num_fields_total[ptype] =
+        get_ptype_fields(ptype, field_list[ptype], with_cosmology);
 
   /* Check for whether we have a `Default` section */
   int have_default = 0;
@@ -2316,14 +2316,14 @@ void io_check_output_fields(struct output_options* output_options,
 
     /* Initialise section-specific writing counters for each particle type.
      * If default is 'write', then we start from the total to deduct any fields
-     * that are switched off. If the default is 'off', we have to start from 
+     * that are switched off. If the default is 'off', we have to start from
      * zero and then count upwards for each field that is switched back on. */
     for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
       /* Internally also verifies that the default level is allowed */
       const enum compression_levels compression_level_current_default =
           output_options_get_ptype_default(params, section_name,
-                                           (enum part_type) ptype);
+                                           (enum part_type)ptype);
 
       if (compression_level_current_default == compression_do_not_write) {
         ptype_default_write_status[ptype] = 0;
@@ -2349,7 +2349,7 @@ void io_check_output_fields(struct output_options* output_options,
             "SelectOutput; see the documentation for changes.");
       }
 
-      /* Skip if the parameter belongs to another output class or is a 
+      /* Skip if the parameter belongs to another output class or is a
        * 'Standard' parameter */
       if (strstr(param_name, section_name) == NULL) continue;
       if (strstr(param_name, ":Standard_") != NULL) continue;
@@ -2369,8 +2369,7 @@ void io_check_output_fields(struct output_options* output_options,
                 field_list[param_ptype][field_id].name,
                 part_type_names[param_ptype]);
 
-        if (strcmp(param_name, field_name) == 0)
-          break;
+        if (strcmp(param_name, field_name) == 0) break;
       }
 
       if (field_id == ptype_num_fields_total[param_ptype])
@@ -2386,13 +2385,12 @@ void io_check_output_fields(struct output_options* output_options,
 
       int value_id = 0;
       for (value_id = 0; value_id < compression_level_count; value_id++)
-        if (!strcmp(field_value, compression_level_names[value_id]))
-          break;
+        if (!strcmp(field_value, compression_level_names[value_id])) break;
       if (value_id == compression_level_count)
         error("Choice of output selection parameter %s ('%s') is invalid.",
               field_name, field_value);
 
-      /* Adjust number of fields to be written for param_ptype, if this field's 
+      /* Adjust number of fields to be written for param_ptype, if this field's
        * status is different from default */
       const int is_on = strcmp(
           field_value, compression_level_names[compression_do_not_write]);
@@ -2419,7 +2417,7 @@ void io_check_output_fields(struct output_options* output_options,
             "type %d in output class %s (total to write is %d)",
             ptype, section_name, ptype_num_fields_to_write[ptype]);
 #endif
-      output_options->num_fields_to_write[section_id][ptype] = 
+      output_options->num_fields_to_write[section_id][ptype] =
           ptype_num_fields_to_write[ptype];
     }
   } /* Ends loop over sections, for different output classes */
@@ -2430,9 +2428,8 @@ void io_check_output_fields(struct output_options* output_options,
     for (int ptype = 0; ptype < swift_type_count; ptype++)
       output_options->num_fields_to_write[default_id][ptype] =
           ptype_num_fields_total[ptype];
-    }
+  }
 }
-
 
 /**
  * @brief Write the output field parameters file
@@ -2453,8 +2450,7 @@ void io_write_output_field_parameter(const char* filename, int with_cosmology) {
   fprintf(file, "Default:\n");
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
-
-    struct io_props list[100];    
+    struct io_props list[100];
     int num_fields = get_ptype_fields(ptype, list, with_cosmology);
 
     if (num_fields == 0) continue;
@@ -2605,8 +2601,7 @@ int get_ptype_fields(const int ptype, struct io_props* list,
       num_fields += chemistry_write_sparticles(NULL, list + num_fields);
       num_fields +=
           tracers_write_sparticles(NULL, list + num_fields, with_cosmology);
-      num_fields +=
-          star_formation_write_sparticles(NULL, list + num_fields);
+      num_fields += star_formation_write_sparticles(NULL, list + num_fields);
       num_fields += fof_write_sparts(NULL, list + num_fields);
       num_fields += velociraptor_write_sparts(NULL, list + num_fields);
       break;
@@ -2620,7 +2615,6 @@ int get_ptype_fields(const int ptype, struct io_props* list,
 
     default:
       error("Particle Type %d not yet supported. Aborting", ptype);
-
   }
 
   return num_fields;
@@ -2634,7 +2628,7 @@ int get_ptype_fields(const int ptype, struct io_props* list,
  * @return The (integer) particle type of the parameter.
  */
 int get_param_ptype(const char* name) {
-  
+
   const int name_len = strlen(name);
 
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
