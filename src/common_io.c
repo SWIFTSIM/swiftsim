@@ -884,6 +884,7 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                            const int distributed,
                            const long long global_counts[swift_type_count],
                            const long long global_offsets[swift_type_count],
+                           const int num_fields[swift_type_count],
                            const struct unit_system* internal_units,
                            const struct unit_system* snapshot_units) {
 
@@ -1108,7 +1109,7 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
         H5Gcreate(h_grp, "Counts", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (h_grp_counts < 0) error("Error while creating counts sub-group");
 
-    if (global_counts[swift_type_gas] > 0) {
+    if (global_counts[swift_type_gas] > 0 && num_fields[swift_type_gas] > 0) {
       io_write_array(h_grp_files, nr_cells, files, INT, "PartType0", "files");
       io_write_array(h_grp_offsets, nr_cells, offset_part, LONGLONG,
                      "PartType0", "offsets");
@@ -1116,7 +1117,8 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                      "counts");
     }
 
-    if (global_counts[swift_type_dark_matter] > 0) {
+    if (global_counts[swift_type_dark_matter] > 0 &&
+        num_fields[swift_type_dark_matter] > 0) {
       io_write_array(h_grp_files, nr_cells, files, INT, "PartType1", "files");
       io_write_array(h_grp_offsets, nr_cells, offset_gpart, LONGLONG,
                      "PartType1", "offsets");
@@ -1124,7 +1126,8 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                      "counts");
     }
 
-    if (global_counts[swift_type_dark_matter_background] > 0) {
+    if (global_counts[swift_type_dark_matter_background] > 0 &&
+        num_fields[swift_type_dark_matter_background] > 0) {
       io_write_array(h_grp_files, nr_cells, files, INT, "PartType2", "files");
       io_write_array(h_grp_offsets, nr_cells, offset_background_gpart, LONGLONG,
                      "PartType2", "offsets");
@@ -1132,7 +1135,8 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                      "PartType2", "counts");
     }
 
-    if (global_counts[swift_type_stars] > 0) {
+    if (global_counts[swift_type_stars] > 0 &&
+        num_fields[swift_type_stars] > 0) {
       io_write_array(h_grp_files, nr_cells, files, INT, "PartType4", "files");
       io_write_array(h_grp_offsets, nr_cells, offset_spart, LONGLONG,
                      "PartType4", "offsets");
@@ -1140,7 +1144,8 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                      "counts");
     }
 
-    if (global_counts[swift_type_black_hole] > 0) {
+    if (global_counts[swift_type_black_hole] > 0 &&
+        num_fields[swift_type_black_hole] > 0) {
       io_write_array(h_grp_files, nr_cells, files, INT, "PartType5", "files");
       io_write_array(h_grp_offsets, nr_cells, offset_bpart, LONGLONG,
                      "PartType5", "offsets");

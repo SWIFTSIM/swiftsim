@@ -848,6 +848,7 @@ void write_output_single(struct engine* e,
 
   /* Total number of fields to write per ptype */
   int numFields[swift_type_count] = {0};
+
   for (int ptype = 0; ptype < swift_type_count; ++ptype) {
     numParticles[ptype] = (unsigned int)N_total[ptype];
     numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
@@ -887,7 +888,7 @@ void write_output_single(struct engine* e,
   /* Write the location of the particles in the arrays */
   io_write_cell_offsets(h_grp, e->s->cdim, e->s->dim, e->s->pos_dithering,
                         e->s->cells_top, e->s->nr_cells, e->s->width, e->nodeID,
-                        /*distributed=*/0, N_total, global_offsets,
+                        /*distributed=*/0, N_total, global_offsets, numFields,
                         internal_units, snapshot_units);
   H5Gclose(h_grp);
 

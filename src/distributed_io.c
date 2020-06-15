@@ -383,14 +383,21 @@ void write_output_distributed(struct engine* e,
   strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
   io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
 
-  /* GADGET-2 legacy values */
-  /* Number of particles of each type */
+  /* GADGET-2 legacy values:  Number of particles of each type */
   unsigned int numParticles[swift_type_count] = {0};
   unsigned int numParticlesHighWord[swift_type_count] = {0};
+
+  /* Total number of fields to write per ptype */
+  int numFields[swift_type_count] = {0};
+
   for (int ptype = 0; ptype < swift_type_count; ++ptype) {
     numParticles[ptype] = (unsigned int)N_total[ptype];
     numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
+
+    numFields[ptype] = output_options_get_num_fields_to_write(
+        output_options, current_selection_name, ptype);
   }
+
   io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N, swift_type_count);
   io_write_attribute(h_grp, "NumPart_Total", UINT, numParticles,
                      swift_type_count);
@@ -424,15 +431,16 @@ void write_output_distributed(struct engine* e,
   /* Write the location of the particles in the arrays */
   io_write_cell_offsets(h_grp, e->s->cdim, e->s->dim, e->s->pos_dithering,
                         e->s->cells_top, e->s->nr_cells, e->s->width, mpi_rank,
-                        /*distributed=*/1, N_total, global_offsets,
+                        /*distributed=*/1, N_total, global_offsets, numFields,
                         internal_units, snapshot_units);
   H5Gclose(h_grp);
 
   /* Loop over all particle types */
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
-    /* Don't do anything if no particle of this kind */
-    if (numParticles[ptype] == 0) continue;
+    /* Don't do anything if there are (a) no particles of this kind, or (b)
+     * if we have disabled every field of this particle type. */
+    if (numParticles[ptype] == 0 || numFields[ptype] == 0) continue;
 
     /* Open the particle group in the file */
     char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
@@ -452,6 +460,7 @@ void write_output_distributed(struct engine* e,
 
     /* Write the number of particles as an attribute */
     io_write_attribute_l(h_grp, "NumberOfParticles", N[ptype]);
+    io_write_attribute_i(h_grp, "NumberOfFields", numFields[ptype]);
 
     int num_fields = 0;
     struct io_props list[100];
