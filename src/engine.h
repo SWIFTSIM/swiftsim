@@ -117,8 +117,8 @@ enum engine_step_properties {
 #define engine_max_parts_per_cooling_default 200
 #define engine_star_resort_task_depth_default 2
 #define engine_tasks_per_cell_margin 1.2
-#define engine_default_stf_subdir_per_output ""
-#define engine_default_snapshot_subdir ""
+#define engine_default_stf_subdir_per_output "."
+#define engine_default_snapshot_subdir "."
 
 /**
  * @brief The rank of the engine as a global variable (for messages).
