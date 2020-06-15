@@ -19,12 +19,10 @@
 #ifndef SWIFT_OUTPUT_OPTIONS_H
 #define SWIFT_OUTPUT_OPTIONS_H
 
-#include "config.h"
-#include "parser.h"
+/* Local headers. */
+#include "output_list.h"
 #include "part_type.h"
-/*#include "output_list.h" */
-
-#define OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES 8
+#include "restart.h"
 
 /**
  * @brief Compression levels for snapshot fields
@@ -39,10 +37,10 @@ enum compression_levels {
   compression_level_count,
 };
 
-/* Default value for SelectOutput */
+/*! Default value for SelectOutput */
 #define compression_level_default compression_write_lossless
 
-/* Default name for the SelectOutput header */
+/*! Default name for the SelectOutput header */
 #define select_output_header_default_name "Default"
 
 /**
@@ -79,9 +77,9 @@ void output_options_struct_restore(struct output_options* output_options,
 
 /* Logic functions */
 int output_options_should_write_field(
-    struct output_options* output_options, char* snapshot_type,
-    char* field_name, enum part_type part_type,
-    enum compression_levels comp_level_current_default);
+    const struct output_options* output_options, const char* snapshot_type,
+    const char* field_name, const enum part_type part_type,
+    const enum compression_levels comp_level_current_default);
 
 enum compression_levels output_options_get_ptype_default(
     struct swift_params* output_params, const char* snapshot_type,

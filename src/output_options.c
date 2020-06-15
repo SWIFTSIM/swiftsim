@@ -20,6 +20,7 @@
 
 /* Some standard headers. */
 #include <stdlib.h>
+#include <string.h>
 
 /* MPI headers. */
 #ifdef WITH_MPI
@@ -30,9 +31,9 @@
 #include "output_options.h"
 
 /* Local headers. */
+#include "common_io.h"
+#include "error.h"
 #include "parser.h"
-#include "part_type.h"
-#include "swift.h"
 
 /* Compression level names. */
 const char* compression_level_names[compression_level_count] = {
@@ -132,9 +133,10 @@ void output_options_struct_restore(struct output_options* output_options,
  *         written
  **/
 int output_options_should_write_field(
-    struct output_options* output_options, char* snapshot_type,
-    char* field_name, enum part_type part_type,
-    enum compression_levels compression_level_current_default) {
+    const struct output_options* output_options, const char* snapshot_type,
+    const char* field_name, const enum part_type part_type,
+    const enum compression_levels compression_level_current_default) {
+
   /* Full name for the field path */
   char field[PARSER_MAX_LINE_SIZE];
   sprintf(field, "%.*s:%.*s_%s", FIELD_BUFFER_SIZE, snapshot_type,
@@ -245,7 +247,9 @@ int output_options_get_num_fields_to_write(
   if (selection_id >= output_options->select_output->sectionCount)
     error(
         "Output selection '%s' was apparently located in index %d of the "
-        "output_options structure, but this only has %d sections.");
+        "output_options structure, but this only has %d sections.",
+        selection_name, selection_id,
+        output_options->select_output->sectionCount);
 #endif
 
   /* Special treatment for absent `Default` section */

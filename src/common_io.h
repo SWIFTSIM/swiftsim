@@ -30,7 +30,6 @@
 #include "../config.h"
 
 /* Local includes. */
-#include "output_options.h"
 #include "part_type.h"
 #include "units.h"
 
@@ -45,6 +44,7 @@ struct xpart;
 struct io_props;
 struct engine;
 struct threadpool;
+struct output_options;
 
 /**
  * @brief The different types of data used in the GADGET IC files.
