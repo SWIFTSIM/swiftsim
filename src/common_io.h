@@ -20,18 +20,17 @@
 #ifndef SWIFT_COMMON_IO_H
 #define SWIFT_COMMON_IO_H
 
+/* Config parameters. */
+#include "config.h"
+
+/* Local includes. */
+#include "part_type.h"
+
 #define FIELD_BUFFER_SIZE 64
 #define DESCRIPTION_BUFFER_SIZE 512
 #define PARTICLE_GROUP_BUFFER_SIZE 50
 #define FILENAME_BUFFER_SIZE 150
 #define IO_BUFFER_ALIGNMENT 1024
-
-/* Config parameters. */
-#include "../config.h"
-
-/* Local includes. */
-#include "part_type.h"
-#include "units.h"
 
 /* Avoid cyclic inclusion problems */
 struct cell;
@@ -45,6 +44,7 @@ struct io_props;
 struct engine;
 struct threadpool;
 struct output_options;
+struct unit_system;
 
 /**
  * @brief The different types of data used in the GADGET IC files.
@@ -66,6 +66,9 @@ enum IO_DATA_TYPE {
 };
 
 #if defined(HAVE_HDF5)
+
+/* Library header */
+#include <hdf5.h>
 
 hid_t io_hdf5_type(enum IO_DATA_TYPE type);
 
@@ -120,7 +123,7 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
                          const struct unit_system* internal_units,
                          const struct unit_system* snapshot_units);
 
-#endif /* defined HDF5 */
+#endif /* HAVE_HDF5 */
 
 size_t io_sizeof_type(enum IO_DATA_TYPE type);
 int io_is_double_precision(enum IO_DATA_TYPE type);
