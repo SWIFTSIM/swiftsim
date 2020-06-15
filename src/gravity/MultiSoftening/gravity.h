@@ -57,6 +57,8 @@ __attribute__((always_inline)) INLINE static float gravity_get_softening(
       return grav_props->epsilon_baryon_cur;
     case swift_type_gas:
       return grav_props->epsilon_baryon_cur;
+    case swift_type_sink:
+      return grav_props->epsilon_baryon_cur;
     case swift_type_black_hole:
       return grav_props->epsilon_baryon_cur;
     case swift_type_dark_matter_background:
