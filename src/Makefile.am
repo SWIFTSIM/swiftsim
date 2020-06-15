@@ -238,7 +238,10 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 stars/GEAR/stars_debug.h stars/GEAR/stars_part.h \
 	         potential/none/potential.h potential/point_mass/potential.h \
                  potential/isothermal/potential.h potential/disc_patch/potential.h \
-                 potential/sine_wave/potential.h \
+                 potential/sine_wave/potential.h potential/constant/potential.h \
+		 potential/hernquist/potential.h potential/nfw/potential.h \
+		 potential/nfw_mn/potential.h potential/point_mass_softened/potential.h \
+		 potential/point_mass_ring/potential.h \
 		 star_formation/none/star_formation.h star_formation/none/star_formation_struct.h \
 		 star_formation/none/star_formation_io.h star_formation/none/star_formation_iact.h \
 		 star_formation/QLA/star_formation.h star_formation/QLA/star_formation_struct.h \
