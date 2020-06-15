@@ -1085,15 +1085,10 @@ void prepare_file(struct engine* e, const char* fileName,
   const struct gpart* gparts = e->s->gparts;
   const struct spart* sparts = e->s->sparts;
   const struct bpart* bparts = e->s->bparts;
-<<<<<<< HEAD
-  const struct sink* sinks = e->s->sinks.parts;
+  const struct sink* sinks = e->s->sinks;
 
   struct output_options* output_options = e->output_options;
   struct output_list* output_list = e->output_list_snapshots;
-=======
-  const struct sink* sinks = e->s->sinks;
->>>>>>> Sink: update API
-  struct swift_params* params = e->parameter_file;
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const int with_cooling = e->policy & engine_policy_cooling;
   const int with_temperature = e->policy & engine_policy_temperature;
