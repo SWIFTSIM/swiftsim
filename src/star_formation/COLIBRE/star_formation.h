@@ -40,6 +40,13 @@
  * @brief Star formation model used in the COLIBRE model
  */
 
+#define star_formation_need_update_dx_max 0
+
+/**
+ * @file src/star_formation/COLIBRE/star_formation.h
+ * @brief Star formation model used in the COLIBRE model
+ */
+
 /**
  * @brief Functional form of the star formation law
  */
