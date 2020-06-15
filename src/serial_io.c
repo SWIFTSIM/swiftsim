@@ -1410,8 +1410,6 @@ void write_output_serial(struct engine* e,
             error("Particle Type %d not yet supported. Aborting", ptype);
         }
 
-        /* Write everything that is not cancelled */
-
         /* Did the user specify a non-standard default for the entire particle
          * type? */
         const enum compression_levels compression_level_current_default =
@@ -1419,6 +1417,8 @@ void write_output_serial(struct engine* e,
                                              current_selection_name,
                                              (enum part_type)ptype);
 
+        /* Write everything that is not cancelled */
+        int num_fields_written = 0;
         for (int i = 0; i < num_fields; ++i) {
 
           /* Did the user cancel this field? */
@@ -1426,11 +1426,19 @@ void write_output_serial(struct engine* e,
               output_options, current_selection_name, list[i].name,
               (enum part_type)ptype, compression_level_current_default);
 
-          if (should_write)
+          if (should_write) {
             write_array_serial(e, h_grp, fileName, xmfFile, partTypeGroupName,
                                list[i], Nparticles, N_total[ptype], mpi_rank,
                                offset[ptype], internal_units, snapshot_units);
+            num_fields_written++;
+          }
         }
+#ifdef SWIFT_DEBUG_CHECKS
+        if (num_fields_written != numFields[ptype])
+          error(
+              "Wrote %d fields for particle type %s, but expected to write %d.",
+              num_fields_written, part_type_names[ptype], numFields[ptype]);
+#endif
 
         /* Free temporary array */
         if (parts_written) swift_free("parts_written", parts_written);
