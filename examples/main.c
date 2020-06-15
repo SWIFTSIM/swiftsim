@@ -1186,14 +1186,14 @@ int main(int argc, char *argv[]) {
       space_check_cosmology(&s, &cosmo, myrank);
 
     /* Also update the total counts (in case of changes due to replication) */
-    Nbaryons = s.nr_parts + s.nr_sparts + s.nr_bparts + s.sinks.nr_parts;
+    Nbaryons = s.nr_parts + s.nr_sparts + s.nr_bparts + s.nr_sinks;
 #if defined(WITH_MPI)
     N_long[swift_type_gas] = s.nr_parts;
     N_long[swift_type_dark_matter] =
         with_gravity ? s.nr_gparts - Ngpart_background - Nbaryons : 0;
     N_long[swift_type_count] = s.nr_gparts;
     N_long[swift_type_stars] = s.nr_sparts;
-    N_long[swift_type_sink] = s.sinks.nr_parts;
+    N_long[swift_type_sink] = s.nr_sinks;
     N_long[swift_type_black_hole] = s.nr_bparts;
     MPI_Allreduce(&N_long, &N_total, swift_type_count + 1, MPI_LONG_LONG_INT,
                   MPI_SUM, MPI_COMM_WORLD);
@@ -1203,7 +1203,7 @@ int main(int argc, char *argv[]) {
         with_gravity ? s.nr_gparts - Ngpart_background - Nbaryons : 0;
     N_total[swift_type_count] = s.nr_gparts;
     N_total[swift_type_stars] = s.nr_sparts;
-    N_total[swift_type_sink] = s.sinks.nr_parts;
+    N_total[swift_type_sink] = s.nr_sinks;
     N_total[swift_type_black_hole] = s.nr_bparts;
 #endif
 
@@ -1216,7 +1216,7 @@ int main(int argc, char *argv[]) {
               s.cdim[1], s.cdim[2]);
       message("%zi parts in %i cells.", s.nr_parts, s.tot_cells);
       message("%zi gparts in %i cells.", s.nr_gparts, s.tot_cells);
-      message("%zi sinks in %i cells.", s.sinks.nr_parts, s.tot_cells);
+      message("%zi sinks in %i cells.", s.nr_sinks, s.tot_cells);
       message("%zi sparts in %i cells.", s.nr_sparts, s.tot_cells);
       message("%zi bparts in %i cells.", s.nr_bparts, s.tot_cells);
       message("maximum depth is %d.", s.maxdepth);

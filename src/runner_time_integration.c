@@ -709,7 +709,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
           // Loic TODO remove this
           /* Synchronize the time step */
           if (gp->type == swift_type_sink) {
-            struct sink *sink = &e->s->sinks.parts[-gp->id_or_neg_offset];
+            struct sink *sink = &e->s->sinks[-gp->id_or_neg_offset];
             sink->time_bin = gp->time_bin;
           }
 

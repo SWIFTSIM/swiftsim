@@ -761,7 +761,7 @@ void write_output_single(struct engine* e,
   const struct gpart* gparts = e->s->gparts;
   const struct spart* sparts = e->s->sparts;
   const struct bpart* bparts = e->s->bparts;
-  const struct sink* sinks = e->s->sinks.parts;
+  const struct sink* sinks = e->s->sinks;
   struct output_options* output_options = e->output_options;
   struct output_list* output_list = e->output_list_snapshots;
   const int with_cosmology = e->policy & engine_policy_cosmology;
@@ -780,7 +780,7 @@ void write_output_single(struct engine* e,
   const size_t Ntot = e->s->nr_gparts;
   const size_t Ngas = e->s->nr_parts;
   const size_t Nstars = e->s->nr_sparts;
-  const size_t Nsinks = e->s->sinks.nr_parts;
+  const size_t Nsinks = e->s->nr_sinks;
   const size_t Nblackholes = e->s->nr_bparts;
   // const size_t Nbaryons = Ngas + Nstars;
   // const size_t Ndm = Ntot > 0 ? Ntot - Nbaryons : 0;
@@ -798,9 +798,9 @@ void write_output_single(struct engine* e,
       e->s->nr_parts - e->s->nr_inhibited_parts - e->s->nr_extra_parts;
   const size_t Nstars_written =
       e->s->nr_sparts - e->s->nr_inhibited_sparts - e->s->nr_extra_sparts;
-  const size_t Nsinks_written = e->s->sinks.nr_parts -
-                                e->s->sinks.nr_inhibited_parts -
-                                e->s->sinks.nr_extra_parts;
+  const size_t Nsinks_written = e->s->nr_sinks -
+                                e->s->nr_inhibited_sinks -
+                                e->s->nr_extra_sinks;
   const size_t Nblackholes_written =
       e->s->nr_bparts - e->s->nr_inhibited_bparts - e->s->nr_extra_bparts;
   const size_t Nbaryons_written =
