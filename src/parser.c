@@ -1281,7 +1281,12 @@ void parser_struct_restore(const struct swift_params *params, FILE *stream) {
  */
 int parser_get_section_id(const struct swift_params *params, const char *name) {
   for (int section_id = 0; section_id < params->sectionCount; section_id++) {
-    if (!strcmp(params->section[section_id].name, name)) return section_id;
+    /* Get the name of current section, *without* a trailing colon */
+    char section_name[FIELD_BUFFER_SIZE];
+    strcpy(section_name, params->section[section_id].name);
+    section_name[strlen(section_name) - 1] = 0;
+    
+    if (!strcmp(section_name, name)) return section_id;
   }
   return -1;
 }
