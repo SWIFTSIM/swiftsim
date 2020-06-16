@@ -130,7 +130,10 @@ float cooling_get_internalenergy_for_temperature(
         4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
     return exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs * T /
            (hydro_gamma_minus_one * mu_HII);
+#else
+    return -1.f;
 #endif
+
   } else {
 
     /* Convert Hydrogen mass fraction into Hydrogen number density */
@@ -211,6 +214,8 @@ float cooling_get_temperature(const struct phys_const *phys_const,
         4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
     return u_cgs * hydro_gamma_minus_one * mu_HII /
            (exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs);
+#else
+    return -1.f;
 #endif
 
   } else {
