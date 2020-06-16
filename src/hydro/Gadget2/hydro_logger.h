@@ -24,7 +24,8 @@
 /**
  * @brief Initialize the logger.
  *
- * WARNING: this should be done in the same order than #hydro_logger_write_particle.
+ * WARNING: this should be done in the same order than
+ * #hydro_logger_write_particle.
  *
  * @param mask_data Data for each type of mask.
  *
@@ -56,8 +57,8 @@ INLINE static int hydro_logger_init(struct mask_data *mask_data) {
  */
 INLINE static void hydro_logger_prepare_to_write_particle(
     const struct mask_data *masks, const struct part *part,
-    const struct xpart *xpart, const int write_all,
-    size_t *buffer_size, unsigned int *mask) {
+    const struct xpart *xpart, const int write_all, size_t *buffer_size,
+    unsigned int *mask) {
 
   /* Here you can decide your own writing logic */
 
@@ -98,7 +99,7 @@ INLINE static void hydro_logger_prepare_to_write_particle(
  * @return The buffer after the data.
  */
 INLINE static char *hydro_logger_write_particle(
-    const struct mask_data *mask_data, const struct part* p,
+    const struct mask_data *mask_data, const struct part *p,
     const struct xpart *xp, unsigned int *mask, char *buff) {
 #ifdef WITH_LOGGER
 
@@ -117,9 +118,9 @@ INLINE static char *hydro_logger_write_particle(
   /* Write the acceleration. */
   if (logger_should_write_field(mask_data[2], mask, "Accelerations")) {
     float acc[3] = {
-                    p->a_hydro[0] + xp->a_grav[0],
-                    p->a_hydro[1] + xp->a_grav[1],
-                    p->a_hydro[2] + xp->a_grav[2],
+        p->a_hydro[0] + xp->a_grav[0],
+        p->a_hydro[1] + xp->a_grav[1],
+        p->a_hydro[2] + xp->a_grav[2],
     };
     memcpy(buff, acc, 3 * sizeof(float));
     buff += 3 * sizeof(float);
@@ -162,5 +163,4 @@ INLINE static char *hydro_logger_write_particle(
 #endif /* WITH_LOGGER */
 }
 
-
-#endif // SWIFT_GADGET2_HYDRO_LOGGER_H
+#endif  // SWIFT_GADGET2_HYDRO_LOGGER_H

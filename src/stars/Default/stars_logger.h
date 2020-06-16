@@ -19,11 +19,11 @@
 #ifndef SWIFT_DEFAULT_STARS_LOGGER_H
 #define SWIFT_DEFAULT_STARS_LOGGER_H
 
-
 /**
  * @brief Initialize the logger.
  *
- * WARNING: this should be done in the same order than #stars_logger_write_particle.
+ * WARNING: this should be done in the same order than
+ * #stars_logger_write_particle.
  *
  * @param mask_data Data for each type of mask.
  *
@@ -52,8 +52,7 @@ INLINE static int stars_logger_init(struct mask_data *mask_data) {
  */
 INLINE static void stars_logger_prepare_to_write_particle(
     const struct mask_data *masks, const struct spart *spart,
-    const int write_all,
-    size_t *buffer_size, unsigned int *mask) {
+    const int write_all, size_t *buffer_size, unsigned int *mask) {
 
   /* Here you can decide you own writing logic */
 
@@ -87,7 +86,7 @@ INLINE static void stars_logger_prepare_to_write_particle(
  * @return The buffer after the data.
  */
 INLINE static char *stars_logger_write_particle(
-    const struct mask_data *mask_data, const struct spart* sp,
+    const struct mask_data *mask_data, const struct spart *sp,
     unsigned int *mask, char *buff) {
 #ifdef WITH_LOGGER
 
@@ -134,4 +133,4 @@ INLINE static char *stars_logger_write_particle(
 #endif /* WITH_LOGGER */
 }
 
-#endif // SWIFT_DEFAULT_STARS_LOGGER_H
+#endif  // SWIFT_DEFAULT_STARS_LOGGER_H

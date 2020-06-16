@@ -44,7 +44,6 @@ struct mask_data {
   int type;
 };
 
-
 /**
  * @brief Initialize the mask_data with a given field.
  *
@@ -53,7 +52,8 @@ struct mask_data {
  *
  * @return The new mask_data.
  */
-INLINE static struct mask_data logger_add_field_to_logger(char *name, int size) {
+INLINE static struct mask_data logger_add_field_to_logger(char* name,
+                                                          int size) {
   struct mask_data mask;
   /* Copy the fields */
   strcpy(mask.name, name);
@@ -66,16 +66,20 @@ INLINE static struct mask_data logger_add_field_to_logger(char *name, int size) 
 /**
  * @brief Add a given field to the current mask.
  *
- * @param mask_data The mask_data corresponding to the field that we wish to write.
+ * @param mask_data The mask_data corresponding to the field that we wish to
+ * write.
  * @param name The name of the field.
- * @param buffer_size (in) The current size of the future buffer. (out) The updated size.
+ * @param buffer_size (in) The current size of the future buffer. (out) The
+ * updated size.
  *
  * @return The mask of the current field.
  */
-INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data, char *name, size_t *buffer_size) {
+INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
+                                              char* name, size_t* buffer_size) {
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {
-    error("Mismatch between the requested field (%s) and the mask (%s)", name, mask_data.name);
+    error("Mismatch between the requested field (%s) and the mask (%s)", name,
+          mask_data.name);
   }
 
   *buffer_size += mask_data.size;
@@ -83,16 +87,19 @@ INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data, char *
 }
 
 /**
- * @brief Check if a field should be written according to the mask set in #logger_add_field_to_mask.
+ * @brief Check if a field should be written according to the mask set in
+ * #logger_add_field_to_mask.
  *
  * @param mask_data The mask_data corresponding to the current field.
  * @param name The name of the field that we are checking.
  * @param mask The mask used for the current record.
  */
-INLINE static int logger_should_write_field(struct mask_data mask_data, unsigned int *mask, char *name) {
+INLINE static int logger_should_write_field(struct mask_data mask_data,
+                                            unsigned int* mask, char* name) {
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {
-    error("Mismatch between the requested field (%s) and the mask (%s)", name, mask_data.name);
+    error("Mismatch between the requested field (%s) and the mask (%s)", name,
+          mask_data.name);
   }
 
   const int test = mask_data.mask & *mask;

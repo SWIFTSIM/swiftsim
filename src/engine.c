@@ -565,9 +565,9 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
           logger_pack_flags_and_data(logger_flag_mpi_exit, node_id);
 
       /* Log the particle when leaving a rank. */
-      logger_log_part(
-          e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
-          e, /* log_all */ 1, logger_flag);
+      logger_log_part(e->logger, &s->parts[offset_parts + k],
+                      &s->xparts[offset_parts + k], e, /* log_all */ 1,
+                      logger_flag);
     }
 #endif
   }
@@ -935,8 +935,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
         struct gpart *gparts = &s->gparts[offset_gparts + count_gparts];
 
         /* Log the gas particles */
-        logger_log_parts(
-                         e->logger, parts, xparts, prox->nr_parts_in, e,
+        logger_log_parts(e->logger, parts, xparts, prox->nr_parts_in, e,
                          /* log_all */ 1, flag);
 
         /* Log the stellar particles */

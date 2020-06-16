@@ -80,7 +80,8 @@ char logger_file_format[logger_format_size] = "SWIFT_LOGGER";
  * @return updated buff
  */
 char *logger_write_record_header(char *buff, const unsigned int *mask,
-                                const size_t *offset, const size_t offset_new) {
+                                 const size_t *offset,
+                                 const size_t offset_new) {
   /* write mask. */
   memcpy(buff, mask, logger_mask_size);
   buff += logger_mask_size;
@@ -171,13 +172,15 @@ void logger_copy_part_fields(const struct logger_writer *log,
   buff = logger_write_record_header(buff, &mask, offset, offset_new);
 
   /* Write the hydro fields */
-  buff = hydro_logger_write_particle(log->mask_data_pointers.hydro, p, xp, &mask, buff);
+  buff = hydro_logger_write_particle(log->mask_data_pointers.hydro, p, xp,
+                                     &mask, buff);
 
   /* Special flags */
   const int logger_special_flags = log->logger_count_mask - 2;
 
   if (mask & log->logger_mask_data[logger_special_flags].mask) {
-    memcpy(buff, &special_flags, log->logger_mask_data[logger_special_flags].size);
+    memcpy(buff, &special_flags,
+           log->logger_mask_data[logger_special_flags].size);
     buff += log->logger_mask_data[logger_special_flags].size;
     mask &= ~log->logger_mask_data[logger_special_flags].mask;
   }
@@ -200,12 +203,11 @@ void logger_copy_part_fields(const struct logger_writer *log,
  * @param special_flags The value of the special flag.
  */
 void logger_log_part(struct logger_writer *log, const struct part *p,
-                     struct xpart *xp, const struct engine *e, const int log_all,
-                     const uint32_t special_flags) {
+                     struct xpart *xp, const struct engine *e,
+                     const int log_all, const uint32_t special_flags) {
 
   logger_log_parts(log, p, xp, /* count */ 1, e, log_all, special_flags);
 }
-
 
 /**
  * @brief Dump a group of #part to the log.
@@ -224,11 +226,11 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
-  for(int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++) {
     unsigned int mask = 0;
     size_t tmp = 0;
-    hydro_logger_prepare_to_write_particle(
-      log->mask_data_pointers.hydro, &p[i], &xp[i], log_all, &tmp, &mask);
+    hydro_logger_prepare_to_write_particle(log->mask_data_pointers.hydro, &p[i],
+                                           &xp[i], log_all, &tmp, &mask);
     size_total += tmp + logger_header_bytes;
   }
 
@@ -241,8 +243,8 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    hydro_logger_prepare_to_write_particle(
-      log->mask_data_pointers.hydro, &p[i], &xp[i], log_all, &size, &mask);
+    hydro_logger_prepare_to_write_particle(log->mask_data_pointers.hydro, &p[i],
+                                           &xp[i], log_all, &size, &mask);
     size += logger_header_bytes;
 
     if (special_flags != 0) {
@@ -250,8 +252,9 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     }
 
     /* Copy everything into the buffer */
-    logger_copy_part_fields(log, &p[i], &xp[i], e, mask, &xp[i].logger_data.last_offset,
-                            offset_new, buff, special_flags);
+    logger_copy_part_fields(log, &p[i], &xp[i], e, mask,
+                            &xp[i].logger_data.last_offset, offset_new, buff,
+                            special_flags);
 
     /* Update the pointers */
     xp[i].logger_data.last_offset = offset_new;
@@ -274,11 +277,10 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
  * @param special_flags The data for the special flags.
  */
 void logger_copy_spart_fields(const struct logger_writer *log,
-                              const struct spart *sp,
-                              const struct engine *e, unsigned int mask,
-                              size_t *offset, size_t offset_new, char *buff,
+                              const struct spart *sp, const struct engine *e,
+                              unsigned int mask, size_t *offset,
+                              size_t offset_new, char *buff,
                               const uint32_t special_flags) {
-
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask == 0) {
@@ -290,13 +292,15 @@ void logger_copy_spart_fields(const struct logger_writer *log,
   buff = logger_write_record_header(buff, &mask, offset, offset_new);
 
   /* Write the stellar fields */
-  buff = stars_logger_write_particle(log->mask_data_pointers.stars, sp, &mask, buff);
+  buff = stars_logger_write_particle(log->mask_data_pointers.stars, sp, &mask,
+                                     buff);
 
   /* Special flags */
   const int logger_special_flags = log->logger_count_mask - 2;
 
   if (mask & log->logger_mask_data[logger_special_flags].mask) {
-    memcpy(buff, &special_flags, log->logger_mask_data[logger_special_flags].size);
+    memcpy(buff, &special_flags,
+           log->logger_mask_data[logger_special_flags].size);
     buff += log->logger_mask_data[logger_special_flags].size;
     mask &= ~log->logger_mask_data[logger_special_flags].mask;
   }
@@ -318,8 +322,8 @@ void logger_copy_spart_fields(const struct logger_writer *log,
  * @param special_flags The value of the special flag.
  */
 void logger_log_spart(struct logger_writer *log, struct spart *sp,
-                      const struct engine *e,
-                      const int log_all, const uint32_t special_flags) {
+                      const struct engine *e, const int log_all,
+                      const uint32_t special_flags) {
 
   logger_log_sparts(log, sp, /* count */ 1, e, log_all, special_flags);
 }
@@ -334,17 +338,17 @@ void logger_log_spart(struct logger_writer *log, struct spart *sp,
  * @param count The number of particle to dump.
  * @param special_flags The value of the special flags.
  */
-void logger_log_sparts(struct logger_writer *log, struct spart *sp,
-                       int count, const struct engine *e,
-                       const int log_all, const uint32_t special_flags) {
+void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
+                       const struct engine *e, const int log_all,
+                       const uint32_t special_flags) {
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
-  for(int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++) {
     unsigned int mask = 0;
     size_t tmp = 0;
-    stars_logger_prepare_to_write_particle(
-      log->mask_data_pointers.stars, &sp[i], log_all, &tmp, &mask);
+    stars_logger_prepare_to_write_particle(log->mask_data_pointers.stars,
+                                           &sp[i], log_all, &tmp, &mask);
     size_total += tmp + logger_header_bytes;
   }
 
@@ -356,8 +360,8 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    stars_logger_prepare_to_write_particle(
-      log->mask_data_pointers.stars, &sp[i], log_all, &size, &mask);
+    stars_logger_prepare_to_write_particle(log->mask_data_pointers.stars,
+                                           &sp[i], log_all, &size, &mask);
     size += logger_header_bytes;
 
     if (special_flags != 0) {
@@ -365,8 +369,9 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp,
     }
 
     /* Copy everything into the buffer */
-    logger_copy_spart_fields(log, &sp[i], e, mask, &sp[i].logger_data.last_offset,
-                             offset_new, buff, special_flags);
+    logger_copy_spart_fields(log, &sp[i], e, mask,
+                             &sp[i].logger_data.last_offset, offset_new, buff,
+                             special_flags);
 
     /* Update the pointers */
     sp[i].logger_data.last_offset = offset_new;
@@ -388,11 +393,11 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp,
  * @param buff The buffer to use when writing.
  * @param special_flags The data of the special flag.
  */
-void logger_copy_gpart_fields(
-    const struct logger_writer *log, const struct gpart *gp,
-    const struct engine *e, unsigned int mask,
-    size_t *offset, size_t offset_new, char *buff,
-    const uint32_t special_flags) {
+void logger_copy_gpart_fields(const struct logger_writer *log,
+                              const struct gpart *gp, const struct engine *e,
+                              unsigned int mask, size_t *offset,
+                              size_t offset_new, char *buff,
+                              const uint32_t special_flags) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask == 0) {
@@ -404,12 +409,14 @@ void logger_copy_gpart_fields(
   buff = logger_write_record_header(buff, &mask, offset, offset_new);
 
   /* Write the hydro fields */
-  buff = gravity_logger_write_particle(log->mask_data_pointers.gravity, gp, &mask, buff);
+  buff = gravity_logger_write_particle(log->mask_data_pointers.gravity, gp,
+                                       &mask, buff);
 
   /* Special flags */
   const int logger_special_flags = log->logger_count_mask - 2;
   if (mask & log->logger_mask_data[logger_special_flags].mask) {
-    memcpy(buff, &special_flags, log->logger_mask_data[logger_special_flags].size);
+    memcpy(buff, &special_flags,
+           log->logger_mask_data[logger_special_flags].size);
     buff += log->logger_mask_data[logger_special_flags].size;
     mask &= ~log->logger_mask_data[logger_special_flags].mask;
   }
@@ -431,8 +438,8 @@ void logger_copy_gpart_fields(
  * @param special_flags The value of the special flags.
  */
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
-                      const struct engine *e,
-                      const int log_all, const uint32_t special_flags) {
+                      const struct engine *e, const int log_all,
+                      const uint32_t special_flags) {
   logger_log_gparts(log, p, /* count */ 1, e, log_all, special_flags);
 }
 
@@ -447,19 +454,19 @@ void logger_log_gpart(struct logger_writer *log, struct gpart *p,
  * @param special_flags The value of the special flags.
  */
 void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
-                       const struct engine *e,
-                       const int log_all, const uint32_t special_flags) {
+                       const struct engine *e, const int log_all,
+                       const uint32_t special_flags) {
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
-  for(int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++) {
     /* Log only the dark matter */
     if (p[i].type != swift_type_dark_matter) continue;
 
     unsigned int mask = 0;
     size_t tmp = 0;
-    gravity_logger_prepare_to_write_particle(
-      log->mask_data_pointers.gravity, &p[i], log_all, &tmp, &mask);
+    gravity_logger_prepare_to_write_particle(log->mask_data_pointers.gravity,
+                                             &p[i], log_all, &tmp, &mask);
     size_total += tmp + logger_header_bytes;
   }
 
@@ -474,8 +481,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    gravity_logger_prepare_to_write_particle(
-      log->mask_data_pointers.gravity, &p[i], log_all, &size, &mask);
+    gravity_logger_prepare_to_write_particle(log->mask_data_pointers.gravity,
+                                             &p[i], log_all, &size, &mask);
     size += logger_header_bytes;
 
     if (special_flags != 0) {
@@ -509,7 +516,8 @@ void logger_log_timestamp(struct logger_writer *log, integertime_t timestamp,
   const int logger_timestamp = log->logger_count_mask - 1;
 
   /* Start by computing the size of the message. */
-  const int size = log->logger_mask_data[logger_timestamp].size + logger_header_bytes;
+  const int size =
+      log->logger_mask_data[logger_timestamp].size + logger_header_bytes;
 
   /* Allocate a chunk of memory in the dump of the right size. */
   size_t offset_new;
@@ -587,7 +595,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   /* Get the policies */
   const int with_hydro = e->policy & engine_policy_hydro;
   const int with_grav = (e->policy & engine_policy_self_gravity) ||
-    (e->policy & engine_policy_external_gravity);
+                        (e->policy & engine_policy_external_gravity);
   const int with_stars = e->policy & engine_policy_stars;
 
   struct mask_data list[100];
@@ -642,8 +650,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
 
   /* The next fields must be the two last one. */
   /* Add the special flags (written manually => no need of offset) */
-  list[num_fields] =
-      logger_add_field_to_logger("SpecialFlags", sizeof(int));
+  list[num_fields] = logger_add_field_to_logger("SpecialFlags", sizeof(int));
   num_fields += 1;
 
   /* Add the timestamp */
@@ -693,13 +700,16 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
 
   /* Update the pointers */
   if (log->mask_data_pointers.hydro != NULL) {
-    log->mask_data_pointers.hydro = log->logger_mask_data + (log->mask_data_pointers.hydro - list);
+    log->mask_data_pointers.hydro =
+        log->logger_mask_data + (log->mask_data_pointers.hydro - list);
   }
   if (log->mask_data_pointers.stars != NULL) {
-    log->mask_data_pointers.stars = log->logger_mask_data + (log->mask_data_pointers.stars - list);
+    log->mask_data_pointers.stars =
+        log->logger_mask_data + (log->mask_data_pointers.stars - list);
   }
   if (log->mask_data_pointers.gravity != NULL) {
-    log->mask_data_pointers.gravity = log->logger_mask_data + (log->mask_data_pointers.gravity - list);
+    log->mask_data_pointers.gravity =
+        log->logger_mask_data + (log->mask_data_pointers.gravity - list);
   }
 
   /* Set the counter */
@@ -707,10 +717,9 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   message("The logger contains the following masks:");
-  for(int i = 0; i < log->logger_count_mask; i++) {
-    message("%20s:\t mask=%03u\t size=%i",
-            log->logger_mask_data[i].name, log->logger_mask_data[i].mask,
-            log->logger_mask_data[i].size);
+  for (int i = 0; i < log->logger_count_mask; i++) {
+    message("%20s:\t mask=%03u\t size=%i", log->logger_mask_data[i].name,
+            log->logger_mask_data[i].mask, log->logger_mask_data[i].size);
   }
 #endif
 }
@@ -901,16 +910,13 @@ int logger_read_part(const struct logger_writer *log, struct part *p,
       if (strcmp("Coordinates", name) == 0) {
         memcpy(p->x, buff, 3 * sizeof(double));
         buff += 3 * sizeof(double);
-      }
-      else if (strcmp("Velocities", name) == 0) {
+      } else if (strcmp("Velocities", name) == 0) {
         memcpy(p->v, buff, 3 * sizeof(float));
         buff += 3 * sizeof(float);
-      }
-      else if (strcmp("Accelerations", name) == 0) {
+      } else if (strcmp("Accelerations", name) == 0) {
         memcpy(p->a_hydro, buff, 3 * sizeof(float));
         buff += 3 * sizeof(float);
-      }
-      else if (strcmp("SmoothingLengths", name) == 0) {
+      } else if (strcmp("SmoothingLengths", name) == 0) {
         memcpy(&p->h, buff, sizeof(float));
         buff += sizeof(float);
       }
@@ -918,16 +924,13 @@ int logger_read_part(const struct logger_writer *log, struct part *p,
       else if (strcmp("Entropies", name) == 0) {
         memcpy(&p->entropy, buff, sizeof(float));
         buff += sizeof(float);
-      }
-      else if (strcmp("Masses", name) == 0) {
+      } else if (strcmp("Masses", name) == 0) {
         memcpy(&p->mass, buff, sizeof(float));
         buff += sizeof(float);
-      }
-      else if (strcmp("Densities", name) == 0) {
+      } else if (strcmp("Densities", name) == 0) {
         memcpy(&p->rho, buff, sizeof(float));
         buff += sizeof(float);
-      }
-      else if (strcmp("ParticleIDs", name) == 0) {
+      } else if (strcmp("ParticleIDs", name) == 0) {
         memcpy(&p->id, buff, sizeof(long long));
         buff += sizeof(long long);
       }
@@ -952,7 +955,8 @@ int logger_read_part(const struct logger_writer *log, struct part *p,
  *
  * @return The mask containing the values read.
  */
-int logger_read_gpart(const struct logger_writer *log, struct gpart *p, size_t *offset, const char *buff) {
+int logger_read_gpart(const struct logger_writer *log, struct gpart *p,
+                      size_t *offset, const char *buff) {
 
   /* Jump to the offset. */
   buff = &buff[*offset];
@@ -970,24 +974,19 @@ int logger_read_gpart(const struct logger_writer *log, struct gpart *p, size_t *
       if (strcmp("Coordinates", name) == 0) {
         memcpy(p->x, buff, 3 * sizeof(double));
         buff += 3 * sizeof(double);
-      }
-      else if (strcmp("Velocities", name) == 0) {
+      } else if (strcmp("Velocities", name) == 0) {
         memcpy(p->v_full, buff, 3 * sizeof(float));
         buff += 3 * sizeof(float);
-      }
-      else if (strcmp("Accelerations", name) == 0) {
+      } else if (strcmp("Accelerations", name) == 0) {
         memcpy(p->a_grav, buff, 3 * sizeof(float));
         buff += 3 * sizeof(float);
-      }
-      else if (strcmp("ParticleIDs", name) == 0) {
+      } else if (strcmp("ParticleIDs", name) == 0) {
         memcpy(&p->id_or_neg_offset, buff, sizeof(long long));
         buff += sizeof(long long);
-      }
-      else if (strcmp("Masses", name) == 0) {
+      } else if (strcmp("Masses", name) == 0) {
         memcpy(&p->mass, buff, sizeof(float));
         buff += sizeof(float);
-      }
-      else {
+      } else {
         error("Field '%s' not found", name);
       }
     }
@@ -1009,9 +1008,8 @@ int logger_read_gpart(const struct logger_writer *log, struct gpart *p, size_t *
  *
  * @return The mask containing the values read.
  */
-int logger_read_timestamp(const struct logger_writer *log,
-                          integertime_t *t, double *time,
-                          size_t *offset, const char *buff) {
+int logger_read_timestamp(const struct logger_writer *log, integertime_t *t,
+                          double *time, size_t *offset, const char *buff) {
 
   /* Jump to the offset. */
   buff = &buff[*offset];
@@ -1052,9 +1050,9 @@ void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
                        "logger", "logger");
 
   /* Write the masks */
-  restart_write_blocks((void *) log->logger_mask_data,
-                       sizeof(struct mask_data), log->logger_count_mask, stream,
-                       "logger_masks", "logger_masks");
+  restart_write_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
+                       log->logger_count_mask, stream, "logger_masks",
+                       "logger_masks");
 }
 
 /**
@@ -1070,12 +1068,11 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
                       NULL, "logger");
 
   /* Read the masks */
-  log->logger_mask_data = (struct mask_data *) malloc(
-    sizeof(struct mask_data) * log->logger_count_mask);
+  log->logger_mask_data = (struct mask_data *)malloc(sizeof(struct mask_data) *
+                                                     log->logger_count_mask);
 
-  restart_read_blocks((void *) log->logger_mask_data, sizeof(struct mask_data),
-                      log->logger_count_mask,
-                      stream, NULL, "logger_masks");
+  restart_read_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
+                      log->logger_count_mask, stream, NULL, "logger_masks");
 
   /* generate dump filename */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
