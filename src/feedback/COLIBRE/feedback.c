@@ -669,7 +669,7 @@ INLINE static void evolve_CEJSN_stochastic(
     const float log10_min_mass, const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr, float metallicity) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -677,7 +677,7 @@ INLINE static void evolve_CEJSN_stochastic(
 #endif
 
   /* Here we calculate for how long collapsar events will take place */
-  const float Z = sp->chemistry_data.metal_mass_fraction_total;
+  const float Z = metallicity;
 
   /* Abort early if the star is clearly too old or clearly too young */
   if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
@@ -762,7 +762,7 @@ INLINE static void evolve_collapsar_stochastic(
     const float log10_min_mass, const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr, float metallicity) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -770,7 +770,7 @@ INLINE static void evolve_collapsar_stochastic(
 #endif
 
   /* Here we calculate for how long collapsar events will take place */
-  float Z = sp->chemistry_data.metal_mass_fraction_total;
+  float Z = metallicity;
   const float collapsar_max_mass = exp10f(props->log10_collapsar_max_mass_msun);
   const float collapsar_min_mass = exp10f(props->log10_collapsar_min_mass_msun);
   /* Lifetime of 100 Msun star (max mass allowed for collapsar) */
@@ -781,7 +781,7 @@ INLINE static void evolve_collapsar_stochastic(
       lifetime_in_Gyr(collapsar_min_mass, Z, props);
   /* Range over which the collapsars are sampled */
   float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
-
+    
   /* We abort early if the star is clearly too old or clearly too young */
   /* If stars less massive than 10 Msun have exploded, do nothing */
   if (log10_max_mass < props->log10_collapsar_min_mass_msun) return;  // no overlap
@@ -1678,11 +1678,11 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     evolve_CEJSN_stochastic(log10_min_dying_mass_Msun,
                             log10_max_dying_mass_Msun, feedback_props, sp,
                             star_age_Gyr, dt_Gyr, ti_begin, cosmo,
-                            stellar_evolution_age_cut_Gyr);
+                            stellar_evolution_age_cut_Gyr, Z);
     evolve_collapsar_stochastic(log10_min_dying_mass_Msun,
                                 log10_max_dying_mass_Msun, feedback_props, sp,
                                 star_age_Gyr, dt_Gyr, ti_begin, cosmo,
-                                stellar_evolution_age_cut_Gyr);
+                                stellar_evolution_age_cut_Gyr, Z);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
