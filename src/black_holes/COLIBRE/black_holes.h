@@ -87,6 +87,9 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->swallowed_angular_momentum[0] = 0.f;
   bp->swallowed_angular_momentum[1] = 0.f;
   bp->swallowed_angular_momentum[2] = 0.f;
+  bp->accreted_angular_momentum[0] = 0.f;
+  bp->accreted_angular_momentum[1] = 0.f;
+  bp->accreted_angular_momentum[2] = 0.f;
 
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 }
@@ -112,9 +115,9 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->velocity_gas[0] = 0.f;
   bp->velocity_gas[1] = 0.f;
   bp->velocity_gas[2] = 0.f;
-  bp->circular_velocity_gas[0] = 0.f;
-  bp->circular_velocity_gas[1] = 0.f;
-  bp->circular_velocity_gas[2] = 0.f;
+  bp->spec_angular_momentum_gas[0] = 0.f;
+  bp->spec_angular_momentum_gas[1] = 0.f;
+  bp->spec_angular_momentum_gas[2] = 0.f;
   bp->curl_v_gas[0] = 0.f;
   bp->curl_v_gas[1] = 0.f;
   bp->curl_v_gas[2] = 0.f;
@@ -128,6 +131,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.potential = FLT_MAX;
   bp->accretion_rate = 0.f; /* Optionally accumulated ngb-by-ngb */
   bp->f_visc = FLT_MAX;
+  bp->mass_at_start_of_step = bp->mass; /* bp->mass may grow in nibbling mode */
 }
 
 /**
@@ -232,17 +236,20 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   bp->velocity_gas[1] *= h_inv_dim * rho_inv;
   bp->velocity_gas[2] *= h_inv_dim * rho_inv;
   bp->velocity_dispersion_gas *= h_inv_dim * rho_inv;
-
-  /* ... and for the circular velocity, convert from specifc angular
-   *     momentum to circular velocity at the smoothing radius (extra h_inv) */
-  bp->circular_velocity_gas[0] *= h_inv_dim_plus_one * rho_inv;
-  bp->circular_velocity_gas[1] *= h_inv_dim_plus_one * rho_inv;
-  bp->circular_velocity_gas[2] *= h_inv_dim_plus_one * rho_inv;
+  bp->spec_angular_momentum_gas[0] *= h_inv_dim * rho_inv;
+  bp->spec_angular_momentum_gas[1] *= h_inv_dim * rho_inv;
+  bp->spec_angular_momentum_gas[2] *= h_inv_dim * rho_inv;
 
   /* ... and for the curl, we also need to divide by an extra h factor */
   bp->curl_v_gas[0] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[1] *= h_inv_dim_plus_one * rho_inv;
   bp->curl_v_gas[2] *= h_inv_dim_plus_one * rho_inv;
+
+  /* Calculate circular velocity at the smoothing radius from specific
+   * angular momentum (extra h_inv) */
+  bp->circular_velocity_gas[0] = bp->spec_angular_momentum_gas[0] * h_inv;
+  bp->circular_velocity_gas[1] = bp->spec_angular_momentum_gas[1] * h_inv;
+  bp->circular_velocity_gas[2] = bp->spec_angular_momentum_gas[2] * h_inv;
 
   /* Calculate (actual) gas velocity dispersion. Currently, the variable
    * 'velocity_dispersion_gas' holds <v^2> instead. */
@@ -431,6 +438,11 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
   /* Add up all the gas particles we swallowed */
   bpi->number_of_gas_swallows += bpj->number_of_gas_swallows;
 
+  /* Add the subgrid angular momentum that we swallowed */
+  bpi->accreted_angular_momentum[0] += bpj->accreted_angular_momentum[0];
+  bpi->accreted_angular_momentum[1] += bpj->accreted_angular_momentum[1];
+  bpi->accreted_angular_momentum[2] += bpj->accreted_angular_momentum[2];
+
   /* We had another merger */
   bpi->number_of_mergers++;
 }
@@ -614,6 +626,24 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   bp->subgrid_mass += mass_rate * dt;
   bp->total_accreted_mass += mass_rate * dt;
   bp->energy_reservoir += luminosity * props->epsilon_f * dt;
+
+  if (props->use_nibbling && bp->subgrid_mass < bp->mass) {
+    /* In this case, the BH is still accreting from its (assumed) subgrid gas
+     * mass reservoir left over when it was formed. There is some loss in this
+     * due to radiative losses, so we must decrease the particle mass
+     * in proprtion to its current accretion rate. We do not account for this
+     * in the swallowing approach, however. */
+    bp->mass -= epsilon_r * accr_rate * dt;
+  }
+
+  /* Increase the subgrid angular momentum according to what we accreted
+   * (already in physical units, a factors from velocity and radius cancel) */
+  bp->accreted_angular_momentum[0] +=
+      bp->spec_angular_momentum_gas[0] * mass_rate * dt;
+  bp->accreted_angular_momentum[1] +=
+      bp->spec_angular_momentum_gas[1] * mass_rate * dt;
+  bp->accreted_angular_momentum[2] +=
+      bp->spec_angular_momentum_gas[2] * mass_rate * dt;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass

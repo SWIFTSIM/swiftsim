@@ -161,7 +161,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 29;
+  *num_fields = 31;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -351,6 +351,18 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "GasCurlVelocities", FLOAT, 3, UNIT_CONV_SPEED, 0.f, bparts,
       convert_bpart_gas_velocity_curl,
       "Velocity curl (3D) of the gas particles around the black holes.");
+
+  list[29] = io_make_output_field(
+      "AccretedAngularMomenta", FLOAT, 3, UNIT_CONV_ANGULAR_MOMENTUM, 0.f,
+      bparts, accreted_angular_momentum,
+      "Physical angular momenta that the black holes have accumulated through "
+      "subgrid accretion.");
+
+  list[30] = io_make_output_field(
+      "NumberOfGasNeighbours", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      num_ngbs,
+      "Integer number of gas neighbour particles within the black hole "
+      "kernels.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
