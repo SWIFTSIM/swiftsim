@@ -2310,8 +2310,7 @@ void io_check_output_fields(struct output_options* output_options,
     section_name[strlen(section_name) - 1] = 0;
 
     /* Is this the `Default` section? */
-    if (!strcmp(section_name, select_output_header_default_name))
-      have_default = 1;
+    have_default = strcmp(section_name, select_output_header_default_name) == 0;
 
     /* How many fields should each ptype write by default? */
     int ptype_num_fields_to_write[swift_type_count];
@@ -2390,15 +2389,18 @@ void io_check_output_fields(struct output_options* output_options,
 
       int value_id = 0;
       for (value_id = 0; value_id < compression_level_count; value_id++)
-        if (!strcmp(field_value, compression_level_names[value_id])) break;
+        if (strcmp(field_value, compression_level_names[value_id]) != 0) break;
+
       if (value_id == compression_level_count)
         error("Choice of output selection parameter %s ('%s') is invalid.",
               field_name, field_value);
 
       /* Adjust number of fields to be written for param_ptype, if this field's
        * status is different from default */
-      const int is_on = strcmp(
-          field_value, compression_level_names[compression_do_not_write]);
+      const int is_on =
+          strcmp(field_value,
+                 compression_level_names[compression_do_not_write]) != 0;
+
       if (is_on && !ptype_default_write_status[param_ptype]) {
         /* Particle should be written even though default is off:
          * increase field count */
@@ -2639,7 +2641,7 @@ int get_param_ptype(const char* name) {
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
     const int ptype_name_len = strlen(part_type_names[ptype]);
     if (name_len >= ptype_name_len &&
-        !strcmp(&name[name_len - ptype_name_len], part_type_names[ptype]))
+        strcmp(&name[name_len - ptype_name_len], part_type_names[ptype]) != 0)
       return ptype;
   }
 

@@ -1285,7 +1285,7 @@ int parser_get_section_id(const struct swift_params *params, const char *name) {
     char section_name[FIELD_BUFFER_SIZE];
     strcpy(section_name, params->section[section_id].name);
     section_name[strlen(section_name) - 1] = 0;
-    
+
     if (!strcmp(section_name, name)) return section_id;
   }
   return -1;
