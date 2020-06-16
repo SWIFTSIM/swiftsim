@@ -379,8 +379,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
                 const float dx_part = sqrtf(dx2_part);
                 const float dx_sort = sqrtf(dx2_sort);
 
-                /* Note: no need to update quantities further up the tree as this task is always
-                   called at the top-level */
+                /* Note: no need to update quantities further up the tree as
+                   this task is always called at the top-level */
                 c->hydro.dx_max_part = max(c->hydro.dx_max_part, dx_part);
                 c->hydro.dx_max_sort = max(c->hydro.dx_max_sort, dx_sort);
               }
