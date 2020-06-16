@@ -197,9 +197,12 @@ void test_log_timestamps(struct logger_writer *log) {
   size_t offset_old = offset;
   t = 0;
   time = 0;
-  int mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
-         time, offset_old, mask);
+  int mask =
+      logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
+  printf(
+      "Recovered timestamp %020llu with time %g at offset %#016zx with mask "
+      "%#04x.\n",
+      t, time, offset_old, mask);
   if (t != 30) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();
@@ -213,8 +216,10 @@ void test_log_timestamps(struct logger_writer *log) {
   t = 0;
   time = 0;
   mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
-         time, offset_old, mask);
+  printf(
+      "Recovered timestamp %020llu with time %g at offset %#016zx with mask "
+      "%#04x.\n",
+      t, time, offset_old, mask);
   if (t != 20) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();
@@ -228,8 +233,10 @@ void test_log_timestamps(struct logger_writer *log) {
   t = 0;
   time = 0;
   mask = logger_read_timestamp(log, &t, &time, &offset, (const char *)d->data);
-  printf("Recovered timestamp %020llu with time %g at offset %#016zx with mask %#04x.\n", t,
-         time, offset_old, mask);
+  printf(
+      "Recovered timestamp %020llu with time %g at offset %#016zx with mask "
+      "%#04x.\n",
+      t, time, offset_old, mask);
   if (t != 10) {
     printf("FAIL: could not recover correct timestamp.\n");
     abort();

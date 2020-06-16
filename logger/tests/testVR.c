@@ -94,8 +94,7 @@ int main(int argc, char *argv[]) {
   array.hydro.parts = particles;
   array.hydro.n = n_tot;
 
-  logger_reader_read_all_particles(&reader, begin, logger_reader_const, &array,
-                                   n_tot);
+  logger_reader_read_all_particles(&reader, begin, logger_reader_const, &array);
 
   /* Loop over time for a single particle */
   size_t id = 0;
@@ -112,7 +111,7 @@ int main(int argc, char *argv[]) {
     message("Particle %zi: %f %f %f %f", id, p.x[0], p.x[1], p.x[2], p.time);
 
     /* Now you can interpolate */
-    logger_particle_interpolate(&p, &n, t);
+    p = logger_particle_interpolate(&p, &n, t);
   }
 
   /* Cleanup the memory */

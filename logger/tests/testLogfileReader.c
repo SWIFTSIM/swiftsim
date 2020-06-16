@@ -64,8 +64,8 @@ void check_data(struct logger_reader *reader, struct part *parts,
   /* Number of particle found during this time step. */
   int count = 0;
   /* Set it to an impossible value in order to flag it. */
-  const long long id_flag = 5 * number_parts;
-  long long previous_id = id_flag;
+  const uint64_t id_flag = 5 * number_parts;
+  uint64_t previous_id = id_flag;
 
   /* Loop over each record. */
   for (size_t offset =
@@ -89,7 +89,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
       }
 
       /* Get the corresponding particle */
-      if (lp.id >= number_parts) error("Wrong id %lli", lp.id);
+      if (lp.id >= number_parts) error("Wrong id %li", lp.id);
 
       struct part *p = &parts[lp.id];
 
