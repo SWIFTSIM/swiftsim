@@ -339,7 +339,6 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
 
   const struct stars_props* star_props = e->stars_properties;
   const double const_G = e->physical_constants->const_newton_G;
-  const struct unit_system *us = e->internal_units;
 
   /* Gas properties */
   const double rho = hydro_get_physical_density(p, cosmo);
