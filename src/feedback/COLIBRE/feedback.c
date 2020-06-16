@@ -609,7 +609,7 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-    
+
   /* First we check that the amount of time since star was formed
    is larger than NSM_t_delay_Gyr = 30Myr */
   if (star_age_Gyr < 0.03) return;
@@ -665,8 +665,8 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
  */
-INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
-                                           const float log10_max_mass,
+INLINE static void evolve_CEJSN_stochastic(
+    const float log10_min_mass, const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
     const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
@@ -675,46 +675,43 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
-    
-    /* Here we calculate for how long collapsar events will take place */
-    float Z = sp->chemistry_data.metal_mass_fraction_total;
-    const float CEJSN_max_mass = exp10f(props->log10_SNII_max_mass_msun);
-    const float CEJSN_min_mass = exp10f(props->log10_SNII_min_mass_msun);
-    /* Lifetime of 100 Msun star (max mass allowed for core-collapse SN) */
-    const float lifetime_Gyr_max_mass = lifetime_in_Gyr(CEJSN_max_mass, Z, props);
-    /* Lifetime of 10 Msun star (min mass allowed for core-collapse SN) */
-    const float lifetime_Gyr_min_mass = lifetime_in_Gyr(CEJSN_min_mass, Z, props);
-    float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
-    
-    /* If stars less massive than 8 Msun have exploded, do nothing */
-    if ( log10_max_mass < props->log10_SNII_min_mass_msun) return;  // no overlap
-    
-    if (log10_min_mass < props->log10_SNII_min_mass_msun && log10_max_mass > props->log10_SNII_min_mass_msun) { // some overlap
-        
-        /* modify dt_Gyr to be exactly the time from the start of the time-step
-         * to the time at which mass==8 */
-        const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
-        dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
-        
-    } // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
-    
-    
-    /* If stars more massive than 100 Msun have exploded, do nothing */
-    if ( log10_min_mass > props->log10_SNII_max_mass_msun) return;  // no overlap
-    
-    if (log10_min_mass < props->log10_SNII_max_mass_msun && log10_max_mass > props->log10_SNII_max_mass_msun) { // again some overlap
-        
-        /* modify dt_Gyr to be exactly the time since the star has mass=100 till the end of time step */
-        const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
-        dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
-        
-    } // Otherwise i.e. min_mass > 8 & max_mass < 100 is the normal case
-    
-    /* Compute probability based on dt_Gyr / lifetime */
+
+  /* Here we calculate for how long collapsar events will take place */
+  const float Z = sp->chemistry_data.metal_mass_fraction_total;
+
+  /* Abort early if the star is clearly too old or clearly too young */
+  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
+  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
+
+  /* Compute the lifetime of stars with the min and max SNII masses
+   * and metallicities */
+  const float CEJSN_max_mass = exp10f(props->log10_SNII_max_mass_msun);
+  const float CEJSN_min_mass = exp10f(props->log10_SNII_min_mass_msun);
+  const float lifetime_Gyr_max_mass = lifetime_in_Gyr(CEJSN_max_mass, Z, props);
+  const float lifetime_Gyr_min_mass = lifetime_in_Gyr(CEJSN_min_mass, Z, props);
+
+  /* Compute the age of the star at the beginning and end of step */
+  double t_start_Gyr = star_age_Gyr;
+  double t_end_Gyr = star_age_Gyr + dt_Gyr;
+
+  /* Do we need to correct because the age window overalps with the
+     minimal or maximal age? */
+  if (t_end_Gyr > lifetime_Gyr_min_mass) t_end_Gyr = lifetime_Gyr_min_mass;
+  if (t_start_Gyr < lifetime_Gyr_max_mass) t_start_Gyr = lifetime_Gyr_max_mass;
+
+  /* The length of the step used to determine probabilities */
+  const double step_length_Gyr = t_end_Gyr - t_start_Gyr;
+
+  /* Range over which the CEJSN are sampled */
+  const float delta_lifetime_Gyr =
+      lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
+
+  /* Compute probability based on step_length / lifetime */
 
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
-                    props->mass_to_solar_mass * (dt_Gyr / delta_lifetime_Gyr);
+                    props->mass_to_solar_mass *
+                    (step_length_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
@@ -761,8 +758,8 @@ INLINE static void evolve_CEJSN_stochastic(const float log10_min_mass,
  * @param star_age_Gyr age of star in Gyr
  * @param dt_Gyr timestep dt in Gyr
  */
-INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
-                                               const float log10_max_mass,
+INLINE static void evolve_collapsar_stochastic(
+    const float log10_min_mass, const float log10_max_mass,
     const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
     double dt_Gyr, const integertime_t ti_current,
     const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
@@ -777,40 +774,50 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
   const float collapsar_max_mass = exp10f(props->log10_collapsar_max_mass_msun);
   const float collapsar_min_mass = exp10f(props->log10_collapsar_min_mass_msun);
   /* Lifetime of 100 Msun star (max mass allowed for collapsar) */
-  const float lifetime_Gyr_max_mass = lifetime_in_Gyr(collapsar_max_mass, Z, props);
+  const float lifetime_Gyr_max_mass =
+      lifetime_in_Gyr(collapsar_max_mass, Z, props);
   /* Lifetime of 10 Msun star (min mass allowed for collapsar) */
-  const float lifetime_Gyr_min_mass = lifetime_in_Gyr(collapsar_min_mass, Z, props);
+  const float lifetime_Gyr_min_mass =
+      lifetime_in_Gyr(collapsar_min_mass, Z, props);
   float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
 
   /* If stars less massive than 10 Msun have exploded, do nothing */
-  if ( log10_max_mass < props->log10_collapsar_min_mass_msun) return;  // no overlap
-    
-  if (log10_min_mass < props->log10_collapsar_min_mass_msun && log10_max_mass > props->log10_collapsar_min_mass_msun) { // some overlap
-          
-            /* modify dt_Gyr to be exactly the time from the start of the time-step
-             * to the time at which mass==10 */
-          const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
-          dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
-      
-  } // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
+  if (log10_max_mass < props->log10_collapsar_min_mass_msun)
+    return;  // no overlap
 
+  if (log10_min_mass < props->log10_collapsar_min_mass_msun &&
+      log10_max_mass > props->log10_collapsar_min_mass_msun) {  // some overlap
+
+    /* modify dt_Gyr to be exactly the time from the start of the time-step
+     * to the time at which mass==10 */
+    const float lifetime_Gyr =
+        lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
+    dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
+
+  }  // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
 
   /* If stars more massive than 100 Msun have exploded, do nothing */
-  if ( log10_min_mass > props->log10_collapsar_max_mass_msun) return;  // no overlap
+  if (log10_min_mass > props->log10_collapsar_max_mass_msun)
+    return;  // no overlap
 
-  if (log10_min_mass < props->log10_collapsar_max_mass_msun && log10_max_mass > props->log10_collapsar_max_mass_msun) { // again some overlap
-            
-            /* modify dt_Gyr to be exactly the time since the star has mass=100 till the end of time step */
-            const float lifetime_Gyr = lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
-            dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
-      
-  } // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
-        
+  if (log10_min_mass < props->log10_collapsar_max_mass_msun &&
+      log10_max_mass >
+          props->log10_collapsar_max_mass_msun) {  // again some overlap
+
+    /* modify dt_Gyr to be exactly the time since the star has mass=100 till the
+     * end of time step */
+    const float lifetime_Gyr =
+        lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
+    dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
+
+  }  // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
+
   /* Compute probability based on dt_Gyr / lifetime */
 
   /* Number of collapsar events in timestep */
   float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
-                        props->mass_to_solar_mass * (dt_Gyr / delta_lifetime_Gyr);
+                        props->mass_to_solar_mass *
+                        (dt_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
@@ -1501,7 +1508,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Get the total metallicity (metal mass fraction) at birth time and impose a
    * minimum */
   const float Z = max(chemistry_get_total_metal_mass_fraction_for_feedback(sp),
-                       exp10(log10_min_metallicity));
+                      exp10(log10_min_metallicity));
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
@@ -1684,12 +1691,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   if (feedback_props->with_r_process_enrichment) {
     evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
                           cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_CEJSN_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-                            feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
-                            cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_collapsar_stochastic(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-                                feedback_props, sp, star_age_Gyr, dt_Gyr,
-                                ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
+    evolve_CEJSN_stochastic(log10_min_dying_mass_Msun,
+                            log10_max_dying_mass_Msun, feedback_props, sp,
+                            star_age_Gyr, dt_Gyr, ti_begin, cosmo,
+                            stellar_evolution_age_cut_Gyr);
+    evolve_collapsar_stochastic(log10_min_dying_mass_Msun,
+                                log10_max_dying_mass_Msun, feedback_props, sp,
+                                star_age_Gyr, dt_Gyr, ti_begin, cosmo,
+                                stellar_evolution_age_cut_Gyr);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1916,21 +1925,23 @@ void feedback_props_init(struct feedback_props* fp,
       params, "COLIBREFeedback:num_of_collapsar_per_Msun");
   fp->yield_Eu_from_collapsar = parser_get_param_double(
       params, "COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
-    
-  /* Stellar mass limits for collapsar events */
-  const double collapsar_min_mass_msun =
-    parser_get_param_double(params, "COLIBREFeedback:collapsar_min_mass_Msun");
-  const double collapsar_max_mass_msun =
-    parser_get_param_double(params, "COLIBREFeedback:collapsar_max_mass_Msun");
 
-    /* Check that it makes sense. */
-    if (collapsar_max_mass_msun < collapsar_min_mass_msun) {
-        error("Can't have the max collapsar mass smaller than the min collapsar mass!");
-    }
-    
-    fp->log10_collapsar_min_mass_msun = log10(collapsar_min_mass_msun);
-    fp->log10_collapsar_max_mass_msun = log10(collapsar_max_mass_msun);
-    
+  /* Stellar mass limits for collapsar events */
+  const double collapsar_min_mass_msun = parser_get_param_double(
+      params, "COLIBREFeedback:collapsar_min_mass_Msun");
+  const double collapsar_max_mass_msun = parser_get_param_double(
+      params, "COLIBREFeedback:collapsar_max_mass_Msun");
+
+  /* Check that it makes sense. */
+  if (collapsar_max_mass_msun < collapsar_min_mass_msun) {
+    error(
+        "Can't have the max collapsar mass smaller than the min collapsar "
+        "mass!");
+  }
+
+  fp->log10_collapsar_min_mass_msun = log10(collapsar_min_mass_msun);
+  fp->log10_collapsar_max_mass_msun = log10(collapsar_max_mass_msun);
+
   /* Properties of the SNIa enrichment model -------------------------------- */
 
   /* Read AGB ejecta velocity */
