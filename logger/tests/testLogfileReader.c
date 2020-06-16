@@ -68,10 +68,12 @@ void check_data(struct logger_reader *reader, struct part *parts,
   long long previous_id = id_flag;
 
   /* Loop over each record. */
-  for (size_t offset = logger_reader_read_record(reader, &lp, &time, &is_particle,
-                                                 logfile->header.offset_first_record);
+  for (size_t offset =
+           logger_reader_read_record(reader, &lp, &time, &is_particle,
+                                     logfile->header.offset_first_record);
        offset < logfile->log.mmap_size;
-       offset = logger_reader_read_record(reader, &lp, &time, &is_particle, offset)) {
+       offset = logger_reader_read_record(reader, &lp, &time, &is_particle,
+                                          offset)) {
 
     /* Do the particle case */
     if (is_particle) {

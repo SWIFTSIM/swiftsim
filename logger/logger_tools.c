@@ -203,7 +203,7 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
   }
 
   /* set offset after current record. */
-  map = (char *) map +  header_get_record_size_from_mask(h, mask);
+  map = (char *)map + header_get_record_size_from_mask(h, mask);
 
   if (pointed_offset == offset || pointed_offset == 0)
     return (size_t)((char *)map - (char *)file_init);

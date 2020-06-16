@@ -43,33 +43,33 @@ typedef struct {
 } PyLoggerSParticle;
 
 static PyTypeObject PyLoggerParticle_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "logger.Particle",
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.Particle",
     .tp_basicsize = sizeof(PyLoggerParticle),
-    .tp_doc = "This is the type for the hydro particles."
-    "It does nothing but cleanup the interface.",
+    .tp_doc =
+        "This is the type for the hydro particles."
+        "It does nothing but cleanup the interface.",
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
 };
 
 static PyTypeObject PyLoggerGParticle_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "logger.GParticle",
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.GParticle",
     .tp_basicsize = sizeof(PyLoggerGParticle),
-    .tp_doc = "This is the type for the gravity particles."
-    "It does nothing but cleanup the interface.",
+    .tp_doc =
+        "This is the type for the gravity particles."
+        "It does nothing but cleanup the interface.",
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
 };
 
 static PyTypeObject PyLoggerSParticle_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "logger.SParticle",
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.SParticle",
     .tp_basicsize = sizeof(PyLoggerSParticle),
-    .tp_doc = "This is the type for the stars particles."
-    "It does nothing but cleanup the interface.",
+    .tp_doc =
+        "This is the type for the stars particles."
+        "It does nothing but cleanup the interface.",
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
@@ -87,15 +87,16 @@ PyArray_Descr *logger_sparticle_descr;
  * @return The array.
  */
 __attribute__((always_inline)) INLINE static struct logger_particle_array
-    convert_and_check_input(PyObject *dict) {
+convert_and_check_input(PyObject *dict) {
   /* Check that we received a dictionnary */
   if (!PyDict_Check(dict)) {
     error("Expecting a dictionnary");
   }
 
-  PyArrayObject *parts = (PyArrayObject *) PyDict_GetItemString(dict, "gas");
-  PyArrayObject *gparts = (PyArrayObject *) PyDict_GetItemString(dict, "dark_matter");
-  PyArrayObject *sparts = (PyArrayObject *) PyDict_GetItemString(dict, "stars");
+  PyArrayObject *parts = (PyArrayObject *)PyDict_GetItemString(dict, "gas");
+  PyArrayObject *gparts =
+      (PyArrayObject *)PyDict_GetItemString(dict, "dark_matter");
+  PyArrayObject *sparts = (PyArrayObject *)PyDict_GetItemString(dict, "stars");
 
   struct logger_particle_array out;
   logger_particle_array_init(&out);
@@ -183,8 +184,8 @@ __attribute__((always_inline)) INLINE static PyObject *create_output(
   if (array->hydro.n != 0) {
     /* Create the python object */
     npy_intp n = array->hydro.n;
-    PyObject *parts = (PyObject *) PyArray_SimpleNewFromData(
-      /* nd */ 1, &n, logger_particle_descr->type_num, array->hydro.parts);
+    PyObject *parts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_particle_descr->type_num, array->hydro.parts);
 
     /* Add it to the dict */
     PyDict_SetItem(output, PyUnicode_FromString("gas"), parts);
@@ -192,8 +193,8 @@ __attribute__((always_inline)) INLINE static PyObject *create_output(
   if (array->grav.n != 0) {
     /* Create the python object */
     npy_intp n = array->grav.n;
-    PyObject *gparts = (PyObject *) PyArray_SimpleNewFromData(
-      /* nd */ 1, &n, logger_gparticle_descr->type_num, array->grav.parts);
+    PyObject *gparts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_gparticle_descr->type_num, array->grav.parts);
 
     /* Add it to the dict */
     PyDict_SetItem(output, PyUnicode_FromString("dark_matter"), gparts);
@@ -201,8 +202,8 @@ __attribute__((always_inline)) INLINE static PyObject *create_output(
   if (array->stars.n != 0) {
     /* Create the python object */
     npy_intp n = array->stars.n;
-    PyObject *sparts = (PyObject *) PyArray_SimpleNewFromData(
-      /* nd */ 1, &n, logger_sparticle_descr->type_num, array->stars.parts);
+    PyObject *sparts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_sparticle_descr->type_num, array->stars.parts);
 
     /* Add it to the dict */
     PyDict_SetItem(output, PyUnicode_FromString("stars"), sparts);
@@ -256,9 +257,9 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
 
   /* Allocate the output memory */
   struct logger_particle_array array;
-  logger_particle_array_allocate(
-    &array, n_parts[swift_type_gas], n_parts[swift_type_dark_matter],
-    n_parts[swift_type_stars], /* empty */0);
+  logger_particle_array_allocate(&array, n_parts[swift_type_gas],
+                                 n_parts[swift_type_dark_matter],
+                                 n_parts[swift_type_stars], /* empty */ 0);
 
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
@@ -346,7 +347,6 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
   return Py_BuildValue("");
 }
 
-
 /**
  * @brief Move forward in time an array of particles.
  *
@@ -382,7 +382,8 @@ static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
   logger_reader_init(&reader, filename, verbose);
 
   /* Move the particles around the requested offset */
-  logger_reader_move_forward(&reader, &array, &next, time, /* should_interpolate */ 1);
+  logger_reader_move_forward(&reader, &array, &next, time,
+                             /* should_interpolate */ 1);
 
   /* Free the reader. */
   logger_reader_free(&reader);
@@ -473,21 +474,24 @@ int pylogger_particle_create_typeobject(PyObject *m) {
 
   /* Do the hydro. */
   Py_INCREF(&PyLoggerParticle_Type);
-  if (PyModule_AddObject(m, "PyLoggerParticle", (PyObject *) &PyLoggerParticle_Type) < 0) {
+  if (PyModule_AddObject(m, "PyLoggerParticle",
+                         (PyObject *)&PyLoggerParticle_Type) < 0) {
     Py_DECREF(&PyLoggerParticle_Type);
     return -1;
   }
 
   /* Do the gravity. */
   Py_INCREF(&PyLoggerGParticle_Type);
-  if (PyModule_AddObject(m, "PyGLoggerParticle", (PyObject *) &PyLoggerGParticle_Type) < 0) {
+  if (PyModule_AddObject(m, "PyGLoggerParticle",
+                         (PyObject *)&PyLoggerGParticle_Type) < 0) {
     Py_DECREF(&PyLoggerGParticle_Type);
     return -2;
   }
 
   /* Do the stars. */
   Py_INCREF(&PyLoggerSParticle_Type);
-  if (PyModule_AddObject(m, "PyLoggerSParticle", (PyObject *) &PyLoggerSParticle_Type) < 0) {
+  if (PyModule_AddObject(m, "PyLoggerSParticle",
+                         (PyObject *)&PyLoggerSParticle_Type) < 0) {
     Py_DECREF(&PyLoggerSParticle_Type);
     return -3;
   }
@@ -624,12 +628,9 @@ void pylogger_all_particle_define_descr(void) {
 PyMODINIT_FUNC PyInit_liblogger(void) {
 
   /* Finalize the initialization of the types. */
-  if (PyType_Ready(&PyLoggerParticle_Type) < 0)
-    return NULL;
-  if (PyType_Ready(&PyLoggerGParticle_Type) < 0)
-    return NULL;
-  if (PyType_Ready(&PyLoggerSParticle_Type) < 0)
-    return NULL;
+  if (PyType_Ready(&PyLoggerParticle_Type) < 0) return NULL;
+  if (PyType_Ready(&PyLoggerGParticle_Type) < 0) return NULL;
+  if (PyType_Ready(&PyLoggerSParticle_Type) < 0) return NULL;
 
   /* Create the module. */
   PyObject *m;

@@ -50,7 +50,7 @@ struct logger_python_field {
 };
 
 #define logger_loader_python_field(name, parts, field, type) \
-  logger_loader_python_field_function(                            \
+  logger_loader_python_field_function(                       \
       name, ((char *)(&parts[0].field) - (char *)parts), type)
 
 /**
@@ -65,7 +65,8 @@ struct logger_python_field {
  * @return The initialized structure.
  */
 __attribute__((always_inline)) INLINE static struct logger_python_field
-logger_loader_python_field_function(char *name, size_t offset, const char *numpy_type) {
+logger_loader_python_field_function(char *name, size_t offset,
+                                    const char *numpy_type) {
   struct logger_python_field ret;
 
   strcpy(ret.name, name);

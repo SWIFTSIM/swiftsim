@@ -55,7 +55,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
                                     size_t n_part, size_t n_gpart,
                                     size_t n_spart, const int empty) {
   /* Hydro */
-  array->hydro.n = empty? 0 : n_part;
+  array->hydro.n = empty ? 0 : n_part;
   array->hydro.allocated_size = n_part;
   array->hydro.parts =
       (struct logger_particle *)malloc(n_part * sizeof(struct logger_particle));
@@ -64,7 +64,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Gravity */
-  array->grav.n = empty? 0 : n_gpart;
+  array->grav.n = empty ? 0 : n_gpart;
   array->grav.allocated_size = n_gpart;
   array->grav.parts = (struct logger_gparticle *)malloc(
       n_gpart * sizeof(struct logger_gparticle));
@@ -73,7 +73,7 @@ void logger_particle_array_allocate(struct logger_particle_array *array,
   }
 
   /* Stars */
-  array->stars.n = empty? 0 : n_spart;
+  array->stars.n = empty ? 0 : n_spart;
   array->stars.allocated_size = n_spart;
   array->stars.parts = (struct logger_sparticle *)malloc(
       n_spart * sizeof(struct logger_sparticle));
@@ -200,8 +200,8 @@ void logger_particle_array_change_size(struct logger_particle_array *array,
  * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_particle_array_add_hydro(
-    struct logger_particle_array *array, size_t offset) {
+void logger_particle_array_add_hydro(struct logger_particle_array *array,
+                                     size_t offset) {
   /* Save the offset */
   array->hydro.parts[array->hydro.n].offset = offset;
 
@@ -210,9 +210,9 @@ void logger_particle_array_add_hydro(
 
   /* Increase the size if required */
   if (array->hydro.n == array->hydro.allocated_size) {
-    logger_particle_array_change_size(
-      array, 2 * array->hydro.allocated_size,
-      array->grav.allocated_size, array->stars.allocated_size);
+    logger_particle_array_change_size(array, 2 * array->hydro.allocated_size,
+                                      array->grav.allocated_size,
+                                      array->stars.allocated_size);
   }
 }
 
@@ -222,8 +222,8 @@ void logger_particle_array_add_hydro(
  * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_particle_array_add_stars(
-    struct logger_particle_array *array, size_t offset) {
+void logger_particle_array_add_stars(struct logger_particle_array *array,
+                                     size_t offset) {
   /* Save the offset */
   array->stars.parts[array->stars.n].offset = offset;
 
@@ -232,11 +232,10 @@ void logger_particle_array_add_stars(
 
   /* Increase the size if required */
   if (array->stars.n == array->stars.allocated_size) {
-    logger_particle_array_change_size(
-      array, array->hydro.allocated_size,
-      array->grav.allocated_size, 2 * array->stars.allocated_size);
+    logger_particle_array_change_size(array, array->hydro.allocated_size,
+                                      array->grav.allocated_size,
+                                      2 * array->stars.allocated_size);
   }
-
 }
 
 /**
@@ -245,8 +244,8 @@ void logger_particle_array_add_stars(
  * @param array The #logger_particle_array.
  * @param offset The offset of the new particle in the logfile.
  */
-void logger_particle_array_add_gravity(
-    struct logger_particle_array *array, size_t offset) {
+void logger_particle_array_add_gravity(struct logger_particle_array *array,
+                                       size_t offset) {
 
   /* Save the offset */
   array->grav.parts[array->grav.n].offset = offset;
@@ -256,15 +255,15 @@ void logger_particle_array_add_gravity(
 
   /* Increase the size if required */
   if (array->grav.n == array->grav.allocated_size) {
-    logger_particle_array_change_size(
-      array, array->hydro.allocated_size,
-      2 * array->grav.allocated_size, array->stars.allocated_size);
+    logger_particle_array_change_size(array, array->hydro.allocated_size,
+                                      2 * array->grav.allocated_size,
+                                      array->stars.allocated_size);
   }
-
 }
 
 /**
- * @brief Remove the flagged particles from the arrays and add the particles from the dynamic array.
+ * @brief Remove the flagged particles from the arrays and add the particles
+ * from the dynamic array.
  *
  * @param prev The array containing the particles before the required time.
  * @param next The array containing the particles after the required time.
@@ -273,10 +272,11 @@ void logger_particle_array_add_gravity(
  * @param n_deleted_grav The number of flagged particles (gravity).
  * @param n_deleted_stars The number of flagged particles (stars).
  */
-void logger_particle_array_update(
-    struct logger_particle_array *prev, struct logger_particle_array *next,
-    struct logger_particle_array *tmp,
-    size_t n_deleted_hydro, size_t n_deleted_grav, size_t n_deleted_stars) {
+void logger_particle_array_update(struct logger_particle_array *prev,
+                                  struct logger_particle_array *next,
+                                  struct logger_particle_array *tmp,
+                                  size_t n_deleted_hydro, size_t n_deleted_grav,
+                                  size_t n_deleted_stars) {
 
   if (prev->hydro.n != next->hydro.n) {
     error("The previous and next arrays are not compatible.");
@@ -294,11 +294,11 @@ void logger_particle_array_update(
   size_t n_stars = prev->stars.n;
 
   /* Remove the hydro particles */
-  for(size_t i = 0; i < n_hydro && n_deleted_hydro != 0; i++) {
+  for (size_t i = 0; i < n_hydro && n_deleted_hydro != 0; i++) {
     if (prev->hydro.parts[i].flag == logger_flag_delete) {
       /* Ensure that we do not have a deleted particle
          at the end of the array. */
-      while(prev->hydro.parts[prev->hydro.n - 1].flag == logger_flag_delete) {
+      while (prev->hydro.parts[prev->hydro.n - 1].flag == logger_flag_delete) {
         n_hydro--;
         n_deleted_hydro--;
       }
@@ -312,11 +312,11 @@ void logger_particle_array_update(
   }
 
   /* Remove the gravity particles */
-  for(size_t i = 0; i < n_grav && n_deleted_grav != 0; i++) {
+  for (size_t i = 0; i < n_grav && n_deleted_grav != 0; i++) {
     if (prev->grav.parts[i].flag == logger_flag_delete) {
       /* Ensure that we do not have a deleted particle
          at the end of the array. */
-      while(prev->grav.parts[prev->grav.n - 1].flag == logger_flag_delete) {
+      while (prev->grav.parts[prev->grav.n - 1].flag == logger_flag_delete) {
         n_grav--;
         n_deleted_grav--;
       }
@@ -330,11 +330,11 @@ void logger_particle_array_update(
   }
 
   /* Remove the stars particles */
-  for(size_t i = 0; i < n_stars && n_deleted_stars != 0; i++) {
+  for (size_t i = 0; i < n_stars && n_deleted_stars != 0; i++) {
     if (prev->stars.parts[i].flag == logger_flag_delete) {
       /* Ensure that we do not have a deleted particle
          at the end of the array. */
-      while(prev->stars.parts[prev->stars.n - 1].flag == logger_flag_delete) {
+      while (prev->stars.parts[prev->stars.n - 1].flag == logger_flag_delete) {
         n_stars--;
         n_deleted_stars--;
       }
@@ -371,18 +371,21 @@ void logger_particle_array_update(
 
   /* Copy the new particles at the end of the arrays */
   if (tmp->hydro.n != 0) {
-    memcpy(prev->hydro.parts + n_hydro, tmp->hydro.parts, tmp->hydro.n * sizeof(struct logger_particle));
+    memcpy(prev->hydro.parts + n_hydro, tmp->hydro.parts,
+           tmp->hydro.n * sizeof(struct logger_particle));
   }
   if (tmp->grav.n != 0) {
-    memcpy(prev->grav.parts + n_grav, tmp->grav.parts, tmp->grav.n * sizeof(struct logger_gparticle));
+    memcpy(prev->grav.parts + n_grav, tmp->grav.parts,
+           tmp->grav.n * sizeof(struct logger_gparticle));
   }
   if (tmp->stars.n != 0) {
-    memcpy(prev->stars.parts + n_stars, tmp->stars.parts, tmp->stars.n * sizeof(struct logger_sparticle));
+    memcpy(prev->stars.parts + n_stars, tmp->stars.parts,
+           tmp->stars.n * sizeof(struct logger_sparticle));
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we removed all the required particles */
-  for(size_t i = 0; i < prev->hydro.n; i++) {
+  for (size_t i = 0; i < prev->hydro.n; i++) {
     if (prev->hydro.parts[i].flag == logger_flag_delete) {
       error("Failed to delete a particle.");
     }
@@ -393,7 +396,7 @@ void logger_particle_array_update(
   }
 
   /* Check that we removed all the required particles */
-  for(size_t i = 0; i < prev->grav.n; i++) {
+  for (size_t i = 0; i < prev->grav.n; i++) {
     if (prev->grav.parts[i].flag == logger_flag_delete) {
       error("Failed to delete a particle.");
     }
@@ -404,7 +407,7 @@ void logger_particle_array_update(
   }
 
   /* Check that we removed all the required particles */
-  for(size_t i = 0; i < prev->stars.n; i++) {
+  for (size_t i = 0; i < prev->stars.n; i++) {
     if (prev->stars.parts[i].flag == logger_flag_delete) {
       error("Failed to delete a particle.");
     }

@@ -141,11 +141,11 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type inter_type,
                                       struct logger_particle_array *array);
-void logger_reader_read_particles_at_offset(struct logger_reader *reader,
-                                            struct logger_particle_array *array);
+void logger_reader_read_particles_at_offset(
+    struct logger_reader *reader, struct logger_particle_array *array);
 void logger_reader_move_forward(struct logger_reader *reader,
                                 struct logger_particle_array *prev,
-                                struct logger_particle_array *next,
-                                double time, const int should_interpolate);
+                                struct logger_particle_array *next, double time,
+                                const int should_interpolate);
 
 #endif  // LOGGER_LOGGER_READER_H

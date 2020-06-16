@@ -78,12 +78,12 @@ size_t logger_particle_read(struct logger_particle *part,
     }
   }
   /* Read the record and copy it to a particle */
-  char *buff = (char *) malloc(record_size);
+  char *buff = (char *)malloc(record_size);
   map = logger_loader_io_read_data(map, record_size, buff);
-  for(int i =0 ; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      logger_particle_read_field(part, buff, h->masks[i].name,
-                                 h->masks[i].size);
+      logger_particle_read_single_field(part, buff, h->masks[i].name,
+                                        h->masks[i].size);
       buff += h->masks[i].size;
     }
   }
@@ -184,12 +184,12 @@ size_t logger_gparticle_read(struct logger_gparticle *part,
     }
   }
   /* Read the record and copy it to a particle */
-  char *buff = (char *) malloc(record_size);
+  char *buff = (char *)malloc(record_size);
   map = logger_loader_io_read_data(map, record_size, buff);
-  for(int i =0 ; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      logger_gparticle_read_field(part, buff, h->masks[i].name,
-                                  h->masks[i].size);
+      logger_gparticle_read_single_field(part, buff, h->masks[i].name,
+                                         h->masks[i].size);
       buff += h->masks[i].size;
     }
   }
@@ -290,12 +290,12 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
     }
   }
   /* Read the record and copy it to a particle */
-  char *buff = (char *) malloc(record_size);
+  char *buff = (char *)malloc(record_size);
   map = logger_loader_io_read_data(map, record_size, buff);
-  for(int i =0 ; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
-      logger_sparticle_read_field(part, buff, h->masks[i].name,
-                                  h->masks[i].size);
+      logger_sparticle_read_single_field(part, buff, h->masks[i].name,
+                                         h->masks[i].size);
       buff += h->masks[i].size;
     }
   }

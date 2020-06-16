@@ -25,6 +25,16 @@
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
 
+#define logger_part_field_coordinates "Coordinates"
+#define logger_part_field_velocities "Velocities"
+#define logger_part_field_accelerations "Accelerations"
+#define logger_part_field_masses "Masses"
+#define logger_part_field_ids "ParticleIDs"
+#define logger_part_field_flags "SpecialFlags"
+#define logger_part_field_h "SmoothingLengths"
+#define logger_part_field_entropies "Entropies"
+#define logger_part_field_densities "Densities"
+
 /**
  * @brief Store the data from a record (hydro particle).
  *
@@ -34,13 +44,13 @@
  * The particle is initialized with #logger_particle_init
  * and can be updated with a record through #logger_particle_read.
  *
- * In #logger_particle_read, we use #logger_particle_read_field on
+ * In #logger_particle_read, we use #logger_particle_read_single_field on
  * each field and #logger_particle_interpolate if an interpolation is required.
  */
 struct logger_particle {
 
   /* Particle ID. */
-  long long id;
+  uint64_t id;
 
   /* Particle position. */
   double x[3];
@@ -66,7 +76,7 @@ struct logger_particle {
   /* time of the record. */
   double time;
 
-  /* offset of the particle */
+  /* offset of the particle in the logfile. */
   size_t offset;
 
   /* Special flag */
@@ -80,13 +90,13 @@ struct logger_particle {
  */
 __attribute__((always_inline)) INLINE static void logger_particle_print(
     const struct logger_particle *p) {
-  message("ID:            %lli.", p->id);
+  message("ID:            %lu.", p->id);
   message("Mass:          %g", p->mass);
   message("Time:          %g.", p->time);
   message("Cutoff Radius: %g.", p->h);
-  message("Positions:     (%g, %g, %g).", p->x[0], p->x[1], p->x[2]);
-  message("Velocities:    (%g, %g, %g).", p->v[0], p->v[1], p->v[2]);
-  message("Accelerations: (%g, %g, %g).", p->a[0], p->a[1], p->a[2]);
+  message("Position:     (%g, %g, %g).", p->x[0], p->x[1], p->x[2]);
+  message("Velocity:    (%g, %g, %g).", p->v[0], p->v[1], p->v[2]);
+  message("Acceleration: (%g, %g, %g).", p->a[0], p->a[1], p->a[2]);
   message("Entropy:       %g.", p->entropy);
   message("Density:       %g.", p->rho);
 }
@@ -108,52 +118,54 @@ __attribute__((always_inline)) INLINE static void logger_particle_init(
   part->rho = -1;
   part->h = -1;
   part->mass = -1;
-  part->id = SIZE_MAX;
+  part->id = UINT64_MAX;
 
   part->flag = 0;
 }
 
 /**
- * @brief Read a single named entry for a particle.
+ * @brief Read a single field for a particle.
+ * This function is called multiple times for each record and the buffer is
+ * updated each time in order to start at the position of the current field (no
+ * need to shift it).
  *
- * @param part The #logger_particle to update.
- * @param buff The buffer containing the particle.
- * @param field field to read.
- * @param size number of bits to read.
- *
- * @return mapped data after the block read.
+ * @param part The #logger_particle where to write the field.
+ * @param buff The buffer to read (starting directly with the current field).
+ * @param field Name of the field to read.
+ * @param size Number of bits to read.
  */
-__attribute__((always_inline)) INLINE static void logger_particle_read_field(
-    struct logger_particle *part, char *buff, const char *field,
-    const size_t size) {
+__attribute__((always_inline)) INLINE static void
+logger_particle_read_single_field(struct logger_particle *part, char *buff,
+                                  const char *field, const size_t size) {
 
   /* Copy the buffer to the particle. */
-  if (strcmp("Coordinates", field) == 0) {
+  if (strcmp(logger_part_field_coordinates, field) == 0) {
     memcpy(&part->x, buff, size);
-  } else if (strcmp("Velocities", field) == 0) {
+  } else if (strcmp(logger_part_field_velocities, field) == 0) {
     memcpy(&part->v, buff, size);
-  } else if (strcmp("Accelerations", field) == 0) {
+  } else if (strcmp(logger_part_field_accelerations, field) == 0) {
     memcpy(&part->a, buff, size);
-  } else if (strcmp("Entropies", field) == 0) {
+  } else if (strcmp(logger_part_field_entropies, field) == 0) {
     memcpy(&part->entropy, buff, size);
-  } else if (strcmp("SmoothingLengths", field) == 0) {
+  } else if (strcmp(logger_part_field_h, field) == 0) {
     memcpy(&part->h, buff, size);
-  } else if (strcmp("Densities", field) == 0) {
+  } else if (strcmp(logger_part_field_densities, field) == 0) {
     memcpy(&part->rho, buff, size);
     // TODO link mass and ids together?
-  } else if (strcmp("Masses", field) == 0) {
+  } else if (strcmp(logger_part_field_masses, field) == 0) {
     memcpy(&part->mass, buff, size);
-  } else if (strcmp("ParticleIDs", field) == 0) {
+  } else if (strcmp(logger_part_field_ids, field) == 0) {
     memcpy(&part->id, buff, size);
-  } else if (strcmp("SpecialFlags", field) == 0) {
+  } else if (strcmp(logger_part_field_flags, field) == 0) {
     memcpy(&part->flag, buff, size);
   } else {
-    error("Type %s not defined.", field);
+    error("Field %s not defined.", field);
   }
 }
 
 /**
- * @brief Check if the required fields are correct.
+ * @brief When starting to read a logfile, check the required fields in the
+ * logfile's header.
  *
  * @param head The #header.
  */
@@ -161,30 +173,24 @@ __attribute__((always_inline)) INLINE static void logger_particle_check_fields(
     struct header *head) {
 
   struct logger_particle part;
-  for(int i = 0; i < head->masks_count; i++) {
+  for (int i = 0; i < head->masks_count; i++) {
     int size = -1;
-    if (strcmp(head->masks[i].name, "Positions") == 0) {
+    if (strcmp(head->masks[i].name, logger_part_field_coordinates) == 0) {
       size = sizeof(part.x);
-    }
-    else if (strcmp(head->masks[i].name, "Velocities") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_velocities) == 0) {
       size = sizeof(part.v);
-    }
-    else if (strcmp(head->masks[i].name, "Accelerations") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_accelerations) ==
+               0) {
       size = sizeof(part.a);
-    }
-    else if (strcmp(head->masks[i].name, "Masses") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_masses) == 0) {
       size = sizeof(part.mass);
-    }
-    else if (strcmp(head->masks[i].name, "SmoothingLengths") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_h) == 0) {
       size = sizeof(part.h);
-    }
-    else if (strcmp(head->masks[i].name, "Entropies") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_entropies) == 0) {
       size = sizeof(part.entropy);
-    }
-    else if (strcmp(head->masks[i].name, "ParticleIDs") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_ids) == 0) {
       size = sizeof(part.id);
-    }
-    else if (strcmp(head->masks[i].name, "Densities") == 0) {
+    } else if (strcmp(head->masks[i].name, logger_part_field_densities) == 0) {
       size = sizeof(part.rho);
     }
 
@@ -192,64 +198,82 @@ __attribute__((always_inline)) INLINE static void logger_particle_check_fields(
       error("The field size is not compatible for %s (%i %i)",
             head->masks[i].name, size, head->masks[i].size);
     }
-
   }
 }
 
 /**
- * @brief interpolate two particles at a given time
+ * @brief Interpolate the location of the particle at the given time.
+ * Here we use a linear interpolation for most of the fields.
+ * For the position (velocity), we use a quintic (cubic) hermite interpolation
+ * based on the positions, velocities and accelerations at the time of the two
+ * particles
  *
- * @param part_curr #logger_particle In: current particle (before time), Out:
- * interpolated particle
+ * @param part_bef #logger_particle current particle (before time)
  * @param part_next #logger_particle next particle (after time)
  * @param time interpolation time
  *
+ * @return The interpolated particle.
+ *
  */
-__attribute__((always_inline)) INLINE static void logger_particle_interpolate(
-    struct logger_particle *part_curr, const struct logger_particle *part_next,
-    const double time) {
-
-  /* Check that a particle is provided. */
-  if (!part_curr) error("part_curr is NULL.");
-  if (!part_next) error("part_next is NULL.");
+__attribute__((always_inline)) INLINE static struct logger_particle
+logger_particle_interpolate(const struct logger_particle *part_bef,
+                            const struct logger_particle *part_next,
+                            const double time) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the particle order. */
-  if (part_next->time < part_curr->time)
+  if (part_next->time < part_bef->time)
     error("Wrong particle order (next before current): %g, %g", part_next->time,
-          part_curr->time);
-  if ((time < part_curr->time) || (part_next->time < time))
+          part_bef->time);
+  if ((time < part_bef->time) || (part_next->time < time))
     error(
         "Cannot extrapolate (particle time: %f, "
         "interpolating time: %f, next particle time: %f).",
-        part_curr->time, time, part_next->time);
+        part_bef->time, time, part_next->time);
 #endif
 
-  /* Compute the interpolation scaling. */
-  double scaling = part_next->time - part_curr->time;
+  /* Copy everything into the return particle */
+  struct logger_particle ret = *part_bef;
 
-  scaling = (time - part_curr->time) / scaling;
+  /* Compute the interpolation scaling. */
+  const double wa =
+      (time - part_bef->time) / (part_next->time - part_bef->time);
+  const double wb =
+      (part_next->time - time) / (part_next->time - part_bef->time);
 
   /* interpolate vectors. */
   for (size_t i = 0; i < 3; i++) {
-    part_curr->x[i] = logger_tools_quintic_hermite_spline(
-      part_curr->time, part_curr->x[i], part_curr->v[i], part_curr->a[i],
-      part_next->time, part_next->x[i], part_next->v[i], part_next->a[i], time);
+    /* position */
+    ret.x[i] = logger_tools_quintic_hermite_spline(
+        part_bef->time, part_bef->x[i], part_bef->v[i], part_bef->a[i],
+        part_next->time, part_next->x[i], part_next->v[i], part_next->a[i],
+        time);
 
-    part_curr->v[i] = logger_tools_cubic_hermite_spline(
-      part_curr->time, part_curr->v[i], part_curr->a[i],
-      part_next->time, part_next->v[i], part_next->a[i], time);
+    /* velocity */
+    ret.v[i] = logger_tools_cubic_hermite_spline(
+        part_bef->time, part_bef->v[i], part_bef->a[i], part_next->time,
+        part_next->v[i], part_next->a[i], time);
 
-    const float tmp = (part_next->a[i] - part_curr->a[i]);
-    part_curr->a[i] += tmp * scaling;
+    /* acceleration */
+    ret.a[i] = wa * part_bef->a[i] + wb * part_next->a[i];
   }
 
-  /* interpolate scalars. */
-  const float tmp = (part_next->entropy - part_curr->entropy);
-  part_curr->entropy += tmp * scaling;
+  /* mass */
+  ret.mass = wa * part_bef->mass + wb * part_next->mass;
+
+  /* density */
+  ret.rho = wa * part_bef->rho + wb * part_next->rho;
+
+  /* entropy */
+  ret.entropy = wa * part_bef->entropy + wb * part_next->entropy;
+
+  /* smoothing length */
+  ret.h = wa * part_bef->h + wb * part_next->h;
 
   /* set time. */
-  part_curr->time = time;
+  ret.time = time;
+
+  return ret;
 }
 
 #ifdef HAVE_PYTHON
@@ -266,26 +290,28 @@ INLINE static int logger_particles_generate_python(
   struct logger_particle *part;
 
   /* List what we want to use in python */
-  list[0] = logger_loader_python_field("Coordinates", part, x, "3f8");
+  list[0] =
+      logger_loader_python_field(logger_part_field_coordinates, part, x, "3f8");
 
-  list[1] = logger_loader_python_field("Velocities", part, v, "3f4");
+  list[1] =
+      logger_loader_python_field(logger_part_field_velocities, part, v, "3f4");
 
   // TODO sum the grav + hydro accelerations
-  list[2] =
-      logger_loader_python_field("Accelerations", part, a, "3f4");
+  list[2] = logger_loader_python_field(logger_part_field_accelerations, part, a,
+                                       "3f4");
 
-  list[3] = logger_loader_python_field("Masses", part, mass, "f4");
+  list[3] =
+      logger_loader_python_field(logger_part_field_masses, part, mass, "f4");
 
-  list[4] =
-      logger_loader_python_field("SmoothingLengths", part, h, "f4");
+  list[4] = logger_loader_python_field(logger_part_field_h, part, h, "f4");
 
-  list[5] =
-      logger_loader_python_field("Entropies", part, entropy, "f4");
+  list[5] = logger_loader_python_field(logger_part_field_entropies, part,
+                                       entropy, "f4");
 
-  list[6] =
-      logger_loader_python_field("ParticleIDs", part, id, "i8");
+  list[6] = logger_loader_python_field(logger_part_field_ids, part, id, "i8");
 
-  list[7] = logger_loader_python_field("Densities", part, rho, "f4");
+  list[7] =
+      logger_loader_python_field(logger_part_field_densities, part, rho, "f4");
 
   list[8] = logger_loader_python_field("Times", part, time, "f8");
 

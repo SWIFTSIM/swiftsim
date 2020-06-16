@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 
   /* Initialize the engine */
   struct engine e;
-  e.policy = engine_policy_hydro | engine_policy_stars
-    | engine_policy_self_gravity;
+  e.policy =
+      engine_policy_hydro | engine_policy_stars | engine_policy_self_gravity;
 
   /* Initialize the logger. */
   logger_init(&log, &e, &params);
@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
 
   /* Copy the masks */
   const int logger_count_mask_tmp = log.logger_count_mask;
-  struct mask_data *mask_data =
-      (struct mask_data *)malloc(log.logger_count_mask * sizeof(struct mask_data));
+  struct mask_data *mask_data = (struct mask_data *)malloc(
+      log.logger_count_mask * sizeof(struct mask_data));
   memcpy(mask_data, log.logger_mask_data,
          log.logger_count_mask * sizeof(struct mask_data));
 
