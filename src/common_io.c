@@ -2310,7 +2310,8 @@ void io_check_output_fields(struct output_options* output_options,
     section_name[strlen(section_name) - 1] = 0;
 
     /* Is this the `Default` section? */
-    have_default = strcmp(section_name, select_output_header_default_name) == 0;
+    if (strcmp(section_name, select_output_header_default_name) == 0)
+      have_default = 1;
 
     /* How many fields should each ptype write by default? */
     int ptype_num_fields_to_write[swift_type_count];
