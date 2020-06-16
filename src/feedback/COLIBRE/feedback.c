@@ -827,6 +827,12 @@ INLINE static void evolve_collapsar_stochastic(const float log10_min_mass,
 
   /* Are we lucky? If so we have 1 more event */
   if (prob_num > rand) num_events += 1;
+    
+    
+    printf(" min mass %f", log10_min_mass);
+    printf(" max mass %f", log10_max_mass);
+    printf(" num events %i", num_events);
+
 
   if (num_events > 0) {
 
