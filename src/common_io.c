@@ -2390,7 +2390,7 @@ void io_check_output_fields(struct output_options* output_options,
 
       int value_id = 0;
       for (value_id = 0; value_id < compression_level_count; value_id++)
-        if (strcmp(field_value, compression_level_names[value_id]) != 0) break;
+        if (strcmp(field_value, compression_level_names[value_id]) == 0) break;
 
       if (value_id == compression_level_count)
         error("Choice of output selection parameter %s ('%s') is invalid.",
