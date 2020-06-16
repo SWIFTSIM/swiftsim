@@ -128,7 +128,7 @@ size_t logger_particle_read(struct logger_particle *part,
                                   logger_reader_const);
 
   /* Interpolate the two particles. */
-  logger_particle_interpolate(part, &part_next, time);
+  *part = logger_particle_interpolate(part, &part_next, time);
 
   return offset;
 }
@@ -234,7 +234,7 @@ size_t logger_gparticle_read(struct logger_gparticle *part,
                                    logger_reader_const);
 
   /* Interpolate the two particles. */
-  logger_gparticle_interpolate(part, &part_next, time);
+  *part = logger_gparticle_interpolate(part, &part_next, time);
 
   return offset;
 }
@@ -340,7 +340,7 @@ size_t logger_sparticle_read(struct logger_sparticle *part,
                                    logger_reader_const);
 
   /* Interpolate the two particles. */
-  logger_sparticle_interpolate(part, &part_next, time);
+  *part = logger_sparticle_interpolate(part, &part_next, time);
 
   return offset;
 }

@@ -480,8 +480,8 @@ void logger_reader_move_forward_internal(
       /* Nothing happened */
       case logger_reader_event_null:
         if (should_interpolate) {
-          logger_particle_interpolate(&prev->hydro.parts[i],
-                                      &next->hydro.parts[i], time);
+          prev->hydro.parts[i] = logger_particle_interpolate(&prev->hydro.parts[i],
+                                                             &next->hydro.parts[i], time);
         }
         break;
 
@@ -525,8 +525,8 @@ void logger_reader_move_forward_internal(
       /* Nothing happened */
       case logger_reader_event_null:
         if (should_interpolate) {
-          logger_gparticle_interpolate(&prev->grav.parts[i],
-                                       &next->grav.parts[i], time);
+          prev->grav.parts[i] = logger_gparticle_interpolate(&prev->grav.parts[i],
+                                                             &next->grav.parts[i], time);
         }
         break;
 
@@ -557,8 +557,8 @@ void logger_reader_move_forward_internal(
         /* Nothing happened */
       case logger_reader_event_null:
         if (should_interpolate) {
-          logger_sparticle_interpolate(&prev->stars.parts[i],
-                                       &next->stars.parts[i], time);
+          prev->stars.parts[i] = logger_sparticle_interpolate(&prev->stars.parts[i],
+                                                              &next->stars.parts[i], time);
         }
         break;
 
