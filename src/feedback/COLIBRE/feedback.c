@@ -779,45 +779,35 @@ INLINE static void evolve_collapsar_stochastic(
   /* Lifetime of 10 Msun star (min mass allowed for collapsar) */
   const float lifetime_Gyr_min_mass =
       lifetime_in_Gyr(collapsar_min_mass, Z, props);
+  /* Range over which the collapsars are sampled */
   float delta_lifetime_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
 
+  /* We abort early if the star is clearly too old or clearly too young */
   /* If stars less massive than 10 Msun have exploded, do nothing */
-  if (log10_max_mass < props->log10_collapsar_min_mass_msun)
-    return;  // no overlap
-
-  if (log10_min_mass < props->log10_collapsar_min_mass_msun &&
-      log10_max_mass > props->log10_collapsar_min_mass_msun) {  // some overlap
-
-    /* modify dt_Gyr to be exactly the time from the start of the time-step
-     * to the time at which mass==10 */
-    const float lifetime_Gyr =
-        lifetime_in_Gyr(exp10f(log10_max_mass), Z, props);
-    dt_Gyr = lifetime_Gyr_min_mass - lifetime_Gyr;
-
-  }  // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
-
+  if (log10_max_mass < props->log10_collapsar_min_mass_msun) return;  // no overlap
+    
   /* If stars more massive than 100 Msun have exploded, do nothing */
-  if (log10_min_mass > props->log10_collapsar_max_mass_msun)
-    return;  // no overlap
+  if (log10_min_mass > props->log10_collapsar_max_mass_msun) return;  // no overlap
 
-  if (log10_min_mass < props->log10_collapsar_max_mass_msun &&
-      log10_max_mass >
-          props->log10_collapsar_max_mass_msun) {  // again some overlap
+    /* Compute the age of the star at the beginning and end of step */
+    double t_start_Gyr = star_age_Gyr;
+    double t_end_Gyr = star_age_Gyr + dt_Gyr;
+    
+    /* Do we need to correct because the age window overalps with the
+     minimal or maximal age? */
+    if (t_end_Gyr > lifetime_Gyr_min_mass) t_end_Gyr = lifetime_Gyr_min_mass;
+    if (t_start_Gyr < lifetime_Gyr_max_mass) t_start_Gyr = lifetime_Gyr_max_mass;
+    
+    /* The length of the step used to determine probabilities */
+    const double step_length_Gyr = t_end_Gyr - t_start_Gyr;
 
-    /* modify dt_Gyr to be exactly the time since the star has mass=100 till the
-     * end of time step */
-    const float lifetime_Gyr =
-        lifetime_in_Gyr(exp10f(log10_min_mass), Z, props);
-    dt_Gyr = lifetime_Gyr - lifetime_Gyr_max_mass;
-
-  }  // Otherwise i.e. min_mass > 10 & max_mass < 100 is the normal case
 
   /* Compute probability based on dt_Gyr / lifetime */
 
   /* Number of collapsar events in timestep */
   float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
                         props->mass_to_solar_mass *
-                        (dt_Gyr / delta_lifetime_Gyr);
+                        (step_length_Gyr / delta_lifetime_Gyr);
 
   /* Draw a random number */
   const float rand =
