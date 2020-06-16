@@ -1,9 +1,71 @@
 Running an isolated galaxy with all available COLIBRE physics. 
 
-At the moment, this example only works on cosma. This will change as 
-soon as the cooling tables from Ploeckinger et al. are made public. 
+The default ICs for the colibre examples is the M5_disk.hdf5 IC file.
+This IC file is the default, there are also lower resolution files.
+The ICs are setup in such a way that they are setup using a assumed
+softening for the disk, the default runs are run without bulge as this
+causes a less strong ring formation in the stars and gas. Besides this
+the files contain a star formation history for the stars. Before we 
+did not have old stars with an age. Now the ICs are setup such that 
+the stars within 2.5 scale radii of the disk and not farther away than
+1 kpc from the disk have a stellar age that is uniformly distributed 
+over the last 100 Myr with a star formation rate of 10 Msun/yr for 
+the default run. This means that some stars in this region still have
+an age of -1, given that the total stellar mass in the galaxy is not
+formed in the last 100 Myr alone. 
 
-For using different resolutions:
+The default IC at different resolutions:
+Name IC file:         eps:         Mgas & Mstar:  SFR init:
+M5_disk.hdf5 (fid)    0.2 (kpc)    10^5 Msun      10 Msun/yr
+M6_disk.hdf5          0.4 (kpc)    8*10^5 Msun    10 Msun/yr
+M4_disk.hdf5          0.1 (kpc)    10^5/8 Msun    10 Msun/yr
+
+The same galaxy with a lower gas fraction of 10%:
+Name IC file:         eps:         Mgas & Mstar:  SFR init:
+M5_disk_f10.hdf5      0.2 (kpc)    10^5 Msun      10/3 Msun/yr
+M6_disk_f10.hdf5      0.4 (kpc)    8*10^5 Msun    10/3 Msun/yr
+M4_disk_f10.hdf5      0.1 (kpc)    10^5/8 Msun    10/3 Msun/yr
+
+The same galaxy with a higher gas fraction of 90%:
+Name IC file:         eps:         Mgas & Mstar:  SFR init:
+M5_disk_f90.hdf5      0.2 (kpc)    10^5 Msun      30 Msun/yr
+M6_disk_f90.hdf5      0.4 (kpc)    8*10^5 Msun    30 Msun/yr
+M4_disk_f90.hdf5      0.1 (kpc)    10^5/8 Msun    30 Msun/yr
+
+Galaxies with different sizes (only at M5 resolution):
+Name IC file:         Rdisk     SFR
+M5_disk.hdf5 (fid)    4.0 kpc   10 Msun/yr
+M5_disk_compact.hdf5  2.0 kpc   10 Msun/yr
+M5_disk_diffuse.hdf5  8.0 kpc   10 Msun/yr
+
+These can be downloaded by editing the getIC.sh script.
+
+It is possible for me (Folkert) to generate new/modified ICs if 
+necessary. 
+
+By default the ICs are run with the overwrite_birth_time=0, such that
+the star formation histories are used.
+
+Recommendation when running isolated galaxies:
+Because the isolated galaxies are idealized setups the start of the 
+simulation is not yet in equilibrium, for the inner region of the galaxy
+it is easier to reach equilibrium quickly in the galaxy, lets say around
+100 Myr in the simulation. However for the lower density regions in the 
+isolated galaxies it takes longer around 300 Myr for every feature at 
+densities of 10^-2 cm^-3 to be completely gone. As a default we therefore
+by use a simulation time of 500 Myr. 
+
+Softenings:
+It is important to use the appropriate softening in your runs, given 
+that using a very small softening can cause unexpected crashes in the
+hydro and a too large softening can cause artificial ring formation 
+around the center because gravity in that case gets softened too much
+at the center. 
+
+---------------------------------------------------------------------
+
+Running with old ICs if desired:
+Set the overwrite_birth_time to 1 instead of 0.
 
 1) uncomment the relevant line in getIC.sh and run it
 2) change the InitialConditions:file_name to the file that should be used
@@ -18,24 +80,24 @@ lowres8.hdf5    0.4
 lowres64.hdf5   0.8
 lowres512.hdf5  1.6
 
-Note: If you run with a gravitational softening that is too small, this 
-      might cause unexpected behaviour and the code might crash. 
-
+---------------------------------------------------------------------
 
 Recommended config option:
-./configure --with-subgrid=COLIBRE --with-hydro=anarchy-du --with-kernel=quintic-spline --disable-hand-vec --with-ext-potential=hernquist
+./configure --with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=wendland-C2 --with-ext-potential=hernquist --with-tbbmalloc --enable-ipo
 
-Other tested config options using the anarchy-du scheme:
-./configure --with-subgrid=COLIBRE --with-hydro=anarchy-du --with-kernel=quartic-spline --disable-hand-vec --with-ext-potential=hernquist
-./configure --with-subgrid=COLIBRE --with-hydro=anarchy-du --with-kernel=wendland-C2 --disable-hand-vec --with-ext-potential=hernquist
+Other tested config options using different kernels:
+./configure --with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quintic-spline --with-ext-potential=hernquist --with-tbbmalloc --enable-ipo
+./configure --with-subgrid=COLIBRE --with-hydro=sphenix --with-kernel=quartic-spline --with-ext-potential=hernquist --with-tbbmalloc --enable-ipo
 
 An isolated galaxy can also be run with other hydrodynamic schemes but
-we recommend to run with the anarchy-du scheme with a quintic-spline. 
+we recommend to run with the sphenix scheme with a quintic-spline. 
 
 The code can also be run with additional debug checks like:
 --enable-debug            
 --enable-debugging-checks (code becomes slower)
 --disable-optimization    (code becomes significanlty slower)
+
+---------------------------------------------------------------------
 
 Plotting routines:
 

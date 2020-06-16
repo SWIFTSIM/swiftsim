@@ -15,7 +15,7 @@ Gravity:
 # Parameters governing the time integration (Set dt_min and dt_max to the same value for a fixed time-step run.)
 TimeIntegration:
   time_begin:        0.     # The starting time of the simulation (in internal units).
-  time_end:          0.1023 # The end time of the simulation (in internal units).
+  time_end:          0.5115 # The end time of the simulation (in internal units).
   dt_min:            1e-9  # The minimal time-step size of the simulation (in internal units).
   dt_max:            1e-2   # The maximal time-step size of the simulation (in internal units).
 
@@ -33,7 +33,7 @@ Statistics:
 
 # Parameters related to the initial conditions
 InitialConditions:
-  file_name:               lowres64.hdf5 # The file to read
+  file_name:               M5_disk.hdf5 # The file to read
   periodic:                0        # Are we running with periodic ICs?
   stars_smoothing_length:  0.5
   
@@ -128,7 +128,7 @@ COLIBREStarFormation:
 
 Stars:
   birth_time:           -1       # (Optional) Initial birth times of *all* the stars to be used if we are overwriting them. (-1 means the stars remain inactive feedback-wise througout the run).
-  overwrite_birth_time:  1       # (Optional) Do we want to overwrite the birth time of the stars read from the ICs? (default: 0).
+  overwrite_birth_time:  0       # (Optional) Do we want to overwrite the birth time of the stars read from the ICs? (default: 0).
 
 # Feedback parameter
 COLIBREFeedback:
@@ -195,9 +195,9 @@ HernquistPotential:
   h:               0.704    # reduced Hubble constant (value does not specify the used units!)
   concentration:   9.0      # concentration of the Halo
   diskfraction:    0.040  # Disk mass fraction
-  bulgefraction:   0.014  # Bulge mass fraction
+  bulgefraction:   0.0  # Bulge mass fraction
   timestep_mult:   0.01     # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
-  epsilon:         0.8      # Softening size (internal units)
+  epsilon:         0.2      # Softening size (internal units)
 
 # Parameters for the COLIBRE "equation of state"
 COLIBREEntropyFloor:
