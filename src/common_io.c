@@ -2642,7 +2642,7 @@ int get_param_ptype(const char* name) {
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
     const int ptype_name_len = strlen(part_type_names[ptype]);
     if (name_len >= ptype_name_len &&
-        strcmp(&name[name_len - ptype_name_len], part_type_names[ptype]) != 0)
+        strcmp(&name[name_len - ptype_name_len], part_type_names[ptype]) == 0)
       return ptype;
   }
 
