@@ -1141,8 +1141,6 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 
       scheduler_addunlock(s, c->top->hydro.star_formation,
                           c->hydro.stars_resort);
-
-      scheduler_addunlock(s, c->hydro.stars_resort, c->super->stars.mosaics);
     }
   }
 
@@ -1270,6 +1268,9 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         if (with_feedback && c->hydro.count > 0) {
           scheduler_addunlock(s, star_resort_cell->hydro.stars_resort, 
                               c->stars.stars_veldisp_in);
+
+          scheduler_addunlock(s, star_resort_cell->hydro.stars_resort,
+                              c->super->stars.mosaics);
         }
 
         scheduler_addunlock(s, c->stars.stars_veldisp_out, 
