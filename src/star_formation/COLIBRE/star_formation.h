@@ -182,7 +182,7 @@ INLINE static int star_formation_is_star_forming(
   /* Get the subgrid temperature from the tracers */
   const double subgrid_temperature = p->cooling_data.subgrid_temp;
 
-  /* Check if we satisfy the subgrid temperature criteria */
+  /* Check if we satisfy the subgrid temperature criterion */
   if (subgrid_temperature < starform->temperature_threshold) return 1;
 
   /* Calculate the thermal velocity dispersion */
@@ -507,11 +507,20 @@ INLINE static void starformation_init_backend(
                               phys_const->const_proton_mass *
                               number_density_from_cgs * hydro_props->mu_neutral;
 
+  /* Get the target number of neighbours and put this as a constant in the
+   * virial criterion, scales as target number of neighbours to the power
+   * 2/3 */
+  const double target_neighbours_to_1_over_3 =
+      cbrt(hydro_props->target_neighbours);
+  const double target_neighbours_to_2_over_3 =
+      target_neighbours_to_1_over_3 * target_neighbours_to_1_over_3;
+
   /* Store a variable for the virial criterion */
   starform->alpha_virial = parser_get_param_double(
       parameter_file, "COLIBREStarFormation:alpha_virial");
 
-  starform->alpha_virial_inv = 1. / (starform->alpha_virial * G_newton);
+  starform->alpha_virial_inv =
+      1. / (starform->alpha_virial * G_newton * target_neighbours_to_2_over_3);
 
   /* Get the subgrid density threshold */
   starform->subgrid_density_threshold_HpCM3 = parser_get_opt_param_double(
@@ -525,7 +534,7 @@ INLINE static void starformation_init_backend(
       phys_const->const_proton_mass * number_density_from_cgs *
       hydro_props->mu_neutral;
 
-  /* Get the subgrid temperature criteria */
+  /* Get the subgrid temperature criterion */
   starform->temperature_threshold = parser_get_param_double(
       parameter_file, "COLIBREStarFormation:temperature_threshold_K");
 
