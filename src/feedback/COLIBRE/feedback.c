@@ -593,15 +593,23 @@ double integrate_rate_of_NSM(const struct spart* sp, const double t0,
  * To do this compute the number of NSM that occur during the timestep
  * and multiply by constants.
  *
- * @param props properties of the feedback model
- * @param sp #spart we are computing feedback from
- * @param star_age_Gyr age of star in Gyr
- * @param dt_Gyr timestep dt in Gyr
+ * The number of NSM events is drawn from a 1/t DTD.
+ *
+ * The Eu mass ejected per event is independent of Z.
+ *
+ * @param props properties of the feedback model.
+ * @param sp #spart we are computing feedback from.
+ * @param star_age_Gyr age of star in Gyr.
+ * @param dt_Gyr timestep dt in Gyr.
+ * @param ti_current Current integer time (for random numbers).
+ * @param cosmo The cosmological model (for logging).
  */
-INLINE static void evolve_NSM_stochastic(
-    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
-    const double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo, const double stellar_evolution_age_cut_Gyr) {
+INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
+                                         struct spart* sp,
+                                         const double star_age_Gyr,
+                                         const double dt_Gyr,
+                                         const integertime_t ti_current,
+                                         const struct cosmology* cosmo) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -629,7 +637,7 @@ INLINE static void evolve_NSM_stochastic(
 
   /* Draw a random number */
   const float rand =
-      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_1);
 
   /* Are we lucky? If so we have 1 more event */
   if (prob_num > rand) num_events++;
@@ -660,8 +668,10 @@ INLINE static void evolve_NSM_stochastic(
  *
  * To do this compute the number of CEJSN that occur during the timestep
  * and multiply by constants.
- * This assumes a uniform probability over the lifetime range of SNII stars.
- * The Eu mass ejected is independent of Z.
+ * This assumes a uniform probability over the Z-dependent lifetime range of
+ * SNII stars.
+ *
+ * The Eu mass ejected per event is independent of Z.
  *
  * @param log10_min_mass log10 of the minimal mass of stars dying in this step
  * in solar masses.
@@ -762,8 +772,10 @@ INLINE static void evolve_CEJSN_stochastic(
  *
  * To do this compute the number of collapsars that occur during the timestep
  * and multiply by constants.
- * This assumes a uniform probability over the lifetime range of collapsars.
- * The Eu mass ejected is independent of Z.
+ * This assumes a uniform probability over the Z-dependent lifetime range of
+ * collapsars.
+ *
+ * The Eu mass ejected per event is independent of Z.
  *
  * @param log10_min_mass log10 of the minimal mass of stars dying in this step
  * in solar masses.
@@ -1502,9 +1514,6 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
-  const double stellar_evolution_age_cut_Gyr =
-      feedback_props->stellar_evolution_age_cut *
-      units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
   /* Get the total metallicity (metal mass fraction) at birth time and impose a
    * minimum */
@@ -1691,7 +1700,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   }
   if (feedback_props->with_r_process_enrichment) {
     evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
-                          cosmo, stellar_evolution_age_cut_Gyr);
+                          cosmo);
 
     evolve_CEJSN_stochastic(log10_min_dying_mass_Msun,
                             log10_max_dying_mass_Msun, feedback_props, sp, Z,
