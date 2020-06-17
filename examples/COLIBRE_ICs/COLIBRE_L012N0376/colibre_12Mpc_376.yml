@@ -143,7 +143,7 @@ COLIBREChemistry:
 # COLIBRE star formation model (Following a density Schmidt law)
 COLIBREStarFormation:
   min_over_density:                  57.7           # Minimum over density above which star formation is allowed
-  alpha_virial:                      2.             # set the alpha virial for star forming gas.
+  alpha_virial:                      1.             # set the alpha virial for star forming gas.
   temperature_threshold_K:           0.             # set the subgrid temperature threshold to zero, so no temperature threshold
   SF_model:                          SchmidtLaw     # star formation model to use (SchmidtLaw or PressureLaw)
   star_formation_efficiency:         0.01           # Star formation efficiency (SFE) of the Schmidt law, \rho_\star = SFE * \rho / t_ff
