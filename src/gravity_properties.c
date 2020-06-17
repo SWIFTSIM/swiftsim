@@ -162,8 +162,8 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
   }
 
   /* Use the maximum of softening and smoothing for gas tensors? */
-  p->gas_tensors_max_h =
-      parser_get_opt_param_int(params, "Gravity:gas_tensors_max_h", 0);
+  p->gas_tensors_htoomre =
+      parser_get_opt_param_int(params, "Gravity:gas_tensors_htoomre", 0);
 
   /* Initial tensor softening length guess = factor * eps_baryon */
   p->init_toomre_length_softening_factor = parser_get_opt_param_float(params,
@@ -255,8 +255,6 @@ void gravity_props_print(const struct gravity_props *p) {
           kernel_long_gravity_truncation_name);
 
   message("Self-gravity tree update frequency: f=%f", p->rebuild_frequency);
-
-  message("Use max(hsoft,hsml) for gas tensors: %d", p->gas_tensors_max_h);
 }
 
 #if defined(HAVE_HDF5)

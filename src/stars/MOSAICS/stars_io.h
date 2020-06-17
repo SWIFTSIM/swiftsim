@@ -428,7 +428,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* Maximum Toomre length for tensor softening, in kpc */
   sp->max_toomre_length = parser_get_opt_param_float(params,
-      "Stars:max_toomre_length", 1.f);
+      "Stars:max_toomre_length", 2.f);
 
   /* kpc in internal units */
   sp->max_toomre_length *= 1000. * phys_const->const_parsec;

@@ -333,19 +333,12 @@ stars_mosaics_copy_extra_properties(
 __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
     struct part* p, const struct engine* e, const struct cosmology* cosmo) {
 
-  /* Did it already become a star? */
-  if (!p->gpart)
-    return;
-
   const struct stars_props* star_props = e->stars_properties;
   const double const_G = e->physical_constants->const_newton_G;
 
-  /* Gas properties */
-  const double rho = hydro_get_physical_density(p, cosmo);
-  const double pressure = rho * p->sf_data.sigma_v2 / 3.f;
-
-  /* Gas surface density, assuming phi_P = 1 */
-  const double SigmaG = sqrt(2. * pressure / (M_PI * const_G));
+  /* Did it already become a star? */
+  if (!p->gpart)
+    return;
 
   /* Temporary array for eigvec/val calculation
    * Note the lower elements are never referenced by dsyevj3 */
@@ -357,19 +350,31 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
   tensor[1][2] = p->gpart->tidal_tensor[4];
   tensor[2][2] = p->gpart->tidal_tensor[5];
 
-  //TODO testing
   double sum_tensor = 0.f;
   for (int i = 0; i < 6; i++)
     sum_tensor += p->gpart->tidal_tensor[i];
+  /*TODO I think gravity is calculated by this point, so must be something
+   * going on? */
+  //if (sum_tensor == 0)
+  //  error("Tidal tensor hasn't been calculated yet for this particle!");
+
+  /* Can't do anything in this case, so keep the length we have */
   if (sum_tensor == 0)
-    error("Tidal tensor hasn't been calculated yet for this particle!");
+    return;
 
   /* Get the eigenvalues */
   double tideval[3];
   dsyevj3(tensor, tideval);
 
-  /* sort eigenvalues, tideval[2] (=lambda_1) is largest eigenvalue */
+  /* sort eigenvalues, tideval[2] is largest eigenvalue */
   sort3(tideval);
+
+  /* Gas properties */
+  const double rho = hydro_get_physical_density(p, cosmo);
+  const double pressure = rho * p->sf_data.sigma_v2 / 3.f;
+
+  /* Gas surface density, assuming phi_P = 1 */
+  const double SigmaG = sqrt(2. * pressure / (M_PI * const_G));
 
   /* Circular and epicyclic frequencies */
   double Omega2;
@@ -391,6 +396,9 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
 
   /* Back in comoving units */
   p->sf_data.toomre_length /= cosmo->a;
+
+  /* Copy to gpart for next gravity calculation */
+  p->gpart->htoomre = p->sf_data.toomre_length;
 }
 
 /**

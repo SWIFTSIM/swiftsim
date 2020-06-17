@@ -57,8 +57,8 @@ struct gpart {
   /*! Tidal tensor (xx,xy,xz,yy,yz,zz) */
   float tidal_tensor[6];
 
-  /*! Smoothing length of gas particle */
-  float hsml;
+  /*! Toomre length of gas particle */
+  float htoomre;
 
 #ifdef SWIFT_DEBUG_CHECKS
 

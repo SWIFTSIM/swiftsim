@@ -269,9 +269,9 @@ static INLINE void runner_dopair_grav_pp_full(
       if (ci_cache->calc_tensor[pid]) {
 
         float h_tt, h2_tt, h_inv_tt, h_inv_3_tt;
-        if (ci_cache->hsml[pid] > h) {
-          /* Use the gas smoothing length */
-          h_tt = ci_cache->hsml[pid];
+        if (ci_cache->htoomre[pid] > h) {
+          /* Use the gas Toomre length */
+          h_tt = ci_cache->htoomre[pid];
           h2_tt = h_tt * h_tt;
           h_inv_tt = 1.f / h_tt;
           h_inv_3_tt = h_inv_tt * h_inv_tt * h_inv_tt;
@@ -468,9 +468,9 @@ static INLINE void runner_dopair_grav_pp_truncated(
       if (ci_cache->calc_tensor[pid]) {
 
         float h_tt, h2_tt, h_inv_tt, h_inv_3_tt;
-        if (ci_cache->hsml[pid] > h) {
-          /* Use the gas smoothing length */
-          h_tt = ci_cache->hsml[pid];
+        if (ci_cache->htoomre[pid] > h) {
+          /* Use the gas Toomre length */
+          h_tt = ci_cache->htoomre[pid];
           h2_tt = h_tt * h_tt;
           h_inv_tt = 1.f / h_tt;
           h_inv_3_tt = h_inv_tt * h_inv_tt * h_inv_tt;
@@ -581,7 +581,7 @@ static INLINE void runner_dopair_grav_pm_full(
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_zz, ci_cache->tensor_zz,
                             SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, hsml, ci_cache->hsml,
+  swift_declare_aligned_ptr(float, htoomre, ci_cache->htoomre,
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, ci_cache->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
@@ -762,7 +762,7 @@ static INLINE void runner_dopair_grav_pm_truncated(
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(float, tensor_zz, ci_cache->tensor_zz,
                             SWIFT_CACHE_ALIGNMENT);
-  swift_declare_aligned_ptr(float, hsml, ci_cache->hsml,
+  swift_declare_aligned_ptr(float, htoomre, ci_cache->htoomre,
                             SWIFT_CACHE_ALIGNMENT);
   swift_declare_aligned_ptr(int, calc_tensor, ci_cache->calc_tensor,
                             SWIFT_CACHE_ALIGNMENT);
@@ -849,9 +849,9 @@ static INLINE void runner_dopair_grav_pm_truncated(
     if (calc_tensor[pid]) {
 
       float h_tt, h_inv_tt;
-      if (hsml[pid] > h_i) {
-        /* Use the gas smoothing length */
-        h_tt = hsml[pid];
+      if (htoomre[pid] > h_i) {
+        /* Use the gas Toomre length */
+        h_tt = htoomre[pid];
         h_inv_tt = 1.f / h_tt;
       } else {
         /* Use normal softening */
@@ -1219,9 +1219,9 @@ static INLINE void runner_doself_grav_pp_full(
       if (ci_cache->calc_tensor[pid]) {
 
         float h_tt, h2_tt, h_inv_tt, h_inv_3_tt;
-        if (ci_cache->hsml[pid] > h) {
-          /* Use the gas smoothing length */
-          h_tt = ci_cache->hsml[pid];
+        if (ci_cache->htoomre[pid] > h) {
+          /* Use the gas Toomre length */
+          h_tt = ci_cache->htoomre[pid];
           h2_tt = h_tt * h_tt;
           h_inv_tt = 1.f / h_tt;
           h_inv_3_tt = h_inv_tt * h_inv_tt * h_inv_tt;
@@ -1401,9 +1401,9 @@ static INLINE void runner_doself_grav_pp_truncated(
       if (ci_cache->calc_tensor[pid]) {
 
         float h_tt, h2_tt, h_inv_tt, h_inv_3_tt;
-        if (ci_cache->hsml[pid] > h) {
-          /* Use the gas smoothing length */
-          h_tt = ci_cache->hsml[pid];
+        if (ci_cache->htoomre[pid] > h) {
+          /* Use the gas Toomre length */
+          h_tt = ci_cache->htoomre[pid];
           h2_tt = h_tt * h_tt;
           h_inv_tt = 1.f / h_tt;
           h_inv_3_tt = h_inv_tt * h_inv_tt * h_inv_tt;
