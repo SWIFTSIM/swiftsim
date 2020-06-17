@@ -593,17 +593,23 @@ double integrate_rate_of_NSM(const struct spart* sp, const double t0,
  * To do this compute the number of NSM that occur during the timestep
  * and multiply by constants.
  *
- * @param props properties of the feedback model
- * @param sp #spart we are computing feedback from
- * @param star_age_Gyr age of star in Gyr
- * @param dt_Gyr timestep dt in Gyr
+ * The number of NSM events is drawn from a 1/t DTD.
+ *
+ * The Eu mass ejected per event is independent of Z.
+ *
+ * @param props properties of the feedback model.
+ * @param sp #spart we are computing feedback from.
+ * @param star_age_Gyr age of star in Gyr.
+ * @param dt_Gyr timestep dt in Gyr.
+ * @param ti_current Current integer time (for random numbers).
+ * @param cosmo The cosmological model (for logging).
  */
 INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
-                                         struct spart* sp, double star_age_Gyr,
-                                         double dt_Gyr,
+                                         struct spart* sp,
+                                         const double star_age_Gyr,
+                                         const double dt_Gyr,
                                          const integertime_t ti_current,
-                                         const struct cosmology* cosmo,
-                                         double stellar_evolution_age_cut_Gyr) {
+                                         const struct cosmology* cosmo) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
@@ -619,22 +625,22 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
   float num_NSM =
       integrate_rate_of_NSM(sp, star_age_Gyr, star_age_Gyr + dt_Gyr, props);
 
-  /* Draw a random number */
-  const float rand =
-      random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
-
   int num_events = 0;
-
   if (num_NSM > 1.f) {
     num_events = floor(num_NSM);
     num_NSM -= num_events;
   }
 
-  /* I define my probability as number of NSM events per time step */
+  /* I define my probability as the left-over after we removed the integer
+   * number of events */
   float prob_num = num_NSM;
 
+  /* Draw a random number */
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_1);
+
   /* Are we lucky? If so we have 1 more event */
-  if (prob_num > rand) num_events += 1;
+  if (prob_num > rand) num_events++;
 
   if (num_events > 0) {
 
@@ -650,55 +656,96 @@ INLINE static void evolve_NSM_stochastic(const struct feedback_props* props,
     sp->feedback_data.to_distribute.mass_from_NSM += delta_mass;
 
     /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 0);
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events,
+                                       /*flag=*/0);
   }
 }
 
 /**
  * @brief Stochastic implementation of enrichment of r-process elements
  * due to common envelope jets supernovae (CEJSN, type of rare core-collapse
- * SN). To do this compute the number of CEJSN that occur during the timestep
- * and multiply by constants.
+ * SN).
  *
- * @param props properties of the feedback model
- * @param sp #spart we are computing feedback from
- * @param star_age_Gyr age of star in Gyr
- * @param dt_Gyr timestep dt in Gyr
+ * To do this compute the number of CEJSN that occur during the timestep
+ * and multiply by constants.
+ * This assumes a uniform probability over the Z-dependent lifetime range of
+ * SNII stars.
+ *
+ * The Eu mass ejected per event is independent of Z.
+ *
+ * @param log10_min_mass log10 of the minimal mass of stars dying in this step
+ * in solar masses.
+ * @param log10_max_mass log10 of the maximal mass of stars dying in this step
+ * in solar masses.
+ * @param props properties of the feedback model.
+ * @param sp #spart we are computing feedback for.
+ * @param Z The star's metallicity.
+ * @param star_age_Gyr age of star in Gyr.
+ * @param dt_Gyr timestep dt in Gyr.
+ * @param ti_current Current integer time (for random numbers).
+ * @param cosmo The cosmological model (for logging).
  */
 INLINE static void evolve_CEJSN_stochastic(
-    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
-    double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+    const float log10_min_mass, const float log10_max_mass,
+    const struct feedback_props* props, struct spart* sp, const float Z,
+    const double star_age_Gyr, const double dt_Gyr,
+    const integertime_t ti_current, const struct cosmology* cosmo) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
 
-  /* First we check that the amount of time since star was formed */
-  /* is larger than 30 Myr */
-  if (star_age_Gyr < 0.03) return;
-  if (star_age_Gyr > 0.1) return;
+  /* Abort early if the star is clearly too old or clearly too young */
+  if (log10_max_mass < props->log10_SNII_min_mass_msun) return;
+  if (log10_min_mass > props->log10_SNII_max_mass_msun) return;
+
+  /* Compute the lifetime of stars with the min and max SNII masses
+   * and metallicities */
+  const float CEJSN_max_mass = exp10f(props->log10_SNII_max_mass_msun);
+  const float CEJSN_min_mass = exp10f(props->log10_SNII_min_mass_msun);
+  const float lifetime_Gyr_max_mass = lifetime_in_Gyr(CEJSN_max_mass, Z, props);
+  const float lifetime_Gyr_min_mass = lifetime_in_Gyr(CEJSN_min_mass, Z, props);
+
+  /* Compute the age of the star at the beginning and end of step */
+  double t_start_Gyr = star_age_Gyr;
+  double t_end_Gyr = star_age_Gyr + dt_Gyr;
+
+  /* Do we need to correct because the age window overalps with the
+     minimal or maximal age? */
+  if (t_end_Gyr > lifetime_Gyr_min_mass) t_end_Gyr = lifetime_Gyr_min_mass;
+  if (t_start_Gyr < lifetime_Gyr_max_mass) t_start_Gyr = lifetime_Gyr_max_mass;
+
+  /* The length of the step used to determine probabilities */
+  const double step_length_Gyr = t_end_Gyr - t_start_Gyr;
+
+  /* Range over which the CEJSN are sampled */
+  const float delta_lifetime_Gyr =
+      lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
+
+  /* Compute probability based on step_length / lifetime */
 
   /* Number of CEJSN events in timestep */
   float num_CEJSN = props->CEJSN_per_Msun * sp->mass_init *
-                    props->mass_to_solar_mass * (dt_Gyr / 0.07);
+                    props->mass_to_solar_mass *
+                    (step_length_Gyr / delta_lifetime_Gyr);
+
+  int num_events = 0;
+  if (num_CEJSN > 1) {
+    num_events = floor(num_CEJSN);
+    num_CEJSN -= num_events;
+  }
+
+  /* I define my probability as the left-over after we removed the integer
+   * number of events */
+  const float prob_num = num_CEJSN;
 
   /* Draw a random number */
   const float rand =
       random_unit_interval(sp->id, ti_current, random_number_enrichment_2);
 
-  int num_events = 0;
-  if (num_CEJSN > 1.f) {
-    num_events = floor(num_CEJSN);
-    num_CEJSN -= num_events;
-  }
-
-  /* I define my probability as number of CEJSN per time step */
-  const float prob_num = num_CEJSN;
-
   /* Are we lucky? If so we have 1 more event */
-  if (prob_num > rand) num_events += 1;
+  if (prob_num > rand) num_events++;
 
   if (num_events > 0) {
 
@@ -714,45 +761,80 @@ INLINE static void evolve_CEJSN_stochastic(
     sp->feedback_data.to_distribute.mass_from_CEJSN += delta_mass;
 
     /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 1);
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events,
+                                       /*flag=*/1);
   }
 }
 
 /**
  * @brief Stochastic implementation of enrichment of r-process elements
  * due to collapsars (rare type core-collapse SN).
+ *
  * To do this compute the number of collapsars that occur during the timestep
  * and multiply by constants.
+ * This assumes a uniform probability over the Z-dependent lifetime range of
+ * collapsars.
  *
- * @param props properties of the feedback model
- * @param sp #spart we are computing feedback from
- * @param star_age_Gyr age of star in Gyr
- * @param dt_Gyr timestep dt in Gyr
+ * The Eu mass ejected per event is independent of Z.
+ *
+ * @param log10_min_mass log10 of the minimal mass of stars dying in this step
+ * in solar masses.
+ * @param log10_max_mass log10 of the maximal mass of stars dying in this step
+ * in solar masses.
+ * @param props properties of the feedback model.
+ * @param sp #spart we are computing feedback for.
+ * @param Z The star's metallicity.
+ * @param star_age_Gyr age of star in Gyr.
+ * @param dt_Gyr timestep dt in Gyr.
+ * @param ti_current Current integer time (for random numbers).
+ * @param cosmo The cosmological model (for logging).
  */
 INLINE static void evolve_collapsar_stochastic(
-    const struct feedback_props* props, struct spart* sp, double star_age_Gyr,
-    double dt_Gyr, const integertime_t ti_current,
-    const struct cosmology* cosmo, double stellar_evolution_age_cut_Gyr) {
+    const float log10_min_mass, const float log10_max_mass,
+    const struct feedback_props* props, struct spart* sp, const float Z,
+    const double star_age_Gyr, const double dt_Gyr,
+    const integertime_t ti_current, const struct cosmology* cosmo) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (dt_Gyr < 0.) error("Negative time-step length!");
   if (star_age_Gyr < 0.) error("Negative age!");
 #endif
 
-  /* First we check that the amount of time since star was formed */
-  /* is larger than 30 Myr */
-  if (star_age_Gyr < 0.03) return;
-  if (star_age_Gyr > 0.1) return;
+  /* Abort early if the star is clearly too old or clearly too young */
+  if (log10_max_mass < props->log10_collapsar_min_mass_msun) return;
+  if (log10_min_mass > props->log10_collapsar_max_mass_msun) return;
+
+  /* Compute the lifetime of stars with the min and max collapsar masses
+   * and metallicities */
+  const float collapsar_max_mass = exp10f(props->log10_collapsar_max_mass_msun);
+  const float collapsar_min_mass = exp10f(props->log10_collapsar_min_mass_msun);
+  const float lifetime_Gyr_max_mass =
+      lifetime_in_Gyr(collapsar_max_mass, Z, props);
+  const float lifetime_Gyr_min_mass =
+      lifetime_in_Gyr(collapsar_min_mass, Z, props);
+
+  /* Compute the age of the star at the beginning and end of step */
+  double t_start_Gyr = star_age_Gyr;
+  double t_end_Gyr = star_age_Gyr + dt_Gyr;
+
+  /* Do we need to correct because the age window overalps with the
+     minimal or maximal age? */
+  if (t_end_Gyr > lifetime_Gyr_min_mass) t_end_Gyr = lifetime_Gyr_min_mass;
+  if (t_start_Gyr < lifetime_Gyr_max_mass) t_start_Gyr = lifetime_Gyr_max_mass;
+
+  /* The length of the step used to determine probabilities */
+  const double step_length_Gyr = t_end_Gyr - t_start_Gyr;
+
+  /* Range over which the collapsars are sampled */
+  const float delta_lifetime_Gyr =
+      lifetime_Gyr_min_mass - lifetime_Gyr_max_mass;
+
+  /* Compute probability based on step_length / lifetime */
 
   /* Number of collapsar events in timestep */
-  /*const float num_collapsar = props->collapsar_per_Msun * dt_Gyr *
-   * (sp->mass_init / star_age_Gyr) * props->mass_to_solar_mass;*/
   float num_collapsar = props->collapsar_per_Msun * sp->mass_init *
-                        props->mass_to_solar_mass * (dt_Gyr / 0.07);
-
-  /* Draw a random number */
-  const float rand =
-      random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
+                        props->mass_to_solar_mass *
+                        (step_length_Gyr / delta_lifetime_Gyr);
 
   int num_events = 0;
   if (num_collapsar > 1.f) {
@@ -760,11 +842,16 @@ INLINE static void evolve_collapsar_stochastic(
     num_collapsar -= num_events;
   }
 
-  /* I define my probability as number of collapsars per time step */
+  /* I define my probability as the left-over after we removed the integer
+   * number of events */
   const float prob_num = num_collapsar;
 
+  /* Draw a random number */
+  const float rand =
+      random_unit_interval(sp->id, ti_current, random_number_enrichment_3);
+
   /* Are we lucky? If so we have 1 more event */
-  if (prob_num > rand) num_events += 1;
+  if (prob_num > rand) num_events++;
 
   if (num_events > 0) {
 
@@ -780,7 +867,8 @@ INLINE static void evolve_collapsar_stochastic(
     sp->feedback_data.to_distribute.mass_from_collapsar += delta_mass;
 
     /* Write the event to the r-process log file */
-    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events, 2);
+    event_logger_r_processes_log_event(sp, cosmo, delta_mass, num_events,
+                                       /*flag=*/2);
   }
 }
 
@@ -1411,12 +1499,11 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const double dt_Myr = dt * conversion_factor * 1e3;
   const double star_age_Gyr = age * conversion_factor;
   const double star_age_Myr = age * conversion_factor * 1e3;
-  const double stellar_evolution_age_cut_Gyr =
-      feedback_props->stellar_evolution_age_cut *
-      units_cgs_conversion_factor(us, UNIT_CONV_TIME) / Gyr_in_cgs;
 
-  /* Get the metallicity */
-  const float Z = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+  /* Get the total metallicity (metal mass fraction) at birth time and impose a
+   * minimum */
+  const float Z = max(chemistry_get_total_metal_mass_fraction_for_feedback(sp),
+                      exp10(log10_min_metallicity));
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
@@ -1583,7 +1670,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   const float log10_min_dying_mass_Msun = log10f(min_dying_mass_Msun);
 
   /* Compute elements, energy and momentum to distribute from the
-   *  three channels SNIa, SNII, AGB */
+   *  four channels SNIa, SNII, AGB and r-processes */
   if (feedback_props->with_SNIa_enrichment) {
     evolve_SNIa(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
                 feedback_props, sp, star_age_Gyr, dt_Gyr);
@@ -1598,11 +1685,15 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   }
   if (feedback_props->with_r_process_enrichment) {
     evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
-                          cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_CEJSN_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,
-                            cosmo, stellar_evolution_age_cut_Gyr);
-    evolve_collapsar_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr,
-                                ti_begin, cosmo, stellar_evolution_age_cut_Gyr);
+                          cosmo);
+
+    evolve_CEJSN_stochastic(log10_min_dying_mass_Msun,
+                            log10_max_dying_mass_Msun, feedback_props, sp, Z,
+                            star_age_Gyr, dt_Gyr, ti_begin, cosmo);
+
+    evolve_collapsar_stochastic(log10_min_dying_mass_Msun,
+                                log10_max_dying_mass_Msun, feedback_props, sp,
+                                Z, star_age_Gyr, dt_Gyr, ti_begin, cosmo);
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1825,6 +1916,22 @@ void feedback_props_init(struct feedback_props* fp,
       params, "COLIBREFeedback:num_of_collapsar_per_Msun");
   fp->yield_Eu_from_collapsar = parser_get_param_double(
       params, "COLIBREFeedback:yield_Eu_from_collapsar_event_Msun");
+
+  /* Stellar mass limits for collapsar events */
+  const double collapsar_min_mass_msun = parser_get_param_double(
+      params, "COLIBREFeedback:collapsar_min_mass_Msun");
+  const double collapsar_max_mass_msun = parser_get_param_double(
+      params, "COLIBREFeedback:collapsar_max_mass_Msun");
+
+  /* Check that it makes sense. */
+  if (collapsar_max_mass_msun < collapsar_min_mass_msun) {
+    error(
+        "Can't have the max collapsar mass smaller than the min collapsar "
+        "mass!");
+  }
+
+  fp->log10_collapsar_min_mass_msun = log10(collapsar_min_mass_msun);
+  fp->log10_collapsar_max_mass_msun = log10(collapsar_max_mass_msun);
 
   /* Properties of the SNIa enrichment model -------------------------------- */
 

@@ -201,6 +201,9 @@ COLIBREFeedback:
   yield_Eu_from_CEJSN_event_Msun:   1e-5            # Amount of europium (in units of Msolar) released by CEJSN(=Common envelop jet SN).
   num_of_collapsar_per_Msun:        4.53e-7         # Number of rare core-collapse SN (collapsars) per Msolar.
   yield_Eu_from_collapsar_event_Msun: 1e-4          # Amount of europium (in units of Msolar) released by collapsars.
+  collapsar_min_mass_Msun:          10.0            # Minimal mass considered for r-process enrichment from collapsars in solar masses.
+  collapsar_max_mass_Msun:          100.0           # Maximal mass considered for r-process enrichment from collapsars in solar masses.
+
 
 
 # Parameters for the COLIBRE "equation of state"

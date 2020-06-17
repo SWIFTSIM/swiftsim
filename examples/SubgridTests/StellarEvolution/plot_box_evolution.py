@@ -237,19 +237,32 @@ Eu_mass_collapsar_Msun = zeros(np.size(Eu_t))
 Eu_mass_CEJSN_Msun = zeros(np.size(Eu_t))
 Eu_mass_NSM_Msun = zeros(np.size(Eu_t))
 
+# NSM
+
 t0 = 0.03
 t1 = 0.1
 mask = Eu_t > t0
 Eu_mass_NSM_Msun[mask] = Eu_N_NSM_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs) * Eu_yield_NSM_Msun * np.log(Eu_t[mask] / t0)
 
-mask = np.logical_and(Eu_t > t0, Eu_t <= t1)
-Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun * (Eu_t[mask] - 0.03) / (0.1 - 0.03)
-Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun * (Eu_t[mask] - 0.03) / (0.1 - 0.03)
+# Collapsars
 
+t0 = 0.003 # Age of 100 Msun stars with Z = 0.01
+t1 = 0.028 # Age of 10 Msun stars with Z = 0.01
+mask = np.logical_and(Eu_t > t0, Eu_t <= t1)
+Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun * (Eu_t[mask] - t0) / (t1 - t0)
 mask = Eu_t > t1
 Eu_mass_collapsar_Msun[mask] = Eu_N_collapsar_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_collapsar_Msun
+
+# CEJSN
+
+t0 = 0.003 # Age of 100 Msun stars with Z = 0.01
+t1 = 0.076 # Age of 8 Msun stars with Z = 0.01
+mask = np.logical_and(Eu_t > t0, Eu_t <= t1)
+Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun * (Eu_t[mask] - t0) / (t1 - t0)
+mask = Eu_t > t1
 Eu_mass_CEJSN_Msun[mask] = Eu_N_CEJSN_p_Msun * (swift_box_star_mass[0] * unit_mass_in_cgs / Msun_in_cgs)* Eu_yield_CEJSN_Msun
 
+# Total Eu mass
 Eu_mass_total_Msun = Eu_mass_collapsar_Msun + Eu_mass_CEJSN_Msun + Eu_mass_NSM_Msun
 
 
