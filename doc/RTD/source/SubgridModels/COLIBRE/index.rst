@@ -14,8 +14,96 @@ different components of the COLIBRE sub-grid model.
 Star formation: Schmidt law
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The star formation is implemented as a simple density Schmidt law given
-by :math:`\dot{\rho}_\star = \epsilon_{sfe} \frac{\rho}{\tau_{ff}}`. Which is 
+The star formation model in the COLIBRE subgrid model consists of 3 components,
+the first component are the star formation criteria, this determines which gas 
+is allowed to form stars. The second component is the Schmidt law which sets 
+the star formation rate of the gas according to a Schmidt law. The last 
+component is the pressure law which sets the star formation rate according to
+the pressure of the gas. Component 2 and 3 can never be used at the same time.
+In the following part we will explain how to use the different parts of the 
+star formation model.
+
+Star forming criteria
+^^^^^^^^^^^^^^^^^^^^^
+
+In our simulations not all the gas is star forming, because of that we need to
+determine in the simulation which gas is star forming. In the COLIBRE star 
+formation model there are several star formation criteria that can be used to 
+determine if gas is star forming. 
+
+The first star formation criterion is an 
+overdensity criterion. In the code the overdensity criterion is called 
+:code:`min_over_density`, this is a mandatory criterion and we often set this
+to 57.7. This criterion always needs to be satisfied in order of gas to be 
+star forming (in non-cosmological runs it is satisfied for all gas). Besides 
+this there are 4 additional criteria that are on their own plus the overdensity
+criterion, if one of these criteria is satisfied and the overdensity criterion is 
+satisfied, this is enough to allow the gas to be star forming. In cosmologial
+runs the overdensity criteria is important because it prevents gas to be star
+forming at high redshifts in non-collapsed objects.
+
+The second criterion is the virial criterion, which uses the 3D velocity 
+dispersion, the kernel mass and the density to determine if gas is 
+gravitationally bound. In the parameter file the variable is called
+:code:`alpha_virial`, this variable is mandatory and often set to 1.0. If
+it is desired to not use the virial criteria a value of 0 will turn it off.
+
+The third criterion is the subgrid temperature threshold, which allows gas to
+be star forming when the subgrid temperature of the gas is below some 
+threshold. In the parameter file this is called :code:`temperature_threshold_K`
+in which a good value is between 100 K and 1000 K. 
+
+The fourth criterion is the maximal allowed density for gas. In the case that
+we do not want gas to reach densities above a certain value we can 
+instantaneously convert gas particles to stars if necessary, this variable is 
+called :code:`threshold_max_density_H_p_cm3`, typical values for EAGLE like
+models are around :math:`10^5` particles per cubic centimeter, in COLIBRE we 
+therefore might need to use a higher value, but for now we are not using this
+variable. This variable is optional and when not specified the value is set to
+infinity.
+
+The fifth and last criterion is the criterion that makes all gas above a certain
+subgrid density have a star formation rate. Like the previous criterion, this 
+criterion is optional and so when not specified is set to infinity. This 
+criterion can be specified by using :code:`subgrid_density_threshold_H_p_CM3`.
+In combination with the temperature model a value of :math:`10^2` is a good 
+value. 
+
+Lastly it is important to realize for models that use the subgrid temperature 
+criteria that there is an implicit dependence with this criteria in the point
+at which the cooling calculates the subgrid temperature. This is specified by
+:code:`delta_logTEOS_subgrid_properties` which specifies how far away from the
+EoS we calculate the subgrid temperature. A default value for this is 0.2, but 
+using 0.3 or 0.5 makes no practical difference. 
+
++----------------------------------------+---------------------------------------+-----------------------+
+| Name                                   | Description                           | Comments              |
++========================================+=======================================+=======================+
+|| ``min_over_density``                  | | Is gas in a high enough over density| | Mandatory           |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``alpha_virial``                      | | Is the virial criterion satisfied?  | | Mandatory           |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``temperature_threshold``             | | Particles need to have a lower      | | Mandatory           |
+|                                        | | subgrid temperature than this to be |                       |
+|                                        | | star forming.                       |                       |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``subgrid_density_threshold_H_p_CM3`` | | Subgrid density threshold from      | | Not specifying the  |
+|                                        | | which to always be star forming     | | variable sets it    |
+|                                        |                                       | | equal to infinity   |
++----------------------------------------+---------------------------------------+-----------------------+
+|| ``threshold_max_density_H_p_cm3``     | | Maximal gas density, gas above this | | Not specifying the  |
+|                                        | | density is instantaneously converted| | variable sets it    |
+|                                        | | into stars.                         | | to infinity         |
++----------------------------------------+---------------------------------------+-----------------------+
+
+Schmidt law
+^^^^^^^^^^^
+
+The first model that sets the star formation rate is the Schmidt law. This 
+model can be specified by using :code:`SF_model:SchmidtLaw`. 
+
+The star formation rate for the Schmidt law is implemented as:
+:math:`\dot{\rho}_\star = \epsilon_{sfe} \frac{\rho}{\tau_{ff}}`. Which is 
 implemented as :math:`\dot{m}_\star = \epsilon_{sfe} \frac{m_{gas}}{\tau_{ff}}`,
 with the free fall time calculated as 
 :math:`\tau_{ff} = \sqrt{\frac{3\pi}{32 G \rho}}`.
@@ -25,55 +113,61 @@ density.
 Given a star formation rate the probability of a converting the particle to a 
 star is given by: :math:`Prob=\min\left(\frac{\dot{m}_*\Delta t}{m_g},1\right)`.
 
-To prevent star formation in non-collapsed objects (for instance at high
-redshift when the whole Universe has a density above the threshold), we apply an
-over-density criterion. Only gas with a density larger than a multiple of the
-critical density for closure can form stars.
+It seems clear that the Schmidt law only has one additional free parameter, the
+star formation efficiency: :code:`star_formation_efficiency`, a good value for
+the star formation efficiency is :math:`0.01`. 
 
-The COLIBRE star formation has a few parameters that determine of the gas is 
-star forming or not the list is shown below:
+Pressure law
+^^^^^^^^^^^^
 
-+----------------------------------------+---------------------------------------+-----------------------+
-| Name                                   | Description                           | Comments              |
-+========================================+=======================================+=======================+
-|| ``temperature_threshold``             | | Particles need to have a lower      | | Mandatory           |
-|                                        | | subgrid temperature than this to be |                       |
-|                                        | | starforming.                        |                       |
-+----------------------------------------+---------------------------------------+-----------------------+
-|| ``subgrid_density_threshold_H_p_CM3`` | | Subgrid density threshold from      | | Not specifying the  |
-|                                        | | which to always be starforming      | | variable sets it    |
-|                                        |                                       | | equal to infinity   |
-+----------------------------------------+---------------------------------------+-----------------------+
-|| ``threshold_max_density_H_p_cm3``     | | Maximal gas density, gas above this | | Not specifying the  |
-|                                        | | density is instantaneously converted| | variable sets it    |
-|                                        | | into stars.                         | | to infinity         |
-+----------------------------------------+---------------------------------------+-----------------------+
+The second model that is available to use is the pressure law model from 
+Schaye & Dalla Vecchia (2008) that was used in the EAGLE simulations. This
+model sets the star formation rate based on input values for the 
+Kennicutt-Schmidt relation. The star formation rate in this model is given
+by:
+:math:`\dot{\rho}_\star = A (1 M_\odot pc^{-2})^{-n} \left( \frac{\gamma}{G} f_g P_{tot} \right)^{(n-1)/2} \rho_g`
 
-A run with all the paramters will have a YAML file that looks like:
+In this model we have 3 variables that need to be set. The first is the 
+observed slope of the Kennicutt-Schmidt relation, this is specified in the 
+parameter file as :code:`KS_exponent`, a typical value for this is 1.4.
+The second is the normalization of the Kennicutt-Schmidt relation, which can
+be set by :code:`KS_normalisation_Msun_p_yr_p_kpc2` and which typical has a 
+value of :math:`1.515e-4`. The last variable is optional and is the gas 
+fraction by default we assume the gas fraction is 1, but it can also be 
+specified as an other value it can be specified by :code:`gas_fraction`.
+
+Examples
+^^^^^^^^
+
+A run with all the parameters to run with a Schmidt law and a virial criterion
+are given by:
 
 .. code:: YAML
 
     # COLIBRE star formation parameters
     COLIBREStarFormation:
       min_over_density:                  57.7
+      alpha_virial:                      1.
+      temperature_threshold:             0
+      SF_model:                          SchmidtLaw
       star_formation_efficiency:         0.01 
+
+A run that is run with the pressure law and uses a non unity gas fraction, a 
+temperature criterion and both density criteria looks like:
+
+.. code:: YAML
+
+    # COLIBRE star formation parameters
+    COLIBREStarFormation:
+      min_over_density:                  57.7
+      alpha_virial:                      1.
       temperature_threshold:             1000
       threshold_max_density_H_p_cm3:     1e5
       subgrid_density_threshold_H_p_CM3: 1e2
-
-Code that only has a temperature threshold will look like:
-
-.. code:: YAML
-
-    # COLIBRE star formation parameters
-    COLIBREStarFormation:
-      min_over_density:                  57.7
-      star_formation_efficiency:         0.01 
-      temperature_threshold:             1000
-      threshold_max_density_H_p_cm3:     1e5
-
-In the future new additional star formation criteria will be added to this 
-routine.
+      SF_model:                          PressureLaw
+      KS_exponent:                       1.4
+      KS_normalisation_Msun_p_yr_p_kpc2: 1.515e-4
+      gas_fraction:                      0.3
 
 
 .. _COLIBRE_delay_time_distributions:
