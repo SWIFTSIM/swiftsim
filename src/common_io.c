@@ -2596,25 +2596,25 @@ int get_ptype_fields(const int ptype, struct io_props* list,
                                             with_cosmology);
       num_fields +=
           star_formation_write_particles(NULL, NULL, list + num_fields);
-      if (include_fof)
+      if (with_fof)
         num_fields += fof_write_parts(NULL, NULL, list + num_fields);
-      if (include_stf)
+      if (with_stf)
         num_fields += velociraptor_write_parts(NULL, NULL, list + num_fields);
       break;
 
     case swift_type_dark_matter:
       darkmatter_write_particles(NULL, list, &num_fields);
-      if (include_fof)
+      if (with_fof)
         num_fields += fof_write_gparts(NULL, list + num_fields);
-      if (include_stf)
+      if (with_stf)
         num_fields += velociraptor_write_gparts(NULL, list + num_fields);
       break;
 
     case swift_type_dark_matter_background:
       darkmatter_write_particles(NULL, list, &num_fields);
-      if (include_fof)
+      if (with_fof)
         num_fields += fof_write_gparts(NULL, list + num_fields);
-      if (include_stf)
+      if (with_stf)
         num_fields += velociraptor_write_gparts(NULL, list + num_fields);
       break;
 
@@ -2627,18 +2627,18 @@ int get_ptype_fields(const int ptype, struct io_props* list,
       num_fields +=
           tracers_write_sparticles(NULL, list + num_fields, with_cosmology);
       num_fields += star_formation_write_sparticles(NULL, list + num_fields);
-      if (include_fof)
+      if (with_fof)
         num_fields += fof_write_sparts(NULL, list + num_fields);
-      if (include_stf)
+      if (with_stf)
         num_fields += velociraptor_write_sparts(NULL, list + num_fields);
       break;
 
     case swift_type_black_hole:
       black_holes_write_particles(NULL, list, &num_fields, with_cosmology);
       num_fields += chemistry_write_bparticles(NULL, list + num_fields);
-      if (include_fof)
+      if (with_fof)
         num_fields += fof_write_bparts(NULL, list + num_fields);
-      if (include_stf)
+      if (with_stf)
         num_fields += velociraptor_write_bparts(NULL, list + num_fields);
       break;
 
