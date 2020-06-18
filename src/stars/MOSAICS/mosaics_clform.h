@@ -345,54 +345,41 @@ __attribute__((always_inline)) INLINE static void mosaics_clform(
 
   /* Toomre mass via tidal tensors (Pfeffer+18) */
 
-  /* Orbital frequencies */
-  double kappa2;
+  /* Temporary array for eigvec/val calculation
+   * Note the lower elements are never referenced by dsyevj3 */
+  double tensor[3][3];
+  tensor[0][0] = sp->tidal_tensor[2][0];
+  tensor[0][1] = sp->tidal_tensor[2][1];
+  tensor[0][2] = sp->tidal_tensor[2][2];
+  tensor[1][1] = sp->tidal_tensor[2][3];
+  tensor[1][2] = sp->tidal_tensor[2][4];
+  tensor[2][2] = sp->tidal_tensor[2][5];
 
-  /* Are we using the smoothed version? And is there any stellar neighbours? */
-  if (props->smoothed_orbit_frequencies && sp->scount > 0) {
-    /* Finish the neighbour calculations */
-    sp->Omega_birth *= (1.f/sp->stars_rho) * h_inv * h_inv2;
-    sp->kappa_birth *= (1.f/sp->stars_rho) * h_inv * h_inv2;
+  /* Get the eigenvalues */
+  double tideval[3];
+  dsyevj3(tensor, tideval);
 
+  /* sort eigenvalues, tideval[2] (=lambda_1) is largest eigenvalue */
+  sort3(tideval);
+
+  /* Circular and epicyclic frequencies */
+  double Omega2;
+  if (props->Omega_is_lambda2 && tideval[2] < 0) {
+    /* Correct version of Omega, in principle. When tideval[2] > 0 we can't
+     * guarantee that tideval[1] will still be < 0 */
+    Omega2 = fabs(-tideval[1]);
   } else {
-    /* No neighbours, so revert to value from own tensor */
-
-    /* Temporary array for eigvec/val calculation
-     * Note the lower elements are never referenced by dsyevj3 */
-    double tensor[3][3];
-    tensor[0][0] = sp->tidal_tensor[2][0];
-    tensor[0][1] = sp->tidal_tensor[2][1];
-    tensor[0][2] = sp->tidal_tensor[2][2];
-    tensor[1][1] = sp->tidal_tensor[2][3];
-    tensor[1][2] = sp->tidal_tensor[2][4];
-    tensor[2][2] = sp->tidal_tensor[2][5];
-
-    /* Get the eigenvalues */
-    double tideval[3];
-    dsyevj3(tensor, tideval);
-
-    /* sort eigenvalues, tideval[2] (=lambda_1) is largest eigenvalue */
-    sort3(tideval);
-
-    /* Circular and epicyclic frequencies */
-    double Omega2;
-    if (props->Omega_is_lambda2) {
-      /* Correct version (in principle) */
-      Omega2 = fabs(-tideval[1]);
-    } else {
-      /* Version in E-MOSAICS */
-      Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
-    }
-    kappa2 = fabs(3.f * Omega2 - tideval[2]);
-
-    sp->Omega_birth = sqrt(Omega2);
-    sp->kappa_birth = sqrt(kappa2);
+    /* Version in E-MOSAICS */
+    Omega2 = fabs(-tideval[0] - tideval[1] - tideval[2]) / 3.f;
   }
+  double kappa2 = fabs(3.f * Omega2 - tideval[2]);
 
-  //TODO Birth Omega and kappa should not have scale factors
+  /* Factor out cosmological factors from birth values */
+  Omega2 *= cosmo->a3_inv;
+  kappa2 *= cosmo->a3_inv;
 
-  /* Factor out cosmology */
-  kappa2 = sp->kappa_birth * sp->kappa_birth * cosmo->a3_inv;
+  sp->Omega_birth = sqrt(Omega2);
+  sp->kappa_birth = sqrt(kappa2);
 
   /* 4 * pi^5 * G^2 */
   const double MTconst =

@@ -275,14 +275,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "BirthKernelStarCount", INT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts, scount,
       "Number of stars within gas smoothing length at time of star formation");
 
-  //TODO Birth properties should not have a factors
   list[29] = io_make_output_field(
-      "BirthEpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
+      "BirthEpicyclicFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, 
       kappa_birth, "Epicyclic frequency at time of star formation");
 
-  //TODO Birth properties should not have a factors
   list[30] = io_make_output_field(
-      "BirthCircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, -1.5f, sparts, 
+      "BirthCircularFrequency", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, sparts, 
       Omega_birth, "Circular frequency at time of star formation");
 
   list[31] = io_make_output_field(
@@ -293,8 +291,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "ToomreCollapseFraction", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       frac_collapse, "Fraction of Toomre mass which can collapse to a GMC");
 
-  // TODO just temporary
   list[33] = io_make_output_field(
+      "BirthToomreLength", FLOAT, 1, UNIT_CONV_LENGTH, 0.f, sparts, 
+      birth_toomre_length, "Toomre length at time of star formation");
+
+  // TODO just temporary
+  list[34] = io_make_output_field(
       "BirthPressures", FLOAT, 1, UNIT_CONV_PRESSURE, 0.f, sparts,
       birth_pressure,
       "Physical pressures at the time of birth of the gas particles that "
@@ -302,24 +304,21 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "we store the physical pressure at the birth redshift, no conversion is "
       "needed)");
 
-  // TODO temporary?
-  list[34] = io_make_output_field(
+  // TODO just temporary
+  list[35] = io_make_output_field(
       "BirthSoundSpeed", FLOAT, 1, UNIT_CONV_SPEED, 0.f, sparts,
       sound_speed_subgrid,
       "Hydro or subgrid sound speed, depending on cooling model");
 
   // TODO just temporary
-  list[35] = io_make_output_field(
+  list[36] = io_make_output_field(
       "Potentials", FLOAT, 1, UNIT_CONV_POTENTIAL, -1.f, sparts, potential,
       "Co-moving gravitational potential at position of the particles");
 
-  list[36] = io_make_output_field(
+  // TODO just temporary
+  list[37] = io_make_output_field(
       "GCs_MassLossEvap", FLOAT, MOSAICS_MAX_CLUSTERS, UNIT_CONV_MASS, 0.f, sparts,
       clusters.dmevap, "Cluster mass lost to evaporation");
-
-  list[37] = io_make_output_field(
-      "BirthToomreLength", FLOAT, 1, UNIT_CONV_LENGTH, 0.f, sparts, 
-      birth_toomre_length, "Toomre length at time of star formation");
 }
 
 /**
@@ -417,10 +416,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* Tidal shocks on by default */
   sp->spitzer_evap_term = 
       parser_get_opt_param_int(params, "Stars:Spitzer_evap_term", 1);
-
-  /* Calculate smoothed Omega and kappa over stellar neighbours? */
-  sp->smoothed_orbit_frequencies = 
-      parser_get_opt_param_int(params, "Stars:smoothed_orbit_frequencies", 0);
 
   /* Use Omega^2 = -lambda_2, otherwise sum(-lambda/3) */
   sp->Omega_is_lambda2 = 

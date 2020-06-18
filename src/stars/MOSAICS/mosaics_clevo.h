@@ -51,8 +51,9 @@ __attribute__((always_inline)) INLINE static double get_local_evaporation_t0(
   sort3(tide_val);
 
   double Omega2;
-  if (props->Omega_is_lambda2) {
-    /* Correct version (in principle) */
+  if (props->Omega_is_lambda2 && tide_val[2] < 0) {
+    /* Correct version of Omega, in principle. When tideval[2] > 0 we can't
+     * guarantee that tideval[1] will still be < 0 */
     Omega2 = fabs(-tide_val[1]);
   } else {
     /* Version in E-MOSAICS */

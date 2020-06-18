@@ -297,8 +297,6 @@ stars_mosaics_copy_extra_properties(
   sp->stars_rho = 0.f;
   sp->stars_sigma_v2 = 0.f;
   sp->stars_mass_unweighted = 0.f;
-  sp->Omega_birth = 0.f;
-  sp->kappa_birth = 0.f;
 
   /* Store the birth properties in the star particle */
   sp->hbirth = p->h;
@@ -378,8 +376,9 @@ __attribute__((always_inline)) INLINE static void mosaics_calc_toomre_length(
 
   /* Circular and epicyclic frequencies */
   double Omega2;
-  if (star_props->Omega_is_lambda2) {
-    /* Correct version (in principle) */
+  if (star_props->Omega_is_lambda2 && tideval[2] < 0) {
+    /* Correct version of Omega, in principle. When tideval[2] > 0 we can't
+     * guarantee that tideval[1] will still be < 0 */
     Omega2 = fabs(-tideval[1]);
   } else {
     /* Version in E-MOSAICS */
