@@ -188,8 +188,7 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const char* subdir, const char* basename);
 
 int get_ptype_fields(const int ptype, struct io_props* list,
-                     const int with_cosmology, const int with_stf,
-                     const struct engine* e);
+                     const int with_cosmology, const struct engine* e);
 int get_param_ptype(const char* name);
 
 #endif /* SWIFT_COMMON_IO_H */
