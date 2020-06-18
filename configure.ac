@@ -2170,6 +2170,33 @@ case "$with_feedback" in
    ;;
 esac
 
+#  Dust evolution model
+AC_ARG_WITH([dust],
+   [AS_HELP_STRING([--with-dust=<model>],
+      [dust model @<:@none, T20, M16, default: none@:>@.
+      For Grackle, the primordial chemistry parameter needs to be provided (e.g. grackle_0).
+      For CHIMES, the size of the network can be provided (e.g. CHIMES_157). Otherwise defaults to 10.]
+   )],
+   [with_dust="$withval"],
+   [with_dust="none"]
+)
+
+case "$with_dust" in
+   none)
+      AC_DEFINE([DUST_NONE], [1], [No dust evolution modelling])
+   ;;
+   T20)
+      AC_DEFINE([DUST_T20], [1], [Evolve dust following Trayford et al. (in prep.)])
+   ;;
+   M16)
+      AC_DEFINE([DUST_M16], [1], [Evolve dust following McKinnon et al. (2016)])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown dust evolution model: $with_dust])
+   ;;
+esac
+
+
 # Black hole model.
 AC_ARG_WITH([black-holes],
    [AS_HELP_STRING([--with-black-holes=<model>],
@@ -2517,6 +2544,11 @@ AM_CONDITIONAL([HAVEGRACKLECOOLING], [test ${with_cooling:0:7} == "grackle"])
 
 # check if using gear feedback
 AM_CONDITIONAL([HAVEGEARFEEDBACK], [test $with_feedback == "GEAR"])
+
+# check if using T20 dust modelling
+AM_CONDITIONAL([HAVET20DUST], [test $with_feedback == "T20"])
+# check if using M16 dust modelling
+AM_CONDITIONAL([HAVEM16DUST], [test $with_feedback == "M16"])
 
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile examples/Cooling/CoolingRatesCOLIBRE/Makefile doc/Makefile doc/Doxyfile tests/Makefile])
