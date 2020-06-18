@@ -1158,11 +1158,6 @@ int main(int argc, char *argv[]) {
     N_total[swift_type_black_hole] = s.nr_bparts;
 #endif
 
-    /* Verify that the fields to dump actually exist - this must be done after
-     * space_init so we know whether or not we have gas particles. */
-    if (myrank == 0)
-      io_check_output_fields(output_options, N_total, with_cosmology);
-
     /* Say a few nice things about the space we just created. */
     if (myrank == 0) {
       message("space dimensions are [ %.3f %.3f %.3f ].", s.dim[0], s.dim[1],
@@ -1249,6 +1244,11 @@ int main(int argc, char *argv[]) {
               clocks_getunit());
       fflush(stdout);
     }
+
+    /* Verify that the fields to dump actually exist - this must be done after
+     * engine_init so we know whether or not to include FOF/STF. */
+    if (myrank == 0)
+      io_check_output_fields(output_options, N_total, with_cosmology, &e);
 
     /* Compute some stats for the star formation */
     if (with_star_formation) {
