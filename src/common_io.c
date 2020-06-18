@@ -2278,11 +2278,9 @@ void io_collect_gparts_background_to_write(
  *
  * @param params The #swift_params instance corresponding to the select_output
  *               file.
- * @param N_total The total number of each particle type.
  * @param with_cosmolgy Ran with cosmology?
  */
 void io_check_output_fields(struct output_options* output_options,
-                            const long long N_total[swift_type_count],
                             const int with_cosmology, const int with_fof,
                             const int with_stf) {
 

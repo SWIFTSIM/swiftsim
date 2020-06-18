@@ -173,7 +173,6 @@ void io_duplicate_black_holes_gparts(struct threadpool* tp,
                                      size_t Ndm);
 
 void io_check_output_fields(struct output_options* output_options,
-                            const long long N_total[swift_type_count],
                             const int with_cosmology, const int with_fof,
                             const int with_stf);
 

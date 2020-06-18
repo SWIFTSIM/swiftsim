@@ -842,7 +842,7 @@ int main(int argc, char *argv[]) {
 
     /* Verify that the fields to dump actually exist */
     if (myrank == 0)
-      io_check_output_fields(output_options, N_total, with_cosmology,
+      io_check_output_fields(output_options, with_cosmology,
                              with_fof, with_structure_finding);
 
     /* Not restarting so look for the ICs. */
