@@ -2283,8 +2283,8 @@ void io_collect_gparts_background_to_write(
  */
 void io_check_output_fields(struct output_options* output_options,
                             const long long N_total[swift_type_count],
-                            const int with_cosmology,
-                            const struct engine* e) {
+                            const int with_cosmology, const int with_fof,
+                            const int with_stf) {
 
   const int MAX_NUM_PTYPE_FIELDS = 100;
 
@@ -2297,7 +2297,8 @@ void io_check_output_fields(struct output_options* output_options,
 
   for (int ptype = 0; ptype < swift_type_count; ptype++)
     ptype_num_fields_total[ptype] =
-        get_ptype_fields(ptype, field_list[ptype], with_cosmology, e);
+        get_ptype_fields(ptype, field_list[ptype], with_cosmology,
+                         with_fof, with_stf);
 
   /* Check for whether we have a `Default` section */
   int have_default = 0;
@@ -2465,7 +2466,8 @@ void io_write_output_field_parameter(const char* filename, int with_cosmology) {
   for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
     struct io_props list[100];
-    int num_fields = get_ptype_fields(ptype, list, with_cosmology, /*e=*/NULL);
+    int num_fields = get_ptype_fields(ptype, list, with_cosmology,
+                                      /*with_fof=*/1, /*with_stf=*/1);
 
     if (num_fields == 0) continue;
 
@@ -2572,16 +2574,14 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
  * @param ptype The index of the particle type under consideration.
  * @param list An io_props list that will hold the individual fields.
  * @param with_cosmology Use cosmological name variant?
- * @param e The engine
+ * @param with_fof Include FoF related fields?
+ * @param with_stf Include STF related fields?
  *
  * @return The total number of fields that can be written for the ptype.
  */
 int get_ptype_fields(const int ptype, struct io_props* list,
-                     const int with_cosmology, const struct engine* e) {
-
-  const int include_fof = (e == NULL) ? 1 : e->policy & engine_policy_fof;
-  const int include_stf = (e == NULL) ? 1 :
-                              e->policy & engine_policy_structure_finding;
+                     const int with_cosmology, const int with_fof,
+                     const int with_stf) {
 
   int num_fields = 0;
 

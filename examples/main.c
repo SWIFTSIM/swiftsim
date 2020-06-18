@@ -840,6 +840,11 @@ int main(int argc, char *argv[]) {
 
   } else {
 
+    /* Verify that the fields to dump actually exist */
+    if (myrank == 0)
+      io_check_output_fields(output_options, N_total, with_cosmology,
+                             with_fof, with_structure_finding);
+
     /* Not restarting so look for the ICs. */
     /* Initialize unit system and constants */
     units_init_from_params(&us, params, "InternalUnitSystem");
@@ -1244,11 +1249,6 @@ int main(int argc, char *argv[]) {
               clocks_getunit());
       fflush(stdout);
     }
-
-    /* Verify that the fields to dump actually exist - this must be done after
-     * engine_init so we know whether or not to include FOF/STF. */
-    if (myrank == 0)
-      io_check_output_fields(output_options, N_total, with_cosmology, &e);
 
     /* Compute some stats for the star formation */
     if (with_star_formation) {
