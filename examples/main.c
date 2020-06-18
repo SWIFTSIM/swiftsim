@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
   struct chemistry_global_data chemistry;
   struct cooling_function_data cooling_func;
   struct cosmology cosmo;
+  struct dustevo_props dustevo_properties;
   struct external_potential potential;
   struct star_formation starform;
   struct pm_mesh mesh;
@@ -164,6 +165,7 @@ int main(int argc, char *argv[]) {
   int with_fof = 0;
   int with_star_formation = 0;
   int with_feedback = 0;
+  int with_dust = 0;
   int with_black_holes = 0;
   int with_timestep_limiter = 0;
   int with_timestep_sync = 0;
@@ -205,6 +207,9 @@ int main(int argc, char *argv[]) {
                   "Run with temperature calculation.", NULL, 0, 0),
       OPT_BOOLEAN('C', "cooling", &with_cooling,
                   "Run with cooling (also switches on --temperature).", NULL, 0,
+                  0),
+      OPT_BOOLEAN('d',"dust", &with_dust,
+                  "Run with configured dust evolution model", NULL, 0,
                   0),
       OPT_BOOLEAN('D', "drift-all", &with_drift_all,
                   "Always drift all particles even the ones far from active "
