@@ -161,7 +161,7 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
     p->epsilon_baryon_comoving = p->epsilon_baryon_max_physical;
   }
 
-  /* Use the maximum of softening and smoothing for gas tensors? */
+  /* Use the maximum of softening and Toomre length for gas tensors? */
   p->gas_tensors_htoomre =
       parser_get_opt_param_int(params, "Gravity:gas_tensors_htoomre", 0);
 

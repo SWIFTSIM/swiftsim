@@ -387,10 +387,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
 
   /* MOSAICS parameters ----------------------------------------------------- */
 
-  /* Use the subgrid turbulent velocity dispersion for CFE */
-  sp->subgrid_gas_vel_disp = parser_get_opt_param_int(params, 
-      "Stars:use_subgrid_velocity_dispersion", 0);
-
   /* Use a power-law mass function (default Schechter) */
   sp->power_law_clMF =
       parser_get_opt_param_int(params, "Stars:power_law_clMF", 0);
@@ -413,7 +409,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->cluster_shocks = 
       parser_get_opt_param_int(params, "Stars:clusters_tidal_shocks", 1);
 
-  /* Tidal shocks on by default */
+  /* Include constant isolation term for evaporation */
   sp->spitzer_evap_term = 
       parser_get_opt_param_int(params, "Stars:Spitzer_evap_term", 1);
 
@@ -453,19 +449,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
   /* Cluster mass function power-law index M^(-alpha) */
   sp->clMF_slope = parser_get_opt_param_float(params, "Stars:clMF_slope", 2.0);
 
-  /* Use the subgrid turbulent velocity dispersion for CFE */
-  sp->subgrid_gas_vel_disp = 
-      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
-
-  /* Value of fixed cluster formation efficiency */
-  sp->FixedCFE = parser_get_opt_param_float(params, "Stars:fixed_CFE", -1.0);
-
-  /* Use the subgrid turbulent velocity dispersion for CFE */
-  sp->subgrid_gas_vel_disp = 
-      parser_get_opt_param_int(params, "Stars:use_subgrid_velocity_dispersion", 0);
-
-  /* Sound speed of cold ISM (m/s) */
-  sp->Fixedcs = parser_get_opt_param_float(params, "Stars:fixed_sound_speed", -1.0);
+  /* Parameters of cluster formation effeciency ----------------------------- */
 
   /* Value of fixed cluster formation efficiency */
   sp->FixedCFE = parser_get_opt_param_float(params, "Stars:fixed_CFE", -1.0);
