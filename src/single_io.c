@@ -921,9 +921,9 @@ void write_output_single(struct engine* e,
 
     /* Write the number of particles and fields as an attribute */
     io_write_attribute_l(h_grp, "NumberOfParticles", numParticles[ptype]);
-    io_write_attribute_i(h_grp, "NumberOfFields", numFields[ptype]);
 
     int num_fields = 0;
+    int num_fields_stf = 0;
     struct io_props list[100];
     size_t N = 0;
 
@@ -952,8 +952,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_parts(parts, xparts, list + num_fields);
           }
           if (with_stf) {
-            num_fields +=
+            num_fields_stf +=
                 velociraptor_write_parts(parts, xparts, list + num_fields);
+            num_fields += num_fields_stf;
           }
           num_fields += tracers_write_particles(
               parts, xparts, list + num_fields, with_cosmology);
@@ -994,8 +995,9 @@ void write_output_single(struct engine* e,
                                           list + num_fields);
           }
           if (with_stf) {
-            num_fields += velociraptor_write_parts(
+            num_fields_stf += velociraptor_write_parts(
                 parts_written, xparts_written, list + num_fields);
+            num_fields += num_fields_stf;
           }
           num_fields += tracers_write_particles(
               parts_written, xparts_written, list + num_fields, with_cosmology);
@@ -1014,8 +1016,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_gparts(gparts, list + num_fields);
           }
           if (with_stf) {
-            num_fields += velociraptor_write_gparts(e->s->gpart_group_data,
+            num_fields_stf += velociraptor_write_gparts(e->s->gpart_group_data,
                                                     list + num_fields);
+            num_fields += num_fields_stf;
           }
         } else {
 
@@ -1049,8 +1052,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_gparts(gparts_written, list + num_fields);
           }
           if (with_stf) {
-            num_fields += velociraptor_write_gparts(gpart_group_data_written,
+            num_fields_stf += velociraptor_write_gparts(gpart_group_data_written,
                                                     list + num_fields);
+            num_fields += num_fields_stf;
           }
         }
       } break;
@@ -1087,8 +1091,9 @@ void write_output_single(struct engine* e,
           num_fields += fof_write_gparts(gparts_written, list + num_fields);
         }
         if (with_stf) {
-          num_fields += velociraptor_write_gparts(gpart_group_data_written,
-                                                  list + num_fields);
+          num_fields_stf += velociraptor_write_gparts(gpart_group_data_written,
+                                                      list + num_fields);
+          num_fields += num_fields_stf;
         }
       } break;
 
@@ -1107,7 +1112,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_sparts(sparts, list + num_fields);
           }
           if (with_stf) {
-            num_fields += velociraptor_write_sparts(sparts, list + num_fields);
+            num_fields_stf += velociraptor_write_sparts(sparts,
+                                                        list + num_fields);
+            num_fields += num_fields_stf;
           }
         } else {
 
@@ -1137,8 +1144,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_sparts(sparts_written, list + num_fields);
           }
           if (with_stf) {
-            num_fields +=
+            num_fields_stf +=
                 velociraptor_write_sparts(sparts_written, list + num_fields);
+            num_fields += num_fields_stf;
           }
         }
       } break;
@@ -1155,7 +1163,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_bparts(bparts, list + num_fields);
           }
           if (with_stf) {
-            num_fields += velociraptor_write_bparts(bparts, list + num_fields);
+            num_fields_stf += 
+                velociraptor_write_bparts(bparts, list + num_fields);
+            num_fields += num_fields_stf;
           }
         } else {
 
@@ -1181,8 +1191,9 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_bparts(bparts_written, list + num_fields);
           }
           if (with_stf) {
-            num_fields +=
+            num_fields_stf +=
                 velociraptor_write_bparts(bparts_written, list + num_fields);
+            num_fields += num_fields_stf;
           }
         }
       } break;
@@ -1213,8 +1224,11 @@ void write_output_single(struct engine* e,
         num_fields_written++;
       }
     }
+
+    io_write_attribute_i(h_grp, "NumberOfFields", num_fields_written);
+
 #ifdef SWIFT_DEBUG_CHECKS
-    if (num_fields_written != numFields[ptype])
+    if (num_fields_written != numFields[ptype] + num_fields_stf)
       error("Wrote %d fields for particle type %s, but expected to write %d.",
             num_fields_written, part_type_names[ptype], numFields[ptype]);
 #endif
