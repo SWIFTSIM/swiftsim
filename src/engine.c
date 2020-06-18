@@ -3490,9 +3490,8 @@ void engine_split(struct engine *e, struct partition *initial_partition) {
 
   /* Re-link everything to the gparts. */
   if (s->nr_gparts > 0)
-    part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts,
-                                    s->sinks, s->sparts, s->bparts,
-                                    &e->threadpool);
+    part_relink_all_parts_to_gparts(s->gparts, s->nr_gparts, s->parts, s->sinks,
+                                    s->sparts, s->bparts, &e->threadpool);
 
 #ifdef SWIFT_DEBUG_CHECKS
 
@@ -3850,8 +3849,8 @@ static void engine_dumper_init(struct engine *e) {
  * @param los_properties the #los_props of this run.
  */
 void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 struct output_options *output_options,
-                 long long Ngas, long long Ngparts, long long Nsinks, long long Nstars,
+                 struct output_options *output_options, long long Ngas,
+                 long long Ngparts, long long Nsinks, long long Nstars,
                  long long Nblackholes, long long Nbackground_gparts,
                  int policy, int verbose, struct repartition *reparttype,
                  const struct unit_system *internal_units,

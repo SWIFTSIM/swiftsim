@@ -1551,8 +1551,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         nr_sinks -= 1;
 
         /* Swap the particle */
-        memswap(&s->sinks[k], &s->sinks[nr_sinks],
-                sizeof(struct sink));
+        memswap(&s->sinks[k], &s->sinks[nr_sinks], sizeof(struct sink));
 
         /* Swap the link with the gpart */
         if (s->sinks[k].gpart != NULL) {
@@ -1883,8 +1882,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 
   /* Sort the sink according to their cells. */
   if (nr_sinks > 0)
-    space_sinks_sort(s->sinks, sink_index, cell_sink_counts, s->nr_cells,
-                     0);
+    space_sinks_sort(s->sinks, sink_index, cell_sink_counts, s->nr_cells, 0);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that the sink have been sorted correctly. */
@@ -3183,9 +3181,9 @@ void space_sinks_get_cell_index(struct space *s, int *sink_ind,
   data.count_extra_bpart = 0;
   data.count_extra_sink = 0;
 
-  threadpool_map(&s->e->threadpool, space_sinks_get_cell_index_mapper,
-                 s->sinks, s->nr_sinks, sizeof(struct sink),
-                 threadpool_auto_chunk_size, &data);
+  threadpool_map(&s->e->threadpool, space_sinks_get_cell_index_mapper, s->sinks,
+                 s->nr_sinks, sizeof(struct sink), threadpool_auto_chunk_size,
+                 &data);
 
   *count_inhibited_sinks = data.count_inhibited_sink;
   *count_extra_sinks = data.count_extra_sink;
@@ -3931,9 +3929,8 @@ void space_split_recursive(struct space *s, struct cell *c,
 
     /* Split the cell's particle data. */
     cell_split(c, c->hydro.parts - s->parts, c->stars.parts - s->sparts,
-               c->black_holes.parts - s->bparts,
-               c->sinks.parts - s->sinks, buff, sbuff, bbuff, gbuff,
-               sink_buff);
+               c->black_holes.parts - s->bparts, c->sinks.parts - s->sinks,
+               buff, sbuff, bbuff, gbuff, sink_buff);
 
     /* Buffers for the progenitors */
     struct cell_buff *progeny_buff = buff, *progeny_gbuff = gbuff,
@@ -4283,8 +4280,8 @@ void space_split_recursive(struct space *s, struct cell *c,
     c->owner = ((c->hydro.parts - s->parts) % s->nr_parts) * s->nr_queues /
                s->nr_parts;
   else if (s->nr_sinks > 0)
-    c->owner = ((c->sinks.parts - s->sinks) % s->nr_sinks) *
-               s->nr_queues / s->nr_sinks;
+    c->owner = ((c->sinks.parts - s->sinks) % s->nr_sinks) * s->nr_queues /
+               s->nr_sinks;
   else if (s->nr_sparts > 0)
     c->owner = ((c->stars.parts - s->sparts) % s->nr_sparts) * s->nr_queues /
                s->nr_sparts;
@@ -5175,9 +5172,9 @@ void space_first_init_sinks_mapper(void *restrict map_data, int count,
 void space_first_init_sinks(struct space *s, int verbose) {
   const ticks tic = getticks();
   if (s->nr_sinks > 0)
-    threadpool_map(&s->e->threadpool, space_first_init_sinks_mapper,
-                   s->sinks, s->nr_sinks, sizeof(struct sink),
-                   threadpool_auto_chunk_size, s);
+    threadpool_map(&s->e->threadpool, space_first_init_sinks_mapper, s->sinks,
+                   s->nr_sinks, sizeof(struct sink), threadpool_auto_chunk_size,
+                   s);
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -5327,8 +5324,8 @@ void space_init_sinks(struct space *s, int verbose) {
 
   if (s->nr_sinks > 0)
     threadpool_map(&s->e->threadpool, space_init_sinks_mapper, s->sinks,
-                   s->nr_sinks, sizeof(struct sink),
-                   threadpool_auto_chunk_size, /*extra_data=*/NULL);
+                   s->nr_sinks, sizeof(struct sink), threadpool_auto_chunk_size,
+                   /*extra_data=*/NULL);
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
@@ -5407,13 +5404,13 @@ void space_convert_quantities(struct space *s, int verbose) {
  */
 void space_init(struct space *s, struct swift_params *params,
                 const struct cosmology *cosmo, double dim[3],
-                const struct hydro_props *hydro_properties,
-                struct part *parts, struct gpart *gparts, struct sink *sinks,
-                struct spart *sparts, struct bpart *bparts, size_t Npart,
-                size_t Ngpart, size_t Nsink, size_t Nspart, size_t Nbpart,
-                int periodic, int replicate, int generate_gas_in_ics, int hydro,
-                int self_gravity, int star_formation, int DM_background,
-                int verbose, int dry_run, int nr_nodes) {
+                const struct hydro_props *hydro_properties, struct part *parts,
+                struct gpart *gparts, struct sink *sinks, struct spart *sparts,
+                struct bpart *bparts, size_t Npart, size_t Ngpart, size_t Nsink,
+                size_t Nspart, size_t Nbpart, int periodic, int replicate,
+                int generate_gas_in_ics, int hydro, int self_gravity,
+                int star_formation, int DM_background, int verbose, int dry_run,
+                int nr_nodes) {
 
   /* Clean-up everything */
   bzero(s, sizeof(struct space));
@@ -6512,8 +6509,8 @@ void space_struct_dump(struct space *s, FILE *stream) {
                          "gparts", "gparts");
 
   if (s->nr_sinks > 0)
-    restart_write_blocks(s->sinks, s->nr_sinks, sizeof(struct sink),
-                         stream, "sinks", "sinks");
+    restart_write_blocks(s->sinks, s->nr_sinks, sizeof(struct sink), stream,
+                         "sinks", "sinks");
 
   if (s->nr_sparts > 0)
     restart_write_blocks(s->sparts, s->nr_sparts, sizeof(struct spart), stream,
@@ -6631,8 +6628,8 @@ void space_struct_restore(struct space *s, FILE *stream) {
                        s->size_sinks * sizeof(struct sink)) != 0)
       error("Failed to allocate restore sink array.");
 
-    restart_read_blocks(s->sinks, s->nr_sinks, sizeof(struct sink),
-                        stream, NULL, "sinks");
+    restart_read_blocks(s->sinks, s->nr_sinks, sizeof(struct sink), stream,
+                        NULL, "sinks");
   }
 
   s->sparts = NULL;
