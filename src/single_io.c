@@ -1154,8 +1154,7 @@ void write_output_single(struct engine* e,
             num_fields += fof_write_bparts(bparts, list + num_fields);
           }
           if (with_stf) {
-            num_fields += 
-                velociraptor_write_bparts(bparts, list + num_fields);
+            num_fields += velociraptor_write_bparts(bparts, list + num_fields);
           }
         } else {
 

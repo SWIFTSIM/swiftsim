@@ -2294,9 +2294,8 @@ void io_check_output_fields(struct output_options* output_options,
   struct io_props field_list[swift_type_count][MAX_NUM_PTYPE_FIELDS];
 
   for (int ptype = 0; ptype < swift_type_count; ptype++)
-    ptype_num_fields_total[ptype] =
-        get_ptype_fields(ptype, field_list[ptype], with_cosmology,
-                         with_fof, with_stf);
+    ptype_num_fields_total[ptype] = get_ptype_fields(
+        ptype, field_list[ptype], with_cosmology, with_fof, with_stf);
 
   /* Check for whether we have a `Default` section */
   int have_default = 0;
@@ -2377,7 +2376,7 @@ void io_check_output_fields(struct output_options* output_options,
         if (strcmp(param_name, field_name) == 0) break;
       }
 
-      int param_is_known = 0;  /* Update below if it is a known one */
+      int param_is_known = 0; /* Update below if it is a known one */
       if (field_id < ptype_num_fields_total[param_ptype])
         param_is_known = 1;
       else
@@ -2602,16 +2601,14 @@ int get_ptype_fields(const int ptype, struct io_props* list,
 
     case swift_type_dark_matter:
       darkmatter_write_particles(NULL, list, &num_fields);
-      if (with_fof)
-        num_fields += fof_write_gparts(NULL, list + num_fields);
+      if (with_fof) num_fields += fof_write_gparts(NULL, list + num_fields);
       if (with_stf)
         num_fields += velociraptor_write_gparts(NULL, list + num_fields);
       break;
 
     case swift_type_dark_matter_background:
       darkmatter_write_particles(NULL, list, &num_fields);
-      if (with_fof)
-        num_fields += fof_write_gparts(NULL, list + num_fields);
+      if (with_fof) num_fields += fof_write_gparts(NULL, list + num_fields);
       if (with_stf)
         num_fields += velociraptor_write_gparts(NULL, list + num_fields);
       break;
@@ -2625,8 +2622,7 @@ int get_ptype_fields(const int ptype, struct io_props* list,
       num_fields +=
           tracers_write_sparticles(NULL, list + num_fields, with_cosmology);
       num_fields += star_formation_write_sparticles(NULL, list + num_fields);
-      if (with_fof)
-        num_fields += fof_write_sparts(NULL, list + num_fields);
+      if (with_fof) num_fields += fof_write_sparts(NULL, list + num_fields);
       if (with_stf)
         num_fields += velociraptor_write_sparts(NULL, list + num_fields);
       break;
@@ -2634,8 +2630,7 @@ int get_ptype_fields(const int ptype, struct io_props* list,
     case swift_type_black_hole:
       black_holes_write_particles(NULL, list, &num_fields, with_cosmology);
       num_fields += chemistry_write_bparticles(NULL, list + num_fields);
-      if (with_fof)
-        num_fields += fof_write_bparts(NULL, list + num_fields);
+      if (with_fof) num_fields += fof_write_bparts(NULL, list + num_fields);
       if (with_stf)
         num_fields += velociraptor_write_bparts(NULL, list + num_fields);
       break;
