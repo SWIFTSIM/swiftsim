@@ -8,9 +8,9 @@ InternalUnitSystem:
 
 # Parameters for the self-gravity scheme
 Gravity:
-  eta:          0.025               # Constant dimensionless multiplier for time integration.
-  theta:        0.4                 # Opening angle (Multipole acceptance criterion).
-  max_physical_baryon_softening: 0.8    # Maximal Plummer-equivalent softening length in physical coordinates for baryon particles (in internal units).
+  eta:          0.025                   # Constant dimensionless multiplier for time integration.
+  theta:        0.4                     # Opening angle (Multipole acceptance criterion).
+  max_physical_baryon_softening: 0.2    # Maximal Plummer-equivalent softening length in physical coordinates for baryon particles (in internal units).
 
 # Parameters governing the time integration (Set dt_min and dt_max to the same value for a fixed time-step run.)
 TimeIntegration:
