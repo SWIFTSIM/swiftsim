@@ -44,6 +44,7 @@ SPH:
   CFL_condition:         0.2      # Courant-Friedrich-Levy condition for time integration.
   h_min_ratio:           0.1      # Minimal smoothing in units of softening.
   h_max:                 10.
+  H_mass_fraction:       0.756
 
 # Standard COLIBRE cooling options
 COLIBRECooling:
