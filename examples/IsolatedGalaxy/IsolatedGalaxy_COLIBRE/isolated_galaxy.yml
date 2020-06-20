@@ -54,7 +54,7 @@ COLIBRECooling:
   He_reion_z_centre:       3.5               # Redshift of the centre of the Helium re-ionization Gaussian
   He_reion_z_sigma:        0.5               # Spread in redshift of the  Helium re-ionization Gaussian
   He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
-  delta_logTEOS_subgrid_properties: 0.2      # delta log T above the EOS below which the subgrid properties use Teq assumption
+  delta_logTEOS_subgrid_properties: 0.3      # delta log T above the EOS below which the subgrid properties use Teq assumption
   rapid_cooling_threshold:          0.333333 # Switch to rapid cooling regime for dt / t_cool above this threshold.
 
 # CHIMES cooling parameters
@@ -80,7 +80,7 @@ CHIMESCooling:
   ThermEvolOn:                1           # Flag to switch on thermal evolution in CHIMES
   chimes_debug:               0           # Flag to include extra debug outputs in CHIMES
   cosmic_ray_rate:            1.8e-16     # HI ionisation rate from cosmic rays
-  delta_logTEOS_subgrid_properties:  0.2  # delta logT above the EOS below which set CHIMES to eqm and use subgrid properties
+  delta_logTEOS_subgrid_properties:  0.3  # delta logT above the EOS below which set CHIMES to eqm and use subgrid properties
   use_colibre_subgrid_EOS:    1           # Flag to set subgrid rho and T to thermal and pressure eqm on the EOS
   set_FB_particles_to_eqm:    1           # Flag to set particles to eqm if they have been heated by feedback 
   use_hybrid_cooling:         1           # Use hybrid cooling, to read in eqm cooling rates from metals not included in CHIMES
