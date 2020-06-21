@@ -136,10 +136,15 @@ void threadpool_chomp(struct threadpool *tp, int tid) {
 
   /* Loop until we can't get a chunk. */
   while (1) {
-    /* Desired chunk size. */
-    size_t chunk_size =
-        (tp->map_data_size - tp->map_data_count) / (2 * tp->num_threads);
-    if (chunk_size > tp->map_data_chunk) chunk_size = tp->map_data_chunk;
+    /* Compute the desired chunk size. */
+    size_t chunk_size;
+    if (tp->map_data_chunk == threadpool_fixed_chunk_size) {
+      chunk_size = (int)((tid + 1) * N / tp->num_threads) - (int)(tid * N / tp->num_threads);
+    } else {
+      chunk_size =
+          (tp->map_data_size - tp->map_data_count) / (2 * tp->num_threads);
+      if (chunk_size > tp->map_data_chunk) chunk_size = tp->map_data_chunk;
+    }
     if (chunk_size < 1) chunk_size = 1;
 
     /* Get a chunk and check its size. */
@@ -278,11 +283,13 @@ void threadpool_map(struct threadpool *tp, threadpool_map_function map_function,
   tp->map_data_stride = stride;
   tp->map_data_size = N;
   tp->map_data_count = 0;
-  tp->map_data_chunk =
-      (chunk == threadpool_auto_chunk_size)
-          ? max((int)(N / (tp->num_threads * threadpool_default_chunk_ratio)),
-                1)
-          : chunk;
+  if (chunk == threadpool_auto_chunk_size) {
+    tp->map_data_chunk = max((int)(N / (tp->num_threads * threadpool_default_chunk_ratio)), 1);
+  } else if (chunk == threadpool_fixed_chunk_size) {
+    tp->map_data_chunk = threadpool_fixed_chunk_size;
+  } else { 
+    tp->map_data_chunk = chunk;
+  }
   tp->map_function = map_function;
   tp->map_data = map_data;
   tp->map_extra_data = extra_data;
