@@ -25,14 +25,15 @@ TimeIntegration:
 
 # Parameters for the self-gravity scheme
 Gravity:
-  eta:          0.025
-  theta:        0.7
+  eta:                         0.025     # Constant dimensionless multiplier for time integration.
+  MAC:                         geometric # Use the geometric opening angle condition
+  theta_cr:                    0.7       # Opening angle (Multipole acceptance criterion)
+  use_tree_below_softening:    1
+  mesh_side_length:            128       # use 128 for 188^3 particles and 256 for 376^3 particles
   comoving_DM_softening:         0.00166     # New EAGLE-Ref values: 0.003320 # Comoving softening for DM (3.32 ckpc); scale with resolution
   max_physical_DM_softening:     0.00065     # New EAGLE-Ref values: 0.001300 # Physical softening for DM (1.30 pkpc); scale with resolution
   comoving_baryon_softening:     0.000895    # New EAGLE-Ref values: 0.001790 # Comoving softening for baryons (1.79 ckpc); scale with resolution
   max_physical_baryon_softening: 0.00035     # New EAGLE-Ref values: 0.000700 # Physical softening for baryons (0.70 pkpc); scale with resolution
-  mesh_side_length:       256    # use 128 for 188^3 particles and 256 for 376^3 particles
-  dithering: 0
 
 # Parameters governing the snapshots
 Snapshots:
