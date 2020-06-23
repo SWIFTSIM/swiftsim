@@ -276,6 +276,10 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /**
+   * Read in Tdep/Depletion values needed for dust modelling
+   **/
+
   /* Thermal equilibrium temperature */
   if (posix_memalign((void **)&table->logTeq, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
