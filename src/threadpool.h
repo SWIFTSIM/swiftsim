@@ -78,8 +78,8 @@ struct threadpool {
 
   /* Current map data and count. */
   void *map_data, *map_extra_data;
-  volatile size_t map_data_count, map_data_size, map_data_stride,
-      map_data_chunk;
+  volatile size_t map_data_count, map_data_size, map_data_stride;
+  volatile ptrdiff_t map_data_chunk;
   volatile threadpool_map_function map_function;
 
   /* Number of threads in this pool. */
