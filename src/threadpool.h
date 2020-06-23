@@ -24,6 +24,7 @@
 
 /* Standard headers */
 #include <pthread.h>
+#include <stddef.h>
 
 /* Local includes. */
 #include "barrier.h"
