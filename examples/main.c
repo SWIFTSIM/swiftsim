@@ -852,9 +852,8 @@ int main(int argc, char *argv[]) {
 
   } else {
 
-    /* Verify that the fields to dump actually exist */
-    if (myrank == 0)
-      io_check_output_fields(output_options, with_cosmology, with_fof,
+    /* Prepare and verify the selection of outputs */
+    io_prepare_output_fields(output_options, with_cosmology, with_fof,
                              with_structure_finding);
 
     /* Not restarting so look for the ICs. */
@@ -1141,7 +1140,7 @@ int main(int argc, char *argv[]) {
       gravity_props_init(&gravity_properties, params, &prog_const, &cosmo,
                          with_cosmology, with_external_gravity,
                          with_baryon_particles, with_DM_particles,
-                         with_DM_background_particles, periodic);
+                         with_DM_background_particles, periodic, s.dim);
 
     /* Initialise the external potential properties */
     bzero(&potential, sizeof(struct external_potential));

@@ -51,6 +51,9 @@ const char* compression_level_names[compression_level_count] = {
 void output_options_init(struct swift_params* parameter_file, int mpi_rank,
                          struct output_options* output_options) {
 
+  /* Start by zero-ing everything */
+  bzero(output_options, sizeof(struct output_options));
+
   /* Load select_output */
   struct swift_params* select_output =
       (struct swift_params*)malloc(sizeof(struct swift_params));
@@ -80,7 +83,7 @@ void output_options_init(struct swift_params* parameter_file, int mpi_rank,
 }
 
 /**
- * @breif Destroys an output_options instance.
+ * @brief Destroys an output_options instance.
  *
  * @param output_options the output_options struct to free the contents of.
  **/
@@ -99,6 +102,11 @@ void output_options_clean(struct output_options* output_options) {
 void output_options_struct_dump(struct output_options* output_options,
                                 FILE* stream) {
   parser_struct_dump(output_options->select_output, stream);
+
+  const size_t count =
+      (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
+  restart_write_blocks(output_options->num_fields_to_write, count * sizeof(int),
+                       1, stream, "output_options", "output options");
 }
 
 /**
@@ -114,6 +122,11 @@ void output_options_struct_restore(struct output_options* output_options,
   parser_struct_restore(select_output, stream);
 
   output_options->select_output = select_output;
+
+  const size_t count =
+      (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
+  restart_read_blocks(output_options->num_fields_to_write, count * sizeof(int),
+                      1, stream, NULL, "output options");
 }
 
 /**
