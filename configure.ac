@@ -2663,6 +2663,7 @@ AC_MSG_RESULT([
    Stellar model        : $with_stars
    Star formation model : $with_star_formation
    Star feedback model  : $with_feedback
+   Dust evolution model : $with_dust
    Sink particle model  : $with_sink
    Black holes model    : $with_black_holes
    SNIa DTD model       : $with_SNIa_DTD

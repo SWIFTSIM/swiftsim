@@ -60,7 +60,8 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     black_holes.h black_holes_io.h black_holes_properties.h black_holes_struct.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
     space_unique_id.h line_of_sight.h \
-    event_logger.h event_logger_struct.h event_logger_core.h
+    event_logger.h event_logger_struct.h event_logger_core.h \
+    dust.h
 
 # source files for EAGLE cooling
 QLA_COOLING_SOURCES =
@@ -117,6 +118,20 @@ GEAR_FEEDBACK_SOURCES += feedback/GEAR/stellar_evolution.c feedback/GEAR/feedbac
 	feedback/GEAR/initial_mass_function.c feedback/GEAR/supernovae_ia.c feedback/GEAR/supernovae_ii.c
 endif
 
+# source files for T20 dust evolution
+T20_DUST_SOURCES =
+if HAVET20DUST
+T20_DUST_SOURCES += dust/T20/dust.c
+endif
+
+# source files for M16 dust evolution
+M16_DUST_SOURCES =
+if HAVEM16DUST
+M16_DUST_SOURCES += dust/M16/dust.c
+endif
+
+
+
 # Common source files
 AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c \
     runner_doiact_stars.c runner_doiact_black_holes.c runner_ghost.c runner_recv.c \
@@ -134,12 +149,13 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
     collectgroup.c hydro_space.c equation_of_state.c \
     chemistry.c cosmology.c restart.c mesh_gravity.c velociraptor_interface.c \
     output_list.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c fof.c \
-    hashmap.c pressure_floor.c space_unique_id.c output_options.c line_of_sight.c \
+    hashmap.c pressure_floor.c space_unique_id.c output_options.c line_of_sight.c dust.c \
     $(QLA_COOLING_SOURCES) \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
     $(GRACKLE_COOLING_SOURCES) $(GEAR_FEEDBACK_SOURCES) \
     $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
-    $(CHIMES_COOLING_SOURCES) 
+    $(CHIMES_COOLING_SOURCES) \
+    $(T20_DUST_SOURCES) $(M16_DUST_SOURCES)
 
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h inline.h kernel_hydro.h kernel_gravity.h \

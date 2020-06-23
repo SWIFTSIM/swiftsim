@@ -978,7 +978,7 @@ int main(int argc, char *argv[]) {
     } else
       bzero(&black_holes_properties, sizeof(struct black_holes_props));
 
-      /* Initialise the cooling function properties */
+   /* Initialise the cooling function properties */
 #ifdef COOLING_NONE
     if (with_cooling) {
       error(
@@ -997,6 +997,41 @@ int main(int argc, char *argv[]) {
       cooling_init(params, &us, &prog_const, &hydro_properties, &cooling_func);
     }
     if (myrank == 0) cooling_print(&cooling_func);
+
+   /* Initialise the dust evolution properties */
+#ifdef DUST_NONE
+    if (with_dust) {
+      error(
+          "ERROR: Running with dust evolution"
+          " but compiled without it.");
+    }
+#else
+    if (!with_dust) {
+      error(
+          "ERROR: Compiled with cooling but running without it. "
+          "Did you forget the --dust flag?");
+    }
+    else { 
+
+      if (!with_feedback) {
+      error(
+          "ERROR: cannot run dust evolution without feedback.");
+      }
+
+      if (!with_cooling) {
+      error(
+          "ERROR: cannot run dust evolution without cooling");
+      }
+    }
+
+#endif
+
+   /* Initialise the dust evolution properties */
+   bzero(&dustevo_properties, sizeof(struct dustevo_props));
+
+   dustevo_props_init(&dustevo_properties, params, &feedback_properties,
+		      &cooling_func, &prog_const, &us);
+
 
     /* Initialise the star formation law and its properties */
     bzero(&starform, sizeof(struct star_formation));
