@@ -369,6 +369,10 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling) {
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /**
+   * Here, read in /Tdep/Depletion and /Udep/Depletion for dust modelling
+   **/
+
   /* Internal energy from temperature */
   if (posix_memalign((void **)&cooling->table.U_from_T, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
