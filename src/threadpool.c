@@ -138,7 +138,7 @@ void threadpool_chomp(struct threadpool *tp, int tid) {
   while (1) {
     /* Compute the desired chunk size. */
     size_t chunk_size;
-    if (tp->map_data_chunk == threadpool_fixed_chunk_size) {
+    if (tp->map_data_chunk == threadpool_uniform_chunk_size) {
       chunk_size = (int)((tid + 1) * N / tp->num_threads) -
                    (int)(tid * N / tp->num_threads);
     } else {
@@ -287,8 +287,8 @@ void threadpool_map(struct threadpool *tp, threadpool_map_function map_function,
   if (chunk == threadpool_auto_chunk_size) {
     tp->map_data_chunk =
         max((int)(N / (tp->num_threads * threadpool_default_chunk_ratio)), 1);
-  } else if (chunk == threadpool_fixed_chunk_size) {
-    tp->map_data_chunk = threadpool_fixed_chunk_size;
+  } else if (chunk == threadpool_uniform_chunk_size) {
+    tp->map_data_chunk = threadpool_uniform_chunk_size;
   } else {
     tp->map_data_chunk = chunk;
   }
