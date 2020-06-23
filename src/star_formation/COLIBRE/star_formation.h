@@ -441,6 +441,11 @@ INLINE static void star_formation_copy_properties(
     sp->birth_time = e->time;
   }
 
+  /**
+   * Redistribute dust masses back to gas-phase elements if 
+   * running with dust(astration)
+   **/
+
   /* Store the chemistry struct in the star particle */
   sp->chemistry_data = p->chemistry_data;
 
