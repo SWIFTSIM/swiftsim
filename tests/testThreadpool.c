@@ -141,8 +141,10 @@ int main(int argc, char *argv[]) {
   threadpool_map(&utp, map_function_check_uniform, counts, 5, sizeof(int),
                  threadpool_uniform_chunk_size, &lsum);
   if (lsum != sum) {
-    printf("  uniform chunking not correct, sum of tids failed "
-           "(%d != %d).\n", sum, lsum);
+    printf(
+        "  uniform chunking not correct, sum of tids failed "
+        "(%d != %d).\n",
+        sum, lsum);
     fflush(stdout);
     exit(1);
   }
@@ -155,12 +157,14 @@ int main(int argc, char *argv[]) {
   threadpool_map(&utp, map_function_check_uniform, counts, unum_thread,
                  sizeof(int), threadpool_uniform_chunk_size, &lsum);
   if (lsum != sum) {
-    printf("  uniform chunking not correct, sum of tids failed "
-           "(%d != %d).\n", sum, lsum);
+    printf(
+        "  uniform chunking not correct, sum of tids failed "
+        "(%d != %d).\n",
+        sum, lsum);
     fflush(stdout);
     exit(1);
   }
-  
+
   threadpool_clean(&utp);
 
   printf("# passed uniform checks\n");
