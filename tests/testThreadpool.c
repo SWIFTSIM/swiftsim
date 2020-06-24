@@ -67,6 +67,7 @@ void map_function_check_uniform(void *map_data, int num_elements,
       count = inputs[ind];
     }
   }
+  printf("    map_function_check_uniform handled %d elements\n", num_elements);
 }
 
 int main(int argc, char *argv[]) {
@@ -116,6 +117,8 @@ int main(int argc, char *argv[]) {
     printf("\n");
   }
 
+  printf("# threadpool_uniform_chunk_size checks\n");
+
   /* Check the spread of threads with threadpool_uniform_chunk_size */
   int counts[23];
   for (int i = 0; i < 23; i++) counts[i] = i;
@@ -125,13 +128,16 @@ int main(int argc, char *argv[]) {
   threadpool_init(&utp, unum_thread);
 
   /* Under provision of threads. */
+  int dummy;
+  printf("# under provision\n");
   threadpool_map(&utp, map_function_check_uniform, counts, 23, sizeof(int),
-                 threadpool_uniform_chunk_size, NULL);
+                 threadpool_uniform_chunk_size, &dummy);
 
   /* Over provision of threads. */
   int sum = 0;
   for (int i = 0; i < 5; i++) sum += i;
   static int lsum = 0;
+  printf("# over provision\n");
   threadpool_map(&utp, map_function_check_uniform, counts, 5, sizeof(int),
                  threadpool_uniform_chunk_size, &lsum);
   if (lsum != sum) {
@@ -145,6 +151,7 @@ int main(int argc, char *argv[]) {
   sum = 0;
   for (int i = 0; i < unum_thread; i++) sum += i;
   lsum = 0;
+  printf("# exact provision\n");
   threadpool_map(&utp, map_function_check_uniform, counts, unum_thread,
                  sizeof(int), threadpool_uniform_chunk_size, &lsum);
   if (lsum != sum) {
@@ -156,7 +163,7 @@ int main(int argc, char *argv[]) {
   
   threadpool_clean(&utp);
 
-  printf("passed uniform checks\n");
+  printf("# passed uniform checks\n");
 
   return 0;
 }
