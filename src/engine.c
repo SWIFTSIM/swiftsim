@@ -562,9 +562,10 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 #ifdef WITH_LOGGER
     if (e->policy & engine_policy_logger) {
       /* Log the particle when leaving a rank. */
-      logger_log_part(e->logger, &s->parts[offset_parts + k],
-                      &s->xparts[offset_parts + k], e, /* log_all */ 1,
-                      logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
+      logger_log_part(
+          e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
+          e, /* log_all */ 1,
+          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
     }
 #endif
   }
@@ -690,9 +691,9 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
       /* Log the particle when leaving a rank. */
       logger_log_gpart(
-        e->logger, &s->gparts[offset_gparts + k], e,
-        /* log_all */ 1,
-        logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
+          e->logger, &s->gparts[offset_gparts + k], e,
+          /* log_all */ 1,
+          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
     }
 #endif
   }
@@ -918,7 +919,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 #ifdef WITH_LOGGER
       if (e->policy & engine_policy_logger) {
         const uint32_t flag =
-          logger_pack_flags_and_data(logger_flag_mpi_enter, prox->nodeID);
+            logger_pack_flags_and_data(logger_flag_mpi_enter, prox->nodeID);
 
         struct part *parts = &s->parts[offset_parts + count_parts];
         struct xpart *xparts = &s->xparts[offset_parts + count_parts];

@@ -30,7 +30,6 @@
 #include "part.h"
 #include "units.h"
 
-
 /* This enum defines the type of particle to use
    with a given mask.
    The values should be the same than in part_type.h. */
@@ -65,8 +64,7 @@ struct mask_data {
  *
  * @return The new mask_data.
  */
-INLINE static struct mask_data logger_create_mask_entry(
-    char* name, int size) {
+INLINE static struct mask_data logger_create_mask_entry(char* name, int size) {
   struct mask_data mask;
   /* Copy the fields */
   strcpy(mask.name, name);
