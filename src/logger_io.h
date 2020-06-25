@@ -30,6 +30,19 @@
 #include "part.h"
 #include "units.h"
 
+
+/* This enum defines the type of particle to use
+   with a given mask.
+   The values should be the same than in part_type.h. */
+enum mask_type {
+  mask_type_gas = 0,
+  mask_type_dark_matter = 1,
+  /* Only need a single type of dm. */
+  mask_type_stars = 4,
+  mask_type_black_hole = 5,
+  mask_type_timestep = -1,
+} __attribute__((packed));
+
 struct mask_data {
   /* Number of bytes for a mask. */
   int size;
@@ -41,7 +54,7 @@ struct mask_data {
   char name[100];
 
   /* Type of particle (follow part_type.h and -1 for timestamp). */
-  int type;
+  enum mask_type type;
 };
 
 /**
@@ -52,8 +65,8 @@ struct mask_data {
  *
  * @return The new mask_data.
  */
-INLINE static struct mask_data logger_add_field_to_logger(char* name,
-                                                          int size) {
+INLINE static struct mask_data logger_create_mask_entry(
+    char* name, int size) {
   struct mask_data mask;
   /* Copy the fields */
   strcpy(mask.name, name);
@@ -76,11 +89,13 @@ INLINE static struct mask_data logger_add_field_to_logger(char* name,
  */
 INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
                                               char* name, size_t* buffer_size) {
+#ifdef SWIFT_DEBUG_CHECKS
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {
     error("Mismatch between the requested field (%s) and the mask (%s)", name,
           mask_data.name);
   }
+#endif
 
   *buffer_size += mask_data.size;
   return mask_data.mask;

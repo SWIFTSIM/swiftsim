@@ -612,7 +612,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     num_fields = hydro_logger_init(list);
     /* Set the particle type */
     for (int i = 0; i < num_fields; i++) {
-      list[i].type = swift_type_gas;
+      list[i].type = mask_type_gas;
     }
   }
 
@@ -627,7 +627,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     int tmp_num_fields = stars_logger_init(tmp);
     /* Set the particle type */
     for (int i = 0; i < tmp_num_fields; i++) {
-      tmp[i].type = swift_type_stars;
+      tmp[i].type = mask_type_stars;
     }
     num_fields += tmp_num_fields;
   }
@@ -643,20 +643,20 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     int tmp_num_fields = gravity_logger_init(tmp);
     /* Set the particle type */
     for (int i = 0; i < tmp_num_fields; i++) {
-      tmp[i].type = swift_type_dark_matter;
+      tmp[i].type = mask_type_dark_matter;
     }
     num_fields += tmp_num_fields;
   }
 
   /* The next fields must be the two last one. */
   /* Add the special flags (written manually => no need of offset) */
-  list[num_fields] = logger_add_field_to_logger("SpecialFlags", sizeof(int));
+  list[num_fields] = logger_create_mask_entry("SpecialFlags", sizeof(int));
   num_fields += 1;
 
   /* Add the timestamp */
-  list[num_fields] = logger_add_field_to_logger(
+  list[num_fields] = logger_create_mask_entry(
       "Timestamp", sizeof(integertime_t) + sizeof(double));
-  list[num_fields].type = -1;  // flag it as timestamp
+  list[num_fields].type = mask_type_timestep;  // flag it as timestamp
   num_fields += 1;
 
   /* Set the masks and ensure to have only one for the common fields
@@ -904,7 +904,7 @@ int logger_read_part(const struct logger_writer *log, struct part *p,
 
   for (int i = 0; i < log->logger_count_mask; i++) {
     if ((mask & log->logger_mask_data[i].mask) &&
-        (log->logger_mask_data[i].type == swift_type_gas)) {
+        (log->logger_mask_data[i].type == mask_type_gas)) {
 
       const char *name = log->logger_mask_data[i].name;
       if (strcmp("Coordinates", name) == 0) {
@@ -968,7 +968,7 @@ int logger_read_gpart(const struct logger_writer *log, struct gpart *p,
 
   for (int i = 0; i < log->logger_count_mask; i++) {
     if ((mask & log->logger_mask_data[i].mask) &&
-        (log->logger_mask_data[i].type == swift_type_dark_matter)) {
+        (log->logger_mask_data[i].type == mask_type_dark_matter)) {
 
       const char *name = log->logger_mask_data[i].name;
       if (strcmp("Coordinates", name) == 0) {

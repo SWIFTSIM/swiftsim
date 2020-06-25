@@ -32,14 +32,14 @@
  * @return Number of masks used.
  */
 INLINE static int hydro_logger_init(struct mask_data *mask_data) {
-  mask_data[0] = logger_add_field_to_logger("Coordinates", 3 * sizeof(double));
-  mask_data[1] = logger_add_field_to_logger("Velocities", 3 * sizeof(float));
-  mask_data[2] = logger_add_field_to_logger("Accelerations", 3 * sizeof(float));
-  mask_data[3] = logger_add_field_to_logger("Masses", sizeof(float));
-  mask_data[4] = logger_add_field_to_logger("SmoothingLengths", sizeof(float));
-  mask_data[5] = logger_add_field_to_logger("Entropies", sizeof(float));
-  mask_data[6] = logger_add_field_to_logger("ParticleIDs", sizeof(long long));
-  mask_data[7] = logger_add_field_to_logger("Densities", sizeof(float));
+  mask_data[0] = logger_create_mask_entry("Coordinates", 3 * sizeof(double));
+  mask_data[1] = logger_create_mask_entry("Velocities", 3 * sizeof(float));
+  mask_data[2] = logger_create_mask_entry("Accelerations", 3 * sizeof(float));
+  mask_data[3] = logger_create_mask_entry("Masses", sizeof(float));
+  mask_data[4] = logger_create_mask_entry("SmoothingLengths", sizeof(float));
+  mask_data[5] = logger_create_mask_entry("Entropies", sizeof(float));
+  mask_data[6] = logger_create_mask_entry("ParticleIDs", sizeof(long long));
+  mask_data[7] = logger_create_mask_entry("Densities", sizeof(float));
 
   return 8;
 }

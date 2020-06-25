@@ -30,12 +30,12 @@
  * @return Number of masks used.
  */
 INLINE static int stars_logger_init(struct mask_data *mask_data) {
-  mask_data[0] = logger_add_field_to_logger("Coordinates", 3 * sizeof(double));
-  mask_data[1] = logger_add_field_to_logger("Velocities", 3 * sizeof(float));
-  mask_data[2] = logger_add_field_to_logger("Accelerations", 3 * sizeof(float));
-  mask_data[3] = logger_add_field_to_logger("Masses", sizeof(float));
-  mask_data[4] = logger_add_field_to_logger("SmoothingLengths", sizeof(float));
-  mask_data[5] = logger_add_field_to_logger("ParticleIDs", sizeof(long long));
+  mask_data[0] = logger_create_mask_entry("Coordinates", 3 * sizeof(double));
+  mask_data[1] = logger_create_mask_entry("Velocities", 3 * sizeof(float));
+  mask_data[2] = logger_create_mask_entry("Accelerations", 3 * sizeof(float));
+  mask_data[3] = logger_create_mask_entry("Masses", sizeof(float));
+  mask_data[4] = logger_create_mask_entry("SmoothingLengths", sizeof(float));
+  mask_data[5] = logger_create_mask_entry("ParticleIDs", sizeof(long long));
 
   return 6;
 }

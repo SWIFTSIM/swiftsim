@@ -94,7 +94,7 @@ enum logger_special_flags {
  * @brief structure containing global data for the particle logger.
  */
 struct logger_writer {
-  /* Number of particle steps between dumping a record. */
+  /* Number of particle updates between log entries. */
   short int delta_step;
 
   /* Logger basename. */
@@ -124,15 +124,15 @@ struct logger_writer {
   /* Description of all the fields that can be written. */
   struct mask_data *logger_mask_data;
 
-  /* Shift in #logger_mask_data for each option. */
+  /* Pointer to the variable logger_mask_data for each module. */
   struct {
-    /* shift for the hydro */
+    /* pointer for the hydro */
     struct mask_data *hydro;
 
-    /* shift for the gravity */
+    /* pointer for the gravity */
     struct mask_data *gravity;
 
-    /* shift for the stars */
+    /* pointer for the stars */
     struct mask_data *stars;
   } mask_data_pointers;
 
