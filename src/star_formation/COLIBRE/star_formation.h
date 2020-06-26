@@ -34,6 +34,7 @@
 #include "random.h"
 #include "stars.h"
 #include "units.h"
+#include "dust.h"
 
 /**
  * @file src/star_formation/COLIBRE/star_formation.h
@@ -438,10 +439,9 @@ INLINE static void star_formation_copy_properties(
     sp->birth_time = e->time;
   }
 
-  /**
-   * Redistribute dust masses back to gas-phase elements if 
-   * running with dust(astration)
-   **/
+   /* Redistribute dust masses back to gas-phase elements if 
+    * running with dust(astration) */
+  redistribute_dust_masses(p->chemistry_data, dp->dust_composition)
 
   /* Store the chemistry struct in the star particle */
   sp->chemistry_data = p->chemistry_data;
