@@ -301,13 +301,13 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
      * more from the gas than the BH gained */
     const float excess_fraction = 1.0 / (1.0 - bh_props->epsilon_r);
 
-    /* Need to check whether nibbling would push gas mass below minimum 
+    /* Need to check whether nibbling would push gas mass below minimum
      * allowed mass */
     float new_gas_mass = pj_mass_orig - nibble_mass * excess_fraction;
     if (new_gas_mass < bh_props->min_gas_mass_for_nibbling) {
       new_gas_mass = bh_props->min_gas_mass_for_nibbling;
-      nibble_mass = (pj_mass_orig - bh_props->min_gas_mass_for_nibbling)
-                    / excess_fraction;
+      nibble_mass = (pj_mass_orig - bh_props->min_gas_mass_for_nibbling) /
+                    excess_fraction;
     }
 
     /* Transfer (dynamical) mass from the gas particle to the BH */
