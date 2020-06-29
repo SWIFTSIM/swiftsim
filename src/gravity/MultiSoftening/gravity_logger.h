@@ -21,6 +21,7 @@
 
 #include "logger_io.h"
 
+#ifdef WITH_LOGGER
 /**
  * @brief Initialize the logger.
  *
@@ -88,8 +89,6 @@ INLINE static void gravity_logger_prepare_to_write_particle(
 INLINE static char *gravity_logger_write_particle(
     const struct mask_data *mask_data, const struct gpart *gp,
     unsigned int *mask, char *buff) {
-#ifdef WITH_LOGGER
-
   /* Write the coordinate. */
   if (logger_should_write_field(mask_data[0], mask, "Coordinates")) {
     memcpy(buff, gp->x, 3 * sizeof(double));
@@ -121,10 +120,7 @@ INLINE static char *gravity_logger_write_particle(
   }
 
   return buff;
-
-#else
-  error("Should not be called without the logger.");
-#endif /* WITH_LOGGER */
 }
 
+#endif // WITH_LOGGER
 #endif  // SWIFT_MULTISOFTENING_GRAVITY_LOGGER_H

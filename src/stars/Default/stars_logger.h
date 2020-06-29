@@ -19,6 +19,7 @@
 #ifndef SWIFT_DEFAULT_STARS_LOGGER_H
 #define SWIFT_DEFAULT_STARS_LOGGER_H
 
+#ifdef WITH_LOGGER
 /**
  * @brief Initialize the logger.
  *
@@ -88,7 +89,6 @@ INLINE static void stars_logger_prepare_to_write_particle(
 INLINE static char *stars_logger_write_particle(
     const struct mask_data *mask_data, const struct spart *sp,
     unsigned int *mask, char *buff) {
-#ifdef WITH_LOGGER
 
   /* Write the coordinate. */
   if (logger_should_write_field(mask_data[0], mask, "Coordinates")) {
@@ -127,10 +127,7 @@ INLINE static char *stars_logger_write_particle(
   }
 
   return buff;
-
-#else
-  error("Should not be called without the logger.");
-#endif /* WITH_LOGGER */
 }
 
+#endif // WITH_LOGGER
 #endif  // SWIFT_DEFAULT_STARS_LOGGER_H

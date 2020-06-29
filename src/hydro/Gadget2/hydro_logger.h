@@ -21,6 +21,8 @@
 
 #include "logger_io.h"
 
+#ifdef WITH_LOGGER
+
 /**
  * @brief Initialize the logger.
  *
@@ -101,7 +103,6 @@ INLINE static void hydro_logger_prepare_to_write_particle(
 INLINE static char *hydro_logger_write_particle(
     const struct mask_data *mask_data, const struct part *p,
     const struct xpart *xp, unsigned int *mask, char *buff) {
-#ifdef WITH_LOGGER
 
   /* Write the coordinate. */
   if (logger_should_write_field(mask_data[0], mask, "Coordinates")) {
@@ -157,10 +158,7 @@ INLINE static char *hydro_logger_write_particle(
   }
 
   return buff;
-
-#else
-  error("Should not be called without the logger.");
-#endif /* WITH_LOGGER */
 }
 
+#endif // WITH_LOGGER
 #endif  // SWIFT_GADGET2_HYDRO_LOGGER_H
