@@ -121,13 +121,13 @@ void write_distributed_array(const struct engine* e, hid_t grp,
     rank = 2;
     shape[0] = N;
     shape[1] = props.dimension;
-    chunk_shape[0] = 1 << log2_chunk_size; /* Just a guess...*/
+    chunk_shape[0] = 1 << log2_chunk_size;
     chunk_shape[1] = props.dimension;
   } else {
     rank = 1;
     shape[0] = N;
     shape[1] = 0;
-    chunk_shape[0] = 1 << log2_chunk_size; /* Just a guess...*/
+    chunk_shape[0] = 1 << log2_chunk_size;
     chunk_shape[1] = 0;
   }
 

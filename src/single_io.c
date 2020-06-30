@@ -267,13 +267,13 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
     rank = 2;
     shape[0] = N;
     shape[1] = props.dimension;
-    chunk_shape[0] = 1 << log2_chunk_size; /* Just a guess...*/
+    chunk_shape[0] = 1 << log2_chunk_size;
     chunk_shape[1] = props.dimension;
   } else {
     rank = 1;
     shape[0] = N;
     shape[1] = 0;
-    chunk_shape[0] = 1 << log2_chunk_size; /* Just a guess...*/
+    chunk_shape[0] = 1 << log2_chunk_size;
     chunk_shape[1] = 0;
   }
 
