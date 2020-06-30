@@ -1307,7 +1307,7 @@ int main(int argc, char *argv[]) {
                              N_total[swift_type_dark_matter_background];
       message(
           "Running on %lld gas particles, %lld sink particles, %lld stars "
-          "particles,"
+          "particles, "
           "%lld black hole particles and %lld DM particles (%lld gravity "
           "particles)",
           N_total[swift_type_gas], N_total[swift_type_sink],
