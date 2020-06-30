@@ -2379,7 +2379,7 @@ void io_collect_sparts_to_write(const struct spart* restrict sparts,
  * @param sinks_written The array of #sink to fill with particles we want to
  * write.
  * @param Nsinks The total number of #sink.
- * @param Nsinks_written The total number of #sinks to write.
+ * @param Nsinks_written The total number of #sink to write.
  */
 void io_collect_sinks_to_write(const struct sink* restrict sinks,
                                struct sink* restrict sinks_written,
