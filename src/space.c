@@ -3152,7 +3152,7 @@ void space_sparts_get_cell_index(struct space *s, int *sind, int *cell_counts,
  * @brief Computes the cell index of all the sink-particles.
  *
  * @param s The #space.
- * @param bind The array of indices to fill.
+ * @param sink_ind The array of indices to fill.
  * @param cell_counts The cell counters to update.
  * @param count_inhibited_sinks (return) The number of #sink to remove.
  * @param count_extra_sinks (return) The number of #sink for on-the-fly

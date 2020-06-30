@@ -476,7 +476,7 @@ void write_array_serial(const struct engine* e, hid_t grp, char* fileName,
  * InternalEnergy field
  * @param with_hydro Are we reading gas particles ?
  * @param with_gravity Are we reading/creating #gpart arrays ?
- * @param with_sinks Are we reading sink particles ?
+ * @param with_sink Are we reading sink particles ?
  * @param with_stars Are we reading star particles ?
  * @param with_black_holes Are we reading black hole particles ?
  * @param with_cosmology Are we running with cosmology ?
