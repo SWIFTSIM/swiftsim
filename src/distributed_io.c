@@ -285,7 +285,7 @@ void write_output_distributed(struct engine* e,
   const size_t Ngas_written =
       e->s->nr_parts - e->s->nr_inhibited_parts - e->s->nr_extra_parts;
   const size_t Nsinks_written =
-    e->s->nr_sinks - e->s->nr_inhibited_sinks - e->s->nr_extra_sinks;
+      e->s->nr_sinks - e->s->nr_inhibited_sinks - e->s->nr_extra_sinks;
   const size_t Nstars_written =
       e->s->nr_sparts - e->s->nr_inhibited_sparts - e->s->nr_extra_sparts;
   const size_t Nblackholes_written =
@@ -662,11 +662,11 @@ void write_output_distributed(struct engine* e,
 
           /* Select the fields to write */
           sink_write_particles(sinks_written, list, &num_fields,
-                                with_cosmology);
+                               with_cosmology);
         }
       } break;
 
-    case swift_type_stars: {
+      case swift_type_stars: {
         if (Nstars == Nstars_written) {
 
           /* No inhibted particles: easy case */

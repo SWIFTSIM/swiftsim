@@ -1066,8 +1066,8 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                 MPI_BOR, MPI_COMM_WORLD);
   MPI_Allreduce(MPI_IN_PLACE, offset_background_gpart, nr_cells,
                 MPI_LONG_LONG_INT, MPI_BOR, MPI_COMM_WORLD);
-  MPI_Allreduce(MPI_IN_PLACE, offset_sink, nr_cells, MPI_LONG_LONG_INT,
-                MPI_BOR, MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE, offset_sink, nr_cells, MPI_LONG_LONG_INT, MPI_BOR,
+                MPI_COMM_WORLD);
   MPI_Allreduce(MPI_IN_PLACE, offset_spart, nr_cells, MPI_LONG_LONG_INT,
                 MPI_BOR, MPI_COMM_WORLD);
   MPI_Allreduce(MPI_IN_PLACE, offset_bpart, nr_cells, MPI_LONG_LONG_INT,
