@@ -126,6 +126,8 @@ void logger_reader_free(struct logger_reader *reader) {
 /**
  * @brief Read a record (timestamp or particle)
  *
+ * WARNING THIS FUNCTION WORKS ONLY WITH HYDRO PARTICLES.
+ *
  * @param reader The #logger_reader.
  * @param lp (out) The #logger_particle (if the record is a particle).
  * @param time (out) The time read (if the record is a timestamp).
@@ -134,9 +136,9 @@ void logger_reader_free(struct logger_reader *reader) {
  *
  * @return The offset after this record.
  */
-size_t reader_read_record(struct logger_reader *reader,
-                          struct logger_particle *lp, double *time,
-                          int *is_particle, size_t offset) {
+size_t logger_reader_read_record(struct logger_reader *reader,
+                                 struct logger_particle *lp, double *time,
+                                 int *is_particle, size_t offset) {
 
   struct logger_logfile *log = &reader->log;
 
@@ -146,7 +148,7 @@ size_t reader_read_record(struct logger_reader *reader,
                              NULL);
 
   /* Check if timestamp or not. */
-  int ind = header_get_field_index(&log->header, "timestamp");
+  int ind = header_get_field_index(&log->header, "Timestamp");
   if (ind == -1) {
     error("File header does not contain a mask for time.");
   }
@@ -229,35 +231,32 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
   return reader->index.index.nparts;
 }
 
-struct extra_data_read {
-  struct logger_reader *reader;
-  struct logger_particle *parts;
-  struct index_data *data;
-  enum logger_reader_type type;
-};
-
 /**
- * @brief Mapper function of logger_reader_read_all_particles().
+ * @brief Read all the particles from the index file.
  *
- * @param map_data The array of #logger_particle.
- * @param num_elements The number of element to process.
- * @param extra_data The #extra_data_read.
+ * @param reader The #logger_reader.
+ * @param time The requested time for the particle.
+ * @param interp_type The type of interpolation.
+ * @param array The array of particles to use.
  */
-void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
-                                             void *extra_data) {
+void logger_reader_read_all_particles(struct logger_reader *reader, double time,
+                                      enum logger_reader_type interp_type,
+                                      struct logger_particle_array *array) {
 
-  struct logger_particle *parts = (struct logger_particle *)map_data;
-  struct extra_data_read *read = (struct extra_data_read *)extra_data;
-  const struct logger_reader *reader = read->reader;
-  struct index_data *data = read->data + (parts - read->parts);
+  /* Shortcut to some structures */
+  struct logger_index *index = &reader->index.index;
+  const int spec_flag_ind =
+      header_get_field_index(&reader->log.header, "special flags");
 
-  const uint64_t *nparts = reader->index.index.nparts;
-  const size_t shift = parts - read->parts;
+  /* Get the correct index file */
+  logger_reader_set_time(reader, time);
+
+  /* Read the hydro */
+  struct index_data *data = logger_index_get_data(index, swift_type_gas);
 
   /* Read the particles */
-  for (int i = 0; i < num_elements; i++) {
-    const size_t part_ind = shift + i;
-
+  // TODO make it parallel
+  for (size_t i = 0; i < array->hydro.n; i++) {
     /* Get the offset */
     size_t prev_offset = data[i].offset;
     size_t next_offset = prev_offset;
@@ -274,12 +273,21 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
 #endif
 
     while (next_offset < reader->time.time_offset) {
-      prev_offset = next_offset;
+      // TODO use a single call for the offset and mask
+      size_t mask = 0;
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
+
+      if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+        error("TODO");
+      }
+
       int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
                                        &next_offset, reader->log.log.mmap_size);
 
       if (test == -1) {
-        size_t mask = 0;
+        mask = 0;
         logger_loader_io_read_mask(&reader->log.header,
                                    (char *)reader->log.log.map + prev_offset,
                                    &mask, &next_offset);
@@ -291,57 +299,110 @@ void logger_reader_read_all_particles_mapper(void *map_data, int num_elements,
     }
 
     /* Read the particle */
-    logger_particle_read(&parts[i], reader, prev_offset, reader->time.time,
-                         read->type);
+    logger_particle_read(&array->hydro.parts[i], reader, prev_offset,
+                         reader->time.time, interp_type);
+  }
 
-    /* Set the type */
-    size_t count = 0;
-    for (int ptype = 0; ptype < swift_type_count; ptype++) {
-      count += nparts[ptype];
-      if (part_ind < count) {
-        parts[i].type = ptype;
-        break;
+  /* Do the dark matter now */
+  data = logger_index_get_data(index, swift_type_dark_matter);
+
+  /* Read the dark matter particles */
+  for (size_t i = 0; i < array->grav.n; i++) {
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
+
+#ifdef SWIFT_DEBUG_CHECKS
+    /* check with the offset of the next timestamp.
+     * (the sentinel protects against overflow)
+     */
+    const size_t ind = reader->time.index + 1;
+    if (prev_offset >= reader->log.times.records[ind].offset) {
+      error("An offset is out of range (%zi > %zi).", prev_offset,
+            reader->log.times.records[ind].offset);
+    }
+#endif
+
+    while (next_offset < reader->time.time_offset) {
+      // TODO use a single call for the offset and mask
+      size_t mask = 0;
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
+
+      if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+        error("TODO");
+      }
+
+      int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
+                                       &next_offset, reader->log.log.mmap_size);
+
+      if (test == -1) {
+        mask = 0;
+        logger_loader_io_read_mask(&reader->log.header,
+                                   (char *)reader->log.log.map + prev_offset,
+                                   &mask, &next_offset);
+        error(
+            "Trying to get a particle without next record (mask: %zi, diff "
+            "offset: %zi)",
+            mask, next_offset);
       }
     }
+
+    /* Read the particle */
+    logger_gparticle_read(&array->grav.parts[i], reader, prev_offset,
+                          reader->time.time, interp_type);
   }
-}
 
-/**
- * @brief Read all the particles from the index file.
- *
- * @param reader The #logger_reader.
- * @param time The requested time for the particle.
- * @param interp_type The type of interpolation.
- * @param parts The array of particles to use.
- * @param n_tot The total number of particles
- */
-void logger_reader_read_all_particles(struct logger_reader *reader, double time,
-                                      enum logger_reader_type interp_type,
-                                      struct logger_particle *parts,
-                                      size_t n_tot) {
-
-  /* Initialize the thread pool */
-  struct threadpool threadpool;
-  threadpool_init(&threadpool, nr_threads);
-
-  /* Shortcut to some structures */
-  struct logger_index *index = &reader->index.index;
-
-  /* Get the correct index file */
-  logger_reader_set_time(reader, time);
-  struct index_data *data = logger_index_get_data(index, 0);
+  data = logger_index_get_data(index, swift_type_stars);
 
   /* Read the particles */
-  struct extra_data_read read;
-  read.reader = reader;
-  read.parts = parts;
-  read.data = data;
-  read.type = interp_type;
-  threadpool_map(&threadpool, logger_reader_read_all_particles_mapper, parts,
-                 n_tot, sizeof(struct logger_particle), 0, &read);
+  for (size_t i = 0; i < array->stars.n; i++) {
+    /* Get the offset */
+    size_t prev_offset = data[i].offset;
+    size_t next_offset = prev_offset;
 
-  /* Cleanup the threadpool */
-  threadpool_clean(&threadpool);
+#ifdef SWIFT_DEBUG_CHECKS
+    /* check with the offset of the next timestamp.
+     * (the sentinel protects against overflow)
+     */
+    const size_t ind = reader->time.index + 1;
+    if (prev_offset >= reader->log.times.records[ind].offset) {
+      error("An offset is out of range (%zi > %zi).", prev_offset,
+            reader->log.times.records[ind].offset);
+    }
+#endif
+
+    while (next_offset < reader->time.time_offset) {
+      // TODO use a single call for the offset and mask
+      size_t mask = 0;
+      logger_loader_io_read_mask(&reader->log.header,
+                                 reader->log.log.map + prev_offset, &mask,
+                                 /* diff_offset */ NULL);
+
+      if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+        error("TODO");
+      }
+
+      int test = tools_get_next_record(&reader->log.header, reader->log.log.map,
+                                       &next_offset, reader->log.log.mmap_size);
+
+      if (test == -1) {
+        mask = 0;
+        logger_loader_io_read_mask(&reader->log.header,
+                                   (char *)reader->log.log.map + prev_offset,
+                                   &mask, &next_offset);
+        error(
+            "Trying to get a particle without next record (mask: %zi, diff "
+            "offset: %zi)",
+            mask, next_offset);
+      }
+    }
+
+    /* Read the particle */
+    logger_sparticle_read(&array->stars.parts[i], reader, prev_offset,
+                          reader->time.time, interp_type);
+  }
 }
 
 /**
@@ -386,18 +447,254 @@ size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
 }
 
 /**
+ * @brief Move forward in time the particles and deal with the special cases.
+ *
+ * @param reader The #logger_reader.
+ * @param prev The list of particles before the time offset (to update).
+ * @param next The list of particles after the time offset (to update).
+ * @param new_parts The list of new particles.
+ * @param n_deleted The number of particles deleted.
+ * @param time_offset The offset (in the logfile) of the time requested.
+ * @param time The time requested.
+ * @param should_interpolate Should the function interpolate the particle at
+ * the required time or simply return the two records around the requested time?
+ */
+void logger_reader_move_forward_internal(
+    struct logger_reader *reader, struct logger_particle_array *prev,
+    struct logger_particle_array *next, struct logger_particle_array *new_parts,
+    size_t *n_deleted, size_t time_offset, double time,
+    const int should_interpolate) {
+
+  // TODO make it parallel
+  /* Move forward the hydro particles */
+  for (size_t i = 0; i < prev->hydro.n; i++) {
+    if (prev->hydro.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->hydro.parts[i].offset, time_offset);
+    }
+
+    enum logger_reader_event event = logger_reader_get_next_particle(
+        reader, &prev->hydro.parts[i], &next->hydro.parts[i], time_offset);
+
+    switch (event) {
+      /* Nothing happened */
+      case logger_reader_event_null:
+        if (should_interpolate) {
+          prev->hydro.parts[i] = logger_particle_interpolate(&prev->hydro.parts[i],
+                                                             &next->hydro.parts[i], time);
+        }
+        break;
+
+      /* The particle has been deleted */
+      case logger_reader_event_deleted:
+        n_deleted[swift_type_gas]++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->hydro.parts[i].flag = logger_flag_delete;
+        break;
+
+      /* The particle has been transformed into a star */
+      case logger_reader_event_stars:
+        /* Delete the hydro particle */
+        n_deleted[swift_type_gas]++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->hydro.parts[i].flag = logger_flag_delete;
+
+        /* Save the offset of the new star. */
+        logger_particle_array_add_stars(new_parts, prev->hydro.parts[i].offset);
+        break;
+
+      default:
+        error("Not implemented");
+    }
+  }
+
+  /* Move forward the gravity particles */
+  for (size_t i = 0; i < prev->grav.n; i++) {
+    if (prev->grav.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->grav.parts[i].offset, time_offset);
+    }
+    enum logger_reader_event event = logger_reader_get_next_gparticle(
+        reader, &prev->grav.parts[i], &next->grav.parts[i], time_offset);
+
+    switch (event) {
+      /* Nothing happened */
+      case logger_reader_event_null:
+        if (should_interpolate) {
+          prev->grav.parts[i] = logger_gparticle_interpolate(&prev->grav.parts[i],
+                                                             &next->grav.parts[i], time);
+        }
+        break;
+
+        /* The particle has been deleted */
+      case logger_reader_event_deleted:
+        n_deleted[swift_type_dark_matter]++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->grav.parts[i].flag = logger_flag_delete;
+        break;
+
+      default:
+        error("Not implemented");
+    }
+  }
+
+  /* Move forward the stars particles */
+  for (size_t i = 0; i < prev->stars.n; i++) {
+    if (prev->stars.parts[i].offset > time_offset) {
+      error("Cannot go backward in time (%zi > %zi)",
+            prev->stars.parts[i].offset, time_offset);
+    }
+    enum logger_reader_event event = logger_reader_get_next_sparticle(
+        reader, &prev->stars.parts[i], &next->stars.parts[i], time_offset);
+
+    switch (event) {
+        /* Nothing happened */
+      case logger_reader_event_null:
+        if (should_interpolate) {
+          prev->stars.parts[i] = logger_sparticle_interpolate(&prev->stars.parts[i],
+                                                              &next->stars.parts[i], time);
+        }
+        break;
+
+        /* The particle has been deleted */
+      case logger_reader_event_deleted:
+        n_deleted[swift_type_stars]++;
+        /* Mark the particle as deleted. */
+        /* This flag is not possible otherwise as it should contain some data
+           in the most significant byte. */
+        prev->stars.parts[i].flag = logger_flag_delete;
+        break;
+
+      default:
+        error("Not implemented");
+    }
+  }
+}
+
+/** @brief Check if still need to update some particles (internal function of
+ * move forward) */
+int logger_reader_check_need_update_parts(const size_t *not_updated) {
+  return not_updated[swift_type_gas] != 0 &&
+         not_updated[swift_type_stars] != 0 &&
+         not_updated[swift_type_dark_matter] != 0;
+}
+
+/**
  * @brief Get the two particle records around the requested time.
  *
  * @param reader The #logger_reader.
  * @param prev (in) A record before the requested time. (out) The last record
  * before the time.
  * @param next (out) The first record after the requested time.
- * @param time_offset The offset of the requested time.
+ * @param time The requested time.
+ * @param should_interpolate Should the function interpolate the particle at
+ * the required time or simply return the two records around the requested time?
  */
-void logger_reader_get_next_particle(struct logger_reader *reader,
-                                     struct logger_particle *prev,
-                                     struct logger_particle *next,
-                                     size_t time_offset) {
+void logger_reader_move_forward(struct logger_reader *reader,
+                                struct logger_particle_array *prev,
+                                struct logger_particle_array *next, double time,
+                                const int should_interpolate) {
+
+  /* Get the offset of the requested time. */
+  size_t time_offset = logger_reader_get_next_offset_from_time(reader, time);
+
+  /* Ensure to have enough place in the next */
+  logger_particle_array_change_size(next, prev->hydro.n, prev->grav.n,
+                                    prev->stars.n);
+
+  /* Create a temporary array for storing the
+     new particles or the changes of type. */
+  struct logger_particle_array new_prev;
+  logger_particle_array_allocate(&new_prev, /* n_part */ 512, /* n_gpart */ 512,
+                                 /* n_spart */ 512,
+                                 /* empty */ 1);
+
+  /* Create the variables for the new / deleted particles */
+  size_t n_deleted[swift_type_count] = {0, 0, 0, 0, 0, 0};
+
+  /* Update the particles.
+     We do it in two part in order to avoid to modify too often the full array.
+   */
+  logger_reader_move_forward_internal(reader, prev, next, &new_prev, n_deleted,
+                                      time_offset, time, should_interpolate);
+
+  /* Get the number of particles not updated */
+  size_t new_deleted[swift_type_count];
+  new_deleted[swift_type_gas] = new_prev.hydro.n;
+  new_deleted[swift_type_dark_matter] = new_prev.grav.n;
+  new_deleted[swift_type_stars] = new_prev.stars.n;
+
+  /* Check if some particles have changed type */
+  const int changed_type = logger_reader_check_need_update_parts(new_deleted);
+
+  /* Allocate a temporary array for the next particles */
+  struct logger_particle_array new_next;
+  if (changed_type) {
+    logger_particle_array_allocate(
+        &new_next, new_prev.hydro.allocated_size, new_prev.grav.allocated_size,
+        new_prev.stars.allocated_size, /* empty */ 1);
+  }
+
+  /* Evolve the particle with special events (should be a tiny fraction of the
+   * array). */
+  while (logger_reader_check_need_update_parts(new_deleted)) {
+
+    /* Read the particles */
+    logger_reader_read_particles_at_offset(reader, &new_prev);
+
+    /* Move them forward */
+    struct logger_particle_array tmp;
+    logger_particle_array_allocate(&new_prev, /* n_part */ 16, /* n_gpart */ 16,
+                                   /* n_spart */ 16,
+                                   /* empty */ 1);
+
+    logger_reader_move_forward_internal(reader, &new_prev, &new_next, &tmp,
+                                        new_deleted, time_offset, time,
+                                        should_interpolate);
+
+    /* Delete the required particles and add the new ones */
+    logger_particle_array_update(
+        &new_prev, &new_next, &tmp, new_deleted[swift_type_gas],
+        new_deleted[swift_type_dark_matter], new_deleted[swift_type_stars]);
+
+    /* Free the memory */
+    logger_particle_array_free(&tmp);
+  }
+
+  /* Remove the particles that should be deleted and
+     update the particles types */
+  logger_particle_array_update(prev, next, &new_prev, n_deleted[swift_type_gas],
+                               n_deleted[swift_type_dark_matter],
+                               n_deleted[swift_type_stars]);
+
+  /* Free the memory */
+  logger_particle_array_free(&new_prev);
+  if (changed_type) {
+    logger_particle_array_free(&new_next);
+  }
+}
+
+/**
+ * @brief Get the two particle records around the requested time.
+ *
+ * @param reader The #logger_reader.
+ * @param prev (in) A record before the requested time. (out) The last record
+ * before the time.
+ * @param next (out) The interpolated particle.
+ * @param time_offset The offset of the requested time.
+ *
+ * @return The event encountered (update also the offset of the previous
+ * particle).
+ */
+enum logger_reader_event logger_reader_get_next_particle(
+    struct logger_reader *reader, struct logger_particle *prev,
+    struct logger_particle *next, size_t time_offset) {
 
   void *map = reader->log.log.map;
   size_t prev_offset = prev->offset;
@@ -405,14 +702,10 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
 
   /* Get the mask index of the special flags */
   const int spec_flag_ind =
-      header_get_field_index(&reader->log.header, "special flags");
-  if (spec_flag_ind < -1) {
+      header_get_field_index(&reader->log.header, "SpecialFlags");
+  if (spec_flag_ind < 0) {
     error("The logfile does not contain the special flags field.");
   }
-
-  /* Keep the type in memory */
-  const int prev_type = prev->type;
-  int new_type = -1;
 
   while (1) {
     /* Read the offset to the next particle */
@@ -422,17 +715,43 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
 
     /* Check if something special happened */
     if (mask & reader->log.header.masks[spec_flag_ind].mask) {
+      /* Read the special flag's data */
       struct logger_particle tmp;
       logger_particle_read(&tmp, reader, prev_offset, /* Time */ -1,
                            logger_reader_const);
-      new_type = tmp.type;
+
+      /* Get the data from the flag */
+      int data = 0;
+      enum logger_special_flags flag =
+          logger_unpack_flags_and_data(tmp.flag, &data);
+
+      /* Save the offset information */
+      prev->offset = prev_offset;
+
+      /* Deal with the different cases */
+      switch (flag) {
+
+        case logger_flag_change_type:
+          if (data == swift_type_stars) {
+            return logger_reader_event_stars;
+          } else {
+            error("Not implemented yet.");
+          }
+
+        case logger_flag_mpi_exit:
+        case logger_flag_delete:
+          return logger_reader_event_deleted;
+
+        default:
+          error("This case should never happen %i.", data);
+      }
     }
 
     /* Are we at the end of the file? */
     if (next_offset == 0) {
       time_array_print(&reader->log.times);
       error(
-          "End of file for particle %lli offset %zi when requesting time %g "
+          "End of file for particle %lu offset %zi when requesting time %g "
           "with offset %zi",
           prev->id, prev_offset,
           time_array_get_time(&reader->log.times, time_offset), time_offset);
@@ -459,12 +778,74 @@ void logger_reader_get_next_particle(struct logger_reader *reader,
   logger_particle_read(next, reader, next_offset, /* Time */ 0,
                        logger_reader_const);
 
-  /* Set the types */
-  if (new_type == -1) {
-    next->type = prev_type;
-    prev->type = prev_type;
-  } else {
-    next->type = new_type;
-    prev->type = new_type;
+  return logger_reader_event_null;
+}
+
+/**
+ * @brief Get the two particle records around the requested time.
+ *
+ * @param reader The #logger_reader.
+ * @param prev (in) A record before the requested time. (out) The last record
+ * before the time.
+ * @param next (out) The first record after the requested time.
+ * @param time_offset The offset of the requested time.
+ *
+ * @return The event encountered (update also the offset of the previous
+ * particle).
+ */
+enum logger_reader_event logger_reader_get_next_gparticle(
+    struct logger_reader *reader, struct logger_gparticle *prev,
+    struct logger_gparticle *next, size_t time_offset) {
+  error("TODO");
+}
+
+/**
+ * @brief Get the two particle records around the requested time.
+ *
+ * @param reader The #logger_reader.
+ * @param prev (in) A record before the requested time. (out) The last record
+ * before the time.
+ * @param next (out) The first record after the requested time.
+ * @param time_offset The offset of the requested time.
+ *
+ * @return The event encountered (update also the offset of the previous
+ * particle).
+ */
+enum logger_reader_event logger_reader_get_next_sparticle(
+    struct logger_reader *reader, struct logger_sparticle *prev,
+    struct logger_sparticle *next, size_t time_offset) {
+
+  error("TODO");
+}
+
+/**
+ * @brief Read the particles at a given offset.
+ *
+ * @param reader The #logger_reader.
+ * @param array The array of particles. (in) Contains the offset of each
+ * records. (out) Contains the full particles.
+ */
+void logger_reader_read_particles_at_offset(
+    struct logger_reader *reader, struct logger_particle_array *array) {
+
+  /* Read the hydro */
+  for (size_t i = 0; i < array->hydro.n; i++) {
+    logger_particle_read(&array->hydro.parts[i], reader,
+                         array->hydro.parts[i].offset,
+                         /* time */ -1, logger_reader_const);
+  }
+
+  /* Read the gravity */
+  for (size_t i = 0; i < array->grav.n; i++) {
+    logger_gparticle_read(&array->grav.parts[i], reader,
+                          array->grav.parts[i].offset,
+                          /* time */ -1, logger_reader_const);
+  }
+
+  /* Read the stars */
+  for (size_t i = 0; i < array->stars.n; i++) {
+    logger_sparticle_read(&array->stars.parts[i], reader,
+                          array->stars.parts[i].offset,
+                          /* time */ -1, logger_reader_const);
   }
 }

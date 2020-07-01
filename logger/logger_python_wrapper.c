@@ -19,6 +19,7 @@
 #include "logger_header.h"
 #include "logger_loader_io.h"
 #include "logger_particle.h"
+#include "logger_python_tools.h"
 #include "logger_reader.h"
 #include "logger_time.h"
 
@@ -27,7 +28,6 @@
 
 #include <Python.h>
 #include <errno.h>
-#include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -35,10 +35,183 @@ typedef struct {
   PyObject_HEAD struct logger_particle part;
 } PyLoggerParticle;
 
-static PyTypeObject PyLoggerParticle_Type;
-const char *particle_name = "Particle";
+typedef struct {
+  PyObject_HEAD struct logger_gparticle gpart;
+} PyLoggerGParticle;
+
+typedef struct {
+  PyObject_HEAD struct logger_sparticle spart;
+} PyLoggerSParticle;
+
+static PyTypeObject PyLoggerParticle_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.Particle",
+    .tp_basicsize = sizeof(PyLoggerParticle),
+    .tp_doc =
+        "This is the type for the hydro particles."
+        "It does nothing but cleanup the interface.",
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+};
+
+static PyTypeObject PyLoggerGParticle_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.GParticle",
+    .tp_basicsize = sizeof(PyLoggerGParticle),
+    .tp_doc =
+        "This is the type for the gravity particles."
+        "It does nothing but cleanup the interface.",
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+};
+
+static PyTypeObject PyLoggerSParticle_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "logger.SParticle",
+    .tp_basicsize = sizeof(PyLoggerSParticle),
+    .tp_doc =
+        "This is the type for the stars particles."
+        "It does nothing but cleanup the interface.",
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+};
 
 PyArray_Descr *logger_particle_descr;
+PyArray_Descr *logger_gparticle_descr;
+PyArray_Descr *logger_sparticle_descr;
+
+/**
+ * @brief Convert the dictionary received in input into a logger array.
+ *
+ * @param dict The dictionary received
+ *
+ * @return The array.
+ */
+__attribute__((always_inline)) INLINE static struct logger_particle_array
+convert_and_check_input(PyObject *dict) {
+  /* Check that we received a dictionnary */
+  if (!PyDict_Check(dict)) {
+    error("Expecting a dictionnary");
+  }
+
+  PyArrayObject *parts = (PyArrayObject *)PyDict_GetItemString(dict, "gas");
+  PyArrayObject *gparts =
+      (PyArrayObject *)PyDict_GetItemString(dict, "dark_matter");
+  PyArrayObject *sparts = (PyArrayObject *)PyDict_GetItemString(dict, "stars");
+
+  struct logger_particle_array out;
+  logger_particle_array_init(&out);
+
+  /* Deal with the hydro particles. */
+  if (parts != NULL) {
+    /* Check parts */
+    if (!PyArray_Check(parts)) {
+      error("Expecting a numpy array for particles.");
+    }
+
+    if (PyArray_NDIM(parts) != 1) {
+      error("Expecting a 1D array of particles.");
+    }
+
+    if (PyArray_TYPE(parts) != logger_particle_descr->type_num) {
+      error("Expecting an array of particles.");
+    }
+
+    /* Set the hydro */
+    out.hydro.parts = PyArray_DATA(parts);
+    out.hydro.n = PyArray_DIM(parts, 0);
+    out.hydro.allocated_size = out.hydro.n;
+  }
+
+  /* Deal with the gravity particles. */
+  if (gparts != NULL) {
+    /* Check gparts */
+    if (!PyArray_Check(gparts)) {
+      error("Expecting a numpy array for gparticles.");
+    }
+
+    if (PyArray_NDIM(gparts) != 1) {
+      error("Expecting a 1D array of gparticles.");
+    }
+
+    if (PyArray_TYPE(gparts) != logger_gparticle_descr->type_num) {
+      error("Expecting an array of gparticles.");
+    }
+
+    /* Set the grav */
+    out.grav.parts = PyArray_DATA(gparts);
+    out.grav.n = PyArray_DIM(gparts, 0);
+    out.grav.allocated_size = out.grav.n;
+  }
+
+  /* Deal with the stellar particles. */
+  if (sparts != NULL) {
+    /* Check parts */
+    if (!PyArray_Check(sparts)) {
+      error("Expecting a numpy array for sparticles.");
+    }
+
+    if (PyArray_NDIM(sparts) != 1) {
+      error("Expecting a 1D array of sparticles.");
+    }
+
+    if (PyArray_TYPE(sparts) != logger_sparticle_descr->type_num) {
+      error("Expecting an array of sparticles.");
+    }
+
+    /* Set the stars */
+    out.stars.parts = PyArray_DATA(sparts);
+    out.stars.n = PyArray_DIM(sparts, 0);
+    out.stars.allocated_size = out.stars.n;
+  }
+
+  return out;
+}
+
+/** @brief Convert a #logger_particle_array into a dictionary. */
+__attribute__((always_inline)) INLINE static PyObject *create_output(
+    struct logger_particle_array *array) {
+  /* Create the output */
+  PyObject *output = PyDict_New();
+
+  /* Check if the array has the correct size */
+  if (array->hydro.n != array->hydro.allocated_size ||
+      array->grav.n != array->grav.allocated_size ||
+      array->stars.n != array->stars.allocated_size) {
+    error("Cannot return an array that contains more memory than particles.");
+  }
+
+  /* Create the entries in the dictionary. */
+  if (array->hydro.n != 0) {
+    /* Create the python object */
+    npy_intp n = array->hydro.n;
+    PyObject *parts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_particle_descr->type_num, array->hydro.parts);
+
+    /* Add it to the dict */
+    PyDict_SetItem(output, PyUnicode_FromString("gas"), parts);
+  }
+  if (array->grav.n != 0) {
+    /* Create the python object */
+    npy_intp n = array->grav.n;
+    PyObject *gparts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_gparticle_descr->type_num, array->grav.parts);
+
+    /* Add it to the dict */
+    PyDict_SetItem(output, PyUnicode_FromString("dark_matter"), gparts);
+  }
+  if (array->stars.n != 0) {
+    /* Create the python object */
+    npy_intp n = array->stars.n;
+    PyObject *sparts = (PyObject *)PyArray_SimpleNewFromData(
+        /* nd */ 1, &n, logger_sparticle_descr->type_num, array->stars.parts);
+
+    /* Add it to the dict */
+    PyDict_SetItem(output, PyUnicode_FromString("stars"), sparts);
+  }
+
+  return output;
+}
 
 /**
  * @brief load data from the index files.
@@ -58,7 +231,7 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   char *basename = NULL;
 
   double time = 0;
-  int verbose = 1;
+  int verbose = 0;
 
   /* parse arguments. */
   if (!PyArg_ParseTuple(args, "sd|i", &basename, &time, &verbose)) return NULL;
@@ -69,9 +242,6 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
 
   if (verbose > 1) message("Reading particles.");
 
-  /* Number of particles in the index files */
-  npy_intp n_tot = 0;
-
   /* Set the reading time */
   logger_reader_set_time(&reader, time);
 
@@ -79,25 +249,24 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   int n_type = 0;
   const uint64_t *n_parts =
       logger_reader_get_number_particles(&reader, &n_type);
-  for (int i = 0; i < n_type; i++) {
-    n_tot += n_parts[i];
-  }
 
+  /* Get the number of particles */
   if (verbose > 0) {
-    message("Found %lu particles", n_tot);
+    message("Found [%lu, %lu, %lu, %lu, %lu %lu] particles", n_parts[0],
+            n_parts[1], n_parts[2], n_parts[3], n_parts[4], n_parts[5]);
   }
 
   /* Allocate the output memory */
-  PyArrayObject *out = (PyArrayObject *)PyArray_SimpleNewFromDescr(
-      1, &n_tot, logger_particle_descr);
+  struct logger_particle_array array;
+  logger_particle_array_allocate(&array, n_parts[swift_type_gas],
+                                 n_parts[swift_type_dark_matter],
+                                 n_parts[swift_type_stars], /* empty */ 0);
 
-  void *data = PyArray_DATA(out);
   /* Allows to use threads */
   Py_BEGIN_ALLOW_THREADS;
 
   /* Read the particle. */
-  logger_reader_read_all_particles(&reader, time, logger_reader_const, data,
-                                   n_tot);
+  logger_reader_read_all_particles(&reader, time, logger_reader_const, &array);
 
   /* No need of threads anymore */
   Py_END_ALLOW_THREADS;
@@ -105,7 +274,11 @@ static PyObject *loadSnapshotAtTime(__attribute__((unused)) PyObject *self,
   /* Free the memory. */
   logger_reader_free(&reader);
 
-  return (PyObject *)out;
+  /* Create the output */
+  PyObject *output = create_output(&array);
+
+  /* No need to free the array as we are returning it */
+  return output;
 }
 
 /**
@@ -123,7 +296,7 @@ static PyObject *getTimeLimits(__attribute__((unused)) PyObject *self,
   /* declare variables. */
   char *basename = NULL;
 
-  int verbose = 1;
+  int verbose = 0;
 
   /* parse arguments. */
   if (!PyArg_ParseTuple(args, "s|i", &basename, &verbose)) return NULL;
@@ -179,7 +352,7 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
  * @brief Move forward in time an array of particles.
  *
  * <b>filename</b> string filename of the log file.
- * <b>parts</b> Numpy array containing the particles to evolve.
+ * <b>parts</b> The dictionary containing the particles to evolve.
  * <b>time</b> Time requested for the particles.
  * <b>verbose</b> Verbose level
  *
@@ -191,79 +364,35 @@ static PyObject *pyMoveForwardInTime(__attribute__((unused)) PyObject *self,
   char *filename = NULL;
 
   int verbose = 0;
-  PyArrayObject *parts = NULL;
+  PyObject *dict = NULL;
   double time = 0;
-  int new_array = 1;
 
   /* parse the arguments. */
-  if (!PyArg_ParseTuple(args, "sOd|ii", &filename, &parts, &time, &verbose,
-                        &new_array))
+  if (!PyArg_ParseTuple(args, "sOd|i", &filename, &dict, &time, &verbose))
     return NULL;
 
-  /* Check parts */
-  if (!PyArray_Check(parts)) {
-    error("Expecting a numpy array of particles.");
-  }
+  struct logger_particle_array array = convert_and_check_input(dict);
 
-  if (PyArray_NDIM(parts) != 1) {
-    error("Expecting a 1D array of particles.");
-  }
-
-  if (PyArray_TYPE(parts) != logger_particle_descr->type_num) {
-    error("Expecting an array of particles.");
-  }
-
-  /* Create the interpolated array. */
-  PyArrayObject *interp = NULL;
-  if (new_array) {
-    interp =
-        (PyArrayObject *)PyArray_NewLikeArray(parts, NPY_ANYORDER, NULL, 0);
-
-    /* Check if the allocation was fine */
-    if (interp == NULL) {
-      return NULL;
-    }
-
-    /* Reference stolen in PyArray_NewLikeArray => incref */
-    Py_INCREF(PyArray_DESCR(parts));
-  } else {
-    interp = parts;
-    // We return it, therefore one more reference exists.
-    Py_INCREF(interp);
-  }
+  /* Create the next array. */
+  struct logger_particle_array next;
+  logger_particle_array_allocate(&next, array.hydro.n, array.grav.n,
+                                 array.stars.n, /* empty */ 0);
 
   /* initialize the reader. */
   struct logger_reader reader;
   logger_reader_init(&reader, filename, verbose);
 
-  /* Get the offset of the requested time. */
-  size_t offset = logger_reader_get_next_offset_from_time(&reader, time);
-
-  /* Loop over all the particles */
-  size_t N = PyArray_DIM(parts, 0);
-  for (size_t i = 0; i < N; i++) {
-
-    /* Obtain the required particle records. */
-    struct logger_particle *p = PyArray_GETPTR1(parts, i);
-
-    /* Check that we are really going forward in time. */
-    if (time < p->time) {
-      error("Requesting to go backward in time (%g < %g)", time, p->time);
-    }
-    struct logger_particle new;
-    logger_reader_get_next_particle(&reader, p, &new, offset);
-
-    /* Interpolate the particle. */
-    struct logger_particle *p_ret = PyArray_GETPTR1(interp, i);
-    *p_ret = *p;
-
-    logger_particle_interpolate(p_ret, &new, time);
-  }
+  /* Move the particles around the requested offset */
+  logger_reader_move_forward(&reader, &array, &next, time,
+                             /* should_interpolate */ 1);
 
   /* Free the reader. */
   logger_reader_free(&reader);
 
-  return PyArray_Return(interp);
+  /* Create the output */
+  PyObject *output = create_output(&next);
+
+  return output;
 }
 
 /* definition of the method table. */
@@ -309,18 +438,16 @@ static PyMethodDef libloggerMethods[] = {
      "----------\n\n"
      "basename: str\n"
      "  The basename of the index files.\n\n"
-     "parts: np.array\n"
-     "  The array of particles.\n\n"
+     "parts: dict\n"
+     "  The dictionary containing all the particles.\n\n"
      "time: double\n"
      "  The requested time for the particles.\n\n"
      "verbose: int, optional\n"
      "  The verbose level of the loader.\n\n"
-     "new_array: bool, optional\n"
-     "  Does the function return a new array (or use the provided one)?\n\n"
      "Returns\n"
      "-------\n\n"
-     "parts: np.array\n"
-     "  The particles at the requested time.\n"},
+     "parts: dict\n"
+     "  The dictionary containing the interpolated particles.\n"},
 
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
@@ -337,101 +464,176 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
-#define CREATE_FIELD(fields, name, field_name, type)                      \
-  ({                                                                      \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)PyArray_DescrFromType(type));   \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
-  })
+/**
+ * @brief Creates the particle types for all type of particles.
+ *
+ * @param m The logger module.
+ *
+ * @return Success code (< 0 means failed).
+ */
+int pylogger_particle_create_typeobject(PyObject *m) {
 
-#define CREATE_FIELD_3D(fields, name, field_name, type)                   \
-  ({                                                                      \
-    /* Create the 3D descriptor */                                        \
-    PyArray_Descr *vec = PyArray_DescrNewFromType(type);                  \
-    vec->subarray = malloc(sizeof(PyArray_ArrayDescr));                   \
-    vec->subarray->base = PyArray_DescrFromType(type);                    \
-    vec->subarray->shape = PyTuple_New(1);                                \
-    PyTuple_SetItem(vec->subarray->shape, 0, PyLong_FromSize_t(3));       \
-                                                                          \
-    /* Create the field */                                                \
-    PyObject *tuple = PyTuple_New(2);                                     \
-    PyTuple_SetItem(tuple, 0, (PyObject *)vec);                           \
-    PyTuple_SetItem(                                                      \
-        tuple, 1,                                                         \
-        PyLong_FromSize_t(offsetof(struct logger_particle, field_name))); \
-    PyDict_SetItem(fields, PyUnicode_FromString(name), tuple);            \
-  })
+  /* Do the hydro. */
+  Py_INCREF(&PyLoggerParticle_Type);
+  if (PyModule_AddObject(m, "PyLoggerParticle",
+                         (PyObject *)&PyLoggerParticle_Type) < 0) {
+    Py_DECREF(&PyLoggerParticle_Type);
+    return -1;
+  }
 
-void pylogger_particle_define_typeobject(void) {
+  /* Do the gravity. */
+  Py_INCREF(&PyLoggerGParticle_Type);
+  if (PyModule_AddObject(m, "PyGLoggerParticle",
+                         (PyObject *)&PyLoggerGParticle_Type) < 0) {
+    Py_DECREF(&PyLoggerGParticle_Type);
+    return -2;
+  }
 
-  PyLoggerParticle_Type.tp_name = particle_name;
-  PyLoggerParticle_Type.tp_print = NULL;
-  PyType_Ready(&PyLoggerParticle_Type);
+  /* Do the stars. */
+  Py_INCREF(&PyLoggerSParticle_Type);
+  if (PyModule_AddObject(m, "PyLoggerSParticle",
+                         (PyObject *)&PyLoggerSParticle_Type) < 0) {
+    Py_DECREF(&PyLoggerSParticle_Type);
+    return -3;
+  }
+
+  return 0;
 }
 
+/**
+ * @brief Defines the numpy descriptor for the (hydro) particle.
+ */
 void pylogger_particle_define_descr(void) {
-  /* Generate list of field names */
-  PyObject *names = PyTuple_New(9);
-  PyTuple_SetItem(names, 0, PyUnicode_FromString("positions"));
-  PyTuple_SetItem(names, 1, PyUnicode_FromString("velocities"));
-  PyTuple_SetItem(names, 2, PyUnicode_FromString("accelerations"));
-  PyTuple_SetItem(names, 3, PyUnicode_FromString("entropies"));
-  PyTuple_SetItem(names, 4, PyUnicode_FromString("smoothing_lengths"));
-  PyTuple_SetItem(names, 5, PyUnicode_FromString("densities"));
-  PyTuple_SetItem(names, 6, PyUnicode_FromString("masses"));
-  PyTuple_SetItem(names, 7, PyUnicode_FromString("ids"));
-  PyTuple_SetItem(names, 8, PyUnicode_FromString("times"));
 
-  /* Generate list of fields */
+  /* Get the fields */
+  struct logger_python_field list[100];
+
+  int num_fields = logger_particles_generate_python(list);
+
+  /* Generate the different fields for the dtype. */
+  PyObject *names = PyTuple_New(num_fields);
+  PyObject *formats = PyTuple_New(num_fields);
+  PyObject *offsets = PyTuple_New(num_fields);
+  for (int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
+    PyTuple_SetItem(formats, i, PyUnicode_FromString(list[i].type));
+    PyTuple_SetItem(offsets, i, PyLong_FromLong(list[i].offset));
+  }
+
+  /* Generate the dtype. */
   PyObject *fields = PyDict_New();
-  CREATE_FIELD_3D(fields, "positions", pos, NPY_DOUBLE);
-  CREATE_FIELD_3D(fields, "velocities", vel, NPY_FLOAT32);
-  CREATE_FIELD_3D(fields, "accelerations", acc, NPY_FLOAT32);
-  CREATE_FIELD(fields, "entropies", entropy, NPY_FLOAT32);
-  CREATE_FIELD(fields, "smoothing_lengths", h, NPY_FLOAT32);
-  CREATE_FIELD(fields, "densities", density, NPY_FLOAT32);
-  CREATE_FIELD(fields, "masses", mass, NPY_FLOAT32);
-  CREATE_FIELD(fields, "ids", id, NPY_LONGLONG);
-  CREATE_FIELD(fields, "times", time, NPY_DOUBLE);
+  PyDict_SetItemString(fields, "names", names);
+  PyDict_SetItemString(fields, "formats", formats);
+  PyDict_SetItemString(fields, "offsets", offsets);
 
-  /* Generate descriptor */
-  logger_particle_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
-  logger_particle_descr->typeobj = &PyLoggerParticle_Type;
-  // V if for an arbitrary kind of array
-  logger_particle_descr->kind = 'V';
-  // Not well documented (seems any value is fine)
-  logger_particle_descr->type = 'v';
-  // Native byte ordering
-  logger_particle_descr->byteorder = '=';
-  // Flags
-  logger_particle_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
-  // id of the data type (assigned automatically)
-  logger_particle_descr->type_num = 0;
-  // Size of an element (using more size than required in order to log
-  // everything)
+  /* Convert it to a descriptor. */
+  PyArray_DescrConverter(fields, &logger_particle_descr);
+
+  /* Update the size of the object (take into account non accessible fields). */
   logger_particle_descr->elsize = sizeof(struct logger_particle);
-  // alignment (doc magic)
-  logger_particle_descr->alignment = offsetof(
-      struct {
-        char c;
-        struct logger_particle v;
-      },
-      v);
-  // no subarray
-  logger_particle_descr->subarray = NULL;
-  // functions
-  logger_particle_descr->f = NULL;
-  // Meta data
-  logger_particle_descr->metadata = NULL;
-  logger_particle_descr->c_metadata = NULL;
-  logger_particle_descr->names = names;
-  logger_particle_descr->fields = fields;
+
+  /* Give a type to the object. */
+  logger_particle_descr->typeobj = &PyLoggerParticle_Type;
+
+  /* Register the new data type. */
+  PyArray_RegisterDataType(logger_particle_descr);
+}
+
+/**
+ * @brief Defines the numpy descriptor for the (gravity) particle.
+ */
+void pylogger_gparticle_define_descr(void) {
+
+  /* Get the fields */
+  struct logger_python_field list[100];
+
+  int num_fields = logger_gparticles_generate_python(list);
+
+  /* Generate the different fields for the dtype. */
+  PyObject *names = PyTuple_New(num_fields);
+  PyObject *formats = PyTuple_New(num_fields);
+  PyObject *offsets = PyTuple_New(num_fields);
+  for (int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
+    PyTuple_SetItem(formats, i, PyUnicode_FromString(list[i].type));
+    PyTuple_SetItem(offsets, i, PyLong_FromLong(list[i].offset));
+  }
+
+  /* Generate the dtype. */
+  PyObject *fields = PyDict_New();
+  PyDict_SetItemString(fields, "names", names);
+  PyDict_SetItemString(fields, "formats", formats);
+  PyDict_SetItemString(fields, "offsets", offsets);
+
+  /* Convert it to a descriptor. */
+  PyArray_DescrConverter(fields, &logger_gparticle_descr);
+
+  /* Update the size of the object (take into account non accessible fields). */
+  logger_gparticle_descr->elsize = sizeof(struct logger_gparticle);
+
+  /* Give a type to the object. */
+  logger_gparticle_descr->typeobj = &PyLoggerGParticle_Type;
+
+  /* Register the new data type */
+  PyArray_RegisterDataType(logger_gparticle_descr);
+}
+
+/**
+ * @brief Defines the numpy descriptor for the (stars) particle.
+ */
+void pylogger_sparticle_define_descr(void) {
+
+  /* Get the fields */
+  struct logger_python_field list[100];
+
+  int num_fields = logger_sparticles_generate_python(list);
+
+  /* Generate the different fields for the dtype. */
+  PyObject *names = PyTuple_New(num_fields);
+  PyObject *formats = PyTuple_New(num_fields);
+  PyObject *offsets = PyTuple_New(num_fields);
+  for (int i = 0; i < num_fields; i++) {
+    PyTuple_SetItem(names, i, PyUnicode_FromString(list[i].name));
+    PyTuple_SetItem(formats, i, PyUnicode_FromString(list[i].type));
+    PyTuple_SetItem(offsets, i, PyLong_FromLong(list[i].offset));
+  }
+
+  /* Generate the dtype. */
+  PyObject *fields = PyDict_New();
+  PyDict_SetItemString(fields, "names", names);
+  PyDict_SetItemString(fields, "formats", formats);
+  PyDict_SetItemString(fields, "offsets", offsets);
+
+  /* Convert it to a descriptor. */
+  PyArray_DescrConverter(fields, &logger_sparticle_descr);
+
+  /* Update the size of the object (take into account non accessible fields). */
+  logger_sparticle_descr->elsize = sizeof(struct logger_sparticle);
+
+  /* Give a type to the object. */
+  logger_sparticle_descr->typeobj = &PyLoggerSParticle_Type;
+
+  /* Register the new data type */
+  PyArray_RegisterDataType(logger_sparticle_descr);
+}
+
+/**
+ * @brief Defines the numpy descriptor for the all particles.
+ */
+void pylogger_all_particle_define_descr(void) {
+  pylogger_particle_define_descr();
+  pylogger_gparticle_define_descr();
+  pylogger_sparticle_define_descr();
 }
 
 PyMODINIT_FUNC PyInit_liblogger(void) {
+
+  /* Finalize the initialization of the types. */
+  if (PyType_Ready(&PyLoggerParticle_Type) < 0) return NULL;
+  if (PyType_Ready(&PyLoggerGParticle_Type) < 0) return NULL;
+  if (PyType_Ready(&PyLoggerSParticle_Type) < 0) return NULL;
+
+  /* Create the module. */
   PyObject *m;
   m = PyModule_Create(&libloggermodule);
   if (m == NULL) return NULL;
@@ -439,12 +641,18 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   /* Deal with SWIFT clock */
   clocks_set_cpufreq(0);
 
+  /* Import numpy. */
   import_array();
-  /* Define the type object */
-  pylogger_particle_define_typeobject();
+
+  /* Create the types. */
+  int test = pylogger_particle_create_typeobject(m);
+  if (test < 0) {
+    Py_DECREF(m);
+    return NULL;
+  }
 
   /* Define the descr of the logger_particle */
-  pylogger_particle_define_descr();
+  pylogger_all_particle_define_descr();
 
   return m;
 }

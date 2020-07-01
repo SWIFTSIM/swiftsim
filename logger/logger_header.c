@@ -47,7 +47,7 @@ void header_print(const struct header *h) {
   message("Offset direction: %s.", logger_offset_name[h->offset_direction]);
   message("Number masks:     %i.", h->masks_count);
 
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     message("  Mask:  %s.", h->masks[i].name);
     message("  Value: %u.", h->masks[i].mask);
     message("  Size:  %i.", h->masks[i].size);
@@ -70,7 +70,7 @@ void header_free(struct header *h) { free(h->masks); };
  * @return Index of the field (-1 if not found).
  */
 int header_get_field_index(const struct header *h, const char *field) {
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (strcmp(h->masks[i].name, field) == 0) {
       return i;
     }
@@ -160,7 +160,7 @@ void header_read(struct header *h, struct logger_logfile *log) {
 
   /* Loop over all masks. */
   h->timestamp_mask = 0;
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     /* Read the mask name. */
     map = logger_loader_io_read_data(map, h->string_length, h->masks[i].name);
 
@@ -172,7 +172,7 @@ void header_read(struct header *h, struct logger_logfile *log) {
                                      &h->masks[i].size);
 
     /* Keep the timestamp mask in memory */
-    if (strcmp(h->masks[i].name, "timestamp") == 0) {
+    if (strcmp(h->masks[i].name, "Timestamp") == 0) {
       h->timestamp_mask = h->masks[i].mask;
     }
   }
@@ -188,6 +188,11 @@ void header_read(struct header *h, struct logger_logfile *log) {
     error("Wrong header size (in header %zi, current %zi).",
           h->offset_first_record, offset);
   }
+
+  /* Check that the fields have the correct size */
+  logger_particle_check_fields(h);
+  logger_sparticle_check_fields(h);
+  logger_gparticle_check_fields(h);
 };
 
 /**
@@ -202,7 +207,7 @@ size_t header_get_record_size_from_mask(const struct header *h,
                                         const size_t mask) {
   size_t count = 0;
   /* Loop over each masks. */
-  for (size_t i = 0; i < h->masks_count; i++) {
+  for (int i = 0; i < h->masks_count; i++) {
     if (mask & h->masks[i].mask) {
       count += h->masks[i].size;
     }
