@@ -64,14 +64,16 @@ void check_data(struct logger_reader *reader, struct part *parts,
   /* Number of particle found during this time step. */
   int count = 0;
   /* Set it to an impossible value in order to flag it. */
-  const size_t id_flag = 5 * number_parts;
-  long long previous_id = id_flag;
+  const uint64_t id_flag = 5 * number_parts;
+  uint64_t previous_id = id_flag;
 
   /* Loop over each record. */
-  for (size_t offset = reader_read_record(reader, &lp, &time, &is_particle,
-                                          logfile->header.offset_first_record);
+  for (size_t offset =
+           logger_reader_read_record(reader, &lp, &time, &is_particle,
+                                     logfile->header.offset_first_record);
        offset < logfile->log.mmap_size;
-       offset = reader_read_record(reader, &lp, &time, &is_particle, offset)) {
+       offset = logger_reader_read_record(reader, &lp, &time, &is_particle,
+                                          offset)) {
 
     /* Do the particle case */
     if (is_particle) {
@@ -87,7 +89,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
       }
 
       /* Get the corresponding particle */
-      if (lp.id >= number_parts) error("Wrong id %lli", lp.id);
+      if (lp.id >= number_parts) error("Wrong id %li", lp.id);
 
       struct part *p = &parts[lp.id];
 
@@ -100,28 +102,31 @@ void check_data(struct logger_reader *reader, struct part *parts,
           if (step >= max_step) {
             tmp = max_step - max_step % p->time_bin;
           }
-          assert(tmp == lp.pos[i]);
+          assert(tmp == lp.x[i]);
         } else
-          assert(p->x[i] == lp.pos[i]);
-        assert(p->v[i] == lp.vel[i]);
-        assert(p->a_hydro[i] == lp.acc[i]);
+          assert(p->x[i] == lp.x[i]);
+        assert(p->v[i] == lp.v[i]);
+        assert(p->a_hydro[i] == lp.a[i]);
       }
 
       assert(p->entropy == lp.entropy);
       assert(p->mass == lp.mass);
 
       /* Check optional fields. */
-      int number_steps = step / p->time_bin;
-      if (number_steps % period_h == 0 || step > max_step) {
-        assert(p->h == lp.h);
-      } else {
-        assert(-1 == lp.h);
-      }
-      if (number_steps % period_rho == 0 || step > max_step) {
-        assert(p->rho == lp.density);
-      } else {
-        assert(-1 == lp.density);
-      }
+      // int number_steps = step / p->time_bin;
+      // TODO check only every few steps
+      assert(p->h == lp.h);
+      /* if (number_steps % period_h == 0 || step > max_step) { */
+      /*   assert(p->h == lp.h); */
+      /* } else { */
+      /*   assert(-1 == lp.h); */
+      /* } */
+      assert(p->rho == lp.rho);
+      /* if (number_steps % period_rho == 0 || step > max_step) { */
+      /*   assert(p->rho == lp.rho); */
+      /* } else { */
+      /*   assert(-1 == lp.rho); */
+      /* } */
     }
     /* Time stamp case. */
     else {
@@ -195,6 +200,7 @@ int main(int argc, char *argv[]) {
   /* Read the header. */
   char basename[200];
   parser_get_param_string(&params, "Logger:basename", basename);
+  strcat(basename, "_0000");
   logger_reader_init(&reader, basename, /* verbose */ 1);
 
   /*

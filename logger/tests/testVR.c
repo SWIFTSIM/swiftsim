@@ -27,6 +27,7 @@
 /* Local include */
 #include "generate_log.h"
 #include "hydro.h"
+#include "logger.h"
 #include "logger_reader.h"
 
 #define number_steps 10.
@@ -63,6 +64,7 @@ int main(int argc, char *argv[]) {
   struct logger_reader reader;
   char basename[200];
   parser_get_param_string(&params, "Logger:basename", basename);
+  strcat(basename, "_0000");
   logger_reader_init(&reader, basename,
                      /* Verbose */ 0);
 
@@ -87,8 +89,12 @@ int main(int argc, char *argv[]) {
   struct logger_particle *particles =
       malloc(n_tot * sizeof(struct logger_particle));
 
-  logger_reader_read_all_particles(&reader, begin, logger_reader_const,
-                                   particles, n_tot);
+  struct logger_particle_array array;
+  logger_particle_array_init(&array);
+  array.hydro.parts = particles;
+  array.hydro.n = n_tot;
+
+  logger_reader_read_all_particles(&reader, begin, logger_reader_const, &array);
 
   /* Loop over time for a single particle */
   size_t id = 0;
@@ -102,11 +108,10 @@ int main(int argc, char *argv[]) {
     struct logger_particle n;
     logger_reader_get_next_particle(&reader, &p, &n, o);
 
-    message("Particle %zi: %f %f %f %f", id, p.pos[0], p.pos[1], p.pos[2],
-            p.time);
+    message("Particle %zi: %f %f %f %f", id, p.x[0], p.x[1], p.x[2], p.time);
 
     /* Now you can interpolate */
-    logger_particle_interpolate(&p, &n, t);
+    p = logger_particle_interpolate(&p, &n, t);
   }
 
   /* Cleanup the memory */
