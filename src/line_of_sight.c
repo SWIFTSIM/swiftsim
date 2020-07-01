@@ -287,8 +287,7 @@ void write_los_hdf5_dataset(const struct io_props props, const size_t N,
     error("Error while creating data space for field '%s'.", props.name);
 
   /* Decide what chunk size to use based on compression */
-  int log2_chunk_size;
-  log2_chunk_size = e->snapshot_compression > 0 ? 12 : 18;
+  int log2_chunk_size = e->snapshot_compression > 0 ? 12 : 18;
 
   int rank = 0;
   hsize_t shape[2];
