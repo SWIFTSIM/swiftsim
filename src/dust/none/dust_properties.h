@@ -1,6 +1,12 @@
 #ifndef SWIFT_DUST_NONE_PROPERTIES_H
 #define SWIFT_DUST_NONE_PROPERTIES_H
 
+#include "chemistry_struct.h"
+#include "feedback_properties.h"
+#include "cooling_struct.h"
+#include "units.h"
+#include "physical_constants.h"
+
 /**
  * @brief Properties of the dust evolution model.
  *
@@ -20,9 +26,12 @@ struct dustevo_props {};
  * @param phys_const The physical constants in internal units.
  * @param us The current internal system of units.
  */
-void dustevo_props_init_backend(struct dustevo_props *dp,
-				struct swift_params *params,
-				const struct phys_const *phys_const,
-				const struct unit_system *us) {};
+static INLINE void dustevo_props_init_backend(struct dustevo_props* dp,
+					      struct swift_params* params,
+					      struct feedback_props* fp,
+					      struct cooling_function_data* cooling,
+					      const struct phys_const* phys_const,
+					      const struct unit_system* us) {
+}
 
 #endif /* SWIFT_DUST_NONE_PROPERTIES_H */

@@ -34,6 +34,7 @@
 /* Local includes. */
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "dust.h"
 #include "error.h"
 #include "exp10.h"
 
@@ -44,7 +45,8 @@
  *
  * @param table Colibre cooling table structure.
  */
-void read_cooling_header(struct colibre_cooling_tables *table) {
+void read_cooling_header(struct colibre_cooling_tables *table,
+			 struct dustevo_props *dp) {
 
 #ifdef HAVE_HDF5
 
@@ -217,7 +219,8 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
  *
  * @param table Colibre cooling table structure.
  */
-void read_cooling_tables(struct colibre_cooling_tables *table) {
+void read_cooling_tables(struct colibre_cooling_tables *table,
+			 struct dustevo_props *dp) {
 
 #ifdef HAVE_HDF5
   hid_t dataset;
@@ -275,11 +278,7 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
   if (status < 0) error("error reading electron_fraction (temperature)\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
-
-  /**
-   * Read in Tdep/Depletion values needed for dust modelling
-   **/
-
+  
   /* Thermal equilibrium temperature */
   if (posix_memalign((void **)&table->logTeq, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
@@ -307,6 +306,8 @@ void read_cooling_tables(struct colibre_cooling_tables *table) {
   if (status < 0) error("error reading mu array\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing mu dataset");
+
+  read_colibre_depletion(tempfile_id, dp);
 
   /* Close the file */
   H5Fclose(tempfile_id);

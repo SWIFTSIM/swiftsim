@@ -64,7 +64,7 @@ struct dustevo_props {
  * @param cooling The cooling struct containing the tables
  */
 void generate_dust_yield_tables(struct dustevo_props *dp,
-				struct feedback_properties *fp,) {
+				struct feedback_props *fp,) {
 
   /**
    * First compute the dust yields for AGB and SNII from the chemical

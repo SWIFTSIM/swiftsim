@@ -44,6 +44,7 @@
 #include "physical_constants.h"
 #include "space.h"
 #include "units.h"
+#include "dust.h"
 
 /**
  * @brief Initialises properties stored in the cooling_function_data struct
@@ -58,7 +59,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           const struct hydro_props *hydro_props,
-                          struct cooling_function_data *cooling) {
+                          struct cooling_function_data *cooling,
+			  struct dustevo_props *dp) {
 
   char chimes_data_dir[256];
   char string_buffer[196];
@@ -399,7 +401,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
     /* Read the Colibre table. */
     message("Reading Colibre cooling table.");
     read_cooling_header(&(cooling->colibre_table));
-    read_cooling_tables(&(cooling->colibre_table));
+    read_cooling_tables(&(cooling->colibre_table), &dp);
   }
 
   /* Set redshift to a very high value, just

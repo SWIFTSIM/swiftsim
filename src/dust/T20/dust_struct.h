@@ -1,10 +1,5 @@
-#ifndef SWIFT_DUST_STRUCT_NONE_H
-#define SWIFT_DUST_STRUCT_NONE_H
-
-/**
- * @file src/dust/none/dust_struct.h
- * @brief Empty infrastructure for running without dust evolution
- */
+#ifndef SWIFT_DUST_STRUCT_T20_H
+#define SWIFT_DUST_STRUCT_T20_H
 
 /**
  * @brief The individual grain species traced in the model.
@@ -14,7 +9,6 @@ enum grain_species {
   grain_species_silicate,
   grain_species_count
  };
-
 
 /**
  * @brief dust properties traced by the #part in the T20 model.
@@ -40,4 +34,4 @@ struct dust_bpart_data {
   float grain_mass_total;
 };
 
-#endif /* SWIFT_DUST_STRUCT_NONE_H */
+#endif /* SWIFT_DUST_STRUCT_T20_H */
