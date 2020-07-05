@@ -43,7 +43,8 @@ void cooling_init(struct swift_params* parameter_file,
                   const struct unit_system* us,
                   const struct phys_const* phys_const,
                   const struct hydro_props* hydro_props,
-                  struct cooling_function_data* cooling) {
+                  struct cooling_function_data* cooling,
+		  struct dustevo_props dp) {
 
   /* Verify that we are not doing something stupid here */
   if (hydro_props->minimal_temperature <= 0.)
@@ -51,7 +52,7 @@ void cooling_init(struct swift_params* parameter_file,
         "ERROR: Cannot run with cooling switched on and no minimal "
         "temperature.");
 
-  cooling_init_backend(parameter_file, us, phys_const, hydro_props, cooling);
+  cooling_init_backend(parameter_file, us, phys_const, hydro_props, cooling, dp);
 }
 
 /**

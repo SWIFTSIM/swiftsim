@@ -443,8 +443,8 @@ INLINE static void star_formation_copy_properties(
   }
 
    /* Redistribute dust masses back to gas-phase elements if 
-    * running with dust(astration) */
-  redistribute_dust_masses(p->chemistry_data, dp->dust_composition)
+    * running with dust (astration) */
+  /* redistribute_dust_masses(p->chemistry_data, dp->dust_composition) !?!*/
 
   /* Store the chemistry struct in the star particle */
   sp->chemistry_data = p->chemistry_data;

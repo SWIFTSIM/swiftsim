@@ -1,6 +1,8 @@
 #ifndef SWIFT_DUST_T20_H
 #define SWIFT_DUST_T20_H
 
+#include "dust_properties.h"
+
 
 /**
  * @brief redistribute any dust mass back to element abundances
@@ -11,6 +13,6 @@
  * @param dp Global dust parameters for initialisation.
  */
 void redistribute_dust_masses(const struct part* p, 
-			      struct dustevo_props *dp)
+			      struct dustevo_props *dp);
 
 #endif /* SWIFT_DUST_T20_PROPERTIES_H */

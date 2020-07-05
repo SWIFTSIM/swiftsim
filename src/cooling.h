@@ -33,6 +33,7 @@
 #include "restart.h"
 #include "space.h"
 #include "units.h"
+#include "dust.h"
 
 /* Import the right cooling definition */
 #if defined(COOLING_NONE)
@@ -62,7 +63,8 @@ void cooling_init(struct swift_params* parameter_file,
                   const struct unit_system* us,
                   const struct phys_const* phys_const,
                   const struct hydro_props* hydro_props,
-                  struct cooling_function_data* cooling);
+                  struct cooling_function_data* cooling,
+		  struct dustevo_props dp);
 
 void cooling_print(const struct cooling_function_data* cooling);
 

@@ -8,7 +8,6 @@
 
 /* Config parameters. */
 #include "../config.h"
-#include "chemistry_struct.h"
 
 /* Import the correct dust definition */
 #if defined(DUST_NONE)
@@ -19,6 +18,7 @@
 #include "./dust/T20/dust.h"
 #include "./dust/T20/dust_struct.h"
 #include "./dust/T20/dust_properties.h"
+#include "./dust/T20/yield_tables.h"
 #elif defined(DUST_M16)
 #include "./dust/M16/dust.h"
 #include "./dust/M16/dust_struct.h"
@@ -27,13 +27,20 @@
 #error "Invalid choice of dust model."
 #endif
 
+/* additional imports */
+#include "chemistry_struct.h"
+#include "feedback_properties.h"
+#include "cooling_struct.h"
+#include "units.h"
+#include "physical_constants.h"
+
 /* Common functions */
 
 void scale_out_table_depletion(struct cooling_function_data* cooling);
 
 void dustevo_props_init(struct dustevo_props *dp,
 			struct swift_params *params,
-			struct feedback_properties *fp,
+			struct feedback_props *fp,
 			struct cooling_function_data *cooling,
 			const struct phys_const *phys_const,
 			const struct unit_system *us);

@@ -1,5 +1,7 @@
 /* Local includes. */
+
 #include "chemistry.h"
+#include "dust_properties.h"
 
 /**
  * @brief redistribute any dust mass back to element abundances
@@ -16,6 +18,7 @@ void redistribute_dust_masses(const struct part* p,
    * redistribute dust abundances to element abundances,
    * according to composition array
    */
-};
+  ;
+}
 
 #endif /* SWIFT_DUST_T20_PROPERTIES_H */

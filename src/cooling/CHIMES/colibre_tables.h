@@ -108,6 +108,9 @@ struct colibre_cooling_tables {
 
   /* array of pressures at equilibrium temperatures */
   float *logPeq;
+
+  /* array of element fractions assumed to be in the dust-phase */
+  float *log10fD;
 };
 
 /*! Number of different bins along the temperature axis of the tables */
