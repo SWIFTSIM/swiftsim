@@ -35,8 +35,6 @@ Snapshots:
   delta_time:          1.0816  # Only every second VELOCIraptor invoke gets a full snapshot dump.
   scale_factor_first:  0.1     # z = 9
   compression:         4
-  output_list:         snap_times
-  output_list_on:      1
 
 # Parameters governing the conserved quantities statistics
 Statistics:
