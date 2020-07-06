@@ -72,8 +72,6 @@ INLINE static void convert_part_T(const struct engine* e, const struct part* p,
                                    e->cooling_func, p, xp);
 }
 
-#if 0  // MATTHIEU
-
 INLINE static void convert_part_sub_T(const struct engine* e,
                                       const struct part* p,
                                       const struct xpart* xp, float* ret) {
@@ -116,8 +114,6 @@ INLINE static void convert_part_sub_species_frac(const struct engine* e,
   ret[2] /= sum;
 }
 
-#endif  // MATTHIEU
-
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -136,7 +132,6 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "Temperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts, xparts,
       convert_part_T, "Temperatures of the gas particles");
 
-#if 0  // MATTHIEU
   list[1] = io_make_output_field_convert_part(
       "SubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts,
       xparts, convert_part_sub_T,
@@ -165,8 +160,8 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "pressure equilibrium on the entropy floor. If the particles are "
       "above deltaT of the entropy floor, the normal hydro quantities are "
       "used.");
-#endif
-  return 1;
+
+  return 4;
 }
 
 #endif /* SWIFT_COOLING_COLIBRE_IO_H */

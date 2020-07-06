@@ -46,8 +46,6 @@ double compute_subgrid_HI_fraction(
     const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
     const float log10_T, const float log10_T_EOS_max) {
 
-  error("Don't call this!");
-
   /* Physical density of this particle */
   const double rho_phys = hydro_get_physical_density(p, cosmo);
 
@@ -75,140 +73,131 @@ double compute_subgrid_HI_fraction(
   get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10_T, &item,
                &dtem);
 
-  /* Are we in an HII region? */
-  if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+  /* Are we above or below the EoS? */
+  if (log10_T < log10_T_EOS_max) {
 
-    /* Return the amount of gas not in HII region. */
-    return 1. - cooling->HIIregion_fion;
+    /* We are below the EoS. Use subgrid properties assuming P equilibrium */
 
-  } else {
+    const float P = hydro_get_physical_pressure(p, cosmo);
+    const float P_cgs = P * cooling->pressure_to_cgs;
+    const float log10_P_cgs = log10(P_cgs);
 
-    /* Are we above or below the EoS? */
-    if (log10_T < log10_T_EOS_max) {
+    /* Recover the maximal equilibrium pressure from the table at the current
+     * redshift and metallicity */
+    const float log10_Peq_max_cgs =
+        interpolation_3d_no_z(cooling->table.logPeq,                     /* */
+                              ired, imet, colibre_cooling_N_density - 1, /* */
+                              dred, dmet, 0.,                            /* */
+                              colibre_cooling_N_redshifts,               /* */
+                              colibre_cooling_N_metallicity,             /* */
+                              colibre_cooling_N_density);
 
-      /* We are below the EoS. Use subgrid properties assuming P equilibrium */
+    /* Are we above or below the max pressure equilibrium? */
+    if (log10_P_cgs > log10_Peq_max_cgs) {
 
-      const float P = hydro_get_physical_pressure(p, cosmo);
-      const float P_cgs = P * cooling->pressure_to_cgs;
-      const float log10_P_cgs = log10(P_cgs);
+      /* EOS pressure (logP) is larger than maximum Peq (can happen for very
+       * steep EOS) HI fraction from the highest density bin */
 
-      /* Recover the maximal equilibrium pressure from the table at the current
-       * redshift and metallicity */
-      const float log10_Peq_max_cgs =
-          interpolation_3d_no_z(cooling->table.logPeq,                     /* */
-                                ired, imet, colibre_cooling_N_density - 1, /* */
-                                dred, dmet, 0.,                            /* */
-                                colibre_cooling_N_redshifts,               /* */
-                                colibre_cooling_N_metallicity,             /* */
-                                colibre_cooling_N_density);
+      const float log10_HI_over_nH = interpolation_4d_no_z_no_w(
+          cooling->table.logHfracs_Teq,                       /* */
+          ired, imet, colibre_cooling_N_density - 1, neutral, /* */
+          dred, dmet, 0., 0.,                                 /* */
+          colibre_cooling_N_redshifts,                        /* */
+          colibre_cooling_N_metallicity,                      /* */
+          colibre_cooling_N_density,                          /* */
+          3);
 
-      /* Are we above or below the max pressure equilibrium? */
-      if (log10_P_cgs > log10_Peq_max_cgs) {
+      return exp10f(log10_HI_over_nH);
 
-        /* EOS pressure (logP) is larger than maximum Peq (can happen for very
-         * steep EOS) HI fraction from the highest density bin */
+    } else {
 
-        const float log10_HI_over_nH = interpolation_4d_no_z_no_w(
-            cooling->table.logHfracs_Teq,                       /* */
-            ired, imet, colibre_cooling_N_density - 1, neutral, /* */
-            dred, dmet, 0., 0.,                                 /* */
-            colibre_cooling_N_redshifts,                        /* */
-            colibre_cooling_N_metallicity,                      /* */
-            colibre_cooling_N_density,                          /* */
-            3);
+      /* Normal case: We are not beyond the table range */
 
-        return exp10f(log10_HI_over_nH);
+      /* Need to find thermal equilibrium state with the same pressure
+       * by interpolating the equilibrium table
+       *
+       * Note that the logPeq table is neither equally spaced nor
+       * necessarilly monotically increasing.
+       * We hance loop over densities and pick the first one where
+       * log10_P < log10_Peq. We start with the resolved density (index iden),
+       * as we expect the subgrid density to be larger */
 
-      } else {
+      /* If the solution can't be found, we revert to the non-subgrid
+       * density */
+      int iden_eq = iden;
+      float dden_eq = dden;
 
-        /* Normal case: We are not beyond the table range */
+      /* Loop over the density bins */
+      for (int i = iden; i < colibre_cooling_N_density; i++) {
 
-        /* Need to find thermal equilibrium state with the same pressure
-         * by interpolating the equilibrium table
-         *
-         * Note that the logPeq table is neither equally spaced nor
-         * necessarilly monotically increasing.
-         * We hance loop over densities and pick the first one where
-         * log10_P < log10_Peq. We start with the resolved density (index iden),
-         * as we expect the subgrid density to be larger */
+        /* Equilibirum pressure at this density */
+        const float log10_Peq_interp =
+            interpolation_3d_no_z(cooling->table.logPeq,         /* */
+                                  ired, imet, i,                 /* */
+                                  dred, dmet, 0.,                /* */
+                                  colibre_cooling_N_redshifts,   /* */
+                                  colibre_cooling_N_metallicity, /* */
+                                  colibre_cooling_N_density);
 
-        /* If the solution can't be found, we revert to the non-subgrid
-         * density */
-        int iden_eq = iden;
-        float dden_eq = dden;
+        /* Did we find a solution? */
+        if (log10_Peq_interp > log10_P_cgs) {
 
-        /* Loop over the density bins */
-        for (int i = iden; i < colibre_cooling_N_density; i++) {
-
-          /* Equilibirum pressure at this density */
-          const float log10_Peq_interp =
+          /* Equilibrium pressure at the previous density point */
+          const float log10_Peq_prev =
               interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                    ired, imet, i,                 /* */
+                                    ired, imet, i - 1,             /* */
                                     dred, dmet, 0.,                /* */
                                     colibre_cooling_N_redshifts,   /* */
                                     colibre_cooling_N_metallicity, /* */
                                     colibre_cooling_N_density);
 
-          /* Did we find a solution? */
-          if (log10_Peq_interp > log10_P_cgs) {
+          /* How far from the equilibrium point are we? */
+          const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
+                                   (log10_Peq_interp - log10_Peq_prev);
 
-            /* Equilibrium pressure at the previous density point */
-            const float log10_Peq_prev =
-                interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                      ired, imet, i - 1,             /* */
-                                      dred, dmet, 0.,                /* */
-                                      colibre_cooling_N_redshifts,   /* */
-                                      colibre_cooling_N_metallicity, /* */
-                                      colibre_cooling_N_density);
+          /* Interpolate to get the density at equilibrium */
+          const float log10_n_at_Peq =
+              cooling->nH[i - 1] +
+              delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
 
-            /* How far from the equilibrium point are we? */
-            const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
-                                     (log10_Peq_interp - log10_Peq_prev);
+          /* We found a valid density: Get the index along the density
+           * axis of the tables. */
+          get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
+                       &iden_eq, &dden_eq);
 
-            /* Interpolate to get the density at equilibrium */
-            const float log10_n_at_Peq =
-                cooling->nH[i - 1] +
-                delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
-
-            /* We found a valid density: Get the index along the density
-             * axis of the tables. */
-            get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
-                         &iden_eq, &dden_eq);
-
-            break;
-          }
+          break;
         }
-
-        /* Finish by interpolating the tables to get the HI density */
-        const float log10_HI_over_nH =
-            interpolation_4d_no_w(cooling->table.logHfracs_Teq,  /* */
-                                  ired, imet, iden_eq, neutral,  /* */
-                                  dred, dmet, dden_eq, 0.,       /* */
-                                  colibre_cooling_N_redshifts,   /* */
-                                  colibre_cooling_N_metallicity, /* */
-                                  colibre_cooling_N_density,     /* */
-                                  3);
-
-        return exp10f(log10_HI_over_nH);
       }
 
-    } else {
+      /* Finish by interpolating the tables to get the HI density */
+      const float log10_HI_over_nH =
+          interpolation_4d_no_w(cooling->table.logHfracs_Teq,  /* */
+                                ired, imet, iden_eq, neutral,  /* */
+                                dred, dmet, dden_eq, 0.,       /* */
+                                colibre_cooling_N_redshifts,   /* */
+                                colibre_cooling_N_metallicity, /* */
+                                colibre_cooling_N_density,     /* */
+                                3);
 
-      /* We are above the EoS. */
-      const float weights[3] = {1.0, 1.0, 1.0};
-      const float nHI_over_nH =
-          interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
-                                         weights, neutral, neutral,     /* */
-                                         ired, item, imet, iden,        /* */
-                                         dred, dtem, dmet, dden,        /* */
-                                         colibre_cooling_N_redshifts,   /* */
-                                         colibre_cooling_N_temperature, /* */
-                                         colibre_cooling_N_metallicity, /* */
-                                         colibre_cooling_N_density,     /* */
-                                         3);
-
-      return nHI_over_nH;
+      return exp10f(log10_HI_over_nH);
     }
+
+  } else {
+
+    /* We are above the EoS. */
+    const float weights[3] = {1.0, 1.0, 1.0};
+    const float nHI_over_nH =
+        interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
+                                       weights, neutral, neutral,     /* */
+                                       ired, item, imet, iden,        /* */
+                                       dred, dtem, dmet, dden,        /* */
+                                       colibre_cooling_N_redshifts,   /* */
+                                       colibre_cooling_N_temperature, /* */
+                                       colibre_cooling_N_metallicity, /* */
+                                       colibre_cooling_N_density,     /* */
+                                       3);
+
+    return nHI_over_nH;
   }
 }
 
@@ -236,8 +225,6 @@ double compute_subgrid_HII_fraction(
     const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
     const float log10_T, const float log10_T_EOS_max) {
 
-  error("Don't call this!");
-
   /* Physical density of this particle */
   const double rho_phys = hydro_get_physical_density(p, cosmo);
 
@@ -265,140 +252,131 @@ double compute_subgrid_HII_fraction(
   get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10_T, &item,
                &dtem);
 
-  /* Are we in an HII region? */
-  if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+  /* Are we above or below the EoS? */
+  if (log10_T < log10_T_EOS_max) {
 
-    /* Return the amount of gas in HII region. */
-    return cooling->HIIregion_fion;
+    /* We are below the EoS. Use subgrid properties assuming P equilibrium */
 
-  } else {
+    const float P = hydro_get_physical_pressure(p, cosmo);
+    const float P_cgs = P * cooling->pressure_to_cgs;
+    const float log10_P_cgs = log10(P_cgs);
 
-    /* Are we above or below the EoS? */
-    if (log10_T < log10_T_EOS_max) {
+    /* Recover the maximal equilibrium pressure from the table at the current
+     * redshift and metallicity */
+    const float log10_Peq_max_cgs =
+        interpolation_3d_no_z(cooling->table.logPeq,                     /* */
+                              ired, imet, colibre_cooling_N_density - 1, /* */
+                              dred, dmet, 0.,                            /* */
+                              colibre_cooling_N_redshifts,               /* */
+                              colibre_cooling_N_metallicity,             /* */
+                              colibre_cooling_N_density);
 
-      /* We are below the EoS. Use subgrid properties assuming P equilibrium */
+    /* Are we above or below the max pressure equilibrium? */
+    if (log10_P_cgs > log10_Peq_max_cgs) {
 
-      const float P = hydro_get_physical_pressure(p, cosmo);
-      const float P_cgs = P * cooling->pressure_to_cgs;
-      const float log10_P_cgs = log10(P_cgs);
+      /* EOS pressure (logP) is larger than maximum Peq (can happen for very
+       * steep EOS) HII fraction from the highest density bin */
 
-      /* Recover the maximal equilibrium pressure from the table at the current
-       * redshift and metallicity */
-      const float log10_Peq_max_cgs =
-          interpolation_3d_no_z(cooling->table.logPeq,                     /* */
-                                ired, imet, colibre_cooling_N_density - 1, /* */
-                                dred, dmet, 0.,                            /* */
-                                colibre_cooling_N_redshifts,               /* */
-                                colibre_cooling_N_metallicity,             /* */
-                                colibre_cooling_N_density);
+      const float log10_HII_over_nH = interpolation_4d_no_z_no_w(
+          cooling->table.logHfracs_Teq,                       /* */
+          ired, imet, colibre_cooling_N_density - 1, ionized, /* */
+          dred, dmet, 0., 0.,                                 /* */
+          colibre_cooling_N_redshifts,                        /* */
+          colibre_cooling_N_metallicity,                      /* */
+          colibre_cooling_N_density,                          /* */
+          3);
 
-      /* Are we above or below the max pressure equilibrium? */
-      if (log10_P_cgs > log10_Peq_max_cgs) {
+      return exp10f(log10_HII_over_nH);
 
-        /* EOS pressure (logP) is larger than maximum Peq (can happen for very
-         * steep EOS) HII fraction from the highest density bin */
+    } else {
 
-        const float log10_HII_over_nH = interpolation_4d_no_z_no_w(
-            cooling->table.logHfracs_Teq,                       /* */
-            ired, imet, colibre_cooling_N_density - 1, ionized, /* */
-            dred, dmet, 0., 0.,                                 /* */
-            colibre_cooling_N_redshifts,                        /* */
-            colibre_cooling_N_metallicity,                      /* */
-            colibre_cooling_N_density,                          /* */
-            3);
+      /* Normal case: We are not beyond the table range */
 
-        return exp10f(log10_HII_over_nH);
+      /* Need to find thermal equilibrium state with the same pressure
+       * by interpolating the equilibrium table
+       *
+       * Note that the logPeq table is neither equally spaced nor
+       * necessarilly monotically increasing.
+       * We hance loop over densities and pick the first one where
+       * log10_P < log10_Peq. We start with the resolved density (index iden),
+       * as we expect the subgrid density to be larger */
 
-      } else {
+      /* If the solution can't be found, we revert to the non-subgrid
+       * density */
+      int iden_eq = iden;
+      float dden_eq = dden;
 
-        /* Normal case: We are not beyond the table range */
+      /* Loop over the density bins */
+      for (int i = iden; i < colibre_cooling_N_density; i++) {
 
-        /* Need to find thermal equilibrium state with the same pressure
-         * by interpolating the equilibrium table
-         *
-         * Note that the logPeq table is neither equally spaced nor
-         * necessarilly monotically increasing.
-         * We hance loop over densities and pick the first one where
-         * log10_P < log10_Peq. We start with the resolved density (index iden),
-         * as we expect the subgrid density to be larger */
+        /* Equilibirum pressure at this density */
+        const float log10_Peq_interp =
+            interpolation_3d_no_z(cooling->table.logPeq,         /* */
+                                  ired, imet, i,                 /* */
+                                  dred, dmet, 0.,                /* */
+                                  colibre_cooling_N_redshifts,   /* */
+                                  colibre_cooling_N_metallicity, /* */
+                                  colibre_cooling_N_density);
 
-        /* If the solution can't be found, we revert to the non-subgrid
-         * density */
-        int iden_eq = iden;
-        float dden_eq = dden;
+        /* Did we find a solution? */
+        if (log10_Peq_interp > log10_P_cgs) {
 
-        /* Loop over the density bins */
-        for (int i = iden; i < colibre_cooling_N_density; i++) {
-
-          /* Equilibirum pressure at this density */
-          const float log10_Peq_interp =
+          /* Equilibrium pressure at the previous density point */
+          const float log10_Peq_prev =
               interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                    ired, imet, i,                 /* */
+                                    ired, imet, i - 1,             /* */
                                     dred, dmet, 0.,                /* */
                                     colibre_cooling_N_redshifts,   /* */
                                     colibre_cooling_N_metallicity, /* */
                                     colibre_cooling_N_density);
 
-          /* Did we find a solution? */
-          if (log10_Peq_interp > log10_P_cgs) {
+          /* How far from the equilibrium point are we? */
+          const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
+                                   (log10_Peq_interp - log10_Peq_prev);
 
-            /* Equilibrium pressure at the previous density point */
-            const float log10_Peq_prev =
-                interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                      ired, imet, i - 1,             /* */
-                                      dred, dmet, 0.,                /* */
-                                      colibre_cooling_N_redshifts,   /* */
-                                      colibre_cooling_N_metallicity, /* */
-                                      colibre_cooling_N_density);
+          /* Interpolate to get the density at equilibrium */
+          const float log10_n_at_Peq =
+              cooling->nH[i - 1] +
+              delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
 
-            /* How far from the equilibrium point are we? */
-            const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
-                                     (log10_Peq_interp - log10_Peq_prev);
+          /* We found a valid density: Get the index along the density
+           * axis of the tables. */
+          get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
+                       &iden_eq, &dden_eq);
 
-            /* Interpolate to get the density at equilibrium */
-            const float log10_n_at_Peq =
-                cooling->nH[i - 1] +
-                delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
-
-            /* We found a valid density: Get the index along the density
-             * axis of the tables. */
-            get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
-                         &iden_eq, &dden_eq);
-
-            break;
-          }
+          break;
         }
-
-        /* Finish by interpolating the tables to get the HII density */
-        const float log10_HII_over_nH =
-            interpolation_4d_no_w(cooling->table.logHfracs_Teq,  /* */
-                                  ired, imet, iden_eq, ionized,  /* */
-                                  dred, dmet, dden_eq, 0.,       /* */
-                                  colibre_cooling_N_redshifts,   /* */
-                                  colibre_cooling_N_metallicity, /* */
-                                  colibre_cooling_N_density,     /* */
-                                  3);
-
-        return exp10f(log10_HII_over_nH);
       }
 
-    } else {
+      /* Finish by interpolating the tables to get the HII density */
+      const float log10_HII_over_nH =
+          interpolation_4d_no_w(cooling->table.logHfracs_Teq,  /* */
+                                ired, imet, iden_eq, ionized,  /* */
+                                dred, dmet, dden_eq, 0.,       /* */
+                                colibre_cooling_N_redshifts,   /* */
+                                colibre_cooling_N_metallicity, /* */
+                                colibre_cooling_N_density,     /* */
+                                3);
 
-      /* We are above the EoS. */
-      const float weights[3] = {1.0, 1.0, 1.0};
-      const float nHII_over_nH =
-          interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
-                                         weights, ionized, ionized,     /* */
-                                         ired, item, imet, iden,        /* */
-                                         dred, dtem, dmet, dden,        /* */
-                                         colibre_cooling_N_redshifts,   /* */
-                                         colibre_cooling_N_temperature, /* */
-                                         colibre_cooling_N_metallicity, /* */
-                                         colibre_cooling_N_density,     /* */
-                                         3);
-
-      return nHII_over_nH;
+      return exp10f(log10_HII_over_nH);
     }
+
+  } else {
+
+    /* We are above the EoS. */
+    const float weights[3] = {1.0, 1.0, 1.0};
+    const float nHII_over_nH =
+        interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
+                                       weights, ionized, ionized,     /* */
+                                       ired, item, imet, iden,        /* */
+                                       dred, dtem, dmet, dden,        /* */
+                                       colibre_cooling_N_redshifts,   /* */
+                                       colibre_cooling_N_temperature, /* */
+                                       colibre_cooling_N_metallicity, /* */
+                                       colibre_cooling_N_density,     /* */
+                                       3);
+
+    return nHII_over_nH;
   }
 }
 
@@ -426,8 +404,6 @@ double compute_subgrid_H2_fraction(
     const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
     const float log10_T, const float log10_T_EOS_max) {
 
-  error("Don't call this!");
-
   /* Physical density of this particle */
   const double rho_phys = hydro_get_physical_density(p, cosmo);
 
@@ -455,140 +431,131 @@ double compute_subgrid_H2_fraction(
   get_index_1d(cooling->Temp, colibre_cooling_N_temperature, log10_T, &item,
                &dtem);
 
-  /* Are we in an HII region? */
-  if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+  /* Are we above or below the EoS? */
+  if (log10_T < log10_T_EOS_max) {
 
-    /* No molecular gas. */
-    return 0.f;
+    /* We are below the EoS. Use subgrid properties assuming P equilibrium */
 
-  } else {
+    const float P = hydro_get_physical_pressure(p, cosmo);
+    const float P_cgs = P * cooling->pressure_to_cgs;
+    const float log10_P_cgs = log10(P_cgs);
 
-    /* Are we above or below the EoS? */
-    if (log10_T < log10_T_EOS_max) {
+    /* Recover the maximal equilibrium pressure from the table at the current
+     * redshift and metallicity */
+    const float log10_Peq_max_cgs =
+        interpolation_3d_no_z(cooling->table.logPeq,                     /* */
+                              ired, imet, colibre_cooling_N_density - 1, /* */
+                              dred, dmet, 0.,                            /* */
+                              colibre_cooling_N_redshifts,               /* */
+                              colibre_cooling_N_metallicity,             /* */
+                              colibre_cooling_N_density);
 
-      /* We are below the EoS. Use subgrid properties assuming P equilibrium */
+    /* Are we above or below the max pressure equilibrium? */
+    if (log10_P_cgs > log10_Peq_max_cgs) {
 
-      const float P = hydro_get_physical_pressure(p, cosmo);
-      const float P_cgs = P * cooling->pressure_to_cgs;
-      const float log10_P_cgs = log10(P_cgs);
+      /* EOS pressure (logP) is larger than maximum Peq (can happen for very
+       * steep EOS) H2 fraction from the highest density bin */
 
-      /* Recover the maximal equilibrium pressure from the table at the current
-       * redshift and metallicity */
-      const float log10_Peq_max_cgs =
-          interpolation_3d_no_z(cooling->table.logPeq,                     /* */
-                                ired, imet, colibre_cooling_N_density - 1, /* */
-                                dred, dmet, 0.,                            /* */
-                                colibre_cooling_N_redshifts,               /* */
-                                colibre_cooling_N_metallicity,             /* */
-                                colibre_cooling_N_density);
+      const float log10_H2_over_nH = interpolation_4d_no_z_no_w(
+          cooling->table.logHfracs_Teq,                         /* */
+          ired, imet, colibre_cooling_N_density - 1, molecular, /* */
+          dred, dmet, 0., 0.,                                   /* */
+          colibre_cooling_N_redshifts,                          /* */
+          colibre_cooling_N_metallicity,                        /* */
+          colibre_cooling_N_density,                            /* */
+          3);
 
-      /* Are we above or below the max pressure equilibrium? */
-      if (log10_P_cgs > log10_Peq_max_cgs) {
+      return 0.5f * exp10f(log10_H2_over_nH);
 
-        /* EOS pressure (logP) is larger than maximum Peq (can happen for very
-         * steep EOS) H2 fraction from the highest density bin */
+    } else {
 
-        const float log10_H2_over_nH = interpolation_4d_no_z_no_w(
-            cooling->table.logHfracs_Teq,                         /* */
-            ired, imet, colibre_cooling_N_density - 1, molecular, /* */
-            dred, dmet, 0., 0.,                                   /* */
-            colibre_cooling_N_redshifts,                          /* */
-            colibre_cooling_N_metallicity,                        /* */
-            colibre_cooling_N_density,                            /* */
-            3);
+      /* Normal case: We are not beyond the table range */
 
-        return 0.5f * exp10f(log10_H2_over_nH);
+      /* Need to find thermal equilibrium state with the same pressure
+       * by interpolating the equilibrium table
+       *
+       * Note that the logPeq table is neither equally spaced nor
+       * necessarilly monotically increasing.
+       * We hance loop over densities and pick the first one where
+       * log10_P < log10_Peq. We start with the resolved density (index iden),
+       * as we expect the subgrid density to be larger */
 
-      } else {
+      /* If the solution can't be found, we revert to the non-subgrid
+       * density */
+      int iden_eq = iden;
+      float dden_eq = dden;
 
-        /* Normal case: We are not beyond the table range */
+      /* Loop over the density bins */
+      for (int i = iden; i < colibre_cooling_N_density; i++) {
 
-        /* Need to find thermal equilibrium state with the same pressure
-         * by interpolating the equilibrium table
-         *
-         * Note that the logPeq table is neither equally spaced nor
-         * necessarilly monotically increasing.
-         * We hance loop over densities and pick the first one where
-         * log10_P < log10_Peq. We start with the resolved density (index iden),
-         * as we expect the subgrid density to be larger */
+        /* Equilibirum pressure at this density */
+        const float log10_Peq_interp =
+            interpolation_3d_no_z(cooling->table.logPeq,         /* */
+                                  ired, imet, i,                 /* */
+                                  dred, dmet, 0.,                /* */
+                                  colibre_cooling_N_redshifts,   /* */
+                                  colibre_cooling_N_metallicity, /* */
+                                  colibre_cooling_N_density);
 
-        /* If the solution can't be found, we revert to the non-subgrid
-         * density */
-        int iden_eq = iden;
-        float dden_eq = dden;
+        /* Did we find a solution? */
+        if (log10_Peq_interp > log10_P_cgs) {
 
-        /* Loop over the density bins */
-        for (int i = iden; i < colibre_cooling_N_density; i++) {
-
-          /* Equilibirum pressure at this density */
-          const float log10_Peq_interp =
+          /* Equilibrium pressure at the previous density point */
+          const float log10_Peq_prev =
               interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                    ired, imet, i,                 /* */
+                                    ired, imet, i - 1,             /* */
                                     dred, dmet, 0.,                /* */
                                     colibre_cooling_N_redshifts,   /* */
                                     colibre_cooling_N_metallicity, /* */
                                     colibre_cooling_N_density);
 
-          /* Did we find a solution? */
-          if (log10_Peq_interp > log10_P_cgs) {
+          /* How far from the equilibrium point are we? */
+          const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
+                                   (log10_Peq_interp - log10_Peq_prev);
 
-            /* Equilibrium pressure at the previous density point */
-            const float log10_Peq_prev =
-                interpolation_3d_no_z(cooling->table.logPeq,         /* */
-                                      ired, imet, i - 1,             /* */
-                                      dred, dmet, 0.,                /* */
-                                      colibre_cooling_N_redshifts,   /* */
-                                      colibre_cooling_N_metallicity, /* */
-                                      colibre_cooling_N_density);
+          /* Interpolate to get the density at equilibrium */
+          const float log10_n_at_Peq =
+              cooling->nH[i - 1] +
+              delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
 
-            /* How far from the equilibrium point are we? */
-            const float delta_P_eq = (log10_P_cgs - log10_Peq_prev) /
-                                     (log10_Peq_interp - log10_Peq_prev);
+          /* We found a valid density: Get the index along the density
+           * axis of the tables. */
+          get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
+                       &iden_eq, &dden_eq);
 
-            /* Interpolate to get the density at equilibrium */
-            const float log10_n_at_Peq =
-                cooling->nH[i - 1] +
-                delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
-
-            /* We found a valid density: Get the index along the density
-             * axis of the tables. */
-            get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
-                         &iden_eq, &dden_eq);
-
-            break;
-          }
+          break;
         }
-
-        /* Finish by interpolating the tables to get the H2 density */
-        const float log10_H2_over_nH =
-            interpolation_4d_no_w(cooling->table.logHfracs_Teq,   /* */
-                                  ired, imet, iden_eq, molecular, /* */
-                                  dred, dmet, dden_eq, 0.,        /* */
-                                  colibre_cooling_N_redshifts,    /* */
-                                  colibre_cooling_N_metallicity,  /* */
-                                  colibre_cooling_N_density,      /* */
-                                  3);
-
-        return 0.5 * exp10f(log10_H2_over_nH);
       }
 
-    } else {
+      /* Finish by interpolating the tables to get the H2 density */
+      const float log10_H2_over_nH =
+          interpolation_4d_no_w(cooling->table.logHfracs_Teq,   /* */
+                                ired, imet, iden_eq, molecular, /* */
+                                dred, dmet, dden_eq, 0.,        /* */
+                                colibre_cooling_N_redshifts,    /* */
+                                colibre_cooling_N_metallicity,  /* */
+                                colibre_cooling_N_density,      /* */
+                                3);
 
-      /* We are above the EoS. */
-      const float weights[3] = {1.0, 1.0, 1.0};
-      const float nHII_over_nH =
-          interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
-                                         weights, molecular, molecular, /* */
-                                         ired, item, imet, iden,        /* */
-                                         dred, dtem, dmet, dden,        /* */
-                                         colibre_cooling_N_redshifts,   /* */
-                                         colibre_cooling_N_temperature, /* */
-                                         colibre_cooling_N_metallicity, /* */
-                                         colibre_cooling_N_density,     /* */
-                                         3);
-
-      return 0.5 * nHII_over_nH;
+      return 0.5 * exp10f(log10_H2_over_nH);
     }
+
+  } else {
+
+    /* We are above the EoS. */
+    const float weights[3] = {1.0, 1.0, 1.0};
+    const float nHII_over_nH =
+        interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
+                                       weights, molecular, molecular, /* */
+                                       ired, item, imet, iden,        /* */
+                                       dred, dtem, dmet, dden,        /* */
+                                       colibre_cooling_N_redshifts,   /* */
+                                       colibre_cooling_N_temperature, /* */
+                                       colibre_cooling_N_metallicity, /* */
+                                       colibre_cooling_N_density,     /* */
+                                       3);
+
+    return 0.5 * nHII_over_nH;
   }
 }
 
@@ -614,8 +581,6 @@ double compute_subgrid_temperature(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
     const float log10_T, const float log10_T_EOS_max) {
-
-  error("Don't call this!");
 
   /* Physical density of this particle */
   const double rho_phys = hydro_get_physical_density(p, cosmo);
@@ -679,13 +644,7 @@ double compute_subgrid_temperature(
 
       const float T_at_Peq = exp10f(log10_T_at_Peq);
 
-      /* For HII regions, limit the subgrid temperature
-       * to be no less than HIIregion_temp. */
-      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
-          (T_at_Peq < cooling->HIIregion_temp))
-        return cooling->HIIregion_temp;
-      else
-        return T_at_Peq;
+      return T_at_Peq;
 
     } else {
 
@@ -758,13 +717,7 @@ double compute_subgrid_temperature(
 
       const float T_at_Peq = exp10f(log10_T_at_Peq);
 
-      /* For HII regions, limit the subgrid temperature
-       * to be no less than HIIregion_temp. */
-      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
-          (T_at_Peq < cooling->HIIregion_temp))
-        return cooling->HIIregion_temp;
-      else
-        return T_at_Peq;
+      return T_at_Peq;
     }
   } else {
 
@@ -798,8 +751,6 @@ double compute_subgrid_density(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const struct part *p, const struct xpart *xp,
     const float log10_T, const float log10_T_EOS_max) {
-
-  error("Don't call this!");
 
   /* Physical density of this particle */
   const double rho_phys = hydro_get_physical_density(p, cosmo);
@@ -866,17 +817,8 @@ double compute_subgrid_density(
 
       const double log10_kB = cooling->log10_kB_cgs;
 
-      /* For HII regions, limit the subgrid temperature
-       * to be no less than HIIregion_temp. */
-      if ((xp->tracers_data.HIIregion_timer_gas > 0.) &&
-          (log10_T_at_Peq < log10(cooling->HIIregion_temp))) {
-        const double mu_HII =
-            4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
-        log10_n_at_Peq = log10_P_cgs - log10(cooling->HIIregion_temp) +
-                         log10(XH) + log10(mu_HII) - log10_kB;
-      } else
-        log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
-                         log10(mu_at_Peq) - log10_kB;
+      log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
+                       log10(mu_at_Peq) - log10_kB;
 
     } else {
 
@@ -926,33 +868,6 @@ double compute_subgrid_density(
           /* Interpolate to get the density at equilibrium */
           log10_n_at_Peq = cooling->nH[i - 1] +
                            delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
-
-          /* For HII regions, limit the subgrid temperature
-           * to be no less than HIIregion_temp. */
-          if (xp->tracers_data.HIIregion_timer_gas > 0.) {
-            int iden_eq;
-            float dden_eq;
-            get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
-                         &iden_eq, &dden_eq);
-
-            float log10_T_at_Peq =
-                interpolation_3d(cooling->table.logTeq,         /* */
-                                 ired, imet, iden_eq,           /* */
-                                 dred, dmet, dden_eq,           /* */
-                                 colibre_cooling_N_redshifts,   /* */
-                                 colibre_cooling_N_metallicity, /* */
-                                 colibre_cooling_N_density);
-
-            if (log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
-              log10_T_at_Peq = log10(cooling->HIIregion_temp);
-
-              const double mu_HII =
-                  4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
-
-              log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
-                               log10(mu_HII) - cooling->log10_kB_cgs;
-            }
-          }
 
           break;
         }

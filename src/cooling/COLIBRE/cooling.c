@@ -36,6 +36,7 @@
 #include "cooling.h"
 #include "cooling_rates.h"
 #include "cooling_struct.h"
+#include "cooling_subgrid.h"
 #include "cooling_tables.h"
 #include "entropy_floor.h"
 #include "error.h"
@@ -683,8 +684,6 @@ float cooling_get_subgrid_HI_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -697,10 +696,6 @@ float cooling_get_subgrid_HI_fraction(
 
   return compute_subgrid_HI_fraction(cooling, phys_const, floor_props, cosmo, p,
                                      xp, log10_T, log10_T_EOS_max);
-#else
-  error("Don't call this!");
-  return -1.f;
-#endif
 }
 
 /**
@@ -726,8 +721,6 @@ float cooling_get_subgrid_HII_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -740,11 +733,6 @@ float cooling_get_subgrid_HII_fraction(
 
   return compute_subgrid_HII_fraction(cooling, phys_const, floor_props, cosmo,
                                       p, xp, log10_T, log10_T_EOS_max);
-
-#else
-  error("Don't call this!");
-  return -1.f;
-#endif
 }
 
 /**
@@ -770,8 +758,6 @@ float cooling_get_subgrid_H2_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -784,10 +770,6 @@ float cooling_get_subgrid_H2_fraction(
 
   return compute_subgrid_H2_fraction(cooling, phys_const, floor_props, cosmo, p,
                                      xp, log10_T, log10_T_EOS_max);
-#else
-  error("Don't call this!");
-  return -1.f;
-#endif
 }
 
 /**
@@ -812,8 +794,6 @@ float cooling_get_subgrid_temperature(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -826,11 +806,6 @@ float cooling_get_subgrid_temperature(
 
   return compute_subgrid_temperature(cooling, phys_const, floor_props, cosmo, p,
                                      xp, log10_T, log10_T_EOS_max);
-
-#else
-  error("Don't call this!");
-  return -1.f;
-#endif
 }
 
 /**
@@ -857,8 +832,6 @@ float cooling_get_subgrid_density(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -871,15 +844,10 @@ float cooling_get_subgrid_density(
 
   return compute_subgrid_density(cooling, phys_const, floor_props, cosmo, p, xp,
                                  log10_T, log10_T_EOS_max);
-
-#else
-  error("Don't call this!");
-  return -1.f;
-#endif
 }
 
 /**
- * @brief Set the subgrid properties of the gas particle
+ * @brief Set the subgrid properties (rho, T) of the gas particle
  *
  * @param phys_const The physical constants in internal units.
  * @param us The internal system of units.
@@ -898,8 +866,6 @@ void cooling_set_subgrid_properties(
     const struct cooling_function_data *cooling, struct part *p,
     struct xpart *xp) {
 
-#if 0  // MATTHIEU
-  
   /* Get the EOS temperature from the entropy floor */
   const float T_EOS = entropy_floor_temperature(p, cosmo, floor_props);
   const float log10_T_EOS_max =
@@ -910,27 +876,10 @@ void cooling_set_subgrid_properties(
                                           cooling, p, xp);
   const float log10_T = log10f(T);
 
-  const double nHI_over_nH = compute_subgrid_HI_fraction(
-      cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-  const double nHII_over_nH = compute_subgrid_HII_fraction(
-      cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-  const double nH2_over_nH = compute_subgrid_H2_fraction(
-      cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-
-  /* Normalize the sum of these H fractions to 1 */
-  const double nHsum_over_nH = nHI_over_nH + nHII_over_nH + 2. * nH2_over_nH;
-
-  /* Compute the subgrid properties */
-  xp->tracers_data.nHI_over_nH = nHI_over_nH / nHsum_over_nH;
-  xp->tracers_data.nHII_over_nH = nHII_over_nH / nHsum_over_nH;
-  xp->tracers_data.nH2_over_nH = nH2_over_nH / nHsum_over_nH;
-
   p->cooling_data.subgrid_temp = compute_subgrid_temperature(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
   p->cooling_data.subgrid_dens = compute_subgrid_density(
       cooling, phys_const, floor_props, cosmo, p, xp, log10_T, log10_T_EOS_max);
-
-#endif
 }
 
 /**
