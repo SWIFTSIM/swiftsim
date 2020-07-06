@@ -120,12 +120,6 @@ struct cooling_function_data {
   /*! Filepath to the directory containing the HDF5 cooling tables */
   char cooling_table_path[colibre_table_path_name_length];
 
-  /* Ionization fraction of gas particles tagged as HII regions */
-  float HIIregion_fion;
-
-  /* Temperature of gas particles tagged as HII regions */
-  float HIIregion_temp;
-
   /* Distance from EOS to use thermal equilibrium temperature for subgrid props
    */
   float dlogT_EOS;
@@ -195,15 +189,11 @@ struct cooling_function_data {
 
 struct cooling_part_data {
 
-#if 0  // MATTHIEU
-  
   /*! Subgrid temperature */
   float subgrid_temp;
 
   /*! Subgrid density (internal units, physical frame) */
   float subgrid_dens;
-
-#endif  // MATTHIEU
 };
 
 /**

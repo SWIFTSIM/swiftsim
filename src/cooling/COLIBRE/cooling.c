@@ -56,7 +56,7 @@ static const int bisection_max_iterations = 150;
 /* Tolerances for termination criteria. */
 static const float explicit_tolerance = 0.05;
 static const float bisection_tolerance = 1.0e-6;
-static const double bracket_factor = 1.5; /* sqrt(1.1) */
+static const double bracket_factor = 1.5;
 
 /**
  * @brief Common operations performed on the cooling function at a
@@ -92,9 +92,7 @@ void cooling_update(const struct cosmology *cosmo,
 
 /**
  * @brief Compute the internal energy of a #part based on the cooling function
- * but for a given temperature. This is used e.g. for particles in HII regions
- * that are set to a constant temperature, but their internal energies should
- * reflect the particle composition
+ * but for a given temperature.
  *
  * @param phys_const #phys_const data structure.
  * @param hydro_props The properties of the hydro scheme.
@@ -123,52 +121,38 @@ float cooling_get_internalenergy_for_temperature(
       chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
 
-  if (0 /*xp->tracers_data.HIIregion_timer_gas > 0.*/) {
+  /* Convert Hydrogen mass fraction into Hydrogen number density */
+  const float rho = hydro_get_physical_density(p, cosmo);
+  const double n_H = rho * XH / phys_const->const_proton_mass;
+  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
-#if 0  // MATTHIEU
-    const float mu_HII =
-        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
-    return exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs * T /
-           (hydro_gamma_minus_one * mu_HII);
-#else
-    return -1.f;
-#endif
+  /* Get this particle's metallicity ratio to solar.
+   *
+   * Note that we do not need the individual element's ratios that
+   * the function also computes. */
+  float dummy[colibre_cooling_N_elementtypes];
+  const float logZZsol = abundance_ratio_to_solar(p, cooling, dummy);
 
-  } else {
+  /* compute hydrogen number density, metallicity and redshift indices and
+   * offsets  */
 
-    /* Convert Hydrogen mass fraction into Hydrogen number density */
-    const float rho = hydro_get_physical_density(p, cosmo);
-    const double n_H = rho * XH / phys_const->const_proton_mass;
-    const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  float d_red, d_met, d_n_H;
+  int red_index, met_index, n_H_index;
 
-    /* Get this particle's metallicity ratio to solar.
-     *
-     * Note that we do not need the individual element's ratios that
-     * the function also computes. */
-    float dummy[colibre_cooling_N_elementtypes];
-    const float logZZsol = abundance_ratio_to_solar(p, cooling, dummy);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+               &red_index, &d_red);
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &met_index, &d_met);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &n_H_index, &d_n_H);
 
-    /* compute hydrogen number density, metallicity and redshift indices and
-     * offsets  */
+  /* Compute the log10 of the temperature by interpolating the table */
+  const double log_10_U =
+      colibre_convert_temp_to_u(log10(T), cosmo->z, n_H_index, d_n_H, met_index,
+                                d_met, red_index, d_red, cooling);
 
-    float d_red, d_met, d_n_H;
-    int red_index, met_index, n_H_index;
-
-    get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-                 &red_index, &d_red);
-    get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
-                 &met_index, &d_met);
-    get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
-                 &n_H_index, &d_n_H);
-
-    /* Compute the log10 of the temperature by interpolating the table */
-    const double log_10_U =
-        colibre_convert_temp_to_u(log10(T), cosmo->z, n_H_index, d_n_H,
-                                  met_index, d_met, red_index, d_red, cooling);
-
-    /* Undo the log! */
-    return exp10(log_10_U);
-  }
+  /* Undo the log! */
+  return exp10(log_10_U);
 }
 
 /**
@@ -207,52 +191,38 @@ float cooling_get_temperature(const struct phys_const *phys_const,
       chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
 
-  if (0 /*xp->tracers_data.HIIregion_timer_gas > 0.*/) {
+  /* Convert Hydrogen mass fraction into Hydrogen number density */
+  const float rho = hydro_get_physical_density(p, cosmo);
+  const double n_H = rho * XH / phys_const->const_proton_mass;
+  const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
-#if 0  // MATTHIEU
-    const float mu_HII =
-        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
-    return u_cgs * hydro_gamma_minus_one * mu_HII /
-           (exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs);
-#else
-    return -1.f;
-#endif
+  /* Get this particle's metallicity ratio to solar.
+   *
+   * Note that we do not need the individual element's ratios that
+   * the function also computes. */
+  float dummy[colibre_cooling_N_elementtypes];
+  const float logZZsol = abundance_ratio_to_solar(p, cooling, dummy);
 
-  } else {
+  /* compute hydrogen number density, metallicity and redshift indices and
+   * offsets  */
 
-    /* Convert Hydrogen mass fraction into Hydrogen number density */
-    const float rho = hydro_get_physical_density(p, cosmo);
-    const double n_H = rho * XH / phys_const->const_proton_mass;
-    const double n_H_cgs = n_H * cooling->number_density_to_cgs;
+  float d_red, d_met, d_n_H;
+  int red_index, met_index, n_H_index;
 
-    /* Get this particle's metallicity ratio to solar.
-     *
-     * Note that we do not need the individual element's ratios that
-     * the function also computes. */
-    float dummy[colibre_cooling_N_elementtypes];
-    const float logZZsol = abundance_ratio_to_solar(p, cooling, dummy);
+  get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
+               &red_index, &d_red);
+  get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
+               &met_index, &d_met);
+  get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
+               &n_H_index, &d_n_H);
 
-    /* compute hydrogen number density, metallicity and redshift indices and
-     * offsets  */
+  /* Compute the log10 of the temperature by interpolating the table */
+  const double log_10_T =
+      colibre_convert_u_to_temp(log10(u_cgs), cosmo->z, n_H_index, d_n_H,
+                                met_index, d_met, red_index, d_red, cooling);
 
-    float d_red, d_met, d_n_H;
-    int red_index, met_index, n_H_index;
-
-    get_index_1d(cooling->Redshifts, colibre_cooling_N_redshifts, cosmo->z,
-                 &red_index, &d_red);
-    get_index_1d(cooling->Metallicity, colibre_cooling_N_metallicity, logZZsol,
-                 &met_index, &d_met);
-    get_index_1d(cooling->nH, colibre_cooling_N_density, log10(n_H_cgs),
-                 &n_H_index, &d_n_H);
-
-    /* Compute the log10 of the temperature by interpolating the table */
-    const double log_10_T =
-        colibre_convert_u_to_temp(log10(u_cgs), cosmo->z, n_H_index, d_n_H,
-                                  met_index, d_met, red_index, d_red, cooling);
-
-    /* Undo the log! */
-    return exp10(log_10_T);
-  }
+  /* Undo the log! */
+  return exp10(log_10_T);
 }
 
 /**
@@ -643,43 +613,9 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0);
 
-#if 0  // MATTHIEU
-  
-  /* Check if the particle is in an HII region and if yes, set the parameter
-   * accordingly */
-  if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
-      (xp->tracers_data.HIIregion_timer_gas > 0.)) {
-
-    /* HII region internal energy is the internal energy of a particle at a
-     * temperature of cooling->HIIregion_temp */
-    const float u_HII_cgs = cooling_get_internalenergy_for_temperature(
-        phys_const, hydro_properties, us, cosmo, cooling, p, xp,
-        cooling->HIIregion_temp);
-
-    const float u_HII = u_HII_cgs * cooling->internal_energy_from_cgs;
-
-    /* The enrgy is below the HII target energy */
-    if (u_final < u_HII) {
-
-      /* Inject energy into the particle */
-      hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
-      hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
-
-      /* Internal energy should stay constant for the timestep */
-      hydro_set_physical_internal_energy_dt(p, cosmo, 0.f);
-    }
-  } else if ((time > xp->tracers_data.HIIregion_timer_gas) &&
-             (xp->tracers_data.HIIregion_timer_gas > 0.)) {
-
-    /* Reset the flags */
-    xp->tracers_data.HIIregion_timer_gas = -1.;
-    xp->tracers_data.HIIregion_starid = -1;
-  }
-
   /* set subgrid properties and hydrogen fractions */
   cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
                                  floor_props, cooling, p, xp);
-#endif
 }
 
 /**
@@ -1092,21 +1028,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
   cooling->He_reion_heat_cgs =
       parser_get_param_float(parameter_file, "COLIBRECooling:He_reion_eV_p_H");
 
-  /* Properties of the HII region model ------------------------------------- */
-  cooling->HIIregion_fion = parser_get_param_float(
-      parameter_file, "COLIBREFeedback:HIIregion_ionization_fraction");
-
-  cooling->HIIregion_temp = parser_get_param_float(
-      parameter_file, "COLIBREFeedback:HIIregion_temperature");
-
   /* Properties for the subgrid properties model ---------------------------- */
   cooling->dlogT_EOS = parser_get_param_float(
       parameter_file, "COLIBRECooling:delta_logTEOS_subgrid_properties");
-
-  /* Check that it makes sense. */
-  if (cooling->HIIregion_fion < 0.5 || cooling->HIIregion_fion > 1.0) {
-    error("HIIregion_ionization_fraction has to be between 0.5 and 1.0");
-  }
 
   /* Optional parameters to correct the abundances */
   cooling->Ca_over_Si_ratio_in_solar = parser_get_opt_param_float(
