@@ -1534,7 +1534,7 @@ case "$with_subgrid" in
   	with_subgrid_sink=none
 	enable_fof=yes
    ;;
-   EAGLE-P20)
+   EAGLE-XL)
 	with_subgrid_cooling=COLIBRE
 	with_subgrid_chemistry=EAGLE
 	with_subgrid_tracers=EAGLE
@@ -1544,7 +1544,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
 	with_subgrid_task_order=EAGLE
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=yes
    ;;
    *)
