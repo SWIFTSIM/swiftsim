@@ -29,6 +29,9 @@ the following changes have been made (at standard resolution):
    been removed as the new cooling tables handle this correctly. The
    gamma=4/3 floor has been extended to lower densities
    (i.e. 800K at n_H = 10^-4 cm^-3) as a fail-safe.
+ - Particles can be star-forming if they are within 0.3 dex of the
+   entropy floor (was 0.5 dex). These particles also get their
+   subgrid properties (rho, T) computed.
  - The minimal mass of SNII stars has been raised to 8 Msun (from 6).
  - The SNII feedback delay is done by sampling the stellar age
    distribution and not using a fixed delay of 30 Myr any more.
