@@ -59,7 +59,7 @@ void cooling_first_init_part(const struct phys_const *phys_const,
                              const struct hydro_props *hydro_props,
                              const struct cosmology *cosmo,
                              const struct cooling_function_data *cooling,
-                             const struct part *p, struct xpart *xp);
+                             struct part *p, struct xpart *xp);
 
 float cooling_get_temperature(const struct phys_const *phys_const,
                               const struct hydro_props *hydro_props,
