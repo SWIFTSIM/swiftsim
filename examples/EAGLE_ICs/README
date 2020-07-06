@@ -5,7 +5,7 @@ difference is the file format, adapted for SWIFT.
 
 For standard runs, the code should be configured with
 
---with-subgrid=EAGLE --with-hydro=sphenix --with-kernel=wendland-C2
+--with-subgrid=EAGLE-XL --with-hydro=sphenix --with-kernel=wendland-C2
 
 Compared to the original EAGLE runs of Schaye et al. 2015),
 the following changes have been made (at standard resolution):
@@ -21,7 +21,14 @@ the following changes have been made (at standard resolution):
  - The metallicity-dependent density threshold for star formation
    uses the smoothed metallicities and not the raw metallicities
    any more.
+ - The cooling uses the Ploeckinger+20 tables including an updated
+   UV background, newer version of CLOUDY and self-shielding
+   (was using the Wiersma+09 tables before).
  - The redshift of H reionization has been lowered to 7.5 (from 11.5).
+ - The entropy floor between n_H = 10^-5 and 10^-1 cm^3 at 8000K has
+   been removed as the new cooling tables handle this correctly. The
+   gamma=4/3 floor has been extended to lower densities
+   (i.e. 800K at n_H = 10^-4 cm^-3) as a fail-safe.
  - The minimal mass of SNII stars has been raised to 8 Msun (from 6).
  - The SNII feedback delay is done by sampling the stellar age
    distribution and not using a fixed delay of 30 Myr any more.
@@ -38,10 +45,6 @@ the following changes have been made (at standard resolution):
    eligible to be a reposition target has been increased to 0.5 times
    the local sound-speed around the BH (was 0.25 * c_sound).
 
-If additionally, the code is configured with --with-subgrid=EAGLE-XL
-instead of with --with-subgrid=EAGLE then the cooling will make use of
-the Ploeckinger+20 tables rather than the Wiermsa+09 tables used in
-the original Schaye et al. 2015 model.
 
 The scripts in this directory download the tables required to
 run the EAGLE model. Plotting scripts are also provided
