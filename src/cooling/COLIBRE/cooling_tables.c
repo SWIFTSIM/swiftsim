@@ -49,7 +49,8 @@
  * @param fname Filepath for cooling table from which to read header
  * @param cooling Cooling data structure
  */
-void read_cooling_header(struct cooling_function_data *cooling) {
+void read_cooling_header(struct cooling_function_data *cooling,
+			   struct dustevo_props *dp) {
 
 #ifdef HAVE_HDF5
 
@@ -235,7 +236,8 @@ void read_cooling_header(struct cooling_function_data *cooling) {
  *
  * @param cooling #cooling_function_data structure
  */
-void read_cooling_tables(struct cooling_function_data *restrict cooling) {
+void read_cooling_tables(struct cooling_function_data *restrict cooling,
+			 struct dustevo_props *dp) {
 
 #ifdef HAVE_HDF5
   hid_t dataset;

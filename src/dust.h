@@ -33,6 +33,11 @@
 #include "cooling_struct.h"
 #include "units.h"
 #include "physical_constants.h"
+#include "parser.h"
+#include "restart.h"
+#include "space.h"
+
+
 
 /* Common functions */
 
@@ -45,5 +50,9 @@ void dustevo_props_init(struct dustevo_props *dp,
 			const struct phys_const *phys_const,
 			const struct unit_system *us);
 
+void dustevo_struct_dump(const struct dustevo_props* dustevo,
+			 FILE* stream);
+
+void dustevo_struct_restore(const struct dustevo_props* dustevo, FILE* stream);
 
 #endif /* SWIFT_DUST_H */

@@ -451,6 +451,9 @@ struct engine {
   /* Properties of the chemistry model */
   const struct chemistry_global_data *chemistry;
 
+  /* Properties of the dust evolution model */
+  struct dustevo_props *dustevo;
+
   /*! The FOF properties data. */
   struct fof_props *fof_properties;
 
@@ -557,6 +560,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
                  const struct chemistry_global_data *chemistry,
+		 struct dustevo_props *dustevo,
                  struct fof_props *fof_properties,
                  struct los_props *los_properties);
 void engine_config(int restart, int fof, struct engine *e,

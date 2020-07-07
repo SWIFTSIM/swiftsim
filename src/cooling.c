@@ -44,7 +44,7 @@ void cooling_init(struct swift_params* parameter_file,
                   const struct phys_const* phys_const,
                   const struct hydro_props* hydro_props,
                   struct cooling_function_data* cooling,
-		  struct dustevo_props dp) {
+		  struct dustevo_props* dp) {
 
   /* Verify that we are not doing something stupid here */
   if (hydro_props->minimal_temperature <= 0.)

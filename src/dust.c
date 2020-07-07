@@ -21,3 +21,14 @@ void dustevo_props_init(struct dustevo_props* dp,
   dustevo_props_init_backend(dp, params, fp, cooling, phys_const, us);
 }
 
+
+void dustevo_struct_restore(const struct dustevo_props* dustevo, FILE* stream) {
+  restart_read_blocks((void*)dustevo, sizeof(struct dustevo_props), 1, stream,
+                      NULL, "dustevo function");
+}
+
+void dustevo_struct_dump(const struct dustevo_props* dustevo,
+                           FILE* stream) {
+  restart_write_blocks((void*)dustevo, sizeof(struct dustevo_props),
+                       1, stream, "dustevo", "dustevo function");
+}
