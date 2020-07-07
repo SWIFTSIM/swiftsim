@@ -34,10 +34,10 @@
 /* Local includes. */
 #include "align.h"
 #include "chemistry_struct.h"
+//#include "dust.h" this breaks the code
 #include "cooling/CHIMES/chimes/chimes_proto.h"
 #include "error.h"
 #include "inline.h"
-#include "dust.h"
 
 #define colibre_table_path_name_length 500
 
@@ -189,9 +189,8 @@ enum colibre_heating_channels {
   heattype_Dust
 };
 
-void read_cooling_header(struct colibre_cooling_tables *table);
-void read_cooling_tables(struct colibre_cooling_tables *table,
-			 struct dustevo_props *dp);
+void read_cooling_header(struct colibre_cooling_tables *table /*, struct dustevo_props *dp */);
+void read_cooling_tables(struct colibre_cooling_tables *table);
 
 /**
  * @brief Returns the 1d index of element with 2d indices x,y

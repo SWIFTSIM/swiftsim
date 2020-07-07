@@ -1011,7 +1011,7 @@ int main(int argc, char *argv[]) {
 #else
     if (!with_dust) {
       error(
-          "ERROR: Compiled with cooling but running without it. "
+          "ERROR: Compiled with dust but running without it. "
           "Did you forget the --dust flag?");
     }
     else { 
@@ -1029,8 +1029,8 @@ int main(int argc, char *argv[]) {
 
 #endif
 
-   dustevo_props_init(&dustevo_properties, params, &feedback_properties,
-		      &cooling_func, &prog_const, &us);
+    dustevo_props_init(&dustevo_properties, params, &feedback_properties,
+		       &cooling_func, &prog_const, &us);
 
 
     /* Initialise the star formation law and its properties */
