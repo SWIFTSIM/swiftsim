@@ -22,6 +22,7 @@
 /* Local includes */
 #include "black_holes_properties.h"
 #include "black_holes_struct.h"
+#include "cooling.h"
 #include "cosmology.h"
 #include "dimension.h"
 #include "gravity.h"
@@ -419,6 +420,8 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
  * @param props The properties of the black hole scheme.
  * @param constants The physical constants (in internal units).
  * @param cosmo The cosmological model.
+ * @param cooling Properties of the cooling model.
+ * @param floor_props Properties of the entropy fllor.
  * @param time Time since the start of the simulation (non-cosmo mode).
  * @param with_cosmology Are we running with cosmology?
  * @param dt The time-step size (in physical internal units).
@@ -426,7 +429,9 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
 __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     struct bpart* restrict bp, const struct black_holes_props* props,
     const struct phys_const* constants, const struct cosmology* cosmo,
-    const double time, const int with_cosmology, const double dt) {
+    const struct cooling_function_data* cooling,
+    const struct entropy_floor_properties* floor_props, const double time,
+    const int with_cosmology, const double dt) {
 
   /* Record that the black hole has another active time step */
   bp->number_of_time_steps++;
@@ -482,31 +487,94 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                  (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {
 
-    /* Standard approach: compute accretion rate for all gas simultaneously.
-     *
-     * Convert the quantities we gathered to physical frame (all internal
-     * units). Note: velocities are already in black hole frame. */
-    const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
-    const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                  bp->velocity_gas[1] * cosmo->a_inv,
-                                  bp->velocity_gas[2] * cosmo->a_inv};
+    if (props->subgrid_bondi) {
 
-    const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
-                               gas_v_phys[1] * gas_v_phys[1] +
-                               gas_v_phys[2] * gas_v_phys[2];
+      /* Construct basic properties of the gas around the BH in
+         physical coordinates */
+      const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
+      const double gas_u_phys =
+          bp->internal_energy_gas * cosmo->a_factor_internal_energy;
+      const double gas_P_phys =
+          gas_pressure_from_internal_energy(gas_rho_phys, gas_u_phys);
 
-    const double denominator2 = gas_v_norm2 + gas_c_phys2;
+      /* Assume primordial abundance and solar metallicity
+       * (Yes, that is inconsitent but makes no difference) */
+      const double logZZsol = 0.;
+      const double XH = 0.75;
+
+      /* Get the gas temperature */
+      const float gas_T = cooling_get_temperature_from_gas(
+          constants, cosmo, cooling, gas_rho_phys, logZZsol, XH, gas_u_phys);
+      const float log10_gas_T = log10f(gas_T);
+
+      /* Get the temperature on the EOS at this physical density */
+      const float T_EOS = entropy_floor_gas_temperature(
+          gas_rho_phys, bp->rho_gas, cosmo, floor_props);
+
+      /* Add the allowed offset */
+      const float log10_T_EOS_max =
+          log10f(max(T_EOS, FLT_MIN)) + cooling->dlogT_EOS;
+
+      /* Compute the subgrid density assuming pressure
+       * equilibirum if on the entropy floor */
+      const double rho_sub = compute_subgrid_density(
+          cooling, constants, floor_props, cosmo, gas_rho_phys, logZZsol, XH,
+          gas_P_phys, log10_gas_T, log10_T_EOS_max);
+
+      /* And the subgrid sound-speed */
+      const float c_sub = gas_soundspeed_from_pressure(rho_sub, gas_P_phys);
+
+      /* Now, compute the Bondi rate based on the normal velocities and
+       * the subgrid density and sound-speed */
+      const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                    bp->velocity_gas[1] * cosmo->a_inv,
+                                    bp->velocity_gas[2] * cosmo->a_inv};
+
+      const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                                 gas_v_phys[1] * gas_v_phys[1] +
+                                 gas_v_phys[2] * gas_v_phys[2];
+
+      const double denominator2 = gas_v_norm2 + c_sub * c_sub;
 #ifdef SWIFT_DEBUG_CHECKS
-    /* Make sure that the denominator is strictly positive */
-    if (denominator2 <= 0)
-      error(
-          "Invalid denominator for black hole particle %lld in Bondi rate "
-          "calculation.",
-          bp->id);
+      /* Make sure that the denominator is strictly positive */
+      if (denominator2 <= 0)
+        error(
+            "Invalid denominator for black hole particle %lld in Bondi rate "
+            "calculation.",
+            bp->id);
 #endif
-    const double denominator_inv = 1. / sqrt(denominator2);
-    Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
-                 denominator_inv * denominator_inv * denominator_inv;
+      const double denominator_inv = 1. / sqrt(denominator2);
+      Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * rho_sub *
+                   denominator_inv * denominator_inv * denominator_inv;
+
+    } else {
+
+      /* Standard approach: compute accretion rate for all gas simultaneously.
+       *
+       * Convert the quantities we gathered to physical frame (all internal
+       * units). Note: velocities are already in black hole frame. */
+      const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
+      const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                    bp->velocity_gas[1] * cosmo->a_inv,
+                                    bp->velocity_gas[2] * cosmo->a_inv};
+
+      const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                                 gas_v_phys[1] * gas_v_phys[1] +
+                                 gas_v_phys[2] * gas_v_phys[2];
+
+      const double denominator2 = gas_v_norm2 + gas_c_phys2;
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Make sure that the denominator is strictly positive */
+      if (denominator2 <= 0)
+        error(
+            "Invalid denominator for black hole particle %lld in Bondi rate "
+            "calculation.",
+            bp->id);
+#endif
+      const double denominator_inv = 1. / sqrt(denominator2);
+      Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
+                   denominator_inv * denominator_inv * denominator_inv;
+    }
   }
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
