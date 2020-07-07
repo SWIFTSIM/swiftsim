@@ -18,7 +18,7 @@
 #include "./dust/T20/dust.h"
 #include "./dust/T20/dust_struct.h"
 #include "./dust/T20/dust_properties.h"
-#include "./dust/T20/yield_tables.h"
+#include "./dust/T20/dust_yield_tables.h"
 #elif defined(DUST_M16)
 #include "./dust/M16/dust.h"
 #include "./dust/M16/dust_struct.h"

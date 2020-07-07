@@ -34,7 +34,6 @@
 /* Local includes. */
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
-#include "dust.h"
 #include "error.h"
 #include "exp10.h"
 
@@ -218,8 +217,7 @@ void read_cooling_header(struct colibre_cooling_tables *table) {
  *
  * @param table Colibre cooling table structure.
  */
-void read_cooling_tables(struct colibre_cooling_tables *table,
-			 struct dustevo_props *dp) {
+void read_cooling_tables(struct colibre_cooling_tables *table /*, struct dustevo_props *dp*/) {
 
 #ifdef HAVE_HDF5
   hid_t dataset;
@@ -306,7 +304,9 @@ void read_cooling_tables(struct colibre_cooling_tables *table,
   status = H5Dclose(dataset);
   if (status < 0) error("error closing mu dataset");
 
-  /* read_colibre_depletion(tempfile_id, dp); */
+  /** If I could #include "dust.h" in colibre_tables.h, would run 
+   * read_colibre_depletion() from src/dust/T20/dust_yield_tables.h 
+   * here **/
 
   /* Close the file */
   H5Fclose(tempfile_id);
