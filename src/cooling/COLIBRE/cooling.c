@@ -38,6 +38,7 @@
 #include "cooling_struct.h"
 #include "cooling_subgrid.h"
 #include "cooling_tables.h"
+#include "dust.h"
 #include "entropy_floor.h"
 #include "error.h"
 #include "exp10.h"
@@ -1190,7 +1191,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           const struct hydro_props *hydro_props,
-                          struct cooling_function_data *cooling) {
+                          struct cooling_function_data *cooling,
+			  struct dustevo_props *dp) {
 
   /* read some parameters */
 
@@ -1324,8 +1326,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parameter_file, "COLIBRECooling:rapid_cooling_threshold");
 
   /* Finally, read the tables */
-  read_cooling_header(cooling);
-  read_cooling_tables(cooling);
+  read_cooling_header(cooling, dp);
+  read_cooling_tables(cooling, dp);
 }
 
 /**
@@ -1336,10 +1338,11 @@ void cooling_init_backend(struct swift_params *parameter_file,
  * @param cosmo #cosmology structure
  */
 void cooling_restore_tables(struct cooling_function_data *cooling,
+			    struct dustevo_props *dustevo,
                             const struct cosmology *cosmo) {
 
-  read_cooling_header(cooling);
-  read_cooling_tables(cooling);
+  read_cooling_header(cooling, dustevo);
+  read_cooling_tables(cooling, dustevo);
 
   cooling_update(cosmo, cooling, /*space=*/NULL);
 }
@@ -1404,6 +1407,7 @@ void cooling_clean(struct cooling_function_data *cooling) {
  * @param stream the file stream
  */
 void cooling_struct_dump(const struct cooling_function_data *cooling,
+			 struct dustevo_props *dustevo,
                          FILE *stream) {
 
   /* To make sure everything is restored correctly, we zero all the pointers to
@@ -1447,10 +1451,11 @@ void cooling_struct_dump(const struct cooling_function_data *cooling,
  * @param stream the file stream
  * @param cosmo #cosmology structure
  */
-void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
+void cooling_struct_restore(struct cooling_function_data *cooling, 
+			    struct dustevo_props *dustevo, FILE *stream,
                             const struct cosmology *cosmo) {
   restart_read_blocks((void *)cooling, sizeof(struct cooling_function_data), 1,
                       stream, NULL, "cooling function");
 
-  cooling_restore_tables(cooling, cosmo);
+  cooling_restore_tables(cooling, dustevo,cosmo);
 }

@@ -31,6 +31,7 @@
 
 /* Local includes. */
 #include "cooling_struct.h"
+#include "dust.h"
 
 struct part;
 struct xpart;
@@ -101,9 +102,11 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
                                struct xpart *restrict xp, const double mu);
 
 void cooling_struct_dump(const struct cooling_function_data *cooling,
+			 struct dustevo_props *dp,
                          FILE *stream);
 
-void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
+void cooling_struct_restore(struct cooling_function_data *cooling, 
+			    struct dustevo_props *dp, FILE *stream,
                             const struct cosmology *cosmo);
 
 void cooling_convert_quantities(

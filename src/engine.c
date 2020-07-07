@@ -62,6 +62,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "distributed_io.h"
+#include "dust.h"
 #include "entropy_floor.h"
 #include "equation_of_state.h"
 #include "error.h"
@@ -3887,6 +3888,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  struct cooling_function_data *cooling_func,
                  const struct star_formation *starform,
                  const struct chemistry_global_data *chemistry,
+                 struct dustevo_props *dustevo,
                  struct fof_props *fof_properties,
                  struct los_props *los_properties) {
 
@@ -3965,6 +3967,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->black_holes_properties = black_holes;
   e->mesh = mesh;
   e->external_potential = potential;
+  e->dustevo = dustevo;
   e->cooling_func = cooling_func;
   e->star_formation = starform;
   e->feedback_props = feedback;
@@ -5452,6 +5455,7 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
     free((void *)e->cooling_func);
     free((void *)e->star_formation);
     free((void *)e->feedback_props);
+    free((void *)e->dustevo);
 #ifdef WITH_FOF
     free((void *)e->fof_properties);
 #endif
@@ -5503,12 +5507,13 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   stars_props_struct_dump(e->stars_properties, stream);
   pm_mesh_struct_dump(e->mesh, stream);
   potential_struct_dump(e->external_potential, stream);
-  cooling_struct_dump(e->cooling_func, stream);
+  cooling_struct_dump(e->cooling_func, e->dustevo, stream);
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
   event_logger_struct_dump(stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
+  dustevo_struct_dump(e->dustevo, stream);
 #ifdef WITH_FOF
   fof_struct_dump(e->fof_properties, stream);
 #endif
@@ -5612,10 +5617,16 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   potential_struct_restore(external_potential, stream);
   e->external_potential = external_potential;
 
+  struct dustevo_props *dp =
+      (struct dustevo_props *)malloc(
+          sizeof(struct dustevo_props));
+  dustevo_struct_restore(dp, stream);
+  e->dustevo = dp;
+
   struct cooling_function_data *cooling_func =
       (struct cooling_function_data *)malloc(
           sizeof(struct cooling_function_data));
-  cooling_struct_restore(cooling_func, stream, e->cosmology);
+  cooling_struct_restore(cooling_func, e->dustevo, stream, e->cosmology);
   e->cooling_func = cooling_func;
 
   struct star_formation *star_formation =
@@ -5640,6 +5651,12 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
           sizeof(struct chemistry_global_data));
   chemistry_struct_restore(chemistry, stream);
   e->chemistry = chemistry;
+
+  struct dustevo_props *dustevo =
+      (struct dustevo_props *)malloc(sizeof(struct dustevo_props));
+  dustevo_struct_restore(dustevo, stream);
+  e->dustevo = dustevo;
+
 
 #ifdef WITH_FOF
   struct fof_props *fof_props =

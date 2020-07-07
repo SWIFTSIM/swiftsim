@@ -401,7 +401,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
     /* Read the Colibre table. */
     message("Reading Colibre cooling table.");
     read_cooling_header(&(cooling->colibre_table));
-    read_cooling_tables(&(cooling->colibre_table), &dp);
+    read_cooling_tables(&(cooling->colibre_table), dp);
   }
 
   /* Set redshift to a very high value, just
@@ -1292,6 +1292,7 @@ double calculate_colibre_N_ref(const struct phys_const *phys_const,
  * @param stream the file stream
  */
 void cooling_struct_dump(const struct cooling_function_data *cooling,
+			 struct dustevo_props* dp,
                          FILE *stream) {
 
   /* Zero all pointers in the colibre_table within
@@ -1328,7 +1329,8 @@ void cooling_struct_dump(const struct cooling_function_data *cooling,
  * @param stream the file stream
  * @param cosmo #cosmology structure
  */
-void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
+void cooling_struct_restore(struct cooling_function_data *cooling,
+			    struct dustevo_props *dp, FILE *stream,
                             const struct cosmology *cosmo) {
 
   restart_read_blocks((void *)cooling, sizeof(struct cooling_function_data), 1,
@@ -1339,7 +1341,7 @@ void cooling_struct_restore(struct cooling_function_data *cooling, FILE *stream,
     /* Read the Colibre table. */
     message("Reading Colibre cooling table.");
     read_cooling_header(&(cooling->colibre_table));
-    read_cooling_tables(&(cooling->colibre_table));
+    read_cooling_tables(&(cooling->colibre_table), &(dp));
   }
 
   /* Initialise the CHIMES module. */

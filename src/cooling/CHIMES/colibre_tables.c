@@ -45,8 +45,7 @@
  *
  * @param table Colibre cooling table structure.
  */
-void read_cooling_header(struct colibre_cooling_tables *table,
-			 struct dustevo_props *dp) {
+void read_cooling_header(struct colibre_cooling_tables *table) {
 
 #ifdef HAVE_HDF5
 
@@ -278,7 +277,7 @@ void read_cooling_tables(struct colibre_cooling_tables *table,
   if (status < 0) error("error reading electron_fraction (temperature)\n");
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
-  
+
   /* Thermal equilibrium temperature */
   if (posix_memalign((void **)&table->logTeq, SWIFT_STRUCT_ALIGNMENT,
                      colibre_cooling_N_redshifts *
@@ -307,7 +306,7 @@ void read_cooling_tables(struct colibre_cooling_tables *table,
   status = H5Dclose(dataset);
   if (status < 0) error("error closing mu dataset");
 
-  read_colibre_depletion(tempfile_id, dp);
+  /* read_colibre_depletion(tempfile_id, dp); */
 
   /* Close the file */
   H5Fclose(tempfile_id);

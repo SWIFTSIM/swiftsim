@@ -64,14 +64,17 @@ void cooling_init(struct swift_params* parameter_file,
                   const struct phys_const* phys_const,
                   const struct hydro_props* hydro_props,
                   struct cooling_function_data* cooling,
-		  struct dustevo_props dp);
+		  struct dustevo_props* dp);
 
 void cooling_print(const struct cooling_function_data* cooling);
 
 /* Dump/restore. */
 void cooling_struct_dump(const struct cooling_function_data* cooling,
+			 struct dustevo_props* dp,
                          FILE* stream);
-void cooling_struct_restore(struct cooling_function_data* cooling, FILE* stream,
+void cooling_struct_restore(struct cooling_function_data* cooling, 
+			    struct dustevo_props* dp,
+			    FILE* stream,
                             const struct cosmology* cosmo);
 
 #endif /* SWIFT_COOLING_H */

@@ -26,6 +26,7 @@
 
 /* Local includes. */
 #include "cooling_struct.h"
+#include "dust.h"
 
 struct part;
 struct xpart;
@@ -136,7 +137,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
                           const struct unit_system *us,
                           const struct phys_const *phys_const,
                           const struct hydro_props *hydro_props,
-                          struct cooling_function_data *cooling);
+                          struct cooling_function_data *cooling,
+			  struct dustevo_props *dp);
 
 void cooling_print_backend(const struct cooling_function_data *cooling);
 
