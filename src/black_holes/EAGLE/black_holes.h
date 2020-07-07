@@ -108,6 +108,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->density.wcount_dh = 0.f;
   bp->rho_gas = 0.f;
   bp->sound_speed_gas = 0.f;
+  bp->internal_energy_gas = 0.f;
   bp->velocity_gas[0] = 0.f;
   bp->velocity_gas[1] = 0.f;
   bp->velocity_gas[2] = 0.f;
@@ -223,6 +224,7 @@ __attribute__((always_inline)) INLINE static void black_holes_end_density(
   /* For the following, we also have to undo the mass smoothing
    * (N.B.: bp->velocity_gas is in BH frame, in internal units). */
   bp->sound_speed_gas *= h_inv_dim * rho_inv;
+  bp->internal_energy_gas *= h_inv_dim * rho_inv;
   bp->velocity_gas[0] *= h_inv_dim * rho_inv;
   bp->velocity_gas[1] *= h_inv_dim * rho_inv;
   bp->velocity_gas[2] *= h_inv_dim * rho_inv;
