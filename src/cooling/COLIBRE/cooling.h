@@ -115,6 +115,14 @@ void cooling_set_particle_subgrid_properties(
     const struct cooling_function_data *cooling, struct part *p,
     struct xpart *xp);
 
+double compute_subgrid_density(
+    const struct cooling_function_data *cooling,
+    const struct phys_const *phys_const,
+    const struct entropy_floor_properties *floor_props,
+    const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
+    const float XH, const float P_phys, const float log10_T,
+    const float log10_T_EOS_max);
+
 float cooling_get_radiated_energy(const struct xpart *xp);
 
 void cooling_split_part(struct part *p, struct xpart *xp, double n);

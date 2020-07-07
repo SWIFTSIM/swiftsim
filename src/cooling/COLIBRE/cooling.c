@@ -165,7 +165,8 @@ float cooling_get_internalenergy_for_temperature(
  * @param cosmo #cosmology data structure.
  * @param cooling #cooling_function_data struct.
  * @param rho_phys Density of the gas in internal physical units.
- * @param logZZsol Logarithm base 10 of the gas' metallicity in units of solar metallicity.
+ * @param logZZsol Logarithm base 10 of the gas' metallicity in units of solar
+ * metallicity.
  * @param XH The Hydrogen abundance of the gas.
  * @param u_phys Internal energy of the gas in internal physical units.
  */
