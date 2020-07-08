@@ -1088,7 +1088,7 @@ void prepare_file(struct engine* e, const char* fileName,
   const struct gpart* gparts = e->s->gparts;
   const struct spart* sparts = e->s->sparts;
   const struct bpart* bparts = e->s->bparts;
-  const struct sink* sinks = e->s->sinks.parts;
+  const struct sink* sinks = e->s->sinks;
 
   struct output_options* output_options = e->output_options;
   const int with_cosmology = e->policy & engine_policy_cosmology;
