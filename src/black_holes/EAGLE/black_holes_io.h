@@ -178,7 +178,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
   }
 
   list[7] = io_make_output_field(
-      "GasDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, bparts, rho_gas,
+      "GasDensities", FLOAT, 1, UNIT_CONV_DENSITY, -3.f, bparts, rho_gas,
       "Co-moving densities of the gas around the particles");
 
   list[8] = io_make_output_field(
