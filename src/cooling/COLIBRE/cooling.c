@@ -1160,6 +1160,9 @@ void cooling_init_backend(struct swift_params *parameter_file,
   /* Finally, read the tables */
   read_cooling_header(cooling, dp);
   read_cooling_tables(cooling, dp);
+
+  /* remove implicit depletion from  if running with dust  */
+  depletion_correct_rates(cooling, dp);
 }
 
 /**
