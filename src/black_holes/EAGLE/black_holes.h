@@ -487,7 +487,21 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                  (4. * M_PI * G * G * BH_mass * BH_mass * hi_inv_dim);
   } else {
 
+    /* Standard approach: compute accretion rate for all gas simultaneously */
+
+    /* Convert velocities to physical frame
+     * Note: velocities are already in black hole frame. */
+    const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
+                                  bp->velocity_gas[1] * cosmo->a_inv,
+                                  bp->velocity_gas[2] * cosmo->a_inv};
+
+    const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
+                               gas_v_phys[1] * gas_v_phys[1] +
+                               gas_v_phys[2] * gas_v_phys[2];
+
     if (props->subgrid_bondi) {
+
+      /* Use subgrid rho and c for Bondi model */
 
       /* Construct basic properties of the gas around the BH in
          physical coordinates */
@@ -526,14 +540,6 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
       /* Now, compute the Bondi rate based on the normal velocities and
        * the subgrid density and sound-speed */
-      const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                    bp->velocity_gas[1] * cosmo->a_inv,
-                                    bp->velocity_gas[2] * cosmo->a_inv};
-
-      const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
-                                 gas_v_phys[1] * gas_v_phys[1] +
-                                 gas_v_phys[2] * gas_v_phys[2];
-
       const double denominator2 = gas_v_norm2 + c_sub * c_sub;
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure that the denominator is strictly positive */
@@ -549,18 +555,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
     } else {
 
-      /* Standard approach: compute accretion rate for all gas simultaneously.
-       *
-       * Convert the quantities we gathered to physical frame (all internal
-       * units). Note: velocities are already in black hole frame. */
-      const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
-      const double gas_v_phys[3] = {bp->velocity_gas[0] * cosmo->a_inv,
-                                    bp->velocity_gas[1] * cosmo->a_inv,
-                                    bp->velocity_gas[2] * cosmo->a_inv};
+      /* Use dynamical rho and c for Bondi model */
 
-      const double gas_v_norm2 = gas_v_phys[0] * gas_v_phys[0] +
-                                 gas_v_phys[1] * gas_v_phys[1] +
-                                 gas_v_phys[2] * gas_v_phys[2];
+      const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
 
       const double denominator2 = gas_v_norm2 + gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
