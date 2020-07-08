@@ -111,6 +111,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->sound_speed_gas = 0.f;
   bp->internal_energy_gas = 0.f;
   bp->rho_subgrid_gas = -1.f;
+  bp->sound_speed_subgrid_gas = -1.f;
   bp->velocity_gas[0] = 0.f;
   bp->velocity_gas[1] = 0.f;
   bp->velocity_gas[2] = 0.f;
@@ -545,6 +546,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       /* Also update the sound-speed to use in the angular momentum limiter */
       gas_c_phys = c_sub;
       gas_c_phys2 = c_sub * c_sub;
+
+      /* Record what we used */
+      bp->sound_speed_subgrid_gas = c_sub;
 
       /* Now, compute the Bondi rate based on the normal velocities and
        * the subgrid density and sound-speed */

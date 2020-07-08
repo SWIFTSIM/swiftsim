@@ -100,6 +100,10 @@ struct bpart {
    * model) */
   float rho_subgrid_gas;
 
+  /*! Subgrid physical sound speed of the gas (updated when using the subgrid
+   * Bondi model) */
+  float sound_speed_subgrid_gas;
+
   /*! Smoothed velocity of the gas surrounding the black hole,
    * in the frame of the black hole (internal units) */
   float velocity_gas[3];

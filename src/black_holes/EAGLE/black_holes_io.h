@@ -139,7 +139,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 28;
+  *num_fields = 29;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -322,6 +322,11 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "SubgridDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, bparts,
       rho_subgrid_gas,
       "Physical subgrid densities used in the subgrid-Bondi model.");
+
+  list[28] = io_make_output_field(
+      "SubgridSoundSpeeds", FLOAT, 1, UNIT_CONV_SPEED, 0.f, bparts,
+      sound_speed_subgrid_gas,
+      "Physical subgrid sound-speeds used in the subgrid-Bondi model.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
