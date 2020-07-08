@@ -110,6 +110,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->rho_gas = 0.f;
   bp->sound_speed_gas = 0.f;
   bp->internal_energy_gas = 0.f;
+  bp->rho_subgrid_gas = -1.f;
   bp->velocity_gas[0] = 0.f;
   bp->velocity_gas[1] = 0.f;
   bp->velocity_gas[2] = 0.f;
@@ -534,6 +535,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       const double rho_sub = compute_subgrid_density(
           cooling, constants, floor_props, cosmo, gas_rho_phys, logZZsol, XH,
           gas_P_phys, log10_gas_T, log10_T_EOS_max);
+
+      /* Record what we used */
+      bp->rho_subgrid_gas = rho_sub;
 
       /* And the subgrid sound-speed */
       const float c_sub = gas_soundspeed_from_pressure(rho_sub, gas_P_phys);

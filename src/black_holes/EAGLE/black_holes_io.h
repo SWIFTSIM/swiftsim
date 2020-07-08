@@ -139,7 +139,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 27;
+  *num_fields = 28;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -317,6 +317,11 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
       "rates have been suppressed by the Rosas-Guevara et al. (2015) "
       "accretion disc model.");
+
+  list[27] = io_make_output_field(
+      "SubgridDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, bparts,
+      rho_subgrid_gas,
+      "Physical subgrid densities used in the subgrid-Bondi model.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
