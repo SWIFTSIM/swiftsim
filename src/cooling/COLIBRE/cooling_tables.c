@@ -189,6 +189,9 @@ void read_cooling_header(struct cooling_function_data *cooling,
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
+  /* Read depletion if running with dust */
+  read_colibre_depletion(tempfile_id, dp);
+
   /* Close the file */
   H5Fclose(tempfile_id);
 
