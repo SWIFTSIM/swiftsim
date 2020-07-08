@@ -461,8 +461,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
   /* Convert the quantities we gathered to physical frame (all internal units).
    * Note: for the velocities this means peculiar velocities */
-  const double gas_c_phys = bp->sound_speed_gas * cosmo->a_factor_sound_speed;
-  const double gas_c_phys2 = gas_c_phys * gas_c_phys;
+  double gas_c_phys = bp->sound_speed_gas * cosmo->a_factor_sound_speed;
+  double gas_c_phys2 = gas_c_phys * gas_c_phys;
   const double gas_v_circular[3] = {
       bp->circular_velocity_gas[0] * cosmo->a_inv,
       bp->circular_velocity_gas[1] * cosmo->a_inv,
@@ -542,9 +542,13 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       /* And the subgrid sound-speed */
       const float c_sub = gas_soundspeed_from_pressure(rho_sub, gas_P_phys);
 
+      /* Also update the sound-speed to use in the angular momentum limiter */
+      gas_c_phys = c_sub;
+      gas_c_phys2 = c_sub * c_sub;
+
       /* Now, compute the Bondi rate based on the normal velocities and
        * the subgrid density and sound-speed */
-      const double denominator2 = gas_v_norm2 + c_sub * c_sub;
+      const double denominator2 = gas_v_norm2 + gas_c_phys2;
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure that the denominator is strictly positive */
       if (denominator2 <= 0)
