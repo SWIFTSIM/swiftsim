@@ -139,7 +139,6 @@ int main(int argc, char *argv[]) {
   int with_aff = 0;
   int dump_tasks = 0;
   int dump_threadpool = 0;
-  int with_fof = 1;
   int with_fp_exceptions = 0;
   int with_stars = 0;
   int with_black_holes = 0;
@@ -389,6 +388,10 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+  /* Prepare and verify the selection of outputs */
+  io_prepare_output_fields(output_options, /*with_cosmology=*/1, /*with_fof=*/1,
+			   /*with_structure_finding=*/0);
+
   /* Initialize unit system and constants */
   units_init_from_params(&us, params, "InternalUnitSystem");
   phys_const_init(&us, params, &prog_const);
@@ -419,7 +422,7 @@ int main(int argc, char *argv[]) {
 
   /* Initialise the FOF properties */
   bzero(&fof_properties, sizeof(struct fof_props));
-  if (with_fof) fof_init(&fof_properties, params, &prog_const, &us);
+  fof_init(&fof_properties, params, &prog_const, &us);
 
   /* Be verbose about what happens next */
   if (myrank == 0) message("Reading ICs from file '%s'", ICfileName);
