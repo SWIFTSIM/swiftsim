@@ -21,6 +21,7 @@
 
 #include "chemistry_struct.h"
 #include "error.h"
+#include "engine.h"
 #include "feedback.h"
 #include "io_properties.h"
 #include "parser.h"
