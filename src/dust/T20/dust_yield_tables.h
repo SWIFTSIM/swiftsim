@@ -19,20 +19,20 @@ static INLINE void depletion_correct_rates(struct cooling_function_data *cooling
 					   struct dustevo_props *dp){
 
   /* initialise variable to store (log) gas-phase element fraction */
-  float logfgas;
+  //float logfgas;
   /* initialise index for 5D array */
-  int idx = 0;
+  //int idx = 0;
 
-  /* iterate through cooling and heating table dimensions */
+  /* // iterate through cooling and heating table dimensions 
   for (int i = 0; i < table_cooling_N_redshifts; i++) {
     for (int j = 0; j < table_cooling_N_temperature; j++) {
       for (int k = 0; k < table_cooling_N_metallicity; k++) {
 	for (int l = 0; l < table_cooling_N_density; l++) {
 	  for (int m = 0; m < (table_cooling_N_elementtypes-1); m++) {
 
-	    /* For each cooling and heating rate we divide out by the
-	       fraction of element m in the gas phase to remove
-	       implicit depletion */
+	    // For each cooling and heating rate we divide out by the
+	    // fraction of element m in the gas phase to remove
+	    // implicit depletion 
 	    logfgas = log10(1-pow(10, dp->logfD[idx]));
 
 	    cooling->table.Theating[idx] =
@@ -45,7 +45,7 @@ static INLINE void depletion_correct_rates(struct cooling_function_data *cooling
 	}
       }
     }
-  }
+  } */
 }
 
 
