@@ -388,6 +388,12 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+  /* Initialise the equation of state */
+  if (with_hydro)
+    eos_init(&eos, &prog_const, &us, params);
+  else
+    bzero(&eos, sizeof(struct eos_parameters));
+
   /* Prepare and verify the selection of outputs */
   io_prepare_output_fields(output_options, /*with_cosmology=*/1, /*with_fof=*/1,
 			   /*with_structure_finding=*/0);
