@@ -34,6 +34,7 @@
 /* Local includes. */
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "dust.h"
 #include "error.h"
 #include "exp10.h"
 
@@ -307,7 +308,14 @@ void read_cooling_tables(struct colibre_cooling_tables *table /*, struct dustevo
   /** If I could #include "dust.h" in colibre_tables.h, would run 
    * read_colibre_depletion() from src/dust/T20/dust_yield_tables.h 
    * here **/
-
+  depletion_correct_rates(table->Theating, table->Tcooling,
+			  colibre_cooling_N_redshifts,
+			  colibre_cooling_N_temperature,
+			  colibre_cooling_N_metallicity,
+			  colibre_cooling_N_density,
+			  colibre_cooling_N_elementtypes,
+			  dustevo_props);  // <--- FIX. Need to pass the dust props to this function
+  
   /* Close the file */
   H5Fclose(tempfile_id);
 

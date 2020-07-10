@@ -2,21 +2,61 @@
 #define SWIFT_DUST_T20_TABLES_H
 
 /* dimensions for the COLIBRE cooling tables */
-#define table_cooling_N_temperature 86
-#define table_cooling_N_redshifts 46
-#define table_cooling_N_density 7
-#define table_cooling_N_metallicity 11
-#define table_cooling_N_cooltypes 22
-#define table_cooling_N_heattypes 24
-#define table_cooling_N_electrontypes 14
-#define table_cooling_N_elementtypes 12
+/* #define table_cooling_N_temperature 86 */
+/* #define table_cooling_N_redshifts 46 */
+/* #define table_cooling_N_density 7 */
+/* #define table_cooling_N_metallicity 11 */
+/* #define table_cooling_N_cooltypes 22 */
+/* #define table_cooling_N_heattypes 24 */
+/* #define table_cooling_N_electrontypes 14 */
+/* #define table_cooling_N_elementtypes 12 */
 
 #include <hdf5.h>
 #include "inline.h"
 #include "dust.h"
 
-static INLINE void depletion_correct_rates(struct cooling_function_data *cooling,
-					   struct dustevo_props *dp){
+/** MATTHIEU's version */
+
+static INLINE void depletion_correct_rates(float *cooling_array_heating_rate,
+					   float *cooling_array_cooling_rate,
+					   const int table_cooling_N_redshifts,
+					   const int table_cooling_N_temperature,
+					   const int table_cooling_N_metallicity,
+					   const int table_cooling_N_density,
+					   const int table_cooling_N_elementtypes,
+					   const struct dustevo_props *dp){
+  
+
+  int idx = 1; // <--- FIX!
+	    
+  
+  // iterate through cooling and heating table dimensions 
+  for (int i = 0; i < table_cooling_N_redshifts; i++) {
+    for (int j = 0; j < table_cooling_N_temperature; j++) {
+      for (int k = 0; k < table_cooling_N_metallicity; k++) {
+	for (int l = 0; l < table_cooling_N_density; l++) {
+	  for (int m = 0; m < (table_cooling_N_elementtypes-1); m++) {
+
+	    
+	    // For each cooling and heating rate we divide out by the
+	    // fraction of element m in the gas phase to remove
+	    // implicit depletion 
+	    const float logfgas = log10f(1. - exp10f(dp->logfD[idx]));
+
+	    cooling_array_heating_rate[idx] -= logfgas;
+	    cooling_array_cooling_rate[idx] -= logfgas;
+
+	    idx = idx + 1;
+	  }
+	}
+      }
+    }
+  } 
+}
+/* END MATTHIEU */
+  
+/* static INLINE void depletion_correct_rates(struct cooling_function_data *cooling, */
+/* 					   struct dustevo_props *dp){ */
 
   /* initialise variable to store (log) gas-phase element fraction */
   //float logfgas;
@@ -46,10 +86,16 @@ static INLINE void depletion_correct_rates(struct cooling_function_data *cooling
       }
     }
   } */
-}
+/* } */
 
 
-static INLINE void read_colibre_depletion(hid_t id, struct dustevo_props *dp) {
+static INLINE void read_colibre_depletion(hid_t id,
+					   const int table_cooling_N_redshifts,
+					   const int table_cooling_N_temperature,
+					   const int table_cooling_N_metallicity,
+					   const int table_cooling_N_density,
+					   const int table_cooling_N_elementtypes,
+					   struct dustevo_props *dp) {
   
   /* HDF5 variables */
 
