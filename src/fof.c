@@ -262,26 +262,6 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
     }
   }
 
-  /* Calculate the mean inter-particle separation as if we were in
-     a scenario where the entire box was filled with high-resolution
-       particles */
-  const double Omega_m = s->e->cosmology->Omega_m;
-  const double Omega_b = s->e->cosmology->Omega_b;
-  const double critical_density_0 = s->e->cosmology->critical_density_0;
-  double mean_matter_density;
-  if (s->with_hydro)
-    mean_matter_density = (Omega_m - Omega_b) * critical_density_0;
-  else
-    mean_matter_density = Omega_m * critical_density_0;
-
-  /* Mean inter-particle separation of the DM particles */
-  const double mean_inter_particle_sep =
-      cbrt(high_res_DM_mass / mean_matter_density);
-
-  /* Calculate the particle linking length based upon the mean inter-particle
-   * spacing of the DM particles. */
-  const double l_x = props->l_x_ratio * mean_inter_particle_sep;
-
   /* Are we using the aboslute value or the one derived from the mean
      inter-particle sepration? */
   if (props->l_x_absolute != -1.) {
@@ -292,6 +272,33 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
               props->l_x_absolute);
     }
   } else {
+
+    /* Safety check */
+    if (!(s->e->policy | engine_policy_cosmology))
+      error(
+          "Attempting to run FoF on a simulation using cosmological "
+          "information but cosmology was not initialised");
+
+    /* Calculate the mean inter-particle separation as if we were in
+       a scenario where the entire box was filled with high-resolution
+         particles */
+    const double Omega_m = s->e->cosmology->Omega_m;
+    const double Omega_b = s->e->cosmology->Omega_b;
+    const double critical_density_0 = s->e->cosmology->critical_density_0;
+    double mean_matter_density;
+    if (s->with_hydro)
+      mean_matter_density = (Omega_m - Omega_b) * critical_density_0;
+    else
+      mean_matter_density = Omega_m * critical_density_0;
+
+    /* Mean inter-particle separation of the DM particles */
+    const double mean_inter_particle_sep =
+        cbrt(high_res_DM_mass / mean_matter_density);
+
+    /* Calculate the particle linking length based upon the mean inter-particle
+     * spacing of the DM particles. */
+    const double l_x = props->l_x_ratio * mean_inter_particle_sep;
+
     props->l_x2 = l_x * l_x;
 
     if (s->e->nodeID == 0) {
