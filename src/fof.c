@@ -88,10 +88,12 @@ static integertime_t ti_current;
  * @param params the parameter file parser.
  * @param phys_const The physical constants in internal units.
  * @param us The internal unit system.
+ * @param stand_alone_fof Are we initialising for stand-alone? (1) or
+ * on-the-fly? (0)
  */
 void fof_init(struct fof_props *props, struct swift_params *params,
-              const struct phys_const *phys_const,
-              const struct unit_system *us) {
+              const struct phys_const *phys_const, const struct unit_system *us,
+              const int stand_alone_fof) {
 
   /* Base name for the FOF output file */
   parser_get_param_string(params, "FOF:basename", props->base_name);
@@ -118,24 +120,27 @@ void fof_init(struct fof_props *props, struct swift_params *params,
 
   /* Read the linking length ratio to the mean inter-particle separation. */
   props->l_x_ratio =
-      parser_get_param_double(params, "FOF:linking_length_ratio");
-
-  if (props->l_x_ratio <= 0.)
-    error("The FOF linking length can't be negative!");
+      parser_get_opt_param_double(params, "FOF:linking_length_ratio", -1.);
 
   /* Read value of absolute linking length aksed by the user */
   props->l_x_absolute =
       parser_get_opt_param_double(params, "FOF:absolute_linking_length", -1.);
 
-  if (props->l_x_ratio <= 0. && props->l_x_ratio != -1.)
+  if (props->l_x_ratio == -1. && props->l_x_absolute <= 0.)
     error("The FOF linking length can't be negative!");
 
-  /* Read the minimal halo mass for black hole seeding */
-  props->seed_halo_mass =
-      parser_get_param_double(params, "FOF:black_hole_seed_halo_mass_Msun");
+  if (props->l_x_ratio <= 0. && props->l_x_absolute == -1.)
+    error("The FOF linking length ratio can't be negative!");
 
-  /* Convert to internal units */
-  props->seed_halo_mass *= phys_const->const_solar_mass;
+  if (!stand_alone_fof) {
+
+    /* Read the minimal halo mass for black hole seeding */
+    props->seed_halo_mass =
+        parser_get_param_double(params, "FOF:black_hole_seed_halo_mass_Msun");
+
+    /* Convert to internal units */
+    props->seed_halo_mass *= phys_const->const_solar_mass;
+  }
 
 #if defined(WITH_MPI) && defined(UNION_BY_SIZE_OVER_MPI)
   if (engine_rank == 0)
