@@ -460,27 +460,29 @@ int main(int argc, char *argv[]) {
 #if defined(HAVE_HDF5)
 #if defined(WITH_MPI)
 #if defined(HAVE_PARALLEL_HDF5)
-  read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts,
-                   &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart, &Nbpart,
-                   &flag_entropy_ICs, with_hydro,
+  read_ic_parallel(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                   &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart,
+                   &Nbpart, &flag_entropy_ICs, with_hydro,
                    /*with_grav=*/1, with_sinks, with_stars, with_black_holes,
                    with_cosmology, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a,
                    myrank, nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads,
                    /*dry_run=*/0);
 #else
-  read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts, &Ngas,
-                 &Ngpart, &Ngpart_background, &Nsink, &Nspart, &Nbpart,
-                 &flag_entropy_ICs, with_hydro,
-                 /*with_grav=*/1, with_sinks, with_stars, with_black_holes, with_cosmology,
-                 cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, myrank, nr_nodes,
-                 MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, /*dry_run=*/0);
+  read_ic_serial(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                 &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart,
+                 &Nbpart, &flag_entropy_ICs, with_hydro,
+                 /*with_grav=*/1, with_sinks, with_stars, with_black_holes,
+                 with_cosmology, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a,
+                 myrank, nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads,
+                 /*dry_run=*/0);
 #endif
 #else
-  read_ic_single(
-      ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts, &bparts, &Ngas, &Ngpart,
-      &Ngpart_background, &Nsink, &Nspart, &Nbpart, &flag_entropy_ICs, with_hydro,
-      /*with_grav=*/1, with_sinks, with_stars, with_black_holes, with_cosmology, cleanup_h,
-      cleanup_sqrt_a, cosmo.h, cosmo.a, nr_threads, /*dry_run=*/0);
+  read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
+                 &bparts, &Ngas, &Ngpart, &Ngpart_background, &Nsink, &Nspart,
+                 &Nbpart, &flag_entropy_ICs, with_hydro,
+                 /*with_grav=*/1, with_sinks, with_stars, with_black_holes,
+                 with_cosmology, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a,
+                 nr_threads, /*dry_run=*/0);
 #endif
 #endif
   if (myrank == 0) {
