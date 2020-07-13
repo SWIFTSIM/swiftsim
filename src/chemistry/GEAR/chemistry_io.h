@@ -20,8 +20,8 @@
 #define SWIFT_CHEMISTRY_IO_GEAR_H
 
 #include "chemistry_struct.h"
-#include "error.h"
 #include "engine.h"
+#include "error.h"
 #include "feedback.h"
 #include "io_properties.h"
 #include "parser.h"
