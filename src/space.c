@@ -5931,7 +5931,7 @@ void space_replicate(struct space *s, int replicate, int verbose) {
  * @brief Remaps the IDs of the particles to the range [1, N]
  *
  * The IDs are unique accross all MPI ranks and are generated
- * in ther order DM, gas, stars, BHs.
+ * in ther order DM, gas, sinks, stars, BHs.
  *
  * @param s The current #space object.
  * @param nr_nodes The number of MPI ranks used in the run.
@@ -5943,19 +5943,24 @@ void space_remap_ids(struct space *s, int nr_nodes, int verbose) {
 
   /* Get the current local number of particles */
   const size_t local_nr_parts = s->nr_parts;
+  const size_t local_nr_sinks = s->nr_sinks;
   const size_t local_nr_gparts = s->nr_gparts;
   const size_t local_nr_sparts = s->nr_sparts;
   const size_t local_nr_bparts = s->nr_bparts;
-  const size_t local_nr_dm =
-      local_nr_gparts - local_nr_parts - local_nr_sparts - local_nr_bparts;
+  const size_t local_nr_baryons =
+      local_nr_parts + local_nr_sinks + local_nr_sparts + local_nr_bparts;
+  const size_t local_nr_dm = local_nr_gparts - local_nr_baryons;
 
   /* Get the global offsets */
   long long offset_parts = 0;
+  long long offset_sinks = 0;
   long long offset_sparts = 0;
   long long offset_bparts = 0;
   long long offset_dm = 0;
 #ifdef WITH_MPI
   MPI_Exscan(&local_nr_parts, &offset_parts, 1, MPI_LONG_LONG_INT, MPI_SUM,
+             MPI_COMM_WORLD);
+  MPI_Exscan(&local_nr_sinks, &offset_sinks, 1, MPI_LONG_LONG_INT, MPI_SUM,
              MPI_COMM_WORLD);
   MPI_Exscan(&local_nr_sparts, &offset_sparts, 1, MPI_LONG_LONG_INT, MPI_SUM,
              MPI_COMM_WORLD);
@@ -5968,6 +5973,7 @@ void space_remap_ids(struct space *s, int nr_nodes, int verbose) {
   /* Total number of particles of each kind */
   long long total_dm = offset_dm + local_nr_dm;
   long long total_parts = offset_parts + local_nr_parts;
+  long long total_sinks = offset_sinks + local_nr_sinks;
   long long total_sparts = offset_sparts + local_nr_sparts;
   // long long total_bparts = offset_bparts + local_nr_bparts;
 
@@ -5975,21 +5981,26 @@ void space_remap_ids(struct space *s, int nr_nodes, int verbose) {
   /* The last rank now has the correct total, let's broadcast this back */
   MPI_Bcast(&total_dm, 1, MPI_LONG_LONG_INT, nr_nodes - 1, MPI_COMM_WORLD);
   MPI_Bcast(&total_parts, 1, MPI_LONG_LONG_INT, nr_nodes - 1, MPI_COMM_WORLD);
+  MPI_Bcast(&total_sinks, 1, MPI_LONG_LONG_INT, nr_nodes - 1, MPI_COMM_WORLD);
   MPI_Bcast(&total_sparts, 1, MPI_LONG_LONG_INT, nr_nodes - 1, MPI_COMM_WORLD);
   // MPI_Bcast(&total_bparts, 1, MPI_LONG_LONG_INT, nr_nodes - 1,
   // MPI_COMM_WORLD);
 #endif
 
   /* Let's order the particles
-   * IDs will be DM then gas then stars then BHs */
+   * IDs will be DM then gas then sinks than stars then BHs */
   offset_dm += 1;
   offset_parts += 1 + total_dm;
-  offset_sparts += 1 + total_dm + total_parts;
-  offset_bparts += 1 + total_dm + total_parts + total_sparts;
+  offset_sinks += 1 + total_dm + total_parts;
+  offset_sparts += 1 + total_dm + total_parts + total_sinks;
+  offset_bparts += 1 + total_dm + total_parts + total_sinks + total_sparts;
 
   /* We can now remap the IDs in the range [offset offset + local_nr] */
   for (size_t i = 0; i < local_nr_parts; ++i) {
     s->parts[i].id = offset_parts + i;
+  }
+  for (size_t i = 0; i < local_nr_sinks; ++i) {
+    s->sinks[i].id = offset_sinks + i;
   }
   for (size_t i = 0; i < local_nr_sparts; ++i) {
     s->sparts[i].id = offset_sparts + i;
@@ -6257,6 +6268,7 @@ long long space_get_max_parts_id(struct space *s) {
 
   long long max_id = -1;
   for (size_t i = 0; i < s->nr_parts; ++i) max_id = max(max_id, s->parts[i].id);
+  for (size_t i = 0; i < s->nr_sinks; ++i) max_id = max(max_id, s->sinks[i].id);
   for (size_t i = 0; i < s->nr_sparts; ++i)
     max_id = max(max_id, s->sparts[i].id);
   for (size_t i = 0; i < s->nr_bparts; ++i)
