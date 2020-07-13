@@ -12,7 +12,9 @@
  *
  * Nothing here.
  */
-struct dustevo_props {};
+struct dustevo_props {
+  float *logfD;
+};
 
 /**
  * @brief initialise structure housing global dust parametrisation.

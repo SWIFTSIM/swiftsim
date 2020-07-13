@@ -18,4 +18,8 @@ static INLINE void redistribute_dust_masses(const struct part* p,
 					    struct dustevo_props *dp) {
 }
 
+static INLINE void dustevo_print_backend(const struct dustevo_props *dp) {
+  message("Running without dust evolution modelling.");
+}
+
 #endif /* SWIFT_DUST_NONE_H */

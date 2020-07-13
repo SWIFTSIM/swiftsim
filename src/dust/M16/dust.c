@@ -1,5 +1,8 @@
 /* Local includes. */
+
 #include "chemistry.h"
+#include "dust_properties.h"
+#include "dust.h"
 
 /**
  * @brief redistribute any dust mass back to element abundances
@@ -16,6 +19,14 @@ void redistribute_dust_masses(const struct part* p,
    * redistribute dust abundances to element abundances,
    * according to composition array
    */
-};
+  ;
+}
 
-#endif /* SWIFT_DUST_T20_PROPERTIES_H */
+/**
+ * @brief Prints the dust evolution model to stdout.
+ *
+ * @param dust #dustevo_props struct.
+ */
+void dustevo_print_backend(const struct dustevo_props *dp) {
+    message("Running with an approximated McKinnon et al. (2016) dust evolution model.");
+}

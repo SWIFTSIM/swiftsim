@@ -21,4 +21,11 @@ void redistribute_dust_masses(const struct part* p,
   ;
 }
 
-#endif /* SWIFT_DUST_T20_PROPERTIES_H */
+/**
+ * @brief Prints the dust evolution model to stdout.
+ *
+ * @param dust #dustevo_props struct.
+ */
+void dustevo_print_backend(const struct dustevo_props *dp) {
+    message("Running with a Trayford et al. (2020) dust evolution model.");
+}

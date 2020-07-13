@@ -190,7 +190,8 @@ enum colibre_heating_channels {
 };
 
 void read_cooling_header(struct colibre_cooling_tables *table /*, struct dustevo_props *dp */);
-void read_cooling_tables(struct colibre_cooling_tables *table);
+void read_cooling_tables(struct colibre_cooling_tables *table,
+			 float *log_depletion_fractions);
 
 /**
  * @brief Returns the 1d index of element with 2d indices x,y
