@@ -1,6 +1,19 @@
 #ifndef SWIFT_DUST_M16_PROPERTIES_H
 #define SWIFT_DUST_M16_PROPERTIES_H
 
+/* Config parameters. */
+#include "../config.h"
+
+/* Standard includes */
+#include <hdf5.h>
+
+/* Local includes. */
+#include "chemistry_struct.h" 
+#include "feedback_properties.h"
+#include "cooling_struct.h"
+#include "units.h"
+#include "physical_constants.h"
+
 /**
  * @brief Stores AGB and SNII dust yields
  */
@@ -45,6 +58,11 @@ struct dustevo_props {
   /*! Boost (> 1.) or reduction (< 1.) factor applied to dust diffusion rates (default 1.) */
   float diffusion_rate_boost;
 
+  /* ----------- Correcting cooling tables ---------- */
+
+  /* array of element fractions assumed to be in the dust-phase */
+  float *logfD;
+
   /* ------------ Dust yield tables ----------------- */
 
   /* Yield tables for AGB and SNII  */
@@ -58,27 +76,30 @@ struct dustevo_props {
  * This is because values in abundances arrays become entirely
  * gas-phase when running with dust (ie. no implicit dust as in 
  * COLIBRE and COLIBRE-CHIMES cooling)
- * 
- * Calls cooling_init_backend for the chosen cooling function.
  *
- * @param cooling The cooling struct containing the tables
+ * @param dustevo_properties  
  */
-void generate_dust_yield_tables(struct dustevo_props *dp,
-				struct feedback_props *fp,) {
+static INLINE void generate_dust_yield_tables(struct dustevo_props *dp,
+					      struct feedback_props *fp) {
 
   /**
-   * First compute the dust yields for AGB and SNII from the chemical
-   * yields, using the Dwek+98 assumptions.
+   * First read in tables for Dell'Aglia+19 AGB dust yields. These are 
+   * in the same format as the Wiersma+09 chemical yields.
+   * yields are stored in dp->dyield_AGB 
    *
    * Then, remove the yielded dust mass from the corresponding chemical 
    * elements, according to each grain composition
+   *
+   * Finally, SNII dust yields are computed directly from chemical yields
+   * following Zhukovska, Gail & Trieloff 2008. Again, corresponding mass
+   * is removed from chemical yields, accounting for modification factors
    * 
    * Currently, no SNIa dust creation is assumed
    **/  
+  ;
+}
 
-};
-
-void scale_out_table_depletion(struct cooling_function_data* cooling){
+static INLINE void scale_out_table_depletion(struct cooling_function_data* cooling){
   /**
    * Here, iterate through the 5 axes of the cooling table, scaling out
    * depletion factors, as: 
@@ -94,8 +115,10 @@ void scale_out_table_depletion(struct cooling_function_data* cooling){
    *
    * Better to house this function in the cooling/COLIBRE and cooling/CHIMES
    * code? Need to modify cooling code anyway to read table depletions.
-   **/  
-};
+   **/
+  message("Scale out COLIBRE depletion from cooling/heating rates...");
+
+}
 
 /**
  * @brief initialise structure housing global dust parametrisation.
@@ -107,10 +130,12 @@ void scale_out_table_depletion(struct cooling_function_data* cooling){
  * @param phys_const The physical constants in internal units.
  * @param us The current internal system of units.
  */
-void dustevo_props_init_backend(struct dustevo_props *dp,
-				struct swift_params *params,
-				const struct phys_const *phys_const,
-				const struct unit_system *us) {
+static INLINE void dustevo_props_init_backend(struct dustevo_props* dp,
+					      struct swift_params* params,
+					      struct feedback_props* fp,
+					      struct cooling_function_data* cooling,
+					      const struct phys_const* phys_const,
+					      const struct unit_system* us) {
 
 /**
  * initialise structure housing global dust parametrisation.
@@ -129,6 +154,13 @@ void dustevo_props_init_backend(struct dustevo_props *dp,
  * to remove implicit dust, via the scale_out_table_depletion
  * function.
  **/
-};
+  
+  message("Initialising backend...");
+  scale_out_table_depletion(cooling);
+  /* read some parameters */
+
+}
+
+
 
 #endif /* SWIFT_DUST_M16_PROPERTIES_H */

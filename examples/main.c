@@ -1017,7 +1017,7 @@ int main(int argc, char *argv[]) {
 
     dustevo_props_init(&dustevo_properties, params, &feedback_properties,
 		       &cooling_func, &prog_const, &us);
-
+    if (myrank == 0) dustevo_print(&dustevo_properties);
 
     /* Initialise the star formation law and its properties */
     bzero(&starform, sizeof(struct star_formation));

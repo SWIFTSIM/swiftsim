@@ -1158,11 +1158,8 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parameter_file, "COLIBRECooling:rapid_cooling_threshold");
 
   /* Finally, read the tables */
-  read_cooling_header(cooling, dp);
-  read_cooling_tables(cooling, dp);
-
-  /* remove implicit depletion from  if running with dust  */
-  depletion_correct_rates(cooling, dp);
+  read_cooling_header(cooling);
+  read_cooling_tables(cooling, dp->logfD);
 }
 
 /**
@@ -1176,8 +1173,8 @@ void cooling_restore_tables(struct cooling_function_data *cooling,
 			    struct dustevo_props *dustevo,
                             const struct cosmology *cosmo) {
 
-  read_cooling_header(cooling, dustevo);
-  read_cooling_tables(cooling, dustevo);
+  read_cooling_header(cooling);
+  read_cooling_tables(cooling, dustevo->logfD);
 
   cooling_update(cosmo, cooling, /*space=*/NULL);
 }

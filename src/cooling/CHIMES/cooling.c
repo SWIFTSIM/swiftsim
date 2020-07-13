@@ -400,7 +400,7 @@ void cooling_init_backend(struct swift_params *parameter_file,
     /* Read the Colibre table. */
     message("Reading Colibre cooling table.");
     read_cooling_header(&(cooling->colibre_table));
-    read_cooling_tables(&(cooling->colibre_table));
+    read_cooling_tables(&(cooling->colibre_table), dp->logfD);
   }
 
   /* Set redshift to a very high value, just
@@ -1340,7 +1340,7 @@ void cooling_struct_restore(struct cooling_function_data *cooling,
     /* Read the Colibre table. */
     message("Reading Colibre cooling table.");
     read_cooling_header(&(cooling->colibre_table));
-    read_cooling_tables(&(cooling->colibre_table));
+    read_cooling_tables(&(cooling->colibre_table), dp->logfD);
   }
 
   /* Initialise the CHIMES module. */

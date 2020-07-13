@@ -49,8 +49,7 @@
  * @param fname Filepath for cooling table from which to read header
  * @param cooling Cooling data structure
  */
-void read_cooling_header(struct cooling_function_data *cooling,
-			   struct dustevo_props *dp) {
+void read_cooling_header(struct cooling_function_data *cooling) {
 
 #ifdef HAVE_HDF5
 
@@ -190,9 +189,6 @@ void read_cooling_header(struct cooling_function_data *cooling,
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
-  /* Read depletion if running with dust */
-  read_colibre_depletion(tempfile_id, dp);
-
   /* Close the file */
   H5Fclose(tempfile_id);
 
@@ -240,7 +236,7 @@ void read_cooling_header(struct cooling_function_data *cooling,
  * @param cooling #cooling_function_data structure
  */
 void read_cooling_tables(struct cooling_function_data *restrict cooling,
-			 struct dustevo_props *dp) {
+			 float *log_depletion_fractions) {
 
 #ifdef HAVE_HDF5
   hid_t dataset;
@@ -374,9 +370,14 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling,
   status = H5Dclose(dataset);
   if (status < 0) error("error closing cooling dataset");
 
-  /**
-   * Here, read in /Tdep/Depletion and /Udep/Depletion for dust modelling
-   **/
+  /* read depletion table if running with dust evolution modelling */
+  read_colibre_depletion(tempfile_id,
+			 &log_depletion_fractions,
+			 colibre_cooling_N_redshifts,
+			 colibre_cooling_N_temperature,
+			 colibre_cooling_N_metallicity,
+			 colibre_cooling_N_density,
+			 colibre_cooling_N_elementtypes);
 
   /* Internal energy from temperature */
   if (posix_memalign((void **)&cooling->table.U_from_T, SWIFT_STRUCT_ALIGNMENT,
@@ -503,6 +504,19 @@ void read_cooling_tables(struct cooling_function_data *restrict cooling,
 #ifdef SWIFT_DEBUG_CHECKS
   message("Done reading in general cooling table");
 #endif
+
+  /** Modify COLIBRE heating and cooling rates to remove the effects
+   * of implicit depletion when running with dust evolution **/
+  depletion_correct_rates(cooling->table.Theating,
+			  cooling->table.Tcooling,
+			  log_depletion_fractions,
+			  colibre_cooling_N_redshifts,
+			  colibre_cooling_N_temperature,
+			  colibre_cooling_N_metallicity,
+			  colibre_cooling_N_density,
+			  colibre_cooling_N_elementtypes,
+			  colibre_cooling_N_cooltypes,
+			  colibre_cooling_N_heattypes);
 
 #else
   error("Need HDF5 to read cooling tables");

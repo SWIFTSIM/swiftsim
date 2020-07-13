@@ -113,9 +113,8 @@ enum colibre_heating_channels {
 struct cooling_function_data;
 
 void get_cooling_redshifts(struct cooling_function_data *cooling);
-void read_cooling_header(struct cooling_function_data *cooling,
-			 struct dustevo_props *dp);
+void read_cooling_header(struct cooling_function_data *cooling);
 void read_cooling_tables(struct cooling_function_data *cooling,
-			 struct dustevo_props *dp);
+			 float *log_depletion_fractions);
 
 #endif

@@ -2546,9 +2546,10 @@ AM_CONDITIONAL([HAVEGRACKLECOOLING], [test ${with_cooling:0:7} == "grackle"])
 AM_CONDITIONAL([HAVEGEARFEEDBACK], [test $with_feedback == "GEAR"])
 
 # check if using T20 dust modelling
-AM_CONDITIONAL([HAVET20DUST], [test $with_feedback == "T20"])
+AM_CONDITIONAL([HAVET20DUST], [test $with_dust == "T20"])
+
 # check if using M16 dust modelling
-AM_CONDITIONAL([HAVEM16DUST], [test $with_feedback == "M16"])
+AM_CONDITIONAL([HAVEM16DUST], [test $with_dust == "M16"])
 
 # Handle .in files.
 AC_CONFIG_FILES([Makefile src/Makefile examples/Makefile examples/Cooling/CoolingRates/Makefile examples/Cooling/CoolingRatesCOLIBRE/Makefile doc/Makefile doc/Doxyfile tests/Makefile])

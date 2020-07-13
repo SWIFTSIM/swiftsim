@@ -24,6 +24,7 @@
 #include "./dust/M16/dust.h"
 #include "./dust/M16/dust_struct.h"
 #include "./dust/M16/dust_properties.h"
+#include "./dust/M16/dust_yield_tables.h"
 #else
 #error "Invalid choice of dust model."
 #endif
@@ -55,5 +56,7 @@ void dustevo_struct_dump(const struct dustevo_props* dustevo,
 			 FILE* stream);
 
 void dustevo_struct_restore(const struct dustevo_props* dustevo, FILE* stream);
+
+void dustevo_print(const struct dustevo_props* dp);
 
 #endif /* SWIFT_DUST_H */
