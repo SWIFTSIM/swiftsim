@@ -187,6 +187,9 @@ struct space {
   /*! The total number of #bpart in the space. */
   size_t nr_bparts;
 
+  /*! The total number of #sink in the space. */
+  size_t nr_sinks;
+
   /*! The total number of #part we allocated memory for */
   size_t size_parts;
 
@@ -198,6 +201,9 @@ struct space {
 
   /*! The total number of #bpart we allocated memory for */
   size_t size_bparts;
+
+  /*! The total number of #sink we allocated memory for. */
+  size_t size_sinks;
 
   /*! Number of inhibted gas particles in the space */
   size_t nr_inhibited_parts;
@@ -211,6 +217,9 @@ struct space {
   /*! Number of inhibted black hole particles in the space */
   size_t nr_inhibited_bparts;
 
+  /*! Number of inhibted sinks in the space */
+  size_t nr_inhibited_sinks;
+
   /*! Number of extra #part we allocated (for on-the-fly creation) */
   size_t nr_extra_parts;
 
@@ -222,6 +231,9 @@ struct space {
 
   /*! Number of extra #bpart we allocated (for on-the-fly creation) */
   size_t nr_extra_bparts;
+
+  /*! Number of extra #sink we allocated (for on-the-fly creation) */
+  size_t nr_extra_sinks;
 
   /*! The particle data (cells have pointers to this). */
   struct part *parts;
@@ -237,6 +249,9 @@ struct space {
 
   /*! The b-particle data (cells have pointers to this). */
   struct bpart *bparts;
+
+  /*! The sink particle data (cells have pointers to this). */
+  struct sink *sinks;
 
   /*! Minimal mass of all the #part */
   float min_part_mass;
@@ -282,21 +297,6 @@ struct space {
 
   /*! Structure dealing with the computation of a unique ID */
   struct unique_id unique_id;
-
-  /*! The total number of #sink in the space. */
-  size_t nr_sinks;
-
-  /*! The total number of #sink we allocated memory for. */
-  size_t size_sinks;
-
-  /*! Number of inhibted sinks in the space */
-  size_t nr_inhibited_sinks;
-
-  /*! Number of extra #sink we allocated (for on-the-fly creation) */
-  size_t nr_extra_sinks;
-
-  /*! The particle data (cells have pointers to this). */
-  struct sink *sinks;
 
 #ifdef WITH_MPI
 
