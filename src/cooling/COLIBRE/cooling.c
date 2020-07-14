@@ -129,8 +129,7 @@ float cooling_get_internalenergy_for_temperature(
   /* Special case for gas in HII regions */
   if (xp->tracers_data.HIIregion_timer_gas > 0.) {
 
-    const float mu_HII =
-        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+    const double mu_HII = get_mu_HII_region(cooling, XH);
     return exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs * T /
            (hydro_gamma_minus_one * mu_HII);
   }
@@ -194,14 +193,15 @@ float cooling_get_temperature_from_gas(
 
   /* Convert to CGS */
   const double u_cgs = u_phys * cooling->internal_energy_to_cgs;
+
+  /* Get density in Hydrogen number density */
   const double n_H = rho_phys * XH / phys_const->const_proton_mass;
   const double n_H_cgs = n_H * cooling->number_density_to_cgs;
 
   /* Special case for gas in HII regions */
   if (HII_region) {
 
-    const float mu_HII =
-        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+    const double mu_HII = get_mu_HII_region(cooling, XH);
     return u_cgs * hydro_gamma_minus_one * mu_HII /
            (exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs);
   }
@@ -257,16 +257,14 @@ float cooling_get_temperature(const struct phys_const *phys_const,
         "--temperature runtime flag?");
 #endif
 
-  /* Get physical internal energy */
+  /* Get quantities in physical frame */
   const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
+  const float rho_phys = hydro_get_physical_density(p, cosmo);
 
   /* Get the Hydrogen mass fraction */
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
-
-  /* Convert Hydrogen mass fraction into Hydrogen number density */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
 
   /* Get this particle's metallicity ratio to solar.
    *

@@ -23,6 +23,19 @@
 #include "../config.h"
 
 /**
+ * @brief Computes the mean molecular weight for an HII region at a given H
+ * abundance.
+ *
+ * @param cooling The properties of the cooling scheme.
+ * @param XH The Hydrogen abundance of the gas.
+ */
+double get_mu_HII_region(const struct cooling_function_data *cooling,
+                         const double XH) {
+
+  return 4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+}
+
+/**
  * @brief Compute the fraction of Hydrogen that is in HI based
  * on the pressure of the gas.
  *
@@ -830,8 +843,7 @@ double compute_subgrid_density(
        * to be no less than HIIregion_temp. */
       if (HII_region && log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
 
-        const double mu_HII =
-            4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+        const double mu_HII = get_mu_HII_region(cooling, XH);
 
         log10_n_at_Peq = log10_P_cgs - log10(cooling->HIIregion_temp) +
                          log10(XH) + log10(mu_HII) - log10_kB;
@@ -910,8 +922,7 @@ double compute_subgrid_density(
             if (log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
               log10_T_at_Peq = log10(cooling->HIIregion_temp);
 
-              const double mu_HII =
-                  4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+              const double mu_HII = get_mu_HII_region(cooling, XH);
 
               log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
                                log10(mu_HII) - cooling->log10_kB_cgs;
