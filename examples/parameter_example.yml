@@ -323,7 +323,6 @@ NFW_MNPotential:
   Rdisk:            4.0        # Effective radius of the disk (internal units)
   Zdisk:            0.4704911  # Scale-height of the disk (internal units)
 
-
 # Disk-patch potential parameters. The potential is along the x-axis.
 DiscPatchPotential:
   surface_density: 10.      # Surface density of the disc (internal units)

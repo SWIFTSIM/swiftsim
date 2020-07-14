@@ -566,7 +566,7 @@ double compute_subgrid_H2_fraction(
 
     /* We are above the EoS. */
     const float weights[3] = {1.0, 1.0, 1.0};
-    const float nHII_over_nH =
+    const float nH2_over_nH =
         interpolation4d_plus_summation(cooling->table.logHfracs_all,  /* */
                                        weights, molecular, molecular, /* */
                                        ired, item, imet, iden,        /* */
@@ -577,7 +577,7 @@ double compute_subgrid_H2_fraction(
                                        colibre_cooling_N_density,     /* */
                                        3);
 
-    return 0.5 * nHII_over_nH;
+    return 0.5 * nH2_over_nH;
   }
 }
 
