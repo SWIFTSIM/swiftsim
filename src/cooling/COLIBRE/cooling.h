@@ -64,7 +64,8 @@ void cooling_first_init_part(const struct phys_const *phys_const,
 float cooling_get_temperature_from_gas(
     const struct phys_const *phys_const, const struct cosmology *cosmo,
     const struct cooling_function_data *cooling, const float rho_phys,
-    const float XH, const float logZZsol, const float u_phys);
+    const float XH, const float logZZsol, const float u_phys,
+    const int HII_region);
 
 float cooling_get_temperature(const struct phys_const *phys_const,
                               const struct hydro_props *hydro_props,
