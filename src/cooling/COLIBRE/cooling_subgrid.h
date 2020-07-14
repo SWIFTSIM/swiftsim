@@ -41,6 +41,7 @@
  * @param log10_T The logarithm base 10 of the temperature of the gas.
  * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
  * to be considered on the EOS at the density of the gas.
+ * @param HII_region Is this patch of gas in an HII region?
  */
 double compute_subgrid_HI_fraction(
     const struct cooling_function_data *cooling,
@@ -48,7 +49,16 @@ double compute_subgrid_HI_fraction(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max) {
+    const float log10_T_EOS_max, const int HII_region) {
+
+  /* Special case for gas in HII regions */
+  if (HII_region) {
+
+    /* Return the amount of gas not in HII region. */
+    return 1. - cooling->HIIregion_fion;
+  }
+
+  /* Normal case --> Interpolate the table */
 
   /* Get the Hydrogen number density */
   const double n_H = XH * rho_phys / phys_const->const_proton_mass;
@@ -213,6 +223,7 @@ double compute_subgrid_HI_fraction(
  * @param log10_T The logarithm base 10 of the temperature of the gas.
  * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
  * to be considered on the EOS at the density of the gas.
+ * @param HII_region Is this patch of gas in an HII region?
  */
 double compute_subgrid_HII_fraction(
     const struct cooling_function_data *cooling,
@@ -220,7 +231,16 @@ double compute_subgrid_HII_fraction(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max) {
+    const float log10_T_EOS_max, const int HII_region) {
+
+  /* Special case for gas in HII regions */
+  if (HII_region) {
+
+    /* Return the amount of gas in HII region. */
+    return cooling->HIIregion_fion;
+  }
+
+  /* Normal case --> Interpolate the table */
 
   /* Get the Hydrogen number density */
   const double n_H = XH * rho_phys / phys_const->const_proton_mass;
@@ -385,6 +405,7 @@ double compute_subgrid_HII_fraction(
  * @param log10_T The logarithm base 10 of the temperature of the gas.
  * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
  * to be considered on the EOS at the density of the gas.
+ * @param HII_region Is this patch of gas in an HII region?
  */
 double compute_subgrid_H2_fraction(
     const struct cooling_function_data *cooling,
@@ -392,7 +413,16 @@ double compute_subgrid_H2_fraction(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max) {
+    const float log10_T_EOS_max, const int HII_region) {
+
+  /* Special case for gas in HII regions */
+  if (HII_region) {
+
+    /* Return the amount of gas in HII region. */
+    return 0.;
+  }
+
+  /* Normal case --> Interpolate the table */
 
   /* Get the Hydrogen number density */
   const double n_H = XH * rho_phys / phys_const->const_proton_mass;
@@ -556,6 +586,7 @@ double compute_subgrid_H2_fraction(
  * @param log10_T The logarithm base 10 of the temperature of the gas.
  * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
  * to be considered on the EOS at the density of the gas.
+ * @param HII_region Is this patch of gas in an HII region?
  */
 double compute_subgrid_temperature(
     const struct cooling_function_data *cooling,
@@ -563,7 +594,7 @@ double compute_subgrid_temperature(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max) {
+    const float log10_T_EOS_max, const int HII_region) {
 
   /* Get the Hydrogen number density */
   const double n_H = XH * rho_phys / phys_const->const_proton_mass;
@@ -616,7 +647,13 @@ double compute_subgrid_temperature(
 
       const float T_at_Peq = exp10f(log10_T_at_Peq);
 
-      return T_at_Peq;
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. */
+      if (HII_region && T_at_Peq < cooling->HIIregion_temp) {
+        return cooling->HIIregion_temp;
+      } else {
+        return T_at_Peq;
+      }
 
     } else {
 
@@ -689,7 +726,13 @@ double compute_subgrid_temperature(
 
       const float T_at_Peq = exp10f(log10_T_at_Peq);
 
-      return T_at_Peq;
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. */
+      if (HII_region && T_at_Peq < cooling->HIIregion_temp) {
+        return cooling->HIIregion_temp;
+      } else {
+        return T_at_Peq;
+      }
     }
   } else {
 
@@ -719,6 +762,7 @@ double compute_subgrid_temperature(
  * @param log10_T The logarithm base 10 of the temperature of the gas.
  * @param log10_T_EOS_max The logarithm base 10 of the maximal temperature
  * to be considered on the EOS at the density of the gas.
+ * @param HII_region Is this patch of gas in an HII region?
  */
 double compute_subgrid_density(
     const struct cooling_function_data *cooling,
@@ -726,7 +770,7 @@ double compute_subgrid_density(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max) {
+    const float log10_T_EOS_max, const int HII_region) {
 
   /* Get the Hydrogen number density */
   const double n_H = XH * rho_phys / phys_const->const_proton_mass;
@@ -782,8 +826,20 @@ double compute_subgrid_density(
 
       const double log10_kB = cooling->log10_kB_cgs;
 
-      log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
-                       log10(mu_at_Peq) - log10_kB;
+      /* For HII regions, limit the subgrid temperature
+       * to be no less than HIIregion_temp. */
+      if (HII_region && log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
+
+        const double mu_HII =
+            4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+
+        log10_n_at_Peq = log10_P_cgs - log10(cooling->HIIregion_temp) +
+                         log10(XH) + log10(mu_HII) - log10_kB;
+      } else {
+
+        log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
+                         log10(mu_at_Peq) - log10_kB;
+      }
 
     } else {
 
@@ -834,6 +890,34 @@ double compute_subgrid_density(
           log10_n_at_Peq = cooling->nH[i - 1] +
                            delta_P_eq * (cooling->nH[i] - cooling->nH[i - 1]);
 
+          /* For HII regions, limit the subgrid temperature
+           * to be no less than HIIregion_temp. */
+          if (HII_region) {
+
+            int iden_eq;
+            float dden_eq;
+            get_index_1d(cooling->nH, colibre_cooling_N_density, log10_n_at_Peq,
+                         &iden_eq, &dden_eq);
+
+            float log10_T_at_Peq =
+                interpolation_3d(cooling->table.logTeq,         /* */
+                                 ired, imet, iden_eq,           /* */
+                                 dred, dmet, dden_eq,           /* */
+                                 colibre_cooling_N_redshifts,   /* */
+                                 colibre_cooling_N_metallicity, /* */
+                                 colibre_cooling_N_density);
+
+            if (log10_T_at_Peq < log10(cooling->HIIregion_temp)) {
+              log10_T_at_Peq = log10(cooling->HIIregion_temp);
+
+              const double mu_HII =
+                  4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+
+              log10_n_at_Peq = log10_P_cgs - log10_T_at_Peq + log10(XH) +
+                               log10(mu_HII) - cooling->log10_kB_cgs;
+            }
+          }
+
           break;
         }
       }
@@ -842,7 +926,6 @@ double compute_subgrid_density(
     const float n_at_Peq = exp10(log10_n_at_Peq);
     return n_at_Peq * cooling->number_density_from_cgs *
            phys_const->const_proton_mass / XH;
-
   } else {
 
     /* We are above the EoS. */

@@ -95,6 +95,10 @@ void cooling_update(const struct cosmology *cosmo,
  * @brief Compute the internal energy of a #part based on the cooling function
  * but for a given temperature.
  *
+ * This is used e.g. for particles in HII regions that are set to a constant
+ * temperature, but their internal energies should reflect the particle
+ * composition .
+ *
  * @param phys_const #phys_const data structure.
  * @param hydro_props The properties of the hydro scheme.
  * @param us The internal system of units.
@@ -121,6 +125,17 @@ float cooling_get_internalenergy_for_temperature(
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
+
+  /* Special case for gas in HII regions */
+  if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+
+    const float mu_HII =
+        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+    return exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs * T /
+           (hydro_gamma_minus_one * mu_HII);
+  }
+
+  /* Normal case --> Interpolate the table */
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const float rho = hydro_get_physical_density(p, cosmo);
@@ -160,6 +175,8 @@ float cooling_get_internalenergy_for_temperature(
  * @brief Compute the temperature based on gas properties.
  *
  * The temperature returned is consistent with the cooling rates.
+ *
+ * This function does *NOT* consider HII regions.
  *
  * @param phys_const #phys_const data structure.
  * @param cosmo #cosmology data structure.
@@ -236,6 +253,20 @@ float cooling_get_temperature(const struct phys_const *phys_const,
   float const *metal_fraction =
       chemistry_get_metal_mass_fraction_for_cooling(p);
   const float XH = metal_fraction[chemistry_element_H];
+
+  /* Special case for gas in HII regions */
+  if (xp->tracers_data.HIIregion_timer_gas > 0.) {
+
+    /* Convert to CGS */
+    const double u_cgs = u_phys * cooling->internal_energy_to_cgs;
+
+    const float mu_HII =
+        4.0 / ((1.0 + cooling->HIIregion_fion) * (1.0 + (3.0 * XH)));
+    return u_cgs * hydro_gamma_minus_one * mu_HII /
+           (exp10(cooling->log10_kB_cgs) * cooling->inv_proton_mass_cgs);
+  }
+
+  /* Normal case --> Interpolate the table */
 
   /* Convert Hydrogen mass fraction into Hydrogen number density */
   const float rho_phys = hydro_get_physical_density(p, cosmo);
@@ -639,6 +670,37 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Store the radiated energy */
   xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0);
 
+  /* Check if the particle is in an HII region and if yes, set the parameter
+   * accordingly */
+  if ((time <= xp->tracers_data.HIIregion_timer_gas) &&
+      (xp->tracers_data.HIIregion_timer_gas > 0.)) {
+
+    /* HII region internal energy is the internal energy of a particle at a
+     * temperature of cooling->HIIregion_temp */
+    const float u_HII_cgs = cooling_get_internalenergy_for_temperature(
+        phys_const, hydro_properties, us, cosmo, cooling, p, xp,
+        cooling->HIIregion_temp);
+
+    const float u_HII = u_HII_cgs * cooling->internal_energy_from_cgs;
+
+    /* The enrgy is below the HII target energy */
+    if (u_final < u_HII) {
+
+      /* Inject energy into the particle */
+      hydro_set_physical_internal_energy(p, xp, cosmo, u_HII);
+      hydro_set_drifted_physical_internal_energy(p, cosmo, u_HII);
+
+      /* Internal energy should stay constant for the timestep */
+      hydro_set_physical_internal_energy_dt(p, cosmo, 0.f);
+    }
+  } else if ((time > xp->tracers_data.HIIregion_timer_gas) &&
+             (xp->tracers_data.HIIregion_timer_gas > 0.)) {
+
+    /* Reset the flags */
+    xp->tracers_data.HIIregion_timer_gas = -1.;
+    xp->tracers_data.HIIregion_starid = -1;
+  }
+
   /* set subgrid properties and hydrogen fractions */
   cooling_set_particle_subgrid_properties(
       phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp);
@@ -732,17 +794,17 @@ float cooling_get_particle_subgrid_HI_fraction(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
 
   return compute_subgrid_HI_fraction(cooling, phys_const, floor_props, cosmo,
                                      rho_phys, logZZsol, XH, P_phys, log10_T,
-                                     log10_T_EOS_max);
+                                     log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -788,17 +850,17 @@ float cooling_get_particle_subgrid_HII_fraction(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
 
   return compute_subgrid_HII_fraction(cooling, phys_const, floor_props, cosmo,
                                       rho_phys, logZZsol, XH, P_phys, log10_T,
-                                      log10_T_EOS_max);
+                                      log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -844,17 +906,17 @@ float cooling_get_particle_subgrid_H2_fraction(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
 
   return compute_subgrid_H2_fraction(cooling, phys_const, floor_props, cosmo,
                                      rho_phys, logZZsol, XH, P_phys, log10_T,
-                                     log10_T_EOS_max);
+                                     log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -899,17 +961,17 @@ float cooling_get_particle_subgrid_temperature(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
 
   return compute_subgrid_temperature(cooling, phys_const, floor_props, cosmo,
                                      rho_phys, logZZsol, XH, P_phys, log10_T,
-                                     log10_T_EOS_max);
+                                     log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -956,17 +1018,17 @@ float cooling_get_particle_subgrid_density(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
 
   return compute_subgrid_density(cooling, phys_const, floor_props, cosmo,
                                  rho_phys, logZZsol, XH, P_phys, log10_T,
-                                 log10_T_EOS_max);
+                                 log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -1008,20 +1070,38 @@ void cooling_set_particle_subgrid_properties(
   /* Get the particle pressure */
   const float P_phys = hydro_get_physical_pressure(p, cosmo);
 
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
   /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys);
+  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
+                                          cooling, p, xp);
   const float log10_T = log10f(T);
+
+  /* Are we in an HII region? */
+  const int HII_region = xp->tracers_data.HIIregion_timer_gas > 0.;
+
+  const double nHI_over_nH = compute_subgrid_HI_fraction(
+      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
+      log10_T, log10_T_EOS_max, HII_region);
+  const double nHII_over_nH = compute_subgrid_HII_fraction(
+      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
+      log10_T, log10_T_EOS_max, HII_region);
+  const double nH2_over_nH = compute_subgrid_H2_fraction(
+      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
+      log10_T, log10_T_EOS_max, HII_region);
+
+  /* Normalize the sum of these H fractions to 1 */
+  const double nHsum_over_nH = nHI_over_nH + nHII_over_nH + 2. * nH2_over_nH;
+
+  /* Compute the subgrid properties */
+  xp->tracers_data.nHI_over_nH = nHI_over_nH / nHsum_over_nH;
+  xp->tracers_data.nHII_over_nH = nHII_over_nH / nHsum_over_nH;
+  xp->tracers_data.nH2_over_nH = nH2_over_nH / nHsum_over_nH;
 
   p->cooling_data.subgrid_temp = compute_subgrid_temperature(
       cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_T_EOS_max);
-  p->cooling_data.subgrid_dens =
-      compute_subgrid_density(cooling, phys_const, floor_props, cosmo, rho_phys,
-                              logZZsol, XH, P_phys, log10_T, log10_T_EOS_max);
+      log10_T, log10_T_EOS_max, HII_region);
+  p->cooling_data.subgrid_dens = compute_subgrid_density(
+      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
+      log10_T, log10_T_EOS_max, HII_region);
 }
 
 /**
@@ -1119,6 +1199,18 @@ void cooling_init_backend(struct swift_params *parameter_file,
       parser_get_param_float(parameter_file, "COLIBRECooling:He_reion_z_sigma");
   cooling->He_reion_heat_cgs =
       parser_get_param_float(parameter_file, "COLIBRECooling:He_reion_eV_p_H");
+
+  /* Properties of the HII region model ------------------------------------- */
+  cooling->HIIregion_fion = parser_get_param_float(
+      parameter_file, "COLIBREFeedback:HIIregion_ionization_fraction");
+
+  cooling->HIIregion_temp = parser_get_param_float(
+      parameter_file, "COLIBREFeedback:HIIregion_temperature");
+
+  /* Check that it makes sense. */
+  if (cooling->HIIregion_fion < 0.5 || cooling->HIIregion_fion > 1.0) {
+    error("HIIregion_ionization_fraction has to be between 0.5 and 1.0");
+  }
 
   /* Properties for the subgrid properties model ---------------------------- */
   cooling->dlogT_EOS = parser_get_param_float(

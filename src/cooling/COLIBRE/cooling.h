@@ -121,7 +121,7 @@ double compute_subgrid_density(
     const struct entropy_floor_properties *floor_props,
     const struct cosmology *cosmo, const float rho_phys, const float logZZsol,
     const float XH, const float P_phys, const float log10_T,
-    const float log10_T_EOS_max);
+    const float log10_T_EOS_max, const int HII_region);
 
 float cooling_get_radiated_energy(const struct xpart *xp);
 
