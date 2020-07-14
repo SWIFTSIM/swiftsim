@@ -57,6 +57,7 @@ InitialConditions:
   cleanup_h_factors:           1
   cleanup_velocity_factors:    1
   generate_gas_in_ics:         0     # Generate gas particles from the DM-only ICs
+  remap_ids:                   1     # Remap the IDs to the range [1, N]
 
 # Parameters of the hydro scheme
 SPH:
