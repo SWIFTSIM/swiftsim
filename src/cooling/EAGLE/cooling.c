@@ -585,7 +585,8 @@ __attribute__((always_inline)) INLINE void cooling_first_init_part(
 float cooling_get_temperature_from_gas(
     const struct phys_const *phys_const, const struct cosmology *cosmo,
     const struct cooling_function_data *cooling, const float rho_phys,
-    const float XH, const float logZZsol, const float u_phys) {
+    const float XH, const float logZZsol, const float u_phys,
+    const int HII_region) {
 
   error("Do not call this function");
   return -1.f;

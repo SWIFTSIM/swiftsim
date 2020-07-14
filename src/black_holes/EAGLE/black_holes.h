@@ -505,7 +505,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 
       /* Get the gas temperature */
       const float gas_T = cooling_get_temperature_from_gas(
-          constants, cosmo, cooling, gas_rho_phys, logZZsol, XH, gas_u_phys);
+          constants, cosmo, cooling, gas_rho_phys, logZZsol, XH, gas_u_phys,
+          /*HII_region=*/0);
       const float log10_gas_T = log10f(gas_T);
 
       /* Get the temperature on the EOS at this physical density */
