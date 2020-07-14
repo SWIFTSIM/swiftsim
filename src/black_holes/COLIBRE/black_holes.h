@@ -455,6 +455,8 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
  * @param props The properties of the black hole scheme.
  * @param constants The physical constants (in internal units).
  * @param cosmo The cosmological model.
+ * @param cooling Properties of the cooling model.
+ * @param floor_props Properties of the entropy fllor.
  * @param time Time since the start of the simulation (non-cosmo mode).
  * @param with_cosmology Are we running with cosmology?
  * @param dt The time-step size (in physical internal units).
@@ -462,7 +464,9 @@ __attribute__((always_inline)) INLINE static void black_holes_swallow_bpart(
 __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     struct bpart* restrict bp, const struct black_holes_props* props,
     const struct phys_const* constants, const struct cosmology* cosmo,
-    const double time, const int with_cosmology, const double dt) {
+    const struct cooling_function_data* cooling,
+    const struct entropy_floor_properties* floor_props, const double time,
+    const int with_cosmology, const double dt) {
 
   /* Record that the black hole has another active time step */
   bp->number_of_time_steps++;
