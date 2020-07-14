@@ -137,8 +137,8 @@ AM_SOURCES = space.c runner_main.c runner_doiact_hydro.c runner_doiact_limiter.c
     hashmap.c pressure_floor.c space_unique_id.c output_options.c line_of_sight.c \
     $(QLA_COOLING_SOURCES) \
     $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) \
-    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
     $(GRACKLE_COOLING_SOURCES) $(GEAR_FEEDBACK_SOURCES) \
+    $(COLIBRE_COOLING_SOURCES) $(COLIBRE_FEEDBACK_SOURCES) \
     $(CHIMES_COOLING_SOURCES) 
 
 # Include files for distribution, not installation.
@@ -270,16 +270,16 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
                  cooling/EAGLE/cooling_io.h cooling/EAGLE/interpolate.h cooling/EAGLE/cooling_rates.h \
 		 cooling/QLA/cooling.h cooling/QLA/cooling_struct.h cooling/QLA/cooling_tables.h \
                  cooling/QLA/cooling_io.h cooling/QLA/interpolate.h cooling/QLA/cooling_rates.h \
-		 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h cooling/COLIBRE/cooling_subgrid.h \
+                 cooling/COLIBRE/cooling.h cooling/COLIBRE/cooling_struct.h cooling/COLIBRE/cooling_subgrid.h \
                  cooling/COLIBRE/cooling_io.h cooling/COLIBRE/interpolate.h cooling/COLIBRE/cooling_rates.h \
-	         cooling/COLIBRE/cooling_tables.h cooling/COLIBRE/cooling_subgrid.h \
+                 cooling/COLIBRE/cooling_tables.h cooling/COLIBRE/cooling_subgrid.h \
                  cooling/CHIMES/cooling.h cooling/CHIMES/cooling_struct.h \
                  cooling/CHIMES/cooling_io.h cooling/CHIMES/colibre_tables.h \
 		 cooling/CHIMES/colibre_tables_restrict.h \
 		 cooling/CHIMES/colibre_subgrid.h \
 		 cooling/CHIMES/chimes/chimes_vars.h cooling/CHIMES/chimes/chimes_proto.h \
 		 cooling/CHIMES/chimes/chimes_interpol.h \
-                 chemistry/none/chemistry.h \
+		 chemistry/none/chemistry.h \
 		 chemistry/none/chemistry_io.h \
 		 chemistry/none/chemistry_struct.h \
 		 chemistry/none/chemistry_iact.h \

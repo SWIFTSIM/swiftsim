@@ -193,6 +193,9 @@ struct cooling_function_data {
   double rapid_cooling_threshold;
 };
 
+/**
+ * @brief Properties of the cooling stored in the #part data.
+ */
 struct cooling_part_data {
 
   /*! Subgrid temperature */

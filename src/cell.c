@@ -391,6 +391,9 @@ int cell_link_foreign_gparts(struct cell *c, struct gpart *gparts) {
       error("Something is wrong with the foreign counts");
 #endif
     return counts;
+  } else {
+    c->grav.parts = gparts;
+    c->grav.parts_rebuild = gparts;
   }
 
   /* Go deeper to find the level where the tasks are */
@@ -1484,6 +1487,66 @@ int cell_slocktree(struct cell *c) {
 }
 
 /**
+ * @brief Lock a cell for access to its array of #sink and hold its parents.
+ *
+ * @param c The #cell.
+ * @return 0 on success, 1 on failure
+ */
+int cell_sink_locktree(struct cell *c) {
+  TIMER_TIC;
+
+  /* First of all, try to lock this cell. */
+  if (c->sinks.hold || lock_trylock(&c->sinks.lock) != 0) {
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+
+  /* Did somebody hold this cell in the meantime? */
+  if (c->sinks.hold) {
+    /* Unlock this cell. */
+    if (lock_unlock(&c->sinks.lock) != 0) error("Failed to unlock cell.");
+
+    /* Admit defeat. */
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+
+  /* Climb up the tree and lock/hold/unlock. */
+  struct cell *finger;
+  for (finger = c->parent; finger != NULL; finger = finger->parent) {
+    /* Lock this cell. */
+    if (lock_trylock(&finger->sinks.lock) != 0) break;
+
+    /* Increment the hold. */
+    atomic_inc(&finger->sinks.hold);
+
+    /* Unlock the cell. */
+    if (lock_unlock(&finger->sinks.lock) != 0) error("Failed to unlock cell.");
+  }
+
+  /* If we reached the top of the tree, we're done. */
+  if (finger == NULL) {
+    TIMER_TOC(timer_locktree);
+    return 0;
+  }
+
+  /* Otherwise, we hit a snag. */
+  else {
+    /* Undo the holds up to finger. */
+    for (struct cell *finger2 = c->parent; finger2 != finger;
+         finger2 = finger2->parent)
+      atomic_dec(&finger2->sinks.hold);
+
+    /* Unlock this cell. */
+    if (lock_unlock(&c->sinks.lock) != 0) error("Failed to unlock cell.");
+
+    /* Admit defeat. */
+    TIMER_TOC(timer_locktree);
+    return 1;
+  }
+}
+
+/**
  * @brief Lock a cell for access to its array of #bpart and hold its parents.
  *
  * @param c The #cell.
@@ -1617,6 +1680,24 @@ void cell_sunlocktree(struct cell *c) {
 }
 
 /**
+ * @brief Unlock a cell's parents for access to #sink array.
+ *
+ * @param c The #cell.
+ */
+void cell_sink_unlocktree(struct cell *c) {
+  TIMER_TIC;
+
+  /* First of all, try to unlock this cell. */
+  if (lock_unlock(&c->sinks.lock) != 0) error("Failed to unlock cell.");
+
+  /* Climb up the tree and unhold the parents. */
+  for (struct cell *finger = c->parent; finger != NULL; finger = finger->parent)
+    atomic_dec(&finger->sinks.hold);
+
+  TIMER_TOC(timer_locktree);
+}
+
+/**
  * @brief Unlock a cell's parents for access to #bpart array.
  *
  * @param c The #cell.
@@ -1645,6 +1726,8 @@ void cell_bunlocktree(struct cell *c) {
  * @param bparts_offset Offset of the cell bparts array relative to the
  *        space's bparts array, i.e. c->black_holes.parts -
  * s->black_holes.parts.
+ * @param sinks_offset Offset of the cell sink array relative to the
+ *        space's sink array, i.e. c->sinks.parts - s->sinks.parts.
  * @param buff A buffer with at least max(c->hydro.count, c->grav.count)
  * entries, used for sorting indices.
  * @param sbuff A buffer with at least max(c->stars.count, c->grav.count)
@@ -1653,18 +1736,23 @@ void cell_bunlocktree(struct cell *c) {
  * entries, used for sorting indices for the sparts.
  * @param gbuff A buffer with at least max(c->hydro.count, c->grav.count)
  * entries, used for sorting indices for the gparts.
+ * @param sinkbuff A buffer with at least max(c->sinks.count, c->grav.count)
+ * entries, used for sorting indices for the sinks.
  */
 void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
-                ptrdiff_t bparts_offset, struct cell_buff *buff,
-                struct cell_buff *sbuff, struct cell_buff *bbuff,
-                struct cell_buff *gbuff) {
+                ptrdiff_t bparts_offset, ptrdiff_t sinks_offset,
+                struct cell_buff *buff, struct cell_buff *sbuff,
+                struct cell_buff *bbuff, struct cell_buff *gbuff,
+                struct cell_buff *sinkbuff) {
   const int count = c->hydro.count, gcount = c->grav.count,
-            scount = c->stars.count, bcount = c->black_holes.count;
+            scount = c->stars.count, bcount = c->black_holes.count,
+            sink_count = c->sinks.count;
   struct part *parts = c->hydro.parts;
   struct xpart *xparts = c->hydro.xparts;
   struct gpart *gparts = c->grav.parts;
   struct spart *sparts = c->stars.parts;
   struct bpart *bparts = c->black_holes.parts;
+  struct sink *sinks = c->sinks.parts;
   const double pivot[3] = {c->loc[0] + c->width[0] / 2,
                            c->loc[1] + c->width[1] / 2,
                            c->loc[2] + c->width[2] / 2};
@@ -1692,6 +1780,11 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
     if (bbuff[k].x[0] != bparts[k].x[0] || bbuff[k].x[1] != bparts[k].x[1] ||
         bbuff[k].x[2] != bparts[k].x[2])
       error("Inconsistent bbuff contents.");
+  }
+  for (int k = 0; k < sink_count; k++) {
+    if (sinkbuff[k].x[0] != sinks[k].x[0] ||
+        sinkbuff[k].x[1] != sinks[k].x[1] || sinkbuff[k].x[2] != sinks[k].x[2])
+      error("Inconsistent sinkbuff contents.");
   }
 #endif /* SWIFT_DEBUG_CHECKS */
 
@@ -1922,6 +2015,60 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
     c->progeny[k]->black_holes.parts = &c->black_holes.parts[bucket_offset[k]];
   }
 
+  /* Now do the same song and dance for the sinks. */
+  for (int k = 0; k < 8; k++) bucket_count[k] = 0;
+
+  /* Fill the buffer with the indices. */
+  for (int k = 0; k < sink_count; k++) {
+    const int bid = (sinkbuff[k].x[0] > pivot[0]) * 4 +
+                    (sinkbuff[k].x[1] > pivot[1]) * 2 +
+                    (sinkbuff[k].x[2] > pivot[2]);
+    bucket_count[bid]++;
+    sinkbuff[k].ind = bid;
+  }
+
+  /* Set the buffer offsets. */
+  bucket_offset[0] = 0;
+  for (int k = 1; k <= 8; k++) {
+    bucket_offset[k] = bucket_offset[k - 1] + bucket_count[k - 1];
+    bucket_count[k - 1] = 0;
+  }
+
+  /* Run through the buckets, and swap particles to their correct spot. */
+  for (int bucket = 0; bucket < 8; bucket++) {
+    for (int k = bucket_offset[bucket] + bucket_count[bucket];
+         k < bucket_offset[bucket + 1]; k++) {
+      int bid = sinkbuff[k].ind;
+      if (bid != bucket) {
+        struct sink sink = sinks[k];
+        struct cell_buff temp_buff = sinkbuff[k];
+        while (bid != bucket) {
+          int j = bucket_offset[bid] + bucket_count[bid]++;
+          while (sinkbuff[j].ind == bid) {
+            j++;
+            bucket_count[bid]++;
+          }
+          memswap(&sinks[j], &sink, sizeof(struct sink));
+          memswap(&sinkbuff[j], &temp_buff, sizeof(struct cell_buff));
+          if (sinks[j].gpart)
+            sinks[j].gpart->id_or_neg_offset = -(j + sinks_offset);
+          bid = temp_buff.ind;
+        }
+        sinks[k] = sink;
+        sinkbuff[k] = temp_buff;
+        if (sinks[k].gpart)
+          sinks[k].gpart->id_or_neg_offset = -(k + sinks_offset);
+      }
+      bucket_count[bid]++;
+    }
+  }
+
+  /* Store the counts and offsets. */
+  for (int k = 0; k < 8; k++) {
+    c->progeny[k]->sinks.count = bucket_count[k];
+    c->progeny[k]->sinks.parts = &c->sinks.parts[bucket_offset[k]];
+  }
+
   /* Finally, do the same song and dance for the gparts. */
   for (int k = 0; k < 8; k++) bucket_count[k] = 0;
 
@@ -1962,6 +2109,9 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
           } else if (gparts[j].type == swift_type_stars) {
             sparts[-gparts[j].id_or_neg_offset - sparts_offset].gpart =
                 &gparts[j];
+          } else if (gparts[j].type == swift_type_sink) {
+            sinks[-gparts[j].id_or_neg_offset - sinks_offset].gpart =
+                &gparts[j];
           } else if (gparts[j].type == swift_type_black_hole) {
             bparts[-gparts[j].id_or_neg_offset - bparts_offset].gpart =
                 &gparts[j];
@@ -1975,6 +2125,8 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
         } else if (gparts[k].type == swift_type_stars) {
           sparts[-gparts[k].id_or_neg_offset - sparts_offset].gpart =
               &gparts[k];
+        } else if (gparts[k].type == swift_type_sink) {
+          sinks[-gparts[k].id_or_neg_offset - sinks_offset].gpart = &gparts[k];
         } else if (gparts[k].type == swift_type_black_hole) {
           bparts[-gparts[k].id_or_neg_offset - bparts_offset].gpart =
               &gparts[k];

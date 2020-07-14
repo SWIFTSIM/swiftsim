@@ -163,8 +163,11 @@ struct part {
 
   } geometry;
 
-  /* Chemistry information */
+  /*! Chemistry information */
   struct chemistry_part_data chemistry_data;
+
+  /*! Cooling information */
+  struct cooling_part_data cooling_data;
 
   /* Star formation variables that need SPH */
   struct star_formation_part_data sf_data;
@@ -172,7 +175,7 @@ struct part {
   /*! Black holes information (e.g. swallowing ID) */
   struct black_holes_part_data black_holes_data;
 
-  /* Time-step length */
+  /*! Time-step length */
   timebin_t time_bin;
 
   /*! Time-step limiter information */

@@ -1622,6 +1622,20 @@ case "$with_subgrid" in
 	enable_fof=yes
         with_subgrid_SNIa_DTD=EAGLE
    ;;
+   EAGLE-XL)
+	with_subgrid_cooling=COLIBRE
+	with_subgrid_chemistry=EAGLE
+	with_subgrid_tracers=EAGLE
+	with_subgrid_entropy_floor=EAGLE
+	with_subgrid_stars=EAGLE
+	with_subgrid_star_formation=EAGLE
+	with_subgrid_feedback=EAGLE
+	with_subgrid_black_holes=EAGLE
+	with_subgrid_task_order=EAGLE
+	with_subgrid_sink=none
+	enable_fof=yes
+        with_subgrid_SNIa_DTD=EAGLE
+   ;;
    COLIBRE)
 	with_subgrid_cooling=COLIBRE
 	with_subgrid_chemistry=COLIBRE
@@ -1632,6 +1646,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=COLIBRE
 	with_subgrid_task_order=EAGLE
+	with_subgrid_sink=none
 	enable_fof=yes
         with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
@@ -1645,6 +1660,7 @@ case "$with_subgrid" in
 	with_subgrid_feedback=COLIBRE
 	with_subgrid_black_holes=COLIBRE
 	with_subgrid_task_order=EAGLE
+	with_subgrid_sink=none
 	enable_fof=yes
         with_subgrid_SNIa_DTD=power-law-beta-one
    ;;
@@ -2500,6 +2516,7 @@ AM_CONDITIONAL(HAVE_CHIMES_GNU_SOURCE, [test "$ac_cv_lib_m_exp10" = "yes"])
 
 # Check if using QLA cooling
 AM_CONDITIONAL([HAVEQLACOOLING], [test $with_cooling = "QLA"])
+
 # Check if using EAGLE cooling
 AM_CONDITIONAL([HAVEEAGLECOOLING], [test $with_cooling = "EAGLE"])
 # Check if using COLIBRE cooling
