@@ -520,7 +520,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
        * equilibirum if on the entropy floor */
       const double rho_sub = compute_subgrid_density(
           cooling, constants, floor_props, cosmo, gas_rho_phys, logZZsol, XH,
-          gas_P_phys, log10_gas_T, log10_T_EOS_max);
+          gas_P_phys, log10_gas_T, log10_T_EOS_max, /*HII_region=*/0);
 
       /* Record what we used */
       bp->rho_subgrid_gas = rho_sub;
