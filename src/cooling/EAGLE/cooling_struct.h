@@ -131,8 +131,6 @@ struct cooling_function_data {
   float dlogT_EOS;
 };
 
-struct cooling_part_data {};
-
 /**
  * @brief Properties of the cooling stored in the #part data.
  */

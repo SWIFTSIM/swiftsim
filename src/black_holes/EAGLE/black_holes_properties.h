@@ -219,7 +219,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->subgrid_bondi = parser_get_param_int(params, "EAGLEAGN:subgrid_bondi");
 
-  if (bp->multi_phase_bondi && bp->subgrid_bondi)
+  if (bp->use_multi_phase_bondi && bp->subgrid_bondi)
     error(
         "Cannot run with both the multi-phase Bondi and subgrid Bondi models "
         "at the same time!");
