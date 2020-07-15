@@ -175,6 +175,9 @@ INLINE static int star_formation_is_star_forming(
   /* Check if the subgrid density criterion is satisfied */
   if (subgrid_density > starform->subgrid_density_threshold) return 1;
 
+  /* Check if we are not in a HII region */
+  if (xp->tracers_data.HIIregion_timer_gas > 0.) return 0;
+
   /* Calculate the temperature */
   const double temperature = cooling_get_temperature(phys_const, hydro_props,
                                                      us, cosmo, cooling, p, xp);
