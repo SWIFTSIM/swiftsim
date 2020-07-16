@@ -84,7 +84,7 @@ INLINE static int gravity_logger_init(struct mask_data *mask_data) {
  * @param buffer_size (out) The requested size for the buffer.
  * @param mask (out) The mask that will be written.
  */
-INLINE static void gravity_logger_compute_size_size_and_mask(
+INLINE static void gravity_logger_compute_size_and_mask(
     const struct mask_data *masks, const struct gpart *part,
     const int write_all, size_t *buffer_size, unsigned int *mask) {
 
@@ -145,7 +145,7 @@ INLINE static char *gravity_logger_write_particle(
   if (logger_should_write_field(
           mask_data[gravity_logger_field_velocities], mask,
           gravity_logger_field_names[gravity_logger_field_velocities])) {
-    memcpy(buff, p->v, 3 * sizeof(float));
+    memcpy(buff, p->v_full, 3 * sizeof(float));
     buff += 3 * sizeof(float);
   }
 
@@ -153,12 +153,7 @@ INLINE static char *gravity_logger_write_particle(
   if (logger_should_write_field(
           mask_data[gravity_logger_field_accelerations], mask,
           gravity_logger_field_names[gravity_logger_field_accelerations])) {
-    float acc[3] = {
-        p->a_gravity[0] + xp->a_grav[0],
-        p->a_gravity[1] + xp->a_grav[1],
-        p->a_gravity[2] + xp->a_grav[2],
-    };
-    memcpy(buff, acc, 3 * sizeof(float));
+    memcpy(buff, p->a_grav, 3 * sizeof(float));
     buff += 3 * sizeof(float);
   }
 
@@ -174,7 +169,7 @@ INLINE static char *gravity_logger_write_particle(
   if (logger_should_write_field(
           mask_data[gravity_logger_field_particle_ids], mask,
           gravity_logger_field_names[gravity_logger_field_particle_ids])) {
-    memcpy(buff, &p->id, sizeof(long long));
+    memcpy(buff, &p->id_or_neg_offset, sizeof(long long));
     buff += sizeof(long long);
   }
 

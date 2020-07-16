@@ -999,15 +999,15 @@ void engine_redistribute(struct engine *e) {
 
       /* Log the hydro parts. */
       logger_log_parts(e->logger, &parts[part_offset], &xparts[part_offset],
-                       counts[c_ind], e, /* log_all */ 1, flag);
+                       counts[c_ind], e, /* log_all_fields */ 1, flag);
 
       /* Log the stellar parts. */
       logger_log_sparts(e->logger, &sparts[spart_offset], s_counts[c_ind], e,
-                        /* log_all */ 1, flag);
+                        /* log_all_fields */ 1, flag);
 
       /* Log the gparts */
       logger_log_gparts(e->logger, &gparts[gpart_offset], g_counts[c_ind], e,
-                        /* log_all */ 1, flag);
+                        /* log_all_fields */ 1, flag);
 
       /* Log the bparts */
       if (b_counts[c_ind] > 0) {
@@ -1100,15 +1100,15 @@ void engine_redistribute(struct engine *e) {
       /* Log the hydro parts. */
       logger_log_parts(e->logger, &s->parts[part_offset],
                        &s->xparts[part_offset], counts[c_ind], e,
-                       /* log_all */ 1, flag);
+                       /* log_all_fields */ 1, flag);
 
       /* Log the stellar parts. */
       logger_log_sparts(e->logger, &s->sparts[spart_offset], s_counts[c_ind], e,
-                        /* log_all */ 1, flag);
+                        /* log_all_fields */ 1, flag);
 
       /* Log the gparts */
       logger_log_gparts(e->logger, &s->gparts[gpart_offset], g_counts[c_ind], e,
-                        /* log_all */ 1, flag);
+                        /* log_all_fields */ 1, flag);
 
       /* Log the bparts */
       if (b_counts[c_ind] > 0) {

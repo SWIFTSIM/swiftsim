@@ -38,7 +38,7 @@ enum stars_logger_fields_mask {
 /* Name of each possible mask. */
 static const char *stars_logger_field_names[stars_logger_field_count] = {
     "Coordinates",      "Velocities", "Accelerations", "Masses",
-    "SmoothingLengths", "Entropies",  "ParticleIDs",   "Densities"};
+    "SmoothingLengths", "ParticleIDs"};
 
 /**
  * @brief Initialize the logger.
@@ -87,7 +87,7 @@ INLINE static int stars_logger_init(struct mask_data *mask_data) {
  * @param buffer_size (out) The requested size for the buffer.
  * @param mask (out) The mask that will be written.
  */
-INLINE static void stars_logger_compute_size_size_and_mask(
+INLINE static void stars_logger_compute_size_and_mask(
     const struct mask_data *masks, const struct spart *part,
     const int write_all, size_t *buffer_size, unsigned int *mask) {
 
@@ -159,12 +159,7 @@ INLINE static char *stars_logger_write_particle(
   if (logger_should_write_field(
           mask_data[stars_logger_field_accelerations], mask,
           stars_logger_field_names[stars_logger_field_accelerations])) {
-    float acc[3] = {
-        p->a_stars[0] + xp->a_grav[0],
-        p->a_stars[1] + xp->a_grav[1],
-        p->a_stars[2] + xp->a_grav[2],
-    };
-    memcpy(buff, acc, 3 * sizeof(float));
+    memcpy(buff, p->gpart->a_grav, 3 * sizeof(float));
     buff += 3 * sizeof(float);
   }
 

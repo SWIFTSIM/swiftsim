@@ -240,7 +240,7 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     for (int i = 0; i < count; i++) {
       unsigned int mask = 0;
       size_t size = 0;
-      hydro_logger_compute_size_size_and_mask(log->mask_data_pointers.hydro,
+      hydro_logger_compute_size_and_mask(log->mask_data_pointers.hydro,
                                               &p[i], &xp[i], log_all_fields,
                                               &size, &mask);
       size_total += size + logger_header_bytes;
@@ -256,7 +256,7 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    hydro_logger_compute_size_size_and_mask(log->mask_data_pointers.hydro,
+    hydro_logger_compute_size_and_mask(log->mask_data_pointers.hydro,
                                             &p[i], &xp[i], log_all_fields,
                                             &size, &mask);
     size += logger_header_bytes;
@@ -362,7 +362,7 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
     for (int i = 0; i < count; i++) {
       unsigned int mask = 0;
       size_t size = 0;
-      stars_logger_compute_size_size_and_mask(
+      stars_logger_compute_size_and_mask(
           log->mask_data_pointers.stars, &sp[i], log_all_fields, &size, &mask);
       size_total += size + logger_header_bytes;
     }
@@ -376,7 +376,7 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    stars_logger_compute_size_size_and_mask(
+    stars_logger_compute_size_and_mask(
         log->mask_data_pointers.stars, &sp[i], log_all_fields, &size, &mask);
     size += logger_header_bytes;
 
@@ -483,7 +483,7 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
 
       unsigned int mask = 0;
       size_t size = 0;
-      gravity_logger_compute_size_size_and_mask(
+      gravity_logger_compute_size_and_mask(
           log->mask_data_pointers.gravity, &p[i], log_all_fields, &size, &mask);
       size_total += size + logger_header_bytes;
     }
@@ -500,7 +500,7 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
     /* Get the masks */
     size_t size = 0;
     unsigned int mask = 0;
-    gravity_logger_compute_size_size_and_mask(
+    gravity_logger_compute_size_and_mask(
         log->mask_data_pointers.gravity, &p[i], log_all_fields, &size, &mask);
     size += logger_header_bytes;
 
@@ -750,17 +750,17 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
 
   /* Compute the maximal size of the records. */
   log->max_size_record_part = 0;
-  for (int i = 0; i < logger_hydro_count; i++) {
+  for (int i = 0; i < hydro_logger_field_count; i++) {
     log->max_size_record_part += log->mask_data_pointers.hydro[i].size;
   }
 
   log->max_size_record_gpart = 0;
-  for (int i = 0; i < logger_gravity_count; i++) {
+  for (int i = 0; i < gravity_logger_field_count; i++) {
     log->max_size_record_gpart += log->mask_data_pointers.gravity[i].size;
   }
 
   log->max_size_record_spart = 0;
-  for (int i = 0; i < logger_stars_count; i++) {
+  for (int i = 0; i < stars_logger_field_count; i++) {
     log->max_size_record_spart += log->mask_data_pointers.stars[i].size;
   }
 

@@ -52,10 +52,8 @@ struct mask_data {
   /* Type of particle (follow part_type.h and -1 for timestamp). */
   enum mask_type type;
 
-#ifdef SWIFT_DEBUG_CHECKS
   /* Name of the mask. */
   char name[100];
-#endif
 };
 
 /**
@@ -66,7 +64,7 @@ struct mask_data {
  *
  * @return The new mask_data.
  */
-INLINE static struct mask_data logger_create_mask_entry(char* name, int size) {
+INLINE static struct mask_data logger_create_mask_entry(const char* name, int size) {
   struct mask_data mask;
   /* Copy the fields */
 #ifdef SWIFT_DEBUG_CHECKS
@@ -90,7 +88,7 @@ INLINE static struct mask_data logger_create_mask_entry(char* name, int size) {
  * @return The mask of the current field.
  */
 INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
-                                              char* name, size_t* buffer_size) {
+                                              const char* name, size_t* buffer_size) {
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {
@@ -112,7 +110,7 @@ INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
  * @param mask The mask used for the current record.
  */
 INLINE static int logger_should_write_field(struct mask_data mask_data,
-                                            unsigned int* mask, char* name) {
+                                            unsigned int* mask, const char* name) {
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {

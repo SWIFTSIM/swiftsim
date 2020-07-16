@@ -564,7 +564,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       /* Log the particle when leaving a rank. */
       logger_log_part(
           e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
-          e, /* log_all */ 1,
+          e, /* log_all_fields */ 1,
           logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
     }
 #endif
@@ -609,7 +609,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       /* Log the particle when leaving a rank. */
       logger_log_spart(
           e->logger, &s->sparts[offset_sparts + k], e,
-          /* log_all */ 1,
+          /* log_all_fields */ 1,
           logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
     }
 #endif
@@ -692,7 +692,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       /* Log the particle when leaving a rank. */
       logger_log_gpart(
           e->logger, &s->gparts[offset_gparts + k], e,
-          /* log_all */ 1,
+          /* log_all_fields */ 1,
           logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
     }
 #endif
@@ -928,15 +928,15 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
         /* Log the gas particles */
         logger_log_parts(e->logger, parts, xparts, prox->nr_parts_in, e,
-                         /* log_all */ 1, flag);
+                         /* log_all_fields */ 1, flag);
 
         /* Log the stellar particles */
         logger_log_sparts(e->logger, sparts, prox->nr_sparts_in, e,
-                          /* log_all */ 1, flag);
+                          /* log_all_fields */ 1, flag);
 
         /* Log the gparts */
         logger_log_gparts(e->logger, gparts, prox->nr_gparts_in, e,
-                          /* log_all */ 1, flag);
+                          /* log_all_fields */ 1, flag);
 
         /* Log the bparts */
         if (prox->nr_bparts_in > 0) {

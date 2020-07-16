@@ -98,7 +98,7 @@ INLINE static int hydro_logger_init(struct mask_data *mask_data) {
  * @param buffer_size (out) The requested size for the buffer.
  * @param mask (out) The mask that will be written.
  */
-INLINE static void hydro_logger_compute_size_size_and_mask(
+INLINE static void hydro_logger_compute_size_and_mask(
     const struct mask_data *masks, const struct part *part,
     const struct xpart *xpart, const int write_all, size_t *buffer_size,
     unsigned int *mask) {
