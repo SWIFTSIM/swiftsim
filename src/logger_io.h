@@ -49,11 +49,13 @@ struct mask_data {
   /* Mask value. */
   unsigned int mask;
 
-  /* Name of the mask. */
-  char name[100];
-
   /* Type of particle (follow part_type.h and -1 for timestamp). */
   enum mask_type type;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Name of the mask. */
+  char name[100];
+#endif
 };
 
 /**
@@ -67,7 +69,9 @@ struct mask_data {
 INLINE static struct mask_data logger_create_mask_entry(char* name, int size) {
   struct mask_data mask;
   /* Copy the fields */
+#ifdef SWIFT_DEBUG_CHECKS
   strcpy(mask.name, name);
+#endif
   mask.size = size;
   mask.mask = 0;
 
@@ -109,11 +113,13 @@ INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
  */
 INLINE static int logger_should_write_field(struct mask_data mask_data,
                                             unsigned int* mask, char* name) {
+#ifdef SWIFT_DEBUG_CHECKS
   /* Check that we are writing the requested field. */
   if (strcmp(name, mask_data.name) != 0) {
     error("Mismatch between the requested field (%s) and the mask (%s)", name,
           mask_data.name);
   }
+#endif
 
   const int test = mask_data.mask & *mask;
   if (test) {

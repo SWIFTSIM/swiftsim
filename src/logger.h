@@ -139,6 +139,15 @@ struct logger_writer {
   /* Number of elements in logger_mask_data. */
   int logger_count_mask;
 
+  /* Maximum size for a hydro record. */
+  int max_size_record_part;
+
+  /* Maximum size for a gravity record. */
+  int max_size_record_gpart;
+
+  /* Maximum size for a star record. */
+  int max_size_record_spart;
+
 } SWIFT_STRUCT_ALIGN;
 
 /* required structure for each particle type. */
@@ -151,24 +160,25 @@ struct logger_part_data {
 };
 
 /* Function prototypes. */
-void logger_log_all(struct logger_writer *log, const struct engine *e);
+void logger_log_all_particles(struct logger_writer *log,
+                              const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
-                     const int log_all, const uint32_t special_flags);
+                     const int log_all_fields, const uint32_t special_flags);
 void logger_log_parts(struct logger_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
-                      const int log_all, const uint32_t special_flags);
+                      const int log_all_fields, const uint32_t special_flags);
 void logger_log_spart(struct logger_writer *log, struct spart *p,
-                      const struct engine *e, const int log_all,
+                      const struct engine *e, const int log_all_fields,
                       const uint32_t special_flags);
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
-                       const struct engine *e, const int log_all,
+                       const struct engine *e, const int log_all_fields,
                        const uint32_t special_flags);
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
-                      const struct engine *e, const int log_all,
+                      const struct engine *e, const int log_all_fields,
                       const uint32_t special_flags);
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
-                       const struct engine *e, const int log_all,
+                       const struct engine *e, const int log_all_fields,
                        const uint32_t special_flags);
 void logger_init(struct logger_writer *log, const struct engine *e,
                  struct swift_params *params);
