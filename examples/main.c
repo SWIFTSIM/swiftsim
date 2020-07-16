@@ -967,7 +967,7 @@ int main(int argc, char *argv[]) {
       error("ERROR: Running with feedback but compiled without it.");
 #endif
       feedback_props_init(&feedback_properties, &prog_const, &us, params,
-                          &hydro_properties, &cosmo);
+                          &hydro_properties, &cosmo/*, &dustevo_properties*/);
     } else
       bzero(&feedback_properties, sizeof(struct feedback_props));
 

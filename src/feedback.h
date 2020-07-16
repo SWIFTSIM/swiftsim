@@ -21,6 +21,8 @@
 
 /* Config parameters. */
 #include "../config.h"
+/* #include "dust.h" */
+/* #include "dust_properties.h" */
 
 /* Select the correct feedback model */
 #if defined(FEEDBACK_NONE)

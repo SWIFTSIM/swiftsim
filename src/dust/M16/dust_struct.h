@@ -12,7 +12,7 @@
 enum grain_species { 
   grain_species_C = 0,
   grain_species_O,
-  grain_species_S,
+  grain_species_Si,
   grain_species_Mg,
   grain_species_Fe,
   grain_species_count

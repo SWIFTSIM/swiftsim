@@ -22,6 +22,8 @@
 #include "SNIa_DTD_struct.h"
 #include "chemistry.h"
 #include "hydro_properties.h"
+//#include "dust_properties.h" <-- BREAKS CODE, WHY?
+//#include "dust.h" */
 
 /*! Number of elements to be read from the yield tables */
 #define enrichment_of_N_elements_from_yield_tables 9
@@ -352,6 +354,6 @@ void feedback_props_init(struct feedback_props *fp,
                          const struct unit_system *us,
                          struct swift_params *params,
                          const struct hydro_props *hydro_props,
-                         const struct cosmology *cosmo);
+                         const struct cosmology *cosmo/*, struct dustevo_props* dp*/);
 
 #endif /* SWIFT_COLIBRE_FEEDBACK_PROPERTIES_H */
