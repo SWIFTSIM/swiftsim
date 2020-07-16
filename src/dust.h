@@ -13,17 +13,17 @@
 #if defined(DUST_NONE)
 #include "./dust/none/dust.h"
 #include "./dust/none/dust_struct.h"
-#include "./dust/none/dust_properties.h"
+//#include "./dust/none/dust_properties.h"
 #include "./dust/none/dust_yield_tables.h"
 #elif defined(DUST_T20)
 #include "./dust/T20/dust.h"
 #include "./dust/T20/dust_struct.h"
-#include "./dust/T20/dust_properties.h"
+//#include "./dust/T20/dust_properties.h"
 #include "./dust/T20/dust_yield_tables.h"
 #elif defined(DUST_M16)
 #include "./dust/M16/dust.h"
 #include "./dust/M16/dust_struct.h"
-#include "./dust/M16/dust_properties.h"
+//#include "./dust/M16/dust_properties.h"
 #include "./dust/M16/dust_yield_tables.h"
 #else
 #error "Invalid choice of dust model."

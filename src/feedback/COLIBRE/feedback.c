@@ -36,6 +36,7 @@
 #include "physical_constants.h"
 #include "timers.h"
 #include "yield_tables.h"
+//#include "dust_properties.h"
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
@@ -1757,7 +1758,7 @@ void feedback_props_init(struct feedback_props* fp,
                          const struct unit_system* us,
                          struct swift_params* params,
                          const struct hydro_props* hydro_props,
-                         const struct cosmology* cosmo) {
+                         const struct cosmology* cosmo/*, struct dustevo_props* dp*/) {
 
   /* Main operation modes ------------------------------------------------- */
 
@@ -2127,7 +2128,7 @@ void feedback_props_init(struct feedback_props* fp,
         imf_log10_mass_bin_size * i + fp->log10_imf_min_mass_msun;
 
   /* Resample yields from mass bins used in tables to mass bins used in IMF  */
-  compute_yields(fp);
+  compute_yields(fp); // <HERE>
 
   /* Resample ejecta contribution to enrichment from mass bins used in tables to
    * mass bins used in IMF  */

@@ -689,7 +689,7 @@ INLINE static void allocate_yield_tables(
  *
  * @param feedback_props the #feedback_props data struct.
  */
-INLINE static void compute_yields(struct feedback_props *feedback_props) {
+INLINE static void compute_yields(struct feedback_props *feedback_props) { //<HERE>
 
   int flat_index_3d, flat_index_2d;
 
