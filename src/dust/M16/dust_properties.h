@@ -22,7 +22,7 @@
 struct dust_yield_table {
 
   /* Array to read dust yield tables into */
-  double *yield;
+  /* double *yield; */
 
   /* Array to store IMF-resampled dust yield tables */
   double *yield_IMF_resampled;

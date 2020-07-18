@@ -70,7 +70,7 @@ struct lifetime_table {
   /* table of metallicities */
   double *metallicity;
 
-  /* table of lifetimes depending on mass an metallicity */
+  /* table of lifetimes depending on mass and metallicity */
   double **dyingtime;
 };
 
