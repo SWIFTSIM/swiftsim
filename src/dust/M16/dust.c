@@ -111,8 +111,8 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
 
   dp->grain_element_mfrac[grain_species_C] = gcomp1;
   dp->grain_element_mfrac[grain_species_O] = gcomp2;
-  dp->grain_element_mfrac[grain_species_Si] = gcomp3;
-  dp->grain_element_mfrac[grain_species_Mg] = gcomp4;
+  dp->grain_element_mfrac[grain_species_Mg] = gcomp3;
+  dp->grain_element_mfrac[grain_species_Si] = gcomp4;
   dp->grain_element_mfrac[grain_species_Fe] = gcomp5;
   
   /* for (int i = 0; i < grain_species_count; ++i) { */
@@ -122,24 +122,38 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   /* set chemistry indices composition */
   int gidx1[1] = {chemistry_element_C};
   int gidx2[1] = {chemistry_element_O};
-  int gidx3[1] = {chemistry_element_Si};
-  int gidx4[1] = {chemistry_element_Mg};
+  int gidx3[1] = {chemistry_element_Mg};
+  int gidx4[1] = {chemistry_element_Si};
   int gidx5[1] = {chemistry_element_Fe};
 
   dp->grain_element_indices[grain_species_C] = gidx1;
   dp->grain_element_indices[grain_species_O] = gidx2;
-  dp->grain_element_indices[grain_species_Si] = gidx3;
-  dp->grain_element_indices[grain_species_Mg] = gidx4;
+  dp->grain_element_indices[grain_species_Mg] = gidx3;
+  dp->grain_element_indices[grain_species_Si] = gidx4;
   dp->grain_element_indices[grain_species_Fe] = gidx5;
   
   /* set element count contributing to each grain */
   dp->grain_element_count[grain_species_C] = 1;
   dp->grain_element_count[grain_species_O] = 1;
-  dp->grain_element_count[grain_species_Si] = 1;
   dp->grain_element_count[grain_species_Mg] = 1;
+  dp->grain_element_count[grain_species_Si] = 1;
   dp->grain_element_count[grain_species_Fe] = 1;
 
-  compute_SNII_yield(fp, dp);
+  /** NOTE 1: total metallicity yields untouched here, so Z represents the conserved dust + gas phase metals **/
+
+  /** NOTE 2: only the IMF resampled tables are modified in fp, while plain .yield arrays are unchanged (the 
+   *  original yield tables are only used to compute these and are already modified via the SNII yield factors) **/
+
+
+  initialise_dyield_tables(fp, dp);
+  message("%f", dp->dyield_SNII.yield_IMF_resampled[4999]);
+  compute_SNII_dyield(fp, dp);
+  compute_AGB_dyield(fp, dp);
+  print_dyield_tables(fp, dp);
+
+  //message("New Yield: %f", fp->yield_SNII.yield_IMF_resampled[8950]);
+ 
+
 
   /* dp->grain_comp[chemistry_element_count*chemistry_element_C + chemistry_element_C] = 1.; */
   /* dp->grain_comp[chemistry_element_count*chemistry_element_O + chemistry_element_O] = 1.; */
