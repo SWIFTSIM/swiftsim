@@ -29,18 +29,6 @@
 #error "Invalid choice of dust model."
 #endif
 
-/* additional imports */
-#include "chemistry_struct.h"
-#include "feedback_properties.h"
-#include "cooling_struct.h"
-#include "units.h"
-#include "physical_constants.h"
-#include "parser.h"
-#include "restart.h"
-#include "space.h"
-
-
-
 /* Common functions */
 
 void scale_out_table_depletion(struct cooling_function_data* cooling);
