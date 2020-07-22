@@ -240,7 +240,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_float(params, "COLIBREAGN:radiative_efficiency");
   if (bp->epsilon_r > 1)
     error("COLIBREAGN:radiative_efficiency must be <= 1, not %f.",
-        bp->epsilon_r);
+          bp->epsilon_r);
 
   bp->f_Edd =
       parser_get_param_float(params, "COLIBREAGN:max_eddington_fraction");
