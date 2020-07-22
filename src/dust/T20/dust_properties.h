@@ -13,6 +13,7 @@
 #include "cooling_struct.h"
 #include "units.h"
 #include "physical_constants.h"
+#include "dust_struct.h"
 
 /**
  * @brief Stores AGB and SNII dust yields
@@ -21,7 +22,7 @@
 struct dust_yield_table {
 
   /* Array to read dust yield tables into */
-  double *yield;
+  /* double *yield; */
 
   /* Array to store IMF-resampled dust yield tables */
   double *yield_IMF_resampled;
@@ -68,6 +69,28 @@ struct dustevo_props {
   /* Yield tables for AGB and SNII  */
   struct dust_yield_table dyield_AGB;
   struct dust_yield_table dyield_SNII;
+
+  /* ------------- Dust Mapping -------------------- */
+
+  /* mass fraction of each grain type constituted by given element */ 
+  float* grain_element_mfrac[grain_species_count];  
+
+  /* indices of chemistry array for element contributing to each grain */
+  int* grain_element_indices[grain_species_count];
+
+  /* set element count contributing to each grain */
+  int grain_element_count[grain_species_count];
+
+  /* Wiersma solar abundance patterns, for consistency with chemical yields */
+  double abundance_pattern[chemistry_element_count];
+
+  /* Element atomic weights */
+  float atomic_weight[chemistry_element_count];
+
+  /* Element condensation fractions */
+  float condensation_frac[grain_species_count];
+
+
 };
 
 /**
@@ -98,6 +121,8 @@ static INLINE void generate_dust_yield_tables(struct dustevo_props *dp,
    **/  
   ;
 }
+
+
 
 static INLINE void scale_out_table_depletion(struct cooling_function_data* cooling){
   /**
@@ -130,36 +155,64 @@ static INLINE void scale_out_table_depletion(struct cooling_function_data* cooli
  * @param phys_const The physical constants in internal units.
  * @param us The current internal system of units.
  */
-static INLINE void dustevo_props_init_backend(struct dustevo_props* dp,
-					      struct swift_params* params,
-					      struct feedback_props* fp,
-					      struct cooling_function_data* cooling,
-					      const struct phys_const* phys_const,
-					      const struct unit_system* us) {
 
-/**
- * initialise structure housing global dust parametrisation.
- * First, set global parameters: 
- *
- * initialise dustevo_props struct object and store:
- * - Parameter file flags (e.g. with_accretion, with_sputtering)
- * - Parameter file values (e.g diffusion boost, clumping factor)
- * - Hard coded values (e.g. grain radii, density, composition)
- *
- *
- * Then, using the yield tables from feedback_props, compute 
- * and set dust yields for each of the  dust species 
- *
- * Finally apply corections to the cooling and heating rates
- * to remove implicit dust, via the scale_out_table_depletion
- * function.
- **/
+void dustevo_props_init_backend(struct dustevo_props* dp,
+				struct swift_params* params,
+				struct feedback_props* fp,
+				struct cooling_function_data* cooling,
+				const struct phys_const* phys_const,
+				const struct unit_system* us);
+
+/* static INLINE void dustevo_props_init_backend(struct dustevo_props* dp, */
+/* 	 				      struct swift_params* params, */
+/* 					      struct feedback_props* fp, */
+/* 					      struct cooling_function_data* cooling, */
+/* 					      const struct phys_const* phys_const, */
+/* 					      const struct unit_system* us) { */
+
+/* /\** */
+/*  * initialise structure housing global dust parametrisation. */
+/*  * First, set global parameters:  */
+/*  * */
+/*  * initialise dustevo_props struct object and store: */
+/*  * - Parameter file flags (e.g. with_accretion, with_sputtering) */
+/*  * - Parameter file values (e.g diffusion boost, clumping factor) */
+/*  * - Hard coded values (e.g. grain radii, density, composition) */
+/*  * */
+/*  * */
+/*  * Then, using the yield tables from feedback_props, compute  */
+/*  * and set dust yields for each of the  dust species  */
+/*  * */
+/*  * Finally apply corections to the cooling and heating rates */
+/*  * to remove implicit dust, via the scale_out_table_depletion */
+/*  * function. */
+/*  **\/ */
   
-  message("Initialising backend...");
-  scale_out_table_depletion(cooling);
-  /* read some parameters */
+/*   message("Initialising backend..."); */
+/*   scale_out_table_depletion(cooling); */
+/*   /\* read some parameters *\/ */
+/* } */
 
-}
+/* static INLINE void scale_out_table_depletion(struct cooling_function_data* cooling){ */
+/*   /\** */
+/*    * Here, iterate through the 5 axes of the cooling table, scaling out */
+/*    * depletion factors, as:  */
+/*    * */
+/*    * Theating[idx] -= log10(1-pow(10, table->log10fD[idx])) */
+/*    * */
+/*    * and */
+/*    * */
+/*    * Tcooling[idx] -= log10(1-pow(10, table->log10fD[idx])) */
+/*    * */
+/*    * Where table->log10fD are depletion factors that need to be read in  */
+/*    * from the COLIBRE tables. */
+/*    * */
+/*    * Better to house this function in the cooling/COLIBRE and cooling/CHIMES */
+/*    * code? Need to modify cooling code anyway to read table depletions. */
+/*    **\/ */
+/*   message("Scale out COLIBRE depletion from cooling/heating rates..."); */
+/* } */
+
 
 
 

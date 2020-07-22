@@ -95,11 +95,11 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
 
   /* set condensation fractions */
   memset(dp->condensation_frac, 0, sizeof dp->condensation_frac);
-  dp->condensation_frac[chemistry_element_C] = 0.5;
-  dp->condensation_frac[chemistry_element_O] = 0.;
-  dp->condensation_frac[chemistry_element_Mg] = 0.8;
-  dp->condensation_frac[chemistry_element_Si] = 0.8;
-  dp->condensation_frac[chemistry_element_Fe] = 0.8;
+  dp->condensation_frac[grain_species_C] = 0.5;
+  dp->condensation_frac[grain_species_O] = 0.;
+  dp->condensation_frac[grain_species_Mg] = 0.8;
+  dp->condensation_frac[grain_species_Si] = 0.8;
+  dp->condensation_frac[grain_species_Fe] = 0.8;
 
 
   /* set grain composition */
@@ -114,10 +114,6 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   dp->grain_element_mfrac[grain_species_Mg] = gcomp3;
   dp->grain_element_mfrac[grain_species_Si] = gcomp4;
   dp->grain_element_mfrac[grain_species_Fe] = gcomp5;
-  
-  /* for (int i = 0; i < grain_species_count; ++i) { */
-  /*   message("entry %d: %f", i, dp->grain_element_mfrac[i][0]); */
-  /* } */
 
   /* set chemistry indices composition */
   int gidx1[1] = {chemistry_element_C};
@@ -151,13 +147,4 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   compute_AGB_dyield(fp, dp);
   print_dyield_tables(fp, dp);
 
-  //message("New Yield: %f", fp->yield_SNII.yield_IMF_resampled[8950]);
- 
-
-
-  /* dp->grain_comp[chemistry_element_count*chemistry_element_C + chemistry_element_C] = 1.; */
-  /* dp->grain_comp[chemistry_element_count*chemistry_element_O + chemistry_element_O] = 1.; */
-  /* dp->grain_comp[chemistry_element_count*chemistry_element_Mg + chemistry_element_Mg] = 1.; */
-  /* dp->grain_comp[chemistry_element_count*chemistry_element_Si + chemistry_element_Si] = 1.; */
-  /* dp->grain_comp[chemistry_element_count*chemistry_element_Fe + chemistry_element_Fe] = 1.; */
 }
