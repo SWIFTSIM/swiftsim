@@ -38,7 +38,8 @@ enum stars_logger_fields_mask {
 /* Name of each possible mask. */
 static const char *stars_logger_field_names[stars_logger_field_count] = {
     "Coordinates", "Velocities",       "Accelerations",
-    "Masses",      "SmoothingLengths", "ParticleIDs"};
+    "Masses",      "SmoothingLengths", "ParticleIDs",
+};
 
 /**
  * @brief Initialize the logger.
@@ -50,7 +51,7 @@ static const char *stars_logger_field_names[stars_logger_field_count] = {
  *
  * @return Number of masks used.
  */
-INLINE static int stars_logger_init(struct mask_data *mask_data) {
+INLINE static int stars_logger_populate_mask_data(struct mask_data *mask_data) {
   mask_data[stars_logger_field_coordinates] = logger_create_mask_entry(
       stars_logger_field_names[stars_logger_field_coordinates],
       3 * sizeof(double));

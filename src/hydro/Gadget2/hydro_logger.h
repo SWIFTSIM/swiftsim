@@ -54,7 +54,7 @@ static const char *hydro_logger_field_names[hydro_logger_field_count] = {
  *
  * @return Number of masks used.
  */
-INLINE static int hydro_logger_init(struct mask_data *mask_data) {
+INLINE static int hydro_logger_populate_mask_data(struct mask_data *mask_data) {
   mask_data[hydro_logger_field_coordinates] = logger_create_mask_entry(
       hydro_logger_field_names[hydro_logger_field_coordinates],
       3 * sizeof(double));
@@ -182,11 +182,13 @@ INLINE static char *hydro_logger_write_particle(
   if (logger_should_write_field(
           mask_data[hydro_logger_field_accelerations], mask,
           hydro_logger_field_names[hydro_logger_field_accelerations])) {
-    float acc[3] = {
-        p->a_hydro[0] + xp->a_grav[0],
-        p->a_hydro[1] + xp->a_grav[1],
-        p->a_hydro[2] + xp->a_grav[2],
-    };
+
+    /* Compute the acceleration due to hydro and gravity */
+    float *acc = (float *)buff;
+    acc[0] = p->a_hydro[0] + xp->a_grav[0];
+    acc[1] = p->a_hydro[1] + xp->a_grav[1];
+    acc[2] = p->a_hydro[2] + xp->a_grav[2];
+
     memcpy(buff, acc, 3 * sizeof(float));
     buff += 3 * sizeof(float);
   }
