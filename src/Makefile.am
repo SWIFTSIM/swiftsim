@@ -121,7 +121,7 @@ endif
 # source files for T20 dust evolution
 T20_DUST_SOURCES =
 if HAVET20DUST
-T20_DUST_SOURCES += dust/T20/dust.c
+T20_DUST_SOURCES += dust/T20/dust.c dust/T20/dust_yield_tables.c
 endif
 
 # source files for M16 dust evolution
