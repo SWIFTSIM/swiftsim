@@ -284,6 +284,11 @@ runner_iact_nonsym_bh_gas_swallow(const float r2, const float *dx,
 
   if (bh_props->use_nibbling) {
 
+    /* Don't do anything in the special case of epsilon_r = 1. In this case,
+     * an infinite amount of gas mass would have to be nibbled. */
+    if (bh_props->epsilon_r == 1)
+      return;
+
     /* If we do nibbling, things are quite straightforward. We transfer
      * the mass and all associated quantities right here. */
 

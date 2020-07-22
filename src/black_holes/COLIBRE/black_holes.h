@@ -638,6 +638,10 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
      * in proprtion to its current accretion rate. We do not account for this
      * in the swallowing approach, however. */
     bp->mass -= epsilon_r * accr_rate * dt;
+    if (bp->mass < 0)
+      error("Black hole %lld has reached a negative mass (%f). This is "
+            "not a great situation, so I am stopping.",
+            bp->id, bp->mass);
   }
 
   /* Increase the subgrid angular momentum according to what we accreted
