@@ -29,8 +29,6 @@
  */
 struct cooling_function_data {};
 
-struct cooling_part_data {};
-
 /**
  * @brief Properties of the cooling stored in the #part data.
  */
