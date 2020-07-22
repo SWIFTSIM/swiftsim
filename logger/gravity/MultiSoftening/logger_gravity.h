@@ -20,6 +20,17 @@
 #define SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H
 
 #include "../config.h"
+/**
+   TODO
+
+   Merge everything into writer
+   Use a single enum for both reader / writer
+   Use particle from writer
+   Check_fields -> populate
+   read_gparticle on a single field at a time
+   Use NaN to flag available fields
+   Remove available_fields
+ */
 
 /* local includes */
 #include "logger_loader_io.h"
