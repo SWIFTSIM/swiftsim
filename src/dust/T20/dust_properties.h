@@ -22,7 +22,7 @@
 struct dust_yield_table {
 
   /* Array to read dust yield tables into */
-  /* double *yield; */
+  double *yield;
 
   /* Array to store IMF-resampled dust yield tables */
   double *yield_IMF_resampled;
@@ -44,7 +44,7 @@ struct dustevo_props {
 
   /*! Are we doing grain growth by accretion? */
   int with_accretion;
-
+ 
   /*! Are we using the subgrid T and rho? */
   int with_subgrid_props;
 
@@ -70,6 +70,9 @@ struct dustevo_props {
   struct dust_yield_table dyield_AGB;
   struct dust_yield_table dyield_SNII;
 
+  /* Path to AGB dust yield table */
+  char AGB_dyield_path[200];
+
   /* ------------- Dust Mapping -------------------- */
 
   /* mass fraction of each grain type constituted by given element */ 
@@ -89,7 +92,6 @@ struct dustevo_props {
 
   /* Element condensation fractions */
   float condensation_frac[grain_species_count];
-
 
 };
 

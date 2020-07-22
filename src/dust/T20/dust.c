@@ -1,5 +1,4 @@
 /* Local includes. */
-
 #include "chemistry.h"
 #include "dust_properties.h"
 #include "dust_yield_tables.h"
@@ -137,10 +136,17 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   dp->grain_element_count[grain_species_graphite] = 1;
   dp->grain_element_count[grain_species_silicate] = 4;
 
+  /* hard code AGB dust yield path for now */
+  strncpy(dp->AGB_dyield_path, "./dust_yields", 200);
+
   /** NOTE 1: total metallicity yields untouched here, so Z represents the conserved dust + gas phase metals **/
 
   /** NOTE 2: only the IMF resampled tables are modified in fp, while plain .yield arrays are unchanged (the 
    *  original yield tables are only used to compute these and are already modified via the SNII yield factors) **/
+
   initialise_dyield_tables(fp, dp);
+  compute_AGB_dyield(fp, dp);
   compute_SNII_dyield(fp, dp);
+  print_dyield_tables(fp, dp);
+  exit(0);
 }
