@@ -88,7 +88,7 @@ struct dustevo_props {
   float atomic_weight[chemistry_element_count];
 
   /* Element condensation fractions */
-  float condensation_frac[chemistry_element_count];
+  float condensation_frac[grain_species_count];
 
 
 };
