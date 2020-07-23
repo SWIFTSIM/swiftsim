@@ -147,6 +147,6 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   initialise_dyield_tables(fp, dp);
   compute_AGB_dyield(fp, dp);
   compute_SNII_dyield(fp, dp);
-  print_dyield_tables(fp, dp);
-  exit(0);
+  //print_dyield_tables(fp, dp);
+
 }

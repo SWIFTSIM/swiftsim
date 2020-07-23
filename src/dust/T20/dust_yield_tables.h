@@ -153,7 +153,7 @@ static INLINE void print_dyield_tables(struct feedback_props *fp,
   			     grain_species_count,
   			     eagle_feedback_N_imf_bins);
 
-  	  if (dyield_index_3d % 10 == -1) {
+  	  if (dyield_index_3d % 20 == 0) {
   	    message("\t\t Grain %d | Metallicity %f | Mass %f | Index %d | Yield %f",
   		    grain,
   		    exp10f(fp->yield_SNII.metallicity[i]),
@@ -219,9 +219,8 @@ INLINE static void read_AGB_dyield_tables(struct dustevo_props *dp) {
 
   /* Read AGB tables */
   sprintf(fname, "%s/AGB_dustyield.hdf5", dp->AGB_dyield_path);
-  message("%s, %s", fname, dp->AGB_dyield_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (file_id < 0) error("unable to open file %s\n", fname);
+  if (file_id < 0) error("unable to open file %s\n", fname);	      
 
   double temp_yield_AGB[grain_species_count]
     		       [eagle_feedback_AGB_N_masses];
@@ -237,6 +236,7 @@ INLINE static void read_AGB_dyield_tables(struct dustevo_props *dp) {
                    metallicity_yield_table_name_AGB);
   if (status < 0) error("error reading yield table names");
 
+
   /* read AGB yield tables */
   for (int i = 0; i < eagle_feedback_AGB_N_metals; i++) {
     /* read yields to temporary array */
@@ -247,21 +247,18 @@ INLINE static void read_AGB_dyield_tables(struct dustevo_props *dp) {
     if (status < 0) error("error reading AGB yield");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset");
-
-    message("try setting");
     /* Flatten the temporary tables that were read, store in stars_props */
     for (int k = 0; k < eagle_feedback_AGB_N_masses; k++) {
 
       for (int j = 0; j < grain_species_count; j++) {
         const int flat_index_Z = row_major_index_3d(
-            i, j, k, eagle_feedback_AGB_N_metals, eagle_feedback_AGB_N_elements,
+            i, j, k, eagle_feedback_AGB_N_metals, grain_species_count,
             eagle_feedback_AGB_N_masses);
-
         dp->dyield_AGB.yield[flat_index_Z] = temp_yield_AGB[j][k];
       }
     }
   }
-
+  
   /* Release the memory allocated by HDF5 for the strings */
   status = H5Dvlen_reclaim(datatype, dataspace, H5P_DEFAULT,
                            metallicity_yield_table_name_AGB);
@@ -273,11 +270,7 @@ INLINE static void read_AGB_dyield_tables(struct dustevo_props *dp) {
   status = H5Sclose(dataspace);
   if (status < 0) error("error closing dataspace");
 
-  message("done 1");
-  fflush(stdout);
   status = H5Fclose(file_id);
-  message("done 2");
-  fflush(stdout);
   if (status < 0) error("error closing file");
 #endif
 }
@@ -288,7 +281,7 @@ INLINE static void read_AGB_dyield_tables(struct dustevo_props *dp) {
  * @param feedback_props the #feedback_props data struct.
  */
 INLINE static void resample_AGB_dyield(struct feedback_props *fp,
-				       struct dustevo_props *dp) { //<HERE>
+				       struct dustevo_props *dp) {
 
   int flat_index_3d  ;
 
@@ -305,8 +298,8 @@ INLINE static void resample_AGB_dyield(struct feedback_props *fp,
       for (int j = 0; j < eagle_feedback_AGB_N_masses; j++) {
 	flat_index_3d = row_major_index_3d(
 					   i, grain, j, eagle_feedback_AGB_N_metals,
-					   eagle_feedback_AGB_N_elements, eagle_feedback_AGB_N_masses);
-	AGB_yield[j] = fp->yield_AGB.yield[flat_index_3d] *
+					   grain_species_count, eagle_feedback_AGB_N_masses);
+	AGB_yield[j] = dp->dyield_AGB.yield[flat_index_3d] *
 	  exp(M_LN10 * (-fp->yield_AGB.mass[j]));
       }
 
@@ -326,10 +319,11 @@ INLINE static void resample_AGB_dyield(struct feedback_props *fp,
 
 	flat_index_3d =
 	  row_major_index_3d(i, grain, j, eagle_feedback_AGB_N_metals,
-			     enrichment_of_N_elements_from_yield_tables,
+			     grain_species_count,
 			     eagle_feedback_N_imf_bins);
-	fp->yield_AGB.yield_IMF_resampled[flat_index_3d] =
+	dp->dyield_AGB.yield_IMF_resampled[flat_index_3d] =
 	  exp(M_LN10 * fp->yield_mass_bins[j]) * result;
+	
       }
     }
   }  
@@ -464,7 +458,7 @@ static INLINE void compute_AGB_dyield(struct feedback_props *fp,
   read_AGB_dyield_tables(dp);
   resample_AGB_dyield(fp, dp); 
 
-  message("Budgeting tabulate SNII dust yield from tabulated metal yields");
+  message("Budgeting AGB dust yield from tabulated metal yields");
   /* variables to store temporary values in calculation */
   double dust_contr, elfrac;
   int yield_index_3d;
