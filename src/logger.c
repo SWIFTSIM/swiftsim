@@ -644,7 +644,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     log->mask_data_pointers.hydro = tmp;
 
     /* Set the masks */
-    num_fields = hydro_logger_populate_mask_data(tmp);
+    num_fields = hydro_logger_writer_populate_mask_data(tmp);
     /* Set the particle type */
     for (int i = 0; i < num_fields; i++) {
       tmp[i].type = mask_type_gas;
@@ -659,7 +659,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     log->mask_data_pointers.stars = tmp;
 
     /* Set the masks */
-    int tmp_num_fields = stars_logger_populate_mask_data(tmp);
+    int tmp_num_fields = stars_logger_writer_populate_mask_data(tmp);
     /* Set the particle type */
     for (int i = 0; i < tmp_num_fields; i++) {
       tmp[i].type = mask_type_stars;
@@ -675,7 +675,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     log->mask_data_pointers.gravity = tmp;
 
     /* Set the masks */
-    int tmp_num_fields = gravity_logger_populate_mask_data(tmp);
+    int tmp_num_fields = gravity_logger_writer_populate_mask_data(tmp);
     /* Set the particle type */
     for (int i = 0; i < tmp_num_fields; i++) {
       tmp[i].type = mask_type_dark_matter;
