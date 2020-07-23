@@ -30,7 +30,8 @@
    read_gparticle on a single field at a time
    Use NaN to flag available fields
    Remove available_fields
- */
+   Avoid rounding error for wa and wb
+*/
 
 /* local includes */
 #include "logger_loader_io.h"
