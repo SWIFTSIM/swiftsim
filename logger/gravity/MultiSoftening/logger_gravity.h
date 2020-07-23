@@ -39,7 +39,7 @@
 #include "gravity_io.h"
 
 /* Index of the mask in the header mask array */
-static int gravity_logger_mask_id[gravity_mask_count];
+static int gravity_logger_mask_id[gravity_logger_field_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -51,43 +51,41 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_check_fields(
     struct header *head) {
 
   /* TODO This loop will be moved outside of the module */
+  // Check that all the fields are set
   for(int i = 0; i < gravity_logger_field_count; i++) {
-    gravity_mask_id[i] = -1;
+    gravity_logger_mask_id[i] = -1;
   }
 
   for (int i = 0; i < head->masks_count; i++) {
-    if (strcmp(head->masks[i].name, logger_gpart_field_coordinates) == 0) {
-      gravity_mask_size[gravity_coordinate] = 3 * sizeof(double);
-      gravity_mask_id[gravity_coordinate] = i;
+    int size = 0;
+    if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_coordinates]) == 0) {
+      size = 3 * sizeof(double);
+      gravity_logger_mask_id[gravity_logger_field_coordinates] = i;
 
-    } else if (strcmp(head->masks[i].name, logger_gpart_field_velocities) ==
+    } else if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_velocities]) ==
                0) {
-      gravity_mask_size[gravity_velocity] = 3 * sizeof(float);
-      gravity_mask_id[gravity_velocity] = i;
+      size = 3 * sizeof(float);
+      gravity_logger_mask_id[gravity_logger_field_velocities] = i;
 
-    } else if (strcmp(head->masks[i].name, logger_gpart_field_accelerations) ==
+    } else if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_accelerations]) ==
                0) {
-      gravity_mask_size[gravity_acceleration] = 3 * sizeof(float);
-      gravity_mask_id[gravity_acceleration] = i;
+      size = 3 * sizeof(float);
+      gravity_logger_mask_id[gravity_logger_field_accelerations] = i;
 
-    } else if (strcmp(head->masks[i].name, logger_gpart_field_masses) == 0) {
-      gravity_mask_size[gravity_mass] = sizeof(float);
-      gravity_mask_id[gravity_mass] = i;
+    } else if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_masses]) == 0) {
+      size = sizeof(float);
+      gravity_logger_mask_id[gravity_logger_field_masses] = i;
 
-    } else if (strcmp(head->masks[i].name, logger_gpart_field_ids) == 0) {
-      gravity_mask_size[gravity_id] = sizeof(uint64_t);
-      gravity_mask_id[gravity_id] = i;
+    } else if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_particle_ids]) == 0) {
+      size = sizeof(uint64_t);
+      gravity_logger_mask_id[gravity_logger_field_particle_ids] = i;
     }
 
-  }
-
-  /* This loop will be moved outside of the module */
-  for(int i = 0; i < gravity_mask_count; i++) {
-    int id = gravity_mask_id[i];
-    if (head->masks[id].size != gravity_mask_size[i]) {
-      error("Size are not compatible for the field %s.",
-            head->masks[i].name);
+    /* Check that the size are compatible */
+    if (size != 0 && size != head->masks[i].size) {
+      error("Size are not compatible for the field %s", head->masks[i].name);
     }
+
   }
 }
 
@@ -99,7 +97,7 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_check_fields(
  * @param fields Output: will see format later
  * @param mask Mask of the current record
  */
-void read_gparticle(const int *mask_id, const int n_mask, char *buffer, void *fields,
+void read_gparticle(const struct header *head, const int *mask_id, const int n_mask, char *buffer, void *fields,
                     unsigned int mask_record) {
   for(int i = 0; i < head->masks_count; i++) {
     unsigned int mask = 1 << i;
@@ -123,7 +121,7 @@ void read_gparticle(const int *mask_id, const int n_mask, char *buffer, void *fi
     }
 
     /* Move the buffer */
-    buffer += head->masks.size[i]
+    buffer += head->masks[i].size;
   }
 }
 
@@ -143,9 +141,9 @@ void read_gparticle(const int *mask_id, const int n_mask, char *buffer, void *fi
  */
 __attribute__((always_inline)) INLINE static void
 logger_gparticle_interpolate_field(
-    const logger_gravity_particle *before, const logger_gravity_particle *after,
+    const struct gpart *before, const struct gpart *after,
     void *output, const double t_before, const double t_after,
-    const double t, const int field, const int *available_fields) {
+    const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
@@ -154,26 +152,21 @@ logger_gparticle_interpolate_field(
   /* Compute the interpolation scaling. */
   const double wa =
       (t - t_before) / (t_after - t_before);
-  const double wb =
-      (t_after - t) / (t_after - t_before);
+  const double wb = 1. - wa;
 
   switch(field) {
-    case gravity_mask_id[gravity_coordinate]:
-      if (available_fields[gravity_velocity] &&
-          available_fields[gravity_acceleration]) {
-        /* interpolate vectors. */
-        for (int i = 0; i < 3; i++) {
-          /* position */
-          ((double *)output)[i] = logger_tools_quintic_hermite_spline(
-            t_before, before->x[i], before->v[i], before->a[i],
-            t_after->time, after->x[i], after->v[i], after->a[i],
+    case gravity_logger_field_coordinates:
+      /* interpolate vectors. */
+      for (int i = 0; i < 3; i++) {
+        /* position */
+        ((double *)output)[i] = logger_tools_quintic_hermite_spline(
+            t_before, before->x[i], before->v_full[i], before->a_grav[i],
+            t_after, after->x[i], after->v_full[i], after->a_grav[i],
             t);
-        }
       }
-      else if (available_fields[gravity_velocity]) {
-        // TODO
-      };
       break;
+    default:
+      error("Not implemented");
   }
 }
 

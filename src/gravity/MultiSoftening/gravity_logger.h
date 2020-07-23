@@ -20,6 +20,7 @@
 #define SWIFT_MULTISOFTENING_GRAVITY_LOGGER_H
 
 #include "logger_io.h"
+#include "gravity_part.h"
 
 #ifdef WITH_LOGGER
 
@@ -50,7 +51,7 @@ static const char *gravity_logger_field_names[gravity_logger_field_count] = {
  *
  * @return Number of masks used.
  */
-INLINE static int gravity_logger_populate_mask_data(
+INLINE static int gravity_logger_writer_populate_mask_data(
     struct mask_data *mask_data) {
   mask_data[gravity_logger_field_coordinates] = logger_create_mask_entry(
       gravity_logger_field_names[gravity_logger_field_coordinates],

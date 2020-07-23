@@ -53,7 +53,7 @@ static const char *hydro_logger_field_names[hydro_logger_field_count] = {
  *
  * @return Number of masks used.
  */
-INLINE static int hydro_logger_populate_mask_data(struct mask_data *mask_data) {
+INLINE static int hydro_logger_writer_populate_mask_data(struct mask_data *mask_data) {
   mask_data[hydro_logger_field_coordinates] = logger_create_mask_entry(
       hydro_logger_field_names[hydro_logger_field_coordinates],
       3 * sizeof(double));

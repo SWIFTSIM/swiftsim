@@ -43,6 +43,7 @@
 #include <string.h>
 
 #define STRING_SIZE 200
+#define LOGGER_DOUBLE_NOT_ASSIGNED nan("214");
 
 struct header;
 struct logger_reader;
