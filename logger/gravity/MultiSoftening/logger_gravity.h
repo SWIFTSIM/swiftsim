@@ -36,45 +36,10 @@
 /* local includes */
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
-
-#define logger_gpart_field_coordinates "Coordinates"
-#define logger_gpart_field_velocities "Velocities"
-#define logger_gpart_field_accelerations "Accelerations"
-#define logger_gpart_field_masses "Masses"
-#define logger_gpart_field_ids "ParticleIDs"
-#define logger_gpart_field_flags "SpecialFlags"
-
-#define gravity_mask_count 5
+#include "gravity_io.h"
 
 /* Index of the mask in the header mask array */
-static int gravity_mask_id[gravity_mask_count];
-/* Size of each field */
-static int gravity_mask_size[gravity_mask_count];
-
-enum gravity_mask_index {
-  gravity_coordinate = 0,
-  gravity_velocity = 1,
-  gravity_acceleration = 2,
-  gravity_mass = 3,
-  gravity_id = 4,
-};
-
-struct logger_gravity_particle {
-  /* Particle ID. */
-  uint64_t id;
-
-  /* Particle position. */
-  double x[3];
-
-  /* Particle velocity. */
-  float v[3];
-
-  /* Particle acceleration. */
-  float a[3];
-
-  /* Particle mass. */
-  float mass;
-};
+static int gravity_logger_mask_id[gravity_mask_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -85,8 +50,8 @@ struct logger_gravity_particle {
 __attribute__((always_inline)) INLINE static void logger_gparticle_check_fields(
     struct header *head) {
 
-  /* This loop will be moved outside of the module */
-  for(int i = 0; i < gravity_mask_count; i++) {
+  /* TODO This loop will be moved outside of the module */
+  for(int i = 0; i < gravity_logger_field_count; i++) {
     gravity_mask_id[i] = -1;
   }
 
