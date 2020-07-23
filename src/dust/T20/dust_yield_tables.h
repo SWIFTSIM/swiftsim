@@ -45,7 +45,6 @@ void read_colibre_depletion(hid_t id, float **log_depletion_fractions,
 				  const int table_cooling_N_metallicity,
 				  const int table_cooling_N_density,
 				  const int table_cooling_N_elementtypes);
-
 void depletion_correct_rates(float *cooling_array_heating_rate,
 				   float *cooling_array_cooling_rate,
 				   float *log_depletion_fractions,
