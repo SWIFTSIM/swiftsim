@@ -57,6 +57,21 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
   gp->ti_drift = ti_current;
 #endif
 
+#ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
+  
+  /* Get the ID of the gpart */
+  const long long id = gp->id_or_neg_offset;
+
+  /* Cancel the velocity of the particles */
+  if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
+
+    /* Don't move! */
+    gp->v_full[0] = 0.f;
+    gp->v_full[1] = 0.f;
+    gp->v_full[2] = 0.f;
+  }
+#endif
+
   /* Drift... */
   gp->x[0] += gp->v_full[0] * dt_drift;
   gp->x[1] += gp->v_full[1] * dt_drift;
@@ -95,6 +110,21 @@ __attribute__((always_inline)) INLINE static void drift_part(
         p->ti_drift, ti_old, ti_current);
 
   p->ti_drift = ti_current;
+#endif
+
+#ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
+  
+  /* Get the ID of the gpart */
+  const long long id = p->id;
+
+  /* Cancel the velocity of the particles */
+  if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
+
+    /* Don't move! */
+    xp->v_full[0] = 0.f;
+    xp->v_full[1] = 0.f;
+    xp->v_full[2] = 0.f;
+  }
 #endif
 
   /* Drift... */
@@ -145,6 +175,21 @@ __attribute__((always_inline)) INLINE static void drift_spart(
   sp->ti_drift = ti_current;
 #endif
 
+#ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
+  
+  /* Get the ID of the gpart */
+  const long long id = sp->id;
+
+  /* Cancel the velocity of the particles */
+  if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
+
+    /* Don't move! */
+    sp->v[0] = 0.f;
+    sp->v[1] = 0.f;
+    sp->v[2] = 0.f;
+  }
+#endif
+
   /* Drift... */
   sp->x[0] += sp->v[0] * dt_drift;
   sp->x[1] += sp->v[1] * dt_drift;
@@ -182,6 +227,21 @@ __attribute__((always_inline)) INLINE static void drift_bpart(
         bp->ti_drift, ti_old, ti_current);
 
   bp->ti_drift = ti_current;
+#endif
+
+#ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
+  
+  /* Get the ID of the gpart */
+  const long long id = bp->id;
+
+  /* Cancel the velocity of the particles */
+  if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
+
+    /* Don't move! */
+    bp->v[0] = 0.f;
+    bp->v[1] = 0.f;
+    bp->v[2] = 0.f;
+  }
 #endif
 
   /* Drift... */
