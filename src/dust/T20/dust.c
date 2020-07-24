@@ -71,6 +71,10 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
    **/  
   
   /* read some parameters */
+
+  /* <!! SET IN PARAMETER FILE> */
+  dp->initial_grain_mass_fraction[grain_species_graphite] = 0.;
+  dp->initial_grain_mass_fraction[grain_species_silicate] = 0.;
    
   /* set assumed abundance patterns to Wiersma et al (2009a) */
   memset(dp->abundance_pattern, 0, sizeof dp->abundance_pattern);
@@ -147,6 +151,6 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   initialise_dyield_tables(fp, dp);
   compute_AGB_dyield(fp, dp);
   compute_SNII_dyield(fp, dp);
-  //print_dyield_tables(fp, dp);
+  print_dyield_tables(fp, dp);
 
 }

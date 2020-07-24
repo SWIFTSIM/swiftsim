@@ -18,8 +18,8 @@ struct dust_part_data {
   /*! Fraction of the particle mass in a given species of grain */
   float grain_mass_fraction[grain_species_count];
 
-  /*! Fraction of the particle mass in *all* metals */
-  float grain_mass_fraction_total;
+  /*! Fraction of the particle mass in *all* metals  <!! UNNEEDED? > */
+  //float grain_mass_fraction_total;
 };
 
 /**
@@ -30,8 +30,8 @@ struct dust_bpart_data {
   /*! Mass in a given species of grain */
   float grain_mass[grain_species_count];
 
-  /*! Mass in *all* grains */
-  float grain_mass_total;
+  /*! Mass in *all* grains <!! UNNEEDED?> */
+  //float grain_mass_total;
 };
 
 #endif /* SWIFT_DUST_STRUCT_T20_H */

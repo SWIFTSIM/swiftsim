@@ -205,6 +205,10 @@ static INLINE void compute_SNII_dyield(struct feedback_props *fp,
   
   /* iterate through each grain composition*/
   for (int grain = 0; grain < grain_species_count; grain++) {
+
+    /* grain-specific constants here */
+    c_frac = dp->condensation_frac[grain];
+
     for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
       
       /* get constituent element chemistry index */
@@ -216,7 +220,6 @@ static INLINE void compute_SNII_dyield(struct feedback_props *fp,
       /* get element-specific constants here */
       solar_metalfrac = dp->abundance_pattern[eldx];
       mu_elem_inv = 1./dp->atomic_weight[eldx];
-      c_frac = dp->condensation_frac[eldx];
 
       /* print constituent element */
       elname = chemistry_get_element_name((enum chemistry_element)eldx);
@@ -329,6 +332,10 @@ static INLINE void compute_AGB_dyield(struct feedback_props *fp,
   
   /* iterate through each grain composition*/
   for (int grain = 0; grain < grain_species_count; grain++) {
+
+    /* grain-specific constants here */
+    c_frac = dp->condensation_frac[grain];
+
     for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
       
       /* get constituent element chemistry index */
@@ -340,7 +347,6 @@ static INLINE void compute_AGB_dyield(struct feedback_props *fp,
       /* get element-specific constants here */
       solar_metalfrac = dp->abundance_pattern[eldx];
       mu_elem_inv = 1./dp->atomic_weight[eldx];
-      c_frac = dp->condensation_frac[eldx];
 
       /* print constituent element */
       elname = chemistry_get_element_name((enum chemistry_element)eldx);

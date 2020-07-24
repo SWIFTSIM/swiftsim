@@ -295,6 +295,18 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   pj->chemistry_data.mass_from_collapsar +=
       si->feedback_data.to_distribute.mass_from_collapsar * Omega_frac;
 
+  /* Update mass fraction of each tracked dust grain species */
+  for (int grain = 0; grain < grain_species_count; grain++) {
+    const double current_grain_mass =
+        pj->dust_data.grain_mass_fraction[grain] * current_mass;
+    const double delta_grain_mass =
+        si->feedback_data.to_distribute.dust_mass[grain] * Omega_frac;
+    const double new_grain_mass = current_grain_mass + delta_grain_mass;
+
+    pj->dust_data.grain_mass_fraction[grain] =
+        new_grain_mass * new_mass_inv;
+  }
+
   /* Update iron mass fraction from SNIa  */
   const double current_iron_from_SNIa_mass =
       pj->chemistry_data.iron_mass_fraction_from_SNIa * current_mass;

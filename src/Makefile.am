@@ -61,7 +61,7 @@ include_HEADERS = space.h runner.h queue.h task.h lock.h cell.h part.h const.h \
     feedback.h feedback_struct.h feedback_properties.h task_order.h \
     space_unique_id.h line_of_sight.h \
     event_logger.h event_logger_struct.h event_logger_core.h \
-    dust.h dust_properties.h
+    dust.h dust_properties.h dust_struct.h
 
 # source files for EAGLE cooling
 QLA_COOLING_SOURCES =

@@ -23,6 +23,7 @@
  * feedback */
 #define colibre_feedback_number_of_rays 1
 #include "chemistry_struct.h"
+#include "dust_struct.h"
 
 /**
  * @brief Feedback fields carried by each hydro particles
@@ -78,6 +79,9 @@ struct feedback_spart_data {
 
       /*! Total mass released by each element */
       float metal_mass[chemistry_element_count];
+
+      /*! Total mass released by each grain species */
+      float dust_mass[grain_species_count];
 
       /*! Total mass released due to SNIa */
       float mass_from_SNIa;

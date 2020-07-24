@@ -321,6 +321,10 @@ void compute_SNII_dyield(struct feedback_props *fp,
   
   /* first pass through each grain composition to find bottlenecked yield for each grain type */
   for (int grain = 0; grain < grain_species_count; grain++) {
+
+    /* grain-specific constants here */
+    c_frac = dp->condensation_frac[grain];
+
     for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
       
       /* get constituent element chemistry index */
@@ -331,7 +335,6 @@ void compute_SNII_dyield(struct feedback_props *fp,
 
       /* get element-specific constants here */
       solar_metalfrac = dp->abundance_pattern[eldx];
-      c_frac = dp->condensation_frac[eldx];
 
       for (int i = 0; i < eagle_feedback_SNII_N_metals; i++) {
 	for (int k = 0; k < eagle_feedback_N_imf_bins; k++) {
@@ -364,6 +367,7 @@ void compute_SNII_dyield(struct feedback_props *fp,
 
 	  /* ejected metal mass condensing in the dust phase */
 	  dust_yield = (rel_yield+base_yield) * c_frac / elfrac;
+	  
 
 	  /* if dust yield is unset or estimated larger than predicted for this element, set */
 	    if (dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d] != 0){
@@ -374,13 +378,13 @@ void compute_SNII_dyield(struct feedback_props *fp,
 	      dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d] = dust_yield;
 	    }
 	  
-	  if (yield_index_3d % 50 == -1) {
-	    message("\t Index %d :: Dindex %d :: :: Mass %f :: Metallicity %f :: Orig Yield %f :: Dust Yield %f :: Mod Yield %f",
+	  if (yield_index_3d % 50 == 0) {
+	    message("\t Index %d :: Dindex %d :: :: Mass %f :: Metallicity %f :: cfrac %f :: Dust Yield %f :: Mod Yield %f",
 		    //elname,
 		    yield_index_3d, dyield_index_3d, 
 		    exp10f(fp->yield_mass_bins[k]), 
 		    exp10f(fp->yield_SNII.metallicity[i]), 
-		    rel_yield, 
+		    c_frac, 
 		    dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d],
 		    fp->yield_SNII.yield_IMF_resampled[yield_index_3d]);
 		     
@@ -436,7 +440,7 @@ void compute_AGB_dyield(struct feedback_props *fp,
   read_AGB_dyield_tables(dp);
   resample_AGB_dyield(fp, dp); 
 
-  message("Budgeting tabulate SNII dust yield from tabulated metal yields");
+  message("Budgeting AGB dust yield from tabulated metal yields");
   /* variables to store temporary values in calculation */
   double dust_contr, elfrac;
   int yield_index_3d;
