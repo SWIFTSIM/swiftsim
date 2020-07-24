@@ -42,6 +42,7 @@
  * @param ti_old Integer start of time-step (for debugging checks).
  * @param ti_current Integer end of time-step (for debugging checks).
  * @param grav_props The properties of the gravity scheme.
+ * @param e the #engine
  */
 __attribute__((always_inline)) INLINE static void drift_gpart(
     struct gpart *restrict gp, double dt_drift, integertime_t ti_old,
@@ -60,7 +61,7 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
 #endif
 
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
-  
+
   /* Get the ID of the gpart */
   long long id = 0;
   if (gp->type == swift_type_gas)
@@ -69,7 +70,7 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
     id = e->s->sparts[-gp->id_or_neg_offset].id;
   else if (gp->type == swift_type_black_hole)
     id = e->s->bparts[-gp->id_or_neg_offset].id;
-  else 
+  else
     id = gp->id_or_neg_offset;
 
   /* Cancel the velocity of the particles */
@@ -123,7 +124,7 @@ __attribute__((always_inline)) INLINE static void drift_part(
 #endif
 
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
-  
+
   /* Get the ID of the gpart */
   const long long id = p->id;
 
@@ -186,7 +187,7 @@ __attribute__((always_inline)) INLINE static void drift_spart(
 #endif
 
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
-  
+
   /* Get the ID of the gpart */
   const long long id = sp->id;
 
@@ -240,7 +241,7 @@ __attribute__((always_inline)) INLINE static void drift_bpart(
 #endif
 
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
-  
+
   /* Get the ID of the gpart */
   const long long id = bp->id;
 
