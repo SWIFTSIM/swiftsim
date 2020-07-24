@@ -15,17 +15,13 @@ import liblogger as logger
 def plot3D(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    if "gas" in data:
-        pos = data["gas"]["Coordinates"]
-        ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.1)
-    if "dark_matter" in data:
-        pos = data["dark_matter"]["Coordinates"]
-        ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.1,
-                color="k")
+    pos = data
+    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.1)
 
 
 def plot2D(data):
-    pos = data["gas"]["Coordinates"]
+    # pos = data["gas"]["Coordinates"]
+    pos = data
 
     center = np.array([0.5]*3)
     r2 = np.sum((pos - center)**2, axis=1)
@@ -57,19 +53,9 @@ print("time: %g" % time)
 
 # read the logger
 t = logger.getTimeLimits(basename)
-data = logger.loadSnapshotAtTime(basename, time)
-
-if "gas" in data:
-    print("The data contains the following elements for the gas:")
-    print(data["gas"].dtype.names)
-
-if "dark_matter" in data:
-    print("The data contains the following elements for the dark matter:")
-    print(data["dark_matter"].dtype.names)
-
-if "stars" in data:
-    print("The data contains the following elements for the stars:")
-    print(data["stars"].dtype.names)
+data = logger.get_particle_data(basename, ["Coordinates"], time)
+print(data)
+print(data.max())
 
 plot3D(data)
 # plot2D(data)

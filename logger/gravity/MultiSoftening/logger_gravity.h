@@ -24,13 +24,8 @@
    TODO
 
    Merge everything into writer
-   Use a single enum for both reader / writer
-   Use particle from writer
-   Check_fields -> populate
    read_gparticle on a single field at a time
    Use NaN to flag available fields
-   Remove available_fields
-   Avoid rounding error for wa and wb
 */
 
 /* local includes */
@@ -39,7 +34,7 @@
 #include "gravity_io.h"
 
 /* Index of the mask in the header mask array */
-static int gravity_logger_mask_id[gravity_logger_field_count];
+extern int gravity_logger_mask_id[gravity_logger_field_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -47,21 +42,14 @@ static int gravity_logger_mask_id[gravity_logger_field_count];
  *
  * @param head The #header.
  */
-__attribute__((always_inline)) INLINE static void logger_gparticle_check_fields(
+__attribute__((always_inline)) INLINE static void gravity_logger_reader_populate_mask_data(
     struct header *head) {
-
-  /* TODO This loop will be moved outside of the module */
-  // Check that all the fields are set
-  for(int i = 0; i < gravity_logger_field_count; i++) {
-    gravity_logger_mask_id[i] = -1;
-  }
 
   for (int i = 0; i < head->masks_count; i++) {
     int size = 0;
     if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_coordinates]) == 0) {
       size = 3 * sizeof(double);
       gravity_logger_mask_id[gravity_logger_field_coordinates] = i;
-
     } else if (strcmp(head->masks[i].name, gravity_logger_field_names[gravity_logger_field_velocities]) ==
                0) {
       size = 3 * sizeof(float);
@@ -89,42 +77,6 @@ __attribute__((always_inline)) INLINE static void logger_gparticle_check_fields(
   }
 }
 
-
-/**
- * @param mask_id Mask to read (index in header)
- * @param n_mask number of mask to read
- * @param buffer The file
- * @param fields Output: will see format later
- * @param mask Mask of the current record
- */
-void read_gparticle(const struct header *head, const int *mask_id, const int n_mask, char *buffer, void *fields,
-                    unsigned int mask_record) {
-  for(int i = 0; i < head->masks_count; i++) {
-    unsigned int mask = 1 << i;
-
-    /* Can we skip this mask? */
-    if (!(mask_record & mask)) {
-      continue;
-    }
-
-    /* Check if we want to read it */
-    int j;
-    for(j = 0; j < n_mask; j++) {
-      if (mask_id[j] == i) {
-        break;
-      }
-    }
-
-    /* Copy the field if we need it. */
-    if (j != n_mask) {
-      memcpy(fields, buffer, head->masks[i].size);
-    }
-
-    /* Move the buffer */
-    buffer += head->masks[i].size;
-  }
-}
-
 /**
  * @brief Interpolate the location of the particle at the given time.
  * Here we use a linear interpolation for most of the fields.
@@ -141,7 +93,7 @@ void read_gparticle(const struct header *head, const int *mask_id, const int n_m
  */
 __attribute__((always_inline)) INLINE static void
 logger_gparticle_interpolate_field(
-    const struct gpart *before, const struct gpart *after,
+    void *field_before, void *field_after,
     void *output, const double t_before, const double t_after,
     const double t, const int field) {
 
@@ -158,11 +110,13 @@ logger_gparticle_interpolate_field(
     case gravity_logger_field_coordinates:
       /* interpolate vectors. */
       for (int i = 0; i < 3; i++) {
-        /* position */
-        ((double *)output)[i] = logger_tools_quintic_hermite_spline(
-            t_before, before->x[i], before->v_full[i], before->a_grav[i],
-            t_after, after->x[i], after->v_full[i], after->a_grav[i],
-            t);
+        ((double *)output)[i] = wa * ((double *) field_after)[i] +
+          wb * ((double *) field_before)[i];
+        /* /\* position *\/ */
+        /* ((double *)output)[i] = logger_tools_quintic_hermite_spline( */
+        /*     t_before, before->x[i], before->v_full[i], before->a_grav[i], */
+        /*     t_after, after->x[i], after->v_full[i], after->a_grav[i], */
+        /*     t); */
       }
       break;
     default:

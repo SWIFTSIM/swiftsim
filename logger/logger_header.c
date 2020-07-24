@@ -192,7 +192,15 @@ void header_read(struct header *h, struct logger_logfile *log) {
   /* Check that the fields have the correct size */
   logger_particle_check_fields(h);
   logger_sparticle_check_fields(h);
-  logger_gparticle_check_fields(h);
+
+  for(int i = 0; i < gravity_logger_field_count; i++) {
+    gravity_logger_mask_id[i] = -1;
+  }
+  gravity_logger_reader_populate_mask_data(h);
+  for(int i = 0; i < gravity_logger_field_count; i++) {
+    if (gravity_logger_mask_id[i] == -1)
+      error("A field in gravity_logger_reader_populate_mask_data is not set");
+  }
 };
 
 /**

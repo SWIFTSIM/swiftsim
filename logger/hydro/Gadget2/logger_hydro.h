@@ -24,6 +24,7 @@
 /* local includes */
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
+#include "hydro_io.h"
 
 #define logger_part_field_coordinates "Coordinates"
 #define logger_part_field_velocities "Velocities"

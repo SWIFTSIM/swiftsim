@@ -24,6 +24,7 @@
 /* local includes */
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
+#include "stars_io.h"
 
 #define logger_spart_field_coordinates "Coordinates"
 #define logger_spart_field_velocities "Velocities"
