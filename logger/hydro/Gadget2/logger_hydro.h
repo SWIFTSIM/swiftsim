@@ -287,36 +287,6 @@ logger_particle_interpolate(const struct logger_particle *part_bef,
  */
 INLINE static int logger_particles_generate_python(
     struct logger_python_field *list) {
-
-  struct logger_particle *part;
-
-  /* List what we want to use in python */
-  list[0] =
-      logger_loader_python_field(logger_part_field_coordinates, part, x, "3f8");
-
-  list[1] =
-      logger_loader_python_field(logger_part_field_velocities, part, v, "3f4");
-
-  // TODO sum the grav + hydro accelerations
-  list[2] = logger_loader_python_field(logger_part_field_accelerations, part, a,
-                                       "3f4");
-
-  list[3] =
-      logger_loader_python_field(logger_part_field_masses, part, mass, "f4");
-
-  list[4] = logger_loader_python_field(logger_part_field_h, part, h, "f4");
-
-  list[5] = logger_loader_python_field(logger_part_field_entropies, part,
-                                       entropy, "f4");
-
-  list[6] = logger_loader_python_field(logger_part_field_ids, part, id, "i8");
-
-  list[7] =
-      logger_loader_python_field(logger_part_field_densities, part, rho, "f4");
-
-  list[8] = logger_loader_python_field("Times", part, time, "f8");
-
-  return 9;
 }
 #endif /* HAVE_PYTHON */
 

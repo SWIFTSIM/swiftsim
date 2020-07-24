@@ -124,4 +124,17 @@ logger_gparticle_interpolate_field(
   }
 }
 
+#ifdef HAVE_PYTHON
+__attribute__((always_inline)) INLINE static void
+gravity_logger_generate_python(struct logger_python_field *fields) {
+
+  fields[gravity_logger_field_coordinates] = logger_loader_python_field(/* Dimension */ 3, NPY_DOUBLE);
+  fields[gravity_logger_field_velocities] = logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
+  fields[gravity_logger_field_accelerations] = logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
+  fields[gravity_logger_field_masses] = logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+  fields[gravity_logger_field_particle_ids] = logger_loader_python_field(/* Dimension */ 1, NPY_LONGLONG);
+}
+
+
+#endif  // HAVE_PYTHON
 #endif  // SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H

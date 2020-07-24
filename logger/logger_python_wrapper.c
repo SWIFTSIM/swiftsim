@@ -98,6 +98,46 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
   return Py_BuildValue("");
 }
 
+
+__attribute__((always_inline)) INLINE static PyObject
+*logger_loader_create_output(void **output, const int *field_indices, const int n_fields,
+                             uint64_t n_tot) {
+
+  struct logger_python_field python_fields[100];
+  gravity_logger_generate_python(python_fields);
+
+  PyObject *list = PyList_New(n_fields);
+  struct logger_python_field *tmp;
+
+  for(int i = 0; i < n_fields; i++) {
+    tmp = NULL;
+    for(int j = 0; j < gravity_logger_field_count; j++) {
+      if (field_indices[i] == gravity_logger_mask_id[j]) {
+        tmp = &python_fields[j];
+        break;
+      }
+    }
+    if (tmp == NULL) {
+      error("Failed to find the required field");
+    }
+
+    PyObject *tmp_array = NULL;
+    if (tmp->dimension > 1) {
+      npy_intp dims[2] = {n_tot, tmp->dimension};
+      tmp_array = PyArray_SimpleNewFromData(2, dims, tmp->typenum, output[i]);
+    }
+    else {
+      npy_intp dims = n_tot;
+      tmp_array = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, output[i]);
+    }
+
+    PyList_SetItem(list, i, tmp_array);
+  }
+
+  return list;
+}
+
+
 /**
  */
 static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
@@ -170,8 +210,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                    field_indices, n_fields, output,
                                    n_part);
 
-  npy_intp dims[2] = {n_tot, 3};
-  PyObject *array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, output[0]);
+  PyObject *array = logger_loader_create_output(output, field_indices, n_fields, n_tot);
 
   /* Free the reader. */
   logger_reader_free(&reader);
