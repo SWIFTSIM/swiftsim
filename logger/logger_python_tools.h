@@ -24,9 +24,6 @@
 /* Include the tools */
 #include "logger_tools.h"
 
-/* Local includes */
-#include "logger_particle_array.h"
-
 #if HAVE_PYTHON
 /* Include numpy */
 #include <numpy/arrayobject.h>
