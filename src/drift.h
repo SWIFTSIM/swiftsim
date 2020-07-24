@@ -27,6 +27,7 @@
 #include "const.h"
 #include "debug.h"
 #include "dimension.h"
+#include "engine.h"
 #include "entropy_floor.h"
 #include "hydro.h"
 #include "hydro_properties.h"
@@ -44,7 +45,8 @@
  */
 __attribute__((always_inline)) INLINE static void drift_gpart(
     struct gpart *restrict gp, double dt_drift, integertime_t ti_old,
-    integertime_t ti_current, const struct gravity_props *grav_props) {
+    integertime_t ti_current, const struct gravity_props *grav_props,
+    const struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (gp->ti_drift != ti_old)
@@ -60,7 +62,15 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
   
   /* Get the ID of the gpart */
-  const long long id = gp->id_or_neg_offset;
+  long long id = 0;
+  if (gp->type == swift_type_gas)
+    id = e->s->parts[-gp->id_or_neg_offset].id;
+  else if (gp->type == swift_type_stars)
+    id = e->s->sparts[-gp->id_or_neg_offset].id;
+  else if (gp->type == swift_type_black_hole)
+    id = e->s->bparts[-gp->id_or_neg_offset].id;
+  else 
+    id = gp->id_or_neg_offset;
 
   /* Cancel the velocity of the particles */
   if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
