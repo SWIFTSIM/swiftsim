@@ -21,40 +21,27 @@
 
 #include "../config.h"
 
-/* Include the tools */
+/* Local includes. */
 #include "logger_tools.h"
+#include "logger_gravity.h"
 
 #if HAVE_PYTHON
 /* Include numpy */
 #include <numpy/arrayobject.h>
 
-extern PyArray_Descr *logger_particle_descr;
-extern PyArray_Descr *logger_gparticle_descr;
-extern PyArray_Descr *logger_sparticle_descr;
-
 /* Structure that allows the user to easily define the
    fields in a numpy array. */
 struct logger_python_field {
+  /* Dimension of the field (e.g. 1 for density and 3 for coordinates). */
+  int dimension;
 
-  /* The name of the field */
-  char name[STRING_SIZE];
-
-  /* The offset of the field in the structure */
-  size_t offset;
-
-  /* The type of data (following numpy definition) */
-  char type[STRING_SIZE];
+  /* Typenum of the array. */
+  int typenum;
 };
-
-#define logger_loader_python_field(name, parts, field, type) \
-  logger_loader_python_field_function(                       \
-      name, ((char *)(&parts[0].field) - (char *)parts), type)
 
 /**
  * @brief Generate a #logger_python_field structure.
  *
- * @param name The name of the field.
- * @param offset The offset of the field in the corresponding structure.
  * @param dimension The number of dimension for the field.
  * @param type The numpy data type (e.g. NPY_FLOAT32, NPY_DOUBLE, NPY_LONGLONG,
  * ...)
@@ -62,13 +49,11 @@ struct logger_python_field {
  * @return The initialized structure.
  */
 __attribute__((always_inline)) INLINE static struct logger_python_field
-logger_loader_python_field_function(char *name, size_t offset,
-                                    const char *numpy_type) {
+logger_loader_python_field(int dimension, int numpy_type) {
   struct logger_python_field ret;
 
-  strcpy(ret.name, name);
-  ret.offset = offset;
-  strcpy(ret.type, numpy_type);
+  ret.typenum = numpy_type;
+  ret.dimension = dimension;
 
   return ret;
 }

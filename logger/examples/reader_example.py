@@ -53,10 +53,12 @@ print("time: %g" % time)
 
 # read the logger
 t = logger.getTimeLimits(basename)
-data = logger.get_particle_data(basename, ["Coordinates"], time)
-print(data)
-print(data.max())
+pos, vel = logger.get_particle_data(basename, ["Coordinates", "Velocities"],
+                                    time)
+print(pos)
+print(vel)
+print(pos.max(), vel.max())
 
-plot3D(data)
+plot3D(pos)
 # plot2D(data)
 plt.show()

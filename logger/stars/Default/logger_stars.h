@@ -262,28 +262,6 @@ logger_sparticle_interpolate(const struct logger_sparticle *part_bef,
  */
 INLINE static int logger_sparticles_generate_python(
     struct logger_python_field *list) {
-  struct logger_sparticle *part;
-
-  /* List what we want to use in python */
-  list[0] = logger_loader_python_field(logger_spart_field_coordinates, part, x,
-                                       "3f8");
-
-  list[1] =
-      logger_loader_python_field(logger_spart_field_velocities, part, v, "3f4");
-
-  list[2] = logger_loader_python_field(logger_spart_field_accelerations, part,
-                                       a, "3f4");
-
-  list[3] =
-      logger_loader_python_field(logger_spart_field_masses, part, mass, "f4");
-
-  list[4] = logger_loader_python_field(logger_spart_field_h, part, h, "f4");
-
-  list[5] = logger_loader_python_field(logger_spart_field_ids, part, id, "i8");
-
-  list[6] = logger_loader_python_field("Times", part, time, "f8");
-
-  return 7;
 }
 #endif /* HAVE_PYTHON */
 
