@@ -163,7 +163,7 @@ __attribute__((always_inline)) INLINE static void drift_part(
   }
 
 #ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
-  
+
   /* Cancel the velocity of the particles */
   if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
     p->v[0] = 0.f;
