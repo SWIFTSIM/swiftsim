@@ -29,31 +29,30 @@ in the sampling of the halo is reduced.
 Note also that this does not affect the hydrodynamic forces. This mode is
 purely designed for gravity-only accuracy tests.
 
-Besides the pure gravity mode, swift also has the boundary particle mode, this
-mode turns off gravity forces and hydro forces for all particles. Because gas
-particles only receive hydro this mode only impacts gas particles more strictly 
-than other particles. This mode can be activated using 
-``--enable-boundary-particles=N``. This will zero the gravitational and 
-hydrodynamic *accelerations* of all particles with ``id`` (strictly) lower than
-``N`` at every time-step. Still if particles have an initial velocity they will 
-keep moving at that speed. This compilation option also activates 
-``--enable-no-gravity-below-id=N``. 
+Besides the pure gravity mode, swift also has the boundary particle mode,
+this mode turns off both the gravity forces and hydro forces for all
+particles. Because gas particles only receive hydro this mode only impacts
+gas particles more strictly than other particles. This mode can be
+activated using ``--enable-boundary-particles=N``. This will zero the
+gravitational and hydrodynamic *accelerations* of all particles with ``id``
+(strictly) lower than ``N`` at every time-step. Still if particles have an
+initial velocity they will keep moving at that speed. This compilation
+option also activates ``--enable-no-gravity-below-id=N``. 
 
 Typical use cases are hydrodynamical experiments that have boundaries. 
 
-Both ``--enable-boundary-particles=N`` and ``--enable-no-gravity-below-id=N``
-have a short come that is that when we use a subgrid model that directly 
-changes the velocity of the boundary or no gravity particles, that the 
-velocity can still change. An example of this is momentum injection of stellar
-winds for example. In the case that we want to keep the boundary particles fixed 
-at the same place for the whole simulation we can use the 
-``--enable-fixed-boundary-particles=N`` compile option, this option explicitly
-sets the velocity of the boundary particles to zero every time step besides 
-using the ``--enable-boundary-particles=N`` option. 
+Both options discussed above only cancel accelerations and have no impact
+on what can happen in any code module that directly changes the velocity of
+the boundary or no gravity particles. An example of this is momentum
+injection of stellar winds for example. If we additionally want to keep the
+boundary particles fixed at the same position for the whole simulation we can
+use the ``--enable-fixed-boundary-particles=N`` compile option, this option
+explicitly sets the velocity of the boundary particles to zero every time
+step on top of also zeroing the accelerations.
 
-A typical use cases is an idealized setup in which we have a black hole in 
-the center of a galaxy that accretes gas but is not allowed to move due to
-momentum conservation because it accretes gas. 
+A typical use cases is an idealized setup in which we have a black hole in
+the centre of a galaxy that accretes gas but is not allowed to move from
+the momentum recoil of the gas it swallows.
 
 Gravity glasses
 ~~~~~~~~~~~~~~~
