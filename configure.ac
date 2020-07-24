@@ -412,7 +412,7 @@ fi
 # Check if we want to use fixed boundary particles.
 AC_ARG_ENABLE([fixed-boundary-particles],
    [AS_HELP_STRING([--enable-fixed-boundary-particles],
-     [Set all particles with an ID smaller than @<:@N@:>@ as fixed boundary particles (i.e. receive zero gravity + hydro forces + zero velocity).]
+     [Set all particles with an ID smaller than @<:@N@:>@ as fixed boundary particles (i.e. receive zero gravity + hydro forces + zero velocity), this mode enables also --enable-boundary-particles and --enable-no-gravity-below-id.]
    )],
    [fixed_boundary_particles="$enableval"],
    [fixed_boundary_particles="no"]

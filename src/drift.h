@@ -161,6 +161,16 @@ __attribute__((always_inline)) INLINE static void drift_part(
     xp->x_diff[k] -= dx;
     xp->x_diff_sort[k] -= dx;
   }
+
+#ifdef SWIFT_FIXED_BOUNDARY_PARTICLES
+  
+  /* Cancel the velocity of the particles */
+  if (id < SWIFT_FIXED_BOUNDARY_PARTICLES) {
+    p->v[0] = 0.f;
+    p->v[1] = 0.f;
+    p->v[2] = 0.f;
+  }
+#endif
 }
 
 /**
