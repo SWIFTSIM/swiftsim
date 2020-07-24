@@ -69,6 +69,13 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   
   /* read some parameters */
 
+  /* <!! SET IN PARAMETER FILE> */
+  dp->initial_grain_mass_fraction[grain_species_C] = 0.;
+  dp->initial_grain_mass_fraction[grain_species_O] = 0.;
+  dp->initial_grain_mass_fraction[grain_species_Mg] = 0.;
+  dp->initial_grain_mass_fraction[grain_species_Si] = 0.;
+  dp->initial_grain_mass_fraction[grain_species_Fe] = 0.;
+
   /* set assumed abundance patterns to Wiersma et al (2009a) */
   memset(dp->abundance_pattern, 0, sizeof dp->abundance_pattern);
   dp->abundance_pattern[chemistry_element_H] = 7.0649785e-01 / 0.0127;

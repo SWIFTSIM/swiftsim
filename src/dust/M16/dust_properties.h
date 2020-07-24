@@ -72,6 +72,9 @@ struct dustevo_props {
 
   /* ------------- Dust Mapping -------------------- */
 
+  /* initial abundance of dust species */ 
+  float initial_grain_mass_fraction[grain_species_count];  
+
   /* mass fraction of each grain type constituted by given element */ 
   float* grain_element_mfrac[grain_species_count];  
 

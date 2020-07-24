@@ -36,7 +36,8 @@
 #include "physical_constants.h"
 #include "timers.h"
 #include "yield_tables.h"
-//#include "dust_properties.h"
+#include "dust_properties.h"
+#include "dust.h"
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
@@ -947,6 +948,7 @@ INLINE static void evolve_SNIa(const float log10_min_mass,
 INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
                                float* stellar_yields,
                                const struct feedback_props* props,
+			       const struct dustevo_props* dp,
                                struct spart* sp) {
 
   int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
@@ -1036,6 +1038,33 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
+  /* compute dust produced */
+  float dust_mass_released[grain_species_count];
+
+  for (int grain = 0; grain < grain_species_count;
+       grain++) {
+    for (mass_bin_index = low_imf_mass_bin_index;
+         mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
+      low_index_3d = row_major_index_3d(
+          iz_low, grain, mass_bin_index, eagle_feedback_SNII_N_metals,
+	  grain_species_count,
+          eagle_feedback_N_imf_bins);
+      high_index_3d = row_major_index_3d(
+          iz_high, grain, mass_bin_index, eagle_feedback_SNII_N_metals,
+          grain_species_count,
+          eagle_feedback_N_imf_bins);
+
+      stellar_yields[mass_bin_index] =
+          (1 - dz) * (dp->dyield_SNII.yield_IMF_resampled[low_index_3d]) +
+          dz * (dp->dyield_SNII.yield_IMF_resampled[high_index_3d]);
+    }
+
+    dust_mass_released[grain] = integrate_imf(
+        log10_min_mass, log10_max_mass, eagle_imf_integration_yield_weight,
+        stellar_yields, props);
+  }
+
+
   /* yield normalization */
   float mass_ejected, mass_released;
 
@@ -1045,7 +1074,10 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
-  /* compute the total metal mass ejected from the star*/
+  for (int grain = 0; grain < grain_species_count; grain++)
+    dust_mass_released[grain] = max(dust_mass_released[grain], 0.f);  
+
+  /* compute the total mass ejected from the star*/
   for (mass_bin_index = low_imf_mass_bin_index;
        mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
     low_index_2d =
@@ -1086,6 +1118,12 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
         metal_mass_released_total * norm_factor;
     sp->feedback_data.to_distribute.metal_mass_from_SNII +=
         metal_mass_released_total * norm_factor;
+
+    for (int grain = 0; grain < grain_species_count; grain++) {
+      sp->feedback_data.to_distribute.dust_mass[grain] +=
+          dust_mass_released[grain] * norm_factor;
+    }
+
   } else {
     error("wrong normalization!!!! mass_released = %e\n", mass_released);
   }
@@ -1108,6 +1146,7 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
 INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
                               float* stellar_yields,
                               const struct feedback_props* props,
+			      const struct dustevo_props* dp,
                               struct spart* sp) {
 
   int low_imf_mass_bin_index, high_imf_mass_bin_index, mass_bin_index;
@@ -1191,6 +1230,33 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
       integrate_imf(log10_min_mass, log10_max_mass,
                     eagle_imf_integration_yield_weight, stellar_yields, props);
 
+
+  /* compute dust produced */
+  float dust_mass_released[grain_species_count];
+
+  for (int grain = 0; grain < grain_species_count;
+       grain++) {
+    for (mass_bin_index = low_imf_mass_bin_index;
+         mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
+      low_index_3d = row_major_index_3d(
+          iz_low, grain, mass_bin_index, eagle_feedback_AGB_N_metals,
+	  grain_species_count,
+          eagle_feedback_N_imf_bins);
+      high_index_3d = row_major_index_3d(
+          iz_high, grain, mass_bin_index, eagle_feedback_AGB_N_metals,
+          grain_species_count,
+          eagle_feedback_N_imf_bins);
+
+      stellar_yields[mass_bin_index] =
+          (1 - dz) * (dp->dyield_AGB.yield_IMF_resampled[low_index_3d]) +
+          dz * (dp->dyield_AGB.yield_IMF_resampled[high_index_3d]);
+    }
+
+    dust_mass_released[grain] = integrate_imf(
+        log10_min_mass, log10_max_mass, eagle_imf_integration_yield_weight,
+        stellar_yields, props);
+  }
+
   /* yield normalization */
   float mass_ejected, mass_released;
 
@@ -1200,7 +1266,10 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
 
   metal_mass_released_total = max(metal_mass_released_total, 0.f);
 
-  /* compute the total metal mass ejected from the star */
+  for (int grain = 0; grain < grain_species_count; grain++)
+    dust_mass_released[grain] = max(dust_mass_released[grain], 0.f);
+
+  /* compute the total mass ejected from the star */
   for (mass_bin_index = low_imf_mass_bin_index;
        mass_bin_index < high_imf_mass_bin_index + 1; mass_bin_index++) {
     low_index_2d =
@@ -1240,6 +1309,12 @@ INLINE static void evolve_AGB(const float log10_min_mass, float log10_max_mass,
         metal_mass_released_total * norm_factor;
     sp->feedback_data.to_distribute.metal_mass_from_AGB +=
         metal_mass_released_total * norm_factor;
+
+    for (int grain = 0; grain < grain_species_count; grain++) {
+      sp->feedback_data.to_distribute.dust_mass[grain] +=
+          dust_mass_released[grain] * norm_factor;
+    }
+
   } else {
     error("wrong normalization!!!! mass_released = %e\n", mass_released);
   }
@@ -1477,7 +1552,9 @@ INLINE static void compute_stellar_momentum(struct spart* sp,
  * numbers).
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
-                               const struct cosmology* cosmo, struct spart* sp,
+                               const struct cosmology* cosmo, 
+			       const struct dustevo_props* dustevo_props,
+			       struct spart* sp,
                                const struct unit_system* us, const double age,
                                const double dt, const double time_beg_of_step,
                                const integertime_t ti_begin) {
@@ -1678,11 +1755,11 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   }
   if (feedback_props->with_SNII_enrichment) {
     evolve_SNII(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-                stellar_yields, feedback_props, sp);
+                stellar_yields, feedback_props, dustevo_props, sp);
   }
   if (feedback_props->with_AGB_enrichment) {
     evolve_AGB(log10_min_dying_mass_Msun, log10_max_dying_mass_Msun,
-               stellar_yields, feedback_props, sp);
+               stellar_yields, feedback_props, dustevo_props, sp);
   }
   if (feedback_props->with_r_process_enrichment) {
     evolve_NSM_stochastic(feedback_props, sp, star_age_Gyr, dt_Gyr, ti_begin,

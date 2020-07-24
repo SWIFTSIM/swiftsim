@@ -46,6 +46,7 @@
 #include "const.h"
 #include "cooling.h"
 #include "debug.h"
+#include "dust.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity.h"
@@ -5201,6 +5202,7 @@ void space_init_parts_mapper(void *restrict map_data, int count,
     hydro_init_part(&parts[k], hs);
     black_holes_init_potential(&parts[k].black_holes_data);
     chemistry_init_part(&parts[k], e->chemistry);
+    dust_init_part(&parts[k], e->dustevo);
     pressure_floor_init_part(&parts[k], &xparts[k]);
     star_formation_init_part(&parts[k], e->star_formation);
     tracers_after_init(&parts[k], &xparts[k], e->internal_units,

@@ -7,13 +7,23 @@
 #include "units.h"
 #include "physical_constants.h"
 
+struct dust_yield_table {
+  double *yield_IMF_resampled;
+};
+
+
 /**
  * @brief Properties of the dust evolution model.
  *
- * Nothing here.
+ * Instantiate global dust parameters referenced (but unused) elsewhere
+ * in the code when runnning with 'none' type dust model.
  */
 struct dustevo_props {
   float *logfD;
+  
+  struct dust_yield_table dyield_AGB;
+  struct dust_yield_table dyield_SNII;
+
 };
 
 /**

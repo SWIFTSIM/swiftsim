@@ -31,7 +31,9 @@
 //#include "dust.h"
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
-                               const struct cosmology* cosmo, struct spart* sp,
+                               const struct cosmology* cosmo, 
+			       const struct dustevo_props* dustevo_props,
+			       struct spart* sp,
                                const struct unit_system* us, const double age,
                                const double dt, const double time_beg_of_step,
                                const integertime_t ti_begin);
@@ -231,7 +233,8 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  */
 __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
-    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct cosmology* cosmo, const struct dustevo_props* dustevo_props,
+    const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
     const double dt, const double time, const integertime_t ti_begin,
     const int with_cosmology) {
@@ -242,7 +245,8 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
 
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
-  compute_stellar_evolution(feedback_props, cosmo, sp, us, star_age_beg_step,
+  compute_stellar_evolution(feedback_props, cosmo, dustevo_props,
+			    sp, us, star_age_beg_step,
                             dt, time - dt, ti_begin);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */

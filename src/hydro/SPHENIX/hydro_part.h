@@ -29,6 +29,7 @@
 #include "black_holes_struct.h"
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
+#include "dust_struct.h"
 #include "feedback_struct.h"
 #include "pressure_floor_struct.h"
 #include "star_formation_struct.h"
@@ -201,6 +202,9 @@ struct part {
 
   /*! Chemistry information */
   struct chemistry_part_data chemistry_data;
+
+  /*! Dust information */
+  struct dust_part_data dust_data;
 
   /*! Cooling information */
   struct cooling_part_data cooling_data;
