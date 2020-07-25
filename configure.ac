@@ -1657,7 +1657,7 @@ case "$with_subgrid" in
 	with_subgrid_cooling=COLIBRE
 	with_subgrid_chemistry=COLIBRE
 	with_subgrid_tracers=COLIBRE
-	with_subgrid_entropy_floor=COLIBRE
+	with_subgrid_entropy_floor=none
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
@@ -1671,7 +1671,7 @@ case "$with_subgrid" in
 	with_subgrid_cooling=CHIMES
 	with_subgrid_chemistry=COLIBRE
 	with_subgrid_tracers=COLIBRE
-	with_subgrid_entropy_floor=COLIBRE
+	with_subgrid_entropy_floor=none
 	with_subgrid_stars=COLIBRE
 	with_subgrid_star_formation=COLIBRE
 	with_subgrid_feedback=COLIBRE
@@ -2348,9 +2348,9 @@ AC_ARG_WITH([entropy-floor],
     [with_entropy_floor="$withval"],
     [with_entropy_floor="none"]
 )
-if test "$with_subgrid" != "none"; then
+if test "$with_subgrid_entropy_floor" != "none"; then
    if test "$with_entropy_floor" != "none"; then
-      AC_MSG_ERROR([Cannot provide with-subgrid and with-entropy-floor together])
+      AC_MSG_ERROR([Cannot provide with-entropy-floor together with a master with-subgrid option that sets an entropy floor])
    else
       with_entropy_floor="$with_subgrid_entropy_floor"
    fi
