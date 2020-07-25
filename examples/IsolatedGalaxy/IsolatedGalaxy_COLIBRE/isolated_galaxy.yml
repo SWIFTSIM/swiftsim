@@ -10,7 +10,7 @@ InternalUnitSystem:
 Gravity:
   eta:                         0.025     # Constant dimensionless multiplier for time integration.
   MAC:                         geometric # Use the geometric opening angle condition
-  theta_cr:                    0.4       # Opening angle (Multipole acceptance criterion)
+  theta_cr:                    0.6       # Opening angle (Multipole acceptance criterion)
   use_tree_below_softening:    1
   max_physical_baryon_softening: 0.2    # Maximal Plummer-equivalent softening length in physical coordinates for baryon particles (in internal units).
 
