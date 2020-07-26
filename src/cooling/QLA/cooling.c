@@ -874,7 +874,7 @@ void cooling_restore_tables(struct cooling_function_data *cooling,
 void cooling_print_backend(const struct cooling_function_data *cooling) {
 
   message(
-      "Cooling function is 'Quick Lyman-alpha (EAGLE with primordial Z "
+      "Cooling function is 'Quick Lyman-alpha (COLIBRE with primordial Z "
       "only)'.");
 }
 
