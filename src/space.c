@@ -5387,13 +5387,15 @@ void space_convert_cooling_quantities_mapper(void *restrict map_data, int count,
   const struct unit_system *us = s->e->internal_units;
   const struct entropy_floor_properties *entropy_floor = s->e->entropy_floor;
   const struct cooling_function_data *cool_func = s->e->cooling_func;
+  const struct dustevo_props *dp = s->e->dustevo;
 
   /* Loop over all the particles ignoring the extra buffer ones for on-the-fly
    * creation */
   for (int k = 0; k < count; k++)
     if (parts[k].time_bin <= num_time_bins)
       cooling_convert_quantities(&parts[k], &xparts[k], cosmo, hydro_props,
-                                 phys_const, us, entropy_floor, cool_func);
+                                 phys_const, us, entropy_floor, cool_func,
+				 dp);
 }
 
 /**

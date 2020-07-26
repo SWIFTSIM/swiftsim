@@ -95,7 +95,6 @@ struct dustevo_props {
 
   /* Element condensation fractions */
   float condensation_frac[grain_species_count];
-
 };
 
 /**

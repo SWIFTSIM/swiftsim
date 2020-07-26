@@ -427,6 +427,7 @@ INLINE static void star_formation_copy_properties(
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const, const struct hydro_props* hydro_props,
     const struct unit_system* us, const struct cooling_function_data* cooling,
+    const struct dustevo_props* dp,
     const int convert_part) {
 
   /* Store the current mass */
@@ -442,12 +443,12 @@ INLINE static void star_formation_copy_properties(
     sp->birth_time = e->time;
   }
 
+  /* store the chemistry struct in the star particle */
+  sp->chemistry_data = p->chemistry_data;
+
    /* Redistribute dust masses back to gas-phase elements if 
     * running with dust (astration) */
-  /* redistribute_dust_masses(p->chemistry_data, dp->dust_composition) !?!*/
-
-  /* Store the chemistry struct in the star particle */
-  sp->chemistry_data = p->chemistry_data;
+  redistribute_dust_masses(sp, p, dp);
 
   /* Store the tracers data */
   sp->tracers_data = xp->tracers_data;

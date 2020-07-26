@@ -885,7 +885,7 @@ int main(int argc, char *argv[]) {
 
     /* Prepare and verify the selection of outputs */
     io_prepare_output_fields(output_options, with_cosmology, with_fof,
-                             with_structure_finding);
+                             with_structure_finding, with_dust);
 
     /* Not restarting so look for the ICs. */
     /* Initialize unit system and constants */
@@ -1324,6 +1324,7 @@ int main(int argc, char *argv[]) {
     if (with_logger) engine_policies |= engine_policy_logger;
     if (with_line_of_sight) engine_policies |= engine_policy_line_of_sight;
     if (with_sink) engine_policies |= engine_policy_sink;
+    if (with_dust) engine_policies |= engine_policy_dust;
 
     /* Initialize the engine with the space and policies. */
     if (myrank == 0) clocks_gettime(&tic);

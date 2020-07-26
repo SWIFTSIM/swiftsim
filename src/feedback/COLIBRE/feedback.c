@@ -1064,7 +1064,6 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
         stellar_yields, props);
   }
 
-
   /* yield normalization */
   float mass_ejected, mass_released;
 

@@ -42,6 +42,7 @@
 #include "common_io.h"
 #include "cooling_io.h"
 #include "dimension.h"
+#include "dust_io.h"
 #include "engine.h"
 #include "error.h"
 #include "fof_io.h"
@@ -1095,6 +1096,7 @@ void prepare_file(struct engine* e, const char* fileName,
   const int with_cooling = e->policy & engine_policy_cooling;
   const int with_temperature = e->policy & engine_policy_temperature;
   const int with_fof = e->policy & engine_policy_fof;
+  const int with_dust = e->policy & engine_policy_dust;
 #ifdef HAVE_VELOCIRAPTOR
   const int with_stf = (e->policy & engine_policy_structure_finding) &&
                        (e->s->gpart_group_data != NULL);
@@ -1225,6 +1227,10 @@ void prepare_file(struct engine* e, const char* fileName,
         hydro_write_particles(parts, xparts, list, &num_fields);
         num_fields +=
             chemistry_write_particles(parts, list + num_fields, with_cosmology);
+        if (with_dust) {
+          num_fields += 
+	    dust_write_particles(parts, list + num_fields, with_cosmology);
+        }
         if (with_cooling || with_temperature) {
           num_fields += cooling_write_particles(
               parts, xparts, list + num_fields, e->cooling_func);
@@ -1376,6 +1382,7 @@ void write_output_parallel(struct engine* e,
   const int with_cooling = e->policy & engine_policy_cooling;
   const int with_temperature = e->policy & engine_policy_temperature;
   const int with_fof = e->policy & engine_policy_fof;
+  const int with_dust = e->policy & engine_policy_dust;
   const int with_DM_background = e->s->with_DM_background;
 #ifdef HAVE_VELOCIRAPTOR
   const int with_stf = (e->policy & engine_policy_structure_finding) &&
@@ -1591,11 +1598,15 @@ void write_output_parallel(struct engine* e,
       case swift_type_gas: {
         if (Ngas == Ngas_written) {
 
-          /* No inhibted particles: easy case */
+          /* No inhibited particles: easy case */
           Nparticles = Ngas;
           hydro_write_particles(parts, xparts, list, &num_fields);
           num_fields += chemistry_write_particles(parts, list + num_fields,
                                                   with_cosmology);
+	  if (with_dust) {
+	    num_fields += 
+	      dust_write_particles(parts, list + num_fields, with_cosmology);
+	  }
           if (with_cooling || with_temperature) {
             num_fields += cooling_write_particles(
                 parts, xparts, list + num_fields, e->cooling_func);
@@ -1636,6 +1647,10 @@ void write_output_parallel(struct engine* e,
                                 &num_fields);
           num_fields += chemistry_write_particles(
               parts_written, list + num_fields, with_cosmology);
+	  if (with_dust) {
+	    num_fields += 
+	      dust_write_particles(parts, list + num_fields, with_cosmology);
+	  }
           if (with_cooling || with_temperature) {
             num_fields +=
                 cooling_write_particles(parts_written, xparts_written,

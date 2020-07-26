@@ -131,7 +131,8 @@ const char *engine_policy_names[] = {"none",
                                      "time-step sync",
                                      "logger",
                                      "line of sight",
-                                     "sink"};
+                                     "sink",
+				     "dust"};
 
 /** The rank of the engine as a global variable (for messages). */
 int engine_rank;

@@ -42,6 +42,7 @@
 #include "common_io.h"
 #include "cooling_io.h"
 #include "dimension.h"
+#include "dust_io.h"
 #include "engine.h"
 #include "error.h"
 #include "fof_io.h"
@@ -907,6 +908,7 @@ void write_output_serial(struct engine* e,
   struct output_list* output_list = e->output_list_snapshots;
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const int with_cooling = e->policy & engine_policy_cooling;
+  const int with_dust = e->policy & engine_policy_dust;
   const int with_temperature = e->policy & engine_policy_temperature;
   const int with_fof = e->policy & engine_policy_fof;
   const int with_DM_background = e->s->with_DM_background;
@@ -1182,11 +1184,15 @@ void write_output_serial(struct engine* e,
           case swift_type_gas: {
             if (Ngas == Ngas_written) {
 
-              /* No inhibted particles: easy case */
+              /* No inhibited particles: easy case */
               Nparticles = Ngas;
               hydro_write_particles(parts, xparts, list, &num_fields);
               num_fields += chemistry_write_particles(parts, list + num_fields,
                                                       with_cosmology);
+	      if (with_dust) {
+		num_fields += dust_write_particles(parts, list + num_fields,
+						   with_cosmology);
+	      }
               if (with_cooling || with_temperature) {
                 num_fields += cooling_write_particles(
                     parts, xparts, list + num_fields, e->cooling_func);
@@ -1227,6 +1233,12 @@ void write_output_serial(struct engine* e,
                                     &num_fields);
               num_fields += chemistry_write_particles(
                   parts_written, list + num_fields, with_cosmology);
+
+	      if (with_dust) {
+		num_fields += dust_write_particles(
+		    parts_written, list + num_fields, with_cosmology);
+	      }
+
               if (with_cooling || with_temperature) {
                 num_fields +=
                     cooling_write_particles(parts_written, xparts_written,

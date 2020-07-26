@@ -32,6 +32,7 @@
 #include "chemistry_io.h"
 #include "const.h"
 #include "cooling_io.h"
+#include "dust_io.h"
 #include "error.h"
 #include "feedback.h"
 #include "fof_io.h"
@@ -2545,7 +2546,7 @@ void io_collect_gparts_background_to_write(
  */
 void io_prepare_output_fields(struct output_options* output_options,
                               const int with_cosmology, const int with_fof,
-                              const int with_stf) {
+                              const int with_stf, const int with_dust) {
 
   const int MAX_NUM_PTYPE_FIELDS = 100;
 
@@ -2558,7 +2559,8 @@ void io_prepare_output_fields(struct output_options* output_options,
 
   for (int ptype = 0; ptype < swift_type_count; ptype++)
     ptype_num_fields_total[ptype] = get_ptype_fields(
-        ptype, field_list[ptype], with_cosmology, with_fof, with_stf);
+      ptype, field_list[ptype], with_cosmology, with_fof, with_stf,
+      with_dust);
 
   /* Check for whether we have a `Default` section */
   int have_default = 0;
@@ -2727,7 +2729,8 @@ void io_write_output_field_parameter(const char* filename, int with_cosmology) {
 
     struct io_props list[100];
     int num_fields = get_ptype_fields(ptype, list, with_cosmology,
-                                      /*with_fof=*/1, /*with_stf=*/1);
+                                      /*with_fof=*/1, /*with_stf=*/1, 
+				      /*with_dust*/1);
 
     if (num_fields == 0) continue;
 
@@ -2841,7 +2844,7 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
  */
 int get_ptype_fields(const int ptype, struct io_props* list,
                      const int with_cosmology, const int with_fof,
-                     const int with_stf) {
+                     const int with_stf, const int with_dust) {
 
   int num_fields = 0;
 
@@ -2861,6 +2864,9 @@ int get_ptype_fields(const int ptype, struct io_props* list,
         num_fields += fof_write_parts(NULL, NULL, list + num_fields);
       if (with_stf)
         num_fields += velociraptor_write_parts(NULL, NULL, list + num_fields);
+      if (with_dust)
+	num_fields +=
+          dust_write_particles(NULL, list + num_fields, with_cosmology);
       break;
 
     case swift_type_dark_matter:
