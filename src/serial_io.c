@@ -86,19 +86,11 @@ void read_array_serial(hid_t grp, const struct io_props props, size_t N,
                        long long N_total, long long offset,
                        const struct unit_system* internal_units,
                        const struct unit_system* ic_units, int cleanup_h,
-                       int cleanup_sqrt_a, double h, double a,
-                       int remap_ids) {
+                       int cleanup_sqrt_a, double h, double a) {
 
   const size_t typeSize = io_sizeof_type(props.type);
   const size_t copySize = typeSize * props.dimension;
   const size_t num_elements = N * props.dimension;
-
-  /* If we are remapping IDs, don't need to read them. */
-  if (remap_ids && strcmp(props.name, "ParticleIDs") == 0) {
-    for (size_t i = 0; i < N; ++i)
-        memset(props.field + i * props.partSize, 1, copySize);
-    return;
-  }
 
   /* Check whether the dataspace exists or not */
   const htri_t exist = H5Lexists(grp, props.name, 0);
@@ -819,10 +811,15 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
 
         /* Read everything */
         if (!dry_run)
-          for (int i = 0; i < num_fields; ++i)
+          for (int i = 0; i < num_fields; ++i) {
+            /* If we are remapping ParticleIDs later, don't need to read them. */
+            if (remap_ids && strcmp(list[i].name, "ParticleIDs") == 0) continue;
+
+            /* Read array. */
             read_array_serial(h_grp, list[i], Nparticles, N_total[ptype],
                               offset[ptype], internal_units, ic_units,
-                              cleanup_h, cleanup_sqrt_a, h, a, remap_ids);
+                              cleanup_h, cleanup_sqrt_a, h, a);
+          }
 
         /* Close particle group */
         H5Gclose(h_grp);
@@ -835,6 +832,9 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
     /* Wait for the read of the reading to complete */
     MPI_Barrier(comm);
   }
+
+  /* If we are remapping ParticleIDs later, start by setting them to 1. */
+  if (remap_ids) set_ids_to_one(*gparts, *Ngparts);
 
   /* Duplicate the parts for gravity */
   if (!dry_run && with_gravity) {
