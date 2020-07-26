@@ -822,7 +822,7 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
           for (int i = 0; i < num_fields; ++i)
             read_array_serial(h_grp, list[i], Nparticles, N_total[ptype],
                               offset[ptype], internal_units, ic_units,
-                              cleanup_h, cleanup_sqrt_a, h, a, remap_id, remap_idss);
+                              cleanup_h, cleanup_sqrt_a, h, a, remap_ids);
 
         /* Close particle group */
         H5Gclose(h_grp);
