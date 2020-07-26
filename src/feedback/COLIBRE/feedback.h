@@ -161,6 +161,11 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.metal_mass_from_SNIa = 0.f;
   sp->feedback_data.to_distribute.Fe_mass_from_SNIa = 0.f;
 
+  /* Zero the dust enrichment quantities */
+  for (int i = 0; i < grain_species_count; i++) {
+    sp->feedback_data.to_distribute.dust_mass[i] = 0.f;
+  }
+
   /* Zero the energy to inject */
   sp->feedback_data.to_distribute.energy = 0.f;
 

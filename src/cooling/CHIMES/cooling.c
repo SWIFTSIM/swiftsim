@@ -515,6 +515,7 @@ void chimes_update_gas_vars(const double u_cgs,
                             const struct hydro_props *hydro_properties,
                             const struct entropy_floor_properties *floor_props,
                             const struct cooling_function_data *cooling,
+			    const struct dustevo_props *dp,
                             struct part *restrict p, struct xpart *restrict xp,
                             struct gasVariables *ChimesGasVars,
                             const float dt_cgs) {
@@ -592,7 +593,22 @@ void chimes_update_gas_vars(const double u_cgs,
   ChimesGasVars->metallicity = 0.0;
 #endif  // CHEMISTRY_COLIBRE || CHEMISTRY_EAGLE
 
+  /* with dust, use particle dust fractions in CHIMES if dp->pair_to_cooling */
+#if defined(DUST_NONE)
   ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
+#else
+  if (dp->pair_to_cooling) {
+    float dfrac = 0.;
+    for (int grain = 0; grain < grain_species_count; grain++) {
+      dfrac += p->dust_data.grain_mass_fraction[grain];
+    }
+    /* Assume a dust-to-gas ratio of 0.006 for the 'local' value (Zsun*D2M) */
+    ChimesGasVars->dust_ratio = dfrac/0.006;
+  }
+  else {
+    ChimesGasVars->dust_ratio = ChimesGasVars->metallicity;
+  }
+#endif
 
   const double nH =
       hydro_get_physical_density(p, cosmo) * XH / phys_const->const_proton_mass;
@@ -857,6 +873,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
                        const struct hydro_props *hydro_properties,
                        const struct entropy_floor_properties *floor_props,
                        const struct cooling_function_data *cooling,
+		       const struct dustevo_props *dp,
                        struct part *restrict p, struct xpart *restrict xp,
                        const float dt, const float dt_therm,
                        const double time) {
@@ -866,7 +883,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
     /* But we still set the subgrid properties to a valid state */
     cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
-                                   floor_props, cooling, p, xp);
+                                   floor_props, cooling, dp, p, xp);
 
     return;
   }
@@ -927,7 +944,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
   /* Update the ChimesGasVars structure with the
    * particle's thermodynamic variables. */
   chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_properties,
-                         floor_props, cooling, p, xp, &ChimesGasVars, dt_cgs);
+                         floor_props, cooling, dp, p, xp, &ChimesGasVars, dt_cgs);
 
   /* Check if the particle has just been heated by
    * feedback. If it has, re-set its abundance
@@ -1057,7 +1074,7 @@ void cooling_cool_part(const struct phys_const *phys_const,
    * abundances will be re-computed from the
    * subgrid temperature and density. */
   cooling_set_subgrid_properties(phys_const, us, cosmo, hydro_properties,
-                                 floor_props, cooling, p, xp);
+                                 floor_props, cooling, dp, p, xp);
 }
 
 /**
@@ -1414,7 +1431,8 @@ void cooling_convert_quantities(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling) {
+    const struct cooling_function_data *cooling,
+    const struct dustevo_props *dp) {
   struct globalVariables ChimesGlobalVars = cooling->ChimesGlobalVars;
   struct gasVariables ChimesGasVars;
   int i;
@@ -1474,7 +1492,7 @@ void cooling_convert_quantities(
       /* Update ChimesGasVars with the particle's
        * thermodynamic variables. */
       chimes_update_gas_vars(u_0_cgs, phys_const, us, cosmo, hydro_props,
-                             floor_props, cooling, p, xp, &ChimesGasVars,
+                             floor_props, cooling, dp, p, xp, &ChimesGasVars,
                              dt_cgs);
 
       /* Set temperature evolution off, so that we
@@ -1519,7 +1537,8 @@ void cooling_set_subgrid_properties(
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props,
-    const struct cooling_function_data *cooling, struct part *p,
+    const struct cooling_function_data *cooling, 
+    const struct dustevo_props *dp, struct part *p,
     struct xpart *xp) {
 
   /* Limit imposed by the entropy floor */
@@ -1603,7 +1622,7 @@ void cooling_set_subgrid_properties(
         units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
     chimes_update_gas_vars(u_subgrid_cgs, phys_const, us, cosmo, hydro_props,
-                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+                           floor_props, cooling, dp, p, xp, &ChimesGasVars, 1.0);
 
 #if defined(CHEMISTRY_COLIBRE) || defined(CHEMISTRY_EAGLE)
     float const *metal_fraction =
@@ -1655,7 +1674,7 @@ void cooling_set_subgrid_properties(
         u * units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
 
     chimes_update_gas_vars(u_cgs, phys_const, us, cosmo, hydro_props,
-                           floor_props, cooling, p, xp, &ChimesGasVars, 1.0);
+                           floor_props, cooling, dp, p, xp, &ChimesGasVars, 1.0);
 
     // Set abundances to equilibrium
     cooling_set_FB_particle_chimes_abundances(&ChimesGasVars, cooling);

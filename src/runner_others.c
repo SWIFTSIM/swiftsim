@@ -42,6 +42,7 @@
 #include "cell.h"
 #include "chemistry.h"
 #include "cooling.h"
+#include "dust.h"
 #include "engine.h"
 #include "error.h"
 #include "feedback.h"
@@ -157,6 +158,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
   const struct cosmology *cosmo = e->cosmology;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const struct cooling_function_data *cooling_func = e->cooling_func;
+  const struct dustevo_props *dp = e->dustevo;
   const struct phys_const *constants = e->physical_constants;
   const struct unit_system *us = e->internal_units;
   const struct hydro_props *hydro_props = e->hydro_properties;
@@ -209,8 +211,8 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
 
         /* Let's cool ! */
         cooling_cool_part(constants, us, cosmo, hydro_props,
-                          entropy_floor_props, cooling_func, p, xp, dt_cool,
-                          dt_therm, time);
+                          entropy_floor_props, cooling_func, dp, p, xp, 
+			  dt_cool, dt_therm, time);
 
         /* Apply the effects of feedback on this particle
          * (Note: Only used in schemes that have a delayed feedback mechanism
@@ -240,6 +242,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   const struct hydro_props *restrict hydro_props = e->hydro_properties;
   const struct unit_system *restrict us = e->internal_units;
   struct cooling_function_data *restrict cooling = e->cooling_func;
+  const struct dustevo_props *dp = e->dustevo;
   const struct entropy_floor_properties *entropy_floor = e->entropy_floor;
   const double time_base = e->time_base;
   const integertime_t ti_current = e->ti_current;
@@ -368,7 +371,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               /* Copy the properties of the gas particle to the star particle */
               star_formation_copy_properties(
                   p, xp, sp, e, sf_props, cosmo, with_cosmology, phys_const,
-                  hydro_props, us, cooling, !spawn_spart);
+                  hydro_props, us, cooling, dp, !spawn_spart);
 
               /* Update the Star formation history */
               star_formation_logger_log_new_spart(sp, &c->stars.sfh);

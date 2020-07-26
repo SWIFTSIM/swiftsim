@@ -81,8 +81,9 @@ enum engine_policy {
   engine_policy_timestep_sync = (1 << 22),
   engine_policy_logger = (1 << 23),
   engine_policy_line_of_sight = (1 << 24),
+  engine_policy_dust = (1 << 25),
 };
-#define engine_maxpolicy 25
+#define engine_maxpolicy 26
 extern const char *engine_policy_names[engine_maxpolicy + 1];
 
 /**

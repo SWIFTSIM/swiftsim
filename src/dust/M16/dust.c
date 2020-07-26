@@ -5,23 +5,39 @@
 #include "dust_yield_tables.h"
 #include "dust.h"
 #include <string.h>
-/* /\** */
-/*  * @brief redistribute any dust mass back to element abundances */
-/*  * on star particle formation according to dust composition, to  */
-/*  * represent astration  */
-/*  * */
-/*  * @param p The gas particles.   */
-/*  * @param dp Global dust parameters for initialisation. */
-/*  *\/ */
-/* void redistribute_dust_masses(const struct part* p,  */
-/* 			      struct dustevo_props *dp) { */
-/*   /\**  */
-/*    * iterate through grain species and element types and */
-/*    * redistribute dust abundances to element abundances, */
-/*    * according to composition array */
-/*    *\/ */
-/*   ; */
-/* } */
+
+/**
+ * @brief redistribute any dust mass back to element abundances
+ * on star particle formation according to dust composition, to 
+ * represent astration 
+ *
+ * @param p The gas particles.  
+ * @param dp Global dust parameters for initialisation.
+ */
+void redistribute_dust_masses(struct spart* sp,
+			      const struct part* p, 
+			      const struct dustevo_props *dp) {
+  
+  /** 
+   * iterate through grain species and element types and
+   * redistribute dust abundances to element abundances,
+   * according to composition array
+   */
+
+  float grain_mass;
+  int eldx;
+
+  for (int grain = 0; grain < grain_species_count; grain++) {
+    grain_mass =  p->dust_data.grain_mass_fraction[grain];
+    for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
+      eldx = dp->grain_element_indices[grain][elem];
+      /* put fraction of grain mass back into constituent element (astration) */
+      sp->chemistry_data.metal_mass_fraction[eldx] +=
+	grain_mass * dp->grain_element_mfrac[grain][elem]; 
+    }
+  }    
+}
+
 
 /**
  * @brief Prints the dust evolution model to stdout.
@@ -142,16 +158,17 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   dp->grain_element_count[grain_species_Si] = 1;
   dp->grain_element_count[grain_species_Fe] = 1;
 
+  /* pair to cooling? */
+  dp->pair_to_cooling = 1;
+
   /** NOTE 1: total metallicity yields untouched here, so Z represents the conserved dust + gas phase metals **/
 
   /** NOTE 2: only the IMF resampled tables are modified in fp, while plain .yield arrays are unchanged (the 
    *  original yield tables are only used to compute these and are already modified via the SNII yield factors) **/
 
-
   initialise_dyield_tables(fp, dp);
-  message("%f", dp->dyield_SNII.yield_IMF_resampled[4999]);
   compute_SNII_dyield(fp, dp);
   compute_AGB_dyield(fp, dp);
-  print_dyield_tables(fp, dp);
+  //print_dyield_tables(fp, dp);
 
 }

@@ -98,8 +98,8 @@ INLINE static void convert_part_chimes_abundances(const struct engine* e,
    * particles on the EOS. */
   cooling_set_subgrid_properties(e->physical_constants, e->internal_units,
                                  e->cosmology, e->hydro_properties,
-                                 e->entropy_floor, e->cooling_func, &dummy_p,
-                                 &dummy_xp);
+                                 e->entropy_floor, e->cooling_func, 
+				 e->dustevo, &dummy_p, &dummy_xp);
 
   int i;
   for (i = 0; i < CHIMES_NETWORK_SIZE; i++)

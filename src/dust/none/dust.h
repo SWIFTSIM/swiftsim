@@ -14,9 +14,9 @@
  * @param p The gas particles.  
  * @param dp Global dust parameters for initialisation.
  */
-static INLINE void redistribute_dust_masses(const struct part* p, 
-					    struct dustevo_props *dp) {
-}
+static INLINE void redistribute_dust_masses(struct spart* sp,
+					    const struct part* p, 
+					    const struct dustevo_props *dp) {}
 
 static INLINE void dustevo_print_backend(const struct dustevo_props *dp) {
   message("Running without dust evolution modelling.");
