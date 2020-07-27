@@ -1,0 +1,42 @@
+/*******************************************************************************
+ * This file is part of SWIFT.
+ * Copyright (c) 2020  Matthieu Schaller (schaller@strw.leidenuniv.nl).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ******************************************************************************/
+#ifndef SWIFT_IO_COMPRESSION_H
+#define SWIFT_IO_COMPRESSION_H
+
+/* Config parameters. */
+#include "../config.h"
+
+enum lossy_compression_schemes {
+  compression_none = 0, /*!< No compression */
+  compression_dscale_1, /*!< D-scale filter of magnitude 10^1 */
+  compression_dscale_3, /*!< D-scale filter of magnitude 10^3 */
+  compression_dscale_6, /*!< D-scale filter of magnitude 10^6 */
+};
+
+#if defined(HAVE_HDF5)
+
+#include <hdf5.h>
+
+void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
+                                const enum lossy_compression_schemes comp,
+                                const char* field_name);
+
+#endif
+
+#endif /* SWIFT_IO_COMPRESSION_H */

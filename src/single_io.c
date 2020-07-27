@@ -48,6 +48,7 @@
 #include "gravity_properties.h"
 #include "hydro_io.h"
 #include "hydro_properties.h"
+#include "io_compression.h"
 #include "io_properties.h"
 #include "memuse.h"
 #include "output_list.h"
@@ -257,7 +258,7 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
     error("Error while creating data space for field '%s'.", props.name);
 
   /* Decide what chunk size to use based on compression */
-  int log2_chunk_size = e->snapshot_compression > 0 ? 12 : 18;
+  int log2_chunk_size = 20;
 
   int rank;
   hsize_t shape[2];
@@ -297,170 +298,10 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
     error("Error while setting chunk size (%llu, %llu) for field '%s'.",
           chunk_shape[0], chunk_shape[1], props.name);
 
-  /* -----------------------------------------------------------------------------------*/
-
-  /* Special cases */
-  if (strcmp(props.name, "Coordinates") == 0) {
-
-    /* Set the fill value of dataset */
-    double fill = -1.0;
-    h_err = H5Pset_fill_value(h_prop, H5T_NATIVE_DOUBLE, &fill);
-    if (h_err < 0)
-      error("Error while setting fill value for field '%s'.", props.name);
-
-    h_err = H5Pset_scaleoffset(h_prop, H5Z_SO_FLOAT_DSCALE, 6);
-    if (h_err < 0)
-      error("Error while setting scale-offset filter for field '%s'.",
-            props.name);
-  }
-  if (strcmp(props.name, "Velocities") == 0) {
-
-    /* Set the fill value of dataset */
-    float fill = -10000.0;
-    h_err = H5Pset_fill_value(h_prop, H5T_NATIVE_FLOAT, &fill);
-    if (h_err < 0)
-      error("Error while setting fill value for field '%s'.", props.name);
-
-    h_err = H5Pset_scaleoffset(h_prop, H5Z_SO_FLOAT_DSCALE, 1);
-    if (h_err < 0)
-      error("Error while setting scale-offset filter for field '%s'.",
-            props.name);
-  }
-
-  if (strcmp(props.name, "Temperatures") == 0) {
-
-    /* Numbers > 1 with 10-bits mantissa and 6-bits exponent */
-
-    const int size = 4;
-    const int m_size = 10;
-    const int e_size = 6;
-    const int offset = 0;
-    const int precision = m_size + e_size + 1;
-    const int e_pos = offset + m_size;
-    const int s_pos = e_pos + e_size;
-    const int m_pos = offset;
-    const int bias = 0;  // (1 << (e_size - 1)) - 1;
-
-    h_type = H5Tcopy(H5T_IEEE_F32BE);
-    h_err = H5Tset_fields(h_type, s_pos, e_pos, e_size, m_pos, m_size);
-    if (h_err < 0)
-      error("Error while setting type properties for field '%s'.", props.name);
-
-    h_err = H5Tset_offset(h_type, offset);
-    if (h_err < 0)
-      error("Error while setting type offset properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_precision(h_type, precision);
-    if (h_err < 0)
-      error("Error while setting type precision properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_size(h_type, size);
-    if (h_err < 0)
-      error("Error while setting type size properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_ebias(h_type, bias);
-    if (h_err < 0)
-      error("Error while setting type bias properties for field '%s'.",
-            props.name);
-
-    h_err = H5Pset_nbit(h_prop);
-    if (h_err < 0)
-      error("Error while setting n-bit filter for field '%s'.", props.name);
-  }
-
-  if (strcmp(props.name, "Densities") == 0) {
-
-    /* Numbers with 10-bits mantissa and 7-bits exponent */
-
-    const int size = 4;
-    const int m_size = 10;
-    const int e_size = 7;
-    const int offset = 0;
-    const int precision = m_size + e_size + 1;
-    const int e_pos = offset + m_size;
-    const int s_pos = e_pos + e_size;
-    const int m_pos = offset;
-    const int bias = (1 << (e_size - 1)) - 1;
-
-    h_type = H5Tcopy(H5T_IEEE_F32BE);
-    h_err = H5Tset_fields(h_type, s_pos, e_pos, e_size, m_pos, m_size);
-    if (h_err < 0)
-      error("Error while setting type properties for field '%s'.", props.name);
-
-    h_err = H5Tset_offset(h_type, offset);
-    if (h_err < 0)
-      error("Error while setting type offset properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_precision(h_type, precision);
-    if (h_err < 0)
-      error("Error while setting type precision properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_size(h_type, size);
-    if (h_err < 0)
-      error("Error while setting type size properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_ebias(h_type, bias);
-    if (h_err < 0)
-      error("Error while setting type bias properties for field '%s'.",
-            props.name);
-
-    h_err = H5Pset_nbit(h_prop);
-    if (h_err < 0)
-      error("Error while setting n-bit filter for field '%s'.", props.name);
-  }
-
-  if (strcmp(props.name, "MetalMassFractions") == 0) {
-
-    /* Numbers with 10-bits mantissa and 6-bits exponent biased such
-       that the maximal valid number is 2. */
-
-    const int size = 4;
-    const int m_size = 10;
-    const int e_size = 6;
-    const int offset = 0;
-    const int precision = m_size + e_size + 1;
-    const int e_pos = offset + m_size;
-    const int s_pos = e_pos + e_size;
-    const int m_pos = offset;
-    const int bias = (1 << (e_size)) - 2;
-
-    h_type = H5Tcopy(H5T_IEEE_F32BE);
-    h_err = H5Tset_fields(h_type, s_pos, e_pos, e_size, m_pos, m_size);
-    if (h_err < 0)
-      error("Error while setting type properties for field '%s'.", props.name);
-
-    h_err = H5Tset_offset(h_type, offset);
-    if (h_err < 0)
-      error("Error while setting type offset properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_precision(h_type, precision);
-    if (h_err < 0)
-      error("Error while setting type precision properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_size(h_type, size);
-    if (h_err < 0)
-      error("Error while setting type size properties for field '%s'.",
-            props.name);
-
-    h_err = H5Tset_ebias(h_type, bias);
-    if (h_err < 0)
-      error("Error while setting type bias properties for field '%s'.",
-            props.name);
-
-    h_err = H5Pset_nbit(h_prop);
-    if (h_err < 0)
-      error("Error while setting n-bit filter for field '%s'.", props.name);
-  }
-
-  /* -----------------------------------------------------------------------------------*/
+  /* Are we imposing some form of lossy compression filter? */
+  if (props.lossy_compression != compression_none)
+    set_hdf5_lossy_compression(h_prop, h_type, props.lossy_compression,
+                               props.name);
 
   /* Impose GZIP data compression */
   if (e->snapshot_compression > 0) {
@@ -1445,6 +1286,9 @@ void write_output_single(struct engine* e,
       const int should_write = output_options_should_write_field(
           output_options, current_selection_name, list[i].name,
           (enum part_type)ptype, compression_level_current_default);
+
+      if (strcmp(list[i].name, "Coordinates") == 0)
+        list[i].lossy_compression = compression_dscale_6;
 
       if (should_write) {
         write_array_single(e, h_grp, fileName, xmfFile, partTypeGroupName,
