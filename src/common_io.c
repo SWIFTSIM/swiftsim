@@ -2936,6 +2936,9 @@ int get_param_ptype(const char* name) {
  * 
  * Function is called when remap_ids is 1.
  *
+ * Note only the gparts IDs have to be set to 1, as other parttypes can survive
+ * as ParticleIDs=0 until the remapping routine.
+ *
  * @param gparts The array of loaded gparts.
  * @param Ngparts Number of loaded gparts.
  */
