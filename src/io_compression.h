@@ -41,6 +41,8 @@ enum lossy_compression_schemes {
  **/
 extern const char* lossy_compression_schemes_names[];
 
+enum lossy_compression_schemes compression_scheme_from_name(const char* name);
+
 #if defined(HAVE_HDF5)
 
 #include <hdf5.h>

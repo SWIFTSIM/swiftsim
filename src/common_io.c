@@ -2589,8 +2589,8 @@ void io_prepare_output_fields(struct output_options* output_options,
 
       /* Internally also verifies that the default level is allowed */
       const enum lossy_compression_schemes compression_level_current_default =
-          output_options_get_ptype_default(params, section_name,
-                                           (enum part_type)ptype);
+          output_options_get_ptype_default_compression(params, section_name,
+                                                       (enum part_type)ptype);
 
       if (compression_level_current_default == compression_do_not_write) {
         ptype_default_write_status[ptype] = 0;

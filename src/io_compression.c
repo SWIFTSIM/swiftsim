@@ -34,6 +34,17 @@
 const char* lossy_compression_schemes_names[compression_level_count] = {
     "off", "on", "D-scale-1", "D-scale-3", "D-scale-6"};
 
+enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
+
+  for (int i = 0; i < compression_level_count; ++i) {
+    if (strcmp(name, lossy_compression_schemes_names[i]) == 0)
+      return (enum lossy_compression_schemes)i;
+  }
+
+  error("Invalid lossy compression scheme name: '%s'", name);
+  return 0;
+}
+
 void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
                                 const enum lossy_compression_schemes comp,
                                 const char* field_name) {

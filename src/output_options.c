@@ -141,7 +141,7 @@ void output_options_struct_restore(struct output_options* output_options,
  * @return should_write integer determining whether this field should be
  *         written
  **/
-int output_options_should_write_field(
+enum lossy_compression_schemes output_options_get_field_compression(
     const struct output_options* output_options, const char* snapshot_type,
     const char* field_name, const enum part_type part_type,
     const enum lossy_compression_schemes compression_level_current_default) {
@@ -156,18 +156,18 @@ int output_options_should_write_field(
       output_options->select_output, field, compression_level,
       lossy_compression_schemes_names[compression_level_current_default]);
 
+#ifdef SWIFT_DEBUG_CHECKS
+
   int should_write =
       strcmp(lossy_compression_schemes_names[compression_do_not_write],
              compression_level);
-
-#ifdef SWIFT_DEBUG_CHECKS
   message(
       "Check for whether %s should be written returned %s from a provided "
       "value of \"%s\"",
       field, should_write ? "True" : "False", compression_level);
 #endif
 
-  return should_write;
+  return compression_scheme_from_name(compression_level);
 }
 
 /**
@@ -180,7 +180,7 @@ int output_options_should_write_field(
  * @param snapshot_type The type of snapshot we are writing
  * @param part_type The #part_type we are considering.
  */
-enum lossy_compression_schemes output_options_get_ptype_default(
+enum lossy_compression_schemes output_options_get_ptype_default_compression(
     struct swift_params* output_params, const char* snapshot_type,
     const enum part_type part_type) {
 

@@ -1274,22 +1274,23 @@ void write_output_single(struct engine* e,
     /* Did the user specify a non-standard default for the entire particle
      * type? */
     const enum lossy_compression_schemes compression_level_current_default =
-        output_options_get_ptype_default(output_options->select_output,
-                                         current_selection_name,
-                                         (enum part_type)ptype);
+        output_options_get_ptype_default_compression(
+            output_options->select_output, current_selection_name,
+            (enum part_type)ptype);
 
     /* Write everything that is not cancelled */
     int num_fields_written = 0;
     for (int i = 0; i < num_fields; ++i) {
 
       /* Did the user cancel this field? */
-      const int should_write = output_options_should_write_field(
-          output_options, current_selection_name, list[i].name,
-          (enum part_type)ptype, compression_level_current_default);
+      const enum lossy_compression_schemes compression_level =
+          output_options_get_field_compression(
+              output_options, current_selection_name, list[i].name,
+              (enum part_type)ptype, compression_level_current_default);
 
-      if (should_write != compression_do_not_write) {
+      if (compression_level != compression_do_not_write) {
         write_array_single(e, h_grp, fileName, xmfFile, partTypeGroupName,
-                           list[i], N, should_write, internal_units,
+                           list[i], N, compression_level, internal_units,
                            snapshot_units);
         num_fields_written++;
       }
