@@ -472,13 +472,16 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   int *fields_found = (int *) malloc(sizeof(int) * n_fields_wanted);
 
   /* Do the hydro. */
-  READ_ALL_PARTICLES(gas, hydro);
+  if (n_part[swift_type_gas] != 0)
+    READ_ALL_PARTICLES(gas, hydro);
 
   /* Do the dark matter now. */
-  READ_ALL_PARTICLES(stars, stars);
+  if (n_part[swift_type_dark_matter] != 0)
+    READ_ALL_PARTICLES(dark_matter, gravity);
 
   /* Do the stars now. */
-  READ_ALL_PARTICLES(stars, stars);
+  if (n_part[swift_type_stars] != 0)
+    READ_ALL_PARTICLES(stars, stars);
 
   /* Free the memory. */
   free(output_single);
