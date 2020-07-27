@@ -235,6 +235,7 @@ void read_array_single(hid_t h_grp, const struct io_props props, size_t N,
 void write_array_single(const struct engine* e, hid_t grp, char* fileName,
                         FILE* xmfFile, char* partTypeGroupName,
                         const struct io_props props, size_t N,
+                        const enum lossy_compression_schemes lossy_compression,
                         const struct unit_system* internal_units,
                         const struct unit_system* snapshot_units) {
 
@@ -299,9 +300,8 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
           chunk_shape[0], chunk_shape[1], props.name);
 
   /* Are we imposing some form of lossy compression filter? */
-  if (props.lossy_compression != compression_none)
-    set_hdf5_lossy_compression(h_prop, h_type, props.lossy_compression,
-                               props.name);
+  if (lossy_compression != compression_write_lossless)
+    set_hdf5_lossy_compression(h_prop, h_type, lossy_compression, props.name);
 
   /* Impose GZIP data compression */
   if (e->snapshot_compression > 0) {
@@ -1273,7 +1273,7 @@ void write_output_single(struct engine* e,
 
     /* Did the user specify a non-standard default for the entire particle
      * type? */
-    const enum compression_levels compression_level_current_default =
+    const enum lossy_compression_schemes compression_level_current_default =
         output_options_get_ptype_default(output_options->select_output,
                                          current_selection_name,
                                          (enum part_type)ptype);
@@ -1287,12 +1287,10 @@ void write_output_single(struct engine* e,
           output_options, current_selection_name, list[i].name,
           (enum part_type)ptype, compression_level_current_default);
 
-      if (strcmp(list[i].name, "Coordinates") == 0)
-        list[i].lossy_compression = compression_dscale_6;
-
-      if (should_write) {
+      if (should_write != compression_do_not_write) {
         write_array_single(e, h_grp, fileName, xmfFile, partTypeGroupName,
-                           list[i], N, internal_units, snapshot_units);
+                           list[i], N, should_write, internal_units,
+                           snapshot_units);
         num_fields_written++;
       }
     }

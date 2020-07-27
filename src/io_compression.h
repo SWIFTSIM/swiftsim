@@ -22,12 +22,24 @@
 /* Config parameters. */
 #include "../config.h"
 
+/**
+ * @brief Compression levels for snapshot fields
+ */
 enum lossy_compression_schemes {
-  compression_none = 0, /*!< No compression */
-  compression_dscale_1, /*!< D-scale filter of magnitude 10^1 */
-  compression_dscale_3, /*!< D-scale filter of magnitude 10^3 */
-  compression_dscale_6, /*!< D-scale filter of magnitude 10^6 */
+  compression_do_not_write = 0, /*!< Do not write that field */
+  compression_write_lossless,   /*!< Do not apply any lossy compression */
+  compression_write_dscale_1,   /*!< D-scale filter of magnitude 10^1 */
+  compression_write_dscale_3,   /*!< D-scale filter of magnitude 10^3 */
+  compression_write_dscale_6,   /*!< D-scale filter of magnitude 10^6 */
+  /* Counter, always leave last */
+  compression_level_count,
 };
+
+/**
+ * @brief Names of the compression levels, used in the select_output.yml
+ *        parameter file.
+ **/
+extern const char* lossy_compression_schemes_names[];
 
 #if defined(HAVE_HDF5)
 

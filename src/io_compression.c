@@ -30,11 +30,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Compression level names. */
+const char* lossy_compression_schemes_names[compression_level_count] = {
+    "off", "on", "D-scale-1", "D-scale-3", "D-scale-6"};
+
 void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
                                 const enum lossy_compression_schemes comp,
                                 const char* field_name) {
 
-  if (comp == compression_dscale_6) {
+  if (comp == compression_write_dscale_6) {
 
     /* Scale filter with a scaling by 10^6 */
 
@@ -44,7 +48,7 @@ void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
             field_name);
   }
 
-  else if (comp == compression_dscale_3) {
+  else if (comp == compression_write_dscale_3) {
 
     /* Scale filter with a scaling by 10^3 */
 
@@ -54,7 +58,7 @@ void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
             field_name);
   }
 
-  else if (comp == compression_dscale_1) {
+  else if (comp == compression_write_dscale_1) {
 
     /* Scale filter with a scaling by 10^1 */
 

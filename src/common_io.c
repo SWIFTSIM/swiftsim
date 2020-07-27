@@ -2588,7 +2588,7 @@ void io_prepare_output_fields(struct output_options* output_options,
     for (int ptype = 0; ptype < swift_type_count; ptype++) {
 
       /* Internally also verifies that the default level is allowed */
-      const enum compression_levels compression_level_current_default =
+      const enum lossy_compression_schemes compression_level_current_default =
           output_options_get_ptype_default(params, section_name,
                                            (enum part_type)ptype);
 
@@ -2655,7 +2655,8 @@ void io_prepare_output_fields(struct output_options* output_options,
 
       int value_id = 0;
       for (value_id = 0; value_id < compression_level_count; value_id++)
-        if (strcmp(param_value, compression_level_names[value_id]) == 0) break;
+        if (strcmp(param_value, lossy_compression_schemes_names[value_id]) == 0)
+          break;
 
       if (value_id == compression_level_count)
         error("Choice of output selection parameter %s ('%s') is invalid.",
@@ -2666,7 +2667,8 @@ void io_prepare_output_fields(struct output_options* output_options,
       if (param_is_known) {
         const int is_on =
             strcmp(param_value,
-                   compression_level_names[compression_do_not_write]) != 0;
+                   lossy_compression_schemes_names[compression_do_not_write]) !=
+            0;
 
         if (is_on && !ptype_default_write_status[param_ptype]) {
           /* Particle should be written even though default is off:
