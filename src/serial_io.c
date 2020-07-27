@@ -812,7 +812,8 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
         /* Read everything */
         if (!dry_run)
           for (int i = 0; i < num_fields; ++i) {
-            /* If we are remapping ParticleIDs later, don't need to read them. */
+            /* If we are remapping ParticleIDs later, don't need to read them.
+             */
             if (remap_ids && strcmp(list[i].name, "ParticleIDs") == 0) continue;
 
             /* Read array. */

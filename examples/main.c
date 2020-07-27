@@ -1039,8 +1039,8 @@ int main(int argc, char *argv[]) {
                    &Nbpart, &flag_entropy_ICs, with_hydro, with_gravity,
                    with_sink, with_stars, with_black_holes, with_cosmology,
                    cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a, myrank,
-                   nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads,
-                   dry_run, remap_ids);
+                   nr_nodes, MPI_COMM_WORLD, MPI_INFO_NULL, nr_threads, dry_run,
+                   remap_ids);
 #endif
 #else
     read_ic_single(ICfileName, &us, dim, &parts, &gparts, &sinks, &sparts,
