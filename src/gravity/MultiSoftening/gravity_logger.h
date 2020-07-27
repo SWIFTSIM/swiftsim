@@ -45,7 +45,7 @@ static const char *gravity_logger_field_names[gravity_logger_field_count] = {
 /**
  * @brief Initialize the logger.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #gravity_logger_fields!
  *
  * @param mask_data Data for each type of mask.
  *
@@ -78,7 +78,7 @@ INLINE static int gravity_logger_writer_populate_mask_data(
 /**
  * @brief Generates the mask and compute the size of the record.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #gravity_logger_fields!
  *
  * @param masks The list of masks (same order than in #gravity_logger_init).
  * @param part The #gpart that will be written.
@@ -117,7 +117,7 @@ INLINE static void gravity_logger_compute_size_and_mask(
 /**
  * @brief Write a particle to the logger.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #gravity_logger_fields!
  *
  * @param masks The list of masks (same order than in #gravity_logger_init).
  * @param p The #gpart to write.

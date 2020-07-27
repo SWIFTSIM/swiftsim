@@ -190,8 +190,14 @@ void header_read(struct header *h, struct logger_logfile *log) {
   }
 
   /* Check that the fields have the correct size */
-  logger_particle_check_fields(h);
-  logger_sparticle_check_fields(h);
+  for(int i = 0; i < hydro_logger_field_count; i++) {
+    hydro_logger_mask_id[i] = -1;
+  }
+  hydro_logger_reader_populate_mask_data(h);
+  for(int i = 0; i < hydro_logger_field_count; i++) {
+    if (hydro_logger_mask_id[i] == -1)
+      error("Field number %i in hydro_logger_reader_populate_mask_data is not set", i);
+  }
 
   for(int i = 0; i < gravity_logger_field_count; i++) {
     gravity_logger_mask_id[i] = -1;
@@ -199,7 +205,16 @@ void header_read(struct header *h, struct logger_logfile *log) {
   gravity_logger_reader_populate_mask_data(h);
   for(int i = 0; i < gravity_logger_field_count; i++) {
     if (gravity_logger_mask_id[i] == -1)
-      error("A field in gravity_logger_reader_populate_mask_data is not set");
+      error("Field number %i in gravity_logger_reader_populate_mask_data is not set", i);
+  }
+
+  for(int i = 0; i < stars_logger_field_count; i++) {
+    stars_logger_mask_id[i] = -1;
+  }
+  stars_logger_reader_populate_mask_data(h);
+  for(int i = 0; i < stars_logger_field_count; i++) {
+    if (stars_logger_mask_id[i] == -1)
+      error("Field number %i in stars_logger_reader_populate_mask_data is not set", i);
   }
 };
 

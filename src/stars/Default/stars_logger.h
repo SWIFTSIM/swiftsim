@@ -25,7 +25,7 @@
  * List of all possible mask.
  * Outside the module, only stars_logger_field_count is used.
  */
-enum stars_logger_fields_mask {
+enum stars_logger_fields {
   stars_logger_field_coordinates = 0,
   stars_logger_field_velocities,
   stars_logger_field_accelerations,
@@ -44,7 +44,7 @@ static const char *stars_logger_field_names[stars_logger_field_count] = {
 /**
  * @brief Initialize the logger.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #stars_logger_fields!
  *
  * @param mask_data Data for each type of mask.
  *
@@ -80,7 +80,7 @@ INLINE static int stars_logger_writer_populate_mask_data(struct mask_data *mask_
 /**
  * @brief Generates the mask and compute the size of the record.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #stars_logger_fields!
  *
  * @param masks The list of masks (same order than in #stars_logger_init).
  * @param part The #spart that will be written.
@@ -123,7 +123,7 @@ INLINE static void stars_logger_compute_size_and_mask(
 /**
  * @brief Write a particle to the logger.
  *
- * WARNING: The order should be the same in all the functions!
+ * WARNING: The order should be the same in all the functions and #stars_logger_fields!
  *
  * @param masks The list of masks (same order than in #stars_logger_init).
  * @param p The #spart to write.

@@ -16,7 +16,7 @@ def plot3D(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     pos = data
-    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=1.)
+    ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.1)
 
 
 def plot2D(data):

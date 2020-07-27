@@ -124,48 +124,6 @@ void logger_reader_free(struct logger_reader *reader) {
 }
 
 /**
- * @brief Read a record (timestamp or particle).
- *
- * WARNING THIS FUNCTION WORKS ONLY WITH HYDRO PARTICLES.
- *
- * @param reader The #logger_reader.
- * @param lp (out) The #logger_particle (if the record is a particle).
- * @param time (out) The time read (if the record is a timestamp).
- * @param is_particle Is the record a particle (or a timestamp)?
- * @param offset The offset in the file.
- *
- * @return The offset after this record.
- */
-size_t logger_reader_read_record(struct logger_reader *reader,
-                                 struct logger_particle *lp, double *time,
-                                 int *is_particle, size_t offset) {
-
-  struct logger_logfile *log = &reader->log;
-
-  /* Read mask to find out if timestamp or particle. */
-  size_t mask = 0;
-  logger_loader_io_read_mask(&log->header, (char *)log->log.map + offset, &mask,
-                             NULL);
-
-  /* Check if timestamp or not. */
-  int ind = header_get_field_index(&log->header, "Timestamp");
-  if (ind == -1) {
-    error("File header does not contain a mask for time.");
-  }
-  if (log->header.masks[ind].mask == mask) {
-    *is_particle = 0;
-    integertime_t int_time = 0;
-    offset = time_read(&int_time, time, reader, offset);
-  } else {
-    *is_particle = 1;
-    offset =
-        logger_particle_read(lp, reader, offset, *time, logger_reader_const);
-  }
-
-  return offset;
-}
-
-/**
  * @brief Set the reader to a given time and read the correct index file.
  *
  * @param reader The #logger_reader.
@@ -241,6 +199,7 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
  * @param time The requested time.
  * @param offset_time The offset of the corresponding time record.
  * @param interp_type The type of interpolation requested.
+ * @param part_type The particle type.
  * @param offset_last_full_record The offset of this particle last record
  containing all the fields.
  * @param fields_wanted The fields wanted
@@ -253,14 +212,31 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
  * @param field_found Temporary array for storing the fields found when
  looking the the records after the requested time.
  */
-void logger_reader_read_single_gparticle(
+void logger_reader_read_single_particle(
     struct logger_reader *reader, double time, size_t offset_time,
-    enum logger_reader_type interp_type, const size_t offset_last_full_record,
+    enum logger_reader_type interp_type, enum part_type part_type,
+    const size_t offset_last_full_record,
     const int *fields_wanted, const int n_fields_wanted, void **output,
     void **tmp_output, double *time_before, int *fields_found) {
 
   const struct header *h = &reader->log.header;
   size_t offset = offset_last_full_record;
+
+  /* Get the mask_id from the particle type */
+  const int *logger_mask_id = NULL;
+  switch(part_type) {
+    case swift_type_gas:
+      logger_mask_id = hydro_logger_mask_id;
+      break;
+    case swift_type_dark_matter:
+      logger_mask_id = gravity_logger_mask_id;
+      break;
+    case swift_type_stars:
+      logger_mask_id = stars_logger_mask_id;
+      break;
+  default:
+      error("Type not implemented yet.");
+  }
 
 
   /* Find the data for the previous record.
@@ -271,19 +247,33 @@ void logger_reader_read_single_gparticle(
 
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_gparticle_read(reader, offset, fields_wanted, n_fields_wanted, tmp_output,
-                          &mask, &h_offset);
+    switch (part_type) {
+      case swift_type_gas:
+        logger_particle_read(reader, offset, fields_wanted, n_fields_wanted, tmp_output,
+                             &mask, &h_offset);
+        break;
+      case swift_type_dark_matter:
+        logger_gparticle_read(reader, offset, fields_wanted, n_fields_wanted, tmp_output,
+                              &mask, &h_offset);
+        break;
+      case swift_type_stars:
+        logger_sparticle_read(reader, offset, fields_wanted, n_fields_wanted, tmp_output,
+                              &mask, &h_offset);
+        break;
+      default:
+        error("Type not implemented yet.");
+    }
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
 
     /* Copy the into the output array. */
     for(int i = 0; i < n_fields_wanted; i++) {
-      const int field_id = gravity_logger_mask_id[fields_wanted[i]];
+      const int field_id = logger_mask_id[fields_wanted[i]];
       /* Check if the field is present in this record. */
       if (mask & h->masks[field_id].mask) {
         time_before[i] = current_time;
-        memcpy(output[i], tmp_output[i], h->masks[gravity_logger_mask_id[i]].size);
+        memcpy(output[i], tmp_output[i], h->masks[logger_mask_id[i]].size);
       }
     }
 
@@ -315,14 +305,30 @@ void logger_reader_read_single_gparticle(
 
       /* Copy the data into the output array. */
       for(int i = 0; i < n_fields_wanted; i++) {
-        const int field_id = gravity_logger_mask_id[fields_wanted[i]];
+        const int field_id = logger_mask_id[fields_wanted[i]];
         /* Check if the mask is present in this record and still not found. */
         if (!fields_found[i] && mask & h->masks[field_id].mask) {
           /* Interpolate the data. */
-          logger_gparticle_interpolate_field(
-              tmp_output[i], output[i], output[i], time_before[i],
-              current_time, time, fields_wanted[i]);
-          /* Mark the field as being found. */
+          switch(part_type) {
+            case swift_type_gas:
+              hydro_logger_interpolate_field(
+                  tmp_output[i], output[i], output[i], time_before[i],
+                  current_time, time, fields_wanted[i]);
+              break;
+            case swift_type_dark_matter:
+              gravity_logger_interpolate_field(
+                  tmp_output[i], output[i], output[i], time_before[i],
+                  current_time, time, fields_wanted[i]);
+              break;
+            case swift_type_stars:
+              stars_logger_interpolate_field(
+                  tmp_output[i], output[i], output[i], time_before[i],
+                  current_time, time, fields_wanted[i]);
+            break;
+            default:
+              error("Type not implemented yet.");
+          }
+            /* Mark the field as being found. */
           number_field_still_to_recover -= 1;
           fields_found[i] = 1;
         }
@@ -348,9 +354,17 @@ void logger_reader_sort_ids(const int *fields_wanted, int *sorted_indices,
   int n_max = 0;
   int *fields_ids = NULL;
   switch(type) {
+    case swift_type_gas:
+      n_max = hydro_logger_field_count;
+      fields_ids = hydro_logger_mask_id;
+      break;
     case swift_type_dark_matter:
       n_max = gravity_logger_field_count;
       fields_ids = gravity_logger_mask_id;
+      break;
+    case swift_type_stars:
+      n_max = stars_logger_field_count;
+      fields_ids = stars_logger_mask_id;
       break;
     default:
       error("Particle type not implemented yet.");
@@ -379,6 +393,52 @@ void logger_reader_sort_ids(const int *fields_wanted, int *sorted_indices,
     error("Failed to find a field for %s", part_type_names[type]);
   }
 }
+
+/**
+ * @brief Read all the particles of a given type.
+ *
+ * @param part_type The name of the particle type following part_type.h (e.g. gas, dark_matter, stars).
+ * @param type The type of functions (e.g. hydro, gravity, stars).
+ */
+#define READ_ALL_PARTICLES(part_type, type)     \
+  ({                                                                    \
+  /* Do the hydro. */                                                   \
+  struct index_data *data = logger_index_get_data(&reader->index.index, swift_type_##part_type); \
+                                                                        \
+  /* Sort the fields in order to read the correct bits. */              \
+  logger_reader_sort_ids(fields_wanted, sorted_indices,                 \
+                         sorted_fields_wanted,                          \
+                         n_fields_wanted, swift_type_##part_type);      \
+                                                                        \
+  /* Allocate the memory for the temporary output. */                   \
+  for(int i = 0; i < n_fields_wanted; i++) {                            \
+    const int field_id = type##_logger_mask_id[sorted_fields_wanted[i]]; \
+    tmp_output_single[i] = malloc(h->masks[field_id].size);             \
+  }                                                                     \
+                                                                        \
+  /* Read the dark matter particles */                                  \
+  for (size_t i = 0; i < n_part[swift_type_##part_type]; i++) {         \
+    /* Get the offset */                                                \
+    size_t offset = data[i].offset;                                     \
+                                                                        \
+    /* Sort the output into output_single. */                           \
+    for(int field = 0; field < n_fields_wanted; field++) {              \
+      const int field_id = fields_wanted[sorted_indices[field]];        \
+      output_single[field] = output[sorted_indices[field]] + i * h->masks[field_id].size; \
+    }                                                                   \
+                                                                        \
+    /* Read the particle. */                                            \
+    logger_reader_read_single_particle(                                 \
+                                       reader, time, reader->time.time_offset, interp_type, swift_type_##part_type, offset, \
+                                       sorted_fields_wanted, n_fields_wanted, output_single, tmp_output_single, \
+                                       time_output, fields_found);      \
+  }                                                                     \
+                                                                        \
+  /* Free the allocated memory for this type of particle. */            \
+  for(int i = 0; i < n_fields_wanted; i++) {                            \
+    free(tmp_output_single[i]);                                         \
+  }                                                                     \
+})
 /**
  * @brief Read all the particles from the index file.
  *
@@ -411,42 +471,14 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* Fields found when moving after the requested time (used internally by the single particle readers) */
   int *fields_found = (int *) malloc(sizeof(int) * n_fields_wanted);
 
+  /* Do the hydro. */
+  READ_ALL_PARTICLES(gas, hydro);
+
   /* Do the dark matter now. */
-  struct index_data *data = logger_index_get_data(&reader->index.index, swift_type_dark_matter);
+  READ_ALL_PARTICLES(stars, stars);
 
-  /* Sort the fields in order to read the correct bits. */
-  logger_reader_sort_ids(fields_wanted, sorted_indices,
-                         sorted_fields_wanted,
-                         n_fields_wanted, swift_type_dark_matter);
-
-  /* Allocate the memory for the temporary output. */
-  for(int i = 0; i < n_fields_wanted; i++) {
-    const int field_id = gravity_logger_mask_id[sorted_fields_wanted[i]];
-    tmp_output_single[i] = malloc(h->masks[field_id].size);
-  }
-
-  /* Read the dark matter particles */
-  for (size_t i = 0; i < n_part[swift_type_dark_matter]; i++) {
-    /* Get the offset */
-    size_t offset = data[i].offset;
-
-    /* Sort the output into output_single. */
-    for(int field = 0; field < n_fields_wanted; field++) {
-      const int field_id = fields_wanted[sorted_indices[field]];
-      output_single[field] = output[sorted_indices[field]] + i * h->masks[field_id].size;
-    }
-
-    /* Read the particle. */
-    logger_reader_read_single_gparticle(
-      reader, time, reader->time.time_offset, interp_type, offset,
-      sorted_fields_wanted, n_fields_wanted, output_single, tmp_output_single,
-      time_output, fields_found);
-  }
-
-  /* Free the allocated memory for this type of particle. */
-  for(int i = 0; i < n_fields_wanted; i++) {
-    free(tmp_output_single[i]);
-  }
+  /* Do the stars now. */
+  READ_ALL_PARTICLES(stars, stars);
 
   /* Free the memory. */
   free(output_single);
