@@ -101,18 +101,58 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
 
 __attribute__((always_inline)) INLINE static PyObject
 *logger_loader_create_output(void **output, const int *field_indices, const int n_fields,
-                             uint64_t n_tot) {
+                             const uint64_t *n_part, uint64_t n_tot) {
 
   struct logger_python_field python_fields[100];
-  gravity_logger_generate_python(python_fields);
+  struct logger_python_field *shifted_python_fields;
 
   PyObject *list = PyList_New(n_fields);
   struct logger_python_field *tmp;
 
   for(int i = 0; i < n_fields; i++) {
     tmp = NULL;
+
+    /* Find in the hydro the field. */
+    hydro_logger_generate_python(python_fields);
+    shifted_python_fields = python_fields + hydro_logger_field_count;
+    for(int j = 0; j < hydro_logger_field_count; j++) {
+      if (field_indices[i] == hydro_logger_mask_id[j]) {
+        tmp = &python_fields[j];
+        break;
+      }
+    }
+
+    /* Find in the gravity the field. */
+    gravity_logger_generate_python(shifted_python_fields);
+    shifted_python_fields = python_fields + gravity_logger_field_count;
     for(int j = 0; j < gravity_logger_field_count; j++) {
       if (field_indices[i] == gravity_logger_mask_id[j]) {
+        /* Check if we have the same fields for gravity + hydro */
+        if (tmp != NULL) {
+          if (tmp->dimension != python_fields[j].dimension ||
+              tmp->typenum != python_fields[j].typenum) {
+            error("The python definition of the field %s does not correspond between"
+                  " the modules.", gravity_logger_field_names[j]);
+          }
+        }
+        tmp = &python_fields[j];
+        break;
+      }
+    }
+
+    /* Find in the stars the field. */
+    stars_logger_generate_python(python_fields);
+    shifted_python_fields = python_fields + stars_logger_field_count;
+    for(int j = 0; j < stars_logger_field_count; j++) {
+      if (field_indices[i] == stars_logger_mask_id[j]) {
+        /* Check if we have the same fields for gravity + hydro + stars */
+        if (tmp != NULL) {
+          if (tmp->dimension != python_fields[j].dimension ||
+              tmp->typenum != python_fields[j].typenum) {
+            error("The python definition of the field %s does not correspond between"
+                  " the modules.", stars_logger_field_names[j]);
+          }
+        }
         tmp = &python_fields[j];
         break;
       }
@@ -146,7 +186,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   /* input variables. */
   char *filename = NULL;
 
-  int verbose = 1;
+  int verbose = 0;
   PyObject *fields = NULL;
   double time = 0;
 
@@ -217,7 +257,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     field_indices, n_fields, output, n_part);
 
   /* Create the python output. */
-  PyObject *array = logger_loader_create_output(output, field_indices, n_fields, n_tot);
+  PyObject *array = logger_loader_create_output(output, field_indices, n_fields, n_part, n_tot);
 
   /* Free the reader. */
   logger_reader_free(&reader);

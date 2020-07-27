@@ -12,26 +12,20 @@ sys.path.append("../.libs/")
 import liblogger as logger
 
 
-def plot3D(data):
+def plot3D(pos):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    pos = data
     ax.plot(pos[:, 0], pos[:, 1], pos[:, 2], ".", markersize=0.1)
 
 
-def plot2D(data):
-    # pos = data["gas"]["Coordinates"]
-    pos = data
-
+def plot2D(pos, entropies):
     center = np.array([0.5]*3)
     r2 = np.sum((pos - center)**2, axis=1)
 
     # plot entropy vs distance
-    plt.plot(np.sqrt(r2), data["gas"]["Entropies"], '.',
+    plt.plot(np.sqrt(r2), entropies, '.',
              markersize=0.2)
 
-    plt.xlim(0., 0.5)
-    plt.ylim(-1, 50)
     plt.xlabel("Radius")
     plt.ylabel("Entropy")
 
@@ -53,12 +47,11 @@ print("time: %g" % time)
 
 # read the logger
 t = logger.getTimeLimits(basename)
-pos, vel = logger.get_particle_data(basename, ["Coordinates", "Velocities"],
+pos, ent = logger.get_particle_data(basename, ["Coordinates", "Entropies"],
                                     time)
-print(pos)
-print(vel)
-print(pos.max(), vel.max())
 
-plot3D(pos)
-# plot2D(data)
+print("Min/Max of the position:", pos.min(), pos.max())
+print("Min/Max of the entropy:", ent.min(), ent.max())
+# plot3D(pos)
+plot2D(pos, ent)
 plt.show()
