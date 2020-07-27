@@ -42,7 +42,7 @@ enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
   }
 
   error("Invalid lossy compression scheme name: '%s'", name);
-  return 0;
+  return (enum lossy_compression_schemes)0;
 }
 
 void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,

@@ -445,7 +445,7 @@ void prepare_array_parallel(
 
   /* Create dataset */
   const hid_t h_data = H5Dcreate(grp, props.name, h_type, h_space, H5P_DEFAULT,
-                                 H5P_DEFAULT, H5P_DEFAULT);
+                                 h_prop, H5P_DEFAULT);
   if (h_data < 0) error("Error while creating dataspace '%s'.", props.name);
 
   /* Write unit conversion factors for this data set */
