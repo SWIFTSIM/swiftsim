@@ -154,6 +154,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   if (!PyArg_ParseTuple(args, "sOd|i", &filename, &fields, &time, &verbose))
     return NULL;
 
+  /* Check the inputs. */
   if (!PyList_Check(fields)) {
     error("Expecting a list of fields");
   }
@@ -163,26 +164,31 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   logger_reader_init(&reader, filename, verbose);
   const struct header *h = &reader.log.header;
 
-  /* Get the fields in the logger format. */
+  /* Get the fields indexes from the header. */
   const int n_fields = PyList_Size(fields);
   int *field_indices = (int *) malloc(n_fields * sizeof(int));
   for(int i = 0; i < n_fields; i++) {
     field_indices[i] = -1;
 
+    /* Get the an item in the list. */
     PyObject *field = PyList_GetItem(fields, i);
     if (!PyUnicode_Check(field)) {
       error("Expecting list of string for the fields");
     }
 
+    /* Convert into C string. */
     Py_ssize_t size = 0;
     const char *field_name = PyUnicode_AsUTF8AndSize(field, &size);
 
+    /* Find the equivalent field inside the header. */
     for(int j = 0; j < h->masks_count; j++) {
       if (strcmp(field_name, h->masks[j].name) == 0) {
         field_indices[i] = j;
         break;
       }
     }
+
+    /* Check if we found a field. */
     if (field_indices[i] == -1) {
       error("Failed to find the field %s", field_name);
     }
@@ -199,17 +205,18 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     n_tot += n_part[i];
   }
 
-  /* Allocate the output memory */
+  /* Allocate the output memory. */
   void **output = malloc(n_fields * sizeof(void));
   for(int i = 0; i < n_fields; i++) {
     output[i] = malloc(n_tot * h->masks[field_indices[i]].size);
   }
 
   /* Read the particles. */
-  logger_reader_read_all_particles(&reader, time, logger_reader_const,
-                                   field_indices, n_fields, output,
-                                   n_part);
+  logger_reader_read_all_particles(
+    &reader, time, logger_reader_lin,
+    field_indices, n_fields, output, n_part);
 
+  /* Create the python output. */
   PyObject *array = logger_loader_create_output(output, field_indices, n_fields, n_tot);
 
   /* Free the reader. */

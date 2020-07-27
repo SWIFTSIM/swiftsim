@@ -109,6 +109,7 @@ logger_gparticle_interpolate_field(
   switch(field) {
     case gravity_logger_field_coordinates:
       /* interpolate vectors. */
+      // TODO use hermite spline
       for (int i = 0; i < 3; i++) {
         ((double *)output)[i] = wa * ((double *) field_after)[i] +
           wb * ((double *) field_before)[i];
@@ -118,6 +119,31 @@ logger_gparticle_interpolate_field(
         /*     t_after, after->x[i], after->v_full[i], after->a_grav[i], */
         /*     t); */
       }
+      break;
+    case gravity_logger_field_velocities:
+      /* interpolate vectors. */
+      // TODO use hermite spline
+      for (int i = 0; i < 3; i++) {
+        ((float *)output)[i] = wa * ((float *) field_after)[i] +
+          wb * ((float *) field_before)[i];
+      }
+      break;
+    case gravity_logger_field_accelerations:
+      /* interpolate vectors. */
+      for (int i = 0; i < 3; i++) {
+        ((float *)output)[i] = wa * ((float *) field_after)[i] +
+          wb * ((float *) field_before)[i];
+      }
+      break;
+    case gravity_logger_field_masses:
+      ((float *)output)[0] = wa * ((float *) field_after)[0] +
+        wb * ((float *) field_before)[0];
+      break;
+    case gravity_logger_field_particle_ids:
+      if (*(long long *) field_after != *(long long *) field_before) {
+        error("Interpolating different particles");
+      }
+      *(long long *) output = *(long long *) field_after;
       break;
     default:
       error("Not implemented");
