@@ -112,9 +112,6 @@ void logger_reader_init_index(struct logger_reader *reader);
 void logger_reader_init(struct logger_reader *reader, const char *basename,
                         int verbose);
 void logger_reader_free(struct logger_reader *reader);
-size_t logger_reader_read_record(struct logger_reader *reader,
-                                 struct logger_particle *lp, double *time,
-                                 int *is_particle, size_t offset);
 
 void logger_reader_set_time(struct logger_reader *reader, double time);
 

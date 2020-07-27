@@ -24,7 +24,6 @@
    TODO
 
    Merge everything into writer
-   read_gparticle on a single field at a time
    Use NaN to flag available fields
 */
 
@@ -78,27 +77,32 @@ __attribute__((always_inline)) INLINE static void gravity_logger_reader_populate
 }
 
 /**
- * @brief Interpolate the location of the particle at the given time.
+ * @brief Interpolate a field of the particle at the given time.
  * Here we use a linear interpolation for most of the fields.
  * For the position (velocity), we use a quintic (cubic) hermite interpolation
  * based on the positions, velocities and accelerations at the time of the two
- * particles
+ * particles.
  *
- * @param part_bef #logger_gparticle current particle (before time)
- * @param part_next #logger_gparticle next particle (after time)
- * @param time interpolation time
- *
- * @return The interpolated particle.
- *
+ * @param field_before Pointer to the field at a time < t.
+ * @param field_after Pointer to the field at a time > t.
+ * @param otuput Pointer to the output value.
+ * @param t_before Time of field_before (< t).
+ * @param t_after Time of field_after (> t).
+ * @param t Requested time.
+ * @param field The field to reconstruct (follows the order of #gravity_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-logger_gparticle_interpolate_field(
+gravity_logger_interpolate_field(
     void *field_before, void *field_after,
     void *output, const double t_before, const double t_after,
     const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
+  if (t_before > t || t_after < t) {
+    error("The times for the interpolation are not correct"
+          " %g < %g < %g.", t_before, t, t_after);
+  }
 #endif
 
   /* Compute the interpolation scaling. */

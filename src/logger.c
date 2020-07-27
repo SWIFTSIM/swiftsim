@@ -644,11 +644,12 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     log->mask_data_pointers.hydro = tmp;
 
     /* Set the masks */
-    num_fields = hydro_logger_writer_populate_mask_data(tmp);
+    int tmp_num_fields= hydro_logger_writer_populate_mask_data(tmp);
     /* Set the particle type */
     for (int i = 0; i < num_fields; i++) {
       tmp[i].type = mask_type_gas;
     }
+    num_fields += tmp_num_fields;
   }
 
   /* Get all the fields that need to be written for the stars. */
