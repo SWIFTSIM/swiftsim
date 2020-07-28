@@ -114,53 +114,54 @@ __attribute__((always_inline)) INLINE static PyObject
 
     /* Find in the hydro the field. */
     hydro_logger_generate_python(python_fields);
-    shifted_python_fields = python_fields + hydro_logger_field_count;
     for(int j = 0; j < hydro_logger_field_count; j++) {
       if (field_indices[i] == hydro_logger_mask_id[j]) {
         tmp = &python_fields[j];
         break;
       }
     }
+    shifted_python_fields = python_fields + hydro_logger_field_count;
 
     /* Find in the gravity the field. */
     gravity_logger_generate_python(shifted_python_fields);
-    shifted_python_fields = python_fields + gravity_logger_field_count;
     for(int j = 0; j < gravity_logger_field_count; j++) {
       if (field_indices[i] == gravity_logger_mask_id[j]) {
         /* Check if we have the same fields for gravity + hydro */
         if (tmp != NULL) {
-          if (tmp->dimension != python_fields[j].dimension ||
-              tmp->typenum != python_fields[j].typenum) {
+          if (tmp->dimension != shifted_python_fields[j].dimension ||
+              tmp->typenum != shifted_python_fields[j].typenum) {
             error("The python definition of the field %s does not correspond between"
                   " the modules.", gravity_logger_field_names[j]);
           }
         }
-        tmp = &python_fields[j];
+        tmp = &shifted_python_fields[j];
         break;
       }
     }
+    shifted_python_fields = shifted_python_fields + gravity_logger_field_count;
 
     /* Find in the stars the field. */
-    stars_logger_generate_python(python_fields);
-    shifted_python_fields = python_fields + stars_logger_field_count;
+    stars_logger_generate_python(shifted_python_fields);
     for(int j = 0; j < stars_logger_field_count; j++) {
       if (field_indices[i] == stars_logger_mask_id[j]) {
         /* Check if we have the same fields for gravity + hydro + stars */
         if (tmp != NULL) {
-          if (tmp->dimension != python_fields[j].dimension ||
-              tmp->typenum != python_fields[j].typenum) {
+          if (tmp->dimension != shifted_python_fields[j].dimension ||
+              tmp->typenum != shifted_python_fields[j].typenum) {
             error("The python definition of the field %s does not correspond between"
                   " the modules.", stars_logger_field_names[j]);
           }
         }
-        tmp = &python_fields[j];
+        tmp = &shifted_python_fields[j];
         break;
       }
     }
+    shifted_python_fields = shifted_python_fields + stars_logger_field_count;
+
+    /* Check if we got a field */
     if (tmp == NULL) {
       error("Failed to find the required field");
     }
-
     PyObject *tmp_array = NULL;
     if (tmp->dimension > 1) {
       npy_intp dims[2] = {n_tot, tmp->dimension};
@@ -168,7 +169,7 @@ __attribute__((always_inline)) INLINE static PyObject
     }
     else {
       npy_intp dims = n_tot;
-      tmp_array = PyArray_SimpleNewFromData(1, &dims, NPY_DOUBLE, output[i]);
+      tmp_array = PyArray_SimpleNewFromData(1, &dims, tmp->typenum, output[i]);
     }
 
     PyList_SetItem(list, i, tmp_array);

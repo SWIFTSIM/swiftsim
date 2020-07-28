@@ -104,33 +104,39 @@ int main(int argc, char *argv[]) {
       required_fields[1] = j;
     }
   }
+  if (required_fields[0] == -1) {
+    error("Coordinates not found");
+  }
+  if (required_fields[1] == -1) {
+    error("ParticleIDs not found.");
+  }
 
   /* Create the output */
   void **output = malloc(n_fields * sizeof(void*));
   output[0] = (void *) pos;
   output[1] = (void *) ids;
 
-
-  logger_reader_read_all_particles(&reader, begin, logger_reader_lin,
-                                   required_fields, n_fields, output, n_parts);
-
   /* Loop over time for a single particle */
+  int part_ind = 0;
   for (double t = begin; t < end; t += (end - begin) / number_steps) {
-    /* Get the offset of the given time */
-    size_t o = logger_reader_get_next_offset_from_time(&reader, t);
-    message("time: %f offset: %ld", t, o);
+    /* Set the time of the next reading */
+    logger_reader_set_time(&reader, t);
 
     /* Read the next time */
     logger_reader_read_all_particles(&reader, t, logger_reader_lin,
                                      required_fields, n_fields, output, n_parts);
 
-    message("Particle %lli: %f %f %f %f", ids[0], pos[0], pos[1], pos[2], t);
+    message("Particle %lli: %f %f %f %f", ids[part_ind],
+            pos[3 * part_ind + 0], pos[3 * part_ind + 1], pos[3 * part_ind + 2], t);
   }
 
   /* Cleanup the memory */
   free(required_fields);
   free(ids);
   free(pos);
+  free(parts);
+  free(xparts);
   logger_reader_free(&reader);
+  free(output);
   return 0;
 }

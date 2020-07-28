@@ -91,9 +91,12 @@ void logger_reader_init_index(struct logger_reader *reader) {
   reader->index.n_files = count;
 
   /* Initialize the arrays */
-  reader->index.times = (double *)malloc(count * sizeof(double));
-  reader->index.int_times =
-      (integertime_t *)malloc(count * sizeof(integertime_t));
+  if ((reader->index.times = (double *)malloc(count * sizeof(double))) == NULL) {
+    error("Failed to allocate the list of times");
+  }
+  if ((reader->index.int_times = (integertime_t *)malloc(count * sizeof(integertime_t))) == NULL) {
+    error("Failed to allocate the list of times");
+  }
 
   /* Get the information contained in the headers */
   for (int i = 0; i < reader->index.n_files; i++) {
@@ -165,6 +168,11 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
 
   /* Get the offset of the time chunk */
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
+  /* ind == 0 and ind == 1 are the same time, but when reading we need
+     data before the initial time. */
+  if (ind == 0) {
+    ind = 1;
+  }
 
   /* Check if we requested exactly a time step  */
   if (reader->log.times.records[ind].time != time) {
@@ -241,13 +249,11 @@ void logger_reader_read_single_particle(
       error("Type not implemented yet.");
   }
 
-
   /* Find the data for the previous record.
      As we start from a full record,
      no need to check if all the fields are found.
   */
   while(offset < offset_time) {
-
     /* Read the particle. */
     size_t mask, h_offset;
     switch (part_type) {
@@ -270,13 +276,13 @@ void logger_reader_read_single_particle(
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
 
-    /* Copy the into the output array. */
+    /* Copy into the output array. */
     for(int i = 0; i < n_fields_wanted; i++) {
       const int field_id = logger_mask_id[fields_wanted[i]];
       /* Check if the field is present in this record. */
       if (mask & h->masks[field_id].mask) {
         time_before[i] = current_time;
-        memcpy(output[i], tmp_output[i], h->masks[logger_mask_id[i]].size);
+        memcpy(output[i], tmp_output[i], h->masks[field_id].size);
       }
     }
 
@@ -311,6 +317,16 @@ void logger_reader_read_single_particle(
         const int field_id = logger_mask_id[fields_wanted[i]];
         /* Check if the mask is present in this record and still not found. */
         if (!fields_found[i] && mask & h->masks[field_id].mask) {
+
+          /* Mark the field as being found. */
+          number_field_still_to_recover -= 1;
+          fields_found[i] = 1;
+
+          /* If the times are the same, no need to interpolate
+             (e.g. when requesting a logger_log_all_particles). */
+          if (current_time == time_before[i])
+            continue;
+
           /* Interpolate the data. */
           switch(part_type) {
             case swift_type_gas:
@@ -331,9 +347,6 @@ void logger_reader_read_single_particle(
             default:
               error("Type not implemented yet.");
           }
-            /* Mark the field as being found. */
-          number_field_still_to_recover -= 1;
-          fields_found[i] = 1;
         }
       }
     }
@@ -416,7 +429,9 @@ void logger_reader_sort_ids(const int *fields_wanted, int *sorted_indices,
   /* Allocate the memory for the temporary output. */                   \
   for(int i = 0; i < n_fields_wanted; i++) {                            \
     const int field_id = type##_logger_mask_id[sorted_fields_wanted[i]]; \
-    tmp_output_single[i] = malloc(h->masks[field_id].size);             \
+    if ((tmp_output_single[i] = malloc(h->masks[field_id].size)) == NULL) { \
+      error("Failed to allocate the temporary output.");                \
+    }                                                                   \
   }                                                                     \
                                                                         \
   /* Read the dark matter particles */                                  \
@@ -464,16 +479,35 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* Allocate temporary memory. */
   /* The index of fields_wanted sorted according to the fields order. */
   int *sorted_indices = (int *) malloc(sizeof(int) * n_fields_wanted);
+  if (sorted_indices == NULL) {
+    error("Failed to allocate the array of sorted indices.");
+  }
   /* fields_wanted sorted according to the fields order. */
   int *sorted_fields_wanted = (int *) malloc(sizeof(int) * n_fields_wanted);
+  if (sorted_fields_wanted == NULL) {
+    error("Failed to allocate the array of sorted fields.");
+  }
   /* Pointer to the output array in the correct reading order. */
   void **output_single = malloc(sizeof(void*) * n_fields_wanted);
+  if (output_single == NULL) {
+    error("Failed to allocate the output.");
+  }
   /* Temporary array for storing a single particle read. */
   void **tmp_output_single = malloc(sizeof(void*) * n_fields_wanted);
+  if (tmp_output_single == NULL) {
+    error("Failed to allocate the temporary array for a single particle.");
+  }
+
   /* Output time of the fields (used internally by the single particle readers). */
   double *time_output = (double *) malloc(sizeof(double) * n_fields_wanted);
+  if (time_output == NULL) {
+    error("Failed to allocate the array of the times.");
+  }
   /* Fields found when moving after the requested time (used internally by the single particle readers) */
   int *fields_found = (int *) malloc(sizeof(int) * n_fields_wanted);
+  if (fields_found == NULL) {
+    error("Failed to allocate the array of fields found.");
+  }
 
   /* Do the hydro. */
   if (n_part[swift_type_gas] != 0)
@@ -570,6 +604,9 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
   if (*is_particle) {
     /* We request all the fields */
     int *required_fields = malloc(hydro_logger_field_count * sizeof(int));
+    if (required_fields == NULL) {
+      error("Failed to allocate the required fields.");
+    }
     for(int i = 0; i < hydro_logger_field_count; i++) {
       required_fields[i] = i;
     }
