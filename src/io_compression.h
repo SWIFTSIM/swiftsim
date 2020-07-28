@@ -26,11 +26,12 @@
  * @brief Compression levels for snapshot fields
  */
 enum lossy_compression_schemes {
-  compression_do_not_write = 0, /*!< Do not write that field */
-  compression_write_lossless,   /*!< Do not apply any lossy compression */
-  compression_write_dscale_1,   /*!< D-scale filter of magnitude 10^1 */
-  compression_write_dscale_3,   /*!< D-scale filter of magnitude 10^3 */
-  compression_write_dscale_6,   /*!< D-scale filter of magnitude 10^6 */
+  compression_do_not_write = 0,    /*!< Do not write that field */
+  compression_write_lossless,      /*!< Do not apply any lossy compression */
+  compression_write_d_scale_1,     /*!< D-scale filter of magnitude 10^1 */
+  compression_write_d_scale_3,     /*!< D-scale filter of magnitude 10^3 */
+  compression_write_d_scale_6,     /*!< D-scale filter of magnitude 10^6 */
+  compression_write_f_mantissa_10, /*!< Conversion to 10-bits mantissa float */
   /* Counter, always leave last */
   compression_level_count,
 };
@@ -47,7 +48,7 @@ enum lossy_compression_schemes compression_scheme_from_name(const char* name);
 
 #include <hdf5.h>
 
-void set_hdf5_lossy_compression(hid_t h_prop, hid_t h_type,
+void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
                                 const enum lossy_compression_schemes comp,
                                 const char* field_name);
 
