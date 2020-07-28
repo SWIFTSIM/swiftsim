@@ -121,6 +121,9 @@ void logger_reader_free(struct logger_reader *reader) {
   if (reader->time.time != -1.) {
     logger_index_free(&reader->index.index);
   }
+
+  free(reader->index.int_times);
+  free(reader->index.times);
 }
 
 /**
@@ -439,6 +442,7 @@ void logger_reader_sort_ids(const int *fields_wanted, int *sorted_indices,
     free(tmp_output_single[i]);                                         \
   }                                                                     \
 })
+
 /**
  * @brief Read all the particles from the index file.
  *
@@ -463,9 +467,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* fields_wanted sorted according to the fields order. */
   int *sorted_fields_wanted = (int *) malloc(sizeof(int) * n_fields_wanted);
   /* Pointer to the output array in the correct reading order. */
-  void **output_single = malloc(sizeof(void) * n_fields_wanted);
+  void **output_single = malloc(sizeof(void*) * n_fields_wanted);
   /* Temporary array for storing a single particle read. */
-  void **tmp_output_single = malloc(sizeof(void) * n_fields_wanted);
+  void **tmp_output_single = malloc(sizeof(void*) * n_fields_wanted);
   /* Output time of the fields (used internally by the single particle readers). */
   double *time_output = (double *) malloc(sizeof(double) * n_fields_wanted);
   /* Fields found when moving after the requested time (used internally by the single particle readers) */
@@ -531,4 +535,55 @@ size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
     ind -= 1;
   }
   return reader->log.times.records[ind + 1].offset;
+}
+
+/**
+ * @brief Read a record without knowing if it is a particle or a timestamp.
+ *
+ * WARNING This function asssumes that all the particles are hydro particles.
+ * Thus it should be used only for testing the code.
+ *
+ * @param reader The #logger_reader.
+ * @param output The already allocated buffer containing all the fields possible for
+ * an hydro particle. (out) The particle if the record is a particle
+ * @param time (out) The time if the record is a timestamp.
+ * @param is_particle (out) 1 if the record is a particle 0 otherwise.
+ * @param offset The offset of the record to read.
+ *
+ * @return The offset after the record.
+ */
+size_t logger_reader_read_record(struct logger_reader *reader, void **output,
+                                 double *time, int *is_particle, size_t offset) {
+
+  /* Get a few pointers. */
+  const struct header *h = &reader->log.header;
+  void *map = reader->log.log.map;
+
+  size_t mask = 0;
+  size_t h_offset = 0;
+
+  /* Read the record's mask. */
+  map = logger_loader_io_read_mask(h, (char *)map + offset, &mask, &h_offset);
+
+  *is_particle = !(mask & h->timestamp_mask);
+  /* The record is a particle. */
+  if (*is_particle) {
+    /* We request all the fields */
+    int *required_fields = malloc(hydro_logger_field_count * sizeof(int));
+    for(int i = 0; i < hydro_logger_field_count; i++) {
+      required_fields[i] = i;
+    }
+
+    offset = logger_particle_read(reader, offset, required_fields, hydro_logger_field_count,
+                                  output, &mask, &h_offset);
+
+    free(required_fields);
+  }
+  /* The record is a timestamp. */
+  else {
+    integertime_t not_used = 0;
+    offset = time_read(&not_used, time, reader, offset);
+  }
+
+  return offset;
 }
