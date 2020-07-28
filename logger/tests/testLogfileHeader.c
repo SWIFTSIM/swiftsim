@@ -121,5 +121,6 @@ int main(int argc, char *argv[]) {
   assert(h->offset_direction == logger_offset_backward);
 
   free(mask_data);
+  logger_logfile_free(logfile);
   return 0;
 }

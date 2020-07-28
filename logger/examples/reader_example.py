@@ -19,6 +19,7 @@ def plot3D(pos):
 
 
 def plot2D(pos, entropies):
+    plt.figure()
     center = np.array([0.5]*3)
     r2 = np.sum((pos - center)**2, axis=1)
 
@@ -52,6 +53,6 @@ pos, ent = logger.get_particle_data(basename, ["Coordinates", "Entropies"],
 
 print("Min/Max of the position:", pos.min(), pos.max())
 print("Min/Max of the entropy:", ent.min(), ent.max())
-# plot3D(pos)
+plot3D(pos)
 plot2D(pos, ent)
 plt.show()
