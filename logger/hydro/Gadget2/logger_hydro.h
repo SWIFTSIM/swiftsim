@@ -39,7 +39,6 @@ __attribute__((always_inline)) INLINE static void hydro_logger_reader_populate_m
     struct header *head) {
 
   for (int i = 0; i < head->masks_count; i++) {
-    message("%i %s", i, head->masks[i].name);
     int size = 0;
     if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
       size = 3 * sizeof(double);

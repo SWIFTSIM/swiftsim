@@ -178,7 +178,7 @@ void generate_log(struct swift_params *params, struct part *parts,
   logger_ensure_size(&log, nparts, /* number gpart */ 0, 0);
 
   /* Log all the particles before starting */
-  logger_log_all(&log, &e);
+  logger_log_all_particles(&log, &e);
   engine_dump_index(&e);
 
   /* Write particles */
@@ -189,7 +189,7 @@ void generate_log(struct swift_params *params, struct part *parts,
                        &e.logger->timestamp_offset);
 
   /* Write all the particles at the end */
-  logger_log_all(e.logger, &e);
+  logger_log_all_particles(e.logger, &e);
 
   /* Write a sentinel timestamp */
   logger_log_timestamp(e.logger, e.ti_current, e.time,

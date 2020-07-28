@@ -86,36 +86,51 @@ int main(int argc, char *argv[]) {
   }
 
   /* Allocate the particles memory */
-  struct logger_particle *particles =
-      malloc(n_tot * sizeof(struct logger_particle));
+  double *pos = (double *) malloc(n_tot * 3 * sizeof(double));
+  long long *ids = (long long *) malloc(n_tot * sizeof(long long));
 
-  struct logger_particle_array array;
-  logger_particle_array_init(&array);
-  array.hydro.parts = particles;
-  array.hydro.n = n_tot;
+  /* Create the list of fields. */
+  const int n_fields = 2;
+  int *required_fields = (int *) malloc(n_fields * sizeof(int));
+  const struct header *h = &reader.log.header;
+  for(int i = 0; i < n_fields; i++) {
+    required_fields[i] = -1;
+  }
+  for(int j = 0; j < h->masks_count; j++) {
+    if (strcmp(h->masks[j].name, "Coordinates") == 0) {
+      required_fields[0] = j;
+    }
+    else if (strcmp(h->masks[j].name, "ParticleIDs") == 0) {
+      required_fields[1] = j;
+    }
+  }
 
-  logger_reader_read_all_particles(&reader, begin, logger_reader_const, &array);
+  /* Create the output */
+  void **output = malloc(n_fields * sizeof(void*));
+  output[0] = (void *) pos;
+  output[1] = (void *) ids;
+
+
+  logger_reader_read_all_particles(&reader, begin, logger_reader_lin,
+                                   required_fields, n_fields, output, n_parts);
 
   /* Loop over time for a single particle */
-  size_t id = 0;
-  struct logger_particle p = particles[id];
   for (double t = begin; t < end; t += (end - begin) / number_steps) {
     /* Get the offset of the given time */
     size_t o = logger_reader_get_next_offset_from_time(&reader, t);
     message("time: %f offset: %ld", t, o);
 
-    /* Read the next particle */
-    struct logger_particle n;
-    logger_reader_get_next_particle(&reader, &p, &n, o);
+    /* Read the next time */
+    logger_reader_read_all_particles(&reader, t, logger_reader_lin,
+                                     required_fields, n_fields, output, n_parts);
 
-    message("Particle %zi: %f %f %f %f", id, p.x[0], p.x[1], p.x[2], p.time);
-
-    /* Now you can interpolate */
-    p = logger_particle_interpolate(&p, &n, t);
+    message("Particle %lli: %f %f %f %f", ids[0], pos[0], pos[1], pos[2], t);
   }
 
   /* Cleanup the memory */
-  free(particles);
+  free(required_fields);
+  free(ids);
+  free(pos);
   logger_reader_free(&reader);
   return 0;
 }

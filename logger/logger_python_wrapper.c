@@ -246,7 +246,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   }
 
   /* Allocate the output memory. */
-  void **output = malloc(n_fields * sizeof(void));
+  void **output = malloc(n_fields * sizeof(void*));
   for(int i = 0; i < n_fields; i++) {
     output[i] = malloc(n_tot * h->masks[field_indices[i]].size);
   }
