@@ -20,12 +20,6 @@
 #define SWIFT_MULTISOFTENING_LOGGER_GRAVITY_H
 
 #include "../config.h"
-/**
-   TODO
-
-   Merge everything into writer
-   Use NaN to flag available fields
-*/
 
 /* local includes */
 #include "logger_loader_io.h"

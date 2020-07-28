@@ -99,6 +99,17 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
 }
 
 
+/**
+ * @brief Create a list of numpy array containing the fields.
+ *
+ * @param output A list of array of fields.
+ * @param field_indices The indices (header ordering) of the requested fields.
+ * @param n_fields The number of fields requested.
+ * @param n_part The number of particles of each type.
+ * @param n_tot The total number of particles.
+ *
+ * @return The python list of numpy array.
+ */
 __attribute__((always_inline)) INLINE static PyObject
 *logger_loader_create_output(void **output, const int *field_indices, const int n_fields,
                              const uint64_t *n_part, uint64_t n_tot) {
@@ -180,19 +191,26 @@ __attribute__((always_inline)) INLINE static PyObject
 
 
 /**
+ * @brief Read some fields at a given time.
+ *
+ * @param basename The basename of the logger files.
+ * @param fields Python list containing the name of the fields (e.g. Coordinates).
+ * @param time The time of the fields.
+ * @param verbose (Optional) The verbose level of the reader.
+ *
+ * @return List of numpy array containing the fields requested (in the same order).
  */
 static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                    PyObject *args) {
-  message("WARNING NOT DEALING WITH SPECIAL FLAGS AND TIMESTEP CORRECTLY");
   /* input variables. */
-  char *filename = NULL;
+  char *basename = NULL;
 
   int verbose = 0;
   PyObject *fields = NULL;
   double time = 0;
 
   /* parse the arguments. */
-  if (!PyArg_ParseTuple(args, "sOd|i", &filename, &fields, &time, &verbose))
+  if (!PyArg_ParseTuple(args, "sOd|i", &basename, &fields, &time, &verbose))
     return NULL;
 
   /* Check the inputs. */
@@ -202,7 +220,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
 
   /* initialize the reader. */
   struct logger_reader reader;
-  logger_reader_init(&reader, filename, verbose);
+  logger_reader_init(&reader, basename, verbose);
   const struct header *h = &reader.log.header;
 
   /* Get the fields indexes from the header. */
@@ -291,7 +309,21 @@ static PyMethodDef libloggerMethods[] = {
      "times: tuple\n"
      "  time min, time max\n"},
     {"get_particle_data", pyGetParticleData, METH_VARARGS,
-     "TODO"},
+     "Read some fields from the logfile at a given time.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "basename: str\n"
+     "  The basename of the log file.\n\n"
+     "fields: list\m"
+     "  The list of fields (e.g. 'Coordinates', 'Entropies', ...)\n\n"
+     "time: float\m"
+     "  The time at which the fields must be read.\n\n"
+     "verbose: int, optional\n"
+     "  The verbose level of the loader.\n\n"
+     "-------\n\n"
+     "list_of_fields: list\n"
+     "  Each element is a numpy array containing the corresponding field.\n"
+    },
 
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
