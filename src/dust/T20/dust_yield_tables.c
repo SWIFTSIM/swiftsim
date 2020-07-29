@@ -339,7 +339,7 @@ void compute_SNII_dyield(struct feedback_props *fp,
       elfrac = dp->grain_element_mfrac[grain][elem];
 
       /* get element-specific constants here */
-      solar_metalfrac = dp->abundance_pattern[eldx];
+      solar_metalfrac = dp->abundance_pattern[eldx] / dp->solar_metallicity;
 
       for (int i = 0; i < eagle_feedback_SNII_N_metals; i++) {
 	for (int k = 0; k < eagle_feedback_N_imf_bins; k++) {

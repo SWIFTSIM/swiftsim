@@ -218,7 +218,7 @@ static INLINE void compute_SNII_dyield(struct feedback_props *fp,
       isRefractory = (eldx != chemistry_element_C && eldx != chemistry_element_O);
       
       /* get element-specific constants here */
-      solar_metalfrac = dp->abundance_pattern[eldx];
+      solar_metalfrac = dp->abundance_pattern[eldx] / dp->solar_metallicity;
       mu_elem_inv = 1./dp->atomic_weight[eldx];
 
       /* print constituent element */
@@ -345,7 +345,7 @@ static INLINE void compute_AGB_dyield(struct feedback_props *fp,
       isRefractory = (eldx != chemistry_element_C && eldx != chemistry_element_O);
       
       /* get element-specific constants here */
-      solar_metalfrac = dp->abundance_pattern[eldx];
+      solar_metalfrac = dp->abundance_pattern[eldx] / dp->solar_metallicity;
       mu_elem_inv = 1./dp->atomic_weight[eldx];
 
       /* print constituent element */
@@ -407,11 +407,13 @@ static INLINE void compute_AGB_dyield(struct feedback_props *fp,
 	    exp10f(fp->yield_AGB.metallicity[i]) * \
 	    fp->yield_AGB.ejecta_IMF_resampled[yield_index_2d];
 
-	  base_yield_O = dp->abundance_pattern[chemistry_element_O] * \
+	  base_yield_O = (dp->abundance_pattern[chemistry_element_O] / \
+			  dp->solar_metallicity) * \
 	    exp10f(fp->yield_AGB.metallicity[i]) * \
 	    fp->yield_AGB.ejecta_IMF_resampled[yield_index_2d];
 
-	  base_yield_C = dp->abundance_pattern[chemistry_element_C] * \
+	  base_yield_C = (dp->abundance_pattern[chemistry_element_C] /
+			  dp->solar_metallicity) * \
 	    exp10f(fp->yield_AGB.metallicity[i]) * \
 	    fp->yield_AGB.ejecta_IMF_resampled[yield_index_2d];
 	   

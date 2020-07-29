@@ -530,7 +530,9 @@ void io_write_meta_data(hid_t h_file, const struct engine* e,
   chemistry_write_flavour(h_grp, h_grp_columns, e);
   tracers_write_flavour(h_grp);
   feedback_write_flavour(e->feedback_props, h_grp);
+  dust_write_flavour(h_grp, h_grp_columns, e);
   H5Gclose(h_grp_columns);
+  dust_write_composition(h_grp, e);
   H5Gclose(h_grp);
 
   /* Print the gravity parameters */
