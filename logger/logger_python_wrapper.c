@@ -115,80 +115,98 @@ logger_loader_create_output(void **output, const int *field_indices,
                             uint64_t n_tot) {
 
   struct logger_python_field python_fields[100];
-  struct logger_python_field *shifted_python_fields;
 
+  /* Create the python list */
   PyObject *list = PyList_New(n_fields);
-  struct logger_python_field *tmp;
+  struct logger_python_field *current_field;
 
+  /* Get the hydro fields */
+  hydro_logger_generate_python(python_fields);
+  int total_number_fields = hydro_logger_field_count;
+  /* Get the gravity fields */
+  gravity_logger_generate_python(python_fields + total_number_fields);
+  total_number_fields += gravity_logger_field_count;
+  /* Get the stars fields */
+  stars_logger_generate_python(python_fields + total_number_fields);
+  total_number_fields += stars_logger_field_count;
+
+  /* Get all the requested fields */
   for (int i = 0; i < n_fields; i++) {
-    tmp = NULL;
+    /* Reset the variables. */
+    current_field = NULL;
+    total_number_fields = 0;
 
     /* Find in the hydro the field. */
-    hydro_logger_generate_python(python_fields);
-    for (int j = 0; j < hydro_logger_field_count; j++) {
-      if (field_indices[i] == hydro_logger_mask_id[j]) {
-        tmp = &python_fields[j];
-        break;
+    for (int local = 0; local < hydro_logger_field_count; local++) {
+      const int global = hydro_logger_local_to_global[local];
+      if (field_indices[i] == global) {
+        current_field = &python_fields[local];
       }
     }
-    shifted_python_fields = python_fields + hydro_logger_field_count;
+    total_number_fields += hydro_logger_field_count;
 
     /* Find in the gravity the field. */
-    gravity_logger_generate_python(shifted_python_fields);
-    for (int j = 0; j < gravity_logger_field_count; j++) {
-      if (field_indices[i] == gravity_logger_mask_id[j]) {
+    for (int local = 0; local < gravity_logger_field_count; local++) {
+      const int global = gravity_logger_local_to_global[local];
+      const int local_shifted = local + total_number_fields;
+      if (field_indices[i] == global) {
         /* Check if we have the same fields for gravity + hydro */
-        if (tmp != NULL) {
-          if (tmp->dimension != shifted_python_fields[j].dimension ||
-              tmp->typenum != shifted_python_fields[j].typenum) {
+        if (current_field != NULL) {
+          if (current_field->dimension !=
+                  python_fields[local_shifted].dimension ||
+              current_field->typenum != python_fields[local_shifted].typenum) {
             error(
                 "The python definition of the field %s does not correspond "
                 "between"
                 " the modules.",
-                gravity_logger_field_names[j]);
+                gravity_logger_field_names[local]);
           }
         }
-        tmp = &shifted_python_fields[j];
+        current_field = &python_fields[local_shifted];
         break;
       }
     }
-    shifted_python_fields = shifted_python_fields + gravity_logger_field_count;
+    total_number_fields += gravity_logger_field_count;
 
     /* Find in the stars the field. */
-    stars_logger_generate_python(shifted_python_fields);
-    for (int j = 0; j < stars_logger_field_count; j++) {
-      if (field_indices[i] == stars_logger_mask_id[j]) {
-        /* Check if we have the same fields for gravity + hydro + stars */
-        if (tmp != NULL) {
-          if (tmp->dimension != shifted_python_fields[j].dimension ||
-              tmp->typenum != shifted_python_fields[j].typenum) {
+    for (int local = 0; local < stars_logger_field_count; local++) {
+      const int global = stars_logger_local_to_global[local];
+      const int local_shifted = local + total_number_fields;
+      if (field_indices[i] == global) {
+        /* Check if we have the same fields for gravity + hydro + stars. */
+        if (current_field != NULL) {
+          if (current_field->dimension !=
+                  python_fields[local_shifted].dimension ||
+              current_field->typenum != python_fields[local_shifted].typenum) {
             error(
                 "The python definition of the field %s does not correspond "
                 "between"
                 " the modules.",
-                stars_logger_field_names[j]);
+                stars_logger_field_names[local]);
           }
         }
-        tmp = &shifted_python_fields[j];
+        current_field = &python_fields[local_shifted];
         break;
       }
     }
-    shifted_python_fields = shifted_python_fields + stars_logger_field_count;
+    total_number_fields += stars_logger_field_count;
 
     /* Check if we got a field */
-    if (tmp == NULL) {
+    if (current_field == NULL) {
       error("Failed to find the required field");
     }
-    PyObject *tmp_array = NULL;
-    if (tmp->dimension > 1) {
-      npy_intp dims[2] = {n_tot, tmp->dimension};
-      tmp_array = PyArray_SimpleNewFromData(2, dims, tmp->typenum, output[i]);
+    PyObject *array = NULL;
+    if (current_field->dimension > 1) {
+      npy_intp dims[2] = {n_tot, current_field->dimension};
+      array =
+          PyArray_SimpleNewFromData(2, dims, current_field->typenum, output[i]);
     } else {
       npy_intp dims = n_tot;
-      tmp_array = PyArray_SimpleNewFromData(1, &dims, tmp->typenum, output[i]);
+      array = PyArray_SimpleNewFromData(1, &dims, current_field->typenum,
+                                        output[i]);
     }
 
-    PyList_SetItem(list, i, tmp_array);
+    PyList_SetItem(list, i, array);
   }
 
   return list;
@@ -214,7 +232,6 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   int verbose = 0;
   PyObject *fields = NULL;
   double time = 0;
-
   /* parse the arguments. */
   if (!PyArg_ParseTuple(args, "sOd|i", &basename, &fields, &time, &verbose))
     return NULL;

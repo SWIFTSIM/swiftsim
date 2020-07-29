@@ -27,7 +27,7 @@
 #include "stars_io.h"
 
 /* Index of the mask in the header mask array */
-extern int stars_logger_mask_id[stars_logger_field_count];
+extern int stars_logger_local_to_global[stars_logger_field_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -43,38 +43,38 @@ stars_logger_reader_populate_mask_data(struct header *head) {
     if (strcmp(head->masks[i].name,
                stars_logger_field_names[stars_logger_field_coordinates]) == 0) {
       size = 3 * sizeof(double);
-      stars_logger_mask_id[stars_logger_field_coordinates] = i;
+      stars_logger_local_to_global[stars_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_velocities]) ==
                0) {
       size = 3 * sizeof(float);
-      stars_logger_mask_id[stars_logger_field_velocities] = i;
+      stars_logger_local_to_global[stars_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_accelerations]) == 0) {
       size = 3 * sizeof(float);
-      stars_logger_mask_id[stars_logger_field_accelerations] = i;
+      stars_logger_local_to_global[stars_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names[stars_logger_field_masses]) ==
                0) {
       size = sizeof(float);
-      stars_logger_mask_id[stars_logger_field_masses] = i;
+      stars_logger_local_to_global[stars_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_smoothing_lengths]) == 0) {
       size = sizeof(float);
-      stars_logger_mask_id[stars_logger_field_smoothing_lengths] = i;
+      stars_logger_local_to_global[stars_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_particle_ids]) ==
                0) {
       size = sizeof(uint64_t);
-      stars_logger_mask_id[stars_logger_field_particle_ids] = i;
+      stars_logger_local_to_global[stars_logger_field_particle_ids] = i;
     }
 
     /* Check that the size are compatible */
@@ -84,9 +84,12 @@ stars_logger_reader_populate_mask_data(struct header *head) {
   }
 
   /* Now set the first and second derivatives */
-  const int pos_id = stars_logger_mask_id[stars_logger_field_coordinates];
-  const int vel_id = stars_logger_mask_id[stars_logger_field_velocities];
-  const int acc_id = stars_logger_mask_id[stars_logger_field_accelerations];
+  const int pos_id =
+      stars_logger_local_to_global[stars_logger_field_coordinates];
+  const int vel_id =
+      stars_logger_local_to_global[stars_logger_field_velocities];
+  const int acc_id =
+      stars_logger_local_to_global[stars_logger_field_accelerations];
 
   /* Coordinates */
   header_set_first_derivative(head, pos_id, vel_id);

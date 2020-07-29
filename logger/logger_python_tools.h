@@ -35,7 +35,7 @@ struct logger_python_field {
   /* Dimension of the field (e.g. 1 for density and 3 for coordinates). */
   int dimension;
 
-  /* Typenum of the array. */
+  /* Numpy typenum of the array (e.g. NPY_FLOAT32, NPY_INT32). */
   int typenum;
 };
 

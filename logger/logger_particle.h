@@ -40,10 +40,10 @@ enum logger_reader_type {
   logger_reader_lin,   /* Linear interpolation. */
 };
 
-size_t logger_particle_read(
-    const struct logger_reader *reader, size_t offset, void **output,
-    const int *logger_mask_id, const int logger_field_count,
-    size_t *mask, size_t *h_offset);
+size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
+                            void **output, const int *local_to_global,
+                            const int local_count, size_t *mask,
+                            size_t *h_offset);
 /**
  * @brief Generate the data for the special flags.
  *

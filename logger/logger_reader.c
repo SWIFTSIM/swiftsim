@@ -205,9 +205,6 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
 /**
  * @brief Read a single part from the logger and interpolate it if needed.
  *
- * The temporary arrays are provided to this function in order to allocate
- * them only once for all the particles.
- *
  * @param reader The #logger_reader.
  * @param time The requested time.
  * @param offset_time The offset of the corresponding time record.
@@ -220,7 +217,7 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
  of fields_wanted (-1 if none)
  * @param second_deriv_wanted The fields that correspond to the second
  derivative of fields_wanted (-1 if none)
- * @param n_fields_wanted Size of fields_wanted.
+ * @param n_fields_wanted Number of element in fields_wanted.
  * @param output Array of pointers to the output array
  (sorted according to the particle's type reading order).
  */
@@ -244,9 +241,10 @@ void logger_reader_read_single_particle(
 
   /* Array for the output before the requested time. */
   void *full_output[hydro_logger_field_count];
-  for (int i = 0; i < hydro_logger_field_count; i++) {
-    if ((full_output[i] = malloc(h->masks[hydro_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < hydro_logger_field_count; local++) {
+    full_output[local] =
+        malloc(h->masks[hydro_logger_local_to_global[local]].size);
+    if (full_output[local] == NULL) {
       error(
           "Failed to allocate a field for the output before the requested "
           "time.");
@@ -254,9 +252,10 @@ void logger_reader_read_single_particle(
   }
   /* Temporary storage of a single record. */
   void *tmp_output[hydro_logger_field_count];
-  for (int i = 0; i < hydro_logger_field_count; i++) {
-    if ((tmp_output[i] = malloc(h->masks[hydro_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < hydro_logger_field_count; local++) {
+    tmp_output[local] =
+        malloc(h->masks[hydro_logger_local_to_global[local]].size);
+    if (tmp_output[local] == NULL) {
       error("Failed to allocate a field for the temporary storage.");
     }
   }
@@ -266,7 +265,7 @@ void logger_reader_read_single_particle(
   int first_deriv_found[hydro_logger_field_count] = {0};
   int second_deriv_found[hydro_logger_field_count] = {0};
 
-  /* Array for the output of the first derivative before the requested time */
+  /* Array for the output of the first derivative before the requested time. */
   void *first_deriv[hydro_logger_field_count] = {NULL};
 
   for (int i = 0; i < n_fields_wanted; i++) {
@@ -274,9 +273,11 @@ void logger_reader_read_single_particle(
     if (first_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_first_deriv = hydro_logger_mask_id[first_deriv_wanted[i]];
-    if ((first_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_first_deriv].size)) == NULL) {
+    const int local_field = fields_wanted[i];
+    const int local_first = first_deriv_wanted[i];
+    const int global_first = hydro_logger_local_to_global[local_first];
+    first_deriv[local_field] = malloc(h->masks[global_first].size);
+    if (first_deriv[local_field] == NULL) {
       error("Failed to allocate a first derivative.");
     }
   }
@@ -289,10 +290,12 @@ void logger_reader_read_single_particle(
     if (second_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_second_deriv =
-        hydro_logger_mask_id[second_deriv_wanted[i]];
-    if ((second_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_second_deriv].size)) == NULL) {
+
+    const int local_field = fields_wanted[i];
+    const int local_second = second_deriv_wanted[i];
+    const int global_second = hydro_logger_local_to_global[local_second];
+    second_deriv[local_field] = malloc(h->masks[global_second].size);
+    if (second_deriv[local_field] == NULL) {
       error("Failed to allocate a second derivative.");
     }
   }
@@ -304,8 +307,9 @@ void logger_reader_read_single_particle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_particle_read(reader, offset, tmp_output, hydro_logger_mask_id,
-                         hydro_logger_field_count, &mask, &h_offset);
+    logger_particle_read(reader, offset, tmp_output,
+                         hydro_logger_local_to_global, hydro_logger_field_count,
+                         &mask, &h_offset);
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
@@ -313,42 +317,45 @@ void logger_reader_read_single_particle(
     /* Go to the next record. */
     offset += h_offset;
 
-    /* Copy into the output array. */
+    /* Get the requested fields. */
     for (int i = 0; i < n_fields_wanted; i++) {
-      const int global_field_id = hydro_logger_mask_id[fields_wanted[i]];
-      const int local_field_id = fields_wanted[i];
-      /* Check if the field is present in this record. */
-      if (mask & h->masks[global_field_id].mask) {
-        time_before[local_field_id] = current_time;
-        memcpy(full_output[local_field_id], tmp_output[local_field_id],
-               h->masks[global_field_id].size);
+      const int local_field = fields_wanted[i];
+      const int global_field = hydro_logger_local_to_global[local_field];
+      /* If the field is present in this record, save it. */
+      if (mask & h->masks[global_field].mask) {
+        time_before[local_field] = current_time;
+        memcpy(full_output[local_field], tmp_output[local_field],
+               h->masks[global_field].size);
 
         /* Now deal with the first derivative. */
-        const int local_id_first = first_deriv_wanted[i];
+        const int local_first = first_deriv_wanted[i];
         /* Check if the first derivative exists. */
-        if (local_id_first >= 0) {
+        if (local_first >= 0) {
           /* Check if the first derivative is present in this record. */
-          const int global_id_first = hydro_logger_mask_id[local_id_first];
-          if (h->masks[global_id_first].mask & mask) {
-            first_deriv_found[local_field_id] = 1;
-            memcpy(first_deriv[local_field_id], tmp_output[local_id_first],
-                   h->masks[global_id_first].size);
+          const int global_first = hydro_logger_local_to_global[local_first];
+          if (h->masks[global_first].mask & mask) {
+            /* Save it */
+            first_deriv_found[local_field] = 1;
+            memcpy(first_deriv[local_field], tmp_output[local_first],
+                   h->masks[global_first].size);
           } else {
-            first_deriv_found[local_field_id] = 0;
+            first_deriv_found[local_field] = 0;
           }
         }
+
         /* Now deal with the second derivative. */
-        const int local_id_second = second_deriv_wanted[i];
+        const int local_second = second_deriv_wanted[i];
         /* Check if the second derivative exists. */
-        if (local_id_second >= 0) {
+        if (local_second >= 0) {
           /* Check if the second derivative is present in this record. */
-          const int global_id_second = hydro_logger_mask_id[local_id_second];
-          if (h->masks[global_id_second].mask & mask) {
-            second_deriv_found[local_field_id] = 1;
-            memcpy(second_deriv[local_field_id], tmp_output[local_id_second],
-                   h->masks[global_id_second].size);
+          const int global_second = hydro_logger_local_to_global[local_second];
+          if (h->masks[global_second].mask & mask) {
+            /* Save it */
+            second_deriv_found[local_field] = 1;
+            memcpy(second_deriv[local_field], tmp_output[local_second],
+                   h->masks[global_second].size);
           } else {
-            second_deriv_found[local_field_id] = 0;
+            second_deriv_found[local_field] = 0;
           }
         }
       }
@@ -363,7 +370,8 @@ void logger_reader_read_single_particle(
     /* Initialize the variables that record the fields found. */
     int number_field_still_to_recover = n_fields_wanted;
     for (int i = 0; i < n_fields_wanted; i++) {
-      fields_found[i] = 0;
+      const int local = fields_wanted[i];
+      fields_found[local] = 0;
     }
 
     /* Loop over the records until having all the fields. */
@@ -371,7 +379,8 @@ void logger_reader_read_single_particle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_particle_read(reader, offset, tmp_output, hydro_logger_mask_id,
+      logger_particle_read(reader, offset, tmp_output,
+                           hydro_logger_local_to_global,
                            hydro_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
@@ -382,49 +391,49 @@ void logger_reader_read_single_particle(
 
       /* Copy the data into the output array. */
       for (int i = 0; i < n_fields_wanted; i++) {
-        const int local_field_id = fields_wanted[i];
-        const int global_field_id = hydro_logger_mask_id[local_field_id];
+        const int local_field = fields_wanted[i];
+        const int global_field = hydro_logger_local_to_global[local_field];
         /* Check if the mask is present in this record and still not found. */
-        if (!fields_found[i] && mask & h->masks[global_field_id].mask) {
+        if (!fields_found[local_field] && mask & h->masks[global_field].mask) {
 
           /* Mark the field as being found. */
           number_field_still_to_recover -= 1;
-          fields_found[local_field_id] = 1;
+          fields_found[local_field] = 1;
 
           /* If the times are the same, no need to interpolate
-             (e.g. when requesting a logger_log_all_particles). */
-          if (current_time == time_before[local_field_id]) continue;
+             (e.g. when requesting a time close to a logger_log_all_particles).
+           */
+          if (current_time == time_before[local_field]) continue;
 
           /* Deal with the derivatives */
           struct logger_field before;
           struct logger_field after;
-          before.field = full_output[local_field_id];
+          before.field = full_output[local_field];
           before.first_deriv = NULL;
           before.second_deriv = NULL;
-          after.field = tmp_output[local_field_id];
+          after.field = tmp_output[local_field];
           after.first_deriv = NULL;
           after.second_deriv = NULL;
 
           /* Check if the first derivative exists. */
-          const int local_id_first = first_deriv_wanted[i];
-          if (local_id_first >= 0) {
-            const int global_id_first = hydro_logger_mask_id[local_id_first];
+          const int local_first = first_deriv_wanted[i];
+          if (local_first >= 0 && first_deriv_found[local_field]) {
+            const int global_first = hydro_logger_local_to_global[local_first];
             /* Check if we have access to the first derivative. */
-            if (first_deriv_found[local_field_id] &&
-                h->masks[global_id_first].mask & mask) {
-              before.first_deriv = first_deriv[local_field_id];
-              after.first_deriv = tmp_output[local_id_first];
+            if (h->masks[global_first].mask & mask) {
+              before.first_deriv = first_deriv[local_field];
+              after.first_deriv = tmp_output[local_first];
             }
           }
           /* Check if the second derivative exists. */
-          const int local_id_second = second_deriv_wanted[i];
-          if (local_id_second >= 0) {
-            const int global_id_second = hydro_logger_mask_id[local_id_second];
+          const int local_second = second_deriv_wanted[i];
+          if (local_second >= 0 && second_deriv_found[local_field]) {
+            const int global_second =
+                hydro_logger_local_to_global[local_second];
             /* Check if we have access to the second derivative. */
-            if (second_deriv_found[local_field_id] &&
-                h->masks[global_id_second].mask & mask) {
-              before.second_deriv = second_deriv[local_field_id];
-              after.second_deriv = tmp_output[local_id_second];
+            if (h->masks[global_second].mask & mask) {
+              before.second_deriv = second_deriv[local_field];
+              after.second_deriv = tmp_output[local_second];
             }
           }
 
@@ -453,9 +462,6 @@ void logger_reader_read_single_particle(
 /**
  * @brief Read a single gpart from the logger and interpolate it if needed.
  *
- * The temporary arrays are provided to this function in order to allocate
- * them only once for all the particles.
- *
  * @param reader The #logger_reader.
  * @param time The requested time.
  * @param offset_time The offset of the corresponding time record.
@@ -468,7 +474,7 @@ void logger_reader_read_single_particle(
  of fields_wanted (-1 if none)
  * @param second_deriv_wanted The fields that correspond to the second
  derivative of fields_wanted (-1 if none)
- * @param n_fields_wanted Size of fields_wanted.
+ * @param n_fields_wanted Number of elements in fields_wanted.
  * @param output Array of pointers to the output array
  (sorted according to the particle's type reading order).
  */
@@ -492,9 +498,10 @@ void logger_reader_read_single_gparticle(
 
   /* Array for the output before the requested time. */
   void *full_output[gravity_logger_field_count];
-  for (int i = 0; i < gravity_logger_field_count; i++) {
-    if ((full_output[i] = malloc(h->masks[gravity_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < gravity_logger_field_count; local++) {
+    full_output[local] =
+        malloc(h->masks[gravity_logger_local_to_global[local]].size);
+    if (full_output[local] == NULL) {
       error(
           "Failed to allocate a field for the output before the requested "
           "time.");
@@ -502,9 +509,10 @@ void logger_reader_read_single_gparticle(
   }
   /* Temporary storage of a single record. */
   void *tmp_output[gravity_logger_field_count];
-  for (int i = 0; i < gravity_logger_field_count; i++) {
-    if ((tmp_output[i] = malloc(h->masks[gravity_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < gravity_logger_field_count; local++) {
+    tmp_output[local] =
+        malloc(h->masks[gravity_logger_local_to_global[local]].size);
+    if (tmp_output[local] == NULL) {
       error("Failed to allocate a field for the temporary storage.");
     }
   }
@@ -514,7 +522,7 @@ void logger_reader_read_single_gparticle(
   int first_deriv_found[gravity_logger_field_count] = {0};
   int second_deriv_found[gravity_logger_field_count] = {0};
 
-  /* Array for the output of the first derivative before the requested time */
+  /* Array for the output of the first derivative before the requested time. */
   void *first_deriv[gravity_logger_field_count] = {NULL};
 
   for (int i = 0; i < n_fields_wanted; i++) {
@@ -522,10 +530,11 @@ void logger_reader_read_single_gparticle(
     if (first_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_first_deriv =
-        gravity_logger_mask_id[first_deriv_wanted[i]];
-    if ((first_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_first_deriv].size)) == NULL) {
+    const int local_field = fields_wanted[i];
+    const int local_first = first_deriv_wanted[i];
+    const int global_first = gravity_logger_local_to_global[local_first];
+    first_deriv[local_field] = malloc(h->masks[global_first].size);
+    if (first_deriv[local_field] == NULL) {
       error("Failed to allocate a first derivative.");
     }
   }
@@ -538,10 +547,12 @@ void logger_reader_read_single_gparticle(
     if (second_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_second_deriv =
-        gravity_logger_mask_id[second_deriv_wanted[i]];
-    if ((second_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_second_deriv].size)) == NULL) {
+
+    const int local_field = fields_wanted[i];
+    const int local_second = second_deriv_wanted[i];
+    const int global_second = gravity_logger_local_to_global[local_second];
+    second_deriv[local_field] = malloc(h->masks[global_second].size);
+    if (second_deriv[local_field] == NULL) {
       error("Failed to allocate a second derivative.");
     }
   }
@@ -553,7 +564,8 @@ void logger_reader_read_single_gparticle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_particle_read(reader, offset, tmp_output, gravity_logger_mask_id,
+    logger_particle_read(reader, offset, tmp_output,
+                         gravity_logger_local_to_global,
                          gravity_logger_field_count, &mask, &h_offset);
 
     /* Get the time. */
@@ -562,42 +574,46 @@ void logger_reader_read_single_gparticle(
     /* Go to the next record. */
     offset += h_offset;
 
-    /* Copy into the output array. */
+    /* Get the requested fields. */
     for (int i = 0; i < n_fields_wanted; i++) {
-      const int global_field_id = gravity_logger_mask_id[fields_wanted[i]];
-      const int local_field_id = fields_wanted[i];
-      /* Check if the field is present in this record. */
-      if (mask & h->masks[global_field_id].mask) {
-        time_before[local_field_id] = current_time;
-        memcpy(full_output[local_field_id], tmp_output[local_field_id],
-               h->masks[global_field_id].size);
+      const int local_field = fields_wanted[i];
+      const int global_field = gravity_logger_local_to_global[local_field];
+      /* If the field is present in this record, save it. */
+      if (mask & h->masks[global_field].mask) {
+        time_before[local_field] = current_time;
+        memcpy(full_output[local_field], tmp_output[local_field],
+               h->masks[global_field].size);
 
         /* Now deal with the first derivative. */
-        const int local_id_first = first_deriv_wanted[i];
+        const int local_first = first_deriv_wanted[i];
         /* Check if the first derivative exists. */
-        if (local_id_first >= 0) {
+        if (local_first >= 0) {
           /* Check if the first derivative is present in this record. */
-          const int global_id_first = gravity_logger_mask_id[local_id_first];
-          if (h->masks[global_id_first].mask & mask) {
-            first_deriv_found[local_field_id] = 1;
-            memcpy(first_deriv[local_field_id], tmp_output[local_id_first],
-                   h->masks[global_id_first].size);
+          const int global_first = gravity_logger_local_to_global[local_first];
+          if (h->masks[global_first].mask & mask) {
+            /* Save it */
+            first_deriv_found[local_field] = 1;
+            memcpy(first_deriv[local_field], tmp_output[local_first],
+                   h->masks[global_first].size);
           } else {
-            first_deriv_found[local_field_id] = 0;
+            first_deriv_found[local_field] = 0;
           }
         }
+
         /* Now deal with the second derivative. */
-        const int local_id_second = second_deriv_wanted[i];
+        const int local_second = second_deriv_wanted[i];
         /* Check if the second derivative exists. */
-        if (local_id_second >= 0) {
+        if (local_second >= 0) {
           /* Check if the second derivative is present in this record. */
-          const int global_id_second = gravity_logger_mask_id[local_id_second];
-          if (h->masks[global_id_second].mask & mask) {
-            second_deriv_found[local_field_id] = 1;
-            memcpy(second_deriv[local_field_id], tmp_output[local_id_second],
-                   h->masks[global_id_second].size);
+          const int global_second =
+              gravity_logger_local_to_global[local_second];
+          if (h->masks[global_second].mask & mask) {
+            /* Save it */
+            second_deriv_found[local_field] = 1;
+            memcpy(second_deriv[local_field], tmp_output[local_second],
+                   h->masks[global_second].size);
           } else {
-            second_deriv_found[local_field_id] = 0;
+            second_deriv_found[local_field] = 0;
           }
         }
       }
@@ -612,7 +628,8 @@ void logger_reader_read_single_gparticle(
     /* Initialize the variables that record the fields found. */
     int number_field_still_to_recover = n_fields_wanted;
     for (int i = 0; i < n_fields_wanted; i++) {
-      fields_found[i] = 0;
+      const int local = fields_wanted[i];
+      fields_found[local] = 0;
     }
 
     /* Loop over the records until having all the fields. */
@@ -620,7 +637,8 @@ void logger_reader_read_single_gparticle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_particle_read(reader, offset, tmp_output, gravity_logger_mask_id,
+      logger_particle_read(reader, offset, tmp_output,
+                           gravity_logger_local_to_global,
                            gravity_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
@@ -631,50 +649,50 @@ void logger_reader_read_single_gparticle(
 
       /* Copy the data into the output array. */
       for (int i = 0; i < n_fields_wanted; i++) {
-        const int local_field_id = fields_wanted[i];
-        const int global_field_id = gravity_logger_mask_id[local_field_id];
+        const int local_field = fields_wanted[i];
+        const int global_field = gravity_logger_local_to_global[local_field];
         /* Check if the mask is present in this record and still not found. */
-        if (!fields_found[i] && mask & h->masks[global_field_id].mask) {
+        if (!fields_found[local_field] && mask & h->masks[global_field].mask) {
 
           /* Mark the field as being found. */
           number_field_still_to_recover -= 1;
-          fields_found[local_field_id] = 1;
+          fields_found[local_field] = 1;
 
           /* If the times are the same, no need to interpolate
-             (e.g. when requesting a logger_log_all_particles). */
-          if (current_time == time_before[local_field_id]) continue;
+             (e.g. when requesting a time close to a logger_log_all_particles).
+           */
+          if (current_time == time_before[local_field]) continue;
 
           /* Deal with the derivatives */
           struct logger_field before;
           struct logger_field after;
-          before.field = full_output[local_field_id];
+          before.field = full_output[local_field];
           before.first_deriv = NULL;
           before.second_deriv = NULL;
-          after.field = tmp_output[local_field_id];
+          after.field = tmp_output[local_field];
           after.first_deriv = NULL;
           after.second_deriv = NULL;
 
           /* Check if the first derivative exists. */
-          const int local_id_first = first_deriv_wanted[i];
-          if (local_id_first >= 0) {
-            const int global_id_first = gravity_logger_mask_id[local_id_first];
+          const int local_first = first_deriv_wanted[i];
+          if (local_first >= 0 && first_deriv_found[local_field]) {
+            const int global_first =
+                gravity_logger_local_to_global[local_first];
             /* Check if we have access to the first derivative. */
-            if (first_deriv_found[local_field_id] &&
-                h->masks[global_id_first].mask & mask) {
-              before.first_deriv = first_deriv[local_field_id];
-              after.first_deriv = tmp_output[local_id_first];
+            if (h->masks[global_first].mask & mask) {
+              before.first_deriv = first_deriv[local_field];
+              after.first_deriv = tmp_output[local_first];
             }
           }
           /* Check if the second derivative exists. */
-          const int local_id_second = second_deriv_wanted[i];
-          if (local_id_second >= 0) {
-            const int global_id_second =
-                gravity_logger_mask_id[local_id_second];
+          const int local_second = second_deriv_wanted[i];
+          if (local_second >= 0 && second_deriv_found[local_field]) {
+            const int global_second =
+                gravity_logger_local_to_global[local_second];
             /* Check if we have access to the second derivative. */
-            if (second_deriv_found[local_field_id] &&
-                h->masks[global_id_second].mask & mask) {
-              before.second_deriv = second_deriv[local_field_id];
-              after.second_deriv = tmp_output[local_id_second];
+            if (h->masks[global_second].mask & mask) {
+              before.second_deriv = second_deriv[local_field];
+              after.second_deriv = tmp_output[local_second];
             }
           }
 
@@ -703,22 +721,18 @@ void logger_reader_read_single_gparticle(
 /**
  * @brief Read a single spart from the logger and interpolate it if needed.
  *
- * The temporary arrays are provided to this function in order to allocate
- * them only once for all the particles.
- *
  * @param reader The #logger_reader.
  * @param time The requested time.
  * @param offset_time The offset of the corresponding time record.
  * @param interp_type The type of interpolation requested.
  * @param offset_last_full_record The offset of this particle last record
- containing all the fields.
- * @param fields_wanted The fields wanted
- (sorted according to the particle's type reading order).
+ * containing all the fields.
+ * @param fields_wanted The fields wanted in local indexes.
  * @param first_deriv_wanted The fields that correspond to the first derivative
- of fields_wanted (-1 if none)
+ * of fields_wanted (-1 if none)
  * @param second_deriv_wanted The fields that correspond to the second
- derivative of fields_wanted (-1 if none)
- * @param n_fields_wanted Size of fields_wanted.
+ * derivative of fields_wanted (-1 if none)
+ * @param n_fields_wanted Number of elements in fields_wanted.
  * @param output Array of pointers to the output array
  (sorted according to the particle's type reading order).
  */
@@ -742,9 +756,10 @@ void logger_reader_read_single_sparticle(
 
   /* Array for the output before the requested time. */
   void *full_output[stars_logger_field_count];
-  for (int i = 0; i < stars_logger_field_count; i++) {
-    if ((full_output[i] = malloc(h->masks[stars_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < stars_logger_field_count; local++) {
+    full_output[local] =
+        malloc(h->masks[stars_logger_local_to_global[local]].size);
+    if (full_output[local] == NULL) {
       error(
           "Failed to allocate a field for the output before the requested "
           "time.");
@@ -752,9 +767,10 @@ void logger_reader_read_single_sparticle(
   }
   /* Temporary storage of a single record. */
   void *tmp_output[stars_logger_field_count];
-  for (int i = 0; i < stars_logger_field_count; i++) {
-    if ((tmp_output[i] = malloc(h->masks[stars_logger_mask_id[i]].size)) ==
-        NULL) {
+  for (int local = 0; local < stars_logger_field_count; local++) {
+    tmp_output[local] =
+        malloc(h->masks[stars_logger_local_to_global[local]].size);
+    if (tmp_output[local] == NULL) {
       error("Failed to allocate a field for the temporary storage.");
     }
   }
@@ -764,7 +780,7 @@ void logger_reader_read_single_sparticle(
   int first_deriv_found[stars_logger_field_count] = {0};
   int second_deriv_found[stars_logger_field_count] = {0};
 
-  /* Array for the output of the first derivative before the requested time */
+  /* Array for the output of the first derivative before the requested time. */
   void *first_deriv[stars_logger_field_count] = {NULL};
 
   for (int i = 0; i < n_fields_wanted; i++) {
@@ -772,9 +788,11 @@ void logger_reader_read_single_sparticle(
     if (first_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_first_deriv = stars_logger_mask_id[first_deriv_wanted[i]];
-    if ((first_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_first_deriv].size)) == NULL) {
+    const int local_field = fields_wanted[i];
+    const int local_first = first_deriv_wanted[i];
+    const int global_first = stars_logger_local_to_global[local_first];
+    first_deriv[local_field] = malloc(h->masks[global_first].size);
+    if (first_deriv[local_field] == NULL) {
       error("Failed to allocate a first derivative.");
     }
   }
@@ -787,10 +805,12 @@ void logger_reader_read_single_sparticle(
     if (second_deriv_wanted[i] < 0) {
       continue;
     }
-    const int global_second_deriv =
-        stars_logger_mask_id[second_deriv_wanted[i]];
-    if ((second_deriv[fields_wanted[i]] =
-             malloc(h->masks[global_second_deriv].size)) == NULL) {
+
+    const int local_field = fields_wanted[i];
+    const int local_second = second_deriv_wanted[i];
+    const int global_second = stars_logger_local_to_global[local_second];
+    second_deriv[local_field] = malloc(h->masks[global_second].size);
+    if (second_deriv[local_field] == NULL) {
       error("Failed to allocate a second derivative.");
     }
   }
@@ -802,8 +822,9 @@ void logger_reader_read_single_sparticle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_particle_read(reader, offset, tmp_output, stars_logger_mask_id,
-                         stars_logger_field_count, &mask, &h_offset);
+    logger_particle_read(reader, offset, tmp_output,
+                         stars_logger_local_to_global, stars_logger_field_count,
+                         &mask, &h_offset);
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
@@ -811,42 +832,45 @@ void logger_reader_read_single_sparticle(
     /* Go to the next record. */
     offset += h_offset;
 
-    /* Copy into the output array. */
+    /* Get the requested fields. */
     for (int i = 0; i < n_fields_wanted; i++) {
-      const int global_field_id = stars_logger_mask_id[fields_wanted[i]];
-      const int local_field_id = fields_wanted[i];
-      /* Check if the field is present in this record. */
-      if (mask & h->masks[global_field_id].mask) {
-        time_before[local_field_id] = current_time;
-        memcpy(full_output[local_field_id], tmp_output[local_field_id],
-               h->masks[global_field_id].size);
+      const int local_field = fields_wanted[i];
+      const int global_field = stars_logger_local_to_global[local_field];
+      /* If the field is present in this record, save it. */
+      if (mask & h->masks[global_field].mask) {
+        time_before[local_field] = current_time;
+        memcpy(full_output[local_field], tmp_output[local_field],
+               h->masks[global_field].size);
 
         /* Now deal with the first derivative. */
-        const int local_id_first = first_deriv_wanted[i];
+        const int local_first = first_deriv_wanted[i];
         /* Check if the first derivative exists. */
-        if (local_id_first >= 0) {
+        if (local_first >= 0) {
           /* Check if the first derivative is present in this record. */
-          const int global_id_first = stars_logger_mask_id[local_id_first];
-          if (h->masks[global_id_first].mask & mask) {
-            first_deriv_found[local_field_id] = 1;
-            memcpy(first_deriv[local_field_id], tmp_output[local_id_first],
-                   h->masks[global_id_first].size);
+          const int global_first = stars_logger_local_to_global[local_first];
+          if (h->masks[global_first].mask & mask) {
+            /* Save it */
+            first_deriv_found[local_field] = 1;
+            memcpy(first_deriv[local_field], tmp_output[local_first],
+                   h->masks[global_first].size);
           } else {
-            first_deriv_found[local_field_id] = 0;
+            first_deriv_found[local_field] = 0;
           }
         }
+
         /* Now deal with the second derivative. */
-        const int local_id_second = second_deriv_wanted[i];
+        const int local_second = second_deriv_wanted[i];
         /* Check if the second derivative exists. */
-        if (local_id_second >= 0) {
+        if (local_second >= 0) {
           /* Check if the second derivative is present in this record. */
-          const int global_id_second = stars_logger_mask_id[local_id_second];
-          if (h->masks[global_id_second].mask & mask) {
-            second_deriv_found[local_field_id] = 1;
-            memcpy(second_deriv[local_field_id], tmp_output[local_id_second],
-                   h->masks[global_id_second].size);
+          const int global_second = stars_logger_local_to_global[local_second];
+          if (h->masks[global_second].mask & mask) {
+            /* Save it */
+            second_deriv_found[local_field] = 1;
+            memcpy(second_deriv[local_field], tmp_output[local_second],
+                   h->masks[global_second].size);
           } else {
-            second_deriv_found[local_field_id] = 0;
+            second_deriv_found[local_field] = 0;
           }
         }
       }
@@ -861,7 +885,8 @@ void logger_reader_read_single_sparticle(
     /* Initialize the variables that record the fields found. */
     int number_field_still_to_recover = n_fields_wanted;
     for (int i = 0; i < n_fields_wanted; i++) {
-      fields_found[i] = 0;
+      const int local = fields_wanted[i];
+      fields_found[local] = 0;
     }
 
     /* Loop over the records until having all the fields. */
@@ -869,7 +894,8 @@ void logger_reader_read_single_sparticle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_particle_read(reader, offset, tmp_output, stars_logger_mask_id,
+      logger_particle_read(reader, offset, tmp_output,
+                           stars_logger_local_to_global,
                            stars_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
@@ -880,49 +906,49 @@ void logger_reader_read_single_sparticle(
 
       /* Copy the data into the output array. */
       for (int i = 0; i < n_fields_wanted; i++) {
-        const int local_field_id = fields_wanted[i];
-        const int global_field_id = stars_logger_mask_id[local_field_id];
+        const int local_field = fields_wanted[i];
+        const int global_field = stars_logger_local_to_global[local_field];
         /* Check if the mask is present in this record and still not found. */
-        if (!fields_found[i] && mask & h->masks[global_field_id].mask) {
+        if (!fields_found[local_field] && mask & h->masks[global_field].mask) {
 
           /* Mark the field as being found. */
           number_field_still_to_recover -= 1;
-          fields_found[local_field_id] = 1;
+          fields_found[local_field] = 1;
 
           /* If the times are the same, no need to interpolate
-             (e.g. when requesting a logger_log_all_particles). */
-          if (current_time == time_before[local_field_id]) continue;
+             (e.g. when requesting a time close to a logger_log_all_particles).
+           */
+          if (current_time == time_before[local_field]) continue;
 
           /* Deal with the derivatives */
           struct logger_field before;
           struct logger_field after;
-          before.field = full_output[local_field_id];
+          before.field = full_output[local_field];
           before.first_deriv = NULL;
           before.second_deriv = NULL;
-          after.field = tmp_output[local_field_id];
+          after.field = tmp_output[local_field];
           after.first_deriv = NULL;
           after.second_deriv = NULL;
 
           /* Check if the first derivative exists. */
-          const int local_id_first = first_deriv_wanted[i];
-          if (local_id_first >= 0) {
-            const int global_id_first = stars_logger_mask_id[local_id_first];
+          const int local_first = first_deriv_wanted[i];
+          if (local_first >= 0 && first_deriv_found[local_field]) {
+            const int global_first = stars_logger_local_to_global[local_first];
             /* Check if we have access to the first derivative. */
-            if (first_deriv_found[local_field_id] &&
-                h->masks[global_id_first].mask & mask) {
-              before.first_deriv = first_deriv[local_field_id];
-              after.first_deriv = tmp_output[local_id_first];
+            if (h->masks[global_first].mask & mask) {
+              before.first_deriv = first_deriv[local_field];
+              after.first_deriv = tmp_output[local_first];
             }
           }
           /* Check if the second derivative exists. */
-          const int local_id_second = second_deriv_wanted[i];
-          if (local_id_second >= 0) {
-            const int global_id_second = stars_logger_mask_id[local_id_second];
+          const int local_second = second_deriv_wanted[i];
+          if (local_second >= 0 && second_deriv_found[local_field]) {
+            const int global_second =
+                stars_logger_local_to_global[local_second];
             /* Check if we have access to the second derivative. */
-            if (second_deriv_found[local_field_id] &&
-                h->masks[global_id_second].mask & mask) {
-              before.second_deriv = second_deriv[local_field_id];
-              after.second_deriv = tmp_output[local_id_second];
+            if (h->masks[global_second].mask & mask) {
+              before.second_deriv = second_deriv[local_field];
+              after.second_deriv = tmp_output[local_second];
             }
           }
 
@@ -949,106 +975,85 @@ void logger_reader_read_single_sparticle(
 }
 
 /**
- * @brief Sort the fields according to the reading order of a given particle
- * type.
+ * @brief Convert the fields from global indexes to local.
  *
  * @param reader The #logger_reader.
- * @param fields_wanted The fields to sort.
- * @param sorted_indices (out) The indices of fields_wanted in the sorted order
- * (need to be allocated).
- * @param sorted_fields_wanted (out) fields_wanted in the sorted order (need to
- * be allocated).
- * @param sorted_first_deriv (out) Fields corresponding to the first derivative
- * of sorted_fields_wanted (need to be allocated).
- * @param sorted_second_deriv (out) Fields corresponding to the second
- * derivative of sorted_fields_wanted (need to be allocated).
- * @param n_fields_wanted Size of fields_wanted, sorted_indices and
- * sorted_fields_wanted.
+ * @param global_fields_wanted The fields to sort.
+ * @param local_fields_wanted (out) fields_wanted in local indexes (need to be
+ * allocated).
+ * @param local_first_deriv (out) Fields (local indexes) corresponding to the
+ * first derivative of local_fields_wanted (need to be allocated).
+ * @param local_second_deriv (out) Fields (local indexes) corresponding to the
+ * second derivative of local_fields_wanted (need to be allocated).
+ * @param n_fields_wanted Number of elements in global_fields_wanted,
+ * local_fields_wanted and its derivatives.
  * @param type The type of the particle.
  */
-void logger_reader_sort_ids(const struct logger_reader *reader,
-                            const int *fields_wanted, int *sorted_indices,
-                            int *sorted_fields_wanted, int *sorted_first_deriv,
-                            int *sorted_second_deriv, const int n_fields_wanted,
-                            enum part_type type) {
+void logger_reader_global_to_local(
+    const struct logger_reader *reader, const int *global_fields_wanted,
+    int *local_fields_wanted, int *local_first_deriv, int *local_second_deriv,
+    const int n_fields_wanted, enum part_type type) {
 
   const struct header *h = &reader->log.header;
 
   /* Get the correct variables. */
   int n_max = 0;
-  int *fields_ids = NULL;
+  int *local_to_global = NULL;
+  const char **local_names = NULL;
   switch (type) {
     case swift_type_gas:
       n_max = hydro_logger_field_count;
-      fields_ids = hydro_logger_mask_id;
+      local_to_global = hydro_logger_local_to_global;
+      local_names = hydro_logger_field_names;
       break;
     case swift_type_dark_matter:
       n_max = gravity_logger_field_count;
-      fields_ids = gravity_logger_mask_id;
+      local_to_global = gravity_logger_local_to_global;
+      local_names = gravity_logger_field_names;
       break;
     case swift_type_stars:
       n_max = stars_logger_field_count;
-      fields_ids = stars_logger_mask_id;
+      local_to_global = stars_logger_local_to_global;
+      local_names = stars_logger_field_names;
       break;
     default:
       error("Particle type not implemented yet.");
   }
 
-  /* No need to have an efficient sort here (max ~10 items). */
-
-  int current = 0;
-  /* Go over all the existing fields in the correct order. */
-  for (int j = 0; j < n_max; j++) {
-    int field_id = fields_ids[j];
-    /* Find if the fields is requested. */
-    for (int i = 0; i < n_fields_wanted; i++) {
-      /* The field is found, go to the next one. */
-      if (field_id == fields_wanted[i]) {
-        sorted_indices[current] = i;
-        sorted_fields_wanted[current] = j;
-        current += 1;
-        break;
-      }
-    }
+  /* Initialize the arrays */
+  for (int local = 0; local < n_fields_wanted; local++) {
+    local_fields_wanted[local] = -1;
+    local_first_deriv[local] = -1;
+    local_second_deriv[local] = -1;
   }
 
-  /* Check if we found all the fields. */
-  if (current != n_fields_wanted) {
-    error("Failed to find a field for %s", part_type_names[type]);
-  }
-
-  /* Set the index of the derivatives */
+  /* Find the corresponding local fields */
   for (int i = 0; i < n_fields_wanted; i++) {
-    const int local_field_id = sorted_fields_wanted[i];
-    const int global_field_id = gravity_logger_mask_id[local_field_id];
+    const int global_field = global_fields_wanted[i];
+    const int global_first = h->masks[global_field].reader.first_deriv;
+    const int global_second = h->masks[global_field].reader.second_deriv;
 
-    const int global_first_id = h->masks[global_field_id].reader.first_deriv;
-    const int global_second_id = h->masks[global_field_id].reader.second_deriv;
-
-    sorted_first_deriv[i] = -1;
-    sorted_second_deriv[i] = -1;
-    /* Check if the derivatives exist. */
-    if (global_first_id < 0 && global_second_id < 0) {
-      continue;
-    }
-
-    /* Find the local id of the derivatives. */
-    for (int local = 0; local < gravity_logger_field_count; local++) {
-      const int global = gravity_logger_mask_id[local];
-      if (global == global_first_id) {
-        sorted_first_deriv[i] = local;
+    for (int local = 0; local < n_max; local++) {
+      /* Check if we have the same field. */
+      if (global_field == local_to_global[local]) {
+        local_fields_wanted[i] = local;
       }
-      if (global == global_second_id) {
-        sorted_second_deriv[i] = local;
+      /* Check if we have the same first derivative. */
+      if (global_first == local_to_global[local]) {
+        local_first_deriv[i] = local;
+      }
+      /* Check if we have the same second derivative. */
+      if (global_second == local_to_global[local]) {
+        local_second_deriv[i] = local;
       }
     }
+  }
 
-    /* Check if we found the derivative. */
-    if (global_first_id >= 0 && sorted_first_deriv[i] < 0) {
-      error("Cannot find the first derivative.");
-    }
-    if (global_second_id >= 0 && sorted_second_deriv[i] < 0) {
-      error("Cannot find the second derivative.");
+  /* Check that we found the fields */
+  for (int local = 0; local < n_fields_wanted; local++) {
+    if (local_fields_wanted[local] < 0) {
+      error("Field %s not found in particle type %s", local_names[local],
+            part_type_names[type]);
     }
   }
 }
@@ -1059,7 +1064,7 @@ void logger_reader_sort_ids(const struct logger_reader *reader,
  * @param reader The #logger_reader.
  * @param time The requested time for the particle.
  * @param interp_type The type of interpolation.
- * @param fields_wanted The fields requested (global index).
+ * @param global_fields_wanted The fields requested (global index).
  * @param n_fields_wanted Number of field requested.
  * @param output Pointer to the output array. Size: (n_fields_wanted,
  * sum(n_part)).
@@ -1067,21 +1072,16 @@ void logger_reader_sort_ids(const struct logger_reader *reader,
  */
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type interp_type,
-                                      const int *fields_wanted,
+                                      const int *global_fields_wanted,
                                       const int n_fields_wanted, void **output,
                                       const uint64_t *n_part) {
 
   const struct header *h = &reader->log.header;
 
   /* Allocate temporary memory. */
-  /* The index of fields_wanted sorted according to the fields order. */
-  int *sorted_indices = (int *)malloc(sizeof(int) * n_fields_wanted);
-  if (sorted_indices == NULL) {
-    error("Failed to allocate the array of sorted indices.");
-  }
   /* fields_wanted sorted according to the fields order (local index). */
-  int *sorted_fields_wanted = (int *)malloc(sizeof(int) * n_fields_wanted);
-  if (sorted_fields_wanted == NULL) {
+  int *local_fields_wanted = (int *)malloc(sizeof(int) * n_fields_wanted);
+  if (local_fields_wanted == NULL) {
     error("Failed to allocate the array of sorted fields.");
   }
   /* Pointer to the output array in the correct reading order. */
@@ -1092,15 +1092,15 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
   /* Fields corresponding to the first derivative of fields_wanted (sorted and
    * local index). */
-  int *sorted_first_deriv = malloc(sizeof(int) * n_fields_wanted);
-  if (sorted_first_deriv == NULL) {
+  int *local_first_deriv = malloc(sizeof(int) * n_fields_wanted);
+  if (local_first_deriv == NULL) {
     error("Failed to allocate the list of first derivative.");
   }
 
   /* Fields corresponding to the second derivative of fields_wanted (sorted and
    * local index). */
-  int *sorted_second_deriv = malloc(sizeof(int) * n_fields_wanted);
-  if (sorted_second_deriv == NULL) {
+  int *local_second_deriv = malloc(sizeof(int) * n_fields_wanted);
+  if (local_second_deriv == NULL) {
     error("Failed to allocate the list of second derivative.");
   }
 
@@ -1110,10 +1110,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         logger_index_get_data(&reader->index.index, swift_type_gas);
 
     /* Sort the fields in order to read the correct bits. */
-    logger_reader_sort_ids(reader, fields_wanted, sorted_indices,
-                           sorted_fields_wanted, sorted_first_deriv,
-                           sorted_second_deriv, n_fields_wanted,
-                           swift_type_gas);
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_gas);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_gas]; i++) {
@@ -1122,15 +1121,14 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
       /* Sort the output into output_single. */
       for (int field = 0; field < n_fields_wanted; field++) {
-        const int field_id = fields_wanted[sorted_indices[field]];
-        output_single[field] =
-            output[sorted_indices[field]] + i * h->masks[field_id].size;
+        const int global = global_fields_wanted[field];
+        output_single[field] = output[field] + i * h->masks[global].size;
       }
 
       /* Read the particle. */
       logger_reader_read_single_particle(
           reader, time, reader->time.time_offset, interp_type, offset,
-          sorted_fields_wanted, sorted_first_deriv, sorted_second_deriv,
+          local_fields_wanted, local_first_deriv, local_second_deriv,
           n_fields_wanted, output_single);
     }
   }
@@ -1141,10 +1139,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         logger_index_get_data(&reader->index.index, swift_type_dark_matter);
 
     /* Sort the fields in order to read the correct bits. */
-    logger_reader_sort_ids(reader, fields_wanted, sorted_indices,
-                           sorted_fields_wanted, sorted_first_deriv,
-                           sorted_second_deriv, n_fields_wanted,
-                           swift_type_dark_matter);
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_dark_matter);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_dark_matter]; i++) {
@@ -1153,15 +1150,14 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
       /* Sort the output into output_single. */
       for (int field = 0; field < n_fields_wanted; field++) {
-        const int field_id = fields_wanted[sorted_indices[field]];
-        output_single[field] =
-            output[sorted_indices[field]] + i * h->masks[field_id].size;
+        const int global = global_fields_wanted[field];
+        output_single[field] = output[field] + i * h->masks[global].size;
       }
 
       /* Read the particle. */
       logger_reader_read_single_particle(
           reader, time, reader->time.time_offset, interp_type, offset,
-          sorted_fields_wanted, sorted_first_deriv, sorted_second_deriv,
+          local_fields_wanted, local_first_deriv, local_second_deriv,
           n_fields_wanted, output_single);
     }
   }
@@ -1172,10 +1168,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         logger_index_get_data(&reader->index.index, swift_type_stars);
 
     /* Sort the fields in order to read the correct bits. */
-    logger_reader_sort_ids(reader, fields_wanted, sorted_indices,
-                           sorted_fields_wanted, sorted_first_deriv,
-                           sorted_second_deriv, n_fields_wanted,
-                           swift_type_stars);
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_stars);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_stars]; i++) {
@@ -1184,25 +1179,23 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
       /* Sort the output into output_single. */
       for (int field = 0; field < n_fields_wanted; field++) {
-        const int field_id = fields_wanted[sorted_indices[field]];
-        output_single[field] =
-            output[sorted_indices[field]] + i * h->masks[field_id].size;
+        const int global = global_fields_wanted[field];
+        output_single[field] = output[field] + i * h->masks[global].size;
       }
 
       /* Read the particle. */
       logger_reader_read_single_particle(
           reader, time, reader->time.time_offset, interp_type, offset,
-          sorted_fields_wanted, sorted_first_deriv, sorted_second_deriv,
+          local_fields_wanted, local_first_deriv, local_second_deriv,
           n_fields_wanted, output_single);
     }
   }
 
   /* Free the memory. */
   free(output_single);
-  free(sorted_indices);
-  free(sorted_fields_wanted);
-  free(sorted_first_deriv);
-  free(sorted_second_deriv);
+  free(local_fields_wanted);
+  free(local_first_deriv);
+  free(local_second_deriv);
 }
 
 /**
@@ -1287,7 +1280,8 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
       required_fields[i] = i;
     }
 
-    offset = logger_particle_read(reader, offset, output, hydro_logger_mask_id,
+    offset = logger_particle_read(reader, offset, output,
+                                  hydro_logger_local_to_global,
                                   hydro_logger_field_count, &mask, &h_offset);
 
     free(required_fields);
