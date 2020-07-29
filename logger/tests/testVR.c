@@ -86,21 +86,20 @@ int main(int argc, char *argv[]) {
   }
 
   /* Allocate the particles memory */
-  double *pos = (double *) malloc(n_tot * 3 * sizeof(double));
-  long long *ids = (long long *) malloc(n_tot * sizeof(long long));
+  double *pos = (double *)malloc(n_tot * 3 * sizeof(double));
+  long long *ids = (long long *)malloc(n_tot * sizeof(long long));
 
   /* Create the list of fields. */
   const int n_fields = 2;
-  int *required_fields = (int *) malloc(n_fields * sizeof(int));
+  int *required_fields = (int *)malloc(n_fields * sizeof(int));
   const struct header *h = &reader.log.header;
-  for(int i = 0; i < n_fields; i++) {
+  for (int i = 0; i < n_fields; i++) {
     required_fields[i] = -1;
   }
-  for(int j = 0; j < h->masks_count; j++) {
+  for (int j = 0; j < h->masks_count; j++) {
     if (strcmp(h->masks[j].name, "Coordinates") == 0) {
       required_fields[0] = j;
-    }
-    else if (strcmp(h->masks[j].name, "ParticleIDs") == 0) {
+    } else if (strcmp(h->masks[j].name, "ParticleIDs") == 0) {
       required_fields[1] = j;
     }
   }
@@ -112,9 +111,9 @@ int main(int argc, char *argv[]) {
   }
 
   /* Create the output */
-  void **output = malloc(n_fields * sizeof(void*));
-  output[0] = (void *) pos;
-  output[1] = (void *) ids;
+  void **output = malloc(n_fields * sizeof(void *));
+  output[0] = (void *)pos;
+  output[1] = (void *)ids;
 
   /* Loop over time for a single particle */
   int part_ind = 0;
@@ -124,10 +123,11 @@ int main(int argc, char *argv[]) {
 
     /* Read the next time */
     logger_reader_read_all_particles(&reader, t, logger_reader_lin,
-                                     required_fields, n_fields, output, n_parts);
+                                     required_fields, n_fields, output,
+                                     n_parts);
 
-    message("Particle %lli: %f %f %f %f", ids[part_ind],
-            pos[3 * part_ind + 0], pos[3 * part_ind + 1], pos[3 * part_ind + 2], t);
+    message("Particle %lli: %f %f %f %f", ids[part_ind], pos[3 * part_ind + 0],
+            pos[3 * part_ind + 1], pos[3 * part_ind + 2], t);
   }
 
   /* Cleanup the memory */

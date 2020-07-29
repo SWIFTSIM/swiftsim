@@ -189,32 +189,41 @@ void header_read(struct header *h, struct logger_logfile *log) {
           h->offset_first_record, offset);
   }
 
+  /* Set the first and second derivatives as non existent. */
+  for (int i = 0; i < h->masks_count; i++) {
+    h->masks[i].reader.first_deriv = -1;
+    h->masks[i].reader.second_deriv = -1;
+  }
+
   /* Check that the fields have the correct size */
-  for(int i = 0; i < hydro_logger_field_count; i++) {
+  for (int i = 0; i < hydro_logger_field_count; i++) {
     hydro_logger_mask_id[i] = -1;
   }
   hydro_logger_reader_populate_mask_data(h);
-  for(int i = 0; i < hydro_logger_field_count; i++) {
+  for (int i = 0; i < hydro_logger_field_count; i++) {
     if (hydro_logger_mask_id[i] == -1)
-      error("Field number %i in hydro_logger_reader_populate_mask_data is not set", i);
+      error("Field %s in hydro_logger_reader_populate_mask_data is not set",
+            hydro_logger_field_names[i]);
   }
 
-  for(int i = 0; i < gravity_logger_field_count; i++) {
+  for (int i = 0; i < gravity_logger_field_count; i++) {
     gravity_logger_mask_id[i] = -1;
   }
   gravity_logger_reader_populate_mask_data(h);
-  for(int i = 0; i < gravity_logger_field_count; i++) {
+  for (int i = 0; i < gravity_logger_field_count; i++) {
     if (gravity_logger_mask_id[i] == -1)
-      error("Field number %i in gravity_logger_reader_populate_mask_data is not set", i);
+      error("Field %s in gravity_logger_reader_populate_mask_data is not set",
+            gravity_logger_field_names[i]);
   }
 
-  for(int i = 0; i < stars_logger_field_count; i++) {
+  for (int i = 0; i < stars_logger_field_count; i++) {
     stars_logger_mask_id[i] = -1;
   }
   stars_logger_reader_populate_mask_data(h);
-  for(int i = 0; i < stars_logger_field_count; i++) {
+  for (int i = 0; i < stars_logger_field_count; i++) {
     if (stars_logger_mask_id[i] == -1)
-      error("Field number %i in stars_logger_reader_populate_mask_data is not set", i);
+      error("Field %s in stars_logger_reader_populate_mask_data is not set",
+            stars_logger_field_names[i]);
   }
 };
 

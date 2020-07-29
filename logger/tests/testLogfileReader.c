@@ -54,8 +54,8 @@ void check_data(struct logger_reader *reader, struct part *parts,
   struct header *h = &reader->log.header;
 
   /* Create a particle */
-  void **output = malloc(hydro_logger_field_count * sizeof(void*));
-  for(int i = 0; i < hydro_logger_field_count; i++) {
+  void **output = malloc(hydro_logger_field_count * sizeof(void *));
+  for (int i = 0; i < hydro_logger_field_count; i++) {
     output[i] = malloc(h->masks[hydro_logger_mask_id[i]].size);
   }
 
@@ -87,7 +87,8 @@ void check_data(struct logger_reader *reader, struct part *parts,
         Check that we are really increasing the id in the logfile.
         See the writing part to see that we are always increasing the id.
       */
-      const uint64_t current_id = *(long long *)output[hydro_logger_field_particle_ids];
+      const uint64_t current_id =
+          *(long long *)output[hydro_logger_field_particle_ids];
       if (previous_id != id_flag && previous_id >= current_id) {
         error("Wrong particle found");
         previous_id = current_id;
@@ -97,9 +98,9 @@ void check_data(struct logger_reader *reader, struct part *parts,
       if (current_id >= number_parts) error("Wrong id %li", current_id);
 
       struct part *p = &parts[current_id];
-      const double *pos = (double *) output[hydro_logger_field_coordinates];
-      const float *vel = (float *) output[hydro_logger_field_velocities];
-      const float *acc = (float *) output[hydro_logger_field_accelerations];
+      const double *pos = (double *)output[hydro_logger_field_coordinates];
+      const float *vel = (float *)output[hydro_logger_field_velocities];
+      const float *acc = (float *)output[hydro_logger_field_accelerations];
 
       /* Check the record's data. */
       for (int i = 0; i < 3; i++) {
@@ -117,22 +118,23 @@ void check_data(struct logger_reader *reader, struct part *parts,
         assert(p->a_hydro[i] == acc[i]);
       }
 
-      const float entropy = *(float *) output[hydro_logger_field_entropies];
+      const float entropy = *(float *)output[hydro_logger_field_entropies];
       assert(p->entropy == entropy);
-      const float mass = *(float *) output[hydro_logger_field_masses];
+      const float mass = *(float *)output[hydro_logger_field_masses];
       assert(p->mass == mass);
 
       /* Check optional fields. */
       // int number_steps = step / p->time_bin;
       // TODO check only every few steps
-      const float current_h = *(float *) output[hydro_logger_field_smoothing_lengths];
+      const float current_h =
+          *(float *)output[hydro_logger_field_smoothing_lengths];
       assert(p->h == current_h);
       /* if (number_steps % period_h == 0 || step > max_step) { */
       /*   assert(p->h == lp.h); */
       /* } else { */
       /*   assert(-1 == lp.h); */
       /* } */
-      const float rho = *(float *) output[hydro_logger_field_densities];
+      const float rho = *(float *)output[hydro_logger_field_densities];
       assert(p->rho == rho);
       /* if (number_steps % period_rho == 0 || step > max_step) { */
       /*   assert(p->rho == lp.rho); */
@@ -168,7 +170,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
   }
 
   /* Cleanup */
-  for(int i = 0; i < hydro_logger_field_count; i++) {
+  for (int i = 0; i < hydro_logger_field_count; i++) {
     free(output[i]);
   }
   free(output);

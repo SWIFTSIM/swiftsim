@@ -123,4 +123,40 @@ __attribute__((always_inline)) INLINE static int header_is_corrupted(
   return h->offset_direction == logger_offset_corrupted;
 }
 
+/**
+ * @brief Set the first derivative of a field.
+ *
+ * @param h The #header.
+ * @param field The index of the field.
+ * @param field_first The index of the first derivative of the field.
+ */
+__attribute__((always_inline)) INLINE static void header_set_first_derivative(
+    struct header *h, const int field, const int field_first) {
+  if (h->masks[field].reader.first_deriv != -1 &&
+      h->masks[field].reader.first_deriv != field_first) {
+    error(
+        "The first derivative is not consistent with the one from a different "
+        "module.");
+  }
+  h->masks[field].reader.first_deriv = field_first;
+}
+
+/**
+ * @brief Set the second derivative of a field.
+ *
+ * @param h The #header.
+ * @param field The index of the field.
+ * @param field_second The index of the second derivative of the field.
+ */
+__attribute__((always_inline)) INLINE static void header_set_second_derivative(
+    struct header *h, const int field, const int field_second) {
+  if (h->masks[field].reader.second_deriv != -1 &&
+      h->masks[field].reader.second_deriv != field_second) {
+    error(
+        "The second derivative is not consistent with the one from a different "
+        "module.");
+  }
+  h->masks[field].reader.second_deriv = field_second;
+}
+
 #endif  // LOGGER_LOGGER_HEADER_H

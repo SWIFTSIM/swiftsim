@@ -36,20 +36,19 @@ int hydro_logger_mask_id[hydro_logger_field_count];
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param fields_wanted Indices (in #hydro_logger_fields) of the fields to return.
- * They are assumed to be sorted according to #hydro_logger_fields.
+ * @param fields_wanted Indices (in #hydro_logger_fields) of the fields to
+ * return. They are assumed to be sorted according to #hydro_logger_fields.
  * @param n_fields_wanted Number of fields requested.
- * @param output Array of buffer where the data are written (size given by n_fields).
+ * @param output Array of buffer where the data are written (size given by
+ * n_fields).
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
  * @return position after the record.
  */
 size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
-                             const int *fields_wanted,
-                             const int n_fields_wanted,
-                             void **output, size_t *mask,
-                             size_t *h_offset) {
+                            const int *fields_wanted, const int n_fields_wanted,
+                            void **output, size_t *mask, size_t *h_offset) {
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
   void *map = reader->log.log.map;
@@ -78,7 +77,8 @@ size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
     /* Is the mask present? */
     if (!(*mask & h->masks[field_index].mask)) {
       /* Requested mask not present, go to the next. */
-      if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
+      if (current_field < n_fields_wanted &&
+          fields_wanted[current_field] == i) {
         current_field += 1;
       }
       continue;
@@ -86,10 +86,10 @@ size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
 
     /* Read the data if needed and update the buffer position? */
     if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-      map = logger_loader_io_read_data(map, h->masks[field_index].size, output[current_field]);
+      map = logger_loader_io_read_data(map, h->masks[field_index].size,
+                                       output[current_field]);
       current_field += 1;
-    }
-    else {
+    } else {
       map += h->masks[field_index].size;
     }
   }
@@ -101,20 +101,15 @@ size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param fields_wanted Indices (in #gravity_logger_fields) of the fields to return.
- * They are assumed to be sorted according to #gravity_logger_fields.
- * @param n_fields_wanted Number of fields requested.
- * @param output Array of buffer where the data are written (size given by n_fields).
+ * @param output Array of buffer where the data are written (size given by
+ * gravity_logger_field_count).
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
  * @return position after the record.
  */
 size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
-                             const int *fields_wanted,
-                             const int n_fields_wanted,
-                             void **output, size_t *mask,
-                             size_t *h_offset) {
+                             void **output, size_t *mask, size_t *h_offset) {
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
   void *map = reader->log.log.map;
@@ -136,27 +131,17 @@ size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
   }
 
   /* Read the record and copy it to a particle. */
-  int current_field = 0;
   for (int i = 0; i < gravity_logger_field_count; i++) {
     const int field_index = gravity_logger_mask_id[i];
 
     /* Is the mask present? */
     if (!(*mask & h->masks[field_index].mask)) {
-      /* Requested mask not present, go to the next. */
-      if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-        current_field += 1;
-      }
       continue;
     }
 
     /* Read the data if needed and update the buffer position? */
-    if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-      map = logger_loader_io_read_data(map, h->masks[field_index].size, output[current_field]);
-      current_field += 1;
-    }
-    else {
-      map += h->masks[field_index].size;
-    }
+    map =
+        logger_loader_io_read_data(map, h->masks[field_index].size, output[i]);
   }
   return map - reader->log.log.map;
 }
@@ -166,10 +151,11 @@ size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param fields_wanted Indices (in #stars_logger_fields) of the fields to return.
- * They are assumed to be sorted according to #stars_logger_fields.
+ * @param fields_wanted Indices (in #stars_logger_fields) of the fields to
+ * return. They are assumed to be sorted according to #stars_logger_fields.
  * @param n_fields_wanted Number of fields requested.
- * @param output Array of buffer where the data are written (size given by n_fields).
+ * @param output Array of buffer where the data are written (size given by
+ * n_fields).
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
@@ -177,9 +163,8 @@ size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
  */
 size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
                              const int *fields_wanted,
-                             const int n_fields_wanted,
-                             void **output, size_t *mask,
-                             size_t *h_offset) {
+                             const int n_fields_wanted, void **output,
+                             size_t *mask, size_t *h_offset) {
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
   void *map = reader->log.log.map;
@@ -208,7 +193,8 @@ size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
     /* Is the mask present? */
     if (!(*mask & h->masks[field_index].mask)) {
       /* Requested mask not present, go to the next. */
-      if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
+      if (current_field < n_fields_wanted &&
+          fields_wanted[current_field] == i) {
         current_field += 1;
       }
       continue;
@@ -216,10 +202,10 @@ size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
 
     /* Read the data if needed and update the buffer position? */
     if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-      map = logger_loader_io_read_data(map, h->masks[field_index].size, output[current_field]);
+      map = logger_loader_io_read_data(map, h->masks[field_index].size,
+                                       output[current_field]);
       current_field += 1;
-    }
-    else {
+    } else {
       map += h->masks[field_index].size;
     }
   }
