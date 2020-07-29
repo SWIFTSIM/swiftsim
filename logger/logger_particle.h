@@ -19,17 +19,18 @@
 #ifndef LOGGER_LOGGER_PARTICLE_H
 #define LOGGER_LOGGER_PARTICLE_H
 
+/* Include the tools. */
+#include "logger_tools.h"
+
+/* Include the other local files. */
 #include "logger_gravity.h"
 #include "logger_header.h"
 #include "logger_hydro.h"
 #include "logger_stars.h"
 #include "logger_time.h"
-#include "logger_tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-struct logger_reader;
 
 /**
  * @brief Defines the type of interpolation
@@ -39,18 +40,10 @@ enum logger_reader_type {
   logger_reader_lin,   /* Linear interpolation. */
 };
 
-size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
-                            const int *id_masks_wanted, const int n_mask_wanted,
-                            void **output, size_t *mask, size_t *h_offset);
-
-size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
-                             void **output, size_t *mask, size_t *h_offset);
-
-size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
-                             const int *id_masks_wanted,
-                             const int n_mask_wanted, void **output,
-                             size_t *mask, size_t *h_offset);
-
+size_t logger_particle_read(
+    const struct logger_reader *reader, size_t offset, void **output,
+    const int *logger_mask_id, const int logger_field_count,
+    size_t *mask, size_t *h_offset);
 /**
  * @brief Generate the data for the special flags.
  *
