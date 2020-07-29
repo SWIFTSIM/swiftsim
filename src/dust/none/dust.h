@@ -2,6 +2,16 @@
 #define SWIFT_DUST_NONE_H
 
 /* #include "dust_struct.h" */
+
+/* Config parameters. */
+#include "../config.h"
+
+/* Local includes */
+#include "parser.h"
+#include "physical_constants.h"
+#include "restart.h"
+#include "space.h"
+#include "units.h"
 #include "dust_properties.h"
 
 /**
@@ -21,6 +31,17 @@ static INLINE void redistribute_dust_masses(struct spart* sp,
 static INLINE void dustevo_print_backend(const struct dustevo_props *dp) {
   message("Running without dust evolution modelling.");
 }
+
+static INLINE void evolve_dust_part(const struct phys_const *phys_const,
+				    const struct unit_system *us,
+				    const struct cosmology *cosmo,
+				    const struct hydro_props *hydro_properties,
+				    const struct entropy_floor_properties *floor_props,
+				    const struct cooling_function_data *cooling,
+				    const struct dustevo_props *dp,
+				    struct part *restrict p, struct xpart *restrict xp,
+				    const float dt, const float dt_therm, const double time) {}
+
 
 /**
  * @brief Prepares a particle for the smooth dust calculation.

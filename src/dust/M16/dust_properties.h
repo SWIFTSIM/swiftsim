@@ -72,6 +72,9 @@ struct dustevo_props {
 
   /* ------------- Dust Mapping -------------------- */
 
+  /* metallicity of the Sun */
+  float solar_metallicity;
+
   /* initial abundance of dust species */ 
   float initial_grain_mass_fraction[grain_species_count];  
 

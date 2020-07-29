@@ -75,6 +75,9 @@ struct dustevo_props {
 
   /* ------------- Dust Mapping -------------------- */
 
+  /* metallicity of the Sun */
+  float solar_metallicity;
+
   /* initial abundance of dust species */ 
   float initial_grain_mass_fraction[grain_species_count];  
 
@@ -95,6 +98,13 @@ struct dustevo_props {
 
   /* Element condensation fractions */
   float condensation_frac[grain_species_count];
+
+  /* Grain accretion coeficients (cgs)*/
+  float accretion_coeff[grain_species_count];
+
+  /* --------------- Other Constants --------------- */
+  float specific_numSNII;
+  
 };
 
 /**
