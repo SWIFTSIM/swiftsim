@@ -22,9 +22,9 @@
 #include "../config.h"
 
 /* local includes */
+#include "hydro_io.h"
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
-#include "hydro_io.h"
 
 /* Index of the mask in the header mask array */
 extern int hydro_logger_mask_id[hydro_logger_field_count];
@@ -35,41 +35,56 @@ extern int hydro_logger_mask_id[hydro_logger_field_count];
  *
  * @param head The #header.
  */
-__attribute__((always_inline)) INLINE static void hydro_logger_reader_populate_mask_data(
-    struct header *head) {
+__attribute__((always_inline)) INLINE static void
+hydro_logger_reader_populate_mask_data(struct header *head) {
 
   for (int i = 0; i < head->masks_count; i++) {
     int size = 0;
-    if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
+    if (strcmp(head->masks[i].name,
+               hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
       size = 3 * sizeof(double);
       hydro_logger_mask_id[hydro_logger_field_coordinates] = i;
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_velocities]) ==
+    } else if (strcmp(
+                   head->masks[i].name,
+                   hydro_logger_field_names[hydro_logger_field_velocities]) ==
                0) {
       size = 3 * sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_velocities] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_accelerations]) ==
-               0) {
+    } else if (strcmp(head->masks[i].name,
+                      hydro_logger_field_names
+                          [hydro_logger_field_accelerations]) == 0) {
       size = 3 * sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_accelerations] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_masses]) == 0) {
+    } else if (strcmp(head->masks[i].name,
+                      hydro_logger_field_names[hydro_logger_field_masses]) ==
+               0) {
       size = sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_masses] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_smoothing_lengths]) == 0) {
+    } else if (strcmp(head->masks[i].name,
+                      hydro_logger_field_names
+                          [hydro_logger_field_smoothing_lengths]) == 0) {
       size = sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_smoothing_lengths] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_entropies]) == 0) {
+    } else if (strcmp(head->masks[i].name,
+                      hydro_logger_field_names[hydro_logger_field_entropies]) ==
+               0) {
       size = sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_entropies] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_particle_ids]) == 0) {
+    } else if (strcmp(
+                   head->masks[i].name,
+                   hydro_logger_field_names[hydro_logger_field_particle_ids]) ==
+               0) {
       size = sizeof(uint64_t);
       hydro_logger_mask_id[hydro_logger_field_particle_ids] = i;
 
-    } else if (strcmp(head->masks[i].name, hydro_logger_field_names[hydro_logger_field_densities]) == 0) {
+    } else if (strcmp(head->masks[i].name,
+                      hydro_logger_field_names[hydro_logger_field_densities]) ==
+               0) {
       size = sizeof(float);
       hydro_logger_mask_id[hydro_logger_field_densities] = i;
     }
@@ -78,8 +93,19 @@ __attribute__((always_inline)) INLINE static void hydro_logger_reader_populate_m
     if (size != 0 && size != head->masks[i].size) {
       error("Size are not compatible for the field %s", head->masks[i].name);
     }
-
   }
+
+  /* Now set the first and second derivatives */
+  const int pos_id = hydro_logger_mask_id[hydro_logger_field_coordinates];
+  const int vel_id = hydro_logger_mask_id[hydro_logger_field_velocities];
+  const int acc_id = hydro_logger_mask_id[hydro_logger_field_accelerations];
+
+  /* Coordinates */
+  header_set_first_derivative(head, pos_id, vel_id);
+  header_set_second_derivative(head, pos_id, acc_id);
+
+  /* Velocities */
+  header_set_first_derivative(head, vel_id, acc_id);
 }
 
 /**
@@ -89,74 +115,106 @@ __attribute__((always_inline)) INLINE static void hydro_logger_reader_populate_m
  * based on the positions, velocities and accelerations at the time of the two
  * particles.
  *
- * @param field_before Pointer to the field at a time < t.
- * @param field_after Pointer to the field at a time > t.
+ * @param before Pointer to the #logger_field at a time < t.
+ * @param after Pointer to the #logger_field at a time > t.
  * @param otuput Pointer to the output value.
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
- * @param field The field to reconstruct (follows the order of #hydro_logger_fields).
+ * @param field The field to reconstruct (follows the order of
+ * #hydro_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-hydro_logger_interpolate_field(
-    void *field_before, void *field_after,
-    void *output, const double t_before, const double t_after,
-    const double t, const int field) {
+hydro_logger_interpolate_field(const double t_before,
+                               const struct logger_field *before,
+                               const double t_after,
+                               const struct logger_field *after, void *output,
+                               const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
   if (t_before > t || t_after < t) {
-    error("The times for the interpolation are not correct"
-          " %g < %g < %g.", t_before, t, t_after);
+    error(
+        "The times for the interpolation are not correct"
+        " %g < %g < %g.",
+        t_before, t, t_after);
   }
 #endif
 
   /* Compute the interpolation scaling. */
-  const double wa =
-      (t - t_before) / (t_after - t_before);
+  const double wa = (t - t_before) / (t_after - t_before);
   const double wb = 1. - wa;
 
-  switch(field) {
+  switch (field) {
     case hydro_logger_field_coordinates:
-      /* interpolate vectors. */
-      // TODO use hermite spline
       for (int i = 0; i < 3; i++) {
-        ((double *)output)[i] = wa * ((double *) field_after)[i] +
-          wb * ((double *) field_before)[i];
-        /* /\* position *\/ */
-        /* ((double *)output)[i] = logger_tools_quintic_hermite_spline( */
-        /*     t_before, before->x[i], before->v_full[i], before->a_grav[i], */
-        /*     t_after, after->x[i], after->v_full[i], after->a_grav[i], */
-        /*     t); */
+        double *x = (double *)output;
+        const double *x_bef = (double *)before->field;
+        const float *v_bef = (float *)before->first_deriv;
+        const float *a_bef = (float *)before->second_deriv;
+
+        const double *x_aft = (double *)after->field;
+        const float *v_aft = (float *)after->first_deriv;
+        const float *a_aft = (float *)after->second_deriv;
+
+        /* Use quintic hermite spline. */
+        if (v_bef && v_aft && a_bef && a_aft) {
+          x[i] = logger_tools_quintic_hermite_spline(
+              t_before, x_bef[i], v_bef[i], a_bef[i], t_after, x_aft[i],
+              v_aft[i], a_aft[i], t);
+        }
+        /* Use cubic hermite spline. */
+        else if (v_bef && v_aft) {
+          x[i] = logger_tools_cubic_hermite_spline(
+              t_before, x_bef[i], v_bef[i], t_after, x_aft[i], v_aft[i], t);
+        }
+        /* Use linear interpolation. */
+        else {
+          x[i] = wa * x_aft[i] + wb * x_bef[i];
+        }
       }
       break;
     case hydro_logger_field_velocities:
-      /* interpolate vectors. */
-      // TODO use hermite spline
       for (int i = 0; i < 3; i++) {
-        ((float *)output)[i] = wa * ((float *) field_after)[i] +
-          wb * ((float *) field_before)[i];
+        float *v = (float *)output;
+        const float *v_bef = (float *)before->field;
+        const float *a_bef = (float *)before->first_deriv;
+
+        const float *v_aft = (float *)after->field;
+        const float *a_aft = (float *)after->first_deriv;
+
+        /* Use a cubic hermite spline. */
+        if (a_bef && a_aft) {
+          v[i] = logger_tools_cubic_hermite_spline(
+              t_before, v_bef[i], a_bef[i], t_after, v_aft[i], a_aft[i], t);
+        }
+        /* Use linear interpolation. */
+        else {
+          v[i] = wa * v_aft[i] + wb * v_bef[i];
+        }
       }
       break;
     case hydro_logger_field_accelerations:
       /* interpolate vectors. */
       for (int i = 0; i < 3; i++) {
-        ((float *)output)[i] = wa * ((float *) field_after)[i] +
-          wb * ((float *) field_before)[i];
+        float *a = (float *)output;
+        const float *a_bef = (float *)before->field;
+        const float *a_aft = (float *)before->field;
+        a[i] = wa * a_aft[i] + wb * a_bef[i];
       }
       break;
-    case hydro_logger_field_masses:
     case hydro_logger_field_smoothing_lengths:
     case hydro_logger_field_entropies:
     case hydro_logger_field_densities:
-      ((float *)output)[0] = wa * ((float *) field_after)[0] +
-        wb * ((float *) field_before)[0];
+    case hydro_logger_field_masses:
+      ((float *)output)[0] =
+          wa * ((float *)after->field)[0] + wb * ((float *)before->field)[0];
       break;
     case hydro_logger_field_particle_ids:
-      if (*(long long *) field_after != *(long long *) field_before) {
+      if (*(long long *)after->field != *(long long *)before->field) {
         error("Interpolating different particles");
       }
-      *(long long *) output = *(long long *) field_after;
+      *(long long *)output = *(long long *)after->field;
       break;
     default:
       error("Not implemented");
@@ -164,19 +222,26 @@ hydro_logger_interpolate_field(
 }
 
 #ifdef HAVE_PYTHON
-__attribute__((always_inline)) INLINE static void
-hydro_logger_generate_python(struct logger_python_field *fields) {
+__attribute__((always_inline)) INLINE static void hydro_logger_generate_python(
+    struct logger_python_field *fields) {
 
-  fields[hydro_logger_field_coordinates] = logger_loader_python_field(/* Dimension */ 3, NPY_DOUBLE);
-  fields[hydro_logger_field_velocities] = logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
-  fields[hydro_logger_field_accelerations] = logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
-  fields[hydro_logger_field_masses] = logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
-  fields[hydro_logger_field_smoothing_lengths] = logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
-  fields[hydro_logger_field_entropies] = logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
-  fields[hydro_logger_field_particle_ids] = logger_loader_python_field(/* Dimension */ 1, NPY_LONGLONG);
-  fields[hydro_logger_field_densities] = logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+  fields[hydro_logger_field_coordinates] =
+      logger_loader_python_field(/* Dimension */ 3, NPY_DOUBLE);
+  fields[hydro_logger_field_velocities] =
+      logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
+  fields[hydro_logger_field_accelerations] =
+      logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
+  fields[hydro_logger_field_masses] =
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+  fields[hydro_logger_field_smoothing_lengths] =
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+  fields[hydro_logger_field_entropies] =
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+  fields[hydro_logger_field_particle_ids] =
+      logger_loader_python_field(/* Dimension */ 1, NPY_LONGLONG);
+  fields[hydro_logger_field_densities] =
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
 }
 
-
 #endif  // HAVE_PYTHON
-#endif /* SWIFT_GADGET2_LOGGER_HYDRO_H */
+#endif  /* SWIFT_GADGET2_LOGGER_HYDRO_H */

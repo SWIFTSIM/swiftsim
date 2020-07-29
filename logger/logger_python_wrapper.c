@@ -98,7 +98,6 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
   return Py_BuildValue("");
 }
 
-
 /**
  * @brief Create a list of numpy array containing the fields.
  *
@@ -110,9 +109,10 @@ static PyObject *pyReverseOffset(__attribute__((unused)) PyObject *self,
  *
  * @return The python list of numpy array.
  */
-__attribute__((always_inline)) INLINE static PyObject
-*logger_loader_create_output(void **output, const int *field_indices, const int n_fields,
-                             const uint64_t *n_part, uint64_t n_tot) {
+__attribute__((always_inline)) INLINE static PyObject *
+logger_loader_create_output(void **output, const int *field_indices,
+                            const int n_fields, const uint64_t *n_part,
+                            uint64_t n_tot) {
 
   struct logger_python_field python_fields[100];
   struct logger_python_field *shifted_python_fields;
@@ -120,12 +120,12 @@ __attribute__((always_inline)) INLINE static PyObject
   PyObject *list = PyList_New(n_fields);
   struct logger_python_field *tmp;
 
-  for(int i = 0; i < n_fields; i++) {
+  for (int i = 0; i < n_fields; i++) {
     tmp = NULL;
 
     /* Find in the hydro the field. */
     hydro_logger_generate_python(python_fields);
-    for(int j = 0; j < hydro_logger_field_count; j++) {
+    for (int j = 0; j < hydro_logger_field_count; j++) {
       if (field_indices[i] == hydro_logger_mask_id[j]) {
         tmp = &python_fields[j];
         break;
@@ -135,14 +135,17 @@ __attribute__((always_inline)) INLINE static PyObject
 
     /* Find in the gravity the field. */
     gravity_logger_generate_python(shifted_python_fields);
-    for(int j = 0; j < gravity_logger_field_count; j++) {
+    for (int j = 0; j < gravity_logger_field_count; j++) {
       if (field_indices[i] == gravity_logger_mask_id[j]) {
         /* Check if we have the same fields for gravity + hydro */
         if (tmp != NULL) {
           if (tmp->dimension != shifted_python_fields[j].dimension ||
               tmp->typenum != shifted_python_fields[j].typenum) {
-            error("The python definition of the field %s does not correspond between"
-                  " the modules.", gravity_logger_field_names[j]);
+            error(
+                "The python definition of the field %s does not correspond "
+                "between"
+                " the modules.",
+                gravity_logger_field_names[j]);
           }
         }
         tmp = &shifted_python_fields[j];
@@ -153,14 +156,17 @@ __attribute__((always_inline)) INLINE static PyObject
 
     /* Find in the stars the field. */
     stars_logger_generate_python(shifted_python_fields);
-    for(int j = 0; j < stars_logger_field_count; j++) {
+    for (int j = 0; j < stars_logger_field_count; j++) {
       if (field_indices[i] == stars_logger_mask_id[j]) {
         /* Check if we have the same fields for gravity + hydro + stars */
         if (tmp != NULL) {
           if (tmp->dimension != shifted_python_fields[j].dimension ||
               tmp->typenum != shifted_python_fields[j].typenum) {
-            error("The python definition of the field %s does not correspond between"
-                  " the modules.", stars_logger_field_names[j]);
+            error(
+                "The python definition of the field %s does not correspond "
+                "between"
+                " the modules.",
+                stars_logger_field_names[j]);
           }
         }
         tmp = &shifted_python_fields[j];
@@ -177,8 +183,7 @@ __attribute__((always_inline)) INLINE static PyObject
     if (tmp->dimension > 1) {
       npy_intp dims[2] = {n_tot, tmp->dimension};
       tmp_array = PyArray_SimpleNewFromData(2, dims, tmp->typenum, output[i]);
-    }
-    else {
+    } else {
       npy_intp dims = n_tot;
       tmp_array = PyArray_SimpleNewFromData(1, &dims, tmp->typenum, output[i]);
     }
@@ -189,16 +194,17 @@ __attribute__((always_inline)) INLINE static PyObject
   return list;
 }
 
-
 /**
  * @brief Read some fields at a given time.
  *
  * @param basename The basename of the logger files.
- * @param fields Python list containing the name of the fields (e.g. Coordinates).
+ * @param fields Python list containing the name of the fields (e.g.
+ * Coordinates).
  * @param time The time of the fields.
  * @param verbose (Optional) The verbose level of the reader.
  *
- * @return List of numpy array containing the fields requested (in the same order).
+ * @return List of numpy array containing the fields requested (in the same
+ * order).
  */
 static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                    PyObject *args) {
@@ -225,8 +231,8 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
 
   /* Get the fields indexes from the header. */
   const int n_fields = PyList_Size(fields);
-  int *field_indices = (int *) malloc(n_fields * sizeof(int));
-  for(int i = 0; i < n_fields; i++) {
+  int *field_indices = (int *)malloc(n_fields * sizeof(int));
+  for (int i = 0; i < n_fields; i++) {
     field_indices[i] = -1;
 
     /* Get the an item in the list. */
@@ -240,7 +246,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     const char *field_name = PyUnicode_AsUTF8AndSize(field, &size);
 
     /* Find the equivalent field inside the header. */
-    for(int j = 0; j < h->masks_count; j++) {
+    for (int j = 0; j < h->masks_count; j++) {
       if (strcmp(field_name, h->masks[j].name) == 0) {
         field_indices[i] = j;
         break;
@@ -260,23 +266,23 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   int n_type = 0;
   const uint64_t *n_part = logger_reader_get_number_particles(&reader, &n_type);
   uint64_t n_tot = 0;
-  for(int i = 0; i < n_type; i++) {
+  for (int i = 0; i < n_type; i++) {
     n_tot += n_part[i];
   }
 
   /* Allocate the output memory. */
-  void **output = malloc(n_fields * sizeof(void*));
-  for(int i = 0; i < n_fields; i++) {
+  void **output = malloc(n_fields * sizeof(void *));
+  for (int i = 0; i < n_fields; i++) {
     output[i] = malloc(n_tot * h->masks[field_indices[i]].size);
   }
 
   /* Read the particles. */
-  logger_reader_read_all_particles(
-    &reader, time, logger_reader_lin,
-    field_indices, n_fields, output, n_part);
+  logger_reader_read_all_particles(&reader, time, logger_reader_lin,
+                                   field_indices, n_fields, output, n_part);
 
   /* Create the python output. */
-  PyObject *array = logger_loader_create_output(output, field_indices, n_fields, n_part, n_tot);
+  PyObject *array = logger_loader_create_output(output, field_indices, n_fields,
+                                                n_part, n_tot);
 
   /* Free the reader. */
   logger_reader_free(&reader);
@@ -314,16 +320,15 @@ static PyMethodDef libloggerMethods[] = {
      "----------\n\n"
      "basename: str\n"
      "  The basename of the log file.\n\n"
-     "fields: list\m"
+     "fields: list\n"
      "  The list of fields (e.g. 'Coordinates', 'Entropies', ...)\n\n"
-     "time: float\m"
+     "time: float\n"
      "  The time at which the fields must be read.\n\n"
      "verbose: int, optional\n"
      "  The verbose level of the loader.\n\n"
      "-------\n\n"
      "list_of_fields: list\n"
-     "  Each element is a numpy array containing the corresponding field.\n"
-    },
+     "  Each element is a numpy array containing the corresponding field.\n"},
 
     {NULL, NULL, 0, NULL} /* Sentinel */
 };

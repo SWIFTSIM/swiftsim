@@ -40,19 +40,16 @@ enum logger_reader_type {
 };
 
 size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
-                             const int *id_masks_wanted,
-                             const int n_mask_wanted,
-                             void **output, size_t *mask, size_t *h_offset);
+                            const int *id_masks_wanted, const int n_mask_wanted,
+                            void **output, size_t *mask, size_t *h_offset);
 
 size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
-                             const int *id_masks_wanted,
-                             const int n_mask_wanted,
                              void **output, size_t *mask, size_t *h_offset);
 
 size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
                              const int *id_masks_wanted,
-                             const int n_mask_wanted,
-                             void **output, size_t *mask, size_t *h_offset);
+                             const int n_mask_wanted, void **output,
+                             size_t *mask, size_t *h_offset);
 
 /**
  * @brief Generate the data for the special flags.

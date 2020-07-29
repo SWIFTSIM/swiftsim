@@ -124,8 +124,9 @@ const uint64_t *logger_reader_get_number_particles(struct logger_reader *reader,
 
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type interp_type,
-                                      const int *id_masks_wanted, const int n_mask_wanted,
-                                      void **output, const uint64_t *n_part);
+                                      const int *id_masks_wanted,
+                                      const int n_mask_wanted, void **output,
+                                      const uint64_t *n_part);
 size_t logger_reader_read_record(struct logger_reader *reader, void **output,
                                  double *time, int *is_particle, size_t offset);
 
