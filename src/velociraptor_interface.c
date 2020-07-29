@@ -37,6 +37,7 @@
 #include "swift_velociraptor_part.h"
 #include "threadpool.h"
 #include "velociraptor_struct.h"
+#include "gravity_io.h"
 
 #ifdef HAVE_VELOCIRAPTOR
 
@@ -247,12 +248,6 @@ void velociraptor_convert_particles_mapper(void *map_data, int nr_gparts,
   const struct phys_const *phys_const = e->physical_constants;
   const struct cooling_function_data *cool_func = e->cooling_func;
 
-  const float a_inv = e->cosmology->a_inv;
-  const int periodic = s->periodic;
-  const double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
-  const double pos_dithering[3] = {s->pos_dithering[0], s->pos_dithering[1],
-                                   s->pos_dithering[2]};
-
   /* Convert particle properties into VELOCIraptor units.
    * VELOCIraptor wants:
    * - Un-dithered co-moving positions,
@@ -263,22 +258,8 @@ void velociraptor_convert_particles_mapper(void *map_data, int nr_gparts,
    */
   for (int i = 0; i < nr_gparts; i++) {
 
-    if (periodic) {
-      swift_parts[i].x[0] =
-          box_wrap(gparts[i].x[0] - pos_dithering[0], 0.0, dim[0]);
-      swift_parts[i].x[1] =
-          box_wrap(gparts[i].x[1] - pos_dithering[1], 0.0, dim[1]);
-      swift_parts[i].x[2] =
-          box_wrap(gparts[i].x[2] - pos_dithering[2], 0.0, dim[2]);
-    } else {
-      swift_parts[i].x[0] = gparts[i].x[0];
-      swift_parts[i].x[1] = gparts[i].x[1];
-      swift_parts[i].x[2] = gparts[i].x[2];
-    }
-
-    swift_parts[i].v[0] = gparts[i].v_full[0] * a_inv;
-    swift_parts[i].v[1] = gparts[i].v_full[1] * a_inv;
-    swift_parts[i].v[2] = gparts[i].v_full[2] * a_inv;
+    convert_gpart_pos(e, &(gparts[i]), swift_parts[i].x);
+    convert_gpart_vel(e, &(gparts[i]), swift_parts[i].v);
 
 #ifndef HAVE_VELOCIRAPTOR_WITH_NOMASS
     swift_parts[i].mass = gravity_get_mass(&gparts[i]);
