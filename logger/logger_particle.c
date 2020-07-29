@@ -28,28 +28,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int gravity_logger_mask_id[gravity_logger_field_count];
-int stars_logger_mask_id[stars_logger_field_count];
-int hydro_logger_mask_id[hydro_logger_field_count];
-
+int gravity_logger_local_to_global[gravity_logger_field_count];
+int stars_logger_local_to_global[stars_logger_field_count];
+int hydro_logger_local_to_global[hydro_logger_field_count];
 
 /**
- * @brief Read a gpart record in the log file.
+ * @brief Read a particle (of any type) record in the log file.
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param output Array of buffer where the data are written (size given by logger_field_count).
- * @param logger_mask_id The list converting local to global id for the fields (e.g. gravity_logger_mask_id)
- * @param logger_field_count The number of element in logger_mask_id (e.g. gravity_logger_field_count)
+ * @param output Array of buffer where the data are written (size given by
+ * local_count).
+ * @param local_to_global The list converting local to global id for the fields
+ * (e.g. gravity_logger_local_to_global)
+ * @param local_count The number of element in logger_mask_id (e.g.
+ * gravity_logger_field_count)
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
  * @return position after the record.
  */
-__attribute__((always_inline)) INLINE size_t logger_particle_read(
-    const struct logger_reader *reader, size_t offset, void **output,
-    const int *logger_mask_id, const int logger_field_count,
-    size_t *mask, size_t *h_offset) {
+__attribute__((always_inline)) INLINE size_t
+logger_particle_read(const struct logger_reader *reader, size_t offset,
+                     void **output, const int *local_to_global,
+                     const int local_count, size_t *mask, size_t *h_offset) {
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
@@ -72,16 +74,16 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read(
   }
 
   /* Read the record and copy it to a particle. */
-  for (int i = 0; i < logger_field_count; i++) {
-    const int field_index = logger_mask_id[i];
+  for (int local = 0; local < local_count; local++) {
+    const int global = local_to_global[local];
 
     /* Is the mask present? */
-    if (!(*mask & h->masks[field_index].mask)) {
+    if (!(*mask & h->masks[global].mask)) {
       continue;
     }
 
     /* Read the data if needed and update the buffer position? */
-    map = logger_loader_io_read_data(map, h->masks[field_index].size, output[i]);
+    map = logger_loader_io_read_data(map, h->masks[global].size, output[local]);
   }
   return map - reader->log.log.map;
 }

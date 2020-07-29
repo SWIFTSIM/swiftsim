@@ -27,7 +27,7 @@
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
-extern int gravity_logger_mask_id[gravity_logger_field_count];
+extern int gravity_logger_local_to_global[gravity_logger_field_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -44,31 +44,31 @@ gravity_logger_reader_populate_mask_data(struct header *head) {
                gravity_logger_field_names[gravity_logger_field_coordinates]) ==
         0) {
       size = 3 * sizeof(double);
-      gravity_logger_mask_id[gravity_logger_field_coordinates] = i;
+      gravity_logger_local_to_global[gravity_logger_field_coordinates] = i;
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_velocities]) == 0) {
       size = 3 * sizeof(float);
-      gravity_logger_mask_id[gravity_logger_field_velocities] = i;
+      gravity_logger_local_to_global[gravity_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_accelerations]) == 0) {
       size = 3 * sizeof(float);
-      gravity_logger_mask_id[gravity_logger_field_accelerations] = i;
+      gravity_logger_local_to_global[gravity_logger_field_accelerations] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    gravity_logger_field_names[gravity_logger_field_masses]) ==
                0) {
       size = sizeof(float);
-      gravity_logger_mask_id[gravity_logger_field_masses] = i;
+      gravity_logger_local_to_global[gravity_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_particle_ids]) == 0) {
       size = sizeof(uint64_t);
-      gravity_logger_mask_id[gravity_logger_field_particle_ids] = i;
+      gravity_logger_local_to_global[gravity_logger_field_particle_ids] = i;
     }
 
     /* Check that the size are compatible */
@@ -78,9 +78,12 @@ gravity_logger_reader_populate_mask_data(struct header *head) {
   }
 
   /* Now set the first and second derivatives */
-  const int pos_id = gravity_logger_mask_id[gravity_logger_field_coordinates];
-  const int vel_id = gravity_logger_mask_id[gravity_logger_field_velocities];
-  const int acc_id = gravity_logger_mask_id[gravity_logger_field_accelerations];
+  const int pos_id =
+      gravity_logger_local_to_global[gravity_logger_field_coordinates];
+  const int vel_id =
+      gravity_logger_local_to_global[gravity_logger_field_velocities];
+  const int acc_id =
+      gravity_logger_local_to_global[gravity_logger_field_accelerations];
 
   /* Coordinates */
   header_set_first_derivative(head, pos_id, vel_id);

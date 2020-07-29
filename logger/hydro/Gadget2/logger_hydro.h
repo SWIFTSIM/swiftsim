@@ -27,7 +27,7 @@
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
-extern int hydro_logger_mask_id[hydro_logger_field_count];
+extern int hydro_logger_local_to_global[hydro_logger_field_count];
 
 /**
  * @brief When starting to read a logfile, check the required fields in the
@@ -43,50 +43,50 @@ hydro_logger_reader_populate_mask_data(struct header *head) {
     if (strcmp(head->masks[i].name,
                hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
       size = 3 * sizeof(double);
-      hydro_logger_mask_id[hydro_logger_field_coordinates] = i;
+      hydro_logger_local_to_global[hydro_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_velocities]) ==
                0) {
       size = 3 * sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_velocities] = i;
+      hydro_logger_local_to_global[hydro_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_accelerations]) == 0) {
       size = 3 * sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_accelerations] = i;
+      hydro_logger_local_to_global[hydro_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_masses]) ==
                0) {
       size = sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_masses] = i;
+      hydro_logger_local_to_global[hydro_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_smoothing_lengths]) == 0) {
       size = sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_smoothing_lengths] = i;
+      hydro_logger_local_to_global[hydro_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_entropies]) ==
                0) {
       size = sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_entropies] = i;
+      hydro_logger_local_to_global[hydro_logger_field_entropies] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_particle_ids]) ==
                0) {
       size = sizeof(uint64_t);
-      hydro_logger_mask_id[hydro_logger_field_particle_ids] = i;
+      hydro_logger_local_to_global[hydro_logger_field_particle_ids] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_densities]) ==
                0) {
       size = sizeof(float);
-      hydro_logger_mask_id[hydro_logger_field_densities] = i;
+      hydro_logger_local_to_global[hydro_logger_field_densities] = i;
     }
 
     /* Check that the size are compatible */
@@ -96,9 +96,12 @@ hydro_logger_reader_populate_mask_data(struct header *head) {
   }
 
   /* Now set the first and second derivatives */
-  const int pos_id = hydro_logger_mask_id[hydro_logger_field_coordinates];
-  const int vel_id = hydro_logger_mask_id[hydro_logger_field_velocities];
-  const int acc_id = hydro_logger_mask_id[hydro_logger_field_accelerations];
+  const int pos_id =
+      hydro_logger_local_to_global[hydro_logger_field_coordinates];
+  const int vel_id =
+      hydro_logger_local_to_global[hydro_logger_field_velocities];
+  const int acc_id =
+      hydro_logger_local_to_global[hydro_logger_field_accelerations];
 
   /* Coordinates */
   header_set_first_derivative(head, pos_id, vel_id);
@@ -146,6 +149,7 @@ hydro_logger_interpolate_field(const double t_before,
   const double wb = 1. - wa;
 
   switch (field) {
+    /* Do the position */
     case hydro_logger_field_coordinates:
       for (int i = 0; i < 3; i++) {
         double *x = (double *)output;
@@ -174,6 +178,7 @@ hydro_logger_interpolate_field(const double t_before,
         }
       }
       break;
+      /* Do the velocity */
     case hydro_logger_field_velocities:
       for (int i = 0; i < 3; i++) {
         float *v = (float *)output;
@@ -203,6 +208,7 @@ hydro_logger_interpolate_field(const double t_before,
         a[i] = wa * a_aft[i] + wb * a_bef[i];
       }
       break;
+      /* Do the linear interpolation of float. */
     case hydro_logger_field_smoothing_lengths:
     case hydro_logger_field_entropies:
     case hydro_logger_field_densities:
@@ -210,6 +216,7 @@ hydro_logger_interpolate_field(const double t_before,
       ((float *)output)[0] =
           wa * ((float *)after->field)[0] + wb * ((float *)before->field)[0];
       break;
+      /* Check the ids */
     case hydro_logger_field_particle_ids:
       if (*(long long *)after->field != *(long long *)before->field) {
         error("Interpolating different particles");

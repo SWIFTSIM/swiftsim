@@ -56,7 +56,7 @@ void check_data(struct logger_reader *reader, struct part *parts,
   /* Create a particle */
   void **output = malloc(hydro_logger_field_count * sizeof(void *));
   for (int i = 0; i < hydro_logger_field_count; i++) {
-    output[i] = malloc(h->masks[hydro_logger_mask_id[i]].size);
+    output[i] = malloc(h->masks[hydro_logger_local_to_global[i]].size);
   }
 
   /* Define a few variables */

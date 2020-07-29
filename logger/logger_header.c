@@ -195,33 +195,36 @@ void header_read(struct header *h, struct logger_logfile *log) {
     h->masks[i].reader.second_deriv = -1;
   }
 
-  /* Check that the fields have the correct size */
+  /* Check that the fields have the correct size and set the derivatives. */
+  /* Hydro */
   for (int i = 0; i < hydro_logger_field_count; i++) {
-    hydro_logger_mask_id[i] = -1;
+    hydro_logger_local_to_global[i] = -1;
   }
   hydro_logger_reader_populate_mask_data(h);
   for (int i = 0; i < hydro_logger_field_count; i++) {
-    if (hydro_logger_mask_id[i] == -1)
+    if (hydro_logger_local_to_global[i] == -1)
       error("Field %s in hydro_logger_reader_populate_mask_data is not set",
             hydro_logger_field_names[i]);
   }
 
+  /* Gravity */
   for (int i = 0; i < gravity_logger_field_count; i++) {
-    gravity_logger_mask_id[i] = -1;
+    gravity_logger_local_to_global[i] = -1;
   }
   gravity_logger_reader_populate_mask_data(h);
   for (int i = 0; i < gravity_logger_field_count; i++) {
-    if (gravity_logger_mask_id[i] == -1)
+    if (gravity_logger_local_to_global[i] == -1)
       error("Field %s in gravity_logger_reader_populate_mask_data is not set",
             gravity_logger_field_names[i]);
   }
 
+  /* Stars */
   for (int i = 0; i < stars_logger_field_count; i++) {
-    stars_logger_mask_id[i] = -1;
+    stars_logger_local_to_global[i] = -1;
   }
   stars_logger_reader_populate_mask_data(h);
   for (int i = 0; i < stars_logger_field_count; i++) {
-    if (stars_logger_mask_id[i] == -1)
+    if (stars_logger_local_to_global[i] == -1)
       error("Field %s in stars_logger_reader_populate_mask_data is not set",
             stars_logger_field_names[i]);
   }
