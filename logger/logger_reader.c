@@ -304,7 +304,8 @@ void logger_reader_read_single_particle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+    logger_particle_read(reader, offset, tmp_output, hydro_logger_mask_id,
+                         hydro_logger_field_count, &mask, &h_offset);
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
@@ -370,7 +371,8 @@ void logger_reader_read_single_particle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+      logger_particle_read(reader, offset, tmp_output, hydro_logger_mask_id,
+                           hydro_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
       double current_time = time_array_get_time(&reader->log.times, offset);
@@ -551,7 +553,8 @@ void logger_reader_read_single_gparticle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+    logger_particle_read(reader, offset, tmp_output, gravity_logger_mask_id,
+                         gravity_logger_field_count, &mask, &h_offset);
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
@@ -617,7 +620,8 @@ void logger_reader_read_single_gparticle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+      logger_particle_read(reader, offset, tmp_output, gravity_logger_mask_id,
+                           gravity_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
       double current_time = time_array_get_time(&reader->log.times, offset);
@@ -798,7 +802,8 @@ void logger_reader_read_single_sparticle(
   while (offset < offset_time) {
     /* Read the particle. */
     size_t mask, h_offset;
-    logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+    logger_particle_read(reader, offset, tmp_output, stars_logger_mask_id,
+                         stars_logger_field_count, &mask, &h_offset);
 
     /* Get the time. */
     double current_time = time_array_get_time(&reader->log.times, offset);
@@ -864,7 +869,8 @@ void logger_reader_read_single_sparticle(
 
       /* Read the particle. */
       size_t mask, h_offset;
-      logger_gparticle_read(reader, offset, tmp_output, &mask, &h_offset);
+      logger_particle_read(reader, offset, tmp_output, stars_logger_mask_id,
+                           stars_logger_field_count, &mask, &h_offset);
 
       /* Get the time of the record. */
       double current_time = time_array_get_time(&reader->log.times, offset);
@@ -1281,9 +1287,8 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
       required_fields[i] = i;
     }
 
-    offset = logger_particle_read(reader, offset, required_fields,
-                                  hydro_logger_field_count, output, &mask,
-                                  &h_offset);
+    offset = logger_particle_read(reader, offset, output, hydro_logger_mask_id,
+                                  hydro_logger_field_count, &mask, &h_offset);
 
     free(required_fields);
   }

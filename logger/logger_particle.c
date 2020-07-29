@@ -32,85 +32,25 @@ int gravity_logger_mask_id[gravity_logger_field_count];
 int stars_logger_mask_id[stars_logger_field_count];
 int hydro_logger_mask_id[hydro_logger_field_count];
 
-/**
- * @brief Read an hydro-part record in the log file.
- *
- * @param reader The #logger_reader.
- * @param offset offset of the record to read.
- * @param fields_wanted Indices (in #hydro_logger_fields) of the fields to
- * return. They are assumed to be sorted according to #hydro_logger_fields.
- * @param n_fields_wanted Number of fields requested.
- * @param output Array of buffer where the data are written (size given by
- * n_fields).
- * @param mask (out) The mask of the record.
- * @param h_offset (out) Difference of offset with the next record.
- *
- * @return position after the record.
- */
-size_t logger_particle_read(const struct logger_reader *reader, size_t offset,
-                            const int *fields_wanted, const int n_fields_wanted,
-                            void **output, size_t *mask, size_t *h_offset) {
-  /* Get a few pointers. */
-  const struct header *h = &reader->log.header;
-  void *map = reader->log.log.map;
-
-  *mask = 0;
-  *h_offset = 0;
-
-  /* Read the record's mask. */
-  map = logger_loader_io_read_mask(h, (char *)map + offset, mask, h_offset);
-
-  /* Check that the mask is meaningful */
-  if (*mask > (unsigned int)(1 << h->masks_count)) {
-    error("Found an unexpected mask %zi", *mask);
-  }
-
-  /* Check if it is not a time record. */
-  if (*mask == h->timestamp_mask) {
-    error("Unexpected timestamp while reading a particle: %lu.", *mask);
-  }
-
-  /* Read the record and copy it to a particle. */
-  int current_field = 0;
-  for (int i = 0; i < hydro_logger_field_count; i++) {
-    const int field_index = hydro_logger_mask_id[i];
-
-    /* Is the mask present? */
-    if (!(*mask & h->masks[field_index].mask)) {
-      /* Requested mask not present, go to the next. */
-      if (current_field < n_fields_wanted &&
-          fields_wanted[current_field] == i) {
-        current_field += 1;
-      }
-      continue;
-    }
-
-    /* Read the data if needed and update the buffer position? */
-    if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-      map = logger_loader_io_read_data(map, h->masks[field_index].size,
-                                       output[current_field]);
-      current_field += 1;
-    } else {
-      map += h->masks[field_index].size;
-    }
-  }
-  return map - reader->log.log.map;
-}
 
 /**
  * @brief Read a gpart record in the log file.
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param output Array of buffer where the data are written (size given by
- * gravity_logger_field_count).
+ * @param output Array of buffer where the data are written (size given by logger_field_count).
+ * @param logger_mask_id The list converting local to global id for the fields (e.g. gravity_logger_mask_id)
+ * @param logger_field_count The number of element in logger_mask_id (e.g. gravity_logger_field_count)
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
  * @return position after the record.
  */
-size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
-                             void **output, size_t *mask, size_t *h_offset) {
+__attribute__((always_inline)) INLINE size_t logger_particle_read(
+    const struct logger_reader *reader, size_t offset, void **output,
+    const int *logger_mask_id, const int logger_field_count,
+    size_t *mask, size_t *h_offset) {
+
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
   void *map = reader->log.log.map;
@@ -132,8 +72,8 @@ size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
   }
 
   /* Read the record and copy it to a particle. */
-  for (int i = 0; i < gravity_logger_field_count; i++) {
-    const int field_index = gravity_logger_mask_id[i];
+  for (int i = 0; i < logger_field_count; i++) {
+    const int field_index = logger_mask_id[i];
 
     /* Is the mask present? */
     if (!(*mask & h->masks[field_index].mask)) {
@@ -141,74 +81,7 @@ size_t logger_gparticle_read(const struct logger_reader *reader, size_t offset,
     }
 
     /* Read the data if needed and update the buffer position? */
-    map =
-        logger_loader_io_read_data(map, h->masks[field_index].size, output[i]);
-  }
-  return map - reader->log.log.map;
-}
-
-/**
- * @brief Read a spart record in the log file.
- *
- * @param reader The #logger_reader.
- * @param offset offset of the record to read.
- * @param fields_wanted Indices (in #stars_logger_fields) of the fields to
- * return. They are assumed to be sorted according to #stars_logger_fields.
- * @param n_fields_wanted Number of fields requested.
- * @param output Array of buffer where the data are written (size given by
- * n_fields).
- * @param mask (out) The mask of the record.
- * @param h_offset (out) Difference of offset with the next record.
- *
- * @return position after the record.
- */
-size_t logger_sparticle_read(const struct logger_reader *reader, size_t offset,
-                             const int *fields_wanted,
-                             const int n_fields_wanted, void **output,
-                             size_t *mask, size_t *h_offset) {
-  /* Get a few pointers. */
-  const struct header *h = &reader->log.header;
-  void *map = reader->log.log.map;
-
-  *mask = 0;
-  *h_offset = 0;
-
-  /* Read the record's mask. */
-  map = logger_loader_io_read_mask(h, (char *)map + offset, mask, h_offset);
-
-  /* Check that the mask is meaningful */
-  if (*mask > (unsigned int)(1 << h->masks_count)) {
-    error("Found an unexpected mask %zi", *mask);
-  }
-
-  /* Check if it is not a time record. */
-  if (*mask == h->timestamp_mask) {
-    error("Unexpected timestamp while reading a particle: %lu.", *mask);
-  }
-
-  /* Read the record and copy it to a particle. */
-  int current_field = 0;
-  for (int i = 0; i < stars_logger_field_count; i++) {
-    const int field_index = stars_logger_mask_id[i];
-
-    /* Is the mask present? */
-    if (!(*mask & h->masks[field_index].mask)) {
-      /* Requested mask not present, go to the next. */
-      if (current_field < n_fields_wanted &&
-          fields_wanted[current_field] == i) {
-        current_field += 1;
-      }
-      continue;
-    }
-
-    /* Read the data if needed and update the buffer position? */
-    if (current_field < n_fields_wanted && fields_wanted[current_field] == i) {
-      map = logger_loader_io_read_data(map, h->masks[field_index].size,
-                                       output[current_field]);
-      current_field += 1;
-    } else {
-      map += h->masks[field_index].size;
-    }
+    map = logger_loader_io_read_data(map, h->masks[field_index].size, output[i]);
   }
   return map - reader->log.log.map;
 }
